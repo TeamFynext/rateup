@@ -47,6 +47,7 @@ import {
   getCustomerAccountByPhone,
   getCustomerAccounts,
   getLCustomerByPhone,
+  lookupContactByPhone,
   getRewardByShortCode,
   markRewardAsRedeemed,
   updateCustomerAccount,
@@ -830,5 +831,87 @@ describe("markRewardAsRedeemed", () => {
     db.customerReward.update.mockResolvedValue({ id: "cr-1" });
 
     await expect(markRewardAsRedeemed("SHORT1", ORG)).rejects.toThrow("Reward not found");
+  });
+});
+
+describe("lookupContactByPhone", () => {
+  test("strips a leading + before matching, since contacts are stored without one", async () => {
+    db.contact.findFirst.mockResolvedValue(null);
+
+    await lookupContactByPhone("+919876543210", ORG);
+
+    expect(db.contact.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { phone: "919876543210", orgId: ORG } }),
+    );
+  });
+
+  test("returns nothing for a number the org has never seen", async () => {
+    db.contact.findFirst.mockResolvedValue(null);
+
+    const result = await lookupContactByPhone("919876543210", ORG);
+
+    expect(result).toEqual({ contact: null, alreadyMember: false });
+    // No point asking about a loyalty account for a contact that does not exist.
+    expect(db.customerLoyaltyAccount.findFirst).not.toHaveBeenCalled();
+  });
+
+  test("returns a known contact that has never joined the programme", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
+
+    const result = await lookupContactByPhone("919876543210", ORG);
+
+    expect(result.contact?.name).toBe("Asha");
+    expect(result.alreadyMember).toBe(false);
+  });
+
+  test("flags an active member so the form can stop a duplicate", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue({ id: "acc-1", status: "active" });
+
+    expect((await lookupContactByPhone("919876543210", ORG)).alreadyMember).toBe(true);
+  });
+
+  test("an inactive account is not 'already a member' — submitting reactivates it", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue({ id: "acc-1", status: "inactive" });
+
+    const result = await lookupContactByPhone("919876543210", ORG);
+
+    expect(result.contact?.name).toBe("Asha");
+    expect(result.alreadyMember).toBe(false);
+  });
+
+  test("scopes the loyalty account lookup to the caller's org", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
+
+    await lookupContactByPhone("919876543210", ORG);
+
+    expect(db.customerLoyaltyAccount.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { contactId: "contact-1", program: { orgId: ORG } },
+      }),
+    );
   });
 });

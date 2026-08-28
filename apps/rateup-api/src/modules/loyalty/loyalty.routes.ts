@@ -17,6 +17,7 @@ import { approvalRoutes } from "./approvals/approval.route.js";
 import { LoyaltySettingsRoutes } from "./settings/settings.route.js";
 import { loyaltyDashboardRoutes } from "./dashboard/dashboard.router.js";
 import { loyaltyApiSettingRoutes } from "./apiSetting/apiSetting.route.js";
+import { loyaltyOnboardingRoutes } from "./onboarding/onboarding.route.js";
 
 export async function loyaltyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -39,4 +40,5 @@ export async function loyaltyRoutes(server: FastifyInstance) {
   server.register(LoyaltySettingsRoutes, { prefix: "/settings" });
   server.register(loyaltyDashboardRoutes, { prefix: "/dashboard" });
   server.register(loyaltyApiSettingRoutes, { prefix: "/api-settings" });
+  server.register(loyaltyOnboardingRoutes, { prefix: "/onboarding" });
 }

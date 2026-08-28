@@ -52,6 +52,8 @@ const updateOrgDetailsSchema = z.object({
   showLifecycle: z.boolean().optional(),
   isConversionApiActive: z.boolean().optional(),
   onboardingChecklistCompleted: z.boolean().optional(),
+  // The platform setup checklist (`/login/setup`). Loyalty program setup is deliberately
+  // absent: it is tracked on `LoyaltyProgram.onboardingStep` by the guided wizard.
   onboardingChecklist: z
     .object({
       api: z.boolean().optional(),
@@ -59,12 +61,6 @@ const updateOrgDetailsSchema = z.object({
       payment: z.boolean().optional(),
       invite: z.boolean().optional(),
       auto: z.boolean().optional(),
-      points: z.boolean().optional(),
-      tiers: z.boolean().optional(),
-      rewards: z.boolean().optional(),
-      referral: z.boolean().optional(),
-      cmds: z.boolean().optional(),
-      loyaltyauto: z.boolean().optional(),
     })
     .optional(),
 });

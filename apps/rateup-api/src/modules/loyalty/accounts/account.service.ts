@@ -568,6 +568,44 @@ export async function awardPoints(
   };
 }
 
+/**
+ * Looks a phone number up for the add-customer form.
+ *
+ * Deliberately different from `getCustomerAccountByPhone`, which only finds people who
+ * are *already* loyalty members and 404s otherwise. The point here is the opposite case:
+ * someone the org already has a Contact for (from a WhatsApp conversation, an import, a
+ * survey) who has never joined the programme. `createCustomerAccount` will reuse that
+ * contact on submit, so surfacing it lets the cashier confirm the name instead of
+ * retyping it — and warns them when the person is already a member.
+ *
+ * Contacts store the number without a leading "+", matching how `createCustomerAccount`
+ * writes it, so normalise before comparing.
+ */
+export async function lookupContactByPhone(phone: string, orgId: string) {
+  const normalized = parsePhoneforWa(phone);
+
+  const contact = await prisma.contact.findFirst({
+    where: { phone: normalized, orgId },
+    select: { id: true, name: true, email: true, dob: true },
+  });
+
+  if (!contact) {
+    return { contact: null, alreadyMember: false };
+  }
+
+  const account = await prisma.customerLoyaltyAccount.findFirst({
+    where: { contactId: contact.id, program: { orgId } },
+    select: { id: true, status: true },
+  });
+
+  return {
+    contact,
+    // An inactive account is reactivated on submit rather than rejected, so it is not
+    // the same "already a member" dead end as an active one.
+    alreadyMember: Boolean(account && account.status === "active"),
+  };
+}
+
 export async function getLCustomerByPhone(phone: string, orgId: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
     where: {

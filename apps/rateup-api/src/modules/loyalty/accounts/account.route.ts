@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  lookupContactByPhoneHandler,
   awardPointsHandler,
   createCustomerAccountHandler,
   exportCustomerAccountsHandler,
@@ -63,6 +64,19 @@ export async function customerAccountRoutes(server: FastifyInstance) {
       },
     },
     getCustomerAccountByContactHandler,
+  );
+
+  // Distinct from "/phone/:phoneNumber" below, which looks for an existing *member*.
+  // This answers "does the org already have a contact for this number", which is what
+  // the add-customer form needs before it knows whether to ask for a name.
+  server.get(
+    "/lookup/:phoneNumber",
+    {
+      schema: {
+        params: phoneNumberParamSchema,
+      },
+    },
+    lookupContactByPhoneHandler,
   );
 
   server.get(

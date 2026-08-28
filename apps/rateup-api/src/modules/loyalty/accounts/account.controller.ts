@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  lookupContactByPhone,
   awardPoints,
   createCustomerAccount,
   getCustomerAccountById,
@@ -126,6 +127,27 @@ export async function getCustomerAccountByContactHandler(
     if (!result) {
       return reply.code(404).send({ error: "Customer account not found" });
     }
+    reply.code(200).send(result);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+  }
+}
+
+/**
+ * Powers the add-customer form's phone-first flow: given a number, say whether the org
+ * already knows this person and whether they are already in the programme.
+ *
+ * Authenticated and org-scoped by `request.user.orgId`. It is deliberately not exposed
+ * on the public registration route — an unauthenticated lookup would let anyone probe
+ * phone numbers and read back a customer's name.
+ */
+export async function lookupContactByPhoneHandler(
+  request: FastifyRequest<{ Params: PhoneNumberParam }>,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await lookupContactByPhone(request.params.phoneNumber, request.user.orgId);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);

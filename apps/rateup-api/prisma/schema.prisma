@@ -175,50 +175,50 @@ model Org {
 
   deletionMailSent DateTime?
 
-  members                  OrgMember[]
-  teams                    Team[]
-  invitations              Invitation[]
-  templates                WaTemplate[]
-  Subscription             Subscription?
-  Order                    Order[]
-  WaFlow                   WaFlow[]
-  contacts                 Contact[]
-  linktree                 Linktree[]
-  ApiAccessToken           ApiAccessToken?
-  surveyThemes             WebSurveyTheme[]
-  UsageStats               UsageStats?
-  chatbot                  Chatbot[]
-  Survey                   Survey[]
-  WaAccountSettings        WaAccountSettings?
-  generateQr               GenerateQr[]
-  Integration              Integration[]
-  waMessageSchedule        WaMessageSchedule[]
-  loyaltyProgram           LoyaltyProgram?
-  loyaltyTemplates         LoyaltyWaCommand[]
-  WaAutomatedReplyMessage  WaAutomatedReplyMessage[]
-  WaAutomatedReply         WaAutomatedReply[]
-  whatsappQuickReplies     WhatsappQuickReply[]
-  loyaltyApiSettings       LoyaltyApiSettings[]
-  expoPushTokens           ExpoPushToken[]
-  WhatsappSettings         WhatsappSettings[]
-  metaBusinessAgents       MetaBusinessAgent[]
-  WaCatalog                WhatsappCatalog[]
-  productSets              WhatsappProductSet[]
-  UserAssignedCount        UserAssignedCount[]
-  Lifecycle                Lifecycle[]
-  ContactCustomField       ContactCustomField[]
-  AuditLog                 AuditLog[]
-  ContactLabel             ContactLabel[]
-  businessHours            BusinessHour[]
-  rules                    Rule[]
-  ruleMessageBodyLocks     RuleMessageBodyLock[]
-  waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
-  Webhook                  Webhook?
-  inboxAutomations         InboxAutomation[]
-  inboxStats               InboxStats?
-  inboxMentions            InboxMention[]
-  conversationTags         ConversationTag[]
-  pipelines                Pipeline[]
+  members                 OrgMember[]
+  teams                   Team[]
+  invitations             Invitation[]
+  templates               WaTemplate[]
+  Subscription            Subscription?
+  Order                   Order[]
+  WaFlow                  WaFlow[]
+  contacts                Contact[]
+  linktree                Linktree[]
+  ApiAccessToken          ApiAccessToken?
+  surveyThemes            WebSurveyTheme[]
+  UsageStats              UsageStats?
+  chatbot                 Chatbot[]
+  Survey                  Survey[]
+  WaAccountSettings       WaAccountSettings?
+  generateQr              GenerateQr[]
+  Integration             Integration[]
+  waMessageSchedule       WaMessageSchedule[]
+  loyaltyProgram          LoyaltyProgram?
+  loyaltyTemplates        LoyaltyWaCommand[]
+  WaAutomatedReplyMessage WaAutomatedReplyMessage[]
+  WaAutomatedReply        WaAutomatedReply[]
+  whatsappQuickReplies    WhatsappQuickReply[]
+  loyaltyApiSettings      LoyaltyApiSettings[]
+  expoPushTokens          ExpoPushToken[]
+  WhatsappSettings        WhatsappSettings[]
+  metaBusinessAgents      MetaBusinessAgent[]
+  WaCatalog               WhatsappCatalog[]
+  productSets             WhatsappProductSet[]
+  UserAssignedCount       UserAssignedCount[]
+  Lifecycle               Lifecycle[]
+  ContactCustomField      ContactCustomField[]
+  AuditLog                AuditLog[]
+  ContactLabel            ContactLabel[]
+  businessHours           BusinessHour[]
+  rules                   Rule[]
+  ruleMessageBodyLocks    RuleMessageBodyLock[]
+  waMessageOrgTeamMaps    WaMessageOrgTeamMap[]
+  Webhook                 Webhook?
+  inboxAutomations        InboxAutomation[]
+  inboxStats              InboxStats?
+  inboxMentions           InboxMention[]
+  conversationTags        ConversationTag[]
+  pipelines               Pipeline[]
 }
 
 model UsageStats {
@@ -1969,6 +1969,12 @@ model LoyaltyProgram {
   pointsExpirationMonths   Int     @default(12)
   referralMessageTemplate  Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
 
+  // Guided setup wizard (/dashboard/loyalty/onboarding) progress. The wizard commits each
+  // step for real while the program stays status "draft", so these track where to resume.
+  onboardingPresetKey   String? // which preset pack the user picked
+  onboardingStep        String? // last completed step id
+  onboardingCompletedAt DateTime?
+
   // Metadata
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2663,9 +2669,9 @@ model BusinessHour {
   /// [PBusinessHourSchedule]
   schedule Json // <---- stores 7 days + timeslots
 
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @updatedAt
-  ruleMessageBodyLocks     RuleMessageBodyLock[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  ruleMessageBodyLocks RuleMessageBodyLock[]
 }
 
 model ConversationAssignedUserTeamMap {
@@ -3029,7 +3035,7 @@ model PipelineStage {
   color String?
 
   /// Share of leads in this stage expected to convert, 0-100. Drives the forecast.
-  probability Int     @default(0)
+  probability Int         @default(0)
   /// Days idle before a lead here is flagged as rotting. 0 disables the check.
   rottingDays Int         @default(0)
   /// Landing here leaves the lead open, or closes it won or lost.
