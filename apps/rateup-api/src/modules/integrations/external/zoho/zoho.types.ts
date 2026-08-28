@@ -237,25 +237,67 @@ export function zohoErrorDetail(error: unknown): unknown {
   return data ?? error;
 }
 
+/** What a write path knows about the column it is reporting. */
+export interface StageMappingKey {
+  stageId?: string;
+  stageName?: string;
+  /** The contact write paths still describe the move by lifecycle. */
+  lifecycleId?: string;
+  lifecycleName?: string;
+}
+
 /**
- * Which Bigin stage a trigger's column maps to.
+ * The mapping row a trigger's column matches, in either table.
  *
- * Keyed on `stageId` — the board drives the deal now. The `lifecycleId` fallback
- * is for the contact write paths in `contact.service.ts`, which still enqueue
- * this trigger with a lifecycle rather than a stage.
+ * Keyed on `stageId` — the board drives both products now. The `lifecycleId`
+ * fallback is for the contact write paths in `contact.service.ts`, which still
+ * enqueue with a lifecycle rather than a stage.
  *
  * Each key is compared **only when the incoming value is set**. A bare
  * `m.stageId === data.stageId` matches the first entry that has no `stageId`
  * whenever the trigger carries none either, which silently stamps an unrelated
- * Bigin stage onto the deal — the reason this is its own function.
+ * mapping onto the record — the reason this is its own function.
  */
-export function findBiginStageMapping(
+export function findMappingForTrigger(
   mappings: ZohoStageMapping[],
-  data: { stageId?: string; lifecycleId?: string },
+  data: StageMappingKey,
 ): ZohoStageMapping | undefined {
   if (data.stageId) return mappings.find((m) => m.stageId === data.stageId);
   if (data.lifecycleId) return mappings.find((m) => m.lifecycleId === data.lifecycleId);
   return undefined;
+}
+
+/** Which Bigin stage a trigger's column maps to. */
+export function findBiginStageMapping(
+  mappings: ZohoStageMapping[],
+  data: StageMappingKey,
+): ZohoStageMapping | undefined {
+  return findMappingForTrigger(mappings, data);
+}
+
+/**
+ * Which Zoho CRM lead status a trigger's column maps to.
+ *
+ * The outbound half of the "Lead Status Mapping" dialog: inbound has always read
+ * it, outbound used to push the Rateup column's own name straight into
+ * `Lead_Status`. That field is a picklist, so an org whose Zoho statuses are not
+ * named exactly like its board had every push rejected.
+ *
+ * Null means "do not push". An unmapped column is deliberately silent rather
+ * than falling back to the name: the org told us what its statuses are, and
+ * inventing a new one is what was broken.
+ */
+export function resolveCrmLeadStatus(
+  mappings: ZohoStageMapping[],
+  data: StageMappingKey,
+): string | null {
+  // An org that never opened the mapping dialog has nothing configured. Sending
+  // the column's own name is a guess, but it is the guess this has always made
+  // and it does work where the two are named alike — going silent instead would
+  // stop a sync that works today.
+  if (mappings.length === 0) return data.stageName ?? data.lifecycleName ?? null;
+
+  return findMappingForTrigger(mappings, data)?.zohoLeadStatus ?? null;
 }
 
 /**
