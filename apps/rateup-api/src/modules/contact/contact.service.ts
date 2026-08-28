@@ -566,6 +566,18 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
         name: true,
       },
     },
+    // The contacts table's Stage column. One board per org today, so one lead is
+    // the whole answer; `take` keeps this a bounded join rather than pulling a
+    // contact's entire lead history into a 500-row page.
+    leads: {
+      select: {
+        id: true,
+        stageId: true,
+        stage: { select: { name: true, color: true } },
+      },
+      orderBy: { createdAt: "asc" as const },
+      take: 1,
+    },
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / Number(limit)));

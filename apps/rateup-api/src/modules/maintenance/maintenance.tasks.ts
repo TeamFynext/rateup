@@ -1,11 +1,16 @@
 import type { TaskRunner } from "./task.js";
+import { convertAssignLifecycleActions } from "./tasks/convertAssignLifecycleActions.js";
 import { convertSubscriptions } from "./tasks/convertSubscriptions.js";
+import { deletePipelines } from "./tasks/deletePipelines.js";
+import { mapLifecycleRefsToStages } from "./tasks/mapLifecycleRefsToStages.js";
+import { placeLeadsFromLifecycles } from "./tasks/placeLeadsFromLifecycles.js";
 import { refreshPlanFeatures } from "./tasks/refreshPlanFeatures.js";
 import { relinkRazorpayPlans } from "./tasks/relinkRazorpayPlans.js";
 import { removeCustomPlan } from "./tasks/removeCustomPlan.js";
 import { restructureTiers } from "./tasks/restructureTiers.js";
 import { retireLegacyPlans } from "./tasks/retireLegacyPlans.js";
 import { seedConversationAddon } from "./tasks/seedConversationAddon.js";
+import { seedPipelines } from "./tasks/seedPipelines.js";
 import { seedPlans } from "./tasks/seedPlans.js";
 
 export interface TaskDefinition {
@@ -118,6 +123,74 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "entitlements — take a backup first.",
     destructive: true,
     run: convertSubscriptions,
+  },
+
+  // ---- Lifecycle → pipeline migration -------------------------------------
+  // Run in this order. Each one assumes the one above it has already been applied:
+  // boards have to exist before leads can be placed on them, and columns have to exist
+  // before a stored lifecycle reference can be resolved to one.
+  {
+    id: "delete-pipelines",
+    title: "Delete every pipeline",
+    description:
+      "Wipes every board in every organisation, so the seeder can start from a clean " +
+      "slate. Stages, leads, notes, activity, tasks, labels and lost reasons all cascade " +
+      "with them, and teams have their default board cleared. Contacts and lifecycles are " +
+      "untouched. Built for clearing boards created while the feature was being tested — " +
+      "preview it first, because the counts it reports are what an apply run destroys.",
+    destructive: true,
+    run: deletePipelines,
+  },
+  {
+    id: "seed-pipelines",
+    title: "Seed a pipeline per organisation",
+    description:
+      "Gives every organisation that has none a “Default Pipeline”, with one column per " +
+      "lifecycle stage it owns — same names, so contacts can then be placed on the column " +
+      "matching the lifecycle they already sit in. Appends a Won or Lost column if the " +
+      "org's lifecycles produce neither, since a board without one cannot close a lead. " +
+      "Skips organisations that already have a board, have no lifecycles, or have no " +
+      "teams. Idempotent.",
+    destructive: false,
+    run: seedPipelines,
+  },
+  {
+    id: "place-leads-from-lifecycles",
+    title: "Place leads from lifecycles",
+    description:
+      "Puts every classified contact on the board column matching its lifecycle, by name. " +
+      "A contact whose lifecycle has no column of that name is reported rather than " +
+      "dropped somewhere arbitrary, and a contact with no lifecycle stays off the board. " +
+      "Lead dates come from the contact's last real activity, so a lead that has sat " +
+      "untouched for months reads as stalled rather than fresh. Resumable and safe to " +
+      "re-run — if it reports work remaining, run it again.",
+    destructive: false,
+    run: placeLeadsFromLifecycles,
+  },
+  {
+    id: "map-lifecycle-refs-to-stages",
+    title: "Map stored lifecycle references onto stages",
+    description:
+      "Writes a stage id next to every stored lifecycle id — Zoho Bigin and CRM mappings, " +
+      "and Assign Lifecycle rule actions. Additive: both keys are kept, so live syncing " +
+      "and live rules keep working while the code that reads them is still moving over. " +
+      "Lifecycle conditions and lifecycle-triggered rules cannot be migrated by data alone " +
+      "and are reported, not touched.",
+    destructive: false,
+    run: mapLifecycleRefsToStages,
+  },
+  {
+    id: "convert-assign-lifecycle-actions",
+    title: "Convert Assign Lifecycle rules to Assign Stage",
+    description:
+      "Switches automation rules that set a lifecycle over to moving the contact's lead " +
+      "instead. This changes what those rules do: the old action fanned out to Zoho, " +
+      "Zapier and the Meta Conversions API, and the new one writes only the lead, so a " +
+      "converted rule stops updating Zoho until those surfaces move. The lifecycle it came " +
+      "from is kept in the stored value so a rule can be put back by hand. An action whose " +
+      "lifecycle has no column of that name is left alone and reported.",
+    destructive: true,
+    run: convertAssignLifecycleActions,
   },
 ];
 

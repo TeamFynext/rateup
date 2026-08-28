@@ -34,7 +34,11 @@ import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
-import { openLeadOnPipelineForContact } from "../../pipeline/pipelineLead/lead.service.js";
+import {
+  openLeadOnPipelineForContact,
+  resolvePipelineForContact,
+  setContactStage,
+} from "../../pipeline/pipelineLead/lead.service.js";
 import { sendInstagramTextMessage } from "../instagram/instagram_messaging.service.js";
 import {
   startInstagramAutomationFlow,
@@ -908,6 +912,10 @@ async function executeRuleActions(
           success = await executeAssignLifecycleAction(action.value, actionContext);
           break;
 
+        case "ASSIGN_STAGE":
+          success = await executeAssignStageAction(action.value, actionContext);
+          break;
+
         case "SEND_MESSAGE":
           success = await executeSendMessageAction(action.value as string, actionContext);
           break;
@@ -1085,6 +1093,80 @@ async function executeAssignTeamAction(
   );
 
   return true;
+}
+
+/**
+ * Moves the contact's lead to a pipeline column — the successor to
+ * {@link executeAssignLifecycleAction}, which set a contact lifecycle instead.
+ *
+ * Unlike that one this does not touch the contact record, so it fires no Zoho,
+ * Zapier or Conversions-API sync. Those still hang off the lifecycle write and
+ * move across with their own surfaces.
+ *
+ * Returns false only when the rule cannot act at all — no phone, no stage
+ * chosen, or the org has no board. A stage that has since been deleted, or a
+ * lead already sitting on the named column, is a no-op the rule reports as
+ * handled: neither is a failure worth retrying the message over.
+ */
+async function executeAssignStageAction(
+  rawValue: unknown,
+  context: {
+    orgId: string;
+    phone?: string | null;
+    message?: string;
+    platform?: string;
+  },
+): Promise<boolean> {
+  const stageId = readAssignStageValue(rawValue);
+  if (!context.phone || !context.orgId || !stageId) return false;
+
+  const pipelineId = await resolvePipelineForContact(context.orgId);
+  if (!pipelineId) {
+    log.info({ orgId: context.orgId }, "Rule wanted to assign a stage but the org has no board");
+    return false;
+  }
+
+  const contact = await prisma.contact.findUnique({
+    where: { contact_phone_org_id_unique: { phone: context.phone, orgId: context.orgId } },
+    select: { id: true },
+  });
+  if (!contact) return false;
+
+  const origin = PLATFORM_ORIGIN[context.platform ?? "WHATSAPP"] ?? {
+    source: "MANUAL" as LeadSource,
+    channel: "NONE" as LeadChannel,
+  };
+
+  const lead = await setContactStage({
+    contactId: contact.id,
+    pipelineId,
+    stageId,
+    source: origin.source,
+    channel: origin.channel,
+  });
+
+  if (!lead) {
+    log.info(
+      { contactId: contact.id, pipelineId, stageId },
+      "Rule assigned a stage but nothing moved: the lead is already there, or the column is gone",
+    );
+  }
+
+  return true;
+}
+
+/**
+ * The stored value is a bare stage id. Objects are tolerated because the
+ * lifecycle migration writes `{ stageId, ... }` into the older action's value,
+ * and a rule converted by hand could carry either shape.
+ */
+export function readAssignStageValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const record = value as { stageId?: unknown };
+    if (typeof record.stageId === "string") return record.stageId;
+  }
+  return "";
 }
 
 function readAssignLifecycleValue(value: unknown): {

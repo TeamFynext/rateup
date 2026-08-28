@@ -1,6 +1,11 @@
 import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
+import {
+  updateZohoLeadQueue,
+  ZohoTriggers,
+} from "../../integrations/external/zoho/zoho.service.js";
 import type {
   BulkUpdateLeadsRequestSchema,
   CloseLeadRequestSchema,
@@ -134,6 +139,8 @@ export async function createLead(
   data: CreateLeadRequestSchema & {
     userId: string | null;
     automated?: boolean;
+    /** See {@link setContactStage}. False when an integration opened this lead. */
+    syncIntegrations?: boolean;
   },
 ) {
   const stage = await prisma.pipelineStage.findUniqueOrThrow({
@@ -141,7 +148,7 @@ export async function createLead(
     select: { status: true },
   });
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const lead = await tx.lead.create({
       data: {
         pipelineId: data.pipelineId,
@@ -183,6 +190,14 @@ export async function createLead(
 
     return serialiseLead(lead);
   });
+
+  // A lead opening straight onto a mapped column is as much a stage change as a
+  // move is, so the CRMs hear about it the same way.
+  if (data.syncIntegrations !== false) await syncLeadStageToIntegrations(created);
+  // Opened directly onto a Won column — rare, but it is still the moment it was won.
+  if (stage.status === "WON") await reportLeadWon(created);
+
+  return created;
 }
 
 export async function updateLead(id: string, data: UpdateLeadRequestSchema, userId: string) {
@@ -226,11 +241,18 @@ export async function updateLead(id: string, data: UpdateLeadRequestSchema, user
   });
 }
 
-export async function moveLead(id: string, stageId: string, userId: string | null) {
-  return prisma.$transaction(async (tx) => {
+export async function moveLead(
+  id: string,
+  stageId: string,
+  userId: string | null,
+  syncIntegrations = true,
+) {
+  const moved = await prisma.$transaction(async (tx) => {
     const before = await tx.lead.findUniqueOrThrow({
       where: { id },
-      select: { stageId: true, stage: { select: { name: true } } },
+      // The previous status decides whether this move is the moment the lead was
+      // won — moving between two Won columns is not a second conversion.
+      select: { stageId: true, stage: { select: { name: true, status: true } } },
     });
 
     const target = await tx.pipelineStage.findUniqueOrThrow({
@@ -267,8 +289,434 @@ export async function moveLead(id: string, stageId: string, userId: string | nul
       },
     });
 
-    return serialiseLead(lead);
+    return {
+      ...serialiseLead(lead),
+      becameWon: target.status === "WON" && before.stage.status !== "WON",
+    };
   });
+
+  // Outside the transaction: an integration being down must not roll back a move
+  // the user already saw happen on the board.
+  const { becameWon, ...lead } = moved;
+  if (syncIntegrations) await syncLeadStageToIntegrations(lead);
+  if (becameWon) await reportLeadWon(lead);
+
+  return lead;
+}
+
+/**
+ * Tells the CRMs a lead changed column.
+ *
+ * This is the outbound half of the Zoho stage mapping: the org's board is now
+ * the thing that drives a Bigin deal stage and a CRM lead status, where the
+ * contact's lifecycle used to. Both are keyed on the mapping the org configured
+ * under "Pipeline Stage Mapping"; a column with no mapping simply syncs nothing.
+ *
+ * A lead with no contact behind it — one typed straight onto the board — still
+ * syncs. It carries its own name, phone and email, which is everything Bigin
+ * needs to open a deal and a contact; the only thing missing is somewhere in
+ * Rateup to write the resulting ids back to, so `rateupContactId` is omitted and
+ * the deal is created fresh each time rather than matched to an existing one.
+ *
+ * Skipped when the move came *from* an integration — see `syncIntegrations` on
+ * {@link moveLead}.
+ *
+ * Failures are swallowed: a CRM being unreachable must not fail the move that
+ * has already been committed and shown on the board.
+ */
+async function syncLeadStageToIntegrations(lead: {
+  id: string;
+  contactId: string | null;
+  stageId: string;
+  pipelineId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  source: LeadSource;
+}) {
+  try {
+    const stage = await prisma.pipelineStage.findUnique({
+      where: { id: lead.stageId },
+      select: { name: true, pipeline: { select: { orgId: true } } },
+    });
+    if (!stage) return;
+
+    const orgId = stage.pipeline.orgId;
+
+    // The contact is the better source when there is one: it holds the CRM ids,
+    // and its details are the ones the rest of the app keeps current.
+    const contact = lead.contactId
+      ? await prisma.contact.findUnique({
+          where: { id: lead.contactId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            source: true,
+            notes: true,
+            integrationIds: true,
+          },
+        })
+      : null;
+
+    const integrationIds = contact
+      ? (contact.integrationIds as ContactIntegrationIds | null)
+      : null;
+
+    if (integrationIds?.zoho?.lead?.id) {
+      await updateZohoLeadQueue(orgId, integrationIds.zoho.lead.id, {
+        Lead_Status: stage.name,
+      });
+    }
+
+    await integrationTriggerQueue.add("zoho-bigin-deal-update", {
+      integrationName: "zoho",
+      triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+      orgId,
+      data: {
+        name: contact?.name ?? lead.name,
+        source: contact?.source ?? lead.source,
+        email: contact?.email ?? lead.email,
+        phone: contact?.phone ?? lead.phone,
+        notes: contact?.notes ?? null,
+        stageId: lead.stageId,
+      },
+      // The lead is always named. The handler keeps the Bigin ids on the contact
+      // when there is one — that is where the lifecycle flow put them and where
+      // everything else looks — and falls back to the lead for board-only cards,
+      // so either way the same deal is matched and moved rather than recreated.
+      rateupLeadId: lead.id,
+      ...(contact && { rateupContactId: contact.id }),
+    });
+  } catch (error) {
+    // The move itself already succeeded; this is best-effort fan-out.
+    console.error("Failed to sync lead stage to integrations", error);
+  }
+}
+
+/**
+ * Reports a win to Meta's Conversions API.
+ *
+ * The board is what decides a win now: a lead landing on a stage whose status is
+ * `WON`, where the contact's lifecycle `isWon` flag used to. Fired on the move
+ * that *becomes* a win, not on every write while it sits there — Meta counts
+ * every event it receives, so a second one is a double-counted conversion.
+ *
+ * Deliberately outside the `syncIntegrations` guard. That flag exists to stop a
+ * change Zoho pushed in from being pushed straight back out; a win is still a win
+ * whoever recorded it, and reporting it to Meta cannot loop back here.
+ *
+ * A lead with no contact still reports: Meta matches on hashed phone and email,
+ * both of which the lead carries itself.
+ */
+async function reportLeadWon(lead: {
+  contactId: string | null;
+  stageId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  source: LeadSource;
+}) {
+  try {
+    const stage = await prisma.pipelineStage.findUnique({
+      where: { id: lead.stageId },
+      select: { name: true, pipeline: { select: { orgId: true } } },
+    });
+    if (!stage) return;
+
+    const contact = lead.contactId
+      ? await prisma.contact.findUnique({
+          where: { id: lead.contactId },
+          select: { id: true, name: true, email: true, phone: true, source: true, orgId: true },
+        })
+      : null;
+
+    // Imported here rather than at the top: the Conversions API service pulls in
+    // the WhatsApp settings and Meta client, and `zoho.service` already imports
+    // this file — an eager edge widened that cycle enough to break module loading.
+    // A win is rare, so paying for the import only when one happens is no loss.
+    const { sendWonConversionEvent } =
+      await import("../../integrations/meta/conversions.service.js");
+
+    await sendWonConversionEvent(
+      contact ?? {
+        id: "",
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        source: lead.source,
+        orgId: stage.pipeline.orgId,
+      },
+      stage.name,
+    );
+  } catch (error) {
+    // The win is already recorded on the board; this is best-effort reporting.
+    console.error("Failed to report a won lead to the Conversions API", error);
+  }
+}
+
+/**
+ * The board a contact's stage lives on. One pipeline per org today, so this is
+ * simply that one — but every caller goes through here, so lifting
+ * `PIPELINE_LIMIT_PER_ORG` later is one function rather than twenty call sites.
+ *
+ * Returns null when the org has no board. Callers must treat that as "skip",
+ * never as an error: an org that has not opened a pipeline must still be able
+ * to edit its contacts.
+ */
+export async function resolvePipelineForContact(orgId: string) {
+  const pipeline = await prisma.pipeline.findFirst({
+    where: { orgId },
+    orderBy: { order: "asc" },
+    select: { id: true },
+  });
+  return pipeline?.id ?? null;
+}
+
+/**
+ * Puts a contact on a stage, opening a lead if it has none. The single write
+ * behind every "assign stage" surface — the contact panel, the contacts table,
+ * automation rules and the CRM integrations all land here.
+ *
+ * Idempotent by design: landing on the stage the lead already sits in returns it
+ * untouched and writes no activity row. Integrations call this on every sync, so
+ * without that the timeline would fill with moves that never happened.
+ *
+ * Returns null rather than throwing when the stage does not belong to the board,
+ * or the contact is gone — a rule naming a deleted stage should quietly do
+ * nothing, not fail the message it was answering.
+ */
+export async function setContactStage({
+  contactId,
+  pipelineId,
+  stageId,
+  source,
+  channel,
+  userId = null,
+  automated = true,
+  syncIntegrations = true,
+}: {
+  contactId: string;
+  pipelineId: string;
+  stageId: string;
+  source: LeadSource;
+  channel: LeadChannel;
+  userId?: string | null;
+  automated?: boolean;
+  /**
+   * False when the caller *is* an integration. Without it a stage Zoho pushed in
+   * would be pushed straight back out, returning as another webhook.
+   */
+  syncIntegrations?: boolean;
+}) {
+  const stage = await prisma.pipelineStage.findFirst({
+    where: { id: stageId, pipelineId },
+    select: { id: true },
+  });
+  if (!stage) return null;
+
+  const existing = await prisma.lead.findUnique({
+    where: { contact_pipeline_unique: { contactId, pipelineId } },
+    select: { id: true, stageId: true },
+  });
+
+  if (existing) {
+    if (existing.stageId === stageId) return null;
+    return moveLead(existing.id, stageId, userId, syncIntegrations);
+  }
+
+  const contact = await prisma.contact.findUnique({
+    where: { id: contactId },
+    select: { name: true, phone: true, email: true },
+  });
+  if (!contact) return null;
+
+  try {
+    return await createLead({
+      pipelineId,
+      stageId,
+      contactId,
+      name: contact.name ?? "Unnamed contact",
+      phone: contact.phone,
+      email: contact.email,
+      source,
+      channel,
+      // Assigning a stage names a board, not a team; whoever picks the lead up
+      // sets that.
+      teamId: null,
+      userId,
+      automated,
+      syncIntegrations,
+    });
+  } catch (err) {
+    // Two syncs racing on the same contact: the unique index rejected the loser,
+    // whose intent was still "put this contact on that stage". Move instead.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      const won = await prisma.lead.findUnique({
+        where: { contact_pipeline_unique: { contactId, pipelineId } },
+        select: { id: true, stageId: true },
+      });
+      if (!won) throw err;
+      return won.stageId === stageId ? null : moveLead(won.id, stageId, userId, syncIntegrations);
+    }
+    throw err;
+  }
+}
+
+/**
+ * The contacts table's bulk "Assign stage": the same write as {@link setContactStage},
+ * once per selected contact.
+ *
+ * The ids arrive from the client and `setContactStage` takes a contact id on
+ * trust, so they are narrowed to the caller's org first — an id belonging to
+ * another tenant is silently dropped rather than written. Runs one contact at a
+ * time on purpose: each contact is an independent decision (open a lead, move an
+ * existing one, or leave it alone) and reusing the single-contact path is what
+ * keeps the timeline honest.
+ *
+ * Returns null when the org has no board, or the stage is not one of its columns.
+ */
+export async function bulkSetContactStage({
+  contactIds,
+  orgId,
+  stageId,
+  userId,
+}: {
+  contactIds: string[];
+  orgId: string;
+  stageId: string;
+  userId: string | null;
+}) {
+  const pipelineId = await resolvePipelineForContact(orgId);
+  if (!pipelineId) return null;
+
+  const stage = await prisma.pipelineStage.findFirst({
+    where: { id: stageId, pipelineId },
+    select: { id: true },
+  });
+  if (!stage) return null;
+
+  const contacts = await prisma.contact.findMany({
+    where: { id: { in: contactIds }, orgId },
+    select: { id: true },
+  });
+
+  let changed = 0;
+  for (const contact of contacts) {
+    const lead = await setContactStage({
+      contactId: contact.id,
+      pipelineId,
+      stageId,
+      source: "MANUAL",
+      channel: "NONE",
+      userId,
+      automated: false,
+    });
+    // Null is "already on that column" — counted as untouched, not as a failure.
+    if (lead) changed += 1;
+  }
+
+  return {
+    pipelineId,
+    requested: contactIds.length,
+    matched: contacts.length,
+    changed,
+    unchanged: contacts.length - changed,
+  };
+}
+
+/**
+ * Takes a contact off the board entirely — the inverse of {@link setContactStage},
+ * since a lead is what holds the stage.
+ *
+ * **This is destructive and cannot be undone.** Every child row cascades: notes,
+ * the whole activity timeline, tasks, assignees and labels go with the lead. The
+ * confirmation dialog is the only guard, so callers must show it and name what is
+ * being lost — {@link countContactStageLoss} returns the figures for that.
+ *
+ * Only ever called from an explicit human action. An integration whose status
+ * maps to nothing, or a rule with no stage set, does nothing at all.
+ */
+export async function clearContactStage(contactId: string, pipelineId: string) {
+  const lead = await prisma.lead.findUnique({
+    where: { contact_pipeline_unique: { contactId, pipelineId } },
+    select: { id: true },
+  });
+  if (!lead) return null;
+
+  await prisma.lead.delete({ where: { id: lead.id } });
+  return lead.id;
+}
+
+/**
+ * What clearing this contact's stage would destroy, so the confirmation can say
+ * so with real numbers instead of a generic warning. Null when there is no lead
+ * and therefore nothing to lose.
+ */
+export async function countContactStageLoss(contactId: string, pipelineId: string) {
+  const lead = await prisma.lead.findUnique({
+    where: { contact_pipeline_unique: { contactId, pipelineId } },
+    select: {
+      id: true,
+      stage: { select: { name: true } },
+      _count: { select: { notes: true, tasks: true, activities: true, assignees: true } },
+    },
+  });
+  if (!lead) return null;
+
+  return {
+    leadId: lead.id,
+    stageName: lead.stage.name,
+    notes: lead._count.notes,
+    tasks: lead._count.tasks,
+    activities: lead._count.activities,
+    assignees: lead._count.assignees,
+  };
+}
+
+/**
+ * Where a contact currently sits on its org's board, for the inbox panel.
+ *
+ * Returns the board even when the contact has no lead, because the panel still
+ * has to draw every column to offer one. `stageId` null simply means the contact
+ * is not on the board yet — the same shape a contact with no lifecycle has today.
+ *
+ * `loss` rides along so the clear confirmation can name what it would destroy
+ * without a second round trip.
+ */
+export async function getContactStage(contactId: string, orgId: string) {
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, orgId },
+    select: { id: true },
+  });
+  if (!contact) return null;
+
+  const pipelineId = await resolvePipelineForContact(orgId);
+  if (!pipelineId) return null;
+
+  const lead = await prisma.lead.findUnique({
+    where: { contact_pipeline_unique: { contactId, pipelineId } },
+    select: {
+      id: true,
+      stageId: true,
+      _count: { select: { notes: true, tasks: true, activities: true, assignees: true } },
+    },
+  });
+
+  return {
+    pipelineId,
+    leadId: lead?.id ?? null,
+    stageId: lead?.stageId ?? null,
+    loss: lead
+      ? {
+          notes: lead._count.notes,
+          tasks: lead._count.tasks,
+          activities: lead._count.activities,
+          assignees: lead._count.assignees,
+        }
+      : null,
+  };
 }
 
 export async function openLeadOnPipelineForContact({
@@ -284,8 +732,11 @@ export async function openLeadOnPipelineForContact({
   channel: LeadChannel;
   userId?: string | null;
 }) {
-  const existing = await prisma.lead.findFirst({
-    where: { contactId, pipelineId },
+  // Deliberately *not* `setContactStage`: a rule that fires again on a contact
+  // already on the board must leave it where it is, not drag it back to the
+  // first column — which for a closed lead would silently reopen it.
+  const existing = await prisma.lead.findUnique({
+    where: { contact_pipeline_unique: { contactId, pipelineId } },
     select: { id: true },
   });
   if (existing) return null;
@@ -322,9 +773,17 @@ export async function openLeadOnPipelineForContact({
 }
 
 export async function closeLead(id: string, data: CloseLeadRequestSchema, userId: string) {
-  return prisma.$transaction(async (tx) => {
+  const closed = await prisma.$transaction(async (tx) => {
     const isWon = data.status === "WON";
     const now = new Date();
+
+    // Same guard as `moveLead`: only the transition counts, so closing an
+    // already-won lead again does not report a second conversion.
+    const before = await tx.lead.findUniqueOrThrow({
+      where: { id },
+      select: { status: true },
+    });
+    const becameWon = isWon && before.status !== "WON";
 
     // Closing moves the lead into a column that closes it, so the board never
     // shows a won or lost lead sitting in an open column. `stageId` is the
@@ -381,8 +840,18 @@ export async function closeLead(id: string, data: CloseLeadRequestSchema, userId
       },
     });
 
-    return serialiseLead(lead);
+    return { ...serialiseLead(lead), becameWon };
   });
+
+  const { becameWon, ...lead } = closed;
+
+  // Winning or losing moves the lead into a closing column, which is a stage
+  // change like any other — the CRM has to hear about it, or a deal dropped onto
+  // Won on the board stays open in Bigin.
+  if (lead.stageId) await syncLeadStageToIntegrations(lead);
+  if (becameWon) await reportLeadWon(lead);
+
+  return lead;
 }
 
 export async function reopenLead(id: string, userId: string) {

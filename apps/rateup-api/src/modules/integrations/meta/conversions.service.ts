@@ -21,17 +21,52 @@ function hashData(data: string): string {
   return crypto.createHash("sha256").update(data.trim().toLowerCase()).digest("hex");
 }
 
+/** The contact fields Meta matches on, plus the org that owns the settings. */
+export interface ConversionContact {
+  id: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  source?: string | null;
+  orgId: string;
+}
+
+/**
+ * Sends the win event for a contact whose **lifecycle** says it was won.
+ *
+ * The lifecycle-era entry point, still used by the contact write paths. The
+ * pipeline calls {@link sendWonConversionEvent} directly, because there the board
+ * has already decided — a lead sitting on a stage whose status is `WON` is the
+ * same fact this lookup is trying to establish.
+ */
 export async function triggerConversionsApiForContact(
-  contact: {
-    id: string;
-    name?: string | null;
-    phone?: string | null;
-    email?: string | null;
-    source?: string | null;
-    orgId: string;
-  },
+  contact: ConversionContact,
   lifecycleId: string,
 ) {
+  const lifecycle = await prisma.lifecycle.findUnique({
+    where: { id: lifecycleId },
+    select: { isWon: true },
+  });
+
+  if (!lifecycle?.isWon) return;
+
+  return sendWonConversionEvent(contact);
+}
+
+/**
+ * Reports a win to Meta's Conversions API.
+ *
+ * The caller has already established that this *is* a win — from a lifecycle, or
+ * from a lead landing on a stage whose status is `WON`. Everything past that
+ * point is the same either way, which is why the decision lives outside.
+ *
+ * Silent when the org has the feature off, has no WhatsApp access token, or has
+ * no dataset id: all three are ordinary "not set up" states, not failures.
+ *
+ * `stageName` is the board column that closed the lead, when a board is what
+ * decided it. The lifecycle path has no column to name and omits it.
+ */
+export async function sendWonConversionEvent(contact: ConversionContact, stageName?: string) {
   try {
     const org = await prisma.org.findUnique({
       where: { id: contact.orgId },
@@ -39,13 +74,6 @@ export async function triggerConversionsApiForContact(
     });
 
     if (!org?.isConversionApiActive) return;
-
-    const lifecycle = await prisma.lifecycle.findUnique({
-      where: { id: lifecycleId },
-      select: { name: true, isWon: true },
-    });
-
-    if (!lifecycle?.isWon) return;
 
     const waSettings = await getWaSettings(contact.orgId);
     if (!waSettings?.accessToken) {
@@ -66,8 +94,12 @@ export async function triggerConversionsApiForContact(
     const eventName = waSettings.conversionData?.event_name || "Purchase";
     const currency = waSettings.conversionData?.currency || "USD";
 
+    // `lifecycle_stage` is a constant kept only so anything already keyed off it
+    // in Meta keeps matching; `pipeline_stage` is the field that says something —
+    // which column the lead was actually won on.
     const customData: MetaConversionCustomData = {
       lifecycle_stage: "Won",
+      ...(stageName && { pipeline_stage: stageName }),
     };
 
     if (eventName === "Purchase") {

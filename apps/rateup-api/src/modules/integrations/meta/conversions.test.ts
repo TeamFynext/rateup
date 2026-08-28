@@ -22,7 +22,7 @@ import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../../whatsapp/wa_axios.js";
 import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
 import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
-import { triggerConversionsApiForContact } from "./conversions.service.js";
+import { sendWonConversionEvent, triggerConversionsApiForContact } from "./conversions.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -206,6 +206,26 @@ describe("the event payload", () => {
       (c) => c[3].data[0].custom_data.value,
     );
     expect(values).toEqual([1, 1]);
+  });
+
+  // The board's column name is the only part of the payload that says which win
+  // this was. `lifecycle_stage` stays put beside it: anything already keyed off
+  // that field in Meta has to keep matching.
+  test("names the board column that closed the lead", async () => {
+    await sendWonConversionEvent(contact, "Closed Won");
+
+    const customData = (callMetaApi as unknown as Mock).mock.calls[0][3].data[0].custom_data;
+    expect(customData.pipeline_stage).toBe("Closed Won");
+    expect(customData.lifecycle_stage).toBe("Won");
+  });
+
+  // The lifecycle path has no column to name, so the field is absent rather than
+  // present-and-empty — Meta treats an empty string as a real value.
+  test("omits the board column when a lifecycle decided the win", async () => {
+    await triggerConversionsApiForContact(contact, "lc-1");
+
+    const customData = (callMetaApi as unknown as Mock).mock.calls[0][3].data[0].custom_data;
+    expect(customData).not.toHaveProperty("pipeline_stage");
   });
 
   test("honours a configured event name and currency", async () => {
