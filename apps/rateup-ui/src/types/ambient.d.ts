@@ -720,6 +720,15 @@ declare global {
     Lifecycle?: {
       name?: string;
     };
+    /**
+     * The contact's lead on the org's board, when it has one. At most one entry:
+     * the list endpoint takes a single lead, since there is one pipeline per org.
+     */
+    leads?: Array<{
+      id: string;
+      stageId: string;
+      stage?: { name?: string; color?: string | null };
+    }>;
     /** Free-text notes shown on the contact detail panel. */
     notes?: string;
     location?: string;

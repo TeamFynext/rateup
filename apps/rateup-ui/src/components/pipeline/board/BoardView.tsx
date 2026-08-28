@@ -14,6 +14,7 @@ import { STATUS_BAND } from "../pipeline.constants.tsx";
 import { stageStatusHint, stageStatusLabel } from "../pipeline.labels.ts";
 import { daysInStage, groupStagesIntoBands, isRotting, leadsInStage } from "../pipeline.utils.ts";
 import { StageFill } from "../shared/atoms.tsx";
+import { useHorizontalWheelScroll } from "../shared/useHorizontalWheelScroll.ts";
 import type { PipelineData } from "../usePipelineData.ts";
 import { isLeadDragData, LeadCard } from "./LeadCard.tsx";
 
@@ -148,7 +149,12 @@ function StageColumn({
       {/* `min-h-0` is what lets this scroll: without it a flex child refuses to
           shrink below its content and the overflow escapes to the page instead.
           The old `min-h-30` floor is gone — the column is now `h-full`, so the
-          card list takes whatever height is left rather than setting its own. */}
+          card list takes whatever height is left rather than setting its own.
+
+          `overscroll-contain` stops the page behind moving when this list hits
+          its end. It also stops the wheel chaining out to the board, but that is
+          not what horizontal scrolling relies on — dropping it does not make the
+          board scroll, so it stays. `useHorizontalWheelScroll` does that job. */}
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain p-2.5">
         {leads.map((lead) => (
           <LeadCard
@@ -186,6 +192,9 @@ export function BoardView({
   const { t } = useTranslation();
   const { pipeline, visibleLeads } = data;
 
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useHorizontalWheelScroll(scrollRef);
+
   useEffect(() => {
     if (!pipeline) return;
 
@@ -222,7 +231,15 @@ export function BoardView({
     // Only the horizontal axis scrolls out here — each column owns its own
     // vertical scroll, so the headers stay put while a long column scrolls
     // under them.
-    <div className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden p-4 sm:snap-none sm:p-6">
+    //
+    // The wheel needs `useHorizontalWheelScroll` to reach this element at all:
+    // the columns are full height, so a wheel over the board lands on a card list
+    // and is spent there. Letting it chain out instead — by dropping that list's
+    // `overscroll-contain` — was tried and does not work.
+    <div
+      ref={scrollRef}
+      className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden p-4 sm:snap-none sm:p-6"
+    >
       <div className="flex h-full items-stretch gap-4 sm:gap-6">
         {bands.map((band) => {
           const bandStyle = STATUS_BAND[band.status];

@@ -9,6 +9,11 @@ import {
   useCreateContactMutation,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
+import {
+  useAssignContactStageMutation,
+  useContactStageQuery,
+} from "@/backend/pipeline/pipeline.query";
+import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
@@ -86,6 +91,12 @@ const CreateOrEditContactModal = ({
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation();
   const contactSchema = useMemo(() => buildContactSchema(t, customFields), [t, customFields]);
+
+  // The stage lives on a lead, not on the contact row, so it is fetched and
+  // written separately from the rest of the form.
+  const stages = usePipelineStages();
+  const assignStage = useAssignContactStageMutation();
+  const { data: contactStage } = useContactStageQuery(initialValues?.id, stages.length > 0);
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
@@ -93,6 +104,17 @@ const CreateOrEditContactModal = ({
       contactType: customFields?.map((field) => field.slug) || [],
     },
   });
+
+  /**
+   * Writes the picked stage once the contact exists. Only ever adds or moves:
+   * emptying the field leaves an existing lead alone, since taking a contact off
+   * the board deletes the lead and everything on it, and that needs the
+   * confirmation the inbox panel and the board carry.
+   */
+  function applyStage(contactId: string | undefined, stageId: string) {
+    if (!contactId || !stageId || stageId === contactStage?.stageId) return;
+    assignStage.mutate({ contactId, stageId });
+  }
 
   const handleSubmit = form.handleSubmit((values) => {
     const contactData = {
@@ -111,6 +133,7 @@ const CreateOrEditContactModal = ({
         { data: contactData, contactId: initialValues.id },
         {
           onSuccess: () => {
+            applyStage(initialValues.id, values.stageId);
             setOpened(false);
             form.reset();
           },
@@ -129,7 +152,8 @@ const CreateOrEditContactModal = ({
       return;
     }
     createContactMutation.mutate(contactData, {
-      onSuccess: () => {
+      onSuccess: (created) => {
+        applyStage(created?.data?.id, values.stageId);
         setOpened(false);
         form.reset();
         toast.success("contact added successfully");
@@ -149,6 +173,12 @@ const CreateOrEditContactModal = ({
   useEffect(() => {
     form.setValue("contactType", customFields?.map((field) => field.slug) || []);
   }, [customFields, form]);
+
+  // The board is fetched after the form mounts, so the current column is seeded
+  // here rather than in `defaultValues`.
+  useEffect(() => {
+    form.setValue("stageId", contactStage?.stageId ?? "");
+  }, [contactStage?.stageId, form]);
 
   const contactType = form.watch("contactType");
   const { errors, isSubmitted } = form.formState;

@@ -28,6 +28,13 @@ import {
   useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
+import {
+  useClearContactStageMutation,
+  useContactStageQuery,
+  usePipelineQuery,
+  usePipelinesQuery,
+  useSetContactStageMutation,
+} from "@/backend/pipeline/pipeline.query.tsx";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import {
@@ -41,14 +48,28 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { useLifecycleContext } from "@/context/LifecycleContext.ts";
+import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
-import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
+import {
+  MessagePlatform,
+  NOT_SPAM_EVENT,
+  TeamFeature,
+  WaMessageAssignStatus,
+} from "@/types/enums.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { generateInternalMessageId } from "../util.tsx";
@@ -149,9 +170,18 @@ export default function TicketPanel({
   const { updateContactById, setSelectedContact } = useContactsStore();
   const messagesStore = useMessagesStore();
 
-  const lifecycles = useLifecycleContext() as
-    | { id: string; name: string; emoji: string; category: string }[]
-    | undefined;
+  // The board replaces the lifecycle chips. Gated on the same check as the
+  // sidebar entry — the org's Pipeline feature — so the section is simply absent
+  // for orgs whose plan does not include it.
+  const { allowedFeatures } = useTeamFeatures();
+  const canSeePipeline = allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline);
+
+  const { data: pipelines = [] } = usePipelinesQuery(canSeePipeline);
+  const { data: board } = usePipelineQuery(canSeePipeline ? pipelines[0]?.id : undefined);
+  const { data: contactStage } = useContactStageQuery(contact?.id, canSeePipeline);
+  const setStage = useSetContactStageMutation(contact?.id);
+  const clearStage = useClearContactStageMutation(contact?.id);
+  const [clearOpen, setClearOpen] = useState(false);
   const { data: allLabels = [] } = useContactLabels();
   const { data: allTags = [] } = useConversationTags();
   const { data: teamRes } = useTeamsByUser();
@@ -209,20 +239,18 @@ export default function TicketPanel({
     }
   };
 
-  const handleLifecycleChange = (lifecycle: { id: string; name: string; emoji: string }) => {
-    if (!contact?.id || contact?.lifecycleId === lifecycle.id) return;
-    editContactMutation.mutate(
-      { contactId: contact.id, data: { lifecycleId: lifecycle.id } },
-      {
-        onSuccess: () => {
-          updateContactById(contact.id, (c) => ({
-            ...c,
-            lifecycleId: lifecycle.id,
-            lifecycleName: `${lifecycle.emoji} ${lifecycle.name}`,
-          }));
-        },
-      },
-    );
+  /**
+   * Clicking a column moves the contact's lead there, opening one if it has
+   * none. Clicking the column it is already on is the clear gesture — the same
+   * shape the lifecycle chips had — but that deletes the lead, so it asks first.
+   */
+  const handleStageClick = (stageId: string) => {
+    if (!contact?.id) return;
+    if (contactStage?.stageId === stageId) {
+      setClearOpen(true);
+      return;
+    }
+    setStage.mutate(stageId);
   };
 
   const handleToggleLabel = (labelId: string) => {
@@ -515,38 +543,49 @@ export default function TicketPanel({
         )}
       </Section>
 
-      {/* ---- Lifecycle Stage ---- */}
-      {!!lifecycles?.length && (
-        <Section label={t("Lifecycle Stage")}>
+      {/* ---- Pipeline Stage ----
+           Was the lifecycle chips. Same shape and same one-click gesture, but it
+           moves the contact's lead on the board rather than writing a field. */}
+      {canSeePipeline && !!board?.stages.length && (
+        <Section label={t("Pipeline Stage")}>
           <div className="grid grid-cols-2 gap-2">
-            {lifecycles.map((lifecycle) => {
-              const active = contact?.lifecycleId === lifecycle.id;
+            {board.stages.map((stage) => {
+              const active = contactStage?.stageId === stage.id;
               return (
                 <button
-                  key={lifecycle.id}
+                  key={stage.id}
                   type="button"
-                  onClick={() => handleLifecycleChange(lifecycle)}
-                  disabled={editContactMutation.isPending}
+                  onClick={() => handleStageClick(stage.id)}
+                  disabled={setStage.isPending || clearStage.isPending}
+                  title={active ? t("Click again to remove from the board") : stage.name}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-full cursor-pointer min-w-0 border-[1.5px]",
                     active ? "border-primary bg-primary/10" : "border-border",
                   )}
                 >
-                  <span className="text-[13px] leading-none shrink-0" role="img">
-                    {lifecycle.emoji}
-                  </span>
+                  {/* The column's own colour stands in for the lifecycle emoji;
+                      a stage with none falls back to the brand accent. */}
+                  <span
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: stage.color ?? "var(--color-primary)" }}
+                  />
                   <span
                     className={cn(
                       "text-[12px] font-bold truncate",
                       active ? "text-primary" : "text-foreground",
                     )}
                   >
-                    {lifecycle.name}
+                    {stage.name}
                   </span>
                 </button>
               );
             })}
           </div>
+          {!contactStage?.stageId && (
+            <p className="text-muted-foreground mt-2 text-[11px]">
+              {t("Not on the board. Pick a stage to add them.")}
+            </p>
+          )}
         </Section>
       )}
 
@@ -808,6 +847,37 @@ export default function TicketPanel({
           {contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
         </Button>
       </div>
+
+      {/* Removing a contact from the board deletes the lead, and with it every
+          note, task and timeline entry on that deal. The confirmation is the only
+          guard, so it names what goes rather than asking a generic "are you sure". */}
+      <Dialog open={clearOpen} onOpenChange={setClearOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("Remove from the board?")}</DialogTitle>
+            <DialogDescription>
+              {contactStage?.loss && (
+                <>
+                  {t(
+                    "This deletes the lead and cannot be undone: {{notes}} note(s), {{tasks}} task(s), {{activities}} timeline entr(y/ies) and {{assignees}} assignee(s) go with it.",
+                    contactStage.loss,
+                  )}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>{t("Cancel")}</DialogClose>
+            <Button
+              variant="destructive"
+              disabled={clearStage.isPending}
+              onClick={() => clearStage.mutate(undefined, { onSuccess: () => setClearOpen(false) })}
+            >
+              {clearStage.isPending ? t("Removing...") : t("Remove")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

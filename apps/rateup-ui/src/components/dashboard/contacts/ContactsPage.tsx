@@ -13,6 +13,7 @@ import { contactColumn } from "@/components/Contacts/utils/utils.tsx";
 import { DataTableToolbar } from "@/components/dashboard/contacts/components/data-table-toolbar.tsx";
 import type { ContactTableFilter } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
+import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
@@ -48,9 +49,10 @@ export function ContactsPage() {
   const { customFields } = useCustomFieldsContext();
 
   const { user } = useUser();
+  const pipelineStages = usePipelineStages();
   const column = useMemo(
     () => [
-      ...contactColumn(customFields || [], user?.showLifecycle),
+      ...contactColumn(customFields || [], user?.showLifecycle, pipelineStages.length > 0),
       {
         header: "Action",
         accessorFn: (row) => row,
@@ -63,7 +65,7 @@ export function ContactsPage() {
         meta: { title: "Action" },
       } satisfies ColumnDef<ContactsData, unknown>,
     ],
-    [customFields],
+    [customFields, user?.showLifecycle, pipelineStages.length],
   );
 
   const contactMemoData = useMemo(() => contactData?.users ?? [], [contactData?.users]);

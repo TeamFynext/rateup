@@ -13,9 +13,9 @@ import {
   useSyncZohoLeadsMutation,
   useZohoLeads,
 } from "@/backend/appsIntegration/zoho/zoho.query";
-import { useLifecyclesWithContactCount } from "@/backend/lifecycle/lifecycle.query";
 import { zohoKeys } from "@/backend/whatsapp/automation.keys";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
+import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/context/UserContext";
@@ -95,7 +95,7 @@ export function ZohoContactsTable({ integration }: { integration: AppIntegration
 export function ZohoLeadsTable({ integration }: { integration: AppIntegration }) {
   const { user } = useUser();
   const { t } = useTranslation();
-  const { data: lifecycles } = useLifecyclesWithContactCount();
+  const pipelineStages = usePipelineStages();
   const syncMutation = useSyncZohoLeadsMutation();
   const updateIntegrationMutation = useUpdateIntegrationMutation(IntegratedApps.zoho);
   const { data } = useZohoLeads(user?.orgId);
@@ -103,11 +103,11 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
   const queryClient = useQueryClient();
   const [openMappingModal, setOpenMappingModal] = useState(false);
   const [leadStatusMappings, setLeadStatusMappings] = useState<
-    Array<{ zohoLeadStatus: string; lifecycleId?: string; lifecycleName?: string }>
+    Array<{ zohoLeadStatus: string; stageId?: string; stageName?: string }>
   >([]);
 
   async function handleSync() {
-    if (!lifecycles || !leads.length) return;
+    if (!pipelineStages.length || !leads.length) return;
     const uniqueLeadStatuses = Array.from(
       new Set<string>(
         leads
@@ -116,6 +116,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
       ),
     );
 
+    // Key name is legacy; the entries target pipeline columns now.
     const existingMappings = integration?.credential?.crm?.leadLifecycleMappings || [];
 
     const mappings = uniqueLeadStatuses.map((status) => {
@@ -123,8 +124,8 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
 
       return {
         zohoLeadStatus: status,
-        lifecycleId: existing?.lifecycleId || "",
-        lifecycleName: existing?.lifecycleName || "",
+        stageId: existing?.stageId || "",
+        stageName: existing?.stageName || "",
       };
     });
 
@@ -189,7 +190,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
               <CardTitle>{t("Zoho Leads")}</CardTitle>
 
               <p className="text-sm text-muted-foreground">
-                {t("Map Zoho Lead Statuses to Rateup Lifecycles")}
+                {t("Map Zoho Lead Statuses to your pipeline columns")}
               </p>
             </div>
           </div>
@@ -221,13 +222,15 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
             <DialogTitle>{t("Lead Status Mapping")}</DialogTitle>
 
             <DialogDescription>
-              {t("Map Zoho Lead Statuses with existing Rateup lifecycles.")}
+              {t(
+                "Map each Zoho Lead Status to a column of your pipeline. A status change in Zoho moves the contact's lead to the matching column.",
+              )}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
             {(() => {
-              const unmatched = leadStatusMappings.filter((mapping) => !mapping.lifecycleId);
+              const unmatched = leadStatusMappings.filter((mapping) => !mapping.stageId);
 
               return (
                 <div className="rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
@@ -242,41 +245,39 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
                 key={mapping.zohoLeadStatus}
                 className="flex items-center gap-4 rounded-xl border p-4"
               >
-                {/* LEFT = RATEUP LIFECYCLE */}
+                {/* LEFT = RATEUP PIPELINE COLUMN */}
 
                 <div className="flex-1">
                   <Select
-                    value={mapping.lifecycleId}
+                    value={mapping.stageId}
                     onValueChange={(value) => {
-                      const lifecycle = lifecycles?.find((l) => String(l.id) === String(value));
+                      const stage = pipelineStages.find((s) => String(s.id) === String(value));
 
                       const updated = [...leadStatusMappings];
 
                       updated[index] = {
                         ...mapping,
 
-                        lifecycleId: lifecycle?.id,
+                        stageId: stage?.id,
 
-                        lifecycleName: lifecycle?.name,
+                        stageName: stage?.name,
                       };
 
                       setLeadStatusMappings(updated);
                     }}
-                    items={
-                      lifecycles?.map((lifecycle) => ({
-                        value: String(lifecycle.id),
-                        label: lifecycle.name,
-                      })) ?? []
-                    }
+                    items={pipelineStages.map((stage) => ({
+                      value: String(stage.id),
+                      label: stage.name,
+                    }))}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("Select lifecycle")} />
+                      <SelectValue placeholder={t("Select stage")} />
                     </SelectTrigger>
 
                     <SelectContent>
-                      {lifecycles?.map((lifecycle) => (
-                        <SelectItem key={lifecycle.id} value={String(lifecycle.id)}>
-                          {lifecycle.name}
+                      {pipelineStages.map((stage) => (
+                        <SelectItem key={stage.id} value={String(stage.id)}>
+                          {stage.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -299,7 +300,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
 
             <Button
               onClick={saveMappingsAndSync}
-              disabled={leadStatusMappings.some((m) => !m.lifecycleId)}
+              disabled={leadStatusMappings.some((m) => !m.stageId)}
             >
               {t("Save Mapping & Sync")}
             </Button>

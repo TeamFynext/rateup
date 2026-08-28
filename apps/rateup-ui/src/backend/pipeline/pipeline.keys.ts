@@ -14,4 +14,7 @@ export const pipelineKeys = {
   leads: (pipelineId: string | undefined) => ["pipeline", "leads", pipelineId] as const,
   lead: (leadId: string | undefined) => ["pipeline", "lead", leadId] as const,
   teamDefaults: () => ["pipeline", "team-defaults"] as const,
+  /** Where one contact sits on the board — read by the inbox panel. */
+  contactStage: (contactId: string | undefined) =>
+    ["pipeline", "contact-stage", contactId] as const,
 } as const;

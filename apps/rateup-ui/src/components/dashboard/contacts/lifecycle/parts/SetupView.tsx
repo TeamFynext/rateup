@@ -20,13 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,14 +53,9 @@ export function SetupView({
   handleDeleteStage,
   handleMoveStage,
   setIsSettingUp,
-  isConversionApiActive,
-  conversionData,
-  handleUpdateConversionApi,
-  hasWhatsAppSettings,
   isCreating,
   isReordering,
 }: Readonly<SetupViewProps>) {
-  const uid = useId();
   const { t } = useTranslation("contacts.lifecycle");
   const stages = useMemo(
     () => sortStages(backendStages.filter((stage) => stage.category !== "lost")),
@@ -78,12 +66,6 @@ export function SetupView({
     [backendStages],
   );
   const [visibleDescriptions, setVisibleDescriptions] = useState<Record<string, boolean>>({});
-
-  const [pixelIdDraft, setPixelIdDraft] = useState(conversionData?.conversionsApiDatasetId || "");
-
-  React.useEffect(() => {
-    setPixelIdDraft(conversionData?.conversionsApiDatasetId || "");
-  }, [conversionData?.conversionsApiDatasetId]);
 
   const toggleDescription = (id: string) => {
     setVisibleDescriptions((previous) => ({
@@ -108,147 +90,9 @@ export function SetupView({
         <Switch checked={showStagesGlobal} onCheckedChange={setShowStagesGlobal} />
       </Card>
 
-      {hasWhatsAppSettings ? (
-        <Card className="flex flex-col gap-4 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold tracking-tight text-foreground">
-                {t("Meta Conversions API (CAPI)")}
-              </h3>
-              <p className="mt-1 max-w-4xl text-xs font-medium leading-relaxed text-muted-foreground">
-                {t(
-                  "Enable tracking of conversions to Meta using Conversions API when a lifecycle stage changes to Won.",
-                )}
-              </p>
-            </div>
-            <Switch
-              checked={isConversionApiActive}
-              onCheckedChange={(checked) => handleUpdateConversionApi(checked, conversionData)}
-            />
-          </div>
-
-          {isConversionApiActive && (
-            <div
-              className={cn(
-                "grid gap-4 pt-4 border-t border-border",
-                conversionData.event_name === "Purchase"
-                  ? "grid-cols-1 md:grid-cols-3"
-                  : "grid-cols-1 md:grid-cols-2",
-              )}
-            >
-              <Field>
-                <FieldLabel
-                  htmlFor={`${uid}-field`}
-                  className="text-xs font-bold text-muted-foreground"
-                >
-                  {t("Event Name")}
-                </FieldLabel>
-                <Select
-                  value={conversionData.event_name || "Purchase"}
-                  items={[
-                    { value: "Purchase", label: t("Purchase") },
-                    { value: "Lead", label: t("Lead") },
-                  ]}
-                  onValueChange={(val) =>
-                    handleUpdateConversionApi(isConversionApiActive, {
-                      ...conversionData,
-                      event_name: val ?? undefined,
-                    })
-                  }
-                >
-                  <SelectTrigger id={`${uid}-field`} className="w-full">
-                    <SelectValue placeholder={t("Select Event")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Purchase">{t("Purchase")}</SelectItem>
-                    <SelectItem value="Lead">{t("Lead")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              {conversionData.event_name === "Purchase" && (
-                <Field>
-                  <FieldLabel
-                    htmlFor={`${uid}-field-2`}
-                    className="text-xs font-bold text-muted-foreground"
-                  >
-                    {t("Currency")}
-                  </FieldLabel>
-                  <Select
-                    value={conversionData.currency || "INR"}
-                    items={[
-                      { value: "INR", label: t("INR") },
-                      { value: "USD", label: t("USD") },
-                      { value: "EUR", label: t("EUR") },
-                      { value: "GBP", label: t("GBP") },
-                      { value: "AED", label: t("AED") },
-                    ]}
-                    onValueChange={(val) =>
-                      handleUpdateConversionApi(isConversionApiActive, {
-                        ...conversionData,
-                        currency: val ?? undefined,
-                      })
-                    }
-                  >
-                    <SelectTrigger id={`${uid}-field-2`} className="w-full">
-                      <SelectValue placeholder={t("Select Currency")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="INR">{t("INR")}</SelectItem>
-                      <SelectItem value="USD">{t("USD")}</SelectItem>
-                      <SelectItem value="EUR">{t("EUR")}</SelectItem>
-                      <SelectItem value="GBP">{t("GBP")}</SelectItem>
-                      <SelectItem value="AED">{t("AED")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              )}
-              <div className="space-y-2">
-                <FieldLabel
-                  htmlFor={`${uid}-field-3`}
-                  className="text-xs font-bold text-muted-foreground"
-                >
-                  {t("Pixel ID")}
-                </FieldLabel>
-                <div className="relative">
-                  <Input
-                    id={`${uid}-field-3`}
-                    value={pixelIdDraft}
-                    onChange={(e) => setPixelIdDraft(e.target.value)}
-                    placeholder={t("Enter Pixel ID")}
-                    className="w-full border-input bg-background pr-8 text-xs font-semibold text-foreground"
-                  />
-                  {pixelIdDraft !== (conversionData?.conversionsApiDatasetId || "") && (
-                    <Button
-                      type="button"
-                      size="icon"
-                      onClick={() =>
-                        handleUpdateConversionApi(isConversionApiActive, {
-                          ...conversionData,
-                          conversionsApiDatasetId: pixelIdDraft,
-                        })
-                      }
-                      className="absolute right-1 top-1/2 -translate-y-1/2 size-6"
-                    >
-                      <IconCheck className="size-3.5" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-      ) : (
-        <Card className="flex flex-col gap-4 p-6 bg-muted/20">
-          <div>
-            <h3 className="text-sm font-bold tracking-tight text-foreground">
-              {t("Meta Conversions API (CAPI)")}
-            </h3>
-            <p className="mt-1 max-w-4xl text-xs font-medium leading-relaxed text-muted-foreground">
-              {t("Please connect WhatsApp to configure Meta Conversions API for tracking.")}
-            </p>
-          </div>
-        </Card>
-      )}
+      {/* The Meta Conversions API card moved to pipeline settings, above the
+          danger zone: a win is now a lead reaching a Won column, not a lifecycle
+          flag, so the setting belongs with the board that decides it. */}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-border bg-muted/30 px-6 py-4">
