@@ -177,14 +177,58 @@ export function useDeleteStageMutation() {
   });
 }
 
+/**
+ * Reordering the board's columns.
+ *
+ * The only stage mutation that writes to the cache before the server answers.
+ * The others change a field in place, so waiting for the refetch costs nothing
+ * visible; this one moves a row the user has just dragged, and without the
+ * optimistic write the row snaps back to where it was and then jumps again when
+ * the refetch lands. `onSettled` still invalidates, so the server's order wins.
+ */
 export function useReorderStagesMutation() {
-  return usePipelineMutation<
-    { pipelineId: string; stages: Array<{ id: string; order: number }> },
-    unknown
-  >({
-    mutationFn: ({ pipelineId, stages }) => api.reorderStages(pipelineId, stages),
-    errorFallback: (t) => t("Could not reorder the stages"),
-    toastId: "pipeline-stage-reorder",
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: ({
+      pipelineId,
+      stages,
+    }: {
+      pipelineId: string;
+      stages: Array<{ id: string; order: number }>;
+    }) => api.reorderStages(pipelineId, stages),
+
+    onMutate: async ({ pipelineId, stages }) => {
+      const key = pipelineKeys.detail(pipelineId);
+      // Otherwise an in-flight detail fetch can land after this write and undo it.
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<PipelineDetail>(key);
+      if (!previous) return { key, previous };
+
+      const orderById = new Map(stages.map((stage) => [stage.id, stage.order]));
+      queryClient.setQueryData<PipelineDetail>(key, {
+        ...previous,
+        stages: previous.stages
+          .map((stage) => ({ ...stage, order: orderById.get(stage.id) ?? stage.order }))
+          .sort((a, b) => a.order - b.order),
+      });
+
+      return { key, previous };
+    },
+
+    onError: (error, _variables, context) => {
+      // Put the old order back rather than leaving the board showing a sequence
+      // the server rejected.
+      if (context?.previous) queryClient.setQueryData(context.key, context.previous);
+      toast.error(getApiErrorMessage(error, t("Could not reorder the stages")), {
+        id: "pipeline-stage-reorder",
+      });
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+    },
   });
 }
 

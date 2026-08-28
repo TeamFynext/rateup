@@ -1,5 +1,20 @@
 import {
+  attachClosestEdge,
+  extractClosestEdge,
+  type Edge,
+} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import {
+  draggable,
+  dropTargetForElements,
+  monitorForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { pointerOutsideOfPreview } from "@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview";
+import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
+import {
   IconAlertTriangle,
+  IconGripVertical,
   IconPlus,
   IconTrash,
   IconUsersGroup,
@@ -7,14 +22,14 @@ import {
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
   useCreateLostReasonMutation,
   useCreateStageMutation,
   useDeleteLostReasonMutation,
-  useDeleteStageMutation,
+  useReorderStagesMutation,
   useTeamPipelineDefaultsQuery,
   useUpdatePipelineMutation,
   useUpdateStageMutation,
@@ -48,6 +63,7 @@ import { stageStatusLabel } from "../pipeline.labels.ts";
 import { StageDot } from "../shared/atoms.tsx";
 import { ConversionsApiSection } from "./ConversionsApiSection.tsx";
 import { DeletePipelineDialog } from "./DeletePipelineDialog.tsx";
+import { DeleteStageDialog } from "./DeleteStageDialog.tsx";
 
 /** A section heading, at the one size and weight the design uses for them. */
 function SectionTitle({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -209,21 +225,121 @@ function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
   );
 }
 
+/**
+ * What a dragged stage row carries. `index` rides along so the drop can be
+ * resolved by position without searching the list again.
+ */
+interface StageDragData extends Record<string, unknown> {
+  type: "pipeline-stage";
+  stageId: string;
+  index: number;
+}
+
+function isStageDragData(data: Record<string, unknown>): data is StageDragData {
+  return (
+    data.type === "pipeline-stage" &&
+    typeof data.stageId === "string" &&
+    typeof data.index === "number"
+  );
+}
+
 function StageRow({
   stage,
+  index,
+  total,
   canDelete,
+  canReorder,
+  onNudge,
   otherStages,
 }: Readonly<{
   stage: PipelineStage;
+  index: number;
+  /** How many columns the board has, so the handle can say "3 of 7". */
+  total: number;
   canDelete: boolean;
+  /** A one-stage board has nothing to reorder, so the handle is not offered. */
+  canReorder: boolean;
+  onNudge: (index: number, direction: -1 | 1) => void;
   otherStages: PipelineStage[];
 }>) {
   const { t } = useTranslation();
   const updateStage = useUpdateStageMutation();
-  const deleteStage = useDeleteStageMutation();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [name, setName] = useState(stage.name);
   const [probability, setProbability] = useState(String(stage.probability));
   const [rottingDays, setRottingDays] = useState(String(stage.rottingDays));
+
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const handleRef = useRef<HTMLButtonElement | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
+
+  useEffect(() => {
+    const element = rowRef.current;
+    const handle = handleRef.current;
+    if (!element || !handle || !canReorder) return;
+
+    return combine(
+      draggable({
+        element,
+        // Only the grip starts a drag. The row is full of inputs and selects, and
+        // a row-wide drag would swallow every attempt to select text in them.
+        dragHandle: handle,
+        getInitialData: (): StageDragData => ({
+          type: "pipeline-stage",
+          stageId: stage.id,
+          index,
+        }),
+        /**
+         * The browser's own drag image is not usable here. Generating it from the
+         * row means capturing through the app shell's transformed ancestors, and
+         * Chrome answers that by snapshotting the whole stacking context — the
+         * page appeared to lift off the screen. Rendering our own chip means the
+         * preview is a known, small thing rather than whatever the compositor
+         * decides to grab.
+         */
+        onGenerateDragPreview: ({ nativeSetDragImage }) => {
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            // Beside the cursor, not under it — under the pointer the chip covers
+            // the insertion line you are aiming with.
+            getOffset: pointerOutsideOfPreview({ x: "12px", y: "8px" }),
+            render: ({ container }) => {
+              const chip = document.createElement("div");
+              chip.textContent = stage.name;
+              chip.className =
+                "bg-card border-border text-foreground rounded-lg border px-3 py-2 text-sm font-semibold shadow-md";
+              container.append(chip);
+              return () => chip.remove();
+            },
+          });
+        },
+        onDragStart: () => setDragging(true),
+        onDrop: () => setDragging(false),
+      }),
+      dropTargetForElements({
+        element,
+        canDrop: ({ source }) => isStageDragData(source.data),
+        getData: ({ input }) =>
+          // The edge decides whether the row lands above or below this one, which
+          // is what makes dropping on the top half mean something different from
+          // the bottom half.
+          attachClosestEdge(
+            { type: "pipeline-stage", stageId: stage.id, index },
+            { element, input, allowedEdges: ["top", "bottom"] },
+          ),
+        onDrag: ({ self, source }) => {
+          // A row is never a drop indicator for itself.
+          if (source.data.stageId === stage.id) return setClosestEdge(null);
+          setClosestEdge(extractClosestEdge(self.data));
+        },
+        onDragLeave: () => setClosestEdge(null),
+        onDrop: () => setClosestEdge(null),
+      }),
+    );
+    // `stage.name` is in here for the preview chip. It changes only when a rename
+    // commits, not per keystroke, so this re-registers rarely.
+  }, [stage.id, stage.name, index, canReorder]);
 
   /** Only writes when the field actually changed and parses to a sane number. */
   const commitNumber = (field: "probability" | "rottingDays", raw: string, max: number) => {
@@ -235,7 +351,66 @@ function StageRow({
   };
 
   return (
-    <div className="border-border/60 flex flex-wrap items-center gap-3 border-b p-4 last:border-b-0">
+    <div
+      ref={rowRef}
+      className={cn(
+        "border-border/60 relative flex flex-wrap items-center gap-3 border-b p-4 last:border-b-0",
+        dragging && "opacity-40",
+      )}
+    >
+      {/* Where the row would land, drawn on the edge the pointer is nearest. An
+          absolute line rather than a shifted layout: nudging the real rows apart
+          made the list jump while the pointer was still moving over it.
+
+          The knob on the left end is what separates this from the hairline row
+          borders it sits directly on top of — a bare 2px rule at a row boundary
+          read as one more border rather than as "it lands here". */}
+      {closestEdge && (
+        <span
+          aria-hidden
+          className={cn(
+            "bg-primary pointer-events-none absolute inset-x-0 z-10 h-0.5",
+            closestEdge === "top" ? "-top-px" : "-bottom-px",
+          )}
+        >
+          <span className="border-primary bg-background absolute -top-0.75 left-0 size-2 rounded-full border-2" />
+        </span>
+      )}
+
+      {canReorder && (
+        <div className="flex items-center gap-1.5">
+          <button
+            ref={handleRef}
+            type="button"
+            // Arrow keys do the same job without the precision a drag needs. This
+            // is the only way to reorder from the keyboard, and on a trackpad it
+            // is usually the easier one either way.
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+              event.preventDefault();
+              onNudge(index, event.key === "ArrowUp" ? -1 : 1);
+            }}
+            aria-label={t("Reorder {stage}, currently {position} of {total}", {
+              stage: stage.name,
+              position: index + 1,
+              total,
+            })}
+            title={t("Drag to reorder, or use the arrow keys")}
+            // `touch-none` so dragging the grip on a touch screen reorders instead
+            // of scrolling the page; `select-none` so a slow drag does not leave the
+            // row's text highlighted behind the preview.
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring -ml-1.5 cursor-grab touch-none rounded p-1 select-none focus-visible:ring-2 focus-visible:outline-none active:cursor-grabbing"
+          >
+            <IconGripVertical className="size-4" />
+          </button>
+          {/* The board reads left to right in this order, so saying which
+              position a column is in answers the question the list raises. */}
+          <span className="text-muted-foreground w-4 text-right text-xs tabular-nums">
+            {index + 1}
+          </span>
+        </div>
+      )}
+
       <div className="flex min-w-52 flex-1 items-center gap-2.5">
         <Select
           items={STAGE_COLOR_CHOICES.map((choice) => ({ value: choice, label: choice }))}
@@ -351,18 +526,20 @@ function StageRow({
         className="text-muted-foreground hover:text-destructive size-8"
         disabled={!canDelete}
         title={canDelete ? t("Delete stage") : t("A pipeline needs at least one stage")}
-        onClick={() =>
-          deleteStage.mutate({
-            stageId: stage.id,
-            // Leads never vanish with a stage: they fall back to the first stage
-            // that is still standing.
-            moveLeadsToStageId: stage.openLeadCount > 0 ? otherStages[0]?.id : undefined,
-          })
-        }
+        // Confirmed rather than done on the click: the leads in this column have
+        // to land somewhere, and that destination is the reader's to choose.
+        onClick={() => setConfirmingDelete(true)}
         aria-label={t("Delete {stage}", { stage: stage.name })}
       >
         <IconTrash className="size-4" />
       </Button>
+
+      <DeleteStageDialog
+        open={confirmingDelete}
+        onOpenChange={setConfirmingDelete}
+        stage={stage}
+        otherStages={otherStages}
+      />
     </div>
   );
 }
@@ -378,6 +555,73 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   const [newReason, setNewReason] = useState("");
   const [addingReason, setAddingReason] = useState(false);
   const { user } = useUser();
+  const reorderStages = useReorderStagesMutation();
+
+  const stages = pipeline?.stages;
+
+  /**
+   * The one place a new column order is written, whether it came from a drag or
+   * from the keyboard. Both produce a reordered list and nothing else differs, so
+   * they share the no-op check and the re-indexing.
+   */
+  const commitOrder = useCallback(
+    (next: PipelineStage[]) => {
+      if (!pipeline || !stages) return;
+      // A drop that changes nothing — released on the row it was picked up from,
+      // or nudged past the end of the list — is a round trip and a toast for a
+      // change nobody made.
+      if (next.every((stage, position) => stage.id === stages[position].id)) return;
+
+      reorderStages.mutate({
+        pipelineId: pipeline.id,
+        // Re-indexed from zero rather than sent as-is: `order` is the board's
+        // column sequence, and gaps left by a deleted stage would otherwise
+        // survive every reorder.
+        stages: next.map((stage, position) => ({ id: stage.id, order: position })),
+      });
+    },
+    [pipeline, stages, reorderStages],
+  );
+
+  /** Keyboard reordering: one step up or down from where the stage sits now. */
+  const nudgeStage = useCallback(
+    (index: number, direction: -1 | 1) => {
+      if (!stages) return;
+      const to = index + direction;
+      if (to < 0 || to >= stages.length) return;
+
+      const next = [...stages];
+      [next[index], next[to]] = [next[to], next[index]];
+      commitOrder(next);
+    },
+    [stages, commitOrder],
+  );
+
+  useEffect(() => {
+    if (!stages) return;
+
+    return monitorForElements({
+      canMonitor: ({ source }) => isStageDragData(source.data),
+      onDrop: ({ source, location }) => {
+        const target = location.current.dropTargets[0];
+        if (!target || !isStageDragData(source.data) || !isStageDragData(target.data)) return;
+
+        const startIndex = source.data.index;
+        const indexOfTarget = target.data.index;
+        if (startIndex === indexOfTarget) return;
+
+        commitOrder(
+          reorderWithEdge({
+            list: stages,
+            startIndex,
+            indexOfTarget,
+            closestEdgeOfTarget: extractClosestEdge(target.data),
+            axis: "vertical",
+          }),
+        );
+      },
+    });
+  }, [stages, commitOrder]);
 
   if (!pipeline) return null;
 
@@ -415,12 +659,20 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
           </div>
           <p className="text-muted-foreground mb-3.5 text-xs">
             {t(
-              "These are your board's own columns. Status decides what happens when a lead lands here — Won and Lost columns close the lead and are left out of open counts.",
+              "These are your board's own columns, numbered left to right as they appear on it. Drag a row by its handle to move it, or focus a handle and use the arrow keys. Status decides what happens when a lead lands here — Won and Lost columns close the lead and are left out of open counts.",
             )}
           </p>
 
           <Card className="gap-0 overflow-hidden p-0">
             <div className="bg-muted border-border hidden flex-wrap items-center gap-3 border-b px-4 py-2.5 md:flex">
+              {/* Lines the headings up with the rows, which now lead with a grip
+                  and a position number. */}
+              {pipeline.stages.length > 1 && (
+                <span className="text-muted-foreground -ml-1.5 flex items-center gap-1.5 text-[10px] font-extrabold tracking-[0.06em] uppercase">
+                  <span className="w-6" />
+                  <span className="w-4 text-right">{t("#")}</span>
+                </span>
+              )}
               <span className="text-muted-foreground min-w-52 flex-1 text-[10px] font-extrabold tracking-[0.06em] uppercase">
                 {t("Stage")}
               </span>
@@ -436,11 +688,15 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
               <span className="w-8" />
             </div>
 
-            {pipeline.stages.map((stage) => (
+            {pipeline.stages.map((stage, index) => (
               <StageRow
                 key={stage.id}
                 stage={stage}
+                index={index}
+                total={pipeline.stages.length}
                 canDelete={pipeline.stages.length > 1}
+                canReorder={pipeline.stages.length > 1}
+                onNudge={nudgeStage}
                 otherStages={pipeline.stages.filter((candidate) => candidate.id !== stage.id)}
               />
             ))}
