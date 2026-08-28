@@ -14,7 +14,10 @@ export const CONDITION_FIELDS = [
   { label: "Contact Email", value: "CONTACT_EMAIL" },
   { label: "Contact Group", value: "CONTACT_GROUP" },
   { label: "Contact Label", value: "CONTACT_LABEL" },
-  { label: "Contact Lifecycle", value: "CONTACT_LIFECYCLE" },
+  // Superseded by Contact Stage. Kept for the same reason as Assign Lifecycle
+  // below: conditions already written against it still have to render and save.
+  { label: "Contact Lifecycle (legacy)", value: "CONTACT_LIFECYCLE", legacy: true },
+  { label: "Contact Stage", value: "CONTACT_STAGE" },
   // TODO: Enable if needed in future existed in trengo
   // { label: "Message Direction", value: "MESSAGE_DIRECTION" },
   // { label: "Elapsed Time", value: "ELAPSED_TIME" },
@@ -63,8 +66,15 @@ const TRIGGER_EVENTS = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    label: "Lifecycle Updated",
+    // Superseded by Stage Updated; still fires for rules already using it.
+    label: "Lifecycle Updated (legacy)",
     value: "LIFECYCLE_UPDATED",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+    legacy: true,
+  },
+  {
+    label: "Stage Updated",
+    value: "STAGE_UPDATED",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
@@ -84,8 +94,24 @@ const TRIGGER_EVENTS = [
   },
 ] as const;
 
-export function getTriggerEventsForPlatform(platform: Platform) {
-  return TRIGGER_EVENTS.filter((e) => (e.platforms as readonly string[]).includes(platform));
+/**
+ * The trigger events offered for a platform.
+ *
+ * `current` is the event the rule already has, so a legacy one keeps rendering
+ * on the rule that uses it while nothing new can be authored against it — the
+ * same rule as {@link getActionTypesForPlatform}.
+ */
+export function getTriggerEventsForPlatform(platform: Platform, current?: string) {
+  return TRIGGER_EVENTS.filter(
+    (e) =>
+      (e.platforms as readonly string[]).includes(platform) &&
+      (!("legacy" in e && e.legacy) || e.value === current),
+  );
+}
+
+/** Condition fields, hiding a legacy one unless it is the field already chosen. */
+export function getConditionFields(current?: string) {
+  return CONDITION_FIELDS.filter((f) => !("legacy" in f && f.legacy) || f.value === current);
 }
 
 export const INSTAGRAM_SCOPE_OPTIONS = [

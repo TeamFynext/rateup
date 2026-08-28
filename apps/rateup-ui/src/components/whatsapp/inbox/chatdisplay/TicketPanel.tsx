@@ -250,6 +250,9 @@ export default function TicketPanel({
       setClearOpen(true);
       return;
     }
+    // The conversation list's chip is patched by the mutation itself, which the
+    // board's own move goes through too — one place, so the two directions
+    // cannot drift apart.
     setStage.mutate(stageId);
   };
 
@@ -871,7 +874,11 @@ export default function TicketPanel({
             <Button
               variant="destructive"
               disabled={clearStage.isPending}
-              onClick={() => clearStage.mutate(undefined, { onSuccess: () => setClearOpen(false) })}
+              onClick={() =>
+                clearStage.mutate(undefined, {
+                  onSuccess: () => setClearOpen(false),
+                })
+              }
             >
               {clearStage.isPending ? t("Removing...") : t("Remove")}
             </Button>

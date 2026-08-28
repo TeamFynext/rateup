@@ -59,20 +59,30 @@ export function StageSelector({
   placeholder,
   className = "",
   disabled = false,
+  all = false,
 }: Readonly<{
-  /** The chosen stage id, or "" for none. */
+  /** The chosen stage id, "" for none, or "all" when filtering with `all`. */
   value: string;
   onChange: (stageId: string) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /**
+   * Adds an "All stages" option, for filtering rather than setting. Its value is
+   * the string `"all"` — the same sentinel `LifecycleSelector` and the contacts
+   * table's other filters already use, which the API reads as "no filter".
+   */
+  all?: boolean;
 }>) {
   const { t } = useTranslation();
   const stages = usePipelineStages();
   if (stages.length === 0) return null;
 
   const bands = groupStagesIntoBands(stages);
-  const items = stages.map((stage) => ({ value: stage.id, label: stage.name }));
+  const items = [
+    ...(all ? [{ value: "all", label: t("All stages") }] : []),
+    ...stages.map((stage) => ({ value: stage.id, label: stage.name })),
+  ];
 
   return (
     <Select
@@ -85,6 +95,12 @@ export function StageSelector({
         <SelectValue placeholder={placeholder ?? t("Select a stage")} />
       </SelectTrigger>
       <SelectContent>
+        {all && (
+          <>
+            <SelectItem value="all">{t("All stages")}</SelectItem>
+            <SelectSeparator />
+          </>
+        )}
         {bands.map((band, index) => (
           <Fragment key={band.key}>
             {index > 0 && <SelectSeparator />}
