@@ -9,16 +9,11 @@ import {
   IconChevronDown,
   IconCircleCheck,
   IconCircleX,
-  IconCoins,
   IconCreditCard,
-  IconGift,
   IconHeadphones,
   IconLoader2,
   IconMessageCircle,
-  IconRobot,
   IconRosetteDiscountCheck,
-  IconSettings2,
-  IconShare2,
   IconUsers,
   IconVideo,
   type TablerIcon,
@@ -33,7 +28,6 @@ import { useTranslation } from "react-i18next";
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import type { OnboardingChecklist } from "@/backend/org/org.api";
 import { useChecklist, useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { getVerificationStatus } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
@@ -46,9 +40,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible.tsx";
 import { cn } from "@/lib/utils.ts";
-import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 /** The setup steps rendered by this page; mirrors the API's checklist keys. */
 type CardId = keyof OnboardingChecklist;
@@ -79,18 +71,6 @@ const CARD_ICONS: Record<CardId, CardIcon> = {
   verify: { icon: IconRosetteDiscountCheck, iconClass: "bg-primary/10 text-primary" },
   invite: { icon: IconUsers, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
   auto: { icon: IconBolt, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
-  points: { icon: IconSettings2, iconClass: "bg-primary/10 text-primary" },
-  tiers: { icon: IconCoins, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
-  rewards: { icon: IconGift, iconBg: { background: "rgba(225,29,72,0.08)", color: "#e11d48" } },
-  referral: { icon: IconShare2, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
-  cmds: {
-    icon: IconMessageCircle,
-    iconBg: { background: "rgba(5,150,105,0.08)", color: "#059669" },
-  },
-  loyaltyauto: {
-    icon: IconRobot,
-    iconBg: { background: "rgba(13,148,136,0.08)", color: "#0d9488" },
-  },
 };
 
 /** A step's icon styling plus its translated copy. */
@@ -143,54 +123,6 @@ function useCardConfig() {
         desc: translations("Set up an automated welcome message for new contacts."),
         btnLabel: translations("Set up automation"),
       },
-      points: {
-        ...CARD_ICONS.points,
-        title: translations("Basic settings"),
-        desc: translations(
-          "Set your program name, branding, currency, and general loyalty preferences for RateUp Cafe.",
-        ),
-        btnLabel: translations("Configure"),
-      },
-      tiers: {
-        ...CARD_ICONS.tiers,
-        title: translations("Set up points system & tiers"),
-        desc: translations(
-          "Configure earning rate (1 pt per $1 spent), redemption value (100 pts = $5), and define Bronze, Silver, and Gold tier thresholds.",
-        ),
-        btnLabel: translations("Set up"),
-      },
-      rewards: {
-        ...CARD_ICONS.rewards,
-        title: translations("Build rewards catalog"),
-        desc: translations(
-          "Add free items, discounts, and special offers that customers can unlock by redeeming their loyalty points.",
-        ),
-        btnLabel: translations("Build catalog"),
-      },
-      referral: {
-        ...CARD_ICONS.referral,
-        title: translations("Configure referral system"),
-        desc: translations(
-          "Set up referral rewards so existing members earn bonus points when they bring new customers to RateUp Cafe.",
-        ),
-        btnLabel: translations("Configure"),
-      },
-      cmds: {
-        ...CARD_ICONS.cmds,
-        title: translations("Create WhatsApp templates"),
-        desc: translations(
-          "Design and submit approved message templates for points updates, tier upgrades, and loyalty re-engagement campaigns.",
-        ),
-        btnLabel: translations("Create templates"),
-      },
-      loyaltyauto: {
-        ...CARD_ICONS.loyaltyauto,
-        title: translations("Create loyalty automations"),
-        desc: translations(
-          "Build automated WhatsApp flows — welcome messages, milestone rewards, win-back campaigns, and birthday bonuses.",
-        ),
-        btnLabel: translations("Set up automations"),
-      },
     }),
     [translations],
   );
@@ -209,12 +141,6 @@ const CARD_ROUTES = {
   api: { to: "/dashboard/settings/channels/$channel", params: { channel: "whatsapp" } },
   invite: { to: "/dashboard/settings/users" },
   auto: { to: "/dashboard/automation" },
-  points: { to: "/dashboard/loyalty/settings" },
-  tiers: { to: "/dashboard/loyalty/earning-rules" },
-  rewards: { to: "/dashboard/loyalty/rewards" },
-  referral: { to: "/dashboard/loyalty/customers" },
-  cmds: { to: "/dashboard/loyalty/templates" },
-  loyaltyauto: { to: "/dashboard/loyalty/dashboard" },
 } as const;
 
 type NavigableCardId = keyof typeof CARD_ROUTES;
@@ -235,14 +161,6 @@ export function RateUpOnboarding() {
         sub: translations("Invite staff and configure automated responses"),
         cards: ["invite", "auto"],
       },
-      {
-        id: "loyalty",
-        title: translations("Design your loyalty program"),
-        sub: translations(
-          "Basic settings, points, tiers, rewards, referrals, templates & automations",
-        ),
-        cards: ["points", "tiers", "rewards", "referral", "cmds", "loyaltyauto"],
-      },
     ],
     [translations],
   );
@@ -250,53 +168,26 @@ export function RateUpOnboarding() {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [isCheckingVerification, setIsCheckingVerification] = useState(false);
   const navigate = useNavigate();
-  const { data: sub, isLoading: isSubLoading } = useSubscription();
   const { data: waSettings, isLoading } = useWaSettings();
 
   const updateOrg = useUpdateOrgDetailsMutation({ showSuccessToast: false });
   const queryClient = useQueryClient();
   const waConnected = !isLoading && Boolean(waSettings?.length);
-  const isSubReady = !isSubLoading && sub;
-
-  const hasLoyaltyFeature = isSubReady
-    ? hasFeature(sub, SubscriptionFeaturePathName.Whatsapp)
-    : null;
   const { data: checklist } = useChecklist();
-
-  const visibleSections = useMemo(() => {
-    return SECTIONS.filter((s) => {
-      if (s.id === "loyalty") return hasLoyaltyFeature;
-      return true;
-    });
-  }, [SECTIONS, hasLoyaltyFeature]);
 
   const checklistMap = useMemo<ChecklistMap>(() => {
     const base: OnboardingChecklist = checklist?.onboardingChecklist ?? {};
 
-    let merged: ChecklistMap = {
+    return {
       ...base,
       ...localChecklist,
       api: waConnected || base.api,
       verify: verificationStatus === "verified" || base.verify,
     };
-
-    if (!hasLoyaltyFeature) {
-      merged = {
-        ...merged,
-        points: true,
-        tiers: true,
-        rewards: true,
-        referral: true,
-        cmds: true,
-        loyaltyauto: true,
-      };
-    }
-
-    return merged;
-  }, [checklist, waConnected, localChecklist, hasLoyaltyFeature]);
+  }, [checklist, waConnected, localChecklist, verificationStatus]);
 
   const { totalTasks, doneTasks, remainingTasks, pct } = useMemo(() => {
-    const allCards = visibleSections.flatMap((s) => s.cards);
+    const allCards = SECTIONS.flatMap((s) => s.cards);
 
     const total = allCards.length;
     const done = allCards.filter((id) => checklistMap[id]).length;
@@ -307,7 +198,7 @@ export function RateUpOnboarding() {
       remainingTasks: total - done,
       pct: total === 0 ? 0 : Math.round((done / total) * 100),
     };
-  }, [visibleSections, checklistMap]);
+  }, [SECTIONS, checklistMap]);
 
   const handleToggle = async (key: CardId, value: boolean) => {
     setLocalChecklist((prev) => ({
@@ -345,12 +236,12 @@ export function RateUpOnboarding() {
   };
 
   const defaultOpenSectionId = useMemo(() => {
-    for (const section of visibleSections) {
+    for (const section of SECTIONS) {
       const isDone = section.cards.every((id) => checklistMap[id]);
       if (!isDone) return section.id;
     }
-    return visibleSections[0]?.id;
-  }, [visibleSections, checklistMap]);
+    return SECTIONS[0]?.id;
+  }, [SECTIONS, checklistMap]);
 
   return (
     <div className="w-full flex flex-col items-center justify-center bg-[#f9fafc] dark:bg-[#121212]">
@@ -435,7 +326,7 @@ export function RateUpOnboarding() {
 
               <p className="text-xs sm:text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
                 {translations(
-                  "Welcome to RateUp — connect your WhatsApp, Invite Team members, build automations, configure your loyalty program, and launch your first campaign.",
+                  "Welcome to RateUp — connect your WhatsApp, invite your team, and build automations to launch your first campaign.",
                 )}
               </p>
             </div>
@@ -492,7 +383,7 @@ export function RateUpOnboarding() {
           </div>
         </div>
         <div className="flex flex-col gap-4 p-4 sm:p-8">
-          {visibleSections.map((section) => (
+          {SECTIONS.map((section) => (
             <CollapsibleCard
               key={section.id}
               defaultOpenSectionId={defaultOpenSectionId}

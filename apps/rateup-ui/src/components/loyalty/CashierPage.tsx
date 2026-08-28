@@ -152,7 +152,7 @@ export function CashierPage() {
             className="flex items-center gap-2"
           >
             <IconPlus className="w-4 h-4" />
-            Register Customer
+            Add New Customer
           </Button>
           <InfoButton docUrl={`${docsPath}/loyality/cashierPortal`} />
         </div>
@@ -293,7 +293,7 @@ export function CashierPage() {
             <EmptyTitle>No customer selected</EmptyTitle>
             <EmptyDescription>
               Search by name or phone number above to see a customer&apos;s points, tier and
-              rewards, and to record a transaction. New to the program? Register them first.
+              rewards, and to record a transaction. New to the program? Add them first.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
@@ -304,7 +304,7 @@ export function CashierPage() {
               }}
             >
               <IconPlus className="w-4 h-4 mr-2" />
-              Register Customer
+              Add New Customer
             </Button>
           </EmptyContent>
         </Empty>

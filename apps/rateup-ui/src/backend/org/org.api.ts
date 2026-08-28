@@ -2,8 +2,10 @@ import type { RequestPayload } from "@/types/api.ts";
 import type { WaAssignedChatPermission } from "@/types/enums.ts";
 
 /**
- * The setup wizard's per-step completion flags. Mirrors the API's
- * `onboardingChecklist` zod object; every step is optional.
+ * The platform setup checklist's per-step completion flags. Mirrors the API's
+ * `onboardingChecklist` zod object; every step is optional. Loyalty program setup
+ * is not tracked here — it lives on `LoyaltyProgram.onboardingStep`, driven by the
+ * guided wizard at `/dashboard/loyalty/onboarding`.
  */
 export interface OnboardingChecklist {
   api?: boolean;
@@ -11,12 +13,6 @@ export interface OnboardingChecklist {
   payment?: boolean;
   invite?: boolean;
   auto?: boolean;
-  points?: boolean;
-  tiers?: boolean;
-  rewards?: boolean;
-  referral?: boolean;
-  cmds?: boolean;
-  loyaltyauto?: boolean;
 }
 
 import { axiosClient } from "../apiClient";

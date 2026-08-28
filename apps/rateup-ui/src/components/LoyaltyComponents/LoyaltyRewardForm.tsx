@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { numberInputValue } from "@/utils/form.ts";
 
 interface LoyaltyRewardFormProps {
   category: string;
@@ -47,13 +48,6 @@ interface LoyaltyRewardFormProps {
   loyaltyTiers: LoyaltyTier[] | undefined;
   loyaltyTemplates: WaTemplateListEntry[] | undefined;
 }
-
-/**
- * The numeric fields are `z.coerce.number()`, whose *input* type is `unknown`, so
- * react-hook-form hands their value back unnarrowed. The inputs render it as typed.
- */
-const numberInputValue = (value: unknown): string | number =>
-  typeof value === "number" || typeof value === "string" ? value : "";
 
 export function LoyaltyRewardForm({
   category,

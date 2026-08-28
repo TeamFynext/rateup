@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as Sitemap_indexDotxmlRouteImport } from './routes/sitemap_index[.]xml'
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 import { Route as marketingBlogRouteRouteImport } from './routes/(marketing)/blog/route'
@@ -33,6 +34,8 @@ import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketi
 import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
 import { Route as marketingPrivacyPolicyIndexRouteImport } from './routes/(marketing)/privacy-policy/index'
 import { Route as marketingTermsOfServiceIndexRouteImport } from './routes/(marketing)/terms-of-service/index'
+import { Route as marketingToolsIndexRouteImport } from './routes/(marketing)/tools/index'
+import { Route as marketingToolsSitemapDotxmlRouteImport } from './routes/(marketing)/tools/sitemap[.]xml'
 import { Route as AdminGenerateIndexRouteImport } from './routes/admin/generate/index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrgsIndexRouteImport } from './routes/admin/orgs/index'
@@ -91,6 +94,11 @@ import { Route as marketingProductsTicketingIndexRouteImport } from './routes/(m
 import { Route as marketingProductsWhatsappFeedbackIndexRouteImport } from './routes/(marketing)/products/whatsapp-feedback/index'
 import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
 import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
+import { Route as marketingToolsNpsSurveyTemplatesIndexRouteImport } from './routes/(marketing)/tools/nps-survey-templates/index'
+import { Route as marketingToolsRtoLossCalculatorIndexRouteImport } from './routes/(marketing)/tools/rto-loss-calculator/index'
+import { Route as marketingToolsWhatsappLinkGeneratorIndexRouteImport } from './routes/(marketing)/tools/whatsapp-link-generator/index'
+import { Route as marketingToolsWhatsappPricingCalculatorIndexRouteImport } from './routes/(marketing)/tools/whatsapp-pricing-calculator/index'
+import { Route as marketingToolsWhatsappQrCodeGeneratorIndexRouteImport } from './routes/(marketing)/tools/whatsapp-qr-code-generator/index'
 import { Route as publicFacingloyaltyCashierIndexRouteImport } from './routes/(public-facing)/(loyalty)/cashier/index'
 import { Route as publicFacingLtShortIdIndexRouteImport } from './routes/(public-facing)/lt/$shortId/index'
 import { Route as publicFacingQrShortIdIndexRouteImport } from './routes/(public-facing)/qr/$shortId/index'
@@ -121,6 +129,7 @@ import { Route as DashboardLoyaltyCommandIndexRouteImport } from './routes/dashb
 import { Route as DashboardLoyaltyCustomersIndexRouteImport } from './routes/dashboard/loyalty/customers/index'
 import { Route as DashboardLoyaltyDashboardIndexRouteImport } from './routes/dashboard/loyalty/dashboard/index'
 import { Route as DashboardLoyaltyEarningRulesIndexRouteImport } from './routes/dashboard/loyalty/earning-rules/index'
+import { Route as DashboardLoyaltyOnboardingIndexRouteImport } from './routes/dashboard/loyalty/onboarding/index'
 import { Route as DashboardLoyaltyRewardsIndexRouteImport } from './routes/dashboard/loyalty/rewards/index'
 import { Route as DashboardLoyaltySettingsIndexRouteImport } from './routes/dashboard/loyalty/settings/index'
 import { Route as DashboardLoyaltyTemplatesIndexRouteImport } from './routes/dashboard/loyalty/templates/index'
@@ -150,6 +159,7 @@ import { Route as authLoginCallbackGoogleIndexRouteImport } from './routes/(auth
 import { Route as authLoginCallbackPausedIndexRouteImport } from './routes/(auth)/login/callback/paused/index'
 import { Route as marketingBlogAuthorSlugIndexRouteImport } from './routes/(marketing)/blog/author/$slug/index'
 import { Route as marketingBlogTagSlugIndexRouteImport } from './routes/(marketing)/blog/tag/$slug/index'
+import { Route as marketingToolsNpsSurveyTemplatesSlugIndexRouteImport } from './routes/(marketing)/tools/nps-survey-templates/$slug/index'
 import { Route as publicFacingPublicSurveySurveyIdIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/index'
 import { Route as publicFacingPublicSurveyCsIndexRouteImport } from './routes/(public-facing)/public/survey/cs/index'
 import { Route as publicFacingPublicTestimonialCollectionIdIndexRouteImport } from './routes/(public-facing)/public/testimonial/$collectionId/index'
@@ -185,6 +195,11 @@ const DashboardRouteRoute = DashboardRouteRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Sitemap_indexDotxmlRoute = Sitemap_indexDotxmlRouteImport.update({
@@ -294,6 +309,17 @@ const marketingTermsOfServiceIndexRoute =
   marketingTermsOfServiceIndexRouteImport.update({
     id: '/(marketing)/terms-of-service/',
     path: '/terms-of-service/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingToolsIndexRoute = marketingToolsIndexRouteImport.update({
+  id: '/(marketing)/tools/',
+  path: '/tools/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const marketingToolsSitemapDotxmlRoute =
+  marketingToolsSitemapDotxmlRouteImport.update({
+    id: '/(marketing)/tools/sitemap.xml',
+    path: '/tools/sitemap.xml',
     getParentRoute: () => rootRouteImport,
   } as any)
 const AdminGenerateIndexRoute = AdminGenerateIndexRouteImport.update({
@@ -614,6 +640,36 @@ const marketingProductsWhatsappSurveyIndexRoute =
     path: '/products/whatsapp-survey/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const marketingToolsNpsSurveyTemplatesIndexRoute =
+  marketingToolsNpsSurveyTemplatesIndexRouteImport.update({
+    id: '/(marketing)/tools/nps-survey-templates/',
+    path: '/tools/nps-survey-templates/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingToolsRtoLossCalculatorIndexRoute =
+  marketingToolsRtoLossCalculatorIndexRouteImport.update({
+    id: '/(marketing)/tools/rto-loss-calculator/',
+    path: '/tools/rto-loss-calculator/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingToolsWhatsappLinkGeneratorIndexRoute =
+  marketingToolsWhatsappLinkGeneratorIndexRouteImport.update({
+    id: '/(marketing)/tools/whatsapp-link-generator/',
+    path: '/tools/whatsapp-link-generator/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingToolsWhatsappPricingCalculatorIndexRoute =
+  marketingToolsWhatsappPricingCalculatorIndexRouteImport.update({
+    id: '/(marketing)/tools/whatsapp-pricing-calculator/',
+    path: '/tools/whatsapp-pricing-calculator/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingToolsWhatsappQrCodeGeneratorIndexRoute =
+  marketingToolsWhatsappQrCodeGeneratorIndexRouteImport.update({
+    id: '/(marketing)/tools/whatsapp-qr-code-generator/',
+    path: '/tools/whatsapp-qr-code-generator/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const publicFacingloyaltyCashierIndexRoute =
   publicFacingloyaltyCashierIndexRouteImport.update({
     id: '/(public-facing)/(loyalty)/cashier/',
@@ -791,6 +847,12 @@ const DashboardLoyaltyEarningRulesIndexRoute =
     path: '/loyalty/earning-rules/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardLoyaltyOnboardingIndexRoute =
+  DashboardLoyaltyOnboardingIndexRouteImport.update({
+    id: '/loyalty/onboarding/',
+    path: '/loyalty/onboarding/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardLoyaltyRewardsIndexRoute =
   DashboardLoyaltyRewardsIndexRouteImport.update({
     id: '/loyalty/rewards/',
@@ -965,6 +1027,12 @@ const marketingBlogTagSlugIndexRoute =
     path: '/tag/$slug/',
     getParentRoute: () => marketingBlogRouteRoute,
   } as any)
+const marketingToolsNpsSurveyTemplatesSlugIndexRoute =
+  marketingToolsNpsSurveyTemplatesSlugIndexRouteImport.update({
+    id: '/(marketing)/tools/nps-survey-templates/$slug/',
+    path: '/tools/nps-survey-templates/$slug/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const publicFacingPublicSurveySurveyIdIndexRoute =
   publicFacingPublicSurveySurveyIdIndexRouteImport.update({
     id: '/(public-facing)/public/survey/$surveyId/',
@@ -1096,6 +1164,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/blog': typeof marketingBlogRouteRouteWithChildren
   '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
@@ -1106,6 +1175,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
+  '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
@@ -1124,6 +1194,7 @@ export interface FileRoutesByFullPath {
   '/pricing/': typeof marketingPricingIndexRoute
   '/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
   '/terms-of-service/': typeof marketingTermsOfServiceIndexRoute
+  '/tools/': typeof marketingToolsIndexRoute
   '/admin/generate/': typeof AdminGenerateIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/orgs/': typeof AdminOrgsIndexRoute
@@ -1176,6 +1247,11 @@ export interface FileRoutesByFullPath {
   '/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
+  '/tools/nps-survey-templates/': typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  '/tools/rto-loss-calculator/': typeof marketingToolsRtoLossCalculatorIndexRoute
+  '/tools/whatsapp-link-generator/': typeof marketingToolsWhatsappLinkGeneratorIndexRoute
+  '/tools/whatsapp-pricing-calculator/': typeof marketingToolsWhatsappPricingCalculatorIndexRoute
+  '/tools/whatsapp-qr-code-generator/': typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
   '/cashier/': typeof publicFacingloyaltyCashierIndexRoute
   '/lt/$shortId/': typeof publicFacingLtShortIdIndexRoute
   '/qr/$shortId/': typeof publicFacingQrShortIdIndexRoute
@@ -1205,6 +1281,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/loyalty/customers/': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard/': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
   '/dashboard/loyalty/rewards/': typeof DashboardLoyaltyRewardsIndexRoute
   '/dashboard/loyalty/settings/': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates/': typeof DashboardLoyaltyTemplatesIndexRoute
@@ -1234,6 +1311,7 @@ export interface FileRoutesByFullPath {
   '/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
   '/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
+  '/tools/nps-survey-templates/$slug/': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
   '/public/survey/$surveyId/': typeof publicFacingPublicSurveySurveyIdIndexRoute
   '/public/survey/cs/': typeof publicFacingPublicSurveyCsIndexRoute
   '/public/testimonial/$collectionId/': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -1258,6 +1336,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/': typeof marketingIndexRoute
@@ -1265,6 +1344,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
+  '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
@@ -1283,6 +1363,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof marketingPricingIndexRoute
   '/privacy-policy': typeof marketingPrivacyPolicyIndexRoute
   '/terms-of-service': typeof marketingTermsOfServiceIndexRoute
+  '/tools': typeof marketingToolsIndexRoute
   '/admin/generate': typeof AdminGenerateIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/orgs': typeof AdminOrgsIndexRoute
@@ -1335,6 +1416,11 @@ export interface FileRoutesByTo {
   '/products/whatsapp-feedback': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey': typeof marketingProductsWhatsappSurveyIndexRoute
+  '/tools/nps-survey-templates': typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  '/tools/rto-loss-calculator': typeof marketingToolsRtoLossCalculatorIndexRoute
+  '/tools/whatsapp-link-generator': typeof marketingToolsWhatsappLinkGeneratorIndexRoute
+  '/tools/whatsapp-pricing-calculator': typeof marketingToolsWhatsappPricingCalculatorIndexRoute
+  '/tools/whatsapp-qr-code-generator': typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
   '/cashier': typeof publicFacingloyaltyCashierIndexRoute
   '/lt/$shortId': typeof publicFacingLtShortIdIndexRoute
   '/qr/$shortId': typeof publicFacingQrShortIdIndexRoute
@@ -1364,6 +1450,7 @@ export interface FileRoutesByTo {
   '/dashboard/loyalty/customers': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/onboarding': typeof DashboardLoyaltyOnboardingIndexRoute
   '/dashboard/loyalty/rewards': typeof DashboardLoyaltyRewardsIndexRoute
   '/dashboard/loyalty/settings': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates': typeof DashboardLoyaltyTemplatesIndexRoute
@@ -1393,6 +1480,7 @@ export interface FileRoutesByTo {
   '/login/callback/paused': typeof authLoginCallbackPausedIndexRoute
   '/blog/author/$slug': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug': typeof marketingBlogTagSlugIndexRoute
+  '/tools/nps-survey-templates/$slug': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
   '/public/survey/$surveyId': typeof publicFacingPublicSurveySurveyIdIndexRoute
   '/public/survey/cs': typeof publicFacingPublicSurveyCsIndexRoute
   '/public/testimonial/$collectionId': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -1420,6 +1508,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/(marketing)/blog': typeof marketingBlogRouteRouteWithChildren
   '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
@@ -1430,6 +1519,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/(marketing)/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/(marketing)/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
+  '/(marketing)/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
@@ -1448,6 +1538,7 @@ export interface FileRoutesById {
   '/(marketing)/pricing/': typeof marketingPricingIndexRoute
   '/(marketing)/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
   '/(marketing)/terms-of-service/': typeof marketingTermsOfServiceIndexRoute
+  '/(marketing)/tools/': typeof marketingToolsIndexRoute
   '/admin/generate/': typeof AdminGenerateIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/orgs/': typeof AdminOrgsIndexRoute
@@ -1500,6 +1591,11 @@ export interface FileRoutesById {
   '/(marketing)/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/(marketing)/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/(marketing)/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
+  '/(marketing)/tools/nps-survey-templates/': typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  '/(marketing)/tools/rto-loss-calculator/': typeof marketingToolsRtoLossCalculatorIndexRoute
+  '/(marketing)/tools/whatsapp-link-generator/': typeof marketingToolsWhatsappLinkGeneratorIndexRoute
+  '/(marketing)/tools/whatsapp-pricing-calculator/': typeof marketingToolsWhatsappPricingCalculatorIndexRoute
+  '/(marketing)/tools/whatsapp-qr-code-generator/': typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
   '/(public-facing)/(loyalty)/cashier/': typeof publicFacingloyaltyCashierIndexRoute
   '/(public-facing)/lt/$shortId/': typeof publicFacingLtShortIdIndexRoute
   '/(public-facing)/qr/$shortId/': typeof publicFacingQrShortIdIndexRoute
@@ -1529,6 +1625,7 @@ export interface FileRoutesById {
   '/dashboard/loyalty/customers/': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard/': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
   '/dashboard/loyalty/rewards/': typeof DashboardLoyaltyRewardsIndexRoute
   '/dashboard/loyalty/settings/': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates/': typeof DashboardLoyaltyTemplatesIndexRoute
@@ -1558,6 +1655,7 @@ export interface FileRoutesById {
   '/(auth)/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
   '/(marketing)/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/(marketing)/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
+  '/(marketing)/tools/nps-survey-templates/$slug/': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
   '/(public-facing)/public/survey/$surveyId/': typeof publicFacingPublicSurveySurveyIdIndexRoute
   '/(public-facing)/public/survey/cs/': typeof publicFacingPublicSurveyCsIndexRoute
   '/(public-facing)/public/testimonial/$collectionId/': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -1586,6 +1684,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/sitemap_index.xml'
     | '/blog'
     | '/dashboard/commerce'
@@ -1596,6 +1695,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
+    | '/tools/sitemap.xml'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
@@ -1614,6 +1714,7 @@ export interface FileRouteTypes {
     | '/pricing/'
     | '/privacy-policy/'
     | '/terms-of-service/'
+    | '/tools/'
     | '/admin/generate/'
     | '/admin/orders/'
     | '/admin/orgs/'
@@ -1666,6 +1767,11 @@ export interface FileRouteTypes {
     | '/products/whatsapp-feedback/'
     | '/products/whatsapp-loyalty/'
     | '/products/whatsapp-survey/'
+    | '/tools/nps-survey-templates/'
+    | '/tools/rto-loss-calculator/'
+    | '/tools/whatsapp-link-generator/'
+    | '/tools/whatsapp-pricing-calculator/'
+    | '/tools/whatsapp-qr-code-generator/'
     | '/cashier/'
     | '/lt/$shortId/'
     | '/qr/$shortId/'
@@ -1695,6 +1801,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/customers/'
     | '/dashboard/loyalty/dashboard/'
     | '/dashboard/loyalty/earning-rules/'
+    | '/dashboard/loyalty/onboarding/'
     | '/dashboard/loyalty/rewards/'
     | '/dashboard/loyalty/settings/'
     | '/dashboard/loyalty/templates/'
@@ -1724,6 +1831,7 @@ export interface FileRouteTypes {
     | '/login/callback/paused/'
     | '/blog/author/$slug/'
     | '/blog/tag/$slug/'
+    | '/tools/nps-survey-templates/$slug/'
     | '/public/survey/$surveyId/'
     | '/public/survey/cs/'
     | '/public/testimonial/$collectionId/'
@@ -1748,6 +1856,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/sitemap_index.xml'
     | '/.well-known/api-catalog'
     | '/'
@@ -1755,6 +1864,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
+    | '/tools/sitemap.xml'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
@@ -1773,6 +1883,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy-policy'
     | '/terms-of-service'
+    | '/tools'
     | '/admin/generate'
     | '/admin/orders'
     | '/admin/orgs'
@@ -1825,6 +1936,11 @@ export interface FileRouteTypes {
     | '/products/whatsapp-feedback'
     | '/products/whatsapp-loyalty'
     | '/products/whatsapp-survey'
+    | '/tools/nps-survey-templates'
+    | '/tools/rto-loss-calculator'
+    | '/tools/whatsapp-link-generator'
+    | '/tools/whatsapp-pricing-calculator'
+    | '/tools/whatsapp-qr-code-generator'
     | '/cashier'
     | '/lt/$shortId'
     | '/qr/$shortId'
@@ -1854,6 +1970,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/customers'
     | '/dashboard/loyalty/dashboard'
     | '/dashboard/loyalty/earning-rules'
+    | '/dashboard/loyalty/onboarding'
     | '/dashboard/loyalty/rewards'
     | '/dashboard/loyalty/settings'
     | '/dashboard/loyalty/templates'
@@ -1883,6 +2000,7 @@ export interface FileRouteTypes {
     | '/login/callback/paused'
     | '/blog/author/$slug'
     | '/blog/tag/$slug'
+    | '/tools/nps-survey-templates/$slug'
     | '/public/survey/$surveyId'
     | '/public/survey/cs'
     | '/public/testimonial/$collectionId'
@@ -1909,6 +2027,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/sitemap_index.xml'
     | '/(marketing)/blog'
     | '/dashboard/commerce'
@@ -1919,6 +2038,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/(marketing)/blog/rss.xml'
     | '/(marketing)/blog/sitemap.xml'
+    | '/(marketing)/tools/sitemap.xml'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
@@ -1937,6 +2057,7 @@ export interface FileRouteTypes {
     | '/(marketing)/pricing/'
     | '/(marketing)/privacy-policy/'
     | '/(marketing)/terms-of-service/'
+    | '/(marketing)/tools/'
     | '/admin/generate/'
     | '/admin/orders/'
     | '/admin/orgs/'
@@ -1989,6 +2110,11 @@ export interface FileRouteTypes {
     | '/(marketing)/products/whatsapp-feedback/'
     | '/(marketing)/products/whatsapp-loyalty/'
     | '/(marketing)/products/whatsapp-survey/'
+    | '/(marketing)/tools/nps-survey-templates/'
+    | '/(marketing)/tools/rto-loss-calculator/'
+    | '/(marketing)/tools/whatsapp-link-generator/'
+    | '/(marketing)/tools/whatsapp-pricing-calculator/'
+    | '/(marketing)/tools/whatsapp-qr-code-generator/'
     | '/(public-facing)/(loyalty)/cashier/'
     | '/(public-facing)/lt/$shortId/'
     | '/(public-facing)/qr/$shortId/'
@@ -2018,6 +2144,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/customers/'
     | '/dashboard/loyalty/dashboard/'
     | '/dashboard/loyalty/earning-rules/'
+    | '/dashboard/loyalty/onboarding/'
     | '/dashboard/loyalty/rewards/'
     | '/dashboard/loyalty/settings/'
     | '/dashboard/loyalty/templates/'
@@ -2047,6 +2174,7 @@ export interface FileRouteTypes {
     | '/(auth)/login/callback/paused/'
     | '/(marketing)/blog/author/$slug/'
     | '/(marketing)/blog/tag/$slug/'
+    | '/(marketing)/tools/nps-survey-templates/$slug/'
     | '/(public-facing)/public/survey/$surveyId/'
     | '/(public-facing)/public/survey/cs/'
     | '/(public-facing)/public/testimonial/$collectionId/'
@@ -2074,10 +2202,12 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   Sitemap_indexDotxmlRoute: typeof Sitemap_indexDotxmlRoute
   marketingBlogRouteRoute: typeof marketingBlogRouteRouteWithChildren
   DotwellKnownApiCatalogRoute: typeof DotwellKnownApiCatalogRoute
   marketingIndexRoute: typeof marketingIndexRoute
+  marketingToolsSitemapDotxmlRoute: typeof marketingToolsSitemapDotxmlRoute
   authInviteIndexRoute: typeof authInviteIndexRoute
   authLoginIndexRoute: typeof authLoginIndexRoute
   authLogoutIndexRoute: typeof authLogoutIndexRoute
@@ -2088,6 +2218,7 @@ export interface RootRouteChildren {
   marketingPricingIndexRoute: typeof marketingPricingIndexRoute
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute
   marketingTermsOfServiceIndexRoute: typeof marketingTermsOfServiceIndexRoute
+  marketingToolsIndexRoute: typeof marketingToolsIndexRoute
   AuthFbIndexRoute: typeof AuthFbIndexRoute
   AuthOauth2callbackIndexRoute: typeof AuthOauth2callbackIndexRoute
   AuthShopifyIndexRoute: typeof AuthShopifyIndexRoute
@@ -2108,6 +2239,11 @@ export interface RootRouteChildren {
   marketingProductsWhatsappFeedbackIndexRoute: typeof marketingProductsWhatsappFeedbackIndexRoute
   marketingProductsWhatsappLoyaltyIndexRoute: typeof marketingProductsWhatsappLoyaltyIndexRoute
   marketingProductsWhatsappSurveyIndexRoute: typeof marketingProductsWhatsappSurveyIndexRoute
+  marketingToolsNpsSurveyTemplatesIndexRoute: typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  marketingToolsRtoLossCalculatorIndexRoute: typeof marketingToolsRtoLossCalculatorIndexRoute
+  marketingToolsWhatsappLinkGeneratorIndexRoute: typeof marketingToolsWhatsappLinkGeneratorIndexRoute
+  marketingToolsWhatsappPricingCalculatorIndexRoute: typeof marketingToolsWhatsappPricingCalculatorIndexRoute
+  marketingToolsWhatsappQrCodeGeneratorIndexRoute: typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
   publicFacingloyaltyCashierIndexRoute: typeof publicFacingloyaltyCashierIndexRoute
   publicFacingLtShortIdIndexRoute: typeof publicFacingLtShortIdIndexRoute
   publicFacingQrShortIdIndexRoute: typeof publicFacingQrShortIdIndexRoute
@@ -2119,6 +2255,7 @@ export interface RootRouteChildren {
   authLoginCallbackAppleIndexRoute: typeof authLoginCallbackAppleIndexRoute
   authLoginCallbackGoogleIndexRoute: typeof authLoginCallbackGoogleIndexRoute
   authLoginCallbackPausedIndexRoute: typeof authLoginCallbackPausedIndexRoute
+  marketingToolsNpsSurveyTemplatesSlugIndexRoute: typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
   publicFacingPublicSurveySurveyIdIndexRoute: typeof publicFacingPublicSurveySurveyIdIndexRoute
   publicFacingPublicSurveyCsIndexRoute: typeof publicFacingPublicSurveyCsIndexRoute
   publicFacingPublicTestimonialCollectionIdIndexRoute: typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -2151,6 +2288,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap_index.xml': {
@@ -2298,6 +2442,20 @@ declare module '@tanstack/react-router' {
       path: '/terms-of-service'
       fullPath: '/terms-of-service/'
       preLoaderRoute: typeof marketingTermsOfServiceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/tools/': {
+      id: '/(marketing)/tools/'
+      path: '/tools'
+      fullPath: '/tools/'
+      preLoaderRoute: typeof marketingToolsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/tools/sitemap.xml': {
+      id: '/(marketing)/tools/sitemap.xml'
+      path: '/tools/sitemap.xml'
+      fullPath: '/tools/sitemap.xml'
+      preLoaderRoute: typeof marketingToolsSitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/generate/': {
@@ -2706,6 +2864,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingProductsWhatsappSurveyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(marketing)/tools/nps-survey-templates/': {
+      id: '/(marketing)/tools/nps-survey-templates/'
+      path: '/tools/nps-survey-templates'
+      fullPath: '/tools/nps-survey-templates/'
+      preLoaderRoute: typeof marketingToolsNpsSurveyTemplatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/tools/rto-loss-calculator/': {
+      id: '/(marketing)/tools/rto-loss-calculator/'
+      path: '/tools/rto-loss-calculator'
+      fullPath: '/tools/rto-loss-calculator/'
+      preLoaderRoute: typeof marketingToolsRtoLossCalculatorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/tools/whatsapp-link-generator/': {
+      id: '/(marketing)/tools/whatsapp-link-generator/'
+      path: '/tools/whatsapp-link-generator'
+      fullPath: '/tools/whatsapp-link-generator/'
+      preLoaderRoute: typeof marketingToolsWhatsappLinkGeneratorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/tools/whatsapp-pricing-calculator/': {
+      id: '/(marketing)/tools/whatsapp-pricing-calculator/'
+      path: '/tools/whatsapp-pricing-calculator'
+      fullPath: '/tools/whatsapp-pricing-calculator/'
+      preLoaderRoute: typeof marketingToolsWhatsappPricingCalculatorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/tools/whatsapp-qr-code-generator/': {
+      id: '/(marketing)/tools/whatsapp-qr-code-generator/'
+      path: '/tools/whatsapp-qr-code-generator'
+      fullPath: '/tools/whatsapp-qr-code-generator/'
+      preLoaderRoute: typeof marketingToolsWhatsappQrCodeGeneratorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(public-facing)/(loyalty)/cashier/': {
       id: '/(public-facing)/(loyalty)/cashier/'
       path: '/cashier'
@@ -2916,6 +3109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLoyaltyEarningRulesIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/loyalty/onboarding/': {
+      id: '/dashboard/loyalty/onboarding/'
+      path: '/loyalty/onboarding'
+      fullPath: '/dashboard/loyalty/onboarding/'
+      preLoaderRoute: typeof DashboardLoyaltyOnboardingIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/loyalty/rewards/': {
       id: '/dashboard/loyalty/rewards/'
       path: '/loyalty/rewards'
@@ -3118,6 +3318,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/tag/$slug/'
       preLoaderRoute: typeof marketingBlogTagSlugIndexRouteImport
       parentRoute: typeof marketingBlogRouteRoute
+    }
+    '/(marketing)/tools/nps-survey-templates/$slug/': {
+      id: '/(marketing)/tools/nps-survey-templates/$slug/'
+      path: '/tools/nps-survey-templates/$slug'
+      fullPath: '/tools/nps-survey-templates/$slug/'
+      preLoaderRoute: typeof marketingToolsNpsSurveyTemplatesSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(public-facing)/public/survey/$surveyId/': {
       id: '/(public-facing)/public/survey/$surveyId/'
@@ -3394,6 +3601,7 @@ interface DashboardRouteRouteChildren {
   DashboardLoyaltyCustomersIndexRoute: typeof DashboardLoyaltyCustomersIndexRoute
   DashboardLoyaltyDashboardIndexRoute: typeof DashboardLoyaltyDashboardIndexRoute
   DashboardLoyaltyEarningRulesIndexRoute: typeof DashboardLoyaltyEarningRulesIndexRoute
+  DashboardLoyaltyOnboardingIndexRoute: typeof DashboardLoyaltyOnboardingIndexRoute
   DashboardLoyaltyRewardsIndexRoute: typeof DashboardLoyaltyRewardsIndexRoute
   DashboardLoyaltySettingsIndexRoute: typeof DashboardLoyaltySettingsIndexRoute
   DashboardLoyaltyTemplatesIndexRoute: typeof DashboardLoyaltyTemplatesIndexRoute
@@ -3469,6 +3677,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardLoyaltyDashboardIndexRoute: DashboardLoyaltyDashboardIndexRoute,
   DashboardLoyaltyEarningRulesIndexRoute:
     DashboardLoyaltyEarningRulesIndexRoute,
+  DashboardLoyaltyOnboardingIndexRoute: DashboardLoyaltyOnboardingIndexRoute,
   DashboardLoyaltyRewardsIndexRoute: DashboardLoyaltyRewardsIndexRoute,
   DashboardLoyaltySettingsIndexRoute: DashboardLoyaltySettingsIndexRoute,
   DashboardLoyaltyTemplatesIndexRoute: DashboardLoyaltyTemplatesIndexRoute,
@@ -3557,10 +3766,12 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   Sitemap_indexDotxmlRoute: Sitemap_indexDotxmlRoute,
   marketingBlogRouteRoute: marketingBlogRouteRouteWithChildren,
   DotwellKnownApiCatalogRoute: DotwellKnownApiCatalogRoute,
   marketingIndexRoute: marketingIndexRoute,
+  marketingToolsSitemapDotxmlRoute: marketingToolsSitemapDotxmlRoute,
   authInviteIndexRoute: authInviteIndexRoute,
   authLoginIndexRoute: authLoginIndexRoute,
   authLogoutIndexRoute: authLogoutIndexRoute,
@@ -3571,6 +3782,7 @@ const rootRouteChildren: RootRouteChildren = {
   marketingPricingIndexRoute: marketingPricingIndexRoute,
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,
   marketingTermsOfServiceIndexRoute: marketingTermsOfServiceIndexRoute,
+  marketingToolsIndexRoute: marketingToolsIndexRoute,
   AuthFbIndexRoute: AuthFbIndexRoute,
   AuthOauth2callbackIndexRoute: AuthOauth2callbackIndexRoute,
   AuthShopifyIndexRoute: AuthShopifyIndexRoute,
@@ -3597,6 +3809,16 @@ const rootRouteChildren: RootRouteChildren = {
     marketingProductsWhatsappLoyaltyIndexRoute,
   marketingProductsWhatsappSurveyIndexRoute:
     marketingProductsWhatsappSurveyIndexRoute,
+  marketingToolsNpsSurveyTemplatesIndexRoute:
+    marketingToolsNpsSurveyTemplatesIndexRoute,
+  marketingToolsRtoLossCalculatorIndexRoute:
+    marketingToolsRtoLossCalculatorIndexRoute,
+  marketingToolsWhatsappLinkGeneratorIndexRoute:
+    marketingToolsWhatsappLinkGeneratorIndexRoute,
+  marketingToolsWhatsappPricingCalculatorIndexRoute:
+    marketingToolsWhatsappPricingCalculatorIndexRoute,
+  marketingToolsWhatsappQrCodeGeneratorIndexRoute:
+    marketingToolsWhatsappQrCodeGeneratorIndexRoute,
   publicFacingloyaltyCashierIndexRoute: publicFacingloyaltyCashierIndexRoute,
   publicFacingLtShortIdIndexRoute: publicFacingLtShortIdIndexRoute,
   publicFacingQrShortIdIndexRoute: publicFacingQrShortIdIndexRoute,
@@ -3608,6 +3830,8 @@ const rootRouteChildren: RootRouteChildren = {
   authLoginCallbackAppleIndexRoute: authLoginCallbackAppleIndexRoute,
   authLoginCallbackGoogleIndexRoute: authLoginCallbackGoogleIndexRoute,
   authLoginCallbackPausedIndexRoute: authLoginCallbackPausedIndexRoute,
+  marketingToolsNpsSurveyTemplatesSlugIndexRoute:
+    marketingToolsNpsSurveyTemplatesSlugIndexRoute,
   publicFacingPublicSurveySurveyIdIndexRoute:
     publicFacingPublicSurveySurveyIdIndexRoute,
   publicFacingPublicSurveyCsIndexRoute: publicFacingPublicSurveyCsIndexRoute,

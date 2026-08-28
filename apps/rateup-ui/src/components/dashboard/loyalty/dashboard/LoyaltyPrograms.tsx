@@ -7,11 +7,13 @@ import {
   IconPackage,
   IconTag,
   IconTicket,
+  IconRocket,
   IconTrendingUp,
   IconTrophy,
   IconUserCheck,
   IconUsers,
 } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import {
@@ -30,8 +32,11 @@ import {
 } from "recharts";
 
 import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
+import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { docsPath } from "@/utils/constants.ts";
@@ -47,6 +52,35 @@ function ChangeIndicator({ change }: Readonly<{ change: number | null }>) {
       {isPositive ? "+" : ""}
       {change}% from last month
     </p>
+  );
+}
+
+/**
+ * A programme left at "draft" is silent — it earns nothing and sends nothing — so the
+ * numbers below would all read zero with no explanation. The route only redirects when
+ * there is no programme at all, so this is what a half-finished setup sees.
+ */
+function ResumeSetupBanner() {
+  const { t } = useTranslation();
+  const { data: state } = useLoyaltyOnboardingState();
+
+  if (!state?.program || state.program.status !== "draft") return null;
+
+  return (
+    <Alert>
+      <IconRocket />
+      <AlertTitle>{t("Your loyalty program isn't live yet")}</AlertTitle>
+      <AlertDescription className="flex flex-wrap items-center gap-3">
+        <span>
+          {t(
+            "It's saved as a draft, so customers can't earn points and no messages are sent. Finish setup to launch it.",
+          )}
+        </span>
+        <Button size="sm" render={<Link to="/dashboard/loyalty/onboarding" />}>
+          {t("Resume setup")}
+        </Button>
+      </AlertDescription>
+    </Alert>
   );
 }
 
@@ -88,6 +122,8 @@ export function LoyaltyPrograms() {
           </div>
           <InfoButton docUrl={`${docsPath}/loyality`} />
         </div>
+
+        <ResumeSetupBanner />
 
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

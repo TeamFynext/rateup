@@ -24,6 +24,22 @@ export async function createLoyaltyCustomer(
   return await axiosClient.post(`${url}`, lc);
 }
 
+/** What the org already knows about a phone number, for the add-customer form. */
+export interface ContactLookupResult {
+  contact: { id: string; name: string | null; email: string | null; dob: string | null } | null;
+  /** True only for an *active* member — an inactive account is reactivated on submit. */
+  alreadyMember: boolean;
+}
+
+/**
+ * Authenticated only, and org-scoped server-side. Never call this from the public
+ * registration page: an open lookup would let anyone probe phone numbers and read back
+ * a customer's name.
+ */
+export async function lookupContactByPhone(phone: string): Promise<ContactLookupResult> {
+  return (await axiosClient.get(`${base}/lookup/${encodeURIComponent(phone)}`)).data;
+}
+
 export async function getAllCustomers(
   pagination: {
     pageIndex: number;

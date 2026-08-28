@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-21-loyalty-guided-setup",
+    title: "Guided setup for your loyalty program",
+    summary:
+      "Building a loyalty program used to mean piecing it together across five screens with no idea what good numbers look like. There is now a guided setup that does it in six steps: pick your kind of business and it fills in points, tiers, rewards and WhatsApp messages tuned for it, which you accept or edit as you go. Everything saves as you go and nothing reaches customers until you activate, so you can stop halfway and pick it up later. Loyalty steps have moved out of the general setup checklist, which now covers connecting RateUp itself.",
+    publishedAt: "2026-08-21",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/onboarding", label: "Set up your program" },
+  },
+  {
     id: "2026-08-17-pipeline-feature-access",
     title: "Pipeline is its own team permission",
     summary:

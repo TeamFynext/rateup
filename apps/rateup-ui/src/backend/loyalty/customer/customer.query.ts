@@ -16,6 +16,7 @@ import {
   getAllCustomers,
   getLoyaltyCustomerByContactId,
   getLoyaltyCustomerById,
+  lookupContactByPhone,
   importCustomers,
   updateLoyaltyCustomer,
 } from "./customer.api";
@@ -31,6 +32,25 @@ export const useCreateLoyaltyCustomerMutation = () => {
     onError: (error) => {
       toast.error(error?.message || "Error creating customer");
     },
+  });
+};
+
+/**
+ * Looks a phone number up against the org's contacts so the add-customer form can fill
+ * in a name it already has.
+ *
+ * `enabled` is the security boundary as much as an optimisation: the endpoint is
+ * authenticated, so the public registration page must pass `enabled: false` rather than
+ * relying on the request simply failing.
+ */
+export const useContactLookupByPhone = (phone: string, enabled: boolean) => {
+  return useQuery({
+    queryKey: loyaltyKeys.contactLookup(phone),
+    queryFn: () => lookupContactByPhone(phone),
+    enabled: enabled && phone.length > 0,
+    // A contact's name does not change between keystrokes; don't refetch on every focus.
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   });
 };
 
