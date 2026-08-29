@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-29-ticket-boards-retired",
+    title: "Ticket boards have been retired",
+    summary:
+      "The Tickets board is no longer part of RateUp. The Tickets entry has left the sidebar, Tickets is gone from a team's Feature Access, and the settings that fed it are gone too: a survey can no longer raise a ticket from a response or a per-question rule, and the Create Ticket step has been removed from the automation builder. Flows you saved with that step still open — the step is skipped rather than run. Work that used to live on a board is better tracked in the Inbox, where each conversation is already a ticket with its own number, assignee and tags, or on a Pipeline board for anything sales-shaped.",
+    publishedAt: "2026-08-29",
+    kinds: ["improvement"],
+    area: "Tickets",
+    link: { to: "/dashboard/inbox", search: { tab: "open" }, label: "Open the Inbox" },
+  },
+  {
     id: "2026-08-22-conversation-packs",
     title: "Buy conversation packs from Billing",
     summary:

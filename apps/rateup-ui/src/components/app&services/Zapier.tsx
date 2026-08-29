@@ -312,12 +312,6 @@ function getTriggerLabel(triggerKey: ZapierTriggers) {
       return "Staff joined to a team";
     case ZapierTriggers.RESPONSE_SUBMITTED:
       return "Response submitted";
-    case ZapierTriggers.TICKET_ASSIGNEE_UPDATED:
-      return "Ticket Assignee updated";
-    case ZapierTriggers.TICKET_CREATED:
-      return "Ticket created";
-    case ZapierTriggers.TICKET_CARD_MOVED:
-      return "Ticket card moved to another column";
     case ZapierTriggers.CONTACT_ADDED_TO_GROUP:
       return "Contact added to group";
     default:

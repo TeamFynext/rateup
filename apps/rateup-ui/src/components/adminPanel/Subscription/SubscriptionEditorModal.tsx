@@ -16,6 +16,9 @@ import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 import { FeatureCard } from "./FeatureCard.tsx";
 
+/** Feature keys that older stored subscriptions may still carry but that nothing grants. */
+const RETIRED_FEATURES = new Set<string>(["menu", "ticket"]);
+
 export type SubscriptionFormValues = {
   features: SubscriptionFeatures;
   expiresAt: Date;
@@ -124,8 +127,10 @@ export function SubscriptionEditorModal({
               {subscription?.features &&
                 (Object.keys(subscription.features) as SubscriptionFeaturePathName[]).map(
                   (feature) => {
-                    // Tickets are a free feature — no longer subscription-managed.
-                    if (feature === "menu" || feature === "ticket") return null;
+                    // Neither is subscription-managed any more: `menu` was retired, and
+                    // `ticket` went with the ticket boards. Both can still appear as keys
+                    // on subscriptions stored before then, so they are filtered by name.
+                    if (RETIRED_FEATURES.has(feature)) return null;
                     return (
                       <FeatureCard
                         key={feature}

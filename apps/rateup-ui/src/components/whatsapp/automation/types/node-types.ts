@@ -224,15 +224,6 @@ export interface AssignNodeData extends BaseNodeData {
   };
 }
 
-export interface TicketNodeData extends BaseNodeData {
-  ticket: {
-    selectedBoardId: string;
-    selectedBoardName: string;
-    selectedBoardColumnId: string;
-    selectedBoardColumnName: string;
-  };
-}
-
 export interface LeadgenNodeData extends BaseNodeData {
   adAccountId: string;
   ad: {
@@ -348,7 +339,6 @@ export interface NodeTypeMap {
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
   aibotNode: AiBotNodeData;
-  ticketNode: TicketNodeData;
   assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
   catalogNode: CatalogNodeData;
@@ -430,12 +420,6 @@ export interface NodeFields {
   template?: { id?: string; name?: string };
   flow?: { id?: string; name?: string };
   ad?: { id?: string; name?: string };
-  ticket?: {
-    selectedBoardId?: string;
-    selectedBoardColumnId?: string;
-    selectedBoardName?: string;
-    selectedBoardColumnName?: string;
-  };
   assign?: {
     assignType?: string;
     choice?: string;
@@ -473,7 +457,6 @@ export type NodeData =
   | ContactsNodeData
   | FlowNodeData
   | AiBotNodeData
-  | TicketNodeData
   | AssignNodeData
   | LeadgenNodeData
   | CatalogNodeData
@@ -986,17 +969,6 @@ export function validateNodeData(node: TypedNode): {
             };
           }
         }
-      }
-      break;
-    }
-
-    case "ticketNode": {
-      const data = node.data as NodeTypeMap["ticketNode"];
-      if (!data.ticket?.selectedBoardColumnId || data.ticket.selectedBoardColumnId.trim() === "") {
-        return {
-          valid: false,
-          message: `${node.data.label}: Selected column ID is required.`,
-        };
       }
       break;
     }

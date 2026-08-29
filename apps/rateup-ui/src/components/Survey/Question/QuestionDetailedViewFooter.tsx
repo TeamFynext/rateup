@@ -4,7 +4,6 @@ import {
   IconChartBar,
   IconDots,
   IconEdit,
-  IconTicket,
   IconVariable,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
@@ -23,7 +22,6 @@ import { NPSQuestions } from "@/utils/constants.ts";
 import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
-  ticketIssueSupportedTypes,
   validationSupportedTypes,
 } from "@/utils/data.ts";
 
@@ -38,8 +36,6 @@ interface QuestionDetailedViewFooterProps {
   setActiveTab: (tab: QuestionTabsEnum) => void;
   isGoogleReviewFeatureActive: boolean;
   handleSave: () => Promise<string>;
-  isTicketFeatureActive: boolean;
-  enableAutoGenerateTicket: boolean;
   className?: string;
 }
 
@@ -52,8 +48,6 @@ function QuestionDetailedViewFooter({
   setActiveTab,
   isGoogleReviewFeatureActive,
   handleSave,
-  isTicketFeatureActive,
-  enableAutoGenerateTicket,
   className,
 }: QuestionDetailedViewFooterProps) {
   const { t: translations } = useTranslation();
@@ -168,27 +162,6 @@ function QuestionDetailedViewFooter({
             >
               <IconEdit />
               {translations("Custom Validation")}
-            </DropdownMenuItem>
-          )}
-
-          {ticketIssueSupportedTypes.includes(question?.type as QuestionType) && (
-            <DropdownMenuItem
-              onClick={async () => {
-                if (!isTicketFeatureActive || enableAutoGenerateTicket) return;
-                const save = await handleSave();
-                if (save === "saved") setActiveTab(QuestionTabsEnum.TicketIssueEditor);
-              }}
-              disabled={!isTicketFeatureActive || enableAutoGenerateTicket}
-            >
-              <IconTicket stroke={4} />
-              {translations("Create Tickets")}
-              {(!isTicketFeatureActive || enableAutoGenerateTicket) && (
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {enableAutoGenerateTicket
-                    ? translations("Auto-ticket on")
-                    : translations("Upgrade")}
-                </span>
-              )}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

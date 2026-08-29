@@ -49,7 +49,6 @@ import {
   IconTemplate,
   IconTerminal2,
   IconGitBranch,
-  IconTicket,
   IconUser,
   IconUserCheck,
   IconUserCog,
@@ -694,16 +693,6 @@ export function useNavMain({
               // Views and facets are built next to the pipeline's own
               // derivations so the sidebar counts and the board agree.
               items: buildPipelineNavItems(pipelineNav),
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Tickets)
-        ? [
-            {
-              title: t("Tickets"),
-              url: "/dashboard/tickets",
-              icon: IconTicket,
-              items: [],
             },
           ]
         : []),

@@ -148,7 +148,6 @@ const SUBSCRIPTION_FEATURE_LABELS: Readonly<Record<string, string>> = {
   [sfpn.Team]: "Team",
   [sfpn.TeamMember]: "Team Members",
   [sfpn.Whatsapp]: "Whatsapp",
-  [sfpn.Ticket]: "Ticket",
   [sfpn.AI]: "AI",
   [sfpn.Webhook]: "Webhook",
   [sfpn.WhatsAppConversation]: "WhatsApp Conversation",

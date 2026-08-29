@@ -30,6 +30,8 @@ function formatTime(ts: number) {
 
 // Internal/operational nodes that don't produce a customer-facing message — the playground
 // silently passes through them while walking the flow instead of rendering a chat bubble.
+// `ticketNode` is a retired type kept here only so flows saved before ticketing was
+// removed still skip past it instead of trying to render it as a chat bubble.
 const SILENT_NODE_TYPES = new Set(["assignNode", "ticketNode", "aibotNode", "leadgenNode"]);
 
 function isSilentNode(node: TypedNode | null | undefined): boolean {

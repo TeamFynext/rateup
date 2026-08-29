@@ -73,7 +73,6 @@ import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/das
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardSurveysIndexRouteImport } from './routes/dashboard/surveys/index'
 import { Route as DashboardTestimonialIndexRouteImport } from './routes/dashboard/testimonial/index'
-import { Route as DashboardTicketsIndexRouteImport } from './routes/dashboard/tickets/index'
 import { Route as DashboardWhatsappIndexRouteImport } from './routes/dashboard/whatsapp/index'
 import { Route as authLoginCompleteLoginIndexRouteImport } from './routes/(auth)/login/complete-login/index'
 import { Route as authLoginResetPasswordIndexRouteImport } from './routes/(auth)/login/reset-password/index'
@@ -91,7 +90,6 @@ import { Route as marketingProductsOmnichannelInboxIndexRouteImport } from './ro
 import { Route as marketingProductsQrStudioIndexRouteImport } from './routes/(marketing)/products/qr-studio/index'
 import { Route as marketingProductsQrIndexRouteImport } from './routes/(marketing)/products/qr/index'
 import { Route as marketingProductsTestimonialGatewayIndexRouteImport } from './routes/(marketing)/products/testimonial-gateway/index'
-import { Route as marketingProductsTicketingIndexRouteImport } from './routes/(marketing)/products/ticketing/index'
 import { Route as marketingProductsWhatsappFeedbackIndexRouteImport } from './routes/(marketing)/products/whatsapp-feedback/index'
 import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
 import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
@@ -146,7 +144,6 @@ import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashbo
 import { Route as DashboardSurveysSurveyIdIndexRouteImport } from './routes/dashboard/surveys/$surveyId/index'
 import { Route as DashboardSurveysTemplatesIndexRouteImport } from './routes/dashboard/surveys/templates/index'
 import { Route as DashboardTestimonialCollectionIdIndexRouteImport } from './routes/dashboard/testimonial/$collectionId/index'
-import { Route as DashboardTicketsTicketIdIndexRouteImport } from './routes/dashboard/tickets/$ticketId/index'
 import { Route as DashboardWhatsappCatalogIndexRouteImport } from './routes/dashboard/whatsapp/catalog/index'
 import { Route as DashboardWhatsappConversationalComponentsIndexRouteImport } from './routes/dashboard/whatsapp/conversational-components/index'
 import { Route as DashboardWhatsappFlowbotsIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/index'
@@ -517,11 +514,6 @@ const DashboardTestimonialIndexRoute =
     path: '/testimonial/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardTicketsIndexRoute = DashboardTicketsIndexRouteImport.update({
-  id: '/tickets/',
-  path: '/tickets/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
 const DashboardWhatsappIndexRoute = DashboardWhatsappIndexRouteImport.update({
   id: '/whatsapp/',
   path: '/whatsapp/',
@@ -619,12 +611,6 @@ const marketingProductsTestimonialGatewayIndexRoute =
   marketingProductsTestimonialGatewayIndexRouteImport.update({
     id: '/(marketing)/products/testimonial-gateway/',
     path: '/products/testimonial-gateway/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsTicketingIndexRoute =
-  marketingProductsTicketingIndexRouteImport.update({
-    id: '/(marketing)/products/ticketing/',
-    path: '/products/ticketing/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const marketingProductsWhatsappFeedbackIndexRoute =
@@ -948,12 +934,6 @@ const DashboardTestimonialCollectionIdIndexRoute =
     path: '/testimonial/$collectionId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardTicketsTicketIdIndexRoute =
-  DashboardTicketsTicketIdIndexRouteImport.update({
-    id: '/tickets/$ticketId/',
-    path: '/tickets/$ticketId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
 const DashboardWhatsappCatalogIndexRoute =
   DashboardWhatsappCatalogIndexRouteImport.update({
     id: '/whatsapp/catalog/',
@@ -1224,7 +1204,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/surveys/': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial/': typeof DashboardTestimonialIndexRoute
-  '/dashboard/tickets/': typeof DashboardTicketsIndexRoute
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
@@ -1243,7 +1222,6 @@ export interface FileRoutesByFullPath {
   '/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/products/qr/': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
-  '/products/ticketing/': typeof marketingProductsTicketingIndexRoute
   '/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
@@ -1297,7 +1275,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/surveys/$surveyId/': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates/': typeof DashboardSurveysTemplatesIndexRoute
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
-  '/dashboard/tickets/$ticketId/': typeof DashboardTicketsTicketIdIndexRoute
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/conversational-components/': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
@@ -1393,7 +1370,6 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/surveys': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial': typeof DashboardTestimonialIndexRoute
-  '/dashboard/tickets': typeof DashboardTicketsIndexRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
@@ -1412,7 +1388,6 @@ export interface FileRoutesByTo {
   '/products/qr-studio': typeof marketingProductsQrStudioIndexRoute
   '/products/qr': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway': typeof marketingProductsTestimonialGatewayIndexRoute
-  '/products/ticketing': typeof marketingProductsTicketingIndexRoute
   '/products/whatsapp-feedback': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey': typeof marketingProductsWhatsappSurveyIndexRoute
@@ -1466,7 +1441,6 @@ export interface FileRoutesByTo {
   '/dashboard/surveys/$surveyId': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates': typeof DashboardSurveysTemplatesIndexRoute
   '/dashboard/testimonial/$collectionId': typeof DashboardTestimonialCollectionIdIndexRoute
-  '/dashboard/tickets/$ticketId': typeof DashboardTicketsTicketIdIndexRoute
   '/dashboard/whatsapp/catalog': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/conversational-components': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots': typeof DashboardWhatsappFlowbotsIndexRoute
@@ -1568,7 +1542,6 @@ export interface FileRoutesById {
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/surveys/': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial/': typeof DashboardTestimonialIndexRoute
-  '/dashboard/tickets/': typeof DashboardTicketsIndexRoute
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/(marketing)/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/(marketing)/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
@@ -1587,7 +1560,6 @@ export interface FileRoutesById {
   '/(marketing)/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/(marketing)/products/qr/': typeof marketingProductsQrIndexRoute
   '/(marketing)/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
-  '/(marketing)/products/ticketing/': typeof marketingProductsTicketingIndexRoute
   '/(marketing)/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/(marketing)/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/(marketing)/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
@@ -1641,7 +1613,6 @@ export interface FileRoutesById {
   '/dashboard/surveys/$surveyId/': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates/': typeof DashboardSurveysTemplatesIndexRoute
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
-  '/dashboard/tickets/$ticketId/': typeof DashboardTicketsTicketIdIndexRoute
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/conversational-components/': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
@@ -1744,7 +1715,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/'
     | '/dashboard/surveys/'
     | '/dashboard/testimonial/'
-    | '/dashboard/tickets/'
     | '/dashboard/whatsapp/'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
@@ -1763,7 +1733,6 @@ export interface FileRouteTypes {
     | '/products/qr-studio/'
     | '/products/qr/'
     | '/products/testimonial-gateway/'
-    | '/products/ticketing/'
     | '/products/whatsapp-feedback/'
     | '/products/whatsapp-loyalty/'
     | '/products/whatsapp-survey/'
@@ -1817,7 +1786,6 @@ export interface FileRouteTypes {
     | '/dashboard/surveys/$surveyId/'
     | '/dashboard/surveys/templates/'
     | '/dashboard/testimonial/$collectionId/'
-    | '/dashboard/tickets/$ticketId/'
     | '/dashboard/whatsapp/catalog/'
     | '/dashboard/whatsapp/conversational-components/'
     | '/dashboard/whatsapp/flowbots/'
@@ -1913,7 +1881,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/surveys'
     | '/dashboard/testimonial'
-    | '/dashboard/tickets'
     | '/dashboard/whatsapp'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
@@ -1932,7 +1899,6 @@ export interface FileRouteTypes {
     | '/products/qr-studio'
     | '/products/qr'
     | '/products/testimonial-gateway'
-    | '/products/ticketing'
     | '/products/whatsapp-feedback'
     | '/products/whatsapp-loyalty'
     | '/products/whatsapp-survey'
@@ -1986,7 +1952,6 @@ export interface FileRouteTypes {
     | '/dashboard/surveys/$surveyId'
     | '/dashboard/surveys/templates'
     | '/dashboard/testimonial/$collectionId'
-    | '/dashboard/tickets/$ticketId'
     | '/dashboard/whatsapp/catalog'
     | '/dashboard/whatsapp/conversational-components'
     | '/dashboard/whatsapp/flowbots'
@@ -2087,7 +2052,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/'
     | '/dashboard/surveys/'
     | '/dashboard/testimonial/'
-    | '/dashboard/tickets/'
     | '/dashboard/whatsapp/'
     | '/(marketing)/blog/author/sitemap.xml'
     | '/(marketing)/blog/tag/sitemap.xml'
@@ -2106,7 +2070,6 @@ export interface FileRouteTypes {
     | '/(marketing)/products/qr-studio/'
     | '/(marketing)/products/qr/'
     | '/(marketing)/products/testimonial-gateway/'
-    | '/(marketing)/products/ticketing/'
     | '/(marketing)/products/whatsapp-feedback/'
     | '/(marketing)/products/whatsapp-loyalty/'
     | '/(marketing)/products/whatsapp-survey/'
@@ -2160,7 +2123,6 @@ export interface FileRouteTypes {
     | '/dashboard/surveys/$surveyId/'
     | '/dashboard/surveys/templates/'
     | '/dashboard/testimonial/$collectionId/'
-    | '/dashboard/tickets/$ticketId/'
     | '/dashboard/whatsapp/catalog/'
     | '/dashboard/whatsapp/conversational-components/'
     | '/dashboard/whatsapp/flowbots/'
@@ -2235,7 +2197,6 @@ export interface RootRouteChildren {
   marketingProductsQrStudioIndexRoute: typeof marketingProductsQrStudioIndexRoute
   marketingProductsQrIndexRoute: typeof marketingProductsQrIndexRoute
   marketingProductsTestimonialGatewayIndexRoute: typeof marketingProductsTestimonialGatewayIndexRoute
-  marketingProductsTicketingIndexRoute: typeof marketingProductsTicketingIndexRoute
   marketingProductsWhatsappFeedbackIndexRoute: typeof marketingProductsWhatsappFeedbackIndexRoute
   marketingProductsWhatsappLoyaltyIndexRoute: typeof marketingProductsWhatsappLoyaltyIndexRoute
   marketingProductsWhatsappSurveyIndexRoute: typeof marketingProductsWhatsappSurveyIndexRoute
@@ -2717,13 +2678,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTestimonialIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/tickets/': {
-      id: '/dashboard/tickets/'
-      path: '/tickets'
-      fullPath: '/dashboard/tickets/'
-      preLoaderRoute: typeof DashboardTicketsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     '/dashboard/whatsapp/': {
       id: '/dashboard/whatsapp/'
       path: '/whatsapp'
@@ -2841,13 +2795,6 @@ declare module '@tanstack/react-router' {
       path: '/products/testimonial-gateway'
       fullPath: '/products/testimonial-gateway/'
       preLoaderRoute: typeof marketingProductsTestimonialGatewayIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/ticketing/': {
-      id: '/(marketing)/products/ticketing/'
-      path: '/products/ticketing'
-      fullPath: '/products/ticketing/'
-      preLoaderRoute: typeof marketingProductsTicketingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)/products/whatsapp-feedback/': {
@@ -3228,13 +3175,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTestimonialCollectionIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/tickets/$ticketId/': {
-      id: '/dashboard/tickets/$ticketId/'
-      path: '/tickets/$ticketId'
-      fullPath: '/dashboard/tickets/$ticketId/'
-      preLoaderRoute: typeof DashboardTicketsTicketIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     '/dashboard/whatsapp/catalog/': {
       id: '/dashboard/whatsapp/catalog/'
       path: '/whatsapp/catalog'
@@ -3584,7 +3524,6 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
   DashboardSurveysIndexRoute: typeof DashboardSurveysIndexRoute
   DashboardTestimonialIndexRoute: typeof DashboardTestimonialIndexRoute
-  DashboardTicketsIndexRoute: typeof DashboardTicketsIndexRoute
   DashboardWhatsappIndexRoute: typeof DashboardWhatsappIndexRoute
   DashboardInstagramFlowbotsFlowbotIdRoute: typeof DashboardInstagramFlowbotsFlowbotIdRoute
   DashboardAnalyticsStaffidIndexRoute: typeof DashboardAnalyticsStaffidIndexRoute
@@ -3617,7 +3556,6 @@ interface DashboardRouteRouteChildren {
   DashboardSurveysSurveyIdIndexRoute: typeof DashboardSurveysSurveyIdIndexRoute
   DashboardSurveysTemplatesIndexRoute: typeof DashboardSurveysTemplatesIndexRoute
   DashboardTestimonialCollectionIdIndexRoute: typeof DashboardTestimonialCollectionIdIndexRoute
-  DashboardTicketsTicketIdIndexRoute: typeof DashboardTicketsTicketIdIndexRoute
   DashboardWhatsappCatalogIndexRoute: typeof DashboardWhatsappCatalogIndexRoute
   DashboardWhatsappConversationalComponentsIndexRoute: typeof DashboardWhatsappConversationalComponentsIndexRoute
   DashboardWhatsappFlowbotsIndexRoute: typeof DashboardWhatsappFlowbotsIndexRoute
@@ -3655,7 +3593,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
   DashboardSurveysIndexRoute: DashboardSurveysIndexRoute,
   DashboardTestimonialIndexRoute: DashboardTestimonialIndexRoute,
-  DashboardTicketsIndexRoute: DashboardTicketsIndexRoute,
   DashboardWhatsappIndexRoute: DashboardWhatsappIndexRoute,
   DashboardInstagramFlowbotsFlowbotIdRoute:
     DashboardInstagramFlowbotsFlowbotIdRoute,
@@ -3697,7 +3634,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSurveysTemplatesIndexRoute: DashboardSurveysTemplatesIndexRoute,
   DashboardTestimonialCollectionIdIndexRoute:
     DashboardTestimonialCollectionIdIndexRoute,
-  DashboardTicketsTicketIdIndexRoute: DashboardTicketsTicketIdIndexRoute,
   DashboardWhatsappCatalogIndexRoute: DashboardWhatsappCatalogIndexRoute,
   DashboardWhatsappConversationalComponentsIndexRoute:
     DashboardWhatsappConversationalComponentsIndexRoute,
@@ -3801,7 +3737,6 @@ const rootRouteChildren: RootRouteChildren = {
   marketingProductsQrIndexRoute: marketingProductsQrIndexRoute,
   marketingProductsTestimonialGatewayIndexRoute:
     marketingProductsTestimonialGatewayIndexRoute,
-  marketingProductsTicketingIndexRoute: marketingProductsTicketingIndexRoute,
   marketingProductsWhatsappFeedbackIndexRoute:
     marketingProductsWhatsappFeedbackIndexRoute,
   marketingProductsWhatsappLoyaltyIndexRoute:

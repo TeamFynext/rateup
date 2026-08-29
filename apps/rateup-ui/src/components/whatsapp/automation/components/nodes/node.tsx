@@ -172,14 +172,6 @@ const NODE_BODY: Record<string, (d: NodeFields) => Part[]> = {
 
   contactsNode: (d) => [field("Contacts", `${d.contacts?.length ?? 0} to send`)],
 
-  ticketNode: (d) => {
-    const parts: Part[] = [];
-    if (d.ticket?.selectedBoardName) parts.push(field("Board", d.ticket.selectedBoardName));
-    if (d.ticket?.selectedBoardColumnName)
-      parts.push(field("Column", d.ticket.selectedBoardColumnName));
-    return parts.length ? parts : [field("Ticket", "Not configured")];
-  },
-
   assignNode: (d) => {
     const a = d.assign || {};
     const parts: Part[] = [];

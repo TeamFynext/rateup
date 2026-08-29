@@ -40,7 +40,6 @@ export const useUpdateNotificationSettings = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: {
-      ticketAssignNotification?: boolean;
       waMessageAssignNotification?: boolean;
       waMessageClosedNotification?: boolean;
     }) => {

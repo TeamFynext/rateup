@@ -3,8 +3,6 @@ import { QuestionType as Q, QuestionType2 } from "@/types/enums.ts";
 export const validationSupportedTypes = [Q.Text, Q.TextArea, Q.Number, Q.MultiTextInput, Q.Optin];
 export const googleReviewSupportedTypes = [Q.Rating, Q.Smiley, Q.Opinion];
 
-export const ticketIssueSupportedTypes = Object.values(Q);
-
 export const logicSupportedTypes = Object.values(Q);
 
 export const logicSupportedTypes3 = [

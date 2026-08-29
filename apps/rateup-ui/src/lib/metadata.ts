@@ -197,19 +197,6 @@ const pageMetadata: Record<string, PageMetadata> = {
       canonical: "/products/whatsapp-survey",
     },
   },
-  "/products/ticketing": {
-    title: "WhatsApp Ticketing & Customer Support Software - RateUp",
-    description:
-      "Turn WhatsApp chats into trackable support tickets with RateUp. Assign, prioritise and resolve customer issues from one shared team inbox. Start free.",
-    openGraph: {
-      title: "WhatsApp Ticketing & Customer Support Software - RateUp",
-      description:
-        "Turn WhatsApp chats into trackable support tickets with RateUp. Assign, prioritise and resolve customer issues from one shared team inbox. Start free.",
-    },
-    alternates: {
-      canonical: "/products/ticketing",
-    },
-  },
   "/products/testimonial-gateway": {
     title: "Customer Testimonial Collection Software - RateUp",
     description:
