@@ -33,12 +33,6 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
-type IssueTicket = {
-  minRating?: number;
-  minOpinion?: number;
-  reqOptions?: Array<string>;
-} | null;
-
 interface TNC {
   title: string;
   urlTitle: string;
@@ -105,7 +99,6 @@ declare global {
     label?: Record<string, string>; // only for whatsapp-flow surveys
     id: string;
     googleReview?: GoogleReview;
-    ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
     tnc?: TNC;
@@ -484,8 +477,6 @@ declare global {
       referrals?: subscriptionActiveField;
       catalog?: subscriptionActiveField;
     };
-    // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.
-    [sfpn.Ticket]?: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
         completionTokens: number;
@@ -584,19 +575,6 @@ declare global {
 
   /** What generateQuestionResponsesFromFlowResponse yields, per flow version. */
   type WaFlowQuestionResponse = QuestionResponse | WaFlowV2QuestionResponse;
-
-  interface FlowTicket {
-    questionId: string;
-    type: QuestionType2;
-    selectedColumnId?: string;
-    selectedBoardId?: string;
-    condition: {
-      minRating?: number;
-      minOpinion?: number;
-      reqOptions?: string[];
-      submissionTicket?: boolean;
-    };
-  }
 
   interface WaFlowScreen {
     id: string;
@@ -863,7 +841,12 @@ declare global {
     [key: string]: unknown;
   }
 
-  /** One tickable line on a ticket card's checklist. */
+  /**
+   * RETIRED: ticket boards were removed, but `TicketCard.checklists` still carries the
+   * `/// [PTicketChecklists]` annotation in schema.prisma, and the generated client
+   * (generated/prisma/models/TicketCard.ts) references the type below. It has to stay
+   * until the Ticket* tables are dropped. Nothing in src/ reads it.
+   */
   interface TicketChecklistItem {
     id: string;
     text?: string;

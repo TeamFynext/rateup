@@ -6,8 +6,8 @@ import { canAccess, subscriptionGates, TeamFeature } from "./canAccess.js";
 const withTeam = (...features: TeamFeature[]) => new Set<TeamFeature>(features);
 
 describe("subscriptionGates", () => {
-  test("tickets are free with NO subscription gate", () => {
-    expect(subscriptionGates[TeamFeature.tickets]).toBeNull();
+  test("the pipeline is free with NO subscription gate", () => {
+    expect(subscriptionGates[TeamFeature.pipeline]).toBeNull();
   });
 
   test("gated features still map to their subscription feature", () => {
@@ -16,14 +16,14 @@ describe("subscriptionGates", () => {
   });
 });
 
-describe("canAccess — tickets (ungated)", () => {
+describe("canAccess — ungated features", () => {
   test("granted regardless of subscription features when the team is allowed", () => {
-    // Empty features (no `ticket` key at all) must NOT block tickets anymore.
-    expect(canAccess({} as any, withTeam(TeamFeature.tickets), TeamFeature.tickets)).toBe(true);
+    // Empty features (no matching key at all) must not block an ungated feature.
+    expect(canAccess({} as any, withTeam(TeamFeature.pipeline), TeamFeature.pipeline)).toBe(true);
   });
 
   test("still respects team/RBAC permission", () => {
-    expect(canAccess({} as any, withTeam(), TeamFeature.tickets)).toBe(false);
+    expect(canAccess({} as any, withTeam(), TeamFeature.pipeline)).toBe(false);
   });
 });
 

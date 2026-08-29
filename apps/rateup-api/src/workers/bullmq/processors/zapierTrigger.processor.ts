@@ -1,7 +1,7 @@
 // Ported from message-dispatcher/src/index.ts.
 //
 // Delivers a trigger to every Zapier hook subscribed to it. The job *name* is the
-// trigger key (contact_create, ticket_update, …), not the payload.
+// trigger key (new_contact_create, contact_updated, …), not the payload.
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../shared/logger.js";

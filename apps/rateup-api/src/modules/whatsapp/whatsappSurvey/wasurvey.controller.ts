@@ -110,7 +110,6 @@ import type {
   TemplateComponentParameter,
 } from "./node-types.js";
 import { logAutomationAction, findRecentAutomation } from "./automation-logger.utils.js";
-import { autoGenerateTicket } from "../../ticket/ticketCard/card.service.js";
 import {
   getAutomatedReplyById,
   verifyAutomationTriggerLimit,
@@ -1201,16 +1200,6 @@ export async function processNextNode(
           undefined,
         );
         break;
-      case "ticketNode":
-        const typedData = node?.data as NodeTypeMap["ticketNode"];
-        await autoGenerateTicket({
-          ticketColumnId: typedData?.ticket?.selectedBoardColumnId,
-          waAutomatedReplyMessageId: automationMessageId,
-          type: "AUTOMATION",
-          orgId,
-        });
-        break;
-
       case "pauseNode": {
         if (!automationMessageId) {
           log.error("Cannot pause automation without an automationMessageId");

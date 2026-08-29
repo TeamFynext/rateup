@@ -25,9 +25,7 @@ const responseCore = {
       .optional(),
   }),
   encryptedResponses: z.string().optional(),
-  shouldRaiseTicket: z.boolean().optional(),
   checkUniqueDevice: z.boolean().optional(),
-  selectedColumnId: z.string().optional().nullable(),
 };
 
 const createResponseInputSchema = z.object({

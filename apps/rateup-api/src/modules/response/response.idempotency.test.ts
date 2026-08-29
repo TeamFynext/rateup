@@ -17,18 +17,14 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
-vi.mock("../ticket/ticketCard/card.service.js", () => ({ autoGenerateTicket: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
-import { autoGenerateTicket } from "../ticket/ticketCard/card.service.js";
 import { createResponse } from "./response.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   surveyResponse: { create: Mock; findUnique: Mock; findFirst: Mock };
 };
-const autoGenerateTicketMock = autoGenerateTicket as unknown as Mock;
-
 const KEY = "v1.token.signature";
 const EXISTING = {
   id: "resp-existing",
@@ -75,15 +71,6 @@ describe("createResponse idempotency", () => {
     expect(db.surveyResponse.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { idempotencyKey: KEY } }),
     );
-  });
-
-  // A duplicate must not raise a second ticket for the same answers.
-  test("does not re-raise the response's ticket on a retry", async () => {
-    db.surveyResponse.findUnique.mockResolvedValue(EXISTING);
-
-    await createResponse(input({ idempotencyKey: KEY }), true, false, null, "col-1");
-
-    expect(autoGenerateTicketMock).not.toHaveBeenCalled();
   });
 
   // Two retries racing: the loser of the unique index reads back the winner's row.

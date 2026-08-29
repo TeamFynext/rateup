@@ -51,7 +51,6 @@ interface MemberFixture {
   role: string;
   status: string;
   lastLoggedInAt: string;
-  assignedTicketsCount: number;
   assignedChatsCount: number;
 }
 
@@ -64,7 +63,6 @@ function member(over: Record<string, unknown> = {}) {
     role: "ADMIN",
     status: "online",
     lastLoggedInAt: "2026-03-01T00:00:00.000Z",
-    assignedTicketsCount: 3,
     assignedChatsCount: 5,
   };
   return { ...base, ...over };
@@ -87,30 +85,28 @@ describe("getOverallStats", () => {
     await getOverallStats(ORG, USER);
 
     const { values } = query();
-    expect(values.filter((v) => v === ORG)).toHaveLength(8);
+    expect(values.filter((v) => v === ORG)).toHaveLength(7);
     expect(values).toContain(USER);
   });
 
   test("returns the single aggregate row", async () => {
-    db.$queryRaw.mockResolvedValue([{ newChatCount: 4, ticketCount: 2 }]);
+    db.$queryRaw.mockResolvedValue([{ newChatCount: 4, teamsCount: 2 }]);
 
-    expect(await getOverallStats(ORG, USER)).toEqual({ newChatCount: 4, ticketCount: 2 });
+    expect(await getOverallStats(ORG, USER)).toEqual({ newChatCount: 4, teamsCount: 2 });
   });
 
-  test("counts only chats and tickets from the last twenty-four hours", async () => {
+  test("counts only chats from the last twenty-four hours", async () => {
     await getOverallStats(ORG, USER);
 
     const { sql } = query();
     expect(sql).toContain(`"lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours'`);
-    expect(sql).toContain(`tc."createdAt" > NOW() - INTERVAL '24 hours'`);
   });
 
-  test("scopes campaigns and tickets to the org through their team", async () => {
+  test("scopes campaigns to the org through their team", async () => {
     await getOverallStats(ORG, USER);
 
     const { sql } = query();
     expect(sql).toContain(`JOIN "Team" t ON cp."teamId" = t.id`);
-    expect(sql).toContain(`JOIN "Team" t ON tbt."teamId" = t.id`);
   });
 
   test("counts loyalty customers through the table the rewrite left behind", async () => {
@@ -134,7 +130,6 @@ describe("getOverallStats", () => {
     expect(await getOverallStats(ORG, USER)).toMatchObject({
       newChatCount: 0,
       teamsCount: 0,
-      ticketCount: 0,
     });
   });
 });
@@ -230,7 +225,6 @@ describe("getTeamMemberStats", () => {
     expect(row).toMatchObject({
       email: "ann@example.test",
       role: "ADMIN",
-      assignedTicketsCount: 3,
       assignedChatsCount: 5,
     });
   });

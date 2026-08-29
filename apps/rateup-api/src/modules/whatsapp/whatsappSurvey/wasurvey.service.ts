@@ -7,7 +7,6 @@ import {
 import {
   CampaignParticipantStatus,
   QuestionType as Q,
-  QuestionType2,
   SubscriptionFeaturePathName,
   WaQuestions,
   WaTemplateCategory,
@@ -499,63 +498,6 @@ export function shouldShowGoogleReviewV2({
   return showGoogleReview;
 }
 /**
- * Ticket rules are evaluated for both v1 survey answers (`QuestionResponse`, whose
- * `response` is keyed by question type) and v2 flow answers (a bare scalar/array).
- */
-type FlowQuestionResponse = WaFlowQuestionResponse;
-
-/** Ticket conditions compare against scalars, so collapse either answer shape to text. */
-function ticketAnswerValues(response: FlowQuestionResponse["response"]): string[] {
-  if (Array.isArray(response)) return response.map((item) => String(item));
-  if (response !== null && typeof response === "object") {
-    return Object.values(response).map((item) => String(item));
-  }
-  return [String(response ?? "")];
-}
-function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses: FlowQuestionResponse[]) {
-  let shouldRaiseTicket = false;
-  for (const ticket of ticketIssued) {
-    const response = responses.find((r) => r.questionId === ticket.questionId);
-    if (!response) continue;
-    if (ticket.condition.submissionTicket) shouldRaiseTicket = true;
-    switch (ticket.type) {
-      case QuestionType2.Rating:
-        shouldRaiseTicket =
-          Number(ticketAnswerValues(response.response)[0]) <=
-          (ticket.condition.minRating ?? -Infinity);
-        break;
-      case QuestionType2.Smiley:
-        shouldRaiseTicket = (ticket.condition.reqOptions ?? []).includes(
-          ticketAnswerValues(response.response)[0]!,
-        );
-        break;
-      case QuestionType2.Opinion:
-        shouldRaiseTicket =
-          Number(ticketAnswerValues(response.response)[0]) <=
-          (ticket.condition.minOpinion ?? -Infinity);
-        break;
-      case QuestionType2.CheckboxGroup:
-      case QuestionType2.ChipsSelector:
-      case QuestionType2.Dropdown:
-      case QuestionType2.RadioButtonsGroup: {
-        const answers = ticketAnswerValues(response.response);
-        shouldRaiseTicket = (ticket.condition.reqOptions ?? []).some((op) => answers.includes(op));
-        break;
-      }
-    }
-    if (shouldRaiseTicket) return true;
-  }
-  return shouldRaiseTicket;
-}
-function getColumnIdFromTickets(ticketIssued: FlowTicket[], responses: FlowQuestionResponse[]) {
-  for (const ticket of ticketIssued) {
-    const response = responses.find((r) => r.questionId === ticket.questionId);
-    if (!response) continue;
-    return ticket.selectedColumnId;
-  }
-  return null;
-}
-/**
  * Everything `saveResponses` reads about the run it is persisting. Structural,
  * not tied to any one carrier of the run context: the flow paths assemble it
  * from a signed flow_token plus the Redis answer accumulator.
@@ -579,11 +521,8 @@ export interface SaveResponsesContext {
   idempotencyKey?: string | null;
   surveyTeamMap?: {
     survey: {
-      enableAutoGenerateTicket?: boolean | null;
-      ticketColumnId?: string | null;
       WaFlow?: {
         anonymous?: boolean | null;
-        ticketIssued?: unknown;
       } | null;
     };
   } | null;
@@ -711,15 +650,7 @@ export async function saveResponses(session: SaveResponsesContext) {
     location: { coordinates: undefined },
     idempotencyKey: session.idempotencyKey ?? undefined,
   };
-  const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow
-    ?.ticketIssued as unknown as FlowTicket[];
-  let shouldRaiseTicket = session?.surveyTeamMap?.survey?.enableAutoGenerateTicket ?? undefined;
-  let columnId = session?.surveyTeamMap?.survey?.ticketColumnId ?? undefined;
-  if (ticketIssued.length && !shouldRaiseTicket) {
-    columnId = getColumnIdFromTickets(ticketIssued, questionResponses) ?? undefined;
-    shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);
-  }
-  const res = await createResponse(surveyResponse, shouldRaiseTicket, false, null, columnId);
+  const res = await createResponse(surveyResponse, false, null);
   await updateResponse(res.id, { ip: session.ip, location: undefined });
   // TODO: CHECK LOYALTY FEATURE
   // const loyalty = await prisma.loyaltyAction.findFirst({

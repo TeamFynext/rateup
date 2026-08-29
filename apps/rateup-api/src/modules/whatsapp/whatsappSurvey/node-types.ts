@@ -22,7 +22,6 @@ export type Node =
   | ContactsNodeData
   | FlowNodeData
   | AiBotNodeData
-  | TicketNodeData
   | AssignNodeData
   | LeadgenNodeData
   | CatalogNodeData;
@@ -284,14 +283,6 @@ export interface AiBotNodeData extends BaseNodeData {
   };
 }
 
-export interface TicketNodeData extends BaseNodeData {
-  ticket: {
-    selectedBoardId: string;
-    selectedBoardName: string;
-    selectedBoardColumnId: string;
-    selectedBoardColumnName: string;
-  };
-}
 export interface AssignNodeData extends BaseNodeData {
   assign: {
     choice: "manual" | "all";
@@ -366,7 +357,6 @@ export interface NodeTypeMap {
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
   aibotNode: AiBotNodeData;
-  ticketNode: TicketNodeData;
   assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
   catalogNode: CatalogNodeData;
@@ -399,7 +389,6 @@ export type NodeData =
   | ContactsNodeData
   | FlowNodeData
   | AiBotNodeData
-  | TicketNodeData
   | AssignNodeData
   | CatalogNodeData;
 

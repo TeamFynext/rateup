@@ -16,10 +16,8 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
   [TeamFeature.automation]: sfpn.Whatsapp,
   [TeamFeature.loyalty]: sfpn.WhatsappLoyalty,
   [TeamFeature.web_forms]: sfpn.WebSurvey,
-  // Tickets are free with no limits (no subscription feature backs them), so
-  // there is no subscription gate — access is governed only by team/RBAC perms.
-  [TeamFeature.tickets]: null,
-  // Same as tickets: the lead pipeline has no subscription feature behind it.
+  // The lead pipeline has no subscription feature behind it, so there is no
+  // subscription gate — access is governed only by team/RBAC perms.
   [TeamFeature.pipeline]: null,
   [TeamFeature.ai_chatbot]: sfpn.AI,
 
@@ -28,6 +26,12 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
   [TeamFeature.qr_studio]: null,
   [TeamFeature.apps_services]: null,
   [TeamFeature.settings]: null,
+
+  // RETIRED: ticket boards were removed. The enum value still exists in Postgres
+  // (and on teams that had it switched on), so this map — which must be total over
+  // TeamFeature — still needs the key. Nothing reads it; drop it together with the
+  // enum value when the Ticket* tables are dropped.
+  [TeamFeature.tickets]: null,
 };
 
 /**
