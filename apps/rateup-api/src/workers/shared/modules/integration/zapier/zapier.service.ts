@@ -168,18 +168,6 @@ export async function getFormattedPayloadForTrigger(triggerKey: ZapierTriggers, 
         stageStatus: tmp.stageStatus,
       };
     }
-    case ZapierTriggers.TICKET_CREATED: {
-      const card = data[ZapierTriggers.TICKET_CREATED];
-      return {
-        ticketId: card.ticketId,
-        title: card.title,
-        description: card.description,
-        type: card.type,
-        ticketColumnName: card.ticketColumn.title,
-        deadline: card.deadline,
-        priority: card.priority,
-      };
-    }
     case ZapierTriggers.CONTACT_ADDED_TO_GROUP: {
       const tmp = data[ZapierTriggers.CONTACT_ADDED_TO_GROUP];
       return {
@@ -211,33 +199,6 @@ export async function getFormattedPayloadForTrigger(triggerKey: ZapierTriggers, 
         email: contact.email,
         source: contact.source,
         igsId: contact.igsId,
-      };
-    }
-    case ZapierTriggers.TICKET_CARD_MOVED: {
-      const card = data[ZapierTriggers.TICKET_CARD_MOVED];
-      return {
-        ticketId: card.ticketId,
-        title: card.title,
-        description: card.description,
-        type: card.type,
-        ticketColumnName: card.ticketColumn.title,
-        deadline: card.deadline,
-        priority: card.priority,
-      };
-    }
-    case ZapierTriggers.TICKET_ASSIGNEE_UPDATED: {
-      const { card, assignees } = data[ZapierTriggers.TICKET_ASSIGNEE_UPDATED];
-      return {
-        card: {
-          ticketId: card.ticketId,
-          title: card.title,
-          description: card.description,
-          type: card.type,
-          ticketColumnName: card.ticketColumn.title,
-          deadline: card.deadline,
-          priority: card.priority,
-        },
-        assignees: assignees.map((u: any) => ({ name: u.name, email: u.email })),
       };
     }
     case ZapierTriggers.NEW_TEAM_MEMBER_CREATED: {

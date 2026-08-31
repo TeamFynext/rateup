@@ -1,15 +1,12 @@
 import { FastifyInstance } from "fastify";
 import {
   addContactToGroupHandler,
-  createTicketHandler,
   deleteContactHandler,
   getContactGroupsHandler,
   getContactHandler,
   getLifecycleHandler,
   getSampleDataForTriggerHandler,
   getTeamsHandler,
-  getTicketBoardsByTeamIdHandler,
-  getTicketColumnsByBoardIdHandler,
   inviteMemberHandler,
   sendTextMessageHandler,
   subscribeTriggerHandler,
@@ -20,7 +17,6 @@ import {
 } from "./zapier.controller.js";
 import { createContactHandler } from "../../../contact/contact.controller.js";
 import {
-  boardQuerySchema,
   contactLabelSchema,
   contactResponseSchema,
   contactSearchResponseSchema,
@@ -30,9 +26,6 @@ import {
   newMemberToGroupShema,
   sendMessageSchema,
   successSchema,
-  ticketCardResponseSchema,
-  ticketCardSchema,
-  ticketColumnSchema,
   triggerSubscriptionBodySchema,
 } from "./zapier.schema.js";
 
@@ -78,30 +71,6 @@ export async function zapierRoutes(server: FastifyInstance) {
       },
     },
     getTeamsHandler,
-  );
-  server.get(
-    "/ticket-boards",
-    {
-      schema: {
-        querystring: boardQuerySchema,
-        response: {
-          201: dropdownResponseSchema,
-        },
-      },
-    },
-    getTicketBoardsByTeamIdHandler,
-  );
-  server.get(
-    "/ticket-column",
-    {
-      schema: {
-        querystring: ticketColumnSchema,
-        response: {
-          201: dropdownResponseSchema,
-        },
-      },
-    },
-    getTicketColumnsByBoardIdHandler,
   );
   server.get(
     "/group",
@@ -187,19 +156,6 @@ export async function zapierRoutes(server: FastifyInstance) {
     },
     deleteContactHandler,
   );
-  server.post(
-    "/ticket",
-    {
-      schema: {
-        response: {
-          201: ticketCardResponseSchema,
-        },
-        body: ticketCardSchema,
-      },
-    },
-    createTicketHandler,
-  );
-
   server.post(
     "/add-group-member",
     {

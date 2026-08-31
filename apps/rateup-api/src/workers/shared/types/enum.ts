@@ -91,11 +91,8 @@ export enum ZapierTriggers {
   CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
   /** The board's counterpart to the lifecycle trigger, added beside it. */
   CONTACT_STAGE_UPDATED = "contact_stage_updated",
-  TICKET_CREATED = "new_ticket",
   CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
   RESPONSE_SUBMITTED = "response_submitted",
   CONTACT_DELETED = "contact_deleted",
-  TICKET_CARD_MOVED = "ticket_card_moved",
-  TICKET_ASSIGNEE_UPDATED = "ticket_assignee_updated",
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
 }

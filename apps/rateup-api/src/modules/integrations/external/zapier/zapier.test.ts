@@ -30,13 +30,10 @@ vi.mock("./zapier.service.js", async () => {
     getContactsByPhoneNumberAndOrgId: vi.fn(),
     getLifecyclesByOrgId: vi.fn(),
     getSampleDataForTrigger: vi.fn(),
-    getTicketBoardsByTeamId: vi.fn(),
-    getTicketColumnsByBoardId: vi.fn(),
     getUserIdByEmailAndOrgId: vi.fn(),
   };
 });
 
-vi.mock("../../../ticket/ticketCard/card.service.js", () => ({ createCard: vi.fn() }));
 vi.mock("../../../contact/contactGroup/contactGroup.service.js", () => ({
   addNewContactsToGroup: vi.fn(),
   getContactGroupsByOrgId: vi.fn(),
@@ -52,7 +49,6 @@ import bcrypt from "bcrypt";
 import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
 import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { inviteTeamMember } from "../../../team/team.service.js";
-import { createCard } from "../../../ticket/ticketCard/card.service.js";
 import { deleteContactById, getContactById } from "../../../contact/contact.service.js";
 import {
   deleteContactByPhoneNumberAndOrgId,
@@ -100,7 +96,6 @@ beforeEach(() => {
   (bcrypt.compare as unknown as Mock).mockResolvedValue(true);
   (sendTextMessage as unknown as Mock).mockResolvedValue({ status: true });
   (inviteTeamMember as unknown as Mock).mockResolvedValue({ id: "invite-1" });
-  (createCard as unknown as Mock).mockResolvedValue({ ticketId: "T-1" });
   (getUserIdByEmailAndOrgId as unknown as Mock).mockResolvedValue({ userId: "user-1" });
   (getSampleDataForTrigger as unknown as Mock).mockResolvedValue([]);
   (getContactsByPhoneNumberAndOrgId as unknown as Mock).mockResolvedValue([]);
@@ -147,7 +142,7 @@ describe("route registration", () => {
 
     await zapierRoutes(srv);
 
-    expect(routes).toHaveLength(18);
+    expect(routes).toHaveLength(15);
     expect(routes.filter((r) => r.url === "/auth")).toHaveLength(1);
   });
 
@@ -171,8 +166,6 @@ describe("route registration", () => {
       "DELETE /subscribe",
       "GET /sample-data",
       "GET /teams",
-      "GET /ticket-boards",
-      "GET /ticket-column",
       "GET /group",
       "GET /lifecycle",
       "POST /send-message",
@@ -181,7 +174,6 @@ describe("route registration", () => {
       "PUT /contact",
       "GET /contact",
       "DELETE /contact",
-      "POST /ticket",
       "POST /add-group-member",
       "POST /invite-member",
     ]);
@@ -438,8 +430,8 @@ describe("the unauthenticated handlers take their org from the query string", ()
     );
   });
 
-  // NOTE: once subscribed, that URL receives the org's contact, message and
-  // ticket events for as long as it stays in the credential.
+  // NOTE: once subscribed, that URL receives the org's contact and message
+  // events for as long as it stays in the credential.
   test("a subscribed hook is stored as active with no verification", async () => {
     await subscribeTriggerHandler(
       {

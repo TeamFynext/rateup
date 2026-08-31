@@ -5,7 +5,6 @@ const notificationIdParamSchema = z.object({
 });
 
 const notificationSettingSchema = z.object({
-  ticketAssignNotification: z.boolean().optional(),
   waMessageAssignNotification: z.boolean().optional(),
   waMessageClosedNotification: z.boolean().optional(),
 });

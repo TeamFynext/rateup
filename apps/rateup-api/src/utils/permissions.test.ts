@@ -14,7 +14,6 @@ vi.mock("../../generated/prisma/client.js", () => ({
     analytics: "analytics",
     contacts: "contacts",
     campaigns: "campaigns",
-    tickets: "tickets",
     settings: "settings",
   },
 }));

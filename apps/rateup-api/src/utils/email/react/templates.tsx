@@ -35,7 +35,6 @@ import SubscriptionActivatedEmail from "../../../emails/subscription-activated.j
 import SubscriptionExpiryEmail, { type ExpiryStage } from "../../../emails/subscription-expiry.js";
 import SurveyResponseEmail, { type SurveyResponseAnswer } from "../../../emails/survey-response.js";
 import TeamInviteEmail, { type TeamInviteEmailProps } from "../../../emails/team-invite.js";
-import TicketEmail, { type TicketEmailProps } from "../../../emails/ticket.js";
 import UsageLimitEmail from "../../../emails/usage-limit.js";
 import VerifyEmail, { type VerifyEmailProps } from "../../../emails/verify-email.js";
 import WeeklyReportEmail, { type WeeklyReportEmailProps } from "../../../emails/weekly-report.js";
@@ -125,10 +124,6 @@ export function renderSurveyResponseEmail(props: {
 
 export function renderContactFormEmail(props: ContactFormEmailProps) {
   return renderEmail(<ContactFormEmail {...props} />);
-}
-
-export function renderTicketEmail(props: TicketEmailProps) {
-  return renderEmail(<TicketEmail {...props} />);
 }
 
 export function renderSubscriptionActivatedEmail(props: {

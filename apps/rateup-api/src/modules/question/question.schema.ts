@@ -92,18 +92,6 @@ const questionCore = {
       }),
     ])
     .optional(),
-  ticketIssue: z
-    .union([
-      z.null(),
-      z.object({
-        minRating: z.number().optional(),
-        minOpinion: z.number().optional(),
-        reqOptions: z.array(z.string()).optional(),
-        selectedColumnId: z.string().optional(),
-        selectedBoardId: z.string().optional(),
-      }),
-    ])
-    .optional(),
   logic: z.array(logicJumpSchema).optional(),
   validationRules: z.union([z.null(), validationRulesSchema, z.any()]).optional(),
   tnc: z
@@ -189,19 +177,6 @@ const updateQuestionRequestSchema = z.object({
         minRating: z.number().optional(),
         minOpinion: z.number().optional(),
         reqOptions: z.array(z.string()).optional(),
-      }),
-    ])
-    .optional(),
-  ticketIssue: z
-    .union([
-      z.null(),
-      z.object({
-        minRating: z.number().optional(),
-        minOpinion: z.number().optional(),
-        reqOptions: z.array(z.string()).optional(),
-        submissionTicket: z.boolean().optional(),
-        selectedColumnId: z.string().optional(),
-        selectedBoardId: z.string().optional(),
       }),
     ])
     .optional(),
