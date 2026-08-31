@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
 import { Button, buttonVariants } from "@/components/ui/button.tsx";
-import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogoWhite } from "@/utils/constants.ts";
 
 interface AuthHeaderProps {
   isSignup: boolean;
@@ -18,13 +18,13 @@ export function AuthHeader({
   const switchLabel = isSignup ? "Sign In" : "Create account";
 
   return (
-    <header className="w-full bg-[#081C3F] border-b border-white/5 shadow-md">
+    <header className="w-full bg-ru-blue-900 border-b border-white/5 shadow-md">
       <div
         className={`mx-auto w-full px-6 py-[18px] flex items-center justify-between gap-4 ${maxWidth}`}
       >
         <Link to="/" className="flex items-center shrink-0">
           <Image
-            src={rateupLogoHorizontalWhiteTransparent}
+            src={rateupLogoWhite}
             alt="RateUp Logo"
             width={100}
             height={33}

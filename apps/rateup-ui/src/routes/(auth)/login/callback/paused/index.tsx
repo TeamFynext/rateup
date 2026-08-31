@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
+import { rateupIconBw } from "@/utils/constants";
 
 export const Route = createFileRoute("/(auth)/login/callback/paused/")({
   /** Declares the search params this route reads, so links to it type-check. */
@@ -24,7 +25,7 @@ function PausedPage() {
       <Card className="p-8 w-fit">
         <div className="flex flex-col items-center gap-4">
           <img
-            src={`${import.meta.env.VITE_FRONTEND_URL}/images/bw-logo.png`}
+            src={rateupIconBw}
             alt="Logo"
             className="object-contain"
             style={{ width: isMobile ? 70 : 80, height: isMobile ? 70 : 80 }}

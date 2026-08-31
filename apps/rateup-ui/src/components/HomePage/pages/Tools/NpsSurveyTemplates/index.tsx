@@ -36,7 +36,7 @@ export default function NpsSurveyTemplates() {
         <NpsCalculator />
 
         <div className="mt-11 flex flex-wrap items-center justify-between gap-4">
-          <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-[#0A0B0A] sm:text-[32px]">
+          <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
             {NPS_TEMPLATES.length} templates by industry
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -49,8 +49,8 @@ export default function NpsSurveyTemplates() {
                 className={cn(
                   "cursor-pointer rounded-full border border-[#E0E5EC] px-3 py-1.5 text-[12.5px] font-bold transition-colors",
                   sector === option
-                    ? "border-[#1C518E] bg-[#1C518E] text-white"
-                    : "bg-white text-[#4A4C49] hover:border-[#CBD9EA]",
+                    ? "border-primary bg-primary text-white"
+                    : "bg-white text-muted-foreground hover:border-[#CBD9EA]",
                 )}
               >
                 {option}
@@ -65,23 +65,23 @@ export default function NpsSurveyTemplates() {
               key={template.slug}
               to="/tools/nps-survey-templates/$slug"
               params={{ slug: template.slug }}
-              className="block rounded-xl border border-[#ECECEA] bg-white p-[22px] transition-colors hover:border-[#CBD9EA]"
+              className="block rounded-xl border border-border bg-white p-[22px] transition-colors hover:border-[#CBD9EA]"
             >
               <div className="flex items-center justify-between gap-2.5">
-                <span className="rounded-full bg-[#EEF4FB] px-2 py-1 text-[11px] font-extrabold tracking-[0.1em] text-[#1C518E] uppercase">
+                <span className="rounded-full bg-accent px-2 py-1 text-[11px] font-extrabold tracking-[0.1em] text-primary uppercase">
                   {template.sector}
                 </span>
-                <span className="text-right text-[11.5px] text-[#8A8C88]">{template.timing}</span>
+                <span className="text-right text-[11.5px] text-muted-foreground">
+                  {template.timing}
+                </span>
               </div>
-              <div className="mt-3.5 mb-2 font-nunito text-[16px] leading-[1.3] font-extrabold text-[#0A0B0A]">
+              <div className="mt-3.5 mb-2 font-nunito text-[16px] leading-[1.3] font-extrabold text-foreground">
                 {template.industry}
               </div>
-              <p className="m-0 text-[13px] leading-[1.5] text-[#4A4C49]">
+              <p className="m-0 text-[13px] leading-[1.5] text-muted-foreground">
                 {template.ratingQuestion}
               </p>
-              <div className="mt-3.5 text-[12.5px] font-bold text-[#1C518E]">
-                Use this template →
-              </div>
+              <div className="mt-3.5 text-[12.5px] font-bold text-primary">Use this template →</div>
             </Link>
           ))}
         </div>
@@ -118,10 +118,10 @@ function NpsCalculator() {
     <ToolCard>
       <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.2fr]">
         <div>
-          <div className="font-nunito text-[19px] font-extrabold text-[#0A0B0A]">
+          <div className="font-nunito text-[19px] font-extrabold text-foreground">
             Score your responses
           </div>
-          <p className="mt-1.5 mb-4.5 text-[13px] text-[#8A8C88]">
+          <p className="mt-1.5 mb-4.5 text-[13px] text-muted-foreground">
             Promoters 9–10 · Passives 7–8 · Detractors 0–6
           </p>
           <div className="grid grid-cols-3 gap-3">
@@ -156,25 +156,25 @@ function NpsCalculator() {
           {result && verdict ? (
             <>
               <div>
-                <div className="text-[11px] font-extrabold tracking-[0.12em] text-[#1C518E] uppercase">
+                <div className="text-[11px] font-extrabold tracking-[0.12em] text-primary uppercase">
                   Your NPS
                 </div>
-                <div className="font-nunito text-[48px] leading-none font-black tracking-[-0.02em] text-[#1C518E] sm:text-[60px]">
+                <div className="font-nunito text-[48px] leading-none font-black tracking-[-0.02em] text-primary sm:text-[60px]">
                   {result.score}
                 </div>
               </div>
               <div className="border-l border-[#D9E4F0] pl-6">
-                <div className="text-[14px] font-extrabold text-[#0A0B0A]">{verdict.label}</div>
-                <p className="mt-1 text-[12.5px] leading-[1.5] text-[#666864]">
+                <div className="text-[14px] font-extrabold text-foreground">{verdict.label}</div>
+                <p className="mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
                   {result.promoterShare}% promoters − {result.detractorShare}% detractors
                 </p>
-                <div className="mt-2 text-[12px] text-[#8A8C88]">
+                <div className="mt-2 text-[12px] text-muted-foreground">
                   {result.total.toLocaleString("en-IN")} responses
                 </div>
               </div>
             </>
           ) : (
-            <p className="text-[13px] text-[#8A8C88]">Enter at least one response.</p>
+            <p className="text-[13px] text-muted-foreground">Enter at least one response.</p>
           )}
         </div>
       </div>

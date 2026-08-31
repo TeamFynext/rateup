@@ -20,12 +20,12 @@ const TestimonialFooter = () => {
             <h4 className="font-semibold text-lg pb-4 text-[#013553]">Product</h4>
             <ul className="space-y-3">
               <li>
-                <a href="#features" className="text-[#1c518e] transition-colors">
+                <a href="#features" className="text-primary transition-colors">
                   Features
                 </a>
               </li>
               <li>
-                <Link to="/pricing" className="text-[#1c518e] transition-colors">
+                <Link to="/pricing" className="text-primary transition-colors">
                   Pricing
                 </Link>
               </li>
@@ -36,18 +36,18 @@ const TestimonialFooter = () => {
             <h4 className="font-semibold text-lg pb-4 text-[#013553]">Company</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/about-us" className="text-[#1c518e] transition-colors">
+                <Link to="/about-us" className="text-primary transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <a href="https://blog.rateup.app/" className="text-[#1c518e] transition-colors">
+                <a href="https://blog.rateup.app/" className="text-primary transition-colors">
                   Blog
                 </a>
               </li>
 
               <li>
-                <Link to="/contact-us" className="text-[#1c518e] transition-colors">
+                <Link to="/contact-us" className="text-primary transition-colors">
                   Contact
                 </Link>
               </li>
@@ -58,12 +58,12 @@ const TestimonialFooter = () => {
             <h4 className="font-semibold text-lg pb-4 text-[#013553]">Legal</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/privacy-policy" className="text-[#1c518e] transition-colors">
+                <Link to="/privacy-policy" className="text-primary transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/terms-of-service" className="text-[#1c518e] transition-colors">
+                <Link to="/terms-of-service" className="text-primary transition-colors">
                   Terms of Service
                 </Link>
               </li>
@@ -77,13 +77,13 @@ const TestimonialFooter = () => {
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0 text-[#00397b]">
             <a href="https://www.facebook.com/people/RateUp/61556199852468/">
-              <IconBrandFacebook className="h-5 w-5 hover:text-[#1c518e] transition-colors" />
+              <IconBrandFacebook className="h-5 w-5 hover:text-primary transition-colors" />
             </a>
             <a href="https://www.instagram.com/rateupsoftware/">
-              <IconBrandInstagram className="h-5 w-5 hover:text-[#1c518e] transition-colors" />
+              <IconBrandInstagram className="h-5 w-5 hover:text-primary transition-colors" />
             </a>
             <a href="https://www.linkedin.com/company/rateup">
-              <IconBrandLinkedin className="h-5 w-5 hover:text-[#1c518e] transition-colors" />
+              <IconBrandLinkedin className="h-5 w-5 hover:text-primary transition-colors" />
             </a>
           </div>
         </div>

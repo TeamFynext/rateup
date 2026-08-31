@@ -60,7 +60,7 @@ const TestimonialFAQSection = () => {
                 viewport={{ once: true, margin: "-100px" }}
               >
                 <AccordionItem value={`item-${index}`} className="border-b border-white/20">
-                  <AccordionTrigger className="cursor-pointer font-semibold py-6 hover:text-[#f8951d] transition-colors duration-200">
+                  <AccordionTrigger className="cursor-pointer font-semibold py-6 hover:text-ru-amber-500 transition-colors duration-200">
                     <span className="text-lg">{faq.question}</span>
                   </AccordionTrigger>
                   <AccordionContent className="text-white/80 text-base pb-5 px-1">
@@ -81,7 +81,7 @@ const TestimonialFAQSection = () => {
         >
           <p className="text-white/70 text-sm">
             Have more questions?{" "}
-            <a href="#" className="text-[#f8951d] hover:underline">
+            <a href="#" className="text-ru-amber-500 hover:underline">
               Contact our support team
             </a>
           </p>

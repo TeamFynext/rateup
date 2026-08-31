@@ -14,6 +14,7 @@ import { Image } from "@unpic/react";
 
 import { cn } from "@/lib/utils";
 import { SmileyColorType, SmileyVariantStyle } from "@/types/enums.ts";
+import { imagesPath } from "@/utils/constants.ts";
 
 /**
  * Smiley colours are stored as palette *names* ("yellow", "blue", …) and used to
@@ -242,15 +243,15 @@ export function getSmileyEmojies(value: number) {
 export function getDefaultSmileySrc(value: number) {
   switch (value) {
     case 1:
-      return "/images/smiley-icons/Very_Sad.svg";
+      return `${imagesPath}/smiley-icons/Very_Sad.svg`;
     case 2:
-      return "/images/smiley-icons/Sad.svg";
+      return `${imagesPath}/smiley-icons/Sad.svg`;
     case 3:
-      return "/images/smiley-icons/Neutral.svg";
+      return `${imagesPath}/smiley-icons/Neutral.svg`;
     case 4:
-      return "/images/smiley-icons/Happy.svg";
+      return `${imagesPath}/smiley-icons/Happy.svg`;
     case 5:
-      return "/images/smiley-icons/Very_Happy.svg";
+      return `${imagesPath}/smiley-icons/Very_Happy.svg`;
     default:
       return "";
   }

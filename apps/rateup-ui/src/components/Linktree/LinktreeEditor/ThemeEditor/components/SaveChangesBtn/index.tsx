@@ -13,8 +13,6 @@ import { initialState as defaultThemeobj } from "../../ThemeContext/constants.ts
 import { useThemeDispatch, useThemeObj } from "../../ThemeContext/ThemeContext.tsx";
 import { uploadFile } from "./uploadFile.tsx";
 
-import styles from "./SaveChangesBtn.module.css";
-
 function SaveChangesBtn() {
   // Theme obj from api.
   const { theme } = useLinktreeObj();
@@ -98,7 +96,7 @@ function SaveChangesBtn() {
         {haveUnsavedChanges ? "Unsaved Changes" : "All Changes are saved"}
       </p>
       <Button
-        className={styles["save-btn"]}
+        className={"h-auto rounded-[2.5rem] px-6 py-2 leading-normal"}
         disabled={isSaving}
         onClick={handleSavingLinktreeChanges}
       >

@@ -1,12 +1,12 @@
 .grad-cyan {
-  background: linear-gradient(100deg, #6bd0ff 0%, #2fa3ff 55%, #2c6fd6 100%);
+  background: linear-gradient(100deg, #6bd0ff 0%, var(--color-ru-blue-400) 55%, #2c6fd6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
 .grad-warm {
-  background: linear-gradient(135deg, #ffd54c 0%, #f8951d 100%);
+  background: linear-gradient(135deg, var(--color-ru-star-top) 0%, var(--color-ru-amber-500) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -253,7 +253,7 @@
   letter-spacing: -0.02em;
 }
 .brand .wm .up {
-  color: #4fc3ff;
+  color: var(--color-ru-blue-300);
 }
 
 /* Buttons */
@@ -337,7 +337,7 @@
   width: 0;
   z-index: 0;
   border-radius: 2px;
-  background: linear-gradient(90deg, #2fa3ff, #4fc3ff);
+  background: linear-gradient(90deg, var(--color-ru-blue-400), var(--color-ru-blue-300));
   box-shadow: 0 0 12px rgba(47, 163, 255, 0.6);
   transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: 75%;
@@ -419,13 +419,13 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 13px;
-  color: #4fc3ff;
+  color: var(--color-ru-blue-300);
   transition:
     background 180ms,
     color 180ms;
 }
 .fstep.active .num {
-  background: #4fc3ff;
+  background: var(--color-ru-blue-300);
   color: #042;
   border-color: transparent;
 }

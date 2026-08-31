@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/collapsible.tsx";
 import { cn } from "@/lib/utils.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
-import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants";
+import { rateupLogo, rateupLogoWhite } from "@/utils/constants";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 /** The setup steps rendered by this page; mirrors the API's checklist keys. */
@@ -76,13 +76,31 @@ const CARD_ICONS: Record<CardId, CardIcon> = {
     icon: IconCreditCard,
     iconBg: { background: "rgba(16,185,129,0.08)", color: "#10b981" },
   },
-  verify: { icon: IconRosetteDiscountCheck, iconClass: "bg-primary/10 text-primary" },
-  invite: { icon: IconUsers, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
-  auto: { icon: IconBolt, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
+  verify: {
+    icon: IconRosetteDiscountCheck,
+    iconClass: "bg-primary/10 text-primary",
+  },
+  invite: {
+    icon: IconUsers,
+    iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" },
+  },
+  auto: {
+    icon: IconBolt,
+    iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" },
+  },
   points: { icon: IconSettings2, iconClass: "bg-primary/10 text-primary" },
-  tiers: { icon: IconCoins, iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" } },
-  rewards: { icon: IconGift, iconBg: { background: "rgba(225,29,72,0.08)", color: "#e11d48" } },
-  referral: { icon: IconShare2, iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" } },
+  tiers: {
+    icon: IconCoins,
+    iconBg: { background: "rgba(217,119,6,0.08)", color: "#d97706" },
+  },
+  rewards: {
+    icon: IconGift,
+    iconBg: { background: "rgba(225,29,72,0.08)", color: "#e11d48" },
+  },
+  referral: {
+    icon: IconShare2,
+    iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" },
+  },
   cmds: {
     icon: IconMessageCircle,
     iconBg: { background: "rgba(5,150,105,0.08)", color: "#059669" },
@@ -206,7 +224,10 @@ const META_BILLING_URL = "https://business.facebook.com/latest/billing_hub/accou
 const CARD_ROUTES = {
   // The WhatsApp channel page is the `$channel` route, so it needs params rather
   // than a literal "/dashboard/settings/channels/whatsapp" path.
-  api: { to: "/dashboard/settings/channels/$channel", params: { channel: "whatsapp" } },
+  api: {
+    to: "/dashboard/settings/channels/$channel",
+    params: { channel: "whatsapp" },
+  },
   invite: { to: "/dashboard/settings/users" },
   auto: { to: "/dashboard/automation" },
   points: { to: "/dashboard/loyalty/settings" },
@@ -357,10 +378,17 @@ export function RateUpOnboarding() {
       <nav className="w-full h-16 border-b px-4 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
         {/* Left */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* The nav is white in light mode and near-black in dark, so the mark
+              swaps rather than relying on one transparent lockup for both. */}
           <img
-            src={`${rateupLogoHorizontalWhiteTransparent}`}
+            src={rateupLogo}
             alt={translations("RateUp Logo")}
-            className="w-20 sm:w-24 h-auto"
+            className="w-28 sm:w-32 h-auto dark:hidden"
+          />
+          <img
+            src={rateupLogoWhite}
+            alt={translations("RateUp Logo")}
+            className="w-28 sm:w-32 h-auto hidden dark:block"
           />
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
@@ -443,8 +471,16 @@ export function RateUpOnboarding() {
             {/* Right stats */}
             <div className="flex gap-2.5 shrink-0">
               {[
-                { id: "completed", val: doneTasks, label: translations("completed") },
-                { id: "remaining", val: remainingTasks, label: translations("remaining") },
+                {
+                  id: "completed",
+                  val: doneTasks,
+                  label: translations("completed"),
+                },
+                {
+                  id: "remaining",
+                  val: remainingTasks,
+                  label: translations("remaining"),
+                },
               ].map(({ id, val, label }) => (
                 <div
                   key={id}

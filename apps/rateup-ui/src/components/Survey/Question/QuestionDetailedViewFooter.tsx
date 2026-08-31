@@ -18,7 +18,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PageType, QuestionType } from "@/types/enums.ts";
-import { NPSQuestions } from "@/utils/constants.ts";
+import { imagesPath, NPSQuestions } from "@/utils/constants.ts";
 import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
@@ -125,11 +125,7 @@ function QuestionDetailedViewFooter({
 
           {logicSupportedTypes.includes(question?.type as QuestionType) && (
             <DropdownMenuItem onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}>
-              <img
-                src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump.svg`}
-                className="size-4"
-                alt="logic jump icon"
-              />
+              <img src={`${imagesPath}/logic-jump.svg`} className="size-4" alt="logic jump icon" />
               {translations("Logic Jump")}
             </DropdownMenuItem>
           )}

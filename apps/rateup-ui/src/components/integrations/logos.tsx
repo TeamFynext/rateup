@@ -1,17 +1,22 @@
 import { cn } from "@/lib/utils.ts";
+import { imagesPath, rateupIcon } from "@/utils/constants";
 
 type LogoProps = Readonly<{ className?: string }>;
 
 export function ShopifyLogo({ className }: LogoProps) {
   return (
-    <img src="/images/shopifyicon.png" alt="Shopify" className={cn("object-contain", className)} />
+    <img
+      src={`${imagesPath}/shopifyicon.png`}
+      alt="Shopify"
+      className={cn("object-contain", className)}
+    />
   );
 }
 
 export function GoogleSheetsLogo({ className }: LogoProps) {
   return (
     <img
-      src="/images/googlesheeticon.png"
+      src={`${imagesPath}/googlesheeticon.png`}
       alt="Google Sheets"
       className={cn("object-contain", className)}
     />
@@ -19,13 +24,19 @@ export function GoogleSheetsLogo({ className }: LogoProps) {
 }
 
 export function AmeliaLogo({ className }: LogoProps) {
-  return <img src="/images/amelia.png" alt="Amelia" className={cn("object-contain", className)} />;
+  return (
+    <img
+      src={`${imagesPath}/amelia.png`}
+      alt="Amelia"
+      className={cn("object-contain", className)}
+    />
+  );
 }
 
 export function WhatsAppPaymentLogo({ className }: LogoProps) {
   return (
     <img
-      src="/images/whatsapp.png"
+      src={`${imagesPath}/whatsapp.png`}
       alt="WhatsApp Payment"
       className={cn("object-contain", className)}
     />
@@ -34,31 +45,40 @@ export function WhatsAppPaymentLogo({ className }: LogoProps) {
 
 export function PetpoojaLogo({ className }: LogoProps) {
   return (
-    <img src="/images/petpooja.png" alt="Petpooja" className={cn("object-contain", className)} />
-  );
-}
-
-export function ZapierLogo({ className }: LogoProps) {
-  return <img src="/images/zapier.png" alt="Zapier" className={cn("object-contain", className)} />;
-}
-
-export function ZohoLogo({ className }: LogoProps) {
-  return <img src="/images/zoho.jpg" alt="Zoho" className={cn("object-contain", className)} />;
-}
-
-export function RateupStar({ className }: LogoProps) {
-  return (
     <img
-      src="/images/rateup-icon.png"
-      alt=""
-      aria-hidden="true"
+      src={`${imagesPath}/petpooja.png`}
+      alt="Petpooja"
       className={cn("object-contain", className)}
     />
   );
 }
 
+export function ZapierLogo({ className }: LogoProps) {
+  return (
+    <img
+      src={`${imagesPath}/zapier.png`}
+      alt="Zapier"
+      className={cn("object-contain", className)}
+    />
+  );
+}
+
+export function ZohoLogo({ className }: LogoProps) {
+  return (
+    <img src={`${imagesPath}/zoho.jpg`} alt="Zoho" className={cn("object-contain", className)} />
+  );
+}
+
+export function RateupStar({ className }: LogoProps) {
+  return (
+    <img src={rateupIcon} alt="" aria-hidden="true" className={cn("object-contain", className)} />
+  );
+}
+
 export function BiginLogo({ className }: LogoProps) {
-  return <img src="/images/bigin.png" alt="Bigin" className={cn("object-contain", className)} />;
+  return (
+    <img src={`${imagesPath}/bigin.png`} alt="Bigin" className={cn("object-contain", className)} />
+  );
 }
 
 export function ZohoCombinedLogo({ className }: Readonly<{ className?: string }>) {

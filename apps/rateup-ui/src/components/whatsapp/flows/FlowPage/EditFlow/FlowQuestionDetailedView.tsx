@@ -55,7 +55,7 @@ import {
   WaFlowStatus,
 } from "@/types/enums.ts";
 import type { WaFlowScreen } from "@/types/global";
-import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants.ts";
+import { imagesPath, SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants.ts";
 import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { getInitialQuestionValues, validateAllLanguagesArePopulated } from "@/utils/questions.ts";
@@ -567,7 +567,7 @@ function ElementEditor({
                 }}
               >
                 <img
-                  src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
+                  src={`${imagesPath}/logic-jump-whatsapp.svg`}
                   className="h-7.5 w-7.5 object-contain"
                   alt="image of logic jump"
                 />

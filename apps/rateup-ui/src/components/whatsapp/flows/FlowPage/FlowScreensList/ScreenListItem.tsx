@@ -32,7 +32,7 @@ import { useDisclosure } from "@/hooks/useDisclosure";
 import type { QuestionType } from "@/types/enums.ts";
 import { WaFlowFormElementType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement, WaFlowScreen } from "@/types/global";
-import { FlowChoiceQuestions } from "@/utils/constants.ts";
+import { FlowChoiceQuestions, imagesPath } from "@/utils/constants.ts";
 import {
   getFlowElementText,
   getFlowFooterElementsFromScreen,
@@ -515,7 +515,7 @@ function FormElementCard({
       <p className="line-clamp-2 flex-1 px-2 font-medium">{text}</p>
       {Object.keys(dbFlow?.logicJumps ?? {}).includes(screen) && (
         <img
-          src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
+          src={`${imagesPath}/logic-jump-whatsapp.svg`}
           className="h-7.5 w-7.5 object-contain"
           alt="image of logic jump"
         />

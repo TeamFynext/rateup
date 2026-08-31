@@ -4,8 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useSyncTemplatesMutation } from "@/backend/whatsapp/whatsapp.query";
 import { Button } from "@/components/ui/button.tsx";
 
-import classes from "./template.module.css";
-
 export function SyncTemplatesButton({
   disabled = false,
   whatsappSettingsPhoneIds,
@@ -23,7 +21,7 @@ export function SyncTemplatesButton({
 
   return (
     <Button variant="outline" onClick={handleSyncClick} disabled={disabled}>
-      <IconRefresh className={syncMutation.isPending ? classes.rotateInfinitely : ""} />
+      <IconRefresh className={syncMutation.isPending ? "animate-spin" : ""} />
       {translations("Sync")}
     </Button>
   );

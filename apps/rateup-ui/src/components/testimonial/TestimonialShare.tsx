@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import type { TestimonialStyleType } from "@/types/global";
+import { imagesPath } from "@/utils/constants.ts";
 
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import TestimonialCard from "./TestimonialCard.tsx";
@@ -94,7 +95,7 @@ export const TestimonialShareModal = ({
                     )}
                   </h5>
                 </div>
-                <img src={`../../images/Party Svg Icon.svg`} className="size-15" alt="" />
+                <img src={`${imagesPath}/Party SVG Icon.svg`} className="size-15" alt="" />
               </div>
             </div>
             <div className="flex flex-col gap-4 px-25 py-8">

@@ -1,11 +1,9 @@
 import { TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
-import styles from "../../Survey/SurveyTheme/components/PageSelector/PageSelector.module.css";
-
 function TabsListComp() {
   return (
     <div className="tabs-list-comp-tabs">
-      <TabsList className={styles.list}>
+      <TabsList className="max-w-max overflow-hidden rounded-[0.625rem] border border-border">
         <TabsTrigger value="links">Links</TabsTrigger>
         <TabsTrigger value="theme">Theme</TabsTrigger>
         <TabsTrigger value="share">Share</TabsTrigger>

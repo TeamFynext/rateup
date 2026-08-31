@@ -18,8 +18,6 @@ import type { WaFlowFormElement } from "@/types/global";
 import useFlowStore from "../../flow-v2/utils/store.ts";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext.ts";
 
-import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
-
 interface Idata {
   id: string;
   name: string;
@@ -44,7 +42,7 @@ const SortDrawerFlow = ({ opened, close, data = [], v = 1 }: ISortDrawerProps) =
     <Draggable key={item?.id} index={index} draggableId={item?.id}>
       {(provided) => (
         <div
-          className={`${classes.itemDragging} my-4 flex gap-2`}
+          className="my-4 flex gap-2 !top-auto !left-auto"
           ref={provided.innerRef}
           {...provided.draggableProps}
           style={provided.draggableProps.style as React.CSSProperties}

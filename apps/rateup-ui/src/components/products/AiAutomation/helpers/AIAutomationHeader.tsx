@@ -6,7 +6,7 @@ import { useState } from "react";
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
 const AIAutomationHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +31,7 @@ const AIAutomationHeader = () => {
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center">
             <a href="https://rateup.app" className="flex items-center gap-2">
-              <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
+              <Image src={rateupLogo} alt="logo" height={50} width={126} />
             </a>
           </div>
 
@@ -52,13 +52,13 @@ const AIAutomationHeader = () => {
             <a href="https://rateup.app/login">
               <Button
                 variant="outline"
-                className="text-gray-700 hover:text-[#1c518e] cursor-pointer transition-colors duration-300"
+                className="text-gray-700 hover:text-primary cursor-pointer transition-colors duration-300"
               >
                 Log in
               </Button>
             </a>
             <a href="https://rateup.app/signup">
-              <Button className="bg-[#1c518e] text-white cursor-pointer hover:bg-[#1c518e] transition-colors duration-300 shadow-md">
+              <Button className="bg-primary text-white cursor-pointer hover:bg-primary transition-colors duration-300 shadow-md">
                 Get Started
               </Button>
             </a>
@@ -66,7 +66,7 @@ const AIAutomationHeader = () => {
 
           <div className="md:hidden">
             <button
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-[#1c518e] transition-colors duration-300"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary transition-colors duration-300"
               onClick={toggleMenu}
             >
               {isOpen ? <IconX className="h-6 w-6" /> : <IconMenu className="h-6 w-6" />}
@@ -84,7 +84,7 @@ const AIAutomationHeader = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="block px-4 py-2 rounded-md text-base font-medium text-gray-800 hover:text-[#1c518e] transition-colors duration-300"
+                className="block px-4 py-2 rounded-md text-base font-medium text-gray-800 hover:text-primary transition-colors duration-300"
                 onClick={() => setIsOpen(false)}
               >
                 {link.text}
@@ -95,13 +95,13 @@ const AIAutomationHeader = () => {
             <Link to="/login">
               <Button
                 variant="ghost"
-                className="w-full justify-center text-gray-700 hover:text-[#1c518e] transition-colors duration-300"
+                className="w-full justify-center text-gray-700 hover:text-primary transition-colors duration-300"
               >
                 Log in
               </Button>
             </Link>
             <a href="/get-started">
-              <Button className="mt-3 w-full bg-[#1c518e] text-white hover:bg-[#1c518e] transition-colors duration-300 shadow-sm">
+              <Button className="mt-3 w-full bg-primary text-white hover:bg-primary transition-colors duration-300 shadow-sm">
                 Get Started
               </Button>
             </a>

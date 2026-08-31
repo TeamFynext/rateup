@@ -1,7 +1,7 @@
 /* Fonts */
 .displayFont {
   font-family:
-    "Nunito Variable",
+    "Figtree Variable",
     ui-rounded,
     system-ui,
     -apple-system,
@@ -19,7 +19,7 @@
 }
 .bodyFont {
   font-family:
-    "Inter Variable",
+    "Instrument Sans Variable",
     system-ui,
     -apple-system,
     sans-serif;
@@ -54,51 +54,51 @@
 }
 
 .ink25 {
-  color: #fafaf7;
+  color: var(--background);
 }
 
 .ink50 {
-  color: #f4f5f2;
+  color: var(--color-ru-n-50);
 }
 
 .ink100 {
-  color: #ececea;
+  color: var(--border);
 }
 
 .ink200 {
-  color: #d9dad7;
+  color: var(--color-ru-n-300);
 }
 
 .ink400 {
-  color: #8b8e8a;
+  color: var(--muted-foreground);
 }
 
 .ink500 {
-  color: #666864;
+  color: var(--muted-foreground);
 }
 
 .ink700 {
-  color: #2e302e;
+  color: var(--foreground);
 }
 
 .ink800 {
-  color: #1a1b1a;
+  color: var(--foreground);
 }
 
 .warm300 {
-  color: #ffd54c;
+  color: var(--color-ru-star-top);
 }
 
 .warm600 {
-  color: #d97a0f;
+  color: var(--color-ru-amber-600);
 }
 
 .danger {
-  color: #dc2626;
+  color: var(--destructive);
 }
 
 .success {
-  color: #16a34a;
+  color: var(--color-ru-green-500);
 }
 
 /* Background Colors */
@@ -127,51 +127,51 @@
 }
 
 .bgInk25 {
-  background-color: #fafaf7;
+  background-color: var(--background);
 }
 
 .bgInk50 {
-  background-color: #f4f5f2;
+  background-color: var(--color-ru-n-50);
 }
 
 .bgInk100 {
-  background-color: #ececea;
+  background-color: var(--border);
 }
 
 .bgInk200 {
-  background-color: #d9dad7;
+  background-color: var(--color-ru-n-300);
 }
 
 .bgInk400 {
-  background-color: #8b8e8a;
+  background-color: var(--muted-foreground);
 }
 
 .bgInk500 {
-  background-color: #666864;
+  background-color: var(--muted-foreground);
 }
 
 .bgInk700 {
-  background-color: #2e302e;
+  background-color: var(--foreground);
 }
 
 .bgInk800 {
-  background-color: #1a1b1a;
+  background-color: var(--foreground);
 }
 
 .bgWarm300 {
-  background-color: #ffd54c;
+  background-color: var(--color-ru-star-top);
 }
 
 .bgWarm600 {
-  background-color: #d97a0f;
+  background-color: var(--color-ru-amber-600);
 }
 
 .bgDanger {
-  background-color: #dc2626;
+  background-color: var(--destructive);
 }
 
 .bgSuccess {
-  background-color: #16a34a;
+  background-color: var(--color-ru-green-500);
 }
 
 /* Animations */
@@ -203,8 +203,8 @@
 /* html { scroll-behavior: smooth; } */
 /* body {
   margin: 0;
-  background: #FAFAF7;
-  color: #2E302E;
+  background: var(--background);
+  color: var(--foreground);
   font-family: 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -304,8 +304,8 @@ button { font-family: inherit; cursor: pointer; } */
   letter-spacing: -0.02em;
 }
 .brand .wm .up {
-  color: #4fc3ff;
+  color: var(--color-ru-blue-300);
 }
 .brand .cm .uc {
-  color: #4fc3ff;
+  color: var(--color-ru-blue-300);
 }

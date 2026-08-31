@@ -12,13 +12,10 @@ import {
   NavItems,
 } from "@/components/ui/resizable-navbar.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
-import { imagesPath, rateupLogoHorizontalWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
-import { RateupStar } from "../../integrations/logos.tsx";
 import { BookDemoModal } from "../helper/BookDemoModal.tsx";
 import DropDownMobileNavItems from "../helpers/DropDownMobileNavItems.tsx";
-
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 interface RateupNavbarProps {
   darkNavbar?: boolean;
@@ -26,8 +23,6 @@ interface RateupNavbarProps {
 
 export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
   const hasSession = useCheckSession();
-  const mobileLogo = rateupLogoHorizontalWhiteTransparent;
-  const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
   const navItems = [
     {
       name: "Pricing",
@@ -52,7 +47,9 @@ export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
 
   /* The demo page IS the form the CTA opens, so the button would only re-offer what is already
      on screen. Read off the router rather than a prop so it stays right wherever `Layout` is used. */
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
   const showBookDemo = pathname.replace(/\/+$/, "") !== "/book-a-demo";
 
   return (
@@ -64,13 +61,7 @@ export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
           className="relative z-20 mr-4 flex items-center
          space-x-2 px-2 py-1 text-sm font-normal text-black"
         >
-          <span className={styles.brand}>
-            <RateupStar className="h-8 w-8" />
-            <span className={styles.wm}>
-              Rate
-              <span className={styles.up}>Up</span>
-            </span>
-          </span>
+          <Image src={rateupLogo} alt="RateUp" width={126} height={50} />
         </Link>
         <NavItems items={navItems} className="flex-none" />
         {hasSession ? (
@@ -168,7 +159,7 @@ export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
             className="relative z-20 mr-4 flex items-center 
           space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
           >
-            <Image src={mobileLogo} alt="logo" width={100} height={30} />
+            <Image src={rateupLogo} alt="RateUp" width={126} height={50} />
           </Link>
           <MobileNavToggle
             isOpen={isMobileMenuOpen}
@@ -183,7 +174,7 @@ export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
             }`}
           >
             <div className="flex justify-between items-center mb-6">
-              <Image src={rateupLogoUrl} alt="logo" width={60} height={30} />
+              <Image src={rateupLogo} alt="RateUp" width={126} height={50} />
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-2xl font-bold"

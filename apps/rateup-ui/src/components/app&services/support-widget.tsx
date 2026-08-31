@@ -475,13 +475,13 @@ export default function SupportWidget({
               <TabsList className="w-full mb-4 h-10">
                 <TabsTrigger
                   value="contact"
-                  className="transition-colors duration-200 data-[state=active]:bg-[#1c518e] data-[state=active]:text-white"
+                  className="transition-colors duration-200 data-[state=active]:bg-primary data-[state=active]:text-white"
                 >
                   <IconMessageCircle className="h-4 w-4" /> Chat
                 </TabsTrigger>
                 <TabsTrigger
                   value="whatsapp"
-                  className="transition-colors duration-200 data-[state=active]:bg-[#1c518e] data-[state=active]:text-white"
+                  className="transition-colors duration-200 data-[state=active]:bg-primary data-[state=active]:text-white"
                 >
                   <IconSend className="h-4 w-4" /> Whatsapp
                 </TabsTrigger>

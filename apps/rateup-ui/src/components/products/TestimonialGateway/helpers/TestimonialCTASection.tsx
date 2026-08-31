@@ -35,13 +35,13 @@ const TestimonialCTASection = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-[#1c518e] cursor-pointer text-[#1c518e] hover:bg-[#1c518e]/10 font-semibold px-6 py-3 text-base transition"
+                  className="border-primary cursor-pointer text-primary hover:bg-primary/10 font-semibold px-6 py-3 text-base transition"
                 >
                   Schedule a Demo
                 </Button>
               </BookDemoModal>
             </div>
-            <p className="pt-6 text-sm text-[#1c518e]">
+            <p className="pt-6 text-sm text-primary">
               No credit card required. Free plan available on every tier.
             </p>
           </div>

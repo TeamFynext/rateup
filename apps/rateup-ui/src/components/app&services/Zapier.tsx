@@ -26,6 +26,7 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
 import type { ZapierIntegration } from "@/types/global";
+import { imagesPath } from "@/utils/constants.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 import { Card, CardContent } from "../ui/card";
@@ -47,7 +48,7 @@ export function Zapier() {
     <div className="flex flex-col gap-4 p-3">
       <div className="flex items-center gap-2">
         <Avatar>
-          <AvatarImage src={"/images/zapier.png"} alt="Zapier" />
+          <AvatarImage src={`${imagesPath}/zapier.png`} alt="Zapier" />
           <AvatarFallback>Z</AvatarFallback>
         </Avatar>
         <h1 className="text-2xl font-bold">Zapier</h1>

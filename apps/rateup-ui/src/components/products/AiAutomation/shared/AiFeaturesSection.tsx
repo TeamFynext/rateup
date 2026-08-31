@@ -83,10 +83,10 @@ export default function FeaturesSection() {
         {/* Header */}
         <div className="mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
-            <p className="text-xs font-medium text-[#1c518e] uppercase tracking-widest mb-1">
+            <p className="text-xs font-medium text-primary uppercase tracking-widest mb-1">
               Features
             </p>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1c518e] leading-snug">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary leading-snug">
               Key Highlights of the AI Automation Builder
             </h2>
           </div>
@@ -109,12 +109,12 @@ export default function FeaturesSection() {
               className="bg-white border border-[#dce3ec] rounded-xl p-6 sm:p-7 shadow-sm hover:shadow-md transition-shadow duration-300"
               variants={cardVariants}
             >
-              <feature.icon className="text-[#1c518e] w-10 h-10 mb-4" />
+              <feature.icon className="text-primary w-10 h-10 mb-4" />
               <h3 className="text-xl font-semibold text-[#013553] mb-2">{feature.title}</h3>
               <p className="text-gray-600 text-sm mb-4 leading-relaxed">{feature.description}</p>
               <Link
                 to={feature.href}
-                className="text-[#1c518e] font-medium text-sm hover:underline flex items-center gap-1"
+                className="text-primary font-medium text-sm hover:underline flex items-center gap-1"
               >
                 Learn More <span>→</span>
               </Link>

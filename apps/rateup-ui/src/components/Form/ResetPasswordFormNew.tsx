@@ -17,7 +17,7 @@ import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
 import { useSendResetEmail, useSetNewPassword } from "@/utils/auth/resetPassword.tsx";
-import { rateupLogoStackedWhiteTransparent, SAVE_HOTKEY } from "@/utils/constants.ts";
+import { rateupLogo, SAVE_HOTKEY } from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
@@ -172,7 +172,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
       <div className="text-center">
-        <img src={rateupLogoStackedWhiteTransparent} alt="RateUp" className="w-20" />
+        <img src={rateupLogo} alt="RateUp" className="w-40" />
       </div>
       {page !== ResetSteps.STEP_TWO ? (
         <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">

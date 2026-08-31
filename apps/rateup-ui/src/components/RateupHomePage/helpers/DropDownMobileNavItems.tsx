@@ -24,7 +24,7 @@ export default function DropDownMobileNavItems() {
     <div className="w-full border-b border-gray-200">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left py-3  text-[#1c518e] text-lg flex items-center justify-between"
+        className="w-full text-left py-3  text-primary text-lg flex items-center justify-between"
       >
         <span className=" font-semibold">Products</span>
         <svg
@@ -48,7 +48,7 @@ export default function DropDownMobileNavItems() {
                     to: item.href,
                   })
                 }
-                className="block text-[#1c518e] hover:underline text-lg"
+                className="block text-primary hover:underline text-lg"
               >
                 {item.title}
               </button>

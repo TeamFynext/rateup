@@ -56,7 +56,7 @@ export function ArticleCard({
   return (
     <Link to="/blog/$slug" params={{ slug: post.slug }} className="no-underline text-inherit group">
       <article
-        className="reveal in rounded-[20px] overflow-hidden bg-white flex flex-col h-full cursor-pointer transition-[transform,border-color,box-shadow] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] border border-[#ECECEA] shadow-[0_1px_2px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:border-[#C5D5EC] hover:shadow-[0_12px_36px_rgba(11,31,72,0.1)]"
+        className="reveal in rounded-[20px] overflow-hidden bg-white flex flex-col h-full cursor-pointer transition-[transform,border-color,box-shadow] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] border border-border shadow-[0_1px_2px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:border-[#C5D5EC] hover:shadow-[0_12px_36px_rgba(11,31,72,0.1)]"
         data-d={delay}
       >
         {/* Thumbnail */}
@@ -82,7 +82,7 @@ export function ArticleCard({
               <div className="absolute top-2.5 left-2.5 flex items-center gap-1.25">
                 <img src="/rateup-star.png" alt="" className="w-4 h-4" />
                 <span className="font-nunito font-black text-[10px] text-white/80">
-                  Rate<span className="text-[#4FC3FF]">Up</span>
+                  Rate<span className="text-ru-blue-300">Up</span>
                 </span>
               </div>
 
@@ -116,7 +116,7 @@ export function ArticleCard({
         {/* Body */}
         <div className="p-[16px_18px_20px] flex-1 flex flex-col gap-2">
           {post.primary_tag?.name && (
-            <span className="text-[10px] font-bold tracking-[0.09em] uppercase py-[3px] px-[9px] rounded-full text-[#1C518E] bg-[#1C518E]/10 border border-[#1C518E]/22 self-start">
+            <span className="text-[10px] font-bold tracking-[0.09em] uppercase py-[3px] px-[9px] rounded-full text-primary bg-primary/10 border border-primary/22 self-start">
               {post.primary_tag.name}
             </span>
           )}
@@ -130,7 +130,7 @@ export function ArticleCard({
           </p>
 
           {/* Footer */}
-          <div className="flex items-center gap-2 mt-auto pt-[11px] border-t border-[#ECECEA]">
+          <div className="flex items-center gap-2 mt-auto pt-[11px] border-t border-border">
             {post.primary_author?.profile_image ? (
               <img
                 src={post.primary_author.profile_image}
@@ -143,12 +143,12 @@ export function ArticleCard({
               </div>
             )}
             <div className="flex-1">
-              <div className="text-[11px] font-bold text-[#2E302E]">
+              <div className="text-[11px] font-bold text-foreground">
                 {post.primary_author?.name || "RateUp Team"}
               </div>
-              <div className="text-[10.5px] text-[#8B8E8A]">{formattedDate}</div>
+              <div className="text-[10.5px] text-muted-foreground">{formattedDate}</div>
             </div>
-            <div className="w-[26px] h-[26px] rounded-[7px] shrink-0 bg-[#2FA3FF]/8 border border-[#2FA3FF]/15 flex items-center justify-center text-[#4FC3FF] opacity-0 -translate-x-1 transition-[opacity,transform] duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+            <div className="w-[26px] h-[26px] rounded-[7px] shrink-0 bg-ru-blue-400/8 border border-ru-blue-400/15 flex items-center justify-center text-ru-blue-300 opacity-0 -translate-x-1 transition-[opacity,transform] duration-200 group-hover:opacity-100 group-hover:translate-x-0">
               <svg
                 width="12"
                 height="12"
