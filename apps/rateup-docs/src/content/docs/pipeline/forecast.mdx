@@ -1,0 +1,61 @@
+---
+title: "Forecast"
+description: Open leads bucketed by the month they should close, weighted by each stage's probability.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Forecast** answers one question: how much is likely to land, and when. It groups your open leads
+by their **expected close** month and weights each one by the win probability of the stage it is in.
+
+<ScreenShot src="/docs/screenshots/pipelines/pipeline-forcast.png" alt="The Forecast view, with every open lead in the Unscheduled column" />
+
+---
+
+## Reading a Column
+
+| Element | Meaning |
+|---------|---------|
+| The month | Formatted from each lead's **Expected close** date |
+| **{`{n}`} leads** | How many open leads fall in that month |
+| The big number | **Expected to convert** — the probability-weighted count |
+| The bar | That number against the strongest month showing |
+| Each row | A lead, with its stage and that stage's probability. Click to open it |
+
+The headline number is deliberately not the raw lead count. Five leads sitting at 20% are one
+expected win, and the column says **1** rather than **5**.
+
+---
+
+## The Unscheduled Column
+
+Open leads with no **Expected close** date collect in a trailing **Unscheduled** column rather than
+being dropped from the view.
+
+<Callout type="warn">
+  An unscheduled lead is invisible to your forecast in every other respect, so the column is
+  usually the most important one on this screen. If it is the tallest column you have, the forecast
+  is not measuring your pipeline — it is measuring the part of it somebody remembered to date.
+</Callout>
+
+Set a date from the lead drawer's **Expected close** field — see
+[Working a Lead](/pipeline/leads#details).
+
+---
+
+## What It Includes
+
+Only **open** leads. Won and lost leads have already landed, so they belong in
+[Insights](/pipeline/insights) rather than a forecast.
+
+Everything else the board is filtering on still applies — a search, an assignee, a team or a source
+facet narrows the forecast the same way it narrows the board. That makes *"what is Priya expected to
+close this quarter"* a two-click question.
+
+---
+
+## Related Pages
+
+- [Insights](/pipeline/insights) — what has already happened
+- [Stages](/pipeline/stages) — where the probabilities come from
+- [Working a Lead](/pipeline/leads)

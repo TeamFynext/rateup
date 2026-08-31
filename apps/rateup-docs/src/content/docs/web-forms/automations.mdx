@@ -1,13 +1,14 @@
 ---
 title: "Automations"
-description: Route happy customers to Google reviews, and turn unhappy ones into tickets automatically.
+description: Route happy customers to Google reviews, and give unhappy ones a path to a person.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Two automations turn a form from a data-collection exercise into something that acts on what it
-learns.
+Review routing turns a form from a data-collection exercise into something that acts on what it
+learns: it decides, per answer, who gets asked for a public review and who gets handled privately
+instead.
 
 ---
 
@@ -43,7 +44,7 @@ a custom platform with **Enter Custom Platform Name**.
 ```
 "How was your experience?"
    ├── Great / Excellent  →  Google review prompt
-   └── Poor / Okay        →  "What went wrong?" → ticket
+   └── Poor / Okay        →  "What went wrong?" → follow up privately
 ```
 
 Happy customers get a frictionless path to saying so in public. Unhappy ones get a path to being
@@ -51,49 +52,33 @@ heard in private — and a chance for you to fix it before they post anyway.
 
 ---
 
-## Automatic Ticket Creation
+## Following Up on a Poor Response
 
-**Enable Auto-Ticket Creation** turns qualifying responses into tickets on a
-[board](/tickets/boards), so nothing gets lost in a spreadsheet.
+Forms no longer raise tickets on a board — RateUp has no ticket boards. Act on a poor response
+where the customer already is:
 
-<Steps>
-<Step>
-Enable **Auto-Ticket** on the form or the question.
-</Step>
-<Step>
-**Choose a board** and **choose a column** for new tickets to land in.
-</Step>
-<Step>
-Set the **condition for ticket issue** — which answers should raise one.
-</Step>
-<Step>
-**Choose the teams to be added** so the right people see it.
-</Step>
-</Steps>
-
-### What to trigger on
-
-| Trigger | Why |
-|---------|-----|
-| Detractor NPS scores | Every one is a customer worth rescuing |
-| A complaint keyword in free text | Catches problems the rating missed |
-| A specific choice — *"Report a problem"* | Explicit, unambiguous |
+| Route | How |
+|-------|-----|
+| The conversation | A form sent over WhatsApp files its answers against the contact's conversation, so the agent replying already sees them — see [Results](/web-forms/results) |
+| An automation rule | A [Send Web Survey](/automation/actions) rule can be paired with an **Assign Team** rule so poor responses land with the right people |
+| The sales board | Put the contact on a [pipeline](/pipeline) stage when the follow-up is a deal rather than a complaint |
+| Email | **Enable Notification Email** in [Settings](/web-forms/settings) mails each submission to an address you choose |
 
 <Callout type="info">
-  Do not raise a ticket for every response. A board full of "everything was fine" cards is a board
-  your team stops reading — and then they miss the one that mattered.
+  Do not route every response to a person. A queue full of "everything was fine" is a queue your
+  team stops reading — and then they miss the one that mattered.
 </Callout>
 
 ---
 
 ## Closing the Loop
 
-The full sequence, when both automations are set up:
+The full sequence, when review routing is set up:
 
-1. A customer submits a poor rating
-2. A ticket is created on your support board, assigned to the right team
-3. An agent opens it, sees the response, and contacts the customer
-4. The problem is fixed and the ticket closed
+1. A customer submits a poor rating, and is not shown the review prompt
+2. Their answers land against their conversation in the [Inbox](/inbox)
+3. An agent opens it, sees the response, and replies to the customer
+4. The problem is fixed and the conversation closed
 5. Next time, that customer is a promoter — and the review prompt is the right thing to show them
 
 That loop is the difference between measuring satisfaction and improving it.
@@ -102,6 +87,6 @@ That loop is the difference between measuring satisfaction and improving it.
 
 ## Related Pages
 
-- [Ticket Boards](/tickets)
+- [Settings](/web-forms/settings) — notification email and webhooks
 - [Logic & Variables](/web-forms/logic-and-variables)
 - [Results](/web-forms/results)

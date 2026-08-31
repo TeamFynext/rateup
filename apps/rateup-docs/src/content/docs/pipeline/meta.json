@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "index",
+    "board",
+    "leads",
+    "list",
+    "forecast",
+    "insights",
+    "stages",
+    "automatic-leads",
+    "settings"
+  ]
+}

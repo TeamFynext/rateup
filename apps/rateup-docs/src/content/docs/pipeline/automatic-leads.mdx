@@ -1,0 +1,131 @@
+---
+title: "Leads That Open Themselves"
+description: The four ways a contact lands on the board without anyone opening the Pipeline screen.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+Most leads should not be typed in. A contact reaching the board is usually a side effect of
+something else — a rule firing, an agent filing a conversation, a sync from your CRM.
+
+Every route below does the same thing: it puts a contact on a stage. If that contact has no lead on
+the board yet, one opens there. If they already have one, it moves.
+
+<Callout type="info">
+  A contact holds **one lead per board**. None of these routes can produce a second one, and none of
+  them ever creates a duplicate card.
+</Callout>
+
+---
+
+## An Automation Rule
+
+The **Assign Stage** action in the [automation](/automation) builder is the main one. It is
+available on WhatsApp, Instagram and Facebook rules.
+
+<Steps>
+<Step>
+Build the rule as usual — see [Triggers](/automation/triggers) and
+[Conditions](/automation/conditions).
+</Step>
+<Step>
+Add an **Assign Stage** action and pick the column from the list of your board's stages.
+</Step>
+<Step>
+Save. From then on, a contact meeting the rule lands on that column.
+</Step>
+</Steps>
+
+A lead opened this way has no owner and its timeline reads *"Added by automation"*, naming whoever
+set the rule off. Its source and channel follow the platform the rule fired on — a WhatsApp rule
+produces a **WhatsApp enquiry**.
+
+<Callout type="info">
+  The picker says *"No pipeline columns yet — create a pipeline before using this action."* if your
+  organisation has no board.
+</Callout>
+
+**Assign Lifecycle** is the older action this replaced. It is still offered on rules that already
+use it, so nothing you built stops running, but new rules should use **Assign Stage**. See
+[Actions](/automation/actions).
+
+---
+
+## From the Inbox
+
+The **Ticket Details** panel beside a conversation carries a **Pipeline Stage** section: every column
+on the board as a chip, the current one highlighted.
+
+| Action | Result |
+|--------|--------|
+| Click a chip | Puts the contact on that column, opening a lead if they had none |
+| Click the highlighted chip again | Takes them off the board |
+| Nothing highlighted | *"Not on the board. Pick a stage to add them."* |
+
+This is the fastest route for an agent who has just worked out that an enquiry is real.
+
+<Callout type="warn">
+  Taking a contact off the board **deletes their lead** — its notes, its next activities, its
+  timeline and its assignees go with it. The confirmation counts each of those before you commit.
+  To record that a deal did not happen, mark it [lost](/pipeline/leads#closing-a-lead) instead; a
+  lost lead stays on the board and still counts in your [insights](/pipeline/insights).
+</Callout>
+
+---
+
+## From the Contacts Table
+
+Select contacts in [Contacts](/contacts/managing-contacts) and use **Update Pipeline Stage** to put
+all of them on one column in a single action.
+
+The result reports what actually happened — how many were matched, how many changed, and how many
+were already sitting on that column. It is normal for the changed count to be lower than the number
+you selected.
+
+<Callout type="info">
+  On an organisation without the **Pipeline** feature the same button reads **Update Lifecycle
+  Stage** and writes a [lifecycle stage](/contacts/lifecycle) instead. Which one you see depends on
+  your team's feature access.
+</Callout>
+
+---
+
+## From Zoho Bigin
+
+If you have connected Zoho Bigin under [Integrations](/settings/integrations), **Lead Status
+Mapping** lines each Zoho lead status up against one of your pipeline columns. The dialog tracks how
+many statuses are still unmapped, and **Save Mapping & Sync** applies it.
+
+Once mapped, a lead moving in Bigin moves the matching card on your board, and vice versa. An
+inbound change is applied without echoing back, so the two do not fight each other.
+
+---
+
+## What Does Not Happen Automatically
+
+A lead that arrives by any of these routes has **no team and no assignees**. Assigning a stage names
+a board, not the people on it.
+
+| Not automatic | Do it yourself |
+|---------------|----------------|
+| Putting the lead on a team | From the lead drawer |
+| Assigning it to someone | On the card, or in bulk from the [List](/pipeline/list) |
+| Scheduling a next activity | From the lead drawer. This is what stops it stalling |
+| Setting an expected close date | From the drawer, or it sits in the forecast's **Unscheduled** column |
+
+<Callout type="warn">
+  A rule that files leads onto the board and nothing else produces a growing column of unassigned
+  cards with no next step — every one of them will eventually be flagged as stalled. An
+  **Assign Team** action in the same rule routes the *conversation*, not the lead, so somebody still
+  has to pick each card up. Watch the sidebar's **No next activity** count for how well that is
+  going.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Actions](/automation/actions)
+- [Working a Lead](/pipeline/leads)
+- [Lifecycle Stages](/contacts/lifecycle) — what the board superseded
+- [Integrations](/settings/integrations)
