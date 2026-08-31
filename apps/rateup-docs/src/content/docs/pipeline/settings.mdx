@@ -1,0 +1,117 @@
+---
+title: "Settings"
+description: Who works the board, stalled-lead flagging, its name, conversion tracking and deletion.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+The **Settings** tab holds everything about the board that is not a column. Columns and lost reasons
+are covered separately in [Stages](/pipeline/stages).
+
+<ScreenShot src="/docs/screenshots/pipelines/pipeline-settings.png" alt="Lost reasons and the start of Teams, below the stages table" />
+
+---
+
+## Who Can Change What
+
+| Section | Who |
+|---------|-----|
+| Stages, lost reasons, stalled-lead flagging, conversion tracking | Anyone on a team attached to the board |
+| **Teams**, **Name**, **Delete this pipeline** | The organisation owner only |
+
+The split is deliberate: a member can retune their own funnel without being able to hand the board
+to another team or destroy it.
+
+---
+
+## Teams
+
+Membership of a team attached to the board is the board's **only** access rule. Everyone on those
+teams can open it and be assigned its leads; nobody else sees it in the sidebar at all.
+
+You may only add teams **you are on yourself**. A team already on the board that you are not a
+member of stays listed and marked **Not your team**, and cannot be removed here — dropping one would
+be a door you could not reopen.
+
+<Callout type="warn">
+  Removing a team hides the board from its members. Their leads stay exactly where they are, still
+  assigned to them, still counting in the totals — they simply cannot see them any more.
+</Callout>
+
+The picker will not let you save an empty list, so you cannot lock yourself out of the board you are
+editing.
+
+---
+
+## Automation
+
+One switch, and it is the only rule on this screen that actually runs:
+
+| Switch | Does |
+|--------|------|
+| **Flag stalled leads** | Highlights leads idle past their stage's rotting window |
+
+With it off, no lead is ever flagged, the header's attention chip disappears, and
+[Insights](/pipeline/insights) reports **Rotting checks are off** rather than a zero.
+
+Opening leads by rule is not configured here — that lives in the
+[automation builder](/pipeline/automatic-leads).
+
+---
+
+## Name
+
+What the board is called in the sidebar and the switcher. Owner only. Saving the name it already has
+does nothing, and an empty name is refused.
+
+---
+
+## Conversion Tracking
+
+**Meta Conversions API (CAPI)** sends a conversion event to Meta when a lead is **won** on this
+board. It belongs to the pipeline rather than to a contact's lifecycle, because reaching a Won
+column is what fires the event.
+
+| Field | Notes |
+|-------|-------|
+| **Pixel ID** | Auto-filled when a Meta dataset is found for your account, and shown as *"Auto-selected dataset: {`{name}`}"* |
+| **Event Name** | **Lead** or **Purchase** |
+| **Currency** | **INR**, **USD**, **EUR**, **GBP** or **AED** |
+
+The section needs a connected WhatsApp account: without one it says *"Please connect WhatsApp to
+configure Meta Conversions API for tracking."* See [Channels](/settings/channels).
+
+---
+
+## Danger Zone
+
+**Delete this pipeline** is owner-only and asks you to type the board's name to confirm. The dialog
+lists exactly what goes:
+
+- every stage and every lead sitting in them
+- all notes, timeline entries and next activities on those leads
+- the board's labels and lost reasons
+
+<Callout type="warn">
+  This cannot be undone, and with one board per organisation it deletes your entire sales history in
+  RateUp. Contacts are left alone — but nothing that recorded what happened with them survives.
+</Callout>
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| No **Teams**, **Name** or **Danger zone** section | You are not the organisation owner | Ask an owner |
+| A teammate cannot see the board | They are on no team attached to it, or their team lacks the **Pipeline** feature | Add the team here, and check [Teams](/settings/teams) |
+| Nothing flags as stalled | **Flag stalled leads** is off, or no stage has a rotting window | This page, then [Stages](/pipeline/stages) |
+| Conversion tracking will not save | No WhatsApp channel is connected | [Channels](/settings/channels) |
+
+---
+
+## Related Pages
+
+- [Stages](/pipeline/stages)
+- [Teams](/settings/teams)
+- [Leads That Open Themselves](/pipeline/automatic-leads)

@@ -1,0 +1,140 @@
+---
+title: "Pipeline Overview"
+description: A sales board that turns your conversations into leads, with stages, a forecast and win-rate insights.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Pipeline** is where a conversation becomes a deal you are working. Each customer sits on a
+**lead** card, each card sits in a **stage** column, and moving it across the board is how your team
+says where things stand.
+
+<ScreenShot src="/docs/screenshots/pipelines/pipeline-overview.png" alt="The Pipeline board, with the sidebar's views and stage facets beside it" />
+
+---
+
+## What a Lead Is
+
+A lead is one customer's progress towards one outcome. It carries the details of the contact it was
+raised against — name, company, phone, email — plus everything your team adds while working it:
+assignees, labels, a next activity, notes and a full timeline.
+
+| A lead has | Meaning |
+|------------|---------|
+| **Stage** | The column it sits in, and with it a win probability |
+| **Status** | **Open**, **Won** or **Lost** — set by the stage it lands on |
+| **Source** | How it reached you — a WhatsApp enquiry, a web survey, added manually |
+| **Assignees** | Everyone working it. A handover adds a name rather than replacing one |
+| **Owner** | Whoever opened it. Fixed at creation, and empty for a lead a rule opened |
+| **Next activity** | The one thing due next. A lead without one is a lead that stalls |
+
+A contact can hold **one lead per board**. Putting a contact who is already on the board onto
+another stage moves their existing lead rather than opening a second one.
+
+---
+
+## Getting In
+
+**Pipeline** appears in the sidebar for anyone on a team that has the **Pipeline** feature switched
+on, and who is on a team attached to the board. See
+[Teams](/settings/teams) for both.
+
+<Callout type="info">
+  An organisation has **one pipeline** while the feature beds in. Creating a second is refused with
+  *"Your organisation already has a pipeline"* — the switcher and the **New pipeline** row exist for
+  when that limit lifts.
+</Callout>
+
+If nobody has made one yet, the screen offers **Create a pipeline**: give it a name, pick the teams
+that work it, and it opens with seven columns and five lost reasons already set up. Every one of
+them is yours to change — see [Stages](/pipeline/stages).
+
+---
+
+## The Five Views
+
+The same filtered set of leads, rendered five ways. Switching tabs never refetches, so the counts
+never disagree.
+
+<Cards>
+  <Card
+    title="Board"
+    href="/pipeline/board"
+    description="Columns you drag leads across. The default view."
+  />
+  <Card
+    title="List"
+    href="/pipeline/list"
+    description="Every lead as a row, with bulk reassign and bulk moves."
+  />
+  <Card
+    title="Forecast"
+    href="/pipeline/forecast"
+    description="Open leads bucketed by the month they should close."
+  />
+  <Card
+    title="Insights"
+    href="/pipeline/insights"
+    description="Funnel, stalls, sources and per-assignee win rates."
+  />
+  <Card
+    title="Settings"
+    href="/pipeline/settings"
+    description="Teams, stalled-lead flagging, conversion tracking and deletion."
+  />
+</Cards>
+
+---
+
+## The Rest of the Section
+
+<Cards>
+  <Card
+    title="Working a Lead"
+    href="/pipeline/leads"
+    description="Adding one, the lead drawer, next activities, closing and reopening."
+  />
+  <Card
+    title="Stages"
+    href="/pipeline/stages"
+    description="Your board's columns — status, probability, rotting window and order."
+  />
+  <Card
+    title="Leads That Open Themselves"
+    href="/pipeline/automatic-leads"
+    description="Automation rules, the inbox panel, bulk assign and Zoho Bigin."
+  />
+</Cards>
+
+---
+
+## The Sidebar
+
+Under **Pipeline**, the sidebar carries the board's own filters. Everything except the board name is
+a click, not a page load, and each row counts across **every** lead so a count never shrinks just
+because another filter is on.
+
+| Section | Rows |
+|---------|------|
+| **Pipelines** | Each board, with its open-lead count, plus **New pipeline** |
+| **Views** | **All leads on board** · **Mine** · **Needs attention** · **No next activity** · **Won** · **Lost** |
+| **Stages** | One row per column, in board order |
+| **Teams** | One row per team with leads on the board |
+| **Sources** | One row per source in use |
+
+Below them sits **Pipeline settings**.
+
+<Callout type="info">
+  Which tab and which filters you had open are remembered in your browser, so returning to Pipeline
+  puts you back where you left it. Only the board itself is in the URL, so a link you share opens
+  the board, not your filters.
+</Callout>
+
+---
+
+## Related Pages
+
+- [The Board](/pipeline/board)
+- [Working a Lead](/pipeline/leads)
+- [Lifecycle Stages](/contacts/lifecycle) — what the board superseded
+- [Teams](/settings/teams) — who can open the board

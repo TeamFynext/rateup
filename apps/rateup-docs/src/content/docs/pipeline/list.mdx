@@ -1,0 +1,79 @@
+---
+title: "List"
+description: Every lead as a row, grouped by stage, with bulk moves and bulk reassignment.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**List** shows the same leads the board does, as rows you can scan, sort through and act on in bulk.
+It is the view to use when you are tidying up rather than working one deal.
+
+<ScreenShot src="/docs/screenshots/pipelines/pipeline-lists.png" alt="The List view, grouped by stage" />
+
+---
+
+## The Columns
+
+| Column | Shows |
+|--------|-------|
+| **Lead** | Avatar, name, and the company or **Direct customer** |
+| **Stage** | The column it sits in. A lost lead reads *"{`{stage}`} (lost)"* |
+| **Status** | **Open**, **Won** or **Lost**, tinted to match the board's bands |
+| **Assignees** | Up to two avatars, then the name or **{`{n}`} assignees**, with the team under it |
+| **Next activity** | What is due. Red when overdue, amber when **None scheduled**, an em dash on a closed lead |
+| **In stage** | Days in the current column, or **{`{n}`}d idle** in red on a stalled lead |
+| **Age** | Days since the lead was created |
+
+Below `lg` widths the seven columns fold away and each row carries a summary line instead — stage,
+next step, and how long it has sat.
+
+A sticky footer totals what you are looking at: the lead count, how many stages are represented, how
+many distinct assignees, **{`{n}`} without a next step** in red, and the average time in stage and
+lead age.
+
+---
+
+## Grouping
+
+**Group by stage** is on by default: one collapsible heading per column, in board order, with a
+count. Stages with no matching leads are dropped rather than shown empty. Turn it off for one flat
+**All leads** list.
+
+---
+
+## Acting in Bulk
+
+Tick the checkbox on any row — or the one in the header to take everything showing — and a bar
+appears at the bottom of the screen.
+
+| Control | Does |
+|---------|------|
+| **→ {`{stage}`}** | Moves every selected lead to that column. The first three columns are offered |
+| An assignee button | Assigns every selected lead to that person. The first three members are offered |
+| **✕** | Clears the selection |
+
+<Callout type="warn">
+  A bulk move onto a **Won** or **Lost** column does not ask for confirmation or a lost reason the
+  way a single close does — it just moves them. Close deals one at a time if you want the reason
+  recorded, and use the bulk move for open columns.
+</Callout>
+
+Assigning in bulk **replaces** the assignees on each selected lead rather than adding to them.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| *No leads match these filters.* | A sidebar facet or the search box is narrowing everything out | Clear the active sidebar row, or empty **Search leads** |
+| A stage heading you expected is missing | Grouping hides stages with no leads | Turn **Group by stage** off to see the flat list |
+| The bulk bar does not offer the column you want | Only the first three columns are offered | Drag on the [Board](/pipeline/board), or open each lead |
+
+---
+
+## Related Pages
+
+- [The Board](/pipeline/board)
+- [Working a Lead](/pipeline/leads)
+- [Insights](/pipeline/insights)

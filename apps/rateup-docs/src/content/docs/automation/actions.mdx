@@ -29,10 +29,17 @@ is on leave; individual routing quietly piles up in an absent person's queue.
 | Action | Does |
 |--------|------|
 | **Attach Label** | Adds a label to the contact |
-| **Assign Lifecycle** | Moves the contact to a lifecycle stage |
+| **Assign Stage** | Puts the contact on a column of your [pipeline](/pipeline) board, opening a lead if they are not on it yet |
+| **Assign Lifecycle (legacy)** | Moves the contact to a lifecycle stage. Superseded by **Assign Stage** |
 
 These make later filtering and reporting possible. A rule that labels every refund enquiry costs
 nothing and makes "how many refund requests last month?" answerable.
+
+<Callout type="info">
+  **Assign Lifecycle (legacy)** is offered only on a rule that already uses it, so existing rules
+  keep running and can still be saved. New rules get **Assign Stage** instead — see
+  [Leads that open themselves](/pipeline/automatic-leads).
+</Callout>
 
 ---
 
@@ -93,3 +100,4 @@ Actions run in order, so a single rule can do a complete piece of work:
 - [Triggers](/automation/triggers)
 - [Conditions](/automation/conditions)
 - [Integrations](/settings/integrations)
+- [Leads that open themselves](/pipeline/automatic-leads)

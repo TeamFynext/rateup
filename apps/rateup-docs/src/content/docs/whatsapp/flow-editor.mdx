@@ -25,7 +25,7 @@ with **Save to WhatsApp** always in reach.
 | Tab | For |
 |-----|-----|
 | **Edit** | Screens and the elements on them |
-| **Settings** | Name, teams, ticketing, webhooks |
+| **Settings** | Name, teams, webhooks |
 | **Share** | How the flow reaches customers |
 | **Responses** | Individual submissions |
 | **Analytics** | Charts across all submissions |
@@ -115,23 +115,16 @@ question element first.
 
 ## Settings
 
-Four cards, each with its own **Save Changes**:
+Three cards, each with its own **Save Changes**:
 
 | Card | Contains |
 |------|----------|
 | **General Settings** | **Flow Name** (required) and the **Anonymous** switch |
 | **Team & Notifications** | **Select Teams** for the flow, and **Send weekly report to email** |
-| **Ticketing & Automation** | **Enable Ticketing** and **Enable Auto-Generate Ticket**. **Enable Email Notification** is shown with a padlock and cannot be switched on here |
 | **Webhooks** | An endpoint — `https://example.com/webhook` — that receives every submission |
 
 The webhook uses the same signed, retried delivery as web forms. For the payload, headers and how to
 verify a signature, see [Web Forms → Settings](/web-forms/settings).
-
-<Callout type="warn">
-  Turning on **Enable Auto-Generate Ticket** means every submission opens a ticket. On a flow that
-  collects hundreds of responses a week, that is hundreds of tickets — decide whether you want the
-  queue or just the data.
-</Callout>
 
 ---
 

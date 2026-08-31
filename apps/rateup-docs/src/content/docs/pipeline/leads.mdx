@@ -1,0 +1,182 @@
+---
+title: "Working a Lead"
+description: Adding a lead, the details drawer, next activities, notes, and closing or reopening it.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Everything about one lead lives in a drawer that slides in from the right. Open it by clicking a
+card on the [Board](/pipeline/board), or a row in the [List](/pipeline/list).
+
+<ScreenShot src="/docs/screenshots/pipelines/pipeline-lead.png" alt="The lead drawer open on Details, over the board" />
+
+---
+
+## Adding a Lead
+
+**Add lead** in the header opens on no particular column; the **+** on a column header opens on that
+one.
+
+<Steps>
+<Step>
+Pick the **Customer**. This is a search over your existing [contacts](/contacts) — by name, phone or
+email. A lead is always raised against a contact, so there is no free-text option.
+</Step>
+<Step>
+Pick the **Stage** it starts in.
+</Step>
+<Step>
+Pick the **Source** — **WhatsApp enquiry**, **Instagram DM**, **Messenger**, **Web survey**,
+**Referral program**, **Loyalty program** or **Added manually**. The first three also set the
+channel the lead is reachable on.
+</Step>
+<Step>
+Optionally tap the **Assignees** you want on it, then **Add lead**.
+</Step>
+</Steps>
+
+The lead copies the contact's name, phone and email so a card can render without a second lookup,
+but it is the contact link that matters — it is what makes **Open conversation** work.
+
+<Callout type="info">
+  Choosing a closing column says so: *"{`{stage}`} is a closing column — the lead opens already
+  closed."* That is occasionally what you want, for a deal you are recording after the fact.
+</Callout>
+
+---
+
+## The Header
+
+| Button | Does |
+|--------|------|
+| **Open conversation** | Jumps to this contact in the [Inbox](/inbox). Disabled on a lead with no contact |
+| **Won** | Opens the close confirmation. Disabled on a lead already won |
+| **Lost** | The same, asking for a reason. Disabled on a lead already lost |
+| **⋯ → Reopen lead** | Puts a closed lead back on the board. Disabled while it is open |
+| **⋯ → Delete lead** | Removes the lead outright |
+
+<Callout type="warn">
+  **Delete lead** asks nothing. The lead, its notes, its activities and its whole timeline go
+  immediately, and the drawer closes. If what you want is to record that it did not work out, use
+  **Lost** — a lost lead stays on the board and still counts in your [insights](/pipeline/insights).
+</Callout>
+
+Under the buttons sits the **stage stepper**: every column in order, the current one highlighted,
+with its win probability and how many days the lead has been in it. Clicking another step moves the
+lead — including onto a closing column, which asks the same way a drag does.
+
+---
+
+## The Next Activity
+
+The single most useful field on a lead: what happens next, and when.
+
+<Steps>
+<Step>
+**Schedule** opens the panel. Type what has to happen — *"Follow up on the quote"*.
+</Step>
+<Step>
+Pick a **Type**: **Call**, **Message**, **Meeting**, **Document** or **To-do**. The type only
+chooses the icon that shows on the card.
+</Step>
+<Step>
+Set a **Due** date and time, and optionally who it is assigned to. Then **Schedule**.
+</Step>
+</Steps>
+
+Once scheduled, the panel offers **Mark done**. An overdue activity turns red on the card and in the
+list. A lead with nothing scheduled shows **No next activity scheduled** in amber, and appears under
+the sidebar's **No next activity** view.
+
+<Callout type="info">
+  *Leads without a next step stall.* The **No next activity** count is the one number on this screen
+  you can act on immediately — every lead in it is a decision nobody has made.
+</Callout>
+
+---
+
+## Details
+
+| Field | Notes |
+|-------|-------|
+| **Assignees** | Everyone working the lead. Pick from the people on the board's teams; **Unassign everyone** clears it |
+| **Owner** | Whoever opened it. Fixed, and shown as **Added automatically** for a lead a rule opened |
+| **Team** | The team it belongs to, or **No team** |
+| **Source** and **Channel** | How it arrived, and where the customer is reachable |
+| **Lead age** | Days since it was created |
+| **Idle** | Days since anything happened. Reads *"{`{n}`} days — stalled"* once past the stage's window |
+| **Expected close** | Feeds the [Forecast](/pipeline/forecast). **Not set** puts it in the unscheduled bucket |
+| **Contact** | The linked contact, or **Not linked** |
+
+### Labels
+
+Labels are the board's own, defined per pipeline, and are separate from
+[contact labels](/contacts/labels). The drawer's **Add** button puts an existing label on the lead,
+and the chips also show on its board card.
+
+<Callout type="warn">
+  A board with no labels reads *"This pipeline has no labels yet — add them in pipeline settings"* —
+  but the current build has no label editor in pipeline settings, and the pipeline is not part of the
+  [external API](/external-api) either. Until an editor ships there is no way to create one, so the
+  picker will stay empty. Nothing else on the lead depends on labels.
+</Callout>
+
+---
+
+## Timeline and Notes
+
+**Timeline** is the automatic record — created, moved, assignees changed, won, lost, reopened, note
+added, activity scheduled and completed. Each entry names who did it, or says *"Added by automation"*
+when a rule did.
+
+**Notes** is what your team writes down. A note is attributed and timestamped, and can be deleted by
+anyone who can open the lead.
+
+<Callout type="info">
+  Notes count as activity, so leaving one resets the idle clock and clears a **needs attention**
+  flag. That is intended — someone has looked at it — but it does mean a lead can be kept out of the
+  stalled list without moving forward.
+</Callout>
+
+---
+
+## Closing a Lead
+
+Closing happens three ways, and all three end in the same confirmation: **Won** or **Lost** in the
+drawer, the stage stepper, or dragging the card onto a closing column.
+
+| Outcome | What it asks |
+|---------|--------------|
+| **Won** | Confirmation only. *"The lead moves to the won column and stops counting as open."* |
+| **Lost** | A **Lost reason**, picked from the board's list — and it is required when the board has any |
+
+Both accept an optional closing note, which is kept on the timeline.
+
+<Callout type="warn">
+  The lost reason is the only input the *"why do we lose deals"* side of reporting ever gets. A board
+  with no lost reasons configured lets a loss through without one, and that loss can never be
+  attributed afterwards — add them in [Settings](/pipeline/settings) before your team starts closing.
+</Callout>
+
+A closed lead stays on the board in its closing column, stops counting as open, and can be put back
+with **Reopen lead**.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| **Open conversation** is greyed out | The lead has no linked contact | It was created without one; raise a new lead from the contact |
+| Nobody appears in the assignee picker | Nobody is on the board's teams yet | Add a team in [Settings](/pipeline/settings) |
+| **Mark lost** stays disabled | The board has lost reasons but none is selected | Pick one |
+| The lead has no labels to choose | The board has none defined | Add them in pipeline settings |
+
+---
+
+## Related Pages
+
+- [The Board](/pipeline/board)
+- [Stages](/pipeline/stages)
+- [Leads That Open Themselves](/pipeline/automatic-leads)

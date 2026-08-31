@@ -46,14 +46,23 @@ Click **Done** to collapse the picker.
 
 ---
 
-## Lifecycle Stage
+## Pipeline Stage
 
-The customer's stage in your funnel — lead, customer, churned, and whatever else your organisation
-has configured.
+Every column of your [pipeline](/pipeline) board, as chips. Click one to put this customer on it —
+which opens a lead there if they had none. The current column is highlighted, and clicking it again
+takes them off the board. With nothing set the section reads *"Not on the board. Pick a stage to add
+them."*
 
-Click a stage to set it. This belongs to the **contact**, so it applies to all of their tickets.
+This belongs to the **contact**, so it applies to all of their tickets.
 
-Stages are configured under **Contacts → Lifecycle**.
+<Callout type="warn">
+  Clicking the highlighted chip **deletes the lead** — its notes, next activities, timeline and
+  assignees go with it, and the confirmation counts each of them first. To record a deal that did
+  not happen, mark it [lost](/pipeline/leads#closing-a-lead) instead.
+</Callout>
+
+The section is absent for organisations without the **Pipeline** feature, and on a board with no
+columns. Columns are configured in [Pipeline → Stages](/pipeline/stages).
 
 ---
 
@@ -173,5 +182,6 @@ ticket field and only this ticket is affected.
 ## Related Pages
 
 - [Tickets & Conversations](/inbox/tickets)
+- [Pipeline](/pipeline) — the board those stage chips write to
 - [Assignment & Reassignment](/inbox/asigning-conversation)
 - [Search, Filters & Sorting](/inbox/toolbar)

@@ -15,10 +15,16 @@ exactly one stage at a time, and the stages together form your **Customer Journe
 
 ## Setting Up Stages
 
+<Callout type="warn">
+  **Lifecycle is no longer listed in the sidebar.** It was dropped from the **Contacts** menu when
+  [Pipeline](/pipeline) took over the places it used to be read from. The page itself still works —
+  go to `/dashboard/contacts/lifecycle` directly, or bookmark it.
+</Callout>
+
 <Steps>
 <Step>
-Open **Contacts → Lifecycle**. If nothing is configured you will see *"No lifecycle stages yet"*
-and a **Set up Lifecycle Stages** prompt.
+Open `/dashboard/contacts/lifecycle`. If nothing is configured you will see *"No lifecycle stages
+yet"* and a **Set up Lifecycle Stages** prompt.
 </Step>
 <Step>
 Click **Add Stage** or **Create Lifecycle Stage**.
@@ -73,9 +79,34 @@ Keep it to five or six. A funnel with fifteen stages does not get maintained.
 | From | How |
 |------|-----|
 | **Contact record** | Set the stage directly |
-| **Inbox** | Ticket Details panel → **Lifecycle Stage** |
-| **Automation** | The **Assign Lifecycle** action |
 | **Import** | Assign a stage during import |
+| **Automation** | The **Assign Lifecycle (legacy)** action, on rules that already use it |
+
+### What moved to Pipeline, and what did not
+
+Lifecycle is being retired rather than removed: on an organisation with a
+[pipeline](/pipeline) board, the board is what tracks a contact's progress.
+
+| Surface | Now |
+|---------|-----|
+| The sidebar | **Contacts → Lifecycle** is gone; the route still works |
+| Inbox details panel | Shows [**Pipeline Stage**](/inbox/ticket-details) instead of Lifecycle Stage |
+| Contacts table column | A **Stage** column replaces **Lifecycle Stage** once the org has a board |
+| Contacts bulk action | **Update Pipeline Stage**, or **Update Lifecycle Stage** without the feature |
+| Automation action | **Assign Stage**; **Assign Lifecycle** is legacy — see [Actions](/automation/actions) |
+
+Still read from the lifecycle, and unchanged:
+
+| Surface | Still uses lifecycle |
+|---------|----------------------|
+| Inbox filter rail | The **Lifecycle** filter section |
+| Automation trigger | **Lifecycle Updated** |
+| Zoho Bigin and Zapier | Field mappings that name a lifecycle stage |
+
+<Callout type="info">
+  An organisation **without** the Pipeline feature keeps lifecycle everywhere it always was. Nothing
+  described here changes for them.
+</Callout>
 
 Automating stage changes on real signals — a first purchase, a form submission — keeps the funnel
 honest in a way that relying on people to remember never does.
@@ -86,6 +117,9 @@ honest in a way that relying on people to remember never does.
 
 **Show/Hide Lifecycle Stages** controls whether the funnel appears in the contacts view. Hidden, it
 reads *"Lifecycle Display is Hidden"* — the stages still exist and still apply.
+
+The contacts table's **Lifecycle Stage** column also depends on this switch, and is replaced by a
+**Stage** column once your organisation has a pipeline board.
 
 Descriptions can be shown or hidden with **Show description** / **Hide description**.
 

@@ -1,0 +1,122 @@
+---
+title: "Stages"
+description: Your board's columns — their status, win probability, rotting window, colour and order.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Stages are the columns of your board, and they are the board's own — a stage exists on one pipeline
+and nowhere else. Manage them at the top of **Pipeline settings**.
+
+<ScreenShot src="/docs/screenshots/pipelines/pipeline-stages.png" alt="The stages table in pipeline settings" />
+
+---
+
+## What a Stage Carries
+
+| Field | Does |
+|-------|------|
+| **Colour** | The left edge of every card in the column, and the dot beside its name. Picked from a fixed palette |
+| **Stage** | Its name, everywhere on the board. Blanking the field reverts it |
+| **Status** | **Open**, **Won** or **Lost** — what landing here does to a lead |
+| **Probability** | 0–100. Weights the [Forecast](/pipeline/forecast) and shows as *"{`{n}`}% likely"* on the column |
+| **Rotting after** | Days of silence before a lead here is flagged. **0** means never |
+
+The row also shows how many leads the column holds. Number and text fields save when you click away
+from them; the colour and status selects save immediately.
+
+<Callout type="warn">
+  Status is the one field that changes behaviour rather than presentation. Switching an ordinary
+  column to **Won** or **Lost** makes every future drop onto it close a lead — and leaves the leads
+  already sitting there untouched, so the column's status and its contents can disagree until they
+  are moved.
+</Callout>
+
+---
+
+## What a New Board Starts With
+
+Creating a pipeline gives you seven columns and five lost reasons. All of them are editable, and
+none of them are special.
+
+| Stage | Status | Probability | Rotting after |
+|-------|--------|-------------|---------------|
+| **New Lead** | Open | 10% | 3 days |
+| **Contacted** | Open | 25% | 4 days |
+| **Qualified** | Open | 45% | 5 days |
+| **Demo / Proposal** | Open | 65% | 7 days |
+| **Negotiation** | Open | 80% | 5 days |
+| **Won** | Won | 100% | — |
+| **Lost** | Lost | 0% | — |
+
+An organisation that had lifecycle stages before the pipeline shipped gets a board whose columns
+carry those names instead, sorted into open, then won, then lost.
+
+---
+
+## Adding and Ordering
+
+<Steps>
+<Step>
+**Add stage** appends a column called **New stage** at 50% and a 5-day rotting window. Rename it in
+place straight away — the name is stored, so the whole organisation sees whatever you leave there.
+</Step>
+<Step>
+Set its **Status**. This is the field to get right: a new stage defaults to **Open**.
+</Step>
+<Step>
+Reorder by dragging a row's grip handle, or by focusing the handle and pressing the arrow keys. The
+number on the left is the column's position, left to right on the board.
+</Step>
+</Steps>
+
+<Callout type="info">
+  A one-column board offers no handles and no delete — there is nothing to reorder, and a pipeline
+  must keep at least one stage. The delete button's tooltip says so.
+</Callout>
+
+---
+
+## Deleting a Stage
+
+Deleting asks where the leads in it should go: **Move its leads to** a column you pick. Nothing is
+deleted with the stage, and the leads keep their notes, timelines and assignees — they simply land
+somewhere else.
+
+---
+
+## Lost Reasons
+
+Under the stages table, **Lost reasons** is the list your team picks from when marking a lead lost.
+Each row shows how many leads have been attributed to it. **Add reason** appends one; the bin
+removes it.
+
+A new board starts with **Price too high**, **No response**, **Chose a competitor**,
+**Not the right fit** and **Timing — revisit later**.
+
+<Callout type="warn">
+  Deleting a reason is not blocked by the leads already using it, and the count beside it is your
+  only warning. Rename a reason you have outgrown rather than deleting it, or its share of your
+  historical losses becomes unattributable.
+</Callout>
+
+---
+
+## Choosing Windows That Work
+
+- **Match the window to the step, not the board.** A first reply is late after two days; a proposal
+  under review is not late after two weeks.
+- **Leave closing columns at zero.** Nothing in them can be late — the lead is already done.
+- **Set probabilities that step up.** They drive the forecast, and a board where three consecutive
+  stages all read 50% forecasts nothing useful.
+- **Fewer columns than you think.** Every column is a decision someone has to make about which one a
+  lead belongs in.
+
+---
+
+## Related Pages
+
+- [Settings](/pipeline/settings) — teams, stalled-lead flagging and conversion tracking
+- [The Board](/pipeline/board)
+- [Forecast](/pipeline/forecast)

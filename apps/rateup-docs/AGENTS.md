@@ -40,6 +40,12 @@ campaign participants in the external API, loyalty Coupons). They were deliberat
 **Meta AI Agent is no longer one of them** — `/dashboard/meta-agent` and its seven sub-routes are
 live in `hooks.tsx`, gated on `TeamFeature.AiChatbot`, and are documented in `meta-agent/`.
 
+**"Ticket" means two different things and only one of them survives.** An *inbox ticket* is a
+customer conversation and is very much alive (`TicketPanel.tsx`, `CloseTicketMenu.tsx`, the whole
+`inbox/` section). *Ticket boards* — the kanban feature — were removed from the product. Never
+reintroduce a page about boards, a **Ticket** chatbot node, survey auto-ticket creation, or a flow
+**Enable Ticketing** setting: none of them exist in the code any more.
+
 ---
 
 ## 2. Structure
@@ -57,6 +63,9 @@ src/content/docs/
 
 - **One section per app sidebar entry.** The docs mirror the product's navigation, in the same order.
 - **Every folder needs a `meta.json`.** A page missing from it still builds but is unordered in nav.
+  To keep a page reachable while hiding it from the sidebar, prefix its name with `!` — fumadocs reads
+  `!name` as an exclude, so the route and every inbound link keep working while the nav drops the entry.
+  `"..."` is the matching rest marker if you ever want to list only a few pages explicitly.
 - **Every section needs an `index.mdx`** — an overview with `<Cards>` linking to its pages.
 - `baseUrl` is `/`, so `src/content/docs/inbox/tickets.mdx` → `/inbox/tickets`.
 
@@ -169,8 +178,16 @@ labelled dashed frame:
 - `shot` — precise instructions for whoever takes it
 - Always pair it with a `{/* TODO: … */}` comment
 
-**99 screenshots are referenced from `public/docs/screenshots/`** as `/docs/screenshots/<file>` —
-served from `public/`, not the CDN. Every reference resolves. **7 placeholders remain** (§10), and 8
+**Every screenshot is served from the CDN, not from `public/`.** `<ScreenShot>` prefixes
+`VITE_CLOUDFRONT_WEB_IMAGES_URL` to whatever `src` it is given, so a shot has to be uploaded to the
+bucket before its page can render it — there is no `public/docs/` directory, and a shot dropped into
+`public/screenshots/` will 403.
+
+All 104 references use `/docs/screenshots/…`; newer sections group their shots in a subfolder, e.g.
+`/docs/screenshots/pipelines/pipeline-board.png`.
+
+Because nothing is on disk, §8 cannot check shots with a file test — verify them against the CDN
+(`curl -o /dev/null -w '%{http_code}'`) or in a running dev server. Every reference resolves. **7 placeholders remain** (§10), and 8
 older inbox shots still point at the CDN.
 
 **A screenshot that shows a control which no longer exists is worse than no screenshot.** When a
@@ -180,7 +197,24 @@ file** so nothing can re-reference it, and list it in §10.
 
 Captures are automated and **redacted**: customer names, phone numbers, emails and message bodies
 are swapped for consistent fake data *before* the screenshot is taken, and avatar photos are
-blurred. Avatar initials are regenerated to match the fake names. If you re-capture, reuse that
+blurred. The `pipeline/` shots were redacted *after* capture instead, by repainting the names and
+avatar initials — see the fake-name table below. Prefer seeding fake data and re-shooting; patching
+pixels works but has to be redone from scratch every time the screen is re-captured.
+
+The names those shots now use, so a re-capture can stay consistent:
+
+| Shown as | Avatar |
+|----------|--------|
+| John Doe | JD |
+| Jane Roe | JR |
+| MARIA G | MG |
+| SAM PATEL RIVERA | SP |
+| PRIYA.S.K | P |
+| ALEX MORGAN | AM |
+| Chris Lee | CL |
+| alexdemo | A |
+| demo test user | DT |
+| `15550100142` (the unnamed contact) | ? | Avatar initials are regenerated to match the fake names. If you re-capture, reuse that
 pipeline — never publish a raw screenshot of the running app.
 
 ---
@@ -248,7 +282,7 @@ an unescaped `{{ }}`.
 
 ## 9. Where We Are Now
 
-**112 pages across 16 sections + 2 top-level pages.** Every section maps 1:1 to an app sidebar
+**118 pages across 16 sections + 2 top-level pages.** Every section maps 1:1 to an app sidebar
 entry. Build clean.
 
 Each of the three WhatsApp builders now has a **detail page** alongside its list page — the pattern
@@ -260,7 +294,7 @@ managing, the detail page covers the editor itself.
 | `getting-started` | 4 | Register, login, reset password |
 | `inbox` | 23 | Tickets, 8 views, replying, private notes, closing, ticket details, filters, tags & labels, settings |
 | `analytics` | 7 | All six analytics tabs |
-| `contacts` | 6 | Managing, groups, labels, lifecycle, custom fields |
+| `contacts` | 6 | Managing, groups, labels, lifecycle, custom fields. **Lifecycle is hidden from the nav** (`"!lifecycle"` in `contacts/meta.json`), mirroring the app — the app dropped **Contacts → Lifecycle** from its sidebar when Pipeline took over. The route, the page and every inbound link still work; the inbox filter rail, the **Lifecycle Updated** trigger and the Zoho/Zapier mappings still read a lifecycle, so do not delete it |
 | `campaign` | 3 | Creating, details, broadcast vs drip |
 | `whatsapp` | 9 | Flows + flow editor, chatbots + chatbot builder, templates + template editor, conversational components, settings |
 | `instagram` | 4 | Chatbots, comment/story automations, entry points |
@@ -269,7 +303,7 @@ managing, the detail page covers the editor itself.
 | `commerce` | 6 | Overview, catalogs, orders, payments, checkout settings |
 | `loyalty` | 12 | Dashboard, earning rules, rewards, customers, transactions, approvals, cashier, commands, notifications, templates, settings |
 | `web-forms` | 9 | Creating, question types, logic, design, settings, sharing, results, automations |
-| `tickets` | 3 | Boards, working with tickets |
+| `pipeline` | 9 | Board, leads, list, forecast, insights, stages, automatic leads, settings |
 | `testimonials` | 1 | Collections, styling, embedding |
 | `qr-studio` | 3 | QR creator, access links |
 | `settings` | 8 | Account, users, teams, channels, integrations, security, billing |
@@ -288,6 +322,7 @@ managing, the detail page covers the editor itself.
 | `contacts/all-contacts/`, `contacts/groups/` | Flattened into `contacts/` |
 | `web-survey/`, `advanced-features/` | Merged into `web-forms/` |
 | `loyality/` | Renamed to `loyalty/` (spelling) |
+| `tickets/` | **Ticket boards were retired from the product** (announcement `2026-08-29-ticket-boards-retired`). No `/dashboard/tickets` route, no `modules/ticket` on the API, no **Tickets** row in a team's Feature Access. Replaced by `pipeline/`. Inbox *tickets* — conversations — are unrelated and stay |
 
 If a section looks "missing", check this table before adding it back.
 
@@ -303,6 +338,7 @@ externally, they need redirects — **this has not been done.**
 | Item | Notes |
 |------|-------|
 | **Onboarding / setup page** | `/login/setup` — the post-signup checklist. Three sections (Connect WhatsApp, Team & automation, Design your loyalty program), 11 task cards, progress tracking, **Continue to Dashboard**. Belongs in `getting-started/`. **Not written.** |
+| **`pipeline/` is fully shot** | Eight images, one per page, on the CDN under `/docs/screenshots/pipelines/`. `pipeline-settings.png` stops at the **Teams** heading — Automation, Name, Conversion tracking and the Danger zone are still below the fold. Its title was captured as **Sales** and repainted to **Default Pipeline** by lifting the Nunito glyphs out of `pipeline-board.png` and sliding the count badge right; a re-capture on the renamed board makes that patch unnecessary |
 | **Screenshots** | **7 placeholders**: `inbox/toolbar-annotated` and `inbox/close-menu` (stale captures, deleted — see below), `web-forms/webhook-settings`, `settings/channel-edit-tabs` + `settings/channel-profile-tab` (the Edit channel dialog), and `inbox/conversation-tags-panel`. In `meta-agent/`, only the section index is shot (`meta-agent/overview.png`) — the seven inner pages have no screenshots at all |
 | **`whatsapp/catalogs.mdx` was deleted** | The deletion is staged, but `/whatsapp/catalogs` is still linked from `commerce/catalogs.mdx` (×2), `commerce/index.mdx` and `whatsapp/index.mdx`, and `public/docs/screenshots/whatsapp/catalog.png` is now orphaned. Either restore the page or repoint those four links — the `/dashboard/whatsapp/catalog` route does still exist |
 | **Stale captures to re-shoot** | `inbox/close-menu` (the menu no longer lists "Mark as Spam"; spam and block sit below a separator) and `inbox/toolbar-annotated` (the advanced-filters icon is gone). Both files were **deleted**; the pages carry `ImagePlaceholder`s with the shot instructions. `inbox/mark-as-spam` has been re-shot against the new menu. `inbox/staff-team-filters` and `inbox/layout-annotated` still work but predate the sidebar's **Channel** section |
