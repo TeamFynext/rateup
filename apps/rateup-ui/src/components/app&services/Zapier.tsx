@@ -304,6 +304,8 @@ function getTriggerLabel(triggerKey: ZapierTriggers) {
       return "Conversation closed";
     case ZapierTriggers.CONTACT_LIFECYCLE_UPDATED:
       return "Contact life cycle updated";
+    case ZapierTriggers.CONTACT_STAGE_UPDATED:
+      return "Contact moved to another pipeline stage";
     case ZapierTriggers.CONTACT_UPDATED:
       return "Contact updated";
     case ZapierTriggers.NEW_MESSAGE:

@@ -7,6 +7,7 @@ import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.qu
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
+import { StageSelector } from "@/components/pipeline/shared/StageSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -21,7 +22,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
 import type { ConditionField, CreateRuleInput } from "./schema.ts";
-import { CONDITION_FIELDS, CONDITION_OPERATORS } from "./schema.ts";
+import { CONDITION_OPERATORS, getConditionFields } from "./schema.ts";
 
 interface ConditionListProps {
   name: string;
@@ -127,6 +128,19 @@ const ConditionValueInput = ({
           ))}
         </SelectContent>
       </Select>
+    );
+  }
+  // The board column the contact's lead sits in — the successor to
+  // CONTACT_LIFECYCLE above. `StageSelector` renders nothing without a board, so
+  // the field is only offered where there is one to pick from.
+  if (fieldType === "CONTACT_STAGE") {
+    return (
+      <StageSelector
+        value={value ?? ""}
+        onChange={valueField.onChange}
+        placeholder="Select stage"
+        className="w-full"
+      />
     );
   }
   if (fieldType === "BUSINESS_HOURS") {
@@ -277,8 +291,10 @@ const ConditionRow = ({
               value={field.value as string}
               items={
                 allowedFields
-                  ? CONDITION_FIELDS.filter((opt) => allowedFields.includes(opt.value))
-                  : CONDITION_FIELDS
+                  ? getConditionFields(field.value as string).filter((opt) =>
+                      allowedFields.includes(opt.value),
+                    )
+                  : getConditionFields(field.value as string)
               }
             >
               <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
@@ -286,8 +302,10 @@ const ConditionRow = ({
               </SelectTrigger>
               <SelectContent>
                 {(allowedFields
-                  ? CONDITION_FIELDS.filter((opt) => allowedFields.includes(opt.value))
-                  : CONDITION_FIELDS
+                  ? getConditionFields(field.value as string).filter((opt) =>
+                      allowedFields.includes(opt.value),
+                    )
+                  : getConditionFields(field.value as string)
                 ).map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -424,7 +442,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
         className="w-full border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/30"
         onClick={() => {
           const defaultField =
-            CONDITION_FIELDS.length > 0 ? CONDITION_FIELDS[0].value : "CONTACT_EMAIL";
+            getConditionFields().length > 0 ? getConditionFields()[0].value : "CONTACT_EMAIL";
           append({
             field: defaultField,
             operator: "CONTAINS",
