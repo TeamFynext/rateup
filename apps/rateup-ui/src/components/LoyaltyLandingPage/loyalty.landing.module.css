@@ -2056,7 +2056,6 @@ section {
 :global(.loyalty-scope) .display-1,
 :global(.loyalty-scope) .display-2 {
   font-family: var(--font-display);
-  color: var(--foreground);
   letter-spacing: -0.02em;
   margin: 0;
   text-wrap: balance;
