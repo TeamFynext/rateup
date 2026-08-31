@@ -2,7 +2,7 @@ import { IconStar } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import { easeOut, motion } from "motion/react";
 
-import { clientIcons } from "../../TicketLandingComponets/TicketingConstants.tsx";
+import { clientIcons } from "../../shared/clientIcons.ts";
 import { testimonials } from "../../Whatsapp-loyalty/constants.tsx";
 
 const containerVariants = {

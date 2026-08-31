@@ -1,7 +1,7 @@
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
-import { clientIcons } from "../../TicketLandingComponets/TicketingConstants.tsx";
+import { clientIcons } from "../../shared/clientIcons.ts";
 
 // Duplicating icons for seamless scroll
 const scrollingIcons = [...clientIcons, ...clientIcons];

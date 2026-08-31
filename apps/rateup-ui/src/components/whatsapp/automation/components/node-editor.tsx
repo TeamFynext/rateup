@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
-import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
@@ -36,7 +35,6 @@ import { styles } from "./node-editors/shared.tsx";
 import { StartNodeEditor } from "./node-editors/StartNodeEditor.tsx";
 import { TemplateNodeEditor } from "./node-editors/TemplateNodeEditor.tsx";
 import { TextNodeEditor } from "./node-editors/TextNodeEditor.tsx";
-import { TicketNodeEditor } from "./node-editors/TicketNodeEditor.tsx";
 import { getNodeLabel, getNodeVisual } from "./nodes/node-config.tsx";
 
 // Node editor props
@@ -49,9 +47,6 @@ interface NodeEditorProps {
 export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEditorProps>) {
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
-  // Tickets are a free feature — always available.
-  const hasTicketFeature = true;
-  const { data: boardData, isLoading: isBoardsPending } = useBoardsQueries(hasTicketFeature);
   const { data: teamMembers, isPending: isLoadingTeamMembers } = useTeamsMembersOfOrg();
   const session = useSessionContext() as {
     userId: string;
@@ -104,7 +99,7 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
   // Render different editor based on node type with proper type casting
   const renderEditor = () => {
     const nodeType = node.type;
-    if (isPending || isLoading || isBoardsPending || isLoadingTeamMembers) return <RateupLoader />;
+    if (isPending || isLoading || isLoadingTeamMembers) return <RateupLoader />;
 
     switch (nodeType) {
       case "textNode":
@@ -200,14 +195,6 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
           <ContactsNodeEditor
             nodeData={nodeData as NodeTypeMap["contactsNode"]}
             handleInputChange={handleInputChange}
-          />
-        );
-      case "ticketNode":
-        return (
-          <TicketNodeEditor
-            nodeData={nodeData as NodeTypeMap["ticketNode"]}
-            handleInputChange={handleInputChange}
-            options={boardData}
           />
         );
       case "assignNode":

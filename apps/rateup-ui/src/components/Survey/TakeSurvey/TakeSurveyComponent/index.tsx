@@ -29,7 +29,6 @@ import QuestionForm from "./QuestionForm.tsx";
 import QuestionTitle from "./QuestionTitle.tsx";
 import {
   checkGoogleReviewForQuestion,
-  checkRaiseTicketIssueQuestion,
   getFirstQuestion,
   getLastQuestion,
   getQuestionsLength,
@@ -277,33 +276,11 @@ function TakeSurvey({
       openConfirmationResponsesModal();
     }
   }
-  function getColumnIdFromTickets(questions: Question[], responses: QuestionResponse[]) {
-    for (const question of questions) {
-      const ticketIssue = question?.ticketIssue;
-      if (!ticketIssue) continue;
-      const response = responses.find((r) => r.questionId === question.id);
-      if (!response) continue;
-      return ticketIssue.selectedColumnId;
-    }
-    return null;
-  }
   const finishSurvey = async (pageType = "") => {
     const start = searchParams.start; // (TODO - Temp) change for survey merge
     const shouldShowGoogleReview =
       pageType === PageType.GoogleReview ||
       checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
-    const shouldRaiseTicket =
-      survey?.enableAutoGenerateTicket ||
-      checkRaiseTicketIssueQuestion(
-        survey?.questions ?? [],
-        responsesRef.current,
-        selectedLanguage,
-      );
-    let selectedColumnId: string | undefined = survey?.ticketColumnId;
-    if (shouldRaiseTicket && !survey?.enableAutoGenerateTicket) {
-      selectedColumnId =
-        getColumnIdFromTickets(survey?.questions ?? [], responsesRef.current) ?? undefined;
-    }
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
       if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
@@ -340,9 +317,7 @@ function TakeSurvey({
       setIsSavingResponses,
       coordinates,
       tag: typeof searchParams.tag === "string" ? searchParams.tag : null,
-      shouldRaiseTicket,
       checkUniqueDevice,
-      selectedColumnId,
     })
       .then(() => {
         updateCompleted.mutate(surveyTeamMapId ?? "");

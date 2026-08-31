@@ -32,7 +32,6 @@ import { QuestionDetailedView } from "./Question/QuestionDetailedView.tsx";
 import QuestionReviewPageEditor from "./Question/QuestionReviewPageEditor/index.tsx";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection.tsx";
 import SurveyVariableEditor from "./Question/SurveyVariableEditor.tsx";
-import TicketIssueEditor from "./Question/TicketIssueEditor.tsx";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor.tsx";
 import { QuestionsSideBar } from "./QuestionsSideBar.tsx";
 import SurveyPreviewModal from "./SurveyPreviewModal.tsx";
@@ -55,7 +54,6 @@ export enum QuestionTabsEnum {
   LogicEditor = "LogicEditor",
   GoogleReviewEditor = "GoogleReviewEditor",
   ValidationRulesEditor = "ValidationRulesEditor",
-  TicketIssueEditor = "TicketIssueEditor",
   VariableEditor = "VariableEditor",
   None = "None",
   QuestionReviewPageEditor = "QuestionReviewPageEditor",
@@ -414,13 +412,6 @@ export function EditSurvey({
                   <QuestionReviewPageEditor
                     selectedQ={selectedQ!}
                     survey={survey!}
-                    setActiveTab={setActiveTab}
-                  />
-                )}
-                {activeTab === QuestionTabsEnum.TicketIssueEditor && (
-                  <TicketIssueEditor
-                    selectedQ={selectedQ!}
-                    setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                   />
                 )}

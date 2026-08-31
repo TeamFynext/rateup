@@ -1,7 +1,7 @@
 import { IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
-const TicketFooter = () => {
+const ProductFooter = () => {
   return (
     <footer className="bg-gray-900 text-white pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
@@ -9,7 +9,7 @@ const TicketFooter = () => {
           <div>
             <h3 className="font-bold text-xl mb-4">RateUp</h3>
             <p className="text-gray-400 mb-4">
-              The complete ticketing and customer support solution with WhatsApp integration.
+              The complete customer engagement and support platform, built on WhatsApp.
             </p>
             <div className="flex space-x-4 mt-3">
               <a
@@ -116,4 +116,4 @@ const TicketFooter = () => {
   );
 };
 
-export default TicketFooter;
+export default ProductFooter;

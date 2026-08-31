@@ -9,7 +9,7 @@ import ReviewAiHero from "@/components/products/ReviewWithAiComponents/shared/Re
 import ReviewAiHowItWorks from "@/components/products/ReviewWithAiComponents/shared/ReviewAiHowItWorks.tsx";
 // import ReviewPricing from "@/components/products/ReviewWithAiComponents/shared/ReviewPricing";
 import ReviewTestimonials from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials.tsx";
-import TicketFooter from "@/components/products/TicketLandingComponets/helpers/TicketFooter.tsx";
+import ProductFooter from "@/components/products/shared/ProductFooter.tsx";
 import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/products/ai-review/")({
@@ -31,7 +31,7 @@ function page() {
         <PricingSection color2="#009987" color1="#1cad9f" />
         <ReviewCta />
       </main>
-      <TicketFooter />
+      <ProductFooter />
     </div>
   );
 }

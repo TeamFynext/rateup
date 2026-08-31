@@ -1,6 +1,11 @@
 import type { RedirectRule } from "./index.ts";
 
 const pageRedirects: Record<string, RedirectRule> = {
+  // Ticketing was retired; the inbox is where that work lives now.
+  "/products/ticketing": {
+    to: "/products/inbox",
+    statusCode: 301,
+  },
   // The un-hyphenated slug people are likely to guess.
   "/bookdemo": {
     to: "/book-a-demo",

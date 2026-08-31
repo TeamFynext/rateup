@@ -176,12 +176,6 @@ export function getNodeFieldErrors(node: { type: string; data?: NodeFields }): N
       if (isBlank(data.teamId)) errors.teamId = "Team is required.";
       break;
 
-    case "ticketNode":
-      if (isBlank(data.ticket?.selectedBoardColumnId)) {
-        errors.ticket = "A board column is required.";
-      }
-      break;
-
     case "leadgenNode":
       if (isBlank(data.fbPageId)) errors.fbPageId = "Select the Facebook page of the lead.";
       if (isBlank(data.ad?.id)) errors.ad = "Select the Ad of the lead.";

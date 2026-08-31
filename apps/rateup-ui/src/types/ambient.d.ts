@@ -48,15 +48,6 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
-type IssueTicket = {
-  minRating?: number;
-  minOpinion?: number;
-  reqOptions?: Array<string>;
-  submissionTicket?: boolean;
-  selectedColumnId?: string;
-  selectedBoardId?: string;
-} | null;
-
 interface TNC {
   title: string;
   urlTitle: string;
@@ -218,7 +209,6 @@ declare global {
     id: string;
     metaType?: WaQuestions;
     googleReview?: GoogleReview;
-    ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
     /** `null` clears the rules. */
     validationRules?: QuestionValidationRules | null;
@@ -291,10 +281,6 @@ declare global {
     kioskMode: boolean;
     type: SurveyType;
     getLocation: boolean;
-    enableTickets: boolean;
-    enableTicketEmailAlerts: boolean;
-    enableAutoGenerateTicket: boolean;
-    enableTicketWaMessageAlerts: boolean;
     uniqueDeviceResponse: boolean;
     welcomePageEnabled: boolean;
     orgLogo?: string;
@@ -331,8 +317,6 @@ declare global {
     sendWeeklyReport?: boolean;
     /** Endpoint each new response is POSTed to. */
     responseWebhookEndpoint?: string;
-    ticketColumnId?: string;
-    ticketBoardId?: string;
     /** Owning organisation's name, included by the public survey endpoint. */
     orgName?: string;
     /** Welcome page theme, included by the survey templates endpoint. */
@@ -422,9 +406,6 @@ declare global {
       city?: string;
       state?: string;
       country?: string;
-    };
-    Ticket?: {
-      id: string;
     };
     teamId?: string;
   }
@@ -857,8 +838,6 @@ declare global {
       referrals?: subscriptionActiveField;
       catalog?: subscriptionActiveField;
     };
-    // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.
-    [sfpn.Ticket]?: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
         completionTokens: number;
@@ -956,19 +935,6 @@ declare global {
     cta: string;
   }
 
-  interface FlowTicket {
-    questionId: string;
-    type: QuestionType2;
-    selectedColumnId?: string;
-    selectedBoardId?: string;
-    condition: {
-      minRating?: number;
-      minOpinion?: number;
-      reqOptions?: string[];
-      submissionTicket?: boolean;
-    };
-  }
-
   interface DbFlow {
     dbFlowId: string;
     createdAt: Date;
@@ -995,7 +961,6 @@ declare global {
     pendingSave: boolean;
     anonymous: boolean;
     version: number;
-    ticketIssued: FlowTicket[];
     /**
      * WhatsApp channel the flow lives on. Meta scopes flow ids to a WABA, so the flow
      * can only be used from this number. Null on flows created before it was tracked —

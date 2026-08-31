@@ -93,7 +93,7 @@ export default function NpsSurveyTemplates() {
       {tool ? (
         <ToolCta
           title={tool.cta}
-          description="A template is only half the job — the response rate comes from the channel. RateUp sends these as native WhatsApp flows, routes detractors to your team as a ticket, and pushes promoters straight to a review request."
+          description="A template is only half the job — the response rate comes from the channel. RateUp sends these as native WhatsApp flows, flags detractors for your team to follow up, and pushes promoters straight to a review request."
         />
       ) : null}
     </>

@@ -119,8 +119,6 @@ interface StoreState {
   deleteComponentFromScreen: (feId: string) => void;
   /** The Google review step configured for the flow, if any. */
   googleReview?: GoogleReview;
-  ticketIssued: FlowTicket[];
-  setTicketIssued: (ticketIssued: FlowTicket[]) => void;
   getLogicJumps: (screenId: string) => Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
   updateLogicJumps: (
     screenId: string,
@@ -407,7 +405,6 @@ const useFlowStoreV3 = create<StoreState>()(
         }
         return undefined;
       },
-      ticketIssued: [],
       getLogicJumps: (screenId) => {
         return get().logicJumps[screenId] || [];
       },
@@ -419,7 +416,6 @@ const useFlowStoreV3 = create<StoreState>()(
         set((state) => {
           state.logicJumps = jumps;
         }),
-      setTicketIssued: (ticketIssued) => set({ ticketIssued }),
     }),
   ),
 );
