@@ -601,6 +601,8 @@ export enum ZapierTriggers {
   CONVERSATION_CLOSED = "conversation_closed",
   CONTACT_UPDATED = "contact_updated",
   CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
+  /** The board's counterpart to the lifecycle trigger, added beside it. */
+  CONTACT_STAGE_UPDATED = "contact_stage_updated",
   RESPONSE_SUBMITTED = "response_submitted",
   CONTACT_DELETED = "contact_deleted",
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",

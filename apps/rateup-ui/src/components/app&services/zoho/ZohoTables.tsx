@@ -190,7 +190,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
               <CardTitle>{t("Zoho Leads")}</CardTitle>
 
               <p className="text-sm text-muted-foreground">
-                {t("Map Zoho Lead Statuses to your pipeline columns")}
+                {t("Keep Zoho Lead Statuses and your pipeline columns in step")}
               </p>
             </div>
           </div>
@@ -223,7 +223,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
 
             <DialogDescription>
               {t(
-                "Map each Zoho Lead Status to a column of your pipeline. A status change in Zoho moves the contact's lead to the matching column.",
+                "Map each Zoho Lead Status to a column of your pipeline. The mapping runs both ways: a status change in Zoho moves the lead to the matching column, and moving it on your board sets the matching status in Zoho. A column no status points at is left out of the sync.",
               )}
             </DialogDescription>
           </DialogHeader>

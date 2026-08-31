@@ -35,6 +35,7 @@ import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorMod
 import CreateOrEditContactModal from "@/components/Contacts/CreatOrEditContactModal.tsx";
 import LabelContactModal from "@/components/Contacts/LabelContactModal.tsx";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -195,6 +196,9 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
   // reaches them, so nobody loses the bulk write in the meantime.
   const { allowedFeatures } = useTeamFeatures();
   const hasPipeline = allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline);
+  // Whether the org has columns to filter by, which is stricter than having the
+  // feature — see the note on the filter itself.
+  const hasBoard = usePipelineStages().length > 0;
 
   const deleteManyContactsMutation = useDeleteManyContactsMutation();
   const confirm = useConfirm();
@@ -246,12 +250,27 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
                 }
               />
             </div>
-            <LifecycleSelector
-              all={true}
-              className="w-48"
-              value={filter?.lifecycleId}
-              onChange={(value, _lifecycleObj) => setFilter({ ...filter, lifecycleId: value })}
-            />
+            {/* Matches the table's Stage column, which swaps on the same test:
+                filtering by lifecycle while reading a Pipeline Stage column was
+                the same screen speaking two vocabularies. Keyed on the board
+                existing rather than on the feature flag, because `StageSelector`
+                renders nothing without columns — a team with the feature but no
+                board would otherwise be left with no filter at all. */}
+            {hasBoard ? (
+              <StageSelector
+                all
+                className="w-48"
+                value={filter?.stageId}
+                onChange={(value) => setFilter({ ...filter, stageId: value })}
+              />
+            ) : (
+              <LifecycleSelector
+                all={true}
+                className="w-48"
+                value={filter?.lifecycleId}
+                onChange={(value, _lifecycleObj) => setFilter({ ...filter, lifecycleId: value })}
+              />
+            )}
             <LabelSelector
               value={filter.labelId}
               onChange={(value) => setFilter({ ...filter, labelId: value })}

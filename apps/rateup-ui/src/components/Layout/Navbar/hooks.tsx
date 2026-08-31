@@ -489,11 +489,12 @@ export function useNavMain({
                   url: "/dashboard/contacts/labels",
                   icon: IconTag,
                 },
-                {
-                  title: t("Lifecycle"),
-                  url: "/dashboard/contacts/lifecycle",
-                  icon: IconActivity,
-                },
+                // Lifecycle is no longer listed here: pipeline stages have taken
+                // over the places it was read from. The page and the route are
+                // still there for the surfaces that have not moved yet — the
+                // inbox chip, automation conditions, Zapier and the Zoho CRM
+                // mapping — so it stays reachable at
+                // `/dashboard/contacts/lifecycle` until those are migrated.
               ],
             },
           ]

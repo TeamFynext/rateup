@@ -48,6 +48,16 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     link: { to: "/dashboard/inbox", search: { tab: "open" }, label: "Open the Inbox" },
   },
   {
+    id: "2026-08-28-lifecycle-to-pipeline-stages",
+    title: "Lifecycle stages are now pipeline stages",
+    summary:
+      "Your board's columns are its own now, instead of being your contact lifecycle stages. Name them what your sales process calls them, and give each a status of Open, Won or Lost — Won and Lost are real columns you drop onto, so the separate Lost zone is gone. Pipeline stage replaces lifecycle elsewhere too: in the contacts table, when editing one contact or several, in Zoho Bigin's stage mapping, and in Meta conversion tracking, which now lives in pipeline settings and fires when a lead reaches a Won column. In settings you can reorder columns by dragging a handle or with the arrow keys, and deleting one asks where its leads should go rather than moving them for you. Lifecycle itself is unchanged for contacts and the inbox — the two are simply no longer tied together.",
+    publishedAt: "2026-08-28",
+    kinds: ["new", "improvement"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
+  },
+  {
     id: "2026-08-22-conversation-packs",
     title: "Buy conversation packs from Billing",
     summary:

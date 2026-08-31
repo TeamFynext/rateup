@@ -145,6 +145,13 @@ export type ContactsWithLastMessage = ContactsData & {
   mentionCount?: number;
   /** Sibling tickets for the same contact — drives the thread's history strip. */
   otherTicketCount?: number;
+  /**
+   * The board column the contact's lead sits in — contact-grained, like labels.
+   * Absent when the contact is not on a board at all, which is the ordinary case
+   * for a conversation nobody has turned into a lead.
+   */
+  stageName?: string | null;
+  stageColor?: string | null;
   /** Contact-grained: these follow the customer across every one of their tickets. */
   contactLabels?: ContactLabelOption[];
   /** Ticket-grained: these describe this conversation only. */
