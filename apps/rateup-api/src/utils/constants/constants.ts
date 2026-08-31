@@ -21,7 +21,7 @@ export const DEFAULT_JOIN_MESSAGE_TEMPLATE = [
   },
 ];
 
-export const rateupLogo = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup-logo-stacked-white-transparent.png`;
+export const rateupLogo = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup.png`;
 
 export function webImagesBaseUrl(): string {
   return process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL?.replace(/\/+$/, "") ?? "";

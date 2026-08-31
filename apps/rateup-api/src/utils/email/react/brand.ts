@@ -12,11 +12,15 @@ export const brand = {
 } as const;
 
 /**
- * The horizontal lockup. Its baked-in background is `#111A32`, which is why the
- * layout's logo band uses the `header` colour token — the two must stay in sync.
+ * The Design System V2 horizontal lockup — the same asset rateup-ui exports as
+ * `rateupLogo`. It is the transparent *colour* wordmark, drawn for light
+ * surfaces, which is what the layout sits it on (the white card, not a dark
+ * band). On a navy or photographic surface use `rateup-white.png` instead.
+ *
+ * The artwork is 2500x992, so anything rendering it must hold 2.52:1.
  */
 export function logoUrl(): string {
-  return `${webImagesBaseUrl()}/images/rateup-logo-horizontal-white-transparent.png`;
+  return `${webImagesBaseUrl()}/images/rateup.png`;
 }
 
 export function emailImage(fileName: string): string {
