@@ -3,9 +3,10 @@ import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import {
-  updateZohoLeadQueue,
-  ZohoTriggers,
-} from "../../integrations/external/zoho/zoho.service.js";
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../integrations/external/zapier/zapier.service.js";
+import { pushCrmLeadStatus, ZohoTriggers } from "../../integrations/external/zoho/zoho.service.js";
 import type {
   BulkUpdateLeadsRequestSchema,
   CloseLeadRequestSchema,
@@ -196,6 +197,9 @@ export async function createLead(
   if (data.syncIntegrations !== false) await syncLeadStageToIntegrations(created);
   // Opened directly onto a Won column — rare, but it is still the moment it was won.
   if (stage.status === "WON") await reportLeadWon(created);
+  // A contact that was not on the board and now sits in a column has changed
+  // stage as surely as one that was dragged — from nothing to something.
+  await announceStageChange(created);
 
   return created;
 }
@@ -300,8 +304,119 @@ export async function moveLead(
   const { becameWon, ...lead } = moved;
   if (syncIntegrations) await syncLeadStageToIntegrations(lead);
   if (becameWon) await reportLeadWon(lead);
+  await announceStageChange(lead);
 
   return lead;
+}
+
+/**
+ * Everything outside the pipeline that wants to hear a lead changed column.
+ *
+ * The two listeners are independent and must stay that way: a Zap should still
+ * fire for a contact with no phone number, which is the one thing that stops a
+ * rule from running.
+ */
+async function announceStageChange(lead: {
+  id: string;
+  contactId: string | null;
+  stageId: string;
+}) {
+  await fireStageUpdatedZap(lead);
+  await fireStageUpdatedRules(lead);
+}
+
+/**
+ * Emits Zapier's **Contact Stage Updated** — the board's counterpart to
+ * `contact_lifecycle_updated`, which fires from the contact write path and is
+ * left exactly as it is. Zaps built on the lifecycle trigger keep working; this
+ * is the trigger an org on the board has to build against instead.
+ *
+ * Keyed on the contact, like every other contact-shaped Zapier trigger: a
+ * board-only lead has no contact for the Zap's later steps to look up.
+ */
+async function fireStageUpdatedZap(lead: {
+  id: string;
+  contactId: string | null;
+  stageId: string;
+}) {
+  if (!lead.contactId) return;
+
+  try {
+    const stage = await prisma.pipelineStage.findUnique({
+      where: { id: lead.stageId },
+      select: {
+        name: true,
+        status: true,
+        pipelineId: true,
+        pipeline: { select: { orgId: true, name: true } },
+      },
+    });
+    if (!stage) return;
+
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_STAGE_UPDATED,
+      {
+        [ZapierTriggers.CONTACT_STAGE_UPDATED]: {
+          contactId: lead.contactId,
+          leadId: lead.id,
+          pipelineId: stage.pipelineId,
+          pipelineName: stage.pipeline.name,
+          stageId: lead.stageId,
+          stageName: stage.name,
+          stageStatus: stage.status,
+        },
+      },
+      stage.pipeline.orgId,
+    );
+  } catch (error) {
+    // The move is already recorded; a Zap that could not be queued must not undo it.
+    console.error("Failed to queue the Contact Stage Updated Zapier trigger", error);
+  }
+}
+
+/**
+ * Runs the automation rules listening for **Stage Updated** — the successor to
+ * the contact write path's `LIFECYCLE_UPDATED`.
+ *
+ * Called from all three writes that can change which column a lead sits in:
+ * {@link moveLead}, {@link closeLead} (a drop onto Won or Lost routes there, not
+ * through `moveLead`) and {@link createLead} (a contact joining the board).
+ *
+ * Only a lead with a contact can trigger one: rules are matched by phone and
+ * channel, and a board-only lead has neither an inbox thread nor a contact
+ * record for a rule to act on.
+ *
+ * Outside the `syncIntegrations` guard on purpose, the same as
+ * {@link reportLeadWon}: that flag stops a change Zoho pushed in from being
+ * echoed back out, but a rule should still see a stage that Zoho set.
+ *
+ * Imported dynamically. `wa_automatedReply.utils` already imports this file for
+ * `setContactStage`, so an eager import here closes the cycle — the same edge
+ * that broke module loading when the Conversions API service was pulled in.
+ */
+async function fireStageUpdatedRules(lead: { contactId: string | null; stageId: string }) {
+  if (!lead.contactId) return;
+
+  try {
+    const contact = await prisma.contact.findUnique({
+      where: { id: lead.contactId },
+      select: { id: true, orgId: true, phone: true, igsId: true, psid: true },
+    });
+    if (!contact?.phone) return;
+
+    const { checkAndExecuteRuleByTriggerEvent, resolveContactChannel } =
+      await import("../../whatsapp/automatedReply/wa_automatedReply.utils.js");
+
+    const channel = await resolveContactChannel(contact);
+    await checkAndExecuteRuleByTriggerEvent("STAGE_UPDATED", {
+      orgId: contact.orgId,
+      phone: contact.phone,
+      ...channel,
+    });
+  } catch (error) {
+    // The move is already recorded; a rule that could not run must not undo it.
+    console.error("Failed to run Stage Updated rules for a lead", error);
+  }
 }
 
 /**
@@ -364,9 +479,13 @@ async function syncLeadStageToIntegrations(lead: {
       ? (contact.integrationIds as ContactIntegrationIds | null)
       : null;
 
+    // Through the org's mapping, not the column's own name: `Lead_Status` is a
+    // Zoho picklist, so a board column named anything the org did not map is a
+    // value the CRM rejects.
     if (integrationIds?.zoho?.lead?.id) {
-      await updateZohoLeadQueue(orgId, integrationIds.zoho.lead.id, {
-        Lead_Status: stage.name,
+      await pushCrmLeadStatus(orgId, integrationIds.zoho.lead.id, {
+        stageId: lead.stageId,
+        stageName: stage.name,
       });
     }
 
@@ -781,7 +900,7 @@ export async function closeLead(id: string, data: CloseLeadRequestSchema, userId
     // already-won lead again does not report a second conversion.
     const before = await tx.lead.findUniqueOrThrow({
       where: { id },
-      select: { status: true },
+      select: { status: true, stageId: true },
     });
     const becameWon = isWon && before.status !== "WON";
 
@@ -840,16 +959,20 @@ export async function closeLead(id: string, data: CloseLeadRequestSchema, userId
       },
     });
 
-    return { ...serialiseLead(lead), becameWon };
+    return { ...serialiseLead(lead), becameWon, fromStageId: before.stageId };
   });
 
-  const { becameWon, ...lead } = closed;
+  const { becameWon, fromStageId, ...lead } = closed;
 
   // Winning or losing moves the lead into a closing column, which is a stage
   // change like any other — the CRM has to hear about it, or a deal dropped onto
   // Won on the board stays open in Bigin.
   if (lead.stageId) await syncLeadStageToIntegrations(lead);
   if (becameWon) await reportLeadWon(lead);
+  // Dropping a lead onto Won or Lost on the board routes here rather than
+  // through `moveLead`, so without this the one move a user is most likely to
+  // build a rule around would be the one move that never fired.
+  if (lead.stageId !== fromStageId) await announceStageChange(lead);
 
   return lead;
 }

@@ -35,6 +35,7 @@ import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
 import {
+  getContactStage,
   openLeadOnPipelineForContact,
   resolvePipelineForContact,
   setContactStage,
@@ -511,6 +512,23 @@ async function validateRuleCondition(
       if (!contact) return false;
 
       return contact.lifecycleId === value;
+    }
+
+    /**
+     * The board column the contact's lead sits in — the successor to
+     * CONTACT_LIFECYCLE.
+     *
+     * A contact with no lead has no stage, so the condition is simply false
+     * rather than an error: not being on the board is an ordinary state, and a
+     * rule asking "is this contact in Negotiation" should say no.
+     */
+    case "CONTACT_STAGE": {
+      if (!value) return false;
+      const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+      if (!contact) return false;
+
+      const stage = await getContactStage(contact.id, orgId);
+      return stage?.stageId === value;
     }
 
     default:

@@ -105,7 +105,7 @@ vi.mock("../whatsapp/inbox/inboxStats/inboxStats.service.js", () => ({
 }));
 
 vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
-  updateZohoLeadQueue: vi.fn(),
+  pushCrmLeadStatus: vi.fn(),
   ZohoTriggers: {
     LEAD_CREATE: "lead_created",
     CONTACT_UPDATE: "contact_updated",
@@ -1275,8 +1275,11 @@ describe("updateContactById", () => {
     expect(jobs[1][1].data.biginContactId).toBe("b1");
   });
 
-  test("pushes the lifecycle name to the mirrored zoho lead", async () => {
-    const { updateZohoLeadQueue } = await import("../integrations/external/zoho/zoho.service.js");
+  // The lifecycle is reported rather than written straight into `Lead_Status`:
+  // the org's mapping decides which Zoho status it means, and a lifecycle named
+  // something Zoho's picklist does not hold is a rejected push.
+  test("reports the lifecycle to the mirrored zoho lead", async () => {
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
     db.contact.update.mockResolvedValue(
       updated({ lifecycleId: "lc-1", integrationIds: { zoho: { lead: { id: "lead-1" } } } }),
     );
@@ -1284,20 +1287,21 @@ describe("updateContactById", () => {
 
     await updateContactById("c1", ORG, { lifecycleId: "lc-1" } as any, USER, existing);
 
-    expect(updateZohoLeadQueue).toHaveBeenCalledWith(
+    expect(pushCrmLeadStatus).toHaveBeenCalledWith(
       ORG,
       "lead-1",
-      expect.objectContaining({ Lead_Status: "Customer" }),
+      { lifecycleId: "lc-1", lifecycleName: "Customer" },
+      expect.any(Object),
     );
   });
 
   test("skips the lead update when the contact has no mirrored lead", async () => {
-    const { updateZohoLeadQueue } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
     db.contact.update.mockResolvedValue(updated({ lifecycleId: "lc-1" }));
 
     await updateContactById("c1", ORG, { lifecycleId: "lc-1" } as any, USER, existing);
 
-    expect(updateZohoLeadQueue).not.toHaveBeenCalled();
+    expect(pushCrmLeadStatus).not.toHaveBeenCalled();
   });
 
   test("closing frees the assignees and notifies those who asked to hear about it", async () => {
@@ -1419,14 +1423,17 @@ describe("updateLifecycleStageofContacts", () => {
   });
 
   test("pushes the new stage to contacts that are mirrored as zoho leads", async () => {
-    const { updateZohoLeadQueue } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
     db.contact.findMany.mockResolvedValue([
       { id: "c1", orgId: ORG, integrationIds: { zoho: { lead: { id: "lead-1" } } } },
     ]);
 
     await updateLifecycleStageofContacts("lc-1", ORG, ["c1"]);
 
-    expect(updateZohoLeadQueue).toHaveBeenCalledWith(ORG, "lead-1", { Lead_Status: "Customer" });
+    expect(pushCrmLeadStatus).toHaveBeenCalledWith(ORG, "lead-1", {
+      lifecycleId: "lc-1",
+      lifecycleName: "Customer",
+    });
   });
 });
 

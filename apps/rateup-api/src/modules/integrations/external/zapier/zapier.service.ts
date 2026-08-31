@@ -9,6 +9,14 @@ export enum ZapierTriggers {
   CONVERSATION_CLOSED = "conversation_closed",
   CONTACT_UPDATED = "contact_updated",
   CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
+  /**
+   * A contact's lead moved to a different pipeline column — the board's
+   * counterpart to {@link ZapierTriggers.CONTACT_LIFECYCLE_UPDATED}.
+   *
+   * Added beside it rather than replacing it: the lifecycle trigger is a live
+   * external contract, and every Zap already built on it keeps firing unchanged.
+   */
+  CONTACT_STAGE_UPDATED = "contact_stage_updated",
   CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
   RESPONSE_SUBMITTED = "response_submitted",
   CONTACT_DELETED = "contact_deleted",
@@ -158,6 +166,38 @@ export async function getSampleDataForTrigger(
         lifecycleName: l.Lifecycle?.name ?? null,
       }));
       break;
+    case ZapierTriggers.CONTACT_STAGE_UPDATED: {
+      const leads = await prisma.lead.findMany({
+        where: { contactId: { not: null }, pipeline: { orgId } },
+        select: {
+          id: true,
+          contactId: true,
+          pipelineId: true,
+          pipeline: { select: { name: true } },
+          stageId: true,
+          stage: { select: { name: true, status: true } },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = leads.map((lead) => ({
+        contactId: lead.contactId,
+        leadId: lead.id,
+        pipelineId: lead.pipelineId,
+        pipelineName: lead.pipeline.name,
+        stageId: lead.stageId,
+        stageName: lead.stage.name,
+        stageStatus: lead.stage.status,
+      }));
+      break;
+    }
     case ZapierTriggers.NEW_MESSAGE:
       const messages = await prisma.waMessage.findMany({
         where: {
