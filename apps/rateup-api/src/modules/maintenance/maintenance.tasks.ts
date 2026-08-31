@@ -7,6 +7,7 @@ import { placeLeadsFromLifecycles } from "./tasks/placeLeadsFromLifecycles.js";
 import { refreshPlanFeatures } from "./tasks/refreshPlanFeatures.js";
 import { relinkRazorpayPlans } from "./tasks/relinkRazorpayPlans.js";
 import { removeCustomPlan } from "./tasks/removeCustomPlan.js";
+import { repriceCatalogPlans } from "./tasks/repriceCatalogPlans.js";
 import { restructureTiers } from "./tasks/restructureTiers.js";
 import { retireLegacyPlans } from "./tasks/retireLegacyPlans.js";
 import { seedConversationAddon } from "./tasks/seedConversationAddon.js";
@@ -80,6 +81,20 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "moves and by how much.",
     destructive: true,
     run: refreshPlanFeatures,
+  },
+  {
+    id: "reprice-catalog-plans",
+    title: "Reprice the gateway plans",
+    description:
+      "Moves each tier's Razorpay plans (and Stripe prices) onto the catalog's current " +
+      "amounts. Run this before “Seed the plan catalog” after a price change — seeding " +
+      "refuses to reuse a plan whose amount has moved, so nothing else can push one " +
+      "through. Neither gateway allows editing an amount, so a fresh plan is created and " +
+      "the stored id repointed. Customers already subscribed keep their old price: their " +
+      "subscription names the plan it was created against, and that plan is left alone. " +
+      "Idempotent.",
+    destructive: true,
+    run: repriceCatalogPlans,
   },
   {
     id: "relink-razorpay-plans",

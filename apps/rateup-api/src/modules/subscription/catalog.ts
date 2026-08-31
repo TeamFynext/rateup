@@ -62,8 +62,8 @@ export const CATALOG_TIERS: TierSpec[] = [
     displayName: "Plus",
     inrMonthly: 2_400,
     inrYearly: 24_000,
-    usdMonthly: 29,
-    usdYearly: 290,
+    usdMonthly: 30,
+    usdYearly: 300,
     features: getPlusSubscriptionFeatures(),
     description: [
       "2 teams · 10 users",
@@ -78,10 +78,10 @@ export const CATALOG_TIERS: TierSpec[] = [
     name: "PRO PLAN",
     displayName: "Pro",
     badge: "Most popular",
-    inrMonthly: 6_000,
-    inrYearly: 60_000,
-    usdMonthly: 79,
-    usdYearly: 790,
+    inrMonthly: 4_800,
+    inrYearly: 48_000,
+    usdMonthly: 60,
+    usdYearly: 600,
     features: getProSubscriptionFeatures(),
     description: [
       "5 teams · 30 users",
@@ -94,10 +94,10 @@ export const CATALOG_TIERS: TierSpec[] = [
   {
     name: "MAX PLAN",
     displayName: "Max",
-    inrMonthly: 10_800,
-    inrYearly: 108_000,
-    usdMonthly: 129,
-    usdYearly: 1_290,
+    inrMonthly: 9_600,
+    inrYearly: 96_000,
+    usdMonthly: 120,
+    usdYearly: 1_200,
     features: getMaxSubscriptionFeatures(),
     description: [
       "10 teams · 100 users",
@@ -132,8 +132,8 @@ export const CATALOG_TIERS: TierSpec[] = [
  *
  * Priced so stacking packs stays cheaper than the next tier until an org is most of the
  * way to that tier's allowance, at which point upgrading wins on price alone. Plus is
- * ₹2,400/mo for 5,000; two packs on top (₹2,400) buy another 10,000 for less than Pro,
- * but a fourth pack costs more than moving up.
+ * ₹2,400/mo for 5,000; one pack on top (₹3,600) buys 10,000 for less than Pro, but a
+ * second lands on Pro's own ₹4,800 while still buying 5,000 fewer conversations.
  *
  * Add-ons attach to a paid subscription. A free org cannot buy one — there is no
  * subscription for the pack to sit alongside, and the upgrade is the cheaper answer
