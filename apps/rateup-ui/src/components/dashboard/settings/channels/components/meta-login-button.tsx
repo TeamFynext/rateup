@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useRegisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button.tsx";
+import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
 const fbLogin = (
@@ -116,24 +116,11 @@ export function MetaLoginButton({
   }
 
   return (
-    <Button
+    <FacebookBrandButton
       onClick={login}
-      style={{
-        backgroundColor: "#1877f2",
-        border: 0,
-        borderRadius: "4px",
-        color: "#fff",
-        cursor: "pointer",
-        fontFamily: "Helvetica, Arial, sans-serif",
-        fontSize: "16px",
-        fontWeight: "bold",
-        height: "40px",
-        padding: "0 24px",
-      }}
       disabled={disabled || registerMutation.isPending}
-    >
-      {registerMutation.isPending && <Spinner />}
-      {translations("Login with Facebook")}
-    </Button>
+      adornment={registerMutation.isPending ? <Spinner /> : null}
+      label={translations("Continue with Facebook")}
+    />
   );
 }

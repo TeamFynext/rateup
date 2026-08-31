@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
-import { ConnectMetaAccountButton } from "./connect-meta-account-button.tsx";
+import { ContinueWithFacebookButton } from "./continue-with-facebook-button.tsx";
 import { WaSettingEditModal } from "./wa-setting-edit-modal.tsx";
 
 type WaSetting = WaSettings[number];
@@ -42,7 +42,7 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
       <div className="flex h-full items-center justify-center rounded bg-muted">
         <div className="flex flex-col items-center gap-4 p-4">
           <p className="text-sm">No WhatsApp Business Accounts Connected</p>
-          <ConnectMetaAccountButton />
+          <ContinueWithFacebookButton />
         </div>
       </div>
     );
@@ -59,7 +59,7 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
             {translations("Manage your connected WhatsApp Business accounts and team access")}
           </p>
         </div>
-        <ConnectMetaAccountButton />
+        <ContinueWithFacebookButton />
       </div>
       <div className="grid gap-4">
         {waSettings.map((setting) => {

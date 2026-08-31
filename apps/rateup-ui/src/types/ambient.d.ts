@@ -162,8 +162,40 @@ declare global {
           callback: (response: FacebookLoginResponse) => void,
           options?: Record<string, unknown>,
         ) => void;
+        /** Present once init has run; logs the user out of the app and of Facebook. */
+        logout?: (callback?: (response: FacebookLoginResponse) => void) => void;
+        getLoginStatus?: (
+          callback: (response: FacebookLoginResponse) => void,
+          force?: boolean,
+        ) => void;
+        /** Graph API calls, used here to read the name/picture for "Continue as". */
+        api?: (
+          path: string,
+          params: Record<string, unknown>,
+          callback: (response: FacebookApiResponse) => void,
+        ) => void;
+        /** Renders `fb-*` markup added to the DOM after `FB.init()` ran. */
+        XFBML?: {
+          parse: (element?: HTMLElement, callback?: () => void) => void;
+        };
+        Event?: {
+          subscribe: (
+            event: "auth.statusChange" | "auth.authResponseChange" | "auth.login" | "auth.logout",
+            callback: (response: FacebookLoginResponse) => void,
+          ) => void;
+          unsubscribe: (
+            event: "auth.statusChange" | "auth.authResponseChange" | "auth.login" | "auth.logout",
+            callback: (response: FacebookLoginResponse) => void,
+          ) => void;
+        };
       }
     | undefined;
+  /** A `/me` read, or the error the Graph API returns instead. */
+  interface FacebookApiResponse {
+    name?: string;
+    picture?: { data?: { url?: string } };
+    error?: { message?: string };
+  }
   var fbAsyncInit: (() => void) | undefined;
   interface ValidationRules {
     length?: {

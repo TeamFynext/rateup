@@ -1,53 +1,26 @@
-import { IconBrandMeta } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
+import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
+import { loadFacebookSdk } from "@/lib/facebook-sdk";
 import { MetaLoginAssets } from "@/types/enums.ts";
 
 import { MetaLoginButton } from "./meta-login-button.tsx";
 
-const FB_SDK_SCRIPT_ID = "facebook-jssdk";
-
-const initFacebookSdk = () => {
-  return new Promise<void>((resolve) => {
-    if (globalThis.FB) {
-      resolve();
-      return;
-    }
-
-    globalThis.fbAsyncInit = function () {
-      globalThis.FB?.init({
-        appId: import.meta.env.VITE_META_APP_ID,
-        autoLogAppEvents: true,
-        xfbml: true,
-        version: "v25.0",
-      });
-      resolve();
-    };
-
-    if (document.getElementById(FB_SDK_SCRIPT_ID)) return;
-
-    const script = document.createElement("script");
-    script.id = FB_SDK_SCRIPT_ID;
-    script.src = "https://connect.facebook.net/en_US/sdk.js";
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = "anonymous";
-    document.head.appendChild(script);
-  });
-};
-
-export function ConnectMetaAccountButton() {
+export function ContinueWithFacebookButton() {
   const [opened, { open, close }] = useDisclosure(false);
+  const { t: translations } = useTranslation();
   const [selectedAssets, setSelectedAssets] = useState<string[]>([MetaLoginAssets.WHATSAPP]);
   const assets = Object.values(MetaLoginAssets);
 
   useEffect(() => {
-    initFacebookSdk();
+    void loadFacebookSdk().catch(() => {
+      // The login button reports the failure when it is clicked.
+    });
   }, []);
 
   const configId = useMemo(() => {
@@ -96,13 +69,10 @@ export function ConnectMetaAccountButton() {
 
   return (
     <>
-      <Button onClick={open}>
-        <IconBrandMeta />
-        Connect Meta Account
-      </Button>
+      <FacebookBrandButton onClick={open} label={translations("Continue with Facebook")} />
       <Dialog open={opened} onOpenChange={(next) => (next ? open() : close())}>
         <DialogContent>
-          <DialogTitle>Connect Meta account</DialogTitle>
+          <DialogTitle>Continue with Facebook</DialogTitle>
           <Field>
             <Field>
               <p className="text-sm font-medium">
