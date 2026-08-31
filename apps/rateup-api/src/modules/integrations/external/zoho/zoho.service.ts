@@ -21,6 +21,7 @@ import {
   getZohoCredential,
   isStaleContactLinkError,
   isStaleRecordIdError,
+  resolveCrmLeadStatus,
 } from "./zoho.types.js";
 import {
   moveLead,
@@ -29,6 +30,7 @@ import {
 } from "../../../pipeline/pipelineLead/lead.service.js";
 import { Prisma } from "../../../../../generated/prisma/client.js";
 import type {
+  StageMappingKey,
   ZohoBiginDealPayload,
   ZohoCredential,
   ZohoFieldMeta,
@@ -1273,6 +1275,57 @@ export async function updateZohoLeadQueue(
       ...fields,
     },
   });
+}
+
+/**
+ * Tells Zoho CRM a lead changed column, through the org's status mapping.
+ *
+ * The one place `Lead_Status` is pushed from. Both callers — the board's
+ * {@link import("../../../pipeline/pipelineLead/lead.service.js").moveLead} fan-out
+ * and the contact write paths — used to enqueue the Rateup name directly, so
+ * neither respected the mapping the org configured in the "Lead Status Mapping"
+ * dialog even though the inbound sync has always read it.
+ *
+ * Silently does nothing when the column maps to no status: that is a
+ * configuration gap, not a failure of the move that triggered it.
+ */
+export async function pushCrmLeadStatus(
+  orgId: string,
+  zohoLeadId: string,
+  key: StageMappingKey,
+  extraFields: Record<string, unknown> = {},
+) {
+  // Resolving the mapping means a database read, and this sits inside a fan-out
+  // that also feeds Bigin. Its own guard, so a Zoho lookup that fails does not
+  // take the other integrations down with it.
+  let leadStatus: string | null;
+  try {
+    const integration = await prisma.integration.findUnique({
+      where: { orgid_integration_name_unique: { orgId, name: "zoho" } },
+    });
+    if (!integration) return;
+
+    const credential = getZohoCredential(integration);
+    leadStatus = resolveCrmLeadStatus(credential?.crm?.leadLifecycleMappings || [], key);
+  } catch (error) {
+    log.error(error, "Failed to read the Zoho lead status mapping");
+    return;
+  }
+
+  if (!leadStatus) {
+    log.warn(
+      "Column %s maps to no Zoho lead status; leaving the CRM lead's status alone",
+      key.stageName ?? key.lifecycleName ?? key.stageId ?? key.lifecycleId,
+    );
+    // The status is the only field the mapping governs. A caller that also had
+    // name or phone changes to push still gets them out — dropping those too
+    // would turn a mapping gap into a contact that stops syncing entirely.
+    if (Object.keys(extraFields).length > 0)
+      await updateZohoLeadQueue(orgId, zohoLeadId, extraFields);
+    return;
+  }
+
+  await updateZohoLeadQueue(orgId, zohoLeadId, { ...extraFields, Lead_Status: leadStatus });
 }
 
 export async function fetchZohoPipelineMeta(orgId: string, product: ZohoProduct = "bigin") {

@@ -54,7 +54,7 @@ import {
   decrementInboxStat,
   type StatsField,
 } from "../whatsapp/inbox/inboxStats/inboxStats.service.js";
-import { updateZohoLeadQueue, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
+import { pushCrmLeadStatus, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
 import {
   addZohoContactToQueue,
   buildZohoContactPayload,
@@ -485,6 +485,17 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
           }
           break;
         }
+        case "stageId": {
+          // The pipeline counterpart of `lifecycleId`. A contact has no stage of
+          // its own — the stage belongs to its lead — so this asks whether the
+          // contact has a lead sitting in that column.
+          if (value !== "all") {
+            filterData.push({
+              leads: { some: { stageId: value } },
+            });
+          }
+          break;
+        }
         case "labelId": {
           if (!["all", "active", "blocked"].includes(value)) {
             filterData.push({
@@ -504,6 +515,7 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
               blockedOnWhatsApp: true,
             });
           }
+          break;
         }
       }
     }
@@ -937,13 +949,15 @@ export async function updateContactById(
     });
 
     if (lifecycle) {
-      await updateZohoLeadQueue(
+      const { Lead_Status: _mapped, ...payload } = buildZohoLeadPayload(updatedContact);
+      await pushCrmLeadStatus(
         updatedContact.orgId,
         integrationIds.zoho.lead.id,
-        buildZohoLeadPayload({
-          ...updatedContact,
-          leadStatus: lifecycle.name,
-        }),
+        {
+          lifecycleId: updatedContact.lifecycleId,
+          lifecycleName: lifecycle.name,
+        },
+        payload,
       );
     }
   }
@@ -1700,13 +1714,15 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
         });
 
         if (lifecycle) {
-          await updateZohoLeadQueue(
+          const { Lead_Status: _mapped, ...payload } = buildZohoLeadPayload(updatedContact);
+          await pushCrmLeadStatus(
             updatedContact.orgId,
             integrationIds.zoho.lead.id,
-            buildZohoLeadPayload({
-              ...updatedContact,
-              leadStatus: lifecycle.name,
-            }),
+            {
+              lifecycleId: updatedContact.lifecycleId,
+              lifecycleName: lifecycle.name,
+            },
+            payload,
           );
         }
       }
@@ -1862,8 +1878,9 @@ export async function updateLifecycleStageofContacts(
     };
 
     if (integrationIds?.zoho?.lead?.id) {
-      await updateZohoLeadQueue(contact.orgId, integrationIds.zoho?.lead?.id, {
-        Lead_Status: lifecycle.name,
+      await pushCrmLeadStatus(contact.orgId, integrationIds.zoho.lead.id, {
+        lifecycleId,
+        lifecycleName: lifecycle.name,
       });
     }
     if (lifecycleId) {

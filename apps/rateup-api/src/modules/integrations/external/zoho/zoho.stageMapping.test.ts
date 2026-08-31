@@ -4,6 +4,7 @@ import {
   findBiginStageMapping,
   isStaleContactLinkError,
   isStaleRecordIdError,
+  resolveCrmLeadStatus,
 } from "./zoho.types.js";
 
 const QUALIFIED = { stageId: "stage-q", stageName: "Qualified", biginStageName: "Qualification" };
@@ -44,6 +45,52 @@ describe("finding the Bigin stage for a trigger", () => {
 
   test("an unmapped column resolves to nothing", () => {
     expect(findBiginStageMapping([QUALIFIED], { stageId: "stage-unmapped" })).toBeUndefined();
+  });
+});
+
+describe("finding the Zoho CRM lead status for a column", () => {
+  const MAPPED = { stageId: "stage-q", stageName: "Qualified", zohoLeadStatus: "Contacted" };
+  const OTHER = { stageId: "stage-w", stageName: "Won", zohoLeadStatus: "Junk Lead" };
+  const BY_LIFECYCLE = { lifecycleId: "life-x", lifecycleName: "Customer", zohoLeadStatus: "Won" };
+
+  test("returns the status the org mapped, not the column's own name", () => {
+    expect(
+      resolveCrmLeadStatus([MAPPED, OTHER], { stageId: "stage-q", stageName: "Qualified" }),
+    ).toBe("Contacted");
+  });
+
+  // The contact write paths still describe the move by lifecycle.
+  test("resolves a lifecycle the same way", () => {
+    const status = resolveCrmLeadStatus([MAPPED, BY_LIFECYCLE], {
+      lifecycleId: "life-x",
+      lifecycleName: "Customer",
+    });
+    expect(status).toBe("Won");
+  });
+
+  // The bug: `Lead_Status` is a Zoho picklist, so a column the org never mapped
+  // is a value Zoho rejects. Better to leave the CRM lead's status alone.
+  test("a mapped board with an unmapped column pushes nothing", () => {
+    expect(
+      resolveCrmLeadStatus([MAPPED], { stageId: "stage-new", stageName: "New Lead" }),
+    ).toBeNull();
+  });
+
+  test("a mapped entry with no Zoho status on it pushes nothing", () => {
+    expect(resolveCrmLeadStatus([{ stageId: "stage-q" }], { stageId: "stage-q" })).toBeNull();
+  });
+
+  // An org that never opened the mapping dialog keeps the behaviour it has
+  // always had, rather than silently losing a sync that works for it.
+  test("falls back to the column's name when nothing is configured", () => {
+    expect(resolveCrmLeadStatus([], { stageId: "stage-q", stageName: "Qualified" })).toBe(
+      "Qualified",
+    );
+    expect(resolveCrmLeadStatus([], { lifecycleName: "Customer" })).toBe("Customer");
+  });
+
+  test("an unconfigured board with a nameless column still pushes nothing", () => {
+    expect(resolveCrmLeadStatus([], { stageId: "stage-q" })).toBeNull();
   });
 });
 

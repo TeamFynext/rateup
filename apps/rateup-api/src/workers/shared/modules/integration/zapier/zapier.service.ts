@@ -156,6 +156,18 @@ export async function getFormattedPayloadForTrigger(triggerKey: ZapierTriggers, 
         lifecycleName: tmp.lifecycleName,
       };
     }
+    case ZapierTriggers.CONTACT_STAGE_UPDATED: {
+      const tmp = data[ZapierTriggers.CONTACT_STAGE_UPDATED];
+      return {
+        contactId: tmp.contactId,
+        leadId: tmp.leadId,
+        pipelineId: tmp.pipelineId,
+        pipelineName: tmp.pipelineName,
+        stageId: tmp.stageId,
+        stageName: tmp.stageName,
+        stageStatus: tmp.stageStatus,
+      };
+    }
     case ZapierTriggers.TICKET_CREATED: {
       const card = data[ZapierTriggers.TICKET_CREATED];
       return {

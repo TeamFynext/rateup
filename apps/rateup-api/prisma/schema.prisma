@@ -588,6 +588,9 @@ enum ConditionField {
   CONTACT_GROUP
   CONTACT_LABEL
   CONTACT_LIFECYCLE
+  /// The board column the contact's lead sits in. Replaces CONTACT_LIFECYCLE;
+  /// both exist while rules written against the old one are still running.
+  CONTACT_STAGE
 }
 
 enum ConditionOperator {
@@ -603,6 +606,9 @@ enum TriggerEvent {
   CHAT_ASSIGNED
   CONTACT_CREATED
   LIFECYCLE_UPDATED
+  /// A lead moved to a different board column. Replaces LIFECYCLE_UPDATED; both
+  /// exist while rules written against the old one are still running.
+  STAGE_UPDATED
   SHOPIFY_EVENT
   INSTAGRAM_COMMENT
   INSTAGRAM_STORY_MENTION

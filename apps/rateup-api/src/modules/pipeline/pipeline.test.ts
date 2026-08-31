@@ -51,8 +51,19 @@ vi.mock("../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
   notificationQueue: { add: vi.fn() },
 }));
+// Pulled in by a dynamic import inside `moveLead` to run the Stage Updated
+// rules. Left real it drags the whole automated-reply module tree in mid-test,
+// which is slow enough under a parallel run to trip the 5s timeout.
+vi.mock("../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
+  checkAndExecuteRuleByTriggerEvent: vi.fn(),
+  resolveContactChannel: vi.fn().mockResolvedValue({ platform: "whatsapp" }),
+}));
+vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
+  addZapierTriggerToQueue: vi.fn(),
+  ZapierTriggers: { CONTACT_STAGE_UPDATED: "contact_stage_updated" },
+}));
 vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
-  updateZohoLeadQueue: vi.fn(),
+  pushCrmLeadStatus: vi.fn(),
   ZohoTriggers: { BIGIN_DEAL_CREATE: "bigin_deal_created" },
 }));
 vi.mock("../integrations/meta/conversions.service.js", () => ({
@@ -61,7 +72,8 @@ vi.mock("../integrations/meta/conversions.service.js", () => ({
 
 import prisma from "../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
-import { updateZohoLeadQueue } from "../integrations/external/zoho/zoho.service.js";
+import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
+import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.service.js";
 import { sendWonConversionEvent } from "../integrations/meta/conversions.service.js";
 import {
   isPipelineMember,
@@ -964,7 +976,8 @@ describe("telling the CRMs a lead changed column", () => {
 
   beforeEach(() => {
     vi.mocked(integrationTriggerQueue.add).mockClear();
-    vi.mocked(updateZohoLeadQueue).mockClear();
+    vi.mocked(pushCrmLeadStatus).mockClear();
+    vi.mocked(addZapierTriggerToQueue).mockClear();
     db.lead.findUniqueOrThrow.mockResolvedValue({
       stageId: "old-stage",
       stage: { name: "New Lead" },
@@ -974,7 +987,9 @@ describe("telling the CRMs a lead changed column", () => {
     // another tenant's integration.
     db.pipelineStage.findUnique.mockResolvedValue({
       name: "Qualified",
-      pipeline: { orgId: "org-1" },
+      status: "OPEN",
+      pipelineId: PIPELINE,
+      pipeline: { orgId: "org-1", name: "Sales" },
     });
     db.lead.update.mockResolvedValue({
       id: LEAD,
@@ -1003,11 +1018,15 @@ describe("telling the CRMs a lead changed column", () => {
     expect(job.data).not.toHaveProperty("lifecycleId");
   });
 
-  test("a move updates the Zoho lead status to the column's name", async () => {
+  // The column is reported, not a `Lead_Status`: which status that becomes is
+  // the org's mapping to decide, and pushing the column's own name into Zoho's
+  // picklist is what used to be wrong here.
+  test("a move reports the column to the Zoho CRM lead", async () => {
     await moveLead(LEAD, STAGE, null);
 
-    expect(updateZohoLeadQueue).toHaveBeenCalledWith("org-1", "zoho-lead-1", {
-      Lead_Status: "Qualified",
+    expect(pushCrmLeadStatus).toHaveBeenCalledWith("org-1", "zoho-lead-1", {
+      stageId: STAGE,
+      stageName: "Qualified",
     });
   });
 
@@ -1017,7 +1036,7 @@ describe("telling the CRMs a lead changed column", () => {
     await moveLead(LEAD, STAGE, null, false);
 
     expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
-    expect(updateZohoLeadQueue).not.toHaveBeenCalled();
+    expect(pushCrmLeadStatus).not.toHaveBeenCalled();
   });
 
   // Dropping a lead onto Won or Lost goes through `closeLead`, not `moveLead`.
@@ -1078,7 +1097,61 @@ describe("telling the CRMs a lead changed column", () => {
     // the next move updates that deal instead of opening another.
     expect(job).toMatchObject({ rateupLeadId: LEAD });
     // No contact means no Zoho CRM lead to update either.
-    expect(updateZohoLeadQueue).not.toHaveBeenCalled();
+    expect(pushCrmLeadStatus).not.toHaveBeenCalled();
+  });
+
+  // The board's counterpart to `contact_lifecycle_updated`, which fires from the
+  // contact write path and is untouched — a Zap built on the lifecycle trigger
+  // keeps working, and this is what an org on the board builds against instead.
+  test("a move emits the Contact Stage Updated Zapier trigger", async () => {
+    await moveLead(LEAD, STAGE, null);
+
+    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
+      "contact_stage_updated",
+      {
+        contact_stage_updated: {
+          contactId: CONTACT,
+          leadId: LEAD,
+          pipelineId: PIPELINE,
+          pipelineName: "Sales",
+          stageId: STAGE,
+          stageName: "Qualified",
+          stageStatus: "OPEN",
+        },
+      },
+      "org-1",
+    );
+  });
+
+  // A card typed straight onto the board has no contact for the Zap's later
+  // steps to look up, so there is nothing to announce.
+  test("a lead with no contact emits no Zapier trigger", async () => {
+    db.lead.update.mockResolvedValue({
+      id: LEAD,
+      contactId: null,
+      stageId: STAGE,
+      pipelineId: PIPELINE,
+      name: "Walk-in enquiry",
+      email: null,
+      phone: "+9199",
+      source: "MANUAL",
+      labels: [],
+      assignees: [],
+      tasks: [],
+    });
+
+    await moveLead(LEAD, STAGE, null);
+
+    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+  });
+
+  // Unlike the CRM fan-out, this is outside the `syncIntegrations` guard: that
+  // flag stops a change Zoho pushed in from being echoed back to Zoho, but a Zap
+  // should still hear about a stage Zoho set.
+  test("a move that came from an integration still emits the Zapier trigger", async () => {
+    await moveLead(LEAD, STAGE, null, false);
+
+    expect(addZapierTriggerToQueue).toHaveBeenCalled();
   });
 
   // Both ids ride along: the handler prefers the contact, matching where the
