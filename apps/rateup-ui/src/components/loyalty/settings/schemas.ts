@@ -86,6 +86,8 @@ export const BasicSettingsSchema = z.object({
   pointsCurrency: z.string().min(1, "Points Currency is required"),
   moneyCurrency: z.string().min(1, "Money Currency is required"),
   defaultCountryCode: z.string().min(1, "Default Country is required"),
+  /** null means "not set" — the giveback estimate then prompts instead of guessing. */
+  averageOrderValue: z.number().min(0).nullable().optional(),
   whatsappSettingsId: z.string().optional(),
   referralMessageTemplate: ReferralMessageTemplateSchema,
 });

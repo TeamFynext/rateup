@@ -156,6 +156,7 @@ export function LoyaltySettingsPage() {
       pointsCurrency: "Points",
       moneyCurrency: "INR",
       defaultCountryCode: "IN",
+      averageOrderValue: null,
       whatsappSettingsId: undefined,
       referralMessageTemplate: DEFAULT_JOIN_MESSAGE_TEXT,
     },
@@ -208,6 +209,7 @@ export function LoyaltySettingsPage() {
           pointsCurrency: program.currencyName || "Points",
           moneyCurrency: program.currencyCode || "INR",
           defaultCountryCode: program.defaultCountryCode || "IN",
+          averageOrderValue: program.averageOrderValue ?? null,
           whatsappSettingsId: program.whatsappSettingsId,
           referralMessageTemplate: program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEXT,
         });
@@ -281,6 +283,8 @@ export function LoyaltySettingsPage() {
       currencyName: data.pointsCurrency,
       currencyCode: data.moneyCurrency,
       defaultCountryCode: data.defaultCountryCode,
+      // Null clears it back to "never told us", which the estimate reads as a prompt.
+      averageOrderValue: data.averageOrderValue ?? null,
       whatsappSettingsId: data.whatsappSettingsId,
       referralMessageTemplate: data.referralMessageTemplate,
     };

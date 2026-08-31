@@ -10,6 +10,8 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
+import { EarningGivebackPanel } from "../../giveback/StepGivebackPanels.tsx";
+import type { GivebackContext } from "../givebackContext.ts";
 import { earningFormSchema, type EarningFormInput, type EarningFormValues } from "../schemas.ts";
 import { StepFooter, StepHeader } from "../StepChrome.tsx";
 
@@ -17,8 +19,10 @@ interface EarningStepProps {
   defaultValues: EarningFormInput;
   currencySymbol: string;
   pointsName: string;
+  giveback: GivebackContext;
   isSaving: boolean;
   onBack: () => void;
+  onEditAverageOrderValue: () => void;
   onSubmit: (values: EarningFormValues) => void;
 }
 
@@ -26,8 +30,10 @@ export function EarningStep({
   defaultValues,
   currencySymbol,
   pointsName,
+  giveback,
   isSaving,
   onBack,
+  onEditAverageOrderValue,
   onSubmit,
 }: Readonly<EarningStepProps>) {
   const { t } = useTranslation();
@@ -45,7 +51,7 @@ export function EarningStep({
       <StepHeader
         title={t("How customers earn points")}
         description={t(
-          "The default rule applies to every purchase. Any extra rule stacks on top when its conditions match.",
+          "The default rule applies to every purchase. An extra rule takes over from it while its conditions match — only one rule ever applies to a sale.",
         )}
       />
 
@@ -173,6 +179,12 @@ export function EarningStep({
           <p className="text-xs text-destructive">{rulesError.message}</p>
         )}
       </div>
+
+      <EarningGivebackPanel
+        control={form.control}
+        context={giveback}
+        onEditAverageOrderValue={onEditAverageOrderValue}
+      />
 
       <StepFooter isSaving={isSaving} onBack={onBack} />
     </form>

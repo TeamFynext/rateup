@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Controller, useForm, type Control } from "react-hook-form";
+import { Controller, useForm, useWatch, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyPreset, LoyaltyPresetKey } from "@/backend/loyalty/onboarding.api";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { cn } from "@/lib/utils.ts";
 import { numberInputValue } from "@/utils/form.ts";
@@ -37,6 +38,10 @@ export function BusinessTypeStep({
     resolver: zodResolver(basicsFormSchema),
     defaultValues,
   });
+
+  // The symbol lives in its own field (kept in step with the code by the currency select
+  // above), so the prefix on the spend input has to follow it rather than the code.
+  const currencySymbol = useWatch({ control: form.control, name: "currencySymbol" });
 
   const { reset } = form;
 
@@ -166,6 +171,38 @@ export function BusinessTypeStep({
                 <FieldDescription className="text-xs">
                   {t(
                     "Tier thresholds and reward costs below are in this currency — they are not converted if you change it.",
+                  )}
+                </FieldDescription>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Controller
+            control={form.control}
+            name="averageOrderValue"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name} className="text-xs">
+                  {t("Typical spend in one visit")}
+                </FieldLabel>
+                <InputGroup data-invalid={fieldState.invalid}>
+                  <InputGroupAddon>{currencySymbol}</InputGroupAddon>
+                  <InputGroupInput
+                    id={field.name}
+                    type="number"
+                    min={0}
+                    step="1"
+                    aria-invalid={fieldState.invalid}
+                    {...field}
+                    value={numberInputValue(field.value)}
+                  />
+                </InputGroup>
+                <FieldDescription className="text-xs">
+                  {t(
+                    "Roughly what one customer spends. We use it to show what your program gives back as a share of revenue — a rough figure is fine.",
                   )}
                 </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

@@ -17,6 +17,7 @@ export const basicsFormSchema = z.object({
   signupBonus: z.coerce.number().int().min(0),
   referralBonus: z.coerce.number().int().min(0),
   refereeBonus: z.coerce.number().int().min(0),
+  averageOrderValue: z.coerce.number().min(0),
 });
 
 export const earningFormSchema = z
@@ -73,6 +74,8 @@ export const rewardsFormSchema = z
   .object({
     rewards: z.array(
       z.object({
+        /** Present on a saved reward, absent on one just added. The API updates by it. */
+        id: z.string().optional(),
         name: z.string().min(1, "Name this reward"),
         description: z.string().optional(),
         pointsCost: z.coerce.number().int().min(0),
@@ -84,7 +87,48 @@ export const rewardsFormSchema = z
   .refine(
     (v) => new Set(v.rewards.map((r) => r.name.trim().toLowerCase())).size === v.rewards.length,
     { message: "Two rewards share a name", path: ["rewards"] },
-  );
+  )
+  /**
+   * `rewardValue` stays an open record rather than a discriminated union, deliberately.
+   * `getOnboardingState` hands this form every reward on the programme — including rows the
+   * standalone editor wrote in its own dialect, and coupon blobs — and a union would block
+   * Continue on rows the merchant never touched. So: validate only the three shapes this
+   * wizard itself produces, and leave anything else alone.
+   */
+  .superRefine((v, ctx) => {
+    v.rewards.forEach((reward, index) => {
+      const value = reward.rewardValue;
+      const path = ["rewards", index, "rewardValue"];
+
+      if (value.type === "free_item") {
+        if (typeof value.item_name !== "string" || value.item_name.trim() === "") {
+          ctx.addIssue({
+            code: "custom",
+            path: [...path, "item_name"],
+            message: "Name the item",
+          });
+        }
+      } else if (value.type === "discount_percentage") {
+        const percentage = value.percentage;
+        if (typeof percentage !== "number" || percentage <= 0 || percentage > 100) {
+          ctx.addIssue({
+            code: "custom",
+            path: [...path, "percentage"],
+            message: "Enter 1-100",
+          });
+        }
+      } else if (value.type === "discount_fixed") {
+        const amount = value.amount;
+        if (typeof amount !== "number" || amount <= 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: [...path, "amount"],
+            message: "Enter an amount",
+          });
+        }
+      }
+    });
+  });
 
 export const messagesFormSchema = z.object({
   commands: z.array(
@@ -111,6 +155,8 @@ export type EarningFormValues = z.output<typeof earningFormSchema>;
 export type TiersFormInput = z.input<typeof tiersFormSchema>;
 export type TiersFormValues = z.output<typeof tiersFormSchema>;
 export type RewardsFormInput = z.input<typeof rewardsFormSchema>;
+/** One row of the rewards field array — shared by the step, the dialog and the converters. */
+export type RewardFormRow = RewardsFormInput["rewards"][number];
 export type RewardsFormValues = z.output<typeof rewardsFormSchema>;
 export type MessagesFormInput = z.input<typeof messagesFormSchema>;
 export type MessagesFormValues = z.output<typeof messagesFormSchema>;

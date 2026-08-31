@@ -67,6 +67,8 @@ export interface LoyaltyPreset {
     signupBonus: number;
     referralBonus: number;
     refereeBonus: number;
+    /** Suggested typical spend in one visit — seeds the giveback estimate. */
+    averageOrderValue: number;
   };
   earningRules: PresetEarningRule[];
   tiersEnabled: boolean;
@@ -102,6 +104,7 @@ export interface SavedOnboardingData {
     priority: number;
   }>;
   rewards: Array<{
+    id: string;
     name: string;
     description: string | null;
     pointsCost: number;
@@ -141,6 +144,7 @@ export interface BasicsStepPayload {
   signupBonus: number;
   referralBonus: number;
   refereeBonus: number;
+  averageOrderValue?: number | null;
 }
 
 export interface EarningStepPayload {
@@ -169,6 +173,8 @@ export interface TiersStepPayload {
 
 export interface RewardsStepPayload {
   rewards: Array<{
+    /** Absent for a reward being created; present to update that exact row. */
+    id?: string;
     name: string;
     description?: string | null;
     pointsCost: number;

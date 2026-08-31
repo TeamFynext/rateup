@@ -2,7 +2,8 @@
 // carries routing config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconArrowLeft, IconLoader2, IconPlus } from "@tabler/icons-react";
+import { IconAlertTriangle, IconArrowLeft, IconLoader2, IconPlus } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import { useId, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,10 @@ import {
   useDeleteLoyaltyEarningRuleMutation,
   useLoyaltyEarningRules,
 } from "@/backend/loyalty/earningRules.query";
+import {
+  useLoyaltyProgram,
+  useUpdateLoyaltyProgramMutation,
+} from "@/backend/loyalty/program.query";
 import type { LoyaltyTierInput } from "@/backend/loyalty/tiers.api";
 import { getLoyaltyTierById } from "@/backend/loyalty/tiers.api";
 import {
@@ -22,6 +27,10 @@ import {
   useLoyaltyTiers,
 } from "@/backend/loyalty/tiers.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
+import { calculateGiveback } from "@/components/dashboard/loyalty/giveback/calculateGiveback.ts";
+import { GivebackPanel } from "@/components/dashboard/loyalty/giveback/GivebackPanel.tsx";
+import { useProgrammeGiveback } from "@/components/dashboard/loyalty/giveback/useProgrammeGiveback.ts";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -77,7 +86,27 @@ export function EarningRulesPage() {
   // Fetch earning rules
   const { data: earningRules = [], isLoading, error } = useLoyaltyEarningRules();
 
+  const { data: program } = useLoyaltyProgram();
+  const giveback = useProgrammeGiveback();
+  const givebackResult = useMemo(() => calculateGiveback(giveback), [giveback]);
+
+  // The base rule applies to every purchase. It was fetched but never rendered, so the one
+  // number the whole programme hangs on could not be seen or changed anywhere in the app.
+  const defaultRule = useMemo(() => earningRules.find((r) => r.isDefault), [earningRules]);
   const additionalRules = useMemo(() => earningRules.filter((r) => !r.isDefault), [earningRules]);
+
+  const tiersEnabled = program?.tiersEnabled ?? false;
+  const updateProgramMutation = useUpdateLoyaltyProgramMutation(program?.id ?? "");
+
+  const handleToggleTiers = (checked: boolean) => {
+    if (!program?.id) return;
+    updateProgramMutation.mutate({ tiersEnabled: checked });
+    // Mirrors the wizard's `!tiersEnabled || tiers.length > 0` rule: tiers on with no tiers
+    // to sit in does nothing, so say so rather than leaving an empty section.
+    if (checked && loyaltyTiers.length === 0) {
+      toast.info(t("Add a tier so customers have somewhere to move up to"));
+    }
+  };
 
   // Tier mutations
   const createTierMutation = useCreateLoyaltyTierMutation(() => {
@@ -221,29 +250,32 @@ export function EarningRulesPage() {
   };
 
   const handleAddTier = () => {
-    const createRandomTierName = () => {
-      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const randomLetter = letters[Math.floor(Math.random() * letters.length)];
-      const nextTierNumber =
-        loyaltyTiers.reduce((maxNumber, tier) => {
-          const match = tier.name.match(/-(\d+)$/);
-          const tierNumber = match ? Number.parseInt(match[1], 10) : 0;
-          return Math.max(maxNumber, tierNumber);
-        }, 0) + 1;
-
-      return `Tier ${randomLetter}-${nextTierNumber}`;
-    };
+    // `name` and `threshold` are both unique per programme, so a new tier needs values that
+    // cannot collide with an existing row before the user has named it.
+    const nextTierNumber =
+      loyaltyTiers.reduce((maxNumber, tier) => {
+        const match = tier.name.match(/(\d+)$/);
+        return Math.max(maxNumber, match ? Number.parseInt(match[1], 10) : 0);
+      }, loyaltyTiers.length) + 1;
 
     const maxPoints = Math.max(...loyaltyTiers.map((tier) => tier.threshold), 0);
 
     const newTierData: LoyaltyTierInput = {
-      name: createRandomTierName(),
+      name: `Tier ${nextTierNumber}`,
       color: randomHexColor(),
-      pointsMultiplier: 10,
+      // 1x, matching the API default and the setup wizard. This used to be 10, which
+      // silently created a tier earning ten times the base rate.
+      pointsMultiplier: 1,
       threshold: maxPoints + 1000,
     };
 
-    createTierMutation.mutate(newTierData);
+    createTierMutation.mutate(newTierData, {
+      // Open it straight away: an auto-generated name is a placeholder, not an answer.
+      onSuccess: (tier) => {
+        setEditingRuleId(null);
+        setEditingTierId(tier.id);
+      },
+    });
   };
 
   if (isLoading || tiersLoading) {
@@ -276,81 +308,168 @@ export function EarningRulesPage() {
                 {t("Define how customers earn points through purchases and activities")}
               </p>
             </div>
-            <div className="flex items-start justify-between gap-2">
-              <Button
-                className="bg-[#1873E8] hover:bg-[#1873E8]/90"
-                onClick={() => {
-                  setEditingRuleId(null);
-                  setEditingTierId(null);
-                  resetCreateForm();
-                  setEarningRulesViewMode("create");
-                }}
-              >
-                <IconPlus className="mr-2 h-4 w-4" />
-                {t("Add Rule")}
-              </Button>
-              <InfoButton docUrl={`${docsPath}/loyality/earningRules`} />
-            </div>
+            <InfoButton docUrl={`${docsPath}/loyality/earningRules`} />
           </div>
 
+          {/* What all of this costs. The wizard shows it live while the numbers are being
+              set; this is where they get changed on a programme that already has members. */}
+          <GivebackPanel
+            result={givebackResult}
+            currencySymbol={giveback.currencySymbol}
+            currencyCode={giveback.currencyCode}
+            pointsName={giveback.pointsName}
+            averageOrderValue={giveback.averageOrderValue}
+          />
+
           <div className="space-y-6">
-            {/* Tier-Based Earning Rates */}
+            {/* Base earning rule */}
             <div>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3">
+                <h3 className="font-semibold">{t("Base earning rule")}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("What every customer earns on every purchase.")}
+                </p>
+              </div>
+
+              {defaultRule ? (
+                <RuleCard
+                  rule={defaultRule}
+                  isDefaultRule
+                  currencySymbol={giveback.currencySymbol}
+                  pointsName={giveback.pointsName}
+                  isEditing={editingRuleId === defaultRule.id}
+                  onStartEdit={() => {
+                    setEditingTierId(null);
+                    setEditingRuleId(defaultRule.id || null);
+                  }}
+                  onCancelEdit={() => setEditingRuleId(null)}
+                  onDelete={() => undefined}
+                  isDeleting={false}
+                />
+              ) : (
+                // The API refuses to activate a programme without one, so this is worth
+                // saying loudly rather than rendering an empty section.
+                <Alert variant="destructive">
+                  <IconAlertTriangle />
+                  <AlertTitle>{t("No base earning rule")}</AlertTitle>
+                  <AlertDescription>
+                    {t(
+                      "Customers earn nothing on a purchase until a default rule exists. Set one up in guided setup.",
+                    )}
+                    <Link
+                      to="/dashboard/loyalty/onboarding"
+                      search={{ step: "earning" }}
+                      className="font-medium underline underline-offset-4"
+                    >
+                      {t("Open setup")}
+                    </Link>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            {/* Tiers */}
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">{t("Tier-Based Earning Rates")}</h3>
-                  <Badge variant="outline" className="text-xs">
-                    {loyaltyTiers.length} {t("tiers")}
-                  </Badge>
+                  <h3 className="font-semibold">{t("Tiers")}</h3>
+                  {tiersEnabled && (
+                    <Badge variant="outline" className="text-xs">
+                      {loyaltyTiers.length === 1
+                        ? t("1 tier")
+                        : t("{count} tiers", { count: loyaltyTiers.length })}
+                    </Badge>
+                  )}
+                </div>
+
+                {tiersEnabled && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddTier}
+                    disabled={createTierMutation.isPending}
+                  >
+                    {createTierMutation.isPending ? (
+                      <IconLoader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <IconPlus className="mr-1.5 h-4 w-4" />
+                    )}
+                    {t("Add tier")}
+                  </Button>
+                )}
+              </div>
+
+              {/* Same control and the same words as the setup wizard's tiers step. */}
+              <div className="mb-3 flex items-center justify-between rounded-lg border border-border p-4">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{t("Use tiers")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Turn this off to run a single flat earning rate for everyone.")}
+                  </p>
+                </div>
+                <Switch
+                  checked={tiersEnabled}
+                  onCheckedChange={handleToggleTiers}
+                  disabled={!program?.id || updateProgramMutation.isPending}
+                />
+              </div>
+
+              {tiersEnabled && (
+                <div className="space-y-2">
+                  {loyaltyTiers
+                    .slice()
+                    .sort((a, b) => a.threshold - b.threshold)
+                    .map((tier, index) => (
+                      <TierCard
+                        key={tier.id}
+                        tier={tier}
+                        index={index}
+                        isEditing={editingTierId === tier.id}
+                        onStartEdit={() => {
+                          setEditingRuleId(null);
+                          setEditingTierId(tier.id);
+                        }}
+                        onCancelEdit={() => setEditingTierId(null)}
+                        onDelete={(id: string, name: string) => {
+                          handleTierDelete(id, name);
+                          setEditingTierId(null);
+                        }}
+                      />
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Additional Earning Rules */}
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{t("Additional Earning Rules")}</h3>
+                    <Badge variant="outline" className="text-xs">
+                      {additionalRules.length === 1
+                        ? t("1 rule")
+                        : t("{count} rules", { count: additionalRules.length })}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t("Replace the base rate at set times, like a happy hour or a weekend.")}
+                  </p>
                 </div>
 
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
-                  onClick={handleAddTier}
-                  disabled={createTierMutation.isPending}
+                  onClick={() => {
+                    setEditingRuleId(null);
+                    setEditingTierId(null);
+                    resetCreateForm();
+                    setEarningRulesViewMode("create");
+                  }}
                 >
-                  {createTierMutation.isPending ? (
-                    <IconLoader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <IconPlus className="mr-1.5 h-4 w-4" />
-                  )}
-                  {t("Add Tier")}
+                  <IconPlus className="mr-1.5 h-4 w-4" />
+                  {t("Add earning rule")}
                 </Button>
-              </div>
-
-              <div className="space-y-2">
-                {loyaltyTiers
-                  .slice()
-                  .sort((a, b) => a.threshold - b.threshold)
-                  .map((tier, index) => (
-                    <TierCard
-                      key={tier.id}
-                      tier={tier}
-                      index={index}
-                      isEditing={editingTierId === tier.id}
-                      onStartEdit={() => {
-                        setEditingRuleId(null);
-                        setEditingTierId(tier.id);
-                      }}
-                      onCancelEdit={() => setEditingTierId(null)}
-                      onDelete={(id: string, name: string) => {
-                        handleTierDelete(id, name);
-                        setEditingTierId(null);
-                      }}
-                    />
-                  ))}
-              </div>
-            </div>
-
-            {/* Additional Earning Rules */}
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <h3 className="font-semibold">{t("Additional Earning Rules")}</h3>
-                <Badge variant="outline" className="text-xs">
-                  {additionalRules.length} {t("rules")}
-                </Badge>
               </div>
 
               <div className="space-y-2">
@@ -358,6 +477,8 @@ export function EarningRulesPage() {
                   <RuleCard
                     key={rule.id}
                     rule={rule}
+                    currencySymbol={giveback.currencySymbol}
+                    pointsName={giveback.pointsName}
                     isEditing={editingRuleId === rule.id}
                     onStartEdit={() => {
                       setEditingTierId(null);
@@ -370,10 +491,10 @@ export function EarningRulesPage() {
                 ))}
 
                 {additionalRules.length === 0 && (
-                  <Card className="border-2 border-dashed border-gray-300">
+                  <Card className="border-2 border-dashed border-border">
                     <CardContent className="p-8 text-center">
-                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                        <IconPlus className="h-6 w-6 text-gray-400" />
+                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                        <IconPlus className="h-6 w-6 text-muted-foreground" />
                       </div>
                       <h4 className="mb-1 font-semibold">{t("No additional rules yet")}</h4>
                       <p className="mb-4 text-sm text-muted-foreground">
@@ -387,10 +508,9 @@ export function EarningRulesPage() {
                           resetCreateForm();
                           setEarningRulesViewMode("create");
                         }}
-                        className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
                       >
                         <IconPlus className="mr-2 h-4 w-4" />
-                        {t("Create Your First Rule")}
+                        {t("Add earning rule")}
                       </Button>
                     </CardContent>
                   </Card>
@@ -411,7 +531,7 @@ export function EarningRulesPage() {
                 setEarningRulesViewMode("list");
                 resetCreateForm();
               }}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-muted-foreground hover:text-foreground"
             >
               <IconArrowLeft className="mr-2 h-4 w-4" />
               {t("Back")}
@@ -420,10 +540,11 @@ export function EarningRulesPage() {
 
           <Card>
             <CardContent className="p-6">
-              <h2 className="mb-2 text-xl font-semibold">Create Additional Earning Rule</h2>
+              <h2 className="mb-2 text-xl font-semibold">{t("Add earning rule")}</h2>
               <p className="mb-6 text-sm text-muted-foreground">
-                Add bonus earning opportunities like happy hour multipliers, birthday bonuses, or
-                weekend specials
+                {t(
+                  "A rule that takes over from the base rate while its conditions match — a happy hour, a weekend, a birthday.",
+                )}
               </p>
 
               <form onSubmit={ruleForm.handleSubmit(handleCreateSubmit)} className="space-y-5">
@@ -453,9 +574,7 @@ export function EarningRulesPage() {
                   control={ruleForm.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t("Define how customers earn points through purchases and activities")}
-                      </FieldLabel>
+                      <FieldLabel htmlFor={field.name}>{t("Description")}</FieldLabel>
                       <Textarea
                         {...field}
                         id={field.name}
@@ -505,8 +624,37 @@ export function EarningRulesPage() {
                   </div>
                 </div>
 
-                {/* Multiplier + Bonus Points */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Earning rate. The engine picks a single winning rule by priority, so this
+                    REPLACES the base rate whenever the rule matches rather than adding to it.
+                    Leaving it out of the form silently created rules earning at 1.0. */}
+                <div className="grid grid-cols-3 gap-4">
+                  <Controller
+                    name="pointsPerUnit"
+                    control={ruleForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          {t("{points} per {symbol}1 spent", {
+                            points: giveback.pointsName,
+                            symbol: giveback.currencySymbol,
+                          })}
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          type="number"
+                          aria-invalid={fieldState.invalid}
+                          value={field.value as number}
+                          step="0.01"
+                          min="0"
+                        />
+                        <FieldDescription>
+                          {t("Replaces the base rate while this rule applies")}
+                        </FieldDescription>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
                   <Controller
                     name="multiplier"
                     control={ruleForm.control}
@@ -573,7 +721,6 @@ export function EarningRulesPage() {
                               ruleForm.setValue("timeTo", "");
                             }
                           }}
-                          className="data-[state=checked]:bg-[#1873E8]"
                         />
                       </div>
                       {scheduleEnabled && (
@@ -680,7 +827,6 @@ export function EarningRulesPage() {
                             setTierRestrictionEnabled(checked);
                             if (!checked) ruleForm.setValue("applicableToTiers", []);
                           }}
-                          className="data-[state=checked]:bg-[#1873E8]"
                         />
                       </div>
                       {tierRestrictionEnabled && (
@@ -746,7 +892,6 @@ export function EarningRulesPage() {
                               ruleForm.setValue("validUntil", null);
                             }
                           }}
-                          className="data-[state=checked]:bg-[#1873E8]"
                         />
                       </div>
                       {limitedPeriodEnabled && (
@@ -808,11 +953,7 @@ export function EarningRulesPage() {
                   >
                     {t("Cancel")}
                   </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-[#1873E8] hover:bg-[#1873E8]/90"
-                    disabled={createRuleMutation.isPending}
-                  >
+                  <Button type="submit" className="flex-1" disabled={createRuleMutation.isPending}>
                     {createRuleMutation.isPending ? (
                       <>
                         <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />

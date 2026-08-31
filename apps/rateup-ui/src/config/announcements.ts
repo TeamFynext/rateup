@@ -38,6 +38,50 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-31-loyalty-earning-rules-rework",
+    title: "Earning Rules now shows what your program costs",
+    summary:
+      'The Earning Rules page never showed your base earning rule — the one number every purchase is scored on — so it could only be changed by rerunning setup. It is now the first thing on the page, and editable, including the points earned per unit spent. Tiers get the same on/off switch as setup, and turning it off now genuinely stops tier earning rather than only stopping promotions. Above both sits the same live cost estimate you saw during setup, which now accounts for tiers: a tier that earns at a multiple raises what you give back, and the estimate says so instead of quoting only the base rate. New tiers are also created at 1x rather than 10x, and the tier rate reads as a multiplier ("2x the base rate") rather than a points-per-currency figure it never was. The ambiguous Add Rule button is gone, replaced by Add tier and Add earning rule in the sections they belong to.',
+    publishedAt: "2026-08-31",
+    kinds: ["improvement", "fix"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/earning-rules", label: "Open earning rules" },
+  },
+  {
+    id: "2026-08-30-loyalty-reward-examples-page",
+    title: "Reward examples on the Rewards page too",
+    summary:
+      "Create Reward on the Rewards page now opens the same picker as setup: reward types with worked examples, each priced against your typical order so it lands where a loyalty program should. Pick one and the create form opens prefilled, with every field still yours to change before it goes live — or start blank as before. Free Gifts gets the picker too, offering the free-item examples. Typical order value has also moved into loyalty settings, so the cost estimates work whether or not you went through setup.",
+    publishedAt: "2026-08-30",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/rewards", label: "Open rewards" },
+  },
+  {
+    id: "2026-08-30-loyalty-reward-types",
+    title: "Free items and cash-off rewards in loyalty setup",
+    summary:
+      "Setup could only really offer a percentage discount — everything else meant finishing the wizard and hunting through the Rewards page. Add reward now opens a picker with all three kinds: something free, a percentage off, or a flat amount off, each with examples already priced against your typical order so they land where a loyalty program should. Pick one and edit anything, including switching a reward from one kind to another. Removing or renaming a reward in setup now does what it says: renaming updates the reward instead of quietly creating a second one, and removing takes it out (a reward customers already hold is retired rather than deleted).",
+    publishedAt: "2026-08-30",
+    kinds: ["new", "improvement", "fix"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/onboarding",
+      search: { step: "rewards" },
+      label: "Add a reward",
+    },
+  },
+  {
+    id: "2026-08-30-loyalty-giveback",
+    title: "See what your loyalty program costs you",
+    summary:
+      "Setting an earn rate and a reward price told you nothing about what the two add up to. Loyalty setup now shows what share of revenue your program gives back, live as you type, with the arithmetic spelled out — and warns when it is more than a typical margin can carry. Each reward carries its own line too, in setup and on the Rewards page: what it is worth in cash, what a customer spends to earn it, and the percentage that works out to. Setup asks for a typical order value to work from, and the starter packs have been repriced — several were giving away more than they took in.",
+    publishedAt: "2026-08-30",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/onboarding", label: "Open loyalty setup" },
+  },
+  {
     id: "2026-08-21-loyalty-guided-setup",
     title: "Guided setup for your loyalty program",
     summary:

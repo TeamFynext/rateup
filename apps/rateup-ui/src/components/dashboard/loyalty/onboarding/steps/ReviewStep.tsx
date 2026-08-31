@@ -6,22 +6,29 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
+import { calculateGiveback } from "../../giveback/calculateGiveback.ts";
+import { GivebackPanel } from "../../giveback/GivebackPanel.tsx";
+import type { GivebackContext } from "../givebackContext.ts";
 import { StepHeader } from "../StepChrome.tsx";
 
 interface ReviewStepProps {
   state: OnboardingState;
+  giveback: GivebackContext;
   isActivating: boolean;
   /** Returned by a refused or completed activation; shown rather than toasted. */
   warnings: string[];
   onBack: () => void;
+  onEditAverageOrderValue: () => void;
   onActivate: () => void;
 }
 
 export function ReviewStep({
   state,
+  giveback,
   isActivating,
   warnings,
   onBack,
+  onEditAverageOrderValue,
   onActivate,
 }: Readonly<ReviewStepProps>) {
   const { t } = useTranslation();
@@ -54,6 +61,17 @@ export function ReviewStep({
           ))}
         </CardContent>
       </Card>
+
+      {/* Static here: nothing on this step is editable, so it reads straight off the
+          saved programme rather than subscribing to a form. */}
+      <GivebackPanel
+        result={calculateGiveback(giveback)}
+        currencySymbol={giveback.currencySymbol}
+        currencyCode={giveback.currencyCode}
+        pointsName={giveback.pointsName}
+        averageOrderValue={giveback.averageOrderValue}
+        onEditAverageOrderValue={onEditAverageOrderValue}
+      />
 
       {warnings.length > 0 && (
         <Alert>

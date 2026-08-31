@@ -24,6 +24,10 @@ export interface LoyaltyProgram {
   tiersEnabled: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
   defaultCountryCode?: string;
+  /** Typical spend in one visit; null when the merchant never set it. */
+  averageOrderValue?: number | null;
+  /** Which starter pack the setup wizard used, if it ran. Picks example vocabulary. */
+  onboardingPresetKey?: string | null;
   referralMessageTemplate?: ReferralMessageTemplate;
   enablePointsExpiration?: boolean;
   pointsExpirationMonths?: number;
@@ -54,6 +58,10 @@ export interface LoyaltyProgramInput {
   tiersEnabled?: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
   defaultCountryCode?: string;
+  /** Typical spend in one visit; null when the merchant never set it. */
+  averageOrderValue?: number | null;
+  /** Which starter pack the setup wizard used, if it ran. Picks example vocabulary. */
+  onboardingPresetKey?: string | null;
   referralMessageTemplate?: ReferralMessageTemplate;
   pointsExpirationMonths?: number;
   autoApproveAdjustments?: boolean;

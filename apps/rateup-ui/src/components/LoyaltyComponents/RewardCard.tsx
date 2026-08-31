@@ -5,6 +5,8 @@ import type { UseFormReturn } from "react-hook-form";
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
+import { RewardWorthLine } from "@/components/dashboard/loyalty/giveback/RewardWorthLine.tsx";
+import { useRewardEconomicsContext } from "@/components/dashboard/loyalty/giveback/useRewardEconomicsContext.ts";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -87,6 +89,10 @@ export function RewardCard({
   const lightGray = "text-gray-600 bg-gray-100 border-gray-300";
   const lightBlue = "text-blue-700 bg-blue-50 border-blue-200";
 
+  // What a point is worth here, so a reward's cost can be shown in money and not only in
+  // points. Both queries behind this are cached app-wide, so it adds no request.
+  const economics = useRewardEconomicsContext();
+
   // Helper to render stats based on category
   const renderStats = () => {
     if (category === "point-rewards") {
@@ -95,6 +101,15 @@ export function RewardCard({
           <div className={`px-2 py-1 rounded border ${lightBlue}`}>
             <p className="text-xs font-medium text-blue-700">{reward.pointsCost || 0} pts</p>
           </div>
+          <RewardWorthLine
+            rewardValue={reward.rewardValue}
+            pointsCost={reward.pointsCost || 0}
+            earnRate={economics.earnRate}
+            averageOrderValue={economics.averageOrderValue}
+            currencySymbol={economics.currencySymbol}
+            currencyCode={economics.currencyCode}
+            variant="chip"
+          />
           <div className={`px-2 py-1 rounded border ${lightGreen}`}>
             <p className="text-xs font-medium text-green-700">
               {reward.stockRedeemed || 0} redeemed
@@ -181,7 +196,13 @@ export function RewardCard({
         ) : (
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
-              <span className="text-xl shrink-0">{getRewardIcon(reward.rewardType || "")}</span>
+              <span className="text-xl shrink-0">
+                {/* `getRewardIcon` keys on the *sub*-type (fixed-discount, free-item, …),
+                    which lives inside `rewardValue`. `reward.rewardType` is the coarse
+                    point/coupon/assigned, so passing it always fell through to the
+                    default icon. */}
+                {getRewardIcon(reward.rewardValue?.rewardType || reward.rewardType || "")}
+              </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h4 className="font-medium text-sm leading-tight">{reward.name}</h4>
@@ -196,6 +217,17 @@ export function RewardCard({
                     ? reward.rewardValue?.description || reward.description || "No description"
                     : reward.description || "No description"}
                 </p>
+                {category === "point-rewards" && (
+                  <RewardWorthLine
+                    className="mt-0.5 block truncate"
+                    rewardValue={reward.rewardValue}
+                    pointsCost={reward.pointsCost || 0}
+                    earnRate={economics.earnRate}
+                    averageOrderValue={economics.averageOrderValue}
+                    currencySymbol={economics.currencySymbol}
+                    currencyCode={economics.currencyCode}
+                  />
+                )}
               </div>
             </div>
 

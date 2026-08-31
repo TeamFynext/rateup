@@ -23,6 +23,7 @@ import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Loader } from "@/components/ui/loader.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 
+import { buildGivebackContext } from "./givebackContext.ts";
 import { OnboardingStepper, type StepDefinition } from "./OnboardingStepper.tsx";
 import { BusinessTypeStep } from "./steps/BusinessTypeStep.tsx";
 import { EarningStep } from "./steps/EarningStep.tsx";
@@ -103,6 +104,17 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
     presetKeyOverride ?? state?.presetKey ?? presetData?.suggestedPresetKey ?? "generic";
   const preset = presets.find((p) => p.key === selectedKey) ?? presets[0];
 
+  /**
+   * The whole programme, assembled once. Each step overrides only the slice it edits.
+   * `state` and `preset` are stable react-query references between refetches, so this
+   * survives the re-renders a keystroke causes — which is what keeps the panels' own
+   * memos from recomputing on every character typed.
+   */
+  const giveback = useMemo(
+    () => (state && preset ? buildGivebackContext(state, preset) : null),
+    [state, preset],
+  );
+
   const stepDefinitions: StepDefinition[] = useMemo(
     () => [
       { id: "basics", label: t("Basics") },
@@ -115,7 +127,7 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
     [t],
   );
 
-  if (presetsLoading || stateLoading || !preset || !state) {
+  if (presetsLoading || stateLoading || !preset || !state || !giveback) {
     return <Loader />;
   }
 
@@ -173,6 +185,8 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
   const rewardsDefaults = {
     rewards: saved.rewards.length
       ? saved.rewards.map((reward) => ({
+          // Carried so the API updates this row rather than forking a new reward on rename.
+          id: reward.id,
           name: reward.name,
           description: reward.description ?? "",
           pointsCost: reward.pointsCost,
@@ -249,6 +263,7 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
             signupBonus: program?.signupBonus ?? preset.basics.signupBonus,
             referralBonus: program?.referralBonus ?? preset.basics.referralBonus,
             refereeBonus: program?.refereeBonus ?? preset.basics.refereeBonus,
+            averageOrderValue: program?.averageOrderValue ?? preset.basics.averageOrderValue,
           }}
           isSaving={basics.isPending}
           onSubmit={(values) => basics.mutate({ ...values, presetKey: selectedKey })}
@@ -260,8 +275,10 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
           defaultValues={earningDefaults}
           currencySymbol={currencySymbol}
           pointsName={pointsName}
+          giveback={giveback}
           isSaving={earning.isPending}
           onBack={() => goTo(currentIndex - 1)}
+          onEditAverageOrderValue={() => goTo(0)}
           onSubmit={(values) => earning.mutate(values)}
         />
       )}
@@ -270,8 +287,10 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
         <TiersStep
           defaultValues={tiersDefaults}
           currencySymbol={currencySymbol}
+          giveback={giveback}
           isSaving={tiers.isPending}
           onBack={() => goTo(currentIndex - 1)}
+          onEditAverageOrderValue={() => goTo(0)}
           onSubmit={(values) => tiers.mutate(values)}
         />
       )}
@@ -280,8 +299,10 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
         <RewardsStep
           defaultValues={rewardsDefaults}
           pointsName={pointsName}
+          giveback={giveback}
           isSaving={rewards.isPending}
           onBack={() => goTo(currentIndex - 1)}
+          onEditAverageOrderValue={() => goTo(0)}
           onSubmit={(values) => rewards.mutate(values)}
         />
       )}
@@ -308,9 +329,11 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
       {currentStep === "review" && (
         <ReviewStep
           state={state}
+          giveback={giveback}
           isActivating={activate.isPending}
           warnings={warnings}
           onBack={() => goTo(currentIndex - 1)}
+          onEditAverageOrderValue={() => goTo(0)}
           onActivate={() => activate.mutate()}
         />
       )}

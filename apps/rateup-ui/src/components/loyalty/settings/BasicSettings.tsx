@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { numberInputValue } from "@/utils/form.ts";
 
 import type { BasicSettingsSchema } from "./schemas.ts";
 
@@ -105,6 +106,38 @@ export function BasicSettings({
                   currencies="all"
                   variant="default"
                 />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+
+          <Controller
+            control={form.control}
+            name="averageOrderValue"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name} className="text-xs">
+                  {t("Typical spend in one visit")}
+                </FieldLabel>
+                <Input
+                  id={field.name}
+                  type="number"
+                  min={0}
+                  aria-invalid={fieldState.invalid}
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  value={numberInputValue(field.value)}
+                  // Cleared means "never told us", which is a different answer from zero.
+                  onChange={(event) =>
+                    field.onChange(event.target.value === "" ? null : Number(event.target.value))
+                  }
+                />
+                <FieldDescription className="text-xs">
+                  {t(
+                    "Used to work out what your rewards cost you as a share of revenue. Leave blank if you would rather not say.",
+                  )}
+                </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}

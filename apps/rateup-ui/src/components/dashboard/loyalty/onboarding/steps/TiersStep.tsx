@@ -10,22 +10,28 @@ import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
+import { TiersGivebackPanel } from "../../giveback/StepGivebackPanels.tsx";
+import type { GivebackContext } from "../givebackContext.ts";
 import { tiersFormSchema, type TiersFormInput, type TiersFormValues } from "../schemas.ts";
 import { StepFooter, StepHeader } from "../StepChrome.tsx";
 
 interface TiersStepProps {
   defaultValues: TiersFormInput;
   currencySymbol: string;
+  giveback: GivebackContext;
   isSaving: boolean;
   onBack: () => void;
+  onEditAverageOrderValue: () => void;
   onSubmit: (values: TiersFormValues) => void;
 }
 
 export function TiersStep({
   defaultValues,
   currencySymbol,
+  giveback,
   isSaving,
   onBack,
+  onEditAverageOrderValue,
   onSubmit,
 }: Readonly<TiersStepProps>) {
   const { t } = useTranslation();
@@ -184,6 +190,12 @@ export function TiersStep({
           </Button>
         </div>
       )}
+
+      <TiersGivebackPanel
+        control={form.control}
+        context={giveback}
+        onEditAverageOrderValue={onEditAverageOrderValue}
+      />
 
       <StepFooter isSaving={isSaving} onBack={onBack} />
     </form>
