@@ -28,11 +28,25 @@ const CATALOG = ["FREE PLAN", "PLUS PLAN", "PRO PLAN", "MAX PLAN", "ENTERPRISE P
 async function retireGatewayPlans(apply: boolean, log: Log) {
   const catalog = await prisma.rateupPlan.findMany({
     where: { name: { in: CATALOG } },
-    select: { paymentPlanId: true, monthlyPaymentPlanId: true, yearlyPaymentPlanId: true },
+    select: {
+      paymentPlanId: true,
+      monthlyPaymentPlanId: true,
+      yearlyPaymentPlanId: true,
+      // The USD columns postdate this task. Omitting them disabled every dollar plan a
+      // live tier was selling on, once, on each run.
+      usdMonthlyPaymentPlanId: true,
+      usdYearlyPaymentPlanId: true,
+    },
   });
   const linked = new Set(
     catalog
-      .flatMap((tier) => [tier.paymentPlanId, tier.monthlyPaymentPlanId, tier.yearlyPaymentPlanId])
+      .flatMap((tier) => [
+        tier.paymentPlanId,
+        tier.monthlyPaymentPlanId,
+        tier.yearlyPaymentPlanId,
+        tier.usdMonthlyPaymentPlanId,
+        tier.usdYearlyPaymentPlanId,
+      ])
       .filter((id): id is string => Boolean(id)),
   );
 

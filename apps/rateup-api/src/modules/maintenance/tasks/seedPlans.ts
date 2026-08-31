@@ -143,6 +143,71 @@ async function ensureStripeProduct(
   });
 }
 
+/** The RateupPlan columns that point at a gateway plan, one per cadence/currency. */
+const LINK_SLOTS = [
+  "monthlyPaymentPlanId",
+  "yearlyPaymentPlanId",
+  "usdMonthlyPaymentPlanId",
+  "usdYearlyPaymentPlanId",
+] as const;
+
+type LinkSlot = (typeof LINK_SLOTS)[number];
+
+/**
+ * Frees a gateway plan row that another tier is still holding.
+ *
+ * Every link column is unique, so a row can sit in exactly one tier's slot. Seeding
+ * matches those rows by name and the name carries the price, so the tier whose name
+ * matches is the rightful owner — but a tier rename moves the name without moving the
+ * links. That is how a Max tier ended up owning RATEUP_PRO_USD_MONTHLY: restructureTiers
+ * renames PRO PLAN to MAX PLAN and rewrites the INR plan names, but the USD columns
+ * postdate it and are left pointing where they were. Seeding Pro then collides on
+ * `usdMonthlyPaymentPlanId`. Clear the stale link rather than fail: the losing tier is
+ * advertising someone else's price until it is.
+ */
+async function detachStaleLinks(
+  links: Partial<Record<LinkSlot, string | undefined>>,
+  keepTierId: string | undefined,
+  apply: boolean,
+  log: Log,
+) {
+  for (const slot of LINK_SLOTS) {
+    const planId = links[slot];
+    if (!planId) continue;
+    const holders = await prisma.rateupPlan.findMany({
+      where: { [slot]: planId, ...(keepTierId ? { id: { not: keepTierId } } : {}) },
+      select: { id: true, name: true },
+    });
+    for (const holder of holders) {
+      if (!apply) {
+        log("would detach gateway plan", `${slot} from ${holder.name} (${holder.id})`);
+        continue;
+      }
+      await prisma.rateupPlan.update({ where: { id: holder.id }, data: { [slot]: null } });
+      log("detached gateway plan", `${slot} from ${holder.name} (${holder.id})`);
+    }
+  }
+}
+
+/**
+ * The one tier row for a catalog name.
+ *
+ * Duplicates are not a case to pick a winner for: a tier is a sellable product, both
+ * copies show on the pricing page, and only one of them can hold the gateway links. A
+ * rename onto a name that already existed is how they appear. Report and stop — which
+ * row to keep depends on what still points at it.
+ */
+async function findTier(name: string) {
+  const rows = await prisma.rateupPlan.findMany({ where: { name }, orderBy: { createdAt: "asc" } });
+  if (rows.length > 1) {
+    throw new Error(
+      `${rows.length} RateupPlan rows are named "${name}" (${rows.map((row) => row.id).join(", ")}). ` +
+        "Delete the stale one before seeding; a duplicate tier is sold twice and can only hold one set of gateway plans.",
+    );
+  }
+  return rows[0] ?? null;
+}
+
 async function seedTier(tier: TierSpec, apply: boolean, skipStripe: boolean, log: Log) {
   log("tier", tier.displayName);
 
@@ -208,7 +273,18 @@ async function seedTier(tier: TierSpec, apply: boolean, skipStripe: boolean, log
     stripeId = stripeYearly?.id;
   }
 
-  const existing = await prisma.rateupPlan.findFirst({ where: { name: tier.name } });
+  const existing = await findTier(tier.name);
+  await detachStaleLinks(
+    {
+      monthlyPaymentPlanId: monthlyPlanId,
+      yearlyPaymentPlanId: yearlyPlanId,
+      usdMonthlyPaymentPlanId: usdMonthlyPlanId,
+      usdYearlyPaymentPlanId: usdYearlyPlanId,
+    },
+    existing?.id,
+    apply,
+    log,
+  );
   const data = {
     name: tier.name,
     displayName: tier.displayName,
