@@ -46,7 +46,7 @@ export default function TestimonialCard({
 
       {/* Author Info */}
       <div className="flex items-center gap-4">
-        <div className="relative w-12 h-12 rounded-full bg-[#1c518e] flex items-center justify-center text-white font-semibold text-sm shadow-inner">
+        <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm shadow-inner">
           {author
             .split(" ")
             .map((word) => word[0])

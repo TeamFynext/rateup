@@ -8,8 +8,6 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { useCropperJS } from "@/hooks/useCropperJS.ts";
 import { mimeTypesForImage } from "@/utils/constants.ts";
 
-import styles from "./ImageCropModal.module.css";
-
 function ImageCropModal({
   context,
   id: thisModalId,
@@ -144,7 +142,7 @@ function ImageCropModal({
         />
       </Field>
 
-      <div className={styles["cropper-container"]}>
+      <div className={"relative h-[350px] overflow-hidden"}>
         <LoadingOverlay visible={!isReady} />
 
         <cropper-canvas ref={canvasRef} style={{ height: "100%", width: "100%" }} background>
@@ -174,7 +172,7 @@ function ImageCropModal({
         </cropper-canvas>
       </div>
 
-      <div className={`${styles["cancel-save-btn-container"]} flex justify-end gap-2`}>
+      <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={handleCancelBtnClick}>
           {translations("Cancel")}
         </Button>

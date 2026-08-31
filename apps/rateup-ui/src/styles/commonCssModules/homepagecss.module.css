@@ -12,15 +12,18 @@
   --ink-2: rgba(255, 255, 255, 0.74);
   --ink-3: rgba(255, 255, 255, 0.52);
   --ink-4: rgba(255, 255, 255, 0.38);
-  --cyan: #4fc3ff;
-  --cyan-2: #2fa3ff;
+  --cyan: var(--color-ru-blue-300);
+  --cyan-2: var(--color-ru-blue-400);
   --blue: #2c6fd6;
   --maxw: 1200px;
-  --warm-logo-gradient: linear-gradient(135deg, #ffd54c 0%, #f8951d 100%);
-  --warm-400: #ffb638;
-  --success: #16a34a;
-  --font-display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
-  --font-body: "Inter Variable", system-ui, sans-serif;
+  --warm-logo-gradient: linear-gradient(
+    135deg,
+    var(--color-ru-star-top) 0%,
+    var(--color-ru-amber-500) 100%
+  );
+  --warm-400: var(--color-ru-amber-400);
+  --success: var(--color-ru-green-500);
+  --font-body: var(--font-sans);
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -40,9 +43,9 @@
   --cyan-rgb: 79, 195, 255;
   --light-blue-rgb: 120, 180, 255;
 
-  --grad-cyan-start: #2fa3ff;
-  --grad-cyan-middle: #2fa3ff;
-  --grad-cyan-end: #2fa3ff;
+  --grad-cyan-start: var(--color-ru-blue-400);
+  --grad-cyan-middle: var(--color-ru-blue-400);
+  --grad-cyan-end: var(--color-ru-blue-400);
 
   --btn-primary-start: #3d8bee;
   --btn-primary-end: #2360c8;
@@ -56,8 +59,8 @@
   --nav-link-color: #1e293b;
   --nav-link-hover: #2c6fd6;
   --nav-btn-border: #cbd5e1;
-  --nav-btn-text: #1a1b1a;
-  --nav-logo-color: #1c518e;
+  --nav-btn-text: var(--foreground);
+  --nav-logo-color: var(--primary);
 
   /* Restore standard ghost button colors for Hero on dark section */
   --nav-btn-ghost-border: rgba(255, 255, 255, 0.14);
@@ -86,7 +89,7 @@
   --nav-link-color: #1e293b;
   --nav-link-hover: #2c6fd6;
   --nav-btn-border: #cbd5e1;
-  --nav-btn-text: #1a1b1a;
+  --nav-btn-text: var(--foreground);
   --nav-logo-color: #1e293b;
 
   --btn-primary-start: #3d8bee;
@@ -103,8 +106,8 @@
 /* Omnichannel Inbox Theme (Blue/Cyan - matching original) */
 .themeOmnichannel {
   composes: theme;
-  --cyan: #4fc3ff;
-  --cyan-2: #2fa3ff;
+  --cyan: var(--color-ru-blue-300);
+  --cyan-2: var(--color-ru-blue-400);
   --blue: #2c6fd6;
 
   --primary-rgb: 47, 163, 255;
@@ -115,7 +118,7 @@
   --light-blue-rgb: 120, 180, 255;
 
   --grad-cyan-start: #6bd0ff;
-  --grad-cyan-middle: #2fa3ff;
+  --grad-cyan-middle: var(--color-ru-blue-400);
   --grad-cyan-end: #2c6fd6;
 
   --btn-primary-start: #3d8bee;
@@ -173,9 +176,9 @@
   --nav-border: rgba(236, 236, 234, 0.7);
   --nav-link-color: #1e293b;
   --nav-link-hover: #2a6254;
-  --nav-btn-ghost-border: #ececea;
-  --nav-btn-ghost-text: #1a1b1a;
-  --nav-btn-ghost-border-hover: #8b8e8a;
+  --nav-btn-ghost-border: var(--border);
+  --nav-btn-ghost-text: var(--foreground);
+  --nav-btn-ghost-border-hover: var(--muted-foreground);
   --nav-logo-color: #1e293b;
 
   --btn-primary-chip-bg: #102820;
@@ -520,7 +523,7 @@ nav.top .row {
 
 /* 2. Define overrides for all white-background sections */
 .lightSection {
-  background: #fafaf7;
+  background: var(--background);
   color: #334155; /* Slate-700 */
   --page-0: #1c518e0f;
   --page-1: #ffffff;
@@ -535,7 +538,7 @@ nav.top .row {
   --ink-4: #94a3b8; /* Slate-400 */
 }
 .lightSection .ftag {
-  color: #1c518e;
+  color: var(--primary);
   border-color: rgba(28, 81, 142, 0.12);
 }
 .hero {
@@ -1767,12 +1770,14 @@ nav.top .row {
 
   /* Accent variables are inherited from page level wrapper */
 
-  --warm-logo-gradient: linear-gradient(135deg, #ffd54c 0%, #f8951d 100%);
-  --warm-400: #ffb638;
-  --success: #16a34a;
-
-  --font-display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
-  --font-body: "Inter Variable", system-ui, sans-serif;
+  --warm-logo-gradient: linear-gradient(
+    135deg,
+    var(--color-ru-star-top) 0%,
+    var(--color-ru-amber-500) 100%
+  );
+  --warm-400: var(--color-ru-amber-400);
+  --success: var(--color-ru-green-500);
+  --font-body: var(--font-sans);
 
   --radius-xs: 4px;
   --radius-sm: 8px;

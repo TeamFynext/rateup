@@ -62,19 +62,18 @@ const PlanCardNew = ({
       : "Billed monthly · 20% more";
   }
 
-  const check = dark ? "text-[#4FC3FF]" : "text-[#1C518E]";
+  const check = dark ? "text-ru-blue-300" : "text-primary";
   const ctaButton = (
     <button
       type="button"
       onClick={tier.salesLed ? undefined : onButtonClick}
       className={
         dark
-          ? "relative mt-[22px] w-full cursor-pointer rounded-lg border-none p-[13px] text-[15px] font-extrabold text-[#081C3F] shadow-[0_8px_24px_rgba(248,149,29,0.3)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px"
+          ? "bg-ru-star relative mt-[22px] w-full cursor-pointer rounded-lg border-none p-[13px] text-[15px] font-extrabold text-ru-blue-900 shadow-[0_8px_24px_rgba(248,149,29,0.3)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px"
           : tier.salesLed
-            ? "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-[#1C518E] p-[13px] text-[15px] font-bold text-white transition-colors duration-200 hover:bg-[#113560]"
-            : "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-[#EEF4FB] p-[13px] text-[15px] font-bold text-[#1C518E] transition-colors duration-200 hover:bg-[#D6E4F3]"
+            ? "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-primary p-[13px] text-[15px] font-bold text-white transition-colors duration-200 hover:bg-ru-blue-800"
+            : "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-accent p-[13px] text-[15px] font-bold text-primary transition-colors duration-200 hover:bg-ru-blue-100"
       }
-      style={dark ? { background: "linear-gradient(135deg,#FFD54C,#F8951D)" } : undefined}
     >
       {ctaLabel ?? tier.cta}
     </button>
@@ -84,8 +83,8 @@ const PlanCardNew = ({
     <div
       className={
         dark
-          ? "relative overflow-hidden rounded-2xl border border-[#081C3F] bg-[#081C3F] p-7 shadow-[0_24px_72px_rgba(11,31,72,0.18)]"
-          : "rounded-2xl border border-[#ECECEA] bg-white p-7 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
+          ? "relative overflow-hidden rounded-2xl border border-ru-blue-900 bg-ru-blue-900 p-7 shadow-[0_24px_72px_rgba(11,31,72,0.18)]"
+          : "rounded-2xl border border-border bg-white p-7 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
       }
     >
       {dark && (
@@ -100,15 +99,12 @@ const PlanCardNew = ({
 
       <div className="relative flex items-center justify-between gap-2">
         <div
-          className={`font-nunito text-xl font-extrabold ${dark ? "text-white" : "text-[#0A0B0A]"}`}
+          className={`font-nunito text-xl font-extrabold ${dark ? "text-white" : "text-foreground"}`}
         >
           {tier.name}
         </div>
         {tier.badge && (
-          <div
-            className="rounded-full px-2.5 py-[5px] text-[11px] font-extrabold uppercase tracking-[0.1em] text-[#081C3F]"
-            style={{ background: "linear-gradient(135deg,#FFD54C,#F8951D)" }}
-          >
+          <div className="bg-ru-star rounded-full px-2.5 py-[5px] text-[11px] font-extrabold uppercase tracking-[0.1em] text-ru-blue-900">
             {tier.badge}
           </div>
         )}
@@ -117,7 +113,7 @@ const PlanCardNew = ({
       {tier.tagline && (
         <p
           className={`relative mt-1.5 text-[13px] leading-relaxed ${
-            dark ? "text-white/70" : "text-[#666864]"
+            dark ? "text-white/70" : "text-muted-foreground"
           }`}
         >
           {tier.tagline}
@@ -127,29 +123,33 @@ const PlanCardNew = ({
       <div className="relative mb-1 mt-[22px] flex items-baseline gap-1.5">
         <span
           className={`font-nunito text-[44px] font-black leading-none tracking-[-0.02em] ${
-            dark ? "text-white" : "text-[#0A0B0A]"
+            dark ? "text-white" : "text-foreground"
           }`}
         >
           {amount}
         </span>
         {unit && (
-          <span className={`text-sm font-semibold ${dark ? "text-white/60" : "text-[#8B8E8A]"}`}>
+          <span
+            className={`text-sm font-semibold ${dark ? "text-white/60" : "text-muted-foreground"}`}
+          >
             {unit}
           </span>
         )}
       </div>
 
-      <div className={`relative min-h-[18px] text-xs ${dark ? "text-white/60" : "text-[#8B8E8A]"}`}>
+      <div
+        className={`relative min-h-[18px] text-xs ${dark ? "text-white/60" : "text-muted-foreground"}`}
+      >
         {note}
       </div>
 
       {tier.salesLed ? <BookDemoModal>{ctaButton}</BookDemoModal> : ctaButton}
 
-      <div className={`my-6 h-px ${dark ? "bg-white/10" : "bg-[#ECECEA]"}`} />
+      <div className={`my-6 h-px ${dark ? "bg-white/10" : "bg-muted"}`} />
 
       <ul
         className={`relative m-0 flex list-none flex-col gap-3 p-0 text-sm ${
-          dark ? "text-white/85" : "text-[#4A4C49]"
+          dark ? "text-white/85" : "text-muted-foreground"
         }`}
       >
         {tier.features.map((feature) => (

@@ -13,7 +13,7 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
           href="/blog/rss.xml"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-8 h-8 rounded-[9px] flex items-center justify-center bg-[#F4F5F2] hover:bg-[#F8951D]/[0.06] border border-[#DCDEDD] hover:border-[#F8951D]/[0.22] text-[#8B8E8A] hover:text-[#FFB638] cursor-pointer transition-all duration-200 no-underline"
+          className="w-8 h-8 rounded-[9px] flex items-center justify-center bg-muted hover:bg-ru-amber-500/[0.06] border border-[#DCDEDD] hover:border-ru-amber-500/[0.22] text-muted-foreground hover:text-ru-amber-400 cursor-pointer transition-all duration-200 no-underline"
           title="RSS Feed"
         >
           <svg
@@ -42,7 +42,7 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
           <div className="flex flex-wrap gap-1.5">
             <Link
               to="/blog"
-              className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#1C518E] bg-[#EEF4FB] border border-[#A9C3E3] no-underline"
+              className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-primary bg-accent border border-ru-blue-200 no-underline"
             >
               All
             </Link>
@@ -51,7 +51,7 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
                 key={tag.id}
                 to="/blog/tag/$slug"
                 params={{ slug: tag.slug }}
-                className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#4A4C49] bg-white hover:bg-[#F4F5F2] border border-[#DCDEDD] no-underline transition-all duration-150"
+                className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-muted-foreground bg-white hover:bg-muted border border-[#DCDEDD] no-underline transition-all duration-150"
               >
                 {tag.name}
               </Link>
@@ -69,7 +69,7 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
           <div className="flex flex-wrap gap-1.5">
             <Link
               to="/blog"
-              className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#1C518E] bg-[#EEF4FB] border border-[#A9C3E3] no-underline"
+              className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-primary bg-accent border border-ru-blue-200 no-underline"
             >
               All
             </Link>
@@ -78,7 +78,7 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
                 key={author.id}
                 to="/blog/author/$slug"
                 params={{ slug: author.slug }}
-                className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#4A4C49] bg-white hover:bg-[#F4F5F2] border border-[#DCDEDD] no-underline transition-all duration-150"
+                className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-muted-foreground bg-white hover:bg-muted border border-[#DCDEDD] no-underline transition-all duration-150"
               >
                 {author.name}
               </Link>

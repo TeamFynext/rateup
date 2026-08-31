@@ -16,8 +16,6 @@ import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import TestimonialCard from "./TestimonialCard.tsx";
 
-import classes from "./testimonial.module.css";
-
 const TestimonialEdit = ({
   currentStyle,
   testimonials,
@@ -52,9 +50,17 @@ const TestimonialEdit = ({
       result.source.index,
       result.destination?.index || 0,
     );
-    setFilters?.({ date: null, rating: null, length: null, surveys: [], teams: [] });
+    setFilters?.({
+      date: null,
+      rating: null,
+      length: null,
+      surveys: [],
+      teams: [],
+    });
     updateCollection.mutate({
-      data: { testimonialIds: reorderedTestimonials.map((t: CollectionTestimonial) => t.id) },
+      data: {
+        testimonialIds: reorderedTestimonials.map((t: CollectionTestimonial) => t.id),
+      },
       collectionId,
     });
   };
@@ -87,11 +93,11 @@ const TestimonialEdit = ({
                           {...provided.dragHandleProps}
                           style={provided.draggableProps.style as CSSProperties}
                         >
-                          <div className={classes.root} key={testimonial?.id}>
+                          <div className="relative" key={testimonial?.id}>
                             {isDelete && (
                               <Checkbox
                                 checked={isSelected}
-                                className={classes.checkboxWrapper}
+                                className="absolute top-4 right-4"
                                 onCheckedChange={(checked) => {
                                   if (checked)
                                     setSelectedTestimonialIds((prev) => [...prev, testimonial?.id]);

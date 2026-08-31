@@ -49,14 +49,14 @@ export default function AutomationSteps() {
               >
                 {/* Step Circle */}
                 <div className="relative z-10 mb-6 transition transform duration-300">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#00397b] to-[#1c518e] text-white flex items-center justify-center shadow-lg">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#00397b] to-primary text-white flex items-center justify-center shadow-lg">
                     {step.icon}
                   </div>
                 </div>
 
                 {/* Connector */}
                 {index < Surveysteps.length - 1 && (
-                  <div className="hidden lg:block absolute top-10 right-[-100px] w-[100px] h-1 rounded-full bg-[#1c518e]"></div>
+                  <div className="hidden lg:block absolute top-10 right-[-100px] w-[100px] h-1 rounded-full bg-primary"></div>
                 )}
 
                 {/* Title & Description */}

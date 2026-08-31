@@ -46,7 +46,7 @@ function PartnershipPage() {
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-20 left-10 w-96 h-96 bg-[#2E5BFF] rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
             <div
-              className="absolute top-40 right-10 w-96 h-96 bg-[#FF9500] rounded-full mix-blend-multiply filter blur-3xl animate-pulse"
+              className="absolute top-40 right-10 w-96 h-96 bg-ru-amber-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"
               style={{ animationDelay: "2s" }}
             ></div>
           </div>
@@ -54,13 +54,13 @@ function PartnershipPage() {
           <div className="mx-auto max-w-5xl relative">
             <div className="text-center space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-                <IconHeartHandshake className="w-4 h-4 text-[#FF9500]" />
+                <IconHeartHandshake className="w-4 h-4 text-ru-amber-500" />
                 <span className="text-sm text-white">Partner Program</span>
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
                 Become a{" "}
-                <span className="bg-gradient-to-r from-[#2E5BFF] to-[#FF9500] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#2E5BFF] to-ru-amber-500 bg-clip-text text-transparent">
                   RateUp Partner
                 </span>
               </h1>
@@ -136,7 +136,7 @@ function PartnershipPage() {
               </Card>
 
               <Card className="p-8 border-2 border-gray-100 hover:border-[#2E5BFF]/30 hover:shadow-lg transition-all">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center mb-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-ru-amber-500 to-[#cc7700] flex items-center justify-center mb-4">
                   <IconCurrencyDollar className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Your Earnings</h3>
@@ -158,7 +158,7 @@ function PartnershipPage() {
               </Card>
 
               <Card className="p-8 border-2 border-gray-100 hover:border-[#2E5BFF]/30 hover:shadow-lg transition-all">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center mb-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-ru-amber-500 to-[#cc7700] flex items-center justify-center mb-4">
                   <IconRocket className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Growth Support</h3>
@@ -184,7 +184,7 @@ function PartnershipPage() {
                     className="w-full h-auto"
                   />
                   {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-[#2E5BFF]/20 via-transparent to-[#FF9500]/20"></div>
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#2E5BFF]/20 via-transparent to-ru-amber-500/20"></div>
                 </div>
 
                 {/* Floating stats cards */}
@@ -200,9 +200,9 @@ function PartnershipPage() {
                   </div>
                 </div>
 
-                <div className="absolute -top-6 -right-6 bg-white rounded-xl shadow-xl p-4 border-2 border-[#FF9500]/20">
+                <div className="absolute -top-6 -right-6 bg-white rounded-xl shadow-xl p-4 border-2 border-ru-amber-500/20">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-ru-amber-500 to-[#cc7700] flex items-center justify-center">
                       <IconUsers className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -221,7 +221,7 @@ function PartnershipPage() {
 
                 <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                   Join Our Growing{" "}
-                  <span className="bg-gradient-to-r from-[#2E5BFF] to-[#FF9500] bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-[#2E5BFF] to-ru-amber-500 bg-clip-text text-transparent">
                     Partner Network
                   </span>
                 </h2>
@@ -283,7 +283,7 @@ function PartnershipPage() {
           <div className="absolute inset-0 opacity-10">
             <div className="absolute bottom-20 left-10 w-96 h-96 bg-[#2E5BFF] rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
             <div
-              className="absolute top-20 right-10 w-96 h-96 bg-[#FF9500] rounded-full mix-blend-multiply filter blur-3xl animate-pulse"
+              className="absolute top-20 right-10 w-96 h-96 bg-ru-amber-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"
               style={{ animationDelay: "2s" }}
             ></div>
           </div>
@@ -313,7 +313,7 @@ function PartnershipPage() {
                   title: "Dedicated Partner Manager",
                   description:
                     "Get personalized support from your dedicated partner manager for regular collaboration and guidance.",
-                  color: "from-[#FF9500] to-[#cc7700]",
+                  color: "from-ru-amber-500 to-[#cc7700]",
                 },
                 {
                   icon: IconSchool,
@@ -327,7 +327,7 @@ function PartnershipPage() {
                   title: "Partner Badge & Directory",
                   description:
                     "Gain credibility with an official partner badge and listing in our partner directory for visibility.",
-                  color: "from-[#FF9500] to-[#cc7700]",
+                  color: "from-ru-amber-500 to-[#cc7700]",
                 },
                 {
                   icon: IconUserPlus,
@@ -341,7 +341,7 @@ function PartnershipPage() {
                   title: "Revenue Share",
                   description:
                     "Maximize earnings with competitive revenue share opportunities on all resold plans and upgrades.",
-                  color: "from-[#FF9500] to-[#cc7700]",
+                  color: "from-ru-amber-500 to-[#cc7700]",
                 },
               ].map((benefit, idx) => (
                 <Card
@@ -410,7 +410,7 @@ function PartnershipPage() {
                     <p className="text-gray-600 leading-relaxed">{step.description}</p>
                   </div>
                   {idx < 2 && (
-                    <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-gradient-to-r from-[#2E5BFF] to-[#FF9500] -translate-x-1/2"></div>
+                    <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-gradient-to-r from-[#2E5BFF] to-ru-amber-500 -translate-x-1/2"></div>
                   )}
                 </div>
               ))}
@@ -490,20 +490,20 @@ function PartnershipPage() {
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-20 left-10 w-96 h-96 bg-[#2E5BFF] rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
             <div
-              className="absolute bottom-20 right-10 w-96 h-96 bg-[#FF9500] rounded-full mix-blend-multiply filter blur-3xl animate-pulse"
+              className="absolute bottom-20 right-10 w-96 h-96 bg-ru-amber-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"
               style={{ animationDelay: "2s" }}
             ></div>
           </div>
 
           <div className="mx-auto max-w-4xl text-center relative">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
-              <IconCrown className="w-4 h-4 text-[#FF9500]" />
+              <IconCrown className="w-4 h-4 text-ru-amber-500" />
               <span className="text-sm text-white">Join Today</span>
             </div>
 
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
               Ready to Grow Your Business with{" "}
-              <span className="bg-gradient-to-r from-[#2E5BFF] to-[#FF9500] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#2E5BFF] to-ru-amber-500 bg-clip-text text-transparent">
                 RateUp?
               </span>
             </h2>

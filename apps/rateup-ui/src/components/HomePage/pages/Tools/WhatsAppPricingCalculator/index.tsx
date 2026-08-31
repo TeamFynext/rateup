@@ -192,7 +192,7 @@ export default function WhatsAppPricingCalculator() {
                 step={5}
                 value={utilityInWindow}
                 onChange={(event) => setUtilityInWindow(Number(event.target.value))}
-                className="w-full accent-[#1C518E]"
+                className="w-full accent-primary"
               />
             </Field>
 
@@ -204,7 +204,7 @@ export default function WhatsAppPricingCalculator() {
                 href={RATE_CARD_SOURCE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-bold text-[#1C518E]"
+                className="font-bold text-primary"
               >
                 check the current card
               </a>{" "}
@@ -287,15 +287,15 @@ export default function WhatsAppPricingCalculator() {
             </div>
 
             {breakdown.tiered ? (
-              <p className="mt-3.5 rounded-[10px] bg-[#4FC3FF]/10 p-3.5 text-[12.5px] leading-[1.5] text-white/80">
+              <p className="mt-3.5 rounded-[10px] bg-ru-blue-300/10 p-3.5 text-[12.5px] leading-[1.5] text-white/80">
                 At this volume you have reached a discounted tier on utility or authentication. Meta
                 pools volume across every WhatsApp Business account in your portfolio, and resets
                 the count each month.
               </p>
             ) : null}
 
-            <div className="mt-3.5 rounded-[10px] border border-[#FFD54C]/30 bg-[linear-gradient(135deg,rgba(255,213,76,0.16),rgba(248,149,29,0.1))] p-4">
-              <div className="text-[13px] font-bold text-[#FFD54C]">
+            <div className="mt-3.5 rounded-[10px] border border-ru-star-top/30 bg-[linear-gradient(135deg,rgba(255,213,76,0.16),rgba(248,149,29,0.1))] p-4">
+              <div className="text-[13px] font-bold text-ru-star-top">
                 + RateUp platform fee: a flat monthly subscription
               </div>
               <p className="mt-1 text-[12.5px] leading-[1.5] text-white/75">

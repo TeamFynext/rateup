@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Redirect } from "@/components/(public-facing)/public/wa/Redirect.tsx";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogoOg } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/wa/$surveyTeamMapId/redirect/")({
   component: Redirect,
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/(public-facing)/public/wa/$surveyTeamMapI
       },
       {
         property: "og:image",
-        content: rateupLogoStackedWhiteTransparent,
+        content: rateupLogoOg,
       },
       {
         property: "og:image:type",

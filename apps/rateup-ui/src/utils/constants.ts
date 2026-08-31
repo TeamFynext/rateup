@@ -355,8 +355,25 @@ export const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 
 export const DEFAULT_IMAGE_BASE64_START = "data:image/jpeg;base64,";
 
-export const rateupLogoStackedWhiteTransparent = `${imagesPath}/rateup-logo-stacked-white-transparent.png`;
-export const rateupLogoHorizontalWhiteTransparent = `${imagesPath}/rateup-logo-horizontal-white-transparent.png`;
+/* Brand lockups (2026 refresh) are served from the CloudFront image bucket via
+   `imagesPath`. That URL is absolute, which these constants need: they are also used as
+   Open Graph `og:image` values, and crawlers only resolve absolute URLs. The bucket is the
+   only copy — the source exports are not in this repo, so re-upload there to change them.
+
+   The horizontal lockup is the main mark; it is 2.52:1, so size it by width and let the
+   height follow. Three variants, per the brand exports' README:
+   - `rateupLogo`      transparent colour wordmark — light surfaces (the default)
+   - `rateupLogoWhite` transparent all-white       — navy/dark surfaces and photos
+   - `rateupLogoOg`    opaque on-white             — og:image and JSON-LD, where a
+                       transparent PNG renders as an invisible mark on white cards */
+export const rateupLogo = `${imagesPath}/rateup.png`;
+export const rateupLogoWhite = `${imagesPath}/rateup-white.png`;
+export const rateupLogoOg = `${imagesPath}/rateup-og.png`;
+
+/* Square star marks, for slots the 2.52:1 lockup does not fit — avatars, org-logo
+   fallbacks, integration tiles. Same bucket as the lockups. */
+export const rateupIcon = `${imagesPath}/rateup-icon.png`;
+export const rateupIconBw = `${imagesPath}/bw-logo.png`;
 
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;

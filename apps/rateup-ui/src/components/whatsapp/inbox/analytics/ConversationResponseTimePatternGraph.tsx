@@ -92,10 +92,10 @@ const ConversationResponseTimePatternGraph = ({ dateRange }: { dateRange: Analyt
               <Line
                 dataKey="averageResponseTime"
                 type="natural"
-                stroke="#FF9500"
+                stroke="var(--color-ru-amber-500)"
                 strokeWidth={2}
                 dot={{
-                  fill: "#FF9500",
+                  fill: "var(--color-ru-amber-500)",
                 }}
                 activeDot={{
                   r: 6,

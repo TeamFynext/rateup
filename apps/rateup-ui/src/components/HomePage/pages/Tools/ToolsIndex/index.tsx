@@ -32,7 +32,7 @@ export default function ToolsIndex() {
 
           return (
             <section key={category} className={categoryIndex === 0 ? "" : "mt-11"}>
-              <h2 className="m-0 font-nunito text-[22px] font-extrabold tracking-[-0.02em] text-[#0A0B0A]">
+              <h2 className="m-0 font-nunito text-[22px] font-extrabold tracking-[-0.02em] text-foreground">
                 {category}
               </h2>
 
@@ -43,24 +43,24 @@ export default function ToolsIndex() {
                     <Link
                       key={tool.slug}
                       to={toolPath(tool.slug)}
-                      className="flex flex-col rounded-xl border border-[#ECECEA] bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[#CBD9EA] hover:shadow-[0_8px_24px_rgba(11,31,72,.08)]"
+                      className="flex flex-col rounded-xl border border-border bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[#CBD9EA] hover:shadow-[0_8px_24px_rgba(11,31,72,.08)]"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <span className="flex size-11 items-center justify-center rounded-[10px] bg-[#EEF4FB]">
-                          <Icon className="size-5 text-[#1C518E]" />
+                        <span className="flex size-11 items-center justify-center rounded-[10px] bg-accent">
+                          <Icon className="size-5 text-primary" />
                         </span>
-                        <span className="rounded-full bg-[#F3F7FC] px-2 py-1 text-[11px] font-bold text-[#4A4C49]">
+                        <span className="rounded-full bg-[#F3F7FC] px-2 py-1 text-[11px] font-bold text-muted-foreground">
                           {tool.badge}
                         </span>
                       </div>
 
-                      <div className="mt-4 font-nunito text-[17px] font-extrabold text-[#0A0B0A]">
+                      <div className="mt-4 font-nunito text-[17px] font-extrabold text-foreground">
                         {tool.name}
                       </div>
-                      <p className="mt-2 flex-1 text-[13.5px] leading-[1.55] text-[#4A4C49]">
+                      <p className="mt-2 flex-1 text-[13.5px] leading-[1.55] text-muted-foreground">
                         {tool.description}
                       </p>
-                      <div className="mt-4 text-[12.5px] font-bold text-[#1C518E]">Open tool →</div>
+                      <div className="mt-4 text-[12.5px] font-bold text-primary">Open tool →</div>
                     </Link>
                   );
                 })}
@@ -71,23 +71,25 @@ export default function ToolsIndex() {
       </ToolContainer>
 
       <ToolContainer className="pt-16">
-        <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-[#0A0B0A] sm:text-[32px]">
+        <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
           Why we built these
         </h2>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
           {PROMISES.map((promise) => (
-            <div key={promise.n} className="rounded-xl border border-[#ECECEA] bg-white p-6">
-              <div className="bg-[linear-gradient(135deg,#FFD54C,#F8951D)] bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
+            <div key={promise.n} className="rounded-xl border border-border bg-white p-6">
+              <div className="bg-ru-star bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
                 {promise.n}
               </div>
-              <div className="mt-2.5 mb-1.5 font-nunito text-[16px] font-extrabold text-[#0A0B0A]">
+              <div className="mt-2.5 mb-1.5 font-nunito text-[16px] font-extrabold text-foreground">
                 {promise.title}
               </div>
-              <p className="m-0 text-[13.5px] leading-[1.55] text-[#4A4C49]">{promise.body}</p>
+              <p className="m-0 text-[13.5px] leading-[1.55] text-muted-foreground">
+                {promise.body}
+              </p>
             </div>
           ))}
         </div>
-        <p className="mt-5 max-w-[700px] text-[14px] leading-[1.6] text-[#666864]">
+        <p className="mt-5 max-w-[700px] text-[14px] leading-[1.6] text-muted-foreground">
           We build customer engagement software for WhatsApp. These tools solve the small problems
           around that work — generating a link, pricing a campaign, costing your returns. If they
           are useful, you will know where to find us when the bigger problem shows up.

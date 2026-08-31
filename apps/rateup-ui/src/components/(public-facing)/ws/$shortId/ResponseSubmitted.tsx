@@ -1,7 +1,7 @@
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
+import { rateupLogo } from "@/utils/constants";
 
 import styles from "./ResponseSubmitted.module.css";
 
@@ -26,9 +26,9 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
             Create Surveys for free using
             <a href="https://www.rateup.app" style={{ width: "fit-content" }}>
               <img
-                src={rateupLogoStackedWhiteTransparent}
+                src={rateupLogo}
                 alt="RateUp"
-                style={{ height: 60, width: 60, objectFit: "contain" }}
+                style={{ height: 28, width: "auto", objectFit: "contain" }}
               />
             </a>
           </p>

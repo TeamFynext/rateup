@@ -5,8 +5,6 @@ import { Slider } from "@/components/ui/slider";
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker/index.tsx";
 import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
 
-import styles from "./SubtitleEditor.module.css";
-
 function SubtitleEditor() {
   const {
     subtitle: {
@@ -37,7 +35,7 @@ function SubtitleEditor() {
   }, []);
 
   return (
-    <div className={styles["subtitle-editor-div"]}>
+    <div>
       <div className={`style-section-div`}>
         <h2>Text Color</h2>
         <CustomColorPicker value={String(color ?? "")} onChange={handleColorChange} />

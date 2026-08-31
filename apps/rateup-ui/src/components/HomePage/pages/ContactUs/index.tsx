@@ -6,7 +6,7 @@ function ContactUs() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* India Contact */}
         <div className="bg-white shadow-lg rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
-          <h2 className="text-2xl font-semibold mb-3 text-[#1c518e]">India</h2>
+          <h2 className="text-2xl font-semibold mb-3 text-primary">India</h2>
           <p className="text-base leading-relaxed">
             <strong>Uprate Technologies Private Limited</strong>
             <br />
@@ -25,7 +25,7 @@ function ContactUs() {
 
         {/* Germany Contact */}
         <div className="bg-white shadow-lg rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
-          <h2 className="text-2xl font-semibold mb-3 text-[#1c518e]">Germany</h2>
+          <h2 className="text-2xl font-semibold mb-3 text-primary">Germany</h2>
           <p className="text-base leading-relaxed">
             <strong>Duesseldorf, Germany</strong>
             <br />

@@ -19,11 +19,11 @@ const TAB_LABELS: Record<string, string> = {
  */
 export default function ToolsTabs({ activeSlug }: Readonly<{ activeSlug?: string }>) {
   return (
-    <div className="sticky top-0 z-60 bg-[#081C3F]">
+    <div className="sticky top-0 z-60 bg-ru-blue-900">
       <div className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center gap-2 px-6 py-2.5 lg:px-8">
         <Link
           to={TOOLS_BASE_PATH}
-          className="mr-1.5 text-[10px] font-extrabold tracking-[0.14em] text-[#4FC3FF] uppercase transition-opacity hover:opacity-80"
+          className="mr-1.5 text-[10px] font-extrabold tracking-[0.14em] text-ru-blue-300 uppercase transition-opacity hover:opacity-80"
         >
           Tools
         </Link>
@@ -38,7 +38,7 @@ export default function ToolsTabs({ activeSlug }: Readonly<{ activeSlug?: string
               className={cn(
                 "rounded-full px-3 py-1.5 text-[12.5px] font-bold transition-colors",
                 isActive
-                  ? "bg-[#4FC3FF] text-[#04203D]"
+                  ? "bg-ru-blue-300 text-[#04203D]"
                   : "bg-white/[0.09] text-white/80 hover:bg-white/[0.16] hover:text-white",
               )}
             >

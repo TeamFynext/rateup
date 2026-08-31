@@ -50,7 +50,7 @@ const InboxHero = () => {
         <div className="px-3 sm:px-16 sm:pt-0 pt-8 ">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 leading-tight">
             Go Beyond Feedback{" "}
-            <span className="inline-block text-[#1c518e] font-bold">
+            <span className="inline-block text-primary font-bold">
               <span className="inline-block min-w-[12ch]">{displayedText}</span>
             </span>
           </h1>
@@ -65,7 +65,7 @@ const InboxHero = () => {
             <a href="https://rateup.app/login">
               <Button
                 size="lg"
-                className="bg-[#1c518e] cursor-pointer hover:bg-[#1c518e] text-white font-medium px-8"
+                className="bg-primary cursor-pointer hover:bg-primary text-white font-medium px-8"
               >
                 Get Started Free
               </Button>
@@ -74,7 +74,7 @@ const InboxHero = () => {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-[#1c518e] text-[#1c518e] cursor-pointer hover:bg-[#e6f7ff] group"
+                className="border-primary text-primary cursor-pointer hover:bg-[#e6f7ff] group"
               >
                 Learn More
                 <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />

@@ -52,7 +52,7 @@ export const SurveySection = ({
             <div
               className="px-8 py-2.5 text-center text-white"
               style={{
-                backgroundColor: "#1C518E",
+                backgroundColor: "var(--primary)",
                 borderRadius: "15px 15px 0 0",
                 zIndex: 2,
                 width: PlanCardWidth,

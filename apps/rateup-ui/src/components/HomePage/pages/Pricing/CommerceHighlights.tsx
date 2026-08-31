@@ -2,7 +2,7 @@ const CARDS = [
   {
     title: "Shopify integration",
     body: "Sync orders, customers and products in minutes. Trigger abandoned-cart, order-confirmed and delivery messages on WhatsApp, and award loyalty points on every paid order.",
-    tint: "bg-[#EEF4FB] text-[#1C518E]",
+    tint: "bg-accent text-primary",
     icon: (
       <>
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -31,7 +31,7 @@ export const CommerceHighlights = () => (
       {CARDS.map((card) => (
         <div
           key={card.title}
-          className="rounded-2xl border border-[#ECECEA] bg-white p-8 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
+          className="rounded-2xl border border-border bg-white p-8 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
         >
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.tint}`}>
             <svg
@@ -48,10 +48,10 @@ export const CommerceHighlights = () => (
               {card.icon}
             </svg>
           </div>
-          <h3 className="font-nunito mb-2 mt-[18px] text-[22px] font-extrabold text-[#0A0B0A]">
+          <h3 className="font-nunito mb-2 mt-[18px] text-[22px] font-extrabold text-foreground">
             {card.title}
           </h3>
-          <p className="m-0 text-[15px] leading-relaxed text-[#4A4C49]">{card.body}</p>
+          <p className="m-0 text-[15px] leading-relaxed text-muted-foreground">{card.body}</p>
         </div>
       ))}
     </div>

@@ -1,8 +1,6 @@
-@import "./colors_and_type.css";
-
 /* ============================================================
    RateUp Loyalty — Landing Page styles (CSS Module)
-   Built on the RateUp Design System tokens (colors_and_type.css)
+   Built on the RateUp Design System tokens in globals.css
    Note: @tailwind directives are already imported in globals.css
    ============================================================ */
 
@@ -18,7 +16,7 @@
   --periwinkle-2: #b4c5ee;
   --chip-navy: #16244a;
   --hero-navy-1: #102b57;
-  --hero-navy-2: #081c3f;
+  --hero-navy-2: var(--color-ru-blue-900);
   --hero-navy-3: #060f26;
   --deep-navy: #050d1f;
 }
@@ -44,9 +42,9 @@ section {
   letter-spacing: -0.01em;
   padding: 6px 6px 6px 22px;
   transition:
-    transform var(--dur-2) var(--ease-out-expo),
-    box-shadow var(--dur-3) var(--ease-out-expo),
-    filter var(--dur-2) var(--ease-in-out);
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 180ms cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
 }
 .btn .chip {
@@ -82,11 +80,11 @@ section {
 
 .btn-secondary {
   background: var(--periwinkle);
-  color: var(--blue-900);
+  color: var(--color-ru-blue-900);
 }
 .btn-secondary .chip {
   background: rgba(255, 255, 255, 0.65);
-  color: var(--blue-900);
+  color: var(--color-ru-blue-900);
 }
 .btn-secondary:hover {
   background: var(--periwinkle-2);
@@ -95,8 +93,8 @@ section {
 
 .btn-outline {
   background: transparent;
-  color: var(--blue-900);
-  border: 1.5px solid var(--ink-200);
+  color: var(--color-ru-blue-900);
+  border: 1.5px solid var(--color-ru-n-300);
   padding: 12px 22px;
   border-radius: 12px;
 }
@@ -125,8 +123,8 @@ section {
   border-color: rgba(255, 255, 255, 0.25);
 }
 .on-dark .btn-outline:hover {
-  border-color: var(--cyan-300);
-  color: var(--cyan-300);
+  border-color: var(--color-ru-blue-300);
+  color: var(--color-ru-blue-300);
 }
 
 /* ============================ NAV ============================ */
@@ -138,8 +136,8 @@ section {
   backdrop-filter: blur(14px) saturate(140%);
   border-bottom: 1px solid rgba(236, 236, 234, 0.7);
   transition:
-    height var(--dur-3) var(--ease-in-out),
-    box-shadow var(--dur-3);
+    height 240ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 240ms;
 }
 .navbar .wrap {
   max-width: 1320px;
@@ -149,7 +147,7 @@ section {
   align-items: center;
   height: 80px;
   gap: 36px;
-  transition: height var(--dur-3) var(--ease-in-out);
+  transition: height 240ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .navbar.shrink .nav-row {
   height: 64px;
@@ -179,7 +177,7 @@ section {
   gap: 5px;
   font-size: 15px;
   font-weight: 600;
-  color: var(--ink-700);
+  color: var(--foreground);
   letter-spacing: -0.01em;
 }
 .nav-links a:hover {
@@ -237,7 +235,7 @@ section {
   gap: 10px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-pill);
+  border-radius: 9999px;
   padding: 9px 18px 9px 14px;
   font-size: 14px;
   font-weight: 700;
@@ -247,7 +245,7 @@ section {
 .badge-trust .stars {
   display: inline-flex;
   gap: 2px;
-  color: var(--warm-300);
+  color: var(--color-ru-star-top);
 }
 .badge-trust .stars svg {
   width: 15px;
@@ -410,7 +408,7 @@ section {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd27a, #f8951d);
+  background: linear-gradient(135deg, #ffd27a, var(--color-ru-amber-500));
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -474,8 +472,8 @@ section {
   opacity: 0;
   transform: translateY(8px) scale(0.97);
   transition:
-    opacity 0.32s var(--ease-out-expo),
-    transform 0.32s var(--ease-out-expo);
+    opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   word-wrap: break-word;
 }
 .msg.show {
@@ -506,7 +504,7 @@ section {
   font-weight: 700;
 }
 .msg .pts {
-  color: var(--warm-600);
+  color: var(--color-ru-amber-600);
   font-weight: 800;
 }
 
@@ -521,8 +519,8 @@ section {
   opacity: 0;
   transform: translateY(8px) scale(0.97);
   transition:
-    opacity 0.32s var(--ease-out-expo),
-    transform 0.32s var(--ease-out-expo);
+    opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .msg-card.show {
   opacity: 1;
@@ -545,7 +543,7 @@ section {
   font-size: 13px;
 }
 .msg-card .row .v.warm {
-  color: var(--warm-600);
+  color: var(--color-ru-amber-600);
 }
 .msg-card .bal {
   font-family: var(--font-display);
@@ -579,8 +577,8 @@ section {
   opacity: 0;
   transform: translateY(8px);
   transition:
-    opacity 0.3s var(--ease-out-expo),
-    transform 0.3s var(--ease-out-expo);
+    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .qr svg {
   width: 14px;
@@ -683,10 +681,10 @@ section {
   line-height: 1.55;
 }
 .light-sec .sec-head h2 {
-  color: var(--ink-800);
+  color: var(--foreground);
 }
 .light-sec .sec-head p {
-  color: var(--ink-500);
+  color: var(--muted-foreground);
 }
 .on-dark .sec-head h2 {
   color: #fff;
@@ -699,8 +697,8 @@ section {
   opacity: 0;
   transform: translateY(28px);
   transition:
-    opacity 0.7s var(--ease-out-expo),
-    transform 0.7s var(--ease-out-expo);
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .reveal.in {
   opacity: 1;
@@ -721,7 +719,7 @@ section {
 
 /* ============================ HOW IT WORKS ============================ */
 .light-sec {
-  background: var(--ink-25);
+  background: var(--background);
   padding: 96px 0;
 }
 .steps {
@@ -733,18 +731,22 @@ section {
 .step {
   position: relative;
   background: #fff;
-  border: 1px solid var(--ink-100);
+  border: 1px solid var(--border);
   border-radius: 18px;
   padding: 26px 24px 30px;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow:
+    0 1px 2px rgba(11, 31, 72, 0.06),
+    0 2px 6px rgba(11, 31, 72, 0.05);
   transition:
-    transform var(--dur-3) var(--ease-out-expo),
-    box-shadow var(--dur-3);
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms;
 }
 .step:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 1px 2px rgba(11, 31, 72, 0.06),
+    0 8px 24px rgba(11, 31, 72, 0.06);
 }
 .step .top {
   display: flex;
@@ -755,7 +757,7 @@ section {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: var(--blue-900);
+  background: var(--color-ru-blue-900);
   color: #fff;
   font-family: var(--font-display);
   font-weight: 900;
@@ -769,13 +771,13 @@ section {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 19px;
-  color: var(--ink-800);
+  color: var(--foreground);
   margin: 0;
   line-height: 1.15;
 }
 .step p {
   font-size: 14px;
-  color: var(--ink-500);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin: 16px 0 0;
   max-width: none;
@@ -784,7 +786,7 @@ section {
   position: absolute;
   right: -8px;
   bottom: -10px;
-  color: var(--blue-100);
+  color: var(--color-ru-blue-100);
   opacity: 0.7;
 }
 .step .bgicon svg {
@@ -799,7 +801,7 @@ section {
 
 /* ============================ WHY WORKS ============================ */
 .why {
-  background: var(--ink-25);
+  background: var(--background);
   padding: 40px 0 100px;
 }
 .why-grid {
@@ -821,7 +823,7 @@ section {
   width: 60px;
   height: 60px;
   border-radius: 16px;
-  background: var(--blue-900);
+  background: var(--color-ru-blue-900);
   color: #fff;
   display: flex;
   align-items: center;
@@ -836,12 +838,12 @@ section {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 18px;
-  color: var(--ink-800);
+  color: var(--foreground);
   margin: 0 0 7px;
 }
 .why-item p {
   font-size: 13.5px;
-  color: var(--ink-500);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin: 0;
   max-width: 250px;
@@ -882,19 +884,19 @@ section {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  border: 2px solid var(--blue-100);
+  border: 2px solid var(--color-ru-blue-100);
   box-shadow: 0 8px 24px rgba(11, 31, 72, 0.1);
 }
 .node.star {
   top: 268px;
-  background: var(--blue-900);
+  background: var(--color-ru-blue-900);
   box-shadow: 0 18px 46px rgba(28, 81, 142, 0.32);
 }
 .node.wa .wa-tile {
   width: 58px;
   height: 58px;
   border-radius: 16px;
-  background: var(--channel-whatsapp);
+  background: #25d366;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -921,7 +923,7 @@ section {
 }
 .diagram .wires path {
   fill: none;
-  stroke: var(--blue-300);
+  stroke: var(--color-ru-blue-300);
   stroke-width: 2;
   stroke-dasharray: 5 6;
   opacity: 0.55;
@@ -943,7 +945,7 @@ section {
 
 /* ============================ CUSTOMER PROFILES ============================ */
 .profiles {
-  background: var(--ink-25);
+  background: var(--background);
   padding: 90px 0 100px;
 }
 .profiles h2 {
@@ -952,7 +954,7 @@ section {
   text-align: center;
   font-size: clamp(34px, 4.6vw, 60px);
   letter-spacing: -0.025em;
-  color: var(--ink-800);
+  color: var(--foreground);
   margin: 0;
 }
 .profiles h2 .b {
@@ -963,12 +965,12 @@ section {
   max-width: 720px;
   margin: 18px auto 0;
   font-size: 17px;
-  color: var(--ink-500);
+  color: var(--muted-foreground);
   line-height: 1.55;
 }
 .profile-panel {
   margin-top: 64px;
-  background: var(--blue-900);
+  background: var(--color-ru-blue-900);
   border-radius: 30px;
   padding: 40px;
   position: relative;
@@ -1142,7 +1144,7 @@ section {
   padding-left: 20px;
 }
 .pf-field .v.warm {
-  color: var(--warm-600);
+  color: var(--color-ru-amber-600);
 }
 
 .rlist {
@@ -1202,7 +1204,7 @@ section {
 }
 .rrow .rp {
   font-size: 12px;
-  color: var(--warm-600);
+  color: var(--color-ru-amber-600);
   font-weight: 700;
 }
 
@@ -1237,7 +1239,7 @@ section {
   color: rgba(255, 255, 255, 0.85);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-pill);
+  border-radius: 9999px;
   padding: 8px 16px;
 }
 .tag-pills .tp::before {
@@ -1245,7 +1247,7 @@ section {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--warm-400);
+  background: var(--color-ru-amber-400);
 }
 
 /* ============================ INTEGRATIONS ============================ */
@@ -1275,7 +1277,7 @@ section {
   stroke-width: 1.5;
 }
 .intg-svg .flow {
-  stroke: var(--cyan-300);
+  stroke: var(--color-ru-blue-300);
   stroke-width: 2;
   stroke-dasharray: 4 10;
   filter: drop-shadow(0 0 4px rgba(79, 195, 255, 0.8));
@@ -1362,8 +1364,8 @@ section {
   justify-content: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   transition:
-    transform var(--dur-3) var(--ease-spring),
-    box-shadow var(--dur-3);
+    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 240ms;
 }
 .intg-node:hover {
   transform: scale(1.1);
@@ -1440,7 +1442,7 @@ section {
   font-weight: 700;
   font-size: 13px;
   padding: 7px 16px;
-  border-radius: var(--radius-pill);
+  border-radius: 9999px;
 }
 .tcard .quote {
   font-size: 17px;
@@ -1453,7 +1455,7 @@ section {
 .tcard .stars {
   display: flex;
   gap: 4px;
-  color: var(--warm-400);
+  color: var(--color-ru-amber-400);
   margin-bottom: 22px;
 }
 .tcard .stars svg {
@@ -1517,8 +1519,8 @@ section {
   align-items: center;
   justify-content: center;
   transition:
-    background var(--dur-2),
-    transform var(--dur-2);
+    background 180ms,
+    transform 180ms;
 }
 .tnav button:hover {
   background: var(--loyalty-blue-2);
@@ -1610,7 +1612,7 @@ section {
     rgba(70, 110, 210, 0.4) 100%
   );
   border: 1px solid rgba(120, 160, 230, 0.18);
-  transition: border-color var(--dur-2);
+  transition: border-color 180ms;
 }
 .faq-item.open {
   border-color: rgba(120, 160, 230, 0.4);
@@ -1642,7 +1644,7 @@ section {
   position: absolute;
   background: #fff;
   border-radius: 2px;
-  transition: transform var(--dur-3) var(--ease-out-expo);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .faq-q .pm::before {
   left: 50%;
@@ -1664,7 +1666,7 @@ section {
 .faq-a {
   max-height: 0;
   overflow: hidden;
-  transition: max-height var(--dur-4) var(--ease-in-out);
+  transition: max-height 420ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .faq-a .inner {
   padding: 0 26px 24px;
@@ -1729,7 +1731,7 @@ section {
   margin-bottom: 11px;
 }
 .footer .fcol a:hover {
-  color: var(--cyan-300);
+  color: var(--color-ru-blue-300);
 }
 .footer .bot {
   display: flex;
@@ -1808,7 +1810,7 @@ section {
   color: #111;
 }
 .mck-row .rt .big.warm {
-  color: var(--warm-600);
+  color: var(--color-ru-amber-600);
 }
 .mck-row .rt .sm {
   font-size: 10.5px;
@@ -1848,7 +1850,7 @@ section {
   flex-shrink: 0;
 }
 .mck-rank.top {
-  color: var(--warm-500);
+  color: var(--color-ru-amber-500);
 }
 
 /* stat tiles + bar chart (analytics) */
@@ -1922,7 +1924,7 @@ section {
   box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
 }
 .mck-wa .pts {
-  color: var(--warm-600);
+  color: var(--color-ru-amber-600);
   font-weight: 800;
 }
 .mck-pill {
@@ -2028,4 +2030,114 @@ section {
   .footer .top {
     flex-direction: column;
   }
+}
+
+/* ==========================================================
+   TYPE — page-scoped element defaults.
+   Moved here from the old colors_and_type.css token copy; the colors
+   and families now come from globals.css.
+   ========================================================== */
+:global(.loyalty-scope) {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--foreground);
+  background: var(--background);
+}
+
+:global(.loyalty-scope) h1,
+:global(.loyalty-scope) .h1,
+:global(.loyalty-scope) h2,
+:global(.loyalty-scope) .h2,
+:global(.loyalty-scope) h3,
+:global(.loyalty-scope) .h3,
+:global(.loyalty-scope) h4,
+:global(.loyalty-scope) .h4,
+:global(.loyalty-scope) .display-1,
+:global(.loyalty-scope) .display-2 {
+  font-family: var(--font-display);
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+:global(.loyalty-scope) .display-1 {
+  font-size: clamp(48px, 6vw, 88px);
+  font-weight: 900;
+  line-height: 1.05;
+}
+:global(.loyalty-scope) .display-2 {
+  font-size: clamp(40px, 5vw, 72px);
+  font-weight: 800;
+  line-height: 1.05;
+}
+:global(.loyalty-scope) h1,
+:global(.loyalty-scope) .h1 {
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 800;
+  line-height: 1.05;
+}
+:global(.loyalty-scope) h2,
+:global(.loyalty-scope) .h2 {
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+:global(.loyalty-scope) h3,
+:global(.loyalty-scope) .h3 {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+:global(.loyalty-scope) h4,
+:global(.loyalty-scope) .h4 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+:global(.loyalty-scope) p {
+  margin: 0 0 16px;
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+:global(.loyalty-scope) .lead {
+  font-size: 18px;
+  color: var(--foreground);
+}
+:global(.loyalty-scope) small,
+:global(.loyalty-scope) .caption {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+:global(.loyalty-scope) .micro {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+:global(.loyalty-scope) code,
+:global(.loyalty-scope) pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95em;
+}
+:global(.loyalty-scope) code {
+  background: var(--color-ru-n-50);
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
+}
+
+:global(.loyalty-scope) a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+:global(.loyalty-scope) a:hover {
+  color: var(--color-ru-blue-800);
+}
+:global(.loyalty-scope).theme-dark a:hover,
+:global(.loyalty-scope) .theme-dark a:hover {
+  color: var(--color-ru-blue-300);
 }

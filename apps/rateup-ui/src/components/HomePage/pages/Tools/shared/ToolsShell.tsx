@@ -34,29 +34,32 @@ export default function ToolsShell({
     <Layout contentClassName={styles.themeDefault}>
       <ToolsTabs activeSlug={activeSlug} />
 
-      <div className="bg-[#FAFAF7] font-sans text-[#2E302E]">
+      <div className="bg-background font-sans text-foreground">
         {/* Hero */}
         <div className="mx-auto w-full max-w-[1240px] px-6 pt-10 lg:px-8">
-          <nav aria-label="Breadcrumb" className="mb-4 text-[12.5px] text-[#8A8C88]">
+          <nav aria-label="Breadcrumb" className="mb-4 text-[12.5px] text-muted-foreground">
             <ol className="flex flex-wrap items-center gap-1.5">
               <li>
-                <Link to="/tools" className="text-[#8A8C88] transition-colors hover:text-[#2E302E]">
+                <Link
+                  to="/tools"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
                   Tools
                 </Link>
               </li>
               {crumb ? (
                 <>
                   <li aria-hidden>›</li>
-                  <li className="font-semibold text-[#2E302E]">{crumb.label}</li>
+                  <li className="font-semibold text-foreground">{crumb.label}</li>
                 </>
               ) : null}
             </ol>
           </nav>
 
-          <h1 className="max-w-[840px] font-nunito text-[34px] leading-[1.05] font-black tracking-[-0.025em] text-[#0A0B0A] sm:text-[42px] lg:text-[52px]">
+          <h1 className="max-w-[840px] font-nunito text-[34px] leading-[1.05] font-black tracking-[-0.025em] text-foreground sm:text-[42px] lg:text-[52px]">
             {title}
           </h1>
-          <p className="mt-4 max-w-[700px] text-[16px] leading-[1.55] text-[#4A4C49] sm:text-[18px]">
+          <p className="mt-4 max-w-[700px] text-[16px] leading-[1.55] text-muted-foreground sm:text-[18px]">
             {description}
           </p>
 
@@ -64,11 +67,11 @@ export default function ToolsShell({
             <span className="rounded-full bg-[#E7F9EE] px-2.5 py-1.5 text-[11.5px] font-bold tracking-[0.06em] text-[#128C4A] uppercase">
               No signup
             </span>
-            <span className="rounded-full bg-[#EEF4FB] px-2.5 py-1.5 text-[11.5px] font-bold tracking-[0.06em] text-[#1C518E] uppercase">
+            <span className="rounded-full bg-accent px-2.5 py-1.5 text-[11.5px] font-bold tracking-[0.06em] text-primary uppercase">
               No email gate
             </span>
             {badge ? (
-              <span className="rounded-full bg-[#EEF4FB] px-2.5 py-1.5 text-[11.5px] font-bold tracking-[0.06em] text-[#1C518E] uppercase">
+              <span className="rounded-full bg-accent px-2.5 py-1.5 text-[11.5px] font-bold tracking-[0.06em] text-primary uppercase">
                 {badge}
               </span>
             ) : null}

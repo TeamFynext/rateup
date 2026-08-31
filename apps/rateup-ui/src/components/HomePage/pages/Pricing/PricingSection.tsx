@@ -37,7 +37,7 @@ const COMPACT_GRID_COLS: Record<number, string> = {
 
 const toggleClass = (active: boolean) =>
   `cursor-pointer rounded-full border-none px-[18px] py-[9px] text-[13px] font-bold transition-colors duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-    active ? "bg-[#1C518E] text-white" : "bg-transparent text-[#666864] hover:text-[#2E302E]"
+    active ? "bg-primary text-white" : "bg-transparent text-muted-foreground hover:text-foreground"
   }`;
 
 /**
@@ -151,16 +151,16 @@ const PricingSection = ({
   }
 
   return (
-    <div className={compact ? "text-[#2E302E]" : "bg-[#FAFAF7] text-[#2E302E]"}>
+    <div className={compact ? "text-foreground" : "bg-background text-foreground"}>
       <section className={compact ? "mx-auto max-w-[1240px]" : "mx-auto max-w-[1240px] px-8 pt-20"}>
         <div className="text-center" hidden={compact}>
-          <div className="mb-3.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1C518E]">
+          <div className="mb-3.5 text-xs font-bold uppercase tracking-[0.14em] text-primary">
             Pricing
           </div>
-          <h1 className="font-nunito mx-auto my-0 max-w-[780px] text-[40px] font-black leading-[1.03] tracking-[-0.025em] text-[#0A0B0A] md:text-[64px]">
+          <h1 className="font-nunito mx-auto my-0 max-w-[780px] text-[40px] font-black leading-[1.03] tracking-[-0.025em] text-foreground md:text-[64px]">
             Start free. Scale when your conversations do.
           </h1>
-          <p className="mx-auto mt-5 max-w-[600px] text-lg leading-relaxed text-[#4A4C49]">
+          <p className="mx-auto mt-5 max-w-[600px] text-lg leading-relaxed text-muted-foreground">
             Every plan includes the WhatsApp Business API, the omnichannel inbox, automations and
             web surveys. You only pay for volume, seats and the advanced modules.
           </p>
@@ -170,7 +170,7 @@ const PricingSection = ({
           className={`flex flex-wrap items-center justify-center gap-3.5 ${compact ? "mt-0" : "mt-9"}`}
           hidden={onHighestTier}
         >
-          <div className="flex rounded-full border border-[#ECECEA] bg-white p-1 shadow-[0_1px_2px_rgba(11,31,72,0.06)]">
+          <div className="flex rounded-full border border-border bg-white p-1 shadow-[0_1px_2px_rgba(11,31,72,0.06)]">
             <button
               type="button"
               onClick={() => setPeriod("yearly")}
@@ -186,7 +186,7 @@ const PricingSection = ({
               Monthly
             </button>
           </div>
-          <div className="flex rounded-full border border-[#ECECEA] bg-white p-1 shadow-[0_1px_2px_rgba(11,31,72,0.06)]">
+          <div className="flex rounded-full border border-border bg-white p-1 shadow-[0_1px_2px_rgba(11,31,72,0.06)]">
             <button
               type="button"
               onClick={() => setCurrency("USD")}
@@ -247,11 +247,11 @@ const PricingSection = ({
         </motion.div>
 
         {onHighestTier && (
-          <div className="rounded-xl border border-[#ECECEA] bg-white p-8 text-center">
-            <h3 className="font-nunito text-lg font-extrabold text-[#0A0B0A]">
+          <div className="rounded-xl border border-border bg-white p-8 text-center">
+            <h3 className="font-nunito text-lg font-extrabold text-foreground">
               You&apos;re on our highest plan.
             </h3>
-            <p className="mx-auto mt-2 max-w-[420px] text-sm text-[#4A4C49]">
+            <p className="mx-auto mt-2 max-w-[420px] text-sm text-muted-foreground">
               Need more teams, seats or conversations than Enterprise includes? Talk to us and
               we&apos;ll size a contract around it.
             </p>
@@ -259,7 +259,7 @@ const PricingSection = ({
         )}
 
         <p
-          className="mx-auto mt-6 max-w-[720px] text-center text-[13px] text-[#8B8E8A]"
+          className="mx-auto mt-6 max-w-[720px] text-center text-[13px] text-muted-foreground"
           hidden={onHighestTier}
         >
           A conversation is one 24-hour window with a customer on any connected channel. Annual

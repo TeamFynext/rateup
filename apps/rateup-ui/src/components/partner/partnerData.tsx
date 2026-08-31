@@ -327,7 +327,10 @@ function Step2({
           <Select
             value={data.companySize}
             onValueChange={(v) => set("companySize", v ?? "")}
-            items={["Just me", "2–10", "11–50", "50+"].map((s) => ({ value: s, label: s }))}
+            items={["Just me", "2–10", "11–50", "50+"].map((s) => ({
+              value: s,
+              label: s,
+            }))}
           >
             <SelectTrigger className={errors.companySize ? "border-red-500" : ""}>
               <SelectValue placeholder="Select size" />
@@ -658,7 +661,7 @@ export function PartnerApplyModal({ open, onOpenChange }: Readonly<PartnerApplyM
         <div className="relative bg-gradient-to-br from-[#0f1729] via-[#1a2642] to-[#0f1729] px-6 pt-6 pb-5">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white text-lg font-semibold">
-              <IconHeartHandshake className="h-5 w-5 text-[#FF9500]" />
+              <IconHeartHandshake className="h-5 w-5 text-ru-amber-500" />
               Partner Application
             </DialogTitle>
             <p className="text-sm text-white/60 mt-1">

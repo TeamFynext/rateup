@@ -117,7 +117,7 @@ export default function BusinessSection() {
               className={`border border-ink-100 rounded-[22px] p-8 bg-white shadow-[0_1px_2px_rgba(11,31,72,0.06),0_2px_6px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:shadow-[0_12px_48px_rgba(11,31,72,0.12)] transition-all ${style.reveal}`}
               data-d={c.delay}
             >
-              <div className="w-[52px] h-[52px] rounded-2xl bg-[#EEF4FB] flex items-center justify-center mb-[18px]">
+              <div className="w-[52px] h-[52px] rounded-2xl bg-accent flex items-center justify-center mb-[18px]">
                 <span className="w-[26px] h-[26px] text-fb-green flex items-center justify-center">
                   {c.icon}
                 </span>

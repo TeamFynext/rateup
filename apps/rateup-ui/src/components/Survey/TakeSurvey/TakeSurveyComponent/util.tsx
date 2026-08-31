@@ -397,7 +397,7 @@ export const DEFAULT_WOP = {
   contrastColor: "#ffffff",
   size: 200,
   segments: ["$200 Gift Card", "$100 Gift Card"],
-  segColors: ["#1c518e", "#06ac6e"],
+  segColors: ["var(--primary)", "#06ac6e"],
 };
 
 // Widened to the full question/page union so it can test any question's type.

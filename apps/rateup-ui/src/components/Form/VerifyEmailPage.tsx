@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
@@ -40,7 +40,7 @@ function VerifyEmailPage({ sendEmail }: { sendEmail: () => void }) {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-linear-to-br from-blue-50/30 via-gray-50/20 to-orange-50/30 gap-1 p-4">
       <div className="flex flex-col gap-1 items-center justify-center">
-        <img src={rateupLogoStackedWhiteTransparent} alt="RateUp Logo" className="w-18 h-auto" />
+        <img src={rateupLogo} alt="RateUp Logo" className="w-36 h-auto" />
         <h2 className="text-lg text-gray-900 mb-1">Verify Your Email</h2>
         <p className="text-sm text-gray-600">Check your inbox to continue</p>
       </div>

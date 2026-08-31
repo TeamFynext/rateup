@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import { SurveyType } from "@/types/enums.ts";
+import { imagesPath } from "@/utils/constants.ts";
 import { formatIsoDateStringWithTime, roundOffMinutesAndSeconds } from "@/utils/dateTime.ts";
 import { getContent } from "@/utils/index.ts";
 
@@ -571,7 +572,7 @@ const ShareSurvey = ({
                         >
                           <img
                             alt="iframe icon"
-                            src={`${import.meta.env.VITE_FRONTEND_URL}/images/iframe-icon.png`}
+                            src={`${imagesPath}/iframe-icon.png`}
                             className="size-10 object-contain"
                             style={{ opacity: disableShare ? 0.5 : 1 }}
                           />

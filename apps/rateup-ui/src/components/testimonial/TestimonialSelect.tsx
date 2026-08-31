@@ -14,8 +14,6 @@ import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import TestimonialCard from "./TestimonialCard.tsx";
 
-import classes from "./testimonial.module.css";
-
 const TestimonialSelect = ({
   selectedTestimonialIds,
   setSelectedTestimonialIds,
@@ -53,9 +51,9 @@ const TestimonialSelect = ({
           {filteredTestimonials?.map((testimonial, _index) => {
             const isSelected = selectedTestimonialIds?.some((t) => t === testimonial?.id);
             return (
-              <div className={classes.root} key={testimonial?.id}>
+              <div className="relative" key={testimonial?.id}>
                 <Checkbox
-                  className={classes.checkboxWrapper}
+                  className="absolute top-4 right-4"
                   checked={
                     isSelected || checkIfTestimonialIdsAreIncludedInAllTestimonials(testimonial?.id)
                   }

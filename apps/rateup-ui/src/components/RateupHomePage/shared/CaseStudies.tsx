@@ -62,19 +62,19 @@ function BhimaVisual() {
 
       <div className="grid grid-cols-3 gap-2 border-t border-solid border-white/10 pt-4 text-center">
         <div>
-          <div className="text-2xl font-black text-[#ffd54c]">3.1×</div>
+          <div className="text-2xl font-black text-ru-star-top">3.1×</div>
           <div className="text-[10px] text-white/50 uppercase font-bold tracking-wider">
             Campaign ROI
           </div>
         </div>
         <div>
-          <div className="text-2xl font-black text-[#ffd54c]">98%</div>
+          <div className="text-2xl font-black text-ru-star-top">98%</div>
           <div className="text-[10px] text-white/50 uppercase font-bold tracking-wider">
             Open Rate
           </div>
         </div>
         <div>
-          <div className="text-2xl font-black text-[#ffd54c]">+44%</div>
+          <div className="text-2xl font-black text-ru-star-top">+44%</div>
           <div className="text-[10px] text-white/50 uppercase font-bold tracking-wider">
             Lead Conversion
           </div>

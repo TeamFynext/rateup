@@ -38,7 +38,7 @@ const WhatsAppSurveyCta = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-[#009987] text-[#009987] hover:bg-[#1c518e]/10 font-semibold px-6 py-3 text-base transition"
+                  className="border-[#009987] text-[#009987] hover:bg-primary/10 font-semibold px-6 py-3 text-base transition"
                 >
                   Schedule a Demo
                 </Button>

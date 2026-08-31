@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { PageType } from "@/types/enums.ts";
+import { imagesPath } from "@/utils/constants.ts";
 import { extractText } from "@/utils/index.ts";
 
 import { pageIcons } from "../../Page/PageIcons.ts";
@@ -130,8 +131,8 @@ export function DraggableQuestionCard({
                   <img
                     src={
                       isWaSurvey == true
-                        ? `${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
-                        : `${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump.svg`
+                        ? `${imagesPath}/logic-jump-whatsapp.svg`
+                        : `${imagesPath}/logic-jump.svg`
                     }
                     width={30}
                     height={30}
