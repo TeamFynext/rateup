@@ -83,6 +83,13 @@ export interface LoyaltyPreset {
     signupBonus: number;
     referralBonus: number;
     refereeBonus: number;
+    /**
+     * Typical spend in one visit, in the programme's currency. Seeds
+     * `LoyaltyProgram.averageOrderValue`, which is the denominator the giveback
+     * estimate needs (`../giveback.ts`). Indicative INR figures — the merchant is
+     * expected to correct it, and nothing converts it when the currency changes.
+     */
+    averageOrderValue: number;
   };
   earningRules: PresetEarningRule[];
   tiersEnabled: boolean;
@@ -170,7 +177,13 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
     description:
       "Frequent small purchases. Rewards land quickly to keep people coming back, with a weekend bonus to fill quieter shifts.",
     matchIndustries: ["cafe", "restaurant", "food", "food & beverage", "bakery", "coffee"],
-    basics: { currencyName: "Beans", signupBonus: 50, referralBonus: 100, refereeBonus: 50 },
+    basics: {
+      currencyName: "Beans",
+      signupBonus: 50,
+      referralBonus: 100,
+      refereeBonus: 50,
+      averageOrderValue: 250,
+    },
     earningRules: [
       {
         name: "Standard Earning",
@@ -217,29 +230,31 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "Free Coffee",
         description: "Any regular hot drink, on the house.",
-        pointsCost: 100,
+        pointsCost: 5000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.FREE_ITEM,
           item_name: "Regular hot drink",
+          item_value: 150,
           quantity: 1,
         },
       },
       {
         name: "Free Pastry",
         description: "Pick any pastry from the counter.",
-        pointsCost: 150,
+        pointsCost: 4000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.FREE_ITEM,
           item_name: "Pastry",
+          item_value: 120,
           quantity: 1,
         },
       },
       {
         name: "10% Off Your Bill",
         description: "10% off your next visit.",
-        pointsCost: 250,
+        pointsCost: 800,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -258,7 +273,13 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
     description:
       "Larger, less frequent baskets. A slower earn rate with higher-value rewards, and tiers that recognise annual spend.",
     matchIndustries: ["retail", "store", "ecommerce", "e-commerce", "shop", "fashion", "grocery"],
-    basics: { currencyName: "Points", signupBonus: 100, referralBonus: 250, refereeBonus: 100 },
+    basics: {
+      currencyName: "Points",
+      signupBonus: 100,
+      referralBonus: 250,
+      refereeBonus: 100,
+      averageOrderValue: 1200,
+    },
     earningRules: [
       {
         name: "Standard Earning",
@@ -303,14 +324,14 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "Cash Off Your Order",
         description: "A flat discount on your next order.",
-        pointsCost: 500,
+        pointsCost: 15000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: { type: LoyaltyPointRewardSubType.DISCOUNT_FIXED, amount: 500 },
       },
       {
         name: "10% Off",
         description: "10% off your next purchase.",
-        pointsCost: 750,
+        pointsCost: 4000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -321,7 +342,7 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "20% Off",
         description: "20% off your next purchase.",
-        pointsCost: 1500,
+        pointsCost: 8000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -340,7 +361,13 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
     description:
       "Appointment-based, high value per visit. Rewards are services rather than discounts, which protects your margin.",
     matchIndustries: ["salon", "spa", "beauty", "barber", "wellness", "nails"],
-    basics: { currencyName: "Points", signupBonus: 100, referralBonus: 300, refereeBonus: 150 },
+    basics: {
+      currencyName: "Points",
+      signupBonus: 100,
+      referralBonus: 300,
+      refereeBonus: 150,
+      averageOrderValue: 1500,
+    },
     earningRules: [
       {
         name: "Standard Earning",
@@ -387,18 +414,19 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "Complimentary Add-On",
         description: "A free add-on treatment with your next appointment.",
-        pointsCost: 500,
+        pointsCost: 25000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.FREE_ITEM,
           item_name: "Add-on treatment",
+          item_value: 800,
           quantity: 1,
         },
       },
       {
         name: "15% Off Any Service",
         description: "15% off a single service.",
-        pointsCost: 1000,
+        pointsCost: 7500,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -409,11 +437,12 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "Free Signature Treatment",
         description: "One signature treatment, on us.",
-        pointsCost: 3000,
+        pointsCost: 80000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.FREE_ITEM,
           item_name: "Signature treatment",
+          item_value: 2500,
           quantity: 1,
         },
       },
@@ -428,7 +457,13 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
     description:
       "Membership-led, so the programme rewards showing up rather than spending. Referrals are weighted heavily.",
     matchIndustries: ["gym", "fitness", "sports", "yoga", "studio", "health"],
-    basics: { currencyName: "Points", signupBonus: 200, referralBonus: 500, refereeBonus: 200 },
+    basics: {
+      currencyName: "Points",
+      signupBonus: 200,
+      referralBonus: 500,
+      refereeBonus: 200,
+      averageOrderValue: 2000,
+    },
     earningRules: [
       {
         name: "Standard Earning",
@@ -474,29 +509,31 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "Guest Day Pass",
         description: "Bring a friend in for the day.",
-        pointsCost: 300,
+        pointsCost: 16000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.FREE_ITEM,
           item_name: "Guest day pass",
+          item_value: 500,
           quantity: 1,
         },
       },
       {
         name: "Free Personal Training Session",
         description: "One session with a trainer.",
-        pointsCost: 1500,
+        pointsCost: 40000,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.FREE_ITEM,
           item_name: "Personal training session",
+          item_value: 1200,
           quantity: 1,
         },
       },
       {
         name: "10% Off Membership Renewal",
         description: "10% off your next renewal.",
-        pointsCost: 2500,
+        pointsCost: 6500,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -515,7 +552,13 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
     description:
       "A straightforward starting point: earn one point per unit spent, three tiers, and a simple discount ladder. Edit anything that doesn't fit.",
     matchIndustries: [],
-    basics: { currencyName: "Points", signupBonus: 100, referralBonus: 200, refereeBonus: 100 },
+    basics: {
+      currencyName: "Points",
+      signupBonus: 100,
+      referralBonus: 200,
+      refereeBonus: 100,
+      averageOrderValue: 500,
+    },
     earningRules: [
       {
         name: "Standard Earning",
@@ -553,7 +596,7 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "5% Off",
         description: "5% off your next purchase.",
-        pointsCost: 250,
+        pointsCost: 800,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -564,7 +607,7 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "10% Off",
         description: "10% off your next purchase.",
-        pointsCost: 500,
+        pointsCost: 1600,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -575,7 +618,7 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
       {
         name: "20% Off",
         description: "20% off your next purchase.",
-        pointsCost: 1000,
+        pointsCost: 3200,
         rewardType: LoyaltyRewardType.POINT,
         rewardValue: {
           type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE,
@@ -591,6 +634,13 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
 
 /** Rewards are written as ACTIVE — the casing every loyalty read path filters on. */
 export const PRESET_REWARD_STATUS = LoyaltyRewardStatus.ACTIVE;
+
+/**
+ * What a reward becomes when the wizard drops it but customers already hold or redeemed it.
+ * Inactive keeps the row — and anyone's redemption pointing at it — while taking it out of
+ * the catalog customers can browse.
+ */
+export const RETIRED_REWARD_STATUS = LoyaltyRewardStatus.INACTIVE;
 
 export function isLoyaltyPresetKey(value: string): value is LoyaltyPresetKey {
   return (LOYALTY_PRESET_KEYS as readonly string[]).includes(value);

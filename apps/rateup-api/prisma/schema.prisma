@@ -1943,6 +1943,12 @@ model LoyaltyProgram {
   currencySymbol     String @default("₹") // د.إ, $, €, £, ﷼, ₹
   defaultCountryCode String @default("IN")
 
+  // Self-reported typical order value, used to estimate what the program gives back as a
+  // percentage of revenue (see src/modules/loyalty/giveback.ts). Nullable on purpose:
+  // null means the merchant never told us, which the UI shows as a prompt. A 0 default
+  // would read as a real answer and silently produce a giveback of 0%.
+  averageOrderValue Decimal? @db.Decimal(12, 2)
+
   // Fixed Bonuses
   signupBonus       Int     @default(0)
   referralBonus     Int     @default(0) // For referrer

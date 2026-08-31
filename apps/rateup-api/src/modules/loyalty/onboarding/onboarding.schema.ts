@@ -30,6 +30,8 @@ export const basicsStepSchema = z.object({
   signupBonus: z.number().int().min(0).default(0),
   referralBonus: z.number().int().min(0).default(0),
   refereeBonus: z.number().int().min(0).default(0),
+  /** Typical spend in one visit. Nullable — null means the merchant skipped it. */
+  averageOrderValue: z.number().min(0).nullable().optional(),
 });
 
 /* ── earning ────────────────────────────────────────────────────────────────── */
@@ -93,6 +95,12 @@ export const tiersStepSchema = z
 /* ── rewards ────────────────────────────────────────────────────────────────── */
 
 const rewardSchema = z.object({
+  /**
+   * Present when the wizard is editing a reward that already exists. Keying the update on
+   * it — rather than on the name — is what lets a merchant rename a reward instead of
+   * silently forking a second live one.
+   */
+  id: z.string().uuid().optional(),
   name: z.string().min(1, "Reward name is required"),
   description: z.string().optional().nullable(),
   pointsCost: z.number().int().min(0),

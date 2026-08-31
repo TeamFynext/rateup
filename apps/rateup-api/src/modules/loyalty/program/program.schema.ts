@@ -7,6 +7,7 @@ const loyaltyProgramFields = {
   currencyCode: z.string(),
   currencySymbol: z.string().optional(),
   defaultCountryCode: z.string(),
+  averageOrderValue: z.number().min(0).nullable().optional(),
   signupBonus: z.number(),
   referralBonus: z.number(),
   referralBonusType: z.enum(["points", "gift"]),

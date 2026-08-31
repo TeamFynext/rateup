@@ -12,7 +12,16 @@ vi.mock("../../../utils/prisma.js", () => {
       count: vi.fn(),
     },
     loyaltyTier: { findMany: vi.fn(), create: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
-    loyaltyReward: { findMany: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+    loyaltyReward: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+    },
+    loyaltyRedemption: { findMany: vi.fn() },
+    customerReward: { findMany: vi.fn() },
     loyaltyWaCommand: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
     loyaltyEventTrigger: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
     whatsappSettings: { count: vi.fn() },
@@ -56,7 +65,26 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as Record<string, Record<string, Mock>>;
 
 const ORG = "org-1";
-const PROGRAM = { id: "prog-1", orgId: ORG, status: "draft" };
+const PROGRAM = {
+  id: "prog-1",
+  orgId: ORG,
+  status: "draft",
+  averageOrderValue: 250,
+  tiersEnabled: false,
+  signupBonus: 0,
+  referralBonus: 0,
+  refereeBonus: 0,
+};
+
+/** A default earning rule of 1 point per unit — the shape `activate` now selects. */
+const DEFAULT_RULE = { id: "rule-1", pointsPerUnit: 1, multiplier: 1, bonusPoints: 0 };
+
+/** 3% back: 150 of value for 5000 points, at 1 point per unit. Lands in the healthy band. */
+const HEALTHY_REWARD = {
+  name: "Free Coffee",
+  pointsCost: 5000,
+  rewardValue: { type: "free_item", item_name: "Coffee", item_value: 150 },
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -66,6 +94,9 @@ beforeEach(() => {
     db[model].findMany.mockResolvedValue([]);
   }
   db.loyaltyTier.deleteMany.mockResolvedValue({ count: 0 });
+  db.loyaltyReward.create.mockResolvedValue({ id: "new-reward" });
+  db.loyaltyRedemption.findMany.mockResolvedValue([]);
+  db.customerReward.findMany.mockResolvedValue([]);
 });
 
 describe("preset catalogue", () => {
@@ -312,6 +343,97 @@ describe("rewards", () => {
       expect.objectContaining({ data: expect.objectContaining({ status: "ACTIVE" }) }),
     );
   });
+
+  const reward = (overrides: Record<string, unknown> = {}) => ({
+    name: "Free Coffee",
+    description: null,
+    pointsCost: 5000,
+    rewardType: LoyaltyRewardType.POINT,
+    rewardValue: { type: "free_item", item_name: "Regular hot drink", item_value: 150 },
+    stockQuantity: null,
+    ...overrides,
+  });
+
+  test("renaming updates the same reward instead of forking a second one", async () => {
+    db.loyaltyReward.findMany.mockResolvedValueOnce([{ id: "reward-1", name: "Free Coffee" }]);
+
+    await applyRewardsStep(ORG, {
+      rewards: [reward({ id: "reward-1", name: "Free Flat White" })],
+    });
+
+    expect(db.loyaltyReward.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "reward-1" },
+        data: expect.objectContaining({ name: "Free Flat White" }),
+      }),
+    );
+    expect(db.loyaltyReward.create).not.toHaveBeenCalled();
+    expect(db.loyaltyReward.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test("a reward dropped from the payload is deleted, not left live", async () => {
+    db.loyaltyReward.findMany.mockResolvedValueOnce([
+      { id: "reward-1", name: "Free Coffee" },
+      { id: "reward-2", name: "10% Off" },
+    ]);
+
+    await applyRewardsStep(ORG, { rewards: [reward({ id: "reward-1" })] });
+
+    expect(db.loyaltyReward.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["reward-2"] } },
+    });
+  });
+
+  test("a dropped reward customers already hold is retired, not deleted", async () => {
+    db.loyaltyReward.findMany.mockResolvedValueOnce([
+      { id: "reward-1", name: "Free Coffee" },
+      { id: "reward-2", name: "10% Off" },
+    ]);
+    db.customerReward.findMany.mockResolvedValueOnce([{ rewardId: "reward-2" }]);
+
+    await applyRewardsStep(ORG, { rewards: [reward({ id: "reward-1" })] });
+
+    expect(db.loyaltyReward.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["reward-2"] } },
+      data: { status: "INACTIVE" },
+    });
+    expect(db.loyaltyReward.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test("a dropped reward with a redemption against it is retired too", async () => {
+    db.loyaltyReward.findMany.mockResolvedValueOnce([{ id: "reward-1", name: "Free Coffee" }]);
+    db.loyaltyRedemption.findMany.mockResolvedValueOnce([{ rewardId: "reward-1" }]);
+
+    await applyRewardsStep(ORG, { rewards: [] });
+
+    expect(db.loyaltyReward.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["reward-1"] } },
+      data: { status: "INACTIVE" },
+    });
+    expect(db.loyaltyReward.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test("falls back to matching on name when the client sends no id", async () => {
+    db.loyaltyReward.findMany.mockResolvedValueOnce([{ id: "reward-1", name: "Free Coffee" }]);
+
+    await applyRewardsStep(ORG, { rewards: [reward({ pointsCost: 4000 })] });
+
+    expect(db.loyaltyReward.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "reward-1" } }),
+    );
+    expect(db.loyaltyReward.create).not.toHaveBeenCalled();
+  });
+
+  test("an unknown id creates rather than throwing — a stale client cannot wedge the step", async () => {
+    db.loyaltyReward.findMany.mockResolvedValueOnce([]);
+
+    await applyRewardsStep(ORG, {
+      rewards: [reward({ id: "00000000-0000-4000-8000-000000000000" })],
+    });
+
+    expect(db.loyaltyReward.create).toHaveBeenCalled();
+    expect(db.loyaltyReward.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("messages", () => {
@@ -440,8 +562,8 @@ describe("activate", () => {
   });
 
   test("activates and warns about soft gaps without blocking", async () => {
-    db.loyaltyEarningRule.findFirst.mockResolvedValue({ id: "rule-1" });
-    db.loyaltyReward.count.mockResolvedValue(0);
+    db.loyaltyEarningRule.findFirst.mockResolvedValue(DEFAULT_RULE);
+    db.loyaltyReward.findMany.mockResolvedValue([]);
     db.whatsappSettings.count.mockResolvedValue(0);
 
     const result = await activateProgram(ORG);
@@ -453,11 +575,54 @@ describe("activate", () => {
   });
 
   test("a complete programme activates with no warnings", async () => {
-    db.loyaltyEarningRule.findFirst.mockResolvedValue({ id: "rule-1" });
-    db.loyaltyReward.count.mockResolvedValue(3);
+    db.loyaltyEarningRule.findFirst.mockResolvedValue(DEFAULT_RULE);
+    db.loyaltyReward.findMany.mockResolvedValue([HEALTHY_REWARD]);
     db.whatsappSettings.count.mockResolvedValue(1);
 
     expect((await activateProgram(ORG)).warnings).toEqual([]);
+  });
+
+  test("warns, without blocking, when the programme gives back more than a margin", async () => {
+    db.loyaltyEarningRule.findFirst.mockResolvedValue(DEFAULT_RULE);
+    // 150 of value for 100 points at 1 point per unit: spend 100, get 150 back.
+    db.loyaltyReward.findMany.mockResolvedValue([{ ...HEALTHY_REWARD, pointsCost: 100 }]);
+    db.whatsappSettings.count.mockResolvedValue(1);
+
+    const result = await activateProgram(ORG);
+
+    expect(result.warnings).toContainEqual(expect.stringContaining("150% of revenue"));
+    expect(db.loyaltyProgram.update).toHaveBeenCalled();
+  });
+
+  test("warns when the default rule awards nothing — the hard guard only checks it exists", async () => {
+    db.loyaltyEarningRule.findFirst.mockResolvedValue({
+      ...DEFAULT_RULE,
+      pointsPerUnit: 0,
+      bonusPoints: 0,
+    });
+    db.loyaltyReward.findMany.mockResolvedValue([HEALTHY_REWARD]);
+    db.whatsappSettings.count.mockResolvedValue(1);
+
+    expect((await activateProgram(ORG)).warnings).toContainEqual(
+      expect.stringContaining("awards no points"),
+    );
+  });
+
+  test("says so when there is no order value to estimate against", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue({ ...PROGRAM, averageOrderValue: null });
+    db.loyaltyEarningRule.findFirst.mockResolvedValue(DEFAULT_RULE);
+    db.loyaltyReward.findMany.mockResolvedValue([
+      {
+        name: "10% Off",
+        pointsCost: 500,
+        rewardValue: { type: "discount_percentage", percentage: 10 },
+      },
+    ]);
+    db.whatsappSettings.count.mockResolvedValue(1);
+
+    expect((await activateProgram(ORG)).warnings).toContainEqual(
+      expect.stringContaining("could not estimate"),
+    );
   });
 
   test("a missing programme is a 409, not a crash", async () => {

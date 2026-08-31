@@ -7,6 +7,7 @@ import {
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { calculateGiveback, givebackBand, toFiniteNumber } from "../giveback.js";
 import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 import {
   createTemplate,
@@ -24,6 +25,7 @@ import type {
 import {
   LOYALTY_PRESETS,
   PRESET_REWARD_STATUS,
+  RETIRED_REWARD_STATUS,
   suggestPresetKey,
   type LoyaltyPresetKey,
 } from "./presets.js";
@@ -151,6 +153,7 @@ export async function applyBasicsStep(orgId: string, input: BasicsStepInput) {
     signupBonus: input.signupBonus,
     referralBonus: input.referralBonus,
     refereeBonus: input.refereeBonus,
+    averageOrderValue: input.averageOrderValue,
     onboardingPresetKey: input.presetKey,
     onboardingStep: "basics",
   };
@@ -284,7 +287,11 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
       where: { programId: program.id },
       select: { id: true, name: true },
     });
+    const existingIds = new Set(existing.map((r) => r.id));
     const byName = new Map(existing.map((r) => [r.name.trim().toLowerCase(), r.id]));
+
+    /** Rows the payload still accounts for. Anything else on the programme has been removed. */
+    const keptIds = new Set<string>();
 
     for (const reward of input.rewards) {
       const data = {
@@ -302,12 +309,57 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
         redemptionRules: {},
       };
 
-      const id = byName.get(reward.name.trim().toLowerCase());
+      // Prefer the id the client round-tripped. Falling back to the name keeps older
+      // clients — and the preset rows, which have no id yet — working.
+      const id =
+        reward.id && existingIds.has(reward.id)
+          ? reward.id
+          : byName.get(reward.name.trim().toLowerCase());
+
       if (id) {
         const { redemptionRules: _skip, ...updatable } = data;
         await tx.loyaltyReward.update({ where: { id }, data: updatable });
+        keptIds.add(id);
       } else {
-        await tx.loyaltyReward.create({ data: { ...data, programId: program.id } });
+        const created = await tx.loyaltyReward.create({
+          data: { ...data, programId: program.id },
+        });
+        keptIds.add(created.id);
+      }
+    }
+
+    // Removing a row in the wizard used to do nothing at all: the reward stayed ACTIVE and
+    // reappeared on the next visit, because the step prefills from what is stored.
+    const removedIds = existing.map((r) => r.id).filter((id) => !keptIds.has(id));
+
+    if (removedIds.length > 0) {
+      // A reward someone already redeemed or is holding cannot simply vanish —
+      // `LoyaltyRedemption.reward` has no cascade, so the delete would fail, and a customer
+      // holding it would be left pointing at nothing. Retire those instead.
+      const [redeemed, issued] = await Promise.all([
+        tx.loyaltyRedemption.findMany({
+          where: { rewardId: { in: removedIds } },
+          select: { rewardId: true },
+          distinct: ["rewardId"],
+        }),
+        tx.customerReward.findMany({
+          where: { rewardId: { in: removedIds } },
+          select: { rewardId: true },
+          distinct: ["rewardId"],
+        }),
+      ]);
+
+      const inUse = new Set([...redeemed.map((r) => r.rewardId), ...issued.map((r) => r.rewardId)]);
+      const deletable = removedIds.filter((id) => !inUse.has(id));
+
+      if (inUse.size > 0) {
+        await tx.loyaltyReward.updateMany({
+          where: { id: { in: [...inUse] } },
+          data: { status: RETIRED_REWARD_STATUS },
+        });
+      }
+      if (deletable.length > 0) {
+        await tx.loyaltyReward.deleteMany({ where: { id: { in: deletable } } });
       }
     }
 
@@ -496,7 +548,7 @@ export async function activateProgram(orgId: string) {
   // "active" programme would silently do nothing at all.
   const defaultRule = await prisma.loyaltyEarningRule.findFirst({
     where: { programId: program.id, isDefault: true, status: ACTIVE },
-    select: { id: true },
+    select: { id: true, pointsPerUnit: true, multiplier: true, bonusPoints: true },
   });
 
   if (!defaultRule) {
@@ -507,17 +559,90 @@ export async function activateProgram(orgId: string) {
   }
 
   // Soft gaps: worth telling the user about, not worth blocking a launch over.
-  const [rewardCount, waSettingsCount] = await Promise.all([
-    prisma.loyaltyReward.count({ where: { programId: program.id, status: PRESET_REWARD_STATUS } }),
+  const [rewards, waSettingsCount, tiers] = await Promise.all([
+    prisma.loyaltyReward.findMany({
+      where: { programId: program.id, status: PRESET_REWARD_STATUS },
+      select: { name: true, pointsCost: true, rewardValue: true },
+    }),
     prisma.whatsappSettings.count({ where: { orgId } }),
+    prisma.loyaltyTier.findMany({
+      where: { programId: program.id },
+      select: { name: true, threshold: true, pointsMultiplier: true },
+    }),
   ]);
 
   const warnings: string[] = [];
-  if (rewardCount === 0) {
+  if (rewards.length === 0) {
     warnings.push("No rewards yet — customers can earn points but have nothing to redeem.");
   }
   if (waSettingsCount === 0) {
     warnings.push("No WhatsApp channel connected — loyalty messages cannot be delivered.");
+  }
+
+  // What the programme costs. The wizard shows this live while the user is setting the
+  // numbers, but activate is reachable without it (a resumed session that jumps straight
+  // to review, a direct call), and the rewards catalog keeps changing after launch — so
+  // this is the last point at which anyone checks. It never blocks: a deliberately
+  // generous programme is a legitimate choice, the goal is only informed consent.
+  const giveback = calculateGiveback({
+    earnRate: {
+      pointsPerUnit: toFiniteNumber(defaultRule.pointsPerUnit),
+      multiplier: toFiniteNumber(defaultRule.multiplier, 1),
+      bonusPoints: toFiniteNumber(defaultRule.bonusPoints),
+    },
+    rewards: rewards.map((reward) => ({
+      name: reward.name,
+      pointsCost: reward.pointsCost,
+      rewardValue: reward.rewardValue,
+    })),
+    averageOrderValue:
+      program.averageOrderValue === null ? null : toFiniteNumber(program.averageOrderValue),
+    tiersEnabled: program.tiersEnabled,
+    tiers: tiers.map((tier) => ({
+      name: tier.name,
+      threshold: toFiniteNumber(tier.threshold),
+      pointsMultiplier: toFiniteNumber(tier.pointsMultiplier, 1),
+    })),
+    bonuses: {
+      signupBonus: program.signupBonus,
+      referralBonus: program.referralBonus,
+      refereeBonus: program.refereeBonus,
+    },
+  });
+
+  // `band` is judged at the most generous tier, so the figure quoted has to be the same
+  // one — quoting the base rate here would warn about a number the merchant cannot find.
+  // When a tier is what crosses the line, name it: otherwise the warning sends them to
+  // edit an earning rule that is perfectly reasonable.
+  const pct = giveback.givebackPctTop;
+  const viaTier =
+    giveback.topTier && givebackBand(giveback.givebackPct) !== giveback.band
+      ? ` (${giveback.topTier.name} members earn ${giveback.topTier.pointsMultiplier}x)`
+      : "";
+
+  if (giveback.band === "excessive" && pct !== null) {
+    warnings.push(
+      `This programme gives back about ${pct.toFixed(0)}% of revenue at its most generous reward` +
+        `${giveback.bestReward ? ` (${giveback.bestReward.name})` : ""}${viaTier} — likely more than your margin on a sale.`,
+    );
+  } else if (giveback.band === "generous" && pct !== null) {
+    warnings.push(
+      `This programme gives back about ${pct.toFixed(1)}% of revenue at its most generous reward${viaTier} — more than most loyalty programmes. Fine if that is deliberate.`,
+    );
+  }
+
+  // The existing hard guard only checks that a default rule *exists*, not that it awards
+  // anything. A rule of 0 points per unit with no flat bonus activates a silent programme.
+  if (giveback.status === "no_earning") {
+    warnings.push(
+      "Your default earning rule awards no points — customers will earn nothing on a purchase.",
+    );
+  }
+
+  if (giveback.status === "needs_average_order_value") {
+    warnings.push(
+      "We could not estimate what this programme costs you — set a typical order value in loyalty settings.",
+    );
   }
 
   const activated = await prisma.loyaltyProgram.update({

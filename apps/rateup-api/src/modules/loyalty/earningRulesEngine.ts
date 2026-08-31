@@ -46,6 +46,7 @@ export class EarningRulesEngine {
       where: { id: customerId },
       include: {
         currentTier: true,
+        program: { select: { tiersEnabled: true } },
       },
     });
 
@@ -53,7 +54,14 @@ export class EarningRulesEngine {
       throw new Error("Customer not found");
     }
 
-    const tierMultiplier = customer.currentTier?.pointsMultiplier || 1.0;
+    // Turning tiers off has to stop tier earning, not just tier *promotion*. `currentTierId`
+    // is left in place when the flag flips (customers keep their standing if it is turned
+    // back on), so reading the multiplier unconditionally kept every existing tier member
+    // earning at their old rate forever — and made the giveback estimate, which assumes a
+    // flat rate when tiers are off, disagree with what was actually awarded.
+    const tierMultiplier = customer.program.tiersEnabled
+      ? customer.currentTier?.pointsMultiplier || 1.0
+      : 1.0;
 
     // 3. Find the first matching rule
     let matchedRule = null;
