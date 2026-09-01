@@ -38,6 +38,26 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-31-channels-page-rebuilt",
+    title: "Channels, rebuilt to match setup",
+    summary:
+      "Settings \u2192 Channels is now laid out like the setup guide, overview and channel pages alike: one row per thing with its icon, what it is, its status, and its action on the right \u2014 instead of cards side by side. On the overview WhatsApp leads, because Meta hangs Messenger and Instagram off that connection, and those two say plainly that they are waiting on it rather than only greying out. Open one and the page now names the channel you opened, and each linked account reads as a row: the Page or Instagram account attached to it, a button to connect or change it, and a quieter way to disconnect. Nothing moved and nothing was removed \u2014 the same connect, edit and disconnect actions, in a layout that matches the rest of the app.",
+    publishedAt: "2026-08-31",
+    kinds: ["improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
+    id: "2026-08-31-setup-guide-v2",
+    title: "A rebuilt setup guide",
+    summary:
+      'The setup guide has been rebuilt and now lives inside the app, as Get started at the top of the sidebar, instead of on its own page outside it — so you can work through it without leaving whatever you were doing. It is organised around what actually blocks you from sending: the three Meta steps — connect WhatsApp, verify the business, add payment — come first and are marked required, with verification held back until you are connected. Connecting now happens on the guide itself: Log in with Facebook opens Meta\'s signup in place, so you never leave the page to do it. Below them, Instagram and Facebook Messenger are steps of their own, and they connect in place as well \u2014 the same picker channel settings uses, opened right on the row \u2014 so every channel that shares the inbox is connected without ever leaving the guide. Everything else — your first message template, business hours, auto-replies, loyalty, team invites — sits under "Make it work for you" and can be done in any order. Anything that is not one of the three Meta steps can also be skipped outright, if you are never going to do it \u2014 a skipped step dims, stops counting toward your progress, and leaves the sidebar, so the guide can still reach the end without it. You can undo that from the same row whenever you change your mind. The sidebar lists every step with its progress and jumps straight to it. Once you have finished or skipped them all, or hidden the guide, Get started leaves the sidebar.',
+    publishedAt: "2026-08-31",
+    kinds: ["improvement"],
+    area: "Onboarding",
+    link: { to: "/dashboard/setup", label: "Open the setup guide" },
+  },
+  {
     id: "2026-08-29-ticket-boards-retired",
     title: "Ticket boards have been retired",
     summary:

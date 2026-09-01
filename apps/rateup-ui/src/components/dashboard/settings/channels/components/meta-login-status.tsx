@@ -1,18 +1,16 @@
-import { IconLogout, IconPencilMinus } from "@tabler/icons-react";
+import { IconBrandWhatsapp, IconLogout, IconPencilMinus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useDeregisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
+import { ContinueWithFacebookButton } from "@/components/common/continue-with-facebook-button.tsx";
+import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
-import { ContinueWithFacebookButton } from "./continue-with-facebook-button.tsx";
 import { WaSettingEditModal } from "./wa-setting-edit-modal.tsx";
 
 type WaSetting = WaSettings[number];
@@ -39,124 +37,78 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
 
   if (!waSettings?.length) {
     return (
-      <div className="flex h-full items-center justify-center rounded bg-muted">
-        <div className="flex flex-col items-center gap-4 p-4">
-          <p className="text-sm">No WhatsApp Business Accounts Connected</p>
-          <ContinueWithFacebookButton />
-        </div>
+      <div className="mt-4 flex flex-col items-center gap-4 rounded-lg border border-dashed bg-muted p-8">
+        <p className="text-sm text-muted-foreground">
+          {translations("No WhatsApp Business accounts connected yet.")}
+        </p>
+        <ContinueWithFacebookButton buttonType="login_with" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">
-            {translations("Linked WhatsApp Business Accounts")}
-          </h3>
-          <p className="text-xs text-muted-foreground mt-1">
-            {translations("Manage your connected WhatsApp Business accounts and team access")}
-          </p>
-        </div>
+    <div className="mt-4 flex flex-col gap-3">
+      <div className="flex justify-end">
         <ContinueWithFacebookButton />
       </div>
-      <div className="grid gap-4">
-        {waSettings.map((setting) => {
-          return (
-            <Card
-              key={setting.id || setting.phoneId}
-              className="border-border/80 hover:border-border/90 transition-colors"
+
+      {waSettings.map((setting) => (
+        <SetupRowCard
+          key={setting.id || setting.phoneId}
+          icon={IconBrandWhatsapp}
+          tint="green"
+          done
+          title={setting.phoneDisplayName || setting.phone || translations("Unnamed account")}
+          description={setting.phone}
+          badges={<Badge variant="secondary">{setting.type || "Automated"}</Badge>}
+          detail={
+            <span className="flex flex-wrap gap-x-8 gap-y-2 pt-1">
+              <IdField label={translations("Business ID")} value={setting.wabaId} />
+              <IdField label={translations("Phone ID")} value={setting.phoneId} />
+              <IdField label={translations("App ID")} value={setting.appId} />
+            </span>
+          }
+          action={
+            <Button
+              variant="secondary"
+              className="h-10 w-full"
+              onClick={() => {
+                setSelectedWaSettings(setting);
+                openEdit();
+              }}
             >
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  {/* Header with Edit & Logout buttons */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-base">
-                          {setting.phoneDisplayName || setting.phone || "Unnamed Account"}
-                        </h4>
-                        <Badge variant="secondary" className="text-[10px]">
-                          {setting.type || "Automated"}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{setting.phone}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedWaSettings(setting);
-                                openEdit();
-                              }}
-                            >
-                              <IconPencilMinus size={18} />
-                            </Button>
-                          }
-                        />
-                        <TooltipContent>{translations("Edit channel")}</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleDeRegister(setting.phoneId)}
-                            >
-                              <IconLogout size={18} />
-                            </Button>
-                          }
-                        />
-                        <TooltipContent>
-                          {translations("Logout from this WhatsApp Business Account")}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
+              <IconPencilMinus size={16} />
+              {translations("Edit channel")}
+            </Button>
+          }
+          actionFooter={
+            <button
+              type="button"
+              onClick={() => handleDeRegister(setting.phoneId)}
+              className="flex cursor-pointer items-center gap-1 text-xs text-destructive underline-offset-4 hover:underline"
+            >
+              <IconLogout size={13} />
+              {translations("Disconnect")}
+            </button>
+          }
+        />
+      ))}
 
-                  <Separator />
-
-                  {/* Account Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wide">
-                        {translations("Business ID")}
-                      </p>
-                      <code className="text-sm font-mono text-foreground mt-1 break-all">
-                        {setting.wabaId}
-                      </code>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wide">
-                        {translations("Phone ID")}
-                      </p>
-                      <code className="text-sm font-mono text-foreground mt-1 break-all">
-                        {setting.phoneId}
-                      </code>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wide">
-                        {translations("App ID")}
-                      </p>
-                      <code className="text-sm font-mono text-foreground mt-1 break-all">
-                        {setting.appId}
-                      </code>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
       <WaSettingEditModal opened={openedEdit} close={closeEdit} waSetting={selectedWaSettings} />
     </div>
+  );
+}
+
+/** A Meta identifier, shown as the monospace value it is. */
+function IdField({ label, value }: Readonly<{ label: string; value?: string | null }>) {
+  if (!value) return null;
+
+  return (
+    <span className="flex flex-col">
+      <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        {label}
+      </span>
+      <code className="font-mono text-sm break-all">{value}</code>
+    </span>
   );
 }

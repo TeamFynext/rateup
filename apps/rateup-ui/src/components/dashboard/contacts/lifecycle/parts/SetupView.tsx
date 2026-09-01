@@ -394,7 +394,7 @@ export function StageListItem({
             onChange={(event) => setDescriptionDraft(event.target.value)}
             onBlur={() => onUpdateDescription(descriptionDraft)}
             placeholder={t("Enter stage description details...")}
-            className="h-14 resize-none border-input bg-background text-xs font-semibold text-foreground focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-14 resize-none border-input bg-background text-xs font-semibold text-foreground focus-visible:ring-3 focus-visible:ring-ring"
           />
         ) : null}
       </div>
@@ -486,7 +486,7 @@ export function AddStageForm({
             size="icon"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className={cn(
-              "flex size-10 items-center justify-center rounded-xl border border-transparent text-lg text-white shadow-xs transition-all focus-visible:outline-none focus-visible:ring-1",
+              "flex size-10 items-center justify-center rounded-xl border border-transparent text-lg text-white shadow-xs transition-all focus-visible:outline-none focus-visible:ring-3",
               addColor,
               "focus-visible:ring-ring",
             )}

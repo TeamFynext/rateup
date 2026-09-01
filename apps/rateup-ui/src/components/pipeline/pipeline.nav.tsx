@@ -106,7 +106,7 @@ function countFor(
  * are dropped rather than rendered as an empty heading.
  */
 function section(group: string, items: NavEntry[]): NavEntry[] {
-  return items.length > 0 ? [{ group, showTitle: true, items }] : [];
+  return items.length > 0 ? [{ group, items }] : [];
 }
 
 /** The Pipeline entry's `items`, in sidebar order. */

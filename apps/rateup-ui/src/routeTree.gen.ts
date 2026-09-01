@@ -71,12 +71,12 @@ import { Route as DashboardPipelineIndexRouteImport } from './routes/dashboard/p
 import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
 import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardSetupIndexRouteImport } from './routes/dashboard/setup/index'
 import { Route as DashboardSurveysIndexRouteImport } from './routes/dashboard/surveys/index'
 import { Route as DashboardTestimonialIndexRouteImport } from './routes/dashboard/testimonial/index'
 import { Route as DashboardWhatsappIndexRouteImport } from './routes/dashboard/whatsapp/index'
 import { Route as authLoginCompleteLoginIndexRouteImport } from './routes/(auth)/login/complete-login/index'
 import { Route as authLoginResetPasswordIndexRouteImport } from './routes/(auth)/login/reset-password/index'
-import { Route as authLoginSetupIndexRouteImport } from './routes/(auth)/login/setup/index'
 import { Route as authLoginVerifyEmailIndexRouteImport } from './routes/(auth)/login/verify-email/index'
 import { Route as authLoginVerifyPhoneNumberIndexRouteImport } from './routes/(auth)/login/verify-phone-number/index'
 import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
@@ -503,6 +503,11 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardSetupIndexRoute = DashboardSetupIndexRouteImport.update({
+  id: '/setup/',
+  path: '/setup/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardSurveysIndexRoute = DashboardSurveysIndexRouteImport.update({
   id: '/surveys/',
   path: '/surveys/',
@@ -531,11 +536,6 @@ const authLoginResetPasswordIndexRoute =
     path: '/login/reset-password/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const authLoginSetupIndexRoute = authLoginSetupIndexRouteImport.update({
-  id: '/(auth)/login/setup/',
-  path: '/login/setup/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const authLoginVerifyEmailIndexRoute =
   authLoginVerifyEmailIndexRouteImport.update({
     id: '/(auth)/login/verify-email/',
@@ -1202,6 +1202,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/setup/': typeof DashboardSetupIndexRoute
   '/dashboard/surveys/': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial/': typeof DashboardTestimonialIndexRoute
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
@@ -1210,7 +1211,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password/': typeof authLoginResetPasswordIndexRoute
-  '/login/setup/': typeof authLoginSetupIndexRoute
   '/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
   '/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/blog/$slug/': typeof marketingBlogSlugIndexRoute
@@ -1368,6 +1368,7 @@ export interface FileRoutesByTo {
   '/dashboard/qrCreator': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
+  '/dashboard/setup': typeof DashboardSetupIndexRoute
   '/dashboard/surveys': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial': typeof DashboardTestimonialIndexRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappIndexRoute
@@ -1376,7 +1377,6 @@ export interface FileRoutesByTo {
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/login/complete-login': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password': typeof authLoginResetPasswordIndexRoute
-  '/login/setup': typeof authLoginSetupIndexRoute
   '/login/verify-email': typeof authLoginVerifyEmailIndexRoute
   '/login/verify-phone-number': typeof authLoginVerifyPhoneNumberIndexRoute
   '/blog/$slug': typeof marketingBlogSlugIndexRoute
@@ -1540,6 +1540,7 @@ export interface FileRoutesById {
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/setup/': typeof DashboardSetupIndexRoute
   '/dashboard/surveys/': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial/': typeof DashboardTestimonialIndexRoute
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
@@ -1548,7 +1549,6 @@ export interface FileRoutesById {
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/(auth)/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/(auth)/login/reset-password/': typeof authLoginResetPasswordIndexRoute
-  '/(auth)/login/setup/': typeof authLoginSetupIndexRoute
   '/(auth)/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
   '/(auth)/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/(marketing)/blog/$slug/': typeof marketingBlogSlugIndexRoute
@@ -1713,6 +1713,7 @@ export interface FileRouteTypes {
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
+    | '/dashboard/setup/'
     | '/dashboard/surveys/'
     | '/dashboard/testimonial/'
     | '/dashboard/whatsapp/'
@@ -1721,7 +1722,6 @@ export interface FileRouteTypes {
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/login/complete-login/'
     | '/login/reset-password/'
-    | '/login/setup/'
     | '/login/verify-email/'
     | '/login/verify-phone-number/'
     | '/blog/$slug/'
@@ -1879,6 +1879,7 @@ export interface FileRouteTypes {
     | '/dashboard/qrCreator'
     | '/dashboard/quickAccessLinks'
     | '/dashboard/settings'
+    | '/dashboard/setup'
     | '/dashboard/surveys'
     | '/dashboard/testimonial'
     | '/dashboard/whatsapp'
@@ -1887,7 +1888,6 @@ export interface FileRouteTypes {
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/login/complete-login'
     | '/login/reset-password'
-    | '/login/setup'
     | '/login/verify-email'
     | '/login/verify-phone-number'
     | '/blog/$slug'
@@ -2050,6 +2050,7 @@ export interface FileRouteTypes {
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
+    | '/dashboard/setup/'
     | '/dashboard/surveys/'
     | '/dashboard/testimonial/'
     | '/dashboard/whatsapp/'
@@ -2058,7 +2059,6 @@ export interface FileRouteTypes {
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/(auth)/login/complete-login/'
     | '/(auth)/login/reset-password/'
-    | '/(auth)/login/setup/'
     | '/(auth)/login/verify-email/'
     | '/(auth)/login/verify-phone-number/'
     | '/(marketing)/blog/$slug/'
@@ -2186,7 +2186,6 @@ export interface RootRouteChildren {
   AuthShopifyIndexRoute: typeof AuthShopifyIndexRoute
   authLoginCompleteLoginIndexRoute: typeof authLoginCompleteLoginIndexRoute
   authLoginResetPasswordIndexRoute: typeof authLoginResetPasswordIndexRoute
-  authLoginSetupIndexRoute: typeof authLoginSetupIndexRoute
   authLoginVerifyEmailIndexRoute: typeof authLoginVerifyEmailIndexRoute
   authLoginVerifyPhoneNumberIndexRoute: typeof authLoginVerifyPhoneNumberIndexRoute
   marketingPricingShopifyIndexRoute: typeof marketingPricingShopifyIndexRoute
@@ -2664,6 +2663,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/setup/': {
+      id: '/dashboard/setup/'
+      path: '/setup'
+      fullPath: '/dashboard/setup/'
+      preLoaderRoute: typeof DashboardSetupIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/surveys/': {
       id: '/dashboard/surveys/'
       path: '/surveys'
@@ -2697,13 +2703,6 @@ declare module '@tanstack/react-router' {
       path: '/login/reset-password'
       fullPath: '/login/reset-password/'
       preLoaderRoute: typeof authLoginResetPasswordIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/login/setup/': {
-      id: '/(auth)/login/setup/'
-      path: '/login/setup'
-      fullPath: '/login/setup/'
-      preLoaderRoute: typeof authLoginSetupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/login/verify-email/': {
@@ -3522,6 +3521,7 @@ interface DashboardRouteRouteChildren {
   DashboardQrCreatorIndexRoute: typeof DashboardQrCreatorIndexRoute
   DashboardQuickAccessLinksIndexRoute: typeof DashboardQuickAccessLinksIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+  DashboardSetupIndexRoute: typeof DashboardSetupIndexRoute
   DashboardSurveysIndexRoute: typeof DashboardSurveysIndexRoute
   DashboardTestimonialIndexRoute: typeof DashboardTestimonialIndexRoute
   DashboardWhatsappIndexRoute: typeof DashboardWhatsappIndexRoute
@@ -3591,6 +3591,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardQrCreatorIndexRoute: DashboardQrCreatorIndexRoute,
   DashboardQuickAccessLinksIndexRoute: DashboardQuickAccessLinksIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  DashboardSetupIndexRoute: DashboardSetupIndexRoute,
   DashboardSurveysIndexRoute: DashboardSurveysIndexRoute,
   DashboardTestimonialIndexRoute: DashboardTestimonialIndexRoute,
   DashboardWhatsappIndexRoute: DashboardWhatsappIndexRoute,
@@ -3723,7 +3724,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthShopifyIndexRoute: AuthShopifyIndexRoute,
   authLoginCompleteLoginIndexRoute: authLoginCompleteLoginIndexRoute,
   authLoginResetPasswordIndexRoute: authLoginResetPasswordIndexRoute,
-  authLoginSetupIndexRoute: authLoginSetupIndexRoute,
   authLoginVerifyEmailIndexRoute: authLoginVerifyEmailIndexRoute,
   authLoginVerifyPhoneNumberIndexRoute: authLoginVerifyPhoneNumberIndexRoute,
   marketingPricingShopifyIndexRoute: marketingPricingShopifyIndexRoute,

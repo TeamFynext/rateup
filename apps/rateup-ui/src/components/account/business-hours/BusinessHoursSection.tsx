@@ -116,7 +116,9 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
 
   return (
     <>
-      <Card className="p-6 flex flex-col gap-4">
+      {/* Anchored: the setup guide's business-hours step deep-links to this section,
+          which sits at the foot of a long settings page. */}
+      <Card id="business-hours" className="p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">

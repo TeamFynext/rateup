@@ -62,6 +62,11 @@ import { useTranslation } from "react-i18next";
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
+import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
+import {
+  buildSetupNavItems,
+  buildSetupNavProgress,
+} from "@/components/dashboard/setup/setup.nav.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import {
   buildPipelineNavItems,
@@ -126,9 +131,21 @@ export interface NavEntry {
   description?: React.ReactNode;
   hint?: React.ReactNode;
   count?: number;
+  /**
+   * Draws a done/not-done marker at the row's inline end. A plain flag rather than
+   * a rendered node: `AppSidebar` diffs entries with `JSON.stringify`, which a React
+   * element does not survive.
+   */
+  done?: boolean;
+  /** Meter at the foot of this section's panel. Same reason it is data, not markup. */
+  progress?: NavProgress;
+  /**
+   * Passed to the row's `Link`. `false` keeps the current scroll position on
+   * navigation, for a row whose destination scrolls itself. Omitted rows follow the
+   * router's `scrollRestoration`, which resets to the top.
+   */
+  resetScroll?: boolean;
   isActive?: boolean;
-  showTitle?: boolean;
-  settingsStyle?: boolean;
   hasSepeartorOnTop?: boolean;
   hasSeperatorOnBottom?: boolean;
   showClearButton?: boolean;
@@ -136,6 +153,14 @@ export interface NavEntry {
   clearFilter?: () => void;
   handleClick?: () => void;
   [key: string]: unknown;
+}
+
+/** A "x of y done" meter a section can hang at the foot of its panel. */
+export interface NavProgress {
+  /** Already translated — the sidebar renders it verbatim. */
+  label: string;
+  done: number;
+  total: number;
 }
 
 /** Everything the sidebar's nav tree is derived from, gathered by `AppSidebar`. */
@@ -154,6 +179,7 @@ interface NavMainInput {
   user: User | null;
   sectionCounts: ChatContactCountStore["sectionCounts"];
   pipelineNav: PipelineNavInput;
+  setupNav: SetupNavInput;
 }
 
 export function useNavMain({
@@ -171,14 +197,30 @@ export function useNavMain({
   user,
   sectionCounts,
   pipelineNav,
+  setupNav,
 }: NavMainInput) {
   const { t } = useTranslation();
 
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
-  return useMemo<NavEntry[]>(
-    () => [
+  return useMemo<NavEntry[]>(() => {
+    // Empty once the org has finished or dismissed setup, which is what takes the
+    // rocket back out of the rail.
+    const setupItems = user?.role === UserRole.SUPADM ? buildSetupNavItems(setupNav) : [];
+
+    return [
+      ...(setupItems.length > 0
+        ? [
+            {
+              title: t("Get started"),
+              url: "/dashboard/setup",
+              icon: IconRocket,
+              progress: buildSetupNavProgress(setupNav, t),
+              items: setupItems,
+            },
+          ]
+        : []),
       // {
       //   title: t("Home"),
       //   url: "/dashboard",
@@ -244,7 +286,8 @@ export function useNavMain({
                   count: sectionCounts?.spamCount || 0,
                 },
                 {
-                  group: "Filter",
+                  // No `group`: the filters read as a block under the tabs, and a
+                  // "Filter" heading over them says nothing the rows do not.
                   items: [
                     // Channel scopes every tab, so it leads the filter group.
                     ...(channels.length > 0
@@ -775,7 +818,6 @@ export function useNavMain({
         title: t("Settings"),
         url: "/dashboard/settings",
         icon: IconSettings,
-        settingsStyle: true,
         items: [
           {
             group: t("Account Settings"),
@@ -876,25 +918,25 @@ export function useNavMain({
             : []),
         ],
       },
-    ],
-    [
-      channels,
-      chatFilterStore.filter.conversationTags,
-      chatFilterStore.filter.labels,
-      chatFilterStore.filter.lifecycle,
-      chatFilterStore.filter.phone,
-      contactLabels,
-      conversationTags,
-      handleFilter,
-      hasTeamFeature,
-      hiddenModules,
-      lifecycles,
-      pipelineNav,
-      staff.length,
-      subscription,
-      t,
-      teams.length,
-      user?.role,
-    ],
-  );
+    ];
+  }, [
+    channels,
+    chatFilterStore.filter.conversationTags,
+    chatFilterStore.filter.labels,
+    chatFilterStore.filter.lifecycle,
+    chatFilterStore.filter.phone,
+    contactLabels,
+    conversationTags,
+    handleFilter,
+    hasTeamFeature,
+    hiddenModules,
+    lifecycles,
+    pipelineNav,
+    setupNav,
+    staff.length,
+    subscription,
+    t,
+    teams.length,
+    user?.role,
+  ]);
 }
