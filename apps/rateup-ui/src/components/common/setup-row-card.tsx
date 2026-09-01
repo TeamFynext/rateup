@@ -85,7 +85,9 @@ export function SetupRowCard({
         {detail}
       </div>
 
-      <div className="flex shrink-0 flex-col items-center gap-2.5 sm:w-45">
+      {/* 224px, not less: the Facebook brand button is the widest action any row
+          carries, and its label is fixed by Meta's spec rather than by us. */}
+      <div className="flex shrink-0 flex-col items-center gap-2.5 sm:w-56">
         {action}
         {actionFooter}
       </div>

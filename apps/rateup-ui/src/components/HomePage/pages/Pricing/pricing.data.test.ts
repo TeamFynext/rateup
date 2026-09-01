@@ -1,8 +1,9 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import {
   adviseOnTopUp,
   buildTiers,
+  detectPricingCurrency,
   estimateTopUp,
   resolveDisplayPrice,
   selectGatewayPlan,
@@ -55,7 +56,13 @@ function offeredTiers(
 
 describe("which tiers the in-app dialog offers", () => {
   const plans = [
-    { id: "1", name: "FREE PLAN", displayName: "Free", description: [], features: {} },
+    {
+      id: "1",
+      name: "FREE PLAN",
+      displayName: "Free",
+      description: [],
+      features: {},
+    },
     {
       id: "2",
       name: "PLUS PLAN",
@@ -83,7 +90,13 @@ describe("which tiers the in-app dialog offers", () => {
       monthlyPrice: 10_800,
       yearlyPrice: 108_000,
     },
-    { id: "5", name: "ENTERPRISE PLAN", displayName: "Enterprise", description: [], features: {} },
+    {
+      id: "5",
+      name: "ENTERPRISE PLAN",
+      displayName: "Enterprise",
+      description: [],
+      features: {},
+    },
   ] as unknown as Parameters<typeof buildTiers>[0];
 
   test("a cancelled Pro customer can come back on Pro, or move down to Plus", () => {
@@ -117,7 +130,13 @@ describe("which tiers the in-app dialog offers", () => {
 
 describe("dollar prices", () => {
   const [, plus, , , enterprise] = buildTiers([
-    { id: "1", name: "FREE PLAN", displayName: "Free", description: [], features: {} },
+    {
+      id: "1",
+      name: "FREE PLAN",
+      displayName: "Free",
+      description: [],
+      features: {},
+    },
     {
       id: "2",
       name: "PLUS PLAN",
@@ -129,10 +148,26 @@ describe("dollar prices", () => {
       yearlyPrice: 24_000,
       usdMonthlyPrice: 29,
       usdYearlyPrice: 290,
-      monthlyPaymentPlan: { planId: "plan_inr_m", amount: 2_400, currency: "INR" },
-      yearlyPaymentPlan: { planId: "plan_inr_y", amount: 24_000, currency: "INR" },
-      usdMonthlyPaymentPlan: { planId: "plan_usd_m", amount: 29, currency: "USD" },
-      usdYearlyPaymentPlan: { planId: "plan_usd_y", amount: 290, currency: "USD" },
+      monthlyPaymentPlan: {
+        planId: "plan_inr_m",
+        amount: 2_400,
+        currency: "INR",
+      },
+      yearlyPaymentPlan: {
+        planId: "plan_inr_y",
+        amount: 24_000,
+        currency: "INR",
+      },
+      usdMonthlyPaymentPlan: {
+        planId: "plan_usd_m",
+        amount: 29,
+        currency: "USD",
+      },
+      usdYearlyPaymentPlan: {
+        planId: "plan_usd_y",
+        amount: 290,
+        currency: "USD",
+      },
     },
     {
       id: "3",
@@ -154,13 +189,22 @@ describe("dollar prices", () => {
       monthlyPrice: 10_800,
       yearlyPrice: 108_000,
     },
-    { id: "5", name: "ENTERPRISE PLAN", displayName: "Enterprise", description: [], features: {} },
+    {
+      id: "5",
+      name: "ENTERPRISE PLAN",
+      displayName: "Enterprise",
+      description: [],
+      features: {},
+    },
   ] as unknown as Parameters<typeof buildTiers>[0]);
 
   test("shows the dollar list price the catalog sets, not a conversion", () => {
     // A quoted price beats a converted one — ₹24,000 / 80 would read $300, but the
     // catalog sells the tier at $290, and the customer is charged the list price.
-    expect(resolveDisplayPrice(plus, "USD")).toEqual({ monthly: 29, yearly: 290 });
+    expect(resolveDisplayPrice(plus, "USD")).toEqual({
+      monthly: 29,
+      yearly: 290,
+    });
   });
 
   test("shows no dollar price for a tier the catalog prices only in rupees", () => {
@@ -181,11 +225,17 @@ describe("dollar prices", () => {
     ] as unknown as Parameters<typeof buildTiers>[0])[0];
 
     expect(resolveDisplayPrice(inrOnly, "USD")).toBeNull();
-    expect(resolveDisplayPrice(inrOnly, "INR")).toEqual({ monthly: 2_400, yearly: 24_000 });
+    expect(resolveDisplayPrice(inrOnly, "INR")).toEqual({
+      monthly: 2_400,
+      yearly: 24_000,
+    });
   });
 
   test("leaves the price untouched in its own currency", () => {
-    expect(resolveDisplayPrice(plus, "INR")).toEqual({ monthly: 2_400, yearly: 24_000 });
+    expect(resolveDisplayPrice(plus, "INR")).toEqual({
+      monthly: 2_400,
+      yearly: 24_000,
+    });
   });
 
   test("a sales-led tier still has no price in either currency", () => {
@@ -196,7 +246,13 @@ describe("dollar prices", () => {
 
 describe("which gateway plan a checkout is created from", () => {
   const [, plus] = buildTiers([
-    { id: "1", name: "FREE PLAN", displayName: "Free", description: [], features: {} },
+    {
+      id: "1",
+      name: "FREE PLAN",
+      displayName: "Free",
+      description: [],
+      features: {},
+    },
     {
       id: "2",
       name: "PLUS PLAN",
@@ -206,10 +262,26 @@ describe("which gateway plan a checkout is created from", () => {
       currency: "INR",
       monthlyPrice: 2_400,
       yearlyPrice: 24_000,
-      monthlyPaymentPlan: { planId: "plan_inr_m", amount: 2_400, currency: "INR" },
-      yearlyPaymentPlan: { planId: "plan_inr_y", amount: 24_000, currency: "INR" },
-      usdMonthlyPaymentPlan: { planId: "plan_usd_m", amount: 29, currency: "USD" },
-      usdYearlyPaymentPlan: { planId: "plan_usd_y", amount: 290, currency: "USD" },
+      monthlyPaymentPlan: {
+        planId: "plan_inr_m",
+        amount: 2_400,
+        currency: "INR",
+      },
+      yearlyPaymentPlan: {
+        planId: "plan_inr_y",
+        amount: 24_000,
+        currency: "INR",
+      },
+      usdMonthlyPaymentPlan: {
+        planId: "plan_usd_m",
+        amount: 29,
+        currency: "USD",
+      },
+      usdYearlyPaymentPlan: {
+        planId: "plan_usd_y",
+        amount: 290,
+        currency: "USD",
+      },
     },
   ] as unknown as Parameters<typeof buildTiers>[0]);
 
@@ -236,7 +308,11 @@ describe("which gateway plan a checkout is created from", () => {
         currency: "INR",
         monthlyPrice: 2_400,
         yearlyPrice: 24_000,
-        yearlyPaymentPlan: { planId: "plan_inr_y", amount: 24_000, currency: "INR" },
+        yearlyPaymentPlan: {
+          planId: "plan_inr_y",
+          amount: 24_000,
+          currency: "INR",
+        },
       },
     ] as unknown as Parameters<typeof buildTiers>[0]);
 
@@ -308,7 +384,13 @@ describe("when packs stop being the cheaper answer", () => {
   ];
 
   const advise = (volume: number, packs: number, monthlyCostWithPacks: number | null) =>
-    adviseOnTopUp({ options, currentIncluded: 5_000, volume, packs, monthlyCostWithPacks });
+    adviseOnTopUp({
+      options,
+      currentIncluded: 5_000,
+      volume,
+      packs,
+      monthlyCostWithPacks,
+    });
 
   test("says nothing while the plan still covers the volume", () => {
     expect(advise(4_000, 0, 25).kind).toBe("none");
@@ -351,5 +433,34 @@ describe("when packs stop being the cheaper answer", () => {
         monthlyCostWithPacks: 175,
       }).kind,
     ).toBe("none");
+  });
+});
+
+describe("detectPricingCurrency", () => {
+  test("prices India in INR under either IANA spelling", () => {
+    // V8 hands back the deprecated alias, Firefox and Safari the primary name.
+    // Matching only one of them was pricing Indian visitors in USD.
+    expect(detectPricingCurrency("Asia/Calcutta")).toBe("INR");
+    expect(detectPricingCurrency("Asia/Kolkata")).toBe("INR");
+  });
+
+  test("prices everywhere else in USD", () => {
+    expect(detectPricingCurrency("America/New_York")).toBe("USD");
+    expect(detectPricingCurrency("Europe/London")).toBe("USD");
+    expect(detectPricingCurrency("Asia/Dubai")).toBe("USD");
+  });
+
+  test("falls back to USD when the browser will not report a timezone", () => {
+    // Locked-down and embedded browsers throw out of `resolvedOptions()`. Passing
+    // `undefined` would not exercise this: it hits the default parameter and detects
+    // the real zone, which is INR on an Indian developer's machine.
+    const spy = vi.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
+      throw new Error("Intl unavailable");
+    });
+    try {
+      expect(detectPricingCurrency()).toBe("USD");
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

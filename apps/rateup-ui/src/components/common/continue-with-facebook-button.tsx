@@ -21,10 +21,13 @@ import { MetaLoginButton } from "./meta-login-button.tsx";
 export function ContinueWithFacebookButton({
   className,
   buttonType,
+  size,
 }: Readonly<{
   className?: string;
   /** "login_with" reads "Log in with Facebook"; both wordings are on brand spec. */
   buttonType?: FacebookBrandButtonProps["buttonType"];
+  /** Mirrors the brand button's size, for hosts with a narrow action column. */
+  size?: FacebookBrandButtonProps["size"];
 }> = {}) {
   const [opened, { open, close }] = useDisclosure(false);
   const { t: translations } = useTranslation();
@@ -86,6 +89,7 @@ export function ContinueWithFacebookButton({
       <FacebookBrandButton
         onClick={open}
         buttonType={buttonType}
+        size={size}
         className={className}
         label={buttonType === "login_with" ? undefined : translations("Continue with Facebook")}
       />

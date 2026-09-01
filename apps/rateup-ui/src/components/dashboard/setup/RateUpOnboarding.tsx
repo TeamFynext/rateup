@@ -301,7 +301,13 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
           ) : task.id === "api" && !done ? (
             // Embedded Signup runs here rather than on the channel settings page —
             // the step is "connect", so connecting is what the button does.
-            <ContinueWithFacebookButton className="h-10 w-full" buttonType="login_with" />
+            // `medium` keeps the label inside the action column; `h-10` holds the
+            // row's shared control height regardless.
+            <ContinueWithFacebookButton
+              className="h-10 w-full"
+              buttonType="login_with"
+              size="medium"
+            />
           ) : task.group === "channels" ? (
             // Instagram and Messenger are configured in place too — the same modal
             // channel settings opens, without the trip to channel settings.

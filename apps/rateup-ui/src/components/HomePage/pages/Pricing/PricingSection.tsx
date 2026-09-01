@@ -14,7 +14,7 @@ import { ConversationCreditsDrawer } from "./ConversationCreditsDrawer.tsx";
 import {
   type BillingPeriod,
   buildTiers,
-  type PricingCurrency,
+  detectPricingCurrency,
   type PricingTier,
   tierRank,
   resolveConversationPack,
@@ -66,14 +66,11 @@ const PricingSection = ({
 }) => {
   const compact = variant === "compact";
   const navigate = useNavigate();
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const [period, setPeriod] = useState<BillingPeriod>("yearly");
-  // Seeded from the visitor's timezone as before, but now switchable: the catalog
-  // carries INR and USD products and a visitor abroad may still want to see INR.
-  const [currency, setCurrency] = useState<PricingCurrency>(
-    timeZone === "Asia/Calcutta" ? "INR" : "USD",
-  );
+  // Fixed by the visitor's timezone: India is priced in INR, everywhere else in USD.
+  // Resolved once — the zone cannot change under a mounted page.
+  const currency = useMemo(() => detectPricingCurrency(), []);
 
   /** Cards, matrix and checkout links all come off the plans endpoint. */
   const tiers = useMemo(() => buildTiers(plans), [plans]);
@@ -186,27 +183,10 @@ const PricingSection = ({
               Monthly
             </button>
           </div>
-          <div className="flex rounded-full border border-border bg-white p-1 shadow-[0_1px_2px_rgba(11,31,72,0.06)]">
-            <button
-              type="button"
-              onClick={() => setCurrency("USD")}
-              className={toggleClass(currency === "USD")}
-            >
-              USD
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrency("INR")}
-              className={toggleClass(currency === "INR")}
-            >
-              INR
-            </button>
-          </div>
-
           {/* Sits with the toggles rather than under the cards: the allowance is the one
               number a visitor arrives knowing, and the answer to "what if I go over?"
               was below the fold where nobody scrolled to find it. The drawer prices the
-              headroom in whatever currency and cadence these toggles are set to. */}
+              headroom at the visitor's currency and whichever cadence is selected. */}
           {!compact && conversationPack && (
             <ConversationCreditsDrawer
               tiers={tiers}

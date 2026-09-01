@@ -3,7 +3,43 @@ import type { RateupGatewayPlan, RateupPaymentPlan } from "@/backend/payment/pay
 export type BillingPeriod = "monthly" | "yearly";
 export type PricingCurrency = "USD" | "INR";
 
-export const CURRENCY_SYMBOL: Record<PricingCurrency, string> = { USD: "$", INR: "₹" };
+export const CURRENCY_SYMBOL: Record<PricingCurrency, string> = {
+  USD: "$",
+  INR: "₹",
+};
+
+/**
+ * India's two IANA identifiers. `Asia/Calcutta` is the deprecated alias and
+ * `Asia/Kolkata` the primary one, but engines disagree about which they hand back:
+ * V8 normalises to `Asia/Calcutta` (CLDR's canonical), while Firefox and Safari
+ * return `Asia/Kolkata`, and ECMA-402 is moving everyone to the primary name. Match
+ * both — checking either one alone silently prices a real market in the wrong
+ * currency on the browsers that disagree.
+ */
+const INDIA_TIME_ZONES = new Set(["Asia/Kolkata", "Asia/Calcutta"]);
+
+/**
+ * The currency to price in, from the visitor's clock.
+ *
+ * A rough proxy on purpose: it is a first guess for someone who has not told us where
+ * they are, not a billing decision. Every surface that uses it lets the visitor switch,
+ * because a traveller, a VPN, or an NRI paying an Indian card will all land wrong.
+ * Anything that cannot read a timezone gets USD.
+ */
+export function detectPricingCurrency(
+  timeZone: string | undefined = safeResolvedTimeZone(),
+): PricingCurrency {
+  return timeZone && INDIA_TIME_ZONES.has(timeZone) ? "INR" : "USD";
+}
+
+/** `resolvedOptions()` throws on a handful of locked-down/embedded browsers. */
+function safeResolvedTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Counts at or above this render as "Unlimited". The API writes a large sentinel for
@@ -444,5 +480,9 @@ export function adviseOnTopUp({
   if (!best || monthlyCostWithPacks === null || best.monthlyPrice > monthlyCostWithPacks) {
     return { kind: "none" };
   }
-  return { kind: "upgrade", option: best, monthlySaving: monthlyCostWithPacks - best.monthlyPrice };
+  return {
+    kind: "upgrade",
+    option: best,
+    monthlySaving: monthlyCostWithPacks - best.monthlyPrice,
+  };
 }
