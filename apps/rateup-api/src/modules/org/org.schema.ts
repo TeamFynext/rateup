@@ -57,7 +57,10 @@ const updateOrgDetailsSchema = z.object({
       api: z.boolean().optional(),
       verify: z.boolean().optional(),
       payment: z.boolean().optional(),
+      instagram: z.boolean().optional(),
+      messenger: z.boolean().optional(),
       invite: z.boolean().optional(),
+      hours: z.boolean().optional(),
       auto: z.boolean().optional(),
       points: z.boolean().optional(),
       tiers: z.boolean().optional(),
@@ -65,6 +68,19 @@ const updateOrgDetailsSchema = z.object({
       referral: z.boolean().optional(),
       cmds: z.boolean().optional(),
       loyaltyauto: z.boolean().optional(),
+      // Steps the org has waved off in the setup guide. Nested here rather than in
+      // its own column: `onboardingChecklist` is already a JSON field.
+      skipped: z
+        .object({
+          instagram: z.boolean().optional(),
+          messenger: z.boolean().optional(),
+          invite: z.boolean().optional(),
+          hours: z.boolean().optional(),
+          auto: z.boolean().optional(),
+          points: z.boolean().optional(),
+          cmds: z.boolean().optional(),
+        })
+        .optional(),
     })
     .optional(),
 });
