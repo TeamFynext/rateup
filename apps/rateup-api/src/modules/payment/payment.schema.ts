@@ -67,14 +67,6 @@ const paymentPlanDeleteSchema = z.object({
   planId: z.string(),
 });
 
-const orgPlanEmailSchema = z.object({
-  name: z.string(),
-  email: z.string(),
-  orgName: z.string().optional(),
-  planName: z.string(),
-  planId: z.string().optional(),
-});
-
 const updatePlanSchema = z.object({
   id: z.string(),
   planId: z.string(),
@@ -89,7 +81,6 @@ export type updateRateUpPlanInput = z.infer<typeof updateRateUpPlanSchema>;
 export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 export type rateupPlanParamInput = z.infer<typeof rateupPlanParamSchema>;
 export type paymentPlanDeleteInput = z.infer<typeof paymentPlanDeleteSchema>;
-export type orgPlanEmailInput = z.infer<typeof orgPlanEmailSchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -98,7 +89,6 @@ export {
   updateRateUpPlanSchema,
   rateupPlanParamSchema,
   paymentPlanDeleteSchema,
-  orgPlanEmailSchema,
 };
 
 export const orderIdParamsSchema = z.object({

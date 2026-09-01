@@ -30,7 +30,6 @@ import {
 import {
   CreateCheckoutInput,
   createRateUpPlanInput,
-  orgPlanEmailInput,
   paymentPlanDeleteInput,
   rateupPlanParamInput,
   type ChangePlanInput,
@@ -43,7 +42,6 @@ import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js"
 import { createHash } from "node:crypto";
 import { log } from "../../utils/logger.js";
 // import { html } from "cheerio";
-import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 
 export async function createCheckoutSessionHandler(
@@ -390,27 +388,6 @@ export async function deletePaymentPlanHandler(
   } catch (error) {
     console.error(error);
     reply.code(500).send("Failed");
-  }
-}
-
-export async function sendEmailPlanSelectionDetailsHandler(
-  request: FastifyRequest<{ Body: orgPlanEmailInput }>,
-  reply: FastifyReply,
-) {
-  try {
-    const emailParams = {
-      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
-      text: "ALERT: User initiated subscription",
-      subject: "ALERT: User initiated subscription",
-      html: await createEmailBodyPricingPlanSelected(request.body),
-    };
-    await notificationQueue.add("notification", {
-      emailData: emailParams,
-    });
-    reply.code(200).send();
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send("email sending failed");
   }
 }
 

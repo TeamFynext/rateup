@@ -17,6 +17,7 @@ import {
 } from "./payment.schema.js";
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../utils/email/payments/subscriptionActivated.js";
+import { sendSubscriptionPurchasedAlert } from "../../utils/email/payments/subscriptionPurchasedAlert.js";
 import { getRecurringCharge, getShopifyInfo } from "../integrations/shopify/shopify.service.js";
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
@@ -612,6 +613,15 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
       },
     });
 
+    // Read before the update: `subscription.charged` fires on every cycle, and the order
+    // is only not COMPLETE on the first one. That also makes a webhook redelivery silent,
+    // which `paid_count` on the entity would not.
+    const orderBeforeCharge = await prisma.order.findUnique({
+      where: { subscriptionId: id },
+      select: { status: true },
+    });
+    const isFirstCharge = orderBeforeCharge?.status !== OrderStatus.COMPLETE;
+
     const updatedOrder = await prisma.order.update({
       where: { subscriptionId: id },
       data: {
@@ -666,6 +676,19 @@ export async function updateSubscription(payload: RazorpaySubscriptionChargedPay
           console.error(error);
           throw new Error("Email sending failed. E:" + error);
         }
+      }
+
+      if (isFirstCharge) {
+        await sendSubscriptionPurchasedAlert({
+          orgId: notes?.orgId,
+          customerEmail: payment?.entity?.email,
+          planName: rateupPlan.displayName ?? rateupPlan.name,
+          paid: payment?.entity
+            ? { amountMinor: payment.entity.amount, currency: payment.entity.currency }
+            : undefined,
+          gateway: "Razorpay",
+          cycleEndsAt: new Date(current_end * 1000),
+        });
       }
     }
 

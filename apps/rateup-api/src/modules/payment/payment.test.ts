@@ -62,7 +62,6 @@ vi.mock("./payment.service.js", async () => {
     getAllPaymentSubscription: vi.fn(),
     cancelRazorpaySubscription: vi.fn(),
     createCheckoutSession: vi.fn(),
-    sendEmailPlanSelectionDetails: vi.fn(),
     handlePaymentCaptured: vi.fn(),
     handlePaymentFailed: vi.fn(),
     updateSubscription: vi.fn(),
@@ -106,6 +105,10 @@ vi.mock("../../utils/checkRoleHandler.js", () => ({
   checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
 }));
 
+vi.mock("../../utils/email/payments/subscriptionPurchasedAlert.js", () => ({
+  sendSubscriptionPurchasedAlert: vi.fn(),
+}));
+
 import Session from "supertokens-node/recipe/session/index.js";
 import axios from "axios";
 
@@ -114,6 +117,7 @@ import * as paymentService from "./payment.service.js";
 import * as stripeService from "./stripe/stripe.service.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import { checkSession } from "../../utils/checkSession.js";
+import { sendSubscriptionPurchasedAlert } from "../../utils/email/payments/subscriptionPurchasedAlert.js";
 import { updateSubscriptionOrderHandler, verificationHandler } from "./payment.controller.js";
 import {
   createCheckoutSessionHandler,
@@ -627,7 +631,6 @@ describe("the Stripe webhook", () => {
     expect(routes.map((r) => `${r.method} ${r.url}`)).toEqual([
       "GET /rateup-plans",
       "POST /webhooks/verification",
-      "POST /mail",
     ]);
     expect(srv.addHook).not.toHaveBeenCalled();
   });
@@ -830,6 +833,10 @@ describe("the Razorpay webhook handler", () => {
 describe("getOrgInvoices", () => {
   const axiosGet = vi.spyOn(axios, "get");
 
+  // The spy's config parameter is typed as AxiosRequestConfig, whose `params` is `unknown`.
+  const subIdOf = (config?: { params?: unknown }) =>
+    (config?.params as { subscription_id?: string } | undefined)?.subscription_id;
+
   function invoice(id: string, overrides: Record<string, unknown> = {}) {
     return {
       id,
@@ -894,16 +901,15 @@ describe("getOrgInvoices", () => {
       { subscriptionId: "sub_new" },
       { subscriptionId: "sub_old" },
     ] as never);
-    axiosGet.mockImplementation(
-      (_url: string, config?: { params?: { subscription_id?: string } }) =>
-        Promise.resolve({
-          data: {
-            items:
-              config?.params?.subscription_id === "sub_old"
-                ? [invoice("inv_old", { issued_at: 50 })]
-                : [invoice("inv_new", { issued_at: 900 })],
-          },
-        }),
+    axiosGet.mockImplementation((_url: string, config?: { params?: unknown }) =>
+      Promise.resolve({
+        data: {
+          items:
+            subIdOf(config) === "sub_old"
+              ? [invoice("inv_old", { issued_at: 50 })]
+              : [invoice("inv_new", { issued_at: 900 })],
+        },
+      }),
     );
 
     const invoices = await paymentService.getOrgInvoices("org_1");
@@ -919,11 +925,10 @@ describe("getOrgInvoices", () => {
       subscriptionRef: "sub_ok",
     } as never);
     vi.mocked(prisma.order.findMany).mockResolvedValue([{ subscriptionId: "sub_dead" }] as never);
-    axiosGet.mockImplementation(
-      (_url: string, config?: { params?: { subscription_id?: string } }) =>
-        config?.params?.subscription_id === "sub_dead"
-          ? Promise.reject(new Error("BAD_REQUEST_ERROR"))
-          : Promise.resolve({ data: { items: [invoice("inv_ok")] } }),
+    axiosGet.mockImplementation((_url: string, config?: { params?: unknown }) =>
+      subIdOf(config) === "sub_dead"
+        ? Promise.reject(new Error("BAD_REQUEST_ERROR"))
+        : Promise.resolve({ data: { items: [invoice("inv_ok")] } }),
     );
 
     expect((await paymentService.getOrgInvoices("org_1")).map((i) => i.id)).toEqual(["inv_ok"]);
@@ -1310,6 +1315,69 @@ describe("a pack arriving on the subscription webhook", () => {
     await service.updateSubscription(charged());
 
     expect(prisma.subscription.update).toHaveBeenCalled();
+  });
+});
+
+describe("the internal alert on a subscription charge", () => {
+  let service: typeof import("./payment.service.js");
+  beforeAll(async () => {
+    service = await vi.importActual<typeof import("./payment.service.js")>("./payment.service.js");
+  });
+
+  const PLAN = { id: "plan-pro", name: "PRO PLAN", displayName: "Pro", planType: "BASE" };
+
+  function charged() {
+    return {
+      subscription: {
+        entity: {
+          id: "sub_1",
+          plan_id: "plan_pro",
+          current_end: Math.floor(Date.now() / 1000) + 86_400,
+          notes: { orgId: "org-1" },
+        },
+      },
+      payment: { entity: { email: "owner@example.com", amount: 400_000, currency: "INR" } },
+    };
+  }
+
+  beforeEach(() => {
+    vi.mocked(sendSubscriptionPurchasedAlert).mockClear();
+    vi.mocked(prisma.paymentPlans.findFirst)
+      .mockReset()
+      .mockResolvedValue({ id: "pp" } as never);
+    vi.mocked(prisma.rateupPlan.findFirst)
+      .mockReset()
+      .mockResolvedValue(PLAN as never);
+    vi.mocked(prisma.subscription.update)
+      .mockReset()
+      .mockResolvedValue({} as never);
+    vi.mocked(prisma.order.update)
+      .mockReset()
+      .mockResolvedValue({ id: "order-1" } as never);
+    vi.mocked(prisma.usageStats.update)
+      .mockReset()
+      .mockResolvedValue({} as never);
+    vi.mocked(prisma.order.findUnique).mockReset();
+  });
+
+  test("fires when the order is not yet complete, i.e. on the first charge", async () => {
+    vi.mocked(prisma.order.findUnique).mockResolvedValue({ status: "PENDING" } as never);
+
+    await service.updateSubscription(charged());
+
+    expect(sendSubscriptionPurchasedAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: "org-1", planName: "Pro", gateway: "Razorpay" }),
+    );
+  });
+
+  test("stays silent on a renewal, whose order is already complete", async () => {
+    // `subscription.charged` fires every cycle; only the first one is news. This is also
+    // what makes a webhook redelivery of the first charge silent.
+    vi.mocked(prisma.order.findUnique).mockResolvedValue({ status: "COMPLETE" } as never);
+
+    await service.updateSubscription(charged());
+
+    expect(sendSubscriptionPurchasedAlert).not.toHaveBeenCalled();
   });
 });
 

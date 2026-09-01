@@ -1,11 +1,6 @@
 import { FastifyInstance } from "fastify";
 import fastifyRawBody from "fastify-raw-body";
-import {
-  getAllRateupPaymentPlansHandler,
-  sendEmailPlanSelectionDetailsHandler,
-  verificationHandler,
-} from "./payment.controller.js";
-import { orgPlanEmailSchema } from "./payment.schema.js";
+import { getAllRateupPaymentPlansHandler, verificationHandler } from "./payment.controller.js";
 
 export async function paymentPublicRoutes(server: FastifyInstance) {
   // The Razorpay signature is an HMAC over the bytes Razorpay sent, so the handler needs
@@ -20,14 +15,4 @@ export async function paymentPublicRoutes(server: FastifyInstance) {
   server.get("/rateup-plans", getAllRateupPaymentPlansHandler);
 
   server.post("/webhooks/verification", { config: { rawBody: true } }, verificationHandler);
-
-  server.post(
-    "/mail",
-    {
-      schema: {
-        body: orgPlanEmailSchema,
-      },
-    },
-    sendEmailPlanSelectionDetailsHandler,
-  );
 }

@@ -9,6 +9,7 @@ import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import axios from "axios";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { paymentFailed } from "../../../utils/email/payments/paymentFailed.js";
+import { sendSubscriptionPurchasedAlert } from "../../../utils/email/payments/subscriptionPurchasedAlert.js";
 import prisma from "../../../utils/prisma.js";
 import type { CreateStripeCheckoutInput } from "./stripe.schema.js";
 
@@ -201,6 +202,18 @@ export async function createStripePayment(invoiceData: StripeInvoiceData) {
       } else {
         console.log("Skipping subscription summary email: invoice has no customer_email");
       }
+
+      // `subscription_create` is the first invoice of a subscription, so this fires once
+      // per subscription — the renewal branch below deliberately does not alert.
+      await sendSubscriptionPurchasedAlert({
+        orgId: updatedOrder.orgId,
+        customerEmail: invoiceData.customer_email ?? undefined,
+        planName:
+          updatedOrder.RateupPlan?.displayName ?? updatedOrder.RateupPlan?.name ?? "Rateup Plan",
+        paid: { amountMinor: invoiceData.amount_paid, currency: invoiceData.currency },
+        gateway: "Stripe",
+        cycleEndsAt: new Date(subscriptionData.current_period_end * 1000),
+      });
     }
     return payment;
   } else if (invoiceData.billing_reason === "subscription_cycle") {
