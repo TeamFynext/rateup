@@ -3,32 +3,35 @@ import { useNavigate } from "@tanstack/react-router";
 import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 /**
- * Closing call to action. Lives outside PricingSection so the route can place it after
- * the FAQ, which is the order the design lays the page out in.
+ * Closing call to action: the brand-blue band that ends the page, sitting inside the
+ * page container rather than running full bleed so it reads as the last card in the
+ * stack above it.
  */
 export const PricingCta = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-[radial-gradient(ellipse_at_50%_0%,#0D2E5C_0%,var(--color-ru-blue-900)_60%,var(--color-ru-blue-950)_100%)] text-white">
-      <div className="mx-auto max-w-[1240px] px-8 py-24 text-center">
-        <h2 className="font-nunito mx-auto my-0 max-w-[720px] text-[36px] font-black leading-[1.05] tracking-[-0.025em] text-white md:text-[48px]">
-          Ready to launch on <span className="text-ru-blue-300">WhatsApp?</span>
-        </h2>
-        <p className="mx-auto mb-8 mt-[18px] max-w-[520px] text-[17px] text-white/70">
-          Start on Free today. Upgrade the day your conversations outgrow it.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3.5">
+    <section className="mx-auto max-w-[1240px] px-8 pb-24 pt-14">
+      <div className="flex flex-wrap items-center justify-between gap-6 rounded-3xl bg-primary p-8 text-white md:p-14">
+        <div className="flex-1 basis-[420px]">
+          <h2 className="font-display m-0 mb-2 text-[26px] font-bold leading-[1.12] tracking-[-0.028em] text-white md:text-[36px]">
+            Ready to launch on WhatsApp?
+          </h2>
+          <p className="m-0 max-w-[56ch] text-lg leading-[1.6] text-white/80">
+            Start on the free plan today. No card, no apps, no forms.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => navigate({ to: "/signup" })}
-            className="bg-ru-star cursor-pointer rounded-[10px] border-none px-[26px] py-[15px] text-[15px] font-extrabold text-ru-blue-900 shadow-[0_8px_24px_rgba(248,149,29,0.3)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px"
+            className="h-10 cursor-pointer rounded-lg border-none bg-white px-6 text-sm font-medium text-primary transition-[filter,transform] duration-150 hover:brightness-[0.94] active:translate-y-px"
           >
-            Create free account
+            Get Started Free
           </button>
           <BookDemoLink>
-            <span className="inline-block cursor-pointer rounded-[10px] border border-white/20 px-[22px] py-[15px] text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-white/10">
-              Talk to sales →
+            <span className="inline-flex h-10 cursor-pointer items-center rounded-lg border border-white/40 px-6 text-sm font-medium text-white transition-colors duration-150 hover:bg-white/15">
+              Talk to Sales
             </span>
           </BookDemoLink>
         </div>

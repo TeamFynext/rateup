@@ -8,10 +8,28 @@ import {
   resolveDisplayPrice,
 } from "../pricing.data.ts";
 
+/** The design system's check: a 15px stroke tick, coloured per surface. */
+const Check = ({ className }: { className: string }) => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`mt-[3px] shrink-0 ${className}`}
+    aria-hidden
+  >
+    <path d="M20 6L9 17l-5-5" />
+  </svg>
+);
+
 /**
  * One pricing card, rendered entirely from a plans-endpoint row. The featured tier
- * (the one the catalog gives a badge) is dark navy with the warm brand gradient on its
- * button and a cyan check; every other tier is a light surface.
+ * (the one the catalog gives a badge) is the deep navy panel; every other tier is a
+ * light surface with a hairline ring.
  */
 const PlanCardNew = ({
   tier,
@@ -59,21 +77,18 @@ const PlanCardNew = ({
     // currency here would be the misleading version.
     note = annual
       ? `Billed ${formatPrice(currency, price.yearly)} / year`
-      : "Billed monthly · 20% more";
+      : "Billed monthly, cancel any time";
   }
 
-  const check = dark ? "text-ru-blue-300" : "text-primary";
   const ctaButton = (
     <button
       type="button"
       onClick={tier.salesLed ? undefined : onButtonClick}
-      className={
+      className={`h-10 w-full cursor-pointer rounded-lg border-none text-sm font-medium tracking-[-0.005em] transition-[filter,transform] duration-150 hover:brightness-[0.94] active:translate-y-px active:brightness-[0.89] ${
         dark
-          ? "bg-ru-star relative mt-[22px] w-full cursor-pointer rounded-lg border-none p-[13px] text-[15px] font-extrabold text-ru-blue-900 shadow-[0_8px_24px_rgba(248,149,29,0.3)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px"
-          : tier.salesLed
-            ? "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-primary p-[13px] text-[15px] font-bold text-white transition-colors duration-200 hover:bg-ru-blue-800"
-            : "mt-[22px] w-full cursor-pointer rounded-lg border-none bg-accent p-[13px] text-[15px] font-bold text-primary transition-colors duration-200 hover:bg-ru-blue-100"
-      }
+          ? "bg-white text-ru-blue-900"
+          : "bg-muted text-foreground shadow-[inset_0_0_0_1px_var(--color-border)]"
+      }`}
     >
       {ctaLabel ?? tier.cta}
     </button>
@@ -81,86 +96,67 @@ const PlanCardNew = ({
 
   return (
     <div
-      className={
+      className={`flex h-full flex-col gap-4 rounded-2xl p-6 ${
         dark
-          ? "relative overflow-hidden rounded-2xl border border-ru-blue-900 bg-ru-blue-900 p-7 shadow-[0_24px_72px_rgba(11,31,72,0.18)]"
-          : "rounded-2xl border border-border bg-white p-7 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
-      }
+          ? "bg-ru-blue-900 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18),0_12px_32px_rgba(16,24,40,0.08)]"
+          : "bg-white shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1),0_1px_2px_rgba(0,0,0,0.05)]"
+      }`}
     >
-      {dark && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-[70px] -top-[70px] h-[220px] w-[220px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, rgba(47,163,255,0.32), transparent 70%)",
-          }}
-        />
-      )}
-
-      <div className="relative flex items-center justify-between gap-2">
-        <div
-          className={`font-nunito text-xl font-extrabold ${dark ? "text-white" : "text-foreground"}`}
+      <div className="flex min-h-5 items-center justify-between gap-2">
+        <span
+          className={`text-[11.5px] font-semibold uppercase tracking-[0.1em] ${
+            dark ? "text-white/60" : "text-ru-n-400"
+          }`}
         >
           {tier.name}
-        </div>
-        {tier.badge && (
-          <div className="bg-ru-star rounded-full px-2.5 py-[5px] text-[11px] font-extrabold uppercase tracking-[0.1em] text-ru-blue-900">
-            {tier.badge}
-          </div>
-        )}
-      </div>
-
-      {tier.tagline && (
-        <p
-          className={`relative mt-1.5 text-[13px] leading-relaxed ${
-            dark ? "text-white/70" : "text-muted-foreground"
-          }`}
-        >
-          {tier.tagline}
-        </p>
-      )}
-
-      <div className="relative mb-1 mt-[22px] flex items-baseline gap-1.5">
-        <span
-          className={`font-nunito text-[44px] font-black leading-none tracking-[-0.02em] ${
-            dark ? "text-white" : "text-foreground"
-          }`}
-        >
-          {amount}
         </span>
-        {unit && (
-          <span
-            className={`text-sm font-semibold ${dark ? "text-white/60" : "text-muted-foreground"}`}
-          >
-            {unit}
+        {tier.badge && (
+          <span className="inline-flex h-5 items-center whitespace-nowrap rounded-4xl border border-amber-200 bg-amber-50 px-2 text-[11px] font-semibold text-amber-700">
+            {tier.badge}
           </span>
         )}
       </div>
 
-      <div
-        className={`relative min-h-[18px] text-xs ${dark ? "text-white/60" : "text-muted-foreground"}`}
-      >
-        {note}
+      <div>
+        <div className="flex items-baseline gap-[5px]">
+          <span
+            className={`font-display text-[44px] font-bold leading-none tracking-[-0.035em] ${
+              dark ? "text-white" : "text-foreground"
+            }`}
+          >
+            {amount}
+          </span>
+          {unit && (
+            <span className={`text-sm ${dark ? "text-white/60" : "text-ru-n-400"}`}>{unit}</span>
+          )}
+        </div>
+        <p
+          className={`mt-2 text-[13px] leading-[1.45] ${dark ? "text-white/60" : "text-ru-n-400"}`}
+        >
+          {note}
+        </p>
       </div>
 
-      {tier.salesLed ? <BookDemoLink>{ctaButton}</BookDemoLink> : ctaButton}
+      {tier.tagline && (
+        <p className={`text-sm leading-[1.55] ${dark ? "text-white/70" : "text-muted-foreground"}`}>
+          {tier.tagline}
+        </p>
+      )}
 
-      <div className={`my-6 h-px ${dark ? "bg-white/10" : "bg-muted"}`} />
+      <div className={`h-px ${dark ? "bg-white/10" : "bg-ru-n-100"}`} />
 
-      <ul
-        className={`relative m-0 flex list-none flex-col gap-3 p-0 text-sm ${
-          dark ? "text-white/85" : "text-muted-foreground"
-        }`}
-      >
+      <ul className="m-0 flex list-none flex-col gap-[9px] p-0">
         {tier.features.map((feature) => (
-          <li key={feature} className="flex gap-2.5">
-            <span className={`font-extrabold ${check}`} aria-hidden>
-              ✓
-            </span>
-            {feature}
+          <li key={feature} className="flex gap-[9px] text-sm leading-[1.5]">
+            <Check className={dark ? "text-ru-green-300" : "text-ru-green-600"} />
+            <span className={dark ? "text-white/90" : "text-secondary-foreground"}>{feature}</span>
           </li>
         ))}
       </ul>
+
+      <div className="mt-auto pt-2">
+        {tier.salesLed ? <BookDemoLink>{ctaButton}</BookDemoLink> : ctaButton}
+      </div>
     </div>
   );
 };

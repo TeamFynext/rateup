@@ -22,7 +22,6 @@ import {
   getSubscriptionChangeOptions,
   getAllPaymentSubscription,
   getAllRateupPaymentPlans,
-  sendMailPlanSelectDetails,
   syncRazorPayPlans,
   updatePaymentPlan,
   updateRateupPaymentPlan,
@@ -279,12 +278,6 @@ export const useDeletePaymentPlanMutation = () => {
     },
   });
 };
-
-export function useSendMailPlanSelectDetails() {
-  return useMutation({
-    mutationFn: sendMailPlanSelectDetails,
-  });
-}
 
 export const useUpdateSubscriptionOrder = (orderId: string) => {
   const queryClient = useQueryClient();
