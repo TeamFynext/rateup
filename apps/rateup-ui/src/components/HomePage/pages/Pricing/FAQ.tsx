@@ -29,15 +29,16 @@ const faqs: FaqEntry[] = [
     question: "Can I try RateUp before paying?",
     answer: `Yes — the Free plan is free forever and needs no card. It covers the inbox,
       automations, templates and chatbots, so you can run RateUp end to end before deciding
-      whether Starter or Pro is worth it. Upgrade whenever you are ready; you are billed
+      whether Plus or Pro is worth it. Upgrade whenever you are ready; you are billed
       from the day you upgrade.`,
   },
   {
     question: "Which plan do you recommend for my business?",
     answer: [
       `Free → test WhatsApp automation end to end`,
-      `Starter → growing shops running campaigns, loyalty and catalog sync`,
-      `Pro → high-volume teams that want the Meta Business Agent in the loop`,
+      `Plus → growing shops running campaigns, loyalty and catalog sync`,
+      `Pro → scaling teams past their first 10,000 conversations`,
+      `Max → high-volume teams that want the Meta Business Agent in the loop`,
       `Enterprise → unlimited volume, contracted terms and a dedicated manager`,
     ],
   },
