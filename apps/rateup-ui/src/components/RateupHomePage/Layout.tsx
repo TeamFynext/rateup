@@ -22,6 +22,12 @@ interface LayoutProps {
   footer?: React.ReactNode;
   /** Replaces the marketing navbar — `/book-a-demo` swaps in its own slim chrome. */
   navbar?: React.ReactNode;
+  /**
+   * A bar pinned above the navbar, inside the same sticky header — the tools switcher uses
+   * it. Anything sticky rendered into `children` instead would pin to `top: 0` alongside the
+   * header and cover it, since both share that line.
+   */
+  subheader?: React.ReactNode;
 }
 
 export default function Layout({
@@ -30,6 +36,7 @@ export default function Layout({
   navbarClassName,
   footer = <HomePageFooter />,
   navbar,
+  subheader,
 }: Readonly<LayoutProps>) {
   const [likeWhatOpen, setLikeWhatOpen] = useState(false);
   const [shouldShowLikeWhat, setShouldShowLikeWhat] = useState(false);
@@ -100,6 +107,7 @@ export default function Layout({
   return (
     <div className={`relative w-full ${contentClassName} ${navbarClassName}`}>
       <header className={`sticky top-0 z-50 ${contentClassName ? "" : styles.themeDefault}`}>
+        {subheader}
         {navbar ?? <RateupNavbar />}
       </header>
       <main>{children}</main>

@@ -31,9 +31,10 @@ export default function ToolsShell({
   children,
 }: Readonly<ToolsShellProps>) {
   return (
-    <Layout contentClassName={styles.themeDefault}>
-      <ToolsTabs activeSlug={activeSlug} />
-
+    <Layout
+      contentClassName={styles.themeDefault}
+      subheader={<ToolsTabs activeSlug={activeSlug} />}
+    >
       <div className="bg-background font-sans text-foreground">
         {/* Hero */}
         <div className="mx-auto w-full max-w-[1240px] px-6 pt-10 lg:px-8">
