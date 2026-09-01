@@ -13,14 +13,13 @@ import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
 import Integrations from "@/components/RateupHomePage/shared/Integrations";
 import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Problem from "@/components/RateupHomePage/shared/Problem";
+import ProductVideo from "@/components/RateupHomePage/shared/ProductVideo";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
 import { buildPageHead } from "@/lib/metadata";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
 import { homepageMarkdown } from "../../markdown/homepage";
 import { createMarkdownMiddleware } from "../../markdown/serveMarkdown";
-
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const apiCatalogMiddleware = createMiddleware().server(async ({ next }) => {
   setResponseHeader(
@@ -111,19 +110,16 @@ function RouteComponent() {
   }, [ref, trackVisitMutation]);
 
   return (
-    <Layout contentClassName={styles.theme}>
+    <Layout>
       <HeroSectionNew />
-
-      {/* Wrap everything else in the light theme container */}
-      <div className={styles.lightSection}>
-        <TrustedBy />
-        <Problem />
-        <HowItWorks />
-        <Features />
-        <CaseStudies />
-        <Integrations />
-        <LoyaltySection />
-      </div>
+      <ProductVideo />
+      <TrustedBy />
+      <Problem />
+      <HowItWorks />
+      <Features />
+      <CaseStudies />
+      <Integrations />
+      <LoyaltySection />
     </Layout>
   );
 }

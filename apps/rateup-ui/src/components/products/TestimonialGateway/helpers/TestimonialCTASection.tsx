@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 const TestimonialCTASection = () => {
@@ -31,7 +31,7 @@ const TestimonialCTASection = () => {
                   Get Started for Free
                 </Button>
               </a>
-              <BookDemoModal>
+              <BookDemoLink>
                 <Button
                   size="lg"
                   variant="outline"
@@ -39,7 +39,7 @@ const TestimonialCTASection = () => {
                 >
                   Schedule a Demo
                 </Button>
-              </BookDemoModal>
+              </BookDemoLink>
             </div>
             <p className="pt-6 text-sm text-primary">
               No credit card required. Free plan available on every tier.

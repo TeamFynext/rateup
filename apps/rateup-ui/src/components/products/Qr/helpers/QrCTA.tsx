@@ -1,7 +1,7 @@
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -73,14 +73,14 @@ function QrCTA() {
                 Start For Free
               </Button>
             </a>
-            <BookDemoModal>
+            <BookDemoLink>
               <Button
                 size="lg"
                 className="bg-[#004F98] hover:bg-[#004f98ee] text-white group px-6 w-full sm:w-auto cursor-pointer"
               >
                 Book a Demo
               </Button>
-            </BookDemoModal>
+            </BookDemoLink>
           </div>
         </div>
       </motion.div>

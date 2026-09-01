@@ -1,7 +1,7 @@
 import { IconPhoneCall } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -26,11 +26,11 @@ const QrFinalCTA = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap justify-center gap-4 mb-14">
-          <BookDemoModal>
+          <BookDemoLink>
             <Button className="cursor-pointer bg-white text-[#013553] hover:bg-white/90 text-base font-semibold px-7 py-4 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl">
               Contact Sales
             </Button>
-          </BookDemoModal>
+          </BookDemoLink>
           <Button
             variant="outline"
             className="border-white bg-white/10 hover:bg-white/20 text-white text-base font-medium px-6 py-4 rounded-xl flex items-center gap-2 backdrop-blur-sm transition"

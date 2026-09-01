@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 const WhatsAppSurveyCta = () => {
@@ -34,7 +34,7 @@ const WhatsAppSurveyCta = () => {
                   Get Started
                 </Button>
               </a>
-              <BookDemoModal>
+              <BookDemoLink>
                 <Button
                   size="lg"
                   variant="outline"
@@ -42,7 +42,7 @@ const WhatsAppSurveyCta = () => {
                 >
                   Schedule a Demo
                 </Button>
-              </BookDemoModal>
+              </BookDemoLink>
             </div>
           </div>
         </motion.div>

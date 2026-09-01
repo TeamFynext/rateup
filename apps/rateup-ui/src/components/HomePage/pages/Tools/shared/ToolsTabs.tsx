@@ -13,13 +13,16 @@ const TAB_LABELS: Record<string, string> = {
 };
 
 /**
- * The navy pill bar that sits above the site header on every tools page. It is
- * the cluster's internal navigation — every tool links to every other one, which
- * is what makes the set rank together rather than as orphan pages.
+ * The navy pill bar above the navbar on every tools page. It is the cluster's internal
+ * navigation — every tool links to every other one, which is what makes the set rank
+ * together rather than as orphan pages.
+ *
+ * `Layout` pins this through its `subheader` slot. It must not be sticky itself: two sticky
+ * bars both anchored to `top: 0` pin on the same line, and this one covered the navbar.
  */
 export default function ToolsTabs({ activeSlug }: Readonly<{ activeSlug?: string }>) {
   return (
-    <div className="sticky top-0 z-60 bg-ru-blue-900">
+    <div className="bg-ru-blue-900">
       <div className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center gap-2 px-6 py-2.5 lg:px-8">
         <Link
           to={TOOLS_BASE_PATH}

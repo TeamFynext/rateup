@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 import style from "./feedback.module.css";
 
@@ -38,11 +38,11 @@ export default function CTASection() {
               </svg>
             </span>
           </button>
-          <BookDemoModal>
+          <BookDemoLink>
             <button className="bg-transparent font-extrabold text-base text-fb-green border border-fb-green py-3 px-[22px] rounded-xl hover:border-fb-green hover:bg-fb-green hover:text-white transition-colors cursor-pointer">
               Schedule a Demo
             </button>
-          </BookDemoModal>
+          </BookDemoLink>
         </div>
       </div>
     </section>

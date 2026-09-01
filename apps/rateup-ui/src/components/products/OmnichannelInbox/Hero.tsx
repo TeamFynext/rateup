@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 import { ArrowRight, IgIcon, MsgrIcon, StarIcon, WaIcon } from "./icons";
 
@@ -286,7 +286,7 @@ export default function Hero() {
               >
                 Sign Up for Free <ArrowRight />
               </button>
-              <BookDemoModal>
+              <BookDemoLink>
                 <button
                   className="inline-flex items-center gap-2 font-bold text-[15px] text-white px-6 py-3.5 rounded-[11px] transition-all duration-200 hover:-translate-y-0.5 no-underline"
                   style={{
@@ -296,7 +296,7 @@ export default function Hero() {
                 >
                   Book a Demo
                 </button>
-              </BookDemoModal>
+              </BookDemoLink>
             </div>
 
             <div className="flex items-center gap-3.5 flex-wrap">
