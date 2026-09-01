@@ -97,7 +97,7 @@ export default function Providers({ children }: { children: ReactNode }) {
               </HydrationBoundary>
             </UserProvider>
           </Suspense>
-          {/* <TanStackDevtools
+          <TanStackDevtools
             config={{
               position: "bottom-right",
             }}
@@ -111,7 +111,7 @@ export default function Providers({ children }: { children: ReactNode }) {
                 render: <TanStackRouterDevtoolsPanel />,
               },
             ]}
-          /> */}
+          />
         </QueryClientProvider>
       </SuperTokensProvider>
     </AppErrorBoundary>
