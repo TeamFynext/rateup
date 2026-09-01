@@ -13,7 +13,6 @@ import { BOOK_DEMO_ROUTE } from "@/components/RateupHomePage/helper/BookDemoLink
 import {
   ArrowRight,
   BookDemoCta,
-  CountUp,
   Eyebrow,
   useReveal,
   WhatsAppCta,
