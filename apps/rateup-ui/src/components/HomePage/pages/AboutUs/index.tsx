@@ -1,6 +1,6 @@
 import { Image } from "@unpic/react";
 
-import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoButton } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 function AboutUs() {
@@ -66,7 +66,7 @@ function AboutUs() {
           <p className="text-lg text-gray-700 pb-4">
             Discover how Rateup can help your business grow through better customer understanding.
           </p>
-          <BookDemoModal1 />
+          <BookDemoButton />
         </div>
       </section>
     </main>

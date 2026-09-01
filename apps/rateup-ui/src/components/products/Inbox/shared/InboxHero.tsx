@@ -2,7 +2,7 @@ import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import { useEffect, useState } from "react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -70,7 +70,7 @@ const InboxHero = () => {
                 Get Started Free
               </Button>
             </a>
-            <BookDemoModal>
+            <BookDemoLink>
               <Button
                 size="lg"
                 variant="outline"
@@ -79,7 +79,7 @@ const InboxHero = () => {
                 Learn More
                 <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
-            </BookDemoModal>
+            </BookDemoLink>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { IconCircleCheck } from "@tabler/icons-react";
 import { motion } from "motion/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 
 interface Colors {
   color1?: string;
@@ -82,7 +82,7 @@ const PricingSection = ({ color1, color2 }: Colors) => {
             <p className="text-gray-600 mt-3 mb-6 text-sm">Customized Plan & Pricing</p>
             <div className="text-xl text-center text-gray-700 mt-6 mb-4">Let&apos;s Talk!</div>
           </div>
-          <BookDemoModal>
+          <BookDemoLink>
             <button
               style={{
                 backgroundColor: color1 ? color1 : "#1c518e",
@@ -92,7 +92,7 @@ const PricingSection = ({ color1, color2 }: Colors) => {
             >
               Contact Sales
             </button>
-          </BookDemoModal>
+          </BookDemoLink>
         </div>
       </motion.div>
     </section>

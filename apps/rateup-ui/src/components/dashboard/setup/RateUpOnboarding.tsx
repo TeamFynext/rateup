@@ -22,7 +22,7 @@ import { ConnectChannelButton } from "@/components/common/connect-channel-button
 import { ContinueWithFacebookButton } from "@/components/common/continue-with-facebook-button.tsx";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -468,15 +468,15 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
               {translations("Skip setup and explore the app")}
             </button>
             <span aria-hidden>·</span>
-            {/* There is no /bookdemo route — booking is the same modal the marketing site uses. */}
-            <BookDemoModal>
+            {/* Booking goes to `/book-a-demo`, the one place the site captures a lead. */}
+            <BookDemoLink>
               <button
                 type="button"
                 className="cursor-pointer font-medium text-primary underline-offset-4 hover:underline"
               >
                 {translations("Book a 15-minute setup call")}
               </button>
-            </BookDemoModal>
+            </BookDemoLink>
           </div>
         </div>
       </div>

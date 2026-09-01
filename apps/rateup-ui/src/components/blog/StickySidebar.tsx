@@ -1,7 +1,7 @@
 // StickySidebar.tsx
 // Converted from the RateUp HTML sidebar — all styles preserved as Tailwind utility classes
 
-import { BookDemoModal } from "../RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "../RateupHomePage/helper/BookDemoLink";
 
 // Ring SVG for stat cards
 function Ring({
@@ -142,14 +142,14 @@ export default function StickySidebar() {
           >
             Get Started Free &nbsp;→
           </a>
-          <BookDemoModal>
+          <BookDemoLink>
             <button className="flex items-center justify-center w-full p-[13px] bg-[#25D366] border-none rounded-[13px] text-white text-[13px] font-bold cursor-pointer no-underline gap-[7px] transition-colors duration-200 hover:bg-[#1EBD5A]">
               <svg width="16" height="16" viewBox="0 0 32 32" fill="white">
                 <path d="M16 2.5C8.54 2.5 2.5 8.54 2.5 16c0 2.37.64 4.6 1.76 6.52L2.5 29.5l7.24-1.73A13.44 13.44 0 0016 29.5c7.46 0 13.5-6.04 13.5-13.5S23.46 2.5 16 2.5z" />
               </svg>
               Book a Demo
             </button>
-          </BookDemoModal>
+          </BookDemoLink>
         </div>
 
         {/* ── TRUST BAR ── */}

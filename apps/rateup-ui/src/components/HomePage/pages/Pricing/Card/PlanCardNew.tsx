@@ -1,4 +1,4 @@
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 import {
   type BillingPeriod,
@@ -143,7 +143,7 @@ const PlanCardNew = ({
         {note}
       </div>
 
-      {tier.salesLed ? <BookDemoModal>{ctaButton}</BookDemoModal> : ctaButton}
+      {tier.salesLed ? <BookDemoLink>{ctaButton}</BookDemoLink> : ctaButton}
 
       <div className={`my-6 h-px ${dark ? "bg-white/10" : "bg-muted"}`} />
 

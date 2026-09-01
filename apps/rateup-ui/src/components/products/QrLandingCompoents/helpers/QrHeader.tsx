@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { useState } from "react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -55,11 +55,11 @@ const QrHeader = () => {
                 Log in
               </Button>
             </a>
-            <BookDemoModal>
+            <BookDemoLink>
               <Button className="bg-primary cursor-pointer text-white hover:bg-primary transition-colors duration-300 shadow-md">
                 Get Started
               </Button>
-            </BookDemoModal>
+            </BookDemoLink>
           </div>
 
           <div className="md:hidden">

@@ -1826,12 +1826,12 @@ nav.top .row {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
 }
-footer {
-  background: var(--footer-bg, var(--page-0));
-  border-top: 1px solid var(--footer-border, var(--hair));
-  padding: 56px 0 32px;
-  margin-top: 64px;
-}
+/* The bare `footer` element selector that used to live here leaked out of this module —
+   CSS Modules scope class names, not element selectors — so it styled every <footer> on the
+   site. Because module CSS is unlayered and Tailwind utilities sit in `@layer utilities`,
+   it also beat every `bg-*` utility regardless of specificity, and its `--footer-bg` /
+   `--page-0` fallbacks only resolved inside the `.theme*` scopes. Footers now carry their
+   own background; do not reintroduce an unscoped element selector here. */
 .foot-grid {
   display: grid;
   /* about · Product · Company · Resources · Tools · Download App */

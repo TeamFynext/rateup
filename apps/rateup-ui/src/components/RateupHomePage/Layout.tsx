@@ -1,10 +1,11 @@
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
 import { CookieConsent } from "../ui/cookie-consent.tsx";
-import DemoModal from "./helpers/BookDemoComponent";
+import { BOOK_DEMO_ROUTE } from "./helper/BookDemoLink";
 import LikeWhatUSee from "./helpers/LikeWhatUSee";
 import HomePageFooter from "./shared/HomePageFooter";
 import RateupNavbar from "./shared/RateupNavbar";
@@ -19,7 +20,8 @@ interface LayoutProps {
   contentClassName?: string;
   navbarClassName?: string;
   footer?: React.ReactNode;
-  darkNavbar?: boolean;
+  /** Replaces the marketing navbar — `/book-a-demo` swaps in its own slim chrome. */
+  navbar?: React.ReactNode;
 }
 
 export default function Layout({
@@ -27,11 +29,18 @@ export default function Layout({
   contentClassName,
   navbarClassName,
   footer = <HomePageFooter />,
-  darkNavbar = false,
+  navbar,
 }: Readonly<LayoutProps>) {
   const [likeWhatOpen, setLikeWhatOpen] = useState(false);
-  const [bookDemoOpen, setBookDemoOpen] = useState(false);
   const [shouldShowLikeWhat, setShouldShowLikeWhat] = useState(false);
+  const navigate = useNavigate();
+
+  /* `/book-a-demo` IS the lead form, so the lead popup would only re-offer what is already on
+     screen. Read the path off the router so this holds wherever `Layout` is used. */
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+  const isDemoPage = pathname.replace(/\/+$/, "") === BOOK_DEMO_ROUTE;
 
   // Scroll reveal animation observer
   useEffect(() => {
@@ -54,10 +63,10 @@ export default function Layout({
   // Popup logic
   useEffect(() => {
     const hasSeenPopup = globalThis.localStorage.getItem("likeWhatUSeeShown");
-    if (!hasSeenPopup) {
+    if (!hasSeenPopup && !isDemoPage) {
       setShouldShowLikeWhat(true);
     }
-  }, []);
+  }, [isDemoPage]);
 
   useEffect(() => {
     if (!shouldShowLikeWhat) return;
@@ -80,7 +89,7 @@ export default function Layout({
   const handleLikeWhatBookDemo = () => {
     globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
     setLikeWhatOpen(false);
-    setBookDemoOpen(true);
+    navigate({ to: BOOK_DEMO_ROUTE });
   };
 
   const handleLikeWhatWhatsapp = () => {
@@ -91,17 +100,18 @@ export default function Layout({
   return (
     <div className={`relative w-full ${contentClassName} ${navbarClassName}`}>
       <header className={`sticky top-0 z-50 ${contentClassName ? "" : styles.themeDefault}`}>
-        <RateupNavbar darkNavbar={darkNavbar} />
+        {navbar ?? <RateupNavbar />}
       </header>
       <main>{children}</main>
       {footer}
       <Suspense
         fallback={
-          /* Placeholder launcher so the corner reserves its space instead of popping in. */
+          /* Placeholder launcher so the corner reserves its space instead of popping in.
+             Matches the real launcher's tile — 62px, 18px radius, same offsets. */
           <div
             role="status"
             aria-label="Loading support chat"
-            className="fixed right-1 bottom-8 z-50 size-12 animate-pulse rounded-full bg-muted sm:right-8"
+            className="fixed right-5.5 bottom-5.5 z-50 size-15.5 animate-pulse rounded-[18px] bg-muted"
           />
         }
       >
@@ -116,7 +126,6 @@ export default function Layout({
         onBookDemo={handleLikeWhatBookDemo}
         onWhatsapp={handleLikeWhatWhatsapp}
       />
-      <DemoModal open={bookDemoOpen} onClose={() => setBookDemoOpen(false)} />
       <CookieConsent
         variant="small"
         onAcceptCallback={() => {

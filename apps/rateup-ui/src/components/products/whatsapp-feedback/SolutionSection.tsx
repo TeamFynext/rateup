@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 import style from "./feedback.module.css";
 
@@ -76,7 +76,7 @@ function CopyBlock({
             </svg>
           </span>
         </button>
-        <BookDemoModal>
+        <BookDemoLink>
           <button className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-base pl-[22px] py-[6px] pr-[6px] text-[#0F2820] bg-periwinkle hover:bg-periwinkle-2 hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap">
             See Demo
             <span className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-[10px] bg-white/65 flex-shrink-0">
@@ -93,7 +93,7 @@ function CopyBlock({
               </svg>
             </span>
           </button>
-        </BookDemoModal>
+        </BookDemoLink>
       </div>
     </div>
   );

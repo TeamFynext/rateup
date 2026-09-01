@@ -27,7 +27,10 @@ const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
   const suffix = hour < 12 ? "AM" : "PM";
   const hour12 = hour % 12 === 0 ? 12 : hour % 12;
 
-  return { value, label: `${hour12}:${String(minute).padStart(2, "0")} ${suffix}` };
+  return {
+    value,
+    label: `${hour12}:${String(minute).padStart(2, "0")} ${suffix}`,
+  };
 });
 
 /** Sentinel for "no preference": Base UI's `Select` has no empty-string item, and the field is optional. */
@@ -49,14 +52,15 @@ const fromDateKey = (key: string) => {
 };
 
 interface BookDemoFormProps {
-  /** Ids are prefixed with this so a page and a dialog can both be mounted without colliding labels. */
+  /** Ids are prefixed with this so two instances can be mounted without colliding labels. */
   idPrefix?: string;
-  /** Fired after the request is accepted — the modal uses it to close itself. */
+  /** Fired after the request is accepted — the page swaps in its success panel. */
   onSuccess?: () => void;
   className?: string;
 }
 
-/** The demo-request form itself, shared by the dialog (`BookDemoComponent`) and the `/book-a-demo` page. */
+/** The demo-request form itself. It lives on the `/book-a-demo` page, which is the only place
+ *  the marketing site captures a lead — every "Book a demo" CTA routes there. */
 export default function BookDemoForm({
   idPrefix = "demo",
   onSuccess,
@@ -289,7 +293,9 @@ export default function BookDemoForm({
           />
         </Field>
 
-        <Button type="submit" disabled={isPending}>
+        {/* Full-width and tall: this is the only CTA on the demo page, and the modal reads
+            better for it too. */}
+        <Button type="submit" disabled={isPending} className="mt-1 h-12 w-full text-base font-bold">
           {isPending ? "Booking..." : "Book My Demo"}
         </Button>
 

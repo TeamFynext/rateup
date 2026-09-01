@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 /**
  * Closing call to action. Lives outside PricingSection so the route can place it after
@@ -26,11 +26,11 @@ export const PricingCta = () => {
           >
             Create free account
           </button>
-          <BookDemoModal>
+          <BookDemoLink>
             <span className="inline-block cursor-pointer rounded-[10px] border border-white/20 px-[22px] py-[15px] text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-white/10">
               Talk to sales →
             </span>
-          </BookDemoModal>
+          </BookDemoLink>
         </div>
       </div>
     </section>

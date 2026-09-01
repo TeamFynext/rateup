@@ -217,6 +217,28 @@
 
   --animate-panel-fade: panelFade 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-blink: blink 1.2s infinite both;
+
+  /* Homepage motion, from the marketing design system. `ru-rot` cycles the hero's
+     channel word through a four-item column; `ru-marquee` drives the client-logo
+     rail (the track holds two copies, so -50% is one seamless lap); `ru-orbit`
+     sweeps the retention loop's star; `ru-pulse` is the video play button's halo. */
+  --animate-ru-rot: ru-rot 12s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  --animate-ru-marquee: ru-marquee 44s linear infinite;
+  --animate-ru-orbit: ru-orbit 24s linear infinite;
+  --animate-ru-pulse: ru-pulse 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  /* Fills the active case-study tab's rail over one auto-advance dwell, so the
+     rotation is legible before it happens. Duration tracks CASE_DWELL_MS. */
+  --animate-ru-progress: ru-progress 8s linear forwards;
+  /* The integration tiles breathe one at a time. Each card runs the same 6.3s cycle with a
+     0.9s-per-index delay, and the lift occupies only the first ~16% of it, so exactly one
+     tile is raised at any moment and the bump travels along the row. */
+  --animate-ru-card-lift: ru-card-lift 6.3s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  /* Fires as the orbiting star passes a step node. Shares the 24s lap of `ru-orbit` so the
+     two stay locked; each node offsets by its own arrival time (see HowItWorks). The pop
+     occupies ~7% of the lap, so only the node being passed is raised. */
+  --animate-ru-node-pop: ru-node-pop 24s linear infinite;
+  --animate-ru-rise: ru-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
   --shadow-custom-base: var(--custom-shadow-base);
   --shadow-custom-hover: var(--custom-shadow-hover);
 
@@ -240,6 +262,97 @@
     40% {
       opacity: 1;
       transform: translateY(-3px);
+    }
+  }
+  @keyframes ru-rot {
+    0%,
+    19% {
+      transform: translateY(0);
+    }
+    25%,
+    44% {
+      transform: translateY(-25%);
+    }
+    50%,
+    69% {
+      transform: translateY(-50%);
+    }
+    75%,
+    100% {
+      transform: translateY(-75%);
+    }
+  }
+  @keyframes ru-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes ru-orbit {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes ru-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.45;
+    }
+    70%,
+    100% {
+      transform: scale(1.7);
+      opacity: 0;
+    }
+  }
+  @keyframes ru-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* Scroll-in entrance. `backwards` fill holds the start frame through the stagger delay, and
+   using an animation rather than a transition leaves the card's `transition-all` free for
+   hover — a transition-delay would have lagged the hover by the stagger too. */
+  @keyframes ru-rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  @keyframes ru-node-pop {
+    0%,
+    7%,
+    100% {
+      transform: scale(1);
+      box-shadow:
+        0 1px 3px rgb(16 24 40 / 0.05),
+        0 0 0 0 rgb(248 149 29 / 0);
+    }
+    3% {
+      transform: scale(1.18);
+      box-shadow:
+        0 6px 18px rgb(16 24 40 / 0.1),
+        0 0 0 6px rgb(248 149 29 / 0.18);
+    }
+  }
+  @keyframes ru-card-lift {
+    0%,
+    16%,
+    100% {
+      transform: translateY(0) scale(1);
+      box-shadow: 0 0 0 0 rgb(16 24 40 / 0);
+    }
+    7% {
+      transform: translateY(-6px) scale(1.035);
+      box-shadow: 0 14px 30px rgb(16 24 40 / 0.1);
     }
   }
 }
