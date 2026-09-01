@@ -1,8 +1,9 @@
-import { IconBrandWhatsapp, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
+import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
@@ -32,19 +33,13 @@ export function WhatsAppSettingsDetail({
   const isManual = waSettings?.[0]?.type === WaConfigType.Manual;
 
   return (
-    <div className="space-y-4 rounded-xl border bg-background p-4">
-      <div className="flex items-center gap-2 border-b pb-3">
-        <IconBrandWhatsapp className="h-5 w-5 text-green-500" />
-        <h3 className="text-lg font-semibold">WhatsApp Settings</h3>
-      </div>
+    <section className="flex flex-col gap-3">
+      <SectionHeading
+        title={translations("Connected accounts")}
+        hint={translations("Onboard through Meta, or configure a number by hand")}
+      />
       {isLoading ? (
-        <div className="flex flex-col gap-4 p-4">
-          <Skeleton className="h-2 w-1/2" />
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-7.5 w-75" />
-            <Skeleton className="h-7.5 w-75" />
-          </div>
-        </div>
+        <Skeleton className="h-24 w-full rounded-lg" />
       ) : (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
@@ -119,6 +114,6 @@ export function WhatsAppSettingsDetail({
           </TabsContent>
         </Tabs>
       )}
-    </div>
+    </section>
   );
 }

@@ -48,7 +48,7 @@ export const Route = createFileRoute("/dashboard/")({
 
     if (!user.onboardingChecklistCompleted && user.role === UserRole.SUPADM) {
       throw redirect({
-        to: "/login/setup",
+        to: "/dashboard/setup",
         replace: true,
       });
     }

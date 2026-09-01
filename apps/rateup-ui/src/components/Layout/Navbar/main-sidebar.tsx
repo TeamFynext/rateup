@@ -38,6 +38,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
     pathname,
     pipelineNav,
     resolvedUserInfo,
+    setupNav,
     staff,
     subscription,
     teams,
@@ -74,6 +75,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
                 conversationTags={conversationTags}
                 lifecycles={lifecycles}
                 pipelineNav={pipelineNav}
+                setupNav={setupNav}
                 userData={resolvedUserInfo ?? undefined}
                 staff={staff}
                 teams={teams}

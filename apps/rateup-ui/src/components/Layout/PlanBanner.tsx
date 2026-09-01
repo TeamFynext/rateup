@@ -130,6 +130,8 @@ export function PlanBanner() {
           size="sm"
           variant={kind === "limit" ? "destructive" : "default"}
           className="gap-1"
+          // Rendering as an anchor, so opt out of Base UI's native-<button> expectation.
+          nativeButton={false}
           render={<Link to="/dashboard/settings/billing" />}
         >
           {cta}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { FacebookBrandButtonProps } from "@/components/common/facebook-brand-button.tsx";
 import { FacebookBrandButton } from "@/components/common/facebook-brand-button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -11,7 +12,20 @@ import { MetaLoginAssets } from "@/types/enums.ts";
 
 import { MetaLoginButton } from "./meta-login-button.tsx";
 
-export function ContinueWithFacebookButton() {
+/**
+ * Meta's Embedded Signup, start to finish, wherever it is dropped: the brand button
+ * opens the asset picker, and {@link MetaLoginButton} runs `FB.login` and registers
+ * the business client. Both the channel settings page and the setup guide host it
+ * in place rather than sending people somewhere else to connect.
+ */
+export function ContinueWithFacebookButton({
+  className,
+  buttonType,
+}: Readonly<{
+  className?: string;
+  /** "login_with" reads "Log in with Facebook"; both wordings are on brand spec. */
+  buttonType?: FacebookBrandButtonProps["buttonType"];
+}> = {}) {
   const [opened, { open, close }] = useDisclosure(false);
   const { t: translations } = useTranslation();
   const [selectedAssets, setSelectedAssets] = useState<string[]>([MetaLoginAssets.WHATSAPP]);
@@ -69,7 +83,12 @@ export function ContinueWithFacebookButton() {
 
   return (
     <>
-      <FacebookBrandButton onClick={open} label={translations("Continue with Facebook")} />
+      <FacebookBrandButton
+        onClick={open}
+        buttonType={buttonType}
+        className={className}
+        label={buttonType === "login_with" ? undefined : translations("Continue with Facebook")}
+      />
       <Dialog open={opened} onOpenChange={(next) => (next ? open() : close())}>
         <DialogContent>
           <DialogTitle>Continue with Facebook</DialogTitle>
