@@ -1606,3 +1606,348 @@ async function creditConversationPacks(
     "Credited conversation packs",
   );
 }
+
+/* ── Manual reconciliation ────────────────────────────────────────────────────
+ *
+ * Razorpay webhooks are the normal path and they are reliable, but not perfectly:
+ * a delivery can be dropped, retried past its window, or rejected while a secret is
+ * mid-rotation. When that happens the order sits at PENDING and nothing ever moves
+ * it again — the customer has paid and re-reading our own database keeps returning
+ * the same stale row. This is the way out: ask Razorpay what actually happened and
+ * feed the answer through the very same handlers the webhook would have called, so a
+ * reconciled order is indistinguishable from one that arrived normally.
+ */
+
+/** How many stale orders one reconcile will look at. Bounds the calls to Razorpay. */
+const MAX_RECONCILED_ORDERS = 10;
+
+/** Razorpay's subscription statuses share their names with our enum, but only these are ours. */
+const RECONCILABLE_SUBSCRIPTION_STATUSES = new Set<string>(
+  Object.values(SubscriptionStatus) as string[],
+);
+
+/**
+ * Reverse of {@link SUBSCRIPTION_STATUS_BY_EVENT}, so a status polled from the API can
+ * be replayed through the same handler as the event that would have carried it.
+ */
+const EVENT_BY_SUBSCRIPTION_STATUS = Object.fromEntries(
+  Object.entries(SUBSCRIPTION_STATUS_BY_EVENT).map(([event, status]) => [status, event]),
+) as Partial<Record<SubscriptionStatus, SubscriptionStatusEvent>>;
+
+/** The webhook handlers report failure in-band rather than throwing; surface the reason. */
+function reconcileFailure(result: { success: boolean }, fallback: string) {
+  return "error" in result && result.error ? String(result.error) : fallback;
+}
+
+export interface PaymentReconcileResult {
+  /** True when something actually moved. The UI only reports success on a change. */
+  changed: boolean;
+  /** One plain-language line per thing that moved, for the toast. */
+  actions: string[];
+  /** Where the subscription ended up, or null when the org has none. */
+  subscriptionStatus: SubscriptionStatus | null;
+}
+
+/** The paid invoice's payment, for the activation email `updateSubscription` sends. */
+async function fetchLatestSubscriptionPayment(subscriptionId: string) {
+  try {
+    const invoices = await axios.get("https://api.razorpay.com/v1/invoices", {
+      params: { subscription_id: subscriptionId, count: 10 },
+      headers: { Authorization: `Basic ${credentials}` },
+    });
+    const paid = (invoices.data?.items ?? [])
+      .filter((item: RazorpayInvoiceListItem) => item.payment_id)
+      .sort(
+        (a: RazorpayInvoiceListItem, b: RazorpayInvoiceListItem) =>
+          (b.paid_at ?? b.issued_at ?? 0) - (a.paid_at ?? a.issued_at ?? 0),
+      )[0];
+    if (!paid?.payment_id) return undefined;
+
+    const payment = await axios.get(`https://api.razorpay.com/v1/payments/${paid.payment_id}`, {
+      headers: { Authorization: `Basic ${credentials}` },
+    });
+    return {
+      email: payment.data?.email as string | undefined,
+      amount: payment.data?.amount as number,
+      currency: payment.data?.currency as string | undefined,
+    };
+  } catch (error) {
+    // Only the receipt email depends on this. Losing it must not block the entitlement
+    // the customer has already paid for — `updateSubscription` skips the mail on undefined.
+    log.warn({ err: error, subscriptionId }, "Could not read the payment behind a subscription");
+    return undefined;
+  }
+}
+
+/** Replays a missed `subscription.charged` / status event for one org. */
+async function reconcileSubscription(orgId: string, actions: string[]) {
+  const subscription = await prisma.subscription.findUnique({
+    where: { orgId },
+    select: { subscriptionRef: true, expiresAt: true },
+  });
+
+  const subscriptionRef = subscription?.subscriptionRef;
+  if (!subscriptionRef?.startsWith("sub_")) return null;
+
+  const entity: RazorpaySubscriptionEntity & { status?: string } = (
+    await axios.get(`https://api.razorpay.com/v1/subscriptions/${subscriptionRef}`, {
+      headers: { Authorization: `Basic ${credentials}` },
+    })
+  ).data;
+
+  // `notes` are stamped at checkout and an older subscription may carry none. The webhook
+  // has nothing else to go on; here the caller's org is known, so fill the gap rather
+  // than fail the way the webhook would have.
+  const payloadEntity: RazorpaySubscriptionEntity = {
+    ...entity,
+    notes: { ...entity.notes, orgId: entity.notes?.orgId ?? orgId },
+  };
+
+  const status = RECONCILABLE_SUBSCRIPTION_STATUSES.has(entity.status ?? "")
+    ? (entity.status as SubscriptionStatus)
+    : null;
+
+  // The charge itself: Razorpay has billed a cycle we never recorded. `current_end`
+  // moving past our `expiresAt` is exactly what a missed `subscription.charged` looks
+  // like, and replaying it is what restores the org's entitlements.
+  const chargedThrough = entity.current_end ? new Date(entity.current_end * 1000) : null;
+  const missedCharge =
+    (status === SubscriptionStatus.active || status === SubscriptionStatus.completed) &&
+    chargedThrough !== null &&
+    (!subscription?.expiresAt || subscription.expiresAt < chargedThrough);
+
+  if (missedCharge) {
+    const payment = await fetchLatestSubscriptionPayment(subscriptionRef);
+    const result = await updateSubscription({
+      subscription: { entity: payloadEntity },
+      ...(payment ? { payment: { entity: payment } } : {}),
+    });
+    if (!result.success) {
+      throw new Error(reconcileFailure(result, "Could not apply the missed subscription charge"));
+    }
+    actions.push("Applied a payment Razorpay had already taken; plan renewed.");
+    return status;
+  }
+
+  // No missed charge, but the lifecycle state may still be behind — a cancellation or a
+  // halt that never reached us leaves the org looking active on a dead subscription.
+  const order = await prisma.order.findUnique({
+    where: { subscriptionId: subscriptionRef },
+    select: { subscriptionStatus: true },
+  });
+  const event = status ? EVENT_BY_SUBSCRIPTION_STATUS[status] : undefined;
+  if (status && event && order && order.subscriptionStatus !== status) {
+    const result = await applySubscriptionStatusEvent(event, {
+      subscription: { entity: payloadEntity },
+    });
+    if (!result.success) {
+      throw new Error(reconcileFailure(result, "Could not apply the subscription status"));
+    }
+    actions.push(`Subscription status corrected to ${status}.`);
+  }
+
+  return status;
+}
+
+/**
+ * Replays missed `payment.captured` events for one-off orders — conversation packs.
+ *
+ * Only a captured payment is acted on. An order with no successful payment is left at
+ * PENDING on purpose: a customer who abandoned checkout is harmless, whereas writing
+ * FAILED over an attempt Razorpay is still settling is not.
+ */
+async function reconcileOneOffOrders(orgId: string, actions: string[]) {
+  const pending = await prisma.order.findMany({
+    where: {
+      orgId,
+      paymentStatus: PaymentStatus.PENDING,
+      checkoutRefId: { startsWith: "order_" },
+      // A payment row already means the capture landed; nothing to replay.
+      payment: { is: null },
+    },
+    select: { id: true, checkoutRefId: true, name: true },
+    orderBy: { createdAt: "desc" },
+    take: MAX_RECONCILED_ORDERS,
+  });
+
+  for (const order of pending) {
+    try {
+      const res = await axios.get(
+        `https://api.razorpay.com/v1/orders/${order.checkoutRefId}/payments`,
+        { headers: { Authorization: `Basic ${credentials}` } },
+      );
+      const captured = (res.data?.items ?? []).find(
+        (item: { status?: string }) => item.status === "captured",
+      );
+      if (!captured) continue;
+
+      const result = await verifyPayment(
+        {
+          ...captured,
+          // Same gap-filling as above: `notes` come from checkout and the order is known.
+          notes: {
+            ...captured.notes,
+            rateupOrderId: captured.notes?.rateupOrderId ?? order.id,
+            orgId: captured.notes?.orgId ?? orgId,
+          },
+        },
+        "payment.captured",
+      );
+      if (!result.success) {
+        throw new Error(reconcileFailure(result, "Could not apply the captured payment"));
+      }
+      actions.push(`Recorded a completed payment for ${order.name}.`);
+    } catch (error) {
+      // One unreadable order must not abort the rest — an order created under a previous
+      // account's keys 400s here and is simply skipped.
+      log.warn({ err: error, orderId: order.id }, "Skipping one order during reconciliation");
+    }
+  }
+}
+
+/**
+ * Brings one org's billing state back in line with Razorpay.
+ *
+ * Safe to run at any time and as often as needed: every write it performs is one the
+ * webhook would have performed, and each is guarded — a conversation pack is keyed on
+ * its payment reference, a payment row is unique per order, and a subscription is only
+ * re-charged when Razorpay's cycle has genuinely moved past ours.
+ */
+export async function reconcileOrgPayments(orgId: string): Promise<PaymentReconcileResult> {
+  const actions: string[] = [];
+  const subscriptionStatus = await reconcileSubscription(orgId, actions);
+  await reconcileOneOffOrders(orgId, actions);
+
+  log.info({ orgId, actions }, "Reconciled billing against Razorpay");
+
+  return { changed: actions.length > 0, actions, subscriptionStatus };
+}
+
+/* ── The unattended sweep ─────────────────────────────────────────────────────
+ *
+ * Most customers never look at the billing page, so a renewal whose
+ * `subscription.charged` webhook was dropped is invisible until something breaks.
+ *
+ * It matters most in the hours before `downgradeExpiredSubscriptions` runs: that job
+ * reads `expiresAt` and returns anything in the past to the free plan. A missed renewal
+ * leaves a paying customer's `expiresAt` behind, so without this sweep the nightly
+ * downgrade actively demotes someone who has paid. The schedule puts this ahead of it.
+ */
+
+/** Long enough that a healthy webhook has certainly arrived and been recorded. */
+const SWEEP_SETTLE_MINUTES = 10;
+/** How far back to chase a stuck one-off order before treating it as abandoned. */
+const SWEEP_ONE_OFF_LOOKBACK_DAYS = 7;
+/** How far back a lapsed subscription is still worth asking Razorpay about. */
+const SWEEP_SUBSCRIPTION_LOOKBACK_DAYS = 45;
+/** Bounds the calls to Razorpay in one tick. Anything beyond this waits for the next. */
+const MAX_SWEPT_ORGS = 50;
+
+/** Statuses that say Razorpay should still be billing this subscription. */
+const LIVE_SUBSCRIPTION_STATUSES = [
+  SubscriptionStatus.active,
+  SubscriptionStatus.authenticated,
+  SubscriptionStatus.pending,
+];
+
+function daysAgo(days: number) {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Orgs whose billing state looks like a webhook went missing.
+ *
+ * Deliberately narrow: on a healthy day this returns nothing and the sweep makes no
+ * calls at all. Two shapes qualify, and neither can be produced by a customer simply
+ * choosing not to pay.
+ */
+async function findOrgsNeedingReconcile() {
+  const settledBefore = new Date(Date.now() - SWEEP_SETTLE_MINUTES * 60 * 1000);
+
+  const [staleOrders, lapsedSubscriptions] = await Promise.all([
+    // A one-off order that never got its `payment.captured`. Old enough that the webhook
+    // is not merely in flight, recent enough to still be worth chasing.
+    prisma.order.findMany({
+      where: {
+        paymentStatus: PaymentStatus.PENDING,
+        checkoutRefId: { startsWith: "order_" },
+        payment: { is: null },
+        orgId: { not: null },
+        createdAt: { lt: settledBefore, gt: daysAgo(SWEEP_ONE_OFF_LOOKBACK_DAYS) },
+      },
+      select: { orgId: true },
+      distinct: ["orgId"],
+      take: MAX_SWEPT_ORGS,
+    }),
+
+    // A subscription that has run past its paid-through date while its order still says
+    // Razorpay is billing it. Either the renewal charge never reached us, or it was
+    // genuinely cancelled and that event never reached us either — both need the answer
+    // from Razorpay, and both are wrong to leave alone.
+    prisma.subscription.findMany({
+      where: {
+        subscriptionRef: { startsWith: "sub_" },
+        expiresAt: { lt: settledBefore, gt: daysAgo(SWEEP_SUBSCRIPTION_LOOKBACK_DAYS) },
+        org: {
+          Order: {
+            some: {
+              subscriptionId: { startsWith: "sub_" },
+              subscriptionStatus: { in: LIVE_SUBSCRIPTION_STATUSES },
+            },
+          },
+        },
+      },
+      select: { orgId: true },
+      take: MAX_SWEPT_ORGS,
+    }),
+  ]);
+
+  const orgIds = new Set<string>();
+  for (const order of staleOrders) if (order.orgId) orgIds.add(order.orgId);
+  for (const subscription of lapsedSubscriptions) orgIds.add(subscription.orgId);
+
+  return [...orgIds].slice(0, MAX_SWEPT_ORGS);
+}
+
+export interface PaymentSweepResult {
+  scanned: number;
+  repaired: number;
+  failed: number;
+}
+
+/**
+ * Reconciles every org that looks like it is missing a payment.
+ *
+ * Runs the same {@link reconcileOrgPayments} a single org would, so the unattended path
+ * and any manual path cannot drift. Each org is isolated: one unreachable subscription
+ * must not stop the sweep from repairing the rest.
+ */
+export async function sweepMissedPayments(): Promise<PaymentSweepResult> {
+  const orgIds = await findOrgsNeedingReconcile();
+  if (!orgIds.length) {
+    log.info("Payment sweep found nothing to reconcile");
+    return { scanned: 0, repaired: 0, failed: 0 };
+  }
+
+  let repaired = 0;
+  let failed = 0;
+
+  for (const orgId of orgIds) {
+    try {
+      const result = await reconcileOrgPayments(orgId);
+      if (result.changed) {
+        repaired++;
+        log.warn(
+          { orgId, actions: result.actions },
+          "Payment sweep repaired billing state a webhook had missed",
+        );
+      }
+    } catch (error) {
+      failed++;
+      log.error({ err: error, orgId }, "Payment sweep could not reconcile one org");
+    }
+  }
+
+  log.info({ scanned: orgIds.length, repaired, failed }, "Payment sweep complete");
+  return { scanned: orgIds.length, repaired, failed };
+}

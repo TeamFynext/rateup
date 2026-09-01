@@ -244,6 +244,9 @@ describe("getVerifySubscriptionHandler", () => {
     expect(reply.code).toHaveBeenCalledWith(403);
     expect(reply.payload).toEqual({
       message: "This feature is not included in your subscription",
+      // The client shows "upgrade your plan" off this, not "contact your admin".
+      reason: "subscription",
+      missingFeatures: ["whatsapp"],
     });
   });
 
@@ -258,6 +261,9 @@ describe("getVerifySubscriptionHandler", () => {
     expect(reply.code).toHaveBeenCalledWith(403);
     expect(reply.payload).toEqual({
       message: "This feature is not included in your subscription",
+      // The client shows "upgrade your plan" off this, not "contact your admin".
+      reason: "subscription",
+      missingFeatures: ["whatsapp"],
     });
   });
 

@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import prisma from "./prisma.js";
 import { TeamFeature } from "../../generated/prisma/client.js";
 export { TeamFeature } from "../../generated/prisma/client.js";
+import type { AccessDenialReason } from "./auth.js";
 
 /**
  * Returns the set of TeamFeatures the user can access within an org.
@@ -76,6 +77,9 @@ export function requireFeature(feature: TeamFeature) {
 
       return reply.code(403).send({
         message: `Access to '${requiredFeature}' is not enabled for your team`,
+        // Not a billing problem — an admin has to grant the team this feature.
+        // See AccessDenialReason in utils/auth.ts.
+        reason: "team" satisfies AccessDenialReason,
       });
     }
   };
