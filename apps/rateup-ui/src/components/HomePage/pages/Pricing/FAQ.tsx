@@ -1,14 +1,6 @@
-import { motion } from "motion/react";
 import { useMemo } from "react";
 
 import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 
 import { conversationPackAnswer, resolveConversationPack } from "./pricing.data.ts";
 
@@ -37,15 +29,16 @@ const faqs: FaqEntry[] = [
     question: "Can I try RateUp before paying?",
     answer: `Yes — the Free plan is free forever and needs no card. It covers the inbox,
       automations, templates and chatbots, so you can run RateUp end to end before deciding
-      whether Starter or Pro is worth it. Upgrade whenever you are ready; you are billed
+      whether Plus or Pro is worth it. Upgrade whenever you are ready; you are billed
       from the day you upgrade.`,
   },
   {
     question: "Which plan do you recommend for my business?",
     answer: [
       `Free → test WhatsApp automation end to end`,
-      `Starter → growing shops running campaigns, loyalty and catalog sync`,
-      `Pro → high-volume teams that want the Meta Business Agent in the loop`,
+      `Plus → growing shops running campaigns, loyalty and catalog sync`,
+      `Pro → scaling teams past their first 10,000 conversations`,
+      `Max → high-volume teams that want the Meta Business Agent in the loop`,
       `Enterprise → unlimited volume, contracted terms and a dedicated manager`,
     ],
   },
@@ -75,57 +68,37 @@ export function buildFaqs(plans: RateupPaymentPlan[] | undefined): FaqEntry[] {
   );
 }
 
+/**
+ * The billing questions, as a plain read-through list rather than an accordion: every
+ * answer here is short enough to read at a glance, and a visitor comparing plans should
+ * not have to click each one open to find the one that applies to them.
+ */
 export function Faq({ plans }: Readonly<{ plans?: RateupPaymentPlan[] }>) {
   const entries = useMemo(() => buildFaqs(plans), [plans]);
 
-  const faqAccordion = entries.map((q) => (
-    <motion.div
-      key={q.question}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      viewport={{ once: true }}
-    >
-      <AccordionItem
-        value={q.question}
-        className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl my-2"
-      >
-        <AccordionTrigger className="group px-4 rounded-2xl transition-colors hover:bg-white/10 ">
-          <p className="font-semibold text-white ">{q.question}</p>
-        </AccordionTrigger>
-        <AccordionContent className="px-4">
-          {Array.isArray(q.answer) ? (
-            <ul>
-              {q.answer.map((ans) => (
-                <li className="text-sm text-white" key={ans}>
-                  {ans}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-white">{q.answer}</p>
-          )}
-        </AccordionContent>
-      </AccordionItem>
-    </motion.div>
-  ));
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="flex flex-col gap-2 text-white items-center py-12"
-    >
-      <div className="flex flex-col items-center justify-center gap-4">
-        <Badge className="px-3 py-1 text-sm">FAQs</Badge>
-        <h3 className="text-2xl font-bold text-white mb-8">Frequently Asked Questions</h3>
+    <section className="mx-auto max-w-[1240px] px-8 pt-18">
+      <h2 className="font-display m-0 mb-2 text-[26px] font-bold leading-[1.12] tracking-[-0.028em] text-foreground md:text-[36px]">
+        Billing questions
+      </h2>
+      <div className="max-w-[78ch]">
+        {entries.map((entry) => (
+          <div key={entry.question} className="border-b border-border py-5">
+            <p className="font-display m-0 mb-1.5 text-[17px] font-medium leading-[1.35] text-foreground">
+              {entry.question}
+            </p>
+            {Array.isArray(entry.answer) ? (
+              <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[15px] leading-[1.6] text-muted-foreground">
+                {entry.answer.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="m-0 text-[15px] leading-[1.6] text-muted-foreground">{entry.answer}</p>
+            )}
+          </div>
+        ))}
       </div>
-
-      <Accordion className="w-[85%]" defaultValue={[entries[0].question]}>
-        {faqAccordion}
-      </Accordion>
-    </motion.div>
+    </section>
   );
 }

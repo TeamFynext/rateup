@@ -42,27 +42,42 @@ import type { PaymentOrder } from "./billing-parts/shared.tsx";
  * Razorpay plan per cadence and leaves `paymentPlan` null, so reading only the legacy
  * relation shows "----" for billing cycle and cost on every Starter and Pro org.
  *
- * When both cadences exist, the active order's amount disambiguates which one the org
- * is actually on — that is the figure they were charged, so it beats guessing. With no
- * order to match, annual wins because it is the default cadence.
+ * A tier also links a separate plan per currency, so the candidates must include the
+ * dollar ones: an org that checked out in USD is subscribed to `usd*PaymentPlan` and to
+ * none of the rupee plans, and picking a rupee plan for it quoted ₹48,000/year to a
+ * customer charged $600.
+ *
+ * The active order records the currency and amount actually charged, so it decides:
+ * currency first (it rules out the whole wrong-currency half of the catalog even when
+ * the amounts happen to collide), then amount to pick the cadence. With no order to
+ * match, the legacy link wins, then annual, because that is the default cadence.
  */
 function resolveGatewayPlan(
   plan: SPlan | undefined,
   order: PaymentOrder | null,
 ): SPlanGatewayPlan | undefined {
-  if (plan?.paymentPlan) return plan.paymentPlan;
-
-  const candidates = [plan?.yearlyPaymentPlan, plan?.monthlyPaymentPlan].filter(
-    (candidate): candidate is SPlanGatewayPlan => Boolean(candidate),
-  );
+  const candidates = [
+    plan?.paymentPlan,
+    plan?.yearlyPaymentPlan,
+    plan?.monthlyPaymentPlan,
+    plan?.usdYearlyPaymentPlan,
+    plan?.usdMonthlyPaymentPlan,
+  ].filter((candidate): candidate is SPlanGatewayPlan => Boolean(candidate));
   if (candidates.length === 0) return undefined;
+
+  // Keep every candidate when the order names a currency no linked plan carries, rather
+  // than rendering nothing at all.
+  const sameCurrency = order?.currency
+    ? candidates.filter((candidate) => candidate.currency === order.currency)
+    : [];
+  const pool = sameCurrency.length > 0 ? sameCurrency : candidates;
 
   const matched =
     order?.amount != null
-      ? candidates.find((candidate) => Number(candidate.amount) === Number(order.amount))
+      ? pool.find((candidate) => Number(candidate.amount) === Number(order.amount))
       : undefined;
 
-  return matched ?? candidates[0];
+  return matched ?? pool[0];
 }
 
 export const Billing = ({
@@ -122,6 +137,8 @@ export const Billing = ({
       plan.paymentPlan ||
       plan.monthlyPaymentPlan ||
       plan.yearlyPaymentPlan ||
+      plan.usdMonthlyPaymentPlan ||
+      plan.usdYearlyPaymentPlan ||
       plan.stripeProduct
     );
   }, [subscription?.basePlan, isFreePlan]);
@@ -133,6 +150,11 @@ export const Billing = ({
   useEffect(() => {
     setIsProcessingPlan(latestOrderData?.subscriptionStatus === "pending");
   }, [latestOrderData?.subscriptionStatus]);
+
+  // Cancelling stops the renewal; the plan itself runs to the date it was paid through,
+  // and only then does the nightly downgrade move the org to Free. Every cancel surface
+  // names that date rather than leaving "until the validity expires" to be guessed at.
+  const endsOn = subscription?.expiresAt ? formatIsoDateString(subscription.expiresAt) : null;
 
   const CancelRazorpaySubscription = useCancelRazorpaySubscriptionMutation();
   const CancelStripeSubscription = useCancelStripeSubscriptionMutation();
@@ -283,9 +305,13 @@ export const Billing = ({
                 {translations("Your current Rateup plan subscription is successfully cancelled.")}
               </p>
               <p>
-                {translations(
-                  "You can still enjoy the premium features until the validity expires.",
-                )}
+                {endsOn
+                  ? `${translations("You keep every premium feature until")} ${endsOn}, ${translations(
+                      "after which this organisation moves to the Free plan.",
+                    )}`
+                  : translations(
+                      "You can still enjoy the premium features until the validity expires.",
+                    )}
               </p>
               <p>
                 {translations(
@@ -345,10 +371,13 @@ export const Billing = ({
             </DialogTitle>
             <DialogDescription className="text-base pt-2">
               {translations("Are you sure you want to cancel your active subscription")}?{" "}
-              {translations(
-                "You will lose access to premium features once the current billing period ends",
-              )}
-              .
+              {endsOn
+                ? `${translations("You keep premium features until")} ${endsOn}, ${translations(
+                    "and this organisation then moves to the Free plan.",
+                  )}`
+                : `${translations(
+                    "You will lose access to premium features once the current billing period ends",
+                  )}.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

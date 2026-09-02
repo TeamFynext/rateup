@@ -43,7 +43,7 @@ const chip = (active: boolean) =>
   `cursor-pointer rounded-full border px-3.5 py-1.5 text-[13px] font-bold transition-colors ${
     active
       ? "border-primary bg-primary text-white"
-      : "border-border bg-white text-muted-foreground hover:text-foreground"
+      : "border-border bg-card text-muted-foreground hover:text-foreground"
   }`;
 
 /**
@@ -135,7 +135,7 @@ export function ConversationCreditsDrawer({
         Calculate extra credits
       </SheetTrigger>
 
-      <SheetContent className="w-full gap-0 overflow-y-auto bg-white p-0 text-foreground sm:max-w-md">
+      <SheetContent className="w-full gap-0 overflow-y-auto bg-card p-0 text-foreground sm:max-w-md">
         <div className="border-b border-border px-6 pb-4 pt-5">
           <SheetTitle className="font-nunito pr-7 text-lg font-extrabold text-foreground">
             Additional conversation credits
@@ -203,7 +203,7 @@ export function ConversationCreditsDrawer({
                   : "Your plan already covers this"}
               </p>
             </div>
-            <div className="flex items-center gap-1 rounded-lg border border-border bg-white p-1">
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
               <button
                 type="button"
                 aria-label="Fewer packs"

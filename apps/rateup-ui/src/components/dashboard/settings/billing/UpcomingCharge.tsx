@@ -20,6 +20,7 @@ export function UpcomingCharge({
   currency,
   cadence,
   isFreePlan,
+  endsAt,
 }: {
   order: PaymentOrder | null;
   amount?: number | string;
@@ -27,6 +28,11 @@ export function UpcomingCharge({
   cadence?: string;
   /** Free never charges — and an org returned to Free has no order to read either. */
   isFreePlan?: boolean;
+  /**
+   * The subscription's paid-through date. A cancelled plan keeps running until this
+   * passes, so it — not the cancellation date — is what says whether access is over.
+   */
+  endsAt?: Date | string;
 }) {
   const { t: translations } = useTranslation();
 
@@ -37,6 +43,7 @@ export function UpcomingCharge({
     isFreePlan || status === "cancelled" || status === "completed" || status === "halted";
   const isRetrying = status === "pending";
   const chargeAt = order?.subscriptionChargeAt;
+  const hasEnded = endsAt ? dayjs().isAfter(dayjs(endsAt)) : undefined;
   const symbol = currency === "INR" ? "₹" : "$";
   const formattedAmount =
     typeof amount === "number" ? amount.toLocaleString(currency === "INR" ? "en-IN" : "en-US") : "";
@@ -49,9 +56,16 @@ export function UpcomingCharge({
           <p className="text-sm text-muted-foreground">
             {isFreePlan
               ? translations("The free plan does not renew or expire.")
-              : order?.subscriptionEndedAt
-                ? `${translations("Subscription ended on")} ${formatIsoDateString(order.subscriptionEndedAt)}`
-                : translations("This subscription will not renew.")}
+              : // Cancelling only stops the renewal. Leading with the cancellation date
+                // read as though the plan was already gone, when the customer still has
+                // it until the date they paid through.
+                endsAt
+                ? hasEnded
+                  ? `${translations("Your plan ended on")} ${formatIsoDateString(endsAt)} — ${translations("this organisation is moving to the Free plan.")}`
+                  : `${translations("Your plan runs until")} ${formatIsoDateString(endsAt)}, ${translations("then moves to the Free plan.")}`
+                : order?.subscriptionEndedAt
+                  ? `${translations("Cancelled on")} ${formatIsoDateString(order.subscriptionEndedAt)}`
+                  : translations("This subscription will not renew.")}
           </p>
         </>
       );

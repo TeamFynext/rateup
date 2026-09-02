@@ -2,11 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { getAllRateupPaymentPlans } from "@/backend/payment/payment.api";
 import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
-import { buildFaqs, Faq } from "@/components/HomePage/pages/Pricing/FAQ.tsx";
-import { PricingCta } from "@/components/HomePage/pages/Pricing/PricingCta.tsx";
-import { PricingPlanReview } from "@/components/HomePage/pages/Pricing/PricingPlanReview.tsx";
+import { buildFaqs } from "@/components/HomePage/pages/Pricing/FAQ.tsx";
 import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
-import { ClientLogoSectionNew } from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import { buildPageHead } from "@/lib/metadata";
 
@@ -63,19 +60,6 @@ function Pricing() {
   return (
     <Layout>
       <PricingSection plans={plans} />
-      <ClientLogoSectionNew />
-
-      <div
-        className="grid xs:grid-cols-1 lg:grid-cols-2 p-0"
-        style={{
-          background: "linear-gradient(to bottom right, #00397b, #013553, #1c518e)",
-        }}
-      >
-        <Faq plans={plans} />
-        <PricingPlanReview />
-      </div>
-
-      <PricingCta />
     </Layout>
   );
 }

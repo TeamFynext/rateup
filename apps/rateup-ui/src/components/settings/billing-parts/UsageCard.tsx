@@ -3,13 +3,21 @@
 import { IconRefresh } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import type { ConversationAddonOffer } from "@/backend/payment/payment.api";
 import { useUsageStats } from "@/backend/stats/stats.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 
 import { AIStats, LoyaltyStats, SurveyStats, TeamStats, WhatsappStats } from "./PlanStats.tsx";
 
-export function UsageCard({ subscription }: { subscription?: Subscription }) {
+export function UsageCard({
+  subscription,
+  allowance,
+}: {
+  subscription?: Subscription;
+  /** Packs bought on top of the plan; the conversation meter is read against this. */
+  allowance?: ConversationAddonOffer["allowance"];
+}) {
   const { t: translations } = useTranslation();
   const { data: stats, refetch, isFetching } = useUsageStats();
 
@@ -33,7 +41,7 @@ export function UsageCard({ subscription }: { subscription?: Subscription }) {
       <div className="flex flex-col justify-center gap-4">
         <TeamStats stats={stats} subscription={subscription} />
         <SurveyStats stats={stats} subscription={subscription} />
-        <WhatsappStats stats={stats} subscription={subscription} />
+        <WhatsappStats stats={stats} subscription={subscription} allowance={allowance} />
         <AIStats stats={stats} subscription={subscription} />
         <LoyaltyStats stats={stats} subscription={subscription} />
       </div>

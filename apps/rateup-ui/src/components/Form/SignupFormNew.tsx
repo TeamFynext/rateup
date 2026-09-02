@@ -5,10 +5,8 @@ import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
-import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import type { useSignUp } from "@/utils/auth/index.tsx";
 
-import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Card } from "../ui/card.tsx";
 import { AuthShell, AuthTitle } from "./AuthShell.tsx";
 import {
@@ -105,9 +103,6 @@ export function SignUpFlow({
       setCurrentStep(currentStep - 1);
     }
   };
-  const sendMail = useSendMailPlanSelectDetails();
-
-  const { cart } = useRouteAndCartStore();
 
   const handleSubmit = async () => {
     // Final guard for values prefilled from localStorage and never touched.
@@ -123,13 +118,6 @@ export function SignUpFlow({
     }
 
     const selectedPlan = JSON.parse(localStorage.getItem("selected_plan") ?? "null");
-    if (cart?.planId?.length) {
-      sendMail.mutate({
-        email: signupForm.getValues("email"),
-        name: signupForm.getValues("name"),
-        planName: cart?.name,
-      });
-    }
 
     setIsLoading(true);
     signUp(

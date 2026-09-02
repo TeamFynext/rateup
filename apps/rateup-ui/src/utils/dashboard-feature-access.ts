@@ -29,7 +29,8 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/whatsapp/flowbots", TeamFeature.Chatbots],
   ["/dashboard/instagram/flowbots", TeamFeature.Chatbots],
   ["/dashboard/whatsapp/templates", TeamFeature.Templates],
-  ["/dashboard/qr-studio", TeamFeature.QrStudio],
+  ["/dashboard/meta-agent", TeamFeature.AiChatbot],
+  ["/dashboard/qrCreator", TeamFeature.QrStudio],
   ["/dashboard/apps&services", TeamFeature.AppsServices],
   ["/dashboard/settings/channels", TeamFeature.Automation],
   ["/dashboard/settings/integrations", TeamFeature.AppsServices],
@@ -75,6 +76,7 @@ const PLAN_GATED_ROUTES: Array<[string, SubscriptionFeaturePathName, string]> = 
   ["/dashboard/loyalty", SubscriptionFeaturePathName.WhatsappLoyalty, "Loyalty"],
   ["/dashboard/commerce", SubscriptionFeaturePathName.WhatsappCatalog, "Commerce"],
   ["/dashboard/surveys", SubscriptionFeaturePathName.WebSurvey, "Surveys"],
+  ["/dashboard/meta-agent", SubscriptionFeaturePathName.AI, "The Meta Business Agent"],
 ];
 
 export interface PlanGatedRoute {

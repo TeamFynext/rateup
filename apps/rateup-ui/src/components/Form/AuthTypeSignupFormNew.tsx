@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import type { ICreateGoogleUser } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
 
@@ -89,8 +88,6 @@ function AuthTypeSignupForm({
     }
   };
 
-  const sendMail = useSendMailPlanSelectDetails();
-
   const handleSubmit = () => {
     const values = signupForm.getValues();
     setIsLoading(true);
@@ -119,23 +116,6 @@ function AuthTypeSignupForm({
       integrationsSelected: values?.integrationsSelected,
       referralCode: referralCode || undefined,
     };
-    const planData = localStorage.getItem("subscriptionRoutAndCart");
-    if (planData) {
-      const { cartData } = JSON.parse(planData);
-      sendMail.mutate({
-        email: values.email,
-        name: values.name,
-        orgName: values?.orgName,
-        planName: cartData?.name,
-        planId: cartData?.planId,
-        website: values?.website,
-        phoneNumber: values?.phoneNumber,
-        location: values?.location,
-        goals: values?.goals,
-        integrationsSelected: values?.integrationsSelected,
-      });
-    }
-
     if (authType === "apple") {
       createAppleUserMutation.mutate(data);
     } else {

@@ -3,24 +3,27 @@ import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
 import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
-import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
-import { useCheckSession } from "@/hooks/checkSession.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 import PlanCardNew from "./Card/PlanCardNew.tsx";
-import { CommerceHighlights } from "./CommerceHighlights.tsx";
 import { ComparisonTable } from "./ComparisonTable.tsx";
 import { ConversationCreditsDrawer } from "./ConversationCreditsDrawer.tsx";
+import { Faq } from "./FAQ.tsx";
+import { MetaBillingPanel } from "./MetaBillingPanel.tsx";
 import {
   type BillingPeriod,
   buildTiers,
   detectPricingCurrency,
+  formatCount,
   type PricingTier,
   tierRank,
   resolveConversationPack,
   selectGatewayPlan,
 } from "./pricing.data.ts";
+import { PricingCta } from "./PricingCta.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
+import { PricingSurface } from "./Utils/constants.ts";
 
 /**
  * Column counts for the compact (dialog) grid, keyed by how many tiers are actually on
@@ -36,8 +39,10 @@ const COMPACT_GRID_COLS: Record<number, string> = {
 };
 
 const toggleClass = (active: boolean) =>
-  `cursor-pointer rounded-full border-none px-[18px] py-[9px] text-[13px] font-bold transition-colors duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-    active ? "bg-primary text-white" : "bg-transparent text-muted-foreground hover:text-foreground"
+  `flex h-8 cursor-pointer items-center gap-2 rounded-full border-none px-[18px] text-sm font-medium transition-colors duration-150 ${
+    active
+      ? "bg-primary text-primary-foreground"
+      : "bg-transparent text-muted-foreground hover:text-foreground"
   }`;
 
 /**
@@ -94,8 +99,6 @@ const PricingSection = ({
   const onHighestTier = currentRank >= 0 && offeredTiers.length === 0;
 
   const { updateRouteAndCart } = useRouteAndCartStore();
-  const sendMail = useSendMailPlanSelectDetails();
-  const session = useCheckSession();
 
   function handleTierSelection(tier: PricingTier) {
     if (onPlanSelect) onPlanSelect();
@@ -132,48 +135,47 @@ const PricingSection = ({
 
     localStorage.setItem("subscriptionRoutAndCart", JSON.stringify({ route, cartData }));
 
-    const userInfo = localStorage.getItem("userInfo");
-    if (session && userInfo) {
-      const data = JSON.parse(userInfo);
-      sendMail.mutate({
-        email: data.data.email,
-        name: data.data.userName,
-        orgName: data.data.orgName,
-        planName: plan.name,
-        planId: plan.id,
-      });
-    }
-
     navigate({ to: route });
   }
+
+  const cards = compact ? offeredTiers : offeredTiers.filter((tier) => !tier.salesLed);
+  // On the page the sales-led tier is its own strip below the cards: it has no price to
+  // compare and its own call to action, so a fifth column of "Custom" only narrows the
+  // four that a visitor is actually choosing between. The dialog keeps it as a card.
+  const enterprise = compact ? undefined : offeredTiers.find((tier) => tier.salesLed);
 
   return (
     <div className={compact ? "text-foreground" : "bg-background text-foreground"}>
       <section className={compact ? "mx-auto max-w-[1240px]" : "mx-auto max-w-[1240px] px-8 pt-20"}>
-        <div className="text-center" hidden={compact}>
-          <div className="mb-3.5 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+        <div className="flex flex-col items-center gap-4 text-center" hidden={compact}>
+          <span className="text-[11.5px] font-semibold uppercase tracking-widest text-ru-blue-500">
             Pricing
-          </div>
-          <h1 className="font-nunito mx-auto my-0 max-w-[780px] text-[40px] font-black leading-[1.03] tracking-[-0.025em] text-foreground md:text-[64px]">
-            Start free. Scale when your conversations do.
+          </span>
+          <h1 className="font-display m-0 max-w-[20ch] text-[32px] font-bold leading-[1.06] tracking-[-0.03em] text-foreground md:text-[48px]">
+            Choose What You Need
           </h1>
-          <p className="mx-auto mt-5 max-w-[600px] text-lg leading-relaxed text-muted-foreground">
-            Every plan includes the WhatsApp Business API, the omnichannel inbox, automations and
-            web surveys. You only pay for volume, seats and the advanced modules.
+          <p className="m-0 max-w-[56ch] text-lg leading-[1.6] text-muted-foreground">
+            Every plan includes the WhatsApp Business API, the omnichannel inbox, loyalty and
+            surveys. Start on the Free plan, upgrade when your volume does.
           </p>
         </div>
 
         <div
-          className={`flex flex-wrap items-center justify-center gap-3.5 ${compact ? "mt-0" : "mt-9"}`}
+          className={`flex flex-wrap items-center justify-center gap-3 ${compact ? "mt-0" : "mt-8 mb-10"}`}
           hidden={onHighestTier}
         >
-          <div className="flex rounded-full border border-border bg-white p-1 shadow-[0_1px_2px_rgba(11,31,72,0.06)]">
+          <div
+            className={`inline-flex items-center gap-[3px] rounded-full p-[3px] ${PricingSurface}`}
+          >
             <button
               type="button"
               onClick={() => setPeriod("yearly")}
               className={toggleClass(period === "yearly")}
             >
-              Annual · save 20%
+              Annual
+              <span className="rounded-4xl border border-amber-200 bg-amber-50 px-[7px] py-0.5 text-[11px] font-semibold text-amber-700">
+                Save 20%
+              </span>
             </button>
             <button
               type="button"
@@ -183,18 +185,6 @@ const PricingSection = ({
               Monthly
             </button>
           </div>
-          {/* Sits with the toggles rather than under the cards: the allowance is the one
-              number a visitor arrives knowing, and the answer to "what if I go over?"
-              was below the fold where nobody scrolled to find it. The drawer prices the
-              headroom at the visitor's currency and whichever cadence is selected. */}
-          {!compact && conversationPack && (
-            <ConversationCreditsDrawer
-              tiers={tiers}
-              pack={conversationPack}
-              currency={currency}
-              period={period}
-            />
-          )}
         </div>
 
         <motion.div
@@ -203,16 +193,16 @@ const PricingSection = ({
             // reach four columns a breakpoint earlier than the page, where the grid sits
             // inside a 1240px container with the rest of the layout around it.
             compact
-              ? `mt-6 grid items-start gap-5 ${
-                  COMPACT_GRID_COLS[Math.min(offeredTiers.length, 4)] ?? COMPACT_GRID_COLS[4]
+              ? `mt-6 grid items-stretch gap-4 ${
+                  COMPACT_GRID_COLS[Math.min(cards.length, 4)] ?? COMPACT_GRID_COLS[4]
                 }`
-              : "mt-11 grid items-start gap-5 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+              : "grid items-stretch gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
           }
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          {offeredTiers.map((tier) => (
+          {cards.map((tier) => (
             <PlanCardNew
               key={tier.id}
               tier={tier}
@@ -227,8 +217,8 @@ const PricingSection = ({
         </motion.div>
 
         {onHighestTier && (
-          <div className="rounded-xl border border-border bg-white p-8 text-center">
-            <h3 className="font-nunito text-lg font-extrabold text-foreground">
+          <div className={`rounded-2xl p-8 text-center ${PricingSurface}`}>
+            <h3 className="font-display text-lg font-bold text-foreground">
               You&apos;re on our highest plan.
             </h3>
             <p className="mx-auto mt-2 max-w-[420px] text-sm text-muted-foreground">
@@ -238,20 +228,89 @@ const PricingSection = ({
           </div>
         )}
 
+        {/* Sits directly under the cards rather than in the FAQ: "what if I go over?" is
+            the question the allowance on every card provokes, and the drawer prices the
+            headroom at the visitor's currency and whichever cadence is selected. */}
+        {!compact && conversationPack && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-muted p-[18px_24px] shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+            <p className="m-0 flex-1 basis-[380px] text-sm leading-[1.55] text-muted-foreground">
+              Past your plan&apos;s conversation limit? Add{" "}
+              {formatCount(conversationPack.conversations)}-conversation credit packs — charged
+              once, never renewing.
+            </p>
+            <ConversationCreditsDrawer
+              tiers={tiers}
+              pack={conversationPack}
+              currency={currency}
+              period={period}
+            />
+          </div>
+        )}
+
+        {enterprise && (
+          <div
+            className={`mt-4 flex flex-wrap items-center justify-between gap-5 rounded-2xl p-6 ${PricingSurface}`}
+          >
+            <div className="flex-1 basis-[320px]">
+              <span className="text-[11.5px] font-semibold uppercase tracking-widest text-ru-n-400">
+                {enterprise.name}
+              </span>
+              <h3 className="font-display mt-1.5 mb-2 text-[22px] font-bold leading-[1.25] tracking-[-0.018em] text-foreground">
+                Volume pricing and a dedicated account manager.
+              </h3>
+              <p className="m-0 text-sm leading-[1.55] text-muted-foreground">
+                For teams past the Max plan&apos;s limits or running multiple WhatsApp numbers
+                across brands.
+              </p>
+            </div>
+            <ul className="m-0 flex flex-1 basis-[320px] list-none flex-wrap gap-x-7 gap-y-2 p-0">
+              {enterprise.features.map((feature) => (
+                <li
+                  key={feature}
+                  className="flex gap-[9px] text-sm leading-[1.5] text-secondary-foreground"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="mt-[3px] shrink-0 text-ru-green-600"
+                    aria-hidden
+                  >
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <BookDemoLink>
+              <span className="inline-flex h-10 cursor-pointer items-center whitespace-nowrap rounded-lg bg-primary px-[22px] text-sm font-medium text-primary-foreground transition-[filter,transform] duration-150 hover:brightness-[0.92] active:translate-y-px">
+                Contact Sales
+              </span>
+            </BookDemoLink>
+          </div>
+        )}
+
         <p
-          className="mx-auto mt-6 max-w-[720px] text-center text-[13px] text-muted-foreground"
-          hidden={onHighestTier}
+          className="mt-4 max-w-[80ch] text-[13px] leading-[1.45] text-ru-n-400"
+          hidden={onHighestTier || compact}
         >
-          A conversation is one 24-hour window with a customer on any connected channel. Annual
-          plans are billed yearly; monthly billing costs 20% more. WhatsApp message charges are
-          billed to your own Meta account and are not included above.
+          Prices exclude applicable taxes. A conversation is one 24-hour window with a customer on
+          any connected channel. WhatsApp conversation charges are billed separately by Meta to your
+          own Meta Business account and are never marked up by RateUp.
         </p>
       </section>
 
       {!compact && (
         <>
+          <MetaBillingPanel />
           <ComparisonTable tiers={tiers} />
-          <CommerceHighlights />
+          <Faq plans={plans} />
+          <PricingCta />
         </>
       )}
     </div>
