@@ -57,6 +57,7 @@ interface AccountFixture {
   id: string;
   currentTierId: string | null;
   currentTier: { pointsMultiplier: number } | null;
+  program: { tiersEnabled: boolean };
 }
 
 function rule(over: Record<string, unknown> = {}) {
@@ -84,7 +85,12 @@ function rule(over: Record<string, unknown> = {}) {
 }
 
 function account(over: Record<string, unknown> = {}) {
-  const base: AccountFixture = { id: CUSTOMER, currentTierId: null, currentTier: null };
+  const base: AccountFixture = {
+    id: CUSTOMER,
+    currentTierId: null,
+    currentTier: null,
+    program: { tiersEnabled: true },
+  };
   return { ...base, ...over };
 }
 
@@ -387,6 +393,25 @@ describe("calculatePointsForPurchase — the maths", () => {
     ]);
 
     expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).points).toBe(20);
+  });
+
+  test("ignores the tier multiplier when the programme has tiers switched off", async () => {
+    // `currentTierId` survives the flag being turned off so standing is not lost if it is
+    // turned back on — which is exactly why the multiplier has to be gated on the flag and
+    // not on the customer still having a tier.
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue(
+      account({
+        currentTierId: "gold",
+        currentTier: { pointsMultiplier: 3 },
+        program: { tiersEnabled: false },
+      }),
+    );
+    db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ pointsPerUnit: 1 })]);
+
+    const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
+
+    expect(res.points).toBe(100);
+    expect(res.calculation.tier_multiplier).toBe(1);
   });
 
   test("an untiered customer is treated as a 1x multiplier", async () => {

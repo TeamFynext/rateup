@@ -2078,6 +2078,12 @@ model LoyaltyProgram {
   currencySymbol     String @default("₹") // د.إ, $, €, £, ﷼, ₹
   defaultCountryCode String @default("IN")
 
+  // Self-reported typical order value, used to estimate what the program gives back as a
+  // percentage of revenue (see src/modules/loyalty/giveback.ts). Nullable on purpose:
+  // null means the merchant never told us, which the UI shows as a prompt. A 0 default
+  // would read as a real answer and silently produce a giveback of 0%.
+  averageOrderValue Decimal? @db.Decimal(12, 2)
+
   // Fixed Bonuses
   signupBonus       Int     @default(0)
   referralBonus     Int     @default(0) // For referrer
@@ -2103,6 +2109,12 @@ model LoyaltyProgram {
   enablePointsExpiration   Boolean @default(false)
   pointsExpirationMonths   Int     @default(12)
   referralMessageTemplate  Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
+
+  // Guided setup wizard (/dashboard/loyalty/onboarding) progress. The wizard commits each
+  // step for real while the program stays status "draft", so these track where to resume.
+  onboardingPresetKey   String? // which preset pack the user picked
+  onboardingStep        String? // last completed step id
+  onboardingCompletedAt DateTime?
 
   // Metadata
   createdAt DateTime @default(now())
