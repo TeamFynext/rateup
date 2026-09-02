@@ -79,6 +79,7 @@ import { Route as authLoginCompleteLoginIndexRouteImport } from './routes/(auth)
 import { Route as authLoginResetPasswordIndexRouteImport } from './routes/(auth)/login/reset-password/index'
 import { Route as authLoginVerifyEmailIndexRouteImport } from './routes/(auth)/login/verify-email/index'
 import { Route as authLoginVerifyPhoneNumberIndexRouteImport } from './routes/(auth)/login/verify-phone-number/index'
+import { Route as authSignupSuccessIndexRouteImport } from './routes/(auth)/signup/success/index'
 import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
 import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
@@ -548,6 +549,11 @@ const authLoginVerifyPhoneNumberIndexRoute =
     path: '/login/verify-phone-number/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const authSignupSuccessIndexRoute = authSignupSuccessIndexRouteImport.update({
+  id: '/(auth)/signup/success/',
+  path: '/signup/success/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const marketingBlogSlugIndexRoute = marketingBlogSlugIndexRouteImport.update({
   id: '/$slug/',
   path: '/$slug/',
@@ -1213,6 +1219,7 @@ export interface FileRoutesByFullPath {
   '/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
   '/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
+  '/signup/success/': typeof authSignupSuccessIndexRoute
   '/blog/$slug/': typeof marketingBlogSlugIndexRoute
   '/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
   '/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
@@ -1379,6 +1386,7 @@ export interface FileRoutesByTo {
   '/login/reset-password': typeof authLoginResetPasswordIndexRoute
   '/login/verify-email': typeof authLoginVerifyEmailIndexRoute
   '/login/verify-phone-number': typeof authLoginVerifyPhoneNumberIndexRoute
+  '/signup/success': typeof authSignupSuccessIndexRoute
   '/blog/$slug': typeof marketingBlogSlugIndexRoute
   '/pricing/shopify': typeof marketingPricingShopifyIndexRoute
   '/products/ai-automation': typeof marketingProductsAiAutomationIndexRoute
@@ -1551,6 +1559,7 @@ export interface FileRoutesById {
   '/(auth)/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/(auth)/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
   '/(auth)/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
+  '/(auth)/signup/success/': typeof authSignupSuccessIndexRoute
   '/(marketing)/blog/$slug/': typeof marketingBlogSlugIndexRoute
   '/(marketing)/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
   '/(marketing)/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
@@ -1724,6 +1733,7 @@ export interface FileRouteTypes {
     | '/login/reset-password/'
     | '/login/verify-email/'
     | '/login/verify-phone-number/'
+    | '/signup/success/'
     | '/blog/$slug/'
     | '/pricing/shopify/'
     | '/products/ai-automation/'
@@ -1890,6 +1900,7 @@ export interface FileRouteTypes {
     | '/login/reset-password'
     | '/login/verify-email'
     | '/login/verify-phone-number'
+    | '/signup/success'
     | '/blog/$slug'
     | '/pricing/shopify'
     | '/products/ai-automation'
@@ -2061,6 +2072,7 @@ export interface FileRouteTypes {
     | '/(auth)/login/reset-password/'
     | '/(auth)/login/verify-email/'
     | '/(auth)/login/verify-phone-number/'
+    | '/(auth)/signup/success/'
     | '/(marketing)/blog/$slug/'
     | '/(marketing)/pricing/shopify/'
     | '/(marketing)/products/ai-automation/'
@@ -2188,6 +2200,7 @@ export interface RootRouteChildren {
   authLoginResetPasswordIndexRoute: typeof authLoginResetPasswordIndexRoute
   authLoginVerifyEmailIndexRoute: typeof authLoginVerifyEmailIndexRoute
   authLoginVerifyPhoneNumberIndexRoute: typeof authLoginVerifyPhoneNumberIndexRoute
+  authSignupSuccessIndexRoute: typeof authSignupSuccessIndexRoute
   marketingPricingShopifyIndexRoute: typeof marketingPricingShopifyIndexRoute
   marketingProductsAiAutomationIndexRoute: typeof marketingProductsAiAutomationIndexRoute
   marketingProductsAiReviewIndexRoute: typeof marketingProductsAiReviewIndexRoute
@@ -2717,6 +2730,13 @@ declare module '@tanstack/react-router' {
       path: '/login/verify-phone-number'
       fullPath: '/login/verify-phone-number/'
       preLoaderRoute: typeof authLoginVerifyPhoneNumberIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/signup/success/': {
+      id: '/(auth)/signup/success/'
+      path: '/signup/success'
+      fullPath: '/signup/success/'
+      preLoaderRoute: typeof authSignupSuccessIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)/blog/$slug/': {
@@ -3726,6 +3746,7 @@ const rootRouteChildren: RootRouteChildren = {
   authLoginResetPasswordIndexRoute: authLoginResetPasswordIndexRoute,
   authLoginVerifyEmailIndexRoute: authLoginVerifyEmailIndexRoute,
   authLoginVerifyPhoneNumberIndexRoute: authLoginVerifyPhoneNumberIndexRoute,
+  authSignupSuccessIndexRoute: authSignupSuccessIndexRoute,
   marketingPricingShopifyIndexRoute: marketingPricingShopifyIndexRoute,
   marketingProductsAiAutomationIndexRoute:
     marketingProductsAiAutomationIndexRoute,

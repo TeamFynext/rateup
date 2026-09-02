@@ -5,10 +5,11 @@ import type { ReactNode } from "react";
 import { BOOK_DEMO_ROUTE } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import {
   ArrowRight,
-  BookDemoCta,
+  ClosingCta,
   Eyebrow,
+  HERO_UNDER_NAV,
+  HERO_WASH,
   useReveal,
-  WhatsAppCta,
   WhatsAppGlyph,
   WHATSAPP_HREF,
 } from "@/components/RateupHomePage/shared/home-ui.tsx";
@@ -88,8 +89,8 @@ export default function ContactUs() {
   return (
     <main className="bg-white">
       {/* --- how to reach us --- */}
-      <section className="border-b border-ru-n-100 bg-[linear-gradient(180deg,#f1f6fc_0%,#fbfcfe_62%,#ffffff_100%)]">
-        <div className="mx-auto max-w-280 px-5 py-14 sm:py-26">
+      <section className={`${HERO_WASH} ${HERO_UNDER_NAV}`}>
+        <div className="mx-auto max-w-280 px-5 pb-14 sm:pb-26">
           <div className="mx-auto mb-8 max-w-190 text-center sm:mb-12">
             <Eyebrow className="mb-4.5" icon={<IconMail className="size-4" stroke={1.9} />}>
               Contact us
@@ -191,24 +192,13 @@ export default function ContactUs() {
       </section>
 
       {/* --- closing --- */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-280 px-5 py-14 sm:py-22">
-          <div className="flex flex-wrap items-center justify-between gap-4.5 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-5 shadow-sm sm:p-8">
-            <div className="min-w-0 flex-[1_1_280px]">
-              <div className="font-display text-[clamp(1.1875rem,2.4vw,1.4375rem)] font-bold tracking-[-0.02em] text-ru-n-700">
-                Would rather just see it working?
-              </div>
-              <div className="mt-1.25 text-[15px] text-ru-n-500">
-                Twenty minutes, your catalogue, our demo number.
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <BookDemoCta className="max-sm:w-full max-sm:justify-center" />
-              <WhatsAppCta className="max-sm:w-full max-sm:justify-center" />
-            </div>
-          </div>
-        </div>
-      </section>
+      <ClosingCta
+        eyebrow="Answered by the people who build RateUp"
+        title="Would rather just see it working?"
+      >
+        Twenty minutes, your catalogue, our demo number — or send the question straight to WhatsApp
+        and skip the calendar.
+      </ClosingCta>
     </main>
   );
 }
