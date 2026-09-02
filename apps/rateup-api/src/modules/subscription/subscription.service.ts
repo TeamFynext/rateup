@@ -239,6 +239,24 @@ export async function getSubscription(orgId: string) {
               currency: true,
             },
           },
+          // A tier links a separate Razorpay plan per currency, and an org that checked
+          // out in dollars is subscribed to one of these. Omitting them left the client
+          // with only the rupee plans to price the subscription from, so a $600/year
+          // subscriber was shown ₹48,000/year.
+          usdMonthlyPaymentPlan: {
+            select: {
+              period: true,
+              amount: true,
+              currency: true,
+            },
+          },
+          usdYearlyPaymentPlan: {
+            select: {
+              period: true,
+              amount: true,
+              currency: true,
+            },
+          },
           stripeProduct: {
             select: {
               interval: true,
