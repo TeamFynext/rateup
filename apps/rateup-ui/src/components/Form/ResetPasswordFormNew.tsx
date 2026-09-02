@@ -218,6 +218,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
 
           {isEmailPage ? (
             <form
+              method="post"
               className="flex flex-col gap-4"
               onSubmit={emailForm.handleSubmit(onSubmit)}
               onKeyDown={getHotkeyHandler([
@@ -264,6 +265,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
             </form>
           ) : (
             <form
+              method="post"
               className="flex flex-col gap-4"
               onSubmit={pwdForm.handleSubmit(onSubmit)}
               onKeyDown={getHotkeyHandler([

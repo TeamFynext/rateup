@@ -106,7 +106,15 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
             </div>
           </div>
 
-          <form className="flex flex-col gap-4" onSubmit={loginForm.handleSubmit(handleSubmit)}>
+          {/* `method="post"` guards the window between the server sending this HTML and
+              React hydrating it: until the handler below is attached, a submit is the
+              browser's own, and a GET one would write the password into the URL, the
+              address bar, browser history and every access log along the way. */}
+          <form
+            method="post"
+            className="flex flex-col gap-4"
+            onSubmit={loginForm.handleSubmit(handleSubmit)}
+          >
             <FieldGroup className="gap-4">
               <Controller
                 name="email"

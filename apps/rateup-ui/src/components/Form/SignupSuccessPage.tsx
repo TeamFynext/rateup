@@ -1,10 +1,11 @@
-import { IconArrowRight, IconCheck, IconStarFilled } from "@tabler/icons-react";
+import { IconArrowRight, IconCheck, IconExternalLink, IconStarFilled } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useUserInfo } from "@/backend/user/user.query";
+import { docsPath } from "@/utils/constants.ts";
 
-import { Button } from "../ui/button.tsx";
+import { Button, buttonVariants } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { AUTH_CTA, AuthShell, AuthTitle } from "./AuthShell.tsx";
 
@@ -70,13 +71,20 @@ export default function SignupSuccessPage() {
               {translations("Go to dashboard")}
               <IconArrowRight className="size-4" />
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: "/dashboard/settings/team" })}
-              className="h-9 w-full cursor-pointer rounded-lg text-[13.5px] font-semibold"
+            {/* A real anchor, not a Button with an onClick: this leaves the app, so it
+                has to open in a new tab and behave like a link on middle-click. */}
+            <a
+              href={docsPath}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonVariants({
+                variant: "outline",
+                className: "h-9 w-full rounded-lg text-[13.5px] font-semibold",
+              })}
             >
-              {translations("Invite a teammate")}
-            </Button>
+              {translations("Read the docs")}
+              <IconExternalLink className="size-4" />
+            </a>
           </div>
         </Card>
 
