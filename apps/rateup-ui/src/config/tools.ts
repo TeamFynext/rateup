@@ -28,6 +28,13 @@ export interface ToolStep {
   body: string;
 }
 
+export interface ToolSoftwareApp {
+  name: string;
+  description: string;
+  applicationCategory: "UtilityApplication" | "BusinessApplication";
+  featureList: string[];
+}
+
 export interface ToolDefinition {
   /** URL segment under /tools */
   slug: string;
@@ -48,6 +55,7 @@ export interface ToolDefinition {
   /** Headline for the closing conversion band. */
   cta: string;
   faqs: ToolFaq[];
+  softwareApp: ToolSoftwareApp;
 }
 
 export const TOOLS_BASE_PATH = "/tools";
@@ -111,6 +119,19 @@ export const TOOLS: ToolDefinition[] = [
           "Yes. On mobile it opens the WhatsApp app; on desktop it opens WhatsApp Web or the desktop app. The same link works for both, so you only need one.",
       },
     ],
+    softwareApp: {
+      name: "WhatsApp Link Generator",
+      description:
+        "Free WhatsApp link generator that creates wa.me click-to-chat links with an optional prefilled message. Runs entirely in your browser — no signup, no expiry, works on mobile and desktop.",
+      applicationCategory: "UtilityApplication",
+      featureList: [
+        "Generate wa.me click-to-chat links",
+        "Add a prefilled message with automatic URL encoding",
+        "Automatic phone number normalisation to international format",
+        "Works on mobile and desktop",
+        "No signup, no link expiry",
+      ],
+    },
   },
   {
     slug: "whatsapp-qr-code-generator",
@@ -168,6 +189,20 @@ export const TOOLS: ToolDefinition[] = [
           "No. There is no signup, no watermark and no expiry, and the QR is generated in your browser rather than on a server.",
       },
     ],
+    softwareApp: {
+      name: "WhatsApp QR Code Generator",
+      description:
+        "Free WhatsApp QR code generator that turns your number and an optional prefilled message into a print-ready QR code. Level H error correction for packaging and print, custom colours, PNG and SVG download. Generated in your browser — no signup, no watermark, no expiry.",
+      applicationCategory: "UtilityApplication",
+      featureList: [
+        "Generate a QR code from your WhatsApp number and optional prefilled message",
+        "Level H error correction — scans with up to 30% of the code damaged or covered",
+        "Custom colour options",
+        "PNG download for print, SVG for design files",
+        "Generated in your browser, not on a server",
+        "No signup, no watermark, no expiry",
+      ],
+    },
   },
   {
     slug: "whatsapp-pricing-calculator",
@@ -235,6 +270,20 @@ export const TOOLS: ToolDefinition[] = [
           "It applies Meta's published rate card for your market, walks the volume tiers band by band on utility and authentication, and excludes the utility templates you tell it land inside an open service window — which is how Meta actually bills. That makes it as accurate as your own volume and service-window estimates. It does not model free-entry-point windows from Click-to-WhatsApp ads, which would push your bill lower still.",
       },
     ],
+    softwareApp: {
+      name: "WhatsApp API Pricing Calculator",
+      description:
+        "Free calculator for your monthly WhatsApp Business API bill using Meta's published per-message rates for your market. Handles marketing, utility and authentication categories, walks volume tiers band by band, and excludes utility templates sent inside an open service window. Results in USD and INR. No signup required.",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "Meta's published rate card by country and message category",
+        "Marketing, utility and authentication message pricing",
+        "Band-by-band volume tier calculation for utility and authentication",
+        "Excludes utility templates sent inside an open service window",
+        "Monthly bill estimate in USD and INR",
+        "No signup, runs in your browser",
+      ],
+    },
   },
   {
     slug: "rto-loss-calculator",
@@ -292,6 +341,19 @@ export const TOOLS: ToolDefinition[] = [
           "It works because it reaches people where they reply. An order confirmation sent on WhatsApp gets far higher engagement than an IVR call or SMS, and a single tap to confirm or cancel takes seconds. Brands typically target a several-percentage-point drop in RTO — use the recovery slider above to see what that is worth on your own numbers.",
       },
     ],
+    softwareApp: {
+      name: "COD RTO Loss Calculator",
+      description:
+        "Free calculator that shows what Return to Origin (RTO) on cash-on-delivery orders is costing your ecommerce brand — direct shipping and packaging losses plus working capital blocked in returned inventory, with a recovery slider to model the impact of reducing your RTO rate. No signup required.",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "Calculate direct RTO loss from forward shipping, return shipping and packaging",
+        "Estimate working capital blocked in returned inventory",
+        "Recovery slider to model savings from reducing RTO rate",
+        "Benchmarks for COD RTO rates of Indian D2C brands",
+        "No signup, runs in your browser",
+      ],
+    },
   },
   {
     slug: "nps-survey-templates",
@@ -349,6 +411,20 @@ export const TOOLS: ToolDefinition[] = [
           "Email NPS surveys typically see single-digit response rates. A one-tap survey delivered in WhatsApp, where the customer already reads messages, does substantially better — and the reply lands in a conversation you can continue rather than in an inbox nobody monitors.",
       },
     ],
+    softwareApp: {
+      name: "NPS Survey Templates + NPS Calculator",
+      description:
+        "Ready-to-send NPS survey templates for ecommerce, restaurants, clinics, salons, SaaS and more — with score-based follow-ups for promoters, passives and detractors, recommended send timing, and a built-in NPS score calculator. No signup, no email gate.",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "16 NPS survey templates across 5 industry groups",
+        "Score-based follow-up questions for promoters, passives and detractors",
+        "Recommended send timing per industry",
+        "Built-in NPS score calculator (promoters, passives, detractors)",
+        "Copy-and-edit templates for WhatsApp delivery",
+        "No signup, no email gate",
+      ],
+    },
   },
 ];
 
@@ -367,8 +443,9 @@ export const getRelatedTools = (slug: string, limit = 3): ToolDefinition[] =>
 
 const SITE_URL = "https://rateup.app";
 
-/** FAQPage JSON-LD, built from the same FAQ copy the page renders. */
+/** FAQPage JSON-LD, matching the FAQ Schema in the SEO document. */
 export const buildFaqJsonLd = (faqs: ToolFaq[]) => ({
+  "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: faqs.map((faq) => ({
     "@type": "Question",
@@ -379,6 +456,45 @@ export const buildFaqJsonLd = (faqs: ToolFaq[]) => ({
     },
   })),
 });
+
+/** SoftwareApplication JSON-LD, matching the Tool Schema in the SEO document. */
+export const buildToolSoftwareAppJsonLd = (tool: ToolDefinition) => {
+  const url = `${SITE_URL}${toolPath(tool.slug)}`;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: tool.softwareApp.name,
+    url,
+    description: tool.softwareApp.description,
+    applicationCategory: tool.softwareApp.applicationCategory,
+    operatingSystem: "Any",
+    isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+    },
+    featureList: tool.softwareApp.featureList,
+    publisher: {
+      "@type": "Organization",
+      name: "RateUp",
+      url: SITE_URL,
+    },
+  };
+};
+
+/** Head script tags for FAQ Schema and Tool Schema (placed below meta tags in head). */
+export const buildToolHeadScripts = (tool: ToolDefinition) => [
+  {
+    type: "application/ld+json",
+    children: JSON.stringify(buildFaqJsonLd(tool.faqs)),
+  },
+  {
+    type: "application/ld+json",
+    children: JSON.stringify(buildToolSoftwareAppJsonLd(tool)),
+  },
+];
 
 export const buildBreadcrumbJsonLd = (crumbs: { name: string; url: string }[]) => ({
   "@type": "BreadcrumbList",
@@ -391,46 +507,12 @@ export const buildBreadcrumbJsonLd = (crumbs: { name: string; url: string }[]) =
 });
 
 /**
- * Structured data for a single tool page: the tool itself as a WebApplication,
- * its FAQ, and the breadcrumb trail back to the homepage.
+ * Backwards compatibility helper returning the tool schemas.
  */
-export const buildToolJsonLd = (tool: ToolDefinition) => {
-  const url = `${SITE_URL}${toolPath(tool.slug)}`;
-
-  return {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebApplication",
-        "@id": `${url}#app`,
-        name: tool.headline,
-        url,
-        description: tool.tagline,
-        applicationCategory: "BusinessApplication",
-        operatingSystem: "Web",
-        browserRequirements: "Requires a modern web browser with JavaScript enabled",
-        isAccessibleForFree: true,
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: "INR",
-        },
-        publisher: {
-          "@type": "Organization",
-          "@id": `${SITE_URL}#organization`,
-          name: "RateUp",
-          url: SITE_URL,
-        },
-      },
-      buildFaqJsonLd(tool.faqs),
-      buildBreadcrumbJsonLd([
-        { name: "Home", url: SITE_URL },
-        { name: "Tools", url: `${SITE_URL}${TOOLS_BASE_PATH}` },
-        { name: tool.name, url },
-      ]),
-    ],
-  };
-};
+export const buildToolJsonLd = (tool: ToolDefinition) => [
+  buildFaqJsonLd(tool.faqs),
+  buildToolSoftwareAppJsonLd(tool),
+];
 
 /** ItemList JSON-LD for the /tools directory page. */
 export const buildToolsIndexJsonLd = () => ({

@@ -1,12 +1,25 @@
-import { IconArrowLeft, IconBrandWhatsapp, IconCheck, IconShieldCheck } from "@tabler/icons-react";
+import { IconArrowLeft, IconBrandWhatsapp, IconCheck } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
+import type { CSSProperties } from "react";
 import { useState } from "react";
 
-import { RateupStar } from "@/components/integrations/logos";
+import { MetaLockup, RateupStar } from "@/components/integrations/logos";
 import { rateupLogo, rateupLogoWhite } from "@/utils/constants";
 
 import BookDemoForm from "../helpers/BookDemoForm";
+
+/**
+ * The sticky header's full height, measured off `BookDemoNav`'s own classes: its tallest
+ * child is the 46px WhatsApp pill, and around it sit the pill's and the wrapper's vertical
+ * padding. The page band pulls itself up by exactly this and adds the same back as padding,
+ * so the warm wash runs to the top of the page and reads behind the translucent nav pill.
+ *
+ * Both halves read the one value, so they cannot drift. Revisit it if the nav's padding or
+ * its tallest child changes — anything short of the real height leaves a strip of page
+ * ground showing above the wash.
+ */
+const NAV_HEIGHT = "calc(46px + 2 * clamp(8px, 1.1vw, 12px) + 2 * clamp(8px, 1.3vw, 16px))";
 
 /** Click-to-chat link for the support number, shared by the nav pill and the "in a hurry" card. */
 const WHATSAPP_HREF = `https://wa.me/${import.meta.env.VITE_SUPPORT_WHATSAPP}?text=${encodeURIComponent(
@@ -102,9 +115,15 @@ export default function BookDemoPage() {
   };
 
   /* The design's warm wash: cream at the top settling into #fcfcfd — the same value as the
-     `ink-25` canvas — so the section dissolves into the site ground instead of ending on an edge. */
+     `ink-25` canvas — so the section dissolves into the site ground instead of ending on an edge.
+     The negative top margin runs it up under the sticky nav, whose pill is translucent over a
+     blur and paints no ground of its own; the padding-top adds that height back, leaving the
+     design's clamp(40px,6vw,72px) of air above the eyebrow. See `NAV_HEIGHT`. */
   return (
-    <div className="border-b border-b-[#f1eadd] bg-[linear-gradient(180deg,#fffaf0_0%,#fefcf8_55%,#fcfcfd_100%)] px-5 pt-[clamp(40px,6vw,72px)] pb-[clamp(48px,7vw,88px)]">
+    <div
+      style={{ "--bd-nav-h": NAV_HEIGHT } as CSSProperties}
+      className="-mt-(--bd-nav-h) border-b border-b-[#f1eadd] bg-[linear-gradient(180deg,#fffaf0_0%,#fefcf8_55%,#fcfcfd_100%)] px-5 pt-[calc(clamp(40px,6vw,72px)+var(--bd-nav-h))] pb-[clamp(48px,7vw,88px)]"
+    >
       <div className="mx-auto grid w-full max-w-[1120px] items-start gap-[clamp(32px,5vw,64px)] lg:grid-cols-2">
         {/* --- the pitch --- */}
         <div className="min-w-0">
@@ -139,9 +158,10 @@ export default function BookDemoPage() {
 
           <div className="mb-7 flex flex-wrap gap-2.5">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-[13px] py-[7px]">
-              <IconShieldCheck className="size-[15px] text-primary" stroke={1.9} />
+              {/* The lockup already carries the "Meta" wordmark, so the label drops it. */}
+              <MetaLockup className="h-6" />
               <span className="text-[13.5px] font-medium text-secondary-foreground">
-                Meta Business Partner
+                Business Partner
               </span>
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-[13px] py-[7px]">

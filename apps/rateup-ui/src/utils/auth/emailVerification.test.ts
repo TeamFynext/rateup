@@ -6,6 +6,10 @@ const claim = vi.hoisted(() => ({
   readThrows: false,
   refreshes: 0,
   refreshThrows: false,
+  /** What the API answers when the session carries no claim at all. */
+  apiVerified: true,
+  apiCalls: 0,
+  apiThrows: false,
 }));
 
 vi.mock("supertokens-auth-react/recipe/session", () => ({
@@ -24,9 +28,14 @@ vi.mock("supertokens-auth-react/recipe/emailverification", () => ({
       if (claim.refreshThrows) throw new Error("network");
     },
   },
+  isEmailVerified: async () => {
+    claim.apiCalls += 1;
+    if (claim.apiThrows) throw new Error("no session");
+    return { status: "OK", isVerified: claim.apiVerified };
+  },
 }));
 
-import { isEmailVerified } from "./emailVerification";
+import { forgetEmailVerification, isEmailVerified } from "./emailVerification";
 
 describe("isEmailVerified", () => {
   beforeEach(() => {
@@ -34,6 +43,10 @@ describe("isEmailVerified", () => {
     claim.readThrows = false;
     claim.refreshes = 0;
     claim.refreshThrows = false;
+    claim.apiVerified = true;
+    claim.apiCalls = 0;
+    claim.apiThrows = false;
+    forgetEmailVerification();
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -41,6 +54,7 @@ describe("isEmailVerified", () => {
     claim.reads = [true];
     expect(await isEmailVerified()).toBe(true);
     expect(claim.refreshes).toBe(0);
+    expect(claim.apiCalls).toBe(0);
   });
 
   test("re-checks a cached false — the claim lags a verification done elsewhere", async () => {
@@ -56,12 +70,36 @@ describe("isEmailVerified", () => {
     expect(await isEmailVerified()).toBe(false);
   });
 
-  test("an absent claim is not a refusal", async () => {
+  test("asks the API when the session carries no claim", async () => {
+    // A session restored on a later visit can arrive with no `st-ev` at all. Reading
+    // that as "verified" walked an unverified visitor into the dashboard's 403s and
+    // back out to /login, which returned them to the dashboard — the flicker.
+    claim.reads = [undefined, undefined];
+    claim.apiVerified = false;
+    expect(await isEmailVerified()).toBe(false);
+    expect(claim.apiCalls).toBe(1);
+  });
+
+  test("an absent claim the API calls verified is not a refusal", async () => {
     // No email-verification gate on this session — answering false would strand the
     // user on a page with nothing to confirm.
-    claim.reads = [undefined];
+    claim.reads = [undefined, undefined];
+    claim.apiVerified = true;
     expect(await isEmailVerified()).toBe(true);
-    expect(claim.refreshes).toBe(0);
+  });
+
+  test("a claim that only appears after the refresh is believed", async () => {
+    claim.reads = [undefined, true];
+    expect(await isEmailVerified()).toBe(true);
+    expect(claim.apiCalls).toBe(0);
+  });
+
+  test("an unreachable API falls back to letting the visitor through", async () => {
+    // Signed out, or the network is down — neither is "unverified", and stranding a
+    // signed-out visitor on a page that needs a session helps no one.
+    claim.reads = [undefined, undefined];
+    claim.apiThrows = true;
+    expect(await isEmailVerified()).toBe(true);
   });
 
   test("an unreadable claim is not a refusal either", async () => {

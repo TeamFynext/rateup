@@ -124,6 +124,9 @@ export default function SupportWidget({
   const [tab, setTab] = useState<"chat" | "whatsapp">("chat");
   const [newMessage, setNewMessage] = useState("");
   const [contactId, setContactId] = useState<string | null>(null);
+  /* Messages typed before we know who the visitor is. They are drawn straight away, then
+     posted once the contact exists — the send API cannot accept them any earlier. */
+  const [pendingMessages, setPendingMessages] = useState<string[]>([]);
   const [qr, setQr] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const retryCountRef = useRef(0);
@@ -209,7 +212,43 @@ export default function SupportWidget({
 
   useEffect(() => {
     scrollIntoView();
-  }, [messages, contactId, tab]);
+  }, [messages, pendingMessages, contactId, tab]);
+
+  /* Takes the contact explicitly rather than reading state: the flush below runs in the same
+     tick as the contact being created, when `contactId` has not re-rendered yet. */
+  const postMessage = async (body: string, supportContactId: string, phone: string) => {
+    /* `btoa`, not `Buffer`: this runs in the browser, where `Buffer` is a Node global that
+       nothing here polyfills — reaching for it threw before the request was ever made. */
+    const idSuffix = btoa(phone).slice(0, 22);
+    const messageBody = {
+      object: "support_user",
+      entry: [
+        {
+          id: supportContactId,
+          changes: [
+            {
+              value: {
+                messages: [
+                  {
+                    from: phone,
+                    id: `webid.chat${phone}FQIAERgS${idSuffix}AA==`,
+                    timestamp: Math.floor(Date.now() / 1000).toString(),
+                    text: { body },
+                    type: "text",
+                  },
+                ],
+              },
+              field: "messages",
+            },
+          ],
+        },
+      ],
+    };
+
+    await axios.post(`${API_URL}/api/support${queryParams}`, messageBody, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  };
 
   const handleContactSubmit = form.handleSubmit(async (formValues) => {
     const values = { ...formValues, phone: formValues.phone.replace("+", "") };
@@ -225,6 +264,13 @@ export default function SupportWidget({
       localStorage.setItem("support_contact_id", newContactId);
       localStorage.setItem("support_contact_name", values.phone);
       setContactId(newContactId);
+
+      /* Whatever they typed before we had somewhere to send it. Posted in order, and only
+         cleared once they are away, so a failure here leaves them on screen to retry. */
+      for (const body of pendingMessages) {
+        await postMessage(body, newContactId, values.phone);
+      }
+      setPendingMessages([]);
     } catch (error) {
       console.error("Could not start the support conversation", error);
     }
@@ -235,42 +281,17 @@ export default function SupportWidget({
     if (!body) return;
     setNewMessage("");
 
+    const supportContactId = localStorage.getItem("support_contact_id");
+    const phone = localStorage.getItem("support_contact_name") ?? "";
+
+    /* No contact yet: hold the message and let the form ask who to reply to. */
+    if (!supportContactId) {
+      setPendingMessages((prev) => [...prev, body]);
+      return;
+    }
+
     try {
-      const supportContactId = localStorage.getItem("support_contact_id");
-      const phone = localStorage.getItem("support_contact_name") ?? "";
-      if (!supportContactId) return;
-
-      /* `btoa`, not `Buffer`: this runs in the browser, where `Buffer` is a Node global that
-         nothing here polyfills — reaching for it threw before the request was ever made. */
-      const idSuffix = btoa(phone).slice(0, 22);
-      const messageBody = {
-        object: "support_user",
-        entry: [
-          {
-            id: supportContactId,
-            changes: [
-              {
-                value: {
-                  messages: [
-                    {
-                      from: phone,
-                      id: `webid.chat${phone}FQIAERgS${idSuffix}AA==`,
-                      timestamp: Math.floor(Date.now() / 1000).toString(),
-                      text: { body },
-                      type: "text",
-                    },
-                  ],
-                },
-                field: "messages",
-              },
-            ],
-          },
-        ],
-      };
-
-      await axios.post(`${API_URL}/api/support${queryParams}`, messageBody, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await postMessage(body, supportContactId, phone);
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -386,10 +407,19 @@ export default function SupportWidget({
               ),
             )}
 
-            {/* The design asks for these details after the first message. The contact API is
-                keyed on phone number and a message cannot be posted without a contact, so the
-                card comes first here instead — same card, one step earlier. */}
-            {!contactId && (
+            {pendingMessages.map((body, i) => (
+              <div
+                key={`pending-${i}`}
+                className="max-w-[86%] self-end rounded-[16px_16px_5px_16px] bg-ru-blue-600 px-3.75 py-3 text-[15.5px]/[1.5] text-white"
+              >
+                {parseWhatsAppToReact(body)}
+              </div>
+            ))}
+
+            {/* Asked for only once they have said something. The contact API is keyed on phone
+                number, so the message they already typed waits in `pendingMessages` and is
+                posted the moment this card is filled in. */}
+            {!contactId && pendingMessages.length > 0 && (
               <form
                 onSubmit={handleContactSubmit}
                 className="rounded-2xl border border-ru-n-200 bg-white p-4"
@@ -493,7 +523,7 @@ export default function SupportWidget({
         )}
       </div>
 
-      {tab === "chat" && contactId && (
+      {tab === "chat" && (contactId || pendingMessages.length === 0) && (
         <div className="flex-none border-t border-ru-n-100 bg-ru-n-50 px-3.5 py-3">
           <form
             onSubmit={(e) => {

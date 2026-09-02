@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import ToolsShell from "@/components/HomePage/pages/Tools/shared/ToolsShell.tsx";
 import WhatsAppPricingCalculator from "@/components/HomePage/pages/Tools/WhatsAppPricingCalculator/index.tsx";
-import { buildToolJsonLd, getToolBySlug } from "@/config/tools.ts";
+import { buildToolHeadScripts, getToolBySlug } from "@/config/tools.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
 
 const SLUG = "whatsapp-pricing-calculator";
@@ -16,12 +16,7 @@ export const Route = createFileRoute("/(marketing)/tools/whatsapp-pricing-calcul
       ...buildPageHead(`/tools/${SLUG}`),
       ...(tool
         ? {
-            scripts: [
-              {
-                type: "application/ld+json",
-                children: JSON.stringify(buildToolJsonLd(tool)),
-              },
-            ],
+            scripts: buildToolHeadScripts(tool),
           }
         : {}),
     };

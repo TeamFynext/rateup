@@ -1,8 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  IconAlertCircle,
   IconArrowLeft,
   IconEye,
   IconEyeOff,
+  IconKey,
   IconLock,
   IconMail,
   IconShield,
@@ -17,7 +19,7 @@ import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
 import { useSendResetEmail, useSetNewPassword } from "@/utils/auth/resetPassword.tsx";
-import { rateupLogo, SAVE_HOTKEY } from "@/utils/constants.ts";
+import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
@@ -30,8 +32,9 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "../ui/input-group.tsx";
-import { Input } from "../ui/input.tsx";
 import { Loader } from "../ui/loader.tsx";
+import { AUTH_CONTROL, AUTH_CTA, AuthShell, AuthTitle } from "./AuthShell.tsx";
+import { CheckInboxCard } from "./CheckInboxCard.tsx";
 
 /** Fields of either step of the reset flow — the email step or the new-password step. */
 type ResetPasswordValues = {
@@ -169,225 +172,243 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
         });
       };
 
+  if (page === ResetSteps.STEP_TWO) {
+    return (
+      <AuthShell isSignup={false}>
+        <CheckInboxCard
+          title={translations("Check your inbox")}
+          description={translations("We sent a reset link to")}
+          email={emailTo}
+          expiryNote={translations("It works once and expires in 30 minutes.")}
+          onResend={emailTo ? () => void sendResetEmail(emailTo) : undefined}
+          backTo="/login"
+          backLabel={translations("Back to sign in")}
+        />
+      </AuthShell>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <div className="text-center">
-        <img src={rateupLogo} alt="RateUp" className="w-40" />
-      </div>
-      {page !== ResetSteps.STEP_TWO ? (
-        <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">
-          <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+    <AuthShell isSignup={false}>
+      <div className="flex w-full max-w-108 flex-col gap-3.5">
+        <Card className="gap-4 rounded-2xl px-6 py-4 shadow-md ring-border sm:px-7.5">
+          <div className="flex flex-col gap-3">
+            <span className="flex size-11 items-center justify-center rounded-xl border border-ru-blue-200 bg-accent text-primary dark:border-primary/40">
               {isEmailPage ? (
-                <IconMail className="w-6 h-6 text-primary" />
+                <IconKey className="size-5" stroke={1.8} />
               ) : (
-                <IconLock className="w-6 h-6 text-primary" />
+                <IconLock className="size-5" stroke={1.8} />
               )}
-            </div>
-            <div className="text-2xl font-normal">
-              {isEmailPage ? translations("Reset Password") : translations("Set New Password")}
-            </div>
-            <span className="text-md text-gray-500 text-center max-w-sm mx-auto leading-relaxed">
-              {isEmailPage
-                ? translations("Enter your email address and we'll send you a verification code")
-                : translations("Create a strong new password for your account")}
             </span>
+            <AuthTitle
+              title={
+                isEmailPage
+                  ? translations("Reset your password")
+                  : translations("Set a new password")
+              }
+              subtitle={
+                isEmailPage
+                  ? translations(
+                      "Enter the email on your RateUp account and we'll send a link that expires in 30 minutes.",
+                    )
+                  : translations("Pick something you have not used anywhere else.")
+              }
+            />
           </div>
-          <div className="flex flex-col gap-4">
-            {isEmailPage ? (
-              <form
-                onSubmit={emailForm.handleSubmit(onSubmit)}
-                onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, () => void emailForm.handleSubmit(onSubmit)()],
-                ])}
-              >
-                <FieldGroup className="gap-4">
-                  <Controller
-                    name="email"
-                    control={emailForm.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="email">{translations("Email Address")}</FieldLabel>
-                        <Input
-                          {...field}
-                          id="email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder={translations("Enter your email address")}
-                          required
-                          aria-invalid={fieldState.invalid}
-                          aria-describedby={fieldState.invalid ? "email-error" : undefined}
-                          className="h-12"
-                        />
-                        {fieldState.invalid && (
-                          <FieldError id="email-error" errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
 
-                  <Button type="submit" disabled={isLoading} className="w-full h-12 cursor-pointer">
-                    {isLoading ? <Loader /> : translations("Reset Password")}
-                  </Button>
-                </FieldGroup>
-              </form>
-            ) : (
-              <form
-                onSubmit={pwdForm.handleSubmit(onSubmit)}
-                onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, () => void pwdForm.handleSubmit(onSubmit)()],
-                ])}
-              >
-                <FieldGroup className="gap-4">
-                  <Controller
-                    name="password"
-                    control={pwdForm.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="password">{translations("New Password")}</FieldLabel>
-                        <InputGroup>
-                          <InputGroupAddon>
-                            <IconLock />
-                          </InputGroupAddon>
-                          <InputGroupInput
-                            {...field}
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder={translations("Enter your new password")}
-                            aria-invalid={fieldState.invalid}
-                            onFocus={() => setIsPasswordFocused(true)}
-                            onBlur={() => {
-                              field.onBlur();
-                              setIsPasswordFocused(false);
-                            }}
-                          />
-                          <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                              size="icon-xs"
-                              aria-label={
-                                showPassword
-                                  ? translations("Hide password")
-                                  : translations("Show password")
-                              }
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? <IconEyeOff /> : <IconEye />}
-                            </InputGroupButton>
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  {/* Confirm Password */}
-                  <Controller
-                    name="confirmPassword"
-                    control={pwdForm.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="confirmPassword">
-                          {translations("Confirm New Password")}
-                        </FieldLabel>
-                        <InputGroup>
-                          <InputGroupAddon>
-                            <IconShield />
-                          </InputGroupAddon>
-                          <InputGroupInput
-                            {...field}
-                            id="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder={translations("Confirm your new password")}
-                            aria-invalid={fieldState.invalid}
-                          />
-                          <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                              size="icon-xs"
-                              aria-label={
-                                showConfirmPassword
-                                  ? translations("Hide password")
-                                  : translations("Show password")
-                              }
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            >
-                              {showConfirmPassword ? <IconEyeOff /> : <IconEye />}
-                            </InputGroupButton>
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-                  <AnimatePresence>
-                    {isPasswordFocused && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="text-xs text-gray-500 mt-1 overflow-hidden"
-                      >
-                        {translations("Password must have")}:
-                        <ul className="list-none mt-1 space-y-1">
-                          {rules.map((rule) => (
-                            <li key={rule.label} className="flex items-center space-x-1">
-                              {rule.valid ? (
-                                <span className="text-green-600">✔</span>
-                              ) : (
-                                <span className="text-gray-400">●</span>
-                              )}
-                              <span className={rule.valid ? "text-gray-800" : "text-gray-500"}>
-                                {rule.label}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <Button type="submit" disabled={isLoading} className="w-full h-12 cursor-pointer">
-                    {isLoading ? <Loader /> : translations("Update Password")}
-                  </Button>
-                </FieldGroup>
-              </form>
-            )}
-
-            <Link
-              to={"/login"}
-              className="flex py-1 rounded-md items-center justify-center gap-3 text-black cursor-pointer hover:bg-primary/20 hover:text-primary"
+          {isEmailPage ? (
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={emailForm.handleSubmit(onSubmit)}
+              onKeyDown={getHotkeyHandler([
+                [SAVE_HOTKEY, () => void emailForm.handleSubmit(onSubmit)()],
+              ])}
             >
-              <IconArrowLeft strokeWidth={1} />
-              {translations("Back to Sign In")}
-            </Link>
-          </div>
-        </Card>
-      ) : (
-        <Card className="border-none shadow-lg p-6 max-w-md w-full flex flex-col items-center text-center gap-6">
-          <div className="w-18 h-18 bg-primary/10 rounded-full flex items-center justify-center">
-            <IconMail className="w-10 h-10 text-primary" />
-          </div>
+              <Controller
+                name="email"
+                control={emailForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid} className="gap-0.5">
+                    <FieldLabel htmlFor="email" className="text-xs font-medium">
+                      {translations("Email")}
+                    </FieldLabel>
+                    <InputGroup className={AUTH_CONTROL}>
+                      <InputGroupAddon className="pl-3.5">
+                        <IconMail />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        {...field}
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        aria-invalid={fieldState.invalid}
+                        placeholder={translations("Enter email")}
+                        className="text-[13.5px]"
+                      />
+                    </InputGroup>
+                    {fieldState.invalid && (
+                      <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                        <IconAlertCircle className="size-3.5 shrink-0" />
+                        {fieldState.error?.message}
+                      </FieldError>
+                    )}
+                  </Field>
+                )}
+              />
 
-          <div className="flex flex-col gap-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              {translations("Check your email")}
-            </h2>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              {translations("A password reset link has been sent to your email address")}
-            </p>
-            <p className="text-gray-900 font-medium mt-1">{emailTo}</p>
-          </div>
+              <Button type="submit" disabled={isLoading} className={AUTH_CTA}>
+                {isLoading && <Loader className="size-4 border-white/35" />}
+                {isLoading ? translations("Sending link…") : translations("Send reset link")}
+              </Button>
+            </form>
+          ) : (
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={pwdForm.handleSubmit(onSubmit)}
+              onKeyDown={getHotkeyHandler([
+                [SAVE_HOTKEY, () => void pwdForm.handleSubmit(onSubmit)()],
+              ])}
+            >
+              <FieldGroup className="gap-2.5">
+                <Controller
+                  name="password"
+                  control={pwdForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid} className="gap-0.5">
+                      <FieldLabel htmlFor="password" className="text-xs font-medium">
+                        {translations("New password")}
+                      </FieldLabel>
+                      <InputGroup className={AUTH_CONTROL}>
+                        <InputGroupAddon className="pl-3.5">
+                          <IconLock />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          {...field}
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
+                          placeholder={translations("Enter new password")}
+                          aria-invalid={fieldState.invalid}
+                          className="text-[13.5px]"
+                          onFocus={() => setIsPasswordFocused(true)}
+                          onBlur={() => {
+                            field.onBlur();
+                            setIsPasswordFocused(false);
+                          }}
+                        />
+                        <InputGroupAddon align="inline-end" className="pr-2">
+                          <InputGroupButton
+                            size="icon-sm"
+                            aria-label={
+                              showPassword
+                                ? translations("Hide password")
+                                : translations("Show password")
+                            }
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <IconEyeOff /> : <IconEye />}
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
+                      {fieldState.invalid && (
+                        <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                          <IconAlertCircle className="size-3.5 shrink-0" />
+                          {fieldState.error?.message}
+                        </FieldError>
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="confirmPassword"
+                  control={pwdForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid} className="gap-0.5">
+                      <FieldLabel htmlFor="confirmPassword" className="text-xs font-medium">
+                        {translations("Confirm new password")}
+                      </FieldLabel>
+                      <InputGroup className={AUTH_CONTROL}>
+                        <InputGroupAddon className="pl-3.5">
+                          <IconShield />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          {...field}
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          autoComplete="new-password"
+                          placeholder={translations("Confirm new password")}
+                          aria-invalid={fieldState.invalid}
+                          className="text-[13.5px]"
+                        />
+                        <InputGroupAddon align="inline-end" className="pr-2">
+                          <InputGroupButton
+                            size="icon-sm"
+                            aria-label={
+                              showConfirmPassword
+                                ? translations("Hide password")
+                                : translations("Show password")
+                            }
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? <IconEyeOff /> : <IconEye />}
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
+                      {fieldState.invalid && (
+                        <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                          <IconAlertCircle className="size-3.5 shrink-0" />
+                          {fieldState.error?.message}
+                        </FieldError>
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+
+              <AnimatePresence>
+                {isPasswordFocused && (
+                  <motion.ul
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="flex flex-col gap-1 overflow-hidden text-[12.5px]"
+                  >
+                    {rules.map((rule) => (
+                      <li key={rule.label} className="flex items-center gap-2">
+                        <span
+                          className={`size-1.5 shrink-0 rounded-full ${
+                            rule.valid ? "bg-green-600 dark:bg-green-500" : "bg-input"
+                          }`}
+                        />
+                        <span className={rule.valid ? "text-foreground" : "text-muted-foreground"}>
+                          {translations(rule.label)}
+                        </span>
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+
+              <Button type="submit" disabled={isLoading} className={AUTH_CTA}>
+                {isLoading && <Loader className="size-4 border-white/35" />}
+                {isLoading ? translations("Updating…") : translations("Update password")}
+              </Button>
+            </form>
+          )}
 
           <Link
             to="/login"
-            className="flex items-center justify-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+            className="flex h-10 cursor-pointer items-center justify-center gap-1.75 text-[13.5px] font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <IconArrowLeft strokeWidth={1.5} className="w-4 h-4" />
-            {translations("Back to Sign In")}
+            <IconArrowLeft className="size-3.5" />
+            {translations("Back to sign in")}
           </Link>
         </Card>
-      )}
-    </div>
+      </div>
+    </AuthShell>
   );
 };
 

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils.ts";
-import { imagesPath, rateupIcon } from "@/utils/constants";
+import { imagesPath, metaLockup, metaLockupWhite, rateupIcon } from "@/utils/constants";
 
 type LogoProps = Readonly<{ className?: string }>;
 
@@ -92,5 +92,24 @@ export function ZohoCombinedLogo({ className }: Readonly<{ className?: string }>
         <BiginLogo className="h-7 w-7" />
       </div>
     </div>
+  );
+}
+
+/**
+ * Meta's company lockup, used as-is from their brand pack.
+ *
+ * `onDark` picks the mono-white cut: the colour lockup's wordmark is #1c2b33 and vanishes
+ * against the navy footer. The mark is decorative wherever a "Business Partner" label sits
+ * beside it — the label already names Meta — so it takes an empty alt and is hidden from
+ * assistive tech rather than read out twice.
+ */
+export function MetaLockup({ className, onDark }: LogoProps & Readonly<{ onDark?: boolean }>) {
+  return (
+    <img
+      src={onDark ? metaLockupWhite : metaLockup}
+      alt=""
+      aria-hidden="true"
+      className={cn("w-auto object-contain", className)}
+    />
   );
 }

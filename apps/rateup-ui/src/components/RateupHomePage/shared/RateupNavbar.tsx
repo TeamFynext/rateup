@@ -107,9 +107,13 @@ export default function RateupNavbar() {
                 </Link>
                 <Link
                   to="/signup"
-                  className="inline-flex h-11.5 items-center gap-2 rounded-full border border-ru-blue-200 bg-ru-blue-50 px-3.5 text-[clamp(14px,1.6vw,15.5px)] font-semibold whitespace-nowrap text-ru-blue-600 shadow-xs transition-colors hover:border-ru-blue-600 hover:bg-white hover:text-ru-blue-700 sm:px-6"
+                  /* The design promotes this to the amber star gradient — the only warm
+                     surface in a nav of blues and neutrals, so it carries the eye without
+                     needing more size. Ink is `ru-blue-950` rather than white: amber is far
+                     too light to hold white text at this weight. */
+                  className="inline-flex h-11.5 items-center gap-2 rounded-full border border-ru-amber-600 bg-ru-star px-3.5 text-[clamp(14px,1.6vw,15.5px)] font-semibold whitespace-nowrap text-ru-blue-950 shadow-[0_4px_14px_rgba(248,149,29,0.28)] transition-[filter,box-shadow,transform] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-px hover:brightness-105 hover:shadow-[0_6px_20px_rgba(248,149,29,0.36)] sm:px-6"
                 >
-                  Start for free
+                  Start for Free
                   {/* The pill is the widest thing in the bar. Below `sm` the arrow is the one
                       part that carries no meaning, so it is what goes. */}
                   <ArrowRight className="hidden size-4.25 sm:block" />

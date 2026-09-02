@@ -1,39 +1,40 @@
 import { useState } from "react";
 
-import { rateupLogoWhite } from "@/utils/constants";
+import { rateupLogoWhite, rateupProductVideo } from "@/utils/constants";
 
 /**
  * The 90-second product film, as a click-to-play facade.
  *
- * The design ships this band with a placeholder thumbnail. There is no film in the bucket
- * yet, so the section renders nothing until an id is set here — a play button that plays
- * nothing is worse than no band at all. Drop the YouTube id in and the section appears.
+ * The film is self-hosted on the CloudFront bucket, so nothing about this band is fetched
+ * until someone asks for it: the facade is the design's gradient panel, and the `<video>`
+ * element — with it, the megabytes — only mounts on the click. `preload="none"` keeps a
+ * second visit from fetching ahead of that click either.
  */
-const PRODUCT_VIDEO_ID: string | null = null;
-
 interface ProductVideoProps {
-  /** Overrides the module default, mostly so the band can be previewed before the film ships. */
-  youtubeId?: string | null;
+  /** Overrides the bucket film, mostly so the band can be previewed against another cut. */
+  src?: string | null;
 }
 
-export default function ProductVideo({
-  youtubeId = PRODUCT_VIDEO_ID,
-}: Readonly<ProductVideoProps>) {
+export default function ProductVideo({ src = rateupProductVideo }: Readonly<ProductVideoProps>) {
   const [playing, setPlaying] = useState(false);
 
-  if (!youtubeId) return null;
+  if (!src) return null;
 
   return (
     <section className="bg-ink-25 px-5 pb-12 sm:pb-20">
       <div className="mx-auto max-w-250">
         <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/8 bg-[linear-gradient(148deg,#164070_0%,#0F2540_46%,#091729_100%)] shadow-[0_24px_64px_rgba(16,24,40,0.1)]">
           {playing ? (
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0`}
+            /* No `<track>`: no caption file has been cut for the film yet. Add one beside
+               the mp4 in the bucket and it belongs here. */
+            <video
+              src={src}
               title="RateUp product tour"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 size-full border-0"
+              autoPlay
+              controls
+              playsInline
+              preload="none"
+              className="absolute inset-0 size-full bg-black object-contain"
             />
           ) : (
             <button
@@ -57,7 +58,7 @@ export default function ProductVideo({
                   <span className="ml-1 size-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-ru-blue-700 sm:ml-1.5 sm:border-y-[14px] sm:border-l-[22px]" />
                 </span>
                 <span className="text-center font-display text-[clamp(0.96875rem,2.2vw,1.25rem)] font-semibold tracking-[-0.015em] text-white">
-                  See RateUp in action <span className="font-medium text-white/60">(90 sec)</span>
+                  See RateUp in action
                 </span>
               </span>
 

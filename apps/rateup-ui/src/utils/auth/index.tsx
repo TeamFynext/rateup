@@ -313,8 +313,11 @@ export const useConsumeVerificationCode = () => {
         // Without this refresh the dashboard redirects straight back here, and this page
         // sends the user to the dashboard again — the two bounce off each other.
         await refreshEmailVerificationClaim();
+        // Verifying the address is the last step of signing up, so this lands on
+        // the success screen rather than the dashboard: it says what was set up
+        // and hands over from there.
         navigate({
-          to: "/dashboard",
+          to: "/signup/success",
         });
       }
     } catch (err) {

@@ -1,116 +1,32 @@
-import {
-  IconCircleCheck,
-  IconClock,
-  IconHelpCircle,
-  IconHome,
-  IconMail,
-  IconSend,
-} from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { rateupLogo } from "@/utils/constants.ts";
+import { useUserInfo } from "@/backend/user/user.query";
 
-import { Button } from "../ui/button.tsx";
-import { Card } from "../ui/card.tsx";
+import { AuthShell } from "./AuthShell.tsx";
+import { CheckInboxCard } from "./CheckInboxCard.tsx";
 
+/**
+ * Sits between signing up and the dashboard: the verification mail has already
+ * been sent by signup, so this screen only names the address it went to and
+ * offers to send another.
+ */
 function VerifyEmailPage({ sendEmail }: { sendEmail: () => void }) {
-  const [countdown, setCountdown] = useState(0);
-  const [emailSent, setEmailSent] = useState(false);
-  const navigate = useNavigate();
-  const handleResendEmail = () => {
-    setEmailSent(true);
-    setCountdown(60);
-    sendEmail();
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    setTimeout(() => {
-      setEmailSent(false);
-    }, 3000);
-  };
+  const { t: translations } = useTranslation();
+  const { data: userInfo } = useUserInfo();
+  const email = userInfo && "data" in userInfo ? userInfo.data?.email : undefined;
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-linear-to-br from-blue-50/30 via-gray-50/20 to-orange-50/30 gap-1 p-4">
-      <div className="flex flex-col gap-1 items-center justify-center">
-        <img src={rateupLogo} alt="RateUp Logo" className="w-36 h-auto" />
-        <h2 className="text-lg text-gray-900 mb-1">Verify Your Email</h2>
-        <p className="text-sm text-gray-600">Check your inbox to continue</p>
-      </div>
-      <Card className="p-4 sm:p-5 shadow-xl border border-gray-100 bg-white mb-8 max-w-md">
-        <div className="space-y-3">
-          <div className="flex justify-center py-2">
-            <div className="relative w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center">
-              <IconMail className="w-8 h-8 text-primary" strokeWidth={1.5} />
-
-              {emailSent && (
-                <div className="absolute -top-1 -right-1 animate-in zoom-in duration-300">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                    <IconCircleCheck className="w-3 h-3 text-white" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">
-              We've sent a verification link to your email address.
-            </p>
-          </div>
-
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-            <IconClock className="w-3.5 h-3.5" />
-            <span>Link expires in 24 hours</span>
-          </div>
-
-          <div className="space-y-2 pt-2">
-            {/* Resend Email */}
-            <Button
-              onClick={() => countdown === 0 && handleResendEmail()}
-              disabled={countdown > 0}
-              variant="outline"
-              className="w-full h-10 border-2 border-gray-300 hover:border-primary hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white text-sm"
-            >
-              <IconSend className="w-4 h-4 mr-2" />
-              {countdown > 0 ? `Resend in ${countdown}s` : "Resend verification email"}
-            </Button>
-
-            <Button
-              onClick={() =>
-                navigate({
-                  to: "/logout",
-                })
-              }
-              variant="outline"
-              className="w-full h-10 border-2 border-gray-300 hover:border-primary hover:bg-blue-50 text-sm"
-            >
-              <IconHome className="w-4 h-4 mr-2" />
-              Back to Sign In
-            </Button>
-          </div>
-
-          <div className="bg-blue-50 rounded-lg p-3 mt-3">
-            <div className="flex items-start gap-2.5">
-              <IconHelpCircle className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  Didn't receive the email? Check your spam folder or wait a few minutes for
-                  delivery.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-    </div>
+    <AuthShell isSignup={true}>
+      <CheckInboxCard
+        title={translations("Check your inbox")}
+        description={translations("We sent a verification link to")}
+        email={email}
+        expiryNote={translations("It works once and expires in 24 hours.")}
+        onResend={sendEmail}
+        backTo="/logout"
+        backLabel={translations("Back to sign in")}
+      />
+    </AuthShell>
   );
 }
 
