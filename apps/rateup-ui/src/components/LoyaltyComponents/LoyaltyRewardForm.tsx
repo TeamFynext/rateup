@@ -1,9 +1,11 @@
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useId } from "react";
-import { Controller, type UseFormReturn } from "react-hook-form";
+import { Controller, useWatch, type Control, type UseFormReturn } from "react-hook-form";
 
 import type { LoyaltyTier } from "@/backend/loyalty/tier.api";
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
+import { RewardWorthLine } from "@/components/dashboard/loyalty/giveback/RewardWorthLine.tsx";
+import { useRewardEconomicsContext } from "@/components/dashboard/loyalty/giveback/useRewardEconomicsContext.ts";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -27,6 +29,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { numberInputValue } from "@/utils/form.ts";
 
 interface LoyaltyRewardFormProps {
   category: string;
@@ -47,13 +50,6 @@ interface LoyaltyRewardFormProps {
   loyaltyTiers: LoyaltyTier[] | undefined;
   loyaltyTemplates: WaTemplateListEntry[] | undefined;
 }
-
-/**
- * The numeric fields are `z.coerce.number()`, whose *input* type is `unknown`, so
- * react-hook-form hands their value back unnarrowed. The inputs render it as typed.
- */
-const numberInputValue = (value: unknown): string | number =>
-  typeof value === "number" || typeof value === "string" ? value : "";
 
 export function LoyaltyRewardForm({
   category,
@@ -248,6 +244,8 @@ export function LoyaltyRewardForm({
               )}
             />
           )}
+
+          <PointRewardWorth control={pointRewardForm.control} />
 
           <Controller
             control={pointRewardForm.control}
@@ -834,6 +832,32 @@ export function LoyaltyRewardForm({
             )}
           />
 
+          {/* `estimatedValue` has been in `giftSchema` all along but was never rendered
+              and never sent, so a gift could not be costed at all. */}
+          <Controller
+            control={giftForm.control}
+            name="estimatedValue"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Estimated Value</FieldLabel>
+                <Input
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  type="number"
+                  placeholder="25"
+                  min="0"
+                  {...field}
+                  value={numberInputValue(field.value)}
+                  onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
+                />
+                <FieldDescription>
+                  What this gift normally sells for. Used to show what your program costs you.
+                </FieldDescription>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+
           <div className="pt-4 border-t">
             <h3 className="text-base font-medium mb-3">Code Generation</h3>
             <div className="space-y-3">
@@ -968,5 +992,36 @@ export function LoyaltyRewardForm({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * What this reward will cost, live, as the merchant fills the form in.
+ *
+ * A separate component on purpose: it subscribes with `useWatch`, so a keystroke
+ * re-renders this line rather than the ~1000 lines of form around it. (The `watch()`
+ * calls elsewhere in this file already re-render the whole form; don't add more.)
+ */
+function PointRewardWorth({ control }: Readonly<{ control: Control<PointRewardFormValues> }>) {
+  const economics = useRewardEconomicsContext();
+
+  const rewardType = useWatch({ control, name: "rewardType" });
+  const pointsCost = useWatch({ control, name: "pointsCost" });
+  const cashbackAmount = useWatch({ control, name: "cashbackAmount" });
+  const discountPercentage = useWatch({ control, name: "discountPercentage" });
+  const estimatedValue = useWatch({ control, name: "estimatedValue" });
+
+  // The shape this form writes on submit, so the preview cannot disagree with the row.
+  const rewardValue = { rewardType, cashbackAmount, discountPercentage, estimatedValue };
+
+  return (
+    <RewardWorthLine
+      rewardValue={rewardValue}
+      pointsCost={Number(pointsCost) || 0}
+      earnRate={economics.earnRate}
+      averageOrderValue={economics.averageOrderValue}
+      currencySymbol={economics.currencySymbol}
+      currencyCode={economics.currencyCode}
+    />
   );
 }

@@ -4,20 +4,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod";
 
-import { createLoyaltyEarningRule } from "@/backend/loyalty/earningRules.api";
 import { LoyaltyEventType, updateEventTrigger } from "@/backend/loyalty/eventTriggers.api";
 import {
   useCreateEventTriggerMutation,
   useEventTriggers,
 } from "@/backend/loyalty/eventTriggers.query";
-import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
 import {
   useCreateLoyaltyProgramMutation,
   useDeleteLoyaltyProgramMutation,
@@ -25,8 +23,6 @@ import {
   useResetLoyaltyProgramPointsMutation,
   useUpdateLoyaltyProgramMutation,
 } from "@/backend/loyalty/program.query";
-import { createLoyaltyReward } from "@/backend/loyalty/reward.api";
-import { createLoyaltyTier } from "@/backend/loyalty/tier.api";
 import { automationKeys } from "@/backend/whatsapp/automation.keys";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import { BasicSettings } from "@/components/loyalty/settings/BasicSettings.tsx";
@@ -160,6 +156,7 @@ export function LoyaltySettingsPage() {
       pointsCurrency: "Points",
       moneyCurrency: "INR",
       defaultCountryCode: "IN",
+      averageOrderValue: null,
       whatsappSettingsId: undefined,
       referralMessageTemplate: DEFAULT_JOIN_MESSAGE_TEXT,
     },
@@ -212,6 +209,7 @@ export function LoyaltySettingsPage() {
           pointsCurrency: program.currencyName || "Points",
           moneyCurrency: program.currencyCode || "INR",
           defaultCountryCode: program.defaultCountryCode || "IN",
+          averageOrderValue: program.averageOrderValue ?? null,
           whatsappSettingsId: program.whatsappSettingsId,
           referralMessageTemplate: program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEXT,
         });
@@ -285,96 +283,19 @@ export function LoyaltySettingsPage() {
       currencyName: data.pointsCurrency,
       currencyCode: data.moneyCurrency,
       defaultCountryCode: data.defaultCountryCode,
+      // Null clears it back to "never told us", which the estimate reads as a prompt.
+      averageOrderValue: data.averageOrderValue ?? null,
       whatsappSettingsId: data.whatsappSettingsId,
       referralMessageTemplate: data.referralMessageTemplate,
     };
     if (program?.id) {
       updateProgramMutation.mutate(payload, { onSuccess: () => basicForm.reset(data) });
     } else {
+      // Defaults are no longer seeded from here. The guided setup at
+      // /dashboard/loyalty/onboarding writes tiers, rules and rewards server-side in one
+      // transaction; the fire-and-forget Promise.all that used to live here was
+      // non-atomic, swallowed every error, and wrote reward values the schema rejects.
       await createProgramMutation.mutateAsync(payload);
-
-      // Create defaults in parallel (non-fatal if any fail)
-      try {
-        await createLoyaltyEarningRule({
-          name: "Standard Earning",
-          pointsPerUnit: 10,
-          status: "active",
-          isDefault: true,
-        });
-
-        const defaultTiers = [
-          {
-            name: "Bronze",
-            threshold: 0,
-            pointsMultiplier: 1,
-            color: "#CD7F32",
-            benefitsDescription: "Standard rewards",
-            priority: 1,
-          },
-          {
-            name: "Silver",
-            threshold: 1000,
-            pointsMultiplier: 1,
-            color: "#94A3B8",
-            benefitsDescription: "10% bonus points",
-            priority: 2,
-          },
-          {
-            name: "Gold",
-            threshold: 5000,
-            pointsMultiplier: 1,
-            color: "#EAB308",
-            benefitsDescription: "20% bonus points",
-            priority: 3,
-          },
-          {
-            name: "Platinum",
-            threshold: 10000,
-            pointsMultiplier: 1,
-            color: "#CBD5E1",
-            benefitsDescription: "30% bonus points + exclusive rewards",
-            priority: 4,
-          },
-        ];
-
-        const defaultRewards = [
-          {
-            name: "50 Points",
-            description: "Get 50 loyalty points",
-            pointsCost: 50,
-            rewardType: "point" as const,
-            rewardValue: { points: 50 },
-            status: "ACTIVE" as const,
-          },
-          {
-            name: "10% Off",
-            description: "10% discount on next purchase",
-            pointsCost: 200,
-            rewardType: "coupon" as const,
-            rewardValue: {},
-            status: "ACTIVE" as const,
-          },
-          {
-            name: "Free Shipping",
-            description: "Free shipping on next order",
-            pointsCost: 150,
-            rewardType: "assigned" as const,
-            rewardValue: {},
-            status: "ACTIVE" as const,
-          },
-        ];
-
-        await Promise.all([
-          ...defaultTiers.map((tier) => createLoyaltyTier(tier)),
-          ...defaultRewards.map((reward) => createLoyaltyReward(reward)),
-        ]);
-
-        queryClient.invalidateQueries({ queryKey: loyaltyKeys.tiers() });
-        queryClient.invalidateQueries({ queryKey: loyaltyKeys.rewards() });
-        queryClient.invalidateQueries({ queryKey: loyaltyKeys.earningRules() });
-      } catch (error) {
-        console.error("Error creating program defaults:", error);
-      }
     }
   };
 
@@ -518,12 +439,17 @@ export function LoyaltySettingsPage() {
         <InfoButton docUrl={`${docsPath}/loyality/settings`} />
       </div>
       {noProgram && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTitle>{t("No Loyalty Program Found")}</AlertTitle>
-          <AlertDescription>
-            {t(
-              "You need to create a loyalty program before configuring advanced settings. Please fill out the basic settings and save to create a program.",
-            )}
+        <Alert className="mb-4">
+          <AlertTitle>{t("No loyalty program yet")}</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center gap-3">
+            <span>
+              {t(
+                "The guided setup builds your points, tiers, rewards and WhatsApp messages from a starting point you can edit — it's the quickest way in. You can still fill in the basics below by hand.",
+              )}
+            </span>
+            <Button size="sm" render={<Link to="/dashboard/loyalty/onboarding" />}>
+              {t("Run guided setup")}
+            </Button>
           </AlertDescription>
         </Alert>
       )}

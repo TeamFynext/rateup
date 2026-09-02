@@ -715,6 +715,14 @@ export function useNavMain({
                   url: "/dashboard/loyalty/settings",
                   icon: IconSettings,
                 },
+                {
+                  // The way back into the guided setup once the dashboard redirect and
+                  // the draft banner have stopped firing. Safe to open on a live
+                  // programme: the wizard never takes an active one back to draft.
+                  title: t("Setup Guide"),
+                  url: "/dashboard/loyalty/onboarding",
+                  icon: IconRocket,
+                },
               ],
             },
           ]

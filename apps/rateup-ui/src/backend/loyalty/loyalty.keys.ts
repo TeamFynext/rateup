@@ -37,6 +37,7 @@ export const loyaltyKeys = {
       ? ["loyaltyCustomer"]
       : ["loyaltyCustomer", customerId]) as readonly unknown[],
   customerByContact: (contactId: KeyPart) => ["loyaltyCustomerByContact", contactId] as const,
+  contactLookup: (phone: KeyPart) => ["loyaltyContactLookup", phone] as const,
 
   tiers: () => ["loyalty-tiers"] as const,
   tier: (tierId: KeyPart) => ["loyalty-tier", tierId] as const,
@@ -48,6 +49,9 @@ export const loyaltyKeys = {
   earningRule: (ruleId: KeyPart) => ["loyalty-earning-rule", ruleId] as const,
 
   program: () => ["loyalty-program"] as const,
+
+  onboardingPresets: () => ["loyalty-onboarding-presets"] as const,
+  onboardingState: () => ["loyalty-onboarding-state"] as const,
 
   redeems: () => ["loyaltyRedeems"] as const,
   redemptions: () => ["loyaltyRedemptions"] as const,
@@ -76,6 +80,7 @@ export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
   loyaltyKeys.customers(),
   loyaltyKeys.customer(),
   ["loyaltyCustomerByContact"],
+  ["loyaltyContactLookup"],
   loyaltyKeys.tiers(),
   ["loyalty-tier"],
   loyaltyKeys.rewards(),
@@ -83,6 +88,7 @@ export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
   loyaltyKeys.earningRules(),
   ["loyalty-earning-rule"],
   loyaltyKeys.program(),
+  loyaltyKeys.onboardingState(),
   loyaltyKeys.redeems(),
   loyaltyKeys.redemptions(),
   loyaltyKeys.transactions(),
