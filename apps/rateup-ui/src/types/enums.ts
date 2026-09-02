@@ -258,11 +258,15 @@ export enum SubscriptionFeaturePathName {
   HTMLCodePage = "webSurvey.htmlCodePage",
   Whatsapp = "whatsapp",
   WhatsAppConversation = "whatsapp.conversation",
+  // Tier gates, split out of `whatsapp.active` so the inbox can stay on for every
+  // tier while these are Starter-and-above. Mirrors rateup-api/src/types/enums.ts.
+  WhatsappCampaign = "whatsapp.campaign",
+  WhatsappLoyalty = "whatsapp.loyalty",
+  WhatsappReferrals = "whatsapp.referrals",
+  WhatsappCatalog = "whatsapp.catalog",
   Menu = "menu",
-  ReputationManagement = "reputationManagement",
   Team = "team",
   TeamMember = "team.teamMember",
-  Ticket = "ticket",
   AI = "ai",
   Webhook = "webSurvey.webhook",
 }
@@ -597,11 +601,10 @@ export enum ZapierTriggers {
   CONVERSATION_CLOSED = "conversation_closed",
   CONTACT_UPDATED = "contact_updated",
   CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
-  TICKET_CREATED = "new_ticket",
+  /** The board's counterpart to the lifecycle trigger, added beside it. */
+  CONTACT_STAGE_UPDATED = "contact_stage_updated",
   RESPONSE_SUBMITTED = "response_submitted",
   CONTACT_DELETED = "contact_deleted",
-  TICKET_CARD_MOVED = "ticket_card_moved",
-  TICKET_ASSIGNEE_UPDATED = "ticket_assignee_updated",
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
   CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
 }

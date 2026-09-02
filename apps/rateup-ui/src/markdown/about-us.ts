@@ -48,7 +48,6 @@ RateUp enables businesses to:
 - Campaign Management
 - Loyalty Programs
 - QR Campaigns
-- Ticketing System
 - Team Collaboration
 - Analytics Dashboard
 - Customer Feedback & Surveys

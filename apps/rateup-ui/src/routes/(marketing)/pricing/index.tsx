@@ -1,54 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getAllRateupPaymentPlans } from "@/backend/payment/payment.api";
-import { Faq } from "@/components/HomePage/pages/Pricing/FAQ.tsx";
-import { PricingPlanReview } from "@/components/HomePage/pages/Pricing/PricingPlanReview.tsx";
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
+import { buildFaqs } from "@/components/HomePage/pages/Pricing/FAQ.tsx";
 import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
-import { ClientLogoSectionNew } from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import { buildPageHead } from "@/lib/metadata";
 
 import { buildPricingMarkdown } from "../../../markdown/pricing";
 import { createMarkdownMiddleware } from "../../../markdown/serveMarkdown";
 
-const pricingFaqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
+/**
+ * The page's FAQ structured data, built from the very entries <Faq /> renders.
+ *
+ * Derived rather than duplicated: a search engine showing an answer that contradicts the
+ * page is worse than having no rich result at all, and the conversation-pack answer
+ * carries a price that comes from the catalog and can change without this file being
+ * touched.
+ */
+function pricingFaqJsonLd(plans: RateupPaymentPlan[] | undefined) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: buildFaqs(plans).map((entry) => ({
       "@type": "Question",
-      name: "Do you offer a free trial?",
+      name: entry.question,
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Absolutely! We provide a 14-day free trial for all the plans so you can explore all features before committing. We will be billed after the trial period unless cancelled. Additionally we have a starter plan absolutely for free.",
+        text: Array.isArray(entry.answer) ? entry.answer.join("; ") : entry.answer,
       },
-    },
-    {
-      "@type": "Question",
-      name: "Which plan do you recommend for my business?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Starter → testing & very small usage; Basic → small businesses just starting with WhatsApp engagement; Pro → growing teams needing automation and advanced insights; Enterprise → large businesses requiring high volumes and customization.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Can I switch plans later?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes, you can upgrade, downgrade, or move to a custom enterprise setup anytime. Changes apply instantly.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "What payment methods do you accept?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Major credit/debit cards/UPI/eMandate are supported. Enterprise customers can request invoicing and bank transfers. UPI and eMandate are available for customers from India only.",
-      },
-    },
-  ],
-};
+    })),
+  };
+}
 
 export const Route = createFileRoute("/(marketing)/pricing/")({
   server: {
@@ -61,12 +44,12 @@ export const Route = createFileRoute("/(marketing)/pricing/")({
   },
   component: Pricing,
   loader: getAllRateupPaymentPlans,
-  head: () => ({
+  head: ({ loaderData }) => ({
     ...buildPageHead("/pricing"),
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify(pricingFaqJsonLd),
+        children: JSON.stringify(pricingFaqJsonLd(loaderData)),
       },
     ],
   }),
@@ -77,17 +60,6 @@ function Pricing() {
   return (
     <Layout>
       <PricingSection plans={plans} />
-      <ClientLogoSectionNew />
-
-      <div
-        className="grid xs:grid-cols-1 lg:grid-cols-2 p-0"
-        style={{
-          background: "linear-gradient(to bottom right, #00397b, #013553, #1c518e)",
-        }}
-      >
-        <Faq />
-        <PricingPlanReview />
-      </div>
     </Layout>
   );
 }

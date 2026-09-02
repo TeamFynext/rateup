@@ -73,10 +73,10 @@ function VizTeams() {
       {[
         {
           av: "SA",
-          color: "linear-gradient(135deg,#F8951D,#D97A0F)",
+          color: "linear-gradient(135deg,var(--color-ru-amber-500),var(--color-ru-amber-600))",
           badge: "Admin",
           badgeBg: "rgba(248,149,29,0.17)",
-          badgeColor: "#FFB638",
+          badgeColor: "var(--color-ru-amber-400)",
           badgeBorder: "rgba(248,149,29,0.28)",
         },
         {

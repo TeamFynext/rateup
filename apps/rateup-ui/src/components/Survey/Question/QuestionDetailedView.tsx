@@ -119,7 +119,6 @@ export function QuestionDetailedView({
   const { t: translations } = useTranslation();
   const { data: subscription } = useSubscription();
   const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] = useState(false);
-  const [isTicketFeatureActive, setIsTicketFeatureActive] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -130,9 +129,6 @@ export function QuestionDetailedView({
     setIsGoogleReviewFeatureActive(
       hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview) ?? false,
     );
-
-    // Tickets are free with no limits — always available.
-    setIsTicketFeatureActive(true);
   }, [subscription]);
 
   const form = useForm({
@@ -341,8 +337,6 @@ export function QuestionDetailedView({
             setActiveTab={setActiveTab}
             isGoogleReviewFeatureActive={isGoogleReviewFeatureActive}
             handleSave={handleSave}
-            isTicketFeatureActive={isTicketFeatureActive}
-            enableAutoGenerateTicket={survey?.enableAutoGenerateTicket}
             className="flex items-center gap-3 border-r border-border pr-3.5"
           />
           {/* Actions */}

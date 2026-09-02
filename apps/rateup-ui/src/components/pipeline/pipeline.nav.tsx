@@ -84,7 +84,7 @@ function countFor(
 ): number {
   switch (filter) {
     case "open":
-      return leads.filter((lead) => lead.status !== "LOST").length;
+      return leads.length;
     case "mine":
       return leads.filter(
         (lead) => lead.status === "OPEN" && isAssignedTo(lead, options.currentUserId),
@@ -106,7 +106,7 @@ function countFor(
  * are dropped rather than rendered as an empty heading.
  */
 function section(group: string, items: NavEntry[]): NavEntry[] {
-  return items.length > 0 ? [{ group, showTitle: true, items }] : [];
+  return items.length > 0 ? [{ group, items }] : [];
 }
 
 /** The Pipeline entry's `items`, in sidebar order. */

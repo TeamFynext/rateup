@@ -9,8 +9,16 @@ export interface UsageStats {
   surveysCount: number;
   surveyResponsesCount: number;
   monthlySurveyResponses: number;
+  /**
+   * Inbox-ticket counters. Analytics only — an inbox ticket stays open until a human
+   * or an automation closes it, so it is not the plan meter. Use the metered counters
+   * below for anything quota-related.
+   */
   monthlyConversationsCount: number;
   annualConversationsCount: number;
+  /** Self-derived 24h conversation windows — the plan allowance unit. */
+  monthlyMeteredConversationsCount: number;
+  annualMeteredConversationsCount: number;
   aiPromptTokensCount: number;
   aiCompletionTokensCount: number;
   loyaltyCustomerCount: number;

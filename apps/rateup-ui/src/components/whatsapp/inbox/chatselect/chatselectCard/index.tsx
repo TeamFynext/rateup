@@ -22,6 +22,7 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import { StageDot } from "@/components/pipeline/shared/atoms.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -394,10 +395,22 @@ export default function WaInboxChatSelectCard({
             </span>
           ))}
 
-          {lifecycleInfo && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground">
-              {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
+          {/* The board column, which has replaced the lifecycle chip — the panel
+              beside this list already shows the stage, and the two disagreeing on
+              the same screen was the confusing part. Falls back to the lifecycle
+              for contacts with no lead, so a row never loses its chip before the
+              board reaches it. */}
+          {contact?.stageName ? (
+            <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground">
+              <StageDot color={contact.stageColor ?? null} className="size-1.5" />
+              {contact.stageName}
             </span>
+          ) : (
+            lifecycleInfo && (
+              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground">
+                {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
+              </span>
+            )
           )}
         </div>
       </div>

@@ -35,7 +35,6 @@ export async function getResponsesBySurveyId(surveyId: string, filter: string = 
 }
 
 type CreateResponseType = Omit<SurveyResponse, "id" | "createdAt"> & {
-  shouldRaiseTicket?: boolean;
   checkUniqueDevice?: boolean;
   selectedColumnId?: string;
 };

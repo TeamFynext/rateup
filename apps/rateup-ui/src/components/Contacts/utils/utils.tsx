@@ -127,6 +127,8 @@ export const getSourceBadge = (source: string | null | undefined) => {
 export const contactColumn = (
   contactTags: CustomFieldData[] = [],
   showLifecycle = false,
+  /** True once the org has a board — the Stage column replaces Lifecycle Stage. */
+  showStage = false,
 ): ColumnDef<ContactsData>[] => {
   return [
     ...selectCheckBox,
@@ -190,17 +192,44 @@ export const contactColumn = (
       enableSorting: false,
       meta: { title: "Label" },
     },
-    ...(showLifecycle
+    // The board's column replaces the lifecycle one wherever the org has a
+    // pipeline. Orgs without one keep the lifecycle column, so nobody loses the
+    // information before the pipeline reaches them.
+    ...(showStage
       ? [
           {
-            header: "Lifecycle Stage",
-            accessorKey: "Lifecycle.name",
-            cell: (info) => info.getValue(),
+            header: "Pipeline Stage",
+            accessorFn: (row: ContactsData) => row.leads?.[0]?.stage?.name ?? "",
+            id: "pipelineStage",
+            cell: (info) => {
+              const lead = info.row.original.leads?.[0];
+              if (!lead?.stage?.name) return "-";
+              return (
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block size-2 shrink-0 rounded-full bg-muted-foreground"
+                    // Org-authored colour, so it can only be a dynamic value.
+                    style={lead.stage.color ? { backgroundColor: lead.stage.color } : undefined}
+                  />
+                  <span>{lead.stage.name}</span>
+                </div>
+              );
+            },
             enableSorting: false,
-            meta: { title: "Lifecycle Stage" },
+            meta: { title: "Pipeline Stage" },
           } satisfies ColumnDef<ContactsData>,
         ]
-      : []),
+      : showLifecycle
+        ? [
+            {
+              header: "Lifecycle Stage",
+              accessorKey: "Lifecycle.name",
+              cell: (info) => info.getValue(),
+              enableSorting: false,
+              meta: { title: "Lifecycle Stage" },
+            } satisfies ColumnDef<ContactsData>,
+          ]
+        : []),
     ...(contactTags?.length > 0
       ? contactTags
           .filter((tag) => tag?.visibility)

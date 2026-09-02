@@ -6,7 +6,7 @@ import { TakeSurveyLayoutWeb } from "@/components/Layout/TakeSurveyLayout/TakeSu
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import TakeSurvey from "@/components/Survey/TakeSurvey/TakeSurveyComponent/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
 import errorPageStyles from "../../../ws/$shortId/ws.module.css";
 
@@ -56,11 +56,7 @@ export default function Page({
     return (
       <div className={errorPageStyles["error-page"]}>
         <Link to="/">
-          <img
-            className="w-[80px] object-contain"
-            src={rateupLogoStackedWhiteTransparent}
-            alt="RateUp Logo"
-          />
+          <img className="w-[80px] object-contain" src={rateupLogo} alt="RateUp Logo" />
         </Link>{" "}
         <p className={errorPageStyles["error-text"]}>
           {translations("Unable to get survey, please try again later")}

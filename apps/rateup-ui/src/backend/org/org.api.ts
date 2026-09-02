@@ -2,17 +2,37 @@ import type { RequestPayload } from "@/types/api.ts";
 import type { WaAssignedChatPermission } from "@/types/enums.ts";
 
 /**
- * The platform setup checklist's per-step completion flags. Mirrors the API's
- * `onboardingChecklist` zod object; every step is optional. Loyalty program setup
- * is not tracked here — it lives on `LoyaltyProgram.onboardingStep`, driven by the
- * guided wizard at `/dashboard/loyalty/onboarding`.
+ * The setup wizard's per-step completion flags. Mirrors the API's
+ * `onboardingChecklist` zod object; every step is optional.
  */
+/** Steps the org has waved off, keyed the same way the checklist is. */
+export interface OnboardingChecklistSkips {
+  instagram?: boolean;
+  messenger?: boolean;
+  invite?: boolean;
+  hours?: boolean;
+  auto?: boolean;
+  points?: boolean;
+  cmds?: boolean;
+}
+
 export interface OnboardingChecklist {
   api?: boolean;
   verify?: boolean;
   payment?: boolean;
+  instagram?: boolean;
+  messenger?: boolean;
   invite?: boolean;
+  hours?: boolean;
   auto?: boolean;
+  points?: boolean;
+  tiers?: boolean;
+  rewards?: boolean;
+  referral?: boolean;
+  cmds?: boolean;
+  loyaltyauto?: boolean;
+  /** Nested so skip state travels with the checklist rather than needing a column. */
+  skipped?: OnboardingChecklistSkips;
 }
 
 import { axiosClient } from "../apiClient";
@@ -109,7 +129,14 @@ export async function completeOrgDetails(onboarding: RequestPayload) {
   });
 }
 
-export async function orgNameAndPhone() {
+/** Response of `GET /org/orgnameandphone`; each field is null when unset. */
+export interface OrgNameAndPhone {
+  userPhone: string | null;
+  orgName: string | null;
+  nameOfUser: string | null;
+}
+
+export async function orgNameAndPhone(): Promise<OrgNameAndPhone> {
   const res = await axiosClient.get("/org/orgnameandphone");
   return res.data;
 }

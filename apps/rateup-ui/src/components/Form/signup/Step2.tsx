@@ -1,17 +1,42 @@
-// Extracted verbatim from `SignupFormNew.tsx`. Behaviour is unchanged.
-
-import { IconArrowLeft, IconArrowRight, IconBuilding, IconGlobe } from "@tabler/icons-react";
+import { IconAlertCircle, IconArrowLeft, IconBuilding, IconWorld } from "@tabler/icons-react";
 import { useId } from "react";
 import { Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 
 import { Button } from "../../ui/button.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "../../ui/field.tsx";
-import { Input } from "../../ui/input.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../../ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../../ui/input-group.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select.tsx";
-import { STEP_TWO_FIELDS } from "./shared.tsx";
+import { AUTH_CONTROL } from "../AuthShell.tsx";
+import { errorMessage, RequiredMark, STEP_TWO_FIELDS } from "./shared.tsx";
 import type { SignupForm } from "./shared.tsx";
+
+const INDUSTRIES = [
+  "E-commerce",
+  "Healthcare",
+  "Education",
+  "Finance",
+  "Real Estate",
+  "Hospitality",
+  "Retail",
+  "Technology",
+  "Marketing",
+  "Other",
+];
+
+const TEAM_SIZES = ["1–5", "6–25", "26–100", "100+"];
+
+/** The pill used for the small single-choice rows in the wizard. */
+export function choicePillClass(selected: boolean) {
+  return [
+    "h-8 cursor-pointer rounded-full border px-3.5 text-[13px] transition-colors",
+    selected
+      ? "border-primary bg-accent font-semibold text-primary"
+      : "border-border bg-card font-medium text-muted-foreground hover:border-input hover:text-foreground",
+  ].join(" ");
+}
 
 export function Step2({
   formData,
@@ -23,20 +48,7 @@ export function Step2({
   handleNext: () => void;
 }) {
   const uid = useId();
-  const industries = [
-    "E-commerce",
-    "Healthcare",
-    "Education",
-    "Finance",
-    "Real Estate",
-    "Hospitality",
-    "Retail",
-    "Technology",
-    "Marketing",
-    "Other",
-  ];
-  const teamSizes = ["1–5", "6–25", "26–100", "100+"];
-
+  const { t: translations } = useTranslation();
   const { errors } = formData.formState;
 
   const handleContinue = async () => {
@@ -48,174 +60,187 @@ export function Step2({
   };
 
   return (
-    <div className="w-full h-101 flex flex-col">
-      <div className="flex-1 space-y-4 overflow-y-auto pr-1">
-        {/* Business Name */}
-        <Field className="gap-1">
-          <FieldLabel id="orgName-label" htmlFor="orgName" className="text-xs font-medium">
-            Business Name
-            <span className="text-red-500">*</span>
-          </FieldLabel>
-          <div className="relative">
-            <IconBuilding className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Controller
-              name="orgName"
-              control={formData.control}
-              render={({ field }) => (
-                <Input
+    <div className="flex flex-1 flex-col gap-3">
+      <FieldGroup className="gap-2.5">
+        <Controller
+          name="orgName"
+          control={formData.control}
+          render={({ field }) => (
+            <Field data-invalid={!!errors.orgName} className="gap-0.5">
+              <FieldLabel htmlFor="orgName" className="text-xs font-medium">
+                {translations("Business name")} <RequiredMark />
+              </FieldLabel>
+              <InputGroup className={AUTH_CONTROL}>
+                <InputGroupAddon className="pl-3.5">
+                  <IconBuilding />
+                </InputGroupAddon>
+                <InputGroupInput
                   {...field}
                   id="orgName"
                   autoComplete="organization"
-                  aria-labelledby="orgName-label"
                   aria-invalid={!!errors.orgName}
-                  placeholder="Your Company Name"
-                  className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+                  placeholder={translations("Enter business name")}
+                  className="text-[13.5px]"
                 />
+              </InputGroup>
+              {errors.orgName && (
+                <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                  <IconAlertCircle className="size-3.5 shrink-0" />
+                  {errorMessage(errors.orgName)}
+                </FieldError>
               )}
-            />
-          </div>
-          <FieldError className="text-xs" errors={[errors.orgName]} />
-        </Field>
+            </Field>
+          )}
+        />
 
-        {/* Website */}
-        <Field className="gap-1">
-          <FieldLabel id="website-label" htmlFor="website" className="text-xs font-medium">
-            Website URL
-          </FieldLabel>
-          <div className="relative">
-            <IconGlobe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Controller
-              name="website"
-              control={formData.control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  id="website"
-                  type="url"
-                  autoComplete="url"
-                  aria-labelledby="website-label"
-                  aria-describedby="website-hint"
-                  aria-invalid={!!errors.website}
-                  placeholder="https://yourcompany.com"
-                  className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
-                />
-              )}
-            />
-          </div>
-          <FieldError className="text-xs" errors={[errors.website]} />
-          <span id="website-hint" className="text-gray-500 text-[11px]">
-            Optional — helps us prefill your loyalty program landing page.
-          </span>
-        </Field>
-
-        {/* Phone */}
-        <Field>
-          <FieldLabel htmlFor={`${uid}-contact-number`} className="text-xs font-medium">
-            Contact Number
-            <span className="text-red-500">*</span>
-          </FieldLabel>
-          <Controller
-            name="phoneNumber"
-            control={formData.control}
-            render={({ field }) => (
+        <Controller
+          name="phoneNumber"
+          control={formData.control}
+          render={({ field }) => (
+            <Field data-invalid={!!errors.phoneNumber} className="gap-0.5">
+              <FieldLabel htmlFor={`${uid}-phone`} className="text-xs font-medium">
+                {translations("WhatsApp business number")} <RequiredMark />
+              </FieldLabel>
               <PhoneInput
-                id={`${uid}-contact-number`}
+                id={`${uid}-phone`}
                 international
                 defaultCountry="IN"
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 aria-invalid={!!errors.phoneNumber}
-                className="w-full"
+                placeholder={translations("Enter WhatsApp number")}
+                className="w-full [&_button]:h-9 [&_input]:h-9 [&_input]:text-[13.5px]"
               />
-            )}
-          />
-          <FieldError className="text-xs" errors={[errors.phoneNumber]} />
-        </Field>
+              {errors.phoneNumber && (
+                <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                  <IconAlertCircle className="size-3.5 shrink-0" />
+                  {errorMessage(errors.phoneNumber)}
+                </FieldError>
+              )}
+            </Field>
+          )}
+        />
 
-        {/* Industry */}
-        <Field>
-          <FieldLabel htmlFor={`${uid}-industry`} className="text-xs font-medium">
-            Industry <span className="text-red-500">*</span>
-          </FieldLabel>
-          <Controller
-            name="industry"
-            control={formData.control}
-            render={({ field }) => (
+        <Controller
+          name="website"
+          control={formData.control}
+          render={({ field }) => (
+            <Field data-invalid={!!errors.website} className="gap-0.5">
+              <FieldLabel htmlFor="website" className="text-xs font-medium">
+                {translations("Website")}{" "}
+                <span className="font-normal text-muted-foreground">
+                  {translations("(optional)")}
+                </span>
+              </FieldLabel>
+              <InputGroup className={AUTH_CONTROL}>
+                <InputGroupAddon className="pl-3.5">
+                  <IconWorld />
+                </InputGroupAddon>
+                <InputGroupInput
+                  {...field}
+                  id="website"
+                  type="url"
+                  autoComplete="url"
+                  aria-invalid={!!errors.website}
+                  placeholder={translations("Enter website URL")}
+                  className="text-[13.5px]"
+                />
+              </InputGroup>
+              {errors.website && (
+                <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                  <IconAlertCircle className="size-3.5 shrink-0" />
+                  {errorMessage(errors.website)}
+                </FieldError>
+              )}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="industry"
+          control={formData.control}
+          render={({ field }) => (
+            <Field data-invalid={!!errors.industry} className="gap-0.5">
+              <FieldLabel htmlFor={`${uid}-industry`} className="text-xs font-medium">
+                {translations("What do you sell?")} <RequiredMark />
+              </FieldLabel>
               <Select
                 value={field.value}
-                onValueChange={field.onChange}
-                items={industries.map((industry) => ({ value: industry, label: industry }))}
+                onValueChange={(value) => field.onChange(value ?? "")}
+                items={INDUSTRIES.map((industry) => ({ value: industry, label: industry }))}
               >
                 <SelectTrigger
                   id={`${uid}-industry`}
                   aria-invalid={!!errors.industry}
-                  className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+                  className={`w-full text-[14.5px] ${AUTH_CONTROL}`}
                 >
-                  <SelectValue placeholder="Select Industry" />
+                  <SelectValue placeholder={translations("Select an industry")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {industries.map((industry) => (
+                  {INDUSTRIES.map((industry) => (
                     <SelectItem key={industry} value={industry}>
                       {industry}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            )}
-          />
-          <FieldError className="text-xs" errors={[errors.industry]} />
-        </Field>
+              {errors.industry && (
+                <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                  <IconAlertCircle className="size-3.5 shrink-0" />
+                  {errorMessage(errors.industry)}
+                </FieldError>
+              )}
+            </Field>
+          )}
+        />
 
-        <div className="space-y-1">
-          <FieldTitle id="teamSize-label" className="text-xs font-medium">
-            Team Size <span className="text-red-500">*</span>
-          </FieldTitle>
-
-          <Controller
-            name="teamSize"
-            control={formData.control}
-            render={({ field }) => (
-              <div className="flex gap-2" role="group" aria-labelledby="teamSize-label">
-                {teamSizes.map((size) => (
+        <Controller
+          name="teamSize"
+          control={formData.control}
+          render={({ field }) => (
+            <Field data-invalid={!!errors.teamSize} className="gap-1">
+              <FieldLabel id={`${uid}-team`} className="text-xs font-medium">
+                {translations("How big is your team?")} <RequiredMark />
+              </FieldLabel>
+              <div className="flex flex-wrap gap-2" role="group" aria-labelledby={`${uid}-team`}>
+                {TEAM_SIZES.map((size) => (
                   <button
                     key={size}
                     type="button"
                     aria-pressed={field.value === size}
                     onClick={() => field.onChange(size)}
-                    className={`px-3 py-1.5 text-xs rounded-md border ${
-                      field.value === size
-                        ? "bg-primary text-white border-primary"
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}
+                    className={choicePillClass(field.value === size)}
                   >
                     {size}
                   </button>
                 ))}
               </div>
-            )}
-          />
-          <FieldError className="text-xs" errors={[errors.teamSize]} />
-        </div>
-      </div>
+              {errors.teamSize && (
+                <FieldError className="flex items-center gap-1.5 text-[12.5px]">
+                  <IconAlertCircle className="size-3.5 shrink-0" />
+                  {errorMessage(errors.teamSize)}
+                </FieldError>
+              )}
+            </Field>
+          )}
+        />
+      </FieldGroup>
 
-      {/* Footer */}
-      <div className="flex justify-between gap-3 mt-2 pt-2">
+      <div className="mt-auto flex items-center gap-3">
         <Button
           variant="outline"
           onClick={handleBack}
-          className="h-8 px-4 text-xs border border-gray-300"
+          className="h-10 cursor-pointer gap-2 rounded-lg px-4 text-[13.5px] font-semibold"
         >
-          <IconArrowLeft className="w-4 h-4 mr-1" />
-          Back
+          <IconArrowLeft className="size-4" />
+          {translations("Back")}
         </Button>
-
         <Button
           onClick={handleContinue}
-          className="h-8 px-4 text-xs bg-primary text-white disabled:opacity-50"
+          className="h-10 flex-1 cursor-pointer rounded-lg text-sm font-semibold"
         >
-          Continue
-          <IconArrowRight className="w-4 h-4 ml-1" />
+          {translations("Continue")}
         </Button>
       </div>
     </div>

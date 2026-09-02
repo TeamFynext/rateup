@@ -47,37 +47,39 @@ export default function NpsTemplateDetail({ template }: Readonly<{ template: Nps
         <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_1fr]">
           <ToolCard>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#EEF4FB] px-2 py-1 text-[11px] font-extrabold tracking-[0.1em] text-[#1C518E] uppercase">
+              <span className="rounded-full bg-accent px-2 py-1 text-[11px] font-extrabold tracking-[0.1em] text-primary uppercase">
                 {template.sector}
               </span>
-              <span className="rounded-full border border-[#ECECEA] px-2 py-1 text-[11px] font-bold text-[#8A8C88]">
+              <span className="rounded-full border border-border px-2 py-1 text-[11px] font-bold text-muted-foreground">
                 {template.benchmark}
               </span>
             </div>
 
-            <div className="mt-5 text-[11px] font-extrabold tracking-[0.12em] text-[#8A8C88] uppercase">
+            <div className="mt-5 text-[11px] font-extrabold tracking-[0.12em] text-muted-foreground uppercase">
               The rating question
             </div>
-            <blockquote className="mt-3 rounded-[14px] border border-[#D9E4F0] bg-[#F3F7FC] p-5 text-[16px] leading-[1.55] font-medium text-[#0A0B0A]">
+            <blockquote className="mt-3 rounded-[14px] border border-[#D9E4F0] bg-[#F3F7FC] p-5 text-[16px] leading-[1.55] font-medium text-foreground">
               {template.ratingQuestion}
             </blockquote>
-            <p className="mt-2 text-[11.5px] text-[#8A8C88]">
+            <p className="mt-2 text-[11.5px] text-muted-foreground">
               Replace <span className="font-mono">{"{{brand}}"}</span> with your business name.
             </p>
 
-            <div className="mt-7 text-[11px] font-extrabold tracking-[0.12em] text-[#8A8C88] uppercase">
+            <div className="mt-7 text-[11px] font-extrabold tracking-[0.12em] text-muted-foreground uppercase">
               Follow-ups by score
             </div>
             <div className="mt-3 grid gap-3.5">
               {FOLLOW_UPS.map((group) => (
                 <div key={group.key} className={`rounded-[14px] border p-5 ${group.tone}`}>
-                  <div className="text-[11px] font-extrabold tracking-[0.08em] text-[#4A4C49] uppercase">
+                  <div className="text-[11px] font-extrabold tracking-[0.08em] text-muted-foreground uppercase">
                     {group.band}
                   </div>
-                  <p className="mt-2 text-[14px] leading-[1.55] font-medium text-[#0A0B0A]">
+                  <p className="mt-2 text-[14px] leading-[1.55] font-medium text-foreground">
                     {template.followUps[group.key]}
                   </p>
-                  <p className="mt-2 text-[12px] leading-[1.5] text-[#4A4C49]">{group.intent}</p>
+                  <p className="mt-2 text-[12px] leading-[1.5] text-muted-foreground">
+                    {group.intent}
+                  </p>
                 </div>
               ))}
             </div>
@@ -89,11 +91,15 @@ export default function NpsTemplateDetail({ template }: Readonly<{ template: Nps
 
           <div className="flex flex-col gap-3.5">
             <ToolCard title="When to send it">
-              <p className="-mt-2 text-[14px] leading-[1.6] text-[#4A4C49]">{template.timing}</p>
+              <p className="-mt-2 text-[14px] leading-[1.6] text-muted-foreground">
+                {template.timing}
+              </p>
             </ToolCard>
 
             <ToolCard title="Why this wording">
-              <p className="-mt-2 text-[14px] leading-[1.6] text-[#4A4C49]">{template.note}</p>
+              <p className="-mt-2 text-[14px] leading-[1.6] text-muted-foreground">
+                {template.note}
+              </p>
             </ToolCard>
 
             {siblings.length > 0 ? (
@@ -104,7 +110,7 @@ export default function NpsTemplateDetail({ template }: Readonly<{ template: Nps
                       key={sibling.slug}
                       to="/tools/nps-survey-templates/$slug"
                       params={{ slug: sibling.slug }}
-                      className="rounded-lg border border-[#ECECEA] px-4 py-3 text-[13.5px] font-bold text-[#0A0B0A] transition-colors hover:border-[#CBD9EA] hover:bg-[#F3F7FC]"
+                      className="rounded-lg border border-border px-4 py-3 text-[13.5px] font-bold text-foreground transition-colors hover:border-[#CBD9EA] hover:bg-[#F3F7FC]"
                     >
                       {sibling.industry}
                     </Link>
@@ -112,7 +118,7 @@ export default function NpsTemplateDetail({ template }: Readonly<{ template: Nps
                 </div>
                 <Link
                   to={toolPath(SLUG)}
-                  className="mt-3.5 inline-block text-[12.5px] font-bold text-[#1C518E]"
+                  className="mt-3.5 inline-block text-[12.5px] font-bold text-primary"
                 >
                   Browse all {NPS_TEMPLATES.length} templates →
                 </Link>

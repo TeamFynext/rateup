@@ -3,7 +3,6 @@ import { isEqual } from "lodash";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { ITicket } from "@/backend/tickets/tickets.d.ts";
 import type {
   ContactsWithLastMessage,
   WaGetMessagesBody,
@@ -31,9 +30,6 @@ interface ContactStore {
   opened: boolean;
   open: () => void;
   close: () => void;
-  selectedTicket: ITicket | null;
-  setSelectedTicket: (ticket: ITicket | null) => void;
-  setTicketAndOpen: (ticket: ITicket | null) => void;
   filterData: string | null;
   setFilterData: (value: string) => void;
 }
@@ -67,9 +63,6 @@ const useContactStore = create<ContactStore>((set) => ({
   opened: false,
   open: () => set((_state) => ({ opened: true })),
   close: () => set((_state) => ({ opened: false })),
-  selectedTicket: null,
-  setSelectedTicket: (ticket) => set({ selectedTicket: ticket }),
-  setTicketAndOpen: (ticket) => set({ selectedTicket: ticket, opened: true }),
   filterData: null,
   setFilterData: (value) => set({ filterData: value }),
 }));

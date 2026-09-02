@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
 import { RouteAccessGuard } from "@/components/common/RouteAccessGuard.tsx";
+import { PlanBanner } from "@/components/Layout/PlanBanner.tsx";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext.tsx";
 import { LifecycleContext } from "@/context/LifecycleContext.ts";
 import { TeamFeaturesProvider } from "@/context/TeamFeaturesContext.tsx";
@@ -37,6 +38,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
     pathname,
     pipelineNav,
     resolvedUserInfo,
+    setupNav,
     staff,
     subscription,
     teams,
@@ -73,6 +75,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
                 conversationTags={conversationTags}
                 lifecycles={lifecycles}
                 pipelineNav={pipelineNav}
+                setupNav={setupNav}
                 userData={resolvedUserInfo ?? undefined}
                 staff={staff}
                 teams={teams}
@@ -80,14 +83,22 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
             )}
 
             <div className="flex h-dvh w-full overflow-hidden">
-              <div
-                className={`min-w-0 flex-1 ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
-              >
-                <LifecycleContext value={lifecycles || []}>
-                  <CustomFieldsProvider initialFields={customFieldData || []}>
-                    <RouteAccessGuard>{children}</RouteAccessGuard>
-                  </CustomFieldsProvider>
-                </LifecycleContext>
+              {/* A column, so the plan banner spans the full content width and stays put
+                  while the page scrolls. It used to live inside the scroller below, which
+                  inset it by that container's `p-4` on every route that has padding and
+                  let it scroll away. */}
+              <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                <PlanBanner />
+
+                <div
+                  className={`min-h-0 flex-1 ${paddingExclusion ? "" : "p-4"} overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
+                >
+                  <LifecycleContext value={lifecycles || []}>
+                    <CustomFieldsProvider initialFields={customFieldData || []}>
+                      <RouteAccessGuard>{children}</RouteAccessGuard>
+                    </CustomFieldsProvider>
+                  </LifecycleContext>
+                </div>
               </div>
 
               <PhonePreviewPanel />

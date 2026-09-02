@@ -7,21 +7,21 @@ const cardData = [
     label: "Launch via WhatsApp",
     description:
       "Send automated, friendly check-ins to employees on the app they already use and trust. No downloads needed.",
-    iconBg: "from-[#1c518e] to-[#3b82f6]",
+    iconBg: "from-primary to-[#3b82f6]",
   },
   {
     icon: <IconChartBar className="w-7 h-7 text-white" />,
     label: "Gather Rich Insights",
     description:
       "Collect real-time quantitative scores (eNPS) and qualitative feedback through natural conversation.",
-    iconBg: "from-[#1c518e] to-[#10b981]",
+    iconBg: "from-primary to-[#10b981]",
   },
   {
     icon: <IconSettings2 className="w-7 h-7 text-white" />,
     label: "Analyze & Resolve",
     description:
       "Visualize data on your dashboard, identify key issues with AI, and create trackable tickets for resolution.",
-    iconBg: "from-[#1c518e] to-[#f59e0b]",
+    iconBg: "from-primary to-[#f59e0b]",
   },
 ];
 
@@ -52,10 +52,10 @@ const InboxWorks = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Heading */}
         <div className="text-center mb-20 max-w-3xl mx-auto">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-[#1c518e] leading-tight">
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-primary leading-tight">
             From Conversation to Resolution in Minutes
           </h2>
-          <div className="w-16 h-1 bg-[#1c518e] mx-auto mt-4 rounded-full" />
+          <div className="w-16 h-1 bg-primary mx-auto mt-4 rounded-full" />
           <p className="mt-6 text-lg text-gray-600 font-medium">
             Our streamlined process makes employee engagement effortless and effective.
           </p>

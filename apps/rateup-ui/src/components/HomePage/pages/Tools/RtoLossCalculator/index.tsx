@@ -57,7 +57,10 @@ export default function RtoLossCalculator() {
 
   const set = (key: keyof Inputs, raw: string) => {
     const parsed = Number(raw.replace(/[^\d.]/g, ""));
-    setInputs((current) => ({ ...current, [key]: Number.isFinite(parsed) ? parsed : 0 }));
+    setInputs((current) => ({
+      ...current,
+      [key]: Number.isFinite(parsed) ? parsed : 0,
+    }));
   };
 
   const result = useMemo(() => {
@@ -150,7 +153,7 @@ export default function RtoLossCalculator() {
             </ResultPanel>
 
             <ToolCard title="Recovery">
-              <p className="-mt-2 mb-4 text-[13.5px] leading-[1.55] text-[#4A4C49]">
+              <p className="-mt-2 mb-4 text-[13.5px] leading-[1.55] text-muted-foreground">
                 WhatsApp COD-confirmation flows are the standard lever — address verification,
                 prepaid nudges, and a single &ldquo;confirm your order&rdquo; message before
                 dispatch.
@@ -158,10 +161,10 @@ export default function RtoLossCalculator() {
 
               <label
                 htmlFor="rto-reduce"
-                className="mb-2.5 flex justify-between text-[12.5px] font-bold text-[#4A4C49]"
+                className="mb-2.5 flex justify-between text-[12.5px] font-bold text-muted-foreground"
               >
                 <span>Cut RTO by</span>
-                <span className="text-[#1C518E]">{reduce} percentage points</span>
+                <span className="text-primary">{reduce} percentage points</span>
               </label>
               <input
                 id="rto-reduce"
@@ -171,7 +174,7 @@ export default function RtoLossCalculator() {
                 step={1}
                 value={Math.min(reduce, Math.max(Math.round(inputs.rto), 1))}
                 onChange={(event) => setReduce(Number(event.target.value))}
-                className="w-full accent-[#1C518E]"
+                className="w-full accent-primary"
               />
 
               <div className="mt-4.5 rounded-xl bg-[#E7F9EE] p-5">

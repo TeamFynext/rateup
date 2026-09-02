@@ -6,7 +6,7 @@ import { useState } from "react";
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
 const links = [
   { name: "Features", href: "#features" },
@@ -24,7 +24,7 @@ const ReviewAiHeader = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <a href="https://rateup.app" className="flex items-center gap-2">
-              <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
+              <Image src={rateupLogo} alt="logo" height={50} width={126} />
             </a>
           </div>
 

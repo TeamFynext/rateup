@@ -20,7 +20,7 @@ import {
   TextFieldWithCounter,
 } from "@/components/whatsapp/flow-v2/input/fields.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
-import { WaNPSQuestions2 } from "@/utils/constants.ts";
+import { imagesPath, WaNPSQuestions2 } from "@/utils/constants.ts";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
 
 import { DataSourceInput } from "../input/DataSource.tsx";
@@ -354,7 +354,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                 onClick={() => setLogicJumpModalOpened(true)}
               >
                 <Image
-                  src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump.svg`}
+                  src={`${imagesPath}/logic-jump.svg`}
                   height={20}
                   width={20}
                   className="mr-2"

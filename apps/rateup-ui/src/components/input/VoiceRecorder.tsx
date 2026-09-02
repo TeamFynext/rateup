@@ -16,8 +16,6 @@ import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file
 import { Button } from "../ui/button.tsx";
 import CustomTooltip from "../ui/custom/CustomTooltip.tsx";
 
-import classes from "./VoiceRecorder.module.css";
-
 interface VoiceRecordState {
   isRecording: boolean;
   audioUrl: string | null;
@@ -234,9 +232,13 @@ const VoiceRecorder = () => {
       )}
 
       {barHeights.length > 0 && (
-        <div className={classes["bar-visualizer"]}>
+        <div className="flex items-end justify-center gap-1">
           {barHeights.map((height, index) => (
-            <div key={index} className={classes.bar} style={{ height: `${height}px` }} />
+            <div
+              key={index}
+              className="w-1 rounded-sm bg-primary transition-[height] duration-100 ease-linear"
+              style={{ height: `${height}px` }}
+            />
           ))}
         </div>
       )}

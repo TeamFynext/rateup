@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button.tsx";
+import { rateupIcon } from "@/utils/constants";
 
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";
 import type { QrLogoPanelState } from "../ShareQR/LogoTabPanel/index.tsx";
@@ -39,7 +40,7 @@ function Preview({
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const { t: translations } = useTranslation();
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
-  const FALLBACK_LOGO = "/images/rateup-icon.png";
+  const FALLBACK_LOGO = rateupIcon;
 
   const finalLogoSrc = logoSrc || FALLBACK_LOGO;
 

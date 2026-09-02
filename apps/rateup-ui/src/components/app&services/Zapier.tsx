@@ -26,6 +26,7 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
 import type { ZapierIntegration } from "@/types/global";
+import { imagesPath } from "@/utils/constants.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 import { Card, CardContent } from "../ui/card";
@@ -47,7 +48,7 @@ export function Zapier() {
     <div className="flex flex-col gap-4 p-3">
       <div className="flex items-center gap-2">
         <Avatar>
-          <AvatarImage src={"/images/zapier.png"} alt="Zapier" />
+          <AvatarImage src={`${imagesPath}/zapier.png`} alt="Zapier" />
           <AvatarFallback>Z</AvatarFallback>
         </Avatar>
         <h1 className="text-2xl font-bold">Zapier</h1>
@@ -304,6 +305,8 @@ function getTriggerLabel(triggerKey: ZapierTriggers) {
       return "Conversation closed";
     case ZapierTriggers.CONTACT_LIFECYCLE_UPDATED:
       return "Contact life cycle updated";
+    case ZapierTriggers.CONTACT_STAGE_UPDATED:
+      return "Contact moved to another pipeline stage";
     case ZapierTriggers.CONTACT_UPDATED:
       return "Contact updated";
     case ZapierTriggers.NEW_MESSAGE:
@@ -312,12 +315,6 @@ function getTriggerLabel(triggerKey: ZapierTriggers) {
       return "Staff joined to a team";
     case ZapierTriggers.RESPONSE_SUBMITTED:
       return "Response submitted";
-    case ZapierTriggers.TICKET_ASSIGNEE_UPDATED:
-      return "Ticket Assignee updated";
-    case ZapierTriggers.TICKET_CREATED:
-      return "Ticket created";
-    case ZapierTriggers.TICKET_CARD_MOVED:
-      return "Ticket card moved to another column";
     case ZapierTriggers.CONTACT_ADDED_TO_GROUP:
       return "Contact added to group";
     default:

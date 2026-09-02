@@ -12,15 +12,18 @@
   --ink-2: rgba(255, 255, 255, 0.74);
   --ink-3: rgba(255, 255, 255, 0.52);
   --ink-4: rgba(255, 255, 255, 0.38);
-  --cyan: #4fc3ff;
-  --cyan-2: #2fa3ff;
+  --cyan: var(--color-ru-blue-300);
+  --cyan-2: var(--color-ru-blue-400);
   --blue: #2c6fd6;
   --maxw: 1200px;
-  --warm-logo-gradient: linear-gradient(135deg, #ffd54c 0%, #f8951d 100%);
-  --warm-400: #ffb638;
-  --success: #16a34a;
-  --font-display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
-  --font-body: "Inter Variable", system-ui, sans-serif;
+  --warm-logo-gradient: linear-gradient(
+    135deg,
+    var(--color-ru-star-top) 0%,
+    var(--color-ru-amber-500) 100%
+  );
+  --warm-400: var(--color-ru-amber-400);
+  --success: var(--color-ru-green-500);
+  --font-body: var(--font-sans);
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -40,9 +43,9 @@
   --cyan-rgb: 79, 195, 255;
   --light-blue-rgb: 120, 180, 255;
 
-  --grad-cyan-start: #2fa3ff;
-  --grad-cyan-middle: #2fa3ff;
-  --grad-cyan-end: #2fa3ff;
+  --grad-cyan-start: var(--color-ru-blue-400);
+  --grad-cyan-middle: var(--color-ru-blue-400);
+  --grad-cyan-end: var(--color-ru-blue-400);
 
   --btn-primary-start: #3d8bee;
   --btn-primary-end: #2360c8;
@@ -56,8 +59,8 @@
   --nav-link-color: #1e293b;
   --nav-link-hover: #2c6fd6;
   --nav-btn-border: #cbd5e1;
-  --nav-btn-text: #1a1b1a;
-  --nav-logo-color: #1c518e;
+  --nav-btn-text: var(--foreground);
+  --nav-logo-color: var(--primary);
 
   /* Restore standard ghost button colors for Hero on dark section */
   --nav-btn-ghost-border: rgba(255, 255, 255, 0.14);
@@ -86,7 +89,7 @@
   --nav-link-color: #1e293b;
   --nav-link-hover: #2c6fd6;
   --nav-btn-border: #cbd5e1;
-  --nav-btn-text: #1a1b1a;
+  --nav-btn-text: var(--foreground);
   --nav-logo-color: #1e293b;
 
   --btn-primary-start: #3d8bee;
@@ -103,8 +106,8 @@
 /* Omnichannel Inbox Theme (Blue/Cyan - matching original) */
 .themeOmnichannel {
   composes: theme;
-  --cyan: #4fc3ff;
-  --cyan-2: #2fa3ff;
+  --cyan: var(--color-ru-blue-300);
+  --cyan-2: var(--color-ru-blue-400);
   --blue: #2c6fd6;
 
   --primary-rgb: 47, 163, 255;
@@ -115,7 +118,7 @@
   --light-blue-rgb: 120, 180, 255;
 
   --grad-cyan-start: #6bd0ff;
-  --grad-cyan-middle: #2fa3ff;
+  --grad-cyan-middle: var(--color-ru-blue-400);
   --grad-cyan-end: #2c6fd6;
 
   --btn-primary-start: #3d8bee;
@@ -173,9 +176,9 @@
   --nav-border: rgba(236, 236, 234, 0.7);
   --nav-link-color: #1e293b;
   --nav-link-hover: #2a6254;
-  --nav-btn-ghost-border: #ececea;
-  --nav-btn-ghost-text: #1a1b1a;
-  --nav-btn-ghost-border-hover: #8b8e8a;
+  --nav-btn-ghost-border: var(--border);
+  --nav-btn-ghost-text: var(--foreground);
+  --nav-btn-ghost-border-hover: var(--muted-foreground);
   --nav-logo-color: #1e293b;
 
   --btn-primary-chip-bg: #102820;
@@ -520,7 +523,7 @@ nav.top .row {
 
 /* 2. Define overrides for all white-background sections */
 .lightSection {
-  background: #fafaf7;
+  background: var(--background);
   color: #334155; /* Slate-700 */
   --page-0: #1c518e0f;
   --page-1: #ffffff;
@@ -535,7 +538,7 @@ nav.top .row {
   --ink-4: #94a3b8; /* Slate-400 */
 }
 .lightSection .ftag {
-  color: #1c518e;
+  color: var(--primary);
   border-color: rgba(28, 81, 142, 0.12);
 }
 .hero {
@@ -1767,12 +1770,14 @@ nav.top .row {
 
   /* Accent variables are inherited from page level wrapper */
 
-  --warm-logo-gradient: linear-gradient(135deg, #ffd54c 0%, #f8951d 100%);
-  --warm-400: #ffb638;
-  --success: #16a34a;
-
-  --font-display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
-  --font-body: "Inter Variable", system-ui, sans-serif;
+  --warm-logo-gradient: linear-gradient(
+    135deg,
+    var(--color-ru-star-top) 0%,
+    var(--color-ru-amber-500) 100%
+  );
+  --warm-400: var(--color-ru-amber-400);
+  --success: var(--color-ru-green-500);
+  --font-body: var(--font-sans);
 
   --radius-xs: 4px;
   --radius-sm: 8px;
@@ -1821,12 +1826,12 @@ nav.top .row {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
 }
-footer {
-  background: var(--footer-bg, var(--page-0));
-  border-top: 1px solid var(--footer-border, var(--hair));
-  padding: 56px 0 32px;
-  margin-top: 64px;
-}
+/* The bare `footer` element selector that used to live here leaked out of this module —
+   CSS Modules scope class names, not element selectors — so it styled every <footer> on the
+   site. Because module CSS is unlayered and Tailwind utilities sit in `@layer utilities`,
+   it also beat every `bg-*` utility regardless of specificity, and its `--footer-bg` /
+   `--page-0` fallbacks only resolved inside the `.theme*` scopes. Footers now carry their
+   own background; do not reintroduce an unscoped element selector here. */
 .foot-grid {
   display: grid;
   /* about · Product · Company · Resources · Tools · Download App */
@@ -1860,64 +1865,35 @@ footer {
   color: var(--footer-link-hover, #fff);
 }
 
-/* App store download buttons */
+/* App store badges — official Apple / Google Play artwork, used unmodified.
+   Both vendors forbid recreating the badge, adding borders, shadows or graphics
+   inside the clear space, and animating it, so this block only handles size,
+   the required clear space, and a plain opacity hover. */
 .foot-dl {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 6px;
+  align-items: flex-start;
+  /* The clear space is padding inside each link; pull the block back by that
+     amount so the badges still line up with the column's text edge. */
+  margin: 6px 0 0 -10px;
 }
-.foot-dl-btn {
-  display: flex !important;
-  align-items: center;
-  gap: 13px;
-  padding: 9px 20px 9px 16px;
-  border-radius: 12px;
-  background: #000;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  color: #fff !important;
-  text-decoration: none !important;
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
+.foot-dl-badge {
+  display: block !important;
+  /* Minimum clear space = one-quarter the 40px badge height, on all four sides. */
+  padding: 10px;
   margin-bottom: 0 !important;
-  width: fit-content;
-  min-width: 175px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  line-height: 0;
+  transition: opacity 180ms ease;
 }
-.foot-dl-btn:hover {
+.foot-dl-badge:hover {
   opacity: 0.85;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-  color: #fff !important;
 }
-.foot-dl-icon {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-.foot-dl-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-.foot-dl-sub {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  font-family: var(--font-body);
-  text-transform: uppercase;
-}
-.foot-dl-name {
-  font-size: 19px;
-  font-weight: 700;
-  color: #fff;
-  font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+.foot-dl-badge img {
+  display: block;
+  /* 40px is Apple's onscreen minimum; matching heights keep the Google Play
+     badge no smaller than the App Store one, which Google requires. */
+  height: 40px;
+  width: auto;
 }
 .foot-bottom {
   display: flex;
@@ -1930,6 +1906,13 @@ footer {
   color: var(--footer-text-secondary, var(--ink-3));
   flex-wrap: wrap;
   gap: 14px;
+}
+.foot-legal {
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--footer-text-secondary, var(--ink-3));
+  opacity: 0.75;
 }
 .foot-socials {
   display: flex;

@@ -98,7 +98,6 @@ function TabPanelsComp({
                     "endtoendencryption",
                   "redirect",
                   "uniqueDeviceResponse",
-                  "tickets",
                   hasFeature(subscription, SubscriptionFeaturePathName.EmailNotification) &&
                     "enableNotificationEmail",
                   hasFeature(subscription, SubscriptionFeaturePathName.Webhook) && "webhook",

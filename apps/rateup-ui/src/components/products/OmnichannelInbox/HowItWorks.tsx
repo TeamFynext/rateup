@@ -139,14 +139,14 @@ export default function HowItWorks() {
     <section id="how" ref={sectionRef} className="py-20">
       <div className="max-w-[1200px] mx-auto px-7">
         <div className="text-center max-w-[720px] mx-auto mb-[52px]">
-          <span className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.16em] px-[15px] py-[7px] rounded-full mb-5 text-[#4FC3FF] bg-[#2FA3FF]/10 border border-[#2FA3FF]/22">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4FC3FF] shadow-[0_0_10px_#4FC3FF]" />
+          <span className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.16em] px-[15px] py-[7px] rounded-full mb-5 text-ru-blue-300 bg-ru-blue-400/10 border border-ru-blue-400/22">
+            <span className="w-1.5 h-1.5 rounded-full bg-ru-blue-300 shadow-[0_0_10px_var(--color-ru-blue-300)]" />
             Simple to set up. Powerful from day one.
           </span>
           <h6 className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5 mb-4 text-[clamp(32px,4.2vw,54px)]">
             From scattered to streamlined
             <br />
-            <span className="bg-gradient-to-r from-[#6BD0FF] via-[#2FA3FF] to-[#2C6FD6] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#6BD0FF] via-ru-blue-400 to-[#2C6FD6] bg-clip-text text-transparent">
               in minutes.
             </span>
           </h6>

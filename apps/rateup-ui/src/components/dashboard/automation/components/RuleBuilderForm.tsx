@@ -103,13 +103,15 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
   const platform = (useWatch({ control: form.control, name: "platform" }) ??
     "WHATSAPP") as Platform;
-  const filteredTriggerEvents = getTriggerEventsForPlatform(platform);
   const pColor = platformColor[platform];
 
   const triggerEvent = useWatch({
     control: form.control,
     name: "triggerEvent",
   });
+  // Passing the rule's own event keeps a legacy one listed on the rule that uses
+  // it, while new rules are only offered the current events.
+  const filteredTriggerEvents = getTriggerEventsForPlatform(platform, triggerEvent);
   const ruleName = useWatch({ control: form.control, name: "name" });
   const actions = useWatch({ control: form.control, name: "actions" });
   const groups = useWatch({ control: form.control, name: "groups" });

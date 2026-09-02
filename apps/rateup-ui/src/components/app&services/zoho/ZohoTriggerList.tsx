@@ -7,9 +7,9 @@ import { useTranslation } from "react-i18next";
 import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { useZohoPipelines, useZohoUsers } from "@/backend/appsIntegration/zoho/zoho.query";
-import { useLifecyclesWithContactCount } from "@/backend/lifecycle/lifecycle.query";
 import RefreshButton from "@/components/Button/RefreshButton";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
+import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -92,18 +92,18 @@ export const ZohoTriggerList = ({
     savedRequiredFieldMappings,
   );
 
-  const [openLifecycleMappingModal, setOpenLifecycleMappingModal] = useState(false);
+  const [openStageMappingModal, setOpenStageMappingModal] = useState(false);
 
-  const [lifecycleMappings, setLifecycleMappings] = useState<
+  const [stageMappings, setStageMappings] = useState<
     Array<{
-      lifecycleId: string;
-      lifecycleName?: string;
+      stageId: string;
+      stageName?: string;
       biginStageId?: string;
       biginStageName?: string;
     }>
   >([]);
 
-  const { data: lifecycles } = useLifecyclesWithContactCount();
+  const pipelineStages = usePipelineStages();
 
   const updateMut = useUpdateIntegrationMutation(IntegratedApps.zoho);
 
@@ -117,7 +117,17 @@ export const ZohoTriggerList = ({
     (pipeline) => String(pipeline.id) === String(selectedPipelineId),
   );
 
-  const handleSavePipelineConfig = () => {
+  /**
+   * The credential column is replaced wholesale on save, not merged — see
+   * `updateIntegrationByName`. So every write has to carry forward the keys it
+   * is not changing, at both levels: `bigin` holds `biginOwner` next to
+   * `pipeline`, and rebuilding either from scratch silently deletes the rest.
+   * That is what used to wipe the saved Bigin owner whenever the pipeline
+   * configuration or the stage mapping was saved.
+   */
+  const credentialWithPipelinePatch = (
+    patch: Partial<NonNullable<NonNullable<typeof integration.credential.bigin>["pipeline"]>>,
+  ) => {
     const selectedPipelineObj = pipelines.find(
       (pipeline) => String(pipeline.id) === String(selectedPipelineId),
     );
@@ -126,79 +136,62 @@ export const ZohoTriggerList = ({
       (pipeline) => String(pipeline.id) === String(selectedSubPipelineId),
     );
 
-    updateMut.mutate({
-      credential: {
-        ...integration.credential,
-        bigin: {
-          pipeline: {
-            ...integration?.credential?.bigin?.pipeline,
-            selectedPipeline: {
-              id: selectedPipelineObj?.id,
-              name: selectedPipelineObj?.name,
-            },
-            selectedSubPipeline: {
-              id: selectedSubPipelineObj?.id,
-              name: selectedSubPipelineObj?.name,
-              value: selectedSubPipelineObj?.value,
-            },
-            requiredFieldMappings: requiredFieldValues,
+    return {
+      ...integration.credential,
+      bigin: {
+        ...integration?.credential?.bigin,
+        pipeline: {
+          ...integration?.credential?.bigin?.pipeline,
+          selectedPipeline: {
+            id: selectedPipelineObj?.id,
+            name: selectedPipelineObj?.name,
           },
+          selectedSubPipeline: {
+            id: selectedSubPipelineObj?.id,
+            name: selectedSubPipelineObj?.name,
+            value: selectedSubPipelineObj?.value,
+          },
+          requiredFieldMappings: requiredFieldValues,
+          ...patch,
         },
       },
-    });
+    };
   };
 
-  const handleOpenLifecycleMapping = () => {
-    if (!lifecycles?.length) return;
+  const handleSavePipelineConfig = () => {
+    updateMut.mutate({ credential: credentialWithPipelinePatch({}) });
+  };
 
+  const handleOpenStageMapping = () => {
+    if (!pipelineStages.length) return;
+
+    // Key name is legacy — the stored mappings target pipeline columns now.
     const existingMappings = integration?.credential?.bigin?.pipeline?.lifecycleStageMappings || [];
 
-    const mappings = lifecycles.map((lifecycle) => {
-      const existing = existingMappings.find((m) => m.lifecycleId === lifecycle.id);
+    // One row per column on the board, in board order, so a newly added column
+    // shows up here unmapped rather than silently missing.
+    const mappings = pipelineStages.map((stage) => {
+      const existing = existingMappings.find((m) => m.stageId === stage.id);
 
       return {
-        lifecycleId: lifecycle.id,
-        lifecycleName: lifecycle.name,
+        stageId: stage.id,
+        stageName: stage.name,
         biginStageId: existing?.biginStageId || "",
         biginStageName: existing?.biginStageName || "",
       };
     });
 
-    setLifecycleMappings(mappings);
+    setStageMappings(mappings);
 
-    setOpenLifecycleMappingModal(true);
+    setOpenStageMappingModal(true);
   };
 
-  const handleSaveLifecycleMappings = () => {
-    const selectedPipelineObj = pipelines.find(
-      (pipeline) => String(pipeline.id) === String(selectedPipelineId),
-    );
-
-    const selectedSubPipelineObj = subPipelines.find(
-      (pipeline) => String(pipeline.id) === String(selectedSubPipelineId),
-    );
-
+  const handleSaveStageMappings = () => {
     updateMut.mutate({
-      credential: {
-        ...integration.credential,
-        bigin: {
-          pipeline: {
-            selectedPipeline: {
-              id: selectedPipelineObj?.id,
-              name: selectedPipelineObj?.name,
-            },
-            selectedSubPipeline: {
-              id: selectedSubPipelineObj?.id,
-              name: selectedSubPipelineObj?.name,
-              value: selectedSubPipelineObj?.value,
-            },
-            requiredFieldMappings: requiredFieldValues,
-            lifecycleStageMappings: lifecycleMappings,
-          },
-        },
-      },
+      // Key name is legacy; the entries target pipeline columns now.
+      credential: credentialWithPipelinePatch({ lifecycleStageMappings: stageMappings }),
     });
-    setOpenLifecycleMappingModal(false);
+    setOpenStageMappingModal(false);
   };
 
   async function handleToggleTrigger(triggerKey: ZohoTriggers, enabled: boolean) {
@@ -563,24 +556,26 @@ export const ZohoTriggerList = ({
                 size="lg"
                 className="rounded-xl px-8"
                 disabled={!selectedPipelineId || !selectedSubPipelineId}
-                onClick={handleOpenLifecycleMapping}
+                onClick={handleOpenStageMapping}
               >
                 <IconSettings />
-                {t("Configure Lifecycle Mapping")}
+                {t("Configure Pipeline Stage Mapping")}
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Lifecycle Modal */}
-      <Dialog open={openLifecycleMappingModal} onOpenChange={setOpenLifecycleMappingModal}>
+      {/* Pipeline stage mapping */}
+      <Dialog open={openStageMappingModal} onOpenChange={setOpenStageMappingModal}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t("Lifecycle Stage Mapping")}</DialogTitle>
+            <DialogTitle>{t("Pipeline Stage Mapping")}</DialogTitle>
 
             <DialogDescription>
-              {t("Map Rateup lifecycles to Bigin stages.")}
+              {t(
+                "Map the columns of your pipeline to Bigin stages. Moving a lead on the board updates the matching Bigin deal, and a Bigin stage change moves the lead back.",
+              )}
               <p className="text-sm text-red-500 font-medium mt-2">
                 {t(
                   "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration.",
@@ -593,7 +588,7 @@ export const ZohoTriggerList = ({
             {(() => {
               const unmatchedStages = stages.filter(
                 (stage) =>
-                  !lifecycleMappings.some(
+                  !stageMappings.some(
                     (mapping) => String(mapping.biginStageId) === String(stage.id),
                   ),
               );
@@ -605,26 +600,23 @@ export const ZohoTriggerList = ({
                 </div>
               );
             })()}
-            {lifecycleMappings.map((mapping, index) => (
-              <div
-                key={mapping.lifecycleId}
-                className="flex items-center gap-4 rounded-xl border p-4"
-              >
+            {stageMappings.map((mapping, index) => (
+              <div key={mapping.stageId} className="flex items-center gap-4 rounded-xl border p-4">
                 <div className="flex-1">
-                  <Label>{mapping.lifecycleName}</Label>
+                  <Label>{mapping.stageName}</Label>
                 </div>
 
                 <Select
                   value={mapping.biginStageId}
                   onValueChange={(value) => {
                     const stage = stages.find((s) => String(s.id) === String(value));
-                    const updated = [...lifecycleMappings];
+                    const updated = [...stageMappings];
                     updated[index] = {
                       ...mapping,
                       biginStageId: stage?.id === undefined ? undefined : String(stage.id),
                       biginStageName: stage?.name,
                     };
-                    setLifecycleMappings(updated);
+                    setStageMappings(updated);
                   }}
                   items={stages.map((stage) => ({
                     value: String(stage.id),
@@ -648,7 +640,7 @@ export const ZohoTriggerList = ({
           </div>
 
           <DialogFooter>
-            <Button onClick={handleSaveLifecycleMappings}>
+            <Button onClick={handleSaveStageMappings}>
               <IconDeviceFloppy />
               {t("Save Mapping")}
             </Button>

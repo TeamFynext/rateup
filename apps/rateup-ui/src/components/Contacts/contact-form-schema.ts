@@ -29,6 +29,8 @@ export interface ContactFormValues {
   contactGroupIds: string[];
   assignedUserIds: string[];
   lifecycleId: string;
+  /** Column on the org's pipeline. "" means "not on the board", which opens no lead. */
+  stageId: string;
   notes: string;
 }
 
@@ -48,6 +50,7 @@ export const contactFormDefaults: ContactFormValues = {
   contactGroupIds: [],
   assignedUserIds: [],
   lifecycleId: "",
+  stageId: "",
   notes: "",
 };
 
@@ -70,6 +73,7 @@ export interface ContactInitialValues {
   contactGroupIds?: (string | undefined | null)[];
   assignedUserIds?: (string | undefined | null)[];
   lifecycleId?: string | null;
+  stageId?: string | null;
   notes?: string | null;
   external_id?: string | null;
   contactType?: string[];
@@ -128,6 +132,7 @@ export const toFormValues = (
     source: initialValues.source ?? contactFormDefaults.source,
     external_id: initialValues.external_id ?? "",
     lifecycleId: initialValues.lifecycleId ?? "",
+    stageId: initialValues.stageId ?? "",
     notes: initialValues.notes ?? "",
     labels: toIdList(initialValues.labels),
     contactGroupIds: toIdList(initialValues.contactGroupIds),
@@ -172,6 +177,7 @@ export const buildContactSchema = (t: TFunction, customFields: CustomFieldData[]
       contactGroupIds: z.array(z.string()),
       assignedUserIds: z.array(z.string()),
       lifecycleId: z.string(),
+      stageId: z.string(),
       notes: z.string(),
     })
     .superRefine((values, ctx) => {

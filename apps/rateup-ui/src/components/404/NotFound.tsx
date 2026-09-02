@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
 import type { CSSProperties } from "react";
 
-import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants";
+import { rateupLogoWhite } from "@/utils/constants";
 
 import { RateupStar } from "../integrations/logos";
 
@@ -52,7 +52,7 @@ export default function NotFoundPage() {
       {/* ── Nav ── */}
       <nav className={styles.nav}>
         <a href="https://rateup.app">
-          <img className={styles.navLogo} src={rateupLogoHorizontalWhiteTransparent} alt="RateUp" />
+          <img className={styles.navLogo} src={rateupLogoWhite} alt="RateUp" />
         </a>
       </nav>
 

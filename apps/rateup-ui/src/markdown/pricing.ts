@@ -28,8 +28,6 @@ function getPlanHighlights(plan: RateupPaymentPlan) {
       : null,
     features.webSurvey?.active ? `${features.webSurvey?.count?.max || 0} Web Surveys` : null,
     features.loyalty?.active ? "WhatsApp Loyalty Program" : null,
-    features.ticket?.active ? `${features.ticket?.count?.max || 0} Ticketing Seats` : null,
-    features.reputationManagement?.active ? "Reputation Management" : null,
     features.ai?.active
       ? `AI Tokens (${features.ai?.count?.promptTokens || 0} prompt tokens)`
       : null,
@@ -57,7 +55,6 @@ Businesses use RateUp to:
 - WhatsApp CRM
 - AI Automation
 - Shared Team Inbox
-- Ticketing System
 - Customer Loyalty Programs
 - Surveys & Feedback Collection
 - Broadcast Campaigns
@@ -95,7 +92,6 @@ ${plans
 - Plan Name: ${plan.name}
 - Pricing: ${formatPrice(payment?.amount, payment?.currency, payment?.period)}
 - Billing Cycle: ${payment?.period || "Custom"}
-- Trial Period: ${plan.trialDays || 0} days
 - Plan Type: ${plan.planType}
 
 ### Included Features
@@ -155,7 +151,6 @@ ${`
 #### Support Features
 - Shared Inbox
 - Team Collaboration
-- Ticketing System
 - Multi-Agent Support
 `}
 

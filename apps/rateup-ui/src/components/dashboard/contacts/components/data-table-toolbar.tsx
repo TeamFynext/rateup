@@ -30,10 +30,12 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import AddToGroupModal from "@/components/Contacts/AddToGroupModal.tsx";
 import ApplyLifecycletoContactsModal from "@/components/Contacts/ApplyLifecycletoContactsModal.tsx";
+import AssignStageToContactsModal from "@/components/Contacts/AssignStageToContactsModal.tsx";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import CreateOrEditContactModal from "@/components/Contacts/CreatOrEditContactModal.tsx";
 import LabelContactModal from "@/components/Contacts/LabelContactModal.tsx";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -67,6 +69,8 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { CustomField } from "@/context/CustomFieldsContext.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { TeamFeature } from "@/types/enums.ts";
 import { getApiErrorData } from "@/utils/apiError.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
@@ -185,7 +189,17 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
   const [openAddtoGroupModal, setOpenAddtoGroupModal] = useState(false);
   const [openLabelContactModal, setOpenLabelContactModal] = useState(false);
   const [openLifecycleContactModal, setOpenLifecycleContactModal] = useState(false);
+  const [openStageContactModal, setOpenStageContactModal] = useState(false);
   const [openImportModal, setOpenImportModal] = useState(false);
+  // The bulk action follows whichever vocabulary the org actually has. Pipeline
+  // orgs assign a stage; the rest keep the lifecycle action until the pipeline
+  // reaches them, so nobody loses the bulk write in the meantime.
+  const { allowedFeatures } = useTeamFeatures();
+  const hasPipeline = allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline);
+  // Whether the org has columns to filter by, which is stricter than having the
+  // feature — see the note on the filter itself.
+  const hasBoard = usePipelineStages().length > 0;
+
   const deleteManyContactsMutation = useDeleteManyContactsMutation();
   const confirm = useConfirm();
   async function handleDeleteContacts() {
@@ -236,12 +250,27 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
                 }
               />
             </div>
-            <LifecycleSelector
-              all={true}
-              className="w-48"
-              value={filter?.lifecycleId}
-              onChange={(value, _lifecycleObj) => setFilter({ ...filter, lifecycleId: value })}
-            />
+            {/* Matches the table's Stage column, which swaps on the same test:
+                filtering by lifecycle while reading a Pipeline Stage column was
+                the same screen speaking two vocabularies. Keyed on the board
+                existing rather than on the feature flag, because `StageSelector`
+                renders nothing without columns — a team with the feature but no
+                board would otherwise be left with no filter at all. */}
+            {hasBoard ? (
+              <StageSelector
+                all
+                className="w-48"
+                value={filter?.stageId}
+                onChange={(value) => setFilter({ ...filter, stageId: value })}
+              />
+            ) : (
+              <LifecycleSelector
+                all={true}
+                className="w-48"
+                value={filter?.lifecycleId}
+                onChange={(value, _lifecycleObj) => setFilter({ ...filter, lifecycleId: value })}
+              />
+            )}
             <LabelSelector
               value={filter.labelId}
               onChange={(value) => setFilter({ ...filter, labelId: value })}
@@ -302,10 +331,12 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
             <Button
               variant="outline"
               className="hover:text-blue-500"
-              onClick={() => setOpenLifecycleContactModal(true)}
+              onClick={() =>
+                hasPipeline ? setOpenStageContactModal(true) : setOpenLifecycleContactModal(true)
+              }
             >
               <IconActivity />
-              <span>{t("Update Lifecycle Stage")}</span>
+              <span>{hasPipeline ? t("Update Pipeline Stage") : t("Update Lifecycle Stage")}</span>
             </Button>
             <Button variant="outline" className="hover:text-red-500" onClick={handleDeleteContacts}>
               <IconTrash />
@@ -334,6 +365,12 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
         contactIds={Object.keys(table.getState().rowSelection)}
         opened={openLifecycleContactModal}
         setOpened={setOpenLifecycleContactModal}
+        onSuccess={resetRowSelection}
+      />
+      <AssignStageToContactsModal
+        contactIds={Object.keys(table.getState().rowSelection)}
+        opened={openStageContactModal}
+        setOpened={setOpenStageContactModal}
         onSuccess={resetRowSelection}
       />
     </Card>

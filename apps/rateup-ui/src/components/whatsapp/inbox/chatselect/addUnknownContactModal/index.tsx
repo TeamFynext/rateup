@@ -9,7 +9,8 @@ import { z } from "zod/v4";
 
 import type { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
-import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import { useAssignContactStageMutation } from "@/backend/pipeline/pipeline.query";
+import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
@@ -87,7 +88,7 @@ const addContactSchema = z.object({
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     }, "Invalid email address"),
   countryCode: z.string(),
-  lifecycleId: z.string().optional(),
+  stageId: z.string().optional(),
   source: z.string(),
 });
 
@@ -95,6 +96,8 @@ type AddContactFormValues = z.infer<typeof addContactSchema>;
 
 export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
   const contactMutation = useCreateContactMutation();
+  const stages = usePipelineStages();
+  const assignStage = useAssignContactStageMutation();
   const [loading, setLoading] = useState(false);
   const { t: translations } = useTranslation();
 
@@ -113,7 +116,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
       phone: "",
       email: "",
       countryCode: "91",
-      lifecycleId: "",
+      stageId: "",
       source: importMethod.MANUAL,
     },
   });
@@ -135,17 +138,21 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
     const rawPhone = values.phone ?? "";
     const phoneToSend = rawPhone.replace(/^\+/, "");
 
-    const payload: ICreateContact & { countryCode?: string; lifecycleId?: string } = {
+    const payload: ICreateContact & { countryCode?: string } = {
       name: values.name,
       phone: phoneToSend,
       email: values.email || undefined,
       countryCode: values.countryCode,
-      lifecycleId: values.lifecycleId || undefined,
       source: values.source,
     };
 
     contactMutation.mutate(payload, {
       onSuccess(data) {
+        // The stage lives on a lead, so it can only be written once the contact
+        // has an id. Leaving the field empty opens no lead.
+        if (values.stageId) {
+          assignStage.mutate({ contactId: data.data.id, stageId: values.stageId });
+        }
         reset();
         toast.success("contact added");
         if (props.successCallback) props.successCallback(data.data);
@@ -211,21 +218,22 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
             </Field>
           </div>
 
-          <Field>
-            <FieldTitle>{translations("Lifecycle Stage")}</FieldTitle>
-            <Controller
-              name="lifecycleId"
-              control={control}
-              render={({ field }) => (
-                <LifecycleSelector
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  placeholder={"Enter lifecycle"}
-                  className="w-full"
-                />
-              )}
-            />
-          </Field>
+          {stages.length > 0 && (
+            <Field>
+              <FieldTitle>{translations("Pipeline Stage")}</FieldTitle>
+              <Controller
+                name="stageId"
+                control={control}
+                render={({ field }) => (
+                  <StageSelector
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    className="w-full"
+                  />
+                )}
+              />
+            </Field>
+          )}
 
           <div className="w-full flex items-center justify-end gap-4 mt-2">
             <Button type="submit" disabled={loading || !isValid} className="min-w-[12vw]">

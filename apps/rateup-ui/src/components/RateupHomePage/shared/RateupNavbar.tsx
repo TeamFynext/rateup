@@ -1,223 +1,188 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import {
-  MobileNav,
-  MobileNavHeader,
-  MobileNavMenu,
-  MobileNavToggle,
-  Navbar,
-  NavBody,
-  NavItems,
-} from "@/components/ui/resizable-navbar.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
-import { imagesPath, rateupLogoHorizontalWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
-import { RateupStar } from "../../integrations/logos.tsx";
-import { BookDemoModal } from "../helper/BookDemoModal.tsx";
-import DropDownMobileNavItems from "../helpers/DropDownMobileNavItems.tsx";
+import { BOOK_DEMO_ROUTE } from "../helper/BookDemoLink.tsx";
+import DropDownNavItems from "../helpers/DropDownNavItems.tsx";
+import { ArrowRight } from "./home-ui.tsx";
 
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
+/**
+ * The floating pill nav from the design.
+ *
+ * `Layout` already supplies the `sticky top-0` header, so this renders the gutter and the
+ * pill itself. The pill is translucent over a blur, which only reads once page content is
+ * scrolling underneath it — that is also when the shadow deepens and the pill narrows.
+ */
 
-interface RateupNavbarProps {
-  darkNavbar?: boolean;
-}
+const NAV_LINKS = [
+  { label: "Pricing", to: "/pricing" },
+  { label: "Contact", to: "/contact-us" },
+  { label: "About Us", to: "/about-us" },
+  { label: "Blog", to: "/blog" },
+] as const;
 
-export default function RateupNavbar(_props: Readonly<RateupNavbarProps>) {
+const PRODUCTS = [
+  { label: "WhatsApp Loyalty", to: "/products/whatsapp-loyalty" },
+  { label: "WhatsApp Feedback", to: "/products/whatsapp-feedback" },
+  { label: "Omnichannel Inbox", to: "/products/omnichannel-inbox" },
+] as const;
+
+const DESKTOP_LINK =
+  "text-[clamp(14px,1.5vw,16.5px)] font-semibold tracking-[-0.01em] whitespace-nowrap text-ru-n-700 transition-colors hover:text-ru-blue-600";
+
+const SHEET_LINK =
+  "flex h-13 items-center rounded-lg px-3 text-[16.5px] font-semibold text-ru-n-700 transition-colors hover:bg-ru-n-50 hover:text-ru-blue-600";
+
+export default function RateupNavbar() {
   const hasSession = useCheckSession();
-  const mobileLogo = rateupLogoHorizontalWhiteTransparent;
-  const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
-  const navItems = [
-    {
-      name: "Pricing",
-      link: "/pricing",
-    },
-    {
-      name: "Contact",
-      link: "/contact-us",
-    },
-    {
-      name: "About Us",
-      link: "/about-us",
-    },
-    {
-      name: "Blog",
-      link: "/blog",
-    },
-  ];
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(globalThis.scrollY > 12);
+    globalThis.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => globalThis.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* Navigating with the sheet open would otherwise leave it covering the new page. */
+  useEffect(() => setMenuOpen(false), [pathname]);
 
   return (
-    <Navbar>
-      {/* Desktop Navigation */}
-      <NavBody className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
-        <Link
-          to="/"
-          className="relative z-20 mr-4 flex items-center
-         space-x-2 px-2 py-1 text-sm font-normal text-black"
+    <div className="px-2.5 py-2 sm:px-6 sm:py-4">
+      <div
+        className={`relative mx-auto transition-[max-width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          scrolled ? "max-w-270" : "max-w-300"
+        }`}
+      >
+        <div
+          className={`flex items-center gap-2 rounded-full border border-ru-n-200 bg-ink-25/82 px-3 py-2 backdrop-blur-md backdrop-saturate-150 transition-shadow duration-200 sm:gap-4.5 sm:px-5 sm:py-2.5 ${
+            scrolled
+              ? "shadow-[0_16px_40px_rgba(16,24,40,0.16)]"
+              : "shadow-[0_2px_10px_rgba(16,24,40,0.05)]"
+          }`}
         >
-          <span className={styles.brand}>
-            <RateupStar className="h-8 w-8" />
-            <span className={styles.wm}>
-              Rate
-              <span className={styles.up}>Up</span>
-            </span>
-          </span>
-        </Link>
-        <NavItems items={navItems} className="flex-none" />
-        {hasSession ? (
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate({ to: "/dashboard" })}
-              className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-4.5 py-1.25 pr-1.25 text-white bg-[linear-gradient(135deg,var(--btn-primary-start),var(--btn-primary-end))] shadow-[0_10px_26px_var(--btn-primary-shadow)] hover:shadow-[0_14px_34px_var(--btn-primary-hover-shadow)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
-            >
-              <span style={{ paddingRight: 2 }}>Dashboard</span>
-              <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-(--btn-primary-chip-bg) shrink-0">
-                <svg
-                  className="w-3.75 h-3.75"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="9 6 15 12 9 18" />
-                </svg>
-              </span>
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4 justify-center">
-            <button
-              onClick={() => navigate({ to: "/login" })}
-              style={{
-                borderColor: "var(--nav-btn-border, var(--nav-btn-ghost-border))",
-                color: "var(--nav-btn-text, var(--nav-btn-ghost-text))",
-              }}
-              className="bg-transparent font-extrabold text-[15px] border py-2.5 px-5 rounded-2xl hover:border-(--nav-link-hover) hover:text-(--nav-link-hover) transition-colors cursor-pointer whitespace-nowrap"
-            >
-              Sign In
-            </button>
-            <BookDemoModal>
-              <button
-                style={{
-                  backgroundColor: "var(--btn-demo-bg)",
-                  border: "1px solid var(--btn-demo-border)",
-                  color: "var(--btn-demo-text)",
-                }}
-                className="inline-flex items-center gap-3 rounded-2xl font-extrabold text-sm pl-4.5 py-1.25 pr-1.25 hover:bg-(--btn-demo-hover-bg) hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
-              >
-                <span style={{ paddingRight: 2 }}>Book a Demo</span>
-                <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-white/65 shrink-0 text-slate-800">
-                  <svg
-                    className="w-3.75 h-3.75"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                </span>
-              </button>
-            </BookDemoModal>
-            <button
-              onClick={() => navigate({ to: "/signup" })}
-              className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-4.5 py-1.25 pr-1.25 text-white bg-[linear-gradient(135deg,var(--btn-primary-start),var(--btn-primary-end))] shadow-[0_10px_26px_var(--btn-primary-shadow)] hover:shadow-[0_14px_34px_var(--btn-primary-hover-shadow)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
-            >
-              <span style={{ paddingRight: 2 }}>Sign Up for Free</span>
-              <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-(--btn-primary-chip-bg) shrink-0">
-                <svg
-                  className="w-3.75 h-3.75"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="9 6 15 12 9 18" />
-                </svg>
-              </span>
-            </button>
-          </div>
-        )}
-      </NavBody>
-
-      {/* Mobile Navigation */}
-      <MobileNav>
-        <MobileNavHeader>
-          <Link
-            to="/"
-            className="relative z-20 mr-4 flex items-center 
-          space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
-          >
-            <Image src={mobileLogo} alt="logo" width={100} height={30} />
+          <Link to="/" aria-label="RateUp home" className="flex-none">
+            <Image
+              src={rateupLogo}
+              alt="RateUp"
+              width={126}
+              height={50}
+              className="h-8 w-auto sm:h-12"
+            />
           </Link>
-          <MobileNavToggle
-            isOpen={isMobileMenuOpen}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          />
-        </MobileNavHeader>
 
-        <MobileNavMenu isOpen={isMobileMenuOpen}>
-          <div
-            className={`fixed top-0 left-0 w-full rounded-xl bg-white z-50 flex flex-col p-6 transform transition-transform duration-300 ease-in-out ${
-              isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <Image src={rateupLogoUrl} alt="logo" width={60} height={30} />
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-2xl font-bold"
-                aria-label="Close menu"
-              >
-                ✕
-              </button>
-            </div>
+          {/* Wider than the comp's `clamp(12px, 1.6vw, 26px)`. There is room for it: at the
+              pill's 1200px the five items and both CTAs still leave ~300px spare. */}
+          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-[clamp(20px,2.4vw,40px)] lg:flex">
+            <DropDownNavItems dropdownStyle={DESKTOP_LINK} />
+            {NAV_LINKS.map((item) => (
+              <Link key={item.label} to={item.to} className={DESKTOP_LINK}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
 
-            <DropDownMobileNavItems />
-            {navItems.map((item, idx) => (
+          <div className="ml-auto flex flex-none items-center gap-1.5 sm:gap-2.5">
+            {hasSession ? (
               <Link
-                key={`mobile-link-${idx}`}
-                to={item.link}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="py-3 text-lg text-neutral-700 hover:text-rateup-blue-4"
+                to="/dashboard"
+                className="inline-flex h-11.5 items-center gap-2 rounded-full bg-ru-blue-600 px-3.5 text-[clamp(14px,1.6vw,15.5px)] font-semibold whitespace-nowrap text-white shadow-xs transition-colors hover:bg-ru-blue-700 sm:px-6"
               >
-                {item.name}
+                Dashboard
+                <ArrowRight className="hidden size-4 sm:block" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="hidden h-11 items-center rounded-lg px-3.5 text-[clamp(14px,1.6vw,15.5px)] font-semibold whitespace-nowrap text-ru-n-700 transition-colors hover:text-ru-blue-600 lg:inline-flex"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  /* The design promotes this to the amber star gradient — the only warm
+                     surface in a nav of blues and neutrals, so it carries the eye without
+                     needing more size. Ink is `ru-blue-950` rather than white: amber is far
+                     too light to hold white text at this weight. */
+                  className="inline-flex h-11.5 items-center gap-2 rounded-full border border-ru-amber-600 bg-ru-star px-3.5 text-[clamp(14px,1.6vw,15.5px)] font-semibold whitespace-nowrap text-ru-blue-950 shadow-[0_4px_14px_rgba(248,149,29,0.28)] transition-[filter,box-shadow,transform] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-px hover:brightness-105 hover:shadow-[0_6px_20px_rgba(248,149,29,0.36)] sm:px-6"
+                >
+                  Start for Free
+                  {/* The pill is the widest thing in the bar. Below `sm` the arrow is the one
+                      part that carries no meaning, so it is what goes. */}
+                  <ArrowRight className="hidden size-4.25 sm:block" />
+                </Link>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              className="inline-flex size-11.5 flex-none items-center justify-center rounded-full border border-ru-n-200 bg-white text-ru-n-700 transition-colors hover:border-ru-n-300 lg:hidden"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                className="size-5"
+                aria-hidden="true"
+              >
+                {menuOpen ? (
+                  <path d="M6 6l12 12M18 6 6 18" />
+                ) : (
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {menuOpen && (
+          <div className="absolute inset-x-0 top-[calc(100%+10px)] flex flex-col gap-0.5 rounded-[20px] border border-ru-n-200 bg-white p-3.5 shadow-[0_24px_56px_rgba(16,24,40,0.18)] lg:hidden">
+            <div className="px-3 pt-1 pb-2 text-[12.5px] font-semibold tracking-widest text-ru-n-400 uppercase">
+              Product
+            </div>
+            {PRODUCTS.map((item) => (
+              <Link key={item.label} to={item.to} className={SHEET_LINK}>
+                {item.label}
               </Link>
             ))}
 
-            <div className="mt-6 flex flex-col gap-3">
-              <Link
-                to="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="px-6 py-2 border text-rateup-blue-4 text-center border-rateup-blue-4 rounded hover:bg-rateup-blue-4 hover:text-white transition"
-              >
-                Login
-              </Link>
+            <div className="my-2 h-px bg-ru-n-100" />
 
+            {NAV_LINKS.map((item) => (
+              <Link key={item.label} to={item.to} className={SHEET_LINK}>
+                {item.label}
+              </Link>
+            ))}
+
+            <div className="mt-2.5 flex flex-col gap-2.5 border-t border-ru-n-100 pt-3.5">
               <Link
-                to="/signup"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="px-6 py-2 bg-rateup-blue-4 text-center text-white rounded hover:opacity-90 transition"
+                to={BOOK_DEMO_ROUTE}
+                className="inline-flex h-13 items-center justify-center rounded-lg bg-ru-blue-600 text-base font-bold text-white transition-colors hover:bg-ru-blue-700"
               >
-                SignUp
+                Book a Demo
+              </Link>
+              <Link
+                to={hasSession ? "/dashboard" : "/login"}
+                className="inline-flex h-13 items-center justify-center rounded-lg border border-ru-n-200 bg-white text-base font-bold text-ru-n-700 transition-colors hover:border-ru-n-300 hover:text-ru-blue-600"
+              >
+                {hasSession ? "Dashboard" : "Login"}
               </Link>
             </div>
           </div>
-        </MobileNavMenu>
-      </MobileNav>
-    </Navbar>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { IconCircleCheck } from "@tabler/icons-react";
 import { motion } from "motion/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 
 interface Colors {
   color1?: string;
@@ -17,7 +17,7 @@ const PricingSection = ({ color1, color2 }: Colors) => {
       <div className="text-center mb-16">
         <h4
           style={{ color: color1 }}
-          className="text-[#1c518e] text-sm uppercase font-medium tracking-wider"
+          className="text-primary text-sm uppercase font-medium tracking-wider"
         >
           Our Pricing Plans
         </h4>
@@ -40,7 +40,7 @@ const PricingSection = ({ color1, color2 }: Colors) => {
             <h3 style={{ color: color2 }} className="text-2xl font-semibold text-[#00397b] mb-2">
               Starter
             </h3>
-            <p style={{ color: color1 }} className="text-5xl font-bold text-[#1c518e]">
+            <p style={{ color: color1 }} className="text-5xl font-bold text-primary">
               ₹0 <span className="text-base font-medium text-gray-500">/month</span>
             </p>
             <p className="text-gray-600 mt-3 mb-5 text-sm">
@@ -76,13 +76,13 @@ const PricingSection = ({ color1, color2 }: Colors) => {
             <h3 style={{ color: color2 }} className="text-2xl font-semibold text-[#00397b] mb-2">
               Enterprise
             </h3>
-            <p style={{ color: color1 }} className="text-5xl font-bold text-[#1c518e]">
+            <p style={{ color: color1 }} className="text-5xl font-bold text-primary">
               Custom
             </p>
             <p className="text-gray-600 mt-3 mb-6 text-sm">Customized Plan & Pricing</p>
             <div className="text-xl text-center text-gray-700 mt-6 mb-4">Let&apos;s Talk!</div>
           </div>
-          <BookDemoModal>
+          <BookDemoLink>
             <button
               style={{
                 backgroundColor: color1 ? color1 : "#1c518e",
@@ -92,7 +92,7 @@ const PricingSection = ({ color1, color2 }: Colors) => {
             >
               Contact Sales
             </button>
-          </BookDemoModal>
+          </BookDemoLink>
         </div>
       </motion.div>
     </section>

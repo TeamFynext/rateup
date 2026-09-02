@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
 export default function RateupRedirectCard({ className = "" }) {
   const { t: translations } = useTranslation();
@@ -15,11 +15,7 @@ export default function RateupRedirectCard({ className = "" }) {
       <a href="https://www.rateup.app" className="w-fit text-primary no-underline hover:underline">
         <div className="flex items-end justify-center gap-0">
           <span className="text-[10px] mb-[2px] text-gray-500">{translations("Powered By")}</span>
-          <img
-            src={rateupLogoStackedWhiteTransparent}
-            className="h-[30px] w-[30px] object-contain"
-            alt="RateUp Logo"
-          />
+          <img src={rateupLogo} className="h-[22px] w-auto object-contain" alt="RateUp Logo" />
         </div>
       </a>
     </div>

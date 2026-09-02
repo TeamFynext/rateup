@@ -23,8 +23,6 @@ function EditFlowV3() {
     addScreens,
     setCurrentScreenId,
     currentScreenId,
-    setTicketIssued,
-    ticketIssued,
     logicJumps,
     setAllLogicJumps,
   } = useFlowStoreV3();
@@ -58,13 +56,6 @@ function EditFlowV3() {
     }
   }, [dbFlow?.dbFlowId]);
 
-  // Initialize ticket data
-  useEffect(() => {
-    if (dbFlow?.ticketIssued) {
-      setTicketIssued(dbFlow.ticketIssued);
-    }
-  }, [dbFlow?.ticketIssued]);
-
   // Initialize logic jumps
   useEffect(() => {
     if (dbFlow?.logicJumps) {
@@ -78,9 +69,8 @@ function EditFlowV3() {
       // Deep comparison to avoid unnecessary saves
       const screensChanged = !isEqual(dbFlow.json.screens, getScreens());
       const logicJumpsChanged = !isEqual(dbFlow.logicJumps, logicJumps);
-      const ticketsChanged = ticketIssued && !isEqual(dbFlow.ticketIssued, ticketIssued);
 
-      if (screensChanged || logicJumpsChanged || ticketsChanged) {
+      if (screensChanged || logicJumpsChanged) {
         const timeoutId = setTimeout(() => {
           updateFlow.mutate({
             dbFlowId,
@@ -90,7 +80,6 @@ function EditFlowV3() {
                 version: "7.2",
               },
               logicJumps: logicJumpsChanged ? logicJumps : undefined,
-              ticketIssued: ticketsChanged ? ticketIssued : undefined,
             },
           });
         }, 1000); // Debounce for 1 second
@@ -98,7 +87,7 @@ function EditFlowV3() {
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [dbFlowId, screens, logicJumps, isPending, ticketIssued]);
+  }, [dbFlowId, screens, logicJumps, isPending]);
 
   if (isPending) return <RateupLoader />;
 

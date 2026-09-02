@@ -14,7 +14,6 @@ RateUp provides a complete suite of AI-powered customer engagement products.
 - QR Studio
 - WhatsApp Survey
 - AI Review Management
-- Ticketing System
 - Testimonial Gateway
 
 ## Features

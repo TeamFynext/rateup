@@ -1,10 +1,4 @@
-import {
-  IconAlertTriangle,
-  IconBrandWhatsappFilled,
-  IconSend,
-  IconTicket,
-  IconX,
-} from "@tabler/icons-react";
+import { IconAlertTriangle, IconBrandWhatsappFilled, IconSend, IconX } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 
@@ -31,8 +25,6 @@ const NotificationList = ({
     switch (source) {
       case "whatsapp":
         return <IconBrandWhatsappFilled className="size-4 text-foreground" />;
-      case "ticket":
-        return <IconTicket className="size-4 text-foreground" />;
       case "campaign":
         return <IconSend className="size-4 text-foreground" />;
       case "system":
@@ -77,24 +69,6 @@ const NotificationList = ({
                 className="ml-1 inline font-medium text-primary hover:underline"
               >
                 Show chat
-              </Link>
-            </p>
-          </div>
-        );
-      case "ticket-assigned":
-        return (
-          <div className="flex flex-col gap-2">
-            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              A ticket from board{" "}
-              <span className="font-medium text-foreground">{data?.board_name}</span> has been
-              assigned to you.
-              <Link
-                to="/dashboard/tickets/$ticketId"
-                params={{ ticketId: String(data?.cardId ?? "") }}
-                onClick={close}
-                className="ml-1 inline font-medium text-primary hover:underline"
-              >
-                Show ticket
               </Link>
             </p>
           </div>

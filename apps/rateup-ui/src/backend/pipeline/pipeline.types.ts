@@ -269,3 +269,30 @@ export interface CreateTaskInput {
 export interface UpdateTaskInput extends Partial<CreateTaskInput> {
   completed?: boolean;
 }
+
+/**
+ * Where a contact sits on its org's board, for the inbox panel.
+ *
+ * `stageId` is null when the contact is not on the board — the same absence a
+ * contact with no lifecycle has today, not an error. `loss` is what clearing the
+ * stage would destroy, carried along so the confirmation needs no second call.
+ */
+export interface ContactStage {
+  pipelineId: string;
+  leadId: string | null;
+  stageId: string | null;
+  loss: { notes: number; tasks: number; activities: number; assignees: number } | null;
+}
+
+/**
+ * What a bulk assign did. `matched` can be under `requested` when the selection
+ * held contacts from outside the org, and `unchanged` counts the ones already
+ * sitting on the target column.
+ */
+export interface BulkStageResult {
+  pipelineId: string;
+  requested: number;
+  matched: number;
+  changed: number;
+  unchanged: number;
+}

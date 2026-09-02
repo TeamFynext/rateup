@@ -9,8 +9,6 @@ import { Input } from "@/components/ui/input.tsx";
 import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { mimeTypesForImage } from "@/utils/constants.ts";
 
-import styles from "./ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
-
 interface ImageCropModalProps {
   opened: boolean;
   onclose: () => void;
@@ -123,7 +121,7 @@ export const ImageCropModal = ({
             onChange={(e) => setScale(Number(e.target.value))}
           />
         </Field>
-        <div className={styles["cropper-container"]}>
+        <div className={"relative h-[350px] overflow-hidden"}>
           <LoadingOverlay visible={!isReady} />
 
           <Cropper
@@ -134,7 +132,7 @@ export const ImageCropModal = ({
             onReady={() => setIsReady(true)}
           />
         </div>
-        <div className={`${styles["cancel-save-btn-container"]} flex justify-end gap-2`}>
+        <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={handleCancelBtnClick}>
             {translations("Cancel")}
           </Button>

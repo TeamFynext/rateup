@@ -1,17 +1,42 @@
-// Extracted verbatim from `SignupFormNew.tsx`. Behaviour is unchanged.
-
-import {
-  IconArrowLeft,
-  IconArrowRight,
-  IconGlobe,
-  IconInbox,
-  IconMessage,
-  IconTarget,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconArrowLeft, IconArrowRight, IconCheck } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "../../ui/button.tsx";
+import { Loader } from "../../ui/loader.tsx";
 import type { SignupForm } from "./shared.tsx";
+
+const BUSINESS_GOALS = [
+  {
+    id: "whatsapp-api",
+    label: "WhatsApp Business API",
+    description: "Verified sender, approved templates.",
+  },
+  {
+    id: "loyalty-program",
+    label: "Loyalty inside chat",
+    description: "Points and tiers in the thread.",
+  },
+  {
+    id: "whatsapp-campaigns",
+    label: "Campaigns that get opened",
+    description: "Broadcasts with delivery reporting.",
+  },
+  {
+    id: "customer-feedback",
+    label: "Reviews and ratings",
+    description: "Ask for a rating after delivery.",
+  },
+  {
+    id: "web-feedback-forms",
+    label: "Surveys on the web",
+    description: "NPS and CSAT forms you can share.",
+  },
+  {
+    id: "unified-inbox",
+    label: "One shared inbox",
+    description: "WhatsApp and Instagram in one queue.",
+  },
+] as const;
 
 export function Step3({
   formData,
@@ -24,69 +49,24 @@ export function Step3({
   handleSubmit: () => void;
   isLoading: boolean;
 }) {
+  const { t: translations } = useTranslation();
   const values = formData.watch();
-
-  const businessGoals = [
-    {
-      id: "whatsapp-api",
-      label: "WhatsApp Business API",
-      description: "Verified sender + templates",
-      icon: IconMessage,
-    },
-    {
-      id: "loyalty-program",
-      label: "Loyalty on WhatsApp",
-      description: "Points, tiers and rewards",
-      icon: IconUsers,
-    },
-    {
-      id: "whatsapp-campaigns",
-      label: "WhatsApp Campaigns",
-      description: "Broadcasts with 98% open rate",
-      icon: IconTarget,
-    },
-    {
-      id: "customer-feedback",
-      label: "Customer Feedback",
-      description: "NPS, CSAT, review drives",
-      icon: IconMessage,
-    },
-    {
-      id: "web-feedback-forms",
-      label: "Web Feedback Forms",
-      description: "Surveys without the tools",
-      icon: IconGlobe,
-    },
-    {
-      id: "unified-inbox",
-      label: "Unified Inbox",
-      description: "WhatsApp + Instagram in one place",
-      icon: IconInbox,
-    },
-  ];
+  const selected: string[] = values.goals ?? [];
 
   const handleGoalToggle = (goalId: string) => {
-    const currentGoals = values.goals || [];
-
-    const newGoals = currentGoals.includes(goalId)
-      ? currentGoals.filter((g: string) => g !== goalId)
-      : [...currentGoals, goalId];
-
-    formData.setValue("goals", newGoals);
+    formData.setValue(
+      "goals",
+      selected.includes(goalId)
+        ? selected.filter((goal) => goal !== goalId)
+        : [...selected, goalId],
+    );
   };
 
   return (
-    <div className="w-full flex flex-col h-96">
-      <div className="mb-2">
-        <p className="text-xs text-gray-500">
-          Select all that apply to personalize your experience
-        </p>
-      </div>
-
-      {/* Goals List */}
-      <div className="grid grid-cols-2 gap-3">
-        {businessGoals.map((goal) => {
-          const isActive = values.goals?.includes(goal.id);
+    <div className="flex flex-1 flex-col gap-3">
+      <div className="grid gap-2 sm:grid-cols-2">
+        {BUSINESS_GOALS.map((goal) => {
+          const isActive = selected.includes(goal.id);
 
           return (
             <button
@@ -94,57 +74,52 @@ export function Step3({
               type="button"
               aria-pressed={isActive}
               onClick={() => handleGoalToggle(goal.id)}
-              className={`relative w-full p-3 text-left rounded-xl border cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-          ${isActive ? "border-primary bg-blue-50" : "border-gray-300 hover:border-gray-400"}`}
+              className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-2 text-left transition-colors ${
+                isActive
+                  ? "border-ru-blue-200 bg-accent dark:border-primary/40"
+                  : "border-border bg-card hover:border-input"
+              }`}
             >
-              {/* Top Right Circle */}
-              <div
-                className={`absolute top-2 right-2 w-4 h-4 rounded-full border
-            ${isActive ? "bg-primary border-primary" : "border-gray-300"}`}
-              />
-
-              <div className="flex items-center gap-1">
-                {/* Icon */}
-                <div
-                  className={`w-8 h-8 rounded-md flex items-center justify-center
-            ${isActive ? "bg-primary" : "bg-gray-100"}`}
-                >
-                  <goal.icon className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-500"}`} />
-                </div>
-
-                {/* Title */}
-                <p className={`text-xs font-medium max-w-30 ${isActive && "text-gray-900"}`}>
-                  {goal.label}
-                </p>
-              </div>
-
-              {/* Description */}
-              <p className="text-[11px] text-gray-500 mt-1 leading-snug">{goal.description}</p>
+              <span
+                className={`mt-px flex size-4.5 shrink-0 items-center justify-center rounded-md border-[1.5px] transition-colors ${
+                  isActive ? "border-primary bg-primary" : "border-input bg-card"
+                }`}
+              >
+                <IconCheck
+                  className={`size-3 text-primary-foreground ${isActive ? "" : "opacity-0"}`}
+                  stroke={3}
+                />
+              </span>
+              <span className="flex min-w-0 flex-col gap-0.75">
+                <span className="font-heading text-[14px] font-bold tracking-[-0.015em] text-foreground">
+                  {translations(goal.label)}
+                </span>
+                <span className="text-[12.5px] leading-snug text-muted-foreground">
+                  {translations(goal.description)}
+                </span>
+              </span>
             </button>
           );
         })}
       </div>
-      <div className="mt-3 p-2 rounded-md bg-yellow-50 border border-yellow-200 text-[11px] text-yellow-700">
-        💡 You can change these later in Settings — nothing is locked in.
-      </div>
-      {/* Footer */}
-      <div className="flex justify-between gap-3 mt-2 pt-2">
+
+      <div className="mt-auto flex items-center gap-3">
         <Button
           variant="outline"
           onClick={handleBack}
-          className="h-8 px-4 text-xs border border-gray-300"
+          className="h-10 cursor-pointer gap-2 rounded-lg px-4 text-[13.5px] font-semibold"
         >
-          <IconArrowLeft className="w-4 h-4 mr-1" />
-          Back
+          <IconArrowLeft className="size-4" />
+          {translations("Back")}
         </Button>
-
         <Button
           onClick={handleSubmit}
           disabled={isLoading}
-          className="h-8 px-4 text-xs bg-primary text-white disabled:opacity-50"
+          className="h-10 flex-1 cursor-pointer gap-2 rounded-lg text-sm font-semibold disabled:cursor-not-allowed"
         >
-          {isLoading ? "Loading..." : "Continue"}
-          <IconArrowRight className="w-4 h-4 ml-1" />
+          {isLoading && <Loader className="size-4 border-white/35" />}
+          {isLoading ? translations("Building your flows…") : translations("Finish setup")}
+          {!isLoading && <IconArrowRight className="size-4" />}
         </Button>
       </div>
     </div>

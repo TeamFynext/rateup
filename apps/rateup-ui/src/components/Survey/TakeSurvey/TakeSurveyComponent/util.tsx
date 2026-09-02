@@ -74,62 +74,6 @@ export const checkGoogleReviewForQuestion = (
   return false;
 };
 
-const shouldRaiseTicket = (
-  question: Question,
-  userResponse: QuestionResponse,
-  selectedLanguage: string,
-) => {
-  if (question.ticketIssue?.submissionTicket) return true;
-  switch (question.type) {
-    case QuestionType.Rating:
-      return userResponse.response!.Rating! <= question.ticketIssue!.minRating!;
-    case QuestionType.Opinion:
-      return userResponse.response!["Opinion Scale"]! <= question.ticketIssue!.minOpinion!;
-    case QuestionType.Smiley:
-      return question.ticketIssue!.reqOptions!.includes(userResponse.response!.Smiley!);
-    case QuestionType.CustomNPS:
-    case QuestionType.DDMS:
-    case QuestionType.DDSS:
-    case QuestionType.MCQ:
-    case QuestionType.MSQ:
-      const response = responseValueFor(userResponse);
-      let flag = false;
-      if (Array.isArray(response)) {
-        response.forEach((res: Choice) => {
-          const index = question.choices![selectedLanguage]!.findIndex(
-            (c: Choice) => c.value === res.value,
-          );
-          flag = question.ticketIssue!.reqOptions!.includes(index.toString());
-          if (flag) return;
-        });
-      } else {
-        const index = question.choices![selectedLanguage]!.findIndex(
-          (c: Choice) => c.value === response.value,
-        );
-        flag = question.ticketIssue!.reqOptions!.includes(index.toString());
-      }
-      return flag;
-    default:
-      return false;
-  }
-};
-
-export const checkRaiseTicketIssueQuestion = (
-  questions: Question[],
-  responses: QuestionResponse[],
-  selectedLanguage: string,
-) => {
-  for (const question of questions) {
-    if (question?.ticketIssue) {
-      const userResponse = responses.find((r) => r?.questionId === question?.id);
-      if (userResponse && shouldRaiseTicket(question, userResponse, selectedLanguage)) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
-
 export function submitSurvey({
   surveyTeamMapId,
   responses,
@@ -138,9 +82,7 @@ export function submitSurvey({
   coordinates,
   tag,
   encryptedResponses,
-  shouldRaiseTicket,
   checkUniqueDevice,
-  selectedColumnId,
 }: {
   surveyTeamMapId: string | undefined;
   responses: QuestionResponse[];
@@ -149,9 +91,7 @@ export function submitSurvey({
   coordinates?: Coordinates;
   tag?: string | null;
   encryptedResponses?: string;
-  shouldRaiseTicket: boolean;
   checkUniqueDevice: boolean;
-  selectedColumnId?: string;
 }) {
   return createResponsePublic({
     surveyTeamMapId: surveyTeamMapId ?? "",
@@ -160,9 +100,7 @@ export function submitSurvey({
     language: selectedLanguage,
     location: { coordinates },
     tag: tag || null,
-    shouldRaiseTicket,
     checkUniqueDevice,
-    selectedColumnId,
   })
     .then(() => {
       // notifications.show({
@@ -459,7 +397,7 @@ export const DEFAULT_WOP = {
   contrastColor: "#ffffff",
   size: 200,
   segments: ["$200 Gift Card", "$100 Gift Card"],
-  segColors: ["#1c518e", "#06ac6e"],
+  segColors: ["var(--primary)", "#06ac6e"],
 };
 
 // Widened to the full question/page union so it can test any question's type.

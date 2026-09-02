@@ -13,12 +13,12 @@
 }
 
 .item[data-select="true"] {
-  border-left-color: #1c518e;
-  background-color: #eef4fb;
+  border-left-color: var(--primary);
+  background-color: var(--accent);
 }
 
 .item:hover:not([data-select="true"]) {
-  background-color: #fafaf7;
+  background-color: var(--background);
 }
 
 .itemDragging {
@@ -31,7 +31,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d9dad7;
+  color: var(--color-ru-n-300);
   flex-shrink: 0;
 }
 

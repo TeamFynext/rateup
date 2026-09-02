@@ -16,7 +16,7 @@ function LoginSignupLayout({ children }: { children: ReactNode }) {
     <div className="flex items-center justify-center h-screen">
       <div className="flex flex-col items-center w-full sm:w-full lg:w-[70%] py-6 gap-[50px]">
         <Link to="/">
-          <Image src={rateupLogoUrl} alt="RateUp Logo" width={85} height={85} />
+          <Image src={rateupLogoUrl} alt="RateUp Logo" width={214} height={85} />
         </Link>
         <div
           className={`${styles[`color-scheme-${colorScheme}`]} rounded-xl p-8 w-[90%] sm:w-[90%] xl:w-[70%] 2xl:w-[50%]`}

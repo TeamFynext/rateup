@@ -2,6 +2,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
+import {
+  CURRENCY_SYMBOL,
+  detectPricingCurrency,
+} from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
@@ -23,27 +27,8 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
   const navigate = useNavigate();
   const { data, isPending } = useRateupPaymentsPlans();
 
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
-  const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
-
-  // const currency = "USD";
-  // const currencySymbol = "$";
-
-  // let currency = "INR";
-  // let currencySymbol = "₹";
-
-  // if (gateway === "stripe") {
-  //   //temp for stripe testing
-  //   currency = "USD";
-  //   currencySymbol = "$";
-  // }
-
-  // if (gateway === "razorpay") {
-  //   //for optional switching of gateway for NRIs
-  //   currency = "INR";
-  //   currencySymbol = "₹";
-  // }
+  const currency = detectPricingCurrency();
+  const currencySymbol = CURRENCY_SYMBOL[currency];
 
   const session = useCheckSession();
 

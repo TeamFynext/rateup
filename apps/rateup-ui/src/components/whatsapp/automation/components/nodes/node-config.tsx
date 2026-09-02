@@ -16,7 +16,6 @@ import {
   IconPlayerPlay,
   IconPlayerStop,
   IconSquareRounded,
-  IconTicket,
   IconUser,
   IconUsers,
   IconVideo,
@@ -65,7 +64,6 @@ export const NODE_VISUALS: Record<string, NodeVisual> = {
   startNode: { color: "#ed6ebe", icon: <IconPlayerPlay size={ICON_SIZE} /> },
   endNode: { color: "#46d12e", icon: <IconPlayerStop size={ICON_SIZE} /> },
 
-  ticketNode: { color: "#8150e2", icon: <IconTicket size={ICON_SIZE} /> },
   assignNode: { color: "#edd66e", icon: <IconUser size={ICON_SIZE} /> },
   leadgenNode: { color: "#2ea0d1", icon: <IconAd size={ICON_SIZE} /> },
 
@@ -110,7 +108,6 @@ export const NODE_LABELS: Record<string, string> = {
   startNode: "Start",
   endNode: "End",
 
-  ticketNode: "Create Ticket",
   assignNode: "Assign Chat",
   leadgenNode: "Lead Ad",
 

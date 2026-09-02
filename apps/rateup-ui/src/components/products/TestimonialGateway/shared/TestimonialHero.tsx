@@ -1,7 +1,7 @@
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -26,14 +26,14 @@ const TestimonialHero = () => {
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-            <BookDemoModal>
+            <BookDemoLink>
               <Button
                 className="bg-[#0041a8] cursor-pointer text-white px-6 py-3 text-base hover:bg-[#003a94] shadow-md"
                 aria-label="Book a demo"
               >
                 Book a Demo
               </Button>
-            </BookDemoModal>
+            </BookDemoLink>
             <a href="https://rateup.app/login">
               <Button
                 variant="outline"

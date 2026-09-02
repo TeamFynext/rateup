@@ -48,15 +48,6 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
-type IssueTicket = {
-  minRating?: number;
-  minOpinion?: number;
-  reqOptions?: Array<string>;
-  submissionTicket?: boolean;
-  selectedColumnId?: string;
-  selectedBoardId?: string;
-} | null;
-
 interface TNC {
   title: string;
   urlTitle: string;
@@ -132,7 +123,21 @@ declare global {
     /** The EyeDropper API, in Chromium browsers only — feature-detected before use. */
     EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
     /** Razorpay's checkout widget, present once its script has loaded. */
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void;
+      /** Checkout emits `payment.failed` when the gateway declines an attempt. */
+      on: (event: "payment.failed", handler: (response: RazorpayFailure) => void) => void;
+    };
+  }
+  /** The error Checkout hands back on a failed payment attempt. */
+  interface RazorpayFailure {
+    error?: {
+      code?: string;
+      description?: string;
+      reason?: string;
+      step?: string;
+      source?: string;
+    };
   }
   // The analytics snippets are read off `globalThis`, which only picks up
   // global `var` declarations — an `interface Window` member is not enough.
@@ -157,8 +162,40 @@ declare global {
           callback: (response: FacebookLoginResponse) => void,
           options?: Record<string, unknown>,
         ) => void;
+        /** Present once init has run; logs the user out of the app and of Facebook. */
+        logout?: (callback?: (response: FacebookLoginResponse) => void) => void;
+        getLoginStatus?: (
+          callback: (response: FacebookLoginResponse) => void,
+          force?: boolean,
+        ) => void;
+        /** Graph API calls, used here to read the name/picture for "Continue as". */
+        api?: (
+          path: string,
+          params: Record<string, unknown>,
+          callback: (response: FacebookApiResponse) => void,
+        ) => void;
+        /** Renders `fb-*` markup added to the DOM after `FB.init()` ran. */
+        XFBML?: {
+          parse: (element?: HTMLElement, callback?: () => void) => void;
+        };
+        Event?: {
+          subscribe: (
+            event: "auth.statusChange" | "auth.authResponseChange" | "auth.login" | "auth.logout",
+            callback: (response: FacebookLoginResponse) => void,
+          ) => void;
+          unsubscribe: (
+            event: "auth.statusChange" | "auth.authResponseChange" | "auth.login" | "auth.logout",
+            callback: (response: FacebookLoginResponse) => void,
+          ) => void;
+        };
       }
     | undefined;
+  /** A `/me` read, or the error the Graph API returns instead. */
+  interface FacebookApiResponse {
+    name?: string;
+    picture?: { data?: { url?: string } };
+    error?: { message?: string };
+  }
   var fbAsyncInit: (() => void) | undefined;
   interface ValidationRules {
     length?: {
@@ -204,7 +241,6 @@ declare global {
     id: string;
     metaType?: WaQuestions;
     googleReview?: GoogleReview;
-    ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
     /** `null` clears the rules. */
     validationRules?: QuestionValidationRules | null;
@@ -277,10 +313,6 @@ declare global {
     kioskMode: boolean;
     type: SurveyType;
     getLocation: boolean;
-    enableTickets: boolean;
-    enableTicketEmailAlerts: boolean;
-    enableAutoGenerateTicket: boolean;
-    enableTicketWaMessageAlerts: boolean;
     uniqueDeviceResponse: boolean;
     welcomePageEnabled: boolean;
     orgLogo?: string;
@@ -317,8 +349,6 @@ declare global {
     sendWeeklyReport?: boolean;
     /** Endpoint each new response is POSTed to. */
     responseWebhookEndpoint?: string;
-    ticketColumnId?: string;
-    ticketBoardId?: string;
     /** Owning organisation's name, included by the public survey endpoint. */
     orgName?: string;
     /** Welcome page theme, included by the survey templates endpoint. */
@@ -408,9 +438,6 @@ declare global {
       city?: string;
       state?: string;
       country?: string;
-    };
-    Ticket?: {
-      id: string;
     };
     teamId?: string;
   }
@@ -706,6 +733,15 @@ declare global {
     Lifecycle?: {
       name?: string;
     };
+    /**
+     * The contact's lead on the org's board, when it has one. At most one entry:
+     * the list endpoint takes a single lead, since there is one pipeline per org.
+     */
+    leads?: Array<{
+      id: string;
+      stageId: string;
+      stage?: { name?: string; color?: string | null };
+    }>;
     /** Free-text notes shown on the contact detail panel. */
     notes?: string;
     location?: string;
@@ -830,10 +866,10 @@ declare global {
         automationTrigger?: subscriptionCountRestriction;
       };
       campaign?: subscriptionActiveField & subscriptionCountRestriction;
+      loyalty?: subscriptionActiveField;
+      referrals?: subscriptionActiveField;
+      catalog?: subscriptionActiveField;
     };
-    [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
-    // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.
-    [sfpn.Ticket]?: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
         completionTokens: number;
@@ -847,16 +883,33 @@ declare global {
       customer: subscriptionCountRestriction;
     };
   }
+  interface SPlanGatewayPlan {
+    period: string;
+    /** A number for real plans; the enterprise tiers use "Lets Talk!". */
+    amount: number | string;
+    currency?: string;
+  }
+
   interface SPlan {
     id: string;
     name: string;
     displayName: string;
-    paymentPlan?: {
-      period: string;
-      /** A number for real plans; the enterprise tiers use "Lets Talk!". */
-      amount: number | string;
-      currency?: string;
-    };
+    /**
+     * Legacy single-cadence link. Null on the four-tier catalog, which links its
+     * gateway plans through `monthlyPaymentPlan` / `yearlyPaymentPlan` instead —
+     * read those as a fallback rather than relying on this alone.
+     */
+    paymentPlan?: SPlanGatewayPlan;
+    monthlyPaymentPlan?: SPlanGatewayPlan;
+    yearlyPaymentPlan?: SPlanGatewayPlan;
+    /**
+     * The same cadences billed in dollars. A tier links one Razorpay plan per currency,
+     * so an org that checked out in USD is on one of these and none of the rupee ones —
+     * price the subscription from the pair that matches the order, never from the rupee
+     * plans alone.
+     */
+    usdMonthlyPaymentPlan?: SPlanGatewayPlan;
+    usdYearlyPaymentPlan?: SPlanGatewayPlan;
     paymentPlanId?: string;
     /** Present when the plan is billed through Stripe rather than Razorpay. */
     stripeProduct?: StripeProduct;
@@ -922,19 +975,6 @@ declare global {
     cta: string;
   }
 
-  interface FlowTicket {
-    questionId: string;
-    type: QuestionType2;
-    selectedColumnId?: string;
-    selectedBoardId?: string;
-    condition: {
-      minRating?: number;
-      minOpinion?: number;
-      reqOptions?: string[];
-      submissionTicket?: boolean;
-    };
-  }
-
   interface DbFlow {
     dbFlowId: string;
     createdAt: Date;
@@ -949,19 +989,18 @@ declare global {
     orgId: string;
     surveyId: string;
     templateMessage: WaFlowTemplateMessage;
-    /** The list endpoint selects only the survey's team ids. */
+    /** The list endpoint selects the survey's team ids plus each team's completed count. */
     survey?: {
       teams?: Array<{
         teamId: string;
-        /** Not selected by the flow list endpoint; present on richer survey reads. */
-        surveyStats?: STStats;
+        /** The list endpoint selects only `completed`; richer survey reads carry the full funnel. */
+        surveyStats?: Partial<STStats> | null;
       }>;
     };
     startMessageConfig: WaFlowStartMessageConfig;
     pendingSave: boolean;
     anonymous: boolean;
     version: number;
-    ticketIssued: FlowTicket[];
     /**
      * WhatsApp channel the flow lives on. Meta scopes flow ids to a WABA, so the flow
      * can only be used from this number. Null on flows created before it was tracked —

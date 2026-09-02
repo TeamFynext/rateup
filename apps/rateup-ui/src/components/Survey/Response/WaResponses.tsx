@@ -1,4 +1,3 @@
-import { IconTicket } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -28,14 +27,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, QuestionType, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
-import { TicketType } from "@/utils/enums/ticket.ts";
 import {
   LDResponseMap,
   RatingScaleMap,
@@ -44,7 +41,6 @@ import {
 } from "@/utils/whatsapp/enumMap.ts";
 
 import { DataTable } from "../../Table/data-table.tsx";
-import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
 import { WaHoverCardComponent } from "../HoverCard/WaHoverCard.tsx";
 import { ActionMenu } from "./Columns.tsx";
 import { ResponseTableToolbar } from "./ResponseTableToolbar.tsx";
@@ -84,7 +80,6 @@ interface WaResponseRow {
   language?: string;
   phone?: string;
   tag?: string;
-  Ticket?: Array<{ id: string }>;
   responses: Array<{ questionId?: string; response?: unknown }>;
   [key: string]: unknown;
 }
@@ -114,12 +109,6 @@ const WaResponses = ({
 
   const [, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [createTicketOpened, setCreateTicketOpened] = useState(false);
-  const openTicketModal = () => setCreateTicketOpened(true);
-  const closeTicketModal = () => setCreateTicketOpened(false);
-
-  const [selectedResponseId, setSelectedResponseId] = useState("");
-  const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
   const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
@@ -171,9 +160,6 @@ const WaResponses = ({
     ...serverFilters,
   });
 
-  // Tickets are free with no limits, so creation follows only the survey's toggle.
-  const enableTicket = useMemo(() => survey?.enableTickets, [survey]);
-
   const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId, close);
   const { t: translations } = useTranslation();
 
@@ -216,14 +202,6 @@ const WaResponses = ({
       ranges,
     ],
   );
-
-  useEffect(() => {
-    if (selectedResponseId) openTicketModal();
-  }, [selectedResponseId, responseTeamId, openTicketModal]);
-
-  useEffect(() => {
-    if (!createTicketOpened) setSelectedResponseId("");
-  }, [createTicketOpened]);
 
   const confirmDelete = useCallback(() => {
     toast.loading(translations("Hold on, response is getting deleted..."), {
@@ -269,44 +247,6 @@ const WaResponses = ({
         header: "Tags",
         accessorKey: "tags",
       },
-      ...(enableTicket
-        ? [
-            {
-              header: () => (
-                <span className="text-lg font-semibold min-w-[70px] max-w-[70px] truncate block">
-                  {translations("Ticket")}
-                </span>
-              ),
-              enableColumnFilter: false,
-              enableSorting: false,
-              accessorKey: "ticket",
-              cell: (info: CellInfo) => {
-                const ticketData = info.row.original.Ticket;
-                const ticketExist = (ticketData?.length ?? 0) > 0;
-                return (
-                  <div
-                    className="flex items-center justify-center pr-20 cursor-pointer"
-                    onClick={() => {
-                      if (ticketExist) {
-                        const url = `/dashboard/tickets/${ticketData?.[0]?.id}`;
-                        window.open(url, "_blank");
-                      }
-                    }}
-                  >
-                    {ticketExist && (
-                      <Tooltip>
-                        <TooltipTrigger render={<div />}>
-                          <IconTicket color="orange" className="w-9 h-9" />
-                        </TooltipTrigger>
-                        <TooltipContent side="right">{translations("View Ticket")}</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                );
-              },
-            },
-          ]
-        : []),
       {
         accessorKey: "action",
         header: "Action",
@@ -317,12 +257,7 @@ const WaResponses = ({
           <ActionMenu
             open={open}
             resId={info.row.original.id}
-            resTeamId={info.row.original.teamId}
-            setSelectedResponseId={setSelectedResponseId}
-            setResponseTeamId={setResponseTeamId}
             setSelectedRowId={setSelectedRowId}
-            ticketData={info.row.original.Ticket}
-            enableTicket={enableTicket}
           />
         ),
       },
@@ -390,7 +325,6 @@ const WaResponses = ({
         id: item.id,
         contactId: item.contactId,
         teamId: item.teamId || item.surveyTeamMap?.teamId,
-        Ticket: item.Ticket,
         language: item.language,
         createdAt: item.createdAt,
         mobile: item?.phone || "N/A",
@@ -446,12 +380,6 @@ const WaResponses = ({
 
   return (
     <div className="flex flex-col h-full">
-      <CreateTicketModal
-        createTicketOpened={createTicketOpened}
-        closeTicketModal={closeTicketModal}
-        type={TicketType.SURVEY_RESPONSE}
-        surveyResponseId={selectedResponseId}
-      />
       <div className="h-full px-6 p-2">
         <DataTable
           data={data ?? []}

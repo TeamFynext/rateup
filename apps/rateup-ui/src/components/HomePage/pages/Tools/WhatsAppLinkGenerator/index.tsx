@@ -67,7 +67,7 @@ export default function WhatsAppLinkGenerator() {
                 onChange={(event) => setMessage(event.target.value)}
               />
             </Field>
-            <div className="mt-1.5 flex justify-between gap-3 text-[11.5px] text-[#8A8C88]">
+            <div className="mt-1.5 flex justify-between gap-3 text-[11.5px] text-muted-foreground">
               <span>Short openers get answered more often.</span>
               <span>
                 {message.length}/{RECOMMENDED_LENGTH}

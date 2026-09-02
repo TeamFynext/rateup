@@ -5,6 +5,8 @@ export interface BookDemo {
   workEmail: string;
   businessName: string;
   phone: string;
+  preferredDate?: string;
+  preferredTime?: string;
   message?: string;
 }
 

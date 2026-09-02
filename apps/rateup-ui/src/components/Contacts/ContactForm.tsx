@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
+import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
 
@@ -20,7 +21,6 @@ import { Textarea } from "../ui/textarea.tsx";
 import type { ContactFormValues } from "./contact-form-schema.ts";
 import ContactGroupSelector from "./ContactGroupSelector.tsx";
 import { UserSelector } from "./CreateContactModal.tsx";
-import { LifecycleSelector } from "./LifecycleSelector.tsx";
 
 type ContactFormProps = Readonly<{
   form: UseFormReturn<ContactFormValues>;
@@ -32,6 +32,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
   const uid = useId();
   const { t: translations } = useTranslation();
   const { data: labels = [], isPending } = useContactLabels();
+  const stages = usePipelineStages();
   const contactType = form.watch("contactType");
   const customFieldValues = form.watch("customFields");
 
@@ -232,20 +233,22 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               </Field>
             )}
           />
-          <Controller
-            name="lifecycleId"
-            control={form.control}
-            render={({ field }) => (
-              <Field className="flex flex-col gap-1">
-                <FieldTitle>{translations("Lifecycle Stage")}</FieldTitle>
-                <LifecycleSelector
-                  value={field.value}
-                  onChange={field.onChange}
-                  className="w-full"
-                />
-              </Field>
-            )}
-          />
+          {/* The pipeline column replaces the lifecycle stage here. The whole field
+              is dropped when the org has no board, rather than showing a label
+              with an empty control under it. Picking a stage opens a lead for the
+              contact once it saves; leaving it empty opens none. */}
+          {stages.length > 0 && (
+            <Controller
+              name="stageId"
+              control={form.control}
+              render={({ field }) => (
+                <Field className="flex flex-col gap-1">
+                  <FieldTitle>{translations("Pipeline Stage")}</FieldTitle>
+                  <StageSelector value={field.value} onChange={field.onChange} className="w-full" />
+                </Field>
+              )}
+            />
+          )}
           <Controller
             name="assignedUserIds"
             control={form.control}

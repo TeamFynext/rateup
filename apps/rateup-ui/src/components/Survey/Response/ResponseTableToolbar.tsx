@@ -89,9 +89,7 @@ export function ResponseTableToolbar<TData>({
     () =>
       table
         .getAllColumns()
-        .filter(
-          (column) => column.getCanFilter() && !["action", "Action", "ticket"].includes(column.id),
-        )
+        .filter((column) => column.getCanFilter() && !["action", "Action"].includes(column.id))
         .map((column) => ({
           id: column.id,
           label:

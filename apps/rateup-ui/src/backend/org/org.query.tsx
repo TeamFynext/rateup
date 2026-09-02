@@ -155,10 +155,11 @@ export function useOrgNameAndPhone() {
   });
 }
 
-export function useChecklist() {
+export function useChecklist(enabled = true) {
   return useQuery({
     queryKey: subscriptionKeys.onboardingChecklist(),
     queryFn: getChecklist,
+    enabled,
   });
 }
 

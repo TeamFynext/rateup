@@ -1,4 +1,10 @@
-import { IconAlertTriangle, IconChevronRight, IconExternalLink } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconChevronRight,
+  IconCircleCheck,
+  IconCircle,
+  IconExternalLink,
+} from "@tabler/icons-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -9,9 +15,10 @@ import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
+import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
+import type { NavEntry, NavProgress } from "@/components/Layout/Navbar/hooks.tsx";
 import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
@@ -25,7 +32,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -250,11 +256,9 @@ function getMostSpecificChildRoute(children: NavEntry[], currentRoute: string) {
 function NavItemContent({
   item,
   showRotatingChevron,
-  showDescription,
 }: Readonly<{
   item: NavEntry;
   showRotatingChevron?: boolean;
-  showDescription?: boolean;
 }>) {
   const chevron = showRotatingChevron ? (
     <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -281,10 +285,16 @@ function NavItemContent({
               </Button>
             )}
           </div>
-          {showDescription && item.description ? (
+          {item.description ? (
             <span className="block truncate text-xs text-muted-foreground">{item.description}</span>
           ) : null}
         </div>
+        {item.done != null &&
+          (item.done ? (
+            <IconCircleCheck className="size-4 shrink-0 text-green-600 dark:text-green-500" />
+          ) : (
+            <IconCircle className="size-4 shrink-0 text-muted-foreground/40" />
+          ))}
         {item.count != null && item.count > 0 && (
           <Badge variant="secondary" className="ml-auto tabular-nums" title={String(item.count)}>
             {countFormatter.format(item.count)}
@@ -302,22 +312,21 @@ function NavLink({
   isActive,
   onRouteGuard,
   onClick,
-  showDescription,
 }: Readonly<{
   item: NavEntry;
   isActive: boolean;
   onRouteGuard: RouteGuard;
   onClick?: () => void;
-  showDescription?: boolean;
 }>) {
   return (
     <SidebarMenuButton
       isActive={isActive}
       tooltip={item.title}
-      className={showDescription ? "h-11 py-2" : undefined}
+      className={item.description ? "h-11 py-2" : undefined}
       render={
         <Link
           to={item.url || "#"}
+          resetScroll={item.resetScroll}
           title={item.title}
           aria-label={item.title}
           onClick={(e) => {
@@ -328,16 +337,15 @@ function NavLink({
         />
       }
     >
-      <NavItemContent item={item} showDescription={showDescription} />
+      <NavItemContent item={item} />
     </SidebarMenuButton>
   );
 }
 
 /**
- * NavItem – single nav item in one of three variants:
- *   "default"  → collapsible (when item.items exists), embedded component, or plain link
- *   "sub"      → leaf item inside a SidebarMenuSub
- *   "settings" → direct link (no SidebarMenuItem wrapper); used inside settings groups
+ * NavItem – single nav item in one of two variants:
+ *   "default" → collapsible (when item.items exists), embedded component, or plain link
+ *   "sub"     → leaf item inside a SidebarMenuSub
  */
 function NavItem({
   item,
@@ -350,7 +358,7 @@ function NavItem({
   item: NavEntry;
   fullPathname: string;
   onRouteGuard: RouteGuard;
-  variant?: "default" | "sub" | "settings";
+  variant?: "default" | "sub";
   sidebarComponentMap?: Record<string, React.ReactNode>;
   activeSubPath?: string | null;
 }>) {
@@ -392,11 +400,6 @@ function NavItem({
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
     );
-  }
-
-  if (variant === "settings") {
-    const isActive = isPathPrefixActive(fullPathname, item.url);
-    return <NavLink item={item} isActive={isActive} onRouteGuard={onRouteGuard} showDescription />;
   }
 
   // variant === "default"
@@ -455,59 +458,64 @@ function NavItem({
 }
 
 /**
- * NavSection – renders a labeled group of nav items.
- * isSettingsPanel=true → settings visual style (icon-box items with descriptions).
- * Otherwise → standard group with separators.
+ * A section's "x of y" meter, pinned under its panel. The panel sits on
+ * `--sidebar`, which is brand navy here, so it restates its own background the way
+ * `SidebarHeader` and `SidebarContent` do.
+ */
+function NavPanelProgress({ progress }: Readonly<{ progress: NavProgress }>) {
+  const { label, done, total } = progress;
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+  return (
+    <SidebarFooter className="gap-2 border-t bg-background group-data-[collapsible=icon]:hidden">
+      <div className="flex items-baseline justify-between text-[12.5px]">
+        <span className="text-secondary-foreground">{label}</span>
+        <span className="text-muted-foreground">
+          {done}/{total}
+        </span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+        <div
+          className="h-full rounded-full bg-primary transition-all duration-500 ease-in-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </SidebarFooter>
+  );
+}
+
+/**
+ * NavSection – a labelled group of nav items: a heading over a flat list, with a
+ * rule separating it from the section above. Every panel that has sections —
+ * Settings, Pipeline, Get started, the inbox's filters — renders through this.
  */
 function NavSection({
   item,
   fullPathname,
   onRouteGuard,
   sidebarComponentMap,
-  isLast,
-  isSettingsPanel,
+  dividedAbove,
 }: Readonly<{
   item: NavEntry;
   fullPathname: string;
   onRouteGuard: RouteGuard;
   sidebarComponentMap?: Record<string, React.ReactNode>;
-  isLast?: boolean;
-  isSettingsPanel?: boolean;
+  /** Draw the rule that separates this section from whatever is above it. */
+  dividedAbove?: boolean;
 }>) {
-  if (isSettingsPanel) {
-    return (
-      <SidebarGroup className="p-0">
-        {item.group && (
-          <SidebarGroupLabel className="px-2 mb-1 text-[11px] uppercase tracking-wide font-medium group-data-[collapsible=icon]:hidden">
-            {item.group}
-          </SidebarGroupLabel>
-        )}
-        <SidebarGroupContent className="flex flex-col gap-1">
-          {item.items?.map((subItem) => (
-            <NavItem
-              key={subItem.url}
-              item={subItem}
-              fullPathname={fullPathname}
-              onRouteGuard={onRouteGuard}
-              variant="settings"
-            />
-          ))}
-        </SidebarGroupContent>
-        {!isLast && <Separator className="mt-1.5 group-data-[collapsible=icon]:hidden" />}
-      </SidebarGroup>
-    );
-  }
-
   const groupItems = item.items ?? [];
   const activeChildPath = getMostSpecificChildRoute(groupItems, fullPathname);
 
   return (
     <SidebarGroup className="p-0">
-      <SidebarSeparator className="m-0 group-data-[collapsible=icon]:hidden" />
-      {item.showTitle && <SidebarGroupLabel>{item.group}</SidebarGroupLabel>}
-      <SidebarSeparator className="m-0 hidden group-data-[collapsible=icon]:block" />
-      <SidebarGroupContent className="flex p-2">
-        <SidebarMenu>
+      {dividedAbove && <SidebarSeparator className="m-0 mb-1" />}
+      {item.group && (
+        <SidebarGroupLabel className="mb-1 px-2 text-[11px] font-medium tracking-wide uppercase group-data-[collapsible=icon]:hidden">
+          {item.group}
+        </SidebarGroupLabel>
+      )}
+      <SidebarGroupContent className="flex flex-col px-2 pb-2">
+        <SidebarMenu className="gap-1">
           {groupItems.map((groupItem) => (
             <NavItem
               key={groupItem.title ?? groupItem.url}
@@ -520,7 +528,6 @@ function NavSection({
           ))}
         </SidebarMenu>
       </SidebarGroupContent>
-      <SidebarSeparator className="m-0" />
     </SidebarGroup>
   );
 }
@@ -528,6 +535,15 @@ function NavSection({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+/**
+ * A panel child that holds rows rather than being one. Section-ness comes from the
+ * shape, not from having a heading — the inbox's filters are a section with no
+ * label, and a click-only row that owns children marks itself with `url: "#"`.
+ */
+function isNavSection(item?: NavEntry): boolean {
+  return Boolean(item && (item.items?.length ?? 0) > 0 && !item.url);
+}
+
 function isGrandchildActive(subItem: NavEntry, pathname: string): boolean {
   return (
     subItem.items?.some((grand) => {
@@ -570,6 +586,7 @@ export default function AppSidebar({
   staff,
   teams,
   pipelineNav,
+  setupNav,
 }: Readonly<{
   subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
@@ -580,6 +597,7 @@ export default function AppSidebar({
   staff: Array<{ id: string; name?: string }>;
   teams: Array<{ id: string; name?: string; color?: string }>;
   pipelineNav: PipelineNavInput;
+  setupNav: SetupNavInput;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
@@ -643,6 +661,7 @@ export default function AppSidebar({
     user,
     sectionCounts: useChatContactCountStore().sectionCounts,
     pipelineNav,
+    setupNav,
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);
@@ -666,6 +685,23 @@ export default function AppSidebar({
     ) {
       setActiveItem(active);
       lastActiveTitleRef.current = active.title;
+      return;
+    }
+
+    // An entry can disappear while it is open — "Get started" drops out of the
+    // rail the moment setup is finished — which would otherwise leave its panel
+    // on screen with nothing in the rail to match it. `navMain` is rebuilt on
+    // every render, so this compares titles: falling back on object identity
+    // would re-set state forever.
+    const fallback = navMain[0];
+    if (
+      activeItem &&
+      fallback &&
+      fallback.title !== activeItem.title &&
+      !navMain.some((item) => item.title === activeItem.title)
+    ) {
+      setActiveItem(fallback);
+      lastActiveTitleRef.current = fallback.title;
     }
   }, [
     pathname,
@@ -802,53 +838,54 @@ export default function AppSidebar({
           </SidebarHeader>
 
           <SidebarContent className="bg-background pt-1">
-            {activeItem.settingsStyle ? (
-              <div className="flex flex-col px-2">
-                {activeItem.items?.map((item, index: number) => (
-                  <NavSection
-                    key={item.group ?? index}
-                    item={item}
-                    fullPathname={fullPathname}
-                    onRouteGuard={handleRouteGuard}
-                    isLast={index === (activeItem.items?.length ?? 0) - 1}
-                    isSettingsPanel
-                  />
-                ))}
-              </div>
-            ) : (
-              <SidebarGroup className="p-0">
-                <SidebarGroupContent>
-                  <SidebarMenu className="gap-1">
-                    {activeItem.items?.map((item) =>
-                      item.group ? (
-                        <NavSection
-                          key={item.group}
-                          item={item}
-                          fullPathname={fullPathname}
-                          onRouteGuard={handleRouteGuard}
-                          sidebarComponentMap={sidebarComponentMap}
-                        />
-                      ) : (
-                        <SidebarGroup key={item.title ?? item.url} className="p-0">
-                          <SidebarGroupContent className="flex flex-col px-2">
-                            <SidebarMenu className="gap-1">
-                              <NavItem
-                                item={item}
-                                fullPathname={fullPathname}
-                                onRouteGuard={handleRouteGuard}
-                                sidebarComponentMap={sidebarComponentMap}
-                                activeSubPath={activePanelItemPath}
-                              />
-                            </SidebarMenu>
-                          </SidebarGroupContent>
-                        </SidebarGroup>
-                      ),
-                    )}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
+            <SidebarGroup className="p-0">
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
+                  {activeItem.items?.map((item, index, siblings) => {
+                    // A panel child is a section when it holds rows rather than
+                    // being one: it has `items` and no route of its own. Its
+                    // `group` is only the heading, so a section can go unlabelled.
+                    const isSection = isNavSection(item);
+                    // One rule per boundary, always drawn by the lower neighbour —
+                    // drawing one on each side doubled it up in between, and again
+                    // in the collapsed rail. A boundary is where a section starts,
+                    // or where loose rows resume after one (Pipeline settings, the
+                    // inbox's Settings). Consecutive loose rows stay unbroken.
+                    const dividedAbove =
+                      index > 0 && (isSection || isNavSection(siblings[index - 1]));
+
+                    return isSection ? (
+                      <NavSection
+                        key={item.group ?? item.title ?? index}
+                        item={item}
+                        fullPathname={fullPathname}
+                        onRouteGuard={handleRouteGuard}
+                        sidebarComponentMap={sidebarComponentMap}
+                        dividedAbove={dividedAbove}
+                      />
+                    ) : (
+                      <SidebarGroup key={item.title ?? item.url} className="p-0">
+                        {dividedAbove && <SidebarSeparator className="m-0 mb-1" />}
+                        <SidebarGroupContent className="flex flex-col px-2">
+                          <SidebarMenu className="gap-1">
+                            <NavItem
+                              item={item}
+                              fullPathname={fullPathname}
+                              onRouteGuard={handleRouteGuard}
+                              sidebarComponentMap={sidebarComponentMap}
+                              activeSubPath={activePanelItemPath}
+                            />
+                          </SidebarMenu>
+                        </SidebarGroupContent>
+                      </SidebarGroup>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
+
+          {activeItem?.progress && <NavPanelProgress progress={activeItem.progress} />}
 
           {isSubscriptionExpired && (
             <SidebarFooter className="flex-col gap-2 group-data-[collapsible=icon]:hidden">

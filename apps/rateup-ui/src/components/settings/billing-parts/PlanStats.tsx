@@ -9,6 +9,7 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import type { ConversationAddonOffer } from "@/backend/payment/payment.api";
 import type { UsageStats } from "@/backend/stats/stats.api";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -84,22 +85,13 @@ export const SurveyStats = ({
   const isActive = subscription?.features?.webSurvey?.active;
   if (!isActive) return null;
 
-  const statsArray = [
-    {
-      count: stats?.monthlySurveyResponses,
-      totalCount: subscription?.features?.webSurvey?.count?.monthlyResponseLimit,
-      stats: "Monthly Responses",
-    },
-    {
-      count: stats?.surveysCount,
-      totalCount: subscription?.features?.webSurvey?.count?.max,
-      stats: "Surveys",
-    },
-    {
-      count: stats?.surveyResponsesCount,
-      stats: "Total Responses",
-    },
-  ];
+  // Only the monthly response allowance is a limit the customer can act on here; the
+  // survey count and the all-time response total are analytics and belong on the survey
+  // dashboard, not on a billing usage meter.
+  const count = stats?.monthlySurveyResponses || 0;
+  const totalCount = subscription?.features?.webSurvey?.count?.monthlyResponseLimit || 0;
+  const percentage = totalCount > 0 ? (count / totalCount) * 100 : 0;
+  const remaining = totalCount - count;
 
   return (
     <Card className="p-6">
@@ -107,42 +99,31 @@ export const SurveyStats = ({
         <IconClipboardList className="w-4 h-4" />
         {translations("Web Survey")}
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
-        {statsArray.map((item, index) => {
-          const count = item.count || 0;
-          const totalCount = item.totalCount || 0;
-          const percentage = totalCount > 0 ? (count / totalCount) * 100 : 0;
-          const remaining = totalCount - count;
-
-          return (
-            <div key={index} className="flex flex-col justify-center gap-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{item.stats}</span>
-                {totalCount > 0 ? (
-                  <span>
-                    {count.toLocaleString()} / {totalCount.toLocaleString()}
-                  </span>
-                ) : (
-                  <span>{count.toLocaleString()}</span>
-                )}
-              </div>
-              {totalCount > 0 && (
-                <>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="bg-primary h-3 rounded-full transition-all"
-                      style={{ width: `${Math.min(percentage, 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
-                    {translations("remaining")}
-                  </p>
-                </>
-              )}
+      <div className="flex flex-col justify-center gap-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">{translations("Monthly Responses")}</span>
+          {totalCount > 0 ? (
+            <span>
+              {count.toLocaleString()} / {totalCount.toLocaleString()}
+            </span>
+          ) : (
+            <span>{count.toLocaleString()}</span>
+          )}
+        </div>
+        {totalCount > 0 && (
+          <>
+            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-primary h-3 rounded-full transition-all"
+                style={{ width: `${Math.min(percentage, 100)}%` }}
+              />
             </div>
-          );
-        })}
+            <p className="text-xs text-muted-foreground">
+              {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+              {translations("remaining")}
+            </p>
+          </>
+        )}
       </div>
     </Card>
   );
@@ -151,9 +132,12 @@ export const SurveyStats = ({
 export const WhatsappStats = ({
   stats,
   subscription,
+  allowance,
 }: {
   stats: UsageStats | undefined;
   subscription?: Subscription;
+  /** The org's real allowance, packs included, as the add-on endpoint computes it. */
+  allowance?: ConversationAddonOffer["allowance"];
 }) => {
   const { t: translations } = useTranslation();
   const isActive = subscription?.features?.whatsapp?.active;
@@ -161,12 +145,25 @@ export const WhatsappStats = ({
 
   const isAnnual = subscription?.isAnnualMessageLimit;
   const label = isAnnual ? "Annual Conversation" : "Monthly Conversation";
+  // The METERED counters: self-derived 24h conversation windows, which is the unit the
+  // plan allowance is enforced against. The inbox-ticket counters are analytics only.
   const rawCount =
-    (isAnnual ? stats?.annualConversationsCount : stats?.monthlyConversationsCount) || 0;
-  const totalCount =
-    (isAnnual
-      ? (subscription?.features?.whatsapp?.conversation?.count?.max || 0) * 12
-      : subscription?.features?.whatsapp?.conversation?.count?.max) || 0;
+    (isAnnual ? stats?.annualMeteredConversationsCount : stats?.monthlyMeteredConversationsCount) ||
+    0;
+  // Metered against the allowance the send gate actually enforces — `effectiveMax` is the
+  // plan's number *plus* any packs still in date. Reading the plan's number alone showed a
+  // customer who had paid for headroom a full bar and an overage badge while their sends
+  // kept going through. `undefined` means the plan is not metered at all (Enterprise), so
+  // fall back to the stored feature and leave that rendering as it was.
+  //
+  // The ×12 mirrors the gate: an annual-limit org is measured against twelve months of
+  // the monthly allowance, packs included.
+  const monthlyMax =
+    allowance?.effectiveMax ?? subscription?.features?.whatsapp?.conversation?.count?.max ?? 0;
+  const totalCount = (isAnnual ? monthlyMax * 12 : monthlyMax) || 0;
+  const addonConversations = allowance?.addonConversations ?? 0;
+  const addonTotal = isAnnual ? addonConversations * 12 : addonConversations;
+  const planTotal = totalCount - addonTotal;
 
   // Once usage exceeds the allowance we cap the bar/label at the limit (e.g. 4/4,
   // 100% used, 0 remaining) and surface the surplus separately as "+N more", so
@@ -217,6 +214,20 @@ export const WhatsappStats = ({
             </p>
           </>
         )}
+        {addonTotal > 0 && (
+          // Where the extra headroom came from. Without this the allowance simply reads
+          // larger than the plan sells, which looks like a bug rather than a purchase.
+          <p className="text-xs text-muted-foreground">
+            {translations("Plan")} {planTotal.toLocaleString()} +{" "}
+            <span className="font-medium text-foreground">{addonTotal.toLocaleString()}</span>{" "}
+            {translations("from conversation packs")}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          {translations(
+            "A conversation is a 24-hour window with one customer, on any channel. Message delivery is billed to your WhatsApp account by Meta and is not included here.",
+          )}
+        </p>
       </div>
     </Card>
   );

@@ -55,7 +55,7 @@ export function ListPageSearchInput({
         placeholder={placeholder}
         value={value ?? ""}
         onChange={(e) => onChange?.(e.target.value)}
-        className="pl-9 h-8"
+        className="pl-9"
         aria-label="Search"
       />
     </div>

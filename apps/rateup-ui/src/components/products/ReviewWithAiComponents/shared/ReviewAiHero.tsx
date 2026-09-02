@@ -1,7 +1,7 @@
 import { IconArrowRight } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -26,10 +26,10 @@ const ReviewAiHero = () => {
                   size="lg"
                   className="bg-[#009987] cursor-pointer hover:bg-[#009987] text-[#ffffff] font-medium px-8"
                 >
-                  Start Your Free Trial
+                  Get Started Free
                 </Button>
               </a>
-              <BookDemoModal>
+              <BookDemoLink>
                 <Button
                   size="lg"
                   variant="outline"
@@ -38,7 +38,7 @@ const ReviewAiHero = () => {
                   Learn More
                   <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </BookDemoModal>
+              </BookDemoLink>
             </div>
           </div>
           <div className="hidden lg:flex justify-center ">

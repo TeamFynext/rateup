@@ -60,7 +60,7 @@ export function getTriggerDescription(triggerKey: ZohoTriggers) {
     case ZohoTriggers.LEAD_CREATE:
       return "Create Zoho CRM leads from newly created Rateup contacts.";
     case ZohoTriggers.LEAD_UPDATE:
-      return "Update Zoho lead status when lifecycle stages change.";
+      return "Update the Zoho lead status when a lead moves to another pipeline column.";
     case ZohoTriggers.BIGIN_CONTACT_CREATE:
       return "Automatically create contacts in Zoho Bigin.";
     case ZohoTriggers.BIGIN_CONTACT_UPDATE:
@@ -70,11 +70,11 @@ export function getTriggerDescription(triggerKey: ZohoTriggers) {
     case ZohoTriggers.BIGIN_DEAL_CREATE:
       return "Automatically create deals using the selected pipeline and stage.";
     case ZohoTriggers.LEAD_WEBHOOK:
-      return "Receive Zoho CRM lead updates and sync lifecycle changes into Rateup.";
+      return "Receive Zoho CRM lead updates and move the matching lead to the mapped pipeline column.";
     case ZohoTriggers.BIGIN_CONTACT_WEBHOOK:
       return "Receive Zoho Bigin contact updates and sync them into Rateup.";
     case ZohoTriggers.BIGIN_DEAL_WEBHOOK:
-      return "Receive Bigin deal updates and update Rateup lifecycle stages.";
+      return "Receive Bigin deal updates and move the matching lead to the mapped pipeline column.";
     case ZohoTriggers.CONTACT_WEBHOOK:
       return "Receive Zoho CRM contact updates and sync them into Rateup.";
     default:

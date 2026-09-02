@@ -4,7 +4,6 @@ import {
   IconChartBar,
   IconDots,
   IconEdit,
-  IconTicket,
   IconVariable,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
@@ -19,11 +18,10 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PageType, QuestionType } from "@/types/enums.ts";
-import { NPSQuestions } from "@/utils/constants.ts";
+import { imagesPath, NPSQuestions } from "@/utils/constants.ts";
 import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
-  ticketIssueSupportedTypes,
   validationSupportedTypes,
 } from "@/utils/data.ts";
 
@@ -38,8 +36,6 @@ interface QuestionDetailedViewFooterProps {
   setActiveTab: (tab: QuestionTabsEnum) => void;
   isGoogleReviewFeatureActive: boolean;
   handleSave: () => Promise<string>;
-  isTicketFeatureActive: boolean;
-  enableAutoGenerateTicket: boolean;
   className?: string;
 }
 
@@ -52,8 +48,6 @@ function QuestionDetailedViewFooter({
   setActiveTab,
   isGoogleReviewFeatureActive,
   handleSave,
-  isTicketFeatureActive,
-  enableAutoGenerateTicket,
   className,
 }: QuestionDetailedViewFooterProps) {
   const { t: translations } = useTranslation();
@@ -131,11 +125,7 @@ function QuestionDetailedViewFooter({
 
           {logicSupportedTypes.includes(question?.type as QuestionType) && (
             <DropdownMenuItem onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}>
-              <img
-                src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump.svg`}
-                className="size-4"
-                alt="logic jump icon"
-              />
+              <img src={`${imagesPath}/logic-jump.svg`} className="size-4" alt="logic jump icon" />
               {translations("Logic Jump")}
             </DropdownMenuItem>
           )}
@@ -168,27 +158,6 @@ function QuestionDetailedViewFooter({
             >
               <IconEdit />
               {translations("Custom Validation")}
-            </DropdownMenuItem>
-          )}
-
-          {ticketIssueSupportedTypes.includes(question?.type as QuestionType) && (
-            <DropdownMenuItem
-              onClick={async () => {
-                if (!isTicketFeatureActive || enableAutoGenerateTicket) return;
-                const save = await handleSave();
-                if (save === "saved") setActiveTab(QuestionTabsEnum.TicketIssueEditor);
-              }}
-              disabled={!isTicketFeatureActive || enableAutoGenerateTicket}
-            >
-              <IconTicket stroke={4} />
-              {translations("Create Tickets")}
-              {(!isTicketFeatureActive || enableAutoGenerateTicket) && (
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {enableAutoGenerateTicket
-                    ? translations("Auto-ticket on")
-                    : translations("Upgrade")}
-                </span>
-              )}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

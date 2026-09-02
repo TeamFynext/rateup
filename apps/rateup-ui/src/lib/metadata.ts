@@ -31,11 +31,11 @@ const pageMetadata: Record<string, PageMetadata> = {
   "/signup": {
     title: "Sign up With RateUp - Create A Free Account on Customer Engagement Platform",
     description:
-      "Sign up RateUp. Start a free trial and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
+      "Sign up RateUp. Start free and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
     openGraph: {
       title: "Sign up With RateUp - Create A Free Account on Customer Engagement Platform",
       description:
-        "Sign up RateUp. Start a free trial and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
+        "Sign up RateUp. Start free and get access to WhatsApp Business API and Omnichannel Customer Engagement Platform. Get unified inbox, surveys & loyalty tools for free.",
     },
     alternates: {
       canonical: "/signup",
@@ -104,6 +104,19 @@ const pageMetadata: Record<string, PageMetadata> = {
     },
     alternates: {
       canonical: "",
+    },
+  },
+  "/book-a-demo": {
+    title: "Book a Demo of RateUp AI Powered WhatsApp Marketing Platform",
+    description:
+      "Book a free RateUp demo. See how WhatsApp Business API, automation, surveys & loyalty come together in one platform - pick a time that suits your team.",
+    openGraph: {
+      title: "Book a Demo of RateUp AI Powered WhatsApp Marketing Platform",
+      description:
+        "Book a free RateUp demo. See how WhatsApp Business API, automation, surveys & loyalty come together in one platform - pick a time that suits your team.",
+    },
+    alternates: {
+      canonical: "/book-a-demo",
     },
   },
   "/contact-us": {
@@ -182,19 +195,6 @@ const pageMetadata: Record<string, PageMetadata> = {
     },
     alternates: {
       canonical: "/products/whatsapp-survey",
-    },
-  },
-  "/products/ticketing": {
-    title: "WhatsApp Ticketing & Customer Support Software - RateUp",
-    description:
-      "Turn WhatsApp chats into trackable support tickets with RateUp. Assign, prioritise and resolve customer issues from one shared team inbox. Start free.",
-    openGraph: {
-      title: "WhatsApp Ticketing & Customer Support Software - RateUp",
-      description:
-        "Turn WhatsApp chats into trackable support tickets with RateUp. Assign, prioritise and resolve customer issues from one shared team inbox. Start free.",
-    },
-    alternates: {
-      canonical: "/products/ticketing",
     },
   },
   "/products/testimonial-gateway": {

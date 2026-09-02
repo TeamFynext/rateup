@@ -5,9 +5,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@import "@fontsource-variable/inter";
+/* Design System V2: Instrument Sans (body/UI) + Figtree (display/logo). */
+@import "@fontsource-variable/instrument-sans";
 /* @import "@fontsource/noto-color-emoji"; */
-@import "@fontsource-variable/nunito";
+@import "@fontsource-variable/figtree";
 
 /* Tiptap editor content styles (.ProseMirror, placeholder, --editor-* tokens).
    Global because editors are inlined across many routes. */
@@ -15,78 +16,82 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
+  /* Design System V2 semantic colors (tokens/themes.css, light scope).
+     Hex sources are kept in comments; values are the oklch equivalents. */
+  --background: oklch(0.9913 0.0013 286.38); /* --canvas #fcfcfd */
+  --foreground: oklch(0.2416 0.0153 256.81); /* --fg / n-700 #1b2027 */
+  --card: oklch(1 0 0); /* --surface #ffffff */
+  --card-foreground: oklch(0.2416 0.0153 256.81);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(43.06% 0.137 253.89);
-  --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
+  --popover-foreground: oklch(0.2416 0.0153 256.81);
+  --primary: oklch(0.4337 0.115 254.47); /* --accent / blue-600 #1c518e */
+  --primary-foreground: oklch(1 0 0); /* --on-accent */
+  --secondary: oklch(0.9578 0.0058 264.53); /* --surface-3 / n-100 #eff1f5 */
+  --secondary-foreground: oklch(0.407 0.0206 259.41); /* --fg-2 / n-600 #434a55 */
+  --muted: oklch(0.9789 0.0029 264.54); /* --surface-2 / n-50 #f7f8fa */
+  --muted-foreground: oklch(0.5555 0.0216 255.6); /* --fg-3 / n-500 #6b7480 */
+  --accent: oklch(0.9711 0.0096 252.81); /* --accent-soft / blue-50 #f1f6fc */
+  --accent-foreground: oklch(0.3694 0.0947 254.17); /* --accent-hover / blue-700 #164070 */
+  --destructive: oklch(0.5454 0.1822 28.06); /* --error #c4342c */
+  --border: oklch(0.9271 0.0075 260.73); /* --border / n-200 #e4e7ec */
+  --input: oklch(0.9271 0.0075 260.73);
+  --ring: oklch(0.4337 0.115 254.47); /* --accent, matching the DS focus ring */
+  /* Charts: the brand blue ramp, with amber as the fifth categorical slot. */
+  --chart-1: oklch(0.4337 0.115 254.47); /* blue-600 #1c518e */
+  --chart-2: oklch(0.5109 0.1185 253.05); /* blue-500 #2e68a8 */
+  --chart-3: oklch(0.6294 0.1034 253.03); /* blue-400 #5a8cc6 */
+  --chart-4: oklch(0.7536 0.0713 253.97); /* blue-300 #90b2dc */
+  --chart-5: oklch(0.7571 0.1656 63.06); /* amber-500 #f8951d */
   /* Sidebar palette, from the design system's own tokens. The rail is brand navy
      and the nav panel is white, so `--sidebar-*` here describes the panel; the
      rail overrides the same names locally in app-sidebar.tsx. */
-  --sidebar: oklch(0.2338 0.0719 260.61); /* --blue-900 #081c3f */
-  --sidebar-foreground: oklch(0.3064 0.0045 145.46); /* --fg-2 / ink-700 #2e302e */
-  --sidebar-primary: oklch(0.4337 0.115 254.47); /* --blue-500 #1c518e (brand) */
+  --sidebar: oklch(0.2622 0.0581 254.79); /* blue-900 #0f2540 */
+  --sidebar-foreground: oklch(0.407 0.0206 259.41); /* --fg-2 #434a55 */
+  --sidebar-primary: oklch(0.4337 0.115 254.47); /* blue-600 #1c518e (brand) */
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.9646 0.0114 252.09); /* --bg-brand-soft #eef4fb */
-  --sidebar-accent-foreground: oklch(0.3902 0.0987 252.94); /* --blue-600 #174678 */
-  --sidebar-border: oklch(0.9425 0.0027 106.45); /* --border-1 #ececea */
+  --sidebar-accent: oklch(0.9711 0.0096 252.81); /* --accent-soft #f1f6fc */
+  --sidebar-accent-foreground: oklch(0.3694 0.0947 254.17); /* blue-700 #164070 */
+  --sidebar-border: oklch(0.9271 0.0075 260.73); /* --border #e4e7ec */
   --sidebar-ring: oklch(0.4337 0.115 254.47);
   --custom-shadow-base: 0 1px 3px rgba(11, 31, 72, 0.05);
   --custom-shadow-hover: 0 8px 28px rgba(11, 31, 72, 0.1);
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
+  /* Design System V2 `[data-theme="dark"]` scope. */
+  --background: oklch(0.1665 0.0124 254.17); /* --canvas #0b0f14 */
+  --foreground: oklch(0.954 0.0063 255.48); /* --fg #edf0f4 */
   --card: oklch(0.21 0.006 285.885);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.424 0.199 265.638);
-  --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  /* The design system's `.theme-dark` scope: navy deepens, and the brand accent
-     moves from blue to cyan so it still reads against it. */
-  --sidebar: oklch(0.1762 0.0538 263.84); /* --blue-950 #050f28 */
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.6966 0.1677 247.78); /* --cyan-400 #2fa3ff */
-  --sidebar-primary-foreground: oklch(0.2338 0.0719 260.61); /* --fg-on-brand */
-  --sidebar-accent: oklch(1 0 0 / 8%); /* --bg-surface-2 */
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.6966 0.1677 247.78);
+  --primary: oklch(0.6294 0.1034 253.03); /* --accent / blue-400 #5a8cc6 */
+  --primary-foreground: oklch(0.1823 0.0305 249.25); /* --on-accent #07131f */
+  --secondary: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
+  --secondary-foreground: oklch(0.954 0.0063 255.48);
+  --muted: oklch(0.2286 0.0221 257.28); /* --surface-2 #161d27 */
+  --muted-foreground: oklch(0.6664 0.0238 256.76); /* --fg-3 #8b95a3 */
+  --accent: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
+  --accent-foreground: oklch(0.954 0.0063 255.48);
+  --destructive: oklch(0.7229 0.1388 25.33); /* --error #f08078 */
+  --border: oklch(0.29 0.0254 255.73); /* --border #232c38 */
+  --input: oklch(0.3853 0.0343 253.54); /* --border-strong #374556 */
+  --ring: oklch(0.6294 0.1034 253.03); /* --accent #5a8cc6 */
+  --chart-1: oklch(0.7536 0.0713 253.97); /* blue-300 #90b2dc */
+  --chart-2: oklch(0.6294 0.1034 253.03); /* blue-400 #5a8cc6 */
+  --chart-3: oklch(0.5109 0.1185 253.05); /* blue-500 #2e68a8 */
+  --chart-4: oklch(0.7433 0.0944 251.51); /* --info #7fb0e6 */
+  --chart-5: oklch(0.8085 0.1259 74.78); /* --warning #f0b45c */
+  /* The design system's dark scope: navy deepens, and the brand accent lightens
+     to blue-400 so it still reads against it. */
+  --sidebar: oklch(0.2028 0.0412 255.42); /* blue-950 #091729 */
+  --sidebar-foreground: oklch(0.954 0.0063 255.48);
+  --sidebar-primary: oklch(0.6294 0.1034 253.03); /* blue-400 #5a8cc6 */
+  --sidebar-primary-foreground: oklch(0.1823 0.0305 249.25); /* --on-accent */
+  --sidebar-accent: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
+  --sidebar-accent-foreground: oklch(0.954 0.0063 255.48);
+  --sidebar-border: oklch(0.29 0.0254 255.73); /* --border #232c38 */
+  --sidebar-ring: oklch(0.6294 0.1034 253.03);
   --custom-shadow-base: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --custom-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
 
@@ -95,9 +100,12 @@
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", sans-serif;
-  /* --font-sans: 'Inter Variable', sans-serif; */
-  --font-nunito: "Nunito Variable", sans-serif;
+  /* Design System V2 type: Instrument Sans for body/UI, Figtree for display.
+     `--font-nunito` is kept as the historical alias for the display face so the
+     existing `font-nunito` markup picks up the new family. */
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-nunito: var(--font-display);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -134,16 +142,55 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* RateUp colors */
-  --color-rateup-orange: #ff9500;
-  --color-rateup-graytext: #343a40;
-  --color-rateup-darkblue: #001747;
-  --color-rateup-blue-4: #1c518e;
+  /* RateUp colors — Design System V2 primitives (tokens/colors.css). */
+  --color-ru-blue-50: #f1f6fc;
+  --color-ru-blue-100: #dfeaf7;
+  --color-ru-blue-200: #bdd2ec;
+  --color-ru-blue-300: #90b2dc;
+  --color-ru-blue-400: #5a8cc6;
+  --color-ru-blue-500: #2e68a8;
+  --color-ru-blue-600: #1c518e; /* brand navy, from the lockup */
+  --color-ru-blue-700: #164070;
+  --color-ru-blue-800: #133355;
+  --color-ru-blue-900: #0f2540;
+  --color-ru-blue-950: #091729;
+
+  --color-ru-amber-50: #fff8ec;
+  --color-ru-amber-100: #feeccb;
+  --color-ru-amber-200: #fcd68f;
+  --color-ru-amber-300: #fbc05c;
+  --color-ru-amber-400: #faaa3a;
+  --color-ru-amber-500: #f8951d; /* star gradient end stop */
+  --color-ru-amber-600: #db7a0b;
+  --color-ru-amber-700: #ae5d07;
+  --color-ru-star-top: #ffd54c; /* top stop of the star gradient */
+
+  --color-ru-green-50: #edf9f1;
+  --color-ru-green-100: #d2f0de;
+  --color-ru-green-300: #7bd3a0;
+  --color-ru-green-500: #1fa85b;
+  --color-ru-green-600: #177f45;
+  --color-ru-green-700: #115f34;
+
+  --color-ru-n-50: #f7f8fa;
+  --color-ru-n-100: #eff1f5;
+  --color-ru-n-200: #e4e7ec;
+  --color-ru-n-300: #cbd1da;
+  --color-ru-n-400: #9ba3af;
+  --color-ru-n-500: #6b7480;
+  --color-ru-n-600: #434a55;
+  --color-ru-n-700: #1b2027; /* ink stops at 700, never black */
+
+  /* Legacy aliases, repointed onto the V2 ramps. */
+  --color-rateup-orange: var(--color-ru-amber-500);
+  --color-rateup-graytext: var(--color-ru-n-600);
+  --color-rateup-darkblue: var(--color-ru-blue-900);
+  --color-rateup-blue-4: var(--color-ru-blue-600);
 
   /* WhatsApp Feedback theme configurations */
   --color-fb-green: #2a6254;
@@ -155,20 +202,43 @@
   --color-periwinkle-2: #a6c2bb;
   --color-chip-dark: #102820;
 
-  --color-ink-25: #fafaf7;
-  --color-ink-50: #f4f5f2;
-  --color-ink-100: #ececea;
-  --color-ink-200: #d9dad7;
-  --color-ink-400: #8b8e8a;
-  --color-ink-500: #666864;
-  --color-ink-800: #1a1b1a;
-  --color-ink-900: #0a0b0a;
+  /* `ink-*` were the V1 warm neutrals; mapped by role onto the V2 cool ramp. */
+  --color-ink-25: #fcfcfd; /* --canvas */
+  --color-ink-50: var(--color-ru-n-50);
+  --color-ink-100: var(--color-ru-n-200); /* border role */
+  --color-ink-200: var(--color-ru-n-300);
+  --color-ink-400: var(--color-ru-n-400);
+  --color-ink-500: var(--color-ru-n-500);
+  --color-ink-800: var(--color-ru-n-600);
+  --color-ink-900: var(--color-ru-n-700);
 
-  --color-blue-50: #eef4fb;
-  --color-blue-100: #d6e4f3;
+  --color-blue-50: var(--color-ru-blue-50);
+  --color-blue-100: var(--color-ru-blue-100);
 
   --animate-panel-fade: panelFade 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-blink: blink 1.2s infinite both;
+
+  /* Homepage motion, from the marketing design system. `ru-rot` cycles the hero's
+     channel word through a four-item column; `ru-marquee` drives the client-logo
+     rail (the track holds two copies, so -50% is one seamless lap); `ru-orbit`
+     sweeps the retention loop's star; `ru-pulse` is the video play button's halo. */
+  --animate-ru-rot: ru-rot 12s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  --animate-ru-marquee: ru-marquee 44s linear infinite;
+  --animate-ru-orbit: ru-orbit 24s linear infinite;
+  --animate-ru-pulse: ru-pulse 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  /* Fills the active case-study tab's rail over one auto-advance dwell, so the
+     rotation is legible before it happens. Duration tracks CASE_DWELL_MS. */
+  --animate-ru-progress: ru-progress 8s linear forwards;
+  /* The integration tiles breathe one at a time. Each card runs the same 6.3s cycle with a
+     0.9s-per-index delay, and the lift occupies only the first ~16% of it, so exactly one
+     tile is raised at any moment and the bump travels along the row. */
+  --animate-ru-card-lift: ru-card-lift 6.3s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  /* Fires as the orbiting star passes a step node. Shares the 24s lap of `ru-orbit` so the
+     two stay locked; each node offsets by its own arrival time (see HowItWorks). The pop
+     occupies ~7% of the lap, so only the node being passed is raised. */
+  --animate-ru-node-pop: ru-node-pop 24s linear infinite;
+  --animate-ru-rise: ru-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
   --shadow-custom-base: var(--custom-shadow-base);
   --shadow-custom-hover: var(--custom-shadow-hover);
 
@@ -194,7 +264,171 @@
       transform: translateY(-3px);
     }
   }
+  @keyframes ru-rot {
+    0%,
+    19% {
+      transform: translateY(0);
+    }
+    25%,
+    44% {
+      transform: translateY(-25%);
+    }
+    50%,
+    69% {
+      transform: translateY(-50%);
+    }
+    75%,
+    100% {
+      transform: translateY(-75%);
+    }
+  }
+  @keyframes ru-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes ru-orbit {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes ru-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.45;
+    }
+    70%,
+    100% {
+      transform: scale(1.7);
+      opacity: 0;
+    }
+  }
+  @keyframes ru-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* Scroll-in entrance. `backwards` fill holds the start frame through the stagger delay, and
+   using an animation rather than a transition leaves the card's `transition-all` free for
+   hover — a transition-delay would have lagged the hover by the stagger too. */
+  @keyframes ru-rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  @keyframes ru-node-pop {
+    0%,
+    7%,
+    100% {
+      transform: scale(1);
+      box-shadow:
+        0 1px 3px rgb(16 24 40 / 0.05),
+        0 0 0 0 rgb(248 149 29 / 0);
+    }
+    3% {
+      transform: scale(1.18);
+      box-shadow:
+        0 6px 18px rgb(16 24 40 / 0.1),
+        0 0 0 6px rgb(248 149 29 / 0.18);
+    }
+  }
+  @keyframes ru-card-lift {
+    0%,
+    16%,
+    100% {
+      transform: translateY(0) scale(1);
+      box-shadow: 0 0 0 0 rgb(16 24 40 / 0);
+    }
+    7% {
+      transform: translateY(-6px) scale(1.035);
+      box-shadow: 0 14px 30px rgb(16 24 40 / 0.1);
+    }
+  }
 }
+/* The star gradient from the design system's `--ru-star`. Pair with
+   `bg-clip-text text-transparent` for the gradient-numeral treatment. */
+@utility bg-ru-star {
+  background-image: linear-gradient(
+    150deg,
+    var(--color-ru-star-top) 0%,
+    var(--color-ru-amber-500) 100%
+  );
+}
+
+/* ── The retention loop's palette ───────────────────────────────────────────────────
+   The redesign gives `HowItWorks`' six ring nodes six distinct hues instead of six near
+   identical white discs. They live here as tokens on `[data-loop]` rather than as classes
+   on each node, because the section colours more than the discs — the band, the orbit, the
+   type and the CTA all shift with them, and one scope keeps that set together.
+
+   `--lp1-*` … `--lp6-*` are the per-node triples (fill, border, ink) in ring order —
+   Purchase, Feedback, Recovery, Reward, Campaign, Repeat. The rest is section chrome:
+   `lp-bg`/`lp-edge` the band, `lp-ring*` the dashed orbit and its wash, `lp-dot*` the
+   travelling star, `lp-hub-*` the centre stat, `lp-fg*`/`lp-num` type, `lp-eb-*` the
+   eyebrow, `lp-cta-*` the primary button.
+
+   This is the design's "Spectrum" palette. The comp also drew Ocean, Sunrise and Midnight
+   behind a switcher; we ship Spectrum only, so the attribute takes no value. */
+[data-loop] {
+  --lp-bg: linear-gradient(180deg, #fbfcfe 0%, #fcfcfd 72%);
+  --lp-edge: #edeff3;
+  --lp-ring: #c6d5e8;
+  --lp-ring-fill: conic-gradient(
+    from 200deg,
+    rgba(28, 81, 142, 0.11),
+    rgba(47, 163, 255, 0.11),
+    rgba(91, 52, 192, 0.11),
+    rgba(248, 149, 29, 0.14),
+    rgba(20, 128, 74, 0.11),
+    rgba(176, 42, 86, 0.11),
+    rgba(28, 81, 142, 0.11)
+  );
+  --lp-dot: linear-gradient(150deg, #ffd54c, #f8951d);
+  --lp-dot-ring: rgba(248, 149, 29, 0.2);
+  --lp-hub-bg: #ffffff;
+  --lp-hub-bd: #e4e7ec;
+  --lp-hub-sh: 0 10px 30px rgba(16, 24, 40, 0.1);
+  --lp-node-sh: 0 6px 18px rgba(16, 24, 40, 0.1);
+  --lp-fg: #1b2027;
+  --lp-fg2: #434a55;
+  --lp-fg3: #6b7480;
+  --lp-num: #9ba3af;
+  --lp-eb-bg: #f1f6fc;
+  --lp-eb-bd: #bdd2ec;
+  --lp-eb-ink: #1c518e;
+  --lp-cta-bg: #1c518e;
+  --lp-cta-ink: #ffffff;
+  --lp1-bg: #e7f0fb;
+  --lp1-bd: #a8c6e8;
+  --lp1-ink: #1c518e;
+  --lp2-bg: #e3f4ff;
+  --lp2-bd: #93d0f8;
+  --lp2-ink: #0b6e9e;
+  --lp3-bg: #f1ebfe;
+  --lp3-bd: #c6b0f6;
+  --lp3-ink: #5b34c0;
+  --lp4-bg: #fff1d6;
+  --lp4-bd: #f6c670;
+  --lp4-ink: #a75b06;
+  --lp5-bg: #e4f7ec;
+  --lp5-bd: #9eddbb;
+  --lp5-ink: #14804a;
+  --lp6-bg: #fde9ef;
+  --lp6-bd: #f3b0c6;
+  --lp6-ink: #b02a56;
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -338,10 +572,6 @@
   100% {
     transform: scale(1);
   }
-}
-
-body {
-  font-size: 14px !important;
 }
 
 ::view-transition-new(root) {

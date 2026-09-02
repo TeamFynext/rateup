@@ -11,7 +11,6 @@ import KioskFetchLocSkipPreview from "./KioskFetchLocSkipPreview/index.tsx";
 import OtherSettings from "./OtherSettings.tsx";
 import RedirectSettings from "./RedirectSettings/index.tsx";
 import SecuritySettings from "./SecuritySettings/index.tsx";
-import TicketSettings from "./TicketSettings.tsx";
 import WebhookSettings from "./WebhookSettings.tsx";
 
 import styles from "./SurveySettings.module.css";
@@ -28,7 +27,6 @@ const defaultEnabledModules = [
   "notificationEmail",
   "endtoendencryption",
   "redirect",
-  "tickets",
   "uniqueDeviceResponse",
 ];
 
@@ -135,10 +133,6 @@ const SurveySettings = ({
               setRedirectError={setRedirectError}
               survey={survey}
             />
-
-            {enabledModules.includes("tickets") && (
-              <TicketSettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
-            )}
 
             {survey?.spreadSheetId && <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />}
 

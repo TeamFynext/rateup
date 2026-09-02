@@ -1,14 +1,14 @@
 .terms-of-service-container {
-  color: #f5f5f5;
-  margin-bottom: 6.25rem;
-  margin-top: 4.375rem;
-  margin-left: 4rem;
-  margin-right: 3rem;
+  color: var(--color-slate-600, #475569);
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  line-height: 1.7;
 }
 
 .terms-of-service-container > h1 {
   text-align: center;
-  color: white;
+  color: var(--color-slate-900, #0f172a);
   text-transform: uppercase;
   font-size: 1.625rem;
   margin: 1rem 0;
@@ -21,16 +21,37 @@
 .last-revised-p {
   text-align: center;
   font-size: 0.875rem;
+  color: var(--color-slate-500, #64748b);
   margin-bottom: 2rem;
 }
 
 .terms-of-service-container h2 {
+  color: var(--color-slate-900, #0f172a);
   font-size: 1.25rem;
-  margin: 1rem 0;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem;
+}
+
+.terms-of-service-container a {
+  color: var(--color-rateup-orange, #f59e0b);
+  text-decoration: underline;
+}
+
+:global(.dark) .terms-of-service-container {
+  color: var(--color-slate-300, #cbd5e1);
+}
+
+:global(.dark) .terms-of-service-container > h1,
+:global(.dark) .terms-of-service-container h2 {
+  color: #ffffff;
+}
+
+:global(.dark) .last-revised-p {
+  color: var(--color-slate-400, #94a3b8);
 }
 
 @media screen and (max-width: 768px) {
   .terms-of-service-container {
-    margin-bottom: 4.375rem;
+    padding: 2rem 1.25rem;
   }
 }

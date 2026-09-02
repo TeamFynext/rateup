@@ -53,3 +53,16 @@ export const isPasswordValid = (pass: string) =>
   /[a-z]/.test(pass) &&
   /[0-9]/.test(pass) &&
   /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+
+/**
+ * The red asterisk on a required field's label. The glyph itself is decorative,
+ * so the word it stands for is spelled out for screen readers instead.
+ */
+export function RequiredMark() {
+  return (
+    <span className="text-destructive">
+      <span aria-hidden="true">*</span>
+      <span className="sr-only"> (required)</span>
+    </span>
+  );
+}

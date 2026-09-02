@@ -43,8 +43,6 @@ import type { FormElement } from "../utils/store.ts";
 import useFlowStoreV3 from "../utils/store.ts";
 import { NO_NAME_TYPES, NO_VISIBLE_TYPES } from "../utils/typeConstants.ts";
 
-import styles from "./AddElementModal.module.css";
-
 // Icon mapping for question types
 const questionIcons = {
   [QuestionType2.TextInput]: IconTextSize,
@@ -274,10 +272,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
                       <Button
                         key={type}
                         variant="outline"
-                        className={
-                          styles["element-type-button"] +
-                          " h-auto py-4 flex flex-col items-center gap-2"
-                        }
+                        className="flex h-auto flex-col items-center justify-center gap-2 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_8px_rgba(0,0,0,0.1)]"
                         onClick={() => handleTypeSelection(type)}
                       >
                         {Icon && <Icon size={20} />}

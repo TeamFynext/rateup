@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { SurveyType } from "@/types/enums.ts";
+import { imagesPath } from "@/utils/constants.ts";
 
 import IFrameModal from "./IFrameModal.tsx";
 
@@ -117,7 +118,7 @@ export function ShareMethods({ disableShare, shareUrl, survey }: ShareMethodsPro
             >
               <img
                 alt="iframe icon"
-                src={`${import.meta.env.VITE_FRONTEND_URL}/images/iframe-icon.png`}
+                src={`${imagesPath}/iframe-icon.png`}
                 className="size-10 object-contain"
                 style={{ opacity: !disableShare ? 1 : 0.5 }}
               />

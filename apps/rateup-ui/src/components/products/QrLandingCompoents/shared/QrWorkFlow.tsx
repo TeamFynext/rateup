@@ -10,7 +10,7 @@ const QrWorkFlow = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Heading */}
         <div className="text-center flex flex-col items-center mb-20">
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#1c518e] pb-4">
+          <h2 className="text-4xl sm:text-5xl font-bold text-primary pb-4">
             Get Started in Minutes
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl">
