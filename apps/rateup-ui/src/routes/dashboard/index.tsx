@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import Session from "supertokens-auth-react/recipe/session";
 
 import { getTeamFeatures } from "@/backend/team/team.api";
 import { userInfoQuery } from "@/backend/user/user.options";
@@ -40,8 +41,13 @@ export const Route = createFileRoute("/dashboard/")({
         });
       }
 
+      // With a live session, /login is not the exit: it sees the session and sends the
+      // visitor straight back here, and the two pages flicker between each other for
+      // good. The email is verified and there is still no account behind the session, so
+      // the session itself is unusable — /logout clears it first, and the /login it lands
+      // on then finds nothing and stays put.
       throw redirect({
-        to: "/login",
+        to: (await Session.doesSessionExist()) ? "/logout" : "/login",
         replace: true,
       });
     }

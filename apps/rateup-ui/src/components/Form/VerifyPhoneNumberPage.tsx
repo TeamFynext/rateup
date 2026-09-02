@@ -95,7 +95,10 @@ function VerifyPhoneNumberPage() {
           "Kindly enter the OTP we have sent via SMS to authenticate your phone number.",
         )}
       </p>
+      {/* Same reason as the sign-in form: before hydration the browser submits this
+          itself, and a GET would put the one-time code in the URL. */}
       <form
+        method="post"
         className={`
             ${styles["login-sign-up-form"]}
             ${styles["signup-form"]}

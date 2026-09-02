@@ -2,7 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import type { ReactNode } from "react";
 
-import { rateupLogoWhite } from "@/utils/constants";
+import { MetaLockup } from "@/components/integrations/logos";
+import { imagesPath, rateupLogoWhite } from "@/utils/constants";
+
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 /**
  * The marketing footer, as drawn in the design.
@@ -49,20 +52,43 @@ export default function HomePageFooter() {
             </p>
 
             <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/5 px-3 py-1.75">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--color-ru-blue-400)"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="size-3.75"
-                aria-hidden="true"
+              {/* Mono-white cut: the colour lockup's #1c2b33 wordmark is invisible on navy.
+                  The label drops "Meta" — the lockup carries the wordmark already. */}
+              <MetaLockup onDark className="h-6" />
+              <span className="text-[13.5px] font-medium text-white/78">Business Partner</span>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center -ml-2.5">
+              <a
+                href="https://apps.apple.com/in/app/rateup/id6761990608"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles["foot-dl-badge"]}
               >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-              <span className="text-[13.5px] font-medium text-white/78">Meta Business Partner</span>
+                <Image
+                  src={`${imagesPath}/landing/app-store-badge.svg`}
+                  alt="Download on the App Store"
+                  width={120}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+              <a
+                href="https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles["foot-dl-badge"]}
+              >
+                <Image
+                  src={`${imagesPath}/landing/google-play-badge.svg`}
+                  alt="Get it on Google Play"
+                  width={135}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
             </div>
           </div>
 

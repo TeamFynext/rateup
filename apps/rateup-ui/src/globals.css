@@ -366,6 +366,69 @@
   );
 }
 
+/* ── The retention loop's palette ───────────────────────────────────────────────────
+   The redesign gives `HowItWorks`' six ring nodes six distinct hues instead of six near
+   identical white discs. They live here as tokens on `[data-loop]` rather than as classes
+   on each node, because the section colours more than the discs — the band, the orbit, the
+   type and the CTA all shift with them, and one scope keeps that set together.
+
+   `--lp1-*` … `--lp6-*` are the per-node triples (fill, border, ink) in ring order —
+   Purchase, Feedback, Recovery, Reward, Campaign, Repeat. The rest is section chrome:
+   `lp-bg`/`lp-edge` the band, `lp-ring*` the dashed orbit and its wash, `lp-dot*` the
+   travelling star, `lp-hub-*` the centre stat, `lp-fg*`/`lp-num` type, `lp-eb-*` the
+   eyebrow, `lp-cta-*` the primary button.
+
+   This is the design's "Spectrum" palette. The comp also drew Ocean, Sunrise and Midnight
+   behind a switcher; we ship Spectrum only, so the attribute takes no value. */
+[data-loop] {
+  --lp-bg: linear-gradient(180deg, #fbfcfe 0%, #fcfcfd 72%);
+  --lp-edge: #edeff3;
+  --lp-ring: #c6d5e8;
+  --lp-ring-fill: conic-gradient(
+    from 200deg,
+    rgba(28, 81, 142, 0.11),
+    rgba(47, 163, 255, 0.11),
+    rgba(91, 52, 192, 0.11),
+    rgba(248, 149, 29, 0.14),
+    rgba(20, 128, 74, 0.11),
+    rgba(176, 42, 86, 0.11),
+    rgba(28, 81, 142, 0.11)
+  );
+  --lp-dot: linear-gradient(150deg, #ffd54c, #f8951d);
+  --lp-dot-ring: rgba(248, 149, 29, 0.2);
+  --lp-hub-bg: #ffffff;
+  --lp-hub-bd: #e4e7ec;
+  --lp-hub-sh: 0 10px 30px rgba(16, 24, 40, 0.1);
+  --lp-node-sh: 0 6px 18px rgba(16, 24, 40, 0.1);
+  --lp-fg: #1b2027;
+  --lp-fg2: #434a55;
+  --lp-fg3: #6b7480;
+  --lp-num: #9ba3af;
+  --lp-eb-bg: #f1f6fc;
+  --lp-eb-bd: #bdd2ec;
+  --lp-eb-ink: #1c518e;
+  --lp-cta-bg: #1c518e;
+  --lp-cta-ink: #ffffff;
+  --lp1-bg: #e7f0fb;
+  --lp1-bd: #a8c6e8;
+  --lp1-ink: #1c518e;
+  --lp2-bg: #e3f4ff;
+  --lp2-bd: #93d0f8;
+  --lp2-ink: #0b6e9e;
+  --lp3-bg: #f1ebfe;
+  --lp3-bd: #c6b0f6;
+  --lp3-ink: #5b34c0;
+  --lp4-bg: #fff1d6;
+  --lp4-bd: #f6c670;
+  --lp4-ink: #a75b06;
+  --lp5-bg: #e4f7ec;
+  --lp5-bd: #9eddbb;
+  --lp5-ink: #14804a;
+  --lp6-bg: #fde9ef;
+  --lp6-bd: #f3b0c6;
+  --lp6-ink: #b02a56;
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(24px);

@@ -9,6 +9,9 @@ import {
 
 export const docsPath = "https://docs.rateup.app";
 export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+/* Sibling prefix to `imagesPath` on the same CloudFront distribution — `/videos` and
+   `/images` are both top-level keys in the bucket, not nested under one another. */
+export const videosPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/videos`;
 
 export const surveyUploadsPath = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}`;
 export const isProduction = import.meta.env.VITE_FRONTEND_URL === "https://rateup.app";
@@ -370,10 +373,25 @@ export const rateupLogo = `${imagesPath}/rateup.png`;
 export const rateupLogoWhite = `${imagesPath}/rateup-white.png`;
 export const rateupLogoOg = `${imagesPath}/rateup-og.png`;
 
+/* The 90-second product film behind the homepage's click-to-play facade. Self-hosted
+   rather than embedded so the band carries no third-party player or cookies. */
+export const rateupProductVideo = `${videosPath}/homepage/rateup_product.mp4`;
+
 /* Square star marks, for slots the 2.52:1 lockup does not fit — avatars, org-logo
    fallbacks, integration tiles. Same bucket as the lockups. */
 export const rateupIcon = `${imagesPath}/rateup-icon.png`;
 export const rateupIconBw = `${imagesPath}/bw-logo.png`;
+
+/* Meta's own company lockup — the infinity mark plus the "Meta" wordmark — as shipped in
+   their brand pack, unaltered. Both files are 6962.36 x 3000, so 2.32:1: size these by
+   height and let the width follow.
+
+   `metaLockup` is the colour "positive" cut, drawn in #1c2b33 for light grounds; on the
+   navy footer it disappears, so that surface takes `metaLockupWhite` instead. The colour
+   file carries the mark's gradient and is ~370KB against the white one's 3KB, which is why
+   the light-ground call sites are the only ones that pay for it. */
+export const metaLockup = `${imagesPath}/landing/meta/Meta_lockup_positive%20primary_RGB.svg`;
+export const metaLockupWhite = `${imagesPath}/landing/meta/Meta_lockup_negative%20primary_white_RGB.svg`;
 
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;

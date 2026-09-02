@@ -1,4 +1,7 @@
-import { EmailVerificationClaim } from "supertokens-auth-react/recipe/emailverification";
+import {
+  EmailVerificationClaim,
+  isEmailVerified as fetchEmailVerified,
+} from "supertokens-auth-react/recipe/emailverification";
 import Session from "supertokens-auth-react/recipe/session";
 
 /**
@@ -28,21 +31,53 @@ export async function refreshEmailVerificationClaim() {
 }
 
 /**
- * Whether this session's email is verified, re-checking a `false` against the API first.
+ * Verification only ever goes false -> true, so a `true` holds for the rest of the page's
+ * life. Without this every move inside the dashboard re-reads the claim, and a session
+ * missing `st-ev` pays a round trip for each one.
+ */
+let verifiedThisSession = false;
+
+/**
+ * Drop that memo. Signing out is the one moment the answer can go back to "no" without a
+ * reload — the next visitor at this tab is a different session entirely.
+ */
+export function forgetEmailVerification() {
+  verifiedThisSession = false;
+}
+
+/**
+ * Whether this session's email is verified, re-checking anything but a plain `true`.
  *
- * An unknown claim reads as verified on purpose: it means email verification is not
- * gating this session, and answering `false` there would strand the user on the verify
- * page with no email to confirm.
+ * The claim is only ever trusted when it says `true`. A `false` is re-read from the API
+ * because the validator caches it for ~10s, and an *absent* claim is asked about too:
+ * a session restored on a later visit can carry no `st-ev` at all, and reading that as
+ * "verified" is what let an unverified visitor past the dashboard guard, into the 403s,
+ * and back to /login — the bounce this whole module exists to prevent.
  */
 export async function isEmailVerified(): Promise<boolean> {
+  if (verifiedThisSession) return true;
+
   try {
-    if ((await Session.getClaimValue({ claim: EmailVerificationClaim })) !== false) return true;
+    if ((await Session.getClaimValue({ claim: EmailVerificationClaim })) === true) {
+      verifiedThisSession = true;
+      return true;
+    }
 
     await refreshEmailVerificationClaim();
-    return (await Session.getClaimValue({ claim: EmailVerificationClaim })) !== false;
+    const refreshed = await Session.getClaimValue({ claim: EmailVerificationClaim });
+    if (typeof refreshed === "boolean") {
+      verifiedThisSession = refreshed;
+      return refreshed;
+    }
+
+    // Still no claim on the session. Ask the API outright rather than guessing: it is the
+    // one answer that cannot disagree with the gate the API itself enforces.
+    verifiedThisSession = (await fetchEmailVerified()).isVerified;
+    return verifiedThisSession;
   } catch (err) {
-    // No session, or the claim could not be read — neither is "unverified", and treating
-    // it as such would redirect a signed-out visitor to a page that needs a session.
+    // No session, or neither the claim nor the API could be read — none of which is
+    // "unverified", and treating it as such would redirect a signed-out visitor to a
+    // page that needs a session.
     console.error("Failed to read the email verification claim:", err);
     return true;
   }
