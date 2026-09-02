@@ -1323,11 +1323,15 @@ export async function getAllOrgOrders(orgId: string) {
         subscriptionChargeAt: true,
         subscriptionEndedAt: true,
         shopifyPlanId: true,
+        rateupPlanId: true,
       },
     });
 
+    // A conversation-pack order carries none of the gateway plan references — it is a
+    // one-off charge that names its own amount — so filtering on those alone hid every
+    // add-on purchase from billing history. Keep anything that points at a catalog row.
     const filteredOrders = orders.filter(
-      (order) => order.planId || order.priceId || order.shopifyPlanId,
+      (order) => order.planId || order.priceId || order.shopifyPlanId || order.rateupPlanId,
     );
 
     // Only the fields actually read below (see the `return` further down) —
@@ -1389,6 +1393,28 @@ export async function getAllOrgOrders(orgId: string) {
               };
             }
           }
+        }
+      } else if (order.rateupPlanId) {
+        // A conversation pack. It is last in the chain because a plan and a Shopify order
+        // point at a catalog row too — only an order with no gateway reference left is an
+        // add-on, and the `ADDON` guard makes that explicit.
+        //
+        // An add-on has no gateway plan to read a price off: the charge was priced when
+        // the order was created, so the captured payment is the only record of what was
+        // actually paid, and Razorpay reports it in minor units. An order still awaiting
+        // capture has no payment yet and falls back to the list price the checkout quoted.
+        const addonPlan = await prisma.rateupPlan.findUnique({
+          where: { id: order.rateupPlanId },
+          select: { description: true, planType: true, displayName: true, monthlyPrice: true },
+        });
+        if (addonPlan?.planType === PaymentPlanType.ADDON) {
+          planDetail = {
+            amount: order.payment
+              ? order.payment.amount / 100
+              : Number(addonPlan.monthlyPrice ?? 0),
+            currency: order.payment?.currency ?? "INR",
+            RateupPlan: addonPlan,
+          };
         }
       }
 
