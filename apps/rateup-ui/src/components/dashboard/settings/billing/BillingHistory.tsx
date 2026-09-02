@@ -26,6 +26,11 @@ import { formatIsoDateString } from "@/utils/dateTime.ts";
  * it never records a checkout the customer abandoned or that failed. Charges come from
  * invoices (complete, and downloadable); orders contribute only the attempts that never
  * became a charge.
+ *
+ * Conversation packs are the exception to all of that: a pack is a one-off charge with no
+ * subscription and no Razorpay invoice behind it, so its order *is* the record — paid,
+ * pending and failed alike — and it is listed on its own terms rather than as a failed
+ * subscription attempt.
  */
 interface HistoryRow {
   key: string;
@@ -39,6 +44,8 @@ interface HistoryRow {
   period: string | null;
   reference: string;
   subscriptionId: string | undefined;
+  /** What was bought, when the row is not a plan charge — a pack name today. */
+  label: string | null;
 }
 
 /** Unix seconds from Razorpay; the date helpers want an ISO string. */
@@ -90,13 +97,19 @@ export function BillingHistory({
           : null,
       reference: invoice.id,
       subscriptionId: invoice.subscriptionId,
+      label: null,
     }));
 
     // A subscription that raised an invoice is already represented above; only surface the
     // checkouts that never produced one, so a paid order is not counted twice.
     const invoicedSubscriptions = new Set(invoiceRows.map((row) => row.subscriptionId));
     const attemptRows: HistoryRow[] = (orders ?? [])
-      .filter((order) => order.subscriptionId && !invoicedSubscriptions.has(order.subscriptionId))
+      .filter(
+        (order) =>
+          order.planType !== "ADDON" &&
+          order.subscriptionId &&
+          !invoicedSubscriptions.has(order.subscriptionId),
+      )
       .map((order) => ({
         key: order.id,
         date: order.createdAt,
@@ -108,9 +121,38 @@ export function BillingHistory({
         period: null,
         reference: order.id,
         subscriptionId: order.subscriptionId,
+        label: null,
       }));
 
-    return [...invoiceRows, ...attemptRows].sort(
+    // Packs never raise an invoice, so unlike a plan checkout a successful one is only
+    // ever recorded here — list it as the paid charge it is.
+    const addonRows: HistoryRow[] = (orders ?? [])
+      .filter((order) => order.planType === "ADDON")
+      .map((order) => ({
+        key: order.id,
+        date: order.createdAt,
+        amount: order.amount,
+        currency: order.currency,
+        status:
+          order.paymentStatus === "SUCCESS"
+            ? "paid"
+            : order.paymentStatus === "FAILED"
+              ? "failed"
+              : "incomplete",
+        tone:
+          order.paymentStatus === "SUCCESS"
+            ? "paid"
+            : order.paymentStatus === "FAILED"
+              ? "failed"
+              : "pending",
+        url: null,
+        period: null,
+        reference: order.id,
+        subscriptionId: undefined,
+        label: order.displayName ?? order.name ?? "Conversation packs",
+      }));
+
+    return [...invoiceRows, ...attemptRows, ...addonRows].sort(
       (a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
     );
   }, [invoices, orders]);
@@ -157,7 +199,12 @@ export function BillingHistory({
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4 transition-colors hover:border-primary/30"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{formatIsoDateString(row.date)}</p>
+                  <p className="text-sm font-medium">
+                    {formatIsoDateString(row.date)}
+                    {row.label && (
+                      <span className="ml-2 font-normal text-muted-foreground">· {row.label}</span>
+                    )}
+                  </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {row.period ?? row.reference}
                   </p>
@@ -198,6 +245,12 @@ export function BillingHistory({
           </DialogHeader>
 
           <dl className="space-y-3 text-sm">
+            {selected?.label && (
+              <>
+                <DetailRow label={translations("Item")}>{selected.label}</DetailRow>
+                <Separator />
+              </>
+            )}
             <DetailRow label={translations("Amount")}>
               {money(selected?.amount, selected?.currency)}
             </DetailRow>

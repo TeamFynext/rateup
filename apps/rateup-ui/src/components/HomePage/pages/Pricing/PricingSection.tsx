@@ -23,6 +23,7 @@ import {
 } from "./pricing.data.ts";
 import { PricingCta } from "./PricingCta.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
+import { PricingSurface } from "./Utils/constants.ts";
 
 /**
  * Column counts for the compact (dialog) grid, keyed by how many tiers are actually on
@@ -163,7 +164,9 @@ const PricingSection = ({
           className={`flex flex-wrap items-center justify-center gap-3 ${compact ? "mt-0" : "mt-8 mb-10"}`}
           hidden={onHighestTier}
         >
-          <div className="inline-flex items-center gap-[3px] rounded-full bg-white p-[3px] shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1),0_1px_2px_rgba(0,0,0,0.05)]">
+          <div
+            className={`inline-flex items-center gap-[3px] rounded-full p-[3px] ${PricingSurface}`}
+          >
             <button
               type="button"
               onClick={() => setPeriod("yearly")}
@@ -214,7 +217,7 @@ const PricingSection = ({
         </motion.div>
 
         {onHighestTier && (
-          <div className="rounded-2xl bg-white p-8 text-center shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1),0_1px_2px_rgba(0,0,0,0.05)]">
+          <div className={`rounded-2xl p-8 text-center ${PricingSurface}`}>
             <h3 className="font-display text-lg font-bold text-foreground">
               You&apos;re on our highest plan.
             </h3>
@@ -229,7 +232,7 @@ const PricingSection = ({
             the question the allowance on every card provokes, and the drawer prices the
             headroom at the visitor's currency and whichever cadence is selected. */}
         {!compact && conversationPack && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-muted p-[18px_24px] shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1)]">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-muted p-[18px_24px] shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
             <p className="m-0 flex-1 basis-[380px] text-sm leading-[1.55] text-muted-foreground">
               Past your plan&apos;s conversation limit? Add{" "}
               {formatCount(conversationPack.conversations)}-conversation credit packs — charged
@@ -245,7 +248,9 @@ const PricingSection = ({
         )}
 
         {enterprise && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-white p-6 shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1),0_1px_2px_rgba(0,0,0,0.05)]">
+          <div
+            className={`mt-4 flex flex-wrap items-center justify-between gap-5 rounded-2xl p-6 ${PricingSurface}`}
+          >
             <div className="flex-1 basis-[320px]">
               <span className="text-[11.5px] font-semibold uppercase tracking-widest text-ru-n-400">
                 {enterprise.name}

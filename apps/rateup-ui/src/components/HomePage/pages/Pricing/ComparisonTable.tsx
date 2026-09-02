@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 
 import { buildComparison, type PricingTier } from "./pricing.data.ts";
+import { PricingSurface } from "./Utils/constants.ts";
 
 /**
  * The full feature matrix, derived from each plan's own `features` JSON — the same blob
@@ -20,7 +21,7 @@ export const ComparisonTable = ({ tiers }: { tiers: PricingTier[] }) => {
 
       {/* The matrix does not compress below ~900px, so it scrolls inside its own
           container rather than forcing the page to scroll sideways. */}
-      <div className="overflow-x-auto rounded-xl bg-white shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1),0_1px_2px_rgba(0,0,0,0.05)]">
+      <div className={`overflow-x-auto rounded-xl ${PricingSurface}`}>
         <table className="w-full min-w-[900px] border-collapse text-sm">
           <thead>
             <tr className="bg-muted">

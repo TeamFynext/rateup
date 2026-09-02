@@ -902,6 +902,14 @@ declare global {
     paymentPlan?: SPlanGatewayPlan;
     monthlyPaymentPlan?: SPlanGatewayPlan;
     yearlyPaymentPlan?: SPlanGatewayPlan;
+    /**
+     * The same cadences billed in dollars. A tier links one Razorpay plan per currency,
+     * so an org that checked out in USD is on one of these and none of the rupee ones —
+     * price the subscription from the pair that matches the order, never from the rupee
+     * plans alone.
+     */
+    usdMonthlyPaymentPlan?: SPlanGatewayPlan;
+    usdYearlyPaymentPlan?: SPlanGatewayPlan;
     paymentPlanId?: string;
     /** Present when the plan is billed through Stripe rather than Razorpay. */
     stripeProduct?: StripeProduct;

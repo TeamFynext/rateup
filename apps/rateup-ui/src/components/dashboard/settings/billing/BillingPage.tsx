@@ -117,16 +117,21 @@ export function BillingPage() {
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
 
   useEffect(() => {
-    const order = orders?.data?.filter(
-      (o: { subscriptionId?: string }) => o.subscriptionId === subscription?.subscriptionRef,
-    );
-    if (order && order.length > 0) setActiveOrderData(order[0]);
+    // Conversation packs are one-off orders that carry no subscription. They belong in
+    // billing history, but not here: this picks the order that *is* the subscription, and
+    // a pack would otherwise match an org whose `subscriptionRef` is undefined too, and
+    // price the plan card from a pack's charge.
+    const planOrders = (orders?.data ?? []).filter(
+      (o: PaymentOrder) => o.planType !== "ADDON",
+    ) as PaymentOrder[];
 
-    const sorted = orders?.data?.sort(
-      (a: { createdAt: string }, b: { createdAt: string }) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    const order = planOrders.filter((o) => o.subscriptionId === subscription?.subscriptionRef);
+    if (order.length > 0) setActiveOrderData(order[0]);
+
+    const sorted = [...planOrders].sort(
+      (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
     );
-    if (sorted && sorted.length) setLatestOrderData(sorted[0]);
+    if (sorted.length) setLatestOrderData(sorted[0]);
   }, [subscription, orders]);
 
   const [opened, setOpened] = useState(false);
@@ -332,21 +337,41 @@ export function BillingPage() {
   );
 
   /**
-   * Which cadence the org is actually billed on. A tier links a gateway plan per cadence,
-   * so match the order's own `planId` against them — the annual price is the headline one
-   * and would otherwise be shown to a monthly subscriber. Falls back to the legacy
-   * single-cadence link, then to whichever cadence the tier does define.
+   * Which gateway plan the org is actually billed on. A tier links one plan per cadence
+   * *and* per currency, so match the order's own `planId` against all four — the annual
+   * rupee price is the headline one and would otherwise be quoted to a monthly
+   * subscriber, or to one who checked out in dollars (₹48,000/year for a $600 charge).
+   *
+   * Failing an exact match, prefer a plan in the currency the order was charged in, then
+   * the legacy single-cadence link, then whichever cadence the tier does define.
    */
   const currentGatewayPlan: PricingGatewayPlan | undefined = useMemo(() => {
     const plan = currentPlan;
     if (!plan) return undefined;
-    const byOrder = [plan.monthlyPaymentPlan, plan.yearlyPaymentPlan].find(
+    const linked = [
+      plan.monthlyPaymentPlan,
+      plan.yearlyPaymentPlan,
+      plan.usdMonthlyPaymentPlan,
+      plan.usdYearlyPaymentPlan,
+    ];
+    const byOrder = linked.find(
       (gateway) => gateway?.planId && gateway.planId === activeOrderData?.planId,
     );
+    // Annual is the default cadence, so it leads when only the currency is known.
+    const byCurrency = activeOrderData?.currency
+      ? [plan.yearlyPaymentPlan, plan.usdYearlyPaymentPlan, ...linked].find(
+          (gateway) => gateway?.currency === activeOrderData.currency,
+        )
+      : undefined;
     return (
-      byOrder ?? plan.paymentPlan ?? plan.yearlyPaymentPlan ?? plan.monthlyPaymentPlan ?? undefined
+      byOrder ??
+      byCurrency ??
+      plan.paymentPlan ??
+      plan.yearlyPaymentPlan ??
+      plan.monthlyPaymentPlan ??
+      undefined
     );
-  }, [currentPlan, activeOrderData?.planId]);
+  }, [currentPlan, activeOrderData?.planId, activeOrderData?.currency]);
 
   const isSubscriber = () => {
     return checkExpiry(subscription?.expiresAt) || subscription?.basePlan?.name === "FREE PLAN";
@@ -400,10 +425,11 @@ export function BillingPage() {
           }
           currency={currentGatewayPlan?.currency ?? currentPlan?.currency}
           cadence={cadenceLabel(currentGatewayPlan?.period)}
+          endsAt={subscription?.expiresAt}
         />
         <PlanFeatures plan={currentPlan} subscription={subscription} />
       </div>
-      <UsageCard subscription={subscription} />
+      <UsageCard subscription={subscription} allowance={addonOffer?.allowance} />
       <ConversationPacks
         offer={addonOffer}
         isPending={addonPending}

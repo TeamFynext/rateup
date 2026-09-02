@@ -61,10 +61,10 @@
   /* Design System V2 `[data-theme="dark"]` scope. */
   --background: oklch(0.1665 0.0124 254.17); /* --canvas #0b0f14 */
   --foreground: oklch(0.954 0.0063 255.48); /* --fg #edf0f4 */
-  --card: oklch(0.2029 0.0203 258.34); /* --surface #111720 */
-  --card-foreground: oklch(0.954 0.0063 255.48);
-  --popover: oklch(0.2286 0.0221 257.28); /* --surface-2 #161d27 */
-  --popover-foreground: oklch(0.954 0.0063 255.48);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.6294 0.1034 253.03); /* --accent / blue-400 #5a8cc6 */
   --primary-foreground: oklch(0.1823 0.0305 249.25); /* --on-accent #07131f */
   --secondary: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
