@@ -7,6 +7,7 @@ import {
   type PricingTier,
   resolveDisplayPrice,
 } from "../pricing.data.ts";
+import { PricingSurface } from "../Utils/constants.ts";
 
 /** The design system's check: a 15px stroke tick, coloured per surface. */
 const Check = ({ className }: { className: string }) => (
@@ -99,7 +100,7 @@ const PlanCardNew = ({
       className={`flex h-full flex-col gap-4 rounded-2xl p-6 ${
         dark
           ? "bg-ru-blue-900 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18),0_12px_32px_rgba(16,24,40,0.08)]"
-          : "bg-white shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1),0_1px_2px_rgba(0,0,0,0.05)]"
+          : PricingSurface
       }`}
     >
       <div className="flex min-h-5 items-center justify-between gap-2">
@@ -143,7 +144,7 @@ const PlanCardNew = ({
         </p>
       )}
 
-      <div className={`h-px ${dark ? "bg-white/10" : "bg-ru-n-100"}`} />
+      <div className={`h-px ${dark ? "bg-white/10" : "bg-ru-n-100 dark:bg-white/10"}`} />
 
       <ul className="m-0 flex list-none flex-col gap-[9px] p-0">
         {tier.features.map((feature) => (

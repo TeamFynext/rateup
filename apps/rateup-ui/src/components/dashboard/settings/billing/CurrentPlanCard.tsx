@@ -170,14 +170,33 @@ export function CurrentPlanCard({
           </div>
         </div>
 
-        {isCancelled && activeOrderData?.subscriptionEndedAt && (
+        {isCancelled && (
           <>
             <Separator />
-            <p className="text-sm text-muted-foreground">
-              {translations("Cancelled on")}{" "}
-              {formatIsoDateString(activeOrderData.subscriptionEndedAt)}.{" "}
-              {translations("Resubscribe any time to pick up where you left off.")}
-            </p>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              {activeOrderData?.subscriptionEndedAt && (
+                <p>
+                  {translations("Cancelled on")}{" "}
+                  {formatIsoDateString(activeOrderData.subscriptionEndedAt)}.
+                </p>
+              )}
+              {/* Cancelling stops the renewal, not the plan: the org keeps what it paid
+                  for until `expiresAt`, and a nightly job moves it to Free after that
+                  (`downgradeExpiredSubscriptions`). Saying only when it was cancelled left
+                  the customer to guess whether they had lost access already. */}
+              {subscription?.expiresAt && !isFreePlan && (
+                <p>
+                  {isExpired
+                    ? `${translations("Your plan ended on")} ${formatIsoDateString(
+                        subscription.expiresAt,
+                      )} ${translations("and this organisation is moving to the Free plan.")}`
+                    : `${translations("Your plan stays active until")} ${formatIsoDateString(
+                        subscription.expiresAt,
+                      )}, ${translations("after which this organisation moves to the Free plan.")}`}
+                </p>
+              )}
+              <p>{translations("Resubscribe any time to pick up where you left off.")}</p>
+            </div>
           </>
         )}
 

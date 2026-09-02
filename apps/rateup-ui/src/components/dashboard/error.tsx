@@ -5,7 +5,9 @@ import MainSidebar from "../Layout/Navbar/main-sidebar";
 const DashboardError = (props: { error?: Error; reset?: () => void }) => {
   return (
     <MainSidebar>
-      <CommonError {...props} className="h-screen" />
+      {/* Inside the app shell, "back" means the dashboard — the marketing homepage would
+          drop a signed-in customer out of the product. */}
+      <CommonError {...props} className="h-screen" homeTo="/dashboard" />
     </MainSidebar>
   );
 };

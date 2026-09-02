@@ -31,7 +31,7 @@ export const CommerceHighlights = () => (
       {CARDS.map((card) => (
         <div
           key={card.title}
-          className="rounded-2xl border border-border bg-white p-8 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
+          className="rounded-2xl border border-border bg-card p-8 shadow-[0_1px_2px_rgba(11,31,72,0.06)]"
         >
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.tint}`}>
             <svg

@@ -32,5 +32,8 @@ export interface PricingPlan {
   paymentPlan?: PricingGatewayPlan;
   monthlyPaymentPlan?: PricingGatewayPlan;
   yearlyPaymentPlan?: PricingGatewayPlan;
+  /** The same cadences billed in dollars; a USD checkout subscribes to one of these. */
+  usdMonthlyPaymentPlan?: PricingGatewayPlan;
+  usdYearlyPaymentPlan?: PricingGatewayPlan;
   stripeProduct?: StripeProduct;
 }
