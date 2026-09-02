@@ -11,19 +11,19 @@ vi.mock("../../utils/prisma.js", () => ({
 }));
 
 vi.mock("../../workers/bullmq/queues/index.js", () => ({
-  enqueueTransactionalEmail: vi.fn(),
+  sendTransactionalEmail: vi.fn(),
 }));
 
 import crypto from "node:crypto";
 import prisma from "../../utils/prisma.js";
-import { enqueueTransactionalEmail } from "../../workers/bullmq/queues/index.js";
+import { sendTransactionalEmail } from "../../workers/bullmq/queues/index.js";
 import { sendEmailService, storeOtp, validateOtp } from "./email.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as { otpStore: Record<string, Mock> };
 // OTP mail goes on the transactional (fast) lane; the worker makes the SES call.
-const send = enqueueTransactionalEmail as unknown as Mock;
+const send = sendTransactionalEmail as unknown as Mock;
 
 const sha256 = (v: string) => crypto.createHash("sha256").update(v).digest("hex");
 

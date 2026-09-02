@@ -174,6 +174,7 @@ model Org {
   onboardingChecklistCompleted Boolean @default(false)
 
   deletionMailSent DateTime?
+  addons           SubscriptionAddon[]
 
   members                 OrgMember[]
   teams                   Team[]
@@ -187,6 +188,7 @@ model Org {
   ApiAccessToken          ApiAccessToken?
   surveyThemes            WebSurveyTheme[]
   UsageStats              UsageStats?
+  meteredConversations    MeteredConversation[]
   chatbot                 Chatbot[]
   Survey                  Survey[]
   WaAccountSettings       WaAccountSettings?
@@ -246,6 +248,17 @@ model UsageStats {
   monthlySurveyResponses    Int @default(0)
   monthlyWaSurveyResponses  Int @default(0)
   monthlyConversationsCount Int @default(0)
+
+  /// Metered 24h conversation windows — the plan allowance unit (see
+  /// MeteredConversation). Distinct from monthly/annualConversationsCount, which
+  /// count inbox tickets and remain for inbox analytics only.
+  monthlyMeteredConversationsCount Int @default(0)
+  annualMeteredConversationsCount  Int @default(0)
+
+  /// Set the first time the org trips its conversation allowance in the current
+  /// cycle, so the limit notification fires once rather than on every subsequent
+  /// over-limit message. Cleared by resetMonthlyCounts/resetAnnualCounts.
+  conversationLimitNotifiedAt DateTime?
 
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
@@ -575,6 +588,9 @@ enum ConditionField {
   CONTACT_GROUP
   CONTACT_LABEL
   CONTACT_LIFECYCLE
+  /// The board column the contact's lead sits in. Replaces CONTACT_LIFECYCLE;
+  /// both exist while rules written against the old one are still running.
+  CONTACT_STAGE
 }
 
 enum ConditionOperator {
@@ -590,6 +606,9 @@ enum TriggerEvent {
   CHAT_ASSIGNED
   CONTACT_CREATED
   LIFECYCLE_UPDATED
+  /// A lead moved to a different board column. Replaces LIFECYCLE_UPDATED; both
+  /// exist while rules written against the old one are still running.
+  STAGE_UPDATED
   SHOPIFY_EVENT
   INSTAGRAM_COMMENT
   INSTAGRAM_STORY_MENTION
@@ -610,6 +629,9 @@ enum ActionType {
   ASSIGN_USER
   ASSIGN_TEAM
   ASSIGN_LIFECYCLE
+  /// Move the contact's lead to a pipeline column. Replaces ASSIGN_LIFECYCLE;
+  /// both exist while rules written against the old one are still running.
+  ASSIGN_STAGE
   SEND_MESSAGE
   SEND_WEB_SURVEY
   SEND_TEMPLATE
@@ -919,6 +941,7 @@ model Contact {
   ContactLabelMap             ContactLabelMap[]
   notes                       String?
   Conversations               Conversation[]
+  meteredConversations        MeteredConversation[]
   loyaltyAccounts             CustomerLoyaltyAccount[]
   ticketCards                 TicketCard[]
   leads                       Lead[]
@@ -1275,6 +1298,32 @@ model NLP_Cache {
   result Json
 }
 
+/// A pack of extra conversations an org has bought on top of its plan.
+///
+/// Kept as its own row rather than a number on Subscription so a pack keeps the gateway
+/// subscription that pays for it: packs bill monthly and independently of the plan, and
+/// cancelling one has to be able to find the right Razorpay subscription to stop.
+model SubscriptionAddon {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org         Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId       String     @db.Uuid
+  /// The ADDON tier bought, which is what says how many conversations a pack is worth.
+  addon       RateupPlan @relation("RateupPlanAddon", fields: [addonPlanId], references: [id])
+  addonPlanId String     @db.Uuid
+  /// How many packs this one purchase bought.
+  quantity    Int        @default(1)
+  /// The gateway payment that bought it; unique so a replayed webhook credits once.
+  paymentRef  String?    @unique
+  /// When the month this pack was bought for runs out. A pack is a one-off top-up, not a
+  /// subscription, so nothing renews it — it simply stops counting on this date.
+  expiresAt   DateTime
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  /// Every allowance read is "this org's packs that have not run out yet".
+  @@index([orgId, expiresAt])
+}
+
 model Subscription {
   org                  Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                String      @unique @db.Uuid
@@ -1306,19 +1355,21 @@ enum PaymentPlanStatus {
 
 //For Razorpay PLans
 model PaymentPlans {
-  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  planId            String
-  amount            Float
-  currency          String
-  name              String
-  description       String?
-  createdAt         Int
-  period            String
-  interval          Int
-  status            PaymentPlanStatus @default(NULL)
-  RateupPlan        RateupPlan?       @relation("RateupPlanLegacy")
-  monthlyRateupPlan RateupPlan?       @relation("RateupPlanMonthly")
-  yearlyRateupPlan  RateupPlan?       @relation("RateupPlanYearly")
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId               String
+  amount               Float
+  currency             String
+  name                 String
+  description          String?
+  createdAt            Int
+  period               String
+  interval             Int
+  status               PaymentPlanStatus @default(NULL)
+  RateupPlan           RateupPlan?       @relation("RateupPlanLegacy")
+  monthlyRateupPlan    RateupPlan?       @relation("RateupPlanMonthly")
+  yearlyRateupPlan     RateupPlan?       @relation("RateupPlanYearly")
+  usdMonthlyRateupPlan RateupPlan?       @relation("RateupPlanUsdMonthly")
+  usdYearlyRateupPlan  RateupPlan?       @relation("RateupPlanUsdYearly")
 }
 
 enum StripeProductType {
@@ -1350,31 +1401,42 @@ enum PaymentPlanType {
 }
 
 model RateupPlan {
-  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                 String
-  displayName          String?
-  displayWidgetId      String?
-  planType             PaymentPlanType
-  paymentPlan          PaymentPlans?   @relation("RateupPlanLegacy", fields: [paymentPlanId], references: [id])
-  paymentPlanId        String?         @unique @db.Uuid
-  monthlyPaymentPlan   PaymentPlans?   @relation("RateupPlanMonthly", fields: [monthlyPaymentPlanId], references: [id])
-  monthlyPaymentPlanId String?         @unique @db.Uuid
-  yearlyPaymentPlan    PaymentPlans?   @relation("RateupPlanYearly", fields: [yearlyPaymentPlanId], references: [id])
-  yearlyPaymentPlanId  String?         @unique @db.Uuid
-  Subscription         Subscription[]
-  description          String[]        @default([])
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String
+  displayName             String?
+  displayWidgetId         String?
+  planType                PaymentPlanType
+  paymentPlan             PaymentPlans?       @relation("RateupPlanLegacy", fields: [paymentPlanId], references: [id])
+  paymentPlanId           String?             @unique @db.Uuid
+  monthlyPaymentPlan      PaymentPlans?       @relation("RateupPlanMonthly", fields: [monthlyPaymentPlanId], references: [id])
+  monthlyPaymentPlanId    String?             @unique @db.Uuid
+  yearlyPaymentPlan       PaymentPlans?       @relation("RateupPlanYearly", fields: [yearlyPaymentPlanId], references: [id])
+  yearlyPaymentPlanId     String?             @unique @db.Uuid
+  /// The same tier and cadence, as a gateway plan that charges USD. A Razorpay plan
+  /// carries one currency, so a tier that sells in two needs a plan for each.
+  usdMonthlyPaymentPlan   PaymentPlans?       @relation("RateupPlanUsdMonthly", fields: [usdMonthlyPaymentPlanId], references: [id])
+  usdMonthlyPaymentPlanId String?             @unique @db.Uuid
+  usdYearlyPaymentPlan    PaymentPlans?       @relation("RateupPlanUsdYearly", fields: [usdYearlyPaymentPlanId], references: [id])
+  usdYearlyPaymentPlanId  String?             @unique @db.Uuid
+  Subscription            Subscription[]
+  description             String[]            @default([])
   /// [PSubscriptionFeatures]
-  features             Json?
-  createdAt            DateTime        @default(now())
-  stripeProduct        StripeProducts? @relation(fields: [stripeId], references: [id])
-  stripeId             String?         @unique @db.Uuid
-  trialDays            Int             @default(0)
-  orders               Order[]
-  badge                String?
-  price                Float?
-  currency             String?
-  monthlyPrice         Float?
-  yearlyPrice          Float?
+  features                Json?
+  createdAt               DateTime            @default(now())
+  stripeProduct           StripeProducts?     @relation(fields: [stripeId], references: [id])
+  stripeId                String?             @unique @db.Uuid
+  orders                  Order[]
+  addons                  SubscriptionAddon[] @relation("RateupPlanAddon")
+  badge                   String?
+  price                   Float?
+  currency                String?
+  monthlyPrice            Float?
+  yearlyPrice             Float?
+  /// The dollar list price, alongside the INR one rather than instead of it: the catalog
+  /// prices in both, and a page showing one converted from the other at a fixed rate can
+  /// only ever be approximately right.
+  usdMonthlyPrice         Float?
+  usdYearlyPrice          Float?
 }
 
 enum OrderStatus {
@@ -1720,6 +1782,63 @@ enum PlatformType {
   INTERNAL
 }
 
+enum WaConversationCategory {
+  MARKETING
+  UTILITY
+  AUTHENTICATION
+  SERVICE
+}
+
+enum WaPricingModel {
+  PMP
+  CBP
+}
+
+/// A self-derived, fixed 24-hour conversation window — the unit metered against a
+/// plan's monthly conversation allowance.
+///
+/// Deliberately NOT keyed on Meta's `conversation.id`: under per-message pricing
+/// Meta no longer sends a `conversation` object at all (status webhooks carry only
+/// `pricing`), and inbound `messages[]` webhooks never carried one. Rateup owns the
+/// clock instead: a window opens on the first message in either direction, spans a
+/// fixed 24h from that message, and absorbs every later message until it expires.
+/// That makes it self-closing, unlike the inbox `Conversation` ticket, which stays
+/// open until an agent or an automation closes it.
+model MeteredConversation {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId         String       @db.Uuid
+  org           Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  platform      PlatformType
+  /// The business-side channel identity (`sourceIdentifier`). Empty string, never
+  /// NULL: Postgres treats NULLs as distinct in a unique constraint, which would
+  /// silently defeat the dedupe this table exists for.
+  channelId     String
+  /// The customer-side identity — wa_id / igsId / psid, i.e. `from`.
+  customerId    String
+  contactId     String?      @db.Uuid
+  contact       Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  openedAt      DateTime
+  expiresAt     DateTime
+  lastMessageAt DateTime
+  messageCount  Int          @default(0)
+  inboundCount  Int          @default(0)
+  outboundCount Int          @default(0)
+
+  /// Meta pricing annotations, promoted from status webhooks. Analytics only.
+  category     WaConversationCategory?
+  pricingModel WaPricingModel?
+  billable     Boolean                 @default(false)
+  pricingType  String?
+
+  createdAt DateTime    @default(now())
+  messages  WaMessage[]
+
+  @@unique([orgId, platform, channelId, customerId, openedAt])
+  // Serves the find-open-window probe in recordMessageInWindow.
+  @@index([orgId, platform, channelId, customerId, expiresAt])
+  @@index([orgId, openedAt])
+}
+
 model WaMessage {
   id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt                       DateTime                          @default(now())
@@ -1750,6 +1869,18 @@ model WaMessage {
   /// deliberately kept — the thread renders the message as deleted rather than
   /// losing what was said.
   deletedAt                       DateTime?
+  /// The metered 24h billing window this message was attributed to when it was
+  /// written (see MeteredConversation). Statuses annotate *this* window, never
+  /// whichever window happens to be open when the status is processed.
+  meteredConversationId           String?                           @db.Uuid
+  meteredConversation             MeteredConversation?              @relation(fields: [meteredConversationId], references: [id])
+  /// Raw Meta pricing signals off the status webhook. Stored for analytics and
+  /// support only — they never gate metering or enforcement. Meta bills the
+  /// customer's WABA directly; Rateup bears no per-message cost.
+  pricingCategory                 WaConversationCategory?
+  pricingModel                    WaPricingModel?
+  pricingBillable                 Boolean?
+  pricingType                     String?
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
@@ -1760,6 +1891,10 @@ model WaMessage {
   // Speeds the conversation backfill scan: EXISTS(WaMessage WHERE contactId = c.id
   // AND conversationId IS NULL) can be answered from this index alone.
   @@index([contactId, conversationId])
+  // Status writes match on the Meta message id (`WHERE wm."messageId" = ANY(...)`)
+  // in bulkUpdateStatuses; without this the batch degrades to a seq scan.
+  @@index([messageId])
+  @@index([meteredConversationId])
 }
 
 model WaMessageCampaginParticipantMap {
@@ -2491,6 +2626,10 @@ model ExpoPushToken {
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String @db.Uuid
 
+  // Enforces what `addToken` only checked for: its findFirst-then-create is a
+  // read-then-write race, so two concurrent registrations of the same device
+  // could both insert. `upsert` relies on this constraint.
+  @@unique([expoToken, userId, orgId], name: "expo_token_user_org_unique")
   @@index([userId])
   @@index([orgId])
 }
@@ -3126,6 +3265,12 @@ model Lead {
   lostReason   PipelineLostReason? @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
   lostReasonId String?             @db.Uuid
 
+  /// CRM records this lead maps to, same shape as `Contact.integrationIds`.
+  /// A lead with a contact stores them there instead, so the contact stays the
+  /// single record for anything that has one; this is for board-only leads,
+  /// which would otherwise open a fresh Bigin deal on every stage change.
+  integrationIds Json?
+
   /// Whoever put the lead on the board. Fixed at creation and never reassigned —
   /// assignees change as the lead is handed around, the owner records who
   /// brought it in. Null for leads opened by automation rather than a person.
@@ -3153,6 +3298,11 @@ model Lead {
   /// A lead can be worked by several people, the same way a ticket card is.
   assignees  LeadAssignee[]
 
+  /// One lead per contact per board. Postgres counts NULLs as distinct, so this
+  /// leaves contact-less leads — walk-ins, manual board entries — unconstrained
+  /// while closing the race in `setContactStage`, where two concurrent syncs
+  /// could both find no lead and both create one.
+  @@unique([contactId, pipelineId], name: "contact_pipeline_unique")
   @@index([pipelineId, status])
   @@index([stageId])
 }

@@ -27,6 +27,7 @@ vi.mock("./wa_settings.service.js", () => ({
   updateWaSettingsById: vi.fn(),
   upsertWaSettings: vi.fn(),
 }));
+vi.mock("../../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
 vi.mock("../../user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
 vi.mock("../../org/org.services.js", () => ({
   Role: { SUPER_ADMIN: "SUPER_ADMIN", ADMIN: "ADMIN", AGENT: "AGENT" },
@@ -67,6 +68,7 @@ import {
 import { getOrgIdAndRole } from "../../user/user.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import {
+  describeChannelUpsert,
   createWaSettingsHandler,
   deleteWaSettingsHandler,
   getContactTagHandler,
@@ -765,5 +767,45 @@ describe("the display name handlers", () => {
     await syncDisplayNameHandler(request({ params: { phoneId: PHONE_ID } }), rep);
 
     expect(rep.code).toHaveBeenCalledWith(500);
+  });
+});
+
+describe("describeChannelUpsert", () => {
+  const channel = { fbPageId: "page-1", fbUserName: "Page One", ibaId: "iba-1", igUserName: "ig" };
+
+  test("a first-time upsert is a channel add", () => {
+    expect(describeChannelUpsert(null, channel)).toEqual([{ action: "Channel added" }]);
+  });
+
+  test("names the Facebook page that was connected", () => {
+    const events = describeChannelUpsert({ fbPageId: null, ibaId: null }, channel);
+
+    expect(events.map((e) => e.action)).toEqual([
+      "Facebook page connected",
+      "Instagram account connected",
+    ]);
+    expect(events[0].details).toEqual({ fbPageId: "page-1", fbUserName: "Page One" });
+  });
+
+  test("reports both assets when disconnecting a page also drops its Instagram account", () => {
+    const events = describeChannelUpsert(channel, { fbPageId: null, ibaId: null });
+
+    expect(events.map((e) => e.action)).toEqual([
+      "Facebook page disconnected",
+      "Instagram account disconnected",
+    ]);
+  });
+
+  test("treats an empty string the same as no asset", () => {
+    const events = describeChannelUpsert(
+      { fbPageId: null, ibaId: null },
+      { fbPageId: "", ibaId: "" },
+    );
+
+    expect(events).toEqual([{ action: "Channel updated" }]);
+  });
+
+  test("falls back to a plain update when no asset changed", () => {
+    expect(describeChannelUpsert(channel, channel)).toEqual([{ action: "Channel updated" }]);
   });
 });

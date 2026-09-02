@@ -329,7 +329,7 @@ describe("updateQuestion", () => {
 });
 
 // ===========================================================================
-// updateQuestionsOnSurvey — the one-way ticket switch
+// updateQuestionsOnSurvey
 // ===========================================================================
 
 describe("updateQuestionsOnSurvey", () => {
@@ -342,42 +342,13 @@ describe("updateQuestionsOnSurvey", () => {
     });
   });
 
-  test("a ticketIssue switches tickets on in the same update as the questions", async () => {
-    await updateQuestionsOnSurvey(SURVEY, [q("a", { ticketIssue: "something" })] as never);
+  test("writes only the questions, whatever extra keys they carry", async () => {
+    await updateQuestionsOnSurvey(SURVEY, [q("a", { foo: "x" }), q("b", { foo: "y" })] as never);
 
     expect(db.survey.update).toHaveBeenCalledOnce();
     expect(db.survey.update.mock.calls[0][0].data).toEqual({
-      questions: [q("a", { ticketIssue: "something" })],
-      enableTickets: true,
+      questions: [q("a", { foo: "x" }), q("b", { foo: "y" })],
     });
-  });
-
-  // The condition was `!== undefined`, so a question carrying `ticketIssue: null`
-  // — which is what the editor writes when the field is cleared — switched ticket
-  // creation on.
-  test("a null or absent ticketIssue does not switch it on", async () => {
-    await updateQuestionsOnSurvey(SURVEY, [q("a", { ticketIssue: null })] as never);
-    expect(db.survey.update.mock.calls[0][0].data).not.toHaveProperty("enableTickets");
-
-    db.survey.update.mockClear();
-    await updateQuestionsOnSurvey(SURVEY, [q("a")] as never);
-    expect(db.survey.update.mock.calls[0][0].data).not.toHaveProperty("enableTickets");
-  });
-
-  test("removing the last such question still does not switch it back", async () => {
-    await updateQuestionsOnSurvey(SURVEY, [q("a")] as never);
-
-    expect(db.survey.update.mock.calls[0][0].data).not.toHaveProperty("enableTickets");
-  });
-
-  test("the flag is written once however many questions carry the key", async () => {
-    await updateQuestionsOnSurvey(SURVEY, [
-      q("a", { ticketIssue: "x" }),
-      q("b", { ticketIssue: "y" }),
-    ] as never);
-
-    expect(db.survey.update).toHaveBeenCalledOnce();
-    expect(db.survey.update.mock.calls[0][0].data.enableTickets).toBe(true);
   });
 });
 

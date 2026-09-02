@@ -6,6 +6,9 @@ vi.mock("../../../utils/prisma.js", () => ({
   default: {
     usageStats: { findUnique: vi.fn() },
     subscription: { findUnique: vi.fn() },
+    // The gate reads the allowance through getConversationAllowance, which adds any
+    // conversation packs the org holds; no packs here.
+    subscriptionAddon: { findMany: vi.fn(() => Promise.resolve([])) },
   },
 }));
 
@@ -30,9 +33,14 @@ function seed({
   max?: number;
   isAnnual?: boolean;
 }) {
+  // The guard reads the METERED counters (self-derived 24h windows). The inbox-ticket
+  // counters are seeded to deliberately conflicting values so a regression that reads
+  // them again fails loudly instead of coincidentally agreeing.
   usageMock.mockResolvedValue({
-    monthlyConversationsCount: monthly,
-    annualConversationsCount: annual,
+    monthlyMeteredConversationsCount: monthly,
+    annualMeteredConversationsCount: annual,
+    monthlyConversationsCount: 0,
+    annualConversationsCount: 0,
   });
   subMock.mockResolvedValue({
     isAnnualMessageLimit: isAnnual,

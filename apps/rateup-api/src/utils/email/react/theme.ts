@@ -44,10 +44,14 @@ const colors = {
 /**
  * Collage's type scale, exposed as `font-<step>` utilities. Every size ships its
  * own line height, tracking and weight so templates never pair them by hand.
+ *
+ * The two smallest steps used to sit at weight 300. Instrument Sans starts at
+ * 400, so they now do too — asking for 300 would leave each client to invent a
+ * light face, and they disagree about how.
  */
 const fontScale = {
-  11: { fontSize: "11px", lineHeight: "1.5", letterSpacing: "-0.033px", fontWeight: "300" },
-  13: { fontSize: "13px", lineHeight: "1.5", letterSpacing: "-0.039px", fontWeight: "300" },
+  11: { fontSize: "11px", lineHeight: "1.5", letterSpacing: "-0.033px", fontWeight: "400" },
+  13: { fontSize: "13px", lineHeight: "1.5", letterSpacing: "-0.039px", fontWeight: "400" },
   14: { fontSize: "14px", lineHeight: "1.5" },
   15: { fontSize: "15px", lineHeight: "1.5", letterSpacing: "-0.075px", fontWeight: "500" },
   20: { fontSize: "20px", lineHeight: "1.2", letterSpacing: "-0.2px" },
@@ -78,11 +82,14 @@ export const rateupTailwindConfig: TailwindConfig = {
         card: "0px 76px 21px 0px rgba(193,195,193,0), 0px 49px 19px 0px rgba(193,195,193,0.01), 0px 27px 16px 0px rgba(193,195,193,0.05), 0px 12px 12px 0px rgba(193,195,193,0.09), 0px 3px 7px 0px rgba(193,195,193,0.1)",
       },
       fontFamily: {
-        // Collage's split: display headings in the websafe grotesque stack,
-        // running text in Inter, which falls back to Arial when a client
-        // refuses web fonts.
-        sans: ["Arial", "Helvetica", "sans-serif"],
-        inter: ["Inter", "Arial", "sans-serif"],
+        // Design System V2's split, mirroring `--font-display` / `--font-sans`
+        // in rateup-ui's globals.css: display headings in Figtree, running text
+        // in Instrument Sans. Both fall back to Arial when a client refuses web
+        // fonts, so the stacks stay two-deep rather than naming the variable
+        // ("… Variable") faces the app uses — email clients only get the static
+        // weights `BrandFonts` loads.
+        sans: ["Figtree", "Arial", "Helvetica", "sans-serif"],
+        body: ["Instrument Sans", "Arial", "sans-serif"],
       },
     },
   },

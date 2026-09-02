@@ -33,12 +33,6 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
-type IssueTicket = {
-  minRating?: number;
-  minOpinion?: number;
-  reqOptions?: Array<string>;
-} | null;
-
 interface TNC {
   title: string;
   urlTitle: string;
@@ -105,7 +99,6 @@ declare global {
     label?: Record<string, string>; // only for whatsapp-flow surveys
     id: string;
     googleReview?: GoogleReview;
-    ticketIssue?: IssueTicket;
     logic?: Array<LogicJump>;
     validationRules?: ValidationRules;
     tnc?: TNC;
@@ -477,10 +470,13 @@ declare global {
       };
     [sfpn.Whatsapp]: subscriptionActiveField & {
       conversation: subscriptionWithActiveAndCount;
+      // Tier gates, optional for backward-compat with subscriptions stored before
+      // they existed. Readers must treat "absent" deliberately — see canAccess.
+      campaign?: subscriptionActiveField;
+      loyalty?: subscriptionActiveField;
+      referrals?: subscriptionActiveField;
+      catalog?: subscriptionActiveField;
     };
-    [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
-    // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.
-    [sfpn.Ticket]?: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
         completionTokens: number;
@@ -579,19 +575,6 @@ declare global {
 
   /** What generateQuestionResponsesFromFlowResponse yields, per flow version. */
   type WaFlowQuestionResponse = QuestionResponse | WaFlowV2QuestionResponse;
-
-  interface FlowTicket {
-    questionId: string;
-    type: QuestionType2;
-    selectedColumnId?: string;
-    selectedBoardId?: string;
-    condition: {
-      minRating?: number;
-      minOpinion?: number;
-      reqOptions?: string[];
-      submissionTicket?: boolean;
-    };
-  }
 
   interface WaFlowScreen {
     id: string;
@@ -782,7 +765,14 @@ declare global {
 
   /** The `custom_data` block on a Meta Conversions API event. */
   interface MetaConversionCustomData {
+    /**
+     * Always the constant `"Won"`. Kept because custom conversions and audiences
+     * defined in Meta's dashboard may already key off it — dropping the field
+     * would silently break them. `pipeline_stage` is where the real detail is.
+     */
     lifecycle_stage?: string;
+    /** The board column that closed the lead, e.g. `"Won"` or `"Closed Won"`. */
+    pipeline_stage?: string;
     currency?: string;
     value?: number;
   }
@@ -823,6 +813,8 @@ declare global {
       template?: Record<string, unknown>;
       automation?: Record<string, unknown>;
     };
+    /** Retired: reputation management is no longer offered. Read only by migrations. */
+    reputationManagement?: { active?: boolean; count?: { max?: number } };
   };
 
   interface LoyaltyTimeRange {
@@ -849,7 +841,12 @@ declare global {
     [key: string]: unknown;
   }
 
-  /** One tickable line on a ticket card's checklist. */
+  /**
+   * RETIRED: ticket boards were removed, but `TicketCard.checklists` still carries the
+   * `/// [PTicketChecklists]` annotation in schema.prisma, and the generated client
+   * (generated/prisma/models/TicketCard.ts) references the type below. It has to stay
+   * until the Ticket* tables are dropped. Nothing in src/ reads it.
+   */
   interface TicketChecklistItem {
     id: string;
     text?: string;

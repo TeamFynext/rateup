@@ -99,6 +99,16 @@ function isWrite(method: string) {
   return WRITE_METHODS.has(method);
 }
 
+/**
+ * Why a 403 was sent, so the client can say the right thing.
+ *
+ * A plan gate and a permission gate are both 403s but they are opposite problems: one
+ * is fixed by upgrading, the other by asking an admin. The client used to have only the
+ * status code, so it showed "Access Denied — contact your super admin" to customers
+ * whose only fault was being on the Free plan. Send the reason and let it choose.
+ */
+export type AccessDenialReason = "subscription" | "subscription_expired" | "team" | "unknown";
+
 export function getVerifySubscriptionHandler(featurePathNames: Array<SubscriptionFeaturePathName>) {
   return async function verifySubscription(request: FastifyRequest, reply: FastifyReply) {
     try {
@@ -111,6 +121,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
         log.error({ user: request.user }, "No subscription found\nrequest.user => %o");
         reply.code(403).send({
           message: "No active subscription",
+          reason: "subscription" satisfies AccessDenialReason,
           displayMessageInClient: true,
         });
         return;
@@ -123,6 +134,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
         );
         reply.code(403).send({
           message: "Subscription expired",
+          reason: "subscription_expired" satisfies AccessDenialReason,
           displayMessageInClient: true,
         });
         return;
@@ -139,6 +151,9 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
         );
         reply.code(403).send({
           message: "This feature is not included in your subscription",
+          reason: "subscription" satisfies AccessDenialReason,
+          // Which gates were closed, so the client can name the feature it is offering.
+          missingFeatures,
         });
         return;
       }
@@ -193,6 +208,7 @@ export function getVerifySubscriptionForPublicHandler(
         );
         reply.code(403).send({
           message: "Subscription expired",
+          reason: "subscription_expired" satisfies AccessDenialReason,
           displayMessageInClient: true,
         });
         return;
@@ -208,6 +224,9 @@ export function getVerifySubscriptionForPublicHandler(
         );
         reply.code(403).send({
           message: "This feature is not included in your subscription",
+          reason: "subscription" satisfies AccessDenialReason,
+          // Which gates were closed, so the client can name the feature it is offering.
+          missingFeatures,
         });
         return;
       }

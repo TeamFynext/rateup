@@ -97,8 +97,6 @@ const getSurveyPublicResponseSchema = z.object({
   orgLogo: z.string(),
   skipPreview: z.boolean(),
   isEncrypted: z.boolean(),
-  enableTickets: z.boolean(),
-  enableTicketEmailAlerts: z.boolean(),
   publicKey: z.string().optional(),
   redirect: z
     .object({
@@ -127,8 +125,6 @@ const updateSurveyRequestSchema = z.object({
   enableNotificationEmail: z.boolean().optional(),
   notificationEmail: z.email().optional(),
   isEncrypted: z.boolean().optional(),
-  enableTickets: z.boolean().optional(),
-  enableTicketEmailAlerts: z.boolean().optional(),
   uniqueDeviceResponse: z.boolean().optional(),
   webSurveyAutoTransitionToNextQues: z.boolean().optional(),
   publicKey: z.string().optional(),
@@ -145,10 +141,6 @@ const updateSurveyRequestSchema = z.object({
   webSurveyPagesTheme: z.any().optional(),
   responseWebhookEndpoint: z.string().optional(),
   sendWeeklyReport: z.boolean().optional(),
-  enableAutoGenerateTicket: z.boolean().optional(),
-  enableTicketWaMessageAlerts: z.boolean().optional(),
-  ticketBoardId: z.string().optional(),
-  ticketColumnId: z.string().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z

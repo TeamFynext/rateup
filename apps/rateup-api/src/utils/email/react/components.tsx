@@ -19,41 +19,44 @@ import { brand, emailImage, logoUrl, socialLinks } from "./brand.js";
 import { rateupTailwindConfig } from "./theme.js";
 
 /**
- * Inter in the three weights Collage's type scale uses (300 for `font-11`/`font-13`,
- * 400 for body, 500 for `font-15`). Clients that strip web fonts fall back to
- * Arial, which the `inter` family already lists.
+ * Design System V2's two faces, in the weights the type scale actually asks for:
+ * Instrument Sans 400 and 500 for running text, Figtree 400 for the display
+ * steps. Google serves these as static TTFs — the variable `.woff2` the app
+ * loads is not safe in mail clients, several of which render only the default
+ * instance. Clients that strip web fonts fall back to Arial, which both
+ * families already list.
  */
-function InterFonts() {
+function BrandFonts() {
   return (
     <>
       <Font
-        fontFamily="Inter"
+        fontFamily="Instrument Sans"
         fallbackFontFamily={["Arial", "sans-serif"]}
         webFont={{
-          url: "https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuOKfMZg.ttf",
+          url: "https://fonts.gstatic.com/s/instrumentsans/v4/pximypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr-yp2JGEJOH9npSTF-Qf1.ttf",
           format: "truetype",
-        }}
-        fontWeight={300}
-        fontStyle="normal"
-      />
-      <Font
-        fontFamily="Inter"
-        fallbackFontFamily={["Arial", "sans-serif"]}
-        webFont={{
-          url: "https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
-          format: "woff2",
         }}
         fontWeight={400}
         fontStyle="normal"
       />
       <Font
-        fontFamily="Inter"
+        fontFamily="Instrument Sans"
         fallbackFontFamily={["Arial", "sans-serif"]}
         webFont={{
-          url: "https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf",
+          url: "https://fonts.gstatic.com/s/instrumentsans/v4/pximypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr-yp2JGEJOH9npST3-Qf1.ttf",
           format: "truetype",
         }}
         fontWeight={500}
+        fontStyle="normal"
+      />
+      <Font
+        fontFamily="Figtree"
+        fallbackFontFamily={["Arial", "sans-serif"]}
+        webFont={{
+          url: "https://fonts.gstatic.com/s/figtree/v9/_Xmz-HUzqDCFdgfMsYiV_F7wfS-Bs_d_QF5e.ttf",
+          format: "truetype",
+        }}
+        fontWeight={400}
         fontStyle="normal"
       />
     </>
@@ -65,7 +68,7 @@ function Footer({ note, unsubscribeUrl }: { note?: ReactNode; unsubscribeUrl?: s
     <Section className="border-stroke mobile:px-6! border-t px-10 py-16">
       {note ? <Section className="mb-8">{note}</Section> : null}
 
-      <Text className="font-13 font-inter text-fg-3 m-0 max-w-[320px]">{brand.tagline}</Text>
+      <Text className="font-13 font-body text-fg-3 m-0 max-w-[320px]">{brand.tagline}</Text>
 
       <Row align="left">
         <Column className="w-full align-top">
@@ -94,7 +97,7 @@ function Footer({ note, unsubscribeUrl }: { note?: ReactNode; unsubscribeUrl?: s
 
       <Row align="left">
         <Column className="w-full pt-8 align-top">
-          <Text className="font-11 font-inter text-fg-2 m-0">
+          <Text className="font-11 font-body text-fg-2 m-0">
             {brand.address.map((line) => (
               <span key={line}>
                 {line}
@@ -115,14 +118,14 @@ function Footer({ note, unsubscribeUrl }: { note?: ReactNode; unsubscribeUrl?: s
       <Row align="left">
         <Column className="w-full pt-5 align-top">
           {unsubscribeUrl ? (
-            <Text className="font-11 font-inter text-fg-2 m-0 max-w-[220px]">
+            <Text className="font-11 font-body text-fg-2 m-0 max-w-[220px]">
               <Link href={unsubscribeUrl} className="text-fg-2">
                 Unsubscribe
               </Link>{" "}
               from {brand.name} marketing emails.
             </Text>
           ) : (
-            <Text className="font-11 font-inter text-fg-2 m-0">
+            <Text className="font-11 font-body text-fg-2 m-0">
               Questions? Reach us at{" "}
               <Link href={`mailto:${brand.supportEmail}`} className="text-fg-2">
                 {brand.supportEmail}
@@ -189,27 +192,28 @@ export function EmailLayout({
     <Tailwind config={rateupTailwindConfig}>
       <Html lang="en">
         <Head>
-          <InterFonts />
+          <BrandFonts />
         </Head>
-        <Body className="bg-canvas font-14 font-inter text-fg m-0 p-0">
+        <Body className="bg-canvas font-14 font-body text-fg m-0 p-0">
           <Preview>{preview}</Preview>
           <Container className="mx-auto max-w-[640px] px-4 pt-16 pb-6">
             <Section className="shadow-card rounded-[8px]">
               <Section className="bg-bg border-stroke overflow-hidden rounded-[8px] border">
                 {/*
-                  Occupies the slot Collage gives its inset illustration. The
-                  `-white-transparent` asset is the one drawn *for* white
-                  backgrounds — navy wordmark on transparency — so it sits
-                  directly on the card. Width and height must stay in the
-                  source's 3.31:1 ratio; Outlook honours the attributes rather
-                  than scaling.
+                  Occupies the slot Collage gives its inset illustration. The V2
+                  lockup is the colour-on-transparency artwork, so it sits
+                  directly on the white card. Width and height must stay in the
+                  source's 2.52:1 ratio; Outlook honours the attributes rather
+                  than scaling. The V2 artwork carries more internal padding than
+                  the lockup it replaced, so the box is larger than the old
+                  182x55 to leave the wordmark itself the same optical size.
                 */}
                 <Section className="mobile:px-6! px-10 pt-16">
                   <Img
                     src={logoUrl()}
                     alt={brand.name}
-                    width={182}
-                    height={55}
+                    width={202}
+                    height={80}
                     className="block border-none"
                   />
                 </Section>
@@ -245,7 +249,7 @@ export function Display({ children }: { children: ReactNode }) {
 
 /** A section heading below the display heading. */
 export function Title({ children }: { children: ReactNode }) {
-  return <Text className="font-20 font-inter text-fg m-0 leading-normal">{children}</Text>;
+  return <Text className="font-20 font-body text-fg m-0 leading-normal">{children}</Text>;
 }
 
 /**
@@ -254,7 +258,7 @@ export function Title({ children }: { children: ReactNode }) {
  */
 export function Paragraph({ children, tight }: { children: ReactNode; tight?: boolean }) {
   return (
-    <Text className={`font-14 font-inter text-fg-2 m-0${tight ? "" : " mt-[18px]"}`}>
+    <Text className={`font-14 font-body text-fg-2 m-0${tight ? "" : " mt-[18px]"}`}>
       {children}
     </Text>
   );
@@ -262,14 +266,14 @@ export function Paragraph({ children, tight }: { children: ReactNode; tight?: bo
 
 /** Small print — expiry notes, "ignore this if it wasn't you", disclaimers. */
 export function Muted({ children }: { children: ReactNode }) {
-  return <Text className="font-11 font-inter text-fg-3 m-0 max-w-[310px]">{children}</Text>;
+  return <Text className="font-11 font-body text-fg-3 m-0 max-w-[310px]">{children}</Text>;
 }
 
 export function PrimaryButton({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Button
       href={href}
-      className="bg-brand font-15 font-inter text-fg-inverted inline-block border-none px-5 py-3.5 text-center"
+      className="bg-brand font-15 font-body text-fg-inverted inline-block border-none px-5 py-3.5 text-center"
     >
       {children}
     </Button>
@@ -280,7 +284,7 @@ export function SecondaryButton({ href, children }: { href: string; children: Re
   return (
     <Button
       href={href}
-      className="bg-bg border-stroke font-15 font-inter text-fg inline-block border px-5 py-3.5 text-center"
+      className="bg-bg border-stroke font-15 font-body text-fg inline-block border px-5 py-3.5 text-center"
     >
       {children}
     </Button>
@@ -371,7 +375,7 @@ export function HighlightList({ items }: { items: HighlightItem[] }) {
         <Section key={item.title} className="border-stroke border-b py-6">
           <Row>
             <Column className="w-[92%] align-top">
-              <Text className="font-20 font-inter text-fg m-0 leading-normal">
+              <Text className="font-20 font-body text-fg m-0 leading-normal">
                 {item.href ? (
                   <Link href={item.href} className="text-fg">
                     {item.title}
@@ -380,13 +384,13 @@ export function HighlightList({ items }: { items: HighlightItem[] }) {
                   item.title
                 )}
               </Text>
-              <Text className="font-14 font-inter text-fg-2 m-0 mt-1 max-w-[380px]">
+              <Text className="font-14 font-body text-fg-2 m-0 mt-1 max-w-[380px]">
                 {item.description}
               </Text>
             </Column>
             <Column className="w-[8%] text-right align-middle">
               {item.href ? (
-                <Link href={item.href} className="font-15 font-inter text-fg-3">
+                <Link href={item.href} className="font-15 font-body text-fg-3">
                   &rarr;
                 </Link>
               ) : null}
@@ -423,10 +427,10 @@ export function Band({ heading, intro, lead, items }: BandProps) {
     <>
       <Section className="px-6">
         <Text className="font-48 text-fg m-0 max-w-[400px] font-sans">{heading}</Text>
-        <Text className="font-14 font-inter text-fg-2 m-0 mt-[18px] max-w-[479px]">{intro}</Text>
+        <Text className="font-14 font-body text-fg-2 m-0 mt-[18px] max-w-[479px]">{intro}</Text>
       </Section>
       <Section className="px-6 pt-14">
-        <Text className="font-15 font-inter text-fg m-0">{lead}</Text>
+        <Text className="font-15 font-body text-fg m-0">{lead}</Text>
         <Section className="pt-9">
           <HighlightList items={items} />
         </Section>

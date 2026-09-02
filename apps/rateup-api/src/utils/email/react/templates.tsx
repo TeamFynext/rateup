@@ -6,6 +6,13 @@
  * these are async — rendering JSX to HTML is not synchronous, unlike the string
  * templates these replaced.
  */
+import BookDemoConfirmationEmail, {
+  type BookDemoConfirmationEmailProps,
+} from "../../../emails/book-demo-confirmation.js";
+import BookDemoRequestEmail, {
+  type BookDemoRequestEmailProps,
+} from "../../../emails/book-demo-request.js";
+import CampaignCompletedEmail from "../../../emails/campaign-completed.js";
 import ContactFormEmail, { type ContactFormEmailProps } from "../../../emails/contact-form.js";
 import GeneralEmail, { type GeneralEmailProps } from "../../../emails/general.js";
 import OrgDeletionReminderEmail, {
@@ -14,23 +21,27 @@ import OrgDeletionReminderEmail, {
 import OrgInactivityWarningEmail, {
   type OrgInactivityWarningEmailProps,
 } from "../../../emails/org-inactivity-warning.js";
+import OrgSignupEmail, { type OrgSignupEmailProps } from "../../../emails/org-signup.js";
 import OtpEmail, { type OtpEmailProps } from "../../../emails/otp.js";
 import PasswordResetEmail from "../../../emails/password-reset.js";
 import PaymentFailedEmail from "../../../emails/payment-failed.js";
-import PricingPlanSelectedEmail, {
-  type PricingPlanSelectedEmailProps,
-} from "../../../emails/pricing-plan-selected.js";
+import PartnerInquiryEmail, {
+  type PartnerInquiryEmailProps,
+} from "../../../emails/partner-inquiry.js";
 import SubscriptionActivatedEmail from "../../../emails/subscription-activated.js";
 import SubscriptionExpiryEmail, { type ExpiryStage } from "../../../emails/subscription-expiry.js";
+import SubscriptionPurchasedEmail, {
+  type SubscriptionPurchasedEmailProps,
+} from "../../../emails/subscription-purchased.js";
 import SurveyResponseEmail, { type SurveyResponseAnswer } from "../../../emails/survey-response.js";
 import TeamInviteEmail, { type TeamInviteEmailProps } from "../../../emails/team-invite.js";
-import TicketEmail, { type TicketEmailProps } from "../../../emails/ticket.js";
-import TrialStartedEmail from "../../../emails/trial-started.js";
 import UsageLimitEmail from "../../../emails/usage-limit.js";
 import VerifyEmail, { type VerifyEmailProps } from "../../../emails/verify-email.js";
+import WeeklyReportEmail, { type WeeklyReportEmailProps } from "../../../emails/weekly-report.js";
 import WeeklyStatsEmail, { type WeeklyStatsRow } from "../../../emails/weekly-stats.js";
 import { billingPage, FRONTEND_URL, statsPage } from "../../constants/constants.js";
-import { renderEmail } from "./render.js";
+import { brand } from "./brand.js";
+import { renderEmail, renderEmailText } from "./render.js";
 
 const dashboardLink = `${FRONTEND_URL}/dashboard`;
 
@@ -115,10 +126,6 @@ export function renderContactFormEmail(props: ContactFormEmailProps) {
   return renderEmail(<ContactFormEmail {...props} />);
 }
 
-export function renderTicketEmail(props: TicketEmailProps) {
-  return renderEmail(<TicketEmail {...props} />);
-}
-
 export function renderSubscriptionActivatedEmail(props: {
   planName: string;
   validUntil: string;
@@ -130,23 +137,6 @@ export function renderSubscriptionActivatedEmail(props: {
       {...props}
       billingLink={billingPage}
       nextSteps={[...ONBOARDING_STEPS]}
-    />,
-  );
-}
-
-export function renderTrialStartedEmail(props: {
-  userName: string;
-  planName: string;
-  trialDays: number;
-  expiresAt: string;
-  renewalPrice?: string;
-}) {
-  return renderEmail(
-    <TrialStartedEmail
-      {...props}
-      dashboardLink={dashboardLink}
-      nextSteps={[...ONBOARDING_STEPS]}
-      unsubscribeUrl={emailPreferencesLink}
     />,
   );
 }
@@ -170,8 +160,8 @@ export function renderSubscriptionExpiryEmail(props: {
   );
 }
 
-export function renderPricingPlanSelectedEmail(props: PricingPlanSelectedEmailProps) {
-  return renderEmail(<PricingPlanSelectedEmail {...props} />);
+export function renderSubscriptionPurchasedEmail(props: SubscriptionPurchasedEmailProps) {
+  return renderEmail(<SubscriptionPurchasedEmail {...props} />);
 }
 
 export function renderOrgInactivityWarningEmail(
@@ -201,4 +191,67 @@ export function renderWeeklyStatsEmail(props: {
       unsubscribeUrl={emailPreferencesLink}
     />,
   );
+}
+
+/**
+ * These return both bodies. Where the older wrappers hand back HTML and leave
+ * the caller to write a one-line `text`, every template converted here already
+ * had a real plain-text half — so it is derived from the same element instead,
+ * which is what stops the two from drifting apart.
+ */
+export async function renderBookDemoRequestEmailBodies(props: BookDemoRequestEmailProps) {
+  const element = <BookDemoRequestEmail {...props} />;
+
+  return { html: await renderEmail(element), text: await renderEmailText(element) };
+}
+
+export async function renderBookDemoConfirmationEmailBodies(
+  props: Omit<BookDemoConfirmationEmailProps, "websiteLink">,
+) {
+  const element = <BookDemoConfirmationEmail {...props} websiteLink={brand.website} />;
+
+  return { html: await renderEmail(element), text: await renderEmailText(element) };
+}
+
+export async function renderPartnerInquiryEmailBodies(props: PartnerInquiryEmailProps) {
+  const element = <PartnerInquiryEmail {...props} />;
+
+  return { html: await renderEmail(element), text: await renderEmailText(element) };
+}
+
+export async function renderOrgSignupEmailBodies(
+  props: Omit<OrgSignupEmailProps, "adminLink"> & { orgId: string },
+) {
+  const { orgId, ...rest } = props;
+  const element = <OrgSignupEmail {...rest} adminLink={`${FRONTEND_URL}/admin/orgs/${orgId}`} />;
+
+  return { html: await renderEmail(element), text: await renderEmailText(element) };
+}
+
+export async function renderCampaignCompletedEmailBodies(props: {
+  campaignName: string;
+  campaignId: string;
+}) {
+  const element = (
+    <CampaignCompletedEmail
+      campaignName={props.campaignName}
+      campaignLink={`${FRONTEND_URL}/dashboard/campaign/${props.campaignId}`}
+    />
+  );
+
+  return { html: await renderEmail(element), text: await renderEmailText(element) };
+}
+
+export async function renderWeeklyReportEmailBodies(
+  props: Omit<WeeklyReportEmailProps, "inboxLink" | "unsubscribeUrl">,
+) {
+  const element = (
+    <WeeklyReportEmail
+      {...props}
+      inboxLink={`${FRONTEND_URL}/dashboard/inbox`}
+      unsubscribeUrl={emailPreferencesLink}
+    />
+  );
+
+  return { html: await renderEmail(element), text: await renderEmailText(element) };
 }

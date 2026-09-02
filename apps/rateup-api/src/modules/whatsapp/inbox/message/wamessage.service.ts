@@ -155,6 +155,10 @@ export async function addNewWaMessage(
   failed: boolean = false,
   sourceMessage: string = "inbox",
   logs: WaGraphApiErrorDetail = {},
+  // The 24h metered window this message belongs to, resolved by the caller before
+  // the row is written so attribution lands on the same insert. Optional: metering
+  // is best-effort and must never block the message.
+  meteredConversationId?: string,
 ) {
   const initialStats = {
     read: "",
@@ -195,6 +199,7 @@ export async function addNewWaMessage(
       sourcePlatform,
       sourceIdentifier,
       conversationId,
+      meteredConversationId,
       ...statsData,
       sourceMessage,
       logs,
@@ -864,6 +869,24 @@ export async function filterChats(
         LEFT JOIN "Conversation" sib
           ON sib."contactId" = fc.id AND sib.id <> fc."conversationId"
         GROUP BY fc."conversationId"
+      ),
+      -- The board column the contact's lead sits in — what the row's chip shows
+      -- now that pipeline stages have replaced the lifecycle. Keyed off the
+      -- twenty rows already chosen rather than joined into
+      -- \`filtered_conversations\`, so it never runs over the whole filtered set.
+      --
+      -- A contact can hold more than one lead; the oldest wins, which is the same
+      -- one \`getContactStage\` reports and the same first-by-order board the
+      -- writers resolve.
+      contact_lead_stages AS (
+        SELECT DISTINCT ON (lead."contactId")
+          lead."contactId",
+          ps."name"  AS "stageName",
+          ps."color" AS "stageColor"
+        FROM "Lead" lead
+        INNER JOIN "PipelineStage" ps ON ps.id = lead."stageId"
+        WHERE lead."contactId" IN (SELECT id FROM filtered_conversations)
+        ORDER BY lead."contactId", lead."createdAt" ASC
       )
       SELECT
         fc.*,
@@ -887,7 +910,9 @@ export async function filterChats(
         clm."lastMessageDeletedAt" AS "lastMessageDeletedAt",
         COALESCE(cm."mentionCount", 0) as "mentionCount",
         COALESCE(ctc."otherTicketCount", 0) as "otherTicketCount",
-        l."name" as "lifecycleName"
+        l."name" as "lifecycleName",
+        cst."stageName",
+        cst."stageColor"
       FROM filtered_conversations fc
       LEFT JOIN assigned_users au ON au."conversationId" = fc."conversationId"
       LEFT JOIN contact_labels cls ON cls."contactId" = fc.id
@@ -896,6 +921,7 @@ export async function filterChats(
       LEFT JOIN conversation_mentions cm ON cm."conversationId" = fc."conversationId"
       LEFT JOIN contact_ticket_counts ctc ON ctc."conversationId" = fc."conversationId"
       LEFT JOIN "Lifecycle" l ON l.id = fc."lifecycleId"
+      LEFT JOIN contact_lead_stages cst ON cst."contactId" = fc.id
       ORDER BY ${allOrderBy} ${sortBy} NULLS LAST;
     `;
 

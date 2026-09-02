@@ -29,9 +29,22 @@ export const SCHEDULED_JOBS = [
   { id: "loyaltyInactivityCheck", pattern: "0 2 * * *" }, // Every day at 2:00 AM
   { id: "loyaltyPointsExpiryAlerts", pattern: "0 3 * * *" }, // Every day at 3:00 AM
   { id: "inboxAutomation", pattern: "0 * * * *" }, // Every hour
+  // Hourly, at :20. A dropped payment webhook leaves a paying customer's expiresAt in
+  // the past, which the 4:00 AM downgrade below would then act on — so this has to get
+  // there first, and the :20 run at 03:20 does. Hourly (rather than daily) is what keeps
+  // a stuck conversation-pack purchase from sitting unpaid-looking until tomorrow.
+  { id: "reconcileMissedPayments", pattern: "20 * * * *" },
+  // Warnings first, then the downgrade — a customer hears "expires tomorrow" and
+  // "has expired" before anything is taken away.
+  { id: "subscriptionExpiryAlerts", pattern: "30 3 * * *" }, // Every day at 3:30 AM
+  { id: "downgradeExpiredSubscriptions", pattern: "0 4 * * *" }, // Every day at 4:00 AM
   // TODO: re-enable once the report is working again.
   // { id: "weeklyInboxReport", pattern: "0 9 * * 0" }, // Sundays at 9:00 AM
-] as const satisfies ReadonlyArray<{ id: string; pattern: string; tz?: string }>;
+] as const satisfies ReadonlyArray<{
+  id: string;
+  pattern: string;
+  tz?: string;
+}>;
 
 /**
  * The union of scheduled job ids. The handler map in the processor is typed
@@ -61,7 +74,10 @@ export async function syncJobSchedulers() {
       // worker defaults because job-level options win over them.
       {
         name: job.id,
-        opts: { removeOnComplete: { count: 100 }, removeOnFail: { count: 1_000 } },
+        opts: {
+          removeOnComplete: { count: 100 },
+          removeOnFail: { count: 1_000 },
+        },
       },
     );
   }

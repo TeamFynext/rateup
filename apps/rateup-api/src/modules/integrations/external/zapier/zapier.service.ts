@@ -9,12 +9,17 @@ export enum ZapierTriggers {
   CONVERSATION_CLOSED = "conversation_closed",
   CONTACT_UPDATED = "contact_updated",
   CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
-  TICKET_CREATED = "new_ticket",
+  /**
+   * A contact's lead moved to a different pipeline column — the board's
+   * counterpart to {@link ZapierTriggers.CONTACT_LIFECYCLE_UPDATED}.
+   *
+   * Added beside it rather than replacing it: the lifecycle trigger is a live
+   * external contract, and every Zap already built on it keeps firing unchanged.
+   */
+  CONTACT_STAGE_UPDATED = "contact_stage_updated",
   CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
   RESPONSE_SUBMITTED = "response_submitted",
   CONTACT_DELETED = "contact_deleted",
-  TICKET_CARD_MOVED = "ticket_card_moved",
-  TICKET_ASSIGNEE_UPDATED = "ticket_assignee_updated",
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
 }
 
@@ -161,6 +166,38 @@ export async function getSampleDataForTrigger(
         lifecycleName: l.Lifecycle?.name ?? null,
       }));
       break;
+    case ZapierTriggers.CONTACT_STAGE_UPDATED: {
+      const leads = await prisma.lead.findMany({
+        where: { contactId: { not: null }, pipeline: { orgId } },
+        select: {
+          id: true,
+          contactId: true,
+          pipelineId: true,
+          pipeline: { select: { name: true } },
+          stageId: true,
+          stage: { select: { name: true, status: true } },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = leads.map((lead) => ({
+        contactId: lead.contactId,
+        leadId: lead.id,
+        pipelineId: lead.pipelineId,
+        pipelineName: lead.pipeline.name,
+        stageId: lead.stageId,
+        stageName: lead.stage.name,
+        stageStatus: lead.stage.status,
+      }));
+      break;
+    }
     case ZapierTriggers.NEW_MESSAGE:
       const messages = await prisma.waMessage.findMany({
         where: {
@@ -292,115 +329,11 @@ export async function getSampleDataForTrigger(
         };
       });
       break;
-    case ZapierTriggers.TICKET_ASSIGNEE_UPDATED:
-      const ticketAssigne = await prisma.ticketCard.findMany({
-        where: {
-          ticketColumn: {
-            ticketBoard: {
-              teams: {
-                some: {
-                  team: {
-                    orgId,
-                  },
-                },
-              },
-            },
-          },
-        },
-        select: {
-          ticketId: true,
-          title: true,
-          description: true,
-          type: true,
-          ticketColumn: {
-            select: {
-              title: true,
-            },
-          },
-          deadline: true,
-          priority: true,
-          assignees: {
-            select: {
-              assignee: {
-                select: {
-                  name: true,
-                  email: true,
-                },
-              },
-            },
-          },
-        },
-        ...(page !== undefined
-          ? {
-              skip: page * 20,
-              take: 20,
-            }
-          : {}),
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-      data = ticketAssigne.map((t) => {
-        const { ticketColumn, assignees, ...rest } = t;
-        return {
-          ...rest,
-          ticketColumnName: ticketColumn.title,
-          assignees: assignees.map((a) => a.assignee),
-        };
-      });
-      break;
-    case ZapierTriggers.TICKET_CARD_MOVED:
-    case ZapierTriggers.TICKET_CREATED:
-      const tickerCards = await prisma.ticketCard.findMany({
-        where: {
-          ticketColumn: {
-            ticketBoard: {
-              teams: {
-                some: {
-                  team: {
-                    orgId,
-                  },
-                },
-              },
-            },
-          },
-        },
-        select: {
-          ticketId: true,
-          title: true,
-          description: true,
-          type: true,
-          ticketColumn: {
-            select: {
-              title: true,
-            },
-          },
-          deadline: true,
-          priority: true,
-        },
-        ...(page !== undefined
-          ? {
-              skip: page * 20,
-              take: 20,
-            }
-          : {}),
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-      data = tickerCards.map((t) => {
-        const { ticketColumn, ...rest } = t;
-        return {
-          ...rest,
-          ticketColumnName: ticketColumn.title,
-        };
-      });
-      break;
   }
   return data;
 }
 
-// `data` genuinely varies by trigger (contact rows, message rows, ticket
+// `data` genuinely varies by trigger (contact rows, message rows, response
 // rows, ...) — this just forwards it into the BullMQ job payload, it's never
 // inspected here, so `unknown` is accurate rather than a cop-out.
 export async function addZapierTriggerToQueue(name: ZapierTriggers, data: unknown, orgId: string) {
@@ -422,48 +355,6 @@ export async function deleteContactByPhoneNumberAndOrgId(orgId: string, phone: s
     contact.orgId,
   );
   return contact;
-}
-
-export async function getTicketBoardsByTeamId(teamId: string, page?: number) {
-  const boards = await prisma.ticketBoard.findMany({
-    where: {
-      teams: {
-        some: {
-          teamId,
-        },
-      },
-    },
-    select: {
-      id: true,
-      title: true,
-    },
-    ...(page !== undefined
-      ? {
-          skip: page * 25,
-          take: 25,
-        }
-      : {}),
-  });
-  return boards.map((b) => ({ id: b.id, name: b.title }));
-}
-
-export async function getTicketColumnsByBoardId(boardId: string, page?: number) {
-  const columns = await prisma.ticketColumn.findMany({
-    where: {
-      ticketBoardId: boardId,
-    },
-    select: {
-      id: true,
-      title: true,
-    },
-    ...(page !== undefined
-      ? {
-          skip: page * 20,
-          take: 20,
-        }
-      : {}),
-  });
-  return columns.map((c) => ({ id: c.id, name: c.title }));
 }
 
 export async function getLifecyclesByOrgId(orgId: string) {

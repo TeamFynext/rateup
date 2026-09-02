@@ -213,7 +213,8 @@ describe("emailBodyContactForm", () => {
 
     expect(html).toContain("Name");
     expect(html).toContain("Email");
-    expect(html).toContain("Message");
+    // The React template heads the message block "What they wrote", not "Message".
+    expect(html).toContain("What they wrote");
   });
 });
 

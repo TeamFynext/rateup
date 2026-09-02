@@ -20,7 +20,6 @@ const createCheckoutRequestSchema = z.object({
     error: (issue) => (issue.input === undefined ? "Rateup Plan Id is required" : undefined),
   }),
   isAnnualMessageLimit: z.boolean(),
-  trialDays: z.number().optional(),
 });
 const createRateUpPlanSchema = z.object({
   name: z.string().trim().min(1),
@@ -31,7 +30,6 @@ const createRateUpPlanSchema = z.object({
   stripeId: z.string().optional(),
   description: z.array(z.string()).min(1),
   features: z.any().optional(),
-  trialDays: z.number(),
   badge: z.string().trim().optional(),
   price: z.number().optional(),
   currency: z.enum(["USD", "INR"]).optional(),
@@ -51,7 +49,6 @@ const updateRateUpPlanSchema = z.object({
   stripeId: z.string().optional(),
   description: z.array(z.string()).min(1).optional(),
   features: z.any().optional(),
-  trialDays: z.number().optional(),
   badge: z.string().trim().optional(),
   price: z.number().optional(),
   currency: z.enum(["USD", "INR"]).optional(),
@@ -70,14 +67,6 @@ const paymentPlanDeleteSchema = z.object({
   planId: z.string(),
 });
 
-const orgPlanEmailSchema = z.object({
-  name: z.string(),
-  email: z.string(),
-  orgName: z.string().optional(),
-  planName: z.string(),
-  planId: z.string().optional(),
-});
-
 const updatePlanSchema = z.object({
   id: z.string(),
   planId: z.string(),
@@ -92,7 +81,6 @@ export type updateRateUpPlanInput = z.infer<typeof updateRateUpPlanSchema>;
 export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 export type rateupPlanParamInput = z.infer<typeof rateupPlanParamSchema>;
 export type paymentPlanDeleteInput = z.infer<typeof paymentPlanDeleteSchema>;
-export type orgPlanEmailInput = z.infer<typeof orgPlanEmailSchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -101,7 +89,6 @@ export {
   updateRateUpPlanSchema,
   rateupPlanParamSchema,
   paymentPlanDeleteSchema,
-  orgPlanEmailSchema,
 };
 
 export const orderIdParamsSchema = z.object({
@@ -114,3 +101,17 @@ export const updateOrderStatusSchema = z.object({
 
 export type OrderIdParamsInput = z.infer<typeof orderIdParamsSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+
+/** Body for switching a live subscription onto another tier. */
+export const changePlanSchema = z.object({
+  rateupPlanId: z.string().min(1),
+  period: z.enum(["monthly", "yearly"]),
+});
+
+export type ChangePlanInput = z.infer<typeof changePlanSchema>;
+
+/** How many conversation packs one order buys. The service caps it too. */
+export const conversationAddonOrderSchema = z.object({
+  quantity: z.number().int().positive().max(20).default(1),
+});
+export type ConversationAddonOrderInput = z.infer<typeof conversationAddonOrderSchema>;

@@ -42,7 +42,7 @@ export function TeamInviteEmail({ inviteLink, orgName, teamName }: TeamInviteEma
             {
               title: "Follow up while it matters",
               description:
-                "Turn an unhappy response into a ticket and reply over WhatsApp before the customer writes a public review.",
+                "Reply to an unhappy response over WhatsApp before the customer writes a public review.",
             },
             {
               title: "See the pattern, not just the noise",
