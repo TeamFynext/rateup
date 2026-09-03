@@ -79,6 +79,7 @@ import {
 import { verifyAccess } from "./response.auth.js";
 import { responseRoutes } from "./response.route.js";
 import { responsePublicRoutes } from "./response.public.route.js";
+import { enforceResponseLimit } from "../survey/survey.limits.js";
 import {
   createResponseInputSchema,
   generateXlsxSchema,
@@ -495,7 +496,7 @@ describe("createResponseHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: "survey not found" });
   });
 
-  test("the public route validates the body and carries no session check", async () => {
+  test("the public route validates the body, meters the org, and carries no session check", async () => {
     const routes: any[] = [];
     const srv: any = {
       post: vi.fn((url, opts, handler) => routes.push({ url, opts, handler })),
@@ -506,7 +507,10 @@ describe("createResponseHandler", () => {
 
     expect(routes).toHaveLength(1);
     expect(routes[0].opts.schema.body).toBe(createResponseInputSchema);
-    expect(routes[0].opts.preHandler).toBeUndefined();
+    // The one preHandler is the monthly response limit, which is what actually holds the
+    // allowance — the form's page-load gate is only a courtesy. Still no session check:
+    // the caller is a respondent, not a logged-in user.
+    expect(routes[0].opts.preHandler).toEqual([enforceResponseLimit]);
     expect(srv.addHook).not.toHaveBeenCalled();
   });
 

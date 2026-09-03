@@ -7,6 +7,7 @@ import {
   getCampaignStatsHandler,
   getResponseByCampaignByIdHandler,
   getResponseExcelByCampaignByIdHandler,
+  getCampaignSendPreflightHandler,
   sendCampaignHandler,
   updateCampaignByIdHandler,
 } from "./campaign.controller.js";
@@ -15,12 +16,12 @@ import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { requireFeature, TeamFeature } from "../../utils/permissions.js";
-import { verifyCampaignMaxLimit } from "./campaign.util.js";
 import {
   byCampaignIdParamsSchema,
   CreateCampaignInput,
   createCampaignInputSchema,
   getCampaignsQuerySchema,
+  sendPreflightQuerySchema,
   updateCampaignInputSchema,
 } from "./campaign.schema.js";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
@@ -39,7 +40,6 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post<{ Body: CreateCampaignInput }>(
     "/",
     {
-      preHandler: verifyCampaignMaxLimit,
       schema: {
         body: createCampaignInputSchema,
       },
@@ -74,6 +74,19 @@ export async function campaignRoutes(server: FastifyInstance) {
     },
     deleteCampaignByIdHandler,
   );
+  // Read before opening the send dialog: what this campaign would cost against the
+  // conversation allowance, and whether it fits.
+  server.get(
+    "/:campaignId/send-preflight",
+    {
+      schema: {
+        params: byCampaignIdParamsSchema,
+        querystring: sendPreflightQuerySchema,
+      },
+    },
+    getCampaignSendPreflightHandler,
+  );
+
   server.post(
     "/:campaignId/send",
     {

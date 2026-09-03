@@ -398,7 +398,11 @@ export async function syncStripeProducts() {
 }
 
 export async function getStripeProducts() {
-  const res = await prisma.stripeProducts.findMany();
+  const res = await prisma.stripeProducts.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
   return res;
 }
 

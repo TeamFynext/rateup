@@ -19,6 +19,10 @@ vi.mock("./campaign.service.js", async () => ({
   getResponseExcelByCampaignById: vi.fn(),
   updateCampaign: vi.fn(),
 }));
+// The preflight is exercised in campaign.preflight.test.ts; here it stands in for the
+// participant count the send used to read directly, plus the allowance it now checks.
+vi.mock("./campaign.preflight.js", () => ({ getCampaignSendPreflight: vi.fn() }));
+
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -33,6 +37,9 @@ import {
   getCampaignById,
   getCampaignFilterForFlows,
   getCampaignParticipantCountByStatuses,
+} from "./campaign.service.js";
+import { getCampaignSendPreflight } from "./campaign.preflight.js";
+import {
   getCampaignsByOrgId,
   getCampaignsByTeamId,
   getResponseByCampaignById,
@@ -63,6 +70,7 @@ const m = {
   byId: getCampaignById as unknown as Mock,
   filterForFlows: getCampaignFilterForFlows as unknown as Mock,
   countByStatuses: getCampaignParticipantCountByStatuses as unknown as Mock,
+  preflight: getCampaignSendPreflight as unknown as Mock,
   byOrg: getCampaignsByOrgId as unknown as Mock,
   byTeam: getCampaignsByTeamId as unknown as Mock,
   responses: getResponseByCampaignById as unknown as Mock,
@@ -108,6 +116,16 @@ beforeEach(() => {
   m.byTeam.mockResolvedValue([{ id: CAMPAIGN_ID }]);
   m.byOrg.mockResolvedValue([{ id: CAMPAIGN_ID }]);
   m.countByStatuses.mockResolvedValue(5);
+  m.preflight.mockResolvedValue({
+    recipients: 5,
+    metered: true,
+    max: 5000,
+    used: 10,
+    remaining: 4990,
+    isAnnual: false,
+    exhausted: false,
+    shortfall: 0,
+  });
   m.enqueue.mockResolvedValue({ status: true, message: "ok" });
   m.dequeue.mockResolvedValue({ status: true, message: "ok" });
   m.stats.mockResolvedValue({ countSent: 10 });
@@ -312,7 +330,13 @@ describe("sendCampaignHandler", () => {
   });
 
   test("refuses when no participant sits in the requested statuses", async () => {
-    m.countByStatuses.mockResolvedValue(0);
+    m.preflight.mockResolvedValue({
+      recipients: 0,
+      metered: false,
+      isAnnual: false,
+      exhausted: false,
+      shortfall: 0,
+    });
     const rep = reply();
 
     await sendCampaignHandler(request({ body: sendBody() }), rep);
@@ -356,8 +380,52 @@ describe("sendCampaignHandler", () => {
     expect(m.enqueue.mock.calls[0][5]).toBeUndefined();
   });
 
+  test("refuses a send when the allowance is already spent", async () => {
+    // A campaign started with nothing left only produces a queue of messages that each
+    // fail in the dispatcher, and a campaign stuck in QUEUING with no explanation.
+    m.preflight.mockResolvedValue({
+      recipients: 50,
+      metered: true,
+      max: 5_000,
+      used: 5_000,
+      remaining: 0,
+      isAnnual: false,
+      exhausted: true,
+      shortfall: 50,
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(403);
+    expect(sent(rep).code).toBe("CONVERSATION_LIMIT_REACHED");
+    expect(sent(rep).message).toContain("5,000 conversations");
+    expect(m.enqueue).not.toHaveBeenCalled();
+  });
+
+  test("still sends a campaign that merely outruns the allowance", async () => {
+    // 50 people, 45 left: the dialog has already said where it stops, and sending to as
+    // many as the plan covers is the customer's call to make.
+    m.preflight.mockResolvedValue({
+      recipients: 50,
+      metered: true,
+      max: 5_000,
+      used: 4_955,
+      remaining: 45,
+      isAnnual: false,
+      exhausted: false,
+      shortfall: 5,
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(m.enqueue).toHaveBeenCalled();
+    expect(sent(rep).code).toBe("ENQUEUE_REQUEST_ACCEPTED");
+  });
+
   test("answers 500 when something goes wrong along the way", async () => {
-    m.countByStatuses.mockRejectedValue(new Error("db down"));
+    m.preflight.mockRejectedValue(new Error("db down"));
     const rep = reply();
 
     await sendCampaignHandler(request({ body: sendBody() }), rep);

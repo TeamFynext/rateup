@@ -63,7 +63,6 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
         body: waTemplateInputSchema,
       },
@@ -73,7 +72,6 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/save-as-draft",
     {
-      // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
         body: waTemplateInputSchema,
       },

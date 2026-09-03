@@ -1,74 +1,31 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-import { ContactCore } from "./contact.schema.js";
 import { ContactGroupType } from "./contactGroup/contactGroup.schema.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
-import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { parsePhoneforWa } from "../loyalty/util.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
 import { sendTemplateToUserCore } from "../whatsapp/messageTemplates/wa_templates.controller.js";
 
-export async function verifyLCustomerMaxCountRestrictionHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  // Typed as a plain FastifyRequest so it composes with the route's zod-inferred
-  // body; the two fields it reads are narrowed here instead.
-  const body = (request.body ?? {}) as { orgId?: string } & Partial<ContactCore>;
-  if (body.source !== ContactGroupType.LOYALTY) return;
-  const orgId = body.orgId ?? request.user.orgId;
-  if (!(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))) {
-    return reply.code(403).send({
-      message: "Registration limit reached",
-      displayMessageInClient: true,
-    });
+/**
+ * Keeps the dashboard's loyalty-customer figure honest.
+ *
+ * `UsageStats.loyaltyCustomerCount` is an incremental counter that drifts, and a
+ * registration is the moment there is a real count in hand to reconcile it against. This
+ * is all that remains of a registration LIMIT that used to sit on the same route: it read
+ * `whatsapp.count.max`, a path no tier defines, so it never refused anything, and the
+ * plans do not cap loyalty registrations. Counting is bookkeeping; the refusal is gone.
+ */
+export async function reconcileLoyaltyCustomerCount(orgId: string) {
+  const [count, usageStats] = await Promise.all([
+    prisma.customerLoyaltyAccount.count({
+      where: { contact: { orgId, source: "loyalty_program" } },
+    }),
+    prisma.usageStats.findUnique({ where: { orgId }, select: { loyaltyCustomerCount: true } }),
+  ]);
+
+  if (usageStats && usageStats.loyaltyCustomerCount !== count) {
+    await prisma.usageStats.update({ where: { orgId }, data: { loyaltyCustomerCount: count } });
   }
-}
-export async function verifyLCustomerMaxCountRestriction(
-  orgId: string,
-  subscription: { features: unknown } | null | undefined,
-) {
-  if (!subscription) {
-    log.trace("Subscription not found");
-    return false;
-  }
-  const count = await prisma.customerLoyaltyAccount.count({
-    where: {
-      contact: {
-        orgId,
-        source: "loyalty_program",
-      },
-    },
-  });
-
-  const usageStats = await prisma.usageStats.findUnique({
-    where: {
-      orgId,
-    },
-    select: {
-      loyaltyCustomerCount: true,
-    },
-  });
-
-  if (usageStats && usageStats.loyaltyCustomerCount !== count)
-    await prisma.usageStats.update({
-      where: {
-        orgId,
-      },
-      data: {
-        loyaltyCustomerCount: count,
-      },
-    });
-
-  const whatsappFeature = getNestedProperty<{ count?: { max?: number } }>(
-    subscription.features as unknown as object,
-    SubscriptionFeaturePathName.Whatsapp,
-  );
-  const max = whatsappFeature?.count?.max;
-  if (max === undefined) return true;
-
-  return count < max;
 }
 
 /** The contact fields a loyalty-customer registration supplies. */
@@ -147,6 +104,9 @@ export async function createLCustomer(input: CreateLCustomerInput) {
     });
   }
   await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, input.orgId);
+  // Where the count used to be reconciled — the registration gate ran on this same route.
+  // Moved into the registration itself now that the gate is gone.
+  await reconcileLoyaltyCustomerCount(input.orgId);
 
   // const customer = contact.loyaltyCustomer;
   return {

@@ -17,9 +17,7 @@ import { createQuestion } from "../../question/question.service.js";
 import { log } from "../../../utils/logger.js";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
-import { FastifyReply, FastifyRequest } from "fastify";
-import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
-import prisma from "../../../utils/prisma.js";
+import { FastifyRequest } from "fastify";
 
 interface generateFlowMessageDataProps {
   to: string;
@@ -1088,11 +1086,4 @@ export function transformFlowAndLogicJumps(
     transformedFlow["routing_model"] = routing_model;
     transformedFlow["data_api_version"] = "3.0";
   }
-}
-
-export async function verifyFlowSubscriptionLimit(request: FastifyRequest, reply: FastifyReply) {
-  return await enforceWhatsappCountLimit(request, reply, {
-    label: "Flows",
-    count: (orgId) => prisma.waFlow.count({ where: { orgId } }),
-  });
 }

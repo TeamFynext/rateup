@@ -23,7 +23,6 @@ import { log } from "../../../utils/logger.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
-import { verifyFlowSubscriptionLimit } from "./flow.utils.js";
 import {
   type ByDbFlowIdParams,
   byDbFlowIdParams,
@@ -112,7 +111,6 @@ export async function flowRoutes(server: FastifyInstance) {
   server.post<{ Body: CreateFlowInput }>(
     "/",
     {
-      preHandler: verifyFlowSubscriptionLimit,
       schema: {
         body: createFlowInput,
       },

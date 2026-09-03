@@ -4,9 +4,11 @@ import {
   CreateCampaignInput,
   GetCampaignsQuery,
   SendCampaignInput,
+  SendPreflightQuery,
   UpdateCampaignInput,
 } from "./campaign.schema.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
+import { getCampaignSendPreflight } from "./campaign.preflight.js";
 import {
   createCampaign,
   deleteCampaign,
@@ -15,7 +17,6 @@ import {
   getCampaginStatsById,
   getCampaignById,
   getCampaignFilterForFlows,
-  getCampaignParticipantCountByStatuses,
   getCampaignsByOrgId,
   getCampaignsByTeamId,
   getResponseByCampaignById,
@@ -115,6 +116,37 @@ export async function deleteCampaignByIdHandler(
   }
 }
 
+/**
+ * What a campaign would cost against the conversation allowance, before it is sent.
+ *
+ * Read by the send dialog so a customer whose campaign outruns their allowance is told
+ * while they can still act on it — trim the audience, buy a pack, or send anyway knowing
+ * where it stops. Nothing is refused here; the send gate is still the thing that enforces.
+ */
+export async function getCampaignSendPreflightHandler(
+  request: FastifyRequest<{
+    Params: ByCampaignIdParams;
+    Querystring: SendPreflightQuery;
+  }>,
+  reply: FastifyReply,
+) {
+  const { campaignId } = request.params;
+  const { orgId } = request.user;
+
+  try {
+    const campaign = await getCampaignById(campaignId, orgId);
+    if (!campaign) {
+      return reply.status(404).send({ message: "Campaign not found", code: "CAMPAIGN_NOT_FOUND" });
+    }
+
+    return reply.send(
+      await getCampaignSendPreflight(campaignId, orgId, request.query.sendToStatuses),
+    );
+  } catch (error) {
+    return replyForError(reply, error, "Error while handling getCampaignSendPreflightHandler");
+  }
+}
+
 export async function sendCampaignHandler(
   request: FastifyRequest<{
     Params: ByCampaignIdParams;
@@ -184,11 +216,26 @@ export async function sendCampaignHandler(
         code: "MSG_SCHEDULE_CANCEL_REQUESTED",
       });
     }
-    const count = await getCampaignParticipantCountByStatuses(campaignId, orgId, sendToStatuses);
-    if (count === 0) {
+    const preflight = await getCampaignSendPreflight(campaignId, orgId, sendToStatuses);
+    if (preflight.recipients === 0) {
       return reply.status(400).send({
         message: `No participants with the specified statuses to send the campaign to.`,
         code: "NO_PARTICIPANTS_FOR_CAMPAIGN",
+      });
+    }
+
+    // Only the case where nothing at all could be delivered is refused. A campaign that
+    // merely outruns the allowance still goes — the dialog has already said where it will
+    // stop, and sending to as many people as the plan covers is a reasonable choice. But
+    // starting one with nothing left only produces a queue of messages that each fail in
+    // the dispatcher, a campaign stuck in QUEUING, and no explanation anywhere the sender
+    // would look.
+    if (preflight.exhausted) {
+      return reply.status(403).send({
+        message:
+          `You have used all ${preflight.max?.toLocaleString()} conversations on your plan ` +
+          `${preflight.isAnnual ? "this year" : "this month"}, so this campaign cannot be sent yet.`,
+        code: "CONVERSATION_LIMIT_REACHED",
       });
     }
 

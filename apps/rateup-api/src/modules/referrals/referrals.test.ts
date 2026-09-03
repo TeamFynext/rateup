@@ -524,10 +524,10 @@ describe("createReferralHandler", () => {
 // ===========================================================================
 
 describe("getAllReferralsHandler", () => {
-  test("lists every referral, newest first", async () => {
+  test("lists every referral, by name", async () => {
     await getAllReferrals();
 
-    expect(db.referral.findMany).toHaveBeenCalledWith({ orderBy: { created_at: "desc" } });
+    expect(db.referral.findMany).toHaveBeenCalledWith({ orderBy: { name: "asc" } });
   });
 
   // NOTE: Referral carries no orgId — it is a platform-level table, which is
