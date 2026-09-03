@@ -305,6 +305,10 @@ export async function getAllSubscriptions() {
         },
       },
     },
+    // Subscription has no name of its own, so fall back to newest first.
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 }
 

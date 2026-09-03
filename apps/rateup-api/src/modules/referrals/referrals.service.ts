@@ -19,7 +19,7 @@ export async function createReferral(name: string, email: string) {
 export async function getAllReferrals() {
   return await prisma.referral.findMany({
     orderBy: {
-      created_at: "desc",
+      name: "asc",
     },
   });
 }

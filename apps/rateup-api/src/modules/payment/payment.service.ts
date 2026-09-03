@@ -209,7 +209,9 @@ export async function syncPaymentPlans() {
 //...get list of all payment plans
 export async function getAllPaymentPlans() {
   try {
-    const allItems = await prisma.paymentPlans.findMany();
+    const allItems = await prisma.paymentPlans.findMany({
+      orderBy: [{ status: "asc" }, { name: "asc" }],
+    });
     return { success: true, data: allItems };
   } catch (error) {
     console.error("Error:", error);
@@ -229,7 +231,7 @@ export async function getAllRateupPaymentPlans() {
       usdYearlyPaymentPlan: true,
     },
     orderBy: {
-      createdAt: "asc",
+      name: "asc",
     },
   });
   return plans;
@@ -1279,6 +1281,9 @@ export async function getAllPaymentOrders() {
           name: true,
         },
       },
+    },
+    orderBy: {
+      name: "asc",
     },
   });
   return orders;

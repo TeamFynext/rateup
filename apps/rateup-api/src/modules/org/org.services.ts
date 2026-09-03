@@ -383,7 +383,7 @@ export async function getAllOrgs() {
       },
     },
     orderBy: {
-      createdAt: "desc",
+      name: "asc",
     },
   });
 }
