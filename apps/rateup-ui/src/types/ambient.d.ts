@@ -847,17 +847,19 @@ declare global {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &
       subscriptionCountRestriction;
-    [sfpn.WebSurvey]: subscriptionActiveField &
-      subscriptionCountRestriction & {
-        encryption: subscriptionActiveField;
-        googleReview: subscriptionActiveField;
-        emailNotification: subscriptionActiveField;
-        htmlCodePage: subscriptionActiveField;
-        webhook: subscriptionActiveField;
-        count: {
-          monthlyResponseLimit: number;
-        };
+    // No `subscriptionCountRestriction` here on purpose: forms are not capped by how many
+    // you build, only by how many responses they take in a month. Mirrors the API's
+    // global.d.ts.
+    [sfpn.WebSurvey]: subscriptionActiveField & {
+      encryption: subscriptionActiveField;
+      googleReview: subscriptionActiveField;
+      emailNotification: subscriptionActiveField;
+      htmlCodePage: subscriptionActiveField;
+      webhook: subscriptionActiveField;
+      count: {
+        monthlyResponseLimit: number;
       };
+    };
     [sfpn.Whatsapp]: subscriptionActiveField & {
       conversation: subscriptionWithActiveAndCount;
       /** Monthly send allowance, as the plans endpoint reports it. */

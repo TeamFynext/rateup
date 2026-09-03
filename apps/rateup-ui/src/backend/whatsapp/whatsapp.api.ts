@@ -33,6 +33,16 @@ export interface SyncTemplatesInput {
   whatsappSettingsPhoneIds?: string[];
 }
 
+/** What a sync pass did, as the server reports it back. */
+export interface SyncTemplatesResult {
+  success: boolean;
+  created: number;
+  updated: number;
+  /** Templates Meta no longer has: these were put back into draft. */
+  revertedToDraft: number;
+  message?: string;
+}
+
 /**
  * A draft template payload as the template-creation screens assemble it before
  * sending it to the save-as-draft endpoint.
@@ -103,7 +113,8 @@ export const updateWaTemplate = async (id: string, templateData: RequestPayload)
   return axiosClient.put(`${TEMPLATES_URL}/${id}`, templateData);
 };
 export const syncTemplates = async (input?: SyncTemplatesInput) => {
-  return axiosClient.post(`${TEMPLATES_URL}/sync`, input);
+  const res = await axiosClient.post(`${TEMPLATES_URL}/sync`, input);
+  return res.data as SyncTemplatesResult;
 };
 export const getUnregisteredTemplates = async () => {
   return (await axiosClient.get(`${TEMPLATES_URL}/unregistered`)).data;

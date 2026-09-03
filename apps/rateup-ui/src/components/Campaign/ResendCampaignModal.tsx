@@ -1,5 +1,6 @@
 import {
   IconAlertCircle,
+  IconAlertTriangle,
   IconCalendar,
   IconChevronDown,
   IconClock,
@@ -10,6 +11,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { useCampaignSendPreflight } from "@/backend/campaign/campaign.query.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Calendar } from "@/components/ui/calendar.tsx";
 import {
@@ -45,6 +48,8 @@ interface ResendCampaignModalProps {
   isFirstSend?: boolean;
   /** The campaign's saved cap. The modal opens showing this rather than resetting. */
   campaignDailySendLimit?: number | null;
+  /** Enables the conversation-allowance check. Omitted, the modal simply does not warn. */
+  campaignId?: string;
 }
 
 // Keys of the `stats` prop, which counts participants per status.
@@ -100,6 +105,7 @@ export const ResendCampaignModal = ({
   stats,
   isFirstSend = false,
   campaignDailySendLimit = null,
+  campaignId,
 }: ResendCampaignModalProps) => {
   const { t } = useTranslation("campaign.resend");
   const getToday = () => new Date().toISOString().split("T")[0];
@@ -148,6 +154,17 @@ export const ResendCampaignModal = ({
       ? Math.ceil(recipientCount / parsedDailyLimit)
       : 0;
 
+  // What this send would cost against the org's conversation allowance. Asked of the
+  // server rather than derived from `recipientCount`, because the allowance itself lives
+  // there: packs bought, an annual pool, a contracted Enterprise ceiling, and the metered
+  // windows already spent this period.
+  const { data: preflight } = useCampaignSendPreflight(
+    campaignId ?? "",
+    selectedStatuses,
+    isOpen && !!campaignId,
+  );
+  const period = preflight?.isAnnual ? t("this year") : t("this month");
+
   const handleSubmit = () => {
     if (selectedStatuses.length === 0) {
       toast.error(t("Select at least one status"));
@@ -186,6 +203,39 @@ export const ResendCampaignModal = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* CONVERSATION ALLOWANCE — only ever shown when there is something to act on.
+              A campaign that fits says nothing: a banner on every send would be noise, and
+              the number is already on the billing page. */}
+          {preflight?.metered && preflight.exhausted && (
+            <Alert variant="destructive">
+              <IconAlertTriangle />
+              <AlertTitle>{t("No conversations left")}</AlertTitle>
+              <AlertDescription>
+                {t(
+                  "You have used all {max} conversations on your plan {period}, so this campaign cannot be sent yet. Buy a conversation pack or wait for your allowance to reset.",
+                  { max: preflight.max?.toLocaleString(), period },
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+          {preflight?.metered && !preflight.exhausted && preflight.shortfall > 0 && (
+            <Alert>
+              <IconAlertTriangle className="text-amber-700 dark:text-amber-500" />
+              <AlertTitle>{t("This campaign may not reach everyone")}</AlertTitle>
+              <AlertDescription>
+                {t(
+                  "It goes to {recipients} people and you have {remaining} conversations left {period}, so up to {shortfall} may not be delivered. A contact you are already in an open conversation with costs nothing extra, so the real number may be lower.",
+                  {
+                    recipients: preflight.recipients.toLocaleString(),
+                    remaining: preflight.remaining?.toLocaleString(),
+                    period,
+                    shortfall: preflight.shortfall.toLocaleString(),
+                  },
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* SEND MODE */}
           <div className="space-y-3">
             <FieldTitle className="font-semibold">{t("When to send")}</FieldTitle>

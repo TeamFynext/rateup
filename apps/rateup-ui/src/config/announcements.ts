@@ -341,6 +341,26 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     link: { to: "/dashboard/inbox", label: "Open inbox" },
   },
   {
+    id: "2026-09-03-campaigns-on-free",
+    title: "Campaigns are open on every plan",
+    summary:
+      "Campaigns no longer need a paid plan. A free account can build and send one against its 100 monthly conversations, so you can see how it works before deciding what volume you need.",
+    publishedAt: "2026-09-03",
+    kinds: ["new"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-03-campaign-allowance-warning",
+    title: "Campaigns warn before they outrun your allowance",
+    summary:
+      "The send dialog now says how many conversations you have left, and how many recipients may not be reached — before the campaign starts, instead of after some messages have quietly failed.",
+    publishedAt: "2026-09-03",
+    kinds: ["new"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
     id: "2026-07-22-team-channel-permissions",
     title: "Per-team channel permissions",
     summary:

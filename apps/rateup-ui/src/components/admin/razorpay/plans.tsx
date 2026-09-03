@@ -281,22 +281,20 @@ const RazorpayPlans = () => {
   if (isLoading) return <RateupLoader className="h-dvh" />;
 
   const tableData: PlanTableData[] = Array.isArray(plans?.data)
-    ? plans?.data
-        ?.filter((p: RazorpayPlan) => p.status !== "INACTIVE")
-        ?.map((plan: RazorpayPlan) => ({
-          id: plan.planId,
-          name: plan.name,
-          createdAt: dayjs.unix(plan.createdAt ?? 0).format("DD/MM/YYYY HH:mm:ss"),
-          amount: plan.amount,
-          currency: plan.currency,
-          period: plan.period,
-          interval: plan.interval,
-          status: plan.status,
-          description: plan.description,
-          canDelete: !(
-            plan.status && [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status)
-          ),
-        }))
+    ? plans?.data?.map((plan: RazorpayPlan) => ({
+        id: plan.planId,
+        name: plan.name,
+        createdAt: dayjs.unix(plan.createdAt ?? 0).format("DD/MM/YYYY HH:mm:ss"),
+        amount: plan.amount,
+        currency: plan.currency,
+        period: plan.period,
+        interval: plan.interval,
+        status: plan.status,
+        description: plan.description,
+        canDelete: !(
+          plan.status && [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status)
+        ),
+      }))
     : [];
 
   const activePlans = tableData.filter((p) =>

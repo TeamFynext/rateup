@@ -827,6 +827,7 @@ export function CampaignDetails() {
         onSubmit={handleResendSubmit}
         isLoading={sendCampaignMutation.isPending}
         isFirstSend={canSend}
+        campaignId={campaignId ?? undefined}
         campaignDailySendLimit={campaignQuery.data?.dailySendLimit ?? null}
         stats={{
           failed: statsQuery.data?.countFailed,

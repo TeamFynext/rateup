@@ -51,7 +51,7 @@ export function AuthHeader({
               className={buttonVariants({
                 variant: "outline",
                 className:
-                  "h-8 px-3.5 rounded-lg border-white/20 bg-white/5 text-white hover:bg-white/15",
+                  "h-8 px-3.5 rounded-lg border-white/20 bg-white/5 text-white hover:bg-white/15 hover:text-white",
               })}
             >
               <span className="text-[13.5px] font-semibold">{switchLabel}</span>

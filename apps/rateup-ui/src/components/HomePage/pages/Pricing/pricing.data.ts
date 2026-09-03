@@ -32,6 +32,40 @@ export function detectPricingCurrency(
   return timeZone && INDIA_TIME_ZONES.has(timeZone) ? "INR" : "USD";
 }
 
+/**
+ * The Gulf states, by IANA zone. RateUp does not sell self-serve there: the plans are
+ * contracted through sales, so these visitors are shown the Enterprise treatment with no
+ * prices rather than a card ladder they cannot buy from.
+ *
+ * Both the canonical zones and their links are listed because engines disagree about which
+ * they hand back — `Asia/Kuwait` and `Asia/Bahrain` are links (to `Asia/Riyadh` and
+ * `Asia/Qatar`), and ICU normalises links to the canonical name, so a Kuwaiti browser may
+ * well report `Asia/Riyadh`. That aliasing is why this is a block rather than a per-country
+ * rule: the clock cannot tell Kuwait from Saudi Arabia, or Oman from the UAE. It also cannot
+ * tell Yemen (`Asia/Aden`, another link to `Asia/Riyadh`) from Saudi Arabia, which is the one
+ * country this sweeps in beyond the six intended.
+ */
+const SALES_LED_TIME_ZONES = new Set([
+  "Asia/Kuwait",
+  "Asia/Riyadh",
+  "Asia/Dubai",
+  "Asia/Muscat",
+  "Asia/Qatar",
+  "Asia/Bahrain",
+]);
+
+/**
+ * Whether the visitor is somewhere RateUp only sells through sales.
+ *
+ * The same rough timezone proxy as `detectPricingCurrency`, and it goes wrong the same way
+ * for travellers and VPNs — but it fails in one direction only: someone wrongly placed here
+ * is shown a contact-sales page rather than being quoted a price that is not on offer to
+ * them. Anything that cannot read a timezone is treated as self-serve.
+ */
+export function isSalesLedRegion(timeZone: string | undefined = safeResolvedTimeZone()): boolean {
+  return Boolean(timeZone && SALES_LED_TIME_ZONES.has(timeZone));
+}
+
 /** `resolvedOptions()` throws on a handful of locked-down/embedded browsers. */
 function safeResolvedTimeZone(): string | undefined {
   try {
@@ -45,8 +79,14 @@ function safeResolvedTimeZone(): string | undefined {
  * Counts at or above this render as "Unlimited". The API writes a large sentinel for
  * the Enterprise tier rather than null/Infinity so every `used >= max` comparison on
  * the server keeps working; the UI has to translate it back.
+ *
+ * It is the sentinel itself, not a lower round number, and that matters now that an
+ * Enterprise account can be contracted to a real ceiling: a cap of 2,000,000 is a limit
+ * the send gate enforces, and a threshold below it would advertise that account as
+ * unlimited right up to the point its messages stopped. Mirrors UNLIMITED_COUNT in the
+ * API's subscription.data.ts.
  */
-const UNLIMITED_THRESHOLD = 1_000_000;
+const UNLIMITED_THRESHOLD = 10_000_000;
 
 /** Whether a catalog count is the "no cap" sentinel rather than a real limit. */
 export function isUnlimitedCount(value: number | null | undefined): boolean {
@@ -73,8 +113,8 @@ export const CATALOG_TIER_ORDER = [
  * without an entry simply renders no tagline rather than breaking.
  */
 const TAGLINES: Record<string, string> = {
-  "FREE PLAN": "Test WhatsApp automation end to end.",
-  "PLUS PLAN": "For growing shops running real campaigns.",
+  "FREE PLAN": "Test WhatsApp automation and campaigns end to end.",
+  "PLUS PLAN": "Real volume, plus loyalty and catalog sync.",
   "PRO PLAN": "Scaling teams past their first 10,000 conversations.",
   "MAX PLAN": "High-volume teams with AI in the loop.",
   "ENTERPRISE PLAN": "Unlimited volume, contracted terms.",
@@ -343,7 +383,15 @@ export function resolveConversationPack(
  * Shared by the rendered FAQ and the page's FAQ structured data, so a search engine can
  * never show an answer the page itself contradicts.
  */
-export function conversationPackAnswer(pack: ConversationPack | null): string {
+export function conversationPackAnswer(
+  pack: ConversationPack | null,
+  /**
+   * False in a sales-led region, where the page quotes no figure anywhere: an answer that
+   * costs the pack in dollars would be the one price that got through. The default is true
+   * because the caller with no visitor to read — the route's JSON-LD — should keep it.
+   */
+  showPrice = true,
+): string {
   const base =
     "Your allowance is a monthly cap, not a hard ceiling on your account — you can top it " +
     "up without moving up a tier.";
@@ -352,12 +400,14 @@ export function conversationPackAnswer(pack: ConversationPack | null): string {
   }
 
   const conversations = pack.conversations.toLocaleString("en-US");
-  const price = [
-    pack.inrPrice === null ? null : formatPrice("INR", pack.inrPrice),
-    pack.usdPrice === null ? null : formatPrice("USD", pack.usdPrice),
-  ]
-    .filter(Boolean)
-    .join(" / ");
+  const price = !showPrice
+    ? ""
+    : [
+        pack.inrPrice === null ? null : formatPrice("INR", pack.inrPrice),
+        pack.usdPrice === null ? null : formatPrice("USD", pack.usdPrice),
+      ]
+        .filter(Boolean)
+        .join(" / ");
 
   return (
     `${base} A conversation pack adds ${conversations} extra conversations for ` +

@@ -16,6 +16,7 @@ import {
   buildTiers,
   detectPricingCurrency,
   formatCount,
+  isSalesLedRegion,
   type PricingTier,
   tierRank,
   resolveConversationPack,
@@ -76,6 +77,9 @@ const PricingSection = ({
   // Fixed by the visitor's timezone: India is priced in INR, everywhere else in USD.
   // Resolved once — the zone cannot change under a mounted page.
   const currency = useMemo(() => detectPricingCurrency(), []);
+  // The Gulf is contracted through sales, so no price is shown there at all. Same
+  // timezone proxy as the currency above, and resolved once for the same reason.
+  const salesLedRegion = useMemo(() => isSalesLedRegion(), []);
 
   /** Cards, matrix and checkout links all come off the plans endpoint. */
   const tiers = useMemo(() => buildTiers(plans), [plans]);
@@ -138,7 +142,16 @@ const PricingSection = ({
     navigate({ to: route });
   }
 
-  const cards = compact ? offeredTiers : offeredTiers.filter((tier) => !tier.salesLed);
+  // In a sales-led region the priced tiers are not on offer, so they are not shown at all
+  // and Enterprise is the only thing left. On the page that is the strip below, which is
+  // already the Enterprise treatment; the dialog has no strip, so it keeps the card.
+  const cards = compact
+    ? salesLedRegion
+      ? offeredTiers.filter((tier) => tier.salesLed)
+      : offeredTiers
+    : salesLedRegion
+      ? []
+      : offeredTiers.filter((tier) => !tier.salesLed);
   // On the page the sales-led tier is its own strip below the cards: it has no price to
   // compare and its own call to action, so a fifth column of "Custom" only narrows the
   // four that a visitor is actually choosing between. The dialog keeps it as a card.
@@ -156,13 +169,16 @@ const PricingSection = ({
           </h1>
           <p className="m-0 max-w-[56ch] text-lg leading-[1.6] text-muted-foreground">
             Every plan includes the WhatsApp Business API, the omnichannel inbox, loyalty and
-            surveys. Start on the Free plan, upgrade when your volume does.
+            surveys.{" "}
+            {salesLedRegion
+              ? "In your region we contract directly — talk to us and we'll size a plan to your volume."
+              : "Start on the Free plan, upgrade when your volume does."}
           </p>
         </div>
 
         <div
           className={`flex flex-wrap items-center justify-center gap-3 ${compact ? "mt-0" : "mt-8 mb-10"}`}
-          hidden={onHighestTier}
+          hidden={onHighestTier || salesLedRegion}
         >
           <div
             className={`inline-flex items-center gap-[3px] rounded-full p-[3px] ${PricingSurface}`}
@@ -231,7 +247,7 @@ const PricingSection = ({
         {/* Sits directly under the cards rather than in the FAQ: "what if I go over?" is
             the question the allowance on every card provokes, and the drawer prices the
             headroom at the visitor's currency and whichever cadence is selected. */}
-        {!compact && conversationPack && (
+        {!compact && !salesLedRegion && conversationPack && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-muted p-[18px_24px] shadow-[inset_0_0_0_1px_rgba(27,32,39,0.1)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
             <p className="m-0 flex-1 basis-[380px] text-sm leading-[1.55] text-muted-foreground">
               Past your plan&apos;s conversation limit? Add{" "}
@@ -297,7 +313,7 @@ const PricingSection = ({
 
         <p
           className="mt-4 max-w-[80ch] text-[13px] leading-[1.45] text-ru-n-400"
-          hidden={onHighestTier || compact}
+          hidden={onHighestTier || compact || salesLedRegion}
         >
           Prices exclude applicable taxes. A conversation is one 24-hour window with a customer on
           any connected channel. WhatsApp conversation charges are billed separately by Meta to your
@@ -308,8 +324,10 @@ const PricingSection = ({
       {!compact && (
         <>
           <MetaBillingPanel />
-          <ComparisonTable tiers={tiers} />
-          <Faq plans={plans} />
+          {/* The matrix compares tiers a sales-led region cannot buy, so it goes with the
+              cards: there is nothing there to choose between, only a conversation to have. */}
+          {!salesLedRegion && <ComparisonTable tiers={tiers} />}
+          <Faq plans={plans} showPrices={!salesLedRegion} />
           <PricingCta />
         </>
       )}

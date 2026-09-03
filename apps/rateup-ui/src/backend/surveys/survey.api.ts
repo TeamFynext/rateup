@@ -6,6 +6,28 @@ import { axiosClient, axiosClientIP } from "../apiClient";
 const SURVEYURL = "/survey";
 const SURVEY_PUBLIC_URL = "/public/survey";
 
+/** Mirrors FORM_CLOSED_REASON in the API's survey.limits.ts. */
+const FORM_CLOSED_REASON = "form_closed";
+
+/**
+ * Whether a request failed because the form has stopped accepting responses.
+ *
+ * The org has spent its monthly response allowance, so this is the one public-form
+ * failure that retrying cannot fix — which is exactly what the page needs to know, since
+ * its generic error path reloads itself several times before giving up. Read off the
+ * `reason` code rather than the sentence, so the copy stays free to change.
+ */
+export function isFormClosedError(error: unknown): boolean {
+  const response = (error as { response?: { status?: number; data?: { reason?: string } } })
+    ?.response;
+  return response?.status === 403 && response.data?.reason === FORM_CLOSED_REASON;
+}
+
+/** The sentence the API sent, when it gave one worth showing a respondent. */
+export function formClosedMessage(error: unknown): string | undefined {
+  return (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+}
+
 export interface CreateSurveyResponse {
   title: string;
   languages: string[];

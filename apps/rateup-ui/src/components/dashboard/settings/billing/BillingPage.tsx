@@ -41,9 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
@@ -114,8 +112,6 @@ export function BillingPage() {
   const [activeOrderData, setActiveOrderData] = useState<PaymentOrder | null>(null);
   const [latestOrderData, setLatestOrderData] = useState<PaymentOrder | null>(null);
 
-  const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
-
   useEffect(() => {
     // Conversation packs are one-off orders that carry no subscription. They belong in
     // billing history, but not here: this picks the order that *is* the subscription, and
@@ -169,7 +165,8 @@ export function BillingPage() {
     planName: cart?.name,
     period: cart?.period,
     orgId: user?.orgId,
-    isAnnualMessageLimit,
+    // Annual pooling is no longer offered at checkout; only an admin can turn it on.
+    isAnnualMessageLimit: false,
   };
 
   /**
@@ -544,32 +541,6 @@ export function BillingPage() {
                     })}
                   </ul>
                 </div>
-
-                {cadenceLabel(cart?.period) === "year" && (
-                  <Field
-                    orientation="horizontal"
-                    className="items-start gap-3 rounded-lg border border-border p-4"
-                  >
-                    <Switch
-                      id="annual-limit"
-                      checked={isAnnualMessageLimit}
-                      onCheckedChange={setIsAnnualMessageLimit}
-                      className="mt-0.5"
-                    />
-                    <FieldLabel htmlFor="annual-limit" className="cursor-pointer">
-                      <span className="flex flex-col gap-1">
-                        <span className="text-sm font-medium">
-                          {translations("Pool my conversation allowance annually")}
-                        </span>
-                        <span className="text-xs font-normal leading-relaxed text-muted-foreground">
-                          {translations(
-                            "Spend the whole year's conversations whenever you like, instead of a fixed monthly cap.",
-                          )}
-                        </span>
-                      </span>
-                    </FieldLabel>
-                  </Field>
-                )}
               </div>
             </div>
           ) : (
@@ -629,11 +600,7 @@ export function BillingPage() {
                     });
                   } else {
                     setProcessingPayment(true);
-                    createCheckout.mutate(checkoutDetails, {
-                      onSettled: (_data) => {
-                        setIsAnnualMessageLimit(false);
-                      },
-                    });
+                    createCheckout.mutate(checkoutDetails);
                     close();
                     reset();
                   }

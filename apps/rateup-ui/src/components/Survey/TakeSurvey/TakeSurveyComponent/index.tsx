@@ -29,6 +29,7 @@ import QuestionForm from "./QuestionForm.tsx";
 import QuestionTitle from "./QuestionTitle.tsx";
 import {
   checkGoogleReviewForQuestion,
+  FormClosedError,
   getFirstQuestion,
   getLastQuestion,
   getQuestionsLength,
@@ -52,12 +53,15 @@ function TakeSurvey({
   fromShortUrl = false,
   setIsThankyouPage = null,
   setIsDefaultThankyouPage = null,
+  setFormClosed,
 }: {
   survey: Survey;
   setIsReviewPage?: (language: string) => void;
   fromShortUrl?: boolean;
   setIsThankyouPage?: ((isThankYou: boolean) => void) | null;
   setIsDefaultThankyouPage?: ((isDefault: boolean) => void) | null;
+  /** Called when the org runs out of responses mid-fill; the page then shows FormClosed. */
+  setFormClosed?: (message?: string) => void;
 }) {
   const isSurveyThemePreview = useIsSurveyThemePreview();
 
@@ -343,6 +347,10 @@ function TakeSurvey({
         }
       })
       .catch((e) => {
+        if (e instanceof FormClosedError) {
+          setFormClosed?.(e.detail);
+          return;
+        }
         if (e?.message === "ALREADY_RESPONDED") {
           if (fromShortUrl) {
             navigate({

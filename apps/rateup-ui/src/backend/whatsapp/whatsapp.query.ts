@@ -128,9 +128,18 @@ export const useSyncTemplatesMutation = (onSuccess?: () => void, onError?: () =>
   const queryClient = useQueryClient();
   const syncMutation = useMutation({
     mutationFn: (data?: SyncTemplatesInput) => syncTemplates(data),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
       toast.success("Templates Synced Successfully");
+      // A template Meta no longer has comes back as an editable draft rather than
+      // silently vanishing, so say so - it is the user's cue to resubmit it.
+      if (result?.revertedToDraft) {
+        toast.info(
+          result.revertedToDraft === 1
+            ? "1 template no longer exists on WhatsApp and was moved back to draft"
+            : `${result.revertedToDraft} templates no longer exist on WhatsApp and were moved back to draft`,
+        );
+      }
       onSuccess?.();
     },
     onError: (error) => {

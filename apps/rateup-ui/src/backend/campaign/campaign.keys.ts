@@ -14,6 +14,8 @@ export const campaignKeys = {
   byTeam: (teamId: KeyPart) => ["campaignsbyTeam", teamId] as const,
   contactGroups: () => ["campaignContactGroupsData"] as const,
   contactGroupsByType: (type: KeyPart) => ["campaignContactGroupsData", type] as const,
+  sendPreflight: (campaignId: KeyPart, statuses: KeyPart) =>
+    ["campaignSendPreflight", campaignId, statuses] as const,
 } as const;
 
 export const subscriptionKeys = {
