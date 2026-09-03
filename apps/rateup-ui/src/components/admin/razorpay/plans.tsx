@@ -66,6 +66,19 @@ interface PlanTableData {
   canDelete: boolean;
 }
 
+/** Mirrors the API's ordering so clicking the Status header keeps LIVE/ACTIVE on top. */
+const STATUS_RANK: Record<PaymentPlanStatus, number> = {
+  [PaymentPlanStatus.LIVE]: 0,
+  [PaymentPlanStatus.ACTIVE]: 1,
+  [PaymentPlanStatus.NULL]: 2,
+  [PaymentPlanStatus.INACTIVE]: 3,
+};
+
+const statusRank = (status?: PaymentPlanStatus) =>
+  status
+    ? (STATUS_RANK[status] ?? STATUS_RANK[PaymentPlanStatus.NULL])
+    : STATUS_RANK[PaymentPlanStatus.NULL];
+
 const RazorpayPlans = () => {
   const planUpdateMutate = usePaymentPlanUpdate();
   const { data: rateupPlans } = useRateupPaymentsPlans();
@@ -171,6 +184,7 @@ const RazorpayPlans = () => {
     {
       accessorKey: "status",
       header: createSortableHeader("Status"),
+      sortingFn: (a, b) => statusRank(a.original.status) - statusRank(b.original.status),
       cell: ({ row }) => {
         const status = row.getValue("status") as PaymentPlanStatus;
         const getStatusColor = (status: PaymentPlanStatus) => {
@@ -281,22 +295,20 @@ const RazorpayPlans = () => {
   if (isLoading) return <RateupLoader className="h-dvh" />;
 
   const tableData: PlanTableData[] = Array.isArray(plans?.data)
-    ? plans?.data
-        ?.filter((p: RazorpayPlan) => p.status !== "INACTIVE")
-        ?.map((plan: RazorpayPlan) => ({
-          id: plan.planId,
-          name: plan.name,
-          createdAt: dayjs.unix(plan.createdAt ?? 0).format("DD/MM/YYYY HH:mm:ss"),
-          amount: plan.amount,
-          currency: plan.currency,
-          period: plan.period,
-          interval: plan.interval,
-          status: plan.status,
-          description: plan.description,
-          canDelete: !(
-            plan.status && [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status)
-          ),
-        }))
+    ? plans?.data?.map((plan: RazorpayPlan) => ({
+        id: plan.planId,
+        name: plan.name,
+        createdAt: dayjs.unix(plan.createdAt ?? 0).format("DD/MM/YYYY HH:mm:ss"),
+        amount: plan.amount,
+        currency: plan.currency,
+        period: plan.period,
+        interval: plan.interval,
+        status: plan.status,
+        description: plan.description,
+        canDelete: !(
+          plan.status && [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status)
+        ),
+      }))
     : [];
 
   const activePlans = tableData.filter((p) =>
