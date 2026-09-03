@@ -1,6 +1,7 @@
 import { IconCircleCheck, IconSparkles } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { isUnlimitedCount } from "@/components/HomePage/pages/Pricing/pricing.data.ts";
 import type { PricingPlan } from "@/components/HomePage/pages/Pricing/types.ts";
 import { Card } from "@/components/ui/card.tsx";
 
@@ -11,6 +12,12 @@ import { Card } from "@/components/ui/card.tsx";
  * derived from the stored `features` blob: the catalog is the same copy the pricing page
  * sells, so the customer sees the list they bought. Orgs on a custom or legacy plan have
  * no catalog row, and fall back to a summary read off their own entitlements.
+ *
+ * The other fallback is an Enterprise account contracted to a ceiling. Enterprise is
+ * unlimited by default and its card copy says so, but a deal can cap an individual
+ * account, and the send gate enforces that cap. Showing the tier's "Unlimited" line to a
+ * customer whose messages stop at 200,000 would be telling them the opposite of what the
+ * product does, so their own numbers are shown instead.
  */
 export function PlanFeatures({
   plan,
@@ -21,7 +28,11 @@ export function PlanFeatures({
 }) {
   const { t: translations } = useTranslation();
 
-  const bullets = plan?.description?.length ? plan.description : derivedBullets(subscription);
+  const catalogBullets = plan?.description ?? [];
+  const bullets =
+    catalogBullets.length && !overstatesAllowance(catalogBullets, subscription)
+      ? catalogBullets
+      : derivedBullets(subscription);
 
   return (
     <Card className="p-6 gap-3">
@@ -48,6 +59,26 @@ export function PlanFeatures({
   );
 }
 
+/**
+ * Whether the catalog copy promises "unlimited" something the org is in fact capped on.
+ *
+ * Only a contracted Enterprise account can be in this state: every other tier stores real
+ * numbers and sells copy that quotes them.
+ */
+function overstatesAllowance(bullets: string[], subscription?: Subscription): boolean {
+  if (!bullets.some((bullet) => /unlimited/i.test(bullet))) return false;
+
+  const features = subscription?.features;
+  const caps = [
+    features?.whatsapp?.conversation?.count?.max,
+    features?.webSurvey?.count?.monthlyResponseLimit,
+    features?.team?.count?.max,
+    features?.team?.teamMember?.count?.max,
+  ];
+
+  return caps.some((max) => typeof max === "number" && max > 0 && !isUnlimitedCount(max));
+}
+
 /** Fallback for custom/legacy plans: describe the limits the org is actually running on. */
 function derivedBullets(subscription?: Subscription): string[] {
   const features = subscription?.features;
@@ -59,10 +90,14 @@ function derivedBullets(subscription?: Subscription): string[] {
   const conversations = features.whatsapp?.conversation?.count?.max;
   const responses = features.webSurvey?.count?.monthlyResponseLimit;
 
-  if (teams) bullets.push(`${teams.toLocaleString()} teams`);
-  if (members) bullets.push(`${members.toLocaleString()} users`);
-  if (conversations) bullets.push(`${conversations.toLocaleString()} conversations / mo`);
-  if (responses) bullets.push(`${responses.toLocaleString()} form submissions / mo`);
+  // A count at the sentinel is not a number to print: 10,000,000 teams reads as a bug.
+  const count = (value: number | undefined) =>
+    isUnlimitedCount(value) ? "Unlimited" : value?.toLocaleString();
+
+  if (teams) bullets.push(`${count(teams)} teams`);
+  if (members) bullets.push(`${count(members)} users`);
+  if (conversations) bullets.push(`${count(conversations)} conversations / mo`);
+  if (responses) bullets.push(`${count(responses)} form submissions / mo`);
   if (features.whatsapp?.campaign?.active) bullets.push("Campaigns");
   if (features.loyalty?.active) bullets.push("Loyalty & referrals");
   if (features.ai?.active) bullets.push("AI assistant");

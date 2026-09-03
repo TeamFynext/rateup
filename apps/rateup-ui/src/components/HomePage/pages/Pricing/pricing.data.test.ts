@@ -4,7 +4,9 @@ import {
   adviseOnTopUp,
   buildTiers,
   detectPricingCurrency,
+  conversationPackAnswer,
   estimateTopUp,
+  isSalesLedRegion,
   resolveDisplayPrice,
   selectGatewayPlan,
   tierConversationAllowance,
@@ -370,8 +372,14 @@ describe("tierConversationAllowance", () => {
   test("an unlimited tier has no cap to top up", () => {
     // Enterprise carries a large sentinel rather than null so the API's `used >= max`
     // comparisons keep working; here it has to read as "nothing to top up".
-    expect(tierConversationAllowance(tierFor(1_000_000))).toBeNull();
+    expect(tierConversationAllowance(tierFor(10_000_000))).toBeNull();
     expect(tierConversationAllowance(tierFor(undefined))).toBeNull();
+  });
+
+  test("a large contracted ceiling is still a cap, not the sentinel", () => {
+    // An Enterprise account can be capped at a number this big, and the send gate stops
+    // there. Reading it as "unlimited" would advertise headroom the customer does not have.
+    expect(tierConversationAllowance(tierFor(1_000_000))).toBe(1_000_000);
   });
 });
 
@@ -462,5 +470,61 @@ describe("detectPricingCurrency", () => {
     } finally {
       spy.mockRestore();
     }
+  });
+});
+
+describe("isSalesLedRegion", () => {
+  test("treats the Gulf states as sales-led", () => {
+    expect(isSalesLedRegion("Asia/Kuwait")).toBe(true);
+    expect(isSalesLedRegion("Asia/Riyadh")).toBe(true);
+    expect(isSalesLedRegion("Asia/Dubai")).toBe(true);
+    expect(isSalesLedRegion("Asia/Muscat")).toBe(true);
+    expect(isSalesLedRegion("Asia/Qatar")).toBe(true);
+    expect(isSalesLedRegion("Asia/Bahrain")).toBe(true);
+  });
+
+  test("leaves everywhere else self-serve", () => {
+    expect(isSalesLedRegion("Asia/Kolkata")).toBe(false);
+    expect(isSalesLedRegion("America/New_York")).toBe(false);
+    expect(isSalesLedRegion("Europe/London")).toBe(false);
+    // Adjacent Middle Eastern zones that are not in the block.
+    expect(isSalesLedRegion("Asia/Tehran")).toBe(false);
+    expect(isSalesLedRegion("Asia/Amman")).toBe(false);
+  });
+
+  test("is independent of the currency rule", () => {
+    // The region decides whether a price is shown at all, the currency which one it is
+    // in. Nothing about the Gulf makes it an INR market, so a Gulf visitor who is shown
+    // a price — in the comparison matrix, or after the block is lifted — sees dollars.
+    expect(detectPricingCurrency("Asia/Kuwait")).toBe("USD");
+  });
+
+  test("falls back to self-serve when the browser will not report a timezone", () => {
+    // Failing open matches the currency fallback: a visitor we cannot place gets the
+    // ordinary page rather than being routed to sales.
+    const spy = vi.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
+      throw new Error("Intl unavailable");
+    });
+    try {
+      expect(isSalesLedRegion()).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe("conversationPackAnswer", () => {
+  const pack = { conversations: 1000, inrPrice: 2000, usdPrice: 25 };
+
+  test("quotes both list prices by default", () => {
+    expect(conversationPackAnswer(pack)).toContain("costs ₹2,000 / $25");
+  });
+
+  test("quotes no figure when prices are withheld", () => {
+    // The FAQ is the last place a price could reach a sales-led region: the cards are
+    // gone by then, so an unguarded answer here would be the one number that got through.
+    const answer = conversationPackAnswer(pack, false);
+    expect(answer).not.toMatch(/[₹$]/);
+    expect(answer).toContain("1,000 extra conversations");
   });
 });

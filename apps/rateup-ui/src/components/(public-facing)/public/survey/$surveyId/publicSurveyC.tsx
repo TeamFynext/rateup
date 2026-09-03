@@ -8,6 +8,8 @@ import TakeSurvey from "@/components/Survey/TakeSurvey/TakeSurveyComponent/index
 import { Button } from "@/components/ui/button.tsx";
 import { rateupLogo } from "@/utils/constants.ts";
 
+import { FormClosed } from "../../../ws/$shortId/FormClosed.tsx";
+
 import errorPageStyles from "../../../ws/$shortId/ws.module.css";
 
 export default function Page({
@@ -21,6 +23,10 @@ export default function Page({
 }) {
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
+  // Set when the org runs out of responses while this form is being filled in: the page
+  // loaded fine, so only the submit can discover it.
+  const [closedMessage, setClosedMessage] = useState<string | undefined>();
+  const [formClosed, setFormClosed] = useState(false);
   const { t: translations } = useTranslation();
 
   useEffect(() => {
@@ -51,6 +57,10 @@ export default function Page({
       }
     }
   }, [error_occured]);
+
+  if (formClosed) {
+    return <FormClosed message={closedMessage} />;
+  }
 
   if (error_occured) {
     return (
@@ -84,6 +94,10 @@ export default function Page({
             survey={survey!}
             setIsReviewPage={setIsReviewPage}
             fromShortUrl={fromShortUrl}
+            setFormClosed={(message) => {
+              setClosedMessage(message);
+              setFormClosed(true);
+            }}
           />
         </TakeSurveyLayoutWeb>
       )}

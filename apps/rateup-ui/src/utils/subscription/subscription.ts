@@ -50,7 +50,7 @@ export function getSampleSubscriptionFeatures(count: number): SubscriptionFeatur
       active: true,
     },
     webSurvey: {
-      count: { max: count, monthlyResponseLimit: 1000 },
+      count: { monthlyResponseLimit: 1000 },
       active: true,
       encryption: { active: true },
       googleReview: { active: true },

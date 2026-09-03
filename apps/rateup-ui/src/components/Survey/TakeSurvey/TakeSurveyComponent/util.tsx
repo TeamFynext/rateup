@@ -2,6 +2,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { createResponsePublic } from "@/backend/surveys/response/response.api";
+import { formClosedMessage, isFormClosedError } from "@/backend/surveys/survey.api";
 import { useGetSurveyVariables } from "@/backend/surveys/surveys.query";
 import { PageType, QuestionType as Q, QuestionType, SurveyVariableType } from "@/types/enums.ts";
 import { emailPattern } from "@/utils/constants.ts";
@@ -74,6 +75,14 @@ export const checkGoogleReviewForQuestion = (
   return false;
 };
 
+/** Thrown when the form stopped accepting responses between opening it and submitting. */
+export class FormClosedError extends Error {
+  constructor(public readonly detail?: string) {
+    super("FORM_CLOSED");
+    this.name = "FormClosedError";
+  }
+}
+
 export function submitSurvey({
   surveyTeamMapId,
   responses,
@@ -110,9 +119,17 @@ export function submitSurvey({
       // setIsSavingResponses(false);
     })
     .catch((e) => {
+      setIsSavingResponses(false);
+
+      // The form ran out of responses while this one was being filled in. "Something went
+      // wrong" would be wrong twice over: nothing went wrong here, and retrying — which is
+      // what that message invites — cannot succeed until the org's allowance resets.
+      if (isFormClosedError(e)) {
+        throw new FormClosedError(formClosedMessage(e));
+      }
+
       console.error(e);
       toast.error("Something went wrong while submitting the survey.");
-      setIsSavingResponses(false);
       if (e?.response?.data === "ALREADY_RESPONDED") {
         throw new Error("ALREADY_RESPONDED");
       }
