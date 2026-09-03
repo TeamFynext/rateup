@@ -57,7 +57,6 @@ import {
   YNResponseMap,
 } from "../../utils/enumMap.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
-import { autoGenerateTicket } from "../ticket/ticketCard/card.service.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import { ContactGroupType } from "../contact/contactGroup/contactGroup.schema.js";
@@ -81,13 +80,6 @@ export async function getResponses(surveyTeamMapId: string) {
   const responses = await prisma.surveyResponse.findMany({
     where: {
       surveyTeamMapId,
-    },
-    include: {
-      Ticket: {
-        select: {
-          id: true,
-        },
-      },
     },
   });
   return responses;
@@ -171,11 +163,6 @@ export async function getAllResponses(
             },
           },
           platform: true,
-          Ticket: {
-            select: {
-              id: true,
-            },
-          },
         },
         orderBy: {
           createdAt: "asc",
@@ -770,10 +757,8 @@ async function findResponseByIdempotencyKey(idempotencyKey: string) {
 
 export async function createResponse(
   input: CreateResponseInput,
-  shouldRaiseTicket = false,
   checkUniqueDevice = false,
   ip: string | null = null,
-  columnId?: string,
 ) {
   if (checkUniqueDevice) {
     const existingResponse = await prisma.surveyResponse.findFirst({
@@ -863,16 +848,6 @@ export async function createResponse(
       surveyResponse.platform === "WHATSAPP" ? SubscriptionFeaturePathName.Whatsapp : "survey",
       surveyResponse.surveyTeamMap?.team.orgId,
     );
-  }
-
-  if (shouldRaiseTicket && input?.responses?.length > 0 && columnId) {
-    //generate ticket
-    await autoGenerateTicket({
-      ticketColumnId: columnId,
-      surveyResponseId: surveyResponse.id,
-      type: surveyResponse.platform === "WEB" ? "SURVEY_RESPONSE" : "FLOW_RESPONSE",
-      orgId: surveyResponse?.surveyTeamMap?.team.orgId,
-    });
   }
 
   return surveyResponse;

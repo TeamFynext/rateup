@@ -1,4 +1,3 @@
-import { FastifyReply, FastifyRequest } from "fastify";
 import {
   WaTemplateCategory,
   WaTemplateComponentType,
@@ -14,8 +13,6 @@ import {
 import { parseStringWithVariables } from "../../../utils/template.js";
 import { CreateWaTemplateFormattedInput, CreateWaTemplateInput } from "./wa_templates.schema.js";
 import { getTemplateByIdAndOrgId } from "./wa_templates.service.js";
-import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
-import prisma from "../../../utils/prisma.js";
 
 export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplateFormattedInput {
   let components: CreateWaTemplateFormattedInput["components"] = [];
@@ -317,13 +314,3 @@ export async function getTemplateQuery(
 }
 
 export { getFlowIdFromTemplateComponents } from "../../../utils/waTemplateComponents.js";
-
-export async function verifyTemplateSubscriptionLimit(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  return await enforceWhatsappCountLimit(request, reply, {
-    label: "templates",
-    count: (orgId) => prisma.waTemplate.count({ where: { orgId } }),
-  });
-}

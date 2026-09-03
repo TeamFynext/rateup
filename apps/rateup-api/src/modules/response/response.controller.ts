@@ -236,22 +236,11 @@ export async function createResponseHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { shouldRaiseTicket, checkUniqueDevice, selectedColumnId, ...data } = request.body;
+  const { checkUniqueDevice, ...data } = request.body;
   const ip = getIp(request);
 
   try {
-    const response = await createResponse(
-      data,
-      shouldRaiseTicket,
-      checkUniqueDevice,
-      // response.service.ts's createResponse infers `ip`'s parameter type as exactly `null`
-      // (untyped default parameter `ip = null`), but the DB column (SurveyResponse.ip String?)
-      // and the checkUniqueDevice lookup both need the real client IP string — this is a
-      // pre-existing type gap in that (out-of-scope, already-verified-clean-elsewhere) file,
-      // not something to silently work around by passing null and breaking checkUniqueDevice.
-      ip as unknown as Parameters<typeof createResponse>[3],
-      selectedColumnId ?? undefined,
-    );
+    const response = await createResponse(data, checkUniqueDevice, ip);
     reply.code(201).send();
     const {
       surveyTeamMapId,

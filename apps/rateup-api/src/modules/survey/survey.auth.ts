@@ -2,11 +2,13 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth.js";
 import { CreateSurveyInput } from "./survey.schema.js";
 import { GetSurveyByIdParams } from "./survey.schema.js";
-// import prisma from "../../utils/prisma.js";
-// import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums.js";
-// import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
-// import dayjs from "dayjs";
-// import { sendSubscriptionExpiryAlertEmail } from "../../utils/email/payments/subscriptionExpiryAlert.js";
+import {
+  alertResponseLimitReached,
+  checkResponseAllowance,
+  FORM_CLOSED_REASON,
+  orgForSurveyLink,
+  RESPONSE_LIMIT_MESSAGE,
+} from "./survey.limits.js";
 
 export async function verifySurveyAccess(
   request: FastifyRequest<{
@@ -38,90 +40,35 @@ export async function verifySurveyCreateAccess(
   }
 }
 
-export async function verifySurveyMaxCountRestriction(
-  request: FastifyRequest<{
-    // Body: CreateSurveyInput;
-  }>,
-  reply: FastifyReply,
-) {
-  // TODO: re-check
-  // const orgId = request.user.orgId;
-  //
-  // const count = await prisma.survey.count({
-  //   where: {
-  //     type: SurveyType.Web,
-  //     teams: {
-  //       some: {
-  //         team: {
-  //           orgId: orgId,
-  //         },
-  //       },
-  //     },
-  //   },
-  // });
-  //
-  // if (count >= request.subscription.features[SubscriptionFeaturePathName.WebSurvey].count.max) {
-  //   await sendUsageLimitMailAlert(orgId);
-  //   reply.code(403).send({
-  //     message: "You have reached the maximum limit of surveys",
-  //     displayMessageInClient: true,
-  //   });
-  // }
-}
-
+/**
+ * Closes a public form once the org has spent its monthly response allowance.
+ *
+ * Runs on the form's own page load rather than only on submit, so a respondent is told
+ * before filling anything in — but the submit route carries the same check
+ * ({@link enforceResponseLimit}), because a page load is not what spends the allowance and
+ * a form already open in a tab would otherwise sail past it.
+ *
+ * The message names no plan and no limit: the person reading it is a customer of the org,
+ * not of Rateup, and "upgrade your plan" means nothing to them. The org's owner is told
+ * by email instead.
+ */
 export async function verifySurveyMonthlyLimitRestriction(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
   }>,
   reply: FastifyReply,
 ) {
-  // let id = request.params.id;
-  // const surveyTeamMapWhere = id.length === 8 ? { shortUrlId: id } : { id };
-  // const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
-  //   where: surveyTeamMapWhere,
-  //   include: {
-  //     team: true,
-  //   },
-  // });
-  //
-  // if (!surveyTeamMap) {
-  //   reply.code(404).send({
-  //     message: "Survey not found...!",
-  //     displayMessageInClient: true,
-  //   });
-  // }
-  //
-  // let orgId = surveyTeamMap.team.orgId;
-  //
-  // const usage = await prisma.usageStats.findUnique({
-  //   where: {
-  //     orgId: orgId,
-  //   },
-  // });
-  //
-  // const subscription = await prisma.subscription.findUnique({
-  //   where: {
-  //     orgId: orgId,
-  //   },
-  // });
-  //
-  // //check subscription expiry
-  // if (dayjs().isAfter(subscription.expiresAt)) {
-  //   await sendSubscriptionExpiryAlertEmail(subscription);
-  //   return reply.code(403).send({
-  //     message: "Your subscription has been expired",
-  //     displayMessageInClient: true,
-  //   });
-  // }
-  //
-  // if (
-  //   usage.monthlySurveyResponses >=
-  //   subscription.features[SubscriptionFeaturePathName.WebSurvey].count.monthlyResponseLimit
-  // ) {
-  //   await sendUsageLimitMailAlert(orgId);
-  //   reply.code(403).send({
-  //     message: "You have reached the maximum monthly limit of surveys responses.",
-  //     displayMessageInClient: true,
-  //   });
-  // }
+  const orgId = await orgForSurveyLink(request.params.id);
+  // An unknown link is the handler's 404 to give, not this gate's.
+  if (!orgId) return;
+
+  const { withinLimit } = await checkResponseAllowance(orgId);
+  if (withinLimit) return;
+
+  await alertResponseLimitReached(orgId);
+  return reply.code(403).send({
+    message: RESPONSE_LIMIT_MESSAGE,
+    reason: FORM_CLOSED_REASON,
+    displayMessageInClient: true,
+  });
 }

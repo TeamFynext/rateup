@@ -1,8 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
-import prisma from "../../../utils/prisma.js";
 import { Role } from "../../../../generated/prisma/client.js";
+import { checkPlanLimit } from "../../subscription/planLimits.js";
 
 export async function getWhatsappSurveyVerifySubscriptionHandler(
   request: FastifyRequest<{
@@ -36,48 +36,18 @@ export async function assertWithinConversationLimit(orgId: string) {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-// `Subscription.features` is an untyped Json column, so the WhatsApp conversation
-// cap is read out of it defensively; anything missing/malformed reads as "no cap".
-function readWhatsappConversationMax(features: unknown): number | undefined {
-  if (!isRecord(features)) return undefined;
-  const whatsapp = features[SubscriptionFeaturePathName.Whatsapp];
-  if (!isRecord(whatsapp)) return undefined;
-  const conversation = whatsapp.conversation;
-  if (!isRecord(conversation)) return undefined;
-  const count = conversation.count;
-  if (!isRecord(count)) return undefined;
-  return typeof count.max === "number" ? count.max : undefined;
-}
-
 export async function checkConversationLimitAvailable(orgId: string) {
-  const usage = await prisma.usageStats.findUnique({
-    where: {
-      orgId: orgId,
-    },
-  });
-
-  const subscription = await prisma.subscription.findUnique({
-    where: {
-      orgId: orgId,
-    },
-  });
-
-  // No usage row or no subscription to compare against - nothing to enforce, so treat
-  // the org as within its limit rather than crashing on the missing data.
-  if (!usage || !subscription) {
-    return true;
-  }
-
-  const max = readWhatsappConversationMax(subscription.features);
-  if (max === undefined) {
-    return true;
-  }
-
-  return !(subscription.isAnnualMessageLimit
-    ? usage.annualConversationsCount >= max * 12
-    : usage.monthlyConversationsCount >= max);
+  // The `conversations` row in PLAN_LIMITS carries every rule this gate used to spell out
+  // itself: packs are included (reading the plan's number alone refuses sends from a
+  // customer who paid for the headroom), an uncapped plan is not measured at all, an
+  // annual allowance is twelve months of the monthly one, and missing bookkeeping reads as
+  // "within limit" rather than refusing a send over data the customer cannot fix.
+  //
+  // Shared with the campaign preflight so a customer cannot be warned about a shortfall
+  // that never arrives, or told they have room and then refused. Enforced against the
+  // METERED counters (self-derived 24h conversation windows), not the inbox-ticket
+  // counters: an inbox ticket only closes when a human or an automation closes it, so it
+  // was never a bounded unit to price against, while the metered window always expires.
+  // Name and signature are unchanged, so the ~35 send call sites pick this up untouched.
+  return !(await checkPlanLimit(orgId, "conversations")).exceeded;
 }

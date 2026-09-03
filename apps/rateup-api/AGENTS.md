@@ -156,7 +156,7 @@ generated/              # Generated Prisma client
 
 ### Feature Modules
 
-Modules are organized by domain: `ai`, `campaign`, `chatbot`, `contact`, `dashboard`, `email`, `integrations`, `landingPage`, `lifecycle`, `loyalty`, `menu`, `notification`, `org`, `payment`, `question`, `referrals`, `response`, `services`, `stats`, `subscription`, `survey`, `team`, `testimonial`, `ticket`, `user`, `webhook`, `whatsapp`, and more.
+Modules are organized by domain: `ai`, `campaign`, `chatbot`, `contact`, `dashboard`, `email`, `integrations`, `landingPage`, `lifecycle`, `loyalty`, `menu`, `notification`, `org`, `payment`, `question`, `referrals`, `response`, `services`, `stats`, `subscription`, `survey`, `team`, `testimonial`, `user`, `webhook`, `whatsapp`, and more.
 
 ## Key Conventions
 

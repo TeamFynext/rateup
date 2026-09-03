@@ -10,7 +10,6 @@ interface OverallStats {
   loyaltyCustomersCount: number;
   activeWebSurveysCount: number;
   teamsCount: number;
-  ticketCount: number;
 }
 
 const EMPTY_STATS: OverallStats = {
@@ -21,7 +20,6 @@ const EMPTY_STATS: OverallStats = {
   loyaltyCustomersCount: 0,
   activeWebSurveysCount: 0,
   teamsCount: 0,
-  ticketCount: 0,
 };
 
 export async function getOverallStats(orgId: string, userId: string): Promise<OverallStats> {
@@ -33,11 +31,7 @@ export async function getOverallStats(orgId: string, userId: string): Promise<Ov
   (SELECT COUNT(*)::INTEGER FROM "WaAutomatedReply" WHERE "orgId" = ${orgId}::uuid) AS "automationsCount",
   (SELECT COUNT(*)::INTEGER FROM "CustomerLoyaltyAccount" cla JOIN "LoyaltyProgram" lp ON cla."programId" = lp.id WHERE lp."orgId" = ${orgId}::uuid) AS "loyaltyCustomersCount",
   (SELECT COUNT(*)::INTEGER FROM "Survey" WHERE "orgId" = ${orgId}::uuid AND "active" = TRUE AND "type" = ${SurveyType.Web}) AS "activeWebSurveysCount",
-  (SELECT COUNT(*)::INTEGER FROM "TeamMember" tm JOIN "Team" t ON tm."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid AND tm."userId" = ${userId}::uuid) AS "teamsCount",
-  (SELECT COUNT(*)::INTEGER FROM "TicketCard" tc JOIN "TicketColumn" tcl ON tc."ticketColumnId" = tcl.id JOIN "TicketBoard" tb ON
-   tcl."ticketBoardId" = tb.id JOIN "TicketBoardTeam" tbt ON tbt."boardId" = tb.id JOIN "Team" t ON tbt."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid
-   AND tc."createdAt" > NOW() - INTERVAL '24 hours'
-   ) AS "ticketCount"
+  (SELECT COUNT(*)::INTEGER FROM "TeamMember" tm JOIN "Team" t ON tm."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid AND tm."userId" = ${userId}::uuid) AS "teamsCount"
    ;`;
   return counts[0] ?? EMPTY_STATS;
 }
@@ -75,7 +69,6 @@ interface TeamMember {
   profilePhoto: string;
   role: string;
   lastLoggedInAt: string | null;
-  assignedTicketsCount: number;
   assignedChatsCount: number;
   status: UserAvailabilityStatus;
 }
@@ -92,11 +85,6 @@ export async function getTeamMemberStats(
 
   const users: TeamMember[] =
     await prisma.$queryRaw`SELECT u.id, u."name", u."email", u."profilePhoto", orm."role", orm. "status", u."lastLoggedInAt",
-    (
-        SELECT COUNT(*)::INTEGER
-        FROM "TicketCardAssignee" ticket
-        WHERE ticket."assigneeId" = u.id
-    ) AS "assignedTicketsCount",
     (
         SELECT COUNT(*)::INTEGER
         FROM "WaInboxAssign" inb

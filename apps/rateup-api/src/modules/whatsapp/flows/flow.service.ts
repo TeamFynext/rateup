@@ -219,6 +219,13 @@ export async function getFlowsFromDb(
           teams: {
             select: {
               teamId: true,
+              // The cards show a response count per flow, summed over the survey's
+              // teams — without this the count renders as 0 for every flow.
+              surveyStats: {
+                select: {
+                  completed: true,
+                },
+              },
             },
           },
         },

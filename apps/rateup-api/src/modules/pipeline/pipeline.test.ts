@@ -32,6 +32,7 @@ vi.mock("../../utils/prisma.js", () => ({
       findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
+      delete: vi.fn(),
     },
     leadActivity: { create: vi.fn(), createMany: vi.fn() },
     leadTask: { updateMany: vi.fn() },
@@ -44,7 +45,36 @@ vi.mock("../../utils/prisma.js", () => ({
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
+// The stage sync fans out to BullMQ, which would otherwise try to reach Redis
+// from a unit test. Mocked so the enqueue can be asserted instead.
+vi.mock("../../workers/bullmq/queues/index.js", () => ({
+  integrationTriggerQueue: { add: vi.fn() },
+  notificationQueue: { add: vi.fn() },
+}));
+// Pulled in by a dynamic import inside `moveLead` to run the Stage Updated
+// rules. Left real it drags the whole automated-reply module tree in mid-test,
+// which is slow enough under a parallel run to trip the 5s timeout.
+vi.mock("../whatsapp/automatedReply/wa_automatedReply.utils.js", () => ({
+  checkAndExecuteRuleByTriggerEvent: vi.fn(),
+  resolveContactChannel: vi.fn().mockResolvedValue({ platform: "whatsapp" }),
+}));
+vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
+  addZapierTriggerToQueue: vi.fn(),
+  ZapierTriggers: { CONTACT_STAGE_UPDATED: "contact_stage_updated" },
+}));
+vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
+  pushCrmLeadStatus: vi.fn(),
+  ZohoTriggers: { BIGIN_DEAL_CREATE: "bigin_deal_created" },
+}));
+vi.mock("../integrations/meta/conversions.service.js", () => ({
+  sendWonConversionEvent: vi.fn(),
+}));
+
 import prisma from "../../utils/prisma.js";
+import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
+import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
+import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.service.js";
+import { sendWonConversionEvent } from "../integrations/meta/conversions.service.js";
 import {
   isPipelineMember,
   TeamAccessError,
@@ -60,10 +90,15 @@ import {
 } from "./pipeline.auth.js";
 import { deleteStage, StageNotEmptyError } from "./pipelineStage/stage.service.js";
 import {
+  clearContactStage,
   closeLead,
+  countContactStageLoss,
   createLead,
   moveLead,
   openLeadOnPipelineForContact,
+  resolvePipelineForContact,
+  setContactStage,
+  bulkSetContactStage,
   updateLead,
 } from "./pipelineLead/lead.service.js";
 import { createLeadRequestSchema } from "./pipelineLead/lead.schema.js";
@@ -558,7 +593,7 @@ describe("a lead's owner", () => {
 
 describe("a rule opening a lead on a named pipeline", () => {
   beforeEach(() => {
-    db.lead.findFirst.mockResolvedValue(null);
+    db.lead.findUnique.mockResolvedValue(null);
     db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
     db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ status: "OPEN" });
     db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
@@ -593,7 +628,7 @@ describe("a rule opening a lead on a named pipeline", () => {
 
   // A closed lead means someone decided; a second card would quietly undo it.
   test("leaves a contact already on the board alone", async () => {
-    db.lead.findFirst.mockResolvedValue({ id: "existing" });
+    db.lead.findUnique.mockResolvedValue({ id: "existing" });
 
     expect(await open()).toBeNull();
     expect(db.lead.create).not.toHaveBeenCalled();
@@ -766,5 +801,500 @@ describe("the lead request schema", () => {
       true,
     );
     expect(createLeadRequestSchema.safeParse({ ...base, email: "nope" }).success).toBe(false);
+  });
+});
+
+describe("assigning a contact to a stage", () => {
+  beforeEach(() => {
+    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
+    db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
+    db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
+    db.lead.update.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
+    db.lead.findUniqueOrThrow.mockResolvedValue({
+      stageId: "old-stage",
+      stage: { name: "New Lead" },
+    });
+  });
+
+  function assign() {
+    return setContactStage({
+      contactId: CONTACT,
+      pipelineId: PIPELINE,
+      stageId: STAGE,
+      source: "WHATSAPP",
+      channel: "WHATSAPP",
+    });
+  }
+
+  test("opens a lead on that column when the contact has none", async () => {
+    db.lead.findUnique.mockResolvedValue(null);
+
+    await assign();
+
+    expect(db.lead.create.mock.calls[0][0].data).toMatchObject({
+      pipelineId: PIPELINE,
+      stageId: STAGE,
+      contactId: CONTACT,
+      // Assigning names a board, not a team.
+      teamId: null,
+    });
+  });
+
+  test("moves the lead when the contact is already on the board", async () => {
+    db.lead.findUnique.mockResolvedValue({ id: LEAD, stageId: "old-stage" });
+
+    await assign();
+
+    expect(db.lead.create).not.toHaveBeenCalled();
+    expect(db.lead.update.mock.calls[0][0].data).toMatchObject({ stageId: STAGE });
+  });
+
+  // Integrations re-assert the same stage on every sync; a timeline full of
+  // moves that never happened would make the real ones unreadable.
+  test("is a no-op when the lead already sits in that column", async () => {
+    db.lead.findUnique.mockResolvedValue({ id: LEAD, stageId: STAGE });
+
+    expect(await assign()).toBeNull();
+    expect(db.lead.update).not.toHaveBeenCalled();
+    expect(db.leadActivity.create).not.toHaveBeenCalled();
+  });
+
+  // A rule naming a column that was deleted, or one on another org's board,
+  // should quietly do nothing rather than fail the message it was answering.
+  test("does nothing when the stage is not on that board", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue(null);
+
+    expect(await assign()).toBeNull();
+    expect(db.lead.create).not.toHaveBeenCalled();
+  });
+
+  test("does nothing when the contact is gone", async () => {
+    db.lead.findUnique.mockResolvedValue(null);
+    db.contact.findUnique.mockResolvedValue(null);
+
+    expect(await assign()).toBeNull();
+    expect(db.lead.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("reporting a win to the Conversions API", () => {
+  beforeEach(() => {
+    vi.mocked(sendWonConversionEvent).mockClear();
+    db.pipelineStage.findUnique.mockResolvedValue({
+      name: "Won",
+      pipeline: { orgId: "org-1" },
+    });
+    db.contact.findUnique.mockResolvedValue({
+      id: CONTACT,
+      name: "Aditi",
+      email: null,
+      phone: "+91",
+      source: "WHATSAPP",
+      orgId: "org-1",
+    });
+    db.lead.update.mockResolvedValue({
+      id: LEAD,
+      contactId: CONTACT,
+      stageId: STAGE,
+      name: "Aditi",
+      email: null,
+      phone: "+91",
+      source: "WHATSAPP",
+      labels: [],
+      assignees: [],
+      tasks: [],
+    });
+  });
+
+  // The board decides a win now, where the contact's lifecycle `isWon` used to.
+  test("an open lead moved onto a Won column reports the win", async () => {
+    db.lead.findUniqueOrThrow.mockResolvedValue({
+      stageId: "old-stage",
+      stage: { name: "Negotiation", status: "OPEN" },
+    });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Won", status: "WON" });
+
+    await moveLead(LEAD, STAGE, null);
+
+    expect(sendWonConversionEvent).toHaveBeenCalledTimes(1);
+  });
+
+  // Meta counts every event it receives, so a second one is a double-counted
+  // conversion — real money in someone's ad reporting.
+  test("moving between two Won columns does not report a second win", async () => {
+    db.lead.findUniqueOrThrow.mockResolvedValue({
+      stageId: "old-won",
+      stage: { name: "Won", status: "WON" },
+    });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Won (upsell)", status: "WON" });
+
+    await moveLead(LEAD, STAGE, null);
+
+    expect(sendWonConversionEvent).not.toHaveBeenCalled();
+  });
+
+  test("a move onto an ordinary column reports nothing", async () => {
+    db.lead.findUniqueOrThrow.mockResolvedValue({
+      stageId: "old-stage",
+      stage: { name: "New Lead", status: "OPEN" },
+    });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
+
+    await moveLead(LEAD, STAGE, null);
+
+    expect(sendWonConversionEvent).not.toHaveBeenCalled();
+  });
+
+  // A win is a win whoever recorded it, and reporting it to Meta cannot loop
+  // back here — so unlike the CRM fan-out this is not suppressed for inbound.
+  test("a win that came from an integration is still reported", async () => {
+    db.lead.findUniqueOrThrow.mockResolvedValue({
+      stageId: "old-stage",
+      stage: { name: "Negotiation", status: "OPEN" },
+    });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Won", status: "WON" });
+
+    await moveLead(LEAD, STAGE, null, false);
+
+    expect(sendWonConversionEvent).toHaveBeenCalledTimes(1);
+    expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
+  });
+});
+
+describe("telling the CRMs a lead changed column", () => {
+  const CONTACT_ROW = {
+    id: CONTACT,
+    orgId: "org-1",
+    name: "Aditi",
+    email: null,
+    phone: "+91",
+    source: "WHATSAPP",
+    notes: null,
+    integrationIds: { zoho: { lead: { id: "zoho-lead-1" } } },
+  };
+
+  beforeEach(() => {
+    vi.mocked(integrationTriggerQueue.add).mockClear();
+    vi.mocked(pushCrmLeadStatus).mockClear();
+    vi.mocked(addZapierTriggerToQueue).mockClear();
+    db.lead.findUniqueOrThrow.mockResolvedValue({
+      stageId: "old-stage",
+      stage: { name: "New Lead" },
+    });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
+    // The org is read off the stage's own pipeline, so a lead never syncs into
+    // another tenant's integration.
+    db.pipelineStage.findUnique.mockResolvedValue({
+      name: "Qualified",
+      status: "OPEN",
+      pipelineId: PIPELINE,
+      pipeline: { orgId: "org-1", name: "Sales" },
+    });
+    db.lead.update.mockResolvedValue({
+      id: LEAD,
+      contactId: CONTACT,
+      stageId: STAGE,
+      pipelineId: PIPELINE,
+      name: "Aditi",
+      email: null,
+      phone: "+91",
+      source: "WHATSAPP",
+      labels: [],
+      assignees: [],
+      tasks: [],
+    });
+    db.contact.findUnique.mockResolvedValue(CONTACT_ROW);
+  });
+
+  // The board is what drives the CRM now, where the contact's lifecycle used to.
+  test("a move enqueues the Bigin deal update keyed on the stage", async () => {
+    await moveLead(LEAD, STAGE, null);
+
+    const job = vi.mocked(integrationTriggerQueue.add).mock.calls[0][1];
+    expect(job).toMatchObject({ orgId: "org-1", rateupContactId: CONTACT });
+    expect(job.data).toMatchObject({ stageId: STAGE });
+    // The lifecycle is no longer part of the payload.
+    expect(job.data).not.toHaveProperty("lifecycleId");
+  });
+
+  // The column is reported, not a `Lead_Status`: which status that becomes is
+  // the org's mapping to decide, and pushing the column's own name into Zoho's
+  // picklist is what used to be wrong here.
+  test("a move reports the column to the Zoho CRM lead", async () => {
+    await moveLead(LEAD, STAGE, null);
+
+    expect(pushCrmLeadStatus).toHaveBeenCalledWith("org-1", "zoho-lead-1", {
+      stageId: STAGE,
+      stageName: "Qualified",
+    });
+  });
+
+  // The echo guard. A stage Zoho pushed in must not be pushed straight back out,
+  // or the webhook it triggers arrives as another inbound change, and so on.
+  test("a move that came from an integration syncs nothing back", async () => {
+    await moveLead(LEAD, STAGE, null, false);
+
+    expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
+    expect(pushCrmLeadStatus).not.toHaveBeenCalled();
+  });
+
+  // Dropping a lead onto Won or Lost goes through `closeLead`, not `moveLead`.
+  // It is still a stage change, and without this the deal stayed open in Bigin.
+  test("closing a lead syncs the closing column too", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.leadTask.updateMany.mockResolvedValue({ count: 0 });
+
+    await closeLead(LEAD, { status: "WON" }, "user-1");
+
+    const job = vi.mocked(integrationTriggerQueue.add).mock.calls[0][1];
+    expect(job.data).toMatchObject({ stageId: STAGE });
+  });
+
+  test("setContactStage carries the suppression through to the move", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.lead.findUnique.mockResolvedValue({ id: LEAD, stageId: "old-stage" });
+
+    await setContactStage({
+      contactId: CONTACT,
+      pipelineId: PIPELINE,
+      stageId: STAGE,
+      source: "MANUAL",
+      channel: "NONE",
+      syncIntegrations: false,
+    });
+
+    expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
+  });
+
+  // A card someone typed straight onto the board has no customer record behind
+  // it, so there is nothing for a CRM to match on.
+  // A card typed straight onto the board has no contact behind it, but it does
+  // carry a name and a phone — enough for Bigin to open a deal and a contact.
+  // It syncs with no `rateupContactId`, since there is nowhere to write the
+  // resulting Bigin ids back to.
+  test("a lead with no contact still syncs, using its own details", async () => {
+    db.lead.update.mockResolvedValue({
+      id: LEAD,
+      contactId: null,
+      stageId: STAGE,
+      pipelineId: PIPELINE,
+      name: "Walk-in enquiry",
+      email: null,
+      phone: "+9199",
+      source: "MANUAL",
+      labels: [],
+      assignees: [],
+      tasks: [],
+    });
+
+    await moveLead(LEAD, STAGE, null);
+
+    const job = vi.mocked(integrationTriggerQueue.add).mock.calls[0][1];
+    expect(job.data).toMatchObject({ name: "Walk-in enquiry", phone: "+9199", stageId: STAGE });
+    expect(job).not.toHaveProperty("rateupContactId");
+    // The lead id is what lets the handler store the Bigin deal id somewhere, so
+    // the next move updates that deal instead of opening another.
+    expect(job).toMatchObject({ rateupLeadId: LEAD });
+    // No contact means no Zoho CRM lead to update either.
+    expect(pushCrmLeadStatus).not.toHaveBeenCalled();
+  });
+
+  // The board's counterpart to `contact_lifecycle_updated`, which fires from the
+  // contact write path and is untouched — a Zap built on the lifecycle trigger
+  // keeps working, and this is what an org on the board builds against instead.
+  test("a move emits the Contact Stage Updated Zapier trigger", async () => {
+    await moveLead(LEAD, STAGE, null);
+
+    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
+      "contact_stage_updated",
+      {
+        contact_stage_updated: {
+          contactId: CONTACT,
+          leadId: LEAD,
+          pipelineId: PIPELINE,
+          pipelineName: "Sales",
+          stageId: STAGE,
+          stageName: "Qualified",
+          stageStatus: "OPEN",
+        },
+      },
+      "org-1",
+    );
+  });
+
+  // A card typed straight onto the board has no contact for the Zap's later
+  // steps to look up, so there is nothing to announce.
+  test("a lead with no contact emits no Zapier trigger", async () => {
+    db.lead.update.mockResolvedValue({
+      id: LEAD,
+      contactId: null,
+      stageId: STAGE,
+      pipelineId: PIPELINE,
+      name: "Walk-in enquiry",
+      email: null,
+      phone: "+9199",
+      source: "MANUAL",
+      labels: [],
+      assignees: [],
+      tasks: [],
+    });
+
+    await moveLead(LEAD, STAGE, null);
+
+    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+  });
+
+  // Unlike the CRM fan-out, this is outside the `syncIntegrations` guard: that
+  // flag stops a change Zoho pushed in from being echoed back to Zoho, but a Zap
+  // should still hear about a stage Zoho set.
+  test("a move that came from an integration still emits the Zapier trigger", async () => {
+    await moveLead(LEAD, STAGE, null, false);
+
+    expect(addZapierTriggerToQueue).toHaveBeenCalled();
+  });
+
+  // Both ids ride along: the handler prefers the contact, matching where the
+  // lifecycle flow kept the Bigin ids.
+  test("a lead with a contact sends both ids", async () => {
+    await moveLead(LEAD, STAGE, null);
+
+    expect(vi.mocked(integrationTriggerQueue.add).mock.calls[0][1]).toMatchObject({
+      rateupContactId: CONTACT,
+      rateupLeadId: LEAD,
+    });
+  });
+});
+
+describe("assigning a stage to many contacts", () => {
+  const ORG = "org-1";
+
+  beforeEach(() => {
+    db.pipeline.findFirst.mockResolvedValue({ id: PIPELINE });
+    db.pipelineStage.findFirst.mockResolvedValue({ id: STAGE });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Qualified", status: "OPEN" });
+    db.contact.findUnique.mockResolvedValue({ name: "Aditi", phone: "+91", email: null });
+    db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
+    db.lead.findUnique.mockResolvedValue(null);
+  });
+
+  // The ids come from the client and `setContactStage` takes a contact id on
+  // trust, so the org filter is the only thing standing between a crafted
+  // selection and another tenant's contacts.
+  test("narrows the selection to the caller's org before writing", async () => {
+    db.contact.findMany.mockResolvedValue([{ id: CONTACT }]);
+
+    const result = await bulkSetContactStage({
+      contactIds: [CONTACT, "someone-elses-contact"],
+      orgId: ORG,
+      stageId: STAGE,
+      userId: null,
+    });
+
+    expect(db.contact.findMany.mock.calls[0][0].where).toMatchObject({ orgId: ORG });
+    expect(result).toMatchObject({ requested: 2, matched: 1, changed: 1 });
+    expect(db.lead.create).toHaveBeenCalledTimes(1);
+  });
+
+  // A selection routinely holds contacts already sitting on the target column.
+  // Those are untouched, and the toast has to be able to say so.
+  test("counts contacts already on that column as unchanged", async () => {
+    db.contact.findMany.mockResolvedValue([{ id: CONTACT }, { id: "contact-2" }]);
+    db.lead.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: LEAD, stageId: STAGE });
+
+    const result = await bulkSetContactStage({
+      contactIds: [CONTACT, "contact-2"],
+      orgId: ORG,
+      stageId: STAGE,
+      userId: null,
+    });
+
+    expect(result).toMatchObject({ matched: 2, changed: 1, unchanged: 1 });
+  });
+
+  test("refuses a stage that is not on the org's board", async () => {
+    db.pipelineStage.findFirst.mockResolvedValue(null);
+
+    expect(
+      await bulkSetContactStage({
+        contactIds: [CONTACT],
+        orgId: ORG,
+        stageId: STAGE,
+        userId: null,
+      }),
+    ).toBeNull();
+    expect(db.contact.findMany).not.toHaveBeenCalled();
+  });
+
+  test("does nothing when the org has no board", async () => {
+    db.pipeline.findFirst.mockResolvedValue(null);
+
+    expect(
+      await bulkSetContactStage({
+        contactIds: [CONTACT],
+        orgId: ORG,
+        stageId: STAGE,
+        userId: null,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("clearing a contact's stage", () => {
+  test("deletes the lead that held it", async () => {
+    db.lead.findUnique.mockResolvedValue({ id: LEAD });
+
+    expect(await clearContactStage(CONTACT, PIPELINE)).toBe(LEAD);
+    expect(db.lead.delete).toHaveBeenCalledWith({ where: { id: LEAD } });
+  });
+
+  test("does nothing when the contact was never on the board", async () => {
+    db.lead.findUnique.mockResolvedValue(null);
+
+    expect(await clearContactStage(CONTACT, PIPELINE)).toBeNull();
+    expect(db.lead.delete).not.toHaveBeenCalled();
+  });
+
+  // The confirmation is the only guard on an irreversible delete, so it has to
+  // be able to name what goes with the lead.
+  test("counts what the delete would take with it", async () => {
+    db.lead.findUnique.mockResolvedValue({
+      id: LEAD,
+      stage: { name: "Negotiation" },
+      _count: { notes: 3, tasks: 1, activities: 12, assignees: 2 },
+    });
+
+    expect(await countContactStageLoss(CONTACT, PIPELINE)).toEqual({
+      leadId: LEAD,
+      stageName: "Negotiation",
+      notes: 3,
+      tasks: 1,
+      activities: 12,
+      assignees: 2,
+    });
+  });
+
+  test("reports nothing to lose when there is no lead", async () => {
+    db.lead.findUnique.mockResolvedValue(null);
+
+    expect(await countContactStageLoss(CONTACT, PIPELINE)).toBeNull();
+  });
+});
+
+describe("resolving which board a contact's stage lives on", () => {
+  test("returns the org's board", async () => {
+    db.pipeline.findFirst.mockResolvedValue({ id: PIPELINE });
+
+    expect(await resolvePipelineForContact(ORG)).toBe(PIPELINE);
+  });
+
+  // An org that has never opened a board must still be able to edit contacts,
+  // so callers get null to skip on rather than an error to handle.
+  test("returns null when the org has no board", async () => {
+    db.pipeline.findFirst.mockResolvedValue(null);
+
+    expect(await resolvePipelineForContact(ORG)).toBeNull();
   });
 });

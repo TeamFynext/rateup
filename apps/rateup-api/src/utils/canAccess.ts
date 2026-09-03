@@ -9,17 +9,15 @@ import { getNestedProperty } from "./misc/obj.utils.js";
  */
 export const subscriptionGates: Record<TeamFeature, string | null> = {
   [TeamFeature.inbox]: sfpn.Whatsapp,
-  [TeamFeature.campaigns]: sfpn.Whatsapp,
+  [TeamFeature.campaigns]: sfpn.WhatsappCampaign,
   [TeamFeature.flows]: sfpn.Whatsapp,
   [TeamFeature.chatbots]: sfpn.Whatsapp,
   [TeamFeature.templates]: sfpn.Whatsapp,
   [TeamFeature.automation]: sfpn.Whatsapp,
-  [TeamFeature.loyalty]: sfpn.Whatsapp,
+  [TeamFeature.loyalty]: sfpn.WhatsappLoyalty,
   [TeamFeature.web_forms]: sfpn.WebSurvey,
-  // Tickets are free with no limits (no subscription feature backs them), so
-  // there is no subscription gate — access is governed only by team/RBAC perms.
-  [TeamFeature.tickets]: null,
-  // Same as tickets: the lead pipeline has no subscription feature behind it.
+  // The lead pipeline has no subscription feature behind it, so there is no
+  // subscription gate — access is governed only by team/RBAC perms.
   [TeamFeature.pipeline]: null,
   [TeamFeature.ai_chatbot]: sfpn.AI,
 
@@ -28,6 +26,12 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
   [TeamFeature.qr_studio]: null,
   [TeamFeature.apps_services]: null,
   [TeamFeature.settings]: null,
+
+  // RETIRED: ticket boards were removed. The enum value still exists in Postgres
+  // (and on teams that had it switched on), so this map — which must be total over
+  // TeamFeature — still needs the key. Nothing reads it; drop it together with the
+  // enum value when the Ticket* tables are dropped.
+  [TeamFeature.tickets]: null,
 };
 
 /**
@@ -45,11 +49,40 @@ export function canAccess(
 ): boolean {
   const subGate = subscriptionGates[feature];
 
-  const subOk = subGate
-    ? Boolean(getNestedProperty<subscriptionActiveField>(subscriptionFeatures, subGate)?.active)
-    : true;
+  const subOk = subGate ? isSubscriptionGateOpen(subscriptionFeatures, subGate) : true;
 
   const teamOk = userFeatures.has(feature);
 
   return subOk && teamOk;
+}
+
+/**
+ * Resolves one dotted subscription gate to a boolean.
+ *
+ * The `whatsapp.*` tier gates (campaign, loyalty, referrals, catalog) were split out
+ * of `whatsapp.active` after subscriptions were already in the wild. A stored blob
+ * written before the split has no such key, and reading absent-as-false would revoke
+ * campaigns and loyalty from every org currently paying for them. So an absent
+ * sub-gate inherits its parent's `active` instead. Once a record is rewritten by
+ * migrateFeaturesToCurrentSchema or a plan assignment, the key is explicit and this
+ * fallback stops applying.
+ *
+ * Only ABSENT inherits — an explicit `{ active: false }` (how Free is written) is
+ * honoured as a closed gate.
+ */
+export function isSubscriptionGateOpen(
+  subscriptionFeatures: SubscriptionFeatures,
+  gate: string,
+): boolean {
+  const node = getNestedProperty<subscriptionActiveField>(subscriptionFeatures, gate);
+  if (node && typeof node.active === "boolean") return node.active;
+
+  const lastDot = gate.lastIndexOf(".");
+  if (lastDot === -1) return false;
+
+  const parent = getNestedProperty<subscriptionActiveField>(
+    subscriptionFeatures,
+    gate.slice(0, lastDot),
+  );
+  return Boolean(parent?.active);
 }

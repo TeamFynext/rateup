@@ -1,4 +1,5 @@
 import prisma from "../../utils/prisma.js";
+import { assertSeatAvailable } from "./team.limits.js";
 import { createUser, getUserRecipeName } from "../user/user.service.js";
 import {
   CreateTeamInput,
@@ -154,6 +155,11 @@ export async function inviteTeamMember(input: InviteMemberInput) {
   if (input.name.length < 2) {
     throw new Error("Invalid name.");
   }
+
+  // Checked here as well as on the route: the Zapier integration invites through this
+  // function directly, so a seat limit enforced only in a preHandler would not exist for
+  // it. See assertSeatAvailable.
+  await assertSeatAvailable(input.orgId);
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (input.email.length < 6 || !emailRegex.test(input.email)) {

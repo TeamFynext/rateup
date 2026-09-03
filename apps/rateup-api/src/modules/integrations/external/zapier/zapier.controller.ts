@@ -17,12 +17,9 @@ import {
   getContactsByPhoneNumberAndOrgId,
   getLifecyclesByOrgId,
   getSampleDataForTrigger,
-  getTicketBoardsByTeamId,
-  getTicketColumnsByBoardId,
   getUserIdByEmailAndOrgId,
   ZapierTriggers,
 } from "./zapier.service.js";
-import { CardInput, createCard } from "../../../ticket/ticketCard/card.service.js";
 import {
   addNewContactsToGroup,
   getContactGroupsByOrgId,
@@ -31,14 +28,11 @@ import {
 import { getTeamsByOrgId, inviteTeamMember } from "../../../team/team.service.js";
 import { InviteType } from "../../../team/team.schema.js";
 import {
-  BoardQueryInput,
   ContactLabelSchema,
   InviteMemberRequestSchema,
   NewMemberToGroupShema,
   PageSchema,
   SendMessageSchema,
-  TicketCardSchema,
-  TicketColumnQueryInput,
   TriggerSubscriptionBodySchema,
 } from "./zapier.schema.js";
 
@@ -316,27 +310,6 @@ export async function deleteContactHandler(
   }
 }
 
-export async function createTicketHandler(
-  request: FastifyRequest<{
-    Querystring: ByOrgIdParams;
-    Body: TicketCardSchema;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.query;
-    const res = await createCard({
-      ...request.body,
-      orgId,
-      type: "CUSTOM",
-    } as CardInput);
-    reply.send(res);
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send({ error: "Something went wrong" });
-  }
-}
-
 export async function getTeamsHandler(
   request: FastifyRequest<{ Querystring: ByOrgIdParams & PageSchema }>,
   reply: FastifyReply,
@@ -344,37 +317,6 @@ export async function getTeamsHandler(
   try {
     const { orgId, page } = request.query;
     const data = await getTeamsByOrgId({ orgId }, page);
-    reply.send(data);
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send({ error: "Something went wrong" });
-  }
-}
-
-export async function getTicketBoardsByTeamIdHandler(
-  request: FastifyRequest<{
-    Querystring: BoardQueryInput;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const data = await getTicketBoardsByTeamId(request.query.teamId, request.query.page);
-    reply.send(data);
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send({ error: "Something went wrong" });
-  }
-}
-
-export async function getTicketColumnsByBoardIdHandler(
-  request: FastifyRequest<{
-    Querystring: TicketColumnQueryInput;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { boardId, page } = request.query;
-    const data = await getTicketColumnsByBoardId(boardId, page);
     reply.send(data);
   } catch (e) {
     log.error(e);

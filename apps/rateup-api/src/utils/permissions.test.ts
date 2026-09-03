@@ -14,7 +14,6 @@ vi.mock("../../generated/prisma/client.js", () => ({
     analytics: "analytics",
     contacts: "contacts",
     campaigns: "campaigns",
-    tickets: "tickets",
     settings: "settings",
   },
 }));
@@ -146,6 +145,8 @@ describe("requireFeature", () => {
     expect(reply.code).toHaveBeenCalledWith(403);
     expect(reply.payload).toEqual({
       message: "Access to 'inbox' is not enabled for your team",
+      // A permission problem, not a billing one — the two 403s must stay distinguishable.
+      reason: "team",
     });
   });
 

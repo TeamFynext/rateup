@@ -14,6 +14,10 @@ import {
   reopenLeadHandler,
   updateLeadHandler,
   updateTaskHandler,
+  getContactStageHandler,
+  setContactStageHandler,
+  clearContactStageHandler,
+  bulkSetContactStageHandler,
 } from "./lead.controller.js";
 import {
   bulkUpdateLeadsRequestSchema,
@@ -26,6 +30,9 @@ import {
   moveLeadRequestSchema,
   updateLeadRequestSchema,
   updateTaskRequestSchema,
+  contactIdParamsSchema,
+  setContactStageRequestSchema,
+  bulkSetContactStageRequestSchema,
 } from "./lead.schema.js";
 import {
   verifyLeadAccess,
@@ -36,6 +43,34 @@ import {
 import { verifyPipelineAccessFromBody, verifyPipelineAccessFromQuery } from "../pipeline.auth.js";
 
 export async function leadRoutes(server: FastifyInstance) {
+  // The inbox panel's view of the board: one contact, the column it sits on.
+  // Access is the org's, not a pipeline membership — anyone who can open the
+  // contact can see and set its stage, the way the lifecycle chips worked.
+  server.get(
+    "/contact/:contactId/stage",
+    { schema: { params: contactIdParamsSchema } },
+    getContactStageHandler,
+  );
+  server.put(
+    "/contact/:contactId/stage",
+    { schema: { params: contactIdParamsSchema, body: setContactStageRequestSchema } },
+    setContactStageHandler,
+  );
+  server.delete(
+    "/contact/:contactId/stage",
+    { schema: { params: contactIdParamsSchema } },
+    clearContactStageHandler,
+  );
+
+  // The contacts table's bulk assign. A collection route rather than
+  // `/contact/:id/stage` repeated, so one selection is one request and one
+  // report of what changed.
+  server.put(
+    "/contacts/stage",
+    { schema: { body: bulkSetContactStageRequestSchema } },
+    bulkSetContactStageHandler,
+  );
+
   server.get(
     "/",
     {

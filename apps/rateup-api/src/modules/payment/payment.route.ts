@@ -1,6 +1,10 @@
 import { FastifyInstance } from "fastify";
 import {
   cancelRazorpaySubscriptionHandler,
+  changeSubscriptionPlanHandler,
+  createConversationAddonOrderHandler,
+  getConversationAddonOfferHandler,
+  getSubscriptionChangeOptionsHandler,
   createCheckoutSessionHandler,
   createRateUpPlanHandler,
   deletePaymentPlanHandler,
@@ -9,6 +13,7 @@ import {
   getAllPaymentOrdersHandler,
   getAllPaymentPlansHandler,
   getAllPaymentSubscriptionHandler,
+  getOrgInvoicesHandler,
   syncPaymentPlansHandler,
   updatePaymentPlanHandler,
   updateRateUpPlanHandler,
@@ -28,10 +33,14 @@ import {
   updateRateUpPlanSchema,
   updateRateUpPlanInput,
   UpdatePlanInput,
+  changePlanSchema,
+  type ChangePlanInput,
   orderIdParamsSchema,
   updateOrderStatusSchema,
   type OrderIdParamsInput,
   type UpdateOrderStatusInput,
+  conversationAddonOrderSchema,
+  type ConversationAddonOrderInput,
 } from "./payment.schema.js";
 
 export async function paymentRoutes(server: FastifyInstance) {
@@ -112,7 +121,33 @@ export async function paymentRoutes(server: FastifyInstance) {
     cancelRazorpaySubscriptionHandler,
   );
 
+  server.get("/subscriptions/change-options", getSubscriptionChangeOptionsHandler);
+
+  server.get("/subscriptions/conversation-addon", getConversationAddonOfferHandler);
+
+  server.post<{ Body: ConversationAddonOrderInput }>(
+    "/subscriptions/conversation-addon",
+    {
+      // Same gate as changing the plan: it spends the org's money.
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      schema: { body: conversationAddonOrderSchema },
+    },
+    createConversationAddonOrderHandler,
+  );
+
+  server.put<{ Body: ChangePlanInput }>(
+    "/subscriptions/change-plan",
+    {
+      // Same gate as cancelling: changing what the org is billed is an owner action.
+      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      schema: { body: changePlanSchema },
+    },
+    changeSubscriptionPlanHandler,
+  );
+
   server.get("/org/orders", getAllOrdersByOrg);
+
+  server.get("/org/invoices", getOrgInvoicesHandler);
 
   server.get(
     "/orders/all",

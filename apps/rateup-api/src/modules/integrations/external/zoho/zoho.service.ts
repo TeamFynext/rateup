@@ -16,9 +16,21 @@ import {
 } from "./zoho.client.js";
 import { isZohoTriggerEnabled } from "./zoho.utils.js";
 import { IntegratedApps } from "../../../../types/enums.js";
-import { getZohoCredential } from "./zoho.types.js";
+import {
+  findBiginStageMapping,
+  getZohoCredential,
+  isStaleContactLinkError,
+  isStaleRecordIdError,
+  resolveCrmLeadStatus,
+} from "./zoho.types.js";
+import {
+  moveLead,
+  resolvePipelineForContact,
+  setContactStage,
+} from "../../../pipeline/pipelineLead/lead.service.js";
 import { Prisma } from "../../../../../generated/prisma/client.js";
 import type {
+  StageMappingKey,
   ZohoBiginDealPayload,
   ZohoCredential,
   ZohoFieldMeta,
@@ -60,10 +72,91 @@ interface IntegrationJobData {
   data: ZohoTriggerData;
   orgId: string;
   rateupContactId?: string;
+  /** Set by the pipeline's stage sync; see `syncLeadStageToIntegrations`. */
+  rateupLeadId?: string;
+}
+
+/**
+ * Where a trigger's Bigin ids live.
+ *
+ * The contact wins whenever there is one — that is where the lifecycle flow kept
+ * them and where the rest of the app looks. A lead added straight on the board
+ * has no contact, so it holds its own; without that it would open a fresh deal
+ * on every stage change instead of moving the one it already has.
+ */
+interface BiginIdHolder {
+  kind: "contact" | "lead";
+  id: string;
+}
+
+function resolveBiginIdHolder(
+  rateupContactId?: string,
+  rateupLeadId?: string,
+): BiginIdHolder | null {
+  if (rateupContactId) return { kind: "contact", id: rateupContactId };
+  if (rateupLeadId) return { kind: "lead", id: rateupLeadId };
+  return null;
+}
+
+async function readBiginIds(holder: BiginIdHolder | null): Promise<ContactIntegrationIds> {
+  if (!holder) return {};
+  const row =
+    holder.kind === "contact"
+      ? await prisma.contact.findUnique({
+          where: { id: holder.id },
+          select: { integrationIds: true },
+        })
+      : await prisma.lead.findUnique({
+          where: { id: holder.id },
+          select: { integrationIds: true },
+        });
+  return (row?.integrationIds as ContactIntegrationIds | null) ?? {};
+}
+
+/**
+ * Drops a Bigin id that Bigin no longer recognises, so the next sync recreates
+ * the record instead of failing on the same dead reference forever.
+ */
+async function forgetBiginId(holder: BiginIdHolder | null, which: "contact" | "deal") {
+  if (!holder) return;
+  const existing = await readBiginIds(holder);
+  if (!existing.bigin?.[which]?.id) return;
+
+  const { [which]: _gone, ...restOfBigin } = existing.bigin;
+  const integrationIds = { ...existing, bigin: restOfBigin };
+
+  if (holder.kind === "contact") {
+    await prisma.contact.update({ where: { id: holder.id }, data: { integrationIds } });
+  } else {
+    await prisma.lead.update({ where: { id: holder.id }, data: { integrationIds } });
+  }
+}
+
+/** Merges into `bigin` rather than replacing it, so contact and deal ids coexist. */
+async function writeBiginIds(
+  holder: BiginIdHolder | null,
+  patch: { contactId?: string; dealId?: string },
+) {
+  if (!holder) return;
+  const existing = await readBiginIds(holder);
+  const integrationIds = {
+    ...existing,
+    bigin: {
+      ...existing.bigin,
+      ...(patch.contactId && { contact: { ...existing.bigin?.contact, id: patch.contactId } }),
+      ...(patch.dealId && { deal: { ...existing.bigin?.deal, id: patch.dealId } }),
+    },
+  };
+
+  if (holder.kind === "contact") {
+    await prisma.contact.update({ where: { id: holder.id }, data: { integrationIds } });
+  } else {
+    await prisma.lead.update({ where: { id: holder.id }, data: { integrationIds } });
+  }
 }
 
 export async function processIntegration(job: Job<IntegrationJobData>) {
-  const { integrationName, triggerKey, data, orgId, rateupContactId } = job.data;
+  const { integrationName, triggerKey, data, orgId, rateupContactId, rateupLeadId } = job.data;
 
   const integration = await prisma.integration.findUnique({
     where: {
@@ -83,7 +176,7 @@ export async function processIntegration(job: Job<IntegrationJobData>) {
       return;
 
     case "zoho":
-      return processZoho(integration, triggerKey, data, orgId, rateupContactId);
+      return processZoho(integration, triggerKey, data, orgId, rateupContactId, rateupLeadId);
 
     default:
       throw new Error(`Unsupported integration: ${integrationName}`);
@@ -96,6 +189,7 @@ async function processZoho(
   data: ZohoTriggerData,
   orgId: string,
   rateupContactId?: string,
+  rateupLeadId?: string,
 ) {
   const credential = getZohoCredential(integration);
   const triggerSubscriptions = credential.triggerSubscriptions || [];
@@ -362,33 +456,21 @@ async function processZoho(
 
       const mappings = biginConfig?.lifecycleStageMappings || [];
 
-      const mapping = mappings.find((m) => m.lifecycleId === data.lifecycleId);
+      const mapping = findBiginStageMapping(mappings, data);
 
       if (!mapping) {
-        log.warn("No Bigin lifecycle mapping found for lifecycle=%s", data.lifecycleId);
+        log.warn(
+          "No Bigin stage mapping found for stage=%s lifecycle=%s",
+          data.stageId,
+          data.lifecycleId,
+        );
       }
 
-      let existingDealId: string | undefined = data.biginDealId || undefined;
-      let biginContactId: string | undefined = undefined;
-      if (rateupContactId) {
-        const existingContact = await prisma.contact.findUnique({
-          where: {
-            id: rateupContactId,
-          },
-          select: {
-            integrationIds: true,
-          },
-        });
+      const idHolder = resolveBiginIdHolder(rateupContactId, rateupLeadId);
+      const storedIds = await readBiginIds(idHolder);
 
-        const existingIntegrationIds =
-          (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
-        biginContactId = existingIntegrationIds?.bigin?.contact?.id;
-        const biginDealIdFromContact = existingIntegrationIds?.bigin?.deal?.id;
-
-        if (!existingDealId && biginDealIdFromContact) {
-          existingDealId = biginDealIdFromContact;
-        }
-      }
+      let existingDealId: string | undefined = data.biginDealId || storedIds.bigin?.deal?.id;
+      let biginContactId: string | undefined = storedIds.bigin?.contact?.id;
 
       const payload: ZohoBiginDealPayload = {
         Deal_Name: data.name || data.email || data.phone,
@@ -426,87 +508,60 @@ async function processZoho(
         payload.Owner = { id: credential.bigin.biginOwner };
       }
 
-      // If there is no Bigin contact but creating contacts is enabled, create one first
+      // Bigin makes Contact_Name mandatory on a deal, so a deal always needs a
+      // contact behind it. One is created when there is none — or when the one
+      // we had turns out to be deleted, further down.
       const createContactEnabled = (triggerSubscriptions || []).some(
         (s) => s.subscribed_field === "bigin_contact_created" && s.active,
       );
 
+      const createBiginContact = async () => {
+        const contactPayload: ZohoRecord = {};
+
+        const nameVal = data.name || data.Full_Name || data.fullName || "";
+        if (nameVal) {
+          const parts = String(nameVal).trim().split(" ").filter(Boolean);
+          // SINGLE WORD NAME
+          if (parts.length === 1) {
+            contactPayload.Last_Name = parts[0];
+          } else {
+            contactPayload.First_Name = parts.shift() || "";
+            contactPayload.Last_Name = parts.join(" ");
+          }
+        } else {
+          // FALLBACK
+          contactPayload.Last_Name = data.phone || "Unknown";
+        }
+
+        contactPayload.Email = data.email || data.Email || "";
+        contactPayload.Phone = data.phone || data.Phone || "";
+        if (credential?.bigin?.biginOwner) {
+          contactPayload.Owner = { id: credential.bigin.biginOwner };
+        }
+
+        const contactResponse = await createZohoRecord(
+          accessToken,
+          "Contacts",
+          contactPayload,
+          credential.api_domain,
+          "bigin",
+        );
+
+        const createdContactId = Array.isArray(contactResponse?.data)
+          ? contactResponse.data[0]?.details?.id
+          : undefined;
+        if (!createdContactId) return undefined;
+
+        biginContactId = createdContactId;
+        payload.Contact_Name = { id: createdContactId };
+        await writeBiginIds(idHolder, { contactId: createdContactId });
+        if (idHolder) log.info("Linked Bigin contact to the Rateup %s", idHolder.kind);
+        return createdContactId;
+      };
+
       if (!biginContactId && createContactEnabled) {
         try {
-          // Build a contact payload from available data
-          const contactPayload: ZohoRecord = {};
-
-          const nameVal = data.name || data.Full_Name || data.fullName || "";
-          if (nameVal) {
-            const parts = String(nameVal).trim().split(" ").filter(Boolean);
-            // SINGLE WORD NAME
-            if (parts.length === 1) {
-              contactPayload.Last_Name = parts[0];
-            } else {
-              contactPayload.First_Name = parts.shift() || "";
-              contactPayload.Last_Name = parts.join(" ");
-            }
-          } else {
-            // FALLBACK
-            contactPayload.Last_Name = data.phone || "Unknown";
-          }
-
-          contactPayload.Email = data.email || data.Email || "";
-          contactPayload.Phone = data.phone || data.Phone || "";
-          if (credential?.bigin?.biginOwner) {
-            contactPayload.Owner = { id: credential.bigin.biginOwner };
-          }
-
-          const contactResponse = await createZohoRecord(
-            accessToken,
-            "Contacts",
-            contactPayload,
-            credential.api_domain,
-            "bigin",
-          );
-
-          if (
-            contactResponse?.data &&
-            Array.isArray(contactResponse.data) &&
-            contactResponse.data[0]
-          ) {
-            const createdContactId = contactResponse.data[0]?.details?.id;
-            if (createdContactId) {
-              biginContactId = createdContactId;
-
-              // Update Rateup contact integrationIds if we have a Rateup contact id
-              if (rateupContactId) {
-                const existingContact = await prisma.contact.findUnique({
-                  where: { id: rateupContactId },
-                  select: { integrationIds: true },
-                });
-
-                const existingIntegrationIds =
-                  (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
-
-                await prisma.contact.update({
-                  where: { id: rateupContactId },
-                  data: {
-                    integrationIds: {
-                      ...existingIntegrationIds,
-                      bigin: {
-                        ...existingIntegrationIds.bigin,
-                        contact: {
-                          ...existingIntegrationIds.bigin?.contact,
-                          id: createdContactId,
-                        },
-                      },
-                    },
-                  },
-                });
-
-                log.info("Created and linked Bigin contact to Rateup contact");
-              }
-
-              // attach to payload for deal creation
-              payload.Contact_Name = { id: biginContactId };
-            }
-          }
+          await createBiginContact();
         } catch (err) {
           log.error({ err }, "Failed creating Bigin contact before deal create");
         }
@@ -514,71 +569,76 @@ async function processZoho(
 
       let response: Awaited<ReturnType<typeof createZohoRecord>> | undefined;
 
-      try {
-        if (existingDealId) {
-          response = await updateZohoRecord(
-            accessToken,
-            "Pipelines",
-            existingDealId,
-            payload,
-            credential.api_domain,
-            "bigin",
-          );
+      const writeDeal = () =>
+        existingDealId
+          ? updateZohoRecord(
+              accessToken,
+              "Pipelines",
+              existingDealId,
+              payload,
+              credential.api_domain,
+              "bigin",
+            )
+          : createZohoRecord(accessToken, "Pipelines", payload, credential.api_domain, "bigin");
 
-          log.info("Bigin deal updated");
-        } else {
-          response = await createZohoRecord(
-            accessToken,
-            "Pipelines",
-            payload,
-            credential.api_domain,
-            "bigin",
-          );
+      // Records deleted in Bigin leave dead ids here, and Bigin rejects the write
+      // because of them — so a stage change would be lost over a record the user
+      // tidied away months ago. Each dead reference is dropped and the write
+      // retried: a missing deal becomes a new one, a missing contact link is left
+      // off. Both can be dead at once, hence a loop rather than a single retry;
+      // it is bounded by the number of remedies, and each one is applied at most
+      // once because forgetting the id also removes the condition that triggers it.
+      for (let remediesLeft = 2; ; remediesLeft--) {
+        try {
+          response = await writeDeal();
+          log.info(existingDealId ? "Bigin deal updated" : "Bigin deal created");
+          break;
+        } catch (error) {
+          if (remediesLeft > 0 && existingDealId && isStaleRecordIdError(error)) {
+            log.warn("Bigin no longer has that deal; creating a new one");
+            await forgetBiginId(idHolder, "deal");
+            existingDealId = undefined;
+            continue;
+          }
 
-          log.info("Bigin deal created");
+          // Contact_Name is mandatory on a Bigin deal, so a dead contact link
+          // cannot simply be dropped — the deal would be refused for a missing
+          // field instead. The dead id is forgotten and a fresh contact created
+          // to put in its place.
+          if (remediesLeft > 0 && payload.Contact_Name && isStaleContactLinkError(error)) {
+            log.warn("Bigin no longer has that contact; creating a new one");
+            delete payload.Contact_Name;
+            biginContactId = undefined;
+            await forgetBiginId(idHolder, "contact");
+
+            if (!createContactEnabled) {
+              log.error(
+                "Cannot recreate the Bigin contact: the bigin_contact_created trigger is off, " +
+                  "and Bigin requires a contact on every deal",
+              );
+              throw error;
+            }
+
+            await createBiginContact();
+            continue;
+          }
+
+          log.error(
+            "Bigin API error => %s",
+            JSON.stringify(axios.isAxiosError(error) ? error.response?.data : error),
+          );
+          throw error;
         }
-      } catch (error) {
-        console.log(
-          "Bigin API error =>",
-          JSON.stringify(axios.isAxiosError(error) ? error.response?.data : error, null, 2),
-        );
-        throw error;
       }
 
-      // Save deal id to Rateup contact
+      // Remember the new deal, so the next stage change moves this one rather
+      // than opening another.
       if (!existingDealId && response?.data && Array.isArray(response.data) && response.data[0]) {
         const dealId = response.data[0]?.details?.id;
 
-        if (dealId && rateupContactId) {
-          const existingContact = await prisma.contact.findUnique({
-            where: {
-              id: rateupContactId,
-            },
-            select: {
-              integrationIds: true,
-            },
-          });
-
-          const existingIntegrationIds =
-            (existingContact?.integrationIds as ContactIntegrationIds | null) ?? {};
-          await prisma.contact.update({
-            where: {
-              id: rateupContactId,
-            },
-            data: {
-              integrationIds: {
-                ...existingIntegrationIds,
-                bigin: {
-                  ...existingIntegrationIds.bigin,
-                  deal: {
-                    id: dealId,
-                  },
-                },
-              },
-            },
-          });
-
-          log.info("Updated contact with Bigin Deal ID");
+        if (dealId) {
+          await writeBiginIds(idHolder, { dealId });
+          if (idHolder) log.info("Stored the Bigin deal id on the Rateup %s", idHolder.kind);
         }
       }
       return;
@@ -710,14 +770,26 @@ export async function refreshZohoIntegrationCredential(integration: Integration)
   if (credential.supportedProducts?.bigin && zohoWebhookSecret) {
     try {
       if (credential.biginWebhook?.channelId) {
-        await unsubscribeZohoWebhook({
-          accessToken: newAccessToken,
-          apiDomain: credential.api_domain,
-          product: "bigin",
-          channelIds: [credential.biginWebhook.channelId],
-        });
+        // Guarded like the CRM branch above, and for a reason that bites: Zoho
+        // refuses to unsubscribe a channel that has already expired. Letting that
+        // throw skipped the re-registration below, so an expired webhook could
+        // never come back — every renewal failed on the very expiry it was meant
+        // to fix, and inbound stayed dead until someone reconnected by hand.
+        try {
+          await unsubscribeZohoWebhook({
+            accessToken: newAccessToken,
+            apiDomain: credential.api_domain,
+            product: "bigin",
+            channelIds: [credential.biginWebhook.channelId],
+          });
 
-        log.info("Old Bigin webhook unsubscribed successfully for integration=%s", integration.id);
+          log.info(
+            "Old Bigin webhook unsubscribed successfully for integration=%s",
+            integration.id,
+          );
+        } catch (err) {
+          log.warn({ err }, "Bigin webhook unsubscribe failed, continuing to re-register");
+        }
       }
 
       const biginWebhook = await registerZohoWebhook({
@@ -1084,14 +1156,17 @@ export async function syncZohoLeadsToRateup(leads: ZohoRecord[], orgId: string) 
   const credential = getZohoCredential(integration);
   const leadLifecycleMappings = credential?.crm?.leadLifecycleMappings || [];
 
-  // Build mapping object
-  const lifecycleMap = new Map<string, string>();
+  // Zoho lead status -> the pipeline column it means.
+  const stageMap = new Map<string, string>();
 
   for (const mapping of leadLifecycleMappings) {
-    if (mapping?.zohoLeadStatus && mapping?.lifecycleId) {
-      lifecycleMap.set(mapping.zohoLeadStatus.trim().toLowerCase(), mapping.lifecycleId);
+    if (mapping?.zohoLeadStatus && mapping?.stageId) {
+      stageMap.set(mapping.zohoLeadStatus.trim().toLowerCase(), mapping.stageId);
     }
   }
+
+  // Resolved once: every imported lead lands on the same org's board.
+  const pipelineId = stageMap.size > 0 ? await resolvePipelineForContact(orgId) : null;
 
   for (const zohoLead of leads) {
     try {
@@ -1100,7 +1175,7 @@ export async function syncZohoLeadsToRateup(leads: ZohoRecord[], orgId: string) 
       const lastName = zohoLead.Last_Name || "";
       const name = `${firstName} ${lastName}`.trim();
       const leadStatus = (zohoLead.Lead_Status || "").toString().trim().toLowerCase();
-      const mappedLifecycleId = lifecycleMap.get(leadStatus) || null;
+      const mappedStageId = stageMap.get(leadStatus) || null;
       const orConditions: Prisma.ContactWhereInput[] = [
         {
           integrationIds: {
@@ -1148,22 +1223,34 @@ export async function syncZohoLeadsToRateup(leads: ZohoRecord[], orgId: string) 
         source: existingContact?.source || "ZOHO_LEAD",
         integrationIds,
         notes: zohoLead.Description || "",
-        lifecycleId: mappedLifecycleId || existingContact?.lifecycleId || null,
+        // The lifecycle is left exactly as it was. The import writes the stage
+        // instead, and it does so below, once the contact has an id.
+        lifecycleId: existingContact?.lifecycleId || null,
       };
 
-      if (existingContact) {
-        await prisma.contact.update({
-          where: {
-            id: existingContact.id,
-          },
-          data: contactData,
-        });
-      } else {
-        await prisma.contact.create({
-          data: {
-            ...contactData,
-            orgId,
-          },
+      const contact = existingContact
+        ? await prisma.contact.update({
+            where: {
+              id: existingContact.id,
+            },
+            data: contactData,
+          })
+        : await prisma.contact.create({
+            data: {
+              ...contactData,
+              orgId,
+            },
+          });
+
+      if (mappedStageId && pipelineId) {
+        // Inbound, so no outbound echo — see `applyInboundStage`.
+        await setContactStage({
+          contactId: contact.id,
+          pipelineId,
+          stageId: mappedStageId,
+          source: "MANUAL",
+          channel: "NONE",
+          syncIntegrations: false,
         });
       }
     } catch (error) {
@@ -1188,6 +1275,57 @@ export async function updateZohoLeadQueue(
       ...fields,
     },
   });
+}
+
+/**
+ * Tells Zoho CRM a lead changed column, through the org's status mapping.
+ *
+ * The one place `Lead_Status` is pushed from. Both callers — the board's
+ * {@link import("../../../pipeline/pipelineLead/lead.service.js").moveLead} fan-out
+ * and the contact write paths — used to enqueue the Rateup name directly, so
+ * neither respected the mapping the org configured in the "Lead Status Mapping"
+ * dialog even though the inbound sync has always read it.
+ *
+ * Silently does nothing when the column maps to no status: that is a
+ * configuration gap, not a failure of the move that triggered it.
+ */
+export async function pushCrmLeadStatus(
+  orgId: string,
+  zohoLeadId: string,
+  key: StageMappingKey,
+  extraFields: Record<string, unknown> = {},
+) {
+  // Resolving the mapping means a database read, and this sits inside a fan-out
+  // that also feeds Bigin. Its own guard, so a Zoho lookup that fails does not
+  // take the other integrations down with it.
+  let leadStatus: string | null;
+  try {
+    const integration = await prisma.integration.findUnique({
+      where: { orgid_integration_name_unique: { orgId, name: "zoho" } },
+    });
+    if (!integration) return;
+
+    const credential = getZohoCredential(integration);
+    leadStatus = resolveCrmLeadStatus(credential?.crm?.leadLifecycleMappings || [], key);
+  } catch (error) {
+    log.error(error, "Failed to read the Zoho lead status mapping");
+    return;
+  }
+
+  if (!leadStatus) {
+    log.warn(
+      "Column %s maps to no Zoho lead status; leaving the CRM lead's status alone",
+      key.stageName ?? key.lifecycleName ?? key.stageId ?? key.lifecycleId,
+    );
+    // The status is the only field the mapping governs. A caller that also had
+    // name or phone changes to push still gets them out — dropping those too
+    // would turn a mapping gap into a contact that stops syncing entirely.
+    if (Object.keys(extraFields).length > 0)
+      await updateZohoLeadQueue(orgId, zohoLeadId, extraFields);
+    return;
+  }
+
+  await updateZohoLeadQueue(orgId, zohoLeadId, { ...extraFields, Lead_Status: leadStatus });
 }
 
 export async function fetchZohoPipelineMeta(orgId: string, product: ZohoProduct = "bigin") {
@@ -1326,6 +1464,19 @@ export async function syncContactFromZohoRecord({
   /** Only the lifecycle-mapping config and the trigger list are read here. */
   credential: Pick<ZohoCredential, "crm" | "bigin" | "triggerSubscriptions">;
 }) {
+  // The fields that decide what happens next, so a sync that does nothing can be
+  // read without turning on trace for the whole record.
+  log.info(
+    "Zoho record => %s/%s id=%s stage=%s leadStatus=%s name=%s",
+    product,
+    module,
+    zohoRecord.id,
+    zohoRecord.Stage ?? "-",
+    zohoRecord.Lead_Status ?? "-",
+    zohoRecord.Deal_Name ?? zohoRecord.Full_Name ?? "-",
+  );
+  log.debug({ zohoRecord }, "Zoho record in full");
+
   let requiredTrigger: string | null = null;
 
   if (product === "crm" && module === "Contacts") {
@@ -1377,6 +1528,19 @@ export async function syncContactFromZohoRecord({
   });
 
   if (!existingContact) {
+    // A deal opened for a board-only lead keeps its Bigin ids on the lead, since
+    // there is no contact to hold them. Nothing on the contact side can match it,
+    // so the lead is moved directly.
+    if (product === "bigin" && module === "Deals") {
+      const handled = await applyInboundStageToLead(
+        orgId,
+        String(zohoRecord.id),
+        typeof zohoRecord.Stage === "string" ? zohoRecord.Stage : undefined,
+        credential,
+      );
+      if (handled) return null;
+    }
+
     log.warn("No contact found for Zoho record => %s", zohoRecord.id);
     return null;
   }
@@ -1394,13 +1558,20 @@ export async function syncContactFromZohoRecord({
     updateData.dob = zohoRecord.Date_of_Birth ? new Date(zohoRecord.Date_of_Birth) : null;
   }
 
+  // Which pipeline column Zoho is telling us this contact is on. Applied after
+  // the contact row is written, because the stage lives on a lead rather than on
+  // the contact.
+  let inboundStageId: string | undefined;
+
   if (product === "crm" && module === "Leads") {
     const leadStatus = zohoRecord.Lead_Status;
     const mappings = credential?.crm?.leadLifecycleMappings || [];
     const matchedMapping = mappings.find((m) => m.zohoLeadStatus === leadStatus);
-    if (matchedMapping?.lifecycleId) {
-      updateData.lifecycleId = matchedMapping.lifecycleId;
-      log.info("Mapped CRM Lead Status to lifecycle");
+    if (matchedMapping?.stageId) {
+      inboundStageId = matchedMapping.stageId;
+      log.info("Mapped CRM lead status %s to column %s", leadStatus, matchedMapping.stageName);
+    } else {
+      log.warn("CRM lead status %s maps to no column; leaving the lead where it is", leadStatus);
     }
   }
 
@@ -1408,9 +1579,13 @@ export async function syncContactFromZohoRecord({
     const stageName = zohoRecord.Stage;
     const mappings = credential?.bigin?.pipeline?.lifecycleStageMappings || [];
     const matchedMapping = mappings.find((m) => m.biginStageName === stageName);
-    if (matchedMapping?.lifecycleId) {
-      updateData.lifecycleId = matchedMapping.lifecycleId;
-      log.info("Mapped Bigin stage to lifecycle");
+    if (matchedMapping?.stageId) {
+      inboundStageId = matchedMapping.stageId;
+      log.info("Mapped Bigin stage %s to column %s", stageName, matchedMapping.stageName);
+    } else {
+      // The quiet failure worth seeing: the webhook arrived and was understood,
+      // but the Bigin stage is not one the org mapped, so nothing moves.
+      log.warn("Bigin stage %s maps to no column; leaving the lead where it is", stageName);
     }
   }
 
@@ -1420,8 +1595,77 @@ export async function syncContactFromZohoRecord({
     },
     data: updateData,
   });
+
+  if (inboundStageId) {
+    await applyInboundStage(updatedContact.orgId, updatedContact.id, inboundStageId);
+  }
+
   log.info("Synced contact from Zoho");
   return updatedContact;
+}
+
+/**
+ * Moves a board-only lead when its Bigin deal changes stage.
+ *
+ * The contact-side lookup cannot find these: the deal id lives on the lead, so
+ * without this a Bigin stage change on such a deal was silently dropped.
+ *
+ * `syncIntegrations: false` for the same reason as everywhere else inbound —
+ * moving the lead here must not push the move straight back to Bigin.
+ *
+ * Returns whether a lead was found, so the caller can tell "handled" from
+ * "nothing in Rateup matches this record".
+ */
+async function applyInboundStageToLead(
+  orgId: string,
+  biginDealId: string,
+  biginStageName: string | undefined,
+  // Only the mapping is read here, so the narrower shape the webhook path has is
+  // enough — it does not carry the OAuth fields.
+  credential: Pick<ZohoCredential, "bigin">,
+): Promise<boolean> {
+  const lead = await prisma.lead.findFirst({
+    where: {
+      pipeline: { orgId },
+      integrationIds: { path: ["bigin", "deal", "id"], equals: biginDealId },
+    },
+    select: { id: true, stageId: true },
+  });
+  if (!lead) return false;
+
+  const mappings = credential?.bigin?.pipeline?.lifecycleStageMappings || [];
+  const stageId = mappings.find((m) => m.biginStageName === biginStageName)?.stageId;
+  if (!stageId) {
+    log.info("Bigin stage %s maps to no column; leaving the lead where it is", biginStageName);
+    return true;
+  }
+  if (stageId === lead.stageId) return true;
+
+  await moveLead(lead.id, stageId, null, false);
+  log.info("Moved a board-only lead from its Bigin deal");
+  return true;
+}
+
+/**
+ * Puts a contact on the column Zoho named. `syncIntegrations: false` is the
+ * important half: without it the resulting move would enqueue an outbound update
+ * back to Zoho, which would come back as another webhook, and so on.
+ *
+ * A mapping naming a column that has since been deleted resolves to nothing and
+ * is skipped, the same way an unmapped status is.
+ */
+async function applyInboundStage(orgId: string, contactId: string, stageId: string) {
+  const pipelineId = await resolvePipelineForContact(orgId);
+  if (!pipelineId) return;
+
+  await setContactStage({
+    contactId,
+    pipelineId,
+    stageId,
+    source: "MANUAL",
+    channel: "NONE",
+    syncIntegrations: false,
+  });
 }
 
 export async function fetchZohoUsers(orgId: string, product: ZohoProduct = "bigin") {

@@ -1,8 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth.js";
-import { CreateTeamInput, EditTeamInput, IdParamInput, InviteMemberInput } from "./team.schema.js";
-// import prisma from "../../utils/prisma.js";
-// import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { EditTeamInput, IdParamInput } from "./team.schema.js";
+import { enforcePlanLimit } from "../subscription/planLimits.js";
 
 export async function verifyTeamAdminAccess(
   request: FastifyRequest<{
@@ -51,54 +50,36 @@ export async function verifyTeamAccess(
   }
 }
 
-export async function verifyTeamMaxCountRestriction(
-  request: FastifyRequest<{
-    Body: CreateTeamInput;
-  }>,
-  reply: FastifyReply,
-) {
-  // TODO: re-check
-  // const orgId = request.user.orgId;
-  //
-  // const count = await prisma.team.count({
-  //   where: {
-  //     orgId: orgId,
-  //   },
-  // });
-  //
-  // if (count >= request.subscription.features[SubscriptionFeaturePathName.Team].count.max) {
-  //   reply.code(403).send({
-  //     message: "You have reached the maximum limit of teams",
-  //     displayMessageInClient: true,
-  //   });
-  // }
+/**
+ * The org to meter, or null when the request names one that is not the caller's.
+ *
+ * Both bodies carry `orgId` from the client while the subscription on the request is the
+ * session's, so a request naming another org would be measured against an allowance that
+ * is not the one it spends. Every real client sends its own org, so a mismatch is refused
+ * rather than reconciled.
+ */
+function orgToMeter(request: FastifyRequest): string | null {
+  const orgId = request.user.orgId;
+  const named = (request.body as { orgId?: string } | undefined)?.orgId;
+  return named && named !== orgId ? null : orgId;
 }
 
-export async function verifyTeamMemberMaxCountRestriction(
-  request: FastifyRequest<{
-    Body: InviteMemberInput;
-  }>,
-  reply: FastifyReply,
-) {
-  // const member = await prisma.teamMember.count({
-  //   where: {
-  //     teamId: request.body.teamId,
-  //   },
-  // });
-  // const invitationCount = await prisma.invitation.count({
-  //   where: {
-  //     teamId: request.body.teamId,
-  //   },
-  // });
-  //
-  // const count = member + invitationCount;
-  //
-  // if (
-  //   count >= request.subscription.features[SubscriptionFeaturePathName.Team].teamMember.count.max
-  // ) {
-  //   reply.code(403).send({
-  //     message: "You have reached the maximum limit of team-members",
-  //     displayMessageInClient: true,
-  //   });
-  // }
-}
+/**
+ * Refuses a team the org's plan has no room for.
+ *
+ * Both of these were stubs — the bodies sat commented out behind a `TODO: re-check`, so
+ * every plan's team and user limits were advertised on the pricing page, metered on the
+ * dashboard, and enforced nowhere. They are now two rows in PLAN_LIMITS: what counts as
+ * unlimited, what the refusal says, and how seats are counted all live there, shared with
+ * the service backstop that covers the paths no preHandler runs on.
+ */
+export const verifyTeamMaxCountRestriction = enforcePlanLimit("teams", {
+  org: orgToMeter,
+  orgMismatchMessage: "You cannot create a team in another organisation",
+});
+
+/** Refuses an invitation the org has no seat for. See above. */
+export const verifyTeamMemberMaxCountRestriction = enforcePlanLimit("users", {
+  org: orgToMeter,
+  orgMismatchMessage: "You cannot invite into another organisation",
+});

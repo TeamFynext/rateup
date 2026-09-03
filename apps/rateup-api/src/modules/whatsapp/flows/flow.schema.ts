@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { QuestionType2 } from "../../../types/enums.js";
 
 const sourceQuery = z.object({
   source: z.enum(["wa", "db"]).default("wa"),
@@ -46,22 +45,6 @@ const updateFlowInput = z.object({
   startMessageConfig: z.custom<WaFlowStartMessageConfig>().optional(),
   pendingSave: z.boolean().optional(),
   anonymous: z.boolean().optional(),
-  ticketIssued: z
-    .array(
-      z.object({
-        questionId: z.string(),
-        type: z.enum(QuestionType2),
-        selectedColumnId: z.string().optional(),
-        selectedBoardId: z.string().optional(),
-        condition: z.object({
-          minRating: z.number().optional(),
-          minOpinion: z.number().optional(),
-          reqOptions: z.array(z.string()).optional(),
-          submissionTicket: z.boolean().optional(),
-        }),
-      }),
-    )
-    .optional(),
 });
 const updateFlowMetaInput = z.object({
   name: z.string().optional(),

@@ -582,6 +582,30 @@ function extractDefaultValues(template: WaMetaTemplate): WaTemplateDefaultValues
   return defaultValues;
 }
 
+/**
+ * A template Meta no longer has is worth keeping - the org still owns its content and
+ * campaigns/schedules still point at this row - but its Meta identity is gone for good.
+ * So drop the hsm id (and anything else Meta issued alongside it) and put the row back
+ * in DRAFT: a resubmit then creates a fresh template instead of trying to edit one Meta
+ * has never heard of.
+ */
+async function revertTemplateToDraft(dbTemplate: WaTemplateWithTypes) {
+  const { id: previousMetaId, ...dataWithoutMetaIdentity } = dbTemplate.data ?? {};
+  log.info(
+    { templateId: dbTemplate.id, previousMetaId },
+    "Template is gone at Meta: reverting it to a draft so it can be submitted again",
+  );
+  return await prisma.waTemplate.update({
+    where: { id: dbTemplate.id },
+    data: {
+      data: {
+        ...dataWithoutMetaIdentity,
+        status: WaTemplateStatus.DRAFT,
+      } as WaTemplateWithTypes["data"],
+    },
+  });
+}
+
 export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: string[] = []) {
   try {
     log.trace("Syncing templates for orgId %s", orgId);
@@ -618,7 +642,10 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
         const existingByWaId = wt?.id ? templateByWaId.get(wt.id) : null;
         const nameAndPhoneKey = `${wt?.name ?? ""}|${whatsappSettingsPhoneId ?? ""}`;
         const existingByNameAndPhone = templateByNameAndPhone.get(nameAndPhoneKey);
-        const existingTemplate = existingByWaId ?? existingByNameAndPhone;
+        // An orphan - a template whose number was deleted and re-added - keeps its name
+        // but has lost its phone id, so it only matches on the name half of that key.
+        const existingByOrphanedName = templateByNameAndPhone.get(`${wt?.name ?? ""}|`);
+        const existingTemplate = existingByWaId ?? existingByNameAndPhone ?? existingByOrphanedName;
 
         if (existingTemplate) {
           await updateTemplateInDb(
@@ -657,24 +684,39 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
       }
     }
 
-    const missingAtMeta = dbTemplates.filter(
+    // Only rows this pass actually looked at can be judged missing. Templates on a
+    // number that was not synced were never fetched, so their absence means nothing;
+    // orphans (no number at all) are included, since a full pass is their one chance to
+    // be reattached or retired.
+    const reconcilable = dbTemplates.filter((dbTemplate) => {
+      if (!whatsappSettingsPhoneIds.length) return true;
+      return (
+        !dbTemplate.whatsappSettingsPhoneId ||
+        whatsappSettingsPhoneIds.includes(dbTemplate.whatsappSettingsPhoneId)
+      );
+    });
+
+    const missingAtMeta = reconcilable.filter(
       (dbTemplate) => dbTemplate?.data?.id && !seenWaTemplateIds.has(dbTemplate.data.id),
     );
     for (const dbTemplate of missingAtMeta) {
-      await prisma.waTemplate.update({
-        where: { id: dbTemplate.id },
-        data: { data: { ...dbTemplate.data, status: WaTemplateStatus.DELETED } },
-      });
+      await revertTemplateToDraft(dbTemplate);
     }
     if (missingAtMeta.length) {
       log.warn(
         { orgId, count: missingAtMeta.length },
-        "Templates marked as deleted: they no longer exist at Meta",
+        "Templates reverted to draft: they no longer exist at Meta",
       );
     }
 
     log.trace("Templates synced");
-    return { success: true, created, updated, missingAtMeta: missingAtMeta.length };
+    return {
+      success: true,
+      created,
+      updated,
+      missingAtMeta: missingAtMeta.length,
+      revertedToDraft: missingAtMeta.length,
+    };
   } catch (e) {
     log.error({ err: e }, "Error syncing templates \n%o");
     return {
@@ -682,6 +724,7 @@ export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: str
       created: 0,
       updated: 0,
       missingAtMeta: 0,
+      revertedToDraft: 0,
       message: e instanceof Error ? e.message : "Unknown error",
     };
   }

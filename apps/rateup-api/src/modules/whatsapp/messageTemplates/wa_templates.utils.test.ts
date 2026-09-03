@@ -18,7 +18,6 @@ import {
   getFlowIdFromTemplateComponents,
   getTemplateInMessageFormat,
   getTemplateQuery,
-  verifyTemplateSubscriptionLimit,
   waAllowedMimeTypes,
 } from "./wa_templates.utils.js";
 
@@ -413,74 +412,5 @@ describe("getTemplateQuery", () => {
 describe("waAllowedMimeTypes", () => {
   test("allows exactly the four formats WhatsApp headers support", () => {
     expect(waAllowedMimeTypes).toEqual(["image/jpeg", "image/png", "video/mp4", "application/pdf"]);
-  });
-});
-
-describe("verifyTemplateSubscriptionLimit", () => {
-  function request(features: unknown = { whatsapp: { count: { max: 3 } } }): any {
-    return { user: { orgId: "org-1" }, subscription: { features } };
-  }
-
-  function reply() {
-    const rep: any = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
-    return rep;
-  }
-
-  test("lets an org under its template limit through", async () => {
-    templateCountMock.mockResolvedValue(2);
-    const rep = reply();
-
-    await verifyTemplateSubscriptionLimit(request(), rep);
-
-    expect(rep.code).not.toHaveBeenCalled();
-  });
-
-  test("counts only the caller's own templates", async () => {
-    await verifyTemplateSubscriptionLimit(request(), reply());
-
-    expect(templateCountMock.mock.calls[0][0]).toEqual({ where: { orgId: "org-1" } });
-  });
-
-  test("refuses an org that has reached its limit, naming the limit", async () => {
-    templateCountMock.mockResolvedValue(3);
-    const rep = reply();
-
-    await verifyTemplateSubscriptionLimit(request(), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-    expect(rep.send.mock.calls[0][0].message).toBe(
-      "You have reached the maximum limit of 3 templates.",
-    );
-  });
-
-  test("refuses an org with no subscription at all", async () => {
-    const rep = reply();
-
-    await verifyTemplateSubscriptionLimit(
-      { user: { orgId: "org-1" }, subscription: null } as any,
-      rep,
-    );
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-  });
-
-  test("enforces no limit when the plan does not state one", async () => {
-    templateCountMock.mockResolvedValue(9999);
-    const rep = reply();
-
-    await verifyTemplateSubscriptionLimit(request({ whatsapp: { active: true } }), rep);
-
-    expect(rep.code).not.toHaveBeenCalled();
-  });
-
-  test("lets a database failure surface rather than calling it a refusal", async () => {
-    templateCountMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
-    const rep = reply();
-
-    await expect(verifyTemplateSubscriptionLimit(request(), rep)).rejects.toThrow(
-      "connection terminated unexpectedly",
-    );
-
-    expect(rep.code).not.toHaveBeenCalled();
   });
 });

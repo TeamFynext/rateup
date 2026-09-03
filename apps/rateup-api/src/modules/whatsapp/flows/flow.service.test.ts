@@ -233,6 +233,17 @@ describe("reading a flow - who is allowed to see it", () => {
     ]);
   });
 
+  // The flow cards sum each team's completed count into the "N responses" line,
+  // so the list has to carry the stats rather than just the team ids.
+  test("carries each team's completed count on the list", async () => {
+    await getFlowsFromDb(ORG_A, "user-1");
+
+    const { select } = db.waFlow.findMany.mock.calls[0][0];
+    expect(select.survey.select.teams.select.surveyStats).toEqual({
+      select: { completed: true },
+    });
+  });
+
   test("scopes a lookup by survey id to the caller's org", async () => {
     await getFlowBySurveyId("survey-1", ORG_A);
 
