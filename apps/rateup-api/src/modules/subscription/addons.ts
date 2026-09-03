@@ -65,6 +65,14 @@ export async function getConversationAllowance(orgId: string): Promise<{
   return { planMax, addonConversations, effectiveMax: planMax + addonConversations };
 }
 
+/** The org's own conversation ceiling, when a contract set one. Undefined when uncapped. */
+function contractedConversationCap(features: unknown): number | undefined {
+  const shape = features as { whatsapp?: { conversation?: { count?: { max?: number } } } } | null;
+  const max = shape?.whatsapp?.conversation?.count?.max;
+  if (typeof max !== "number" || max <= 0 || isUnlimitedAllowance(max)) return undefined;
+  return max;
+}
+
 export interface AddonEligibility {
   /** Whether this org may buy conversation packs at all. */
   eligible: boolean;
@@ -99,6 +107,7 @@ export async function getAddonEligibility(orgId: string): Promise<AddonEligibili
     prisma.subscription.findUnique({
       where: { orgId },
       select: {
+        features: true,
         basePlan: {
           select: {
             name: true,
@@ -127,14 +136,22 @@ export async function getAddonEligibility(orgId: string): Promise<AddonEligibili
   }
   if (!isGatewayBilledPlan(plan)) {
     const isFree = plan.name === "FREE PLAN";
+    // A contracted account has a real ceiling, so "there is no allowance to top up" would
+    // be untrue — the allowance exists, it is just not one a self-serve pack can change.
+    const contractedMax = contractedConversationCap(subscription?.features);
+    const salesLedReason = contractedMax
+      ? `Your agreement includes ${contractedMax.toLocaleString()} conversations a month, ` +
+        "and that limit is set by contract rather than sold in packs. Talk to us to raise it."
+      : `${plan.displayName ?? plan.name} is invoiced on the usage you actually run, so ` +
+        "there is no allowance to top up. Talk to us if you need more headroom.";
+
     return {
       ...base,
       eligible: false,
       reason: isFree
         ? "Conversation packs top up a paid plan. Upgrading raises every limit, not just " +
           "conversations, and costs little more than a pack."
-        : `${plan.displayName ?? plan.name} is invoiced on the usage you actually run, so ` +
-          "there is no allowance to top up. Talk to us if you need more headroom.",
+        : salesLedReason,
     };
   }
 

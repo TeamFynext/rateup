@@ -590,7 +590,7 @@ describe("syncTemplates", () => {
     });
   });
 
-  test("marks a template that no longer exists at Meta, without deleting it", async () => {
+  test("reverts a template that no longer exists at Meta to a draft, without deleting it", async () => {
     db.findMany.mockResolvedValue([row()]);
     callMetaApiMock.mockResolvedValue({ data: { data: [] } });
 
@@ -599,9 +599,43 @@ describe("syncTemplates", () => {
       created: 0,
       updated: 0,
       missingAtMeta: 1,
+      revertedToDraft: 1,
     });
     expect(db.delete).not.toHaveBeenCalled();
-    expect(db.update.mock.calls[0][0].data.data.status).toBe("DELETED");
+    expect(db.update.mock.calls[0][0].data.data.status).toBe("DRAFT");
+  });
+
+  test("drops the Meta id of a template Meta no longer has, so it can be submitted afresh", async () => {
+    db.findMany.mockResolvedValue([row()]);
+    callMetaApiMock.mockResolvedValue({ data: { data: [] } });
+
+    await syncTemplates(ORG_A);
+
+    const written = db.update.mock.calls[0][0].data.data;
+    expect(written).not.toHaveProperty("id");
+    expect(written.name).toBe("order_update");
+    expect(written.components).toEqual([{ type: "BODY", text: "hi" }]);
+  });
+
+  test("leaves a number that was not part of this pass alone", async () => {
+    db.findMany.mockResolvedValue([row({ whatsappSettingsPhoneId: "phone-2" })]);
+    callMetaApiMock.mockResolvedValue({ data: { data: [] } });
+
+    await expect(syncTemplates(ORG_A, ["phone-1"])).resolves.toMatchObject({ missingAtMeta: 0 });
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  test("reattaches an orphaned template to the number it was found on", async () => {
+    db.findMany.mockResolvedValue([row({ whatsappSettingsPhoneId: null })]);
+    callMetaApiMock.mockResolvedValue({
+      data: { data: [{ id: "another-id", name: "order_update", components: [] }] },
+    });
+
+    await expect(syncTemplates(ORG_A, ["phone-1"])).resolves.toMatchObject({
+      created: 0,
+      updated: 1,
+    });
+    expect(db.update.mock.calls[0][0].data.whatsappSettingsPhoneId).toBe("phone-1");
   });
 
   test("leaves a template alone when Meta still has it", async () => {

@@ -38,7 +38,6 @@ import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { conversationRoutes } from "./conversation/conversation.route.js";
 import { conversationTagRoutes } from "./conversationTag/conversationTag.route.js";
-import { verifyLCustomerMaxCountRestrictionHandler } from "./contact.utils.js";
 import { lifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 
 import { requireFeature, TeamFeature } from "../../utils/permissions.js";
@@ -67,10 +66,7 @@ export async function contactRoutes(server: FastifyInstance) {
   server.post<{ Body: ContactCore }>(
     "/",
     {
-      preHandler: [
-        getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
-        verifyLCustomerMaxCountRestrictionHandler,
-      ],
+      preHandler: [getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp])],
       schema: {
         body: contactCoreSchema,
       },

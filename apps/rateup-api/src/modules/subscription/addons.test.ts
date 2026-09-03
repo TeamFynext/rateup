@@ -165,6 +165,22 @@ describe("who may buy conversation packs", () => {
     expect(reason).toMatch(/Enterprise/);
   });
 
+  test("a contracted Enterprise account is told its ceiling, not that it has none", async () => {
+    // The uncapped copy ("invoiced on the usage you actually run, so there is no
+    // allowance to top up") is the opposite of this account's experience: its sends stop
+    // at the number the contract set.
+    vi.mocked(prisma.subscription.findUnique).mockResolvedValue({
+      basePlan: SALES_LED,
+      features: { whatsapp: { conversation: { count: { max: 200_000 } } } },
+    } as never);
+
+    const { eligible, reason } = await getAddonEligibility("org-1");
+
+    expect(eligible).toBe(false);
+    expect(reason).toContain("200,000 conversations a month");
+    expect(reason).not.toMatch(/no allowance to top up/);
+  });
+
   test("reports when the packs held run out", async () => {
     const soon = new Date(Date.now() + 3 * 86_400_000);
     const later = new Date(Date.now() + 20 * 86_400_000);

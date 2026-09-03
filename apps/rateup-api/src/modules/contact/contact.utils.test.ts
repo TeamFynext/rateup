@@ -25,10 +25,9 @@ import { getSubscription } from "../subscription/subscription.service.js";
 import { sendTemplateToUserCore } from "../whatsapp/messageTemplates/wa_templates.controller.js";
 import {
   createLCustomer,
+  reconcileLoyaltyCustomerCount,
   handlePostRegisterAction,
   handleSendTemplate,
-  verifyLCustomerMaxCountRestriction,
-  verifyLCustomerMaxCountRestrictionHandler,
 } from "./contact.utils.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -59,96 +58,22 @@ beforeEach(() => {
   db.contact.upsert.mockResolvedValue({ id: "c1", name: "Ann", phone: "919000000001" });
 });
 
-describe("verifyLCustomerMaxCountRestrictionHandler", () => {
-  test("refuses a registration once the org is at its cap", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValue(5);
-    const rep = reply();
-
-    await verifyLCustomerMaxCountRestrictionHandler(
-      { body: { source: "LOYALTY" }, user: { orgId: ORG }, subscription: subscription(5) } as any,
-      rep,
-    );
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-    expect(rep.send.mock.calls[0][0]).toMatchObject({ message: "Registration limit reached" });
-  });
-
-  test("lets a registration through while the org is under its cap", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValue(1);
-    const rep = reply();
-
-    await verifyLCustomerMaxCountRestrictionHandler(
-      { body: { source: "LOYALTY" }, user: { orgId: ORG }, subscription: subscription(5) } as any,
-      rep,
-    );
-
-    expect(rep.code).not.toHaveBeenCalled();
-  });
-
-  // The cap is a LOYALTY registration cap, so an ordinary contact create never
-  // reaches it, and never pays for the two queries behind it.
-  test("ignores a create that is not a loyalty registration", async () => {
-    const rep = reply();
-
-    await verifyLCustomerMaxCountRestrictionHandler(
-      { body: { source: "manual" }, user: { orgId: ORG }, subscription: subscription(0) } as any,
-      rep,
-    );
-
-    expect(rep.code).not.toHaveBeenCalled();
-    expect(db.customerLoyaltyAccount.count).not.toHaveBeenCalled();
-  });
-
-  // Enabling it changes nothing today: no plan in subscription.data.ts states a
-  // `whatsapp.count.max`, so every real subscription reports "no limit".
-  test("enforces nothing for a plan that states no maximum", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValue(999999);
-    const rep = reply();
-
-    await verifyLCustomerMaxCountRestrictionHandler(
-      {
-        body: { source: "LOYALTY" },
-        user: { orgId: ORG },
-        subscription: subscription(undefined),
-      } as any,
-      rep,
-    );
-
-    expect(rep.code).not.toHaveBeenCalled();
-  });
-});
-
-describe("verifyLCustomerMaxCountRestriction", () => {
-  test("refuses an org with no subscription", async () => {
-    expect(await verifyLCustomerMaxCountRestriction(ORG, null)).toBe(false);
-    expect(db.customerLoyaltyAccount.count).not.toHaveBeenCalled();
-  });
-
+describe("reconcileLoyaltyCustomerCount", () => {
+  // All that survives of a registration limit that never refused anything: the counter the
+  // dashboard reads drifts, and a registration is when a real count is in hand.
   test("counts only this org's loyalty-program contacts", async () => {
-    await verifyLCustomerMaxCountRestriction(ORG, subscription(10));
+    await reconcileLoyaltyCustomerCount(ORG);
 
     expect(db.customerLoyaltyAccount.count).toHaveBeenCalledWith({
       where: { contact: { orgId: ORG, source: "loyalty_program" } },
     });
   });
 
-  test("allows a registration while the org is under its cap", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValue(9);
-
-    expect(await verifyLCustomerMaxCountRestriction(ORG, subscription(10))).toBe(true);
-  });
-
-  test("refuses once the org has reached its cap", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValue(10);
-
-    expect(await verifyLCustomerMaxCountRestriction(ORG, subscription(10))).toBe(false);
-  });
-
   test("repairs a usage counter that has drifted from the real count", async () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(7);
     db.usageStats.findUnique.mockResolvedValue({ loyaltyCustomerCount: 3 });
 
-    await verifyLCustomerMaxCountRestriction(ORG, subscription(10));
+    await reconcileLoyaltyCustomerCount(ORG);
 
     expect(db.usageStats.update).toHaveBeenCalledWith({
       where: { orgId: ORG },
@@ -160,30 +85,29 @@ describe("verifyLCustomerMaxCountRestriction", () => {
     db.customerLoyaltyAccount.count.mockResolvedValue(7);
     db.usageStats.findUnique.mockResolvedValue({ loyaltyCustomerCount: 7 });
 
-    await verifyLCustomerMaxCountRestriction(ORG, subscription(10));
+    await reconcileLoyaltyCustomerCount(ORG);
 
     expect(db.usageStats.update).not.toHaveBeenCalled();
-  });
-
-  test("grants an unlimited allowance when the plan states no maximum", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValue(999999);
-
-    expect(await verifyLCustomerMaxCountRestriction(ORG, subscription(undefined))).toBe(true);
-  });
-
-  test("enforces nothing for a plan with no whatsapp feature", async () => {
-    db.customerLoyaltyAccount.count.mockResolvedValue(999999);
-
-    await expect(
-      verifyLCustomerMaxCountRestriction(ORG, { features: { webSurvey: {} } }),
-    ).resolves.toBe(true);
   });
 
   test("copes with an org that has no usage stats row", async () => {
     db.usageStats.findUnique.mockResolvedValue(null);
 
-    await expect(verifyLCustomerMaxCountRestriction(ORG, subscription(10))).resolves.toBe(true);
+    await expect(reconcileLoyaltyCustomerCount(ORG)).resolves.toBeUndefined();
     expect(db.usageStats.update).not.toHaveBeenCalled();
+  });
+
+  test("runs as part of a registration, which is where the old gate ran", async () => {
+    // Without a caller this is dead code and the counter goes stale forever.
+    db.customerLoyaltyAccount.count.mockResolvedValue(7);
+    db.usageStats.findUnique.mockResolvedValue({ loyaltyCustomerCount: 3 });
+
+    await createLCustomer({ phone: "+919000000000", orgId: ORG });
+
+    expect(db.usageStats.update).toHaveBeenCalledWith({
+      where: { orgId: ORG },
+      data: { loyaltyCustomerCount: 7 },
+    });
   });
 });
 

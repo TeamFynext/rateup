@@ -26,11 +26,7 @@ import {
   getSurveyStatsHandler,
   getNPSGraphHandler,
 } from "./survey.controller.js";
-import {
-  verifySurveyMaxCountRestriction,
-  verifySurveyAccess,
-  verifySurveyCreateAccess,
-} from "./survey.auth.js";
+import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
@@ -60,7 +56,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      preHandler: [verifySurveyCreateAccess, verifySurveyMaxCountRestriction],
+      preHandler: [verifySurveyCreateAccess],
       schema: {
         body: createSurveyRequestSchema,
       },
@@ -119,7 +115,7 @@ export async function surveyRoutes(server: FastifyInstance) {
   server.post(
     "/clone/:id",
     {
-      preHandler: [verifySurveyAccess, verifySurveyMaxCountRestriction],
+      preHandler: [verifySurveyAccess],
       schema: {
         params: getSurveyByIdParamsSchema,
         body: cloneSurveySchema,

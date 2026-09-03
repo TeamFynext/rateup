@@ -36,7 +36,6 @@ import {
   removeEmptyStrings,
   removeIdFromFlowJson,
   sanitizeScreenData,
-  verifyFlowSubscriptionLimit,
   waFlowFormElementIterator,
 } from "./flow.utils.js";
 
@@ -694,73 +693,5 @@ describe("convertHeaderToNewQuestion", () => {
     convertHeaderToNewQuestion(original);
 
     expect(original.screens[0].layout.children[0].header).toBe("Your name");
-  });
-});
-
-describe("verifyFlowSubscriptionLimit", () => {
-  function request(features: unknown = { whatsapp: { count: { max: 3 } } }): any {
-    return { user: { orgId: "org-1" }, subscription: { features } };
-  }
-
-  function reply() {
-    const rep: any = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
-    return rep;
-  }
-
-  test("lets an org under its flow limit through", async () => {
-    flowCountMock.mockResolvedValue(2);
-    const rep = reply();
-
-    await verifyFlowSubscriptionLimit(request(), rep);
-
-    expect(rep.code).not.toHaveBeenCalled();
-  });
-
-  test("counts only the caller's own flows", async () => {
-    await verifyFlowSubscriptionLimit(request(), reply());
-
-    expect(flowCountMock.mock.calls[0][0]).toEqual({ where: { orgId: "org-1" } });
-  });
-
-  test("refuses an org that has reached its limit, naming the limit", async () => {
-    flowCountMock.mockResolvedValue(3);
-    const rep = reply();
-
-    await verifyFlowSubscriptionLimit(request(), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-    expect(rep.send.mock.calls[0][0].message).toBe(
-      "You have reached the maximum limit of 3 Flows.",
-    );
-  });
-
-  test("refuses an org with no subscription at all", async () => {
-    const rep = reply();
-
-    await verifyFlowSubscriptionLimit({ user: { orgId: "org-1" }, subscription: null } as any, rep);
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-    expect(rep.send.mock.calls[0][0].message).toBe("Subscription not found");
-  });
-
-  test("enforces no limit when the plan does not state one", async () => {
-    flowCountMock.mockResolvedValue(9999);
-    const rep = reply();
-
-    await verifyFlowSubscriptionLimit(request({ whatsapp: { active: true } }), rep);
-
-    expect(rep.code).not.toHaveBeenCalled();
-    expect(flowCountMock).not.toHaveBeenCalled();
-  });
-
-  test("lets a database failure surface rather than calling it a refusal", async () => {
-    flowCountMock.mockRejectedValue(new Error("connection terminated unexpectedly"));
-    const rep = reply();
-
-    await expect(verifyFlowSubscriptionLimit(request(), rep)).rejects.toThrow(
-      "connection terminated unexpectedly",
-    );
-
-    expect(rep.code).not.toHaveBeenCalled();
   });
 });

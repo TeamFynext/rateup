@@ -108,6 +108,16 @@ const campaignResponseSchema = z.object({
   endedAt: z.date().optional(),
 });
 
+/**
+ * The preflight asks the same question the send does — "who would this go to?" — so it
+ * takes the same statuses, as a querystring since it changes nothing.
+ */
+const sendPreflightQuerySchema = z.object({
+  sendToStatuses: z
+    .union([z.enum(CampaignParticipantStatus), z.array(z.enum(CampaignParticipantStatus))])
+    .transform((value) => (Array.isArray(value) ? value : [value])),
+});
+
 const sendCampaignInputSchema = z.object({
   sendToStatuses: z.array(z.enum(CampaignParticipantStatus)).min(1),
   participantId: z.string().optional(),
@@ -123,6 +133,7 @@ export type UpdateCampaignInput = z.infer<typeof updateCampaignInputSchema>;
 export type CreateCampaignInput = z.infer<typeof createCampaignInputSchema>;
 export type ByCampaignIdParams = z.infer<typeof byCampaignIdParamsSchema>;
 export type SendCampaignInput = z.infer<typeof sendCampaignInputSchema>;
+export type SendPreflightQuery = z.infer<typeof sendPreflightQuerySchema>;
 export type ByFlowIdParams = z.infer<typeof byFlowIdParamsSchema>;
 export type CampaignResponseByIdSchema = z.infer<typeof campaignResponseByIdSchema>;
 
@@ -134,6 +145,7 @@ export {
   getCampaignsQuerySchema,
   campaignResponseSchema,
   sendCampaignInputSchema,
+  sendPreflightQuerySchema,
   byFlowIdParamsSchema,
   campaignResponseByIdSchema,
 };

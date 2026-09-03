@@ -129,13 +129,16 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
     id: "convert-subscriptions",
     title: "Convert subscriptions to the catalog",
     description:
-      "Free stays Free; every other plan becomes Enterprise. Enterprise is unlimited and " +
-      "invoiced on real usage, so nobody loses capability and nobody is moved onto a price " +
-      "they did not agree to — which tier an account really belongs on is then a " +
-      "conversation. Orgs whose subscription names no plan are adopted onto Enterprise too, " +
+      "Free stays Free and is rewritten to today's Free numbers; every other plan becomes " +
+      "Enterprise while KEEPING the counts it already runs on, written as a contracted cap " +
+      "rather than made unlimited — so nobody gains volume nobody sold them, and nobody is " +
+      "moved onto a price they did not agree to. Which tier an account really belongs on is " +
+      "then a conversation. Every blob is rebuilt from the current presets, so retired keys " +
+      "are dropped. Orgs whose subscription names no plan are adopted onto Enterprise too, " +
       "since an unplanned row is invisible to add-ons, expiry and the admin plan views. A " +
-      "live Razorpay subscription is reported but never cancelled. Rewrites live " +
-      "entitlements — take a backup first.",
+      "live Razorpay subscription is reported but never cancelled. A legacy free account " +
+      "may lose allowance it was carrying — preview the run first. Rewrites live " +
+      "entitlements: take a backup.",
     destructive: true,
     run: convertSubscriptions,
   },
