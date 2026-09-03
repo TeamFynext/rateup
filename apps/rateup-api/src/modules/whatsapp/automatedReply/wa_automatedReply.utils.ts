@@ -9,11 +9,9 @@ import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js
 import type { AutomationWithGraph } from "../whatsappSurvey/node-types.js";
 import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
-import { enforceWhatsappCountLimit } from "../../../utils/subscriptionLimit.js";
 import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
-import { FastifyReply, FastifyRequest } from "fastify";
 import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils.js";
 import {
   getContactByPhoneNumberAndOrgId,
@@ -278,13 +276,6 @@ export enum ReplyComponentType {
   Image = "Image",
   List = "List",
   AiBot = "AiBot",
-}
-
-export async function verifyAutomationLimit(request: FastifyRequest, reply: FastifyReply) {
-  return await enforceWhatsappCountLimit(request, reply, {
-    label: "automated replies",
-    count: (orgId) => prisma.waAutomatedReply.count({ where: { orgId } }),
-  });
 }
 
 /**

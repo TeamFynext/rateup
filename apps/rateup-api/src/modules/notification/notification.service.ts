@@ -7,6 +7,7 @@ import prisma from "../../utils/prisma.js";
 import { checkPushReceipts, sendPushNotification } from "../mobileNotification/mobile.service.js";
 import { notificationQueue } from "../../workers/bullmq/queues/notification.queue.js";
 import { NotificationSettingSchema } from "./notification.schema.js";
+import { isGatewayBilledPlan } from "../subscription/planBilling.js";
 
 export async function getNotifications(userId: string, orgId: string) {
   return await prisma.notification.findMany({
@@ -105,16 +106,38 @@ export async function createNotification(
 // counter crosses the limit; best-effort so it never blocks conversation counting.
 export async function notifyConversationLimitReached(orgId: string) {
   try {
-    const admins = await prisma.orgMember.findMany({
-      where: { orgId, role: { in: [Role.SUPER_ADMIN, Role.ADMIN] }, user: { active: true } },
-      select: { userId: true },
-    });
+    const [admins, subscription] = await Promise.all([
+      prisma.orgMember.findMany({
+        where: { orgId, role: { in: [Role.SUPER_ADMIN, Role.ADMIN] }, user: { active: true } },
+        select: { userId: true },
+      }),
+      prisma.subscription.findUnique({
+        where: { orgId },
+        select: {
+          basePlan: {
+            select: {
+              paymentPlanId: true,
+              monthlyPaymentPlanId: true,
+              yearlyPaymentPlanId: true,
+              stripeId: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    // A sales-led account only reaches a limit because a contract set one, and there is no
+    // tier above it to buy — "upgrade your plan" would send them looking for a button that
+    // does not exist. Everyone else can act on the message as written.
+    const message = isGatewayBilledPlan(subscription?.basePlan ?? null)
+      ? "You've reached your conversation limit. Upgrade your plan to keep sending messages."
+      : "You've reached the conversation limit set on your agreement. Talk to us to raise it " +
+        "and keep sending messages.";
 
     await Promise.all(
       admins.map((m) =>
         createNotification(m.userId, orgId, "subscription", "conversation-limit-reached", {
-          message:
-            "You've reached your conversation limit. Upgrade your plan to keep sending messages.",
+          message,
         }),
       ),
     );
@@ -186,12 +209,24 @@ export async function processNotification(job: Job<NotificationJobData>) {
   const { emailData, systemNotificationData, pushNotificationData, pushReceiptData } = job.data;
 
   if (emailData) {
-    // `sendAWSEmail` reports failure by returning false rather than throwing. Turning that
-    // into a throw is what lets BullMQ retry — otherwise a throttled SES call looks like a
-    // delivered email.
-    const sent = await sendAWSEmail(emailData);
-    if (!sent) {
-      throw new Error(`Email send failed for ${emailData.to}`);
+    // A job with no recipient can never be delivered, so it must not be thrown: throwing
+    // is what asks BullMQ to retry, and this one burned five SES calls and five "Missing
+    // required header 'To'" stack traces before giving up on an email that was never
+    // sendable. Dropped with a warning instead — the enqueueing side is where a missing
+    // address is a bug worth chasing.
+    if (!emailData.to) {
+      log.warn(
+        { jobId: job.id, subject: emailData.subject },
+        "Dropping an email job with no recipient",
+      );
+    } else {
+      // `sendAWSEmail` reports failure by returning false rather than throwing. Turning
+      // that into a throw is what lets BullMQ retry — otherwise a throttled SES call looks
+      // like a delivered email.
+      const sent = await sendAWSEmail(emailData);
+      if (!sent) {
+        throw new Error(`Email send failed for ${emailData.to}`);
+      }
     }
   }
 

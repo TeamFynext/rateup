@@ -6,7 +6,7 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
       active: true,
     },
     webSurvey: {
-      count: { max: count, monthlyResponseLimit: 1000 },
+      count: { monthlyResponseLimit: 1000 },
       active: true,
       encryption: { active: true },
       googleReview: { active: true },
@@ -44,7 +44,7 @@ export function getFreeSubscriptionFeatures(
       active: true,
     },
     webSurvey: {
-      count: { max: 2, monthlyResponseLimit: 100 },
+      count: { monthlyResponseLimit: 100 },
       active: true,
       encryption: { active: false },
       googleReview: { active: false },
@@ -60,7 +60,11 @@ export function getFreeSubscriptionFeatures(
         active: true,
         count: { max: 100 },
       },
-      campaign: { active: false },
+      // Campaigns are open on Free. They are not free to run: a campaign spends the same
+      // 100 metered conversations Free already allows, and the send gate stops there, so
+      // the allowance is the throttle rather than the gate. Keeping the feature shut
+      // meant a free account could never see the thing it would be upgrading for.
+      campaign: { active: true },
       loyalty: { active: false },
       referrals: { active: false },
       catalog: { active: false },
@@ -77,11 +81,11 @@ export function getFreeSubscriptionFeatures(
 export const FreePlanSubscriptionFeatures = getFreeSubscriptionFeatures();
 
 /**
- * The paid tiers. Every tier gets the full inbox, automations, templates, flows and
- * chatbots; they differ by count limits plus three capability gates:
+ * The paid tiers. Every tier gets the full inbox, automations, templates, flows,
+ * chatbots and campaigns; they differ by count limits plus two capability gates:
  *
- *   - campaigns / loyalty / referrals / catalog sync — Starter and above
- *   - the Meta Business Agent (`ai.active`)          — Pro and above
+ *   - loyalty / referrals / catalog sync    — Plus and above
+ *   - the Meta Business Agent (`ai.active`) — Max only
  *
  * `whatsapp.conversation.count.max` is the monthly allowance of METERED 24h
  * conversation windows (see MeteredConversation), not a message count. Rateup does
@@ -111,7 +115,7 @@ function getPaidSubscriptionFeatures({
       active: true,
     },
     webSurvey: {
-      count: { max: formSubmissions, monthlyResponseLimit: formSubmissions },
+      count: { monthlyResponseLimit: formSubmissions },
       active: true,
       encryption: { active: true },
       googleReview: { active: true },
@@ -227,4 +231,89 @@ export function getEnterpriseSubscriptionFeatures(
     }),
     ...overrides,
   };
+}
+
+/**
+ * The allowances a contract can cap, as paths into the features blob.
+ *
+ * Enterprise ships every one of these as the unlimited sentinel; a negotiated deal caps
+ * some of them. They are listed rather than walked so that a new count added to the blob
+ * is an explicit decision here, not something silently treated as contractable.
+ */
+const CONTRACTABLE_ALLOWANCES = [
+  ["whatsapp", "conversation", "count", "max"],
+  ["webSurvey", "count", "monthlyResponseLimit"],
+  ["team", "count", "max"],
+  ["team", "teamMember", "count", "max"],
+] as const;
+
+function readPath(source: unknown, path: readonly string[]): unknown {
+  return path.reduce<unknown>(
+    (node, key) =>
+      typeof node === "object" && node !== null
+        ? (node as Record<string, unknown>)[key]
+        : undefined,
+    source,
+  );
+}
+
+function writePath(target: Record<string, unknown>, path: readonly string[], value: unknown) {
+  let node = target;
+  for (const key of path.slice(0, -1)) {
+    const next = node[key];
+    node[key] = typeof next === "object" && next !== null ? { ...(next as object) } : {};
+    node = node[key] as Record<string, unknown>;
+  }
+  node[path[path.length - 1]] = value;
+}
+
+/**
+ * Whether an org carries a contracted cap: a real number where its tier is uncapped.
+ *
+ * Only Enterprise can be in this state. Nothing writes a lower allowance onto an
+ * unlimited tier by accident — the catalog hands out the sentinel — so a number there is
+ * always someone having agreed a ceiling with the customer.
+ */
+export function hasContractedCap(tier: unknown, stored: unknown): boolean {
+  return CONTRACTABLE_ALLOWANCES.some((path) => {
+    const tierMax = readPath(tier, path);
+    const orgMax = readPath(stored, path);
+    return (
+      typeof tierMax === "number" &&
+      isUnlimitedAllowance(tierMax) &&
+      typeof orgMax === "number" &&
+      !isUnlimitedAllowance(orgMax) &&
+      orgMax > 0
+    );
+  });
+}
+
+/**
+ * The tier's features with the org's contracted caps kept.
+ *
+ * Enterprise is unlimited by default, but a deal can put a ceiling on an individual
+ * account, and that ceiling is stored on the subscription because it belongs to that
+ * customer rather than to the tier. Anything that re-applies the catalog therefore has to
+ * carry it across, or a routine refresh would hand a capped account unlimited volume back
+ * and nothing would say so. Everything else — feature gates, the copy, the counts the
+ * contract did not touch — still comes from the tier.
+ */
+export function withContractedCaps<T>(tier: T, stored: unknown): T {
+  const next = structuredClone(tier) as Record<string, unknown>;
+
+  for (const path of CONTRACTABLE_ALLOWANCES) {
+    const tierMax = readPath(tier, path);
+    const orgMax = readPath(stored, path);
+    if (
+      typeof tierMax === "number" &&
+      isUnlimitedAllowance(tierMax) &&
+      typeof orgMax === "number" &&
+      !isUnlimitedAllowance(orgMax) &&
+      orgMax > 0
+    ) {
+      writePath(next, path, orgMax);
+    }
+  }
+
+  return next as T;
 }

@@ -73,7 +73,6 @@ import {
   validateAutomationMatchCondition,
   validateRuleConditions,
   validateTimeWindow,
-  verifyAutomationLimit,
 } from "./wa_automatedReply.utils.js";
 
 // No dayjs.extend here on purpose: the module under test registers customParseFormat
@@ -145,22 +144,6 @@ function rule(overrides: Record<string, unknown> = {}) {
 
 function group(conditions: any[], operator: "AND" | "OR" = "AND") {
   return { id: "group-1", operator, conditions };
-}
-
-function makeReply() {
-  const reply: any = {
-    statusCode: undefined,
-    payload: undefined,
-    code: vi.fn((c: number) => {
-      reply.statusCode = c;
-      return reply;
-    }),
-    send: vi.fn((p?: unknown) => {
-      reply.payload = p;
-      return reply;
-    }),
-  };
-  return reply;
 }
 
 beforeEach(() => {
@@ -795,85 +778,6 @@ describe("validateRuleConditions - combining conditions", () => {
     await expect(validateRuleConditions(r, "shipping only", "org-1", "15550001")).resolves.toBe(
       true,
     );
-  });
-});
-
-describe("verifyAutomationLimit", () => {
-  const subscription = (max: number) => ({ features: { whatsapp: { count: { max } } } });
-
-  function request(overrides: Record<string, unknown> = {}) {
-    return {
-      user: { orgId: "org-1" },
-      subscription: subscription(10),
-      ...overrides,
-    } as any;
-  }
-
-  test("lets the request through when the org is under its limit", async () => {
-    db.waAutomatedReply.count.mockResolvedValue(3);
-    const reply = makeReply();
-
-    await verifyAutomationLimit(request(), reply);
-
-    expect(reply.code).not.toHaveBeenCalled();
-  });
-
-  test("refuses once the org has reached its limit", async () => {
-    db.waAutomatedReply.count.mockResolvedValue(10);
-    const reply = makeReply();
-
-    await verifyAutomationLimit(request(), reply);
-
-    expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.payload).toEqual({
-      message: "You have reached the maximum limit of 10 automated replies.",
-      displayMessageInClient: true,
-    });
-  });
-
-  test("counts only this org's automations", async () => {
-    await verifyAutomationLimit(request(), makeReply());
-
-    expect(db.waAutomatedReply.count).toHaveBeenCalledWith({ where: { orgId: "org-1" } });
-  });
-
-  test("refuses when the request carries no subscription", async () => {
-    const reply = makeReply();
-
-    await verifyAutomationLimit(request({ subscription: undefined }), reply);
-
-    expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.payload).toMatchObject({ message: "Subscription not found" });
-  });
-
-  // Automated replies are unlimited by design — no plan in subscription.data.ts states a
-  // whatsapp count. That outcome is unchanged, but it is now a deliberate early return
-  // rather than an accident of comparing against undefined.
-  test("allows unlimited replies when the plan does not state a count", async () => {
-    db.waAutomatedReply.count.mockResolvedValue(9999);
-    const reply = makeReply();
-
-    await verifyAutomationLimit(request({ subscription: { features: {} } }), reply);
-
-    expect(reply.code).not.toHaveBeenCalled();
-  });
-
-  test("does not bother counting when the plan states no limit", async () => {
-    await verifyAutomationLimit(request({ subscription: { features: {} } }), makeReply());
-
-    expect(db.waAutomatedReply.count).not.toHaveBeenCalled();
-  });
-
-  test("still enforces a limit the plan does state", async () => {
-    db.waAutomatedReply.count.mockResolvedValue(5);
-    const reply = makeReply();
-
-    await verifyAutomationLimit(request({ subscription: subscription(5) }), reply);
-
-    expect(reply.code).toHaveBeenCalledWith(403);
-    expect(reply.payload).toMatchObject({
-      message: "You have reached the maximum limit of 5 automated replies.",
-    });
   });
 });
 
