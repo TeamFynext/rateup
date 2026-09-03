@@ -26,7 +26,9 @@ function getPlanHighlights(plan: RateupPaymentPlan) {
     features.whatsapp?.campaign?.active
       ? `${features.whatsapp?.campaign?.count?.max || 0} WhatsApp Campaigns`
       : null,
-    features.webSurvey?.active ? `${features.webSurvey?.count?.max || 0} Web Surveys` : null,
+    features.webSurvey?.active
+      ? `Web Surveys (${features.webSurvey?.count?.monthlyResponseLimit || 0} monthly responses)`
+      : null,
     features.loyalty?.active ? "WhatsApp Loyalty Program" : null,
     features.ai?.active
       ? `AI Tokens (${features.ai?.count?.promptTokens || 0} prompt tokens)`

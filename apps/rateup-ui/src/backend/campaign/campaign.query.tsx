@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { campaignKeys } from "@/backend/campaign/campaign.keys";
 import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
-import { getApiErrorData } from "@/utils/apiError.ts";
+import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError.ts";
 
 import {
   campaignResponseDownloadById,
@@ -13,6 +13,7 @@ import {
   getCampaignFilterForFlows,
   getCampaigns,
   getCampaignsByTeam,
+  getCampaignSendPreflight,
   getCampaignStatsById,
   sendCampaign,
   updateCampaign,
@@ -30,6 +31,26 @@ export const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
     queryKey: campaignKeys.byTeam(teamId),
     queryFn: () => getCampaignsByTeam(teamId),
     enabled: enabled,
+  });
+};
+
+/**
+ * What the selected send would cost against the conversation allowance.
+ *
+ * Read while the send dialog is open so the warning tracks the statuses being picked.
+ * Kept fresh rather than cached: the allowance moves as conversations happen, and a stale
+ * "45 left" is exactly the number someone would act on.
+ */
+export const useCampaignSendPreflight = (
+  campaignId: string,
+  sendToStatuses: CampaignParticipantStatus[],
+  enabled: boolean,
+) => {
+  return useQuery({
+    queryKey: campaignKeys.sendPreflight(campaignId, sendToStatuses),
+    queryFn: () => getCampaignSendPreflight(campaignId, sendToStatuses),
+    enabled: enabled && !!campaignId && sendToStatuses.length > 0,
+    staleTime: 0,
   });
 };
 
@@ -165,7 +186,9 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
     },
     onError: (error) => {
       if (!(getApiErrorData(error)?.displayMessageInClient ?? false))
-        toast.error(error?.message || `${error?.message ?? "Error sending campaign"}`, {
+        // The API's own sentence, not axios's "Request failed with status code 403" — a
+        // send refused for a spent conversation allowance has to say so.
+        toast.error(getApiErrorMessage(error, "Error sending campaign"), {
           id: "campaign-start",
         });
     },

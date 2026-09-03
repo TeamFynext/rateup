@@ -35,8 +35,8 @@ const faqs: FaqEntry[] = [
   {
     question: "Which plan do you recommend for my business?",
     answer: [
-      `Free → test WhatsApp automation end to end`,
-      `Plus → growing shops running campaigns, loyalty and catalog sync`,
+      `Free → test WhatsApp automation and campaigns end to end`,
+      `Plus → growing shops that need real volume, loyalty and catalog sync`,
       `Pro → scaling teams past their first 10,000 conversations`,
       `Max → high-volume teams that want the Meta Business Agent in the loop`,
       `Enterprise → unlimited volume, contracted terms and a dedicated manager`,
@@ -61,8 +61,8 @@ const faqs: FaqEntry[] = [
  * Exported so the pricing route can build its FAQ structured data from exactly what the
  * page renders — a rich result that contradicts the page is worse than none at all.
  */
-export function buildFaqs(plans: RateupPaymentPlan[] | undefined): FaqEntry[] {
-  const answer = conversationPackAnswer(resolveConversationPack(plans));
+export function buildFaqs(plans: RateupPaymentPlan[] | undefined, showPrices = true): FaqEntry[] {
+  const answer = conversationPackAnswer(resolveConversationPack(plans), showPrices);
   return faqs.map((entry) =>
     entry.question === "What if I run out of conversations?" ? { ...entry, answer } : entry,
   );
@@ -73,8 +73,11 @@ export function buildFaqs(plans: RateupPaymentPlan[] | undefined): FaqEntry[] {
  * answer here is short enough to read at a glance, and a visitor comparing plans should
  * not have to click each one open to find the one that applies to them.
  */
-export function Faq({ plans }: Readonly<{ plans?: RateupPaymentPlan[] }>) {
-  const entries = useMemo(() => buildFaqs(plans), [plans]);
+export function Faq({
+  plans,
+  showPrices = true,
+}: Readonly<{ plans?: RateupPaymentPlan[]; showPrices?: boolean }>) {
+  const entries = useMemo(() => buildFaqs(plans, showPrices), [plans, showPrices]);
 
   return (
     <section className="mx-auto max-w-[1240px] px-8 pt-18">

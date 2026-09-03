@@ -40,6 +40,30 @@ export const deleteCampaign = async (campaignId: string) => {
   return res;
 };
 
+/** What a campaign would cost against the org's conversation allowance, before sending. */
+export interface CampaignSendPreflight {
+  recipients: number;
+  /** False when the plan is not metered — there is nothing to run out of. */
+  metered: boolean;
+  max?: number;
+  used?: number;
+  remaining?: number;
+  isAnnual: boolean;
+  /** The allowance is already spent: the send would deliver nothing. */
+  exhausted: boolean;
+  /** Recipients beyond what is left. An upper bound — see the API's campaign.preflight.ts. */
+  shortfall: number;
+}
+
+export const getCampaignSendPreflight = async (
+  campaignId: string,
+  sendToStatuses: CampaignParticipantStatus[],
+) => {
+  const query = sendToStatuses.map((status) => `sendToStatuses=${status}`).join("&");
+  return (await axiosClient.get(`/campaign/${campaignId}/send-preflight?${query}`))
+    .data as CampaignSendPreflight;
+};
+
 export const sendCampaign = async (
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
