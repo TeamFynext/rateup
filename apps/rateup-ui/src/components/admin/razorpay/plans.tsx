@@ -66,19 +66,6 @@ interface PlanTableData {
   canDelete: boolean;
 }
 
-/** Mirrors the API's ordering so clicking the Status header keeps LIVE/ACTIVE on top. */
-const STATUS_RANK: Record<PaymentPlanStatus, number> = {
-  [PaymentPlanStatus.LIVE]: 0,
-  [PaymentPlanStatus.ACTIVE]: 1,
-  [PaymentPlanStatus.NULL]: 2,
-  [PaymentPlanStatus.INACTIVE]: 3,
-};
-
-const statusRank = (status?: PaymentPlanStatus) =>
-  status
-    ? (STATUS_RANK[status] ?? STATUS_RANK[PaymentPlanStatus.NULL])
-    : STATUS_RANK[PaymentPlanStatus.NULL];
-
 const RazorpayPlans = () => {
   const planUpdateMutate = usePaymentPlanUpdate();
   const { data: rateupPlans } = useRateupPaymentsPlans();
@@ -184,7 +171,6 @@ const RazorpayPlans = () => {
     {
       accessorKey: "status",
       header: createSortableHeader("Status"),
-      sortingFn: (a, b) => statusRank(a.original.status) - statusRank(b.original.status),
       cell: ({ row }) => {
         const status = row.getValue("status") as PaymentPlanStatus;
         const getStatusColor = (status: PaymentPlanStatus) => {
