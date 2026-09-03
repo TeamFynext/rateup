@@ -1,5 +1,5 @@
 /**
- * Query keys for automation, Zoho, ticket cards and survey response listings — the last of
+ * Query keys for automation, Zoho and survey response listings — the last of
  * the roots that were declared in more than one file.
  *
  * Every literal is byte-identical to the inline key it replaced.

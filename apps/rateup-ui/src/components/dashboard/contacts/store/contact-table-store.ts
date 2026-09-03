@@ -3,7 +3,10 @@ import { immer } from "zustand/middleware/immer";
 
 export interface ContactTableFilter {
   searchTerm: string;
+  /** Kept for orgs with no board, where the lifecycle filter still shows. */
   lifecycleId: string;
+  /** The board column a contact's lead sits in — the pipeline counterpart. */
+  stageId: string;
   source: string;
   labelId: string;
 }
@@ -17,6 +20,7 @@ export const useContactTableStore = create<{
     filter: {
       searchTerm: "",
       lifecycleId: "all",
+      stageId: "all",
       source: "all",
       labelId: "all",
     },

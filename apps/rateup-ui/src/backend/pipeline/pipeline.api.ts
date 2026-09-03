@@ -22,6 +22,8 @@ import type {
   UpdateTaskInput,
   TeamPipelineDefault,
   UpdateTeamDefaultInput,
+  ContactStage,
+  BulkStageResult,
 } from "./pipeline.types";
 
 const PIPELINE_URL = "/pipelines";
@@ -218,6 +220,44 @@ export async function updateTeamPipelineDefault(teamId: string, input: UpdateTea
   const { data } = await axiosClient.put<TeamPipelineDefault>(
     `${PIPELINE_URL}/team-defaults/${teamId}`,
     input,
+  );
+  return data;
+}
+
+// -------------------------------------------------------------- contact stage
+
+/** Null when the org has no board — an ordinary state, not an error. */
+export async function fetchContactStage(contactId: string) {
+  const { data } = await axiosClient.get<ContactStage | null>(
+    `${PIPELINE_URL}/leads/contact/${contactId}/stage`,
+  );
+  return data;
+}
+
+export async function setContactStage(contactId: string, stageId: string) {
+  const { data } = await axiosClient.put(`${PIPELINE_URL}/leads/contact/${contactId}/stage`, {
+    stageId,
+  });
+  return data;
+}
+
+/**
+ * The contacts table's bulk assign. One request for the whole selection, and the
+ * reply says how many actually moved — a selection can hold contacts already on
+ * the target column.
+ */
+export async function bulkSetContactStage(contactIds: string[], stageId: string) {
+  const { data } = await axiosClient.put<BulkStageResult>(`${PIPELINE_URL}/leads/contacts/stage`, {
+    contactIds,
+    stageId,
+  });
+  return data;
+}
+
+/** Deletes the lead holding the stage, and everything on it. */
+export async function clearContactStage(contactId: string) {
+  const { data } = await axiosClient.delete<{ leadId: string | null }>(
+    `${PIPELINE_URL}/leads/contact/${contactId}/stage`,
   );
   return data;
 }

@@ -1,40 +1,21 @@
-import { useNavigate } from "@tanstack/react-router";
+import { ClosingCta } from "./home-ui";
 
-import { BookDemoModal } from "../helper/BookDemoModal";
-
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
-
-function LoyaltySection() {
-  const navigate = useNavigate();
+/**
+ * The closing band. This is the one place on the homepage that goes navy, so the CTA reads
+ * as the end of the page rather than another section — the shared footer picks up below it.
+ *
+ * The band itself is `ClosingCta` in `home-ui`, because `/about-us` and `/contact-us` end on
+ * the same one; only the copy differs.
+ */
+export default function LoyaltySection() {
   return (
-    <section className={`${styles.section} ${styles["section--tight"]}`}>
-      <div className={styles.page}>
-        <div className={`${styles["cta-band"]} ${styles.reveal}`}>
-          <h2>Ready To Turn One Sale Into A Lifetime?</h2>
-
-          <p>Launch loyalty, referrals and automated engagement on WhatsApp.</p>
-
-          <div className={styles["cta-row"]}>
-            <button
-              className={`${styles.btn} ${styles["btn-primary"]}`}
-              onClick={() =>
-                navigate({
-                  to: "/signup",
-                })
-              }
-            >
-              Start For Free
-            </button>
-            <BookDemoModal>
-              <button className={`${styles.btn} ${styles["btn-ghost"]}`}>Book a Demo</button>
-            </BookDemoModal>
-          </div>
-
-          <div className={styles.micro}>No credit card required · Cancel anytime</div>
-        </div>
-      </div>
-    </section>
+    <ClosingCta
+      id="demo"
+      eyebrow="Set up on your own WhatsApp number in 20 minutes"
+      title="Ready to turn one sale into a lifetime?"
+    >
+      Book a 20-minute demo, or message us on WhatsApp — the same channel your customers will be
+      using.
+    </ClosingCta>
   );
 }
-
-export default LoyaltySection;

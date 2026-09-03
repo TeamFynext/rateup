@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
 import style from "./feedback.module.css";
 
@@ -14,8 +14,8 @@ function Stars({ n }: { n: number }) {
           key={i}
           className="w-[11px] h-[11px]"
           viewBox="0 0 24 24"
-          fill={i < n ? "#F8951D" : "none"}
-          stroke="#F8951D"
+          fill={i < n ? "var(--color-ru-amber-500)" : "none"}
+          stroke="var(--color-ru-amber-500)"
           strokeWidth="2"
         >
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -61,7 +61,7 @@ function CopyBlock({
           onClick={() => navigate({ to: "/signup" })}
           className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-base tracking-[-0.01em] pl-[22px] py-[6px] pr-[6px] text-white bg-gradient-to-br from-fb-green to-fb-green-2 shadow-[0_10px_26px_rgba(42,98,84,0.40)] hover:shadow-[0_14px_34px_rgba(42,98,84,0.55)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
         >
-          Start Free Trial
+          Get Started Free
           <span className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-[10px] bg-chip-dark flex-shrink-0">
             <svg
               className="w-[18px] h-[18px]"
@@ -76,7 +76,7 @@ function CopyBlock({
             </svg>
           </span>
         </button>
-        <BookDemoModal>
+        <BookDemoLink>
           <button className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-base pl-[22px] py-[6px] pr-[6px] text-[#0F2820] bg-periwinkle hover:bg-periwinkle-2 hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap">
             See Demo
             <span className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-[10px] bg-white/65 flex-shrink-0">
@@ -93,7 +93,7 @@ function CopyBlock({
               </svg>
             </span>
           </button>
-        </BookDemoModal>
+        </BookDemoLink>
       </div>
     </div>
   );
@@ -181,7 +181,7 @@ function TriggersTab() {
     },
     {
       bg: "#FEF3E8",
-      color: "#D97A0F",
+      color: "var(--color-ru-amber-600)",
       label: "After Dining",
       sub: "Sends 15 min after table checkout",
       iconKey: "dining",
@@ -479,7 +479,7 @@ function AnalyticsTab() {
               style={{
                 fontSize: 10.5,
                 fontWeight: 700,
-                color: "#D97A0F",
+                color: "var(--color-ru-amber-600)",
                 background: "#FEF3E8",
                 padding: "3px 8px",
                 borderRadius: 6,
@@ -522,7 +522,7 @@ function FollowupTab() {
   const rules = [
     { n: 5, action: "Request Google Review", color: "#16A34A" },
     { n: 4, action: "Send Referral Offer", color: "#2A6254" },
-    { n: 3, action: "Ask for More Detail", color: "#D97A0F" },
+    { n: 3, action: "Ask for More Detail", color: "var(--color-ru-amber-600)" },
     { n: 2, action: "Escalate to Manager", color: "#E3506B" },
     { n: 1, action: "🚨 Urgent Alert", color: "#DC2626" },
   ];

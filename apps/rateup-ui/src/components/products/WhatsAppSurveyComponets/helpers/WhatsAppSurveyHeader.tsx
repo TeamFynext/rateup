@@ -6,7 +6,7 @@ import { useState } from "react";
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogo } from "@/utils/constants.ts";
 
 const WhatsAppSurveyHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +31,7 @@ const WhatsAppSurveyHeader = () => {
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center">
             <a href="https://rateup.app" className="flex items-center gap-2">
-              <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
+              <Image src={rateupLogo} alt="logo" height={50} width={126} />
             </a>
           </div>
 
@@ -68,7 +68,7 @@ const WhatsAppSurveyHeader = () => {
           <div className="md:hidden">
             <button
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700
-               hover:text-[#1c518e] transition-colors duration-300"
+               hover:text-primary transition-colors duration-300"
               onClick={toggleMenu}
             >
               {isOpen ? <IconX className="h-6 w-6" /> : <IconMenu className="h-6 w-6" />}
@@ -86,7 +86,7 @@ const WhatsAppSurveyHeader = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="block px-4 py-2 rounded-md text-base font-medium text-gray-800 hover:text-[#1c518e] transition-colors duration-300"
+                className="block px-4 py-2 rounded-md text-base font-medium text-gray-800 hover:text-primary transition-colors duration-300"
                 onClick={() => setIsOpen(false)}
               >
                 {link.text}

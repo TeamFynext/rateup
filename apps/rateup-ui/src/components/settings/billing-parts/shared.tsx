@@ -1,18 +1,20 @@
-// Shared helpers for the modules in `./`.
-// Extracted verbatim from `billing.tsx`. Behaviour is unchanged.
-
-import { useTranslation } from "react-i18next";
-
-import { Badge } from "@/components/ui/badge.tsx";
+// Shared types for the billing modules in `./` and in `dashboard/settings/billing/`.
 
 /** A payment order row, as the orders endpoint returns it. */
 export interface PaymentOrder {
   id: string;
+  /** The order's own name, as recorded at checkout. */
+  name?: string;
   subscriptionId?: string;
-  hasTrial?: boolean;
+  /** The gateway plan this order was created from — identifies the billed cadence. */
+  planId?: string;
   subExpiry?: string;
   amount?: number;
   currency?: string;
+  /** The catalog row behind the order. `ADDON` marks a one-off conversation-pack buy. */
+  planType?: string;
+  /** The plan or pack name, as the catalog names it. */
+  displayName?: string;
   createdAt?: string;
   status?: string;
   paymentStatus?: string;
@@ -20,32 +22,3 @@ export interface PaymentOrder {
   subscriptionChargeAt?: string;
   subscriptionEndedAt?: string;
 }
-
-export const OrderStatusBadge = ({ order }: { order: PaymentOrder }) => {
-  const { t: translations } = useTranslation();
-  let color, statusText;
-
-  switch (order?.status) {
-    case "PENDING":
-      if (order?.paymentStatus === "SUCCESS") {
-        color = "blue";
-        statusText = translations("PROCESSING");
-      } else if (order?.paymentStatus === "FAILED") {
-        color = "red";
-        statusText = translations("FAILED");
-      } else {
-        color = "yellow";
-        statusText = order?.status;
-      }
-      break;
-    case "FAILED":
-      color = "red";
-      statusText = order?.status;
-      break;
-    default:
-      color = "green";
-      statusText = order?.status;
-  }
-
-  return <Badge style={{ backgroundColor: color }}>{statusText}</Badge>;
-};

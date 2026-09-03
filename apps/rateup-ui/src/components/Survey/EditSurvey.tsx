@@ -32,7 +32,6 @@ import { QuestionDetailedView } from "./Question/QuestionDetailedView.tsx";
 import QuestionReviewPageEditor from "./Question/QuestionReviewPageEditor/index.tsx";
 import { QuestionTypeSelection } from "./Question/QuestionTypeSelection.tsx";
 import SurveyVariableEditor from "./Question/SurveyVariableEditor.tsx";
-import TicketIssueEditor from "./Question/TicketIssueEditor.tsx";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor.tsx";
 import { QuestionsSideBar } from "./QuestionsSideBar.tsx";
 import SurveyPreviewModal from "./SurveyPreviewModal.tsx";
@@ -55,7 +54,6 @@ export enum QuestionTabsEnum {
   LogicEditor = "LogicEditor",
   GoogleReviewEditor = "GoogleReviewEditor",
   ValidationRulesEditor = "ValidationRulesEditor",
-  TicketIssueEditor = "TicketIssueEditor",
   VariableEditor = "VariableEditor",
   None = "None",
   QuestionReviewPageEditor = "QuestionReviewPageEditor",
@@ -313,21 +311,21 @@ export function EditSurvey({
                       <>
                         {uniquePages.includes(selectedQ?.type as PageType) ? (
                           <div className="flex flex-col h-full">
-                            <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-[#ECECEA] bg-white px-4">
+                            <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-white px-4">
                               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rateup-blue-4 font-nunito text-sm font-black text-white">
                                 {(survey?.questions?.findIndex((q) => q.id === selectedQ.id) ?? 0) +
                                   1}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-[13px] font-semibold text-[#1A1B1A]">
+                                <div className="truncate text-[13px] font-semibold text-foreground">
                                   {getTypeLabel(selectedQ.type)}
                                 </div>
-                                <div className="text-[11px] text-[#8B8E8A]">Page Editor</div>
+                                <div className="text-[11px] text-muted-foreground">Page Editor</div>
                               </div>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-[#ECECEA] px-3 text-xs font-semibold text-[#4A4C49] hover:bg-gray-50"
+                                className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-gray-50"
                                 onClick={() => openSurveyPreviewModal()}
                               >
                                 <IconEye className="size-3.5" />
@@ -414,13 +412,6 @@ export function EditSurvey({
                   <QuestionReviewPageEditor
                     selectedQ={selectedQ!}
                     survey={survey!}
-                    setActiveTab={setActiveTab}
-                  />
-                )}
-                {activeTab === QuestionTabsEnum.TicketIssueEditor && (
-                  <TicketIssueEditor
-                    selectedQ={selectedQ!}
-                    setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                   />
                 )}

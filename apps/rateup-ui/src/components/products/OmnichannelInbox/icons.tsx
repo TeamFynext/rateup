@@ -3,8 +3,8 @@ export function StarIcon({ size = 22 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24">
       <defs>
         <linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFD54C" />
-          <stop offset="1" stopColor="#F8951D" />
+          <stop offset="0" stopColor="var(--color-ru-star-top)" />
+          <stop offset="1" stopColor="var(--color-ru-amber-500)" />
         </linearGradient>
       </defs>
       <path

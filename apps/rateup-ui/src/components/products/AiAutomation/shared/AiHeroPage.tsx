@@ -1,6 +1,6 @@
 import { Image } from "@unpic/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 export default function AiHeroPage() {
@@ -30,11 +30,11 @@ export default function AiHeroPage() {
               Start Automating Smarter Today
             </button>
           </a>
-          <BookDemoModal>
+          <BookDemoLink>
             <button className="bg-white border cursor-pointer border-[#004F98] hover:bg-[#F0F8FF] text-[#004F98] font-semibold py-3 px-6 rounded-lg shadow-md transition">
               Schedule a Demo
             </button>
-          </BookDemoModal>
+          </BookDemoLink>
         </div>
       </div>
 

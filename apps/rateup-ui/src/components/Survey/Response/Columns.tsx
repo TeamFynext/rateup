@@ -1,4 +1,4 @@
-import { IconChevronDown, IconEye, IconTicket, IconTrash } from "@tabler/icons-react";
+import { IconChevronDown, IconEye, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useContext, useMemo, useState } from "react";
@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { PageType, QuestionType } from "@/types/enums.ts";
 import { getFileNameFromKey, getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -28,7 +27,7 @@ import { fuzzyFilter } from "./Filter.ts";
 /** The cell context these response column definitions read. */
 interface ResponseCellInfo {
   getValue: () => StoredResponse;
-  row: { original: { Ticket?: Array<{ id: string }>; [key: string]: unknown } };
+  row: { original: { [key: string]: unknown } };
 }
 
 /** Rating/opinion/number answers sort and filter numerically. */
@@ -54,7 +53,6 @@ export interface ResponseRow {
   surveyTeamMapId?: string;
   teamId?: string;
   responses?: Array<QuestionResponse>;
-  Ticket?: Array<{ id: string }>;
   createdAt?: string;
   [key: string]: unknown;
 }
@@ -68,9 +66,6 @@ export const useSurveyResponseColumns = ({
   setSelectedRowId,
   setSelectedRowSurveyTeamMapId,
   open,
-  setSelectedResponseId,
-  setResponseTeamId,
-  enableTicket,
   surveyId,
   typeWa = false,
 }: Readonly<{
@@ -79,9 +74,6 @@ export const useSurveyResponseColumns = ({
   setSelectedRowId?: (id: string) => void;
   setSelectedRowSurveyTeamMapId?: (id: string) => void;
   open?: () => void;
-  setSelectedResponseId?: (id: string) => void;
-  setResponseTeamId?: (id: string) => void;
-  enableTicket?: boolean;
   surveyId?: string;
   typeWa?: boolean;
 }>) => {
@@ -169,50 +161,6 @@ export const useSurveyResponseColumns = ({
             },
           ]
         : []),
-      ...(enableTicket
-        ? [
-            {
-              header: translations("Ticket"),
-              enableColumnFilter: false,
-              enableSorting: false,
-              accessorKey: "ticket",
-              cell: (info: ResponseCellInfo) => {
-                const ticketData = info.row.original.Ticket;
-                const ticket = ticketData?.[0];
-
-                if (!ticket) return null;
-
-                return (
-                  <div className="flex items-center justify-center pr-20">
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={translations("View Ticket")}
-                            className="h-9 w-9 rounded focus-visible:ring-orange-500"
-                            onClick={() =>
-                              window.open(
-                                `/dashboard/tickets/${ticket.id}`,
-                                "_blank",
-                                "noopener,noreferrer",
-                              )
-                            }
-                          />
-                        }
-                      >
-                        <IconTicket color="orange" className="w-9 h-9" />
-                      </TooltipTrigger>
-                      <TooltipContent side="right">{translations("View Ticket")}</TooltipContent>
-                    </Tooltip>
-                  </div>
-                );
-              },
-            },
-          ]
-        : []),
       {
         header: translations("Action"),
         enableColumnFilter: false,
@@ -222,14 +170,9 @@ export const useSurveyResponseColumns = ({
             <ActionMenu
               open={open}
               resId={info.row.original.id as string | undefined}
-              resTeamId={info.row.original.teamId as string | undefined}
               resSurveyTeamMapId={info.row.original.surveyTeamMapId as string | undefined}
-              setSelectedResponseId={setSelectedResponseId}
-              setResponseTeamId={setResponseTeamId}
               setSelectedRowId={setSelectedRowId}
               setSelectedRowSurveyTeamMapId={setSelectedRowSurveyTeamMapId}
-              ticketData={info.row.original.Ticket}
-              enableTicket={enableTicket}
             />
           );
         },
@@ -239,14 +182,11 @@ export const useSurveyResponseColumns = ({
     [
       questions,
       translations,
-      enableTicket,
       selectedLanguage,
       surveyId,
       defaultLanguage,
       typeWa,
       open,
-      setSelectedResponseId,
-      setResponseTeamId,
       setSelectedRowId,
     ],
   );
@@ -405,29 +345,18 @@ function BadgeorTextorPreview({
 
 export function ActionMenu({
   resId,
-  resTeamId,
   resSurveyTeamMapId,
   open,
-  setSelectedResponseId,
-  setResponseTeamId,
   setSelectedRowId,
   setSelectedRowSurveyTeamMapId,
-  ticketData,
-  enableTicket,
 }: Readonly<{
   resId?: string;
-  resTeamId?: string;
   resSurveyTeamMapId?: string;
   surveyId?: string;
   open?: () => void;
-  setSelectedResponseId?: (id: string) => void;
-  setResponseTeamId?: (id: string) => void;
   setSelectedRowId?: (id: string) => void;
   setSelectedRowSurveyTeamMapId?: (id: string) => void;
-  ticketData?: Array<{ id: string }>;
-  enableTicket?: boolean;
 }>) {
-  const ticketExist = (ticketData?.length ?? 0) > 0;
   const { t: translations } = useTranslation();
 
   return (
@@ -447,23 +376,6 @@ export function ActionMenu({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end">
-          {enableTicket && (
-            <DropdownMenuItem
-              className={ticketExist ? "text-orange-500" : "text-blue-700"}
-              onClick={() => {
-                if (ticketExist) {
-                  const url = `/dashboard/tickets/${ticketData?.[0]?.id}`;
-                  window.open(url, "_blank");
-                } else {
-                  setSelectedResponseId?.(resId ?? "");
-                  setResponseTeamId?.(resTeamId ?? "");
-                }
-              }}
-            >
-              <IconTicket className="size-4" />
-              {ticketExist ? translations("View Ticket") : translations("Create Ticket")}
-            </DropdownMenuItem>
-          )}
           <DropdownMenuItem
             className="text-red-500"
             onClick={() => {

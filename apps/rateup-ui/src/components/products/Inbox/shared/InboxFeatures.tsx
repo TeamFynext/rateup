@@ -41,13 +41,13 @@ export const InboxFeatures = () => {
             viewport={{ once: true }}
             className="lg:pr-12 max-w-7xl mx-auto px-6 sm:px-24"
           >
-            <h3 className="text-4xl sm:text-5xl font-bold text-[#1c518e] font-montserrat leading-tight">
+            <h3 className="text-4xl sm:text-5xl font-bold text-primary font-montserrat leading-tight">
               The Ultimate Employee <br />
               Engagement Toolkit
             </h3>
             <p className="pt-4 text-lg text-gray-700 leading-relaxed max-w-xl">
               Everything you need to transform your{" "}
-              <span className="font-semibold text-[#1c518e]">workplace culture,</span>
+              <span className="font-semibold text-primary">workplace culture,</span>
               all in one platform.
             </p>
 
@@ -65,7 +65,7 @@ export const InboxFeatures = () => {
                   >
                     <IconTicket color="#006156" />
                     <div>
-                      <p className="font-semibold text-[#1c518e] text-lg">{item.title}</p>
+                      <p className="font-semibold text-primary text-lg">{item.title}</p>
                       <p className="text-gray-700">{item.description}</p>
                     </div>
                   </motion.li>

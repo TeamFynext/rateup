@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import type { RequestPayload } from "@/types/api.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import type { ICreateCheckoutType } from "./payment.api";
 import {
@@ -13,10 +14,14 @@ import {
   deleteRateupPaymentPlan,
   getAllOrdersUserOrg,
   getAllPaymentOrders,
+  changeSubscriptionPlan,
   getAllPaymentPlans,
+  createConversationAddonOrder,
+  getConversationAddonOffer,
+  getOrgInvoices,
+  getSubscriptionChangeOptions,
   getAllPaymentSubscription,
   getAllRateupPaymentPlans,
-  sendMailPlanSelectDetails,
   syncRazorPayPlans,
   updatePaymentPlan,
   updateRateupPaymentPlan,
@@ -42,6 +47,56 @@ export function useUserOrgOrders(enabled = true) {
     queryKey: subscriptionKeys.orgOrders(),
     queryFn: getAllOrdersUserOrg,
     enabled,
+  });
+}
+
+/**
+ * Whether this subscription can change plans, and whether it can do so mid-cycle.
+ *
+ * Reads Razorpay live, so it is only fetched when the change dialog is actually open.
+ */
+export function useSubscriptionChangeOptions(enabled: boolean) {
+  return useQuery({
+    queryKey: ["subscriptionChangeOptions"],
+    queryFn: getSubscriptionChangeOptions,
+    enabled,
+    staleTime: 0,
+  });
+}
+
+/**
+ * Switches a live subscription onto another tier.
+ *
+ * The org's plan is not updated here — Razorpay confirms over `subscription.updated`
+ * (and `subscription.charged` for an immediate upgrade), and the webhook is the only
+ * writer. Invalidating the queries just pulls whatever has landed by now; a downgrade
+ * deliberately shows no change until the cycle ends.
+ */
+export function useChangeSubscriptionPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: changeSubscriptionPlan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.current() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgOrders() });
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.orgInvoices() });
+    },
+  });
+}
+
+/**
+ * Invoice history. Read live from Razorpay on every request, so it lags a successful
+ * charge by however long the invoice takes to be raised — refetch on mount rather than
+ * serving a cached list that is missing the payment the user just made.
+ */
+export function useOrgInvoices(enabled = true) {
+  return useQuery({
+    queryKey: subscriptionKeys.orgInvoices(),
+    queryFn: getOrgInvoices,
+    enabled,
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 }
 
@@ -139,8 +194,11 @@ export function useCreateCheckoutSession<TOrder>(
       setOrder(data.data.data);
     },
     onError: (error) => {
+      // A refused purchase — an add-on a Free or Enterprise plan may not buy — comes back
+      // as a 400 with the reason. Showing the axios status text instead would tell the
+      // customer nothing about why.
       console.error("Error creating order:" + error.message);
-      toast.error(error?.message || "Error creating order", {
+      toast.error(getApiErrorMessage(error, "Error creating order"), {
         id: "load-data",
       });
 
@@ -221,12 +279,6 @@ export const useDeletePaymentPlanMutation = () => {
   });
 };
 
-export function useSendMailPlanSelectDetails() {
-  return useMutation({
-    mutationFn: sendMailPlanSelectDetails,
-  });
-}
-
 export const useUpdateSubscriptionOrder = (orderId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -236,3 +288,23 @@ export const useUpdateSubscriptionOrder = (orderId: string) => {
     },
   });
 };
+
+/** What the billing page needs to show — and possibly sell — conversation packs. */
+export function useConversationAddonOffer(enabled = true) {
+  return useQuery({
+    queryKey: subscriptionKeys.conversationAddon(),
+    queryFn: getConversationAddonOffer,
+    enabled,
+  });
+}
+
+/**
+ * Buys conversation packs outright.
+ *
+ * The packs are not credited here — Razorpay confirms over `payment.captured`, and that
+ * webhook is the only writer, so a customer who closes the tab mid-payment still gets
+ * what they paid for. This only creates the order the checkout is opened against.
+ */
+export function useCreateConversationAddonOrder() {
+  return useMutation({ mutationFn: createConversationAddonOrder });
+}

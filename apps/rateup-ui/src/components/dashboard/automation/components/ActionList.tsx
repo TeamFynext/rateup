@@ -6,7 +6,7 @@ import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
-import { usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
+import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
@@ -47,6 +47,9 @@ const ActionValueInput = ({
   const { data: labelsData } = useContactLabels();
   const { data: lifecyclesData } = useLifeCyclesQuery();
   const { data: pipelinesData = [] } = usePipelinesQuery();
+  // One board per org for now, so its columns are simply the first board's.
+  // `usePipelineQuery` is a no-op until that id exists.
+  const { data: boardDetail } = usePipelineQuery(pipelinesData[0]?.id);
   const { data: teamMembers } = useTeamsMembersOfOrg();
   const { data: teamsData } = useTeamsByUser();
   const { data: flowsData } = useWaFlowsFromDb();
@@ -442,6 +445,51 @@ const ActionValueInput = ({
       </div>
     );
   }
+  if (actionType === "ASSIGN_STAGE") {
+    // The picker saves a bare stage id — one board per org, so nothing else needs
+    // storing. Converted rules arrive as an object instead, keeping the lifecycle
+    // they came from so the change can be traced; both shapes are read here, the
+    // same way `readAssignStageValue` does on the API.
+    const stageId =
+      typeof valueField.value === "string"
+        ? valueField.value
+        : ((valueField.value as { stageId?: string } | undefined)?.stageId ?? "");
+    const stages = boardDetail?.stages ?? [];
+
+    if (!stages.length) {
+      return (
+        <p className="text-muted-foreground w-full text-[11px]">
+          No pipeline columns yet — create a pipeline before using this action.
+        </p>
+      );
+    }
+
+    return (
+      <Select
+        onValueChange={(value) => valueField.onChange(value ?? "")}
+        value={stageId}
+        items={stages.map((stage) => ({ value: stage.id, label: stage.name }))}
+      >
+        <SelectTrigger className="bg-background w-full">
+          <SelectValue placeholder="Select stage" />
+        </SelectTrigger>
+        <SelectContent>
+          {stages.map((stage) => (
+            <SelectItem key={stage.id} value={stage.id}>
+              {/* Won and Lost close the lead, so the status is worth showing —
+                  picking one here is a decision, not just a move. */}
+              {stage.name}
+              {stage.status !== "OPEN" && (
+                <span className="text-muted-foreground ml-1.5 text-[11px]">
+                  {stage.status === "WON" ? "· closes as won" : "· closes as lost"}
+                </span>
+              )}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
   if (actionType === "CLOSE_TICKET") {
     const statusOptions = [
       { value: WaMessageAssignStatus.RESOLVED, label: "Resolved" },
@@ -503,7 +551,6 @@ const ActionList: React.FC = () => {
     name: "actions",
   });
   const platform = useWatch({ control, name: "platform" }) as Platform;
-  const filteredActionTypes = getActionTypesForPlatform(platform ?? "WHATSAPP");
 
   return (
     <div className="space-y-3">
@@ -525,38 +572,47 @@ const ActionList: React.FC = () => {
           <Controller
             control={control}
             name={`actions.${index}.type`}
-            render={({ field, fieldState }) => (
-              <Field className="flex-1" data-invalid={fieldState.invalid}>
-                <Select
-                  onValueChange={(val) => {
-                    field.onChange(val);
-                    if (val === "SEND_TEMPLATE") {
-                      setValue(`actions.${index}.value`, {
-                        templateId: "",
-                        variableMapping: [],
-                      });
-                      return;
-                    }
-                    setValue(`actions.${index}.value`, "");
-                  }}
-                  defaultValue={field.value}
-                  value={field.value}
-                  items={filteredActionTypes}
-                >
-                  <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
-                    <SelectValue placeholder="Action Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredActionTypes.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
+            render={({ field, fieldState }) => {
+              // Computed per row, not once for the list: the legacy Assign
+              // Lifecycle entry is offered only to the action already using it.
+              const filteredActionTypes = getActionTypesForPlatform(
+                platform ?? "WHATSAPP",
+                typeof field.value === "string" ? field.value : undefined,
+              );
+
+              return (
+                <Field className="flex-1" data-invalid={fieldState.invalid}>
+                  <Select
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      if (val === "SEND_TEMPLATE") {
+                        setValue(`actions.${index}.value`, {
+                          templateId: "",
+                          variableMapping: [],
+                        });
+                        return;
+                      }
+                      setValue(`actions.${index}.value`, "");
+                    }}
+                    defaultValue={field.value}
+                    value={field.value}
+                    items={filteredActionTypes}
+                  >
+                    <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
+                      <SelectValue placeholder="Action Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredActionTypes.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              );
+            }}
           />
 
           <Controller

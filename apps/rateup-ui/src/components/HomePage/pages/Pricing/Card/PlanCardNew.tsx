@@ -1,127 +1,162 @@
-import { IconCircleCheck, IconFlame } from "@tabler/icons-react";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink";
 
-import { currencyLabel } from "@/components/menu/util/currencyData.ts";
-import { Spoiler } from "@/components/ui/spoiler.tsx";
-import { cn } from "@/lib/utils.ts";
+import {
+  type BillingPeriod,
+  formatPrice,
+  type PricingCurrency,
+  type PricingTier,
+  resolveDisplayPrice,
+} from "../pricing.data.ts";
+import { PricingSurface } from "../Utils/constants.ts";
 
-import type { PricingPlan } from "../pricing-plan.ts";
+/** The design system's check: a 15px stroke tick, coloured per surface. */
+const Check = ({ className }: { className: string }) => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`mt-[3px] shrink-0 ${className}`}
+    aria-hidden
+  >
+    <path d="M20 6L9 17l-5-5" />
+  </svg>
+);
 
-type BillingPeriod = "monthly" | "yearly";
-
+/**
+ * One pricing card, rendered entirely from a plans-endpoint row. The featured tier
+ * (the one the catalog gives a badge) is the deep navy panel; every other tier is a
+ * light surface with a hairline ring.
+ */
 const PlanCardNew = ({
-  plan,
-  period = "monthly",
-  fallbackSymbol = "$",
+  tier,
+  period,
+  currency,
   onButtonClick,
+  ctaLabel,
 }: {
-  plan: PricingPlan;
-  period?: BillingPeriod;
-  fallbackSymbol?: string;
+  tier: PricingTier;
+  period: BillingPeriod;
+  currency: PricingCurrency;
   onButtonClick: () => void;
+  /**
+   * Overrides the tier's own call to action. The in-app upgrade dialog uses this: a
+   * customer already paying is changing plan, not subscribing fresh, so the catalog's
+   * acquisition copy would be wrong there.
+   */
+  ctaLabel?: string;
 }) => {
-  const isPopular = Boolean(plan?.badge);
-  const isFree = plan?.name === "FREE PLAN";
-  const isAnnual = period === "yearly";
+  const dark = tier.featured;
+  const price = resolveDisplayPrice(tier, currency);
+  const annual = period === "yearly";
 
-  const currencySymbol =
-    currencyLabel.find(
-      (c) =>
-        c.label ===
-        (plan?.currency ??
-          plan?.yearlyPaymentPlan?.currency ??
-          plan?.monthlyPaymentPlan?.currency ??
-          plan?.paymentPlan?.currency),
-    )?.symbol ?? fallbackSymbol;
+  let amount: string;
+  let unit: string | null;
+  let note: string;
 
-  const monthlyPrice = plan?.monthlyPrice ?? plan?.price ?? 0;
-  const yearlyPrice = plan?.yearlyPrice ?? plan?.price ?? 0;
-  const displayPrice = isAnnual ? yearlyPrice : monthlyPrice;
+  if (tier.free) {
+    amount = formatPrice(currency, 0);
+    unit = "forever";
+    note = "No card required";
+  } else if (!price) {
+    // Either a sales-led tier, or one the catalog does not price in this currency.
+    amount = "Custom";
+    unit = null;
+    note = tier.salesLed ? "Annual or monthly billing" : "Contact us for this currency";
+  } else {
+    const perMonth = annual ? price.yearly / 12 : price.monthly;
+    amount = formatPrice(currency, Math.round(perMonth));
+    unit = "/month";
 
-  const showAnnualNote = isAnnual && !isFree && plan?.yearlyPrice != null;
-  const annualTotal = (plan?.yearlyPrice ?? 0) * 12;
+    // The checkout is created from the gateway plan in the currency on screen, so the
+    // figure shown is the figure charged. This note used to name a rupee amount beside a
+    // converted dollar headline; both are real list prices now, and quoting the other
+    // currency here would be the misleading version.
+    note = annual
+      ? `Billed ${formatPrice(currency, price.yearly)} / year`
+      : "Billed monthly, cancel any time";
+  }
+
+  const ctaButton = (
+    <button
+      type="button"
+      onClick={tier.salesLed ? undefined : onButtonClick}
+      className={`h-10 w-full cursor-pointer rounded-lg border-none text-sm font-medium tracking-[-0.005em] transition-[filter,transform] duration-150 hover:brightness-[0.94] active:translate-y-px active:brightness-[0.89] ${
+        dark
+          ? "bg-white text-ru-blue-900"
+          : "bg-muted text-foreground shadow-[inset_0_0_0_1px_var(--color-border)]"
+      }`}
+    >
+      {ctaLabel ?? tier.cta}
+    </button>
+  );
 
   return (
     <div
-      className={cn(
-        "relative flex flex-col overflow-hidden rounded-xl bg-white transition-all duration-300 hover:shadow-2xl",
-        isPopular
-          ? "border-2 border-[#1C518E] shadow-[0_12px_48px_rgba(11,31,72,0.12)] lg:-translate-y-2"
-          : "border border-[#ECECEA] shadow-[0_1px_2px_rgba(11,31,72,0.06),0_2px_6px_rgba(11,31,72,0.05)]",
-      )}
+      className={`flex h-full flex-col gap-4 rounded-2xl p-6 ${
+        dark
+          ? "bg-ru-blue-900 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18),0_12px_32px_rgba(16,24,40,0.08)]"
+          : PricingSurface
+      }`}
     >
-      {isPopular && (
-        <div className="flex items-center justify-center gap-2 bg-[#081C3F] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.08em] text-white">
-          <IconFlame className="h-4 w-4 text-[#FFD54C]" />
-          {plan.badge}
+      <div className="flex min-h-5 items-center justify-between gap-2">
+        <span
+          className={`text-[11.5px] font-semibold uppercase tracking-[0.1em] ${
+            dark ? "text-white/60" : "text-ru-n-400"
+          }`}
+        >
+          {tier.name}
+        </span>
+        {tier.badge && (
+          <span className="inline-flex h-5 items-center whitespace-nowrap rounded-4xl border border-amber-200 bg-amber-50 px-2 text-[11px] font-semibold text-amber-700">
+            {tier.badge}
+          </span>
+        )}
+      </div>
+
+      <div>
+        <div className="flex items-baseline gap-[5px]">
+          <span
+            className={`font-display text-[44px] font-bold leading-none tracking-[-0.035em] ${
+              dark ? "text-white" : "text-foreground"
+            }`}
+          >
+            {amount}
+          </span>
+          {unit && (
+            <span className={`text-sm ${dark ? "text-white/60" : "text-ru-n-400"}`}>{unit}</span>
+          )}
         </div>
+        <p
+          className={`mt-2 text-[13px] leading-[1.45] ${dark ? "text-white/60" : "text-ru-n-400"}`}
+        >
+          {note}
+        </p>
+      </div>
+
+      {tier.tagline && (
+        <p className={`text-sm leading-[1.55] ${dark ? "text-white/70" : "text-muted-foreground"}`}>
+          {tier.tagline}
+        </p>
       )}
 
-      <div className="flex flex-1 flex-col p-8">
-        <div className="mb-1 flex items-baseline gap-2">
-          <h3 className="text-2xl font-bold text-[#1C518E]">{plan.displayName}</h3>
-          {plan?.tagline && (
-            <span className="text-sm font-semibold text-gray-500">{plan.tagline}</span>
-          )}
-        </div>
+      <div className={`h-px ${dark ? "bg-white/10" : "bg-ru-n-100 dark:bg-white/10"}`} />
 
-        <div className="my-4 flex min-h-[76px] flex-col justify-center border-y border-[#ECECEA] py-4">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-[44px] font-extrabold leading-none text-[#0A0B0A]">
-              {currencySymbol}
-              {displayPrice}
-            </span>
-            <span className="text-[15px] font-semibold text-gray-500">/ month</span>
-          </div>
-          {showAnnualNote && (
-            <p className="mt-1 text-[13px] font-semibold text-[#16A34A]">
-              Billed {currencySymbol}
-              {annualTotal}/year — 2 months free
-            </p>
-          )}
-          {isFree && <p className="mt-1 text-[13px] text-gray-500">Forever free</p>}
-        </div>
+      <ul className="m-0 flex list-none flex-col gap-[9px] p-0">
+        {tier.features.map((feature) => (
+          <li key={feature} className="flex gap-[9px] text-sm leading-[1.5]">
+            <Check className={dark ? "text-ru-green-300" : "text-ru-green-600"} />
+            <span className={dark ? "text-white/90" : "text-secondary-foreground"}>{feature}</span>
+          </li>
+        ))}
+      </ul>
 
-        <Spoiler
-          maxHeight={310}
-          className="pb-2.5"
-          controlClassName="text-sm text-[#1C518E]"
-          showLabel={"Show all available features"}
-          hideLabel={"See less"}
-        >
-          <div className="flex flex-col gap-3.5">
-            {plan?.description?.map((item: string, index: number) => (
-              <div key={index} className="flex items-start gap-2.5">
-                <IconCircleCheck className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#16A34A]" />
-                <span className="text-sm leading-snug text-gray-700">{item}</span>
-              </div>
-            ))}
-          </div>
-        </Spoiler>
-
-        <div className="mt-auto flex flex-col gap-4 pt-6">
-          <p className="text-[13px] font-semibold text-[#1C518E]">
-            {isFree
-              ? "*No credit card needed"
-              : plan?.trialDays
-                ? `${plan.trialDays} Days Free Trial`
-                : ""}
-          </p>
-          <button
-            onClick={onButtonClick}
-            className={cn(
-              "w-full rounded-lg px-5 py-3.5 text-[15px] font-bold transition",
-              isPopular
-                ? "bg-[#1C518E] text-white hover:bg-[#163f6e]"
-                : "border-[1.5px] border-[#1C518E] bg-transparent text-[#1C518E] hover:bg-[#1C518E] hover:text-white",
-            )}
-          >
-            {isFree
-              ? "Get Started"
-              : plan?.trialDays
-                ? `Start ${plan.trialDays} Day Free Trial`
-                : "Subscribe Now"}
-          </button>
-        </div>
+      <div className="mt-auto pt-2">
+        {tier.salesLed ? <BookDemoLink>{ctaButton}</BookDemoLink> : ctaButton}
       </div>
     </div>
   );

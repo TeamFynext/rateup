@@ -34,10 +34,8 @@ import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, PageType, QuestionType, SurveyType } from "@/types/enums.ts";
 import { getApiErrorData } from "@/utils/apiError.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
-import { TicketType } from "@/utils/enums/ticket.ts";
 
 import { DataTable } from "../../Table/data-table.tsx";
-import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
 import type { ResponseRow } from "./Columns.tsx";
 import { useSurveyResponseColumns } from "./Columns.tsx";
 import { ResponseTableToolbar } from "./ResponseTableToolbar.tsx";
@@ -66,11 +64,6 @@ const Responses = ({
   const close = () => setOpened(false);
 
   const { user } = useUser();
-  const [createTicketOpened, setCreateTicketOpened] = useState(false);
-  const openTicketModal = () => setCreateTicketOpened(true);
-  const closeTicketModal = () => setCreateTicketOpened(false);
-
-  const [selectedResponseId, setSelectedResponseId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
   const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
@@ -163,16 +156,6 @@ const Responses = ({
     ],
   );
 
-  useEffect(() => {
-    if (selectedResponseId) {
-      openTicketModal();
-    }
-  }, [selectedResponseId]);
-
-  useEffect(() => {
-    if (!createTicketOpened) setSelectedResponseId("");
-  }, [createTicketOpened]);
-
   const confirmDelete = (verifyEmail: string) => {
     if (user?.email === verifyEmail) {
       toast.loading(translations("Hold on, response is getting deleted..."), {
@@ -196,9 +179,6 @@ const Responses = ({
     setSelectedRowId,
     setSelectedRowSurveyTeamMapId,
     open,
-    setSelectedResponseId,
-    // Tickets are free with no limits, so creation follows only the survey's toggle.
-    enableTicket: survey?.enableTickets,
     surveyId: survey?.id,
     typeWa: survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow,
   });
@@ -312,12 +292,6 @@ const Responses = ({
 
   return (
     <>
-      <CreateTicketModal
-        createTicketOpened={createTicketOpened}
-        closeTicketModal={closeTicketModal}
-        type={TicketType.SURVEY_RESPONSE}
-        surveyResponseId={selectedResponseId}
-      />
       <DataTable
         data={responseData ? responseData?.responses : []}
         columns={

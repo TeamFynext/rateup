@@ -14,6 +14,8 @@ export const campaignKeys = {
   byTeam: (teamId: KeyPart) => ["campaignsbyTeam", teamId] as const,
   contactGroups: () => ["campaignContactGroupsData"] as const,
   contactGroupsByType: (type: KeyPart) => ["campaignContactGroupsData", type] as const,
+  sendPreflight: (campaignId: KeyPart, statuses: KeyPart) =>
+    ["campaignSendPreflight", campaignId, statuses] as const,
 } as const;
 
 export const subscriptionKeys = {
@@ -21,6 +23,8 @@ export const subscriptionKeys = {
   byOrg: (orgId: KeyPart) => ["subscription", orgId] as const,
   all: () => ["subscriptions"] as const,
   orgOrders: () => ["userOrgOrdersQuery"] as const,
+  orgInvoices: () => ["userOrgInvoicesQuery"] as const,
+  conversationAddon: () => ["conversationAddon"] as const,
   onboardingChecklist: () => ["onboarding-checklist"] as const,
 } as const;
 

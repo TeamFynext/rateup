@@ -28,7 +28,7 @@ export default function PostGrid({
         <div className="mb-6">
           <Link
             to="/blog"
-            className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#1C518E] bg-[#EEF4FB] border border-[#A9C3E3] py-1.5 px-3.5 rounded-full no-underline transition-colors duration-200 hover:bg-[#D6E4F3]"
+            className="inline-flex items-center gap-1.5 text-[13px] font-bold text-primary bg-accent border border-ru-blue-200 py-1.5 px-3.5 rounded-full no-underline transition-colors duration-200 hover:bg-ru-blue-100"
           >
             <svg
               width="14"

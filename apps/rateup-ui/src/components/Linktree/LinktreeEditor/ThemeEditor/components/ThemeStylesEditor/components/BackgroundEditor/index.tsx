@@ -6,8 +6,6 @@ import LocalOrUnsplashImagePicker from "../../../../../../../LocalOrUnsplashImag
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker/index.tsx";
 import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
 
-import styles from "./BackgroundEditor.module.css";
-
 function BackgroundEditor() {
   const {
     background: {
@@ -40,7 +38,7 @@ function BackgroundEditor() {
   }, []);
 
   return (
-    <div className={styles["background-editor-div"]}>
+    <div>
       <div className={`style-section-div`}>
         <h2>Background Color</h2>
         <CustomColorPicker
@@ -52,7 +50,7 @@ function BackgroundEditor() {
       <div className={`style-section-div`}>
         <h2>Background Image</h2>
 
-        <div className={styles["bg-img-upload-btns-container"]}>
+        <div className={"flex flex-col gap-4"}>
           <LocalOrUnsplashImagePicker
             forDevice={"desktop"}
             label={"Desktop"}

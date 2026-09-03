@@ -119,7 +119,6 @@ const categories = [
   {
     name: "None Interactive",
     items: [
-      { id: "ticketNode", label: "Ticket", icon: <IconGitMerge size={16} /> },
       { id: "assignNode", label: "Assign", icon: <IconUser size={16} /> },
       { id: "leadgenNode", label: "Lead", icon: <IconAd size={16} /> },
     ],

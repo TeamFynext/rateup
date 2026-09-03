@@ -1,8 +1,11 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { contactKeys } from "@/backend/campaign/contacts/contacts.keys.ts";
+import { useContactsStore } from "@/store/inbox.store.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import * as api from "./pipeline.api";
@@ -22,6 +25,71 @@ import type {
   UpdateTaskInput,
   UpdateTeamDefaultInput,
 } from "./pipeline.types";
+
+/**
+ * Keeps the inbox's stage chip in step with the board.
+ *
+ * The conversation list draws its chip from the row it holds in the contacts
+ * store — an IndexedDB-backed cache of its own, which no `pipelineKeys`
+ * invalidation reaches. So a card dragged on the board, or a stage assigned from
+ * the contacts table, left the inbox showing the old column until a reload
+ * refetched the list. This is the same patch the contact panel makes in the
+ * other direction, applied at the mutation instead of the call site so no future
+ * caller has to remember it.
+ *
+ * A null `stageId` clears the chip — the contact came off the board.
+ */
+function syncInboxStageChips(
+  queryClient: QueryClient,
+  contactIds: Array<string | null | undefined>,
+  stageId: string | null,
+) {
+  const ids = contactIds.filter((id): id is string => Boolean(id));
+  if (ids.length === 0) return;
+
+  const stage = stageId ? findCachedStage(queryClient, stageId) : null;
+  // Clearing is meaningful, but writing a null chip because the board simply is
+  // not in cache would blank a chip the list is drawing correctly.
+  if (stageId && !stage) return;
+
+  const { updateContactById } = useContactsStore.getState();
+  for (const contactId of ids) {
+    updateContactById(contactId, (contact) => ({
+      ...contact,
+      stageName: stage?.name ?? null,
+      stageColor: stage?.color ?? null,
+    }));
+  }
+}
+
+/** The colour lives on the board, not on the lead the move returns. */
+function findCachedStage(queryClient: QueryClient, stageId: string) {
+  const boards = queryClient.getQueriesData<PipelineDetail>({
+    queryKey: ["pipeline", "detail"],
+  });
+  for (const [, board] of boards) {
+    const stage = board?.stages.find((candidate) => candidate.id === stageId);
+    if (stage) return stage;
+  }
+  return null;
+}
+
+/**
+ * The contacts behind a set of leads, read off the cached lead lists.
+ *
+ * Scans every cached board rather than taking a pipeline id: the close and bulk
+ * mutations are called from screens that never name one.
+ */
+function contactIdsForLeads(queryClient: QueryClient, leadIds: string[]) {
+  const lists = queryClient.getQueriesData<Lead[]>({ queryKey: ["pipeline", "leads"] });
+  const found: Array<string | null> = [];
+  for (const [, leads] of lists) {
+    for (const lead of leads ?? []) {
+      if (leadIds.includes(lead.id)) found.push(lead.contactId);
+    }
+  }
+  return found;
+}
 
 // ------------------------------------------------------------------- queries
 
@@ -101,6 +169,8 @@ function usePipelineMutation<TVariables, TResult>(options: {
   success?: (t: TFunction, result: TResult, variables: TVariables) => string;
   errorFallback: (t: TFunction) => string;
   toastId: string;
+  /** Cache writes outside `pipelineKeys` that the blanket invalidation misses. */
+  afterSuccess?: (queryClient: QueryClient, result: TResult, variables: TVariables) => void;
 }) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -108,6 +178,7 @@ function usePipelineMutation<TVariables, TResult>(options: {
   return useMutation({
     mutationFn: options.mutationFn,
     onSuccess: (result, variables) => {
+      options.afterSuccess?.(queryClient, result, variables);
       if (options.success) {
         toast.success(options.success(t, result, variables), { id: options.toastId });
       }
@@ -176,14 +247,58 @@ export function useDeleteStageMutation() {
   });
 }
 
+/**
+ * Reordering the board's columns.
+ *
+ * The only stage mutation that writes to the cache before the server answers.
+ * The others change a field in place, so waiting for the refetch costs nothing
+ * visible; this one moves a row the user has just dragged, and without the
+ * optimistic write the row snaps back to where it was and then jumps again when
+ * the refetch lands. `onSettled` still invalidates, so the server's order wins.
+ */
 export function useReorderStagesMutation() {
-  return usePipelineMutation<
-    { pipelineId: string; stages: Array<{ id: string; order: number }> },
-    unknown
-  >({
-    mutationFn: ({ pipelineId, stages }) => api.reorderStages(pipelineId, stages),
-    errorFallback: (t) => t("Could not reorder the stages"),
-    toastId: "pipeline-stage-reorder",
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: ({
+      pipelineId,
+      stages,
+    }: {
+      pipelineId: string;
+      stages: Array<{ id: string; order: number }>;
+    }) => api.reorderStages(pipelineId, stages),
+
+    onMutate: async ({ pipelineId, stages }) => {
+      const key = pipelineKeys.detail(pipelineId);
+      // Otherwise an in-flight detail fetch can land after this write and undo it.
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<PipelineDetail>(key);
+      if (!previous) return { key, previous };
+
+      const orderById = new Map(stages.map((stage) => [stage.id, stage.order]));
+      queryClient.setQueryData<PipelineDetail>(key, {
+        ...previous,
+        stages: previous.stages
+          .map((stage) => ({ ...stage, order: orderById.get(stage.id) ?? stage.order }))
+          .sort((a, b) => a.order - b.order),
+      });
+
+      return { key, previous };
+    },
+
+    onError: (error, _variables, context) => {
+      // Put the old order back rather than leaving the board showing a sequence
+      // the server rejected.
+      if (context?.previous) queryClient.setQueryData(context.key, context.previous);
+      toast.error(getApiErrorMessage(error, t("Could not reorder the stages")), {
+        id: "pipeline-stage-reorder",
+      });
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+    },
   });
 }
 
@@ -225,6 +340,10 @@ export function useCreateLeadMutation() {
     success: (t, _result, variables) => t("{name} added to the pipeline", { name: variables.name }),
     errorFallback: (t) => t("Could not add the lead"),
     toastId: "pipeline-lead-create",
+    // Opening a lead for an existing contact puts them on the board for the
+    // first time, so the chip has to appear rather than change.
+    afterSuccess: (queryClient, _result, variables) =>
+      syncInboxStageChips(queryClient, [variables.contactId], variables.stageId),
   });
 }
 
@@ -287,6 +406,11 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
       });
     },
     onSuccess: (_result, variables) => {
+      syncInboxStageChips(
+        queryClient,
+        contactIdsForLeads(queryClient, [variables.leadId]),
+        variables.stageId,
+      );
       if (variables.stageName) {
         // Single braces: this app runs i18next with the ICU format, where
         // `{{stage}}` is not a placeholder and rendered literally.
@@ -308,6 +432,16 @@ export function useCloseLeadMutation() {
       variables.input.status === "WON" ? t("Lead marked won") : t("Lead marked lost"),
     errorFallback: (t) => t("Could not close the lead"),
     toastId: "pipeline-lead-close",
+    // A drop onto Won or Lost closes rather than moves, and lands the lead in
+    // the column that was dropped on — so the chip changes here too.
+    afterSuccess: (queryClient, _result, variables) => {
+      if (!variables.input.stageId) return;
+      syncInboxStageChips(
+        queryClient,
+        contactIdsForLeads(queryClient, [variables.leadId]),
+        variables.input.stageId,
+      );
+    },
   });
 }
 
@@ -327,6 +461,16 @@ export function useBulkUpdateLeadsMutation() {
       t("{total} leads updated", { total: variables.leadIds.length }),
     errorFallback: (t) => t("Could not update the selected leads"),
     toastId: "pipeline-lead-bulk",
+    // Only a stage change touches the chip; the same call also reassigns owners
+    // and teams, which the inbox row does not show.
+    afterSuccess: (queryClient, _result, variables) => {
+      if (!variables.stageId) return;
+      syncInboxStageChips(
+        queryClient,
+        contactIdsForLeads(queryClient, variables.leadIds),
+        variables.stageId,
+      );
+    },
   });
 }
 
@@ -378,5 +522,94 @@ export function useUpdateTeamPipelineDefaultMutation() {
     success: (t) => t("Team pipeline updated"),
     errorFallback: (t) => t("Could not update the team's pipeline"),
     toastId: "pipeline-team-default",
+  });
+}
+
+/**
+ * Where a contact sits on the org's board. Enabled only when the caller has the
+ * pipeline feature — the endpoint is behind `requireFeature`, so asking without
+ * it would 403 and raise a toast on a screen that never mentioned pipelines.
+ */
+export function useContactStageQuery(contactId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: pipelineKeys.contactStage(contactId),
+    queryFn: () => api.fetchContactStage(contactId!),
+    enabled: Boolean(contactId) && enabled,
+  });
+}
+
+export function useSetContactStageMutation(contactId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stageId: string) => api.setContactStage(contactId!, stageId),
+    onSuccess: (_data, stageId) => {
+      syncInboxStageChips(queryClient, [contactId], stageId);
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.contactStage(contactId) });
+      // The board and its counts have moved too.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not set the stage"));
+    },
+  });
+}
+
+/**
+ * Assign a stage to a contact named at call time — the contact form's path,
+ * where the id only exists once the contact has been created.
+ */
+export function useAssignContactStageMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ contactId, stageId }: { contactId: string; stageId: string }) =>
+      api.setContactStage(contactId, stageId),
+    onSuccess: (_data, { contactId, stageId }) => {
+      syncInboxStageChips(queryClient, [contactId], stageId);
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.contactStage(contactId) });
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+    },
+    onError: (error) => {
+      // The contact itself saved; only the stage did not. Say so rather than
+      // letting the modal close as if everything worked.
+      toast.error(getApiErrorMessage(error, "Contact saved, but the stage was not applied"));
+    },
+  });
+}
+
+/**
+ * Bulk assign from the contacts table. Invalidates the contacts list too, since
+ * the stage column reads from the same leads.
+ */
+export function useBulkSetContactStageMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ contactIds, stageId }: { contactIds: string[]; stageId: string }) =>
+      api.bulkSetContactStage(contactIds, stageId),
+    onSuccess: (_data, { contactIds, stageId }) => {
+      syncInboxStageChips(queryClient, contactIds, stageId);
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+      queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not assign the stage"));
+    },
+  });
+}
+
+/** Destructive: deletes the lead and everything on it. Confirm before calling. */
+export function useClearContactStageMutation(contactId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.clearContactStage(contactId!),
+    onSuccess: () => {
+      // Off the board entirely, so the chip goes rather than changes.
+      syncInboxStageChips(queryClient, [contactId], null);
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.contactStage(contactId) });
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+      toast.success("Removed from the board");
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not remove from the board"));
+    },
   });
 }

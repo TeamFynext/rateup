@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
-import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import { useChecklist, useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import {
   useLeadsQuery,
   usePipelinesQuery,
@@ -17,12 +17,15 @@ import { useUserInfo } from "@/backend/user/user.query";
 import { useConversationTags } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.query.ts";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { usePipelineStore } from "@/store/pipeline.store.ts";
+import { SubscriptionFeaturePathName } from "@/types/enums.ts";
+import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import {
   getSignupRedirect,
@@ -90,13 +93,13 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   });
 
   const isInbox = pathname?.includes("/dashboard/inbox");
-  const isTicketsBoard = pathname?.includes("/dashboard/tickets") && Boolean(search?.b);
-  const paddingExclusion =
-    isInbox || isTicketsBoard
-      ? true
-      : pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
-        pathname?.includes("/dashboard/whatsapp/flowbots/") ||
-        pathname?.includes("/dashboard/instagram/flowbots/");
+  const paddingExclusion = isInbox
+    ? true
+    : // The setup guide carries a fixed header over its own scroller.
+      pathname?.includes("/dashboard/setup") ||
+      pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
+      pathname?.includes("/dashboard/whatsapp/flowbots/") ||
+      pathname?.includes("/dashboard/instagram/flowbots/");
 
   // Only the inbox's Channel filter needs these, and the query is shared and
   // cached forever — so it costs nothing on the pages that already fetched it.
@@ -139,6 +142,37 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       pipelineView,
       activePipelineId,
       resolvedUserData?.userId,
+    ],
+  );
+
+  const isSetup = pathname?.includes("/dashboard/setup");
+
+  // Once the org has finished (or dismissed) setup the guide is gone for good, so
+  // the checklist is only fetched while it can still put a row in the rail.
+  const setupDismissed = resolvedUserData?.onboardingChecklistCompleted ?? true;
+  const { data: checklist } = useChecklist(!setupDismissed);
+
+  const setupNav = useMemo<SetupNavInput>(
+    () => ({
+      t,
+      checklist: checklist?.onboardingChecklist,
+      dismissed: setupDismissed || Boolean(checklist?.onboardingChecklistCompleted),
+      // Only WhatsApp is known here; the checklist carries the rest, which the guide
+      // writes as soon as it sees a channel linked.
+      connected: { whatsapp: Boolean(resolvedUserData?.hasWhatsAppSettings) },
+      hasLoyaltyFeature: sub
+        ? Boolean(hasFeature(sub, SubscriptionFeaturePathName.Whatsapp))
+        : null,
+      activeStep: isSetup && typeof search?.step === "string" ? search.step : undefined,
+    }),
+    [
+      t,
+      checklist,
+      setupDismissed,
+      resolvedUserData?.hasWhatsAppSettings,
+      sub,
+      isSetup,
+      search?.step,
     ],
   );
 
@@ -247,6 +281,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     pathname,
     pipelineNav,
     resolvedUserInfo,
+    setupNav,
     staff: userRes?.data ?? [],
     subscription: sub,
     teams: teamRes?.data ?? [],

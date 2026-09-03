@@ -103,7 +103,7 @@ export default function ProblemSection() {
                     {c.icon("currentColor")}
                   </span>
                 </div>
-                <div className="absolute left-[-5px] top-[50%] w-[calc(100%+10px)] h-[2.5px] bg-[#DC2626] rounded-[2px] -rotate-[35deg] -translate-y-1/2 opacity-75 pointer-events-none" />
+                <div className="absolute left-[-5px] top-[50%] w-[calc(100%+10px)] h-[2.5px] bg-destructive rounded-[2px] -rotate-[35deg] -translate-y-1/2 opacity-75 pointer-events-none" />
               </div>
               <h6 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
                 {c.title}

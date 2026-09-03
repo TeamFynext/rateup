@@ -1,56 +1,81 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Link, useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { PageHeading } from "@/components/common/page-heading.tsx";
 import { buttonVariants } from "@/components/ui/button.tsx";
 
-import { FacebookSettingsDetail } from "./components/facebook-settings-detail";
-import { InstagramSettingsDetail } from "./components/instagram-settings-detail";
+import { MetaConnectionsList } from "./components/meta-connections-list.tsx";
 import { WhatsAppSettingsDetail } from "./components/whatsapp-settings-detail";
 
+/** Title and one-liner per channel, so the page names what you opened. */
+const CHANNELS = {
+  whatsapp: {
+    title: "WhatsApp Business",
+    description: "The number your conversations, campaigns and loyalty replies run on.",
+  },
+  facebook: {
+    title: "Facebook Messenger",
+    description: "Page messages join the same queue, with the same auto-replies and rules.",
+  },
+  instagram: {
+    title: "Instagram Messaging",
+    description: "Story replies and DMs land next to your WhatsApp threads.",
+  },
+} as const;
+
+type ChannelKey = keyof typeof CHANNELS;
+
+const isChannel = (value?: string): value is ChannelKey => Boolean(value && value in CHANNELS);
+
 export function ChannelDetailsPage() {
-  const params = useParams({
-    strict: false,
-  });
-  const channel = params?.channel;
+  const params = useParams({ strict: false });
+  const { t: translations } = useTranslation();
   const { data: waSettings, isLoading } = useWaSettings();
 
-  const isWhatsapp = channel === "whatsapp";
-  const isInstagram = channel === "instagram";
-  const isFacebook = channel === "facebook";
+  const channel = params?.channel;
 
-  if (!isWhatsapp && !isInstagram && !isFacebook) {
+  const backLink = (
+    <Link
+      to="/dashboard/settings/channels"
+      className={buttonVariants({ variant: "secondary", size: "sm" })}
+    >
+      <IconArrowLeft className="size-4" />
+      {translations("All channels")}
+    </Link>
+  );
+
+  if (!isChannel(channel)) {
     return (
-      <div className="space-y-4 rounded-xl border bg-background p-4">
-        <div className="flex items-center justify-between border-b pb-3">
-          <h3 className="text-lg font-semibold">Channel not found</h3>
-          <Link
-            to="/dashboard/settings/channels"
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            <IconArrowLeft className="mr-2 h-4 w-4" />
-            Back to channels
-          </Link>
-        </div>
+      <div className="mx-auto flex max-w-265 flex-col gap-6.5">
+        <PageHeading
+          title={translations("Channel not found")}
+          description={translations(
+            "That channel does not exist, or is not available on your plan.",
+          )}
+          actions={backLink}
+        />
       </div>
     );
   }
 
+  const { title, description } = CHANNELS[channel];
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl">Channel Details</h2>
-        <Link
-          to="/dashboard/settings/channels"
-          className={buttonVariants({ variant: "outline", size: "sm" })}
-        >
-          <IconArrowLeft className="mr-2 h-4 w-4" />
-          Back to channels
-        </Link>
-      </div>
-      {isWhatsapp && <WhatsAppSettingsDetail waSettings={waSettings} isLoading={isLoading} />}
-      {isInstagram && <InstagramSettingsDetail waSettings={waSettings} isLoading={isLoading} />}
-      {isFacebook && <FacebookSettingsDetail waSettings={waSettings} isLoading={isLoading} />}
+    <div className="mx-auto flex max-w-265 flex-col gap-6.5">
+      <PageHeading
+        title={translations(title)}
+        description={translations(description)}
+        actions={backLink}
+      />
+
+      {channel === "whatsapp" && (
+        <WhatsAppSettingsDetail waSettings={waSettings} isLoading={isLoading} />
+      )}
+      {(channel === "instagram" || channel === "facebook") && (
+        <MetaConnectionsList platform={channel} waSettings={waSettings} isLoading={isLoading} />
+      )}
     </div>
   );
 }

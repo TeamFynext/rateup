@@ -1,4 +1,4 @@
-import { IconBrandWhatsappFilled, IconTicket } from "@tabler/icons-react";
+import { IconBrandWhatsappFilled } from "@tabler/icons-react";
 
 import {
   useNotificationSettings,
@@ -63,45 +63,11 @@ const WhatsappNotificationSettings = () => {
   );
 };
 
-const TicketNotificationSettings = () => {
-  const { data, isLoading } = useNotificationSettings();
-  const update = useUpdateNotificationSettings();
-
-  return (
-    <Field className="pt-1">
-      <Field
-        orientation="horizontal"
-        className="justify-between rounded-md border border-border p-3"
-      >
-        <FieldLabel htmlFor="ticket-assigned">Allow notification on ticket assigned</FieldLabel>
-        {isLoading ? (
-          <Skeleton className="h-5 w-10" />
-        ) : (
-          <Switch
-            id="ticket-assigned"
-            checked={Boolean(data?.ticketAssignNotification)}
-            onCheckedChange={(checked) => {
-              update.mutate({
-                ticketAssignNotification: checked,
-              });
-            }}
-          />
-        )}
-      </Field>
-    </Field>
-  );
-};
-
 const notificationFeatures = [
   {
     value: "WhatsApp",
     icon: <IconBrandWhatsappFilled className="size-4" />,
     component: <WhatsappNotificationSettings />,
-  },
-  {
-    value: "Ticket",
-    icon: <IconTicket className="size-4" />,
-    component: <TicketNotificationSettings />,
   },
 ];
 

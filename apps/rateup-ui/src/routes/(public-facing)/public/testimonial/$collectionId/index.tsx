@@ -5,7 +5,7 @@ import { getAllTestimonialsByCollection } from "@/backend/testimonials/testimoni
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogoOg } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/testimonial/$collectionId/")({
   component: Collections,
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/(public-facing)/public/testimonial/$colle
         },
         {
           property: "og:image",
-          content: rateupLogoStackedWhiteTransparent,
+          content: rateupLogoOg,
         },
         {
           property: "og:image:type",

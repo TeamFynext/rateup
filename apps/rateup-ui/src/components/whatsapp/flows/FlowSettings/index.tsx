@@ -1,19 +1,11 @@
-import {
-  IconLock,
-  IconRefresh,
-  IconSettings,
-  IconTicket,
-  IconTrash,
-  IconUsers,
-  IconWorldWww,
-} from "@tabler/icons-react";
+import { IconRefresh, IconSettings, IconTrash, IconUsers, IconWorldWww } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.query";
 import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -41,12 +33,6 @@ export default function FlowSettings({
   // Form state for General Settings
   const [flowNameInput, setFlowNameInput] = useState(flowName ?? "");
   const [anonymousChecked, setAnonymousChecked] = useState(anonymous ?? false);
-
-  // State for ticketing
-  const [enableTicketing, setEnableTicketing] = useState(survey?.enableTickets || false);
-  const [enableAutoGenerateTicket, setEnableAutoGenerateTicket] = useState(
-    survey?.enableAutoGenerateTicket || false,
-  );
 
   // State for teams
   const [selectedTeams, setSelectedTeams] = useState<string[]>(
@@ -76,16 +62,6 @@ export default function FlowSettings({
       teams: selectedTeams,
       sendWeeklyReport: sendWeeklyReport,
     });
-  };
-
-  const handleToggleTicketing = (value: boolean) => {
-    setEnableTicketing(value);
-    editSurvey.mutate({ enableTickets: value });
-  };
-
-  const handleToggleAutoGenerate = (value: boolean) => {
-    setEnableAutoGenerateTicket(value);
-    editSurvey.mutate({ enableAutoGenerateTicket: value });
   };
 
   const handleSaveWebhook = () => {
@@ -174,43 +150,6 @@ export default function FlowSettings({
 
         {/* Right Column */}
         <div className="space-y-6">
-          {/* Ticketing & Automation */}
-          <SettingsCard title="Ticketing & Automation" icon={<IconTicket size={20} />}>
-            <div className="flex flex-col gap-6">
-              <Field orientation="horizontal" className="justify-between">
-                <FieldLabel htmlFor="enable-ticketing" className="font-medium cursor-pointer">
-                  Enable Ticketing
-                </FieldLabel>
-                <Switch
-                  id="enable-ticketing"
-                  checked={enableTicketing}
-                  onCheckedChange={handleToggleTicketing}
-                />
-              </Field>
-
-              <Field orientation="horizontal" className="justify-between">
-                <FieldLabel htmlFor="auto-generate" className="font-medium cursor-pointer">
-                  Enable Auto-Generate Ticket
-                </FieldLabel>
-                <Switch
-                  id="auto-generate"
-                  checked={enableAutoGenerateTicket}
-                  onCheckedChange={handleToggleAutoGenerate}
-                />
-              </Field>
-
-              <div className="flex justify-between items-center opacity-50">
-                <div className="flex items-center gap-2">
-                  <FieldTitle className="text-muted-foreground cursor-not-allowed">
-                    Enable Email Notification
-                  </FieldTitle>
-                  <IconLock size={16} className="text-muted-foreground" />
-                </div>
-                <Switch checked={false} disabled />
-              </div>
-            </div>
-          </SettingsCard>
-
           {/* Webhooks */}
           <SettingsCard title="Webhooks" icon={<IconWorldWww size={20} />}>
             <div className="flex flex-col gap-6">

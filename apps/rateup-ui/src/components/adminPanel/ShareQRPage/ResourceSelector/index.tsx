@@ -12,8 +12,6 @@ import {
 
 import { resourceOptions } from "./constants.tsx";
 
-import styles from "./ResourceSelector.module.css";
-
 function ResourceSelector({
   resource,
   setResource,
@@ -24,9 +22,12 @@ function ResourceSelector({
   onGenerateBtnClick: () => void;
 }) {
   const { t: translations } = useTranslation();
-  const items = resourceOptions.map((option) => ({ value: option, label: option }));
+  const items = resourceOptions.map((option) => ({
+    value: option,
+    label: option,
+  }));
   return (
-    <div className={styles["resource-selector-dropdown-container"]}>
+    <div className={"mb-[1.125rem] flex flex-wrap gap-4"}>
       <Select value={resource} onValueChange={(value) => setResource(value ?? "")} items={items}>
         <SelectTrigger className="w-56">
           <SelectValue placeholder={translations("Select a Resource")} />

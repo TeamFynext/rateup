@@ -93,10 +93,6 @@ const FEATURES_WITH_SUBSCRIPTION: {
     requiredSubscriptions: [sfpn.WebSurvey],
   },
   {
-    feature: TeamFeature.Tickets,
-    label: "Tickets",
-  },
-  {
     feature: TeamFeature.Pipeline,
     label: "Pipeline",
   },

@@ -1,76 +1,171 @@
-import { Image } from "@unpic/react";
+import {
+  IconBulb,
+  IconEye,
+  IconHeartHandshake,
+  IconShieldCheck,
+  IconUsersGroup,
+} from "@tabler/icons-react";
+import type { ReactNode } from "react";
 
-import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
-import { imagesPath } from "@/utils/constants.ts";
+import { RateupStar } from "@/components/integrations/logos";
+import {
+  BookDemoCta,
+  ClosingCta,
+  Eyebrow,
+  HERO_UNDER_NAV,
+  HERO_WASH,
+  useReveal,
+  WhatsAppCta,
+} from "@/components/RateupHomePage/shared/home-ui.tsx";
 
-function AboutUs() {
+/**
+ * `/about-us`, drawn to the marketing design system.
+ *
+ * Same bands, spacing and `ru-*` palette the homepage sections use, so the page reads as
+ * part of the site rather than a leftover. The values used to be a flat PNG; they are real
+ * cards here, which keeps them legible on a phone and searchable — the copy matches
+ * `src/markdown/about-us.ts`, which is what crawlers are served.
+ */
+
+interface Value {
+  icon: ReactNode;
+  title: string;
+  body: string;
+}
+
+const VALUES: Value[] = [
+  {
+    icon: <IconBulb className="size-4.75" stroke={1.8} />,
+    title: "Innovation",
+    body: "We keep shipping. The latest of what technology makes possible should reach a ten-person shop, not only an enterprise.",
+  },
+  {
+    icon: <IconHeartHandshake className="size-4.75" stroke={1.8} />,
+    title: "Customer-Centricity",
+    body: "Our customers sit at the centre of every roadmap call. We build what their customers actually feel, not what demos well.",
+  },
+  {
+    icon: <IconShieldCheck className="size-4.75" stroke={1.8} />,
+    title: "Integrity",
+    body: "Honest pricing, honest numbers, honest answers — including when the answer is that we are not the right fit.",
+  },
+  {
+    icon: <IconEye className="size-4.75" stroke={1.8} />,
+    title: "Transparency",
+    body: "Open communication with customers, partners and our own team. Nothing important lives in a private thread.",
+  },
+];
+
+export default function AboutUs() {
+  const [valuesRef, valuesShown] = useReveal<HTMLDivElement>(0.2);
+
   return (
-    <main className="bg-white text-[#001C57]">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-[#004F98] to-[#001C57] text-white py-24 px-6 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl font-extrabold mb-6 leading-tight">We’re Rateup</h1>
-          <p className="text-xl font-medium">
-            Empowering businesses with insights to create exceptional customer experiences.
-          </p>
-        </div>
-      </section>
-
-      {/* Mission + Vision Section */}
-      <section className="py-20 px-6 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-start">
-          {/* Mission Block */}
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold">Our Mission</h2>
-            <p className="text-lg leading-relaxed text-gray-700">
-              We are on a mission to empower businesses of all sizes with the insights they need to
-              create exceptional, unforgettable{" "}
-              <span className="font-semibold text-[#004F98]">customer experiences</span>.
+    <main className="bg-white">
+      {/* --- who we are --- */}
+      <section className={`${HERO_WASH} ${HERO_UNDER_NAV}`}>
+        <div className="mx-auto max-w-280 px-5 pb-14 sm:pb-26">
+          <div className="mx-auto max-w-190 text-center">
+            <Eyebrow className="mb-4.5" icon={<RateupStar className="size-4.5" />}>
+              About us
+            </Eyebrow>
+            <h1 className="mb-4.5 font-display text-[clamp(2.25rem,5.6vw,3.75rem)]/[1.05] font-bold tracking-[-0.035em] text-balance text-ru-n-700">
+              We&apos;re RateUp.
+            </h1>
+            <p className="mx-auto mb-7 max-w-[54ch] text-[clamp(1.0625rem,2.1vw,1.28125rem)]/[1.6] text-pretty text-ru-n-500 sm:mb-9">
+              An AI-powered customer engagement platform for the messages that come after the sale —
+              the feedback, the fix, the reward, the second order. All of it on the channels your
+              customers already use.
             </p>
-          </div>
-
-          {/* Empowering Block */}
-          <div className="space-y-4 border-l-4 border-[#001C57] pl-6">
-            <h2 className="text-3xl font-bold">Empowering Businesses</h2>
-            <p className="text-lg leading-relaxed text-gray-700">
-              Through data, insights, and innovation — we help you elevate{" "}
-              <span className="font-semibold text-[#004F98]">customer satisfaction</span> at every
-              touchpoint.
-            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <BookDemoCta className="max-sm:w-full max-sm:justify-center" />
+              <WhatsAppCta className="max-sm:w-full max-sm:justify-center" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Our Values */}
-      <section className="py-1 px-6 bg-[#f8faff] text-center">
-        <h2 className="text-4xl font-bold mb-4">The Rateup Commitment</h2>
-        <p className="text-lg text-gray-600 mb-12">Our Values guide every decision we make.</p>
+      {/* --- mission + what we do --- */}
+      <section className="border-b border-ru-n-100 bg-white">
+        <div className="mx-auto max-w-280 px-5 py-14 sm:py-26">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-3 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-6.5 sm:p-8">
+              <span className="flex size-9.5 items-center justify-center rounded-[10px] border border-ru-n-200 bg-white text-ru-blue-600">
+                <IconUsersGroup className="size-4.75" stroke={1.8} />
+              </span>
+              <h2 className="font-display text-[clamp(1.375rem,2.8vw,1.75rem)] font-bold tracking-[-0.025em] text-ru-n-700">
+                Our mission
+              </h2>
+              <p className="text-[16.5px]/[1.6] text-pretty text-ru-n-500">
+                To empower businesses of all sizes with the insights they need to create
+                exceptional, unforgettable{" "}
+                <span className="font-semibold text-ru-blue-600">customer experiences</span> —
+                whether they ship ten orders a week or ten thousand.
+              </p>
+            </div>
 
-        <div className="flex justify-center">
-          <Image
-            src={`${imagesPath}/about-us-page/our-values/our-values.png`}
-            alt="Our Core Values"
-            width={900}
-            height={700}
-            className="w-full max-w-5xl h-auto drop-shadow-2xl rounded-xl"
-          />
+            <div className="flex flex-col gap-3 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-6.5 sm:p-8">
+              <span className="flex size-9.5 items-center justify-center rounded-[10px] border border-ru-n-200 bg-white text-ru-blue-600">
+                <RateupStar className="size-5" />
+              </span>
+              <h2 className="font-display text-[clamp(1.375rem,2.8vw,1.75rem)] font-bold tracking-[-0.025em] text-ru-n-700">
+                Empowering businesses
+              </h2>
+              <p className="text-[16.5px]/[1.6] text-pretty text-ru-n-500">
+                Through data, insights and automation we help you lift{" "}
+                <span className="font-semibold text-ru-blue-600">customer satisfaction</span> at
+                every touchpoint — from the first reply to the fifth repeat order.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-20 px-6 text-center bg-white">
-        <div className="max-w-3xl mx-auto">
-          <h3 className="text-3xl font-bold pb-2">
-            Let’s build unforgettable experiences together
-          </h3>
-          <p className="text-lg text-gray-700 pb-4">
-            Discover how Rateup can help your business grow through better customer understanding.
-          </p>
-          <BookDemoModal1 />
+      {/* --- values --- */}
+      <section className="border-b border-ru-n-100 bg-ru-n-50">
+        <div className="mx-auto max-w-280 px-5 py-14 sm:py-26">
+          <div className="mb-8 max-w-170 sm:mb-12">
+            <Eyebrow className="mb-4.5" icon={<IconShieldCheck className="size-4" stroke={1.9} />}>
+              The RateUp commitment
+            </Eyebrow>
+            <h2 className="mb-4 font-display text-[clamp(2rem,5vw,3.25rem)]/[1.08] font-bold tracking-[-0.03em] text-balance text-ru-n-700">
+              Four values that decide the close calls.
+            </h2>
+            <p className="text-[clamp(1.0625rem,2vw,1.25rem)]/[1.6] text-pretty text-ru-n-500">
+              Every product decision runs through these. They are why we say no to some features and
+              ship others in a week.
+            </p>
+          </div>
+
+          <div ref={valuesRef} className="flex flex-wrap gap-4">
+            {VALUES.map((value, i) => (
+              <div
+                key={value.title}
+                style={{ animationDelay: `${i * 110}ms` }}
+                className={`flex flex-[1_1_250px] flex-col gap-3 rounded-2xl border border-ru-n-200 bg-white p-6.5 transition-all hover:-translate-y-0.5 hover:border-ru-n-300 hover:shadow-md motion-reduce:animate-none ${
+                  valuesShown ? "animate-ru-rise" : "opacity-0"
+                }`}
+              >
+                <span className="flex size-9.5 items-center justify-center rounded-[10px] border border-ru-n-200 bg-ru-n-50 text-ru-blue-600">
+                  {value.icon}
+                </span>
+                <div className="font-display text-[19px] font-bold tracking-[-0.018em] text-ru-n-700">
+                  {value.title}
+                </div>
+                <p className="text-[15.5px]/[1.55] text-ru-n-500">{value.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+
+      {/* --- closing --- */}
+      <ClosingCta
+        eyebrow="Set up on your own WhatsApp number in 20 minutes"
+        title="Let's build unforgettable experiences together."
+      >
+        Twenty minutes is enough to see RateUp running on your own catalogue — and to work out what
+        the loop is worth to you per month.
+      </ClosingCta>
     </main>
   );
 }
-
-export default AboutUs;

@@ -14,7 +14,10 @@ export const CONDITION_FIELDS = [
   { label: "Contact Email", value: "CONTACT_EMAIL" },
   { label: "Contact Group", value: "CONTACT_GROUP" },
   { label: "Contact Label", value: "CONTACT_LABEL" },
-  { label: "Contact Lifecycle", value: "CONTACT_LIFECYCLE" },
+  // Superseded by Contact Stage. Kept for the same reason as Assign Lifecycle
+  // below: conditions already written against it still have to render and save.
+  { label: "Contact Lifecycle (legacy)", value: "CONTACT_LIFECYCLE", legacy: true },
+  { label: "Contact Stage", value: "CONTACT_STAGE" },
   // TODO: Enable if needed in future existed in trengo
   // { label: "Message Direction", value: "MESSAGE_DIRECTION" },
   // { label: "Elapsed Time", value: "ELAPSED_TIME" },
@@ -63,8 +66,15 @@ const TRIGGER_EVENTS = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    label: "Lifecycle Updated",
+    // Superseded by Stage Updated; still fires for rules already using it.
+    label: "Lifecycle Updated (legacy)",
     value: "LIFECYCLE_UPDATED",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+    legacy: true,
+  },
+  {
+    label: "Stage Updated",
+    value: "STAGE_UPDATED",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
@@ -84,8 +94,24 @@ const TRIGGER_EVENTS = [
   },
 ] as const;
 
-export function getTriggerEventsForPlatform(platform: Platform) {
-  return TRIGGER_EVENTS.filter((e) => (e.platforms as readonly string[]).includes(platform));
+/**
+ * The trigger events offered for a platform.
+ *
+ * `current` is the event the rule already has, so a legacy one keeps rendering
+ * on the rule that uses it while nothing new can be authored against it — the
+ * same rule as {@link getActionTypesForPlatform}.
+ */
+export function getTriggerEventsForPlatform(platform: Platform, current?: string) {
+  return TRIGGER_EVENTS.filter(
+    (e) =>
+      (e.platforms as readonly string[]).includes(platform) &&
+      (!("legacy" in e && e.legacy) || e.value === current),
+  );
+}
+
+/** Condition fields, hiding a legacy one unless it is the field already chosen. */
+export function getConditionFields(current?: string) {
+  return CONDITION_FIELDS.filter((f) => !("legacy" in f && f.legacy) || f.value === current);
 }
 
 export const INSTAGRAM_SCOPE_OPTIONS = [
@@ -138,14 +164,35 @@ export const ACTION_TYPES = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    label: "Assign Lifecycle",
+    // Superseded by Assign Stage and no longer offered for new actions. It stays
+    // in the list because rules written against it are still running: dropping
+    // the entry would leave those rows with an empty type select, and saving one
+    // would quietly rewrite the action.
+    label: "Assign Lifecycle (legacy)",
     value: "ASSIGN_LIFECYCLE",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+    legacy: true,
+  },
+  {
+    label: "Assign Stage",
+    value: "ASSIGN_STAGE",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
 ] as const;
 
-export function getActionTypesForPlatform(platform: Platform) {
-  return ACTION_TYPES.filter((a) => (a.platforms as readonly string[]).includes(platform));
+/**
+ * The action types offered for a platform.
+ *
+ * `current` is the type the action already has. A legacy type is offered only
+ * when it is the one already selected, so existing rules still render and can be
+ * saved untouched, while nothing new can be authored against it.
+ */
+export function getActionTypesForPlatform(platform: Platform, current?: string) {
+  return ACTION_TYPES.filter(
+    (a) =>
+      (a.platforms as readonly string[]).includes(platform) &&
+      (!("legacy" in a && a.legacy) || a.value === current),
+  );
 }
 
 // Single source of truth for group operators

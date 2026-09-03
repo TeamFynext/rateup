@@ -11,7 +11,7 @@ import { completeInvite } from "@/backend/team/team.api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
+import { imagesPath, rateupLogo } from "@/utils/constants";
 
 import styles from "../../../components/(auth)/invite/styles.module.css";
 
@@ -75,7 +75,11 @@ function Invite() {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <img src="/images/bg-shape.svg" className="fixed bottom-0 w-full" alt="bg of a shape" />
+      <img
+        src={`${imagesPath}/bg-shape.svg`}
+        className="fixed bottom-0 w-full"
+        alt="bg of a shape"
+      />
       <Card
         className="relative mt-17.5 min-h-150 w-87.5 rounded-md p-7.5"
         style={{
@@ -85,7 +89,7 @@ function Invite() {
       >
         <div className="flex justify-center">
           <Link to="/">
-            <img src={rateupLogoStackedWhiteTransparent} alt="RateUp Logo" className="w-25" />
+            <img src={rateupLogo} alt="RateUp Logo" className="w-44" />
           </Link>
         </div>
         <div className="flex flex-col flex-wrap items-center justify-center gap-4">

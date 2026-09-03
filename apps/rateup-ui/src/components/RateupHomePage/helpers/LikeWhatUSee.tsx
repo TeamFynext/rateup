@@ -1,9 +1,18 @@
-import { IconBrandWhatsapp, IconCalendar, IconX } from "@tabler/icons-react";
+import QRCode from "qrcode";
+import { useEffect, useState } from "react";
 
-import { imagesPath } from "@/components/HomePage/constants";
 import { RateupStar } from "@/components/integrations/logos";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+
+import { WhatsAppMark } from "../shared/channel-marks";
+
+/**
+ * The "Like what you see?" popup, drawn to the marketing design.
+ *
+ * Colour comes from the `ru-*` ramp in `globals.css` — the same palette the design was drawn
+ * against. The design's two buttons are flat brand colours rather than gradients, which is
+ * what the rest of the redesign does.
+ */
 
 interface LikeWhatUSeeProps {
   open: boolean;
@@ -12,105 +21,143 @@ interface LikeWhatUSeeProps {
   onWhatsapp?: () => void;
 }
 
+const WHATSAPP_MESSAGE = "Hi, I need help with support";
+
+const CTA = "flex h-14 items-center justify-center gap-2.75 rounded-xl text-[16.5px] font-bold";
+
 export default function LikeWhatUSee({
   open,
   onOpenChange,
   onBookDemo,
   onWhatsapp,
-}: LikeWhatUSeeProps) {
+}: Readonly<LikeWhatUSeeProps>) {
+  const [qr, setQr] = useState<string | null>(null);
+  const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
+  const waHref = `https://wa.me/${phone}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+
+  /* Generated from the same href the button opens, so the code cannot drift from the number
+     the way a checked-in `qr-code.png` can. Only worth doing once the popup is asked for. */
+  useEffect(() => {
+    if (!open || qr) return;
+    QRCode.toDataURL(waHref, {
+      margin: 0,
+      width: 360,
+      color: { dark: "#091729", light: "#ffffff" },
+    })
+      .then(setQr)
+      .catch(() => setQr(null));
+  }, [open, qr, waHref]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-100 p-0 overflow-hidden rounded-2xl sm:max-w-[440px] w-[95vw] bg-white">
-        {/* CLOSE */}
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="bg-[rgba(9,23,41,0.6)] supports-backdrop-filter:backdrop-blur-[5px]"
+        className="block w-[min(100%,470px)] rounded-[26px] bg-white p-[clamp(24px,4vw,36px)] text-center shadow-[0_40px_90px_rgba(9,23,41,0.42)] ring-0 sm:max-w-[470px]"
+      >
+        {/* `showCloseButton={false}` above: the dialog ships its own, which sat stacked on top
+            of this one. This is the design's — 44px, bordered, not a ghost icon button. */}
         <button
+          type="button"
           onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition-all duration-200 hover:bg-slate-200/80 hover:text-slate-850"
+          aria-label="Close"
+          className="absolute top-4 right-4 inline-flex size-11 cursor-pointer items-center justify-center rounded-full border border-ru-n-200 bg-ru-n-50 text-ru-n-500 transition-colors hover:border-ru-n-300 hover:text-ru-n-700"
         >
-          <IconX className="h-4 w-4" />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            className="size-4.5"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
         </button>
 
-        <div className="px-8 pb-7 pt-10">
-          {/* LOGO */}
-          <div className="mb-5 flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-[#0D2B57] to-[#081B38] text-2xl shadow-[0_12px_24px_rgba(13,43,87,0.28)]">
-              <RateupStar className="h-8 w-8" />
-            </div>
-          </div>
+        <span className="mb-5 inline-flex size-19 items-center justify-center rounded-[20px] bg-ru-blue-950 shadow-[0_12px_28px_rgba(9,23,41,0.24)]">
+          <RateupStar className="size-10.5" />
+        </span>
 
-          {/* TITLE */}
-          <DialogTitle className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#0D2550]">
-            Like what you see?
-          </DialogTitle>
+        <DialogTitle className="mb-3 font-display text-[clamp(1.625rem,4vw,2.125rem)]/[1.08] font-bold tracking-[-0.032em] text-ru-n-700">
+          Like what you see?
+        </DialogTitle>
 
-          {/* SUBTITLE */}
-          <DialogDescription className="mx-auto max-w-[320px] text-center text-sm mt-2 text-slate-400">
-            Turn one-time buyers into repeat customers on WhatsApp. Let&apos;s find the fastest way
-            to get you started.
-          </DialogDescription>
+        <DialogDescription className="mx-auto mb-6.5 max-w-[38ch] text-base/[1.55] text-pretty text-ru-n-500">
+          Turn one-time buyers into repeat customers on WhatsApp. Let&apos;s find the fastest way to
+          get you started.
+        </DialogDescription>
 
-          {/* ACTIONS */}
-          <div className="mt-6 flex flex-col gap-3">
-            <Button
-              onClick={() => onBookDemo?.()}
-              className="h-12 w-full rounded-xl bg-gradient-to-r from-[#2c6fd6] to-[#1e5bb8] font-bold text-white shadow-[0_4px_12px_rgba(44,111,214,0.25)] transition-all duration-200 hover:from-[#1e5bb8] hover:to-[#174895] hover:shadow-[0_6px_16px_rgba(44,111,214,0.35)] hover:-translate-y-[0.5px] active:translate-y-0"
+        <div className="mb-6.5 flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => onBookDemo?.()}
+            className={`${CTA} cursor-pointer bg-ru-blue-600 text-white transition-colors hover:bg-ru-blue-700`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="size-4.75"
+              aria-hidden="true"
             >
-              <IconCalendar data-icon="inline-start" className="h-5 w-5" /> Book a Demo
-            </Button>
+              <rect x="3.5" y="5" width="17" height="16" rx="3" />
+              <path d="M8 3v4M16 3v4M3.5 10h17" />
+            </svg>
+            Book a Demo
+          </button>
 
-            <Button
-              onClick={() => {
-                onWhatsapp?.();
-                const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
-                const message = encodeURIComponent("Hi, I need help with support");
-                window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-              }}
-              className="h-12 w-full rounded-xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] font-bold text-white shadow-[0_4px_12px_rgba(22,163,74,0.25)] transition-all duration-200 hover:from-[#16a34a] hover:to-[#15803d] hover:shadow-[0_6px_16px_rgba(22,163,74,0.35)] hover:-translate-y-[0.5px] active:translate-y-0"
-            >
-              <IconBrandWhatsapp data-icon="inline-start" className="h-5 w-5" /> Chat with us on
-              WhatsApp
-            </Button>
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => onWhatsapp?.()}
+            className={`${CTA} bg-ru-green-500 text-white transition-colors hover:bg-ru-green-600`}
+          >
+            <WhatsAppMark className="size-5" />
+            Chat with us on WhatsApp
+          </a>
+        </div>
+
+        <div className="mb-5 flex items-center gap-3.5">
+          <span className="h-px flex-1 bg-ru-n-200" />
+          <span className="text-xs font-semibold tracking-[0.1em] whitespace-nowrap text-ru-n-400 uppercase">
+            Or scan with your phone
+          </span>
+          <span className="h-px flex-1 bg-ru-n-200" />
+        </div>
+
+        <div className="flex items-start gap-4 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-4 text-left">
+          <div className="size-26 flex-none rounded-[10px] border border-ru-n-200 bg-white p-2">
+            {qr && <img src={qr} alt="" className="size-full" />}
           </div>
-
-          {/* SEPARATOR */}
-          <div className="my-5 flex items-center justify-center gap-3">
-            <div className="h-[1px] flex-1 bg-slate-100" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              or scan with your phone
-            </span>
-            <div className="h-[1px] flex-1 bg-slate-100" />
-          </div>
-
-          {/* QR CODE SECTION */}
-          <div className="flex gap-4 rounded-xl border border-blue-100 bg-[#f4f8ff]/60 p-4 text-left">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-              <img
-                src={`${imagesPath}/qr-code.png`}
-                alt="WhatsApp QR Code"
-                className="h-full w-full object-contain"
-              />
+          <div className="min-w-0">
+            <div className="mb-1.75 flex items-center gap-2">
+              <span className="inline-flex size-5 flex-none items-center justify-center rounded-[5px] bg-wa-green text-white">
+                <WhatsAppMark className="size-3" />
+              </span>
+              <span className="font-display text-[16.5px] font-bold tracking-[-0.018em] text-ru-n-700">
+                Open on your phone
+              </span>
             </div>
-            <div className="flex flex-col justify-center">
-              <div className="flex items-center gap-1.5 text-sm font-bold text-[#0D2550]">
-                <IconBrandWhatsapp className="h-4.5 w-4.5 text-green-500" />
-                <span>Open on your phone</span>
-              </div>
-              <p className="mt-1 text-[11.5px] leading-normal text-slate-500 font-medium">
-                Point your phone camera at this code to open WhatsApp and start chatting with us
-                instantly.
-              </p>
-            </div>
-          </div>
-
-          {/* LATER */}
-          <div className="mt-5 text-center">
-            <button
-              onClick={() => onOpenChange(false)}
-              className="text-sm font-bold text-slate-400 transition-colors duration-200 hover:text-slate-500"
-            >
-              Maybe later
-            </button>
+            <p className="text-sm/[1.5] text-ru-n-500">
+              Point your phone camera at this code to open WhatsApp and start chatting with us
+              instantly.
+            </p>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="mt-5 h-12 cursor-pointer px-4.5 text-[15.5px] font-bold text-ru-n-400 transition-colors hover:text-ru-n-600"
+        >
+          Maybe later
+        </button>
       </DialogContent>
     </Dialog>
   );

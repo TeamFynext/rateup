@@ -38,6 +38,96 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-08-31-channels-page-rebuilt",
+    title: "Channels, rebuilt to match setup",
+    summary:
+      "Settings \u2192 Channels is now laid out like the setup guide, overview and channel pages alike: one row per thing with its icon, what it is, its status, and its action on the right \u2014 instead of cards side by side. On the overview WhatsApp leads, because Meta hangs Messenger and Instagram off that connection, and those two say plainly that they are waiting on it rather than only greying out. Open one and the page now names the channel you opened, and each linked account reads as a row: the Page or Instagram account attached to it, a button to connect or change it, and a quieter way to disconnect. Nothing moved and nothing was removed \u2014 the same connect, edit and disconnect actions, in a layout that matches the rest of the app.",
+    publishedAt: "2026-08-31",
+    kinds: ["improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
+    id: "2026-08-31-setup-guide-v2",
+    title: "A rebuilt setup guide",
+    summary:
+      'The setup guide has been rebuilt and now lives inside the app, as Get started at the top of the sidebar, instead of on its own page outside it — so you can work through it without leaving whatever you were doing. It is organised around what actually blocks you from sending: the three Meta steps — connect WhatsApp, verify the business, add payment — come first and are marked required, with verification held back until you are connected. Connecting now happens on the guide itself: Log in with Facebook opens Meta\'s signup in place, so you never leave the page to do it. Below them, Instagram and Facebook Messenger are steps of their own, and they connect in place as well \u2014 the same picker channel settings uses, opened right on the row \u2014 so every channel that shares the inbox is connected without ever leaving the guide. Everything else — your first message template, business hours, auto-replies, loyalty, team invites — sits under "Make it work for you" and can be done in any order. Anything that is not one of the three Meta steps can also be skipped outright, if you are never going to do it \u2014 a skipped step dims, stops counting toward your progress, and leaves the sidebar, so the guide can still reach the end without it. You can undo that from the same row whenever you change your mind. The sidebar lists every step with its progress and jumps straight to it. Once you have finished or skipped them all, or hidden the guide, Get started leaves the sidebar.',
+    publishedAt: "2026-08-31",
+    kinds: ["improvement"],
+    area: "Onboarding",
+    link: { to: "/dashboard/setup", label: "Open the setup guide" },
+  },
+  {
+    id: "2026-08-29-ticket-boards-retired",
+    title: "Ticket boards have been retired",
+    summary:
+      "The Tickets board is no longer part of RateUp. The Tickets entry has left the sidebar, Tickets is gone from a team's Feature Access, and the settings that fed it are gone too: a survey can no longer raise a ticket from a response or a per-question rule, and the Create Ticket step has been removed from the automation builder. Flows you saved with that step still open — the step is skipped rather than run. Work that used to live on a board is better tracked in the Inbox, where each conversation is already a ticket with its own number, assignee and tags, or on a Pipeline board for anything sales-shaped.",
+    publishedAt: "2026-08-29",
+    kinds: ["improvement"],
+    area: "Tickets",
+    link: { to: "/dashboard/inbox", search: { tab: "open" }, label: "Open the Inbox" },
+  },
+  {
+    id: "2026-08-28-lifecycle-to-pipeline-stages",
+    title: "Lifecycle stages are now pipeline stages",
+    summary:
+      "Your board's columns are its own now, instead of being your contact lifecycle stages. Name them what your sales process calls them, and give each a status of Open, Won or Lost — Won and Lost are real columns you drop onto, so the separate Lost zone is gone. Pipeline stage replaces lifecycle elsewhere too: in the contacts table, when editing one contact or several, in Zoho Bigin's stage mapping, and in Meta conversion tracking, which now lives in pipeline settings and fires when a lead reaches a Won column. In settings you can reorder columns by dragging a handle or with the arrow keys, and deleting one asks where its leads should go rather than moving them for you. Lifecycle itself is unchanged for contacts and the inbox — the two are simply no longer tied together.",
+    publishedAt: "2026-08-28",
+    kinds: ["new", "improvement"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
+  },
+  {
+    id: "2026-08-22-conversation-packs",
+    title: "Buy conversation packs from Billing",
+    summary:
+      "Running short before the month is out? Buy a conversation pack for 5,000 extra conversations, good for 30 days. It is a one-off charge — nothing renews and there is nothing to cancel — and packs stack, so buy as many as you need. Packs top up a paid plan: on Free the answer is still to upgrade, which raises every limit rather than just conversations, and Enterprise is already invoiced on the usage it actually runs.",
+    publishedAt: "2026-08-22",
+    kinds: ["new"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See packs" },
+  },
+  {
+    id: "2026-08-22-five-tier-plans",
+    title: "A new plan sits between Plus and Max",
+    summary:
+      "Starter is now Plus and the old Pro is now Max — same price, same limits, nothing to do. A new Pro plan fills the gap between them at 40,000 conversations and form submissions a month, with 5 teams and 30 users, so scaling past 10,000 no longer means jumping straight to the top tier. Existing subscriptions were renamed in place: your price, your allowances and your renewal date are all unchanged.",
+    publishedAt: "2026-08-22",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See the plans" },
+  },
+  {
+    id: "2026-08-22-plan-usage-banner",
+    title: "A heads-up when you run out of an allowance",
+    summary:
+      "A line now sits above the dashboard whenever your organisation has used up an allowance for the billing period — conversations, form submissions, seats or AI tokens — so a feature going quiet is explained rather than mysterious. Admins also get an in-app notification and the account owner gets an email, at most once a week. Free organisations see a dismissible note about upgrading; paid ones are only nudged once an allowance is most of the way gone, not while there is room to spare.",
+    publishedAt: "2026-08-22",
+    kinds: ["new"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See your usage" },
+  },
+  {
+    id: "2026-08-22-plans-return-to-free",
+    title: "Cancelled plans now return to Free",
+    summary:
+      "When a subscription is cancelled or its paid period runs out, the organisation now moves back to the Free plan and its limits, one day after the period ends. Until now a cancelled or lapsed plan kept its full allowances indefinitely. Cancelling still keeps everything you paid for until the end of the current period — nothing changes mid-cycle — and you can resubscribe at any time from Billing.",
+    publishedAt: "2026-08-22",
+    kinds: ["improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "Open billing" },
+  },
+  {
+    id: "2026-08-20-billing-invoices-and-charges",
+    title: "Change plans, and see invoices, on billing",
+    summary:
+      "You can now move between plans without cancelling first: Change plan on an active subscription schedules the switch without you cancelling first — downgrades take effect at your next renewal so you keep what you have already paid for, and upgrades apply straight away where your bank mandate allows it (the dialog tells you which before you confirm). The page also shows what you will be charged and when, what your plan includes, and one Billing History covering every charge — renewals included, which the old order list never showed — with a Download link for each invoice and Details that actually opens.",
+    publishedAt: "2026-08-20",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "Open billing" },
+  },
+  {
     id: "2026-08-17-pipeline-feature-access",
     title: "Pipeline is its own team permission",
     summary:
@@ -96,6 +186,16 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new"],
     area: "Pipeline",
     link: { to: "/dashboard/pipeline", label: "Open the pipeline" },
+  },
+  {
+    id: "2026-08-19-plan-tiers",
+    title: "New plans, priced per conversation",
+    summary:
+      "Free, Starter, Pro and Enterprise replace the old catalog. Your allowance is now counted in conversations — one 24-hour window with a customer on any channel — rather than inbox tickets, so a thread that stays open no longer ties up your quota. Upgrading from billing only offers plans above your current one.",
+    publishedAt: "2026-08-19",
+    kinds: ["new", "improvement"],
+    area: "Billing",
+    link: { to: "/dashboard/settings/billing", label: "See your plan" },
   },
   {
     id: "2026-08-11-meta-agent-rebuild",
@@ -185,6 +285,26 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["improvement"],
     area: "Inbox",
     link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-09-03-campaigns-on-free",
+    title: "Campaigns are open on every plan",
+    summary:
+      "Campaigns no longer need a paid plan. A free account can build and send one against its 100 monthly conversations, so you can see how it works before deciding what volume you need.",
+    publishedAt: "2026-09-03",
+    kinds: ["new"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-03-campaign-allowance-warning",
+    title: "Campaigns warn before they outrun your allowance",
+    summary:
+      "The send dialog now says how many conversations you have left, and how many recipients may not be reached — before the campaign starts, instead of after some messages have quietly failed.",
+    publishedAt: "2026-09-03",
+    kinds: ["new"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
   },
   {
     id: "2026-07-22-team-channel-permissions",

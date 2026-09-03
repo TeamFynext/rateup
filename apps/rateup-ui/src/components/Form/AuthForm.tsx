@@ -27,25 +27,24 @@ const AuthForm = ({ mode, authType }: { mode: string; authType?: string | string
   const sendEmail = useEmailSend();
   const colorScheme = useResolvedTheme();
 
-  // Both branches below have side effects that must not run twice: sending a second
-  // verification email, or spending an already-consumed token (which reports the link as
-  // expired). StrictMode replays effects in dev, and `rid` can settle to a new value
-  // after mount, so guard on what has already been handled rather than on deps alone.
+  // Spending an already-consumed token reports the link as expired, so this must not run
+  // twice. StrictMode replays effects in dev, and `rid` can settle to a new value after
+  // mount, so guard on the token already handled rather than on deps alone.
+  //
+  // Landing here without a token sends nothing. The screen is reached by a refresh, by
+  // every later login and by every bounce off a guarded route, so sending on mount meant
+  // a mailbox of identical links; signing up sends the first email, and the Resend button
+  // below sends any further one.
   const handledVerification = useRef<string | null>(null);
 
   useEffect(() => {
     if (mode !== AuthMode.VERIFY) return;
+    if (!token) return;
+    if (handledVerification.current === token) return;
 
-    const attempt = token && token.length > 0 ? `token:${token}` : "send";
-    if (handledVerification.current === attempt) return;
-    handledVerification.current = attempt;
-
-    if (token && token.length > 0) {
-      consumeVerificationCode();
-    } else {
-      sendEmail(); // TODO : Add time gaps for resending verification mails
-    }
-  }, [mode, token, rid]); // add dependencies here
+    handledVerification.current = token;
+    consumeVerificationCode();
+  }, [mode, token, rid]);
 
   const signIn = useSignIn();
   const signUp = useSignUp();

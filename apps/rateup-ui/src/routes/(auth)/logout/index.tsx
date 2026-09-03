@@ -5,6 +5,7 @@ import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
+import { forgetEmailVerification } from "@/utils/auth/emailVerification.ts";
 
 import { resetBrowserQueryClient } from "../../../components/providers.tsx";
 
@@ -29,6 +30,9 @@ function Logout(): null {
           await queryClient.cancelQueries();
           queryClient.clear();
           await signOut();
+          // The next sign-in at this tab may be an unverified account; without this it
+          // would inherit this session's "verified" answer and skip the verify page.
+          forgetEmailVerification();
           clearFilter();
           await clearMessages();
           await clearAllContacts();

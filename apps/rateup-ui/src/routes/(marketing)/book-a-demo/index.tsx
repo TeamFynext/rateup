@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import Layout from "@/components/RateupHomePage/Layout.tsx";
-import BookDemoPage from "@/components/RateupHomePage/pages/BookDemoPage.tsx";
+import BookDemoPage, {
+  BookDemoFooter,
+  BookDemoNav,
+} from "@/components/RateupHomePage/pages/BookDemoPage.tsx";
 import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/book-a-demo/")({
@@ -11,7 +14,7 @@ export const Route = createFileRoute("/(marketing)/book-a-demo/")({
 
 function BookDemo() {
   return (
-    <Layout>
+    <Layout navbar={<BookDemoNav />} footer={<BookDemoFooter />}>
       <BookDemoPage />
     </Layout>
   );

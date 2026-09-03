@@ -19,9 +19,9 @@ export function FeaturedPost({ post }: { post?: Post }) {
   });
 
   return (
-    <article className="group/featured rounded-[28px] overflow-hidden bg-white border border-[#ECECEA] shadow-[0_1px_3px_rgba(11,31,72,0.06),0_8px_24px_rgba(11,31,72,0.06)] grid grid-cols-[1.2fr_1fr] transition-all duration-[220ms] hover:border-[#C5D5EC] hover:shadow-[0_16px_48px_rgba(11,31,72,0.1)]">
+    <article className="group/featured rounded-[28px] overflow-hidden bg-white border border-border shadow-[0_1px_3px_rgba(11,31,72,0.06),0_8px_24px_rgba(11,31,72,0.06)] grid grid-cols-[1.2fr_1fr] transition-all duration-[220ms] hover:border-[#C5D5EC] hover:shadow-[0_16px_48px_rgba(11,31,72,0.1)]">
       {/* Thumbnail */}
-      <div className="relative min-h-[340px] overflow-hidden bg-[#06182F] border-r border-[#ECECEA]">
+      <div className="relative min-h-[340px] overflow-hidden bg-[#06182F] border-r border-border">
         {post.feature_image ? (
           <img src={post.feature_image} alt={post.title} className="w-full h-full object-cover" />
         ) : (
@@ -35,7 +35,7 @@ export function FeaturedPost({ post }: { post?: Post }) {
       {/* Content */}
       <div className="pt-[32px] px-[30px] pb-[30px] flex flex-col justify-center gap-3">
         {post.primary_tag?.name && (
-          <span className="inline-block self-start text-[10.5px] font-bold tracking-[0.09em] uppercase py-1 px-[11px] rounded-full text-[#1C518E] bg-[#1C518E]/10 border border-[#1C518E]/22">
+          <span className="inline-block self-start text-[10.5px] font-bold tracking-[0.09em] uppercase py-1 px-[11px] rounded-full text-primary bg-primary/10 border border-primary/22">
             {post.primary_tag.name}
           </span>
         )}
@@ -44,11 +44,11 @@ export function FeaturedPost({ post }: { post?: Post }) {
           {post.title}
         </h2>
 
-        <p className="text-[14px] leading-[1.62] text-[#4A4C49] m-0 line-clamp-5">
+        <p className="text-[14px] leading-[1.62] text-muted-foreground m-0 line-clamp-5">
           {post.custom_excerpt || post.excerpt}
         </p>
 
-        <div className="flex items-center gap-[10px] mt-auto pt-4 border-t border-[#ECECEA]">
+        <div className="flex items-center gap-[10px] mt-auto pt-4 border-t border-border">
           {post.primary_author?.profile_image ? (
             <img
               src={post.primary_author.profile_image}
@@ -64,12 +64,12 @@ export function FeaturedPost({ post }: { post?: Post }) {
             <div className="font-bold text-[12.5px] text-[#0E1E3A]">
               {post.primary_author?.name || "RateUp Team"}
             </div>
-            <div className="text-[11.5px] text-[#8B8E8A]">{formattedDate}</div>
+            <div className="text-[11.5px] text-muted-foreground">{formattedDate}</div>
           </div>
           <Link
             to="/blog/$slug"
             params={{ slug: post.slug }}
-            className="inline-flex items-center gap-[7px] text-[13.5px] font-bold text-[#1C518E] py-[9px] px-[18px] rounded-[9px] bg-[#EEF4FB] border border-[#A9C3E3] no-underline transition-all duration-200 hover:bg-[#D6E4F3] hover:border-[#7BA1D1] hover:text-[#0E2B52] hover:translate-x-0.5"
+            className="inline-flex items-center gap-[7px] text-[13.5px] font-bold text-primary py-[9px] px-[18px] rounded-[9px] bg-accent border border-ru-blue-200 no-underline transition-all duration-200 hover:bg-ru-blue-100 hover:border-ru-blue-300 hover:text-[#0E2B52] hover:translate-x-0.5"
           >
             Read more
             <svg

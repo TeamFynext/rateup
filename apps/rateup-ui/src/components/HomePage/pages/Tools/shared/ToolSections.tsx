@@ -40,14 +40,14 @@ export function ToolCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[#ECECEA] bg-white p-6 shadow-[0_1px_2px_rgba(11,31,72,.06),0_8px_24px_rgba(11,31,72,.06)] sm:p-7",
+        "rounded-2xl border border-border bg-white p-6 shadow-[0_1px_2px_rgba(11,31,72,.06),0_8px_24px_rgba(11,31,72,.06)] sm:p-7",
         className,
       )}
     >
       {title ? (
-        <div className="font-nunito text-[19px] font-extrabold text-[#0A0B0A]">{title}</div>
+        <div className="font-nunito text-[19px] font-extrabold text-foreground">{title}</div>
       ) : null}
-      {subtitle ? <p className="mt-1.5 text-[12.5px] text-[#8A8C88]">{subtitle}</p> : null}
+      {subtitle ? <p className="mt-1.5 text-[12.5px] text-muted-foreground">{subtitle}</p> : null}
       <div className={title || subtitle ? "mt-5" : undefined}>{children}</div>
     </div>
   );
@@ -58,16 +58,20 @@ export function ResultPanel({
   eyebrow,
   children,
   className,
-}: Readonly<{ eyebrow?: string; children: React.ReactNode; className?: string }>) {
+}: Readonly<{
+  eyebrow?: string;
+  children: React.ReactNode;
+  className?: string;
+}>) {
   return (
     <div
       className={cn(
-        "rounded-2xl bg-[radial-gradient(ellipse_at_20%_0%,#0D2E5C,#081C3F_70%)] p-6 text-white sm:p-7",
+        "rounded-2xl bg-[radial-gradient(ellipse_at_20%_0%,#0D2E5C,var(--color-ru-blue-900)_70%)] p-6 text-white sm:p-7",
         className,
       )}
     >
       {eyebrow ? (
-        <div className="text-[10.5px] font-extrabold tracking-[0.14em] text-[#4FC3FF] uppercase">
+        <div className="text-[10.5px] font-extrabold tracking-[0.14em] text-ru-blue-300 uppercase">
           {eyebrow}
         </div>
       ) : null}
@@ -140,7 +144,7 @@ export function WarnNote({ children }: Readonly<{ children: React.ReactNode }>) 
 /* ── Form controls ─────────────────────────────────────────────────────────── */
 
 const CONTROL =
-  "w-full rounded border border-[#E5E7EB] bg-white px-3 py-2.5 text-[14px] text-[#2E302E] outline-none transition-colors focus:border-[#1C518E]";
+  "w-full rounded border border-[#E5E7EB] bg-white px-3 py-2.5 text-[14px] text-foreground outline-none transition-colors focus:border-primary";
 
 export function Field({
   label,
@@ -161,13 +165,13 @@ export function Field({
     <div className={className}>
       <label
         htmlFor={htmlFor}
-        className="mb-[7px] block text-[12.5px] font-bold text-[#4A4C49] [&>span]:font-medium [&>span]:text-[#8A8C88]"
+        className="mb-[7px] block text-[12.5px] font-bold text-muted-foreground [&>span]:font-medium [&>span]:text-muted-foreground"
       >
         {label}
         {optional ? <span> (optional)</span> : null}
       </label>
       {children}
-      {hint ? <div className="mt-1.5 text-[11.5px] text-[#8A8C88]">{hint}</div> : null}
+      {hint ? <div className="mt-1.5 text-[11.5px] text-muted-foreground">{hint}</div> : null}
     </div>
   );
 }
@@ -186,7 +190,7 @@ export function SelectControl(props: Readonly<React.ComponentProps<"select">>) {
  * the flag list, formatting and E.164 output stay identical across the product.
  *
  * The shadcn styling underneath belongs to the app's token palette, so it is
- * overridden here to sit on the tools' own #E5E7EB / #1C518E control styling.
+ * overridden here to sit on the tools' own #E5E7EB / var(--primary) control styling.
  */
 export function PhoneControl({
   id,
@@ -216,9 +220,9 @@ export function PhoneControl({
       placeholder={placeholder}
       className={cn(
         "[&>button]:h-[42px] [&>button]:rounded-l [&>button]:rounded-r-none [&>button]:bg-white [&>button]:px-3 [&>button]:shadow-none [&>button]:hover:bg-[#F6F7F5]",
-        "[&_input]:h-[42px] [&_input]:rounded-r [&_input]:rounded-l-none [&_input]:bg-white [&_input]:px-3 [&_input]:text-[14px] [&_input]:text-[#2E302E] [&_input]:shadow-none [&_input]:focus-visible:ring-0",
+        "[&_input]:h-[42px] [&_input]:rounded-r [&_input]:rounded-l-none [&_input]:bg-white [&_input]:px-3 [&_input]:text-[14px] [&_input]:text-foreground [&_input]:shadow-none [&_input]:focus-visible:ring-0",
         border,
-        "[&_input]:focus-visible:border-[#1C518E]",
+        "[&_input]:focus-visible:border-primary",
       )}
     />
   );
@@ -238,7 +242,7 @@ export function PrimaryButton({ className, ...props }: Readonly<React.ComponentP
     <button
       type="button"
       {...props}
-      className={cn(BTN_BASE, "bg-[#1C518E] text-white hover:bg-[#164272]", className)}
+      className={cn(BTN_BASE, "bg-primary text-white hover:bg-[#164272]", className)}
     />
   );
 }
@@ -248,7 +252,7 @@ export function LightButton({ className, ...props }: Readonly<React.ComponentPro
     <button
       type="button"
       {...props}
-      className={cn(BTN_BASE, "bg-white text-[#081C3F] hover:bg-white/90", className)}
+      className={cn(BTN_BASE, "bg-white text-ru-blue-900 hover:bg-white/90", className)}
     />
   );
 }
@@ -260,7 +264,7 @@ export function OutlineButton({ className, ...props }: Readonly<React.ComponentP
       {...props}
       className={cn(
         BTN_BASE,
-        "border border-[#CBD9EA] bg-white font-bold text-[#1C518E] hover:bg-[#F3F7FC]",
+        "border border-[#CBD9EA] bg-white font-bold text-primary hover:bg-[#F3F7FC]",
         className,
       )}
     />
@@ -327,19 +331,19 @@ export function CopyButton({
 export function HowItWorks({ steps }: Readonly<{ steps: ToolStep[] }>) {
   return (
     <ToolContainer className="pt-16">
-      <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-[#0A0B0A] sm:text-[32px]">
+      <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
         How it works
       </h2>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         {steps.map((step) => (
-          <div key={step.n} className="rounded-xl border border-[#ECECEA] bg-white p-6">
-            <div className="bg-[linear-gradient(135deg,#FFD54C,#F8951D)] bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
+          <div key={step.n} className="rounded-xl border border-border bg-white p-6">
+            <div className="bg-ru-star bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
               {step.n}
             </div>
-            <div className="mt-2.5 mb-1.5 font-nunito text-[16px] font-extrabold text-[#0A0B0A]">
+            <div className="mt-2.5 mb-1.5 font-nunito text-[16px] font-extrabold text-foreground">
               {step.title}
             </div>
-            <p className="m-0 text-[13.5px] leading-[1.55] text-[#4A4C49]">{step.body}</p>
+            <p className="m-0 text-[13.5px] leading-[1.55] text-muted-foreground">{step.body}</p>
           </div>
         ))}
       </div>
@@ -357,24 +361,21 @@ export function FaqSection({ faqs }: Readonly<{ faqs: ToolFaq[] }>) {
     <ToolContainer className="pt-14">
       <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
-          <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-[#0A0B0A] sm:text-[32px]">
+          <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
             Questions
           </h2>
-          <p className="mt-3 text-[14px] leading-[1.6] text-[#666864]">
+          <p className="mt-3 text-[14px] leading-[1.6] text-muted-foreground">
             Everything below is on the page for search engines as well as for you — no accordions
             hiding the answers.
           </p>
         </div>
         <div className="flex flex-col gap-0.5">
           {faqs.map((faq) => (
-            <div
-              key={faq.question}
-              className="rounded-xl border border-[#ECECEA] bg-white px-6 py-5"
-            >
-              <div className="font-nunito text-[16px] font-extrabold text-[#0A0B0A]">
+            <div key={faq.question} className="rounded-xl border border-border bg-white px-6 py-5">
+              <div className="font-nunito text-[16px] font-extrabold text-foreground">
                 {faq.question}
               </div>
-              <p className="mt-2 text-[14px] leading-[1.6] text-[#4A4C49]">{faq.answer}</p>
+              <p className="mt-2 text-[14px] leading-[1.6] text-muted-foreground">{faq.answer}</p>
             </div>
           ))}
         </div>
@@ -390,7 +391,7 @@ export function RelatedTools({ slug }: Readonly<{ slug: string }>) {
 
   return (
     <ToolContainer className="pt-14">
-      <h2 className="m-0 font-nunito text-[24px] font-extrabold tracking-[-0.02em] text-[#0A0B0A]">
+      <h2 className="m-0 font-nunito text-[24px] font-extrabold tracking-[-0.02em] text-foreground">
         Related tools
       </h2>
       <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -398,11 +399,15 @@ export function RelatedTools({ slug }: Readonly<{ slug: string }>) {
           <Link
             key={tool.slug}
             to={toolPath(tool.slug)}
-            className="block rounded-xl border border-[#ECECEA] bg-white p-[22px] transition-colors hover:border-[#CBD9EA]"
+            className="block rounded-xl border border-border bg-white p-[22px] transition-colors hover:border-[#CBD9EA]"
           >
-            <div className="font-nunito text-[16px] font-extrabold text-[#0A0B0A]">{tool.name}</div>
-            <p className="mt-2 text-[13px] leading-[1.5] text-[#4A4C49]">{tool.description}</p>
-            <div className="mt-3.5 text-[12.5px] font-bold text-[#1C518E]">Open tool →</div>
+            <div className="font-nunito text-[16px] font-extrabold text-foreground">
+              {tool.name}
+            </div>
+            <p className="mt-2 text-[13px] leading-[1.5] text-muted-foreground">
+              {tool.description}
+            </p>
+            <div className="mt-3.5 text-[12.5px] font-bold text-primary">Open tool →</div>
           </Link>
         ))}
       </div>
@@ -414,9 +419,9 @@ export function RelatedTools({ slug }: Readonly<{ slug: string }>) {
 export function ToolCta({ title, description }: Readonly<{ title: string; description: string }>) {
   return (
     <ToolContainer className="py-16 lg:py-[72px]">
-      <div className="grid items-center gap-10 rounded-3xl bg-[radial-gradient(ellipse_at_25%_0%,#0D2E5C,#081C3F_70%)] p-8 text-white sm:p-12 lg:grid-cols-[1.3fr_1fr] lg:p-14">
+      <div className="grid items-center gap-10 rounded-3xl bg-[radial-gradient(ellipse_at_25%_0%,#0D2E5C,var(--color-ru-blue-900)_70%)] p-8 text-white sm:p-12 lg:grid-cols-[1.3fr_1fr] lg:p-14">
         <div>
-          <div className="text-[11px] font-extrabold tracking-[0.14em] text-[#4FC3FF] uppercase">
+          <div className="text-[11px] font-extrabold tracking-[0.14em] text-ru-blue-300 uppercase">
             Ready to automate it?
           </div>
           <h2 className="mt-3.5 font-nunito text-[28px] leading-[1.1] font-black tracking-[-0.025em] text-white sm:text-[40px]">
@@ -429,7 +434,7 @@ export function ToolCta({ title, description }: Readonly<{ title: string; descri
         <div className="flex flex-col gap-3">
           <Link
             to="/signup"
-            className="cursor-pointer rounded-[10px] bg-[linear-gradient(135deg,#FFD54C,#F8951D)] px-6 py-4 text-center text-[15px] font-extrabold text-[#081C3F] transition-transform hover:-translate-y-0.5"
+            className="cursor-pointer rounded-[10px] bg-ru-star px-6 py-4 text-center text-[15px] font-extrabold text-ru-blue-900 transition-transform hover:-translate-y-0.5"
           >
             Start free trial
           </Link>

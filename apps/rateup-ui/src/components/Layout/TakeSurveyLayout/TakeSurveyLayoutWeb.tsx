@@ -12,7 +12,7 @@ import { getQuestionsLength } from "@/components/Survey/TakeSurvey/TakeSurveyCom
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { PageType } from "@/types/enums.ts";
-import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import { SAVE_HOTKEY, rateupIconBw } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { CreditsCard } from "../../Card/CreditsCard.tsx";
@@ -137,7 +137,9 @@ export const TakeSurveyLayoutWeb = ({
       return;
     }
     setPasswordError("");
-    toast.loading(`Hold on, your access is getting verified.`, { id: "load-data" });
+    toast.loading(`Hold on, your access is getting verified.`, {
+      id: "load-data",
+    });
     verifySurveyPassword.mutate();
   };
 
@@ -307,9 +309,12 @@ export const TakeSurveyLayoutWeb = ({
                   {(survey?.isPublished !== true || !survey?.active) && (
                     <div className="flex items-center justify-center gap-4">
                       <img
-                        src={`${import.meta.env.VITE_FRONTEND_URL}/images/bw-logo.png`}
+                        src={rateupIconBw}
                         alt="Logo"
-                        style={{ width: isMobile ? 70 : 80, height: isMobile ? 70 : 80 }}
+                        style={{
+                          width: isMobile ? 70 : 80,
+                          height: isMobile ? 70 : 80,
+                        }}
                         className="object-contain"
                       />
                       <p className="text-[28px] font-bold" style={{ color: "#CDCDCD" }}>

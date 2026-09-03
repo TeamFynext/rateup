@@ -16,7 +16,7 @@ import {
 } from "../editor-ui.tsx";
 import type { AutomationUser, NodeComponentProps } from "./shared.tsx";
 
-// TicketNode Component
+// AssignNode Component
 export const AssignNodeEditor: React.FC<
   NodeComponentProps<"assignNode"> & {
     options?: Partial<MembersResponse> & { currentUserId?: string };

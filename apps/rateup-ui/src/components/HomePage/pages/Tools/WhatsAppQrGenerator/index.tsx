@@ -162,26 +162,26 @@ export default function WhatsAppQrGenerator() {
             </WarnNote>
           </ToolCard>
 
-          <div className="rounded-2xl border border-[#ECECEA] bg-white p-6 text-center shadow-[0_1px_2px_rgba(11,31,72,.06),0_8px_24px_rgba(11,31,72,.06)] sm:p-7">
-            <div className="inline-flex flex-col items-center rounded-[14px] border border-[#ECECEA] bg-white p-[22px]">
+          <div className="rounded-2xl border border-border bg-white p-6 text-center shadow-[0_1px_2px_rgba(11,31,72,.06),0_8px_24px_rgba(11,31,72,.06)] sm:p-7">
+            <div className="inline-flex flex-col items-center rounded-[14px] border border-border bg-white p-[22px]">
               <div className="size-[240px] max-w-full [&>svg]:size-full">
                 {svg ? (
                   // Markup produced by the qrcode library from values this component
                   // controls — there is no user-authored HTML in it.
                   <div className="size-full" dangerouslySetInnerHTML={{ __html: svg }} />
                 ) : (
-                  <div className="flex size-full items-center justify-center rounded-lg bg-[#FAFAF7] px-6 text-[12.5px] text-[#8A8C88]">
+                  <div className="flex size-full items-center justify-center rounded-lg bg-background px-6 text-[12.5px] text-muted-foreground">
                     Enter a valid number to generate the QR code
                   </div>
                 )}
               </div>
-              <div className="mt-3.5 flex items-center gap-2 font-nunito text-[14px] font-extrabold text-[#081C3F]">
+              <div className="mt-3.5 flex items-center gap-2 font-nunito text-[14px] font-extrabold text-ru-blue-900">
                 <span className="inline-block size-5 rounded-[5px] bg-[#25D366]" />
                 <span>Scan to chat on WhatsApp</span>
               </div>
             </div>
 
-            <div className="mt-4 font-mono text-[12px] break-all text-[#8A8C88]">
+            <div className="mt-4 font-mono text-[12px] break-all text-muted-foreground">
               {link.url || "https://wa.me/…"}
             </div>
 
@@ -196,7 +196,7 @@ export default function WhatsAppQrGenerator() {
               <CopyButton value={link.url} label="Copy link" variant="outline" />
             </div>
 
-            <p className="mt-4 text-[12px] text-[#8A8C88]">
+            <p className="mt-4 text-[12px] text-muted-foreground">
               Logo in the centre, branded frames and scan analytics — available on RateUp.
             </p>
           </div>
@@ -225,7 +225,7 @@ function OutlineSvgButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#CBD9EA] bg-white px-4.5 py-3 text-[14px] font-bold text-[#1C518E] transition-colors hover:bg-[#F3F7FC] disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#CBD9EA] bg-white px-4.5 py-3 text-[14px] font-bold text-primary transition-colors hover:bg-[#F3F7FC] disabled:cursor-not-allowed disabled:opacity-50"
     >
       Download SVG
     </button>

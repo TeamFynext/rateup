@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { cn } from "@/lib/utils.ts";
 import { IntegratedApps } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";
+import { imagesPath } from "@/utils/constants.ts";
 
 interface ActiveBadgeProps extends React.ComponentProps<typeof Badge> {
   active?: boolean;
@@ -75,7 +76,7 @@ export function Shopify() {
       <div className="flex h-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Image
-            src="/images/shopifystore.jpeg"
+            src={`${imagesPath}/shopifystore.jpeg`}
             alt="Shopify Store"
             width={320}
             height={240}

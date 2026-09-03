@@ -50,7 +50,7 @@ export default function App({ posts, authors, tags }: AppProps) {
                   </h3>
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="text-[13px] font-semibold text-[#1C518E] bg-transparent border-none cursor-pointer p-0"
+                    className="text-[13px] font-semibold text-primary bg-transparent border-none cursor-pointer p-0"
                   >
                     Clear search
                   </button>
@@ -59,13 +59,13 @@ export default function App({ posts, authors, tags }: AppProps) {
                 {filteredPosts.length > 0 ? (
                   <ArticlesGrid posts={filteredPosts} />
                 ) : (
-                  <div className="py-[60px] px-5 text-center bg-white rounded-[20px] border border-[#ECECEA] text-[#64666A]">
+                  <div className="py-[60px] px-5 text-center bg-white rounded-[20px] border border-border text-[#64666A]">
                     <p className="text-[15.5px] font-semibold m-0 mb-3">
                       No articles found matching "{searchQuery}"
                     </p>
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="bg-[#EEF4FB] border border-[#A9C3E3] text-[#1C518E] py-2 px-[18px] rounded-[9px] cursor-pointer font-bold text-[13px] transition-colors duration-200 hover:bg-[#D6E4F3]"
+                      className="bg-accent border border-ru-blue-200 text-primary py-2 px-[18px] rounded-[9px] cursor-pointer font-bold text-[13px] transition-colors duration-200 hover:bg-ru-blue-100"
                     >
                       Clear search
                     </button>

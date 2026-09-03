@@ -121,9 +121,9 @@ export const faqs = [
       "Yes, all testimonials go through a moderation queue where you can approve, edit, or reject submissions before they go live on your website.",
   },
   {
-    question: "Do you offer a free trial?",
+    question: "Can I try it before paying?",
     answer:
-      "Yes, we offer a 14-day free trial on our Professional and Enterprise plans, with no credit card required. This gives you full access to all features so you can determine if our platform meets your needs.",
+      "Yes — our Free plan is free forever and needs no credit card, so you can use the platform end to end and decide whether a paid tier is worth it before spending anything.",
   },
 ];
 

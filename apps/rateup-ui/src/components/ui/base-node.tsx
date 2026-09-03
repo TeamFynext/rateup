@@ -27,7 +27,7 @@ export const BaseNode = React.forwardRef<
       "relative w-[240px] rounded-lg border border-border bg-card text-card-foreground",
       "transition-colors duration-150",
       "hover:border-muted-foreground/40",
-      "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+      "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
       selected && "border-primary ring-1 ring-primary/40",
       className,
     )}

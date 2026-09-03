@@ -14,12 +14,11 @@ export interface PricingPlan {
   description?: string[];
   currency?: string;
   /** Marks the highlighted "most popular" card, and supplies its ribbon text. */
-  badge?: string;
+  badge?: string | null;
   tagline?: string;
-  trialDays?: number;
-  price?: number;
-  monthlyPrice?: number;
-  yearlyPrice?: number;
+  price?: number | null;
+  monthlyPrice?: number | null;
+  yearlyPrice?: number | null;
   paymentPlan?: PricingGatewayPlan;
   monthlyPaymentPlan?: PricingGatewayPlan;
   yearlyPaymentPlan?: PricingGatewayPlan;

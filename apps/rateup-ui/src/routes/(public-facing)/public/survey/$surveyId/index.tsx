@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { getPublicSurvey } from "@/backend/surveys/survey.api";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import {
+  formClosedMessage,
+  getPublicSurvey,
+  isFormClosedError,
+} from "@/backend/surveys/survey.api";
+import { FormClosed } from "@/components/(public-facing)/ws/$shortId/FormClosed.tsx";
+import { rateupLogoOg } from "@/utils/constants.ts";
 
 import PublicSurvey from "../../../../../components/(public-facing)/public/survey/$surveyId/publicSurveyC.tsx";
 
-const DEFAULT_OG_IMAGE = rateupLogoStackedWhiteTransparent;
+const DEFAULT_OG_IMAGE = rateupLogoOg;
 
 const MIME_TYPES_FOR_IMAGE: Record<string, string> = {
   png: "image/png",
@@ -23,7 +28,18 @@ const getMimeTypeFromPath = (path?: string) => {
 };
 
 export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/")({
-  loader: ({ params }) => getPublicSurvey(params.surveyId),
+  loader: async ({ params }) => {
+    try {
+      return await getPublicSurvey(params.surveyId);
+    } catch (error) {
+      // Only a closed form is answered here; every other failure still throws to the
+      // router's error boundary, which is where it was handled before.
+      if (isFormClosedError(error)) {
+        return { formClosed: true, closedMessage: formClosedMessage(error) } as const;
+      }
+      throw error;
+    }
+  },
   component: WsPublic,
   head: ({ params, loaderData }) => {
     const survey = (loaderData ?? {}) as {
@@ -65,8 +81,17 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/"
 });
 
 // Web Survey
+/** The sentinel the loader returns in place of a survey when the form is closed. */
+function isClosedForm(data: unknown): data is { formClosed: true; closedMessage?: string } {
+  return Boolean((data as { formClosed?: boolean } | null)?.formClosed);
+}
+
 function WsPublic() {
   const surveyData = Route.useLoaderData();
+
+  if (isClosedForm(surveyData)) {
+    return <FormClosed message={surveyData.closedMessage} />;
+  }
 
   return <PublicSurvey survey={surveyData} error_occured={false} fromShortUrl={false} />;
 }

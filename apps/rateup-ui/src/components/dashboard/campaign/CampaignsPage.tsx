@@ -21,6 +21,7 @@ import {
   ListPageSearchInput,
   ListPageSortDropdown,
 } from "@/components/common/list-page-layout.tsx";
+import { PlanUpgradeRequired } from "@/components/common/plan-upgrade-required.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
@@ -38,7 +39,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
-import { asApiError } from "@/utils/apiError.ts";
+import { getAccessDenialReason, isPlanDenial } from "@/utils/apiError.ts";
 import { docsPath } from "@/utils/constants.ts";
 
 export function CampaignsPage() {
@@ -100,8 +101,17 @@ export function CampaignsPage() {
     });
   };
 
-  if (isError && asApiError(error)?.response?.status === 403) {
-    return <UnauthorizedPage />;
+  // A 403 here is one of two opposite problems, and the API says which. Campaigns are
+  // not on the Free plan, so this path is reached far more often by someone who needs
+  // to upgrade than by someone who needs a permission — showing "Access Denied" to the
+  // first group was both wrong and a dead end.
+  const denial = getAccessDenialReason(error);
+  if (isError && denial) {
+    return isPlanDenial(error) ? (
+      <PlanUpgradeRequired feature={t("Campaigns")} reason={denial} />
+    ) : (
+      <UnauthorizedPage />
+    );
   }
 
   const rightControls = (

@@ -1,406 +1,239 @@
-import {
-  IconBrandInstagram,
-  IconBrandMessenger,
-  IconBrandWhatsapp,
-  IconMessage2,
-} from "@tabler/icons-react";
-import { Image } from "@unpic/react";
-import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
-import { RateupStar } from "@/components/integrations/logos";
-import { imagesPath } from "@/utils/constants";
+import { MetaLockup } from "@/components/integrations/logos";
 
-import { BookDemoModal } from "../helper/BookDemoModal";
+import { InstagramMark, MessengerMark } from "./channel-marks";
+import { BookDemoCta, WhatsAppCta, WhatsAppGlyph } from "./home-ui";
 
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
+/**
+ * The channel word cycles under a fixed headline. The column holds four cells and
+ * `animate-ru-rot` steps it -25% at a time, so the first entry has to repeat at the end
+ * for the loop to close without a jump back through the list.
+ */
+const CHANNELS = [
+  {
+    name: "WhatsApp",
+    textClass: "text-[#0F8C4C]",
+    glyph: (
+      <span className="flex size-[0.86em] flex-none items-center justify-center rounded-[0.24em] bg-wa-green text-white">
+        <WhatsAppGlyph className="size-[62%]" />
+      </span>
+    ),
+  },
+  {
+    name: "Instagram",
+    textClass: "text-[#C13584]",
+    glyph: (
+      <span className="flex size-[0.86em] flex-none items-center justify-center rounded-[0.24em] bg-[linear-gradient(45deg,#FEDA75_0%,#FA7E1E_26%,#D62976_58%,#962FBF_82%,#4F5BD5_100%)] text-white">
+        <InstagramMark className="size-[58%]" />
+      </span>
+    ),
+  },
+  {
+    name: "Messenger",
+    textClass: "text-[#0074E4]",
+    glyph: (
+      <span className="flex size-[0.86em] flex-none items-center justify-center rounded-[0.24em] bg-[linear-gradient(135deg,#00C6FF_0%,#0068FF_100%)] text-white">
+        <MessengerMark className="size-[64%]" />
+      </span>
+    ),
+  },
+];
 
-const whatsapp = `${imagesPath}/landing/logos/wp-logo.png`;
-const instagram = `${imagesPath}/landing/logos/inst-logo.png`;
-const messenger = `${imagesPath}/landing/logos/messenger-logo.png`;
-const shopify = `${imagesPath}/landing/logos/shopyfy.png`;
-const woo = `${imagesPath}/landing/logos/woologo.png`;
+/* The cycle closes by repeating the first channel, so -75% lands back on WhatsApp. */
+const CHANNEL_CELLS = [...CHANNELS, CHANNELS[0]];
 
-const BRANDS = [
-  { name: "WhatsApp", color: "#25D366", src: whatsapp },
-  { name: "Instagram", color: "url(#ig-grad)", src: instagram },
-  { name: "Messenger", color: "#0099FF", src: messenger },
-] as const;
+/**
+ * The seven things RateUp does, named plainly. The design puts them directly under the
+ * promise line as a wrapping row of chips, so the reader sees the product's surface area
+ * before the CTAs rather than having to reach the platform band for it.
+ *
+ * Every icon is drawn on the same 24-box at a 1.75 stroke so the row reads as one set.
+ */
+const CAPABILITIES: ReadonlyArray<{ label: string; icon: ReactNode }> = [
+  {
+    label: "Loyalty",
+    icon: (
+      <path d="M12 3.4l2.6 5.3 5.9.85-4.25 4.15 1 5.9-5.25-2.8-5.25 2.8 1-5.9L3.5 9.55l5.9-.85L12 3.4Z" />
+    ),
+  },
+  {
+    label: "Referral",
+    icon: (
+      <>
+        <circle cx="6.5" cy="12" r="2.6" />
+        <circle cx="17.5" cy="6" r="2.6" />
+        <circle cx="17.5" cy="18" r="2.6" />
+        <path d="m8.9 10.8 6.2-3.4M8.9 13.2l6.2 3.4" />
+      </>
+    ),
+  },
+  {
+    label: "Feedback",
+    icon: (
+      <>
+        <path d="M20.5 12c0 4-3.8 7-8.5 7-1 0-2-.15-2.9-.4L4 20l1.3-3.6A6.9 6.9 0 0 1 3.5 12c0-4 3.8-7 8.5-7s8.5 3 8.5 7Z" />
+        <path d="m12 8.4 1.25 2.55 2.8.4-2.02 1.98.48 2.8L12 14.8l-2.51 1.33.48-2.8-2.02-1.98 2.8-.4L12 8.4Z" />
+      </>
+    ),
+  },
+  {
+    label: "Campaigns",
+    icon: (
+      <>
+        <path d="M3.4 11.2 20.6 4.2l-6 15.9-3.15-6.75-3.15-1.35" />
+        <path d="m11.45 13.35 4.15-6.4" />
+      </>
+    ),
+  },
+  {
+    label: "Automation",
+    icon: (
+      <>
+        <path d="M4 6h7.5" />
+        <path d="M4 18h7.5" />
+        <path d="M11.5 6a4 4 0 0 0 4 4H20" />
+        <path d="M11.5 18a4 4 0 0 1 4-4H20" />
+        <circle cx="20" cy="10" r="1.6" />
+        <circle cx="20" cy="14" r="1.6" />
+      </>
+    ),
+  },
+  {
+    label: "Meta AI Agents",
+    icon: (
+      <>
+        <rect x="4" y="7" width="16" height="11.5" rx="3.2" />
+        <path d="M12 3.2v3.8" />
+        <circle cx="9.2" cy="12.6" r="1.15" fill="currentColor" stroke="none" />
+        <circle cx="14.8" cy="12.6" r="1.15" fill="currentColor" stroke="none" />
+        <path d="M9.8 15.8h4.4" />
+      </>
+    ),
+  },
+  {
+    label: "Lead Pipelines",
+    icon: <path d="M3.6 5h16.8l-6.3 7.1v6L10 20v-7.9L3.6 5Z" />,
+  },
+];
 
-function RotatingBrand() {
-  const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setIndex((prev) => (prev + 1) % BRANDS.length);
-        setVisible(true);
-      }, 350);
-    }, 2800);
-    return () => clearInterval(interval);
-  }, []);
-
+function CapabilityChip({ icon, label }: Readonly<{ icon: ReactNode; label: string }>) {
   return (
-    <span className="inline-grid mt-2">
-      {BRANDS.map((brand, i) => {
-        const active = i === index;
-        return (
-          <span
-            key={brand.name}
-            style={{ gridArea: "1 / 1" }}
-            className={`inline-flex items-center gap-3 transition-[opacity,transform] duration-[350ms] ease-in-out ${
-              active && visible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-3 pointer-events-none"
-            }`}
-          >
-            <Image
-              src={brand.src}
-              alt={brand.name}
-              width={60}
-              height={60}
-              className="w-[60px] h-[60px] shrink-0 object-contain"
-            />
-            <span
-              className={
-                brand.color === "url(#ig-grad)"
-                  ? "font-bold bg-[linear-gradient(135deg,#fd5949_0%,#d6249f_50%,#285AEB_100%)] bg-clip-text [color:transparent] [-webkit-text-fill-color:transparent]"
-                  : "font-bold"
-              }
-              style={brand.color === "url(#ig-grad)" ? undefined : { color: brand.color }}
-            >
-              {brand.name}
-            </span>
-          </span>
-        );
-      })}
+    <div className="flex items-center gap-2.5 rounded-xl border border-ru-n-200 bg-white py-2.75 pr-4 pl-3 shadow-xs">
+      <span className="flex size-8 flex-none items-center justify-center rounded-lg border border-ru-blue-200 bg-ru-blue-50 text-ru-blue-600">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4.25"
+          aria-hidden="true"
+        >
+          {icon}
+        </svg>
+      </span>
+      <span className="text-[1.03125rem] font-semibold tracking-[-0.01em] whitespace-nowrap text-ru-n-700">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function TrustChip({ icon, children }: Readonly<{ icon: ReactNode; children: ReactNode }>) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border border-ru-n-200 bg-white px-3.25 py-1.75">
+      {icon}
+      <span className="text-[13.5px] font-medium text-ru-n-600">{children}</span>
     </span>
   );
 }
 
-function HeroSectionNew() {
+export default function HeroSectionNew() {
+  /* Two things from the design carry the hero's framing:
+     - The same warm wash the book-demo page uses — cream at the top settling into #fcfcfd,
+       the value behind `ink-25`, so the hero dissolves into the sections below it.
+     - The negative top margin pulls the band up under the sticky nav — a translucent pill
+       (`bg-ink-25/82` + backdrop blur) in a header that paints no background of its own — so
+       the wash runs to the top of the page and reads behind the pill. The padding-top adds
+       that height back, leaving the design's 28px/48px of air above the headline.
+
+     The pull has to equal the header's full height or a strip of page ground shows above it.
+     RateupNavbar is taller than the comp's nav, so this is measured off its own classes
+     rather than the design's clamp: wrapper `py-2`/`sm:py-4` + pill `py-2`/`sm:py-2.5` +
+     the tallest child (the `h-11.5` CTA at 46px, then the `sm:h-12` logo at 48px)
+     = 78px, then 100px from `sm`. Revisit these two if the navbar's height changes. */
   return (
-    <>
-      {" "}
-      <header className={styles.hero} id="top">
-        <div className={styles["hero-bg"]} />{" "}
-        <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-[90px] h-[360px] z-[1] bg-gradient-to-b from-white/80 to-transparent blur-[28px] opacity-45 [mask-image:linear-gradient(to_bottom,#000,transparent)]" />
-        <div className={styles.page}>
-          <div className={styles["hero-grid"]}>
-            {/* Left: copy */}
-            <div className={`${styles.reveal} ${styles["in"]}`}>
-              <div className={styles["hero-pill"]}>
-                <span className={styles.tagdot}>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cyan)] shadow-[0_0_10px_var(--cyan)]" />
-                  New
+    <section className="-mt-19.5 border-b border-b-[#f1eadd] bg-[linear-gradient(180deg,#fffaf0_0%,#fefcf8_55%,#fcfcfd_100%)] px-5 pt-26.5 pb-6 sm:-mt-25 sm:pt-37 sm:pb-9">
+      <div className="mx-auto max-w-230 text-center">
+        <h1 className="mb-5.5 font-display text-[clamp(2.5rem,7.2vw,5.25rem)]/[1.05] font-bold tracking-[-0.035em] text-balance text-ru-n-700">
+          Engage with your Customers on
+          <span className="mt-0.5 block h-[1.14em] overflow-hidden">
+            <span className="flex animate-ru-rot flex-col motion-reduce:animate-none">
+              {CHANNEL_CELLS.map((channel, i) => (
+                <span
+                  key={`${channel.name}-${i}`}
+                  className={`flex h-[1.14em] items-center justify-center gap-[0.24em] leading-[1.14] ${channel.textClass}`}
+                >
+                  {channel.glyph}
+                  {channel.name}
                 </span>
-                Loyalty + Referrals, fully automated on WhatsApp
-              </div>
-              <h1 className="leading-tight">
-                Engage with your
-                <br />
-                Customers on
-                <br />
-                <RotatingBrand />
-              </h1>
-              <p className={styles.lead}>
-                Most customers buy once and disappear. RateUp fixes that.
-              </p>
-              <p className={styles.sub}>
-                Loyalty programs, referral automation, and post-purchase feedback — all running on
-                WhatsApp, automatically. No new apps for your customers. No extra work for your
-                team.
-              </p>
-              <div className={styles["cta-row"]}>
-                <BookDemoModal>
-                  <button className={`${styles.btn} ${styles["btn-primary"]}`} type="button">
-                    Book a Demo
-                    <svg
-                      width="17"
-                      height="17"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="4" width="18" height="18" rx="2" />
-                      <path d="M16 2v4M8 2v4M3 10h18" />
-                    </svg>
-                  </button>
-                </BookDemoModal>
-                <button
-                  className={`${styles.btn} ${styles["btn-ghost"]}`}
-                  onClick={() => {
-                    const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
-                    const message = encodeURIComponent("Hi, I need help with support");
-                    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-                  }}
-                >
-                  <span className="relative inline-flex h-5 w-5 items-center justify-center">
-                    <span className="bg-green-500 rounded-md p-1 flex items-center justify-center">
-                      <IconBrandWhatsapp className="w-5 h-5" />
-                    </span>
-                  </span>
-                  Chat with us on WhatsApp
-                </button>
-              </div>
-              <div className={styles.works}>
-                <div className={styles.lbl}>Works With</div>
-                <div className={styles.chips}>
-                  <span className={styles.chip}>
-                    <span className={`${styles.ci} ${styles["ic-wa"]}`}>
-                      <IconBrandWhatsapp className="w-4 h-4" />
-                    </span>
-                    WhatsApp
-                  </span>
-                  <span className={styles.chip}>
-                    <span className={`${styles.ci} ${styles["ic-ig"]}`}>
-                      <IconBrandInstagram className="w-4 h-4" />
-                    </span>
-                    Instagram
-                  </span>
-                  <span className={styles.chip}>
-                    <span className={`${styles.ci} ${styles["ic-msgr"]}`}>
-                      <IconBrandMessenger className="w-4 h-4" />
-                    </span>
-                    Messenger
-                  </span>
-                  <span className={styles.chip}>
-                    <span className={`${styles.ci} ${styles["ic-blue"]}`}>
-                      <IconMessage2 className="w-4 h-4" />
-                    </span>
-                    Web Chat
-                  </span>
-                  <span className={styles.chip}>
-                    <span className={`${styles.ci} bg-white`}>
-                      <Image
-                        src={shopify}
-                        alt="Shopify"
-                        width={18}
-                        height={18}
-                        className="w-4.5 h-4.5 object-contain"
-                      />
-                    </span>
-                    Shopify
-                  </span>
-                  <span className={styles.chip}>
-                    <span className={`${styles.ci} bg-white`}>
-                      <Image
-                        src={woo}
-                        alt="WooCommerce"
-                        width={18}
-                        height={18}
-                        className="w-4.5 h-4.5 object-contain"
-                      />
-                    </span>
-                    WooCommerce
-                  </span>
-                </div>
-              </div>
-            </div>
+              ))}
+            </span>
+          </span>
+        </h1>
 
-            {/* Right: orbital diagram */}
-            <div className={`${styles.reveal} ${styles.in}`} data-d="1">
-              <div className={styles["orbit-wrap"]}>
-                {/* spokes + dotted ring paths */}
-                <svg className={styles["orbit-paths"]} viewBox="0 0 100 100" aria-hidden="true">
-                  <circle className={styles["op-ring"]} cx="50" cy="50" r="29" />
+        <p className="mx-auto mb-4 max-w-[30ch] font-display text-[clamp(1.3125rem,2.9vw,1.8125rem)]/[1.35] font-semibold tracking-[-0.02em] text-ru-n-700">
+          Most customers buy once and disappear. RateUp fixes that.
+        </p>
+        <ul className="mx-auto mb-4.5 flex max-w-225 list-none flex-wrap justify-center gap-2.5 p-0">
+          {CAPABILITIES.map((capability) => (
+            <li key={capability.label}>
+              <CapabilityChip icon={capability.icon} label={capability.label} />
+            </li>
+          ))}
+        </ul>
 
-                  <circle
-                    className={`${styles["op-ring"]} ${styles["op-ring--out"]}`}
-                    cx="50"
-                    cy="50"
-                    r="42"
-                  />
-                </svg>
+        <p className="mx-auto mb-2 max-w-[44ch] font-display text-[clamp(1.125rem,2.3vw,1.375rem)]/[1.45] font-semibold tracking-[-0.015em] text-balance text-ru-n-600">
+          All of it runs on <span className="text-[#0F8C4C]">WhatsApp</span>, automatically.
+        </p>
+        <p className="mx-auto mb-7 max-w-[52ch] text-[clamp(1rem,2vw,1.125rem)]/[1.55] text-pretty text-ru-n-500 sm:mb-9">
+          No new apps for your customers. No extra work for your team.
+        </p>
 
-                {/* concentric glow rings */}
-                <div className={styles["orbit-rings"]}>
-                  <div className={`${styles.ring} ${styles.r1}`}></div>
-                  <div className={`${styles.ring} ${styles.r2}`}></div>
-                  <div className={`${styles.ring} ${styles.r3}`}></div>
-                </div>
-
-                {/* central logo hub */}
-                <div className={styles["orbit-core"]}>
-                  <span className={styles["orbit-core__sheen"]}></span>
-
-                  <span className={styles["orbit-core__disc"]}>
-                    <RateupStar className="h-14 w-14" />
-                  </span>
-
-                  <span className={styles["orbit-core__label"]}>RateUp</span>
-                </div>
-
-                {/* inner ring · channels */}
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-in"]}`}
-                  style={{ "--a": "-50deg" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-wa"]}`}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
-                      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.04c-.24.68-1.2 1.26-1.97 1.42-.53.11-1.22.2-3.56-.76-2.99-1.24-4.91-4.27-5.06-4.47-.15-.2-1.21-1.61-1.21-3.07 0-1.46.77-2.18 1.04-2.48.27-.3.59-.37.79-.37.2 0 .39 0 .56.01.18.01.42-.07.66.5.24.58.82 2.01.89 2.16.07.15.12.32.02.52-.1.2-.15.32-.3.5-.15.18-.31.4-.45.53-.15.15-.3.31-.13.6.17.3.77 1.27 1.65 2.06 1.14 1.01 2.09 1.33 2.39 1.48.3.15.47.13.64-.08.17-.2.74-.86.94-1.16.2-.3.4-.25.66-.15.27.1 1.7.8 1.99.95.3.15.49.22.56.35.07.13.07.73-.17 1.41z" />
-                    </svg>
-                  </span>
-                </div>
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-in"]}`}
-                  style={{ "--a": "50deg", "--fd": ".6s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-ig"]}`}>
-                    <svg
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="2"
-                    >
-                      <rect x="2" y="2" width="20" height="20" rx="5.5" />
-                      <circle cx="12" cy="12" r="4.2" />
-                      <circle cx="17.6" cy="6.4" r="1.1" fill="#fff" stroke="none" />
-                    </svg>
-                  </span>
-                </div>
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-in"]}`}
-                  style={{ "--a": "140deg", "--fd": "1.1s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-msgr"]}`}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
-                      <path d="M12 2C6.27 2 2 6.2 2 11.7c0 2.9 1.2 5.4 3.14 7.13.16.14.26.35.27.57l.05 1.78c.02.57.6.94 1.12.71l1.98-.87c.17-.08.36-.09.54-.04 1.02.28 2.1.43 3.2.43 5.73 0 10-4.2 10-9.7S17.73 2 12 2zm6 7.46l-2.93 4.65c-.47.74-1.46.93-2.17.4l-2.33-1.74a.6.6 0 0 0-.72 0l-3.15 2.39c-.42.32-.97-.18-.68-.62l2.93-4.65c.47-.74 1.46-.93 2.17-.4l2.33 1.74c.21.16.5.16.72 0l3.15-2.39c.42-.32.97.18.68.62z" />
-                    </svg>
-                  </span>
-                </div>
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-in"]}`}
-                  style={{ "--a": "230deg", "--fd": ".3s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-blue"]}`}>
-                    <svg
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                    </svg>
-                  </span>
-                </div>
-
-                {/* outer ring · capabilities */}
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-out"]} ${styles["lbl-out"]}`}
-                  style={{ "--a": "-18deg", "--fd": ".8s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-cyan"]}`}>
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                    </svg>
-                  </span>
-
-                  <em>Automation</em>
-                </div>
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-out"]} ${styles["lbl-out"]}`}
-                  style={{ "--a": "54deg", "--fd": "1.4s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-warm"]}`}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 1.8l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 16.84 6.09 19.96l1.13-6.57L2.45 8.74l6.6-.96L12 1.8z" />
-                    </svg>
-                  </span>
-
-                  <em>Loyalty</em>
-                </div>
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-out"]} ${styles["lbl-out"]}`}
-                  style={{ "--a": "126deg", "--fd": ".5s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-violet"]}`}>
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M3 11l18-5v12L3 14v-3z" />
-                      <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
-                    </svg>
-                  </span>
-
-                  <em>Campaigns</em>
-                </div>
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-out"]} ${styles["lbl-out"]}`}
-                  style={{ "--a": "198deg", "--fd": "1.0s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-cyan"]}`}>
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </span>
-
-                  <em>Feedback</em>
-                </div>
-
-                <div
-                  className={`${styles["orbit-node"]} ${styles["ring-out"]} ${styles["lbl-out"]}`}
-                  style={{ "--a": "270deg", "--fd": ".2s" } as React.CSSProperties}
-                >
-                  <span className={`${styles.ic} ${styles["ic-blue"]}`}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
-                      <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2z" />
-                      <path d="M19 14l.7 2L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7L19 14z" />
-                    </svg>
-                  </span>
-
-                  <em>AI Workflows</em>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* One full-width button per row on phones — two centred pills of different widths
+            read as ragged, and the WhatsApp label is 24 characters wide. */}
+        <div className="mb-5.5 flex flex-wrap justify-center gap-3">
+          <BookDemoCta className="max-sm:w-full max-sm:justify-center" />
+          <WhatsAppCta className="max-sm:w-full max-sm:justify-center" />
         </div>
-      </header>
-    </>
+
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
+          {/* The lockup carries the "Meta" wordmark, so the chip's own label drops it —
+              "Meta · Meta Business Partner" would otherwise read twice. */}
+          <TrustChip icon={<MetaLockup className="h-6" />}>Business Partner</TrustChip>
+          <TrustChip
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="size-3.75 text-ru-n-500"
+                aria-hidden="true"
+              >
+                <path d="M4 8h16l-1.4 11a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 8Z" />
+                <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+              </svg>
+            }
+          >
+            Works with Shopify &amp; WooCommerce
+          </TrustChip>
+        </div>
+      </div>
+    </section>
   );
 }
-
-export default HeroSectionNew;

@@ -1,238 +1,155 @@
-import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 
-import style from "@/styles/commonCssModules/homepagecss.module.css";
+import { BookDemoCta, CountUp, Eyebrow, useReveal, WhatsAppCta } from "./home-ui";
 
-interface PstatProps {
-  pct: number;
-  label: string;
-  delay?: string;
+interface Pain {
+  icon: ReactNode;
+  title: string;
+  body: string;
+  stat: string;
+  statLabel: string;
 }
 
-function Pstat({ pct, label, delay }: PstatProps) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLSpanElement>(null);
-  const ringRef = useRef<SVGCircleElement>(null);
-  const animated = useRef(false);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting || animated.current) return;
-
-        animated.current = true;
-
-        if (barRef.current) {
-          barRef.current.style.width = `${pct}%`;
-        }
-
-        if (ringRef.current) {
-          const C = 175.9;
-
-          ringRef.current.style.transition = "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)";
-
-          ringRef.current.style.strokeDashoffset = String((C * (1 - pct / 100)).toFixed(1));
-        }
-      },
-      { threshold: 0.25 },
-    );
-
-    io.observe(root);
-
-    return () => io.disconnect();
-  }, [pct]);
-
-  return (
-    <div ref={rootRef} className={`${style.pstat} ${style.reveal}`} data-d={delay}>
-      <div className={style.ring}>
-        <svg width="64" height="64" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r="30" fill="#071A33" />
-
-          <circle
-            cx="32"
-            cy="32"
-            r="28"
-            fill="none"
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth="4"
-          />
-
-          <circle
-            ref={ringRef}
-            className={style["ring-prog"]}
-            cx="32"
-            cy="32"
-            r="28"
-            fill="none"
-            stroke="#4FC3FF"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray="175.9"
-            strokeDashoffset="175.9"
-            transform="rotate(-90 32 32)"
-          />
-        </svg>
-
-        <div className={style.pct}>{pct}%</div>
-      </div>
-
-      <div className={style.meta}>
-        <div className={style.t}>{label}</div>
-
-        <div className={style.bar}>
-          <span ref={barRef} />
-        </div>
-      </div>
-    </div>
-  );
-}
+const PAINS: Pain[] = [
+  {
+    icon: (
+      <path d="M12 2v20M17 6.5C17 4.6 14.8 3.5 12 3.5S7 4.6 7 6.5s2 2.8 5 3.5 5 1.6 5 3.5-2.2 3-5 3-5-1.1-5-3" />
+    ),
+    title: "You pay twice for the same customer",
+    body: "Ad costs climb every quarter while the buyers you already paid for sit idle in a spreadsheet.",
+    stat: "71%",
+    statLabel: "send no follow-ups",
+  },
+  {
+    icon: (
+      <>
+        <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-5.1A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5Z" />
+        <path d="M9 14s1 1 3 1 3-1 3-1" />
+      </>
+    ),
+    title: "Unhappy customers leave without a word",
+    body: "One bad delivery and they're gone. You find out months later, from a revenue chart.",
+    stat: "68%",
+    statLabel: "never return",
+  },
+  {
+    icon: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1.6" />
+        <rect x="14" y="3" width="7" height="7" rx="1.6" />
+        <rect x="3" y="14" width="7" height="7" rx="1.6" />
+        <path d="M14 17.5h7M17.5 14v7" />
+      </>
+    ),
+    title: "Five tools that don't talk to each other",
+    body: "Reviews here, coupons there, chat somewhere else. Nobody owns the customer record.",
+    stat: "52%",
+    statLabel: "are silent churners",
+  },
+  {
+    icon: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+    title: "No visibility into customer sentiment",
+    body: "You can't fix what nobody measures. Ratings sit in inboxes instead of dashboards.",
+    stat: "72%",
+    statLabel: "of issues unresolved",
+  },
+];
 
 export default function Problem() {
-  useEffect(() => {
-    const elements = document.querySelectorAll(`.${style.reveal}`);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add(style.in);
-          }
-        });
-      },
-      {
-        threshold: 0.15,
-      },
-    );
-
-    elements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, []);
+  /* The four cards deal one after another as the row scrolls in, and each stat counts up to
+     its figure. Restrained on purpose — this band is the bad news, so it should land rather
+     than perform. */
+  const [cardsRef, shown] = useReveal<HTMLDivElement>(0.2);
 
   return (
-    <section className={style.section} id="problem">
-      <div className={style.page}>
-        <div className={style["sec-head"]}>
-          <span className={`${style.eyebrow} ${style.reveal}`}>
-            <span className={style.dot} />
-            The Problem
-          </span>
-
-          <h2 className={style.reveal} data-d="1">
-            Your Business Goes Silent
-            <br />
-            The Moment Someone Buys
+    <section className="border-b border-ru-n-100 bg-ru-n-50">
+      <div className="mx-auto max-w-280 px-5 py-14 sm:py-26">
+        <div className="mb-8 max-w-170 sm:mb-12">
+          <Eyebrow
+            className="mb-4.5"
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="size-4"
+                aria-hidden="true"
+              >
+                <path d="M12 3 2.5 20h19L12 3Z" />
+                <path d="M12 10v4" />
+                <path d="M12 17.2v.1" />
+              </svg>
+            }
+          >
+            The problem
+          </Eyebrow>
+          <h2 className="mb-4 font-display text-[clamp(2rem,5vw,3.25rem)]/[1.08] font-bold tracking-[-0.03em] text-balance text-ru-n-700">
+            Your business goes silent the moment someone buys.
           </h2>
-
-          <p className={style.reveal} data-d="2">
-            The sale ends. The relationship doesn't begin. Without a system for what happens next,
-            customers disappear — and you never know why.
+          <p className="text-[clamp(1.0625rem,2vw,1.25rem)]/[1.6] text-pretty text-ru-n-500">
+            The order confirmation is the last thing most brands ever send. Everything after it —
+            the feedback, the fix, the reward, the second order — never happens.
           </p>
         </div>
 
-        <div className={style["prob-grid"]}>
-          <div className={`${style.prob} ${style.reveal}`}>
-            <div className={`${style.picon} ${style["pi-1"]}`}>
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                <rect x="4" y="11" width="16" height="10" rx="2" />
-              </svg>
+        <div ref={cardsRef} className="flex flex-wrap gap-4">
+          {PAINS.map((pain, i) => (
+            <div
+              key={pain.title}
+              style={{ animationDelay: `${i * 110}ms` }}
+              className={`flex flex-[1_1_250px] flex-col gap-3 rounded-2xl border border-ru-n-200 bg-white p-6.5 transition-all hover:-translate-y-0.5 hover:border-ru-n-300 hover:shadow-md motion-reduce:animate-none ${
+                shown ? "animate-ru-rise" : "opacity-0"
+              }`}
+            >
+              <span className="flex size-9.5 items-center justify-center rounded-[10px] border border-ru-n-200 bg-ru-n-50 text-ru-blue-600">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4.75"
+                  aria-hidden="true"
+                >
+                  {pain.icon}
+                </svg>
+              </span>
+              <div className="font-display text-[19px] font-bold tracking-[-0.018em] text-ru-n-700">
+                {pain.title}
+              </div>
+              <p className="text-[15.5px]/[1.55] text-ru-n-500">{pain.body}</p>
+              <span className="mt-auto inline-flex w-fit items-center gap-2 rounded-full border border-ru-amber-200 bg-ru-amber-50 px-2.75 py-1.5">
+                <strong className="font-display text-[15px] font-bold text-ru-amber-700">
+                  <CountUp value={pain.stat} durationMs={1000} />
+                </strong>
+                <span className="text-[13.5px] text-ru-amber-700">{pain.statLabel}</span>
+              </span>
             </div>
-
-            <h3>You're Paying Twice For The Same Customer</h3>
-
-            <p>Without follow-ups, first-time buyers leave — and you pay to replace them.</p>
-          </div>
-
-          <div className={`${style.prob} ${style.reveal}`} data-d="1">
-            <div className={`${style.picon} ${style["pi-2"]}`}>
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M16 16s-1.5-2-4-2-4 2-4 2" />
-                <path d="M9 9h.01M15 9h.01" />
-              </svg>
-            </div>
-
-            <h3>Unhappy Customers Leave Without A Word</h3>
-
-            <p>Only 1 in 26 unhappy customers speak up. The rest leave — before you notice.</p>
-          </div>
-
-          <div className={`${style.prob} ${style.reveal}`} data-d="2">
-            <div className={`${style.picon} ${style["pi-3"]}`}>
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v4M12 16h.01" />
-              </svg>
-            </div>
-
-            <h3>5 Tools That Don't Talk To Each Other</h3>
-
-            <p>
-              Your team juggles multiple tools. Data is scattered, experiences break, and revenue
-              leaks.
-            </p>
-          </div>
-
-          <div className={`${style.prob} ${style.reveal}`} data-d="3">
-            <div className={`${style.picon} ${style["pi-4"]}`}>
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                <path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.39-1.61" />
-                <path d="M2 2l20 20" />
-              </svg>
-            </div>
-
-            <h3>No Visibility Into What Customers Feel</h3>
-
-            <p>You have order data, not sentiment data — so decisions rely on guesswork.</p>
-          </div>
+          ))}
         </div>
 
-        <div className={style.probstats}>
-          <Pstat pct={71} label="No Follow-Ups" />
-          <Pstat pct={68} label="Never Return" delay="1" />
-          <Pstat pct={52} label="Silent Churners" delay="2" />
-          <Pstat pct={72} label="Issues Unresolved" delay="3" />
+        <div className="mt-7 flex flex-wrap items-center justify-between gap-4.5 rounded-2xl border border-ru-n-200 bg-white p-5 shadow-sm sm:mt-10 sm:p-7">
+          <div className="min-w-0 flex-[1_1_280px]">
+            <div className="font-display text-[clamp(1.1875rem,2.4vw,1.4375rem)] font-bold tracking-[-0.02em] text-ru-n-700">
+              Every silent customer is revenue you already paid for.
+            </div>
+            <div className="mt-1.25 text-[15px] text-ru-n-500">
+              See what RateUp would send to your last 100 orders.
+            </div>
+          </div>
+          <div className="flex w-full flex-wrap gap-2.5 sm:w-auto sm:flex-none">
+            <BookDemoCta
+              showArrow={false}
+              className="h-12 px-5.5 text-base max-sm:w-full max-sm:justify-center"
+            />
+            <WhatsAppCta className="h-12 px-4.5 text-base max-sm:w-full max-sm:justify-center">
+              WhatsApp us
+            </WhatsAppCta>
+          </div>
         </div>
       </div>
     </section>

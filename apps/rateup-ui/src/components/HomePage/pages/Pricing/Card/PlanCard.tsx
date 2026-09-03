@@ -15,7 +15,6 @@ import type { Cart } from "../store/RouteAndCartStore.ts";
 import type { PricingPlan } from "../types.ts";
 import { PlanCardWidth, Title4 } from "../Utils/constants.ts";
 
-import ButtonStyles from "./Button.module.css";
 import styles from "./Modal.module.css";
 
 const PlanCard = ({
@@ -115,7 +114,7 @@ const PlanCard = ({
           </div>
           <div className="mb-6 flex items-center justify-center">
             <Button
-              className={ButtonStyles["button-hover"]}
+              className="scale-100 transition duration-200 ease-in-out hover:scale-110"
               onClick={() => {
                 gAnalyticsAndFbEvent(
                   "contact_sales",
@@ -137,7 +136,7 @@ const PlanCard = ({
 
           <div className="mb-6 flex items-center justify-center">
             <Button
-              className={ButtonStyles["button-hover"]}
+              className="scale-100 transition duration-200 ease-in-out hover:scale-110"
               onClick={() => {
                 gAnalyticsAndFbEvent(
                   "subscribe_pricing",

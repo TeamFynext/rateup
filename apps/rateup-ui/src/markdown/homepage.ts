@@ -249,7 +249,7 @@ https://docs.rateup.app
 
 Start engaging smarter with RateUp today.
 
-- Free Trial Available
+- Free Plan Available
 - No Credit Card Required
 - No Expiry
 - Personalized Demo Available

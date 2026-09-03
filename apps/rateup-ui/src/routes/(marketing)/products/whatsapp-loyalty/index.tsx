@@ -10,7 +10,7 @@ import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
 import Layout from "@/components/RateupHomePage/Layout";
 import { useRevealAnimation } from "@/hooks/useRevealAnimation";
 import { buildPageHead } from "@/lib/metadata.ts";
-import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+import { rateupLogoOg } from "@/utils/constants.ts";
 
 import { productsMarkdown } from "../../../../markdown/products";
 import { createMarkdownMiddleware } from "../../../../markdown/serveMarkdown";
@@ -141,7 +141,7 @@ const jsonLd = {
         url: "https://rateup.app",
         logo: {
           "@type": "ImageObject",
-          url: rateupLogoStackedWhiteTransparent,
+          url: rateupLogoOg,
         },
         contactPoint: {
           "@type": "ContactPoint",
@@ -201,7 +201,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
 function LoyaltyLandingPage() {
   useRevealAnimation();
   return (
-    <Layout contentClassName={styles.themeLoyalty} navbarClassName="heroNav" darkNavbar>
+    <Layout contentClassName={styles.themeLoyalty} navbarClassName="heroNav">
       <div className="loyalty-scope">
         <span id="top"></span>
         <Hero />

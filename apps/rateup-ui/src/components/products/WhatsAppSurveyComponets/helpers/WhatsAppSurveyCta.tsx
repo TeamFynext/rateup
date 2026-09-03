@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 const WhatsAppSurveyCta = () => {
@@ -34,15 +34,15 @@ const WhatsAppSurveyCta = () => {
                   Get Started
                 </Button>
               </a>
-              <BookDemoModal>
+              <BookDemoLink>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-[#009987] text-[#009987] hover:bg-[#1c518e]/10 font-semibold px-6 py-3 text-base transition"
+                  className="border-[#009987] text-[#009987] hover:bg-primary/10 font-semibold px-6 py-3 text-base transition"
                 >
                   Schedule a Demo
                 </Button>
-              </BookDemoModal>
+              </BookDemoLink>
             </div>
           </div>
         </motion.div>

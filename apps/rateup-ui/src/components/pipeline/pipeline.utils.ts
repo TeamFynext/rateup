@@ -99,8 +99,12 @@ export function filterLeads(
     }
 
     switch (filters.filter) {
+      // "All leads on board" means all of them: won and lost included. Hiding the
+      // lost ones made the Lost column look empty under the default filter, which
+      // read as data loss rather than a filter. `won` and `lost` are how you
+      // narrow to one outcome.
       case "open":
-        return lead.status !== "LOST";
+        return true;
       case "mine":
         return lead.status === "OPEN" && isAssignedTo(lead, currentUserId);
       case "rotting":

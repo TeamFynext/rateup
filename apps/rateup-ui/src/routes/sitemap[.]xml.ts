@@ -19,7 +19,6 @@ const MARKETING_PATHS: { path: string; priority: string; changefreq: string }[] 
   { path: "/products/ai-review", priority: "0.8", changefreq: "monthly" },
   { path: "/products/qr-studio", priority: "0.8", changefreq: "monthly" },
   { path: "/products/testimonial-gateway", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/ticketing", priority: "0.8", changefreq: "monthly" },
   { path: "/about-us", priority: "0.6", changefreq: "yearly" },
   { path: "/book-a-demo", priority: "0.7", changefreq: "yearly" },
   { path: "/contact-us", priority: "0.6", changefreq: "yearly" },

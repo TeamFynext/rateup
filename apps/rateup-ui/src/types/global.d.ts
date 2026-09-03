@@ -42,15 +42,6 @@ type GoogleReview = {
   reqOptions?: Array<string>;
 } | null;
 
-type IssueTicket = {
-  minRating?: number;
-  minOpinion?: number;
-  reqOptions?: Array<string>;
-  submissionTicket?: boolean;
-  selectedColumnId?: string;
-  selectedBoardId?: string;
-} | null;
-
 interface TNC {
   title: string;
   urlTitle: string;

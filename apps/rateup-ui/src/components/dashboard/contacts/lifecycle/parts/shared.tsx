@@ -39,21 +39,6 @@ export interface SetupViewProps {
   readonly backendStages: BackendLifecycleStage[];
   readonly showStagesGlobal: boolean;
   readonly setShowStagesGlobal: (show: boolean) => void;
-  readonly isConversionApiActive: boolean;
-  readonly conversionData: {
-    event_name?: string;
-    currency?: string;
-    conversionsApiDatasetId?: string;
-  };
-  readonly handleUpdateConversionApi: (
-    active: boolean,
-    data: {
-      event_name?: string;
-      currency?: string;
-      conversionsApiDatasetId?: string;
-    },
-  ) => void;
-  readonly hasWhatsAppSettings: boolean;
   readonly showAddActiveForm: boolean;
   readonly setShowAddActiveForm: (show: boolean) => void;
   readonly showAddLostForm: boolean;

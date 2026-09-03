@@ -31,7 +31,7 @@ export default function WhyAutomation() {
   return (
     <section id="why-us" className="py-24 px-6 sm:px-10 bg-white">
       <div className="flex flex-col justify-center items-center text-center mb-14">
-        <h3 className="text-4xl max-w-5xl sm:text-5xl font-bold text-[#1c518e] mb-4">
+        <h3 className="text-4xl max-w-5xl sm:text-5xl font-bold text-primary mb-4">
           ✨ Why Choose RateUp for Your AI Automation?
         </h3>
         <p className="text-lg text-gray-600 max-w-2xl">
@@ -46,7 +46,7 @@ export default function WhyAutomation() {
             key={index}
             className="flex items-start p-6 bg-white rounded-2xl border-2 border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 group"
           >
-            <div className="shrink-0 w-14 h-14 mr-6 rounded-full bg-linear-to-br from-[#00397b] to-[#1c518e] text-white flex items-center justify-center shadow-md">
+            <div className="shrink-0 w-14 h-14 mr-6 rounded-full bg-linear-to-br from-[#00397b] to-primary text-white flex items-center justify-center shadow-md">
               <feature.icon className="w-6 h-6" />
             </div>
             <div>

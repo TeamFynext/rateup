@@ -2,6 +2,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { createResponsePublic } from "@/backend/surveys/response/response.api";
+import { formClosedMessage, isFormClosedError } from "@/backend/surveys/survey.api";
 import { useGetSurveyVariables } from "@/backend/surveys/surveys.query";
 import { PageType, QuestionType as Q, QuestionType, SurveyVariableType } from "@/types/enums.ts";
 import { emailPattern } from "@/utils/constants.ts";
@@ -74,61 +75,13 @@ export const checkGoogleReviewForQuestion = (
   return false;
 };
 
-const shouldRaiseTicket = (
-  question: Question,
-  userResponse: QuestionResponse,
-  selectedLanguage: string,
-) => {
-  if (question.ticketIssue?.submissionTicket) return true;
-  switch (question.type) {
-    case QuestionType.Rating:
-      return userResponse.response!.Rating! <= question.ticketIssue!.minRating!;
-    case QuestionType.Opinion:
-      return userResponse.response!["Opinion Scale"]! <= question.ticketIssue!.minOpinion!;
-    case QuestionType.Smiley:
-      return question.ticketIssue!.reqOptions!.includes(userResponse.response!.Smiley!);
-    case QuestionType.CustomNPS:
-    case QuestionType.DDMS:
-    case QuestionType.DDSS:
-    case QuestionType.MCQ:
-    case QuestionType.MSQ:
-      const response = responseValueFor(userResponse);
-      let flag = false;
-      if (Array.isArray(response)) {
-        response.forEach((res: Choice) => {
-          const index = question.choices![selectedLanguage]!.findIndex(
-            (c: Choice) => c.value === res.value,
-          );
-          flag = question.ticketIssue!.reqOptions!.includes(index.toString());
-          if (flag) return;
-        });
-      } else {
-        const index = question.choices![selectedLanguage]!.findIndex(
-          (c: Choice) => c.value === response.value,
-        );
-        flag = question.ticketIssue!.reqOptions!.includes(index.toString());
-      }
-      return flag;
-    default:
-      return false;
+/** Thrown when the form stopped accepting responses between opening it and submitting. */
+export class FormClosedError extends Error {
+  constructor(public readonly detail?: string) {
+    super("FORM_CLOSED");
+    this.name = "FormClosedError";
   }
-};
-
-export const checkRaiseTicketIssueQuestion = (
-  questions: Question[],
-  responses: QuestionResponse[],
-  selectedLanguage: string,
-) => {
-  for (const question of questions) {
-    if (question?.ticketIssue) {
-      const userResponse = responses.find((r) => r?.questionId === question?.id);
-      if (userResponse && shouldRaiseTicket(question, userResponse, selectedLanguage)) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
+}
 
 export function submitSurvey({
   surveyTeamMapId,
@@ -138,9 +91,7 @@ export function submitSurvey({
   coordinates,
   tag,
   encryptedResponses,
-  shouldRaiseTicket,
   checkUniqueDevice,
-  selectedColumnId,
 }: {
   surveyTeamMapId: string | undefined;
   responses: QuestionResponse[];
@@ -149,9 +100,7 @@ export function submitSurvey({
   coordinates?: Coordinates;
   tag?: string | null;
   encryptedResponses?: string;
-  shouldRaiseTicket: boolean;
   checkUniqueDevice: boolean;
-  selectedColumnId?: string;
 }) {
   return createResponsePublic({
     surveyTeamMapId: surveyTeamMapId ?? "",
@@ -160,9 +109,7 @@ export function submitSurvey({
     language: selectedLanguage,
     location: { coordinates },
     tag: tag || null,
-    shouldRaiseTicket,
     checkUniqueDevice,
-    selectedColumnId,
   })
     .then(() => {
       // notifications.show({
@@ -172,9 +119,17 @@ export function submitSurvey({
       // setIsSavingResponses(false);
     })
     .catch((e) => {
+      setIsSavingResponses(false);
+
+      // The form ran out of responses while this one was being filled in. "Something went
+      // wrong" would be wrong twice over: nothing went wrong here, and retrying — which is
+      // what that message invites — cannot succeed until the org's allowance resets.
+      if (isFormClosedError(e)) {
+        throw new FormClosedError(formClosedMessage(e));
+      }
+
       console.error(e);
       toast.error("Something went wrong while submitting the survey.");
-      setIsSavingResponses(false);
       if (e?.response?.data === "ALREADY_RESPONDED") {
         throw new Error("ALREADY_RESPONDED");
       }
@@ -459,7 +414,7 @@ export const DEFAULT_WOP = {
   contrastColor: "#ffffff",
   size: 200,
   segments: ["$200 Gift Card", "$100 Gift Card"],
-  segColors: ["#1c518e", "#06ac6e"],
+  segColors: ["var(--primary)", "#06ac6e"],
 };
 
 // Widened to the full question/page union so it can test any question's type.

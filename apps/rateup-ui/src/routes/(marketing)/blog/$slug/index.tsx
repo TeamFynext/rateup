@@ -311,7 +311,7 @@ function Page() {
           {/* Soft glow behind the heading */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#2FA3FF]/30 blur-3xl"
+            className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-ru-blue-400/30 blur-3xl"
           />
           <div className="relative mx-auto max-w-2xl">
             <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-blue-100 uppercase backdrop-blur-sm">

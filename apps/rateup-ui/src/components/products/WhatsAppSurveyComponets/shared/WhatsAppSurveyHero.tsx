@@ -1,6 +1,6 @@
 import { Image } from "@unpic/react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { BookDemoLink } from "@/components/RateupHomePage/helper/BookDemoLink.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 export default function WhatsAppSurveyHero() {
@@ -23,14 +23,14 @@ export default function WhatsAppSurveyHero() {
         <div className="flex flex-col sm:flex-row sm:justify-center md:justify-start gap-4">
           <a href={"https://rateup.app/login"}>
             <button className="bg-[#009987] w-full cursor-pointer hover:bg-[#075E54] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition">
-              Start Free Trial
+              Get Started Free
             </button>
           </a>
-          <BookDemoModal>
+          <BookDemoLink>
             <button className="bg-white border cursor-pointer border-gray-300 hover:border-gray-400 text-gray-900 font-semibold py-3 px-6 rounded-lg shadow-md transition">
               Schedule a Demo
             </button>
-          </BookDemoModal>
+          </BookDemoLink>
         </div>
       </div>
 

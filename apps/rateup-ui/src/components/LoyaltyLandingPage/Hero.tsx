@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { BookDemoModal } from "../RateupHomePage/helper/BookDemoModal";
+import { BookDemoLink } from "../RateupHomePage/helper/BookDemoLink";
 
 import styles from "./loyalty.landing.module.css";
 
@@ -229,7 +229,7 @@ export default function Hero() {
                   </svg>
                 </span>
               </button>
-              <BookDemoModal>
+              <BookDemoLink>
                 <button className={`${styles.btn} ${styles["btn-secondary"]}`}>
                   Book A Demo
                   <span className={styles.chip}>
@@ -248,7 +248,7 @@ export default function Hero() {
                     </svg>
                   </span>
                 </button>
-              </BookDemoModal>
+              </BookDemoLink>
             </div>
           </div>
 

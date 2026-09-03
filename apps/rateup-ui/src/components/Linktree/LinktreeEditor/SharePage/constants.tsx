@@ -22,7 +22,7 @@ const socialMediaLinks = [
   },
   {
     id: "iframe",
-    iconSrc: `${import.meta.env.VITE_FRONTEND_URL}/images/iframe-icon.png`,
+    iconSrc: `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/iframe-icon.png`,
     alt: "iframe icon",
     tooltipLabel: "Embed as iframe",
   },
