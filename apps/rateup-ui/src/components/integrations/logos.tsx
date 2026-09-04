@@ -69,6 +69,16 @@ export function ZohoLogo({ className }: LogoProps) {
   );
 }
 
+export function GetLeadLogo({ className }: LogoProps) {
+  return (
+    <img
+      src={`${imagesPath}/getleadconnect_logo.jpg`}
+      alt="GetLead CRM"
+      className={cn("object-contain", className)}
+    />
+  );
+}
+
 export function RateupStar({ className }: LogoProps) {
   return (
     <img src={rateupIcon} alt="" aria-hidden="true" className={cn("object-contain", className)} />

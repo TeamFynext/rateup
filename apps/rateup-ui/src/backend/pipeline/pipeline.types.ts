@@ -135,6 +135,16 @@ export interface LeadActivity {
     sourceLabel?: string;
     /** The lead was opened by a rule; `user` is then whoever set the rule off. */
     automated?: boolean;
+    /** Which CRM a sync entry concerns, e.g. "GetLead". */
+    integrationName?: string;
+    /** The lead's id in that CRM, on a successful sync. */
+    externalId?: string;
+    /** True when the CRM record was opened rather than updated. */
+    externalCreated?: boolean;
+    /** Why a sync did not happen. A stable code, turned into a sentence here. */
+    skipReason?: string;
+    /** The mapped status was refused; the rest of the lead still synced. */
+    statusRejected?: boolean;
   } | null;
   leadId: string;
   userId: string | null;
