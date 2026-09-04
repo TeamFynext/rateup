@@ -126,11 +126,11 @@ export default function Layout({
       <Suspense
         fallback={
           /* Placeholder launcher so the corner reserves its space instead of popping in.
-             Matches the real launcher's tile — 62px, 18px radius, same offsets. */
+             Matches the real launcher's tile — 62px, circular, same offsets. */
           <div
             role="status"
             aria-label="Loading support chat"
-            className="fixed right-5.5 bottom-5.5 z-50 size-15.5 animate-pulse rounded-[18px] bg-muted"
+            className="fixed right-5.5 bottom-5.5 z-50 size-15.5 animate-pulse rounded-full bg-muted"
           />
         }
       >

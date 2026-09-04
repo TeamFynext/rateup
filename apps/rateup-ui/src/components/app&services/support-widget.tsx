@@ -88,6 +88,11 @@ const ERROR_TEXT = "mt-1 text-[12.5px] text-red-600";
    mid-thought — the card only lands once they have actually paused. */
 const CONTACT_PROMPT_DELAY_MS = 2500;
 
+/* The launcher's face. Served from the web-images distribution like every other `/images/…`
+   asset; `VITE_CLOUDFRONT_WEB_IMAGES_URL` is the same base the rest of the app resolves them
+   against. */
+const LAUNCHER_AVATAR = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/support.jpeg`;
+
 /* Deliberately generic: the widget is embedded on customers' own sites, not RateUp's, so the
    openers have to make sense for any of them. Anything sharper is the embedder's to pass in. */
 const DEFAULT_ICEBREAKERS = [
@@ -241,6 +246,7 @@ export default function SupportWidget({
   /* Whether the contact card has had its beat and is ready to be drawn. */
   const [askForContact, setAskForContact] = useState(false);
   const [qr, setQr] = useState<string | null>(null);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const contactIdRef = useRef<string | null>(null);
   const retryCountRef = useRef(0);
@@ -540,12 +546,25 @@ export default function SupportWidget({
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className="relative size-15.5 flex-none cursor-pointer rounded-[18px] bg-ru-blue-950 text-white/85 shadow-[0_14px_32px_rgba(9,23,41,0.3)] transition-transform hover:-translate-y-px"
+          className="relative size-15.5 flex-none cursor-pointer rounded-full bg-ru-blue-950 text-white/85 shadow-[0_14px_32px_rgba(9,23,41,0.3)] transition-transform hover:-translate-y-px"
         >
+          {/* The glyph stays underneath: it shows through while the photo loads, and remains
+              if the photo never arrives — a broken image on a customer's page is worse than
+              the tile the design already draws. */}
           <span className="absolute inset-0 flex items-center justify-center">
             <PersonGlyph className="size-7.5" />
           </span>
-          <span className="absolute -right-0.5 -bottom-0.5 size-3.75 rounded-full border-[2.5px] border-ink-25 bg-wa-green" />
+          {!avatarFailed && (
+            <img
+              src={LAUNCHER_AVATAR}
+              alt=""
+              onError={() => setAvatarFailed(true)}
+              className="absolute inset-0 size-full rounded-full object-cover"
+            />
+          )}
+          {/* Pulled in from the corner: on a circle the old -0.5 offsets left the badge
+              floating off the edge rather than sitting on it. */}
+          <span className="absolute right-0.5 bottom-0.5 size-3.75 rounded-full border-[2.5px] border-ink-25 bg-wa-green" />
         </button>
       </div>
     );
