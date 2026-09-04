@@ -6,6 +6,8 @@ import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service.js";
+import { GetLeadTriggers } from "../../integrations/external/getlead/getlead.service.js";
+import { addGetLeadSyncToQueue } from "../../integrations/external/getlead/getlead.queue.js";
 import { pushCrmLeadStatus, ZohoTriggers } from "../../integrations/external/zoho/zoho.service.js";
 import type {
   BulkUpdateLeadsRequestSchema,
@@ -194,7 +196,8 @@ export async function createLead(
 
   // A lead opening straight onto a mapped column is as much a stage change as a
   // move is, so the CRMs hear about it the same way.
-  if (data.syncIntegrations !== false) await syncLeadStageToIntegrations(created);
+  if (data.syncIntegrations !== false)
+    await syncLeadStageToIntegrations(created, GetLeadTriggers.LEAD_CREATE);
   // Opened directly onto a Won column — rare, but it is still the moment it was won.
   if (stage.status === "WON") await reportLeadWon(created);
   // A contact that was not on the board and now sits in a column has changed
@@ -259,8 +262,19 @@ export async function moveLead(
       select: { stageId: true, stage: { select: { name: true, status: true } } },
     });
 
-    const target = await tx.pipelineStage.findUniqueOrThrow({
-      where: { id: stageId },
+    // Scoped to the lead's own board, not looked up by id alone.
+    //
+    // The id arrives from a client, an automation rule or a CRM webhook, and
+    // nothing upstream checks it belongs here — `verifyLeadAccess` proves the
+    // caller may touch the *lead*, and says nothing about the target column. An
+    // unscoped move was a cross-tenant write: `syncLeadStageToIntegrations`
+    // derives the org from the *stage's* pipeline, so a lead parked on another
+    // org's column fans out to that org's CRM credentials, pushing this lead's
+    // name, email and phone into their Zoho and GetLead.
+    //
+    // Same shape as `closeLead`, which has always scoped its target this way.
+    const target = await tx.pipelineStage.findFirstOrThrow({
+      where: { id: stageId, pipeline: { leads: { some: { id } } } },
       select: { name: true, status: true },
     });
 
@@ -439,16 +453,24 @@ async function fireStageUpdatedRules(lead: { contactId: string | null; stageId: 
  * Failures are swallowed: a CRM being unreachable must not fail the move that
  * has already been committed and shown on the board.
  */
-async function syncLeadStageToIntegrations(lead: {
-  id: string;
-  contactId: string | null;
-  stageId: string;
-  pipelineId: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  source: LeadSource;
-}) {
+async function syncLeadStageToIntegrations(
+  lead: {
+    id: string;
+    contactId: string | null;
+    stageId: string;
+    pipelineId: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    source: LeadSource;
+  },
+  /**
+   * Which GetLead trigger this is. The push itself is an upsert either way, but
+   * the two are separate subscriptions an org can toggle independently, so a
+   * lead arriving on the board must not be reported as a stage change.
+   */
+  getleadTrigger: GetLeadTriggers = GetLeadTriggers.LEAD_UPDATE,
+) {
   try {
     const stage = await prisma.pipelineStage.findUnique({
       where: { id: lead.stageId },
@@ -483,10 +505,15 @@ async function syncLeadStageToIntegrations(lead: {
     // Zoho picklist, so a board column named anything the org did not map is a
     // value the CRM rejects.
     if (integrationIds?.zoho?.lead?.id) {
-      await pushCrmLeadStatus(orgId, integrationIds.zoho.lead.id, {
-        stageId: lead.stageId,
-        stageName: stage.name,
-      });
+      await pushCrmLeadStatus(
+        orgId,
+        integrationIds.zoho.lead.id,
+        { stageId: lead.stageId, stageName: stage.name },
+        {},
+        // So the CRM push lands on this lead's timeline. A Zoho-CRM-only org
+        // never reaches the Bigin branch, so without this it would see nothing.
+        lead.id,
+      );
     }
 
     await integrationTriggerQueue.add("zoho-bigin-deal-update", {
@@ -508,6 +535,26 @@ async function syncLeadStageToIntegrations(lead: {
       rateupLeadId: lead.id,
       ...(contact && { rateupContactId: contact.id }),
     });
+
+    // GetLead is outbound-only and keyed on the same board column, so it rides
+    // the same fan-out. It resolves its own status through the org's mapping and
+    // pushes nothing when a column is unmapped.
+    await addGetLeadSyncToQueue(
+      getleadTrigger,
+      orgId,
+      {
+        name: contact?.name ?? lead.name,
+        email: contact?.email ?? lead.email,
+        phone: contact?.phone ?? lead.phone,
+        notes: contact?.notes ?? null,
+        stageId: lead.stageId,
+        stageName: stage.name,
+        // Not pushed to GetLead — only so a phoneless lead's skip names the
+        // channel it came from. INSTAGRAM and MESSENGER leads never have one.
+        leadSource: lead.source,
+      },
+      { rateupLeadId: lead.id, ...(contact && { rateupContactId: contact.id }) },
+    );
   } catch (error) {
     // The move itself already succeeded; this is best-effort fan-out.
     console.error("Failed to sync lead stage to integrations", error);

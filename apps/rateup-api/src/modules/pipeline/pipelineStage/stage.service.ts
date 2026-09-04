@@ -44,6 +44,19 @@ export async function updateStage(id: string, data: UpdateStageRequestSchema) {
   });
 }
 
+/**
+ * Removes a column, relocating whatever it holds.
+ *
+ * The relocation is a bulk `updateMany` rather than a loop through `moveLead`,
+ * so it reaches none of the stage-change listeners: the CRMs keep whatever
+ * status they last heard, and no timeline entry is written. That is deliberate.
+ * Neither Zoho nor GetLead has a bulk status endpoint, so syncing this would be
+ * one API call per lead — a burst against a per-plan rate limit, on a path where
+ * nobody is waiting to watch it happen.
+ *
+ * `DeleteStageDialog` says so before the fact, to any org with a CRM connected;
+ * moving a lead again on the board is what re-syncs it.
+ */
 export async function deleteStage(id: string, moveLeadsToStageId?: string) {
   const leadCount = await prisma.lead.count({ where: { stageId: id } });
 

@@ -152,7 +152,12 @@ describe("route registration", () => {
     await externalIntegrationRoutes(srv);
 
     expect(hooks).toHaveLength(0);
-    expect(srv.register).toHaveBeenCalledTimes(2);
+    // Asserted by prefix rather than by count: a bare call count fails every
+    // time a provider is added, without saying what changed or whether it was
+    // mounted where it should be.
+    expect(
+      srv.register.mock.calls.map(([, opts]: [unknown, { prefix: string }]) => opts.prefix),
+    ).toEqual(["/getlead", "/zapier", "/zoho"]);
   });
 
   test("every route other than /auth carries a data-bearing handler", async () => {

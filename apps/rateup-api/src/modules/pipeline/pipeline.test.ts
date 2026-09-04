@@ -13,6 +13,7 @@ vi.mock("../../utils/prisma.js", () => ({
     pipelineTeam: { findFirst: vi.fn(), findMany: vi.fn() },
     pipelineStage: {
       findFirst: vi.fn(),
+      findFirstOrThrow: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
@@ -134,6 +135,14 @@ function runTransaction() {
 beforeEach(() => {
   vi.clearAllMocks();
   runTransaction();
+  // `moveLead` resolves its target column through `findFirstOrThrow`, scoped to
+  // the lead's own board; `createLead` still uses `findUniqueOrThrow`. Aliased
+  // so a test only has to stub the column once, whichever path it exercises.
+  // The scoping itself is asserted directly in "refuses a column from another
+  // board", which reads the `where` clause.
+  db.pipelineStage.findFirstOrThrow.mockImplementation((...args: unknown[]) =>
+    db.pipelineStage.findUniqueOrThrow(...args),
+  );
   db.leadActivity.createMany.mockResolvedValue({ count: 1 });
   db.leadActivity.create.mockResolvedValue({ id: "activity" });
   db.leadTask.updateMany.mockResolvedValue({ count: 0 });
@@ -396,6 +405,39 @@ describe("moving a lead", () => {
       tasks: [],
     });
   }
+
+  test("looks the target column up on the lead's own board", async () => {
+    movingInto();
+
+    await moveLead(LEAD, NEXT_STAGE, USER);
+
+    // Not `findUnique({ id })`. The stage id comes from a client, an automation
+    // rule or a CRM webhook, and `verifyLeadAccess` only proves the caller may
+    // touch the lead — nothing upstream checks the column belongs to the same
+    // board. Unscoped, this was a cross-tenant write: the integration fan-out
+    // derives the org from the *stage's* pipeline, so a lead parked on another
+    // org's column pushes its name, email and phone to that org's CRM.
+    expect(db.pipelineStage.findFirstOrThrow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: NEXT_STAGE, pipeline: { leads: { some: { id: LEAD } } } },
+      }),
+    );
+  });
+
+  test("refuses a column from another board", async () => {
+    db.lead.findUniqueOrThrow.mockResolvedValue({
+      stageId: STAGE,
+      stage: { name: "Contacted" },
+    });
+    // What Prisma raises when the scoped lookup matches nothing.
+    const notFound = Object.assign(new Error("No PipelineStage found"), { code: "P2025" });
+    db.pipelineStage.findFirstOrThrow.mockRejectedValue(notFound);
+
+    await expect(moveLead(LEAD, "someone-elses-stage", USER)).rejects.toMatchObject({
+      code: "P2025",
+    });
+    expect(db.lead.update).not.toHaveBeenCalled();
+  });
 
   test("restamps the stage clock and records the move", async () => {
     movingInto();
@@ -1024,10 +1066,15 @@ describe("telling the CRMs a lead changed column", () => {
   test("a move reports the column to the Zoho CRM lead", async () => {
     await moveLead(LEAD, STAGE, null);
 
-    expect(pushCrmLeadStatus).toHaveBeenCalledWith("org-1", "zoho-lead-1", {
-      stageId: STAGE,
-      stageName: "Qualified",
-    });
+    expect(pushCrmLeadStatus).toHaveBeenCalledWith(
+      "org-1",
+      "zoho-lead-1",
+      { stageId: STAGE, stageName: "Qualified" },
+      {},
+      // The lead is passed through so the CRM push can be recorded on its
+      // timeline; a Zoho-CRM-only org never reaches the Bigin branch.
+      LEAD,
+    );
   });
 
   // The echo guard. A stage Zoho pushed in must not be pushed straight back out,

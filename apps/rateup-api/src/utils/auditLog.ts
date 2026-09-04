@@ -23,6 +23,10 @@ const SKIPPED_ROUTES = new Set([
   "/api/wa/settings/:phoneId",
   "/api/wa/auth/register",
   "/api/wa/auth/deregister/:phoneId",
+  // The body is the org's GetLead API key. The generic hook logs `request.body`
+  // verbatim, which would put a live credential in the audit table in plaintext;
+  // the handler records a sanitised "GetLead connected" event instead.
+  "/api/integration/external/getlead/connect",
 ]);
 
 /**
