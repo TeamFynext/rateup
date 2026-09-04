@@ -118,10 +118,16 @@ const pageMetadata = {
       "Collect customer feedback on WhatsApp - RateUp's WhatsApp Flows meet customers where they already are - boosting feedback by up to 35%. Start free.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
+  // Targets "WhatsApp survey / NPS survey" only. /products/whatsapp-feedback owns the
+  // "customer feedback on WhatsApp" terms — the two pages used to open on the same H1 and
+  // compete for the same query.
   "/products/whatsapp-survey": {
-    title: "Free Online WhatsApp Web Survey Creator Application by RateUp",
+    title: "WhatsApp Survey Tool - Run NPS & CSAT Surveys in Chat | RateUp",
     description:
-      "Collect instant customer feedback with RateUp Free Online Web Surveys. Run NPS, CSAT & polls in real time to boost engagement and improve satisfaction.",
+      "Send NPS, CSAT and custom surveys as native WhatsApp Flows forms. Score-based follow-ups, real-time results and up to 35% response rates. No app for customers to install.",
+    ogTitle: "WhatsApp Survey Tool - Run NPS & CSAT Surveys in Chat",
+    ogDescription:
+      "NPS and CSAT surveys that render as a real form inside WhatsApp, with score-based follow-ups and live results.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
   "/products/testimonial-gateway": {

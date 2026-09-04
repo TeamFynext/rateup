@@ -93,6 +93,12 @@ export default function HomePageFooter() {
           </div>
 
           <FooterCol title="Platform">
+            <Link to="/products/whatsapp-business-api" className={LINK}>
+              WhatsApp Business API
+            </Link>
+            <Link to="/products/whatsapp-broadcast" className={LINK}>
+              WhatsApp Broadcast
+            </Link>
             <Link to="/products/whatsapp-loyalty" className={LINK}>
               WhatsApp Loyalty
             </Link>
@@ -102,9 +108,6 @@ export default function HomePageFooter() {
             <Link to="/products/whatsapp-feedback" className={LINK}>
               WhatsApp Feedback
             </Link>
-            <a href="/#platform" className={LINK}>
-              Campaigns
-            </a>
           </FooterCol>
 
           <FooterCol title="Company">
@@ -137,9 +140,9 @@ export default function HomePageFooter() {
             <Link to="/tools" className={LINK}>
               Free tools
             </Link>
-            <a href="/#integrations" className={LINK}>
+            <Link to="/integrations" className={LINK}>
               Integrations
-            </a>
+            </Link>
           </FooterCol>
 
           <FooterCol title="Legal">

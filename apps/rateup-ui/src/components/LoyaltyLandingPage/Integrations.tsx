@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
 import styles from "./loyalty.landing.module.css";
@@ -185,6 +185,24 @@ export default function Integrations() {
           <p>
             Connect RateUp with your ecommerce store, CRM, payment gateway, and communication
             platforms to automate loyalty, rewards, and customer engagement effortlessly.
+          </p>
+          {/* The diagram above is decorative — these are the links a reader (and a crawler)
+              can actually follow into the integration cluster. */}
+          <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-white/70">
+            <span>Works with</span>
+            <Link
+              to="/integrations/shopify"
+              className="font-semibold text-white underline underline-offset-2"
+            >
+              Shopify
+            </Link>
+            <span>·</span>
+            <Link
+              to="/integrations"
+              className="font-semibold text-white underline underline-offset-2"
+            >
+              WooCommerce, POS, CRM and 3,000+ apps
+            </Link>
           </p>
           <button
             className={`${styles.btn} ${styles["btn-primary"]}`}

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import CustomerProfiles from "@/components/LoyaltyLandingPage/CustomerProfiles";
-import Faq from "@/components/LoyaltyLandingPage/Faq";
+import Faq, { faqs } from "@/components/LoyaltyLandingPage/Faq";
 import Hero from "@/components/LoyaltyLandingPage/Hero";
 import HowItWorks from "@/components/LoyaltyLandingPage/HowItWorks";
 import Integrations from "@/components/LoyaltyLandingPage/Integrations";
@@ -9,6 +9,7 @@ import Trusted from "@/components/LoyaltyLandingPage/Trusted";
 import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
 import Layout from "@/components/RateupHomePage/Layout";
 import { useRevealAnimation } from "@/hooks/useRevealAnimation";
+import { faqPage } from "@/lib/jsonLd.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
@@ -174,6 +175,9 @@ const jsonLd = {
         "@id": "https://rateup.app#organization",
       },
     },
+
+    /* Built from the same `faqs` array `<Faq />` renders below. */
+    faqPage(faqs.map((faq) => ({ question: faq.q, answer: faq.a }))),
   ],
 };
 

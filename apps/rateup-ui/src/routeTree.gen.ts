@@ -32,6 +32,7 @@ import { Route as marketingBlogRssDotxmlRouteImport } from './routes/(marketing)
 import { Route as marketingBlogSitemapDotxmlRouteImport } from './routes/(marketing)/blog/sitemap[.]xml'
 import { Route as marketingBookADemoIndexRouteImport } from './routes/(marketing)/book-a-demo/index'
 import { Route as marketingContactUsIndexRouteImport } from './routes/(marketing)/contact-us/index'
+import { Route as marketingIntegrationsIndexRouteImport } from './routes/(marketing)/integrations/index'
 import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketing)/partner-page/index'
 import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
 import { Route as marketingPrivacyPolicyIndexRouteImport } from './routes/(marketing)/privacy-policy/index'
@@ -84,6 +85,7 @@ import { Route as authSignupSuccessIndexRouteImport } from './routes/(auth)/sign
 import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
 import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
+import { Route as marketingIntegrationsShopifyIndexRouteImport } from './routes/(marketing)/integrations/shopify/index'
 import { Route as marketingPricingShopifyIndexRouteImport } from './routes/(marketing)/pricing/shopify/index'
 import { Route as marketingProductsAiAutomationIndexRouteImport } from './routes/(marketing)/products/ai-automation/index'
 import { Route as marketingProductsAiReviewIndexRouteImport } from './routes/(marketing)/products/ai-review/index'
@@ -92,6 +94,8 @@ import { Route as marketingProductsOmnichannelInboxIndexRouteImport } from './ro
 import { Route as marketingProductsQrStudioIndexRouteImport } from './routes/(marketing)/products/qr-studio/index'
 import { Route as marketingProductsQrIndexRouteImport } from './routes/(marketing)/products/qr/index'
 import { Route as marketingProductsTestimonialGatewayIndexRouteImport } from './routes/(marketing)/products/testimonial-gateway/index'
+import { Route as marketingProductsWhatsappBroadcastIndexRouteImport } from './routes/(marketing)/products/whatsapp-broadcast/index'
+import { Route as marketingProductsWhatsappBusinessApiIndexRouteImport } from './routes/(marketing)/products/whatsapp-business-api/index'
 import { Route as marketingProductsWhatsappFeedbackIndexRouteImport } from './routes/(marketing)/products/whatsapp-feedback/index'
 import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
 import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
@@ -296,6 +300,12 @@ const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
   path: '/contact-us/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const marketingIntegrationsIndexRoute =
+  marketingIntegrationsIndexRouteImport.update({
+    id: '/(marketing)/integrations/',
+    path: '/integrations/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const marketingPartnerPageIndexRoute =
   marketingPartnerPageIndexRouteImport.update({
     id: '/(marketing)/partner-page/',
@@ -576,6 +586,12 @@ const marketingBlogTagSitemapDotxmlRoute =
     path: '/tag/sitemap.xml',
     getParentRoute: () => marketingBlogRouteRoute,
   } as any)
+const marketingIntegrationsShopifyIndexRoute =
+  marketingIntegrationsShopifyIndexRouteImport.update({
+    id: '/(marketing)/integrations/shopify/',
+    path: '/integrations/shopify/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const marketingPricingShopifyIndexRoute =
   marketingPricingShopifyIndexRouteImport.update({
     id: '/(marketing)/pricing/shopify/',
@@ -622,6 +638,18 @@ const marketingProductsTestimonialGatewayIndexRoute =
   marketingProductsTestimonialGatewayIndexRouteImport.update({
     id: '/(marketing)/products/testimonial-gateway/',
     path: '/products/testimonial-gateway/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsWhatsappBroadcastIndexRoute =
+  marketingProductsWhatsappBroadcastIndexRouteImport.update({
+    id: '/(marketing)/products/whatsapp-broadcast/',
+    path: '/products/whatsapp-broadcast/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsWhatsappBusinessApiIndexRoute =
+  marketingProductsWhatsappBusinessApiIndexRouteImport.update({
+    id: '/(marketing)/products/whatsapp-business-api/',
+    path: '/products/whatsapp-business-api/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const marketingProductsWhatsappFeedbackIndexRoute =
@@ -1181,6 +1209,7 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof marketingBlogIndexRoute
   '/book-a-demo/': typeof marketingBookADemoIndexRoute
   '/contact-us/': typeof marketingContactUsIndexRoute
+  '/integrations/': typeof marketingIntegrationsIndexRoute
   '/partner-page/': typeof marketingPartnerPageIndexRoute
   '/pricing/': typeof marketingPricingIndexRoute
   '/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
@@ -1226,6 +1255,7 @@ export interface FileRoutesByFullPath {
   '/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/signup/success/': typeof authSignupSuccessIndexRoute
   '/blog/$slug/': typeof marketingBlogSlugIndexRoute
+  '/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
   '/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
   '/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
@@ -1234,6 +1264,8 @@ export interface FileRoutesByFullPath {
   '/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/products/qr/': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
+  '/products/whatsapp-broadcast/': typeof marketingProductsWhatsappBroadcastIndexRoute
+  '/products/whatsapp-business-api/': typeof marketingProductsWhatsappBusinessApiIndexRoute
   '/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
@@ -1348,6 +1380,7 @@ export interface FileRoutesByTo {
   '/blog': typeof marketingBlogIndexRoute
   '/book-a-demo': typeof marketingBookADemoIndexRoute
   '/contact-us': typeof marketingContactUsIndexRoute
+  '/integrations': typeof marketingIntegrationsIndexRoute
   '/partner-page': typeof marketingPartnerPageIndexRoute
   '/pricing': typeof marketingPricingIndexRoute
   '/privacy-policy': typeof marketingPrivacyPolicyIndexRoute
@@ -1393,6 +1426,7 @@ export interface FileRoutesByTo {
   '/login/verify-phone-number': typeof authLoginVerifyPhoneNumberIndexRoute
   '/signup/success': typeof authSignupSuccessIndexRoute
   '/blog/$slug': typeof marketingBlogSlugIndexRoute
+  '/integrations/shopify': typeof marketingIntegrationsShopifyIndexRoute
   '/pricing/shopify': typeof marketingPricingShopifyIndexRoute
   '/products/ai-automation': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review': typeof marketingProductsAiReviewIndexRoute
@@ -1401,6 +1435,8 @@ export interface FileRoutesByTo {
   '/products/qr-studio': typeof marketingProductsQrStudioIndexRoute
   '/products/qr': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway': typeof marketingProductsTestimonialGatewayIndexRoute
+  '/products/whatsapp-broadcast': typeof marketingProductsWhatsappBroadcastIndexRoute
+  '/products/whatsapp-business-api': typeof marketingProductsWhatsappBusinessApiIndexRoute
   '/products/whatsapp-feedback': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey': typeof marketingProductsWhatsappSurveyIndexRoute
@@ -1522,6 +1558,7 @@ export interface FileRoutesById {
   '/(marketing)/blog/': typeof marketingBlogIndexRoute
   '/(marketing)/book-a-demo/': typeof marketingBookADemoIndexRoute
   '/(marketing)/contact-us/': typeof marketingContactUsIndexRoute
+  '/(marketing)/integrations/': typeof marketingIntegrationsIndexRoute
   '/(marketing)/partner-page/': typeof marketingPartnerPageIndexRoute
   '/(marketing)/pricing/': typeof marketingPricingIndexRoute
   '/(marketing)/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
@@ -1567,6 +1604,7 @@ export interface FileRoutesById {
   '/(auth)/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/(auth)/signup/success/': typeof authSignupSuccessIndexRoute
   '/(marketing)/blog/$slug/': typeof marketingBlogSlugIndexRoute
+  '/(marketing)/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
   '/(marketing)/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
   '/(marketing)/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/(marketing)/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
@@ -1575,6 +1613,8 @@ export interface FileRoutesById {
   '/(marketing)/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/(marketing)/products/qr/': typeof marketingProductsQrIndexRoute
   '/(marketing)/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
+  '/(marketing)/products/whatsapp-broadcast/': typeof marketingProductsWhatsappBroadcastIndexRoute
+  '/(marketing)/products/whatsapp-business-api/': typeof marketingProductsWhatsappBusinessApiIndexRoute
   '/(marketing)/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/(marketing)/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/(marketing)/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
@@ -1696,6 +1736,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/book-a-demo/'
     | '/contact-us/'
+    | '/integrations/'
     | '/partner-page/'
     | '/pricing/'
     | '/privacy-policy/'
@@ -1741,6 +1782,7 @@ export interface FileRouteTypes {
     | '/login/verify-phone-number/'
     | '/signup/success/'
     | '/blog/$slug/'
+    | '/integrations/shopify/'
     | '/pricing/shopify/'
     | '/products/ai-automation/'
     | '/products/ai-review/'
@@ -1749,6 +1791,8 @@ export interface FileRouteTypes {
     | '/products/qr-studio/'
     | '/products/qr/'
     | '/products/testimonial-gateway/'
+    | '/products/whatsapp-broadcast/'
+    | '/products/whatsapp-business-api/'
     | '/products/whatsapp-feedback/'
     | '/products/whatsapp-loyalty/'
     | '/products/whatsapp-survey/'
@@ -1863,6 +1907,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/book-a-demo'
     | '/contact-us'
+    | '/integrations'
     | '/partner-page'
     | '/pricing'
     | '/privacy-policy'
@@ -1908,6 +1953,7 @@ export interface FileRouteTypes {
     | '/login/verify-phone-number'
     | '/signup/success'
     | '/blog/$slug'
+    | '/integrations/shopify'
     | '/pricing/shopify'
     | '/products/ai-automation'
     | '/products/ai-review'
@@ -1916,6 +1962,8 @@ export interface FileRouteTypes {
     | '/products/qr-studio'
     | '/products/qr'
     | '/products/testimonial-gateway'
+    | '/products/whatsapp-broadcast'
+    | '/products/whatsapp-business-api'
     | '/products/whatsapp-feedback'
     | '/products/whatsapp-loyalty'
     | '/products/whatsapp-survey'
@@ -2036,6 +2084,7 @@ export interface FileRouteTypes {
     | '/(marketing)/blog/'
     | '/(marketing)/book-a-demo/'
     | '/(marketing)/contact-us/'
+    | '/(marketing)/integrations/'
     | '/(marketing)/partner-page/'
     | '/(marketing)/pricing/'
     | '/(marketing)/privacy-policy/'
@@ -2081,6 +2130,7 @@ export interface FileRouteTypes {
     | '/(auth)/login/verify-phone-number/'
     | '/(auth)/signup/success/'
     | '/(marketing)/blog/$slug/'
+    | '/(marketing)/integrations/shopify/'
     | '/(marketing)/pricing/shopify/'
     | '/(marketing)/products/ai-automation/'
     | '/(marketing)/products/ai-review/'
@@ -2089,6 +2139,8 @@ export interface FileRouteTypes {
     | '/(marketing)/products/qr-studio/'
     | '/(marketing)/products/qr/'
     | '/(marketing)/products/testimonial-gateway/'
+    | '/(marketing)/products/whatsapp-broadcast/'
+    | '/(marketing)/products/whatsapp-business-api/'
     | '/(marketing)/products/whatsapp-feedback/'
     | '/(marketing)/products/whatsapp-loyalty/'
     | '/(marketing)/products/whatsapp-survey/'
@@ -2196,6 +2248,7 @@ export interface RootRouteChildren {
   marketingAboutUsIndexRoute: typeof marketingAboutUsIndexRoute
   marketingBookADemoIndexRoute: typeof marketingBookADemoIndexRoute
   marketingContactUsIndexRoute: typeof marketingContactUsIndexRoute
+  marketingIntegrationsIndexRoute: typeof marketingIntegrationsIndexRoute
   marketingPartnerPageIndexRoute: typeof marketingPartnerPageIndexRoute
   marketingPricingIndexRoute: typeof marketingPricingIndexRoute
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute
@@ -2209,6 +2262,7 @@ export interface RootRouteChildren {
   authLoginVerifyEmailIndexRoute: typeof authLoginVerifyEmailIndexRoute
   authLoginVerifyPhoneNumberIndexRoute: typeof authLoginVerifyPhoneNumberIndexRoute
   authSignupSuccessIndexRoute: typeof authSignupSuccessIndexRoute
+  marketingIntegrationsShopifyIndexRoute: typeof marketingIntegrationsShopifyIndexRoute
   marketingPricingShopifyIndexRoute: typeof marketingPricingShopifyIndexRoute
   marketingProductsAiAutomationIndexRoute: typeof marketingProductsAiAutomationIndexRoute
   marketingProductsAiReviewIndexRoute: typeof marketingProductsAiReviewIndexRoute
@@ -2217,6 +2271,8 @@ export interface RootRouteChildren {
   marketingProductsQrStudioIndexRoute: typeof marketingProductsQrStudioIndexRoute
   marketingProductsQrIndexRoute: typeof marketingProductsQrIndexRoute
   marketingProductsTestimonialGatewayIndexRoute: typeof marketingProductsTestimonialGatewayIndexRoute
+  marketingProductsWhatsappBroadcastIndexRoute: typeof marketingProductsWhatsappBroadcastIndexRoute
+  marketingProductsWhatsappBusinessApiIndexRoute: typeof marketingProductsWhatsappBusinessApiIndexRoute
   marketingProductsWhatsappFeedbackIndexRoute: typeof marketingProductsWhatsappFeedbackIndexRoute
   marketingProductsWhatsappLoyaltyIndexRoute: typeof marketingProductsWhatsappLoyaltyIndexRoute
   marketingProductsWhatsappSurveyIndexRoute: typeof marketingProductsWhatsappSurveyIndexRoute
@@ -2395,6 +2451,13 @@ declare module '@tanstack/react-router' {
       path: '/contact-us'
       fullPath: '/contact-us/'
       preLoaderRoute: typeof marketingContactUsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/integrations/': {
+      id: '/(marketing)/integrations/'
+      path: '/integrations'
+      fullPath: '/integrations/'
+      preLoaderRoute: typeof marketingIntegrationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)/partner-page/': {
@@ -2761,6 +2824,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingBlogTagSitemapDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
+    '/(marketing)/integrations/shopify/': {
+      id: '/(marketing)/integrations/shopify/'
+      path: '/integrations/shopify'
+      fullPath: '/integrations/shopify/'
+      preLoaderRoute: typeof marketingIntegrationsShopifyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(marketing)/pricing/shopify/': {
       id: '/(marketing)/pricing/shopify/'
       path: '/pricing/shopify'
@@ -2815,6 +2885,20 @@ declare module '@tanstack/react-router' {
       path: '/products/testimonial-gateway'
       fullPath: '/products/testimonial-gateway/'
       preLoaderRoute: typeof marketingProductsTestimonialGatewayIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/whatsapp-broadcast/': {
+      id: '/(marketing)/products/whatsapp-broadcast/'
+      path: '/products/whatsapp-broadcast'
+      fullPath: '/products/whatsapp-broadcast/'
+      preLoaderRoute: typeof marketingProductsWhatsappBroadcastIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/whatsapp-business-api/': {
+      id: '/(marketing)/products/whatsapp-business-api/'
+      path: '/products/whatsapp-business-api'
+      fullPath: '/products/whatsapp-business-api/'
+      preLoaderRoute: typeof marketingProductsWhatsappBusinessApiIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)/products/whatsapp-feedback/': {
@@ -3780,6 +3864,7 @@ const rootRouteChildren: RootRouteChildren = {
   marketingAboutUsIndexRoute: marketingAboutUsIndexRoute,
   marketingBookADemoIndexRoute: marketingBookADemoIndexRoute,
   marketingContactUsIndexRoute: marketingContactUsIndexRoute,
+  marketingIntegrationsIndexRoute: marketingIntegrationsIndexRoute,
   marketingPartnerPageIndexRoute: marketingPartnerPageIndexRoute,
   marketingPricingIndexRoute: marketingPricingIndexRoute,
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,
@@ -3793,6 +3878,8 @@ const rootRouteChildren: RootRouteChildren = {
   authLoginVerifyEmailIndexRoute: authLoginVerifyEmailIndexRoute,
   authLoginVerifyPhoneNumberIndexRoute: authLoginVerifyPhoneNumberIndexRoute,
   authSignupSuccessIndexRoute: authSignupSuccessIndexRoute,
+  marketingIntegrationsShopifyIndexRoute:
+    marketingIntegrationsShopifyIndexRoute,
   marketingPricingShopifyIndexRoute: marketingPricingShopifyIndexRoute,
   marketingProductsAiAutomationIndexRoute:
     marketingProductsAiAutomationIndexRoute,
@@ -3804,6 +3891,10 @@ const rootRouteChildren: RootRouteChildren = {
   marketingProductsQrIndexRoute: marketingProductsQrIndexRoute,
   marketingProductsTestimonialGatewayIndexRoute:
     marketingProductsTestimonialGatewayIndexRoute,
+  marketingProductsWhatsappBroadcastIndexRoute:
+    marketingProductsWhatsappBroadcastIndexRoute,
+  marketingProductsWhatsappBusinessApiIndexRoute:
+    marketingProductsWhatsappBusinessApiIndexRoute,
   marketingProductsWhatsappFeedbackIndexRoute:
     marketingProductsWhatsappFeedbackIndexRoute,
   marketingProductsWhatsappLoyaltyIndexRoute:
