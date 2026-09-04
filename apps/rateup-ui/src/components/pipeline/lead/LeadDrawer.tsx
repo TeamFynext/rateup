@@ -5,7 +5,9 @@ import {
   IconCircleX,
   IconDots,
   IconMessage2,
+  IconPlugConnectedX,
   IconPlus,
+  IconRefresh,
   IconRosetteDiscountCheck,
   IconTrash,
   IconUsersGroup,
@@ -63,6 +65,8 @@ const ACTIVITY_ICON: Record<string, Icon> = {
   NOTE_ADDED: IconMessage2,
   TASK_ADDED: IconPlus,
   TASK_COMPLETED: IconCircleCheck,
+  INTEGRATION_SYNCED: IconRefresh,
+  INTEGRATION_SKIPPED: IconPlugConnectedX,
 };
 
 /**
@@ -76,6 +80,9 @@ const ACTIVITY_TONE: Record<string, string> = {
   NOTE_ADDED: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
   ASSIGNEES_CHANGED: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
   TASK_ADDED: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
+  // A skipped sync is something the org may need to act on, so it reads warm
+  // rather than as neutral chrome.
+  INTEGRATION_SKIPPED: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
 };
 
 const DEFAULT_ACTIVITY_TONE = "bg-primary/10 text-primary";
@@ -154,8 +161,54 @@ function describeActivity(t: TFunction, activity: LeadActivity): { title: string
       return { title: t("Note added"), body: t("{actor} left a note on this lead.", { actor }) };
     case "TASK_ADDED":
       return { title: t("Next activity scheduled"), body: details.taskTitle ?? "" };
-    case "TASK_COMPLETED":
-      return { title: t("Activity completed"), body: details.taskTitle ?? "" };
+    case "INTEGRATION_SYNCED": {
+      const target = details.integrationName ?? t("the CRM");
+      if (details.statusRejected) {
+        // The lead reached the CRM but its stage did not. Called out rather than
+        // reported as a plain success, because it is a mapping the org must fix.
+        return {
+          title: t("Synced to {crm}, but not the stage", { crm: target }),
+          body: t(
+            "{crm} would not accept this lead's stage. Check the stage mapping in the integration settings.",
+            { crm: target },
+          ),
+        };
+      }
+      return {
+        title: details.externalCreated
+          ? t("Added to {crm}", { crm: target })
+          : t("Updated in {crm}", { crm: target }),
+        body: details.toStageName
+          ? t("Synced as {stage}.", { stage: details.toStageName })
+          : t("This lead is up to date in {crm}.", { crm: target }),
+      };
+    }
+    case "INTEGRATION_SKIPPED": {
+      const target = details.integrationName ?? t("the CRM");
+      // The only reason so far, and the common one: Instagram and Messenger
+      // leads have no phone number at all, and GetLead requires one.
+      if (details.skipReason === "NO_PHONE") {
+        return {
+          title: t("Not sent to {crm}", { crm: target }),
+          body: details.sourceLabel
+            ? t(
+                "{crm} needs a phone number, and this {source} lead has none. Add one and it will sync.",
+                {
+                  crm: target,
+                  source: sourceLabel(t, details.sourceLabel as Parameters<typeof sourceLabel>[1]),
+                },
+              )
+            : t("{crm} needs a phone number, and this lead has none.", { crm: target }),
+        };
+      }
+      if (details.skipReason === "NOT_CONFIGURED") {
+        return {
+          title: t("Not sent to {crm}", { crm: target }),
+          body: t("{crm} is connected but not finished setting up.", { crm: target }),
+        };
+      }
+      return { title: t("Not sent to {crm}", { crm: target }), body: "" };
+    }
     default:
       // An activity type the UI does not know yet; the raw type is better than
       // a blank row, and it is deliberately not a translation key.

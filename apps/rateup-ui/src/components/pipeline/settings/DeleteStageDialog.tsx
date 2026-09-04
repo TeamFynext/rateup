@@ -2,6 +2,7 @@ import { IconAlertTriangle } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
 import { useDeleteStageMutation } from "@/backend/pipeline/pipeline.query.tsx";
 import type { PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { IntegratedApps } from "@/types/enums.ts";
 
 import { StageDot } from "../shared/atoms.tsx";
+
+/**
+ * The integrations that carry a lead's status, and so have something to be
+ * wrong about after this. Zapier and the rest are unaffected: they are told
+ * about changes as they happen and hold no copy of where a lead sits.
+ */
+const CRM_INTEGRATIONS = [
+  { id: IntegratedApps.zoho, label: "Zoho" },
+  { id: IntegratedApps.getlead, label: "GetLead" },
+];
 
 interface DeleteStageDialogProps {
   open: boolean;
@@ -52,6 +64,18 @@ export function DeleteStageDialog({
 }: Readonly<DeleteStageDialogProps>) {
   const { t } = useTranslation();
   const deleteStage = useDeleteStageMutation();
+  const { data: integrationStatuses = [] } = useIntegrationStatuses();
+
+  // Shown whenever a CRM is connected, without checking whether the column holds
+  // anything: `openLeadCount` counts only open leads, so a Won or Lost column
+  // full of closed ones reads as empty — and a closed lead's status is exactly
+  // the one a CRM most wants right.
+  const connectedCrms = CRM_INTEGRATIONS.filter((crm) =>
+    integrationStatuses.some(
+      (status: { name?: string; isConnected?: boolean }) =>
+        status.name === crm.id && status.isConnected,
+    ),
+  ).map((crm) => crm.label);
   const [destinationId, setDestinationId] = useState(otherStages[0]?.id ?? "");
 
   useEffect(() => {
@@ -133,6 +157,23 @@ export function DeleteStageDialog({
             </p>
           )}
         </div>
+
+        {/* Deleting a column relocates its leads in bulk, which is the one stage
+            change that does not reach the CRMs — see `deleteStage`. Said before
+            it happens, because nothing afterwards corrects it. */}
+        {connectedCrms.length > 0 && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs dark:border-amber-900/50 dark:bg-amber-950/30">
+            <p className="text-foreground mb-1 font-medium">
+              {t("{crms} will not be updated", { crms: connectedCrms.join(" and ") })}
+            </p>
+            <p className="text-muted-foreground">
+              {t(
+                "Leads moved out of this column keep the status they already have in {crms}. Move a lead again on the board to sync it, or update it there directly.",
+                { crms: connectedCrms.join(" and ") },
+              )}
+            </p>
+          </div>
+        )}
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
