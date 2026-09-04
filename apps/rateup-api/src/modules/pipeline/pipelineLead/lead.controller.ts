@@ -92,6 +92,12 @@ export async function moveLeadHandler(
     const lead = await moveLead(request.params.id, request.body.stageId, request.userId);
     return reply.code(200).send(lead);
   } catch (error) {
+    // Prisma raises P2025 when the scoped lookup matched nothing, which here
+    // means the column is not on this lead's board. That is a bad request, not
+    // a server fault, and saying so beats a generic 500 that reads as an outage.
+    if (error && typeof error === "object" && (error as { code?: string }).code === "P2025") {
+      return reply.code(400).send({ message: "That column is not on this lead's board" });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error moving lead" });
   }
