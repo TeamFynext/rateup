@@ -25,8 +25,8 @@ export const Route = createFileRoute("/sitemap_index.xml")({
           `${baseUrl}/sitemap.xml`,
           `${baseUrl}/tools/sitemap.xml`,
           `${baseUrl}/blog/sitemap.xml`,
-          `${baseUrl}/blog/author/sitemap.xml`,
-          `${baseUrl}/blog/tag/sitemap.xml`,
+          // /blog/tag/* and /blog/author/* are noindex listings — submitting them asks Google to
+          // crawl pages it is told not to index, so their sitemaps are deliberately not listed.
         ];
 
         const sitemapIndexXML = buildSitemapIndex(sitemaps);

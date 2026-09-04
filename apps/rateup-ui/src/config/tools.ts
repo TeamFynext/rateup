@@ -484,18 +484,6 @@ export const buildToolSoftwareAppJsonLd = (tool: ToolDefinition) => {
   };
 };
 
-/** Head script tags for FAQ Schema and Tool Schema (placed below meta tags in head). */
-export const buildToolHeadScripts = (tool: ToolDefinition) => [
-  {
-    type: "application/ld+json",
-    children: JSON.stringify(buildFaqJsonLd(tool.faqs)),
-  },
-  {
-    type: "application/ld+json",
-    children: JSON.stringify(buildToolSoftwareAppJsonLd(tool)),
-  },
-];
-
 export const buildBreadcrumbJsonLd = (crumbs: { name: string; url: string }[]) => ({
   "@type": "BreadcrumbList",
   itemListElement: crumbs.map((crumb, index) => ({
@@ -506,9 +494,7 @@ export const buildBreadcrumbJsonLd = (crumbs: { name: string; url: string }[]) =
   })),
 });
 
-/**
- * Backwards compatibility helper returning the tool schemas.
- */
+/** FAQ Schema + Tool Schema for a tool page, passed to `buildPageHead(path, { jsonLd })`. */
 export const buildToolJsonLd = (tool: ToolDefinition) => [
   buildFaqJsonLd(tool.faqs),
   buildToolSoftwareAppJsonLd(tool),

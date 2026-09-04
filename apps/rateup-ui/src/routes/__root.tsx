@@ -18,7 +18,7 @@ import "keen-slider/keen-slider.min.css";
 
 import { Toaster } from "@/components/ui/sonner.tsx";
 import { cn } from "@/lib/utils.ts";
-import { isProduction, rateupUrl } from "@/utils/constants.ts";
+import { isProduction, rateupLogoOg, rateupUrl } from "@/utils/constants.ts";
 import {
   FB_DOMAIN_VERIFICATION,
   FB_PIXEL_ID,
@@ -81,7 +81,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content:
           "RateUp is the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform. The only inbox for chat automation, collect feedback & build loyalty.",
       },
-      { property: "og:image", content: `${rateupUrl}/og-image.png` },
+      // `/og-image.png` never existed and 404d on every page. `rateupLogoOg` is the real
+      // CloudFront asset; `buildPageHead` overrides this per page.
+      { property: "og:image", content: rateupLogoOg },
 
       // Twitter Card
       { name: "twitter:card", content: "summary_large_image" },
@@ -95,7 +97,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content:
           "RateUp is the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform. The only inbox for chat automation, collect feedback & build loyalty.",
       },
-      { name: "twitter:image", content: `${rateupUrl}/og-image.png` },
+      { name: "twitter:image", content: rateupLogoOg },
 
       {
         name: "p:domain_verify",

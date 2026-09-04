@@ -15,8 +15,10 @@ export const Route = createFileRoute("/(public-facing)/public/testimonial/$colle
     const collectionId = loaderData?.id ?? params.collectionId;
 
     return {
-      title: `Rateup - Testimonial ${collectionName}`,
       meta: [
+        // Must be a `meta` entry — TanStack ignores a top-level `title` key, so this page
+        // rendered the root default title.
+        { title: `Rateup - Testimonial ${collectionName}` },
         { charSet: "utf-8" },
         {
           name: "viewport",

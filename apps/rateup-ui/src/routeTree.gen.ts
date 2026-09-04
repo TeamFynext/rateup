@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as publicFacingRouteRouteImport } from './routes/(public-facing)/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
@@ -180,6 +181,10 @@ import { Route as DashboardSettingsIntegrationsZohoCallbackIndexRouteImport } fr
 import { Route as DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v1/$dbFlowId/index'
 import { Route as DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v2/$dbFlowId/index'
 
+const publicFacingRouteRoute = publicFacingRouteRouteImport.update({
+  id: '/(public-facing)',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -669,33 +674,33 @@ const marketingToolsWhatsappQrCodeGeneratorIndexRoute =
   } as any)
 const publicFacingloyaltyCashierIndexRoute =
   publicFacingloyaltyCashierIndexRouteImport.update({
-    id: '/(public-facing)/(loyalty)/cashier/',
+    id: '/(loyalty)/cashier/',
     path: '/cashier/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingLtShortIdIndexRoute =
   publicFacingLtShortIdIndexRouteImport.update({
-    id: '/(public-facing)/lt/$shortId/',
+    id: '/lt/$shortId/',
     path: '/lt/$shortId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingQrShortIdIndexRoute =
   publicFacingQrShortIdIndexRouteImport.update({
-    id: '/(public-facing)/qr/$shortId/',
+    id: '/qr/$shortId/',
     path: '/qr/$shortId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingWasShortIdIndexRoute =
   publicFacingWasShortIdIndexRouteImport.update({
-    id: '/(public-facing)/was/$shortId/',
+    id: '/was/$shortId/',
     path: '/was/$shortId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingWsShortIdIndexRoute =
   publicFacingWsShortIdIndexRouteImport.update({
-    id: '/(public-facing)/ws/$shortId/',
+    id: '/ws/$shortId/',
     path: '/ws/$shortId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const AdminOrgsOrgIdIndexRoute = AdminOrgsOrgIdIndexRouteImport.update({
   id: '/orgs/$orgId/',
@@ -1020,33 +1025,33 @@ const marketingToolsNpsSurveyTemplatesSlugIndexRoute =
   } as any)
 const publicFacingPublicSurveySurveyIdIndexRoute =
   publicFacingPublicSurveySurveyIdIndexRouteImport.update({
-    id: '/(public-facing)/public/survey/$surveyId/',
+    id: '/public/survey/$surveyId/',
     path: '/public/survey/$surveyId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingPublicSurveyCsIndexRoute =
   publicFacingPublicSurveyCsIndexRouteImport.update({
-    id: '/(public-facing)/public/survey/cs/',
+    id: '/public/survey/cs/',
     path: '/public/survey/cs/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingPublicTestimonialCollectionIdIndexRoute =
   publicFacingPublicTestimonialCollectionIdIndexRouteImport.update({
-    id: '/(public-facing)/public/testimonial/$collectionId/',
+    id: '/public/testimonial/$collectionId/',
     path: '/public/testimonial/$collectionId/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingWsShortIdEndIndexRoute =
   publicFacingWsShortIdEndIndexRouteImport.update({
-    id: '/(public-facing)/ws/$shortId/end/',
+    id: '/ws/$shortId/end/',
     path: '/ws/$shortId/end/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingWsShortIdResponseSubmittedIndexRoute =
   publicFacingWsShortIdResponseSubmittedIndexRouteImport.update({
-    id: '/(public-facing)/ws/$shortId/response-submitted/',
+    id: '/ws/$shortId/response-submitted/',
     path: '/ws/$shortId/response-submitted/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const DashboardAnalyticsTeamTeamidIndexRoute =
   DashboardAnalyticsTeamTeamidIndexRouteImport.update({
@@ -1104,27 +1109,27 @@ const DashboardWhatsappTemplatesTemplateIdIndexRoute =
   } as any)
 const publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute =
   publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport.update({
-    id: '/(public-facing)/(loyalty)/loyalty/$orgId/register/',
+    id: '/(loyalty)/loyalty/$orgId/register/',
     path: '/loyalty/$orgId/register/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingPublicSurveySurveyIdEndIndexRoute =
   publicFacingPublicSurveySurveyIdEndIndexRouteImport.update({
-    id: '/(public-facing)/public/survey/$surveyId/end/',
+    id: '/public/survey/$surveyId/end/',
     path: '/public/survey/$surveyId/end/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute =
   publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport.update({
-    id: '/(public-facing)/public/survey/$surveyId/review-us-on-google/',
+    id: '/public/survey/$surveyId/review-us-on-google/',
     path: '/public/survey/$surveyId/review-us-on-google/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute =
   publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport.update({
-    id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/',
+    id: '/public/wa/$surveyTeamMapId/redirect/',
     path: '/public/wa/$surveyTeamMapId/redirect/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => publicFacingRouteRoute,
   } as any)
 const DashboardSettingsIntegrationsZohoCallbackIndexRoute =
   DashboardSettingsIntegrationsZohoCallbackIndexRouteImport.update({
@@ -1486,6 +1491,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/(public-facing)': typeof publicFacingRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/robots.txt': typeof RobotsDottxtRoute
@@ -1999,6 +2005,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/flows/v2/$dbFlowId'
   id:
     | '__root__'
+    | '/(public-facing)'
     | '/admin'
     | '/dashboard'
     | '/robots.txt'
@@ -2172,6 +2179,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  publicFacingRouteRoute: typeof publicFacingRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   RobotsDottxtRoute: typeof RobotsDottxtRoute
@@ -2217,11 +2225,6 @@ export interface RootRouteChildren {
   marketingToolsWhatsappLinkGeneratorIndexRoute: typeof marketingToolsWhatsappLinkGeneratorIndexRoute
   marketingToolsWhatsappPricingCalculatorIndexRoute: typeof marketingToolsWhatsappPricingCalculatorIndexRoute
   marketingToolsWhatsappQrCodeGeneratorIndexRoute: typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
-  publicFacingloyaltyCashierIndexRoute: typeof publicFacingloyaltyCashierIndexRoute
-  publicFacingLtShortIdIndexRoute: typeof publicFacingLtShortIdIndexRoute
-  publicFacingQrShortIdIndexRoute: typeof publicFacingQrShortIdIndexRoute
-  publicFacingWasShortIdIndexRoute: typeof publicFacingWasShortIdIndexRoute
-  publicFacingWsShortIdIndexRoute: typeof publicFacingWsShortIdIndexRoute
   AuthShopifyLogoutIndexRoute: typeof AuthShopifyLogoutIndexRoute
   AuthShopifyOauth2callbackIndexRoute: typeof AuthShopifyOauth2callbackIndexRoute
   AuthShopifyRetryIndexRoute: typeof AuthShopifyRetryIndexRoute
@@ -2229,19 +2232,17 @@ export interface RootRouteChildren {
   authLoginCallbackGoogleIndexRoute: typeof authLoginCallbackGoogleIndexRoute
   authLoginCallbackPausedIndexRoute: typeof authLoginCallbackPausedIndexRoute
   marketingToolsNpsSurveyTemplatesSlugIndexRoute: typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
-  publicFacingPublicSurveySurveyIdIndexRoute: typeof publicFacingPublicSurveySurveyIdIndexRoute
-  publicFacingPublicSurveyCsIndexRoute: typeof publicFacingPublicSurveyCsIndexRoute
-  publicFacingPublicTestimonialCollectionIdIndexRoute: typeof publicFacingPublicTestimonialCollectionIdIndexRoute
-  publicFacingWsShortIdEndIndexRoute: typeof publicFacingWsShortIdEndIndexRoute
-  publicFacingWsShortIdResponseSubmittedIndexRoute: typeof publicFacingWsShortIdResponseSubmittedIndexRoute
-  publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute: typeof publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute
-  publicFacingPublicSurveySurveyIdEndIndexRoute: typeof publicFacingPublicSurveySurveyIdEndIndexRoute
-  publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute: typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
-  publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute: typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/(public-facing)': {
+      id: '/(public-facing)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof publicFacingRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -2877,35 +2878,35 @@ declare module '@tanstack/react-router' {
       path: '/cashier'
       fullPath: '/cashier/'
       preLoaderRoute: typeof publicFacingloyaltyCashierIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/lt/$shortId/': {
       id: '/(public-facing)/lt/$shortId/'
       path: '/lt/$shortId'
       fullPath: '/lt/$shortId/'
       preLoaderRoute: typeof publicFacingLtShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/qr/$shortId/': {
       id: '/(public-facing)/qr/$shortId/'
       path: '/qr/$shortId'
       fullPath: '/qr/$shortId/'
       preLoaderRoute: typeof publicFacingQrShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/was/$shortId/': {
       id: '/(public-facing)/was/$shortId/'
       path: '/was/$shortId'
       fullPath: '/was/$shortId/'
       preLoaderRoute: typeof publicFacingWasShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/ws/$shortId/': {
       id: '/(public-facing)/ws/$shortId/'
       path: '/ws/$shortId'
       fullPath: '/ws/$shortId/'
       preLoaderRoute: typeof publicFacingWsShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/admin/orgs/$orgId/': {
       id: '/admin/orgs/$orgId/'
@@ -3290,35 +3291,35 @@ declare module '@tanstack/react-router' {
       path: '/public/survey/$surveyId'
       fullPath: '/public/survey/$surveyId/'
       preLoaderRoute: typeof publicFacingPublicSurveySurveyIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/public/survey/cs/': {
       id: '/(public-facing)/public/survey/cs/'
       path: '/public/survey/cs'
       fullPath: '/public/survey/cs/'
       preLoaderRoute: typeof publicFacingPublicSurveyCsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/public/testimonial/$collectionId/': {
       id: '/(public-facing)/public/testimonial/$collectionId/'
       path: '/public/testimonial/$collectionId'
       fullPath: '/public/testimonial/$collectionId/'
       preLoaderRoute: typeof publicFacingPublicTestimonialCollectionIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/ws/$shortId/end/': {
       id: '/(public-facing)/ws/$shortId/end/'
       path: '/ws/$shortId/end'
       fullPath: '/ws/$shortId/end/'
       preLoaderRoute: typeof publicFacingWsShortIdEndIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/ws/$shortId/response-submitted/': {
       id: '/(public-facing)/ws/$shortId/response-submitted/'
       path: '/ws/$shortId/response-submitted'
       fullPath: '/ws/$shortId/response-submitted/'
       preLoaderRoute: typeof publicFacingWsShortIdResponseSubmittedIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/dashboard/analytics/team/$teamid/': {
       id: '/dashboard/analytics/team/$teamid/'
@@ -3388,28 +3389,28 @@ declare module '@tanstack/react-router' {
       path: '/loyalty/$orgId/register'
       fullPath: '/loyalty/$orgId/register/'
       preLoaderRoute: typeof publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/public/survey/$surveyId/end/': {
       id: '/(public-facing)/public/survey/$surveyId/end/'
       path: '/public/survey/$surveyId/end'
       fullPath: '/public/survey/$surveyId/end/'
       preLoaderRoute: typeof publicFacingPublicSurveySurveyIdEndIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/public/survey/$surveyId/review-us-on-google/': {
       id: '/(public-facing)/public/survey/$surveyId/review-us-on-google/'
       path: '/public/survey/$surveyId/review-us-on-google'
       fullPath: '/public/survey/$surveyId/review-us-on-google/'
       preLoaderRoute: typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/(public-facing)/public/wa/$surveyTeamMapId/redirect/': {
       id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/'
       path: '/public/wa/$surveyTeamMapId/redirect'
       fullPath: '/public/wa/$surveyTeamMapId/redirect/'
       preLoaderRoute: typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicFacingRouteRoute
     }
     '/dashboard/settings/integrations/zoho/callback/': {
       id: '/dashboard/settings/integrations/zoho/callback/'
@@ -3434,6 +3435,50 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface publicFacingRouteRouteChildren {
+  publicFacingloyaltyCashierIndexRoute: typeof publicFacingloyaltyCashierIndexRoute
+  publicFacingLtShortIdIndexRoute: typeof publicFacingLtShortIdIndexRoute
+  publicFacingQrShortIdIndexRoute: typeof publicFacingQrShortIdIndexRoute
+  publicFacingWasShortIdIndexRoute: typeof publicFacingWasShortIdIndexRoute
+  publicFacingWsShortIdIndexRoute: typeof publicFacingWsShortIdIndexRoute
+  publicFacingPublicSurveySurveyIdIndexRoute: typeof publicFacingPublicSurveySurveyIdIndexRoute
+  publicFacingPublicSurveyCsIndexRoute: typeof publicFacingPublicSurveyCsIndexRoute
+  publicFacingPublicTestimonialCollectionIdIndexRoute: typeof publicFacingPublicTestimonialCollectionIdIndexRoute
+  publicFacingWsShortIdEndIndexRoute: typeof publicFacingWsShortIdEndIndexRoute
+  publicFacingWsShortIdResponseSubmittedIndexRoute: typeof publicFacingWsShortIdResponseSubmittedIndexRoute
+  publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute: typeof publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute
+  publicFacingPublicSurveySurveyIdEndIndexRoute: typeof publicFacingPublicSurveySurveyIdEndIndexRoute
+  publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute: typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
+  publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute: typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
+}
+
+const publicFacingRouteRouteChildren: publicFacingRouteRouteChildren = {
+  publicFacingloyaltyCashierIndexRoute: publicFacingloyaltyCashierIndexRoute,
+  publicFacingLtShortIdIndexRoute: publicFacingLtShortIdIndexRoute,
+  publicFacingQrShortIdIndexRoute: publicFacingQrShortIdIndexRoute,
+  publicFacingWasShortIdIndexRoute: publicFacingWasShortIdIndexRoute,
+  publicFacingWsShortIdIndexRoute: publicFacingWsShortIdIndexRoute,
+  publicFacingPublicSurveySurveyIdIndexRoute:
+    publicFacingPublicSurveySurveyIdIndexRoute,
+  publicFacingPublicSurveyCsIndexRoute: publicFacingPublicSurveyCsIndexRoute,
+  publicFacingPublicTestimonialCollectionIdIndexRoute:
+    publicFacingPublicTestimonialCollectionIdIndexRoute,
+  publicFacingWsShortIdEndIndexRoute: publicFacingWsShortIdEndIndexRoute,
+  publicFacingWsShortIdResponseSubmittedIndexRoute:
+    publicFacingWsShortIdResponseSubmittedIndexRoute,
+  publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute:
+    publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute,
+  publicFacingPublicSurveySurveyIdEndIndexRoute:
+    publicFacingPublicSurveySurveyIdEndIndexRoute,
+  publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute:
+    publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute,
+  publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute:
+    publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute,
+}
+
+const publicFacingRouteRouteWithChildren =
+  publicFacingRouteRoute._addFileChildren(publicFacingRouteRouteChildren)
 
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
@@ -3718,6 +3763,7 @@ const marketingBlogRouteRouteWithChildren =
   marketingBlogRouteRoute._addFileChildren(marketingBlogRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  publicFacingRouteRoute: publicFacingRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   RobotsDottxtRoute: RobotsDottxtRoute,
@@ -3774,11 +3820,6 @@ const rootRouteChildren: RootRouteChildren = {
     marketingToolsWhatsappPricingCalculatorIndexRoute,
   marketingToolsWhatsappQrCodeGeneratorIndexRoute:
     marketingToolsWhatsappQrCodeGeneratorIndexRoute,
-  publicFacingloyaltyCashierIndexRoute: publicFacingloyaltyCashierIndexRoute,
-  publicFacingLtShortIdIndexRoute: publicFacingLtShortIdIndexRoute,
-  publicFacingQrShortIdIndexRoute: publicFacingQrShortIdIndexRoute,
-  publicFacingWasShortIdIndexRoute: publicFacingWasShortIdIndexRoute,
-  publicFacingWsShortIdIndexRoute: publicFacingWsShortIdIndexRoute,
   AuthShopifyLogoutIndexRoute: AuthShopifyLogoutIndexRoute,
   AuthShopifyOauth2callbackIndexRoute: AuthShopifyOauth2callbackIndexRoute,
   AuthShopifyRetryIndexRoute: AuthShopifyRetryIndexRoute,
@@ -3787,22 +3828,6 @@ const rootRouteChildren: RootRouteChildren = {
   authLoginCallbackPausedIndexRoute: authLoginCallbackPausedIndexRoute,
   marketingToolsNpsSurveyTemplatesSlugIndexRoute:
     marketingToolsNpsSurveyTemplatesSlugIndexRoute,
-  publicFacingPublicSurveySurveyIdIndexRoute:
-    publicFacingPublicSurveySurveyIdIndexRoute,
-  publicFacingPublicSurveyCsIndexRoute: publicFacingPublicSurveyCsIndexRoute,
-  publicFacingPublicTestimonialCollectionIdIndexRoute:
-    publicFacingPublicTestimonialCollectionIdIndexRoute,
-  publicFacingWsShortIdEndIndexRoute: publicFacingWsShortIdEndIndexRoute,
-  publicFacingWsShortIdResponseSubmittedIndexRoute:
-    publicFacingWsShortIdResponseSubmittedIndexRoute,
-  publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute:
-    publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute,
-  publicFacingPublicSurveySurveyIdEndIndexRoute:
-    publicFacingPublicSurveySurveyIdEndIndexRoute,
-  publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute:
-    publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute,
-  publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute:
-    publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

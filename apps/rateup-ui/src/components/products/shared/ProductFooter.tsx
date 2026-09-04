@@ -52,9 +52,9 @@ const ProductFooter = () => {
                 </Link>
               </li>
               <li>
-                <a href="https://blog.rateup.app/" className="hover:text-gray-300 transition">
+                <Link to="/blog" className="hover:text-gray-300 transition">
                   Blog
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

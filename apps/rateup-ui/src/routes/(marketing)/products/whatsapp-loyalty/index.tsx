@@ -73,13 +73,8 @@ const jsonLd = {
         },
       ],
 
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.8",
-        reviewCount: "500",
-        bestRating: "5",
-        worstRating: "1",
-      },
+      // aggregateRating removed: Google's review-snippet policy requires the reviews to be
+      // visible on the page itself. Re-add it only alongside real, rendered reviews.
 
       review: [
         {
@@ -187,15 +182,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
     middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
   component: LoyaltyLandingPage,
-  head: () => ({
-    ...buildPageHead("/products/whatsapp-loyalty"),
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(jsonLd),
-      },
-    ],
-  }),
+  head: () => buildPageHead("/products/whatsapp-loyalty", { jsonLd }),
 });
 
 function LoyaltyLandingPage() {
