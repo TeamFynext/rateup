@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import QRCode from "qrcode";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -24,8 +24,8 @@ import { PhoneInput } from "../ui/phone-input.tsx";
  * design was drawn against — `--surface-2` is `ru-n-50`, `--border` is `ru-n-200`, `--fg` is
  * `ru-n-700` and `--accent` is `ru-blue-600`.
  *
- * The design also draws an Email tab. It is not built here: there is no email endpoint, and
- * the contact API is keyed on phone number, so the form would have nowhere to post.
+ * The Email tab posts to `/api/support/email`, which mails the org owner. It does not go
+ * through the chat pipeline: that is keyed on phone number, and an email-only visitor has none.
  */
 
 interface SupportWidgetProps {
@@ -35,17 +35,27 @@ interface SupportWidgetProps {
   token: string;
   backendUrl?: string;
   webhookUrl?: string;
+  /**
+   * Openers offered under the greeting, the same idea as the Instagram ice breakers in
+   * `instagram_messaging.service.ts`. Tapping one sends it as an ordinary first message.
+   * Pass an empty array to draw none.
+   */
+  icebreakers?: string[];
 }
 
 interface Message {
   id: string;
+  /** When the row was stored. The only clock both directions carry — see messageTimestampMs. */
+  waCreatedAt?: string;
   messageBody: {
     exchangeProcess: "send" | "receive";
+    /* The outbound WhatsApp send payload as it went to Meta: a recipient and a body, and
+       none of the metadata an inbound message arrives with. */
     send: {
-      id: string;
+      id?: string;
       text: { body: string };
       type: string;
-      timestamp: string;
+      timestamp?: string;
     } | null;
     receive: {
       messages: [{ id: string; text: { body: string }; type: string; timestamp: string }];
@@ -56,7 +66,15 @@ interface Message {
 const supportSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().refine(isValidPhoneNumber, { message: "Invalid phone number" }),
+  /* Optional: the conversation is carried on WhatsApp, so the number is the only address we
+     actually need. Left blank it is dropped from the payload rather than posted as "". */
+  email: z.union([z.email("Invalid email"), z.literal("")]).optional(),
+});
+
+const emailSchema = z.object({
+  name: z.string().min(1, "Name is required"),
   email: z.email("Invalid email"),
+  message: z.string().min(1, "Message is required"),
 });
 
 /* The design's field styling: 50px tall, 12px radius, accent border on focus. */
@@ -64,6 +82,19 @@ const FIELD =
   "h-12.5 w-full rounded-xl border border-ru-n-200 bg-white px-3.5 text-[15.5px] text-ru-n-700 outline-none transition-colors placeholder:text-ru-n-400 focus:border-ru-blue-600";
 
 const ERROR_TEXT = "mt-1 text-[12.5px] text-red-600";
+
+/* How long the contact card waits after the last thing the visitor sent. Every new message
+   pushes it back, so someone firing off two or three questions in a row is never cut off
+   mid-thought — the card only lands once they have actually paused. */
+const CONTACT_PROMPT_DELAY_MS = 2500;
+
+/* Deliberately generic: the widget is embedded on customers' own sites, not RateUp's, so the
+   openers have to make sense for any of them. Anything sharper is the embedder's to pass in. */
+const DEFAULT_ICEBREAKERS = [
+  "I have a question about my order",
+  "I need help with my account",
+  "Can someone call me back?",
+];
 
 function ChatGlyph({ className = "size-5" }: Readonly<{ className?: string }>) {
   return (
@@ -91,6 +122,24 @@ function PersonGlyph({ className = "size-6" }: Readonly<{ className?: string }>)
   );
 }
 
+function MailGlyph({ className = "size-5" }: Readonly<{ className?: string }>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="m3.6 6.5 8.4 6 8.4-6" />
+    </svg>
+  );
+}
+
 function SendGlyph({ className = "size-4.75" }: Readonly<{ className?: string }>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -112,6 +161,61 @@ function messageText(message: Message) {
   );
 }
 
+/**
+ * Appends only what is not already in the thread. The same message reaches us by two routes —
+ * the socket pushes it live, and the history fetch returns it too — and either can arrive
+ * first, so `id` is what decides. Without this the widget drew everything twice.
+ */
+function mergeMessages(existing: Message[], incoming: Message[]) {
+  const seen = new Set(existing.map((message) => message?.id).filter(Boolean));
+  return [...existing, ...incoming.filter((message) => message?.id && !seen.has(message.id))];
+}
+
+/**
+ * A message id in the shape Meta's ids take, mirroring `generateWebchatMessageId` in
+ * rateup-api's `utils/messageId.ts` — keep the two in step.
+ *
+ * `wcmid` — web chat message id — and deliberately not Meta's `wamid`, which is short for
+ * WhatsApp Message ID and would claim a message that never touched WhatsApp. The prefix is
+ * what makes a widget message tellable from a WhatsApp one by its id alone, with no other
+ * column to hand. It must also be unique per message: it used to be built from the visitor's
+ * phone number, which gave a whole thread one id and collapsed it to a single bubble.
+ */
+function generateWebchatMessageId() {
+  return (
+    "wcmid." +
+    Date.now().toString(36) +
+    "-" +
+    Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+/** The design stamps bubbles with a bare clock, in whatever locale the visitor is browsing in. */
+function timeLabel(date: Date) {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function messageTimestampMs(message: Message) {
+  /* `waCreatedAt` first: it is on every row and is the only clock both directions carry.
+     An outbound message's `send` body is the payload that went to Meta — a recipient and a
+     body — with no timestamp in it at all, so reading that alone dated every reply to 0 and
+     sorted it to the top of the thread. */
+  const created = message.waCreatedAt ? Date.parse(message.waCreatedAt) : Number.NaN;
+  if (!Number.isNaN(created)) return created;
+
+  const seconds = Number(
+    message.messageBody?.receive?.messages?.[0]?.timestamp || message.messageBody?.send?.timestamp,
+  );
+  return seconds ? seconds * 1000 : 0;
+}
+
+function messageTime(message: Message) {
+  const at = messageTimestampMs(message);
+  return at ? timeLabel(new Date(at)) : "";
+}
+
 export default function SupportWidget({
   whatsappNumber = import.meta.env.VITE_SUPPORT_WHATSAPP,
   companyName = "Team RateUp",
@@ -119,16 +223,26 @@ export default function SupportWidget({
   token,
   backendUrl,
   webhookUrl,
+  icebreakers = DEFAULT_ICEBREAKERS,
 }: Readonly<SupportWidgetProps>) {
   const [isOpen, setIsOpen] = useState(false);
-  const [tab, setTab] = useState<"chat" | "whatsapp">("chat");
+  const [tab, setTab] = useState<"chat" | "whatsapp" | "email">("chat");
   const [newMessage, setNewMessage] = useState("");
   const [contactId, setContactId] = useState<string | null>(null);
   /* Messages typed before we know who the visitor is. They are drawn straight away, then
      posted once the contact exists — the send API cannot accept them any earlier. */
-  const [pendingMessages, setPendingMessages] = useState<string[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<{ body: string; time: string }[]>([]);
+  /* The greeting is drawn client-side, so its clock has to be stamped when the panel opens. */
+  const [botTime, setBotTime] = useState("");
+  /* The design answers a filled-in contact card with one more bot bubble. It carries the
+     moment it was said so a later reply can be placed below it — see `ackSplit`. */
+  const [ack, setAck] = useState<{ name: string; at: number } | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  /* Whether the contact card has had its beat and is ready to be drawn. */
+  const [askForContact, setAskForContact] = useState(false);
   const [qr, setQr] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const contactIdRef = useRef<string | null>(null);
   const retryCountRef = useRef(0);
   const browserId = getBrowserId();
   const { scrollIntoView, targetRef, scrollableRef } = useScrollIntoView<
@@ -137,8 +251,15 @@ export default function SupportWidget({
   >({ duration: 0 });
   const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
   const API_URL = backendUrl || import.meta.env.VITE_API_URL;
-  const WEBHOOK_URL =
-    webhookUrl || `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}/ws/${orgId}?role=fab`;
+  /* `/:afterAuthId/widget`, not `/:afterAuthId/ws/:orgId` — the latter matched no route at all,
+     so this socket never opened and the panel only ever caught up on reload. The org id and
+     token ride the query string because a browser WebSocket cannot send an Authorization
+     header, and `contactId` narrows the org-wide feed to this visitor's own thread. */
+  const socketUrl =
+    contactId && orgId && token
+      ? webhookUrl ||
+        `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}/widget?role=fab&orgId=${encodeURIComponent(orgId)}&accessToken=${encodeURIComponent(token)}&contactId=${encodeURIComponent(contactId)}`
+      : null;
   const queryParams = orgId ? `?orgId=${orgId}` : "";
   const waHref = `https://wa.me/${(whatsappNumber || "").replace(/\D/g, "")}?text=${encodeURIComponent(
     "Hi, I need help with support",
@@ -149,30 +270,71 @@ export default function SupportWidget({
     defaultValues: { name: "", phone: "", email: "" },
   });
 
+  const emailForm = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: { name: "", email: "", message: "" },
+  });
+
+  const handleEmailSubmit = emailForm.handleSubmit(async (values) => {
+    try {
+      await axios.post(`${API_URL}/api/support/email${queryParams}`, values, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEmailSent(true);
+      emailForm.reset();
+    } catch (error) {
+      console.error("Could not send the support email", error);
+      emailForm.setError("root", { message: "That did not send. Please try again." });
+    }
+  });
+
   const [messages, setMessages] = useState<Message[]>([]);
 
+  /* The fab socket is per-org, not per-visitor: every widget on the site is handed every
+     webchat message the org sees. Anything that is not this visitor's own thread belongs to
+     someone else and is dropped here. Read through a ref because the socket is opened once
+     and would otherwise close over the `contactId` from first render, which is null. */
   function handleWebSocketMessage(event: MessageEvent) {
-    const message = JSON.parse(event.data);
-    setMessages((prev) => [...prev, message?.inbox?.message]);
+    let payload: { inbox?: { contact?: { id?: string }; message?: Message } };
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+
+    const message = payload?.inbox?.message;
+    const forContact = payload?.inbox?.contact?.id;
+    if (!message?.id || !forContact || forContact !== contactIdRef.current) return;
+
+    setMessages((prev) => mergeMessages(prev, [message]));
   }
 
+  /* Opened only once there is a contact: before that there is no thread to listen to, and the
+     socket has to name the contact it wants anyway. Re-runs when one is created, which is what
+     puts the visitor on the live feed the moment they finish the contact card. */
   useEffect(() => {
-    if (!browserId) return;
+    if (!browserId || !socketUrl) return;
 
     let ws: WebSocket | null = null;
     let closedByUser = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     function connect(): void {
-      if (!orgId || !token) return;
-      ws = new WebSocket(WEBHOOK_URL);
+      ws = new WebSocket(socketUrl!);
       socketRef.current = ws;
+
+      /* Otherwise the retry budget is spent over the life of the page rather than per
+         outage, and realtime never comes back after five idle timeouts. */
+      ws.onopen = () => {
+        retryCountRef.current = 0;
+      };
 
       ws.onmessage = handleWebSocketMessage;
 
       ws.onclose = () => {
         if (!closedByUser && retryCountRef.current < 5) {
           retryCountRef.current += 1;
-          setTimeout(connect, 1000);
+          retryTimer = setTimeout(connect, 1000);
         }
       };
     }
@@ -181,22 +343,41 @@ export default function SupportWidget({
 
     return () => {
       closedByUser = true;
+      if (retryTimer) clearTimeout(retryTimer);
       ws?.close();
     };
-  }, [WEBHOOK_URL, browserId, orgId]);
+  }, [socketUrl, browserId]);
 
   useEffect(() => {
     const storedContactId = localStorage.getItem("support_contact_id");
     if (!storedContactId) return;
+    contactIdRef.current = storedContactId;
     setContactId(storedContactId);
 
     fetch(`${API_URL}/api/support/contact/${storedContactId}${queryParams}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
-      .then((json) => setMessages((prev) => [...prev, ...(json || [])]))
+      .then((json) => setMessages((prev) => mergeMessages(prev, Array.isArray(json) ? json : [])))
       .catch((error) => console.error("Could not load the support history", error));
   }, [token, API_URL, orgId]);
+
+  useEffect(() => {
+    if (isOpen) setBotTime((prev) => prev || timeLabel(new Date()));
+  }, [isOpen]);
+
+  /* Held back until the visitor stops sending, so the card reads as an answer to the thread
+     rather than a form springing out from under the message they just wrote. Each new message
+     re-runs this and re-arms the timer; once the card is up it stays up, since the branch that
+     clears it needs the queue to have emptied or the contact to exist. */
+  useEffect(() => {
+    if (contactId || pendingMessages.length === 0) {
+      setAskForContact(false);
+      return;
+    }
+    const timer = setTimeout(() => setAskForContact(true), CONTACT_PROMPT_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [contactId, pendingMessages.length]);
 
   /* Only drawn on the WhatsApp tab, so it is not worth generating until the panel opens. */
   useEffect(() => {
@@ -212,14 +393,11 @@ export default function SupportWidget({
 
   useEffect(() => {
     scrollIntoView();
-  }, [messages, pendingMessages, contactId, tab]);
+  }, [messages, pendingMessages, contactId, tab, askForContact]);
 
   /* Takes the contact explicitly rather than reading state: the flush below runs in the same
      tick as the contact being created, when `contactId` has not re-rendered yet. */
   const postMessage = async (body: string, supportContactId: string, phone: string) => {
-    /* `btoa`, not `Buffer`: this runs in the browser, where `Buffer` is a Node global that
-       nothing here polyfills — reaching for it threw before the request was ever made. */
-    const idSuffix = btoa(phone).slice(0, 22);
     const messageBody = {
       object: "support_user",
       entry: [
@@ -231,7 +409,7 @@ export default function SupportWidget({
                 messages: [
                   {
                     from: phone,
-                    id: `webid.chat${phone}FQIAERgS${idSuffix}AA==`,
+                    id: generateWebchatMessageId(),
                     timestamp: Math.floor(Date.now() / 1000).toString(),
                     text: { body },
                     type: "text",
@@ -251,7 +429,12 @@ export default function SupportWidget({
   };
 
   const handleContactSubmit = form.handleSubmit(async (formValues) => {
-    const values = { ...formValues, phone: formValues.phone.replace("+", "") };
+    const { email, ...rest } = formValues;
+    const values = {
+      ...rest,
+      phone: formValues.phone.replace("+", ""),
+      ...(email ? { email } : {}),
+    };
 
     try {
       /* Axios, not `fetch`: the route replies with the bare contact id, so it comes back as
@@ -263,30 +446,33 @@ export default function SupportWidget({
 
       localStorage.setItem("support_contact_id", newContactId);
       localStorage.setItem("support_contact_name", values.phone);
+      /* Set before the first post, not just queued as state: the server echoes each message
+         back over the socket almost immediately, and the handler drops anything whose contact
+         it does not recognise — a ref that is still null would throw the echo away. */
+      contactIdRef.current = newContactId;
       setContactId(newContactId);
 
-      /* Whatever they typed before we had somewhere to send it. Posted in order, and only
-         cleared once they are away, so a failure here leaves them on screen to retry. */
-      for (const body of pendingMessages) {
-        await postMessage(body, newContactId, values.phone);
+      /* Whatever they typed before we had somewhere to send it. Posted in order, and each is
+         dropped the moment it lands, so it hands over to the echoed copy instead of sitting
+         alongside it — that overlap was the message appearing twice. A post that throws
+         leaves the rest on screen to retry. */
+      for (const pending of pendingMessages) {
+        await postMessage(pending.body, newContactId, values.phone);
+        setPendingMessages((prev) => prev.filter((queued) => queued !== pending));
       }
-      setPendingMessages([]);
+      setAck({ name: values.name.trim(), at: Date.now() });
     } catch (error) {
       console.error("Could not start the support conversation", error);
     }
   });
 
-  const handleSendMessage = async () => {
-    const body = newMessage.trim();
-    if (!body) return;
-    setNewMessage("");
-
+  const sendMessage = async (body: string) => {
     const supportContactId = localStorage.getItem("support_contact_id");
     const phone = localStorage.getItem("support_contact_name") ?? "";
 
     /* No contact yet: hold the message and let the form ask who to reply to. */
     if (!supportContactId) {
-      setPendingMessages((prev) => [...prev, body]);
+      setPendingMessages((prev) => [...prev, { body, time: timeLabel(new Date()) }]);
       return;
     }
 
@@ -295,6 +481,45 @@ export default function SupportWidget({
     } catch (error) {
       console.error("Error sending message:", error);
     }
+  };
+
+  /* The acknowledgement is drawn by the widget, not sent by the server, so it has no place
+     in `messages` — but it was said at a moment, and a reply arriving afterwards has to show
+     below it rather than above. This is where it splits the thread. */
+  const ackSplit = useMemo(() => {
+    if (!ack) return messages.length;
+    const index = messages.findIndex((message) => messageTimestampMs(message) > ack.at);
+    return index === -1 ? messages.length : index;
+  }, [messages, ack]);
+
+  const renderMessage = (message: Message, index: number) =>
+    isFromVisitor(message) ? (
+      <div
+        key={message?.id ?? index}
+        className="max-w-[86%] self-end rounded-[16px_16px_5px_16px] bg-ru-blue-600 px-3.75 py-3 text-[15.5px]/[1.5] text-white"
+      >
+        {parseWhatsAppToReact(messageText(message))}
+        <div className="mt-1 text-[11.5px] opacity-[0.72]">{messageTime(message)}</div>
+      </div>
+    ) : (
+      <div key={message?.id ?? index} className="flex items-end gap-2.5">
+        <span className="inline-flex size-8.5 flex-none items-center justify-center rounded-[10px] bg-ru-blue-950 text-white">
+          <ChatGlyph className="size-4.25" />
+        </span>
+        <div className="max-w-[86%]">
+          <div className="rounded-[16px_16px_16px_5px] border border-ru-n-200 bg-white px-3.75 py-3 text-[15.5px]/[1.5] text-ru-n-700">
+            {parseWhatsAppToReact(messageText(message))}
+          </div>
+          <div className="mt-1.25 text-xs text-ru-n-400">{messageTime(message)}</div>
+        </div>
+      </div>
+    );
+
+  const handleSendMessage = () => {
+    const body = newMessage.trim();
+    if (!body) return;
+    setNewMessage("");
+    return sendMessage(body);
   };
 
   if (!orgId || !token) return null;
@@ -382,50 +607,53 @@ export default function SupportWidget({
               <span className="inline-flex size-8.5 flex-none items-center justify-center rounded-[10px] bg-ru-blue-950 text-white">
                 <ChatGlyph className="size-4.25" />
               </span>
-              <div className="rounded-[16px_16px_16px_5px] border border-ru-n-200 bg-white px-3.75 py-3 text-[15.5px]/[1.5] text-ru-n-700">
-                How can we help you?
+              <div>
+                <div className="rounded-[16px_16px_16px_5px] border border-ru-n-200 bg-white px-3.75 py-3 text-[15.5px]/[1.5] text-ru-n-700">
+                  How can we help you?
+                </div>
+                <div className="mt-1.25 text-xs text-ru-n-400">{botTime}</div>
               </div>
             </div>
 
-            {messages.map((message, i) =>
-              isFromVisitor(message) ? (
-                <div
-                  key={message?.id ?? i}
-                  className="max-w-[86%] self-end rounded-[16px_16px_5px_16px] bg-ru-blue-600 px-3.75 py-3 text-[15.5px]/[1.5] text-white"
-                >
-                  {parseWhatsAppToReact(messageText(message))}
-                </div>
-              ) : (
-                <div key={message?.id ?? i} className="flex items-end gap-2.5">
-                  <span className="inline-flex size-8.5 flex-none items-center justify-center rounded-[10px] bg-ru-blue-950 text-white">
-                    <ChatGlyph className="size-4.25" />
-                  </span>
-                  <div className="max-w-[86%] rounded-[16px_16px_16px_5px] border border-ru-n-200 bg-white px-3.75 py-3 text-[15.5px]/[1.5] text-ru-n-700">
-                    {parseWhatsAppToReact(messageText(message))}
-                  </div>
-                </div>
-              ),
+            {/* Only while nothing has been said yet — once the visitor speaks, their own words
+                stand in for the openers and the chips would just crowd the thread. */}
+            {icebreakers.length > 0 && messages.length === 0 && pendingMessages.length === 0 && (
+              <div className="flex flex-wrap justify-end gap-2">
+                {icebreakers.map((question) => (
+                  <button
+                    key={question}
+                    type="button"
+                    onClick={() => sendMessage(question)}
+                    className="cursor-pointer rounded-full border border-ru-n-200 bg-white px-3.5 py-2 text-left text-[14.5px]/[1.35] text-ru-n-600 transition-colors hover:border-ru-blue-600 hover:text-ru-blue-600"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
             )}
 
-            {pendingMessages.map((body, i) => (
+            {messages.slice(0, ackSplit).map((message, i) => renderMessage(message, i))}
+
+            {pendingMessages.map((pending, i) => (
               <div
                 key={`pending-${i}`}
                 className="max-w-[86%] self-end rounded-[16px_16px_5px_16px] bg-ru-blue-600 px-3.75 py-3 text-[15.5px]/[1.5] text-white"
               >
-                {parseWhatsAppToReact(body)}
+                {parseWhatsAppToReact(pending.body)}
+                <div className="mt-1 text-[11.5px] opacity-[0.72]">{pending.time}</div>
               </div>
             ))}
 
             {/* Asked for only once they have said something. The contact API is keyed on phone
                 number, so the message they already typed waits in `pendingMessages` and is
                 posted the moment this card is filled in. */}
-            {!contactId && pendingMessages.length > 0 && (
+            {!contactId && askForContact && (
               <form
                 onSubmit={handleContactSubmit}
                 className="rounded-2xl border border-ru-n-200 bg-white p-4"
               >
                 <div className="mb-3.5 text-[15.5px]/[1.5] text-ru-n-700">
-                  Where should we reply?
+                  Thanks — where should we reply?
                 </div>
                 <div className="flex flex-col gap-2.5">
                   <Controller
@@ -465,7 +693,12 @@ export default function SupportWidget({
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <div>
-                        <input {...field} type="email" placeholder="Email" className={FIELD} />
+                        <input
+                          {...field}
+                          type="email"
+                          placeholder="Email (optional)"
+                          className={FIELD}
+                        />
                         {fieldState.error && (
                           <div className={ERROR_TEXT}>{fieldState.error.message}</div>
                         )}
@@ -482,9 +715,29 @@ export default function SupportWidget({
                 </div>
               </form>
             )}
+
+            {ack && (
+              <div className="flex items-end gap-2.5">
+                <span className="inline-flex size-8.5 flex-none items-center justify-center rounded-[10px] bg-ru-blue-950 text-white">
+                  <ChatGlyph className="size-4.25" />
+                </span>
+                <div className="max-w-[86%]">
+                  <div className="rounded-[16px_16px_16px_5px] border border-ru-n-200 bg-white px-3.75 py-3 text-[15.5px]/[1.5] text-ru-n-700">
+                    Got it, {ack.name} — a human will come back to you shortly. For a faster reply,
+                    ping us on WhatsApp.
+                  </div>
+                  <div className="mt-1.25 text-xs text-ru-n-400">{timeLabel(new Date(ack.at))}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Anything that landed after the acknowledgement — a real reply from the inbox,
+                which used to render above it because the bubble was pinned to the bottom. */}
+            {messages.slice(ackSplit).map((message, i) => renderMessage(message, ackSplit + i))}
+
             <div ref={targetRef} />
           </div>
-        ) : (
+        ) : tab === "whatsapp" ? (
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl border border-ru-n-200 bg-white p-4.5">
               <div className="mb-2.5 flex items-center gap-2.5">
@@ -520,10 +773,99 @@ export default function SupportWidget({
               </p>
             </div>
           </div>
+        ) : (
+          <div>
+            {emailSent ? (
+              <div className="rounded-2xl border border-ru-n-200 bg-white p-5.5 text-center">
+                <span className="mb-3.5 inline-flex size-11.5 items-center justify-center rounded-full border border-ru-green-100 bg-ru-green-50 text-ru-green-600">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-5.5"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 13 4 4L19 7" />
+                  </svg>
+                </span>
+                <div className="mb-2 font-display text-lg font-bold tracking-[-0.02em] text-ru-n-700">
+                  Message sent
+                </div>
+                <p className="text-[14.5px]/[1.5] text-ru-n-500">
+                  We&apos;ll be in touch within one business day.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
+                <Controller
+                  name="name"
+                  control={emailForm.control}
+                  render={({ field, fieldState }) => (
+                    <div>
+                      <input {...field} placeholder="Name" className={FIELD} />
+                      {fieldState.error && (
+                        <div className={ERROR_TEXT}>{fieldState.error.message}</div>
+                      )}
+                    </div>
+                  )}
+                />
+                <Controller
+                  name="email"
+                  control={emailForm.control}
+                  render={({ field, fieldState }) => (
+                    <div>
+                      <input {...field} type="email" placeholder="Email" className={FIELD} />
+                      {fieldState.error && (
+                        <div className={ERROR_TEXT}>{fieldState.error.message}</div>
+                      )}
+                    </div>
+                  )}
+                />
+                {/* The design tucks the send button inside the textarea, hence the tall
+                    bottom padding — the text must not run under it. */}
+                <Controller
+                  name="message"
+                  control={emailForm.control}
+                  render={({ field, fieldState }) => (
+                    <div>
+                      <div className="relative">
+                        <textarea
+                          {...field}
+                          rows={5}
+                          placeholder="Message"
+                          className="w-full resize-y rounded-xl border border-ru-n-200 bg-white px-3.5 pt-3.5 pb-16.5 text-[15.5px]/[1.55] text-ru-n-700 outline-none transition-colors placeholder:text-ru-n-400 focus:border-ru-blue-600"
+                        />
+                        <button
+                          type="submit"
+                          aria-label="Send"
+                          disabled={emailForm.formState.isSubmitting}
+                          className="absolute right-3 bottom-3.5 inline-flex h-12 w-14 cursor-pointer items-center justify-center rounded-xl bg-ru-blue-950 text-white transition-transform hover:-translate-y-px disabled:opacity-60"
+                        >
+                          <SendGlyph className="size-5.5" />
+                        </button>
+                      </div>
+                      {fieldState.error && (
+                        <div className={ERROR_TEXT}>{fieldState.error.message}</div>
+                      )}
+                    </div>
+                  )}
+                />
+                {emailForm.formState.errors.root && (
+                  <div className={ERROR_TEXT}>{emailForm.formState.errors.root.message}</div>
+                )}
+                <div className="text-[13px] text-ru-n-400">
+                  We reply to every email within one business day.
+                </div>
+              </form>
+            )}
+          </div>
         )}
       </div>
 
-      {tab === "chat" && (contactId || pendingMessages.length === 0) && (
+      {tab === "chat" && (
         <div className="flex-none border-t border-ru-n-100 bg-ru-n-50 px-3.5 py-3">
           <form
             onSubmit={(e) => {
@@ -555,6 +897,7 @@ export default function SupportWidget({
           [
             { id: "chat", label: "Chat", icon: <ChatGlyph /> },
             { id: "whatsapp", label: "WhatsApp", icon: <WhatsAppMark className="size-5" /> },
+            { id: "email", label: "Email", icon: <MailGlyph /> },
           ] as const
         ).map((item) => (
           <button

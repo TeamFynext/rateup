@@ -14,6 +14,17 @@ import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const SupportWidget = lazy(() => import("@/components/app&services/support-widget.tsx"));
 
+/**
+ * Openers for RateUp's own site. The widget's built-in defaults are written for the shops that
+ * embed it, where the visitor is a customer chasing an order; here the visitor is a prospect
+ * sizing up the product, so they ask about the product instead.
+ */
+const RATEUP_ICEBREAKERS = [
+  "How does RateUp work with my store?",
+  "What does it cost?",
+  "Can I book a demo?",
+];
+
 interface LayoutProps {
   children: React.ReactNode;
   isBlog?: boolean;
@@ -126,6 +137,7 @@ export default function Layout({
         <SupportWidget
           orgId={import.meta.env.VITE_ROOT_ORG || ""}
           token={import.meta.env.VITE_ROOT_TOKEN || ""}
+          icebreakers={RATEUP_ICEBREAKERS}
         />
       </Suspense>
       <LikeWhatUSee
