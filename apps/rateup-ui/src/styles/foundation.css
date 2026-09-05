@@ -1,6 +1,12 @@
 /*
  * Everything that is not a source scan: the design-system tokens, the `@theme` that turns them
- * into utilities, the custom utilities, the base layer and the global element rules.
+ * into utilities, the custom utilities, the base layer and the global element rules. This is the
+ * former `src/globals.css` minus its Tailwind entry, and it is what `components.json` points
+ * `tailwind.css` at, so `npx shadcn add` writes new component variables here.
+ *
+ * (Left to itself the shadcn CLI would auto-detect `app.css` instead — the only sheet with a bare
+ * `@import "tailwindcss"` — and put tokens somewhere the marketing site never loads. Keep the
+ * `tailwind.css` entry in `components.json` pointing here.)
  *
  * It is imported by all three surface stylesheets (`base.css`, `marketing.css`, `app.css`) —
  * each of those is its own Tailwind compilation unit and has to declare the theme to generate

@@ -7,7 +7,7 @@ import { BOOK_DEMO_ROUTE } from "../helper/BookDemoLink";
 import { ArrowRight, WhatsAppCta } from "./home-ui";
 
 /**
- * Every colour in this section comes from the `[data-loop]` token block in `globals.css`
+ * Every colour in this section comes from the `[data-loop]` token block in `styles/foundation.css`
  * rather than from utility classes, because the redesign colours more than the six discs:
  * the band, the orbit wash, the type and the CTA all belong to the same set.
  */
