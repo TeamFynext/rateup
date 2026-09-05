@@ -212,7 +212,7 @@ export default function HeroSectionNew() {
         <div className="flex flex-wrap items-center justify-center gap-2.5">
           {/* The lockup carries the "Meta" wordmark, so the chip's own label drops it —
               "Meta · Meta Business Partner" would otherwise read twice. */}
-          <TrustChip icon={<MetaLockup className="h-6" />}>Business Partner</TrustChip>
+          <TrustChip icon={<MetaLockup priority className="h-6" />}>Business Partner</TrustChip>
           <TrustChip
             icon={
               <svg

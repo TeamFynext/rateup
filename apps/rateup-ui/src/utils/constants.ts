@@ -8,7 +8,11 @@ import {
 } from "@/types/enums.ts";
 
 export const docsPath = "https://docs.rateup.app";
-export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
+/* Origin of the CloudFront distribution every image on the site is served from. Exported on its
+   own so `__root.tsx` can `preconnect` to it — the LCP image lives here, and opening the
+   connection during HTML parse takes the DNS/TLS handshake off the critical path. */
+export const cloudfrontOrigin: string = import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL;
+export const imagesPath = `${cloudfrontOrigin}/images`;
 /* Sibling prefix to `imagesPath` on the same CloudFront distribution — `/videos` and
    `/images` are both top-level keys in the bucket, not nested under one another. */
 export const videosPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/videos`;

@@ -558,6 +558,8 @@ export default function SupportWidget({
             <img
               src={LAUNCHER_AVATAR}
               alt=""
+              loading="lazy"
+              decoding="async"
               onError={() => setAvatarFailed(true)}
               className="absolute inset-0 size-full rounded-full object-cover"
             />

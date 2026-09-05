@@ -1,7 +1,16 @@
 import { cn } from "@/lib/utils.ts";
 import { imagesPath, metaLockup, metaLockupWhite, rateupIcon } from "@/utils/constants";
 
-type LogoProps = Readonly<{ className?: string }>;
+/**
+ * `priority` marks a logo that is genuinely above the fold. Everything else defaults to
+ * `loading="lazy"` — React 19 emits a `<link rel="preload" as="image">` for every eager `<img>`
+ * it renders during SSR, and the homepage was shipping 21 of them (14 client logos in a
+ * below-fold marquee, both footer marks, a modal's icon), which is enough to push the real LCP
+ * image out of the browser's priority queue.
+ */
+type LogoProps = Readonly<{ className?: string; priority?: boolean }>;
+
+const loadingFor = (priority?: boolean) => (priority ? ("eager" as const) : ("lazy" as const));
 
 export function ShopifyLogo({ className }: LogoProps) {
   return (
@@ -79,9 +88,16 @@ export function GetLeadLogo({ className }: LogoProps) {
   );
 }
 
-export function RateupStar({ className }: LogoProps) {
+export function RateupStar({ className, priority }: LogoProps) {
   return (
-    <img src={rateupIcon} alt="" aria-hidden="true" className={cn("object-contain", className)} />
+    <img
+      src={rateupIcon}
+      alt=""
+      aria-hidden="true"
+      loading={loadingFor(priority)}
+      decoding="async"
+      className={cn("object-contain", className)}
+    />
   );
 }
 
@@ -113,12 +129,18 @@ export function ZohoCombinedLogo({ className }: Readonly<{ className?: string }>
  * beside it — the label already names Meta — so it takes an empty alt and is hidden from
  * assistive tech rather than read out twice.
  */
-export function MetaLockup({ className, onDark }: LogoProps & Readonly<{ onDark?: boolean }>) {
+export function MetaLockup({
+  className,
+  onDark,
+  priority,
+}: LogoProps & Readonly<{ onDark?: boolean }>) {
   return (
     <img
       src={onDark ? metaLockupWhite : metaLockup}
       alt=""
       aria-hidden="true"
+      loading={loadingFor(priority)}
+      decoding="async"
       className={cn("w-auto object-contain", className)}
     />
   );

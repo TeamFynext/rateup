@@ -2,6 +2,8 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { noindexHead } from "@/lib/metadata.ts";
 
+import appCss from "@/styles/app.css?url";
+
 /**
  * Layout for the tenant-facing utility URLs — short links (`/ws`, `/was`, `/lt`, `/qr`), public
  * surveys and testimonial walls, loyalty registration and the cashier screen.
@@ -13,5 +15,10 @@ import { noindexHead } from "@/lib/metadata.ts";
  */
 export const Route = createFileRoute("/(public-facing)")({
   component: () => <Outlet />,
-  head: () => noindexHead(undefined, { follow: false }),
+  head: () => ({
+    ...noindexHead(undefined, { follow: false }),
+    /* The application half of the Tailwind scan — these pages render survey, loyalty and
+       short-link screens built from the app's components, not the marketing ones. */
+    links: [{ rel: "stylesheet", href: appCss }],
+  }),
 });

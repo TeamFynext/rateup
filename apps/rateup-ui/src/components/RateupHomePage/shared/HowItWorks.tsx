@@ -133,7 +133,13 @@ function StepDisc({ step, popIndex }: Readonly<{ step: Step; popIndex?: number }
       }`}
     >
       {step.icon === "star" ? (
-        <img src={rateupIcon} alt="" className="size-5 object-contain" />
+        <img
+          src={rateupIcon}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="size-5 object-contain"
+        />
       ) : (
         <svg
           viewBox="0 0 24 24"
@@ -177,7 +183,13 @@ function StepLabel({ step, centered }: Readonly<{ step: Step; centered?: boolean
 function CentreStat() {
   return (
     <>
-      <img src={rateupIcon} alt="" className="mb-2 h-auto w-5 sm:w-7" />
+      <img
+        src={rateupIcon}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="mb-2 h-auto w-5 sm:w-7"
+      />
       <div
         style={{ color: "var(--lp-fg)" }}
         className="font-display text-[clamp(1.75rem,5.2vw,2.875rem)]/none font-bold tracking-[-0.04em]"

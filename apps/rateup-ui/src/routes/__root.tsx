@@ -1,3 +1,7 @@
+/* Preloaded below. Imported as URLs so Vite fingerprints them the same way it does the copies
+   the stylesheet's `@font-face` rules point at — a different URL would download the face twice. */
+import figtreeLatin from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
+import instrumentSansLatin from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
@@ -11,14 +15,14 @@ import { useTranslation } from "react-i18next";
 
 import ErrorPage from "@/components/error.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import Error from "@/components/not-found.tsx";
-import { ThemeProvider } from "@/components/theme/theme-provider.tsx";
 
 import "keen-slider/keen-slider.min.css";
 
+import Error from "@/components/not-found.tsx";
+import { ThemeProvider } from "@/components/theme/theme-provider.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
 import { cn } from "@/lib/utils.ts";
-import { isProduction, rateupLogoOg, rateupUrl } from "@/utils/constants.ts";
+import { cloudfrontOrigin, isProduction, rateupLogoOg, rateupUrl } from "@/utils/constants.ts";
 import {
   FB_DOMAIN_VERIFICATION,
   FB_PIXEL_ID,
@@ -29,7 +33,7 @@ import {
 import { REDIRECT_MAP } from "../../redirects/index.ts";
 import Providers from "../components/providers.tsx";
 
-import appCss from "../globals.css?url";
+import baseCss from "../styles/base.css?url";
 
 export interface RouterContext {
   /**
@@ -40,6 +44,52 @@ export interface RouterContext {
    */
   getQueryClient: () => QueryClient;
 }
+
+/**
+ * GTM and the Meta Pixel, started after the page is interactive rather than during head parse.
+ *
+ * Both loaders used to run as blocking inline scripts in `<head>`, so every visitor paid for
+ * two third-party connections before the first paint. Nothing on the site reads `dataLayer` or
+ * `fbq` during render — the pixel helpers in `utils/fbpixel.ts` queue onto `fbq.queue`, which
+ * the stub below still creates synchronously — so the loaders can wait for `load` and the
+ * browser's idle time. Events fired before then are queued and flushed by the vendors' own
+ * stubs, which is what they are designed for.
+ */
+const ANALYTICS_BOOTSTRAP = `
+window.dataLayer = window.dataLayer || [];
+/* The standard gtag stub, defined synchronously so a consent update that happens before GTM
+   finishes loading is queued onto dataLayer instead of being dropped with a console warning
+   (which is what setGAConsent did whenever it ran early). */
+window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[]}(window,document);
+fbq('consent', 'revoke');
+fbq('init', ${FB_PIXEL_ID});
+fbq('track', 'PageView');
+
+function rateupLoadAnalytics() {
+  var d = document, s = d.getElementsByTagName('script')[0];
+  window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+  var g = d.createElement('script');
+  g.async = true;
+  g.src = 'https://www.googletagmanager.com/gtm.js?id=${GTM_ID}';
+  s.parentNode.insertBefore(g, s);
+
+  var p = d.createElement('script');
+  p.async = true;
+  p.src = 'https://connect.facebook.net/en_US/fbevents.js';
+  s.parentNode.insertBefore(p, s);
+}
+
+function rateupScheduleAnalytics() {
+  if (window.requestIdleCallback) window.requestIdleCallback(rateupLoadAnalytics, { timeout: 3000 });
+  else window.setTimeout(rateupLoadAnalytics, 1);
+}
+
+if (document.readyState === 'complete') rateupScheduleAnalytics();
+else window.addEventListener('load', rateupScheduleAnalytics);
+`;
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: ({ location }) => {
@@ -109,46 +159,39 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
     ],
     links: [
+      /* Every image, logo and screenshot on the marketing site is on this CloudFront
+         distribution, and the LCP image is one of them — opening the connection while the HTML
+         is still parsing takes the DNS/TLS handshake off the critical path. */
+      { rel: "preconnect", href: cloudfrontOrigin, crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: cloudfrontOrigin },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: baseCss,
+      },
+      /* The two faces every page renders text in. Without these the browser cannot discover
+         them until it has fetched and parsed the stylesheet, which is a second round trip
+         before any text can paint in the real font. `crossOrigin` is required on font preloads
+         even same-origin, or the preload is ignored and the file is fetched twice. */
+      {
+        rel: "preload",
+        as: "font",
+        type: "font/woff2",
+        href: instrumentSansLatin,
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
+        as: "font",
+        type: "font/woff2",
+        href: figtreeLatin,
+        crossOrigin: "anonymous",
       },
       {
         rel: "shortcut icon",
         href: "/favicon.png",
       },
     ],
-    scripts: [
-      isProduction
-        ? {
-            children: `
-          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','${GTM_ID}');
-        `,
-          }
-        : undefined,
-      // Facebook Pixel
-      isProduction
-        ? {
-            children: `
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('consent', 'revoke');
-        fbq('init', ${FB_PIXEL_ID});
-        fbq('track', 'PageView');
-        `,
-          }
-        : undefined,
-    ],
+    scripts: isProduction ? [{ children: ANALYTICS_BOOTSTRAP }] : [],
   }),
   errorComponent: ErrorPage,
   notFoundComponent: Error,

@@ -1,0 +1,64 @@
+/*
+ * The stylesheet every page loads, from `__root.tsx`.
+ *
+ * `src/globals.css` used to be the only stylesheet, and because `@import "tailwindcss"` scans
+ * the whole of `src`, every marketing visitor downloaded 563 KB of CSS containing the dashboard,
+ * the survey editor and the admin panel. The scan is now split three ways by surface — this file
+ * (the shell), `marketing.css` and `app.css` — with `source(none)` plus explicit `@source` globs
+ * so each sheet only carries the classes its own surface can render.
+ *
+ * Scope here is deliberately narrow: the shadcn primitives (shared by every surface, so they
+ * belong in the global sheet rather than being duplicated in two), the loaders, the theme
+ * provider, and the error/404 screens the router can render from the root on any route.
+ */
+@import "tailwindcss" source(none);
+
+@source "../components/ui";
+/*
+ * …minus the primitives only the application can render. `components/ui` is 74 files and the
+ * marketing site reaches 31 of them; the app sidebar, the charts, the data table, the chat
+ * bubbles and the flow-graph nodes are half the weight of this stylesheet and can never appear
+ * on a marketing page. `app.css` keeps Tailwind's full scan, so the app still gets them.
+ *
+ * If a marketing page ever needs one of these, delete its line — the component will render
+ * visibly unstyled in development until you do, which is the intended way to find out.
+ */
+@source not "../components/ui/attachment.tsx";
+@source not "../components/ui/base-node.tsx";
+@source not "../components/ui/bubble.tsx";
+@source not "../components/ui/button-edge.tsx";
+@source not "../components/ui/chart.tsx";
+@source not "../components/ui/command.tsx";
+@source not "../components/ui/creative-avatar.tsx";
+@source not "../components/ui/drawer.tsx";
+@source not "../components/ui/dropdown-menu.tsx";
+@source not "../components/ui/inline-multi-select.tsx";
+@source not "../components/ui/input-otp.tsx";
+@source not "../components/ui/loading-overlay.tsx";
+@source not "../components/ui/marker.tsx";
+@source not "../components/ui/message.tsx";
+@source not "../components/ui/message-scroller.tsx";
+@source not "../components/ui/multi-select.tsx";
+@source not "../components/ui/node-header.tsx";
+@source not "../components/ui/phone-preview.tsx";
+@source not "../components/ui/premium-avatar.tsx";
+@source not "../components/ui/resizable.tsx";
+@source not "../components/ui/resizable-navbar.tsx";
+@source not "../components/ui/sidebar.tsx";
+@source not "../components/ui/table.tsx";
+@source not "../components/ui/tags-input.tsx";
+@source "../components/Loaders";
+@source "../components/theme";
+@source "../components/404";
+@source "../components/error.tsx";
+@source "../components/not-found.tsx";
+@source "../components/providers.tsx";
+@source "../components/AppErrorBoundary.tsx";
+@source "../components/SuperToken";
+
+/* Design System V2: Instrument Sans (body/UI) + Figtree (display/logo).
+   Declared once, here, because this sheet is on every page. */
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/figtree";
+
+@import "./foundation.css";

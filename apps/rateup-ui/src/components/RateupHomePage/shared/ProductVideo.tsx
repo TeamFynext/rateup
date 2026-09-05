@@ -49,6 +49,8 @@ export default function ProductVideo({ src = rateupProductVideo }: Readonly<Prod
               <img
                 src={rateupLogoWhite}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="absolute top-4 left-4 h-4.5 w-auto opacity-85 sm:top-6.5 sm:left-6.5 sm:h-6"
               />
 
