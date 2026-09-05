@@ -241,22 +241,24 @@ const pageMetadata = {
   },
 
   // ── Keyword hub pages ───────────────────────────────────────────────────────
+  // Title and description are the design's own `<helmet>` values, not a paraphrase.
   "/products/whatsapp-business-api": {
-    title: "WhatsApp Business API for Business - Official Meta Partner | RateUp",
+    title: "WhatsApp Business API for Growing Brands | RateUp",
     description:
-      "Everything about the WhatsApp Business API: how it differs from the WhatsApp Business app, Embedded Signup onboarding, Meta's per-message pricing and what you can build. Start free.",
-    ogTitle: "WhatsApp Business API for Business - Official Meta Partner",
+      "Get the WhatsApp Business API in minutes with Meta Embedded Signup. Templates, Flows, catalog, payments, loyalty and broadcasts in one platform. Start free.",
+    ogTitle: "WhatsApp Business API for Growing Brands",
     ogDescription:
-      "What the WhatsApp Business API is, how to get access, what Meta charges per message, and what you can build on it.",
+      "Connect through Meta's Embedded Signup and run templates, Flows, catalog, payments, loyalty and broadcasts from one inbox.",
     sitemap: { priority: "0.9", changefreq: "monthly" },
   },
+  // Title and description are the design's own `<helmet>` values, not a paraphrase.
   "/products/whatsapp-broadcast": {
-    title: "WhatsApp Broadcast Software on the Official Business API | RateUp",
+    title: "WhatsApp Broadcast Software on the Official API | RateUp",
     description:
-      "Send segmented WhatsApp broadcasts to thousands of customers on Meta's official API - no 256-contact limit, no ban risk. Templates, scheduling, opt-outs and delivery analytics.",
-    ogTitle: "WhatsApp Broadcast Software on the Official Business API",
+      "Send WhatsApp broadcasts to thousands of customers with approved templates, daily send limits and delivery reports. Official Business API. Start free.",
+    ogTitle: "WhatsApp Broadcast Software on the Official API",
     ogDescription:
-      "Broadcast to thousands on the official API - segmentation, approved templates, scheduling, opt-out handling and per-message analytics.",
+      "Broadcast to your whole list from a verified number — approved templates, daily send limits, drip stages and delivery reports.",
     sitemap: { priority: "0.9", changefreq: "monthly" },
   },
 
@@ -270,13 +272,14 @@ const pageMetadata = {
       "Orders, customers and loyalty points sync both ways. Most setups are live the same day.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
+  // Title and description are the design's own `<helmet>` values, not a paraphrase.
   "/integrations/shopify": {
-    title: "Shopify WhatsApp Integration: Loyalty, Feedback & Broadcasts | RateUp",
+    title: "Shopify WhatsApp Integration: Orders, Loyalty & Feedback | RateUp",
     description:
-      "Install RateUp from the Shopify App Store in one click. Sync orders and customers, award loyalty points automatically, recover abandoned carts and confirm COD orders on WhatsApp.",
-    ogTitle: "Shopify WhatsApp Integration: Loyalty, Feedback & Broadcasts",
+      "Connect Shopify to WhatsApp in one click. Order updates, abandoned checkout recovery, post-purchase feedback and loyalty points on every paid order. Free plan.",
+    ogTitle: "Shopify WhatsApp Integration: Orders, Loyalty & Feedback",
     ogDescription:
-      "One-click install from the Shopify App Store. Order sync, loyalty points, post-purchase feedback and abandoned-cart broadcasts on WhatsApp.",
+      "Store webhooks become WhatsApp messages: order updates, checkout recovery, loyalty points on paid orders and a post-delivery feedback Flow.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
 } as const satisfies Record<string, PageMetadata>;

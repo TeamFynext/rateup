@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import ShopifyIntegrationPage, { SHOPIFY_FAQS } from "@/components/products/landing/ShopifyPage";
+import ShopifyIntegrationPage from "@/components/products/landing/shopify";
+import { SHOPIFY_FAQS } from "@/components/products/landing/shopify/content";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import { breadcrumbList, faqPage, graph, publisher, webPage } from "@/lib/jsonLd.ts";
 import { BASE_URL, buildPageHead } from "@/lib/metadata.ts";
@@ -16,19 +17,21 @@ const jsonLd = graph(
     name: "RateUp for Shopify",
     url: `${BASE_URL}${PATH}`,
     description:
-      "RateUp's Shopify integration syncs orders and customers, awards WhatsApp loyalty points on every order, recovers abandoned carts, confirms cash-on-delivery orders and collects post-purchase feedback on WhatsApp.",
+      "RateUp's Shopify integration turns store webhooks into WhatsApp messages: order updates, abandoned-checkout recovery with the checkout link, loyalty points on paid orders, and a post-delivery feedback Flow.",
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "Ecommerce Marketing Integration",
     operatingSystem: "Web",
     installUrl: "https://apps.shopify.com/rateup",
     featureList: [
       "One-click install from the Shopify App Store",
-      "Two-way order and customer sync",
-      "Loyalty points awarded on paid orders",
-      "Abandoned-cart recovery over WhatsApp",
-      "Cash-on-delivery order confirmation",
-      "Delivery-triggered post-purchase feedback",
-      "Shared inbox with Shopify order history in context",
+      "Store webhooks registered automatically, including the mandatory GDPR webhooks",
+      "Eight store events, each with a per-event template and delay",
+      "Twenty Shopify fields mappable into approved template variables",
+      "Abandoned-checkout recovery with the Checkout Recovery Link variable",
+      "Loyalty points awarded on paid orders and revoked on cancellation",
+      "Post-delivery rating Flow with Google review routing",
+      "Cash-on-delivery confirmation with quick-reply templates",
+      "WhatsApp catalog carts via Shopify checkout link or native payment",
     ],
     publisher,
   },
@@ -40,8 +43,8 @@ const jsonLd = graph(
   ]),
   webPage(
     PATH,
-    "Shopify WhatsApp Integration: Loyalty, Feedback & Broadcasts",
-    "Install RateUp from the Shopify App Store to sync orders and customers, award loyalty points, recover abandoned carts, confirm COD orders and collect feedback on WhatsApp.",
+    "Shopify WhatsApp Integration: Orders, Loyalty & Feedback",
+    "Connect Shopify to WhatsApp in one click: order updates, abandoned checkout recovery, post-purchase feedback and loyalty points on every paid order.",
   ),
 );
 
