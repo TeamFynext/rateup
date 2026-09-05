@@ -1,22 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import CustomerProfiles from "@/components/LoyaltyLandingPage/CustomerProfiles";
-import Faq, { faqs } from "@/components/LoyaltyLandingPage/Faq";
-import Hero from "@/components/LoyaltyLandingPage/Hero";
-import HowItWorks from "@/components/LoyaltyLandingPage/HowItWorks";
-import Integrations from "@/components/LoyaltyLandingPage/Integrations";
-import Trusted from "@/components/LoyaltyLandingPage/Trusted";
-import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
+import LoyaltyPage from "@/components/products/landing/loyalty";
+import { LOYALTY_FAQS } from "@/components/products/landing/loyalty/content";
 import Layout from "@/components/RateupHomePage/Layout";
-import { useRevealAnimation } from "@/hooks/useRevealAnimation";
 import { faqPage } from "@/lib/jsonLd.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
 import { productsMarkdown } from "../../../../markdown/products";
 import { createMarkdownMiddleware } from "../../../../markdown/serveMarkdown";
-
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -127,8 +119,8 @@ const jsonLd = {
       },
     },
 
-    /* Built from the same `faqs` array `<Faq />` renders below. */
-    faqPage(faqs.map((faq) => ({ question: faq.q, answer: faq.a }))),
+    /* Built from the same array the page's accordion renders. */
+    faqPage(LOYALTY_FAQS),
   ],
 };
 
@@ -136,24 +128,14 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
   server: {
     middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
-  component: LoyaltyLandingPage,
+  component: RouteComponent,
   head: () => buildPageHead("/products/whatsapp-loyalty", { jsonLd }),
 });
 
-function LoyaltyLandingPage() {
-  useRevealAnimation();
+function RouteComponent() {
   return (
-    <Layout contentClassName={styles.themeLoyalty} navbarClassName="heroNav">
-      <div className="loyalty-scope">
-        <span id="top"></span>
-        <Hero />
-        <HowItWorks />
-        <WhyWhatsApp />
-        <CustomerProfiles />
-        <Integrations />
-        <Trusted />
-        <Faq />
-      </div>
+    <Layout>
+      <LoyaltyPage />
     </Layout>
   );
 }
