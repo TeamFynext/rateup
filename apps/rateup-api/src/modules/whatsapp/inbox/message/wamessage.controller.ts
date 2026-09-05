@@ -387,23 +387,35 @@ export async function handleWaMessages(
         orgId,
       );
     // Notify connected clients
+    const inboxEvent = {
+      type: "inbox" as const,
+      inbox: {
+        // The inbox list is ticket-grained, so the payload names the ticket
+        // this message landed on. A bare Contact has no way to say which of
+        // its tickets it means, and the client had to guess.
+        contact: {
+          ...contact,
+          conversationId: conversation?.id ?? null,
+          conversationStatus: conversation?.status ?? null,
+        },
+        message: waMessage,
+      },
+    };
+
+    // A webchat thread has the visitor's widget on one end and the inbox on the other, so it
+    // goes to both — `undefined` is "no filter" to the subscriber in org.ws.controller.
+    //
+    // The inbox sends to a webchat contact with `platform: WEBCHAT` (getContactPlatform), so
+    // its own replies were recorded as WEBCHAT and this filter aimed them at `fab` alone: the
+    // dashboard never saw an echo of the message it had just sent, and the thread fell back on
+    // whatever the refetch happened to return. Inbound had the mirror-image problem, reaching
+    // the widget and never the inbox. One thread, two ends, one broadcast.
     await sendViaWstoOrgHandler(
       orgId,
-      {
-        type: "inbox",
-        inbox: {
-          // The inbox list is ticket-grained, so the payload names the ticket
-          // this message landed on. A bare Contact has no way to say which of
-          // its tickets it means, and the client had to guess.
-          contact: {
-            ...contact,
-            conversationId: conversation?.id ?? null,
-            conversationStatus: conversation?.status ?? null,
-          },
-          message: waMessage,
-        },
-      },
-      sourcePlatform === PlatformType.WEBCHAT ? "fab" : "main",
+      inboxEvent,
+      contact.source === PlatformType.WEBCHAT || sourcePlatform === PlatformType.WEBCHAT
+        ? undefined
+        : "main",
     );
 
     return waMessage;

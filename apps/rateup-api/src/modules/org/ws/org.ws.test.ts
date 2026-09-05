@@ -38,6 +38,10 @@ vi.mock("supertokens-node/recipe/session/index.js", () => ({
 }));
 
 vi.mock("../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
+vi.mock("../../apiAccessToken/apiAccessToken.service.js", () => ({
+  verifyApiAccessToken: vi.fn(),
+}));
+vi.mock("../org.services.js", () => ({ getOrgById: vi.fn() }));
 
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
 import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
@@ -45,11 +49,14 @@ import { log } from "../../../utils/logger.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import {
   checkMobileId,
+  checkWidgetToken,
   handleWebSocketConnection,
   orgWsAuthCheckHandler,
   sendViaWstoOrgHandler,
   WS_CHANNEL,
 } from "./org.ws.controller.js";
+import { verifyApiAccessToken } from "../../apiAccessToken/apiAccessToken.service.js";
+import { getOrgById } from "../org.services.js";
 import { orgWsRoutes } from "./org.ws.routes.js";
 import { afterAuthIdParamsSchema } from "./org.ws.schema.js";
 
@@ -207,6 +214,39 @@ describe("handleWebSocketConnection", () => {
 
     expect(widget.send).toHaveBeenCalledOnce();
     expect(dashboard.send).not.toHaveBeenCalled();
+  });
+
+  test("a widget socket hears only the contact it named", async () => {
+    const mine = socket();
+    const theirs = socket();
+    await handleWebSocketConnection(mine, req({ query: { role: "fab", contactId: "contact-1" } }));
+    await handleWebSocketConnection(
+      theirs,
+      req({ query: { role: "fab", contactId: "contact-2" } }),
+    );
+
+    broadcast(OWN_ORG, { type: "inbox", inbox: { contact: { id: "contact-1" } } }, "fab");
+
+    expect(mine.send).toHaveBeenCalledOnce();
+    // The whole point: one visitor's widget must never be handed another's conversation.
+    expect(theirs.send).not.toHaveBeenCalled();
+  });
+
+  test("a socket that named no contact still hears everything", async () => {
+    const dashboard = socket();
+    await handleWebSocketConnection(dashboard, req({ user: { orgId: OWN_ORG, role: "AGENT" } }));
+
+    broadcast(OWN_ORG, { type: "inbox", inbox: { contact: { id: "contact-1" } } });
+
+    expect(dashboard.send).toHaveBeenCalledOnce();
+  });
+
+  test("ignores a contactId on a dashboard socket", async () => {
+    const dashboard = socket();
+
+    await handleWebSocketConnection(dashboard, req({ query: { contactId: "contact-1" } }));
+
+    expect((dashboard as any).contactId).toBeUndefined();
   });
 
   test("schedules an online status for the connecting user", async () => {
@@ -447,11 +487,24 @@ describe("orgWsRoutes", () => {
     return { routes, hooks };
   }
 
-  test("registers three routes and adds no tree-wide hook", async () => {
+  test("registers four routes and adds no tree-wide hook", async () => {
     const { routes, hooks } = await collect();
 
-    expect(routes.map((r) => r.url)).toEqual(["/auth", "/:afterAuthId", "/:afterAuthId/mobilews"]);
+    expect(routes.map((r) => r.url)).toEqual([
+      "/auth",
+      "/:afterAuthId",
+      "/:afterAuthId/widget",
+      "/:afterAuthId/mobilews",
+    ]);
     expect(hooks).toHaveLength(0);
+  });
+
+  test("the widget socket authenticates on its own token, not a session", async () => {
+    const { routes } = await collect();
+
+    const ws = routes.find((r) => r.url === "/:afterAuthId/widget");
+    expect(ws.opts.websocket).toBe(true);
+    expect(ws.opts.preHandler).toBe(checkWidgetToken);
   });
 
   test("the browser socket requires a session cookie", async () => {
@@ -479,5 +532,77 @@ describe("orgWsRoutes", () => {
 
   test("the params schema accepts any string as the connection id", () => {
     expect(afterAuthIdParamsSchema.safeParse({ afterAuthId: "anything" }).success).toBe(true);
+  });
+});
+
+describe("checkWidgetToken", () => {
+  const verify = verifyApiAccessToken as unknown as Mock;
+  const findOrg = getOrgById as unknown as Mock;
+
+  function widgetReq(query: Record<string, string | undefined>) {
+    return { query } as any;
+  }
+
+  beforeEach(() => {
+    findOrg.mockResolvedValue({ id: OWN_ORG });
+    verify.mockResolvedValue(true);
+  });
+
+  test("resolves the org onto the request for a valid token", async () => {
+    const request = widgetReq({ orgId: OWN_ORG, accessToken: "tok" });
+    const rep = reply();
+
+    await checkWidgetToken(request, rep);
+
+    expect(verify).toHaveBeenCalledWith(OWN_ORG, "tok");
+    expect(request.user.orgId).toBe(OWN_ORG);
+    expect(rep.code).not.toHaveBeenCalled();
+  });
+
+  test("refuses a request with no token", async () => {
+    const rep = reply();
+
+    await checkWidgetToken(widgetReq({ orgId: OWN_ORG }), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(401);
+    expect(verify).not.toHaveBeenCalled();
+  });
+
+  test("refuses a request with no orgId", async () => {
+    const rep = reply();
+
+    await checkWidgetToken(widgetReq({ accessToken: "tok" }), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(401);
+  });
+
+  test("refuses a token that does not belong to the org", async () => {
+    verify.mockResolvedValue(false);
+    const request = widgetReq({ orgId: OWN_ORG, accessToken: "wrong" });
+    const rep = reply();
+
+    await checkWidgetToken(request, rep);
+
+    expect(rep.code).toHaveBeenCalledWith(401);
+    expect(request.user).toBeUndefined();
+  });
+
+  test("answers 404 for an org that does not exist", async () => {
+    findOrg.mockResolvedValue(null);
+    const rep = reply();
+
+    await checkWidgetToken(widgetReq({ orgId: "nope", accessToken: "tok" }), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(404);
+    expect(verify).not.toHaveBeenCalled();
+  });
+
+  test("answers 401 rather than throwing when the lookup fails", async () => {
+    findOrg.mockRejectedValue(new Error("db down"));
+    const rep = reply();
+
+    await checkWidgetToken(widgetReq({ orgId: OWN_ORG, accessToken: "tok" }), rep);
+
+    expect(rep.code).toHaveBeenCalledWith(401);
   });
 });

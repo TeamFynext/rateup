@@ -14,6 +14,9 @@ import BookDemoRequestEmail, {
 } from "../../../emails/book-demo-request.js";
 import CampaignCompletedEmail from "../../../emails/campaign-completed.js";
 import ContactFormEmail, { type ContactFormEmailProps } from "../../../emails/contact-form.js";
+import SupportWidgetEmail, {
+  type SupportWidgetEmailProps,
+} from "../../../emails/support-widget.js";
 import GeneralEmail, { type GeneralEmailProps } from "../../../emails/general.js";
 import OrgDeletionReminderEmail, {
   type OrgDeletionReminderEmailProps,
@@ -124,6 +127,10 @@ export function renderSurveyResponseEmail(props: {
 
 export function renderContactFormEmail(props: ContactFormEmailProps) {
   return renderEmail(<ContactFormEmail {...props} />);
+}
+
+export function renderSupportWidgetEmail(props: SupportWidgetEmailProps) {
+  return renderEmail(<SupportWidgetEmail {...props} />);
 }
 
 export function renderSubscriptionActivatedEmail(props: {

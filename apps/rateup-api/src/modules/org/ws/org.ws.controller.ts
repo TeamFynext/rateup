@@ -6,6 +6,9 @@ import baseRedis from "../../../utils/redisConnection.js";
 import { userStatusQueue } from "../../../workers/bullmq/queues/index.js";
 import { WebSocket } from "@fastify/websocket";
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
+import { verifyApiAccessToken } from "../../apiAccessToken/apiAccessToken.service.js";
+import { getOrgById } from "../org.services.js";
+import { Role } from "../../../../generated/prisma/client.js";
 // Constants for delays
 const ONLINE_DEBOUNCE_MS = 2000;
 const OFFLINE_DELAY_MS = 15000;
@@ -27,7 +30,15 @@ export const WS_CHANNEL = "ws:messages";
  * (`SUPER_ADMIN`, `AGENT`, …) meant no dashboard socket ever equalled the `"main"` filter,
  * so every inbox event was dropped before it reached the browser.
  */
-type RoleTaggedSocket = WebSocket & { role?: string };
+type RoleTaggedSocket = WebSocket & {
+  role?: string;
+  /**
+   * Set only on widget sockets. A `fab` broadcast goes to the whole org, so without this
+   * every visitor's widget on the site would be handed every other visitor's conversation.
+   * Present means "deliver only this contact's messages"; absent (the dashboard) means all.
+   */
+  contactId?: string;
+};
 
 const activeConnections = new Map<string, Map<string, RoleTaggedSocket>>();
 
@@ -91,10 +102,13 @@ subscriber.on("message", (channel, message) => {
     const { orgId, data, roleFilter } = parsedMessage;
     const connections = activeConnections.get(orgId);
     if (!connections) return;
+    const forContact = data?.inbox?.contact?.id;
     for (const client of connections.values()) {
-      if (client.readyState === 1 && (!roleFilter || client.role === roleFilter)) {
-        client.send(JSON.stringify(data));
-      }
+      if (client.readyState !== 1) continue;
+      if (roleFilter && client.role !== roleFilter) continue;
+      // A socket that named a contact hears about that contact and nothing else.
+      if (client.contactId && client.contactId !== forContact) continue;
+      client.send(JSON.stringify(data));
     }
   } catch (err) {
     log.error("Error handling WS message: %s", err);
@@ -107,7 +121,7 @@ export async function handleWebSocketConnection(
   connection: RoleTaggedSocket,
   request: FastifyRequest<{
     Params: { afterAuthId: string };
-    Querystring: { role?: string; accessToken?: string };
+    Querystring: { role?: string; accessToken?: string; contactId?: string };
   }>,
 ) {
   const browserId = request.params.afterAuthId;
@@ -134,6 +148,9 @@ export async function handleWebSocketConnection(
 
   // Store role alongside connection
   connection.role = role;
+  // Widget sockets name the conversation they are showing; see RoleTaggedSocket.
+  const requestedContactId = request.query?.contactId;
+  if (role === "fab" && requestedContactId) connection.contactId = requestedContactId;
   activeConnections.get(orgId)!.set(socketKey, connection);
 
   connection.on("message", (msg) => {
@@ -168,6 +185,45 @@ export async function sendViaWstoOrgHandler(
 export async function orgWsAuthCheckHandler(_request: FastifyRequest, reply: FastifyReply) {
   reply.send({ afterAuthId: crypto.randomBytes(16).toString("hex") });
 }
+
+/**
+ * Auth for the embedded support widget's socket. `verifyApiAccessTokenHook` reads the
+ * Authorization header, which a browser `new WebSocket(...)` cannot set — there is no API for
+ * it — so the widget's org id and api access token arrive as query parameters instead. The
+ * token is public by design: it ships inside the widget bundle on the customer's page, so it
+ * proves only which org the socket belongs to, never who the visitor is. Everything that
+ * follows treats it that way; `contactId` scoping is what keeps one visitor out of another's
+ * conversation.
+ */
+export const checkWidgetToken = async (
+  request: FastifyRequest<{ Querystring: { orgId?: string; accessToken?: string } }>,
+  reply: FastifyReply,
+) => {
+  const { orgId, accessToken } = request.query ?? {};
+
+  if (!orgId || !accessToken) {
+    reply.code(401).send({ message: "Not authorized" });
+    return;
+  }
+
+  try {
+    const org = await getOrgById(orgId);
+    if (!org) {
+      reply.code(404).send({ message: "Not found" });
+      return;
+    }
+    if (!(await verifyApiAccessToken(orgId, accessToken))) {
+      reply.code(401).send({ message: "Not authorized" });
+      return;
+    }
+  } catch (err) {
+    log.error({ err, orgId }, "Could not verify the widget socket token");
+    reply.code(401).send({ message: "Not authorized" });
+    return;
+  }
+
+  request.user = { orgId, role: Role.SUPER_ADMIN };
+};
 
 export const checkMobileId = async (
   request: FastifyRequest<{ Querystring: { accessToken?: string } }>,

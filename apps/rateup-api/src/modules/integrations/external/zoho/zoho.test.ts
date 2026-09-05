@@ -43,9 +43,22 @@ import axios from "axios";
 import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import { checkSession } from "../../../../utils/checkSession.js";
 import { getIntegrationByName } from "../../integrations.service.js";
-import { getIntegrationByZohoChannelId, getValidZohoAccessToken } from "./zoho.service.js";
+import {
+  fetchZohoContacts,
+  fetchZohoLeads,
+  fetchZohoUsers,
+  getIntegrationByZohoChannelId,
+  getValidZohoAccessToken,
+} from "./zoho.service.js";
 import { getZohoRecordById, unsubscribeZohoWebhook } from "./zoho.client.js";
-import { disconnectZohoIntegrationHandler, handleZohoWebhook } from "./zoho.controller.js";
+import {
+  disconnectZohoIntegrationHandler,
+  getZohoContactsHandler,
+  getZohoLeadsHandler,
+  getZohoUsersHandler,
+  handleZohoWebhook,
+  zohoAuthenticationHandler,
+} from "./zoho.controller.js";
 import { zohoRoutes } from "./zoho.route.js";
 import {
   addZohoContactToQueue,
@@ -128,6 +141,60 @@ describe("zohoRoutes", () => {
 // ===========================================================================
 // disconnectZohoIntegrationHandler
 // ===========================================================================
+
+// These four took `orgId` from the query string, so any logged-in user could
+// name someone else's org: the reads returned that org's CRM data through its
+// stored credentials, and `/auth` wrote an OAuth credential onto it — attaching
+// the caller's own Zoho account to an org that had not connected one.
+describe("zoho handlers read the org from the session, not the query", () => {
+  test("contacts", async () => {
+    (fetchZohoContacts as unknown as Mock).mockResolvedValueOnce([]);
+
+    await getZohoContactsHandler(
+      { query: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      reply(),
+    );
+
+    expect(fetchZohoContacts).toHaveBeenCalledWith(ORG, "crm");
+    expect(fetchZohoContacts).not.toHaveBeenCalledWith(VICTIM_ORG, expect.anything());
+  });
+
+  test("leads", async () => {
+    (fetchZohoLeads as unknown as Mock).mockResolvedValueOnce([]);
+
+    await getZohoLeadsHandler(
+      { query: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      reply(),
+    );
+
+    expect(fetchZohoLeads).toHaveBeenCalledWith(ORG);
+  });
+
+  test("users", async () => {
+    (fetchZohoUsers as unknown as Mock).mockResolvedValueOnce([]);
+
+    await getZohoUsersHandler(
+      { query: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      reply(),
+    );
+
+    expect(fetchZohoUsers).toHaveBeenCalledWith(ORG);
+  });
+
+  test("auth writes the credential to the caller's org", async () => {
+    // Already connected, so the handler answers before doing any OAuth work —
+    // enough to see which org it looked at.
+    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ active: true });
+
+    await zohoAuthenticationHandler(
+      { body: { code: "oauth-code" }, query: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
+      reply(),
+    );
+
+    expect(getIntegrationByName).toHaveBeenCalledWith(ORG, "zoho");
+    expect(getIntegrationByName).not.toHaveBeenCalledWith(VICTIM_ORG, "zoho");
+  });
+});
 
 describe("disconnectZohoIntegrationHandler", () => {
   const credential = {

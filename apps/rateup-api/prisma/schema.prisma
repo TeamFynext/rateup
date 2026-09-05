@@ -3337,7 +3337,8 @@ model LeadNote {
 model LeadActivity {
   id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// CREATED, MOVED, ASSIGNEES_CHANGED, WON, LOST, REOPENED, NOTE_ADDED,
-  /// TASK_ADDED, TASK_COMPLETED, LIFECYCLE_SYNCED
+  /// TASK_ADDED, TASK_COMPLETED, LIFECYCLE_SYNCED, GETLEAD_SYNCED,
+  /// GETLEAD_SKIPPED
   type    String
   /// [PLeadActivityDetails]
   details Json?
