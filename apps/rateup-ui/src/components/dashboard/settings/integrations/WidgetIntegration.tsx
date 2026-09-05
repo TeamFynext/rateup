@@ -1,6 +1,13 @@
 import SupportWidget from "@/components/app&services/support-widget.tsx";
 import TerminalBlock from "@/components/TerminalBlock.tsx";
 
+/** Shown in the snippet and in the live demo below it, so the two agree. */
+const EXAMPLE_ICEBREAKERS = [
+  "Where's my order?",
+  "I need to change my address",
+  "Can someone call me back?",
+];
+
 export default function WidgetIntegration() {
   const codeExample = `
 import SupportWidget from "@rateup/support-widget";
@@ -12,6 +19,7 @@ import SupportWidget from "@rateup/support-widget";
   companyName="Your Company" // optional
   backendUrl="https://your-backend.com" // optional
   webhookUrl="https://your-webhook.com" // optional
+  icebreakers={${JSON.stringify(EXAMPLE_ICEBREAKERS)}} // optional
 />`;
   const npmCommand = "npm install @rateup/support-widget";
 
@@ -126,6 +134,11 @@ import SupportWidget from "@rateup/support-widget";
                 <td>string</td>
                 <td>No</td>
               </tr>
+              <tr>
+                <td className="font-mono font-bold">icebreakers</td>
+                <td>string[]</td>
+                <td>No</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -138,6 +151,7 @@ import SupportWidget from "@rateup/support-widget";
             <SupportWidget
               orgId={import.meta.env.VITE_ROOT_ORG}
               token={import.meta.env.VITE_ROOT_TOKEN}
+              icebreakers={EXAMPLE_ICEBREAKERS}
             />
           </div>
         </div>

@@ -10,6 +10,7 @@ import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.qu
 import { useWebhook } from "@/backend/webhook/webhook.query";
 import {
   AmeliaLogo,
+  GetLeadLogo,
   GoogleSheetsLogo,
   PetpoojaLogo,
   ShopifyLogo,
@@ -85,6 +86,13 @@ const INTEGRATIONS_CONFIG: Record<string, IntegrationConfig> = {
     name: "Zoho CRM/Bigin",
     icon: ZohoCombinedLogo,
     description: "Sync contacts and leads seamlessly with Zoho",
+    scope: "external",
+  },
+  getlead: {
+    id: "getlead",
+    name: "GetLead CRM",
+    icon: GetLeadLogo,
+    description: "Push pipeline leads to your GetLead CRM",
     scope: "external",
   },
   apiservice: {

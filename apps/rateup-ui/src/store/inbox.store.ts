@@ -922,12 +922,17 @@ export const useMessagesStore = create<MessagesStore>()(
         const m = new Map(state.messagesByKey);
         const entry = m.get(key) ?? { messages: [] };
 
-        const existing = new Map(entry.messages.map((x) => [x.messageId ?? x.id, x]));
+        /* Identity is the row id first. `messageId` is the channel's own id and is only
+           unique when the channel guarantees it — webchat's was minted from the visitor's
+           phone number, so an entire thread shared one, and keying on it collapsed every
+           message a visitor had sent into a single bubble. The generator is fixed, but rows
+           already stored keep their duplicates, and the row id was always the real identity. */
+        const existing = new Map(entry.messages.map((x) => [x.id ?? x.messageId, x]));
 
         const changedOrNew: WaGetMessagesBody[] = [];
 
         for (const msg of messages) {
-          const id = msg.messageId ?? msg.id;
+          const id = msg.id ?? msg.messageId;
           const existingMsg = existing.get(id);
 
           if (existingMsg) {

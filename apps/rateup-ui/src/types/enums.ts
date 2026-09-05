@@ -464,6 +464,7 @@ export enum IntegratedApps {
   petpooja = "petpooja",
   zapier = "zapier",
   zoho = "zoho",
+  getlead = "getlead",
 }
 export enum PhotoSource {
   cameraGallery = "camera_gallery",
