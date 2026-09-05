@@ -651,10 +651,48 @@ describe("handleWaMessages - fanning out", () => {
     expect(channel).toBe("main");
   });
 
-  test("pushes webchat traffic down the fab channel", async () => {
+  test("pushes webchat traffic to both ends of the thread", async () => {
     await callHandleWaMessages({ platform: PlatformType.WEBCHAT });
 
-    expect(m.sendViaWs.mock.calls[0][2]).toBe("fab");
+    // No filter: the visitor's widget and the inbox are both ends of one conversation.
+    expect(m.sendViaWs).toHaveBeenCalledOnce();
+    expect(m.sendViaWs.mock.calls[0][2]).toBeUndefined();
+  });
+
+  test("reaches the inbox for a reply it sent to a webchat contact", async () => {
+    m.byPhone.mockResolvedValue({
+      contact: { ...CONTACT, source: PlatformType.WEBCHAT },
+      conversation: { ...CONVERSATION },
+    });
+
+    // getContactPlatform makes the inbox send to a webchat contact as WEBCHAT, so this used
+    // to be aimed at `fab` and the dashboard never saw its own message.
+    await callHandleWaMessages({ type: "send", platform: PlatformType.WEBCHAT });
+
+    expect(m.sendViaWs.mock.calls[0][2]).toBeUndefined();
+  });
+
+  test("reaches the widget for a reply recorded against another platform", async () => {
+    m.byPhone.mockResolvedValue({
+      contact: { ...CONTACT, source: PlatformType.WEBCHAT },
+      conversation: { ...CONVERSATION },
+    });
+
+    await callHandleWaMessages({ type: "send", platform: PlatformType.WHATSAPP });
+
+    expect(m.sendViaWs.mock.calls[0][2]).toBeUndefined();
+  });
+
+  test("keeps non-webchat traffic aimed at the inbox alone", async () => {
+    m.byPhone.mockResolvedValue({
+      contact: { ...CONTACT, source: PlatformType.WHATSAPP },
+      conversation: { ...CONVERSATION },
+    });
+
+    await callHandleWaMessages({ type: "send", platform: PlatformType.WHATSAPP });
+
+    expect(m.sendViaWs).toHaveBeenCalledOnce();
+    expect(m.sendViaWs.mock.calls[0][2]).toBe("main");
   });
 
   test("returns the stored message", async () => {

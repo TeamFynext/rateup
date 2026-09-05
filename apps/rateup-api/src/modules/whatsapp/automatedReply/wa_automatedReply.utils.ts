@@ -9,6 +9,7 @@ import type { OutgoingTemplateComponent } from "../../../types/whatsapp.types.js
 import type { AutomationWithGraph } from "../whatsappSurvey/node-types.js";
 import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
+import { generateLocalMessageId } from "../../../utils/messageId.js";
 import prisma from "../../../utils/prisma.js";
 import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
@@ -1004,15 +1005,9 @@ async function executeCloseTicketAction(
   return true;
 }
 
+/** @deprecated Prefer `generateLocalMessageId`; kept so the rule engine's callers read on. */
 export function generateInternalMessageId() {
-  return (
-    "wamid." +
-    Date.now().toString(36) +
-    "-" +
-    crypto
-      .getRandomValues(new Uint8Array(16))
-      .reduce((a, b) => a + b.toString(16).padStart(2, "0"), "")
-  );
+  return generateLocalMessageId();
 }
 
 async function executeAttachLabelAction(

@@ -46,7 +46,12 @@ export async function zohoAuthenticationHandler(
 ) {
   try {
     const { code } = request.body;
-    const { orgId } = request.query;
+    // From the session, never the query string. This writes an OAuth credential
+    // onto an organisation, so taking the target from the caller would let any
+    // logged-in user attach their own Zoho account to somebody else's org and
+    // receive that org's leads from then on. The query still carries an `orgId`
+    // for older clients; it is deliberately ignored.
+    const { orgId } = request.user;
 
     if (!code || !orgId) {
       return reply.code(400).send({
@@ -275,7 +280,10 @@ export async function getZohoContactsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId, product = "crm" } = request.query;
+    const { product = "crm" } = request.query;
+    // The caller's own org. A query parameter here read another org's contacts
+    // through that org's stored Zoho credentials.
+    const { orgId } = request.user;
 
     if (!orgId) {
       return reply.code(400).send({
@@ -309,7 +317,8 @@ export async function getZohoUsersHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.query;
+    // The caller's own org, not a query parameter — see the contacts handler.
+    const { orgId } = request.user;
 
     if (!orgId) {
       return reply.code(400).send({
@@ -343,7 +352,8 @@ export async function getZohoLeadsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.query;
+    // The caller's own org, not a query parameter — see the contacts handler.
+    const { orgId } = request.user;
 
     if (!orgId) {
       return reply.code(400).send({

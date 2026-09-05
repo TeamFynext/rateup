@@ -200,6 +200,9 @@ declare global {
       contact?: { id?: string };
       deal?: { id?: string };
     };
+    getlead?: {
+      lead?: { id?: string };
+    };
     [provider: string]: Record<string, { id?: string } | undefined> | undefined;
   }
 
@@ -1523,6 +1526,33 @@ declare global {
     taskTitle?: string;
     sourceLabel?: string;
     automated?: boolean;
+    /** Which integration a sync entry concerns, e.g. "GetLead". */
+    integrationName?: string;
+    /** The lead's id in that integration, on a successful sync. */
+    externalId?: string;
+    /** True when the record was opened rather than updated. */
+    externalCreated?: boolean;
+    /**
+     * Why a sync did not happen. A stable code, not prose — the UI turns it into
+     * a translated sentence. Currently only `NO_PHONE`.
+     */
+    skipReason?: string;
+    /**
+     * The mapped status was refused by the integration's workflow and dropped;
+     * everything else on the lead still synced.
+     */
+    statusRejected?: boolean;
+    /**
+     * The status named by an inbound change, as the integration spelled it —
+     * GetLead sends a display name, not an id.
+     */
+    statusName?: string;
+    /**
+     * The lead itself was opened by an inbound delivery, rather than an existing
+     * one being moved. Distinct from {@link externalCreated}, which is about the
+     * record we created on the integration's side.
+     */
+    inboundCreated?: boolean;
   }
 
   /** One tappable prompt shown before an Instagram conversation starts. */

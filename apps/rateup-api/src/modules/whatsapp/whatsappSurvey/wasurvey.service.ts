@@ -52,6 +52,7 @@ import { createTextMessage } from "./wasurvey.utils.js";
 import { getGraphApiErrorMessage } from "../wa_error_handler.js";
 import { uploadFile } from "../../../utils/upload/s3Upload.js";
 import axios from "axios";
+import { generateWebchatMessageId } from "../../../utils/messageId.js";
 
 import { findRecentAutomation, logAutomationAction } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
@@ -156,8 +157,12 @@ export async function sendMessage(
     if (platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK) {
       messageId = res?.data?.message_id;
     } else if (platform === PlatformType.WEBCHAT) {
-      const phone = (messageData as WaSendMessageBody).to.replace(/\D/g, "");
-      messageId = `webid.chat${phone}FQIAERgS${Buffer.from(phone).toString("base64").slice(0, 22)}AA==`;
+      // Webchat makes no Graph API call, so there is no id coming back and one is minted
+      // here — `wcmid.`, not `wamid.`, since this message never touched WhatsApp. It has to
+      // be unique per message: this was `webid.chat<phone>…`, a pure function of the number,
+      // so every message ever sent to a visitor carried one id and the inbox — which
+      // identifies a message by it — folded the whole conversation into a single bubble.
+      messageId = generateWebchatMessageId();
     } else {
       messageId = res?.data?.messages?.[0]?.id;
     }

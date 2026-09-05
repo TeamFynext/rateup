@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../utils/logger.js";
-import { handleSupportUserWebhook } from "./support-user.service.js";
+import { handleSupportUserWebhook, sendSupportEmail } from "./support-user.service.js";
+import type { SupportEmailInput } from "./support-user.schema.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getOrCreateContactByPhone } from "../../contact/contact.service.js";
@@ -38,4 +39,20 @@ export async function getOrCreateContactHandler(request: FastifyRequest, reply: 
     true,
   ))!;
   reply.code(200).send(contact?.id);
+}
+
+export async function sendSupportEmailHandler(
+  request: FastifyRequest<{ Body: SupportEmailInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const delivered = await sendSupportEmail(request.body, request.user.orgId);
+    if (!delivered) {
+      return reply.code(503).send({ success: false, message: "No support address is configured" });
+    }
+    reply.code(202).send({ success: true });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ success: false, message: "Something went wrong" });
+  }
 }

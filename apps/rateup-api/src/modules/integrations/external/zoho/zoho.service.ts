@@ -2,7 +2,6 @@ import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index
 import prisma from "../../../../utils/prisma.js";
 import { log } from "../../../../utils/logger.js";
 import axios from "axios";
-import type { Job } from "bullmq";
 import {
   createZohoRecord,
   deleteZohoRecord,
@@ -15,6 +14,7 @@ import {
   ZohoProduct,
 } from "./zoho.client.js";
 import { isZohoTriggerEnabled } from "./zoho.utils.js";
+import { recordIntegrationSyncActivity } from "../integrationActivity.js";
 import { IntegratedApps } from "../../../../types/enums.js";
 import {
   findBiginStageMapping,
@@ -64,16 +64,6 @@ export interface ZohoPayload {
   data: Record<string, unknown>;
   orgId: string;
   timestamp: string;
-}
-
-interface IntegrationJobData {
-  integrationName: string;
-  triggerKey: string;
-  data: ZohoTriggerData;
-  orgId: string;
-  rateupContactId?: string;
-  /** Set by the pipeline's stage sync; see `syncLeadStageToIntegrations`. */
-  rateupLeadId?: string;
 }
 
 /**
@@ -155,35 +145,11 @@ async function writeBiginIds(
   }
 }
 
-export async function processIntegration(job: Job<IntegrationJobData>) {
-  const { integrationName, triggerKey, data, orgId, rateupContactId, rateupLeadId } = job.data;
-
-  const integration = await prisma.integration.findUnique({
-    where: {
-      orgid_integration_name_unique: {
-        orgId,
-        name: integrationName,
-      },
-    },
-  });
-
-  if (!integration || !integration.active) {
-    return;
-  }
-
-  switch (integrationName) {
-    case "zapier":
-      return;
-
-    case "zoho":
-      return processZoho(integration, triggerKey, data, orgId, rateupContactId, rateupLeadId);
-
-    default:
-      throw new Error(`Unsupported integration: ${integrationName}`);
-  }
-}
-
-async function processZoho(
+/**
+ * Handles one queued Zoho trigger. Reached through `processIntegration` in
+ * `../integrationDispatch.ts`, which owns the provider routing.
+ */
+export async function processZoho(
   integration: Integration,
   triggerKey: string,
   data: ZohoTriggerData,
@@ -451,6 +417,9 @@ async function processZoho(
 
       if (!biginConfig) {
         log.warn("No Bigin pipeline config found");
+        await recordIntegrationSyncActivity(rateupLeadId, "INTEGRATION_SKIPPED", "Zoho Bigin", {
+          skipReason: "NOT_CONFIGURED",
+        });
         return;
       }
 
@@ -633,14 +602,27 @@ async function processZoho(
 
       // Remember the new deal, so the next stage change moves this one rather
       // than opening another.
+      const wasCreate = !existingDealId;
+      let syncedDealId = existingDealId;
       if (!existingDealId && response?.data && Array.isArray(response.data) && response.data[0]) {
         const dealId = response.data[0]?.details?.id;
 
         if (dealId) {
+          syncedDealId = dealId;
           await writeBiginIds(idHolder, { dealId });
           if (idHolder) log.info("Stored the Bigin deal id on the Rateup %s", idHolder.kind);
         }
       }
+
+      // An unmapped column still writes the deal, just with no Stage — the same
+      // user-facing outcome as GetLead refusing a status, so it reads the same on
+      // the timeline: synced, but the stage did not follow.
+      await recordIntegrationSyncActivity(rateupLeadId, "INTEGRATION_SYNCED", "Zoho Bigin", {
+        ...(syncedDealId && { externalId: syncedDealId }),
+        externalCreated: wasCreate,
+        ...(!mapping && { statusRejected: true }),
+        ...(mapping?.biginStageName && { toStageName: mapping.biginStageName }),
+      });
       return;
     }
     default:
@@ -1294,6 +1276,12 @@ export async function pushCrmLeadStatus(
   zohoLeadId: string,
   key: StageMappingKey,
   extraFields: Record<string, unknown> = {},
+  /**
+   * The Rateup lead this move came from, so the outcome can be put on its
+   * timeline. Optional because the contact write paths also call this, and a
+   * contact has no timeline of its own.
+   */
+  rateupLeadId?: string,
 ) {
   // Resolving the mapping means a database read, and this sits inside a fan-out
   // that also feeds Bigin. Its own guard, so a Zoho lookup that fails does not
@@ -1322,10 +1310,24 @@ export async function pushCrmLeadStatus(
     // would turn a mapping gap into a contact that stops syncing entirely.
     if (Object.keys(extraFields).length > 0)
       await updateZohoLeadQueue(orgId, zohoLeadId, extraFields);
+
+    // Recorded as a partial rather than a clean sync: the lead reached the CRM
+    // but its status did not, which is a mapping the org has to fix. Previously
+    // this was a warn line nobody outside the logs would ever see.
+    await recordIntegrationSyncActivity(rateupLeadId, "INTEGRATION_SYNCED", "Zoho CRM", {
+      externalId: zohoLeadId,
+      externalCreated: false,
+      statusRejected: true,
+    });
     return;
   }
 
   await updateZohoLeadQueue(orgId, zohoLeadId, { ...extraFields, Lead_Status: leadStatus });
+  await recordIntegrationSyncActivity(rateupLeadId, "INTEGRATION_SYNCED", "Zoho CRM", {
+    externalId: zohoLeadId,
+    externalCreated: false,
+    toStageName: leadStatus,
+  });
 }
 
 export async function fetchZohoPipelineMeta(orgId: string, product: ZohoProduct = "bigin") {
@@ -1475,7 +1477,6 @@ export async function syncContactFromZohoRecord({
     zohoRecord.Lead_Status ?? "-",
     zohoRecord.Deal_Name ?? zohoRecord.Full_Name ?? "-",
   );
-  log.debug({ zohoRecord }, "Zoho record in full");
 
   let requiredTrigger: string | null = null;
 
