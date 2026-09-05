@@ -1,12 +1,7 @@
 // lib/posts.js - or make a separate file to reuse for other resources
 import GhostContentAPI from "@tryghost/content-api";
 
-/**
- * Origin of the headless Ghost instance. Posts come back with `url`/`canonical_url` pointing at
- * this host, which serves `Disallow: /` — emitting either as a canonical de-indexes the post,
- * so `blog/$slug` canonicalises to rateup.app and only honours a `canonical_url` set elsewhere.
- */
-export const GHOST_ORIGIN = "https://yellow-roadrunner.pikapod.net";
+import { GHOST_ORIGIN } from "@/utils/constants.ts";
 
 // Create API instance with site credentials
 const api = new GhostContentAPI({

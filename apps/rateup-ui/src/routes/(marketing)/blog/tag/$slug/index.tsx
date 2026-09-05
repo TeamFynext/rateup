@@ -2,7 +2,6 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import BlogLayout from "@/components/blog/Layout.tsx";
 import { noindexHead } from "@/lib/metadata.ts";
-import { getPosts } from "@/lib/posts.ts";
 
 import PostGrid from "../../../../../components/(marketing)/blog/post-grid.tsx";
 
@@ -14,6 +13,8 @@ export const Route = createFileRoute("/(marketing)/blog/tag/$slug/")({
   loader: async ({ params }) => {
     const { slug } = params;
     if (!slug) throw notFound();
+    // Dynamic so the Ghost client stays out of the client entry — see blog/$slug.
+    const { getPosts } = await import("@/lib/posts.ts");
     const posts = await getPosts({ tag: slug });
     if (!posts || posts.meta?.pagination.total === 0) throw notFound();
     return posts;

@@ -8,6 +8,17 @@ import {
 } from "@/types/enums.ts";
 
 export const docsPath = "https://docs.rateup.app";
+/**
+ * Origin of the headless Ghost instance behind /blog. Posts come back with `url`/`canonical_url`
+ * pointing at this host, which serves `Disallow: /` — emitting either as a canonical de-indexes
+ * the post, so `blog/$slug` canonicalises to rateup.app and only honours a `canonical_url` an
+ * editor has pointed somewhere else.
+ *
+ * It lives here rather than in `lib/posts.ts` so the blog route's `head()` can read it without
+ * importing the Ghost client — a route module's imports land in the client entry, so that one
+ * import put the content API on every page of the site.
+ */
+export const GHOST_ORIGIN = "https://yellow-roadrunner.pikapod.net";
 /* Origin of the CloudFront distribution every image on the site is served from. Exported on its
    own so `__root.tsx` can `preconnect` to it — the LCP image lives here, and opening the
    connection during HTML parse takes the DNS/TLS handshake off the critical path. */

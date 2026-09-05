@@ -6,12 +6,10 @@ import SharePopover from "@/components/blog/ShareBlog.tsx";
 import ErrorPage from "@/components/error.tsx";
 import RoutePending from "@/components/Loaders/RoutePending.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { getMarkdownContent } from "@/lib/content.ts";
 import { BASE_URL } from "@/lib/metadata.ts";
-import { getSinglePost, GHOST_ORIGIN } from "@/lib/posts.ts";
 import type { Tag } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
-import { rateupLogoOg } from "@/utils/constants.ts";
+import { GHOST_ORIGIN, rateupLogoOg } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   server: {
@@ -19,6 +17,10 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
       createMarkdownMiddleware(async ({ request }) => {
         const pathname = new URL(request.url).pathname;
         const slugPath = pathname.replace(/^\/(?:[a-z]{2}\/)?blog\//i, "").replace(/\/$/, "");
+        /* Imported here rather than at module scope: this middleware only ever runs on the
+           server, but a route module's static imports land in the client entry — so the Ghost
+           content API and turndown were shipped to every visitor of every page. */
+        const { getMarkdownContent } = await import("@/lib/content.ts");
         const content = await getMarkdownContent(slugPath);
 
         if (!content) {
@@ -34,6 +36,7 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   errorComponent: ErrorPage,
   loader: async ({ params }) => {
     const { slug } = params;
+    const { getSinglePost } = await import("@/lib/posts.ts");
     const post = await getSinglePost(slug);
     if (!post) throw notFound();
     return post;
