@@ -272,13 +272,14 @@ const pageMetadata = {
       "Orders, customers and loyalty points sync both ways. Most setups are live the same day.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
+  // Title and description are the design's own `<helmet>` values, not a paraphrase.
   "/integrations/shopify": {
-    title: "Shopify WhatsApp Integration: Loyalty, Feedback & Broadcasts | RateUp",
+    title: "Shopify WhatsApp Integration: Orders, Loyalty & Feedback | RateUp",
     description:
-      "Install RateUp from the Shopify App Store in one click. Sync orders and customers, award loyalty points automatically, recover abandoned carts and confirm COD orders on WhatsApp.",
-    ogTitle: "Shopify WhatsApp Integration: Loyalty, Feedback & Broadcasts",
+      "Connect Shopify to WhatsApp in one click. Order updates, abandoned checkout recovery, post-purchase feedback and loyalty points on every paid order. Free plan.",
+    ogTitle: "Shopify WhatsApp Integration: Orders, Loyalty & Feedback",
     ogDescription:
-      "One-click install from the Shopify App Store. Order sync, loyalty points, post-purchase feedback and abandoned-cart broadcasts on WhatsApp.",
+      "Store webhooks become WhatsApp messages: order updates, checkout recovery, loyalty points on paid orders and a post-delivery feedback Flow.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
 } as const satisfies Record<string, PageMetadata>;
