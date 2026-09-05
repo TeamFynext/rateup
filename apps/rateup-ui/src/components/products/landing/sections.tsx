@@ -187,55 +187,6 @@ export function Steps({ steps }: Readonly<{ steps: readonly Step[] }>) {
   );
 }
 
-/**
- * A comparison table. Rendered as a real `<table>` so the rows are readable to a crawler and a
- * screen reader; the wrapper scrolls rather than letting the page scroll sideways on mobile.
- */
-export function CompareTable({
-  columns,
-  rows,
-  caption,
-}: Readonly<{
-  columns: readonly [string, string, string];
-  rows: readonly (readonly [string, string, string])[];
-  caption: string;
-}>) {
-  return (
-    <div className="overflow-x-auto rounded-[20px] border border-ru-n-200 bg-white">
-      <table className="w-full min-w-160 border-collapse text-left">
-        <caption className="sr-only">{caption}</caption>
-        <thead>
-          <tr className="border-b border-ru-n-200 bg-ru-n-50">
-            {columns.map((column) => (
-              <th
-                key={column}
-                scope="col"
-                className="px-5 py-4 text-[13px] font-semibold tracking-[0.07em] text-ru-n-500 uppercase"
-              >
-                {column}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row[0]} className="border-b border-ru-n-100 last:border-b-0">
-              <th
-                scope="row"
-                className="px-5 py-4 text-[15.5px] font-semibold text-ru-n-700 align-top"
-              >
-                {row[0]}
-              </th>
-              <td className="px-5 py-4 text-[15.5px]/[1.55] text-ru-n-500 align-top">{row[1]}</td>
-              <td className="px-5 py-4 text-[15.5px]/[1.55] text-ru-n-600 align-top">{row[2]}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 export interface Faq {
   question: string;
   answer: string;

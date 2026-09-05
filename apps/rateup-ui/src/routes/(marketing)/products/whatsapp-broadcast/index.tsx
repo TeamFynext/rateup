@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import BroadcastPage, { BROADCAST_FAQS } from "@/components/products/landing/BroadcastPage";
+import BroadcastPage from "@/components/products/landing/broadcast";
+import { BROADCAST_FAQS } from "@/components/products/landing/broadcast/content";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import { breadcrumbList, faqPage, graph, publisher, webPage } from "@/lib/jsonLd.ts";
 import { BASE_URL, buildPageHead } from "@/lib/metadata.ts";
@@ -16,17 +17,20 @@ const jsonLd = graph(
     name: "RateUp WhatsApp Broadcast",
     url: `${BASE_URL}${PATH}`,
     description:
-      "WhatsApp broadcast software built on Meta's official WhatsApp Business API: segmented audiences, approved message templates, scheduling, opt-out compliance and per-campaign delivery analytics.",
+      "WhatsApp broadcast software built on Meta's official WhatsApp Business API: contact groups and status re-targeting, approved message templates with per-contact variables, scheduling with daily send limits and drip stages, and a per-campaign delivery report.",
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "Marketing Campaign Software",
     operatingSystem: "Web, Android, iOS",
     featureList: [
-      "Segmented WhatsApp broadcasts on the official Business API",
-      "Meta message template drafting and approval tracking",
-      "Campaign scheduling and staggered delivery",
-      "Opt-in capture and automatic STOP opt-out handling",
-      "Delivery, read, reply and click analytics per campaign",
-      "Per-message cost estimates at Meta's published rates",
+      "Unlimited-recipient WhatsApp broadcasts on the official Business API",
+      "Contact groups, CSV/XLSX import and re-targeting by message status",
+      "Per-campaign consent gate",
+      "Meta-approved templates with per-contact variable mapping",
+      "Send now, schedule later, or drip across multiple stages",
+      "Daily send limits that spread a campaign across days",
+      "Delivery report with sent, delivered, read, pending and failed",
+      "Resend to failed or pending contacts, and Excel/ODS export",
+      "Preflight check against the plan's conversation allowance",
     ],
     publisher,
   },
@@ -38,8 +42,8 @@ const jsonLd = graph(
   ]),
   webPage(
     PATH,
-    "WhatsApp Broadcast Software on the Official Business API",
-    "Send segmented WhatsApp broadcasts to thousands of customers on Meta's official API, with approved templates, scheduling, opt-out handling and delivery analytics.",
+    "WhatsApp Broadcast Software on the Official API",
+    "Send WhatsApp broadcasts to thousands of customers with approved templates, daily send limits and delivery reports, on the official WhatsApp Business API.",
   ),
 );
 
