@@ -1,14 +1,19 @@
 import type { ReactNode } from "react";
 
 /**
- * The handset chrome both product-page phone mocks are drawn in — outer navy frame, side
- * buttons, status bar and thread header.
+ * The one handset every product-page chat mock is drawn in.
  *
- * The broadcast and Business API designs specify these pixel for pixel identically (342px frame,
- * 46px outer radius, 2px side buttons at 26/46/66px, 44px status bar), so they live here once.
- * What differs between the two pages is the thread and the composer, which the caller supplies.
+ * The four designs each specified their own dimensions — 342/320/326px bodies, 46/38/42px radii,
+ * three different status bars and two different header treatments. Four almost-identical phones
+ * on four sibling pages reads as four mistakes rather than one house style, so the whole frame is
+ * fixed here and pages supply only the conversation.
+ *
+ * It owns: the frame and its side buttons, the status bar, the thread header, the scroll area
+ * (including the "Today" divider), the composer and the home indicator. `children` is the run of
+ * message bubbles, nothing else.
  */
 
+/** Delivery ticks. Read receipts are blue; sent and delivered are grey. */
 export function Ticks({ tone }: Readonly<{ tone: "sent" | "delivered" | "read" }>) {
   return (
     <svg
@@ -30,6 +35,21 @@ export function Ticks({ tone }: Readonly<{ tone: "sent" | "delivered" | "read" }
         </>
       )}
     </svg>
+  );
+}
+
+/** The three-dot "typing" bubble. */
+export function Typing() {
+  return (
+    <div className="inline-flex flex-none animate-ru-msg-in items-center gap-1 self-start rounded-2xl rounded-bl-xs border border-ru-n-200 bg-white px-3.5 py-2.75">
+      {[0, 0.2, 0.4].map((delay) => (
+        <span
+          key={delay}
+          style={{ animationDelay: `${delay}s` }}
+          className="size-1.5 animate-ru-dot rounded-full bg-ru-n-400"
+        />
+      ))}
+    </div>
   );
 }
 
@@ -81,13 +101,11 @@ function StatusBar() {
 }
 
 /**
- * The chat header. The green verified tick is the substantive detail in both designs: a message
- * on the official API arrives from a verified business name, not an unknown number.
+ * The chat header. The green verified tick is the substantive detail in every one of these
+ * designs: a message on the official API arrives from a verified business name, not an unknown
+ * number.
  */
-export function ThreadHeader({
-  initial = "N",
-  name = "Northside Co.",
-}: Readonly<{ initial?: string; name?: string }>) {
+function ThreadHeader({ initial, name }: Readonly<{ initial: string; name: string }>) {
   return (
     <div className="flex flex-none items-center gap-2.5 border-b border-ru-n-200 bg-ru-n-50 px-3.5 py-2.5">
       <svg
@@ -109,7 +127,7 @@ export function ThreadHeader({
       </span>
       <span className="flex min-w-0 flex-col gap-px">
         <span className="flex items-center gap-1.25">
-          <span className="text-sm font-medium text-ru-n-700">{name}</span>
+          <span className="truncate text-sm font-medium text-ru-n-700">{name}</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-none">
             <circle cx="12" cy="12" r="10" className="fill-ru-green-500" />
             <path
@@ -154,10 +172,55 @@ export function ThreadHeader({
   );
 }
 
+function Composer() {
+  return (
+    <div className="flex flex-none items-center gap-2.25 border-t border-ru-n-200 bg-ru-n-50 px-3.5 pt-2.5 pb-5.5">
+      <span className="flex h-9.5 flex-1 items-center gap-2 rounded-full border border-ru-n-200 bg-white px-3.25 text-[13.5px] text-ru-n-400">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="flex-none"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+          <path d="M9 9h.01" />
+          <path d="M15 9h.01" />
+        </svg>
+        Message
+      </span>
+      <span className="flex size-9.5 flex-none items-center justify-center rounded-full bg-ru-green-500">
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <path d="M12 19v3" />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
 export default function PhoneFrame({
   children,
-  homeIndicator = false,
-}: Readonly<{ children: ReactNode; homeIndicator?: boolean }>) {
+  initial,
+  name,
+}: Readonly<{ children: ReactNode; initial: string; name: string }>) {
   return (
     <div className="relative flex min-w-0 justify-center">
       {/* Brand wash behind the device, so the frame does not sit on flat grey. */}
@@ -183,13 +246,20 @@ export default function PhoneFrame({
 
         <div className="relative flex h-160 flex-col overflow-hidden rounded-[38px] bg-white">
           <StatusBar />
-          {children}
-          {homeIndicator && (
-            <span
-              aria-hidden="true"
-              className="absolute bottom-2 left-1/2 z-3 h-1 w-26.5 -translate-x-1/2 rounded-full bg-ru-n-300"
-            />
-          )}
+          <ThreadHeader initial={initial} name={name} />
+
+          <div className="flex min-h-0 flex-1 flex-col justify-end gap-2.25 overflow-hidden bg-ru-n-50 p-3.5">
+            <span className="flex-none self-center pb-0.5 text-[10.5px] font-semibold tracking-[0.08em] text-ru-n-400 uppercase">
+              Today
+            </span>
+            {children}
+          </div>
+
+          <Composer />
+          <span
+            aria-hidden="true"
+            className="absolute bottom-2 left-1/2 z-3 h-1 w-26.5 -translate-x-1/2 rounded-full bg-ru-n-300"
+          />
         </div>
       </div>
     </div>
