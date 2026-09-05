@@ -77,58 +77,9 @@ const jsonLd = {
       // aggregateRating removed: Google's review-snippet policy requires the reviews to be
       // visible on the page itself. Re-add it only alongside real, rendered reviews.
 
-      review: [
-        {
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: "Shalini",
-          },
-          reviewBody:
-            "This is the first loyalty program our customers actually use. It's seamless, and we saw a 60% increase in repeat visits.",
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: "5",
-            bestRating: "5",
-          },
-          itemReviewed: {
-            "@id": "https://rateup.app/products/whatsapp-loyalty#software",
-          },
-        },
-        {
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: "Ramesh",
-          },
-          reviewBody: "No more stamp cards! Our staff and customers both love how easy it is.",
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: "5",
-            bestRating: "5",
-          },
-          itemReviewed: {
-            "@id": "https://rateup.app/products/whatsapp-loyalty#software",
-          },
-        },
-        {
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: "Priya",
-          },
-          reviewBody:
-            "We started seeing customers come back more frequently within just two weeks of using RateUp. The WhatsApp integration is genius.",
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: "5",
-            bestRating: "5",
-          },
-          itemReviewed: {
-            "@id": "https://rateup.app/products/whatsapp-loyalty#software",
-          },
-        },
-      ],
+      // The `review` array went with the aggregateRating, and for the same reason: it named
+      // three people and their 5-star ratings, none of which appear anywhere on the page.
+      // Google's review-snippet policy requires the reviews to be visible to the reader.
 
       publisher: {
         "@type": "Organization",
