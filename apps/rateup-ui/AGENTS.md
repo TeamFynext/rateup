@@ -100,6 +100,28 @@ code compile** — fix the type instead. `npm run typecheck` must be clean befor
   `max-h-*` and `overflow-y-auto` (plus `overscroll-contain`), which keeps the cap and the overflow
   on one element. `whats-new/WhatsNewButton.tsx` is an example of the plain-`div` form.
 
+## Stylesheets
+
+There is no `src/globals.css` any more. The Tailwind source scan is split three ways by surface,
+because `@import "tailwindcss"` scans the whole of `src` — one stylesheet meant every marketing
+visitor downloaded the dashboard, the survey editor and the admin panel (563 KB).
+
+| File                        | Loaded by                                                                | Scans                                                     |
+| --------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------- |
+| `src/styles/foundation.css` | imported by all three below                                              | nothing — tokens, `@theme`, `@utility`, base layer        |
+| `src/styles/base.css`       | `__root.tsx`, so every page                                              | the shell + `components/ui` minus the app-only primitives |
+| `src/styles/marketing.css`  | `routes/(marketing)/route.tsx`                                           | the marketing component tree                              |
+| `src/styles/app.css`        | the `dashboard`, `admin`, `(auth)`, `auth` and `(public-facing)` layouts | everything (Tailwind's default scan)                      |
+
+- **Adding a marketing component in a new directory?** Add its directory to `marketing.css`'s
+  `@source` list, or it renders unstyled. The app is on a full scan and needs nothing.
+- **Design tokens go in `foundation.css`.** That is also what `components.json` points
+  `tailwind.css` at, so `npx shadcn add` writes component variables there. Do not repoint it at
+  `app.css` — the CLI auto-detects that one, and tokens written there never reach the marketing
+  site.
+- Marketing HTML is edge-cacheable (`s-maxage`) from the `(marketing)` layout, which also sets
+  `Vary: Accept` because those routes serve Markdown to clients that ask for it.
+
 ## Styling & Design Tokens
 
 Color and styling go through **Tailwind utilities + shadcn semantic tokens**, never a bespoke

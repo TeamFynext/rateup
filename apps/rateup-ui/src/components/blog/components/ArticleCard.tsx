@@ -62,7 +62,15 @@ export function ArticleCard({
         {/* Thumbnail */}
         <div className="relative h-[162px] overflow-hidden shrink-0 bg-[#06182F]">
           {post.feature_image ? (
-            <img src={post.feature_image} alt={post.title} className="w-full h-full object-cover" />
+            <img
+              src={post.feature_image}
+              alt={post.title}
+              /* 35 cards on /blog. Eager, React 19 emits a preload link for every thumbnail
+                 during SSR, which is 35 images fighting the hero for bandwidth. */
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div
               className="absolute inset-0 flex flex-col items-start justify-end p-3.5"
@@ -80,7 +88,13 @@ export function ArticleCard({
 
               {/* Brand */}
               <div className="absolute top-2.5 left-2.5 flex items-center gap-1.25">
-                <img src="/rateup-star.png" alt="" className="w-4 h-4" />
+                <img
+                  src="/rateup-star.png"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="w-4 h-4"
+                />
                 <span className="font-nunito font-black text-[10px] text-white/80">
                   Rate<span className="text-ru-blue-300">Up</span>
                 </span>
@@ -135,6 +149,8 @@ export function ArticleCard({
               <img
                 src={post.primary_author.profile_image}
                 alt={post.primary_author.name}
+                loading="lazy"
+                decoding="async"
                 className="w-[26px] h-[26px] rounded-full object-cover"
               />
             ) : (

@@ -41,13 +41,8 @@ const jsonLd = {
         "Automated customer sentiment analysis",
         "Integration with Shopify and WooCommerce",
       ],
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.8",
-        reviewCount: "389",
-        bestRating: "5",
-        worstRating: "1",
-      },
+      // aggregateRating removed: Google's review-snippet policy requires the reviews to be
+      // visible on the page itself. Re-add it only alongside real, rendered reviews.
       offers: [
         {
           "@type": "Offer",
@@ -84,15 +79,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-feedback/")
     middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
   component: WhatsappFeedback,
-  head: () => ({
-    ...buildPageHead("/products/whatsapp-feedback"),
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(jsonLd),
-      },
-    ],
-  }),
+  head: () => buildPageHead("/products/whatsapp-feedback", { jsonLd }),
 });
 
 function WhatsappFeedback() {

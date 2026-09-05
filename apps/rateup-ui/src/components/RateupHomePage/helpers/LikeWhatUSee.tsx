@@ -9,7 +9,7 @@ import { WhatsAppMark } from "../shared/channel-marks";
 /**
  * The "Like what you see?" popup, drawn to the marketing design.
  *
- * Colour comes from the `ru-*` ramp in `globals.css` — the same palette the design was drawn
+ * Colour comes from the `ru-*` ramp in `styles/foundation.css` — the same palette the design was drawn
  * against. The design's two buttons are flat brand colours rather than gradients, which is
  * what the rest of the redesign does.
  */

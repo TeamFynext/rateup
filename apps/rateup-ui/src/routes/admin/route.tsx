@@ -8,8 +8,12 @@ import { ConfirmProvider } from "@/context/confirm-provider.tsx";
 
 import { AppSidebar } from "../../components/admin/admin-sidebar/app-sidebar.tsx";
 
+import appCss from "@/styles/app.css?url";
+
 export const Route = createFileRoute("/admin")({
   component: Page,
+  /* The application half of the Tailwind scan — see src/styles/app.css. */
+  head: () => ({ links: [{ rel: "stylesheet", href: appCss }] }),
 });
 
 function Page() {

@@ -47,9 +47,9 @@ function QrWhyIsStillStuck() {
     >
       {/* Heading */}
       <div>
-        <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-4">
           Why Is Your Feedback Register
-        </h1>
+        </h2>
         <div className="relative inline-block font-bold">
           <motion.svg
             width="100%"
@@ -71,9 +71,9 @@ function QrWhyIsStillStuck() {
             />
           </motion.svg>
 
-          <h1 className="relative z-10 text-[#004F98] text-3xl sm:text-4xl font-semibold">
+          <h2 className="relative z-10 text-[#004F98] text-3xl sm:text-4xl font-semibold">
             Still Stuck in the Past?
-          </h1>
+          </h2>
         </div>
       </div>
 
@@ -115,9 +115,9 @@ function QrWhyIsStillStuck() {
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
       >
         <div className="flex flex-col justify-center items-start text-left">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
             It's time to move from passive collection
-          </h1>
+          </h2>
           <div className="relative inline-block font-bold">
             <motion.svg
               width="100%"
@@ -139,9 +139,9 @@ function QrWhyIsStillStuck() {
               />
             </motion.svg>
 
-            <h1 className="relative z-10 text-[#004F98] text-2xl sm:text-3xl md:text-4xl font-semibold">
+            <h2 className="relative z-10 text-[#004F98] text-2xl sm:text-3xl md:text-4xl font-semibold">
               to active listening.
-            </h1>
+            </h2>
           </div>
         </div>
 

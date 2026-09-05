@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import CustomerProfiles from "@/components/LoyaltyLandingPage/CustomerProfiles";
-import Faq from "@/components/LoyaltyLandingPage/Faq";
+import Faq, { faqs } from "@/components/LoyaltyLandingPage/Faq";
 import Hero from "@/components/LoyaltyLandingPage/Hero";
 import HowItWorks from "@/components/LoyaltyLandingPage/HowItWorks";
 import Integrations from "@/components/LoyaltyLandingPage/Integrations";
@@ -9,6 +9,7 @@ import Trusted from "@/components/LoyaltyLandingPage/Trusted";
 import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
 import Layout from "@/components/RateupHomePage/Layout";
 import { useRevealAnimation } from "@/hooks/useRevealAnimation";
+import { faqPage } from "@/lib/jsonLd.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
 import { rateupLogoOg } from "@/utils/constants.ts";
 
@@ -73,66 +74,12 @@ const jsonLd = {
         },
       ],
 
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.8",
-        reviewCount: "500",
-        bestRating: "5",
-        worstRating: "1",
-      },
+      // aggregateRating removed: Google's review-snippet policy requires the reviews to be
+      // visible on the page itself. Re-add it only alongside real, rendered reviews.
 
-      review: [
-        {
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: "Shalini",
-          },
-          reviewBody:
-            "This is the first loyalty program our customers actually use. It's seamless, and we saw a 60% increase in repeat visits.",
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: "5",
-            bestRating: "5",
-          },
-          itemReviewed: {
-            "@id": "https://rateup.app/products/whatsapp-loyalty#software",
-          },
-        },
-        {
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: "Ramesh",
-          },
-          reviewBody: "No more stamp cards! Our staff and customers both love how easy it is.",
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: "5",
-            bestRating: "5",
-          },
-          itemReviewed: {
-            "@id": "https://rateup.app/products/whatsapp-loyalty#software",
-          },
-        },
-        {
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: "Priya",
-          },
-          reviewBody:
-            "We started seeing customers come back more frequently within just two weeks of using RateUp. The WhatsApp integration is genius.",
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: "5",
-            bestRating: "5",
-          },
-          itemReviewed: {
-            "@id": "https://rateup.app/products/whatsapp-loyalty#software",
-          },
-        },
-      ],
+      // The `review` array went with the aggregateRating, and for the same reason: it named
+      // three people and their 5-star ratings, none of which appear anywhere on the page.
+      // Google's review-snippet policy requires the reviews to be visible to the reader.
 
       publisher: {
         "@type": "Organization",
@@ -179,6 +126,9 @@ const jsonLd = {
         "@id": "https://rateup.app#organization",
       },
     },
+
+    /* Built from the same `faqs` array `<Faq />` renders below. */
+    faqPage(faqs.map((faq) => ({ question: faq.q, answer: faq.a }))),
   ],
 };
 
@@ -187,15 +137,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
     middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
   component: LoyaltyLandingPage,
-  head: () => ({
-    ...buildPageHead("/products/whatsapp-loyalty"),
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(jsonLd),
-      },
-    ],
-  }),
+  head: () => buildPageHead("/products/whatsapp-loyalty", { jsonLd }),
 });
 
 function LoyaltyLandingPage() {

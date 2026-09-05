@@ -44,15 +44,7 @@ export const Route = createFileRoute("/(marketing)/pricing/")({
   },
   component: Pricing,
   loader: getAllRateupPaymentPlans,
-  head: ({ loaderData }) => ({
-    ...buildPageHead("/pricing"),
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(pricingFaqJsonLd(loaderData)),
-      },
-    ],
-  }),
+  head: ({ loaderData }) => buildPageHead("/pricing", { jsonLd: pricingFaqJsonLd(loaderData) }),
 });
 
 function Pricing() {

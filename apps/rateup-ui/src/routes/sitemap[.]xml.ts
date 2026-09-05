@@ -1,48 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/**
- * Root sitemap for the marketing pages.
- *
- * `sitemap_index.xml` has always listed `/sitemap.xml`, but the route did not
- * exist — so the index handed search engines a 404 and none of these pages were
- * submitted. This is that missing file; the blog and tools sitemaps stay in
- * their own routes and are listed alongside it in the index.
- */
-const MARKETING_PATHS: { path: string; priority: string; changefreq: string }[] = [
-  { path: "/", priority: "1.0", changefreq: "weekly" },
-  { path: "/pricing", priority: "0.9", changefreq: "weekly" },
-  { path: "/products/omnichannel-inbox", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/whatsapp-feedback", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/whatsapp-loyalty", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/whatsapp-survey", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/ai-automation", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/ai-review", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/qr-studio", priority: "0.8", changefreq: "monthly" },
-  { path: "/products/testimonial-gateway", priority: "0.8", changefreq: "monthly" },
-  { path: "/about-us", priority: "0.6", changefreq: "yearly" },
-  { path: "/book-a-demo", priority: "0.7", changefreq: "yearly" },
-  { path: "/contact-us", priority: "0.6", changefreq: "yearly" },
-  { path: "/privacy-policy", priority: "0.3", changefreq: "yearly" },
-  { path: "/terms-of-service", priority: "0.3", changefreq: "yearly" },
-];
+import { SITEMAP_LASTMOD, sitemapEntries } from "@/lib/metadata.ts";
 
+/**
+ * Root sitemap for the marketing pages, generated from the `pageMetadata` registry so a new
+ * page is submitted without a second edit here. `noindex` pages and anything covered by
+ * another sitemap (`/blog`, `/tools/*`) opt out via `sitemap: false` in the registry.
+ *
+ * `public/sitemap.xml` used to shadow this route with a stale 12-URL file and has been deleted.
+ */
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
         const baseUrl = import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
-        const lastmod = new Date().toISOString();
 
         const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${MARKETING_PATHS.map(
-  (entry) => `  <url>
-    <loc>${baseUrl}${entry.path}</loc>
-    <lastmod>${lastmod}</lastmod>
+${sitemapEntries()
+  .map(
+    ({ path, entry }) => `  <url>
+    <loc>${baseUrl}${path === "/" ? "/" : path}</loc>
+    <lastmod>${entry.lastmod ?? SITEMAP_LASTMOD}</lastmod>
     <changefreq>${entry.changefreq}</changefreq>
     <priority>${entry.priority}</priority>
   </url>`,
-).join("\n")}
+  )
+  .join("\n")}
 </urlset>`;
 
         return new Response(sitemap, {

@@ -6,10 +6,10 @@ import SharePopover from "@/components/blog/ShareBlog.tsx";
 import ErrorPage from "@/components/error.tsx";
 import RoutePending from "@/components/Loaders/RoutePending.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { getMarkdownContent } from "@/lib/content.ts";
-import { getSinglePost } from "@/lib/posts.ts";
+import { BASE_URL } from "@/lib/metadata.ts";
 import type { Tag } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
+import { GHOST_ORIGIN, rateupLogoOg } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   server: {
@@ -17,6 +17,10 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
       createMarkdownMiddleware(async ({ request }) => {
         const pathname = new URL(request.url).pathname;
         const slugPath = pathname.replace(/^\/(?:[a-z]{2}\/)?blog\//i, "").replace(/\/$/, "");
+        /* Imported here rather than at module scope: this middleware only ever runs on the
+           server, but a route module's static imports land in the client entry — so the Ghost
+           content API and turndown were shipped to every visitor of every page. */
+        const { getMarkdownContent } = await import("@/lib/content.ts");
         const content = await getMarkdownContent(slugPath);
 
         if (!content) {
@@ -32,60 +36,93 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   errorComponent: ErrorPage,
   loader: async ({ params }) => {
     const { slug } = params;
+    const { getSinglePost } = await import("@/lib/posts.ts");
     const post = await getSinglePost(slug);
     if (!post) throw notFound();
     return post;
   },
-  head: async ({ params }) => {
-    const post = await getSinglePost(params.slug);
-
+  head: ({ loaderData: post }) => {
+    // `loaderData` rather than a second `getSinglePost` call — the head used to refetch every
+    // post on every render. It is optional in the head context (client navigation computes the
+    // head before the loader settles), so fall back to the root defaults for that one frame.
     if (!post) return {};
 
-    return {
-      title: post.meta_title || post.title,
-      meta: [
+    const url = `${BASE_URL}/blog/${post.slug}`;
+    // Ghost fills `canonical_url` with its own origin. Honour it only when an editor has pointed
+    // it at a real third-party republication.
+    const canonical =
+      post.canonical_url && !post.canonical_url.startsWith(GHOST_ORIGIN) ? post.canonical_url : url;
+    const description = post.meta_description || post.excerpt || undefined;
+    const image = post.og_image || post.feature_image || rateupLogoOg;
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@graph": [
         {
-          name: "description",
-          content: post.meta_description || post.excerpt || undefined,
+          "@type": "BlogPosting",
+          "@id": `${url}#post`,
+          headline: post.title,
+          description: description,
+          image,
+          url,
+          mainEntityOfPage: { "@type": "WebPage", "@id": url },
+          datePublished: post.published_at,
+          dateModified: post.updated_at || post.published_at,
+          author: {
+            "@type": "Person",
+            name: post.primary_author?.name,
+            url: post.primary_author?.slug
+              ? `${BASE_URL}/blog/author/${post.primary_author.slug}`
+              : undefined,
+          },
+          publisher: {
+            "@type": "Organization",
+            "@id": `${BASE_URL}#organization`,
+            name: "RateUp",
+            url: BASE_URL,
+            logo: { "@type": "ImageObject", url: rateupLogoOg },
+          },
+          keywords: post.tags?.map((tag: Tag) => tag.name).join(", ") || undefined,
         },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+            { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
+            { "@type": "ListItem", position: 3, name: post.title, item: url },
+          ],
+        },
+      ],
+    };
+
+    return {
+      meta: [
+        // Must be a `meta` entry: TanStack never reads a top-level `title` key, which is why
+        // every post rendered the blog index's title.
+        { title: post.meta_title || post.title },
+        { name: "description", content: description },
+        { name: "robots", content: "index, follow" },
 
         // OpenGraph
+        { property: "og:type", content: "article" },
         { property: "og:title", content: post.og_title || post.title },
-        {
-          property: "og:description",
-          content: post.og_description || post.excerpt || undefined,
-        },
-        {
-          property: "og:image",
-          content: post.og_image || post.feature_image || undefined,
-        },
-        { property: "og:url", content: post.canonical_url || post.url },
+        { property: "og:description", content: post.og_description || description },
+        { property: "og:image", content: image },
+        { property: "og:url", content: url },
+        { property: "article:published_time", content: post.published_at },
+        { property: "article:modified_time", content: post.updated_at || post.published_at },
 
         // Twitter
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: post.twitter_title || post.title },
-        {
-          name: "twitter:description",
-          content: post.twitter_description || post.excerpt || undefined,
-        },
-        {
-          name: "twitter:image",
-          content: post.twitter_image || post.feature_image || undefined,
-        },
+        { name: "twitter:description", content: post.twitter_description || description },
+        { name: "twitter:image", content: post.twitter_image || image },
 
-        // Authors (optional meta)
-        {
-          name: "author",
-          content: post.primary_author.name || undefined,
-        },
+        { name: "author", content: post.primary_author?.name || undefined },
       ],
 
-      links: [
-        {
-          rel: "canonical",
-          href: post.canonical_url || post.url || undefined,
-        },
-      ],
+      links: [{ rel: "canonical", href: canonical }],
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(jsonLd) }],
     };
   },
 });

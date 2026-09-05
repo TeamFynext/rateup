@@ -1,18 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
-import { imagesPath } from "@/utils/constants";
+import { INTEGRATIONS, integrationPath } from "@/config/integrations";
 
-import { BOOK_DEMO_ROUTE } from "../helper/BookDemoLink";
 import { Eyebrow } from "./home-ui";
-
-const INTEGRATIONS = [
-  { name: "Shopify", role: "Orders & customers", logo: `${imagesPath}/landing/logos/shopyfy.png` },
-  { name: "WooCommerce", role: "Orders & customers", logo: `${imagesPath}/landing/logos/woo.png` },
-  { name: "Petpooja", role: "POS & billing", logo: `${imagesPath}/landing/logos/petlogo.png` },
-  { name: "Zoho", role: "CRM sync", logo: `${imagesPath}/landing/logos/zoho.png` },
-  { name: "Zapier", role: "3,000+ apps", logo: `${imagesPath}/landing/logos/zapier.png` },
-  { name: "REST API", role: "Build your own", logo: null },
-];
 
 /* One tile is raised at a time. The delay is `index x stride`, and the stride is the 6.3s
    cycle in `--animate-ru-card-lift` divided by the number of tiles (the six integrations plus
@@ -61,35 +51,62 @@ export default function Integrations() {
         </div>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
-          {INTEGRATIONS.map((intg, i) => (
-            <div
-              key={intg.name}
-              style={liftDelay(i)}
-              className="flex h-24 min-w-0 animate-ru-card-lift items-center gap-3.5 rounded-2xl border border-ru-n-200 bg-white px-4.5 transition-colors hover:border-ru-n-300 motion-reduce:animate-none"
-            >
-              {/* Full colour: the comp greyed these tiles out only because it was showing
-                  monogram placeholders, not the partners' real marks. */}
-              <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50">
-                {intg.logo ? (
-                  <img src={intg.logo} alt="" className="size-7.5 object-contain" />
-                ) : (
-                  <span className="font-mono text-sm font-bold text-ru-n-500">{"{ }"}</span>
-                )}
-              </span>
-              <div className="min-w-0">
-                <div className="truncate text-base font-semibold text-ru-n-700">{intg.name}</div>
-                <div className="truncate text-[13.5px] text-ru-n-400">{intg.role}</div>
+          {INTEGRATIONS.map((intg, i) => {
+            /* Full colour: the comp greyed these tiles out only because it was showing
+               monogram placeholders, not the partners' real marks. */
+            const body = (
+              <>
+                <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50">
+                  {intg.logo ? (
+                    <img
+                      src={intg.logo}
+                      alt=""
+                      loading="lazy"
+                      className="size-7.5 object-contain"
+                    />
+                  ) : (
+                    <span className="font-mono text-sm font-bold text-ru-n-500">{"{ }"}</span>
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <div className="truncate text-base font-semibold text-ru-n-700">{intg.name}</div>
+                  <div className="truncate text-[13.5px] text-ru-n-400">{intg.role}</div>
+                </div>
+              </>
+            );
+
+            const shell =
+              "flex h-24 min-w-0 animate-ru-card-lift items-center gap-3.5 rounded-2xl border border-ru-n-200 bg-white px-4.5 transition-colors motion-reduce:animate-none";
+
+            /* Only the integrations that have a landing page become links — the rest have
+               nowhere to go yet. */
+            return intg.page ? (
+              <Link
+                key={intg.name}
+                to={integrationPath(intg.slug)}
+                style={liftDelay(i)}
+                className={`${shell} hover:border-ru-blue-300`}
+              >
+                {body}
+              </Link>
+            ) : (
+              <div
+                key={intg.name}
+                style={liftDelay(i)}
+                className={`${shell} hover:border-ru-n-300`}
+              >
+                {body}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           <Link
-            to={BOOK_DEMO_ROUTE}
+            to="/integrations"
             style={liftDelay(INTEGRATIONS.length)}
             className="flex h-24 min-w-0 animate-ru-card-lift flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ru-n-300 px-4.5 text-center transition-colors hover:border-ru-blue-600 motion-reduce:animate-none"
           >
             <span className="text-[15.5px] font-semibold text-ru-n-600">30+ more via webhooks</span>
-            <span className="text-[13.5px] text-ru-n-400">Ask us about yours</span>
+            <span className="text-[13.5px] text-ru-n-400">See all integrations</span>
           </Link>
         </div>
       </div>

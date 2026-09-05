@@ -294,6 +294,8 @@ export default function CaseStudies() {
               <img
                 src={c.logo}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="size-9 rounded-lg border border-ru-n-200 bg-white object-contain p-0.5"
               />
               <span className="font-display text-[20.5px] font-bold tracking-[-0.03em] text-ru-n-700">

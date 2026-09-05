@@ -1,0 +1,40 @@
+/*
+ * The marketing site's stylesheet, loaded by `src/routes/(marketing)/route.tsx` on top of
+ * `base.css`.
+ *
+ * The `@source` list is the set of directories actually reachable from the marketing routes —
+ * derived from the import graph, not guessed — plus the non-component trees that can hold a
+ * class string. Nothing under `components/dashboard`, `components/whatsapp`, `components/Survey`,
+ * `components/admin` or the editors is in it, which is the whole point: those are what made the
+ * single stylesheet 563 KB.
+ *
+ * A new marketing component in a directory that is not listed here renders unstyled. If you add
+ * one, add its directory.
+ */
+@import "tailwindcss" source(none);
+
+/* Marketing surfaces */
+@source "../components/RateupHomePage";
+@source "../components/HomePage";
+@source "../components/LoyaltyLandingPage";
+@source "../components/products";
+@source "../components/blog";
+@source "../components/marketing";
+@source "../components/(marketing)";
+@source "../components/integrations";
+@source "../components/partner";
+@source "../components/menu";
+@source "../components/Graph";
+/* The support widget is lazy-loaded into the marketing Layout, and drags in one editor helper. */
+@source "../components/app&services";
+@source "../components/RichTextEditor";
+@source "../routes/(marketing)";
+
+/* Non-component trees that can still hold class strings (tool and template registries do). */
+@source "../config";
+@source "../hooks";
+@source "../lib";
+@source "../utils";
+@source "../context";
+
+@import "./foundation.css";

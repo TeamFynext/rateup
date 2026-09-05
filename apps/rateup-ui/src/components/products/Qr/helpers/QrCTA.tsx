@@ -56,9 +56,9 @@ function QrCTA() {
 
         {/* Blue Box */}
         <div className="bg-[linear-gradient(90deg,_rgba(0,28,87,1)_0%,_rgba(0,79,152,1)_100%)] flex flex-col items-center justify-center py-12 px-6 sm:px-10 md:px-16 rounded-3xl gap-6 sm:gap-8">
-          <h1 className="text-white text-2xl sm:text-3xl md:text-4xl font-semibold text-center leading-snug">
+          <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-semibold text-center leading-snug">
             Ready to Unlock the Voice of Your Customer?
-          </h1>
+          </h2>
 
           <p className="text-white text-sm sm:text-base text-center max-w-2xl">
             Stop guessing what your customers think. Start listening, learning, and growing today.

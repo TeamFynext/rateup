@@ -4,6 +4,7 @@ import NpsTemplateDetail from "@/components/HomePage/pages/Tools/NpsSurveyTempla
 import ToolsShell from "@/components/HomePage/pages/Tools/shared/ToolsShell.tsx";
 import { getNpsTemplate } from "@/config/npsTemplates.ts";
 import { buildBreadcrumbJsonLd, TOOLS_SITE_URL, toolPath } from "@/config/tools.ts";
+import { rateupLogoOg } from "@/utils/constants.ts";
 
 const SLUG = "nps-survey-templates";
 
@@ -35,9 +36,11 @@ export const Route = createFileRoute("/(marketing)/tools/nps-survey-templates/$s
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
+        { property: "og:image", content: rateupLogoOg },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
+        { name: "twitter:image", content: rateupLogoOg },
       ],
       links: [{ rel: "canonical", href: url }],
       scripts: [

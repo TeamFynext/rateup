@@ -41,9 +41,9 @@ const TestimonialFooter = () => {
                 </Link>
               </li>
               <li>
-                <a href="https://blog.rateup.app/" className="text-primary transition-colors">
+                <Link to="/blog" className="text-primary transition-colors">
                   Blog
-                </a>
+                </Link>
               </li>
 
               <li>

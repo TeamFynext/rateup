@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import RtoLossCalculator from "@/components/HomePage/pages/Tools/RtoLossCalculator/index.tsx";
 import ToolsShell from "@/components/HomePage/pages/Tools/shared/ToolsShell.tsx";
-import { buildToolHeadScripts, getToolBySlug } from "@/config/tools.ts";
+import { buildToolJsonLd, getToolBySlug } from "@/config/tools.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
 
 const SLUG = "rto-loss-calculator";
@@ -12,14 +12,7 @@ export const Route = createFileRoute("/(marketing)/tools/rto-loss-calculator/")(
   head: () => {
     const tool = getToolBySlug(SLUG);
 
-    return {
-      ...buildPageHead(`/tools/${SLUG}`),
-      ...(tool
-        ? {
-            scripts: buildToolHeadScripts(tool),
-          }
-        : {}),
-    };
+    return buildPageHead(`/tools/${SLUG}`, tool ? { jsonLd: buildToolJsonLd(tool) } : undefined);
   },
 });
 

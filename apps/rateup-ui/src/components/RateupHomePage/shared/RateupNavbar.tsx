@@ -25,9 +25,12 @@ const NAV_LINKS = [
 ] as const;
 
 const PRODUCTS = [
+  { label: "WhatsApp Business API", to: "/products/whatsapp-business-api" },
+  { label: "WhatsApp Broadcast", to: "/products/whatsapp-broadcast" },
   { label: "WhatsApp Loyalty", to: "/products/whatsapp-loyalty" },
   { label: "WhatsApp Feedback", to: "/products/whatsapp-feedback" },
   { label: "Omnichannel Inbox", to: "/products/omnichannel-inbox" },
+  { label: "Integrations", to: "/integrations" },
 ] as const;
 
 const DESKTOP_LINK =

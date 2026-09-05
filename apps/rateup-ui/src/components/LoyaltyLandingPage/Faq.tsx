@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "./loyalty.landing.module.css";
 
-const faqs = [
+/* Exported so `products/whatsapp-loyalty` can build its `FAQPage` graph from the same array
+   the page renders — the markup must never claim an answer the page does not show. */
+export const faqs = [
   {
     q: "How Does WhatsApp Loyalty Work?",
     a: "Customers join your loyalty program with a single WhatsApp message — no app, no form. Every purchase automatically earns points, unlocks tiers, and triggers personalized reward messages right inside the chat they already use every day.",

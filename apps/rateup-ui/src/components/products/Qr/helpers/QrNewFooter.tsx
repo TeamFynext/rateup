@@ -26,9 +26,9 @@ const QrNewFooter = () => {
                 </Link>
               </li>
               <li>
-                <a href="https://blog.rateup.app/" className="hover:text-gray-900">
+                <Link to="/blog" className="hover:text-gray-900">
                   Blog
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

@@ -1,7 +1,7 @@
 /* ============================================================
    RateUp Loyalty — Landing Page styles (CSS Module)
-   Built on the RateUp Design System tokens in globals.css
-   Note: @tailwind directives are already imported in globals.css
+   Built on the RateUp Design System tokens in styles/foundation.css
+   Note: @tailwind directives are already imported by the surface stylesheets
    ============================================================ */
 
 /* Global resets removed - handle at app level */
@@ -2035,7 +2035,7 @@ section {
 /* ==========================================================
    TYPE — page-scoped element defaults.
    Moved here from the old colors_and_type.css token copy; the colors
-   and families now come from globals.css.
+   and families now come from styles/foundation.css.
    ========================================================== */
 :global(.loyalty-scope) {
   font-family: var(--font-sans);
