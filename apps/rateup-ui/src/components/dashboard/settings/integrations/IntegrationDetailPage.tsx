@@ -45,6 +45,11 @@ const ZohoPage = lazy(() =>
     default: m.Zoho,
   })),
 );
+const GetLeadPage = lazy(() =>
+  import("@/components/app&services/GetLead.tsx").then((m) => ({
+    default: m.GetLead,
+  })),
+);
 const ApiServicePage = lazy(() =>
   import("@/components/ExternalApi/ApiAccessKey.tsx").then((m) => ({
     default: m.default,
@@ -69,6 +74,7 @@ const INTEGRATION_PAGES: Record<string, React.ComponentType> = {
   petpooja: PetpoojaPage,
   zapier: ZapierPage,
   zoho: ZohoPage,
+  getlead: GetLeadPage,
   apiservice: ApiServicePage,
   widget: WidgetPage,
   webhook: WebhookPage,
@@ -82,6 +88,7 @@ const INTEGRATION_NAMES: Record<string, string> = {
   petpooja: "Petpooja",
   zapier: "Zapier",
   zoho: "Zoho",
+  getlead: "GetLead CRM",
   apiservice: "API Service",
   widget: "Widget",
   webhook: "Webhook",

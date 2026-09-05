@@ -1,7 +1,7 @@
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import readXlsxFile from "read-excel-file/browser";
+import { type CellValue, readSheet } from "read-excel-file/browser";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
@@ -24,8 +24,8 @@ function ImportChoices({
   const { t: translations } = useTranslation();
 
   const areAllSurveyLanguagesColumnsPresent = useCallback(
-    (headerRow: unknown[]) => {
-      const headerRowArr = headerRow.map((languageStr) => String(languageStr).toLowerCase());
+    (headerRow: (CellValue | null)[]) => {
+      const headerRowArr = headerRow.map((languageStr) => String(languageStr ?? "").toLowerCase());
       return surveyLanguagesArr.every((lang) => headerRowArr.includes(lang.toLowerCase()));
     },
     [surveyLanguagesArr],
@@ -36,10 +36,10 @@ function ImportChoices({
       const file = e.target.files?.[0];
       if (!file) return;
 
-      const rows = await readXlsxFile(file);
-      const headerRow = rows[0]?.data;
+      const rows = await readSheet(file);
+      const headerRow = rows?.[0];
 
-      if (!areAllSurveyLanguagesColumnsPresent(headerRow)) {
+      if (!headerRow || !areAllSurveyLanguagesColumnsPresent(headerRow)) {
         toast.error(translations("Please add all survey languages columns in excel file"));
         if (inputRef.current) inputRef.current.value = "";
         return;
@@ -59,7 +59,7 @@ function ImportChoices({
           choiceStringsSets[surveyLanguage] = newSet;
         }
         const colIndex = headerRow.findIndex(
-          (language) => language.toString().toLowerCase() === surveyLanguage.toLowerCase(),
+          (language) => String(language ?? "").toLowerCase() === surveyLanguage.toLowerCase(),
         );
         if (colIndex >= 0 && !columnLanguageObj[colIndex]) {
           columnLanguageObj[colIndex] = surveyLanguage;
@@ -67,10 +67,10 @@ function ImportChoices({
       }
 
       for (let i = 1; i < rows.length; i++) {
-        const rowArr = rows[i]?.data ?? [];
+        const rowArr = rows[i] ?? [];
         if (!rowArr.includes(null as never)) {
           for (const key in columnLanguageObj) {
-            choiceStringsSets[columnLanguageObj[key]].add(rowArr[key]);
+            choiceStringsSets[columnLanguageObj[key]].add(rowArr[Number(key)]);
           }
         }
       }
