@@ -1,4 +1,11 @@
-import { IconDeviceDesktop, IconInbox, IconMessageCircle } from "@tabler/icons-react";
+import {
+  IconApi,
+  IconDeviceDesktop,
+  IconInbox,
+  IconMessageCircle,
+  IconPlug,
+  IconSpeakerphone,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import * as React from "react";
 
@@ -19,6 +26,18 @@ const components: {
   description: string;
 }[] = [
   {
+    icon: <IconApi className="size-6 text-rateup-graytext" />,
+    title: "WhatsApp Business API",
+    to: "/products/whatsapp-business-api",
+    description: "The channel everything else here is built on.",
+  },
+  {
+    icon: <IconSpeakerphone className="size-6 text-rateup-graytext" />,
+    title: "WhatsApp Broadcast",
+    to: "/products/whatsapp-broadcast",
+    description: "Segmented campaigns to thousands, on the official API.",
+  },
+  {
     icon: <IconMessageCircle className="size-6 text-rateup-graytext" />,
     title: "Whatsapp Loyalty",
     to: "/products/whatsapp-loyalty",
@@ -35,6 +54,12 @@ const components: {
     title: "Omnichannel Inbox",
     to: "/products/omnichannel-inbox",
     description: "All your customer messages flow into one unified workspace.",
+  },
+  {
+    icon: <IconPlug className="size-6 text-rateup-graytext" />,
+    title: "Integrations",
+    to: "/integrations",
+    description: "Shopify, WooCommerce, POS, CRM and 3,000+ apps via Zapier.",
   },
 ];
 interface DropDownNavItemsProps {

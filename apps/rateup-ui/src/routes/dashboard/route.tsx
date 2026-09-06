@@ -8,12 +8,16 @@ import MainSidebar from "@/components/Layout/Navbar/main-sidebar.tsx";
 import { ConfirmProvider } from "@/context/confirm-provider";
 import { isEmailVerified, VERIFY_EMAIL_PATH } from "@/utils/auth/emailVerification.ts";
 
+import appCss from "@/styles/app.css?url";
+
 const dashboardSearchSchema = z.looseObject({
   msg: z.string().optional(),
   tab: z.string().optional(),
 });
 
 export const Route = createFileRoute("/dashboard")({
+  /* The application half of the Tailwind scan — see src/styles/app.css. */
+  head: () => ({ links: [{ rel: "stylesheet", href: appCss }] }),
   validateSearch: (search) => dashboardSearchSchema.parse(search),
   // Every dashboard URL, not just the index: a visitor who signed up and never verified
   // comes back to whatever page they last had open (or a bookmark, or a restored tab),

@@ -20,7 +20,7 @@ import { PhoneInput } from "../ui/phone-input.tsx";
  *
  * Two pieces: a launcher (a navy "How can we help you?" pill beside a navy avatar tile) and,
  * once opened, a 384x640 panel with its own header, a scrolling conversation, a composer and
- * a tab bar. Colour comes from the `ru-*` ramp in `globals.css`, which is the same palette the
+ * a tab bar. Colour comes from the `ru-*` ramp in `styles/foundation.css`, which is the same palette the
  * design was drawn against — `--surface-2` is `ru-n-50`, `--border` is `ru-n-200`, `--fg` is
  * `ru-n-700` and `--accent` is `ru-blue-600`.
  *
@@ -558,6 +558,8 @@ export default function SupportWidget({
             <img
               src={LAUNCHER_AVATAR}
               alt=""
+              loading="lazy"
+              decoding="async"
               onError={() => setAvatarFailed(true)}
               className="absolute inset-0 size-full rounded-full object-cover"
             />

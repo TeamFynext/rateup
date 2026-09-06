@@ -10,7 +10,8 @@ export const Route = createFileRoute("/(marketing)/blog/rss.xml")({
         try {
           const baseUrl = import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
 
-          const posts = await getPosts();
+          // `full` — the feed embeds the post body, which the list projection drops.
+          const posts = await getPosts(undefined, "full");
 
           if (!posts?.length) {
             return new Response("No posts available", {

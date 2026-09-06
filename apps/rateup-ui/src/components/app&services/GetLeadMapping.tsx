@@ -258,7 +258,7 @@ export function GetLeadMapping({ meta }: Props) {
 
       <Card className="p-4">
         <div className="flex items-center gap-2">
-          <h4 className="text-sm font-medium">{t("Stage mapping")}</h4>
+          <h4 className="text-sm font-medium">{t("Lead stage mapping")}</h4>
           {/* The list can change under the cursor when a refresh lands; this
               says why rather than leaving it unexplained. */}
           {refreshMeta.isPending && (

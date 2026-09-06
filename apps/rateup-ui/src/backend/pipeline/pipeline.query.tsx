@@ -225,7 +225,7 @@ export function useCreateStageMutation() {
   return usePipelineMutation<CreateStageInput, unknown>({
     mutationFn: api.createStage,
     success: (t, _result, variables) => t("{name} added", { name: variables.name }),
-    errorFallback: (t) => t("Could not add the stage"),
+    errorFallback: (t) => t("Could not add the lead stage"),
     toastId: "pipeline-stage-create",
   });
 }
@@ -233,7 +233,7 @@ export function useCreateStageMutation() {
 export function useUpdateStageMutation() {
   return usePipelineMutation<{ stageId: string; input: UpdateStageInput }, unknown>({
     mutationFn: ({ stageId, input }) => api.updateStage(stageId, input),
-    errorFallback: (t) => t("Could not save the stage"),
+    errorFallback: (t) => t("Could not save the lead stage"),
     toastId: "pipeline-stage-update",
   });
 }
@@ -241,8 +241,8 @@ export function useUpdateStageMutation() {
 export function useDeleteStageMutation() {
   return usePipelineMutation<{ stageId: string; moveLeadsToStageId?: string }, unknown>({
     mutationFn: ({ stageId, moveLeadsToStageId }) => api.deleteStage(stageId, moveLeadsToStageId),
-    success: (t) => t("Stage deleted"),
-    errorFallback: (t) => t("Could not delete the stage"),
+    success: (t) => t("Lead stage deleted"),
+    errorFallback: (t) => t("Could not delete the lead stage"),
     toastId: "pipeline-stage-delete",
   });
 }
@@ -291,7 +291,7 @@ export function useReorderStagesMutation() {
       // Put the old order back rather than leaving the board showing a sequence
       // the server rejected.
       if (context?.previous) queryClient.setQueryData(context.key, context.previous);
-      toast.error(getApiErrorMessage(error, t("Could not reorder the stages")), {
+      toast.error(getApiErrorMessage(error, t("Could not reorder the lead stages")), {
         id: "pipeline-stage-reorder",
       });
     },

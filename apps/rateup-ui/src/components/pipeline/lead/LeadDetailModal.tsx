@@ -11,6 +11,7 @@ import {
   IconRosetteDiscountCheck,
   IconTrash,
   IconUsersGroup,
+  IconX,
   type Icon,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -34,14 +35,19 @@ import type {
 } from "@/backend/pipeline/pipeline.types.ts";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
@@ -51,7 +57,6 @@ import { daysIdle, isRotting, leadAgeDays } from "../pipeline.utils.ts";
 import { FieldLabel } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
 import { LeadAssigneePicker } from "./LeadAssigneePicker.tsx";
-import { LeadLabelPicker } from "./LeadLabelPicker.tsx";
 import { LeadStageStepper } from "./LeadStageStepper.tsx";
 import { NextActivityPanel } from "./NextActivityPanel.tsx";
 
@@ -216,7 +221,7 @@ function describeActivity(t: TFunction, activity: LeadActivity): { title: string
   }
 }
 
-interface LeadDrawerProps {
+interface LeadDetailModalProps {
   leadId: string | undefined;
   pipeline: PipelineDetail | undefined;
   /** Everyone on the pipeline's teams — the assignee picker's options. */
@@ -232,8 +237,14 @@ interface LeadDrawerProps {
  * Everything known about one lead: its position in the funnel, its fields, its
  * timeline and its notes. Opened from every view, so it takes only a lead id and
  * fetches the detail itself rather than depending on which list it came from.
+ *
+ * A centred modal rather than a side drawer: the lead's fields and its history
+ * are read together, and a 520px column forced them behind tabs, so answering
+ * "where is this lead and what happened last?" cost a tab switch. Side by side
+ * from `lg` up, both columns scroll on their own; below that they stack in one
+ * scroll, which is also the whole layout on a phone.
  */
-export function LeadDrawer({
+export function LeadDetailModal({
   leadId,
   pipeline,
   members,
@@ -242,7 +253,7 @@ export function LeadDrawer({
   onMarkLost,
   onMoveStage,
   onOpenConversation,
-}: Readonly<LeadDrawerProps>) {
+}: Readonly<LeadDetailModalProps>) {
   const { t } = useTranslation();
   const [noteDraft, setNoteDraft] = useState("");
   const { data: lead, isPending } = useLeadQuery(leadId);
@@ -260,30 +271,28 @@ export function LeadDrawer({
   };
 
   return (
-    <Sheet open={Boolean(leadId)} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent
-        className="w-full gap-0 p-0 sm:max-w-130"
-        // The board stays legible behind the drawer — you move a lead by looking
-        // at both — so the backdrop only dims, it does not blur.
-        // overlayClassName="supports-backdrop-filter:backdrop-blur-none"
+    <Dialog open={Boolean(leadId)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="flex h-[calc(100dvh-3rem)] max-h-190 w-full flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-255"
       >
         {isPending || !lead ? (
           <div className="flex flex-col gap-3 p-5">
-            <SheetTitle className="sr-only">{t("Loading lead")}</SheetTitle>
+            <DialogTitle className="sr-only">{t("Loading lead")}</DialogTitle>
             <Skeleton className="h-11 w-2/3" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-40 w-full" />
           </div>
         ) : (
           <>
-            <div className="border-border shrink-0 border-b px-5 pt-4.5 pb-3.5">
-              <div className="flex items-start gap-3 pr-7">
+            <div className="border-border shrink-0 border-b px-6 pt-5 pb-4">
+              <div className="flex items-start gap-3">
                 <LeadAvatar name={lead.name} channel={lead.channel} size="xl" />
                 <div className="min-w-0 flex-1">
-                  <SheetTitle className="font-nunito truncate text-lg font-extrabold">
+                  <DialogTitle className="font-nunito truncate text-xl leading-tight font-bold tracking-[-0.01em]">
                     {lead.name}
-                  </SheetTitle>
-                  <SheetDescription className="truncate text-xs">
+                  </DialogTitle>
+                  <DialogDescription className="mt-0.5 truncate text-sm">
                     {[
                       lead.channel === "NONE" ? null : channelLabel(t, lead.channel),
                       lead.phone,
@@ -291,14 +300,26 @@ export function LeadDrawer({
                     ]
                       .filter(Boolean)
                       .join(" · ") || sourceLabel(t, lead.source)}
-                  </SheetDescription>
+                  </DialogDescription>
                 </div>
+                <DialogClose
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-muted-foreground -mt-1 shrink-0"
+                      aria-label={t("Close")}
+                    >
+                      <IconX className="size-4.5" />
+                    </Button>
+                  }
+                />
               </div>
 
               <div className="mt-3.5 flex items-center gap-2">
                 <Button
                   size="sm"
-                  className="h-8 gap-1.5 bg-green-600 text-xs text-white hover:bg-green-700"
+                  className="h-9 gap-1.5 text-xs"
                   onClick={() => onOpenConversation(lead)}
                   disabled={!lead.contactId}
                 >
@@ -307,8 +328,8 @@ export function LeadDrawer({
                 </Button>
                 <Button
                   size="sm"
-                  variant="ghost"
-                  className="h-8 gap-1.5 bg-green-600/10 text-xs font-bold text-green-700 hover:bg-green-600/20 hover:text-green-700 dark:text-green-500 dark:hover:text-green-500"
+                  variant="outline"
+                  className="h-9 gap-1.5 text-xs font-medium text-green-700 dark:text-green-500"
                   onClick={() => onMarkWon(lead)}
                   disabled={lead.status === "WON"}
                 >
@@ -318,7 +339,7 @@ export function LeadDrawer({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="bg-muted hover:bg-muted/70 h-8 gap-1.5 text-xs font-bold"
+                  className="hover:bg-muted h-9 gap-1.5 text-xs font-medium"
                   onClick={() => onMarkLost(lead)}
                   disabled={lead.status === "LOST"}
                 >
@@ -334,7 +355,7 @@ export function LeadDrawer({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-muted-foreground size-8"
+                        className="text-muted-foreground size-9"
                         aria-label={t("More lead actions")}
                       >
                         <IconDots className="size-4.5" />
@@ -369,32 +390,13 @@ export function LeadDrawer({
               />
             ) : null}
 
-            <Tabs defaultValue="details" className="min-h-0 flex-1 gap-0">
-              {/* Underlined tabs sitting on the section rule, as the design has
-                  them — not the default pill group. */}
-              <TabsList
-                variant="line"
-                className="border-border h-auto w-full shrink-0 justify-start gap-0.5 rounded-none border-b p-0 px-5"
-              >
-                {[
-                  { value: "details", label: t("Details") },
-                  { value: "timeline", label: t("Timeline") },
-                  { value: "notes", label: t("Notes ({total})", { total: lead.notes.length }) },
-                ].map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    // The underline sits on the label's own baseline gap, not
-                    // the row's full padding, so it reads as part of the tab.
-                    className="data-active:text-primary data-active:after:bg-primary h-auto flex-none rounded-none px-3 pt-2.5 pb-1.5 text-[13px] font-medium after:bottom-0 data-active:font-bold"
-                  >
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              <TabsContent value="details" className="min-h-0 flex-1 overflow-y-auto p-5">
-                <div className="grid grid-cols-2 gap-x-5 gap-y-3.5">
+            {/* Below lg the two panels stack and the whole body is one scroll;
+                from lg they sit side by side and each scrolls on its own, so
+                reading the timeline never scrolls the fields out of view. */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+              <div className="border-border bg-muted shrink-0 border-b px-5.5 pt-5 pb-6 lg:w-93 lg:overflow-y-auto lg:border-r lg:border-b-0">
+                <FieldLabel>{t("Details")}</FieldLabel>
+                <div className="mt-3 grid grid-cols-2 gap-x-4.5 gap-y-3.5">
                   {/* Assignees are the one field worth editing here, so they are
                       the one that is a control rather than a read-out. */}
                   <div className="min-w-0">
@@ -469,7 +471,7 @@ export function LeadDrawer({
                       <FieldLabel>{field.label}</FieldLabel>
                       <div
                         className={cn(
-                          "mt-1 truncate text-[13px] font-semibold",
+                          "mt-0.75 truncate text-[13.5px] font-medium",
                           field.tone ?? "text-foreground",
                         )}
                       >
@@ -479,60 +481,16 @@ export function LeadDrawer({
                   ))}
                 </div>
 
-                <div className="bg-border my-4.5 h-px" />
-
-                <FieldLabel>{t("Labels")}</FieldLabel>
-                <LeadLabelPicker lead={lead} labels={pipeline?.labels ?? []} />
-
                 <NextActivityPanel lead={lead} />
-              </TabsContent>
+              </div>
 
-              <TabsContent value="timeline" className="min-h-0 flex-1 overflow-y-auto p-5">
-                {lead.activities.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">{t("Nothing has happened yet.")}</p>
-                ) : (
-                  lead.activities.map((activity, index) => {
-                    const ActivityIcon = ACTIVITY_ICON[activity.type] ?? IconArrowsExchange;
-                    const { title, body } = describeActivity(t, activity);
-                    return (
-                      <div key={activity.id} className="flex gap-3">
-                        <div className="flex shrink-0 flex-col items-center">
-                          <span
-                            className={cn(
-                              "flex size-7 items-center justify-center rounded-full",
-                              ACTIVITY_TONE[activity.type] ?? DEFAULT_ACTIVITY_TONE,
-                            )}
-                          >
-                            <ActivityIcon className="size-3.5" />
-                          </span>
-                          {index < lead.activities.length - 1 ? (
-                            <span className="bg-border my-1 w-px flex-1" />
-                          ) : null}
-                        </div>
-                        <div className="min-w-0 flex-1 pb-4.5">
-                          <div className="flex flex-wrap items-baseline gap-2">
-                            <span className="text-foreground text-[13px] font-bold">{title}</span>
-                            <span className="text-muted-foreground text-[11px]">
-                              {formatToRelativeTime(activity.createdAt)}
-                            </span>
-                          </div>
-                          {body ? (
-                            <p className="text-muted-foreground mt-0.5 text-xs">{body}</p>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </TabsContent>
-
-              <TabsContent value="notes" className="min-h-0 flex-1 overflow-y-auto p-5">
+              <div className="min-h-0 flex-1 px-6 pt-5 pb-6 lg:overflow-y-auto">
                 <div className="border-border rounded-xl border p-3">
                   <Textarea
                     value={noteDraft}
                     onChange={(event) => setNoteDraft(event.target.value)}
                     placeholder={t("Add a note about this lead…")}
-                    className="min-h-18 resize-y border-none p-0 shadow-none focus-visible:ring-0"
+                    className="min-h-12 resize-y border-none p-0 shadow-none focus-visible:ring-0"
                   />
                   <div className="flex justify-end">
                     <Button
@@ -546,41 +504,98 @@ export function LeadDrawer({
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-col gap-3">
-                  {lead.notes.map((note) => (
-                    <div
-                      key={note.id}
-                      className="border-border rounded-xl border bg-amber-50 p-3.5 dark:bg-amber-950/20"
-                    >
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-foreground text-xs font-extrabold">
-                          {note.author?.name ?? t("Someone")}
-                        </span>
-                        <span className="text-muted-foreground text-[11px]">
-                          {dayjs(note.createdAt).format("D MMM, h:mm A")}
-                        </span>
-                        <span className="flex-1" />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-destructive size-6"
-                          onClick={() => deleteNote.mutate(note.id)}
-                          aria-label={t("Delete note")}
+                <div className="mt-4.5">
+                  <FieldLabel>{t("Notes ({total})", { total: lead.notes.length })}</FieldLabel>
+                  {lead.notes.length === 0 ? (
+                    <p className="text-muted-foreground mt-2 text-xs">
+                      {t("No notes yet — anything the team types here stays with the lead.")}
+                    </p>
+                  ) : (
+                    <div className="mt-2 flex flex-col gap-3">
+                      {lead.notes.map((note) => (
+                        <div
+                          key={note.id}
+                          className="rounded-xl border border-amber-200 bg-amber-50 p-3.25 dark:border-amber-900/40 dark:bg-amber-950/20"
                         >
-                          <IconTrash className="size-3.5" />
-                        </Button>
-                      </div>
-                      <p className="text-foreground mt-1.5 text-[13px] whitespace-pre-wrap">
-                        {note.text}
-                      </p>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-foreground text-[13px] font-medium">
+                              {note.author?.name ?? t("Someone")}
+                            </span>
+                            <span className="text-muted-foreground text-[11.5px]">
+                              {dayjs(note.createdAt).format("D MMM, h:mm A")}
+                            </span>
+                            <span className="flex-1" />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-destructive size-6"
+                              onClick={() => deleteNote.mutate(note.id)}
+                              aria-label={t("Delete note")}
+                            >
+                              <IconTrash className="size-3.5" />
+                            </Button>
+                          </div>
+                          <p className="text-muted-foreground mt-1.25 text-[13.5px] leading-normal whitespace-pre-wrap">
+                            {note.text}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              </TabsContent>
-            </Tabs>
+
+                <div className="mt-5.5">
+                  <FieldLabel>{t("Activity")}</FieldLabel>
+                  <div className="mt-3">
+                    {lead.activities.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">
+                        {t("Nothing has happened yet.")}
+                      </p>
+                    ) : (
+                      lead.activities.map((activity, index) => {
+                        const ActivityIcon = ACTIVITY_ICON[activity.type] ?? IconArrowsExchange;
+                        const { title, body } = describeActivity(t, activity);
+                        return (
+                          <div key={activity.id} className="flex gap-3">
+                            <div className="flex shrink-0 flex-col items-center">
+                              <span
+                                className={cn(
+                                  "flex size-7 items-center justify-center rounded-full",
+                                  ACTIVITY_TONE[activity.type] ?? DEFAULT_ACTIVITY_TONE,
+                                )}
+                              >
+                                <ActivityIcon className="size-3.5" />
+                              </span>
+                              {index < lead.activities.length - 1 ? (
+                                <span className="bg-border my-1 w-px flex-1" />
+                              ) : null}
+                            </div>
+                            <div className="min-w-0 flex-1 pb-4.5">
+                              <div className="flex flex-wrap items-baseline gap-2">
+                                <span className="text-foreground text-[13.5px] font-medium">
+                                  {title}
+                                </span>
+                                <span className="text-muted-foreground text-[11.5px]">
+                                  {formatToRelativeTime(activity.createdAt)}
+                                </span>
+                              </div>
+                              {body ? (
+                                <p className="text-muted-foreground mt-0.75 text-[13px] leading-normal">
+                                  {body}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

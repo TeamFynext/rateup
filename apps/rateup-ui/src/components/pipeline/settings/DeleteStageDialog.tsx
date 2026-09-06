@@ -184,7 +184,7 @@ export function DeleteStageDialog({
             onClick={submit}
             disabled={!destinationId || deleteStage.isPending}
           >
-            {t("Delete stage")}
+            {t("Delete lead stage")}
           </Button>
         </DialogFooter>
       </DialogContent>

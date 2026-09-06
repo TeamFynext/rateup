@@ -1,18 +1,23 @@
-@import "tailwindcss";
+/*
+ * Everything that is not a source scan: the design-system tokens, the `@theme` that turns them
+ * into utilities, the custom utilities, the base layer and the global element rules. This is the
+ * former `src/globals.css` minus its Tailwind entry, and it is what `components.json` points
+ * `tailwind.css` at, so `npx shadcn add` writes new component variables here.
+ *
+ * (Left to itself the shadcn CLI would auto-detect `app.css` instead — the only sheet with a bare
+ * `@import "tailwindcss"` — and put tokens somewhere the marketing site never loads. Keep the
+ * `tailwind.css` entry in `components.json` pointing here.)
+ *
+ * It is imported by all three surface stylesheets (`base.css`, `marketing.css`, `app.css`) —
+ * each of those is its own Tailwind compilation unit and has to declare the theme to generate
+ * `bg-ru-blue-600` and friends. The duplication is a few KB of variables per sheet; the
+ * alternative is a surface silently losing half its palette.
+ */
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
-
-/* Design System V2: Instrument Sans (body/UI) + Figtree (display/logo). */
-@import "@fontsource-variable/instrument-sans";
-/* @import "@fontsource/noto-color-emoji"; */
-@import "@fontsource-variable/figtree";
-
-/* Tiptap editor content styles (.ProseMirror, placeholder, --editor-* tokens).
-   Global because editors are inlined across many routes. */
-@import "./components/tiptap/tiptap.css";
 
 :root {
   --radius: 0.625rem;
@@ -238,6 +243,10 @@
      occupies ~7% of the lap, so only the node being passed is raised. */
   --animate-ru-node-pop: ru-node-pop 24s linear infinite;
   --animate-ru-rise: ru-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  /* The broadcast page's phone mock: bubbles enter, and the typing indicator's three dots
+     bounce out of phase. `both` keeps the entered bubble at its final frame. */
+  --animate-ru-msg-in: ru-msg-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-ru-dot: ru-dot 1.2s ease-in-out infinite;
 
   --shadow-custom-base: var(--custom-shadow-base);
   --shadow-custom-hover: var(--custom-shadow-hover);
@@ -327,6 +336,26 @@
     }
   }
 
+  @keyframes ru-msg-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes ru-dot {
+    0%,
+    60%,
+    100% {
+      opacity: 0.28;
+      transform: translateY(0);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+  }
+
   @keyframes ru-node-pop {
     0%,
     7%,
@@ -361,6 +390,17 @@
 @utility bg-ru-star {
   background-image: linear-gradient(
     150deg,
+    var(--color-ru-star-top) 0%,
+    var(--color-ru-amber-500) 100%
+  );
+}
+
+/* The star as a FILL rather than a texture — the design system's `--ru-star-cta`. Same two
+   stops swept horizontally, for the one primary CTA on a marketing page. Text on it is always
+   navy (`text-ru-blue-900`), never white: the amber end is nowhere near dark enough. */
+@utility bg-ru-star-cta {
+  background-image: linear-gradient(
+    90deg,
     var(--color-ru-star-top) 0%,
     var(--color-ru-amber-500) 100%
   );

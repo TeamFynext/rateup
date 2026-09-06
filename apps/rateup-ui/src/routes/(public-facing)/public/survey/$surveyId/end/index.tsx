@@ -4,8 +4,7 @@ import z from "zod";
 import { getPublicSurvey, getPublicSurveyGoogleLink } from "@/backend/surveys/survey.api";
 import { getPublicReviewsBySurveyTeamMapId } from "@/backend/team/reviewSuggestion/reviewSuggestion.api";
 import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end";
-import { ReviewPagePlatform } from "@/components/Survey/Question/QuestionReviewPageEditor/index.tsx";
-import { PageType } from "@/types/enums.ts";
+import { PageType, ReviewPagePlatform } from "@/types/enums.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/end/")({
   component: End,

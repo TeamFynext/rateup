@@ -39,20 +39,21 @@ export function isLeadDragData(
 interface LeadCardProps {
   lead: Lead;
   rottingEnabled: boolean;
-  stageColor: string | null;
   onOpen: (leadId: string) => void;
   onOpenConversation: (lead: Lead) => void;
 }
 
 /**
- * One lead on the board. The left edge carries the stage colour, or the
- * destructive colour when the lead has gone stale — the card's most important
- * state is the one you can read without focusing on it.
+ * One lead on the board.
+ *
+ * The card is a plain hairline panel: the column it sits in already names its
+ * stage, so a stage-coloured edge only repeated that. A stale lead outlines the
+ * whole card instead, which stays readable without focusing on it and — unlike a
+ * thicker left border — does not shift the contents sideways when it appears.
  */
 export function LeadCard({
   lead,
   rottingEnabled,
-  stageColor,
   onOpen,
   onOpenConversation,
 }: Readonly<LeadCardProps>) {
@@ -92,17 +93,17 @@ export function LeadCard({
           onOpen(lead.id);
         }
       }}
-      style={{ borderLeftColor: rotting ? undefined : (stageColor ?? undefined) }}
       className={cn(
-        "bg-card border-border hover:border-primary/40 focus-visible:ring-ring group cursor-grab rounded-xl border border-l-[3px] p-3 shadow-xs transition-colors focus-visible:ring-2 focus-visible:outline-none",
-        rotting && "border-l-destructive",
+        "bg-card border-border focus-visible:ring-ring cursor-grab rounded-xl border p-3 shadow-xs transition-all focus-visible:ring-2 focus-visible:outline-none",
+        "hover:border-foreground/20 hover:-translate-y-0.5 hover:shadow-md",
+        rotting && "border-destructive/45",
         dragging && "opacity-40",
       )}
     >
-      <div className="flex items-start gap-2.5">
-        <LeadAvatar name={lead.name} channel={lead.channel} size="lg" />
+      <div className="flex items-start gap-2.25">
+        <LeadAvatar name={lead.name} source={lead.source} size="lg" />
         <div className="min-w-0 flex-1">
-          <div className="text-foreground truncate text-[13px] font-bold">{lead.name}</div>
+          <div className="text-foreground truncate text-[13.5px] font-medium">{lead.name}</div>
           <div className="text-muted-foreground truncate text-[11px]">
             {lead.company ?? t("Direct customer")}
           </div>
@@ -120,7 +121,7 @@ export function LeadCard({
               event.stopPropagation();
               onOpenConversation(lead);
             }}
-            className="text-muted-foreground hover:text-primary opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
+            className="text-muted-foreground hover:text-primary shrink-0 transition-colors"
           >
             <IconMessage2 className="size-4" />
           </button>
@@ -133,7 +134,7 @@ export function LeadCard({
       </div>
 
       {lead.labels.length > 0 ? (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <div className="mt-2.25 flex flex-wrap gap-1.25">
           {lead.labels.map((label) => (
             <LeadLabelChip key={label.id} label={label} />
           ))}
@@ -142,7 +143,7 @@ export function LeadCard({
 
       <div
         className={cn(
-          "mt-2.5 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-semibold",
+          "mt-2.25 flex items-center gap-1.5 rounded-sm px-2 py-1.25 text-[11px] font-semibold",
           lead.status === "WON"
             ? "bg-green-600/10 text-green-700 dark:text-green-500"
             : overdue
@@ -154,12 +155,12 @@ export function LeadCard({
       >
         {lead.status === "WON" ? (
           <>
-            <IconRosetteDiscountCheck className="size-3.5" />
+            <IconRosetteDiscountCheck className="size-3" />
             <span className="truncate">{t("Won · closed")}</span>
           </>
         ) : (
           <>
-            <NextIcon className="size-3.5" />
+            <NextIcon className="size-3" />
             <span className="truncate">
               {lead.nextTask?.title ?? t("No next activity scheduled")}
             </span>
@@ -167,9 +168,9 @@ export function LeadCard({
         )}
       </div>
 
-      <div className="mt-2.5 flex items-center gap-2">
+      <div className="mt-2.25 flex items-center gap-1.75">
         {lead.team ? (
-          <span className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold">
+          <span className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium">
             <IconUsersGroup className="size-2.5" />
             {lead.team.name}
           </span>
@@ -178,7 +179,7 @@ export function LeadCard({
         <span className="flex-1" />
         <span
           className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-bold",
+            "inline-flex items-center gap-1 text-[11px] font-medium",
             rotting ? "text-destructive" : "text-muted-foreground",
           )}
         >

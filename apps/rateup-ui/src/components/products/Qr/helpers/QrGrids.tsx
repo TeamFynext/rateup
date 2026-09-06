@@ -16,9 +16,9 @@ function QrGrids() {
     >
       {/* Heading */}
       <div className="flex flex-col md:flex-row gap-2 items-center justify-center text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-gray-900">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-gray-900">
           More Than a Box.
-        </h1>
+        </h2>
         <div className="relative inline-block font-bold">
           <motion.svg
             width="100%"
@@ -40,9 +40,9 @@ function QrGrids() {
             />
           </motion.svg>
 
-          <h1 className="relative z-10 text-[#004F98] text-3xl sm:text-4xl md:text-5xl font-semibold">
+          <h2 className="relative z-10 text-[#004F98] text-3xl sm:text-4xl md:text-5xl font-semibold">
             It's a Growth Engine.
-          </h1>
+          </h2>
         </div>
       </div>
 

@@ -7,15 +7,7 @@ import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/tools/")({
   component: ToolsIndexPage,
-  head: () => ({
-    ...buildPageHead("/tools"),
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(buildToolsIndexJsonLd()),
-      },
-    ],
-  }),
+  head: () => buildPageHead("/tools", { jsonLd: buildToolsIndexJsonLd() }),
 });
 
 function ToolsIndexPage() {

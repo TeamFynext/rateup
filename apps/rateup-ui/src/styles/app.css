@@ -1,0 +1,16 @@
+/*
+ * The logged-in application's stylesheet — dashboard, admin, auth and the tenant-facing utility
+ * pages. Loaded by each of those surfaces' layout routes.
+ *
+ * Unlike `marketing.css` this keeps Tailwind's default full-tree scan. The app is behind a login,
+ * so its CSS weight is not an SEO or Core Web Vitals concern, and a full scan means none of the
+ * hundreds of app components can lose its styling to a missing `@source` glob. The saving comes
+ * from marketing pages no longer loading this file at all.
+ */
+@import "tailwindcss";
+
+/* Tiptap editor content styles (.ProseMirror, placeholder, --editor-* tokens).
+   Editors are inlined across many app routes, so the rules stay global to this surface. */
+@import "../components/tiptap/tiptap.css";
+
+@import "./foundation.css";

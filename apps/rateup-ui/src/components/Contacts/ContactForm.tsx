@@ -243,7 +243,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               control={form.control}
               render={({ field }) => (
                 <Field className="flex flex-col gap-1">
-                  <FieldTitle>{translations("Pipeline Stage")}</FieldTitle>
+                  <FieldTitle>{translations("Lead stage")}</FieldTitle>
                   <StageSelector value={field.value} onChange={field.onChange} className="w-full" />
                 </Field>
               )}

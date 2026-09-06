@@ -29,24 +29,17 @@ import type {
   LeadSource,
   PipelineDetail,
   PipelineSummary,
-  StageStatus,
 } from "@/backend/pipeline/pipeline.types.ts";
-import type { NavEntry } from "@/components/Layout/Navbar/hooks.tsx";
+import type { NavEntry, NavProgress } from "@/components/Layout/Navbar/hooks.tsx";
+import { cn } from "@/lib/utils.ts";
 import type { PipelineViewState } from "@/store/pipeline.store.ts";
 import type { LeadFilter } from "@/store/pipeline.store.ts";
 
-import { PIPELINE_LIMIT_PER_ORG, SOURCE_META } from "./pipeline.constants.tsx";
+import { PIPELINE_LIMIT_PER_ORG, SOURCE_META, STATUS_BAND } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel } from "./pipeline.labels.ts";
 import { countByStatus, isAssignedTo, isRotting, stageFacets } from "./pipeline.utils.ts";
 
 const PIPELINE_PATH = "/dashboard/pipeline";
-
-/** A stage row's icon says at a glance whether the column closes a lead. */
-const STAGE_STATUS_ICON: Record<StageStatus, Icon> = {
-  OPEN: IconCircleDot,
-  WON: IconCircleCheck,
-  LOST: IconCircleX,
-};
 
 // Labels come from `leadFilterLabel`, which is where `t` can reach them.
 const FILTER_ROWS: ReadonlyArray<{ id: LeadFilter; icon: Icon }> = [
@@ -57,6 +50,34 @@ const FILTER_ROWS: ReadonlyArray<{ id: LeadFilter; icon: Icon }> = [
   { id: "won", icon: IconCircleCheck },
   { id: "lost", icon: IconCircleX },
 ];
+
+type NavIcon = NonNullable<NavEntry["icon"]>;
+
+/**
+ * Sources are keyed by colour rather than by glyph, the way the design lays the
+ * list out. Built once at module load: `NavEntry.icon` is a component type, and
+ * minting a new one per render would remount every dot on every keystroke.
+ */
+function sourceDot(fillClassName: string): NavIcon {
+  return function SourceDot({ className }: Readonly<{ className?: string }>) {
+    return (
+      <span className={cn("flex shrink-0 items-center justify-center", className)}>
+        <span className={cn("size-2 rounded-full", fillClassName)} />
+      </span>
+    );
+  };
+}
+
+const SOURCE_DOT: Record<LeadSource, NavIcon> = {
+  WHATSAPP: sourceDot(SOURCE_META.WHATSAPP.fillClassName),
+  INSTAGRAM: sourceDot(SOURCE_META.INSTAGRAM.fillClassName),
+  MESSENGER: sourceDot(SOURCE_META.MESSENGER.fillClassName),
+  WEBCHAT: sourceDot(SOURCE_META.WEBCHAT.fillClassName),
+  SURVEY: sourceDot(SOURCE_META.SURVEY.fillClassName),
+  REFERRAL: sourceDot(SOURCE_META.REFERRAL.fillClassName),
+  LOYALTY: sourceDot(SOURCE_META.LOYALTY.fillClassName),
+  MANUAL: sourceDot(SOURCE_META.MANUAL.fillClassName),
+};
 
 type FacetKey = "stageId" | "teamId" | "source" | "assigneeId";
 
@@ -75,6 +96,29 @@ export interface PipelineNavInput {
   currentUserId: string | undefined;
   setView: (patch: Partial<PipelineViewState>) => void;
   toggleFacet: <K extends FacetKey>(key: K, value: NonNullable<PipelineViewState[K]>) => void;
+  /** Drives the meter under the panel. Absent until the stats query resolves. */
+  conversationLimit?: { used: number; limit: number; hasLimit: boolean };
+}
+
+/**
+ * The meter under the pipeline panel, as the design hangs it there.
+ *
+ * It reads as a fuel gauge — what is LEFT, emptying as the month runs on —
+ * rather than as consumption filling up, because the number that decides
+ * whether a broadcast can go out is the remainder. Absent when the plan has no
+ * cap: an unlimited plan has nothing to meter.
+ */
+export function buildPipelineNavProgress({
+  t,
+  conversationLimit,
+}: PipelineNavInput): NavProgress | undefined {
+  if (!conversationLimit?.hasLimit) return undefined;
+  const { used, limit } = conversationLimit;
+  return {
+    label: t("Conversations left"),
+    done: Math.max(0, limit - used),
+    total: limit,
+  };
 }
 
 function countFor(
@@ -165,7 +209,7 @@ export function buildPipelineNavItems({
   const stageRows: NavEntry[] = (pipeline ? stageFacets(pipeline, leads) : []).map((facet) => ({
     title: facet.name,
     url: boardHref,
-    icon: STAGE_STATUS_ICON[facet.status],
+    icon: STATUS_BAND[facet.status].icon,
     count: facet.count,
     variant: "inbox-tab",
     isActive: view.stageId === facet.id,
@@ -193,7 +237,7 @@ export function buildPipelineNavItems({
   const sourceRows: NavEntry[] = sources.map((source) => ({
     title: sourceLabel(t, source),
     url: boardHref,
-    icon: SOURCE_META[source].icon,
+    icon: SOURCE_DOT[source],
     count: leads.filter((lead) => lead.source === source && lead.status === "OPEN").length,
     variant: "inbox-tab",
     isActive: view.source === source,
@@ -203,7 +247,7 @@ export function buildPipelineNavItems({
   return [
     ...section(t("Pipelines"), pipelineRows),
     ...section(t("Views"), viewRows),
-    ...section(t("Stages"), stageRows),
+    ...section(t("Lead stages"), stageRows),
     ...section(t("Teams"), teamRows),
     ...section(t("Sources"), sourceRows),
     // Ungrouped, so it sits on its own below the last section — the sidebar

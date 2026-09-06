@@ -67,7 +67,7 @@ import { DeleteStageDialog } from "./DeleteStageDialog.tsx";
 
 /** A section heading, at the one size and weight the design uses for them. */
 function SectionTitle({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <h2 className="font-nunito text-foreground text-[15px] font-extrabold">{children}</h2>;
+  return <h2 className="font-nunito text-foreground text-[15px] font-semibold">{children}</h2>;
 }
 
 function SectionNote({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -140,7 +140,7 @@ function NameSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
       <SectionTitle>{t("Name")}</SectionTitle>
       <SectionNote>{t("What this board is called in the sidebar and the switcher.")}</SectionNote>
 
-      <Card className="flex-row flex-wrap items-center gap-2 p-3.5">
+      <Card className="flex-row flex-wrap items-center gap-2 p-3.5 shadow-xs">
         <Input
           id="pipeline-name"
           value={name}
@@ -190,7 +190,7 @@ function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
         {t("Everyone on these teams can open the board and be assigned its leads.")}
       </SectionNote>
 
-      <Card className="gap-0 overflow-hidden p-0">
+      <Card className="gap-0 overflow-hidden p-0 shadow-xs">
         <div className="p-3.5">
           <MultiSelect
             id="pipeline-teams"
@@ -207,11 +207,13 @@ function TeamsSection({ pipeline }: Readonly<{ pipeline: PipelineDetail }>) {
             key={team.id}
             className="border-border/60 flex flex-wrap items-center gap-3 border-t p-3.5"
           >
-            <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+            <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
               <IconUsersGroup className="size-4" />
             </span>
             <span className="flex min-w-32 flex-1 items-center gap-2">
-              <span className="text-foreground truncate text-[13px] font-bold">{team.name}</span>
+              <span className="text-foreground truncate text-[13.5px] font-medium">
+                {team.name}
+              </span>
               {!myTeamIds.has(team.id) && <Badge variant="outline">{t("Not your team")}</Badge>}
             </span>
           </div>
@@ -354,7 +356,7 @@ function StageRow({
     <div
       ref={rowRef}
       className={cn(
-        "border-border/60 relative flex flex-wrap items-center gap-3 border-b p-4 last:border-b-0",
+        "border-border/60 relative flex flex-wrap items-center gap-3 border-b px-4 py-3 last:border-b-0",
         dragging && "opacity-40",
       )}
     >
@@ -449,7 +451,7 @@ function StageRow({
             updateStage.mutate({ stageId: stage.id, input: { name: trimmed } });
           }}
           className="h-9 min-w-32 flex-1 md:max-w-48 md:flex-none"
-          aria-label={t("Stage name")}
+          aria-label={t("Lead stage name")}
         />
         <span className="text-muted-foreground text-[11px]">
           {t("{total} leads", { total: stage.openLeadCount })}
@@ -477,7 +479,7 @@ function StageRow({
               it holds. */}
           <SelectTrigger
             size="sm"
-            aria-label={t("Stage status")}
+            aria-label={t("Lead stage status")}
             className={cn(
               "h-7 w-full rounded-full border-transparent text-[11px] font-bold shadow-none",
               STATUS_BAND[stage.status].surface,
@@ -525,7 +527,7 @@ function StageRow({
         size="icon"
         className="text-muted-foreground hover:text-destructive size-8"
         disabled={!canDelete}
-        title={canDelete ? t("Delete stage") : t("A pipeline needs at least one stage")}
+        title={canDelete ? t("Delete lead stage") : t("A pipeline needs at least one lead stage")}
         // Confirmed rather than done on the click: the leads in this column have
         // to land somewhere, and that destination is the reader's to choose.
         onClick={() => setConfirmingDelete(true)}
@@ -632,12 +634,12 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
-      <div className="flex max-w-4xl flex-col gap-6">
+      <div className="flex max-w-4xl flex-col gap-5">
         {/* The columns come first: they are what the board is, and the only thing
             most visits to this screen are here to change. */}
         <section>
           <div className="mb-1 flex items-center justify-between">
-            <SectionTitle>{t("Stages")}</SectionTitle>
+            <SectionTitle>{t("Lead stages")}</SectionTitle>
             <Button
               size="sm"
               className="gap-1.5"
@@ -654,7 +656,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
               }
             >
               <IconPlus className="size-4" />
-              {t("Add stage")}
+              {t("Add lead stage")}
             </Button>
           </div>
           <p className="text-muted-foreground mb-3.5 text-xs">
@@ -663,26 +665,26 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             )}
           </p>
 
-          <Card className="gap-0 overflow-hidden p-0">
+          <Card className="gap-0 overflow-hidden p-0 shadow-xs">
             <div className="bg-muted border-border hidden flex-wrap items-center gap-3 border-b px-4 py-2.5 md:flex">
               {/* Lines the headings up with the rows, which now lead with a grip
                   and a position number. */}
               {pipeline.stages.length > 1 && (
-                <span className="text-muted-foreground -ml-1.5 flex items-center gap-1.5 text-[10px] font-extrabold tracking-[0.06em] uppercase">
+                <span className="text-muted-foreground -ml-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
                   <span className="w-6" />
                   <span className="w-4 text-right">{t("#")}</span>
                 </span>
               )}
-              <span className="text-muted-foreground min-w-52 flex-1 text-[10px] font-extrabold tracking-[0.06em] uppercase">
-                {t("Stage")}
+              <span className="text-muted-foreground min-w-52 flex-1 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
+                {t("Lead stage")}
               </span>
-              <span className="text-muted-foreground w-44 text-[10px] font-extrabold tracking-[0.06em] uppercase">
+              <span className="text-muted-foreground w-44 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
                 {t("Status")}
               </span>
-              <span className="text-muted-foreground w-24 text-[10px] font-extrabold tracking-[0.06em] uppercase">
+              <span className="text-muted-foreground w-24 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
                 {t("Probability")}
               </span>
-              <span className="text-muted-foreground w-28 text-[10px] font-extrabold tracking-[0.06em] uppercase">
+              <span className="text-muted-foreground w-28 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
                 {t("Rotting after")}
               </span>
               <span className="w-8" />
@@ -710,13 +712,13 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
           <SectionTitle>{t("Lost reasons")}</SectionTitle>
           <SectionNote>{t("Reps pick one when marking a lead lost.")}</SectionNote>
 
-          <Card className="gap-0 overflow-hidden p-0">
+          <Card className="gap-0 overflow-hidden p-0 shadow-xs">
             {pipeline.lostReasons.map((reason) => (
               <div
                 key={reason.id}
                 className="border-border/60 flex items-center gap-3 border-b p-3.5"
               >
-                <span className="text-foreground flex-1 text-[13px] font-semibold">
+                <span className="text-foreground flex-1 text-[13.5px] font-medium">
                   {reason.label}
                 </span>
                 <span className="text-muted-foreground text-[11px]">{reason.leadCount}</span>
@@ -773,7 +775,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
               <button
                 type="button"
                 onClick={() => setAddingReason(true)}
-                className="text-primary hover:bg-muted flex items-center gap-2 p-3.5 text-[13px] font-bold transition-colors"
+                className="text-primary hover:bg-muted flex items-center gap-2 px-4 py-3 text-[13px] font-medium transition-colors"
               >
                 <IconPlus className="size-4" />
                 {t("Add reason")}
@@ -794,10 +796,10 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             {automationToggles(t).map((toggle) => {
               const ToggleIcon = toggle.icon;
               return (
-                <Card key={toggle.key} className="flex-row items-center gap-3 p-3.5">
+                <Card key={toggle.key} className="flex-row items-center gap-3 p-3.5 shadow-xs">
                   <span
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                      "flex size-8 shrink-0 items-center justify-center rounded-md",
                       toggle.tone,
                     )}
                   >
@@ -809,8 +811,8 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
                     htmlFor={toggle.key}
                     className="min-w-0 flex-1 cursor-pointer flex-col items-start gap-0.5"
                   >
-                    <span className="text-foreground text-[13px] font-bold">{toggle.name}</span>
-                    <span className="text-muted-foreground text-[11px] font-normal">
+                    <span className="text-foreground text-[13.5px] font-medium">{toggle.name}</span>
+                    <span className="text-muted-foreground text-[12.5px] font-normal">
                       {toggle.description}
                     </span>
                   </Label>
@@ -838,7 +840,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             lifecycle now, because a lead reaching a Won column is what fires the
             event. Sits directly above the danger zone. */}
         <section>
-          <h2 className="font-nunito text-[15px] font-extrabold">{t("Conversion tracking")}</h2>
+          <h2 className="font-nunito text-[15px] font-semibold">{t("Conversion tracking")}</h2>
           <SectionNote>
             {t("Send a conversion event to Meta when a lead is won on this board.")}
           </SectionNote>
@@ -849,17 +851,17 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             cannot be undone, so it should not sit above routine tuning. */}
         {isOrgAdmin && (
           <section>
-            <h2 className="text-destructive font-nunito text-[15px] font-extrabold">
+            <h2 className="text-destructive font-nunito text-[15px] font-semibold">
               {t("Danger zone")}
             </h2>
             <SectionNote>{t("Actions here cannot be undone.")}</SectionNote>
 
-            <Card className="border-destructive/40 flex-row items-center gap-3 p-3.5">
-              <span className="bg-destructive/10 text-destructive flex size-8 shrink-0 items-center justify-center rounded-lg">
+            <Card className="border-destructive/40 flex-row items-center gap-3 p-3.5 shadow-xs">
+              <span className="bg-destructive/10 text-destructive flex size-8 shrink-0 items-center justify-center rounded-md">
                 <IconTrash className="size-4" />
               </span>
               <div className="min-w-0 flex-1">
-                <span className="text-foreground block text-[13px] font-bold">
+                <span className="text-foreground block text-[13.5px] font-medium">
                   {t("Delete this pipeline")}
                 </span>
                 <span className="text-muted-foreground block text-[11px]">

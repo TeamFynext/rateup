@@ -24,7 +24,7 @@ import { ForecastView } from "./forecast/ForecastView.tsx";
 import { InsightsView } from "./insights/InsightsView.tsx";
 import { AddLeadDialog } from "./lead/AddLeadDialog.tsx";
 import { CloseLeadDialog, type CloseLeadTarget } from "./lead/CloseLeadDialog.tsx";
-import { LeadDrawer } from "./lead/LeadDrawer.tsx";
+import { LeadDetailModal } from "./lead/LeadDetailModal.tsx";
 import { ListView } from "./list/ListView.tsx";
 import { PipelineHeader } from "./PipelineHeader.tsx";
 import { SettingsView } from "./settings/SettingsView.tsx";
@@ -182,7 +182,7 @@ export function PipelinePage() {
         {renderView()}
       </div>
 
-      <LeadDrawer
+      <LeadDetailModal
         leadId={view.leadId ?? undefined}
         pipeline={pipeline}
         members={members}

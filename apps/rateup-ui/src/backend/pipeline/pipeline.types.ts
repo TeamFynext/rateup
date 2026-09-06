@@ -10,6 +10,7 @@ export type LeadSource =
   | "WHATSAPP"
   | "INSTAGRAM"
   | "MESSENGER"
+  | "WEBCHAT"
   | "SURVEY"
   | "REFERRAL"
   | "LOYALTY"

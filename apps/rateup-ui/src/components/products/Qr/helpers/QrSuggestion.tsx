@@ -9,10 +9,12 @@ export default function SuggestionBox() {
   return (
     <section className="flex flex-col items-center justify-center px-4 py-16 bg-white gap-10">
       <div className="flex flex-col items-center justify-center text-center bg-white gap-8">
-        <div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-gray-900 mb-4">
+        {/* One H1 for the page. The two halves of the headline used to be two separate <h1>s,
+            which is what left this page shipping thirteen of them. */}
+        <h1>
+          <span className="block text-3xl sm:text-4xl md:text-5xl font-semibold text-gray-900 mb-4">
             The Suggestion Box,
-          </h1>
+          </span>
           <div className="relative inline-block font-bold">
             <motion.svg
               width="100%"
@@ -34,11 +36,11 @@ export default function SuggestionBox() {
               />
             </motion.svg>
 
-            <h1 className="relative z-10 text-[#004F98] text-3xl sm:text-4xl md:text-5xl font-semibold">
+            <span className="relative z-10 text-[#004F98] text-3xl sm:text-4xl md:text-5xl font-semibold">
               Reimagined.
-            </h1>
+            </span>
           </div>
-        </div>
+        </h1>
 
         <p className="text-gray-600 max-w-[50%]">
           Replace your dusty old complaint box with a smart QR code. Get real-time feedback,
