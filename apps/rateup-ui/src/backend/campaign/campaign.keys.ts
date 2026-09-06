@@ -16,6 +16,19 @@ export const campaignKeys = {
   contactGroupsByType: (type: KeyPart) => ["campaignContactGroupsData", type] as const,
   sendPreflight: (campaignId: KeyPart, statuses: KeyPart) =>
     ["campaignSendPreflight", campaignId, statuses] as const,
+  // Moved off inline literals while this file was open; the strings are
+  // byte-identical to the keys they replaced, so nothing already cached misses.
+  byId: (campaignId: KeyPart) => ["campaignById", campaignId] as const,
+  stats: (campaignId: KeyPart, dripStage: KeyPart) =>
+    ["campaignStats", campaignId, dripStage] as const,
+  /** Every key under a campaign's stats, for invalidating without knowing the stage. */
+  statsRoot: (campaignId: KeyPart) => ["campaignStats", campaignId] as const,
+  filterForFlows: (surveyId: KeyPart) => ["campaignFilterForFlows", surveyId] as const,
+  sends: (campaignId: KeyPart) => ["campaignSends", campaignId] as const,
+  sendParticipants: (campaignId: KeyPart, sendId: KeyPart, filters: KeyPart) =>
+    ["campaignSendParticipants", campaignId, sendId, filters] as const,
+  analytics: (campaignId: KeyPart) => ["campaignAnalytics", campaignId] as const,
+  retryPolicy: (campaignId: KeyPart) => ["campaignRetryPolicy", campaignId] as const,
 } as const;
 
 export const subscriptionKeys = {

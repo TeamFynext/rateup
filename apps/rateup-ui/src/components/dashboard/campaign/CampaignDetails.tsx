@@ -3,23 +3,18 @@
 
 import {
   IconArrowLeft,
-  IconCalendarClock,
-  IconCircleCheck,
+  IconChartBar,
+  IconFileText,
   IconDotsVertical,
   IconFileDownload,
   IconPencil,
-  IconPlus,
-  IconRefresh,
-  IconRotate,
-  IconSearch,
   IconSend,
   IconSquare,
   IconTrash,
   IconTrendingUp,
   IconUsers,
 } from "@tabler/icons-react";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import type { ColumnDef } from "@tanstack/react-table";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -32,30 +27,18 @@ import {
   useDeleteCampaignMutation,
   useSendCampaign,
 } from "@/backend/campaign/campaign.query";
-import type { CampaignParticipant } from "@/backend/campaign/campaignParticipants/campaignParticipants.api";
-import {
-  useCampaignParticipants,
-  useRemoveMulitpleGroupParticipants,
-} from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
+import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import AddParticipantModal from "@/components/Campaign/AddParticipantModal.tsx";
-import { CampaignPerformance } from "@/components/Campaign/CampaignPerformanceCard.tsx";
-import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal.tsx";
 import type { ResendOptions } from "@/components/Campaign/ResendCampaignModal.tsx";
 import { ResendCampaignModal } from "@/components/Campaign/ResendCampaignModal.tsx";
-import { StatusBadge } from "@/components/Campaign/statusBadge.tsx";
-import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -72,22 +55,23 @@ import type { Campaign } from "@/types/global";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
+import { CampaignAnalyticsTab } from "./analytics/CampaignAnalyticsTab.tsx";
+import { CampaignStatusBadge } from "./campaignStatus.tsx";
+import { CampaignOverviewTab } from "./overview/CampaignOverviewTab.tsx";
+import { CampaignParticipantsTab } from "./participants/CampaignParticipantsTab.tsx";
+
 export function CampaignDetails() {
   const [activeTab, setActiveTab] = useState("info");
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
-  const [searchInput, setSearchInput] = useState("");
   const [sorting] = useState([CONTACT_SORT]);
   const [columnFilters] = useDebouncedState([], 200);
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
 
-  const [pagination, setPagination] = useState({
+  const [pagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
   const [selectedDripStage] = useState("all");
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
-  const [sendingParticipantId, setSendingParticipantId] = useState<string | null>(null);
 
   const { t } = useTranslation("campaign.details");
   const navigate = useNavigate();
@@ -96,7 +80,6 @@ export function CampaignDetails() {
   });
   const { update } = useRouteParams();
   const rawCampaignId = params?.campaignId;
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const confirm = useConfirm();
 
   const campaignId = useMemo(() => {
@@ -110,132 +93,19 @@ export function CampaignDetails() {
     campaignQuery.data?.teamId,
     campaignQuery.data?.type,
   );
-  const debouncedSearch = useDebounce(searchInput, 200);
+  // Only for the count on the tab; the table owns its own paging and search.
   const participantsQuery = useCampaignParticipants(
     campaignId,
     pagination,
-    debouncedSearch,
+    "",
     sorting,
     columnFilters,
     selectedDripStage,
   );
-  const participants = participantsQuery.data?.participants ?? [];
 
   const statsQuery = useCampaignStatsById(campaignId, selectedDripStage);
   const queueCount = statsQuery.data?.queueCount ?? 0;
-  // Messages a daily send limit has parked for a future batch.
-  const scheduledCount = statsQuery.data?.scheduledCount ?? 0;
-  const nextBatchAt = statsQuery.data?.nextBatchAt ?? null;
-  const nextBatchCount = statsQuery.data?.nextBatchCount ?? 0;
   const sendCampaignMutation = useSendCampaign(campaignId ?? "", campaignQuery.data?.teamId ?? "");
-  const toggleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(participants.map((p) => p.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const toggleSelectOne = (id: string) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-
-  const columns = useMemo<ColumnDef<CampaignParticipant>[]>(
-    () => [
-      // ───────────── Select Column ─────────────
-      {
-        id: "select",
-        size: 50,
-        header: () => {
-          const allSelected = participants.length > 0 && selectedIds.length === participants.length;
-
-          return (
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={(checked) => toggleSelectAll(checked === true)}
-            />
-          );
-        },
-        cell: ({ row }) => (
-          <Checkbox
-            checked={selectedIds.includes(row.original.id)}
-            onCheckedChange={() => toggleSelectOne(row.original.id)}
-          />
-        ),
-      },
-
-      // ───────────── Name ─────────────
-      {
-        accessorKey: "contact.name",
-        header: t("Name"),
-        cell: ({ row }) => (
-          <div className="font-medium dark:text-slate-200">{row.original.contact?.name}</div>
-        ),
-      },
-
-      // ───────────── Phone ─────────────
-      {
-        accessorKey: "contact.phone",
-        header: t("Phone"),
-        cell: ({ row }) => (
-          <div className="text-slate-600 dark:text-slate-400 font-mono text-sm">
-            {row.original.contact?.phone}
-          </div>
-        ),
-      },
-
-      // ───────────── Status ─────────────
-      {
-        accessorKey: "status",
-        header: t("Status"),
-        cell: ({ row }) => (
-          <StatusBadge status={row.original.status} errorMessage={row.original.errorMessage} />
-        ),
-      },
-
-      // ───────────── Consent ─────────────
-      {
-        accessorKey: "contact.consent",
-        header: () => <div className="text-center font-medium">{t("Consent")}</div>,
-        cell: ({ row }) =>
-          row.original.contact?.consent ? (
-            <div className="flex justify-center">
-              <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
-                <IconCircleCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          ) : null,
-      },
-
-      // ───────────── Actions ─────────────
-      {
-        id: "actions",
-        size: 80,
-        header: () => <div className="text-center font-medium">Actions</div>,
-        cell: ({ row }) => (
-          <div className="flex justify-center">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleSendIndividual(row.original.id)}
-              disabled={!!sendingParticipantId}
-              className="hover:bg-blue-50 dark:hover:bg-blue-900/20"
-            >
-              {sendingParticipantId === row.original.id ? (
-                <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <IconSend className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        ),
-      },
-    ],
-    [participants.length, selectedIds, sendingParticipantId, t],
-  );
-  const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(campaignId, () => {
-    setSelectedIds([]);
-  });
 
   useEffect(() => {
     if (campaignQuery.data) {
@@ -265,11 +135,6 @@ export function CampaignDetails() {
     );
   }
 
-  const campaignInfo = {
-    template: campaignQuery.data?.templateData?.name,
-    team: campaignQuery.data?.teamName,
-  };
-
   const teamName =
     campaignQuery.data.team?.name ?? campaignQuery.data.teamName ?? campaignQuery.data.teamId ?? "";
   const stats = campaignQuery.data.stats ?? {
@@ -286,6 +151,8 @@ export function CampaignDetails() {
     type: campaignQuery.data.type,
     team: teamName,
     status: campaignQuery.data.status,
+    // Why a failed campaign stopped — the status badge is the only place it surfaces.
+    errorMessage: campaignQuery.data.errorMessage ?? null,
     dailySendLimit: campaignQuery.data.dailySendLimit ?? null,
     template: campaignQuery.data.template?.name ?? campaignQuery.data.waTemplateId,
     participants: stats.participants,
@@ -296,9 +163,15 @@ export function CampaignDetails() {
     failed: stats.failed,
   };
 
+  // Edit reopens the creation wizard rather than a second, smaller dialog: the
+  // wizard is now the only place a campaign is described, so there is exactly
+  // one set of fields and one validation path.
   const openEditCampaign = (campaign: Campaign) => {
-    setEditingCampaign(campaign);
-    setIsEditOpen(true);
+    void navigate({
+      to: "/dashboard/campaign/$campaignId/edit",
+      params: { campaignId: campaign.id },
+      search: { step: "review" },
+    });
   };
 
   const handleDeliveryReport = (format: "xlsx" | "ods" = "xlsx") => {
@@ -308,24 +181,6 @@ export function CampaignDetails() {
 
   const isQueuing =
     campaign.status === CampaignStatus.QUEUING || campaign.status === CampaignStatus.DEQUEUING;
-
-  const closeEditModal = () => {
-    setEditingCampaign(null);
-    setIsEditOpen(false);
-  };
-
-  const handleRefresh = async () => {
-    try {
-      await Promise.all([
-        campaignQuery.refetch(),
-        statsQuery.refetch(),
-        participantsQuery.refetch(),
-      ]);
-      toast.success(t("Campaign data refreshed"));
-    } catch {
-      toast.error(t("Failed to refresh campaign data"));
-    }
-  };
 
   const canSend =
     campaign.type !== CampaignType.DRIP &&
@@ -382,28 +237,6 @@ export function CampaignDetails() {
     );
   };
 
-  const handleSendIndividual = (participantId: string) => {
-    setSendingParticipantId(participantId);
-    sendCampaignMutation.mutate(
-      {
-        statuses: [CampaignParticipantStatus.PENDING, CampaignParticipantStatus.FAILED],
-        sentCampaignChoice: SentCampaignChoice.NOW,
-        participantId,
-        type: campaign.type,
-        status: campaign.status,
-      },
-      {
-        onSuccess: () => {
-          setSendingParticipantId(null);
-          toast.success("Message sent successfully");
-        },
-        onError: () => {
-          setSendingParticipantId(null);
-        },
-      },
-    );
-  };
-
   const handleDelete = async () => {
     const shouldDelete = await confirm({
       title: t("Delete Campaign"),
@@ -429,26 +262,6 @@ export function CampaignDetails() {
     });
   };
 
-  const handleDeleteParticipants = async () => {
-    const shouldDelete = await confirm({
-      title: t("Delete Participants"),
-      description: t(
-        "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
-        {
-          count: selectedIds.length?.toString(),
-        },
-      ),
-      confirmText: t("Delete"),
-      cancelText: t("Cancel"),
-    });
-
-    if (!shouldDelete) return;
-
-    removeMulitpleGroupParticipants.mutate({
-      data: selectedIds,
-      campaignId,
-    });
-  };
   const handleStopCampaign = () => {
     sendCampaignMutation.mutate(
       {
@@ -472,58 +285,58 @@ export function CampaignDetails() {
     <>
       <div className="flex flex-col relative h-full">
         {/* ── Header (fixed height) ─────────────────────────────────── */}
-        <div className="shrink-0 border-b">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    navigate({
-                      to: "/dashboard/campaign",
-                    })
-                  }
-                  className="hover:bg-slate-100 dark:hover:bg-slate-800 gap-2 text-slate-600 dark:text-slate-400"
-                >
-                  <IconArrowLeft className="w-4 h-4" />
-                  {t("Back to Campaigns")}
-                </Button>
-                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
-                <div>
-                  <h1 className="text-lg dark:text-slate-50">{campaign.name}</h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {t("Campaign ID: #{id}", { id: campaign.id })}
-                  </p>
-                </div>
-              </div>
+        {/* ── Header ───────────────────────────────────────────────── */}
+        <div className="bg-card flex shrink-0 flex-col gap-3.5 px-8 pt-5">
+          <Link
+            to="/dashboard/campaign"
+            className="text-muted-foreground hover:text-foreground inline-flex w-max items-center gap-1 text-[13px]"
+          >
+            <IconArrowLeft className="size-3.5" aria-hidden />
+            {t("Campaigns")}
+          </Link>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEditCampaign(campaignQuery.data)}
-                  className="gap-2 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  <IconPencil className="w-4 h-4" />
-                  {t("Edit")}
-                </Button>
+          <div className="flex items-center justify-between gap-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <h1 className="font-display truncate text-2xl font-bold tracking-tight">
+                {campaign.name}
+              </h1>
+              <CampaignStatusBadge status={campaign.status} errorMessage={campaign.errorMessage} />
+              {/* The template is the single most-asked question about a running
+                  campaign, so it sits in the title row rather than a tab away. */}
+              {campaign.template ? (
+                <span className="bg-secondary text-secondary-foreground inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 font-mono text-xs">
+                  <IconFileText className="text-muted-foreground size-3.5" aria-hidden />
+                  {campaign.template}
+                </span>
+              ) : null}
+            </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
-                    <IconDotsVertical className="w-4 h-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={handleDelete}
-                      className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-                    >
-                      <IconTrash className="w-4 h-4 mr-2" />
-                      {t("Delete")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button variant="ghost" onClick={() => openEditCampaign(campaignQuery.data)}>
+                <IconPencil className="size-4" aria-hidden />
+                {t("Edit")}
+              </Button>
+              <Button variant="ghost" onClick={() => handleDeliveryReport("xlsx")}>
+                <IconFileDownload className="size-4" aria-hidden />
+                {t("Export")}
+              </Button>
+              <Button onClick={() => setIsAddParticipantOpen(true)}>
+                <IconSend className="size-4" aria-hidden />
+                {t("Send to more")}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={<Button variant="outline" size="icon" aria-label={t("More actions")} />}
+                >
+                  <IconDotsVertical className="size-4" aria-hidden />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                    <IconTrash className="mr-2 size-4" aria-hidden />
+                    {t("Delete")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -533,9 +346,10 @@ export function CampaignDetails() {
           onValueChange={setActiveTab}
           className="flex-1 min-h-0 flex flex-col"
         >
-          {/* ── Tab nav bar (fixed height) ─────────────────────────── */}
-          <div className="shrink-0 border-b">
-            <div className="px-6">
+          {/* ── Tab nav bar. Part of the header band above it, not a second
+                 bar: same surface, same padding, one border underneath. ──── */}
+          <div className="border-border bg-card shrink-0 border-b">
+            <div className="px-8">
               <div className="flex items-center justify-between">
                 <TabsList>
                   <TabsTrigger value="info">
@@ -552,21 +366,13 @@ export function CampaignDetails() {
                       {participantsQuery.data?.totalCount}
                     </Badge>
                   </TabsTrigger>
+                  <TabsTrigger value="analytics">
+                    <IconChartBar className="w-4 h-4 mr-2" />
+                    {t("Analytics")}
+                  </TabsTrigger>
                 </TabsList>
 
-                <div className="flex items-center gap-2 py-3">
-                  <Badge
-                    className={`${
-                      campaign.status === "ACTIVE"
-                        ? "bg-green-500 dark:bg-green-600"
-                        : "bg-slate-400 dark:bg-slate-600"
-                    } hover:bg-green-500 dark:hover:bg-green-600 text-white border-0 px-3 py-4 rounded-md`}
-                  >
-                    <div className="w-2.5 h-2.5 bg-white rounded-full mr-1.5 animate-pulse" />
-                    {campaign.status}
-                  </Badge>
-                  <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
-
+                <div className="flex items-center gap-2 py-2.5">
                   {campaign.type !== CampaignType.DRIP && !isQueuing && (
                     <Button
                       variant="outline"
@@ -640,180 +446,29 @@ export function CampaignDetails() {
             </div>
           </div>
 
-          <TabsContent value="info" className="flex-1 min-h-0 overflow-auto mt-0 p-6">
-            <div className="mx-auto space-y-6">
-              {/* Campaign Header Card */}
-              <Card>
-                <CardContent>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                          <IconSend className="w-6 h-6 text-primary-foreground" />
-                        </div>
-                        <div className="flex-1">
-                          <h2 className="text-xl dark:text-slate-50">{campaign.name}</h2>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary">{campaign.type}</Badge>
-                            <Badge variant="outline">Team: {campaignInfo?.team}</Badge>
-                          </div>
-                        </div>
-                        {/* Total Participants */}
-                        <div className="px-6 py-4 rounded-xl bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-1 border-slate-200 dark:border-slate-700">
-                          <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center">
-                              <IconUsers className="w-6 h-6 text-slate-700 dark:text-slate-300" />
-                            </div>
-                            <div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">
-                                {t("Total Participants")}
-                              </div>
-                              <div className="text-2xl text-slate-900 dark:text-slate-50">
-                                {participantsQuery.data?.totalCount}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          <span className="font-medium">{t("Template:")}</span>
-                          <span>{campaignInfo?.template}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          <span className="font-medium">{t("Daily Send Limit:")}</span>
-                          <span>
-                            {campaign.dailySendLimit
-                              ? t("{limit}/day", { limit: campaign.dailySendLimit })
-                              : t("No limit")}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleRefresh}
-                      className="text-slate-400 dark:text-slate-600 hover:text-primary hover:bg-primary/10"
-                    >
-                      <IconRefresh className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {scheduledCount > 0 && (
-                <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
-                  <CardContent className="flex items-start gap-3 py-4">
-                    <IconCalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-blue-600" />
-                    <div className="text-sm text-blue-900 dark:text-blue-100">
-                      <p className="font-medium">
-                        {t("{total} message(s) still scheduled", { total: scheduledCount })}
-                      </p>
-                      {nextBatchAt && (
-                        <p className="text-blue-800/80 dark:text-blue-200/80 mt-0.5">
-                          {t("Next batch: {size} message(s) on {when}", {
-                            size: nextBatchCount,
-                            when: dayjs(nextBatchAt).format("MMM D, YYYY [at] h:mm A"),
-                          })}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <CampaignPerformance
-                data={{
-                  sent: statsQuery.data?.countSent,
-                  delivered: statsQuery.data?.countDelivered,
-                  read: statsQuery.data?.countRead,
-                  pending: statsQuery.data?.countPending,
-                  failed: statsQuery.data?.countFailed,
-                }}
-              />
-            </div>
+          <TabsContent value="info" className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-6 pb-8">
+            <CampaignOverviewTab campaign={campaignQuery.data} />
           </TabsContent>
 
-          <TabsContent value="participants" className="flex-1 min-h-0 flex flex-col mt-0 p-0">
-            {/* Toolbar (fixed height, never scrolls) */}
-            <Card className="mb-4 p-0  ">
-              <CardContent className="mx-0">
-                <div className="shrink-0  pt-6 pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => setIsAddParticipantOpen(true)}
-                        className="gap-2"
-                      >
-                        <IconPlus className="w-4 h-4" />
-                        {t("Add Participant")}
-                      </Button>
-                      {selectedIds?.length > 0 && (
-                        <Button
-                          variant="destructive"
-                          disabled={selectedIds.length === 0}
-                          onClick={handleDeleteParticipants}
-                        >
-                          {t("Delete Contacts ({count})", {
-                            count: selectedIds.length?.toString(),
-                          })}
-                        </Button>
-                      )}
-                    </div>
+          <TabsContent
+            value="participants"
+            className="mt-0 flex min-h-0 flex-1 flex-col px-8 pt-4 pb-6"
+          >
+            <CampaignParticipantsTab
+              campaign={campaignQuery.data}
+              onAddParticipants={() => setIsAddParticipantOpen(true)}
+            />
+          </TabsContent>
 
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-80">
-                        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
-                        <Input
-                          placeholder={t("Search by name or phone...")}
-                          value={searchInput}
-                          onChange={(e) => setSearchInput(e.target.value)}
-                          className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
-                        />
-                      </div>
-
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-9 text-slate-600 dark:text-slate-400 hover:text-primary"
-                        onClick={() => setSearchInput("")}
-                      >
-                        <IconRotate className="w-4 h-4 mr-2" />
-                        {t("Reset")}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>{" "}
-            </Card>
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <DataTable
-                columns={columns}
-                data={participantsQuery.data?.participants || []}
-                isPending={participantsQuery.isPending}
-                serverSide={{
-                  pagination,
-                  onPaginationChange: setPagination,
-                  rowCount: participantsQuery.data?.totalCount || 0,
-                }}
-              />
-            </div>
+          <TabsContent
+            value="analytics"
+            className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-4 pb-6"
+          >
+            <CampaignAnalyticsTab campaignId={campaignId} />
           </TabsContent>
         </Tabs>
       </div>
       {/* ── Dialogs (portalled, outside layout flow) ──────────────────── */}
-      {isEditOpen && editingCampaign && (
-        <CreateCampaignModal
-          isEdit
-          campaign={editingCampaign}
-          close={closeEditModal}
-          campaignType={editingCampaign.type as CampaignType}
-        />
-      )}
       {isAddParticipantOpen && campaignQuery.data && (
         <AddParticipantModal
           close={() => setIsAddParticipantOpen(false)}

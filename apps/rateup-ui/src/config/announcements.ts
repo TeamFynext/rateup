@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-06-campaign-wizard",
+    title: "Campaigns: a guided setup, and retries",
+    summary:
+      "Creating a campaign is now a six-step flow you can leave and come back to — name, template, audience, schedule and retries in one place, saved as a draft as you go, with a live preview of the message as it will arrive and a test send before you commit. The Audience step shows who is already on the campaign next to what you are adding, and either can be taken off from there. Messages Meta blocks with a frequency cap are re-sent automatically. The campaign page is rebuilt around that: Overview shows the next attempt and what has happened so far, Participants shows every recipient's attempt history and why any of them failed, and a new Analytics tab has the delivery funnel, a failure breakdown by Meta error code, and what each send and retry actually recovered. Campaign status now reads the way you'd say it — Draft, Scheduled, Sending, Paused, Completed — on the cards, the campaign page and the status filter, and it is finally accurate: a campaign you are still building stays a draft instead of showing as paused, and one that has sent everything says so instead of sending forever.",
+    publishedAt: "2026-09-06",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Create a campaign" },
+  },
+  {
     id: "2026-08-31-channels-page-rebuilt",
     title: "Channels, rebuilt to match setup",
     summary:

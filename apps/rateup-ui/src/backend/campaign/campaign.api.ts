@@ -1,5 +1,15 @@
 import type { RequestPayload } from "@/types/api.ts";
-import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
+import type {
+  CampaignParticipantStatus,
+  CampaignRetryStrategy,
+  CampaignStatus,
+} from "@/types/enums.ts";
+import type {
+  CampaignAnalytics,
+  CampaignRetryPolicy,
+  CampaignSend,
+  CampaignSendParticipantsPage,
+} from "@/types/global";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { axiosClient } from "../apiClient";
@@ -128,3 +138,89 @@ export async function getCampaignStatsById(campaignId: string, selectedDripStage
     )
   ).data;
 }
+
+// ── Per-attempt analytics ─────────────────────────────────────────────────────
+// Every send and resend is a CampaignSend row on the API side, so the attempts
+// table and the funnel are reads rather than anything reconstructed here.
+
+export const getCampaignSends = async (campaignId: string) => {
+  return (await axiosClient.get(`/campaign/${campaignId}/sends`)).data as CampaignSend[];
+};
+
+export interface CampaignSendParticipantsFilters {
+  status?: CampaignParticipantStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+export const getCampaignSendParticipants = async (
+  campaignId: string,
+  sendId: string,
+  filters: CampaignSendParticipantsFilters = {},
+) => {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.pageSize) params.set("pageSize", String(filters.pageSize));
+  const query = params.toString();
+  return (
+    await axiosClient.get(
+      `/campaign/${campaignId}/sends/${sendId}/participants${query ? `?${query}` : ""}`,
+    )
+  ).data as CampaignSendParticipantsPage;
+};
+
+export const getCampaignAnalytics = async (campaignId: string) => {
+  return (await axiosClient.get(`/campaign/${campaignId}/analytics`)).data as CampaignAnalytics;
+};
+
+// ── Automatic retries ─────────────────────────────────────────────────────────
+
+/** Null when the campaign has no policy, which is how "retries off" is stored. */
+export const getCampaignRetryPolicy = async (campaignId: string) => {
+  return (await axiosClient.get(`/campaign/${campaignId}/retry-policy`))
+    .data as CampaignRetryPolicy | null;
+};
+
+export interface CampaignRetryPolicyInput {
+  enabled: boolean;
+  strategy: CampaignRetryStrategy;
+  maxAttempts: number;
+  intervalHours: number;
+  windowEndsAt?: string | null;
+  quietHoursStart?: string | null;
+  quietHoursEnd?: string | null;
+  timezone: string;
+}
+
+export const updateCampaignRetryPolicy = async ({
+  campaignId,
+  data,
+}: {
+  campaignId: string;
+  data: CampaignRetryPolicyInput;
+}) => {
+  return (await axiosClient.put(`/campaign/${campaignId}/retry-policy`, data))
+    .data as CampaignRetryPolicy;
+};
+
+export const cancelPendingRetries = async (campaignId: string) => {
+  return (await axiosClient.post(`/campaign/${campaignId}/retries/cancel`, {})).data as {
+    cancelled: number;
+    message: string;
+  };
+};
+
+/** A rehearsal send. Opens no send session and moves no counters. */
+export const sendCampaignTest = async ({
+  campaignId,
+  phone,
+}: {
+  campaignId: string;
+  phone: string;
+}) => {
+  return (await axiosClient.post(`/campaign/${campaignId}/send-test`, { phone })).data as {
+    messageId?: string;
+    message: string;
+  };
+};
