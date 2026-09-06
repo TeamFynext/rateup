@@ -125,20 +125,6 @@ function isWaMessageAssignStatusTabKey(key: string): key is keyof typeof WaMessa
  * `bulkUpdateStatuses`), so a campaign send that skips it can never be reported
  * on.
  */
-export async function linkWaMessageToCampaignParticipant(
-  waMessageId: string,
-  campaignParticipantId: string,
-  campaignParticipantDripStageId?: string | null,
-) {
-  return prisma.waMessageCampaginParticipantMap.create({
-    data: {
-      waMessageId,
-      campaignParticipantId,
-      campaignParticipantDripStageId: campaignParticipantDripStageId ?? null,
-    },
-  });
-}
-
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
   contactId: string,
@@ -159,6 +145,22 @@ export async function addNewWaMessage(
   // the row is written so attribution lands on the same insert. Optional: metering
   // is best-effort and must never block the message.
   meteredConversationId?: string,
+  // The campaign participant this message was sent for. Written as a nested
+  // create on the same INSERT, never as a second statement: the status consumer
+  // matches a receipt to its campaign through this row, and a `sent` receipt
+  // that finds the message but not the link is acked as processed with the
+  // campaign counters and participant status silently skipped. Meta's `sent`
+  // lands within a second of the send, so the gap between two writes is one it
+  // regularly wins.
+  campaignLink?: {
+    campaignParticipantId: string;
+    campaignParticipantDripStageId?: string | null;
+    // The send session this message belongs to. Every per-attempt number in the
+    // analytics tab is derived from this column, so a send that leaves it null is
+    // invisible to the attempts table even though the campaign totals move.
+    // todo: revisit
+    // campaignSendId?: string | null;
+  },
 ) {
   const initialStats = {
     read: "",
@@ -203,6 +205,16 @@ export async function addNewWaMessage(
       ...statsData,
       sourceMessage,
       logs,
+      ...(campaignLink
+        ? {
+            WaMessageCampaginParticipantMap: {
+              create: {
+                campaignParticipantId: campaignLink.campaignParticipantId,
+                campaignParticipantDripStageId: campaignLink.campaignParticipantDripStageId ?? null,
+              },
+            },
+          }
+        : {}),
     },
     include: {
       sender: {
