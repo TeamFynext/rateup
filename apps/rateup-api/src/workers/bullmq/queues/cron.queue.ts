@@ -21,6 +21,12 @@ import connection from "../../../utils/redisConnection.js";
 export const SCHEDULED_JOBS = [
   { id: "publishSurveys", pattern: "0/15 * * * *" },
   { id: "dripCampaigns", pattern: "*/4 * * * *", tz: "Etc/UTC" },
+  // Fires CampaignSend rows that have come due. Retry schedules live in the
+  // database rather than as multi-day delayed jobs, so this tick is what turns a
+  // SCHEDULED row into an actual fan-out. Five minutes is fine granularity for
+  // offsets measured in hours, and each tick claims its rows with
+  // FOR UPDATE SKIP LOCKED so overlapping ticks cannot double-fire one.
+  { id: "campaignRetries", pattern: "*/5 * * * *", tz: "Etc/UTC" },
   { id: "hourlyJobs", pattern: "0 * * * *" },
   { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },

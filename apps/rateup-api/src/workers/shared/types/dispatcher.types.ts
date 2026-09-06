@@ -255,7 +255,5 @@ export interface Message {
   dynamicTags: string[];
   wa_template: WaTemplateData;
   scheduledAt: Date;
-  campaignMessageQueueId: string;
-  retryCount: number;
   campaignId: string;
 }

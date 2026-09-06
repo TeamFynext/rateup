@@ -35,6 +35,8 @@ import { downgradeExpiredSubscriptions } from "../../../modules/subscription/sub
 import { sweepMissedPayments } from "../../../modules/payment/payment.service.js";
 import { subscriptionExpiryAlert } from "../../../utils/email/payments/subscriptionExpiryAlert.js";
 import type { ScheduledJobId } from "../queues/cron.queue.js";
+import { processScheduledCampaignSends } from "../../../modules/campaign/campaignRetry.service.js";
+import { settleSentCampaigns } from "../../../modules/campaign/campaignSettle.service.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -63,6 +65,16 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
   dripCampaigns: async () => {
     log.info("Running every 4min JOB --> Drip Campaign Processing");
     await safeRun("processDripCampaigns", processDripCampaigns);
+  },
+
+  campaignRetries: async () => {
+    log.info("Running every 5min JOB --> Campaign retry processing");
+    await safeRun("processScheduledCampaignSends", processScheduledCampaignSends);
+    // Paired with the line above: one fires the retries that are due, the other
+    // closes the campaigns that turned out not to need one. A campaign drains
+    // before its delivery webhooks land, so this is where a clean send is
+    // recognised as finished.
+    await safeRun("settleSentCampaigns", settleSentCampaigns);
   },
 
   hourlyJobs: async () => {

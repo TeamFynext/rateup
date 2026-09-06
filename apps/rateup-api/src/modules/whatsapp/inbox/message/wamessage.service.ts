@@ -129,12 +129,17 @@ export async function linkWaMessageToCampaignParticipant(
   waMessageId: string,
   campaignParticipantId: string,
   campaignParticipantDripStageId?: string | null,
+  // The send session this message belongs to. Every per-attempt number in the
+  // analytics tab is derived from this column, so a send that leaves it null is
+  // invisible to the attempts table even though the campaign totals move.
+  campaignSendId?: string | null,
 ) {
   return prisma.waMessageCampaginParticipantMap.create({
     data: {
       waMessageId,
       campaignParticipantId,
       campaignParticipantDripStageId: campaignParticipantDripStageId ?? null,
+      campaignSendId: campaignSendId ?? null,
     },
   });
 }
@@ -203,6 +208,11 @@ export async function addNewWaMessage(
       ...statsData,
       sourceMessage,
       logs,
+      // Lifted out of `logs` onto its own indexed column. Meta's code is the only
+      // thing that distinguishes a frequency cap worth retrying from a number
+      // that will never receive a message, and reading it back through a jsonb
+      // path made both retry eligibility and the failure breakdown unqueryable.
+      errorCode: typeof logs?.code === "number" ? logs.code : null,
     },
     include: {
       sender: {

@@ -12,6 +12,7 @@ import { sendMessage } from "./whatsappSurvey/wasurvey.service.js";
 import { getScheduleTime } from "../../utils/date.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
+import { getOrCreateDripCampaignSend } from "../campaign/campaignSend.service.js";
 import { getFlowIdFromTemplateComponents } from "./messageTemplates/wa_templates.utils.js";
 import { getFlowWithSurveyTeamMapIds } from "./flows/flow.service.js";
 import type { sendPaymentInitTemplate } from "./automatedReply/wa_automatedReply.utils.js";
@@ -210,14 +211,18 @@ export async function processDripCampaigns() {
       // The cap applies per stage: each stage's pending participants are spread
       // across days. Re-enqueues of a stage are deduplicated by the dispatcher,
       // so an already-delayed participant keeps its original batch.
-      await enqueueCampaignMessage(
+      // One send session per stage, reused across ticks. A fresh session each
+      // time would mint fresh job ids and defeat the deduplication this comment
+      // relies on — every tick would re-send the whole stage.
+      const send = await getOrCreateDripCampaignSend(campaignId, dripStageId);
+
+      await enqueueCampaignMessage({
         campaignId,
-        [CampaignParticipantStatus.PENDING],
-        undefined,
-        undefined,
+        campaignSendId: send.id,
+        sendToStatuses: [CampaignParticipantStatus.PENDING],
         dripStageId,
-        dailySendLimit ?? undefined,
-      );
+        dailySendLimit: dailySendLimit ?? undefined,
+      });
     }
   }
 }

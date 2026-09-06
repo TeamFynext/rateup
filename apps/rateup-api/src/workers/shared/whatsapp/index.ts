@@ -32,6 +32,12 @@ import {
 } from "../../../modules/whatsapp/metering/pricing.utils.js";
 import crypto from "node:crypto";
 import { Queue } from "bullmq";
+// Defined in its own dependency-free module so `queues/campaign.queue.ts` can
+// share the key without importing this one; re-exported here because the send
+// and drain paths read it from beside `enqueueCampaignMessages`.
+import { campaignSendJobId, campaignSendJobsKey } from "../campaignSendKeys.js";
+
+export { campaignSendJobsKey };
 
 // `returnAppropriateTimeStamp` calls `.utc()`. message-dispatcher registered this
 // in its entrypoint; here the module registers it itself rather than depending on
@@ -141,27 +147,48 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const CAMPAIGN_BATCH_INTERVAL_MS =
   Number.parseInt(process.env.CAMPAIGN_BATCH_INTERVAL_MS || "", 10) || DAY_IN_MS;
 
+export interface EnqueueCampaignMessagesOptions {
+  /** BullMQ queue to fan out onto. */
+  queue: Queue;
+  participants: any[];
+  campaignId: string;
+  /**
+   * The send session every job in this fan-out belongs to. Load-bearing: it is
+   * what makes job ids unique per attempt, so a resend to a participant already
+   * sent to is not swallowed by BullMQ's deduplication.
+   */
+  campaignSendId: string;
+  scheduledAt?: string | null;
+  /** Decrypted once for the whole batch by the caller. */
+  accessToken?: string;
+  surveyTeamMapId?: string | null;
+  connection?: any;
+  /**
+   * Max messages per day; participants beyond the cap are pushed onto later days
+   * rather than all firing at once.
+   */
+  dailySendLimit?: number;
+}
+
 /**
- * Enqueue campaign messages in bulk
- * @param queue BullMQ queue instance
- * @param participants Array of participants
- * @param campaignId Campaign ID
- * @param scheduledAt Optional scheduled time
- * @param accessToken Decrypted access token
- * @param surveyTeamMapId Optional survey team map ID
- * @param dailySendLimit Optional max messages per day; participants beyond the
- *   cap are pushed onto later days rather than all firing at once
+ * Enqueue one message job per participant for a single send session.
+ *
+ * Takes an options object rather than positional arguments deliberately: adding
+ * `campaignSendId` as another `string` in a run of optional strings would have
+ * compiled fine at every call site while silently shifting `scheduledAt` into
+ * it.
  */
-export async function enqueueCampaignMessages(
-  queue: Queue,
-  participants: any[],
-  campaignId: string,
-  scheduledAt?: string | null,
-  accessToken?: string,
-  surveyTeamMapId?: string | null,
-  connection?: any,
-  dailySendLimit?: number,
-): Promise<void> {
+export async function enqueueCampaignMessages({
+  queue,
+  participants,
+  campaignId,
+  campaignSendId,
+  scheduledAt,
+  accessToken,
+  surveyTeamMapId,
+  connection,
+  dailySendLimit,
+}: EnqueueCampaignMessagesOptions): Promise<void> {
   if (!participants.length) {
     return;
   }
@@ -184,11 +211,20 @@ export async function enqueueCampaignMessages(
   // per-stage row -- not the participant, which is shared across every stage.
   // Reusing the participant id would make a still-delayed stage-1 job swallow
   // stage 2's enqueue as a duplicate.
-  const jobIdFor = (participant: any) => participant?.dripCampaignParticipantId ?? participant.id;
+  //
+  // Scoped to the send session on top of that. Without the prefix the
+  // deduplication below — which exists so the drip cron's 4-minute re-enqueue
+  // does not reset delays — would also swallow every *retry* to a participant
+  // this campaign has already sent to, making the retry engine inert.
+  const jobIdFor = (participant: any) =>
+    campaignSendJobId(campaignSendId, participant?.dripCampaignParticipantId ?? participant.id);
 
   // Process in batches for better memory usage
   const jobs = participants.map((participant, index) => ({
-    name: campaignId,
+    // Named after the send, not the campaign: `getCampaignScheduleInfo` reads
+    // this to find a campaign's still-delayed jobs, and a campaign can have more
+    // than one send session with jobs outstanding.
+    name: campaignSendId,
     data: {
       id: participant.id, // Include only necessary fields
       phone: participant.phone,
@@ -200,6 +236,7 @@ export async function enqueueCampaignMessages(
       accessToken,
       scheduledAt,
       campaignId,
+      campaignSendId,
       surveyTeamMapId,
       dynamicTags: participant.dynamicTags,
       teamId: participant.teamId,
@@ -227,15 +264,17 @@ export async function enqueueCampaignMessages(
     campaignJobIds.push(...batch.map((job) => job.opts.jobId));
   }
   if (campaignJobIds.length > 0) {
-    await connection.sadd(`campaign:${campaignId}:jobs`, ...campaignJobIds);
+    // Keyed by send, not campaign, so "the queue has drained" is answerable per
+    // attempt — which is what closes a CampaignSend and schedules the next retry.
+    await connection.sadd(campaignSendJobsKey(campaignSendId), ...campaignJobIds);
   }
 
   log.info(
     throttle
-      ? `Enqueued ${participants.length} messages for campaign ${campaignId} over ${Math.ceil(
+      ? `Enqueued ${participants.length} messages for campaign ${campaignId} (send ${campaignSendId}) over ${Math.ceil(
           participants.length / throttle,
         )} batch(es) of ${throttle}, spaced ${CAMPAIGN_BATCH_INTERVAL_MS}ms apart`
-      : `Enqueued ${participants.length} messages for campaign ${campaignId}`,
+      : `Enqueued ${participants.length} messages for campaign ${campaignId} (send ${campaignSendId})`,
   );
 }
 
@@ -244,6 +283,10 @@ export async function enqueueCampaignMessages(
  * @param campaignId Campaign ID
  * @param participantId Optional specific participant ID
  * @param sendToStatuses Optional status filter array
+ * @param participantIds Optional explicit cohort. Narrower than `sendToStatuses`
+ *   and applied on top of it: the retry engine uses this to enforce the exact
+ *   truncation the conversation allowance permits, rather than relying on a
+ *   status filter that could widen between deciding and sending.
  * @returns Array of participants with required data
  */
 export async function fetchCampaignParticipants(
@@ -251,6 +294,7 @@ export async function fetchCampaignParticipants(
   participantId?: string,
   sendToStatuses?: string[],
   dripStageId?: string,
+  participantIds?: string[],
 ): Promise<any[]> {
   // If dripStageId is present, use CampaignDripStage and CampaignParticipantDripStage
   if (dripStageId) {
@@ -415,6 +459,12 @@ export async function fetchCampaignParticipants(
     paramIndex++;
   }
 
+  if (participantIds?.length) {
+    query += ` AND cp.id = ANY($${paramIndex}::uuid[])`;
+    params.push(participantIds);
+    paramIndex++;
+  }
+
   if (campaign?.useUserConsent) {
     query += ` AND c.consent = true`;
   }
@@ -460,14 +510,22 @@ export async function getSurveyTeamMapId(
  */
 export async function decryptAccessToken(encryptedToken: string, iv: string): Promise<string> {
   if (!encryptedToken || !iv) {
-    throw new Error("Access token or IV is missing");
+    // The usual cause is a team with no WhatsApp settings row: the participant
+    // query LEFT JOINs the credentials, so they come back null rather than
+    // failing the query. Say which, since this message is what the sender sees
+    // on the failed campaign.
+    throw new Error("This team has no connected WhatsApp number, so nothing could be sent.");
   }
 
-  return aes_decrypt(
-    encryptedToken,
-    Buffer.from(process.env.wa_access_token_encryption_key!, "hex"),
-    iv,
-  );
+  // Matches the guard in wa_settings.service.ts. Without it a missing key
+  // reaches Buffer.from as undefined and throws about argument types, which
+  // says nothing about the configuration that is actually missing.
+  const key = process.env.wa_access_token_encryption_key;
+  if (!key) {
+    throw new Error("wa_access_token_encryption_key is not configured");
+  }
+
+  return aes_decrypt(encryptedToken, Buffer.from(key, "hex"), iv);
 }
 
 /**
@@ -487,6 +545,13 @@ export async function executeBulkUpdates(
    * nothing here gates metering or enforcement.
    */
   pricingUpdates: any[] = [],
+  /**
+   * Rows of [sent, read, delivered, complete, failed, campaignSendId] — the same
+   * `diffStatusData` deltas that feed `campaignStatsUpdates`, applied to the send
+   * session the message belonged to. Sharing the deltas is what keeps the
+   * per-attempt totals and the campaign lifetime totals from disagreeing.
+   */
+  campaignSendStatsUpdates: any[] = [],
 ): Promise<void> {
   // Raw `pg` rather than `prisma.$transaction`, for a different reason than the
   // campaign dispatch path: this transaction is not starved of a connection, it
@@ -541,23 +606,33 @@ export async function executeBulkUpdates(
       );
     }
 
-    // messageLogUpdates entries are [messageId, logs]: the failure detail is
-    // recorded on the message itself.
+    // messageLogUpdates entries are [messageId, logs, errorCode]: the failure
+    // detail is recorded on the message itself, with Meta's code lifted out of
+    // the jsonb into its own column so retry eligibility and the failure
+    // breakdown are indexable rather than jsonb path scans.
     if (messageLogUpdates.length) {
       const waMessageLogsUpdates = messageLogUpdates
         .filter(([messageId, logs]) => messageId && logs)
-        .map(([messageId, logs]) => [JSON.stringify(logs), messageId]);
+        .map(([messageId, logs, errorCode]) => [
+          JSON.stringify(logs),
+          typeof errorCode === "number" ? errorCode : null,
+          messageId,
+        ]);
 
       if (waMessageLogsUpdates.length) {
         const values = waMessageLogsUpdates
-          .map((_, i) => `($${i * 2 + 1}::jsonb, $${i * 2 + 2})`)
+          .map((_, i) => `($${i * 3 + 1}::jsonb, $${i * 3 + 2}::int, $${i * 3 + 3})`)
           .join(", ");
         const flat = waMessageLogsUpdates.flat();
 
         await client.query(
+          // COALESCE, not assignment: a status arriving after the failure (a
+          // late `delivered` on a different attempt's row, say) carries no code
+          // and must not erase the one already recorded.
           `UPDATE "WaMessage" AS wm
-           SET logs = v.logs
-           FROM (VALUES ${values}) AS v(logs, messageId)
+           SET logs = v.logs,
+               "errorCode" = COALESCE(v."errorCode", wm."errorCode")
+           FROM (VALUES ${values}) AS v(logs, "errorCode", messageId)
            WHERE wm."messageId" = v.messageId`,
           flat,
         );
@@ -627,6 +702,32 @@ export async function executeBulkUpdates(
           "totalFailed" = cs."totalFailed" + v.failed
         FROM (VALUES ${values}) AS v(sent, read, delivered, complete, failed, campaignId)
         WHERE cs."campaignId" = v.campaignId::uuid`,
+        flat,
+      );
+    }
+
+    // Bulk update CampaignSend — the same deltas as CampaignStats above, but
+    // attributed to the attempt that produced them. This is what makes "this
+    // retry re-attempted 340 and 210 landed" answerable.
+    if (campaignSendStatsUpdates.length) {
+      const values = campaignSendStatsUpdates
+        .map(
+          (_, i) =>
+            `($${i * 6 + 1}::int, $${i * 6 + 2}::int, $${i * 6 + 3}::int, $${
+              i * 6 + 4
+            }::int, $${i * 6 + 5}::int, $${i * 6 + 6})`,
+        )
+        .join(", ");
+      const flat = campaignSendStatsUpdates.flat();
+      await client.query(
+        `UPDATE "CampaignSend" AS cs SET
+          "totalSent" = cs."totalSent" + v.sent,
+          "totalRead" = cs."totalRead" + v.read,
+          "totalDelivered" = cs."totalDelivered" + v.delivered,
+          "totalCompleted" = cs."totalCompleted" + v.complete,
+          "totalFailed" = cs."totalFailed" + v.failed
+        FROM (VALUES ${values}) AS v(sent, read, delivered, complete, failed, id)
+        WHERE cs."id" = v.id::uuid`,
         flat,
       );
     }
@@ -833,6 +934,11 @@ export async function updateCampaignStatus(
   status: string,
   scheduledAt?: string | null,
   includeScheduledAt: boolean = false,
+  /**
+   * Why the campaign ended up in this status. Written whenever it is given —
+   * including as `null`, which is how a fresh send clears the last failure.
+   */
+  errorMessage?: string | null,
 ) {
   return await prisma.campaign.updateMany({
     where: { id: campaignId },
@@ -843,6 +949,7 @@ export async function updateCampaignStatus(
       ...(scheduledAt || includeScheduledAt
         ? { campaignSentAt: scheduledAt ? new Date(scheduledAt) : null }
         : {}),
+      ...(errorMessage !== undefined ? { errorMessage } : {}),
     },
   });
 }
@@ -952,6 +1059,7 @@ export async function bulkUpdateStatuses(
             c."orgId" AS "contactOrgId",
             c."id" AS "contactId",
             wmcpm."campaignParticipantDripStageId",
+            wmcpm."campaignSendId",
             cpds."dripStageId" AS "dripStageId",
             cpds.status AS "dripStageStatus"
           FROM "WaMessage" wm
@@ -978,6 +1086,7 @@ export async function bulkUpdateStatuses(
         dripStageId: string | null;
         campaignParticipantDripStageId: string | null;
       };
+      campaignSendId?: string | null;
       contactOrgId?: string;
       contactPhone?: string;
       contactId?: string;
@@ -1004,6 +1113,7 @@ export async function bulkUpdateStatuses(
           dripStageId: row?.dripStageId || null,
           campaignParticipantDripStageId: row?.campaignParticipantDripStageId || null,
         },
+        campaignSendId: row.campaignSendId || null,
         contactOrgId: row.contactOrgId,
         contactPhone: row.contactPhone,
         contactId: row.contactId,
@@ -1016,6 +1126,7 @@ export async function bulkUpdateStatuses(
   const campaignParticipantUpdates: any[] = [];
   const messageLogUpdates: any[] = [];
   const campaignStatsUpdates: any[] = [];
+  const campaignSendStatsUpdates: any[] = [];
   const waMessageUpdates: any[] = [];
   const pricingUpdates: any[] = [];
   const dripCampaignParticipantUpdates: any[] = [];
@@ -1106,7 +1217,12 @@ export async function bulkUpdateStatuses(
 
     if (lastErr) {
       try {
-        messageLogUpdates.push([externalMessageId, lastErr?.[0] ?? {}]);
+        const detail = lastErr?.[0] ?? {};
+        messageLogUpdates.push([
+          externalMessageId,
+          detail,
+          typeof detail?.code === "number" ? detail.code : null,
+        ]);
       } catch (e) {
         log.error("Failed to record message logs: %o", e);
       }
@@ -1117,6 +1233,14 @@ export async function bulkUpdateStatuses(
       updateCampaignStatsCounters(
         campaignStatsUpdates,
         campaignParticipant.campaignId,
+        diffStatusData,
+      );
+    }
+
+    if (Object.keys(diffStatusData).length && messageInfo.campaignSendId) {
+      updateCampaignStatsCounters(
+        campaignSendStatsUpdates,
+        messageInfo.campaignSendId,
         diffStatusData,
       );
     }
@@ -1150,6 +1274,7 @@ export async function bulkUpdateStatuses(
     !dripCampaignParticipantUpdates.length &&
     !messageLogUpdates.length &&
     !campaignStatsUpdates.length &&
+    !campaignSendStatsUpdates.length &&
     !dripCampaignStatsUpdates.length &&
     !waMessageUpdates.length &&
     !pricingUpdates.length
@@ -1165,6 +1290,7 @@ export async function bulkUpdateStatuses(
     dripCampaignParticipantUpdates,
     dripCampaignStatsUpdates,
     pricingUpdates,
+    campaignSendStatsUpdates,
   );
 
   return processedOffsets;

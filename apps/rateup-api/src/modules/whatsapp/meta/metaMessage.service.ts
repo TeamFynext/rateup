@@ -44,6 +44,8 @@ export interface MetaSendInput extends MetaChannelContext {
     participantId: string;
     dripStageId?: string | null;
     templateData?: unknown;
+    /** The send session (initial send or a specific retry) this message is part of. */
+    campaignSendId?: string | null;
   };
 
   /**

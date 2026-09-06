@@ -66,6 +66,31 @@ export async function updateCampaignStats(
   }
 }
 
+/**
+ * Book a send-time failure against the attempt that produced it.
+ *
+ * `totalSent` is bumped alongside `totalFailed` for the same reason
+ * `updateCampaignStats` does: a rejected message was still an attempt, and the
+ * funnel's "attempted" number has to include the ones Meta refused outright.
+ */
+export async function updateCampaignSendStats(
+  campaignSendId: string | undefined | null,
+  column: "totalFailed",
+  client: PoolClient,
+) {
+  if (!campaignSendId) return;
+  try {
+    if (column === "totalFailed") {
+      await client.query(
+        `UPDATE "CampaignSend" SET "totalSent" = "totalSent" + 1, "totalFailed" = "totalFailed" + 1 WHERE "id" = $1`,
+        [campaignSendId],
+      );
+    }
+  } catch (error) {
+    log.error({ err: error }, `Error in updateCampaignSendStats for column ${column}: `);
+  }
+}
+
 export async function updateDripCampaignParticipant(
   id: string,
   data: CampaignParticipantUpdate,

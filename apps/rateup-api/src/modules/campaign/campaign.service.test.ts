@@ -11,6 +11,7 @@ vi.mock("../../utils/prisma.js", () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     team: { findFirst: vi.fn() },
     campaignDripStage: {
@@ -23,8 +24,8 @@ vi.mock("../../utils/prisma.js", () => ({
       update: vi.fn(),
     },
     campaignStats: { create: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
+    campaignSend: { findMany: vi.fn(), findFirst: vi.fn() },
     campaignParticipant: { count: vi.fn() },
-    campaignMessageQueue: { findFirst: vi.fn(), updateMany: vi.fn() },
     waFlow: { findFirst: vi.fn() },
   },
   excludeFields: vi.fn(),
@@ -38,9 +39,7 @@ vi.mock("../../../generated/prisma/client.js", () => ({
     empty: { __fragment: "", values: [] },
   },
 }));
-vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
-  sendCampaignToParticipants: vi.fn(),
-}));
+vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({}));
 vi.mock("../whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
   checkConversationLimitAvailable: vi.fn(),
 }));
@@ -52,12 +51,22 @@ vi.mock("../../workers/bullmq/queues/index.js", () => ({
   waCampaignEnqueue: { add: vi.fn() },
   waMessageQueue: { getDelayed: vi.fn() },
 }));
+vi.mock("./campaignSend.service.js", async () => {
+  const actual = await vi.importActual<typeof import("./campaignSend.service.js")>(
+    "./campaignSend.service.js",
+  );
+  return {
+    ...actual,
+    createCampaignSend: vi.fn(),
+    failCampaignSend: vi.fn(),
+  };
+});
+
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
 import prisma from "../../utils/prisma.js";
-import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import {
@@ -71,7 +80,6 @@ import {
   createCampaign,
   deleteCampaign,
   deleteCampaignParticipantsByCampaignId,
-  doesCampaignIdExistInMessageQueue,
   enqueueCampaignMessage,
   getCampaginStatsById,
   getCampaignById,
@@ -86,15 +94,25 @@ import {
   sendCampaign,
   sendCampaignCronAction,
   updateCampaign,
-  updateCampaignMessageQueueRetryCount,
 } from "./campaign.service.js";
+import { createCampaignSend } from "./campaignSend.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
+
+const SEND_ID = "00000000-0000-0000-0000-0000000000ff";
+const createSendMock = createCampaignSend as unknown as Mock;
 
 const db = prisma as unknown as {
   $queryRaw: Mock;
   campaign: Record<
-    "count" | "create" | "delete" | "findFirst" | "findMany" | "findUnique" | "update",
+    | "count"
+    | "create"
+    | "delete"
+    | "findFirst"
+    | "findMany"
+    | "findUnique"
+    | "update"
+    | "updateMany",
     Mock
   >;
   team: { findFirst: Mock };
@@ -103,11 +121,10 @@ const db = prisma as unknown as {
     Mock
   >;
   campaignStats: Record<"create" | "findFirst" | "findUnique", Mock>;
+  campaignSend: Record<"findMany" | "findFirst", Mock>;
   campaignParticipant: { count: Mock };
-  campaignMessageQueue: Record<"findFirst" | "updateMany", Mock>;
   waFlow: { findFirst: Mock };
 };
-const sendToParticipantsMock = sendCampaignToParticipants as unknown as Mock;
 const limitExceededMock = checkConversationLimitAvailable as unknown as Mock;
 const getFlowBySurveyIdMock = getFlowBySurveyId as unknown as Mock;
 const getCampaignCountMock = getCampaignCount as unknown as Mock;
@@ -138,6 +155,10 @@ function queryAt(index = 0) {
 }
 
 beforeEach(() => {
+  (createCampaignSend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+    id: SEND_ID,
+    attemptNo: 0,
+  });
   vi.clearAllMocks();
   db.$queryRaw.mockResolvedValue([]);
   db.campaign.create.mockResolvedValue({ id: CAMPAIGN_ID });
@@ -336,6 +357,18 @@ describe("createCampaign", () => {
     expect(db.campaign.create.mock.calls[0][0].data.flowId).toBe("");
   });
 
+  test("stores the status the wizard posted", async () => {
+    await createCampaign({ ...input, status: "DRAFT" }, ORG_A);
+
+    expect(db.campaign.create.mock.calls[0][0].data.status).toBe("DRAFT");
+  });
+
+  test("falls back to DRAFT when no status was given", async () => {
+    await createCampaign(input, ORG_A);
+
+    expect(db.campaign.create.mock.calls[0][0].data.status).toBe("DRAFT");
+  });
+
   test("throws for a flow id that matches nothing", async () => {
     db.waFlow.findFirst.mockResolvedValue(null);
 
@@ -448,19 +481,47 @@ describe("updateCampaign", () => {
 });
 
 describe("sendCampaign", () => {
-  test("marks the campaign active and hands it to the dispatcher", async () => {
-    await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING], undefined, "user-1");
+  test("opens a send session and hands the campaign to the queue", async () => {
+    await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING]);
 
     expect(db.campaign.update.mock.calls.at(-1)![0].data).toMatchObject({
-      status: CampaignStatus.ACTIVE,
+      status: CampaignStatus.QUEUING,
       errorMessage: null,
     });
-    expect(sendToParticipantsMock).toHaveBeenCalledWith(
-      CAMPAIGN_ID,
-      [CampaignParticipantStatus.PENDING],
-      undefined,
-      "user-1",
+    expect(createSendMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        campaignId: CAMPAIGN_ID,
+        trigger: "SCHEDULED",
+        targetStatuses: [CampaignParticipantStatus.PENDING],
+      }),
     );
+    expect(enqueueAdd.mock.calls[0][1]).toMatchObject({
+      campaignId: CAMPAIGN_ID,
+      campaignSendId: SEND_ID,
+      sendToStatuses: [CampaignParticipantStatus.PENDING],
+    });
+  });
+
+  test("falls back to pending and failed when the schedule named no statuses", async () => {
+    // Every live write of `scheduledStatuses` is `[]`, which used to mean the
+    // legacy loop skipped every participant and the campaign silently sent
+    // nothing.
+    await sendCampaign(CAMPAIGN_ID, []);
+
+    expect(enqueueAdd.mock.calls[0][1].sendToStatuses).toEqual([
+      CampaignParticipantStatus.PENDING,
+      CampaignParticipantStatus.FAILED,
+    ]);
+  });
+
+  test("rolls the campaign back when the queue refuses the job", async () => {
+    enqueueAdd.mockRejectedValue(new Error("redis is down"));
+
+    await expect(sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING])).rejects.toThrow();
+    // FAILED, not INACTIVE: a campaign the queue refused was not paused by anyone.
+    expect(db.campaign.update.mock.calls.at(-1)![0].data).toMatchObject({
+      status: CampaignStatus.FAILED,
+    });
   });
 
   test("refuses and records why when the org is over its conversation limit", async () => {
@@ -469,10 +530,10 @@ describe("sendCampaign", () => {
     await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING]);
 
     expect(db.campaign.update.mock.calls[0][0].data).toMatchObject({
-      status: CampaignStatus.INACTIVE,
+      status: CampaignStatus.FAILED,
       errorMessage: "Conversation limit reached. Upgrade your plan to send more messages.",
     });
-    expect(sendToParticipantsMock).not.toHaveBeenCalled();
+    expect(enqueueAdd).not.toHaveBeenCalled();
   });
 
   test("refuses when the campaign's org cannot be determined", async () => {
@@ -481,7 +542,7 @@ describe("sendCampaign", () => {
     await expect(sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING])).rejects.toThrow(
       "not found",
     );
-    expect(sendToParticipantsMock).not.toHaveBeenCalled();
+    expect(enqueueAdd).not.toHaveBeenCalled();
   });
 
   test("treats a true answer from the limit check as permission to send", async () => {
@@ -489,7 +550,7 @@ describe("sendCampaign", () => {
 
     await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING]);
 
-    expect(sendToParticipantsMock).toHaveBeenCalled();
+    expect(enqueueAdd).toHaveBeenCalled();
   });
 });
 
@@ -502,7 +563,7 @@ describe("sendCampaignCronAction", () => {
 
     await sendCampaignCronAction();
 
-    expect(sendToParticipantsMock).toHaveBeenCalledTimes(2);
+    expect(enqueueAdd).toHaveBeenCalledTimes(2);
   });
 
   test("looks only at scheduled campaigns due within the next five minutes", async () => {
@@ -517,7 +578,7 @@ describe("sendCampaignCronAction", () => {
   test("does nothing when nothing is due", async () => {
     await sendCampaignCronAction();
 
-    expect(sendToParticipantsMock).not.toHaveBeenCalled();
+    expect(enqueueAdd).not.toHaveBeenCalled();
   });
 
   test("sends the campaigns behind one that fails", async () => {
@@ -525,27 +586,40 @@ describe("sendCampaignCronAction", () => {
       { id: "camp-1", scheduledStatuses: [] },
       { id: "camp-2", scheduledStatuses: [] },
     ]);
-    sendToParticipantsMock.mockRejectedValueOnce(new Error("template gone"));
+    enqueueAdd.mockRejectedValueOnce(new Error("template gone"));
 
     await expect(sendCampaignCronAction()).resolves.toBeUndefined();
-    expect(sendToParticipantsMock).toHaveBeenCalledTimes(2);
+    expect(enqueueAdd).toHaveBeenCalledTimes(2);
   });
 });
 
 describe("enqueueCampaignMessage", () => {
   test("hands the campaign to the dispatcher as one instruction", async () => {
-    await enqueueCampaignMessage(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING], "p-1");
+    await enqueueCampaignMessage({
+      campaignId: CAMPAIGN_ID,
+      campaignSendId: SEND_ID,
+      sendToStatuses: [CampaignParticipantStatus.PENDING],
+      participantId: "p-1",
+    });
 
     expect(enqueueAdd.mock.calls[0][0]).toBe(CAMPAIGN_ID);
     expect(enqueueAdd.mock.calls[0][1]).toMatchObject({
       campaignId: CAMPAIGN_ID,
+      // The send session travels with the job: it is what scopes the BullMQ job
+      // ids, and without it a resend would be deduplicated away.
+      campaignSendId: SEND_ID,
       sendToStatuses: [CampaignParticipantStatus.PENDING],
       participantId: "p-1",
     });
   });
 
   test("carries the daily cap through to the dispatcher", async () => {
-    await enqueueCampaignMessage(CAMPAIGN_ID, [], undefined, undefined, undefined, 500);
+    await enqueueCampaignMessage({
+      campaignId: CAMPAIGN_ID,
+      campaignSendId: SEND_ID,
+      sendToStatuses: [],
+      dailySendLimit: 500,
+    });
 
     expect(enqueueAdd.mock.calls[0][1].dailySendLimit).toBe(500);
   });
@@ -553,7 +627,13 @@ describe("enqueueCampaignMessage", () => {
   test("reports the failure of an enqueue that rejects", async () => {
     enqueueAdd.mockRejectedValue(new Error("redis is down"));
 
-    await expect(enqueueCampaignMessage(CAMPAIGN_ID, [])).resolves.toEqual({
+    await expect(
+      enqueueCampaignMessage({
+        campaignId: CAMPAIGN_ID,
+        campaignSendId: SEND_ID,
+        sendToStatuses: [],
+      }),
+    ).resolves.toEqual({
       status: false,
       message: "Campaign not scheduled, please try again",
     });
@@ -564,7 +644,13 @@ describe("enqueueCampaignMessage", () => {
       throw new Error("queue not initialised");
     });
 
-    await expect(enqueueCampaignMessage(CAMPAIGN_ID, [])).resolves.toEqual({
+    await expect(
+      enqueueCampaignMessage({
+        campaignId: CAMPAIGN_ID,
+        campaignSendId: SEND_ID,
+        sendToStatuses: [],
+      }),
+    ).resolves.toEqual({
       status: false,
       message: "Campaign not scheduled, please try again",
     });
@@ -591,6 +677,12 @@ describe("enqueueCampaignMessage", () => {
 describe("getCampaignScheduleInfo", () => {
   const NOW = 1_700_000_000_000;
 
+  // Delayed jobs are named after the *send session*, not the campaign, so the
+  // schedule is read by first resolving the campaign's live sends.
+  beforeEach(() => {
+    db.campaignSend.findMany.mockResolvedValue([{ id: SEND_ID }]);
+  });
+
   test("reports nothing parked when the queue holds no delayed jobs", async () => {
     await expect(getCampaignScheduleInfo(CAMPAIGN_ID)).resolves.toEqual({
       scheduledCount: 0,
@@ -601,8 +693,8 @@ describe("getCampaignScheduleInfo", () => {
 
   test("counts only the jobs belonging to this campaign", async () => {
     getDelayedMock.mockResolvedValue([
-      { name: CAMPAIGN_ID, timestamp: NOW, opts: { delay: 1000 } },
-      { name: "another-campaign", timestamp: NOW, opts: { delay: 1000 } },
+      { name: SEND_ID, timestamp: NOW, opts: { delay: 1000 } },
+      { name: "another-send", timestamp: NOW, opts: { delay: 1000 } },
     ]);
 
     const result = await getCampaignScheduleInfo(CAMPAIGN_ID);
@@ -612,9 +704,9 @@ describe("getCampaignScheduleInfo", () => {
 
   test("reports when the next batch is released and how big it is", async () => {
     getDelayedMock.mockResolvedValue([
-      { name: CAMPAIGN_ID, timestamp: NOW, opts: { delay: 1000 } },
-      { name: CAMPAIGN_ID, timestamp: NOW, opts: { delay: 2000 } },
-      { name: CAMPAIGN_ID, timestamp: NOW, opts: { delay: 24 * 60 * 60 * 1000 } },
+      { name: SEND_ID, timestamp: NOW, opts: { delay: 1000 } },
+      { name: SEND_ID, timestamp: NOW, opts: { delay: 2000 } },
+      { name: SEND_ID, timestamp: NOW, opts: { delay: 24 * 60 * 60 * 1000 } },
     ]);
 
     const result = await getCampaignScheduleInfo(CAMPAIGN_ID);
@@ -625,7 +717,7 @@ describe("getCampaignScheduleInfo", () => {
   });
 
   test("treats a job with no delay as due immediately", async () => {
-    getDelayedMock.mockResolvedValue([{ name: CAMPAIGN_ID, timestamp: NOW, opts: {} }]);
+    getDelayedMock.mockResolvedValue([{ name: SEND_ID, timestamp: NOW, opts: {} }]);
 
     const result = await getCampaignScheduleInfo(CAMPAIGN_ID);
 
@@ -787,23 +879,8 @@ describe("getResponseExcelByCampaignById", () => {
 });
 
 describe("the remaining queue helpers", () => {
-  test("reports whether a campaign still has anything in the message queue", async () => {
-    db.campaignMessageQueue.findFirst.mockResolvedValue({ id: "q-1" });
-
-    await expect(doesCampaignIdExistInMessageQueue(CAMPAIGN_ID)).resolves.toBe(true);
-
-    db.campaignMessageQueue.findFirst.mockResolvedValue(null);
-    await expect(doesCampaignIdExistInMessageQueue(CAMPAIGN_ID)).resolves.toBe(false);
-  });
-
-  test("resets only the retries that have run out", async () => {
-    await updateCampaignMessageQueueRetryCount(CAMPAIGN_ID);
-
-    expect(db.campaignMessageQueue.updateMany.mock.calls[0][0]).toEqual({
-      where: { campaignParticipant: { campaignId: CAMPAIGN_ID }, retryCount: 2 },
-      data: { retryCount: 0 },
-    });
-  });
+  // The two CampaignMessageQueue helpers that used to be tested here are gone
+  // along with the table, which nothing ever inserted into.
 
   test("counts the participants sitting in the statuses it was given", async () => {
     db.campaignParticipant.count.mockResolvedValue(12);

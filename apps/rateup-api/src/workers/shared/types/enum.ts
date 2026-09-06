@@ -69,12 +69,22 @@ export enum WaTemplateCategory {
 }
 
 export enum CampaignStatus {
+  /// Created by the wizard but never launched. Only the wizard and the campaign
+  /// list see these; no worker ever picks a DRAFT up.
+  DRAFT = "DRAFT",
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
   SCHEDULED = "SCHEDULED",
   COMPLETED = "COMPLETED",
   QUEUING = "QUEUING",
   DEQUEUING = "DEQUEUING",
+  /// Stopped by a failure rather than by its owner. Distinct from INACTIVE so
+  /// that "it fell over" and "I paused it" do not read the same in the list.
+  FAILED = "FAILED",
+  /// The initial send has drained and an automatic retry is booked for later.
+  /// Nothing is going out right now, so calling this ACTIVE described the
+  /// campaign as sending through a retry window that is usually hours long.
+  RETRYING = "RETRYING",
 }
 
 export enum PlatformType {
