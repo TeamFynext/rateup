@@ -2,8 +2,7 @@ import prisma from "../../utils/prisma.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 export { CampaignNotFoundError };
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema.js";
-import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
-import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums.js";
+import { CampaignParticipantStatus, CampaignStatus, CampaignType } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
 import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
@@ -18,6 +17,12 @@ import {
   waMessageQueue,
 } from "../../workers/bullmq/queues/index.js";
 import { Campaign, CampaignDripStage, Prisma } from "../../../generated/prisma/client.js";
+import {
+  createCampaignSend,
+  failCampaignSend,
+  LIVE_SEND_STATUSES,
+} from "./campaignSend.service.js";
+import { CampaignSendTrigger } from "../../../generated/prisma/enums.js";
 
 export interface WaMessageStats {
   read?: boolean;
@@ -55,6 +60,7 @@ export async function getCampaignById(campaignId: string, orgId: string) {
         teamName: string | null;
         flowVersion: number | null;
         dripStages: CampaignDripStage[];
+        campaignParticipantsCount: number;
       }
     >
   >`
@@ -67,7 +73,16 @@ export async function getCampaignById(campaignId: string, orgId: string) {
           SELECT COALESCE(json_agg(cds), '[]'::json)
           FROM "CampaignDripStage" cds
           WHERE cds."campaignId" = c.id
-        ) as "dripStages"
+        ) as "dripStages",
+        -- The wizard marks its Audience step done from this, and the campaign
+        -- page reads it too. It was only ever selected by the list query, so
+        -- everything reading a single campaign saw an undefined count and
+        -- concluded the campaign had no recipients however many it had.
+        (
+          SELECT COUNT(*)::INTEGER
+          FROM "CampaignParticipant" cp
+          WHERE cp."campaignId" = c.id
+        ) as "campaignParticipantsCount"
       FROM "Campaign" c
       LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
       LEFT JOIN "Team" t ON t.id = c."teamId"
@@ -104,6 +119,9 @@ export async function getCampaignsByTeamId(teamId: string, orgId: string) {
 }
 
 export async function getCampaignsByOrgId(orgId: string, type?: string) {
+  // The list cards show a delivered/read bar and a template name, so both come
+  // back with the list. Joined rather than fetched per card: a page of 20 cards
+  // would otherwise be 40 extra round trips to draw one progress bar each.
   const campaigns = await prisma.$queryRaw`SELECT 
     c.id,
     c."name",
@@ -111,14 +129,26 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
     c."status",
     c."teamId",
     c.type,
+    c."waTemplateId",
+    c."campaignSentAt",
+    c."startedAt",
+    c."errorMessage",
     t."name" AS "teamName",
-  COUNT(cp.id)::INTEGER AS "campaignParticipantsCount"
+    wt."data"->>'name' AS "templateName",
+    COALESCE(s."totalSend", 0) AS "totalSent",
+    COALESCE(s."totalDelivered", 0) AS "totalDelivered",
+    COALESCE(s."totalRead", 0) AS "totalRead",
+    COALESCE(s."totalFailed", 0) AS "totalFailed",
+    COUNT(cp.id)::INTEGER AS "campaignParticipantsCount"
   FROM "Campaign" c
   LEFT JOIN "Team" t ON c."teamId" = t.id
+  LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
+  LEFT JOIN "CampaignStats" s ON s."campaignId" = c.id
   LEFT JOIN "CampaignParticipant" cp ON c.id = cp."campaignId"
   WHERE t."orgId" = ${orgId}::uuid
   ${type ? Prisma.sql`AND c.type = ${type}` : Prisma.empty}
-  GROUP BY c.id, c."name", c."createdAt", c."status", c."teamId",t."name";`;
+  GROUP BY c.id, c."name", c."createdAt", c."status", c."teamId", c."errorMessage", t."name",
+           wt."data", s."totalSend", s."totalDelivered", s."totalRead", s."totalFailed";`;
   return campaigns;
 }
 
@@ -150,6 +180,11 @@ export async function createCampaign(data: CreateCampaignInput, orgId: string) {
       name: data.name,
       type: data.type,
       teamId: data.teamId,
+      // The wizard creates a campaign from step one and fills it in over the
+      // next five, so it posts DRAFT. Dropping it here left every half-built
+      // campaign sitting at the column default and reading back as paused —
+      // a state it had never been in, and one the wizard cannot produce.
+      status: data.status ?? CampaignStatus.DRAFT,
       waTemplateId: data.waTemplateId ?? undefined,
       flowId: flowId,
       dynamicTags,
@@ -296,7 +331,6 @@ export async function sendCampaign(
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
   participantId?: string,
-  userId?: string,
 ) {
   // Pre-check the conversation limit once so an over-limit campaign fails cleanly
   // instead of throwing on every recipient inside sendMessage.
@@ -310,23 +344,54 @@ export async function sendCampaign(
   }
   if (!(await checkConversationLimitAvailable(campaignOrgId))) {
     await updateCampaign(campaignId, campaignOrgId, {
-      status: CampaignStatus.INACTIVE,
+      status: CampaignStatus.FAILED,
       errorMessage: "Conversation limit reached. Upgrade your plan to send more messages.",
     });
     log.warn({ campaignId, orgId: campaignOrgId }, "Campaign skipped — conversation limit reached");
     return;
   }
 
+  // Everything sends through the queue now. This used to call an in-process
+  // `for` loop over every participant (`_sendCampaignToParticipants`, with a
+  // `await wait(50)` and a `// TODO: add rate limiting`), which overlapped with
+  // the BullMQ fan-out the send dialog already used: the LATER branch of
+  // `sendCampaignHandler` both set `campaignSentAt` and enqueued a delayed
+  // fan-out, and this cron matched exactly that row. The only thing preventing a
+  // double-send was that every live write of `scheduledStatuses` is `[]`, so the
+  // loop skipped every participant — an accident, not a design.
+  const statuses = sendToStatuses.length
+    ? sendToStatuses
+    : [CampaignParticipantStatus.PENDING, CampaignParticipantStatus.FAILED];
+
+  const send = await createCampaignSend({
+    campaignId,
+    trigger: CampaignSendTrigger.SCHEDULED,
+    targetStatuses: statuses,
+  });
+
   await updateCampaign(campaignId, campaignOrgId, {
-    status: CampaignStatus.ACTIVE,
+    status: CampaignStatus.QUEUING,
     startedAt: new Date(),
     campaignSentAt: null,
     errorMessage: null,
     scheduledStatuses: [],
   });
-  log.trace("updated campaign status to active");
-  await sendCampaignToParticipants(campaignId, sendToStatuses, participantId, userId);
-  // add state indicating survey is sent to all participants?
+
+  const enqueued = await enqueueCampaignMessage({
+    campaignId,
+    campaignSendId: send.id,
+    sendToStatuses: statuses,
+    participantId,
+  });
+  if (!enqueued.status) {
+    await failCampaignSend(send.id, "Could not be queued.");
+    await updateCampaign(campaignId, campaignOrgId, {
+      status: CampaignStatus.FAILED,
+      errorMessage: enqueued.message,
+    });
+    throw new Error(enqueued.message);
+  }
+  log.trace({ campaignId, campaignSendId: send.id }, "Scheduled campaign handed to the queue");
 }
 
 export async function getCampaignFilterForFlows(surveyId: string, orgId: string) {
@@ -641,15 +706,51 @@ const EMPTY_CAMPAIGN_STATS = {
   ...EMPTY_CAMPAIGN_SCHEDULE_INFO,
 };
 
+/**
+ * Ids of the send sessions that still own a campaign — what the queue keys and
+ * job names are scoped by.
+ */
+export async function getLiveCampaignSendIds(campaignId: string): Promise<string[]> {
+  const sends = await prisma.campaignSend.findMany({
+    where: { campaignId, status: { in: [...LIVE_SEND_STATUSES] } },
+    select: { id: true },
+  });
+  return sends.map((send) => send.id);
+}
+
+/**
+ * How many delayed jobs to walk when reading a campaign's pacing schedule.
+ *
+ * This used to be an unbounded `getDelayed()` on every stats poll, which fetched
+ * every delayed job across every campaign and filtered them in JS. With
+ * multi-day `dailySendLimit` pacing that set is large and long-lived, and the
+ * poll runs while a campaign detail page is open.
+ */
+const DELAYED_SCAN_PAGE = 1_000;
+const DELAYED_SCAN_MAX = 20_000;
+
 export async function getCampaignScheduleInfo(campaignId: string): Promise<CampaignScheduleInfo> {
   const empty: CampaignScheduleInfo = EMPTY_CAMPAIGN_SCHEDULE_INFO;
 
   try {
-    // Delayed jobs are named after their campaign by `enqueueCampaignMessages`.
-    const delayed = await waMessageQueue.getDelayed();
-    const releaseTimes = delayed
-      .filter((job) => job?.name === campaignId)
-      .map((job) => job.timestamp + (job.opts?.delay ?? 0));
+    // The cheap exit, and the common one: a campaign with no live send has no
+    // delayed jobs, so the queue is never touched at all.
+    const sendIds = new Set(await getLiveCampaignSendIds(campaignId));
+    if (!sendIds.size) return empty;
+
+    // Delayed jobs are named after their *send session* by
+    // `enqueueCampaignMessages`, not their campaign — a campaign can have more
+    // than one in flight.
+    const releaseTimes: number[] = [];
+    for (let start = 0; start < DELAYED_SCAN_MAX; start += DELAYED_SCAN_PAGE) {
+      const page = await waMessageQueue.getDelayed(start, start + DELAYED_SCAN_PAGE - 1);
+      for (const job of page) {
+        if (job?.name && sendIds.has(job.name)) {
+          releaseTimes.push(job.timestamp + (job.opts?.delay ?? 0));
+        }
+      }
+      if (page.length < DELAYED_SCAN_PAGE) break;
+    }
 
     if (!releaseTimes.length) return empty;
 
@@ -699,7 +800,7 @@ export async function getCampaginStatsById(
     });
     if (!stats) return EMPTY_CAMPAIGN_STATS;
     const [tc, schedule] = await Promise.all([
-      getCampaignCount(campaignId),
+      getLiveCampaignSendIds(campaignId).then(getCampaignCount),
       getCampaignScheduleInfo(campaignId),
     ]);
 
@@ -734,7 +835,7 @@ export async function getCampaginStatsById(
     });
     if (!stats) return EMPTY_CAMPAIGN_STATS;
     const [tc, schedule] = await Promise.all([
-      getCampaignCount(campaignId),
+      getLiveCampaignSendIds(campaignId).then(getCampaignCount),
       getCampaignScheduleInfo(campaignId),
     ]);
 
@@ -756,21 +857,47 @@ export async function getCampaginStatsById(
  * expands it into per-participant jobs; when `dailySendLimit` is set it staggers
  * those jobs across consecutive days instead of releasing them all at once.
  */
-export async function enqueueCampaignMessage(
-  campaignId: string,
-  sendToStatuses: CampaignParticipantStatus[],
-  participantId?: string,
-  scheduledAt?: Date,
-  dripStageId?: string,
-  dailySendLimit?: number,
-): Promise<{ status: boolean; message: string }> {
+export interface EnqueueCampaignMessageInput {
+  campaignId: string;
+  /**
+   * The send session this fan-out belongs to. Required: it is what scopes the
+   * BullMQ job ids, and without it a resend to a participant the campaign has
+   * already messaged is swallowed as a duplicate.
+   */
+  campaignSendId: string;
+  sendToStatuses: CampaignParticipantStatus[];
+  participantId?: string;
+  /** An exact cohort, narrower than `sendToStatuses`. Used by the retry engine. */
+  participantIds?: string[];
+  scheduledAt?: Date;
+  dripStageId?: string;
+  dailySendLimit?: number;
+}
+
+/**
+ * Takes an options object rather than positional arguments so that adding
+ * `campaignSendId` — another `string` in a run of optional strings — could not
+ * compile at a call site while silently shifting the argument after it.
+ */
+export async function enqueueCampaignMessage({
+  campaignId,
+  campaignSendId,
+  sendToStatuses,
+  participantId,
+  participantIds,
+  scheduledAt,
+  dripStageId,
+  dailySendLimit,
+}: EnqueueCampaignMessageInput): Promise<{ status: boolean; message: string }> {
   try {
     await waCampaignEnqueue.add(
       campaignId,
       {
         campaignId,
+        campaignSendId,
         sendToStatuses,
         participantId,
+        participantIds,
         scheduledAt,
         dripStageId,
         dailySendLimit,
@@ -803,29 +930,12 @@ export const deleteCampaignParticipantsByCampaignId = async (
   }
 };
 
-export async function doesCampaignIdExistInMessageQueue(campaignId: string) {
-  const exists = await prisma.campaignMessageQueue.findFirst({
-    where: {
-      campaignParticipant: {
-        campaignId,
-      },
-    },
-  });
-  return !!exists;
-}
-export const updateCampaignMessageQueueRetryCount = (campaignId: string) => {
-  return prisma.campaignMessageQueue.updateMany({
-    where: {
-      campaignParticipant: {
-        campaignId,
-      },
-      retryCount: 2,
-    },
-    data: {
-      retryCount: 0,
-    },
-  });
-};
+// `doesCampaignIdExistInMessageQueue` and
+// `updateCampaignMessageQueueRetryCount` were here, reading and writing a
+// `CampaignMessageQueue` table nothing ever inserted into. The hardcoded
+// `retryCount: 2` in the latter encoded a retry policy no code implemented.
+// Retries are real now — see `campaignRetry.service.ts` — and leaving a
+// vestigial imitation of one beside it was worse than nothing.
 
 export const getCampaignParticipantCountByStatuses = (
   campaignId: string,

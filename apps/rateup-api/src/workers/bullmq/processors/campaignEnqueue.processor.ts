@@ -1,9 +1,11 @@
 // Ported from message-dispatcher/src/index.ts.
 //
-// Fan-out step: turns one campaign into one waMessageQueue job per participant.
-// The access token is decrypted once for the whole batch rather than per message,
-// and the ids of the jobs it creates are recorded in `campaign:<id>:jobs` so the
-// message processor can tell when the campaign has drained.
+// Fan-out step: turns one send session into one waMessageQueue job per
+// participant. The access token is decrypted once for the whole batch rather
+// than per message, and the ids of the jobs it creates are recorded in
+// `campaignSend:<sendId>:jobs` so the message processor can tell when *that
+// attempt* has drained — which is what closes the send and schedules the next
+// retry.
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../shared/logger.js";
@@ -17,15 +19,55 @@ import {
   updateCampaignStatus,
 } from "../../shared/whatsapp/index.js";
 import { waMessageQueue } from "../queues/whatsapp.queue.js";
+import {
+  failCampaignSend,
+  startCampaignSend,
+} from "../../../modules/campaign/campaignSend.service.js";
+
+/**
+ * A reason worth putting in front of the sender.
+ *
+ * The fan-out's failures are mostly configuration — a team with no WhatsApp
+ * credentials, a template that no longer resolves — and the message says which.
+ * A campaign that stops with no explanation is the thing that made "Paused" so
+ * misleading in the first place.
+ */
+function causeOf(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  return "unknown error";
+}
 
 const workerConnection = baseRedis.duplicate();
 
 export const campaignEnqueueWorker = new Worker(
   "waCampaignEnqueue",
   async (job: Job) => {
-    const { campaignId, participantId, sendToStatuses, scheduledAt, dripStageId, dailySendLimit } =
-      job.data;
-    log.trace(`Enqueuing campaign with ID: ${campaignId}`);
+    const {
+      campaignId,
+      campaignSendId,
+      participantId,
+      participantIds,
+      sendToStatuses,
+      scheduledAt,
+      dripStageId,
+      dailySendLimit,
+    } = job.data;
+    log.trace(`Enqueuing campaign ${campaignId} (send ${campaignSendId})`);
+
+    // Every fan-out belongs to a send session. Without one the jobs would carry
+    // no attribution and the completion handler would have no set to drain, so
+    // this is a hard stop rather than a fallback.
+    if (!campaignSendId) {
+      log.error({ campaignId }, "Campaign enqueue job has no campaignSendId — refusing to fan out");
+      await updateCampaignStatus(
+        campaignId,
+        CampaignStatus.FAILED,
+        null,
+        true,
+        "The send could not be started. Try sending it again.",
+      );
+      return;
+    }
 
     try {
       const participants = await fetchCampaignParticipants(
@@ -33,10 +75,25 @@ export const campaignEnqueueWorker = new Worker(
         participantId,
         sendToStatuses,
         dripStageId,
+        participantIds,
       );
 
       if (!participants.length) {
         log.error("No participants found matching the conditions");
+        // Nothing to drain means the completion handler will never fire, so the
+        // send has to be closed here or it would hold the campaign's lane open
+        // against the partial unique index forever.
+        await failCampaignSend(campaignSendId, "No participants matched the selected statuses.");
+        // And the campaign itself: it was moved to QUEUING before this job ran,
+        // so returning here left it reading as though it were still sending
+        // forever, with nothing in the queue to finish it.
+        await updateCampaignStatus(
+          campaignId,
+          CampaignStatus.FAILED,
+          null,
+          true,
+          "No recipients matched this send, so nothing was sent.",
+        );
         return;
       }
 
@@ -52,16 +109,22 @@ export const campaignEnqueueWorker = new Worker(
         participants[0].accessToken_iv,
       );
 
-      await enqueueCampaignMessages(
-        waMessageQueue,
+      // Recorded before the fan-out, not after: once jobs are in the queue the
+      // completion handler can fire at any moment, and it must not find the send
+      // still in QUEUING with a zero target count.
+      await startCampaignSend(campaignSendId, participants.length);
+
+      await enqueueCampaignMessages({
+        queue: waMessageQueue,
         participants,
         campaignId,
+        campaignSendId,
         scheduledAt,
-        decryptedToken,
+        accessToken: decryptedToken,
         surveyTeamMapId,
-        baseRedis,
+        connection: baseRedis,
         dailySendLimit,
-      );
+      });
 
       await updateCampaignStatus(
         campaignId,
@@ -69,8 +132,22 @@ export const campaignEnqueueWorker = new Worker(
         scheduledAt,
       );
     } catch (error) {
-      log.error("Error scheduling campaign: %o", error);
-      await updateCampaignStatus(campaignId, CampaignStatus.INACTIVE, null, true);
+      // `{ err }`, not `%o`: pino's printf formatting JSON-stringifies its
+      // argument, and an Error has no enumerable own properties — so every
+      // failure in here logged the literal text `{}` and told nobody anything.
+      log.error({ err: error, campaignId, campaignSendId }, "Error scheduling campaign");
+      const reason = causeOf(error);
+      await failCampaignSend(campaignSendId, `Fan-out failed: ${reason}`);
+      // FAILED, not INACTIVE. INACTIVE is what a campaign someone paused looks
+      // like, so a campaign that fell over on its way out was indistinguishable
+      // from one that had been stopped on purpose — and carried no reason.
+      await updateCampaignStatus(
+        campaignId,
+        CampaignStatus.FAILED,
+        null,
+        true,
+        `The campaign could not be queued for sending: ${reason}`,
+      );
     }
   },
   {

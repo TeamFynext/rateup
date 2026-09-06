@@ -192,6 +192,89 @@ export async function getCampaignParticipantsByCampaignId(campaignId: string, _e
   return campaignParticipants;
 }
 
+/** One row's worth of attempt history, as the participants table renders it. */
+export interface ParticipantAttempt {
+  attemptNo: number;
+  trigger: string;
+  /** "DELIVERED" | "FAILED" | "SENT" — what this particular attempt achieved. */
+  outcome: "DELIVERED" | "READ" | "FAILED" | "SENT";
+  at: Date | null;
+  errorCode: number | null;
+}
+
+/** The `stats` jsonb each WaMessage carries: a timestamp per status, or "". */
+interface MessageStats {
+  sent?: string;
+  delivered?: string;
+  read?: string;
+  failed?: string;
+}
+
+function readStats(value: unknown): MessageStats {
+  return value && typeof value === "object" ? (value as MessageStats) : {};
+}
+
+/**
+ * Fold a participant's messages into one attempt list plus the summary the table
+ * shows: how many attempts, when the last one was, why the latest failed, and
+ * whether it was read.
+ *
+ * Derived rather than stored: a participant's history *is* its messages, and a
+ * denormalised copy would be one more thing to keep in step with a status
+ * webhook that can arrive hours later.
+ */
+function summariseAttempts(
+  // Optional because the relation is only included by the queries that render
+  // the attempts column; a caller that selects without it gets an empty history
+  // rather than a crash.
+  maps: {
+    campaignSend: { attemptNo: number; trigger: string } | null;
+    waMessage: {
+      createdAt: Date;
+      errorCode: number | null;
+      errorMessage: string | null;
+      stats: unknown;
+      messageId: string | null;
+    };
+  }[] = [],
+) {
+  const attempts: ParticipantAttempt[] = maps.map((map) => {
+    const stats = readStats(map.waMessage.stats);
+    const outcome: ParticipantAttempt["outcome"] = stats.read
+      ? "READ"
+      : stats.delivered
+        ? "DELIVERED"
+        : stats.failed || map.waMessage.errorCode !== null
+          ? "FAILED"
+          : "SENT";
+    return {
+      attemptNo: map.campaignSend?.attemptNo ?? 0,
+      trigger: map.campaignSend?.trigger ?? "MANUAL",
+      outcome,
+      at: map.waMessage.createdAt,
+      errorCode: map.waMessage.errorCode,
+    };
+  });
+
+  const latest = attempts.at(-1) ?? null;
+  const readAt = maps
+    .map((map) => readStats(map.waMessage.stats).read)
+    .filter((value): value is string => Boolean(value))
+    .at(-1);
+
+  return {
+    attempts,
+    attemptCount: attempts.length,
+    lastAttemptAt: latest?.at ?? null,
+    // The most recent failure's reason, not the first: an earlier attempt's
+    // error is history once a later one has been made.
+    failureCode: latest?.outcome === "FAILED" ? (latest.errorCode ?? null) : null,
+    failureMessage:
+      latest?.outcome === "FAILED" ? (maps.at(-1)?.waMessage.errorMessage ?? null) : null,
+    readAt: readAt ?? null,
+  };
+}
+
 export async function getCampaignParticipantsByCampaignIdPaginated(
   campaignId: string,
   orgId: string,
@@ -298,10 +381,33 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
   const orderBy = { [sort]: desc };
   const contactSelect = {
     select: {
+      id: true,
       name: true,
       phone: true,
       consent: true,
     },
+  } as const;
+
+  /**
+   * Every message this participant has been sent, with the attempt it belonged
+   * to. The participants table shows one chip per attempt, so a recipient who
+   * failed on the initial send and landed on retry 1 reads as exactly that
+   * rather than as a single "SENT".
+   */
+  const messagesInclude = {
+    select: {
+      campaignSend: { select: { attemptNo: true, trigger: true } },
+      waMessage: {
+        select: {
+          createdAt: true,
+          errorCode: true,
+          errorMessage: true,
+          stats: true,
+          messageId: true,
+        },
+      },
+    },
+    orderBy: { campaignSend: { attemptNo: "asc" } },
   } as const;
 
   // The include shape — and the resulting `.map()` — is branched (rather than a single
@@ -315,6 +421,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
             where,
             include: {
               contact: contactSelect,
+              WaMessageCampaginParticipantMap: messagesInclude,
               CampaignParticipantDripStage: {
                 where: {
                   dripStageId: selectedDripStage,
@@ -329,6 +436,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
           const dripStage = campaignParticipant.CampaignParticipantDripStage[0];
           return {
             ...campaignParticipant,
+            ...summariseAttempts(campaignParticipant.WaMessageCampaginParticipantMap),
             status: dripStage?.status ?? campaignParticipant.status,
             dripStageId: dripStage?.dripStageId ?? null,
             sentAt: dripStage?.sentAt ?? campaignParticipant.sentAt,
@@ -340,6 +448,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
             where,
             include: {
               contact: contactSelect,
+              WaMessageCampaginParticipantMap: messagesInclude,
             },
             skip,
             take,
@@ -349,6 +458,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
           const dripStageId: string | null = null;
           return {
             ...campaignParticipant,
+            ...summariseAttempts(campaignParticipant.WaMessageCampaginParticipantMap),
             dripStageId,
           };
         });
