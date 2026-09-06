@@ -4,6 +4,7 @@ const leadSource = z.enum([
   "WHATSAPP",
   "INSTAGRAM",
   "MESSENGER",
+  "WEBCHAT",
   "SURVEY",
   "REFERRAL",
   "LOYALTY",

@@ -38,6 +38,49 @@ const leadListInclude = {
   },
 } satisfies Prisma.LeadInclude;
 
+/**
+ * Where a lead came from, in the vocabulary the inbox already uses.
+ *
+ * Every inbound message carries a `sourcePlatform: PlatformType`, and
+ * `handleWaMessages` stamps it onto the contact as `Contact.source` — lowercased,
+ * except WEBCHAT which it writes in caps. So the inbox’s own five platforms reach
+ * this table as "whatsapp", "instagram", "facebook", "WEBCHAT" and "internal".
+ *
+ * The column is plain text, though, and the inbox is not its only writer: the CSV
+ * importer, the loyalty program and the survey flow each stamp their own wording
+ * ("CSV IMPORT", "loyalty_program", "REF"), as does anything typed into the
+ * contact form. That is why contact.service.ts has to filter it
+ * case-insensitively, and why every value is normalised before use here.
+ */
+const CONTACT_SOURCE: Readonly<Record<string, LeadSource>> = {
+  // The five the inbox writes. FACEBOOK is Messenger, which is what the board
+  // calls it; INTERNAL is a message the org sent itself, so no outside origin.
+  whatsapp: "WHATSAPP",
+  instagram: "INSTAGRAM",
+  facebook: "MESSENGER",
+  webchat: "WEBCHAT",
+  internal: "MANUAL",
+  // Wording other writers, and the contact form, use for the same things.
+  messenger: "MESSENGER",
+  web_chat: "WEBCHAT",
+  survey: "SURVEY",
+  referral: "REFERRAL",
+  ref: "REFERRAL",
+  loyalty: "LOYALTY",
+  loyalty_program: "LOYALTY",
+  manual: "MANUAL",
+};
+
+function contactSourceToLeadSource(raw: string | null | undefined): LeadSource | null {
+  if (!raw) return null;
+  const key = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return CONTACT_SOURCE[key] ?? null;
+}
+
 type RawLead = Prisma.LeadGetPayload<{ include: typeof leadListInclude }>;
 
 /** Flattens the join rows and lifts the single open task to `nextTask`. */
@@ -151,6 +194,22 @@ export async function createLead(
     select: { status: true },
   });
 
+  // A lead opened against a contact takes that contact’s source. Every caller but
+  // the WhatsApp auto-reply hardcodes MANUAL, so the board used to record nothing
+  // about where a lead came from.
+  //
+  // A contact whose source is missing or unrecognised falls back to the caller’s
+  // own value, which the schema defaults to MANUAL. So an unknown origin still
+  // lands on MANUAL, while the auto-reply — which knows the platform first-hand —
+  // keeps the value it passed.
+  const contact = data.contactId
+    ? await prisma.contact.findUnique({
+        where: { id: data.contactId },
+        select: { source: true },
+      })
+    : null;
+  const source = contactSourceToLeadSource(contact?.source) ?? data.source;
+
   const created = await prisma.$transaction(async (tx) => {
     const lead = await tx.lead.create({
       data: {
@@ -160,7 +219,7 @@ export async function createLead(
         company: data.company,
         phone: data.phone,
         email: data.email,
-        source: data.source,
+        source,
         channel: data.channel,
         teamId: data.teamId ?? null,
         contactId: data.contactId ?? null,
@@ -187,7 +246,7 @@ export async function createLead(
         leadId: lead.id,
         userId: data.userId,
         type: "CREATED",
-        details: { sourceLabel: data.source, ...(data.automated && { automated: true }) },
+        details: { sourceLabel: source, ...(data.automated && { automated: true }) },
       },
     });
 
