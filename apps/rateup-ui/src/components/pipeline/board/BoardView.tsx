@@ -2,12 +2,11 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { IconAlertTriangle, IconCircleX, IconPlus, IconTrophy } from "@tabler/icons-react";
+import { IconAlertTriangle, IconPlus } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Lead, PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { STATUS_BAND } from "../pipeline.constants.tsx";
@@ -83,57 +82,44 @@ function StageColumn({
     <div
       ref={ref}
       className={cn(
-        "bg-muted/50 flex h-full min-h-0 w-[78vw] max-w-68.5 shrink-0 snap-start flex-col rounded-xl border transition-colors sm:w-68.5",
-        isOver
-          ? "border-primary bg-primary/5"
-          : // A closing column reads as the end of the funnel rather than one
-            // more step along it.
-            stage.status === "WON"
-            ? "border-green-600/40 bg-green-600/5"
-            : stage.status === "LOST"
-              ? "border-border bg-muted"
-              : "border-border",
+        // Every column is the same surface whatever it does to a lead: the band
+        // overhead already says which of them close one, and tinting the column
+        // as well made Won and Lost read as a different kind of thing to drag
+        // onto rather than one more step along.
+        "bg-muted flex h-full min-h-0 w-[78vw] max-w-68.5 shrink-0 snap-start flex-col rounded-xl border transition-colors sm:w-68.5",
+        isOver ? "border-primary bg-primary/5" : "border-border",
       )}
     >
-      <div className="border-border border-b p-3">
-        <div className="flex items-center gap-2">
-          {stage.status === "WON" ? (
-            <IconTrophy
-              className="size-3.5 shrink-0 text-green-700 dark:text-green-500"
-              title={t("Leads dropped here are marked won")}
-            />
-          ) : null}
-          {stage.status === "LOST" ? (
-            <IconCircleX
-              className="text-muted-foreground size-3.5 shrink-0"
-              title={t("Leads dropped here are marked lost")}
-            />
-          ) : null}
-          <span className="font-nunito text-foreground min-w-0 flex-1 truncate text-[13px] font-extrabold">
+      <div className="border-border border-b px-3.25 pt-3 pb-2.5">
+        <div className="flex items-center gap-1.75">
+          <span className="font-nunito text-foreground min-w-0 flex-1 truncate text-sm font-semibold">
             {stage.name}
           </span>
-          <span className="bg-background text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-bold">
+          <span className="border-border text-muted-foreground rounded-full border px-1.75 text-[11.5px] font-medium">
             {leads.length}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-6"
-            onClick={() => onQuickAdd(stage.id)}
-            aria-label={t("Add lead to {stage}", { stage: stage.name })}
-          >
-            <IconPlus className="size-3.5" />
-          </Button>
+          {/* Only an open column takes a new lead: dropping one straight onto
+              Won or Lost is a close, which the close dialog handles instead. */}
+          {stage.status === "OPEN" ? (
+            <button
+              type="button"
+              onClick={() => onQuickAdd(stage.id)}
+              aria-label={t("Add lead to {stage}", { stage: stage.name })}
+              className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+            >
+              <IconPlus className="size-3.75" />
+            </button>
+          ) : null}
         </div>
 
-        <div className="mt-1.5 flex items-center gap-2.5 text-[11px]">
-          <span className="text-primary font-bold">
-            {t("{percent}% likely", { percent: stage.probability })}
-          </span>
-          <span className="bg-border h-2.5 w-px" />
-          <span className="text-muted-foreground">{t("{days}d avg", { days: averageAge })}</span>
+        <div className="mt-1.75 flex items-center gap-2.5 text-[11px]">
+          {stage.status === "OPEN" ? (
+            <span className="text-muted-foreground">
+              {t("{days}d avg in stage", { days: averageAge })}
+            </span>
+          ) : null}
           {rottingCount > 0 ? (
-            <span className="text-destructive ml-auto inline-flex items-center gap-1 font-bold">
+            <span className="text-destructive ml-auto inline-flex items-center gap-1 font-semibold">
               <IconAlertTriangle className="size-3" />
               {rottingCount}
             </span>
@@ -142,7 +128,7 @@ function StageColumn({
 
         <StageFill
           percent={widestCount ? Math.round((leads.length / widestCount) * 100) : 0}
-          fillClassName="bg-green-600 dark:bg-green-500"
+          color={stage.color}
         />
       </div>
 
@@ -155,19 +141,18 @@ function StageColumn({
           its end. It also stops the wheel chaining out to the board, but that is
           not what horizontal scrolling relies on — dropping it does not make the
           board scroll, so it stays. `useHorizontalWheelScroll` does that job. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain p-2.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-2.25 overflow-y-auto overscroll-contain p-2.5">
         {leads.map((lead) => (
           <LeadCard
             key={lead.id}
             lead={lead}
             rottingEnabled={rottingEnabled}
-            stageColor={stage.color}
             onOpen={onOpenLead}
             onOpenConversation={onOpenConversation}
           />
         ))}
         {leads.length === 0 ? (
-          <div className="border-border text-muted-foreground rounded-xl border border-dashed p-5 text-center text-[11px]">
+          <div className="border-border text-muted-foreground rounded-xl border-[1.5px] border-dashed px-3 py-4.5 text-center text-xs">
             {t("Drop a lead here")}
           </div>
         ) : null}
@@ -240,9 +225,10 @@ export function BoardView({
       ref={scrollRef}
       className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden p-4 sm:snap-none sm:p-6"
     >
-      <div className="flex h-full items-stretch gap-4 sm:gap-6">
+      <div className="flex h-full items-stretch gap-4 sm:gap-6.5">
         {bands.map((band) => {
           const bandStyle = STATUS_BAND[band.status];
+          const BandIcon = bandStyle.icon;
           const bandCount = band.stages.reduce(
             (total, stage) => total + leadsInStage(visibleLeads, stage.id).length,
             0,
@@ -252,14 +238,15 @@ export function BoardView({
             <div key={band.key} className="flex h-full min-h-0 flex-col gap-2.5">
               <div
                 className={cn(
-                  "flex items-center gap-2 rounded-full border border-dashed px-3 py-1.5",
+                  "flex items-center gap-2 rounded-full border px-3 py-1.75",
                   bandStyle.border,
                   bandStyle.surface,
                 )}
               >
+                <BandIcon className={cn("size-3.5 shrink-0", bandStyle.text)} />
                 <span
                   className={cn(
-                    "text-[11px] font-extrabold tracking-[0.06em] uppercase",
+                    "text-[11px] font-semibold tracking-[0.06em] uppercase",
                     bandStyle.text,
                   )}
                 >
@@ -274,7 +261,7 @@ export function BoardView({
                 </span>
               </div>
 
-              <div className="flex min-h-0 flex-1 items-stretch gap-3 sm:gap-3">
+              <div className="flex min-h-0 flex-1 items-stretch gap-3.25">
                 {band.stages.map((stage) => (
                   <StageColumn
                     key={stage.id}

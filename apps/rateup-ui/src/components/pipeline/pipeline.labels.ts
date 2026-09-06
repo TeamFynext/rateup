@@ -29,6 +29,8 @@ export function sourceLabel(t: TFunction, source: LeadSource): string {
       return t("Instagram DM");
     case "MESSENGER":
       return t("Messenger");
+    case "WEBCHAT":
+      return t("Web chat");
     case "SURVEY":
       return t("Web survey");
     case "REFERRAL":

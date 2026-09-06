@@ -5,6 +5,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconChevronUp,
+  IconCircleX,
   IconHash,
   IconLink,
   IconMessageCircle,
@@ -12,14 +13,17 @@ import {
   IconPencil,
   IconPhone,
   IconPlus,
+  IconRosetteDiscountCheck,
+  IconSeeding,
   IconShieldExclamation,
   IconShieldOff,
   IconTicket,
+  IconTrash,
   IconUser,
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
@@ -35,6 +39,7 @@ import {
   usePipelinesQuery,
   useSetContactStageMutation,
 } from "@/backend/pipeline/pipeline.query.tsx";
+import type { StageStatus } from "@/backend/pipeline/pipeline.types.ts";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import {
@@ -117,6 +122,18 @@ const CHANNELS: Record<string, { label: string; color: string; icon: typeof Icon
   },
 };
 
+/**
+ * The lead-stage picker marks a column by what its band means — still open, won,
+ * or lost — rather than by the column itself, since stage names are org-authored
+ * and there is no per-stage icon to read. The column's own colour, which the org
+ * does choose, paints the marker and the label.
+ */
+const STAGE_STATUS_ICON: Record<StageStatus, typeof IconSeeding> = {
+  OPEN: IconSeeding,
+  WON: IconRosetteDiscountCheck,
+  LOST: IconCircleX,
+};
+
 /** Shared section shell — 18px padding plus the design's hairline divider. */
 function Section({
   label,
@@ -182,6 +199,8 @@ export default function TicketPanel({
   const setStage = useSetContactStageMutation(contact?.id);
   const clearStage = useClearContactStageMutation(contact?.id);
   const [clearOpen, setClearOpen] = useState(false);
+  const [stagePickerOpen, setStagePickerOpen] = useState(false);
+  const stagePickerRef = useRef<HTMLDivElement>(null);
   const { data: allLabels = [] } = useContactLabels();
   const { data: allTags = [] } = useConversationTags();
   const { data: teamRes } = useTeamsByUser();
@@ -203,12 +222,31 @@ export default function TicketPanel({
   const [subjectDraft, setSubjectDraft] = useState("");
   const [descriptionDraft, setDescriptionDraft] = useState("");
 
+  // The stage picker is an inline dropdown rather than a portalled popover, to
+  // match the rest of the panel, so dismissing it is ours to wire.
+  useEffect(() => {
+    if (!stagePickerOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!stagePickerRef.current?.contains(event.target as Node)) setStagePickerOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setStagePickerOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [stagePickerOpen]);
+
   // Every editor closes when the selected ticket changes.
   useEffect(() => {
     setEditingName(false);
     setEditingTicket(false);
     setLabelPickerOpen(false);
     setTagPickerOpen(false);
+    setStagePickerOpen(false);
     setAssignExpanded(false);
     setCopied(false);
   }, [contact?.conversationId, contact?.id]);
@@ -221,6 +259,10 @@ export default function TicketPanel({
     contact?.assignedUsers ?? [];
   const primaryAssignee = assignedUsers[0];
   const teamName = teams.find((team) => team.id === primaryAssignee?.teamId)?.name;
+  // A stage id with no matching column means the board changed under us; the
+  // trigger then reads as "not on the board" until the stage query catches up.
+  const activeStage = board?.stages.find((stage) => stage.id === contactStage?.stageId) ?? null;
+  const ActiveStageIcon = STAGE_STATUS_ICON[activeStage?.status ?? "OPEN"];
   const platform = getContactPlatform(contact);
   const channel = CHANNELS[platform] ?? CHANNELS[MessagePlatform.WHATSAPP];
   const ChannelIcon = channel.icon;
@@ -240,16 +282,13 @@ export default function TicketPanel({
   };
 
   /**
-   * Clicking a column moves the contact's lead there, opening one if it has
-   * none. Clicking the column it is already on is the clear gesture — the same
-   * shape the lifecycle chips had — but that deletes the lead, so it asks first.
+   * Picking a column moves the contact's lead there, opening one if it has none.
+   * Picking the column it is already on just closes the picker — taking the lead
+   * off the board deletes it, so that lives on its own row and asks first.
    */
   const handleStageClick = (stageId: string) => {
-    if (!contact?.id) return;
-    if (contactStage?.stageId === stageId) {
-      setClearOpen(true);
-      return;
-    }
+    setStagePickerOpen(false);
+    if (!contact?.id || contactStage?.stageId === stageId) return;
     // The conversation list's chip is patched by the mutation itself, which the
     // board's own move goes through too — one place, so the two directions
     // cannot drift apart.
@@ -546,50 +585,109 @@ export default function TicketPanel({
         )}
       </Section>
 
-      {/* ---- Pipeline Stage ----
-           Was the lifecycle chips. Same shape and same one-click gesture, but it
-           moves the contact's lead on the board rather than writing a field. */}
+      {/* ---- Lead Stage ----
+           A single compact row rather than the chip grid it replaces: the panel
+           is a narrow column and a board can carry a dozen columns, which the
+           grid grew to fill. The trigger reads as the current stage in that
+           stage's own colour, and the picker under it is the whole board. */}
       {canSeePipeline && !!board?.stages.length && (
-        <Section label={t("Pipeline Stage")}>
-          <div className="grid grid-cols-2 gap-2">
-            {board.stages.map((stage) => {
-              const active = contactStage?.stageId === stage.id;
-              return (
-                <button
-                  key={stage.id}
-                  type="button"
-                  onClick={() => handleStageClick(stage.id)}
-                  disabled={setStage.isPending || clearStage.isPending}
-                  title={active ? t("Click again to remove from the board") : stage.name}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-full cursor-pointer min-w-0 border-[1.5px]",
-                    active ? "border-primary bg-primary/10" : "border-border",
-                  )}
-                >
-                  {/* The column's own colour stands in for the lifecycle emoji;
-                      a stage with none falls back to the brand accent. */}
+        <div className="border-b border-border px-4.5 py-2.75">
+          <div className="flex items-center gap-2.5">
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              {t("Lead stage")}
+            </span>
+
+            <div ref={stagePickerRef} className="relative flex-1 min-w-0">
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={stagePickerOpen}
+                onClick={() => setStagePickerOpen((open) => !open)}
+                disabled={setStage.isPending || clearStage.isPending}
+                className="flex w-full items-center justify-between gap-1.5 rounded-[7px] border border-border bg-background px-2 py-1.25 cursor-pointer"
+              >
+                {activeStage ? (
                   <span
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: stage.color ?? "var(--color-primary)" }}
-                  />
-                  <span
-                    className={cn(
-                      "text-[12px] font-bold truncate",
-                      active ? "text-primary" : "text-foreground",
-                    )}
+                    className="inline-flex items-center gap-1.5 min-w-0"
+                    style={{ color: activeStage.color ?? "var(--color-primary)" }}
                   >
-                    {stage.name}
+                    <ActiveStageIcon className="size-3.25 shrink-0" />
+                    <span className="truncate text-[11.5px] font-bold">{activeStage.name}</span>
                   </span>
-                </button>
-              );
-            })}
+                ) : (
+                  <span className="truncate text-[11.5px] font-bold text-muted-foreground">
+                    {t("Not on the board")}
+                  </span>
+                )}
+                <IconChevronDown className="size-3.25 shrink-0 text-muted-foreground" />
+              </button>
+
+              {stagePickerOpen && (
+                <div
+                  role="listbox"
+                  className="absolute top-[calc(100%+4px)] left-0 right-0 z-40 max-h-64 overflow-y-auto overscroll-contain rounded-[9px] border border-border bg-background p-1 shadow-md"
+                >
+                  {board.stages.map((stage) => {
+                    const active = contactStage?.stageId === stage.id;
+                    const color = stage.color ?? "var(--color-primary)";
+                    const StageIcon = STAGE_STATUS_ICON[stage.status];
+                    return (
+                      <button
+                        key={stage.id}
+                        type="button"
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => handleStageClick(stage.id)}
+                        className="flex w-full items-center gap-1.75 rounded-md px-2 py-1.5 cursor-pointer hover:bg-muted"
+                        style={
+                          active
+                            ? { backgroundColor: `color-mix(in oklab, ${color} 12%, transparent)` }
+                            : undefined
+                        }
+                      >
+                        <StageIcon
+                          className="size-3.25 shrink-0"
+                          style={{ color: active ? color : "var(--color-muted-foreground)" }}
+                        />
+                        <span
+                          className={cn(
+                            "flex-1 truncate text-left text-[12px]",
+                            active ? "font-bold" : "font-semibold",
+                          )}
+                          style={{ color: active ? color : undefined }}
+                        >
+                          {stage.name}
+                        </span>
+                        {active && <IconCheck className="size-3.25 shrink-0 text-primary" />}
+                      </button>
+                    );
+                  })}
+
+                  {/* Taking the lead off the board is not a stage, and it deletes
+                      the lead, so it sits apart from the columns and confirms. */}
+                  {contactStage?.stageId && (
+                    <>
+                      <div className="my-1 h-px bg-border" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStagePickerOpen(false);
+                          setClearOpen(true);
+                        }}
+                        className="flex w-full items-center gap-1.75 rounded-md px-2 py-1.5 cursor-pointer text-destructive hover:bg-destructive/10"
+                      >
+                        <IconTrash className="size-3.25 shrink-0" />
+                        <span className="flex-1 truncate text-left text-[12px] font-semibold">
+                          {t("Remove from the board")}
+                        </span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          {!contactStage?.stageId && (
-            <p className="text-muted-foreground mt-2 text-[11px]">
-              {t("Not on the board. Pick a stage to add them.")}
-            </p>
-          )}
-        </Section>
+        </div>
       )}
 
       {/* ---- Conversation Tags ----

@@ -126,7 +126,7 @@ export function ConversionsApiSection() {
   // is nothing to configure — say so rather than showing a dead switch.
   if (!hasWhatsAppSettings) {
     return (
-      <Card className="flex flex-col gap-4 p-6 bg-muted/20">
+      <Card className="flex flex-col gap-4 p-5 bg-muted/20 shadow-xs">
         <div>
           <h3 className="text-sm font-bold tracking-tight text-foreground">
             {t("Meta Conversions API (CAPI)")}
@@ -140,7 +140,7 @@ export function ConversionsApiSection() {
   }
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-5 shadow-xs">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold tracking-tight text-foreground">

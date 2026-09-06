@@ -251,7 +251,7 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
               />
             </div>
             {/* Matches the table's Stage column, which swaps on the same test:
-                filtering by lifecycle while reading a Pipeline Stage column was
+                filtering by lifecycle while reading a Lead stage column was
                 the same screen speaking two vocabularies. Keyed on the board
                 existing rather than on the feature flag, because `StageSelector`
                 renders nothing without columns — a team with the feature but no
@@ -336,7 +336,7 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
               }
             >
               <IconActivity />
-              <span>{hasPipeline ? t("Update Pipeline Stage") : t("Update Lifecycle Stage")}</span>
+              <span>{hasPipeline ? t("Update lead stage") : t("Update Lifecycle Stage")}</span>
             </Button>
             <Button variant="outline" className="hover:text-red-500" onClick={handleDeleteContacts}>
               <IconTrash />

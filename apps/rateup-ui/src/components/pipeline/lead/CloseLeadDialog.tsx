@@ -78,7 +78,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
           <div className="flex items-start gap-3">
             <span
               className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-lg",
+                "flex size-9.5 shrink-0 items-center justify-center rounded-md",
                 isLost
                   ? "bg-muted text-muted-foreground"
                   : "bg-green-600/10 text-green-700 dark:text-green-500",
@@ -87,7 +87,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
               {isLost ? <IconCircleX className="size-5" /> : <IconCircleCheck className="size-5" />}
             </span>
             <div className="min-w-0">
-              <DialogTitle className="font-nunito font-extrabold">
+              <DialogTitle className="font-nunito text-xl leading-tight font-bold tracking-[-0.01em]">
                 {isLost ? t("Mark as lost") : t("Mark as won")}
               </DialogTitle>
               <DialogDescription>
@@ -100,7 +100,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
 
         {isLost ? (
           <div>
-            <div className="text-muted-foreground mb-2 text-[11px] font-extrabold tracking-[0.06em] uppercase">
+            <div className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-[0.06em] uppercase">
               {t("Lost reason")}
             </div>
             {reasons.length === 0 ? (
@@ -119,7 +119,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
                   <label
                     key={reason.id}
                     className={cn(
-                      "flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 text-[13px] font-medium transition-colors",
+                      "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 text-[13.5px] font-medium transition-colors",
                       reasonId === reason.id
                         ? "border-primary bg-primary/5"
                         : "border-border hover:bg-muted",
@@ -135,7 +135,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
         ) : (
           <div className="flex items-center gap-2.5 rounded-lg bg-green-600/10 p-3 text-green-700 dark:text-green-500">
             <IconSparkles className="size-4 shrink-0" />
-            <span className="text-xs font-semibold">
+            <span className="text-xs font-medium">
               {t("The lead moves to the won column and stops counting as open.")}
             </span>
           </div>

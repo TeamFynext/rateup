@@ -29,7 +29,7 @@ export function LeadStageStepper({ lead, pipeline, onMoveStage }: Readonly<LeadS
   const labelled = pipeline.stages.length <= 6;
 
   return (
-    <div className="border-border shrink-0 border-b px-5 py-3.5">
+    <div className="border-border shrink-0 border-b px-6 py-4">
       <div className="flex items-center gap-[3px]">
         {pipeline.stages.map((candidate, index) => (
           <button
@@ -45,7 +45,7 @@ export function LeadStageStepper({ lead, pipeline, onMoveStage }: Readonly<LeadS
               "min-w-0 flex-1 overflow-hidden",
               "first:rounded-l-md last:rounded-r-md",
               "disabled:cursor-default not-disabled:cursor-pointer not-disabled:hover:brightness-95",
-              labelled ? "h-6.5 px-1 text-[10px] font-extrabold" : "h-2.5",
+              labelled ? "h-7 px-1 text-[11.5px] font-semibold" : "h-2.5",
               index === currentIndex && "bg-primary text-primary-foreground",
               index < currentIndex && "bg-primary/15 text-primary",
               index > currentIndex && "bg-muted text-muted-foreground",

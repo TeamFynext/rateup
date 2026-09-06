@@ -3,10 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useSubscription } from "../subscription/subscription.query";
 import { getUsageStats } from "./stats.api";
 
-export const useUsageStats = () =>
+/**
+ * `enabled` is for callers mounted app-wide (the sidebar): this query is
+ * deliberately staleTime:0 and refetches on focus, so it should only run on the
+ * screens that show a usage number. Defaults to on for the billing pages.
+ */
+export const useUsageStats = (enabled = true) =>
   useQuery({
     queryKey: ["stats"],
     queryFn: getUsageStats,
+    enabled,
     // Usage counters change server-side (conversations, messages, resets), so
     // always pull fresh numbers whenever the billing page is (re)visited.
     refetchOnMount: "always",
@@ -21,8 +27,8 @@ export const useUsageStats = () =>
 ///
 /// Reads the METERED counters (self-derived 24h conversation windows), which is what
 /// the server enforces against — not the inbox-ticket counters.
-export const useConversationLimit = () => {
-  const { data: stats } = useUsageStats();
+export const useConversationLimit = (enabled = true) => {
+  const { data: stats } = useUsageStats(enabled);
   const { data: subscription } = useSubscription();
 
   const isAnnual = !!subscription?.isAnnualMessageLimit;
