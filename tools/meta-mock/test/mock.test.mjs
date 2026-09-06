@@ -341,6 +341,38 @@ test("failures stop the progression, and are opt-in", async () => {
   });
 });
 
+test("a read receipt is not a send, so nothing follows it", async () => {
+  await withSink(async (sinkUrl, received) => {
+    await withMock(
+      async (mock) => {
+        const body = await fetch(`${mock.url}/v25.0/12345/messages`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            status: "read",
+            message_id: "wamid.INBOUND",
+          }),
+        }).then((r) => r.json());
+
+        await mock.close();
+
+        assert.deepEqual(body, { success: true });
+        // Not `["sent", "delivered", "read"]` against an empty recipient — and
+        // with a failure rate set, not a phantom `failed` either.
+        assert.deepEqual(statusesOf(received), []);
+      },
+      {
+        webhookUrl: sinkUrl,
+        statusProgression: true,
+        statusDelays: { sent: 0, delivered: 0, read: 0 },
+        failureRate: 1,
+        wabaId: "111",
+      },
+    );
+  });
+});
+
 test("status progression is off unless asked for", async () => {
   await withSink(async (sinkUrl, received) => {
     await withMock(

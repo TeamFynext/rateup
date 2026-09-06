@@ -215,6 +215,15 @@ export function createGraphRoutes({ state, mintId, publicUrl, onMessageSent }) {
       method: "POST",
       match: /^\/(?<phoneId>\d+)\/(?<endpoint>messages|marketing_messages)$/,
       handle: ({ body, params }) => {
+        // A read receipt shares the `/messages` endpoint with a send, but it is
+        // not one: it carries `status: "read"` and the id of an *inbound*
+        // message instead of a `to`. Graph answers `{ success: true }` and
+        // notifies nothing. Treating it as a send mints a wamid nobody asked
+        // for and walks a phantom message through sent → delivered → read (or,
+        // with a failure rate set, → failed) against an empty recipient — a
+        // status storm the app then tries to match to a message it never sent.
+        if (body?.status === "read") return { success: true };
+
         const recipientId = body?.to ?? "";
         const messageId = mintMessageId(recipientId);
 

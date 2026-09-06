@@ -20,7 +20,18 @@
  *     rate you set, defaulting to none.
  */
 
-const DEFAULT_DELAYS = { sent: 0, delivered: 300, read: 600 };
+/**
+ * How long each status waits behind the one before it.
+ *
+ * `sent` is not zero on purpose. The send has been answered by the time the
+ * progression starts, but the caller is still writing the row that records the
+ * message id — and a status for a message id the app has never stored is a
+ * status it can only drop. Real Graph takes at least the network back and forth
+ * to say `sent`; firing it in the same tick as the response is a race no real
+ * integration has to win, and it makes the mock's own statuses the ones most
+ * likely to go missing.
+ */
+const DEFAULT_DELAYS = { sent: 750, delivered: 1500, read: 2500 };
 
 /** Meta's undeliverable error, as it appears on a failed status. */
 const UNDELIVERABLE = {
