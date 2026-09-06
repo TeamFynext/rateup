@@ -3,6 +3,7 @@ import { WaTemplateCategory } from "../../../types/enums.js";
 import { graphApiErrorDetail } from "../../../utils/graphError.js";
 import { log } from "../../../utils/logger.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { getWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
 import { getMetaChannel, type MetaChannelContext, type MetaCredentials } from "./metaChannels.js";
@@ -96,6 +97,9 @@ export function metaErrorMessage(detail: WaGraphApiErrorDetail | undefined): str
   );
 }
 
+/** Waits between attempts to store a message Meta has already accepted. */
+const RECORD_RETRY_DELAYS_MS = [500, 2000, 5000];
+
 export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendResult> {
   const {
     platform,
@@ -136,8 +140,8 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     failed: boolean,
     logs?: WaGraphApiErrorDetail,
   ) => {
-    try {
-      await handleWaMessages(
+    const store = () =>
+      handleWaMessages(
         "send",
         payload,
         recipient,
@@ -155,11 +159,41 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
         logs ?? {},
         campaign,
       );
+
+    let lastError: unknown;
+    try {
+      await store();
+      return;
     } catch (err) {
-      // The send already happened. Losing the record is bad, but reporting a
-      // delivered message as failed is worse.
-      log.error({ err, orgId, platform, messageId }, "Message was sent but could not be stored");
+      lastError = err;
     }
+
+    // The send already happened. Losing the record is bad — for a campaign it
+    // is a participant stuck in PENDING and every delivery receipt for the
+    // message dead-lettered — but reporting a delivered message as failed is
+    // worse, so this never throws. It does try again: at campaign concurrency
+    // one store in thousands fails on something transient, and the receipts are
+    // already on their way. A rejected send has no message id to check against,
+    // so it gets the one attempt — a retry could file the same rejection twice.
+    if (messageId) {
+      for (const delayMs of RECORD_RETRY_DELAYS_MS) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        try {
+          // The first attempt may have written the row and failed afterwards.
+          if (await getWaMessageByMessageId(messageId)) return;
+          await store();
+          log.warn({ orgId, platform, messageId }, "Message stored on retry");
+          return;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+    }
+
+    log.error(
+      { err: lastError, orgId, platform, messageId },
+      "Message was sent but could not be stored",
+    );
   };
 
   try {

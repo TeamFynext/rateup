@@ -19,7 +19,6 @@ import {
 } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
-  linkWaMessageToCampaignParticipant,
   assignWaMessageToUser,
   clearMentionsForConversation,
   reopenConversation,
@@ -315,18 +314,19 @@ export async function handleWaMessages(
       messageType,
       logs,
       meteredWindow?.conversationId,
+      // Campaign sends carry the participant they belong to, on the same INSERT
+      // as the message. This used to be a second write straight after, and a
+      // `sent` receipt processed in between matched the message, was acked, and
+      // never counted against the campaign — see addNewWaMessage.
+      campaign?.participantId
+        ? {
+            campaignParticipantId: campaign.participantId,
+            campaignParticipantDripStageId: campaign.dripStageId,
+            // todo: revisit
+            // campaignSendId: campaign.campaignSendId,
+          }
+        : undefined,
     );
-
-    // Campaign sends carry the participant they belong to. Written straight
-    // after the message so the pair either both exist or neither does.
-    if (campaign?.participantId) {
-      await linkWaMessageToCampaignParticipant(
-        waMessage.id,
-        campaign.participantId,
-        campaign.dripStageId,
-        campaign.campaignSendId,
-      );
-    }
 
     // A ticket with no subject is titled by the message that opened it — the
     // first message is the best one-line description of what it is about. The

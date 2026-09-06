@@ -964,6 +964,15 @@ function safeParseJSON<T = any>(value: unknown): T | undefined {
   }
 }
 
+/**
+ * `WaMessage.sourceMessage` is the `messageType` handleWaMessages was given, and
+ * campaign sends pass "CAMPAIGN". Compared loosely: the column is free text and
+ * older rows were written by a dispatcher that spelled it in lowercase.
+ */
+function isCampaignMessage(sourceMessage: string | null | undefined): boolean {
+  return String(sourceMessage ?? "").toLowerCase() === "campaign";
+}
+
 export async function bulkUpdateStatuses(
   batch: {
     id: string;
@@ -1051,6 +1060,7 @@ export async function bulkUpdateStatuses(
             wm.stats,
             wm."messageId" AS "externalMessageId",
             wm."sourceIdentifier",
+            wm."sourceMessage",
             wm."meteredConversationId",
             cp.id AS "participantId",
             cp."campaignId",
@@ -1091,6 +1101,7 @@ export async function bulkUpdateStatuses(
       contactPhone?: string;
       contactId?: string;
       sourceIdentifier?: string;
+      sourceMessage?: string | null;
       meteredConversationId?: string | null;
     }
   >();
@@ -1118,6 +1129,7 @@ export async function bulkUpdateStatuses(
         contactPhone: row.contactPhone,
         contactId: row.contactId,
         sourceIdentifier: row.sourceIdentifier,
+        sourceMessage: row.sourceMessage,
         meteredConversationId: row.meteredConversationId,
       });
     }
@@ -1139,6 +1151,20 @@ export async function bulkUpdateStatuses(
     if (!messageInfo) continue;
 
     const { msg, campaignParticipant, contactOrgId, contactPhone, sourceIdentifier } = messageInfo;
+
+    // A campaign message with no participant behind it is one whose link has
+    // not been written yet, not an ad-hoc send. Processing it now would write
+    // the message's own stats and ack the offset while every campaign-side
+    // update below is skipped for want of a campaignId — and the next receipt
+    // finds `sent` already stored, so the counter is never caught up. Leaving it
+    // unacked sends it round the retry loop until the link exists.
+    if (
+      isCampaignMessage(messageInfo.sourceMessage) &&
+      !campaignParticipant.id &&
+      !campaignParticipant.campaignParticipantDripStageId
+    ) {
+      continue;
+    }
 
     // Backfill logical prerequisite statuses
     const { redisData } = agg;
