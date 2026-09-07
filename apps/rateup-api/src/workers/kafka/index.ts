@@ -45,8 +45,10 @@ async function start() {
       // Disconnecting the consumer first lets the in-flight batch finish and
       // commit before the group rebalances onto another replica.
       await Promise.all(
-        consumers.map(async ({ consumer, producer }) => {
+        consumers.map(async ({ consumer, producer, flushRetries }) => {
           await consumer.disconnect();
+          // Receipts waiting out a retry delay live only in this process.
+          await flushRetries();
           await producer.disconnect();
         }),
       );

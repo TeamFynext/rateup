@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const callMetaApi = vi.fn();
 const handleWaMessages = vi.fn();
+const getWaMessageByMessageId = vi.fn();
 const assertWithinConversationLimit = vi.fn();
 const getWaSettings = vi.fn();
 const getWaSettingsByIbaId = vi.fn();
@@ -19,6 +20,7 @@ vi.mock("../wa_axios.js", async () => {
   return { callMetaApi, GraphApiError };
 });
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages }));
+vi.mock("../inbox/message/wamessage.service.js", () => ({ getWaMessageByMessageId }));
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({ assertWithinConversationLimit }));
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
@@ -39,7 +41,24 @@ beforeEach(() => {
   getWaSettingsByIbaId.mockResolvedValue({ pageAccessToken: "ig-token" });
   getWaSettingsByPageId.mockResolvedValue({ pageAccessToken: "fb-token" });
   callMetaApi.mockResolvedValue({ data: { messages: [{ id: "wamid.1" }] } });
+  getWaMessageByMessageId.mockResolvedValue(null);
 });
+
+afterEach(() => {
+  vi.useRealTimers();
+  // `clearAllMocks` keeps implementations, and a persistent rejection left on
+  // the store would send the next test round the real-timer retry path.
+  handleWaMessages.mockReset();
+  getWaMessageByMessageId.mockReset();
+});
+
+/** Run a send whose store retries wait on timers, without waiting for them. */
+const sendThroughRetries = async (over = {}) => {
+  vi.useFakeTimers();
+  const pending = send(over);
+  await vi.runAllTimersAsync();
+  return pending;
+};
 
 const send = (over = {}) =>
   sendMetaMessage({
@@ -144,10 +163,43 @@ describe("sendMetaMessage", () => {
     expect(config).toEqual({ params: { access_token: "q-token" } });
   });
 
-  it("still reports success when the message cannot be stored", async () => {
+  // Meta has the message either way. A record that fails is retried, because at
+  // campaign concurrency one in thousands does — and an unrecorded campaign
+  // message is a participant stuck in PENDING with its receipts dead-lettered.
+  it("stores on retry when the first attempt fails", async () => {
     handleWaMessages.mockRejectedValueOnce(new Error("db down"));
 
-    await expect(send()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    expect(handleWaMessages).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not store twice when the first attempt wrote the row before failing", async () => {
+    handleWaMessages.mockRejectedValueOnce(new Error("failed after insert"));
+    getWaMessageByMessageId.mockResolvedValue({ id: "row-1" });
+
+    await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    expect(handleWaMessages).toHaveBeenCalledTimes(1);
+    expect(getWaMessageByMessageId).toHaveBeenCalledWith("wamid.1");
+  });
+
+  it("still reports success when the message cannot be stored at all", async () => {
+    handleWaMessages.mockRejectedValue(new Error("db down"));
+
+    await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    // The first attempt plus every retry, then it gives up rather than throw.
+    expect(handleWaMessages).toHaveBeenCalledTimes(4);
+  });
+
+  it("records a rejected send once even when the store fails", async () => {
+    callMetaApi.mockRejectedValue(new Error("socket hang up"));
+    handleWaMessages.mockRejectedValue(new Error("db down"));
+
+    const result = await sendThroughRetries();
+
+    expect(result.ok).toBe(false);
+    // No message id to check against, so a retry could file the rejection twice.
+    expect(handleWaMessages).toHaveBeenCalledTimes(1);
+    expect(getWaMessageByMessageId).not.toHaveBeenCalled();
   });
 
   it("carries campaign linkage through to the writer", async () => {
