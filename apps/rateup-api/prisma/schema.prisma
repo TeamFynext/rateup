@@ -3286,7 +3286,6 @@ model Lead {
   tasks      LeadTask[]
   /// A lead can be worked by several people, the same way a ticket card is.
   assignees  LeadAssignee[]
-
   /// One lead per contact per board. Postgres counts NULLs as distinct, so this
   /// leaves contact-less leads — walk-ins, manual board entries — unconstrained
   /// while closing the race in `setContactStage`, where two concurrent syncs
@@ -3294,6 +3293,12 @@ model Lead {
   @@unique([contactId, pipelineId], name: "contact_pipeline_unique")
   @@index([pipelineId, status])
   @@index([stageId])
+  /// Column paging: one stage, newest arrival first, keyset on (stageEnteredAt, id).
+  @@index([stageId, stageEnteredAt(sort: Desc), id(sort: Desc)])
+  /// Ungrouped list paging across the whole board.
+  @@index([pipelineId, stageEnteredAt(sort: Desc), id(sort: Desc)])
+  /// Rotting counts compare lastActivityAt against each stage's window.
+  @@index([pipelineId, lastActivityAt])
 }
 
 model LeadAssignee {

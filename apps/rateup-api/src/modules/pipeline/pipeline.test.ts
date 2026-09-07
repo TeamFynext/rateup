@@ -6,6 +6,7 @@ vi.mock("../../utils/prisma.js", () => ({
       count: vi.fn(),
       create: vi.fn(),
       findFirst: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -41,6 +42,7 @@ vi.mock("../../utils/prisma.js", () => ({
     teamMember: { findMany: vi.fn() },
     team: { findMany: vi.fn(), updateMany: vi.fn() },
     $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
   },
 }));
 
@@ -93,6 +95,8 @@ import { deleteStage, StageNotEmptyError } from "./pipelineStage/stage.service.j
 import {
   clearContactStage,
   closeLead,
+  listLeads,
+  BadCursorError,
   countContactStageLoss,
   createLead,
   moveLead,
@@ -1343,5 +1347,103 @@ describe("resolving which board a contact's stage lives on", () => {
     db.pipeline.findFirst.mockResolvedValue(null);
 
     expect(await resolvePipelineForContact(ORG)).toBeNull();
+  });
+});
+
+describe("paging one board column", () => {
+  const query = { pipelineId: PIPELINE, limit: 2, filter: "open" } as const;
+
+  // Real ids, because the cursor validates them as UUIDs before it will page.
+  const ID: Record<string, string> = {
+    a: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    b: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    c: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+  };
+
+  function rows(...keys: string[]) {
+    return keys.map((key, index) => ({
+      id: ID[key],
+      stageEnteredAt: new Date(`2026-09-0${index + 1}T00:00:00.000Z`),
+    }));
+  }
+
+  /** The hydrate step, deliberately answering in a different order. */
+  function hydrated(...keys: string[]) {
+    return keys.map((key) => ({
+      id: ID[key],
+      labels: [],
+      tasks: [],
+      assignees: [],
+      stageId: STAGE,
+    }));
+  }
+
+  beforeEach(() => {
+    db.pipeline.findUniqueOrThrow.mockResolvedValue({ rottingEnabled: true });
+  });
+
+  test("returns the page in the order the keyset produced", async () => {
+    // `findMany` does not honour the order of an `in`, so a page that comes
+    // back shuffled has to be put back into the column's order.
+    db.$queryRaw.mockResolvedValue(rows("a", "b"));
+    db.lead.findMany.mockResolvedValue(hydrated("b", "a"));
+
+    const page = await listLeads({ ...query }, USER);
+
+    expect(page.items.map((lead: any) => lead.id)).toEqual([ID.a, ID.b]);
+  });
+
+  test("offers a cursor only when a row past the page came back", async () => {
+    // The query asks for `limit + 1`; the extra row is the whole signal.
+    db.$queryRaw.mockResolvedValue(rows("a", "b", "c"));
+    db.lead.findMany.mockResolvedValue(hydrated("a", "b"));
+
+    const page = await listLeads({ ...query }, USER);
+
+    expect(page.items).toHaveLength(2);
+    expect(page.nextCursor).toBeTypeOf("string");
+  });
+
+  test("ends the column when the page is not full", async () => {
+    db.$queryRaw.mockResolvedValue(rows("a", "b"));
+    db.lead.findMany.mockResolvedValue(hydrated("a", "b"));
+
+    expect((await listLeads({ ...query }, USER)).nextCursor).toBeNull();
+  });
+
+  test("an empty column asks for nothing and offers no cursor", async () => {
+    db.$queryRaw.mockResolvedValue([]);
+
+    const page = await listLeads({ ...query }, USER);
+
+    expect(page).toEqual({ items: [], nextCursor: null });
+    expect(db.lead.findMany).not.toHaveBeenCalled();
+  });
+
+  test("drops a lead deleted between the two statements", async () => {
+    // The ids were read one statement ago; a row that has since gone simply
+    // falls out of the page rather than crashing it.
+    db.$queryRaw.mockResolvedValue(rows("a", "b"));
+    db.lead.findMany.mockResolvedValue(hydrated("a"));
+
+    expect((await listLeads({ ...query }, USER)).items).toHaveLength(1);
+  });
+
+  test("refuses a cursor it did not mint", async () => {
+    await expect(listLeads({ ...query, cursor: "not-a-cursor" }, USER)).rejects.toBeInstanceOf(
+      BadCursorError,
+    );
+  });
+
+  test("a cursor round trips into the next page", async () => {
+    db.$queryRaw.mockResolvedValue(rows("a", "b", "c"));
+    db.lead.findMany.mockResolvedValue(hydrated("a", "b"));
+    const first = await listLeads({ ...query }, USER);
+
+    db.$queryRaw.mockResolvedValue(rows("c"));
+    db.lead.findMany.mockResolvedValue(hydrated("c"));
+    const second = await listLeads({ ...query, cursor: first.nextCursor! }, USER);
+
+    expect(second.items.map((lead: any) => lead.id)).toEqual([ID.c]);
   });
 });
