@@ -1,12 +1,9 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
 import { CookieConsent } from "../ui/cookie-consent.tsx";
-import { BOOK_DEMO_ROUTE } from "./helper/BookDemoLink";
-import LikeWhatUSee from "./helpers/LikeWhatUSee";
 import HomePageFooter from "./shared/HomePageFooter";
 import RateupNavbar from "./shared/RateupNavbar";
 
@@ -24,6 +21,10 @@ const RATEUP_ICEBREAKERS = [
   "What does it cost?",
   "Can I book a demo?",
 ];
+
+/* The support panel opens itself shortly after the page settles, so a prospect is offered a
+   conversation without having to find the launcher. The widget only does this once a session. */
+const SUPPORT_AUTO_OPEN_MS = 5000;
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -49,17 +50,6 @@ export default function Layout({
   navbar,
   subheader,
 }: Readonly<LayoutProps>) {
-  const [likeWhatOpen, setLikeWhatOpen] = useState(false);
-  const [shouldShowLikeWhat, setShouldShowLikeWhat] = useState(false);
-  const navigate = useNavigate();
-
-  /* `/book-a-demo` IS the lead form, so the lead popup would only re-offer what is already on
-     screen. Read the path off the router so this holds wherever `Layout` is used. */
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
-  const isDemoPage = pathname.replace(/\/+$/, "") === BOOK_DEMO_ROUTE;
-
   // Scroll reveal animation observer
   useEffect(() => {
     const io = new IntersectionObserver(
@@ -77,43 +67,6 @@ export default function Layout({
     document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, [children]);
-
-  // Popup logic
-  useEffect(() => {
-    const hasSeenPopup = globalThis.localStorage.getItem("likeWhatUSeeShown");
-    if (!hasSeenPopup && !isDemoPage) {
-      setShouldShowLikeWhat(true);
-    }
-  }, [isDemoPage]);
-
-  useEffect(() => {
-    if (!shouldShowLikeWhat) return;
-
-    const timer = globalThis.setTimeout(() => {
-      setLikeWhatOpen(true);
-      globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
-    }, 20000);
-
-    return () => globalThis.clearTimeout(timer);
-  }, [shouldShowLikeWhat]);
-
-  const handleLikeWhatOpenChange = (open: boolean) => {
-    if (!open) {
-      globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
-    }
-    setLikeWhatOpen(open);
-  };
-
-  const handleLikeWhatBookDemo = () => {
-    globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
-    setLikeWhatOpen(false);
-    navigate({ to: BOOK_DEMO_ROUTE });
-  };
-
-  const handleLikeWhatWhatsapp = () => {
-    globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
-    setLikeWhatOpen(false);
-  };
 
   return (
     <div className={`relative w-full ${contentClassName} ${navbarClassName}`}>
@@ -138,14 +91,9 @@ export default function Layout({
           orgId={import.meta.env.VITE_ROOT_ORG || ""}
           token={import.meta.env.VITE_ROOT_TOKEN || ""}
           icebreakers={RATEUP_ICEBREAKERS}
+          autoOpenDelayMs={SUPPORT_AUTO_OPEN_MS}
         />
       </Suspense>
-      <LikeWhatUSee
-        open={likeWhatOpen}
-        onOpenChange={handleLikeWhatOpenChange}
-        onBookDemo={handleLikeWhatBookDemo}
-        onWhatsapp={handleLikeWhatWhatsapp}
-      />
       <CookieConsent
         variant="small"
         onAcceptCallback={() => {
