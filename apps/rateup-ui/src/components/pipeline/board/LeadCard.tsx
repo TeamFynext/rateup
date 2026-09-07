@@ -7,7 +7,7 @@ import {
   IconRosetteDiscountCheck,
   IconUsersGroup,
 } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Lead } from "@/backend/pipeline/pipeline.types.ts";
@@ -51,7 +51,7 @@ interface LeadCardProps {
  * whole card instead, which stays readable without focusing on it and — unlike a
  * thicker left border — does not shift the contents sideways when it appears.
  */
-export function LeadCard({
+export const LeadCard = memo(function LeadCard({
   lead,
   rottingEnabled,
   onOpen,
@@ -191,4 +191,4 @@ export function LeadCard({
       </div>
     </div>
   );
-}
+});

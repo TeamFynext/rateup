@@ -6,9 +6,9 @@ import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/c
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useChecklist, useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import {
-  useLeadsQuery,
   usePipelinesQuery,
   usePipelineQuery,
+  usePipelineStatsQuery,
 } from "@/backend/pipeline/pipeline.query.tsx";
 import { useConversationLimit } from "@/backend/stats/stats.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -117,7 +117,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const activePipelineId =
     (typeof search?.p === "string" ? search.p : undefined) ?? pipelines[0]?.id;
   const { data: activePipeline } = usePipelineQuery(isPipeline ? activePipelineId : undefined);
-  const { data: pipelineLeads = [] } = useLeadsQuery(isPipeline ? activePipelineId : undefined);
+  const { data: pipelineStats } = usePipelineStatsQuery(isPipeline ? activePipelineId : undefined);
 
   // Gated on the pipeline for the same reason as the leads above: this query
   // refetches on every window focus, and only this panel shows the number.
@@ -132,7 +132,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       t,
       pipelines,
       pipeline: activePipeline,
-      leads: pipelineLeads,
+      stats: pipelineStats,
       view: pipelineView,
       activePipelineId,
       currentUserId: resolvedUserData?.userId,
@@ -144,7 +144,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       t,
       pipelines,
       activePipeline,
-      pipelineLeads,
+      pipelineStats,
       pipelineView,
       activePipelineId,
       resolvedUserData?.userId,

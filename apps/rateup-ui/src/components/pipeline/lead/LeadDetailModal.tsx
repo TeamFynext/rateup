@@ -229,7 +229,7 @@ interface LeadDetailModalProps {
   onClose: () => void;
   onMarkWon: (lead: Lead) => void;
   onMarkLost: (lead: Lead) => void;
-  onMoveStage: (leadId: string, stage: PipelineStage) => void;
+  onMoveStage: (leadId: string, fromStageId: string, stage: PipelineStage) => void;
   onOpenConversation: (lead: Lead) => void;
 }
 
@@ -386,7 +386,7 @@ export function LeadDetailModal({
               <LeadStageStepper
                 lead={lead}
                 pipeline={pipeline}
-                onMoveStage={(stage) => onMoveStage(lead.id, stage)}
+                onMoveStage={(stage) => onMoveStage(lead.id, lead.stageId, stage)}
               />
             ) : null}
 

@@ -56,6 +56,61 @@ export const useContacts = (
   });
 };
 
+/** Digits only, so "+91 90000 00000" and "919000000000" compare equal. */
+const digitsOf = (phone: string) => phone.replace(/\D/g, "");
+
+const PHONE_MATCH_PAGE: PaginationState = { pageIndex: 0, pageSize: 20 };
+
+/**
+ * Finds the contact already holding a phone number, so a caller can offer to
+ * link to it rather than strand a record beside it.
+ *
+ * There is no exact-match-by-phone endpoint, so this leans on the list search,
+ * which is a case-insensitive `contains` over name and phone. Two consequences
+ * shape the implementation:
+ *
+ *  - Search on the *national* digits, not the full E.164 string. Numbers are
+ *    stored however they arrived — the WhatsApp webhook writes a wa_id with the
+ *    country code, older CSV imports often have neither code nor punctuation.
+ *    The national part is the substring common to both.
+ *  - Re-check every candidate here, because `contains` also matches longer
+ *    numbers that merely end the same way, and the search ORs in name matches.
+ */
+export const useContactByPhone = (phone: string | null) => {
+  const national = phone ? digitsOf(phone).slice(-10) : "";
+  const enabled = national.length >= 7;
+  const filters: ColumnFilterState[] = [];
+
+  const query = useQuery({
+    enabled,
+    queryKey: contactKeys.list(
+      PHONE_MATCH_PAGE,
+      national,
+      CONTACT_SORT,
+      filters,
+      ContactGroupType.NORMAL,
+    ),
+    queryFn: () =>
+      getContactsList(PHONE_MATCH_PAGE, national, CONTACT_SORT, filters, ContactGroupType.NORMAL),
+  });
+
+  const wanted = phone ? digitsOf(phone) : "";
+  const match =
+    enabled && wanted
+      ? (query.data?.users ?? []).find((candidate) => {
+          const stored = digitsOf(candidate.phone ?? "");
+          // Too-short stored numbers (junk imports) would suffix-match almost
+          // anything, so they are never treated as a hit.
+          if (stored.length < 7) return false;
+          // Either side may carry the country code the other omits, so the
+          // shorter number has to be a suffix of the longer one.
+          return stored.endsWith(wanted) || wanted.endsWith(stored);
+        })
+      : undefined;
+
+  return { match: match ?? null, isLoading: enabled && query.isFetching };
+};
+
 export const useContactById = (contactId: string) =>
   useQuery({
     enabled: !!contactId,
