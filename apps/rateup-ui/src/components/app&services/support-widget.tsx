@@ -41,6 +41,11 @@ interface SupportWidgetProps {
    * Pass an empty array to draw none.
    */
   icebreakers?: string[];
+  /**
+   * Opens the panel on its own this many milliseconds after the widget mounts. Omit it (the
+   * default) and the panel only ever opens on a tap.
+   */
+  autoOpenDelayMs?: number;
 }
 
 interface Message {
@@ -87,6 +92,10 @@ const ERROR_TEXT = "mt-1 text-[12.5px] text-red-600";
    pushes it back, so someone firing off two or three questions in a row is never cut off
    mid-thought — the card only lands once they have actually paused. */
 const CONTACT_PROMPT_DELAY_MS = 2500;
+
+/* Marks that `autoOpenDelayMs` has had its turn. Session-scoped on purpose: a new visit is
+   worth one opener, the same visit re-reading a third page is not. */
+const AUTO_OPENED_KEY = "support_widget_auto_opened";
 
 /* The launcher's face. Served from the web-images distribution like every other `/images/…`
    asset; `VITE_CLOUDFRONT_WEB_IMAGES_URL` is the same base the rest of the app resolves them
@@ -229,6 +238,7 @@ export default function SupportWidget({
   backendUrl,
   webhookUrl,
   icebreakers = DEFAULT_ICEBREAKERS,
+  autoOpenDelayMs,
 }: Readonly<SupportWidgetProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [tab, setTab] = useState<"chat" | "whatsapp" | "email">("chat");
@@ -371,6 +381,20 @@ export default function SupportWidget({
   useEffect(() => {
     if (isOpen) setBotTime((prev) => prev || timeLabel(new Date()));
   }, [isOpen]);
+
+  /* A panel the visitor never asked for wears out its welcome fast, so the auto-open fires
+     once a session: moving on to another page re-mounts the widget, and someone who has
+     already closed it should not have it spring back on every page they read. */
+  useEffect(() => {
+    if (!autoOpenDelayMs || sessionStorage.getItem(AUTO_OPENED_KEY)) return;
+
+    const timer = setTimeout(() => {
+      sessionStorage.setItem(AUTO_OPENED_KEY, "true");
+      setIsOpen(true);
+    }, autoOpenDelayMs);
+
+    return () => clearTimeout(timer);
+  }, [autoOpenDelayMs]);
 
   /* Held back until the visitor stops sending, so the card reads as an answer to the thread
      rather than a form springing out from under the message they just wrote. Each new message
