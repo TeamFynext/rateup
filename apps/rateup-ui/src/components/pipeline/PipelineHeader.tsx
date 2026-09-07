@@ -150,11 +150,10 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
       </div>
 
       <nav
-        className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+        className="-mx-4 flex items-center gap-5.5 overflow-x-auto px-4 sm:mx-0 sm:px-0"
         aria-label={t("Pipeline views")}
       >
         {VIEW_TABS.map((tab) => {
-          const TabIcon = tab.icon;
           const active = view.view === tab.id;
           return (
             <button
@@ -162,14 +161,17 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
               type="button"
               onClick={() => setView({ view: tab.id })}
               aria-current={active ? "page" : undefined}
+              // `-mb-px` drops the 2px marker onto the header’s own hairline so the
+              // two read as one rule, which is why the marker is a border rather
+              // than an absolutely positioned bar: the row scrolls on mobile, and
+              // `overflow-x` would clip anything hanging below the box.
               className={cn(
-                "flex shrink-0 items-center gap-1.5 border-b-2 px-3 pt-2 pb-2.5 text-[13px] transition-colors sm:px-3.5",
+                "-mb-px flex shrink-0 items-center border-b-2 pt-2 pb-3 text-sm font-medium transition-colors",
                 active
-                  ? "border-primary text-primary font-bold"
-                  : "text-muted-foreground hover:text-foreground border-transparent font-medium",
+                  ? "border-primary text-foreground"
+                  : "text-muted-foreground hover:text-foreground border-transparent",
               )}
             >
-              <TabIcon className="size-4" />
               {viewTabLabel(t, tab.id)}
             </button>
           );

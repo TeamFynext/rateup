@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-
-import { ReviewPagePlatform } from "./QuestionReviewPageEditor/index.tsx";
+import { ReviewPagePlatform } from "@/types/enums.ts";
 
 const urlSchema = z.object({
   url: z.string().refine((value) => value === "" || value.startsWith("https://"), {

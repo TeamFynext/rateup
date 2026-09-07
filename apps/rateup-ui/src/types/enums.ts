@@ -698,3 +698,15 @@ export enum SmileyColorType {
   Individual = "Individual",
   Gradient = "Gradient",
 }
+
+/**
+ * Which review site a survey's review page sends promoters to.
+ *
+ * It lives here rather than beside the review-page editor because a route module imported it
+ * from there — and a route module's imports land in the client entry, so every page on the site,
+ * the marketing homepage included, was downloading the 329 KB survey editor to read two strings.
+ */
+export enum ReviewPagePlatform {
+  Google = "Google",
+  Custom = "Custom",
+}

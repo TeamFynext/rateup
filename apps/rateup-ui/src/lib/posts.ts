@@ -1,9 +1,11 @@
 // lib/posts.js - or make a separate file to reuse for other resources
 import GhostContentAPI from "@tryghost/content-api";
 
+import { GHOST_ORIGIN } from "@/utils/constants.ts";
+
 // Create API instance with site credentials
 const api = new GhostContentAPI({
-  url: "https://yellow-roadrunner.pikapod.net",
+  url: GHOST_ORIGIN,
   key: "b459f625f38f60f854d72f834f",
   version: "v6.0",
 });
@@ -83,7 +85,24 @@ export interface Post {
   url: string;
   excerpt: string;
 }
-export async function getPosts(filter?: { tag?: string; author?: string }) {
+/**
+ * The fields the list cards actually render.
+ *
+ * Without this Ghost returns every post's full rendered `html`, all 35 of which were then
+ * dehydrated into `/blog` — a 1 MB HTML document for a page that shows titles and excerpts. The
+ * post body is fetched per post by `getSinglePost`, which is the only place it is rendered.
+ *
+ * `include: tags,authors` still attaches `primary_tag`/`primary_author`, and `excerpt` is
+ * derived by Ghost, so both survive the projection.
+ */
+const LIST_FIELDS =
+  "id,slug,title,feature_image,feature_image_alt,published_at,updated_at,excerpt,custom_excerpt,url";
+
+export async function getPosts(
+  filter?: { tag?: string; author?: string },
+  /** `full` keeps `html` — only the RSS feed needs it. */
+  detail: "list" | "full" = "list",
+) {
   let filterStr: string | undefined;
   if (filter?.tag) {
     filterStr = `tag:${filter.tag}`;
@@ -96,6 +115,7 @@ export async function getPosts(filter?: { tag?: string; author?: string }) {
       limit: 35,
       include: "tags,authors",
       filter: filterStr,
+      ...(detail === "list" ? { fields: LIST_FIELDS } : {}),
     })
     .catch((err: unknown) => {
       console.error(err);

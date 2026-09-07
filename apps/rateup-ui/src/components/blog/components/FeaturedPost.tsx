@@ -23,7 +23,15 @@ export function FeaturedPost({ post }: { post?: Post }) {
       {/* Thumbnail */}
       <div className="relative min-h-[340px] overflow-hidden bg-[#06182F] border-r border-border">
         {post.feature_image ? (
-          <img src={post.feature_image} alt={post.title} className="w-full h-full object-cover" />
+          <img
+            src={post.feature_image}
+            alt={post.title}
+            /* The one image above the fold on /blog, and the LCP candidate — kept eager and
+               marked high priority while every card below it is lazy. */
+            fetchPriority="high"
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="absolute inset-0 bg-[linear-gradient(145deg,#082040_0%,#0C2B54_45%,#071A33_100%)] flex flex-col items-start justify-end p-[22px]">
             {/* Glow */}
@@ -53,6 +61,8 @@ export function FeaturedPost({ post }: { post?: Post }) {
             <img
               src={post.primary_author.profile_image}
               alt={post.primary_author.name}
+              loading="lazy"
+              decoding="async"
               className="w-[34px] h-[34px] rounded-full object-cover"
             />
           ) : (

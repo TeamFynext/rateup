@@ -27,7 +27,7 @@ import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/partner-page/")({
   component: PartnershipPage,
-  head: () => buildPageHead("/contact-us"),
+  head: () => buildPageHead("/partner-page"),
 });
 
 function PartnershipPage() {

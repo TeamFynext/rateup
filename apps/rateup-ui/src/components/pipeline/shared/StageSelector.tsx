@@ -80,7 +80,7 @@ export function StageSelector({
 
   const bands = groupStagesIntoBands(stages);
   const items = [
-    ...(all ? [{ value: "all", label: t("All stages") }] : []),
+    ...(all ? [{ value: "all", label: t("All lead stages") }] : []),
     ...stages.map((stage) => ({ value: stage.id, label: stage.name })),
   ];
 
@@ -92,12 +92,12 @@ export function StageSelector({
       disabled={disabled}
     >
       <SelectTrigger className={className}>
-        <SelectValue placeholder={placeholder ?? t("Select a stage")} />
+        <SelectValue placeholder={placeholder ?? t("Select a lead stage")} />
       </SelectTrigger>
       <SelectContent>
         {all && (
           <>
-            <SelectItem value="all">{t("All stages")}</SelectItem>
+            <SelectItem value="all">{t("All lead stages")}</SelectItem>
             <SelectSeparator />
           </>
         )}

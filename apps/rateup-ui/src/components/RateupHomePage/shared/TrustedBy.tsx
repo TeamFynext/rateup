@@ -42,6 +42,10 @@ export default function TrustedBy() {
                   width={144}
                   height={48}
                   alt=""
+                  /* 28 img tags (14 logos, twice, for the seamless marquee lap). Eager, React 19
+                     emits a preload link for every one of them and they crowd out the hero. */
+                  loading="lazy"
+                  decoding="async"
                   className="h-12 w-auto object-contain opacity-55 grayscale transition-opacity hover:opacity-90"
                 />
               </div>

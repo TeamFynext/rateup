@@ -559,18 +559,18 @@ export const ZohoTriggerList = ({
                 onClick={handleOpenStageMapping}
               >
                 <IconSettings />
-                {t("Configure Pipeline Stage Mapping")}
+                {t("Configure lead stage mapping")}
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Pipeline stage mapping */}
+      {/* Lead stage mapping */}
       <Dialog open={openStageMappingModal} onOpenChange={setOpenStageMappingModal}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t("Pipeline Stage Mapping")}</DialogTitle>
+            <DialogTitle>{t("Lead stage mapping")}</DialogTitle>
 
             <DialogDescription>
               {t(

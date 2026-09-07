@@ -40,13 +40,8 @@ const jsonLd = {
         "Real-time analytics and reporting",
         "CRM and helpdesk integrations",
       ],
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        reviewCount: "412",
-        bestRating: "5",
-        worstRating: "1",
-      },
+      // aggregateRating removed: Google's review-snippet policy requires the reviews to be
+      // visible on the page itself. Re-add it only alongside real, rendered reviews.
       offers: [
         {
           "@type": "Offer",
@@ -80,15 +75,7 @@ const jsonLd = {
 
 export const Route = createFileRoute("/(marketing)/products/omnichannel-inbox/")({
   component: RouteComponent,
-  head: () => ({
-    ...buildPageHead("/products/omnichannel-inbox"),
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(jsonLd),
-      },
-    ],
-  }),
+  head: () => buildPageHead("/products/omnichannel-inbox", { jsonLd }),
 });
 
 function RouteComponent() {

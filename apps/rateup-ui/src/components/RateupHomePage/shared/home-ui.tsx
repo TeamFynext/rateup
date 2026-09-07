@@ -10,7 +10,7 @@ import { WhatsAppMark } from "./channel-marks";
  *
  * The marketing design repeats four things on every band — a WhatsApp glyph, an eyebrow
  * chip, the "Book a Demo" button and the WhatsApp button — so they live here rather than
- * being re-typed nine times. Colour comes from the `ru-*` palette in `globals.css`, which
+ * being re-typed nine times. Colour comes from the `ru-*` palette in `styles/foundation.css`, which
  * is the same ramp the design was drawn against.
  */
 

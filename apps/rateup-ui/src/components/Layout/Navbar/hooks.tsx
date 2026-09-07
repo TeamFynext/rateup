@@ -70,6 +70,7 @@ import {
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import {
   buildPipelineNavItems,
+  buildPipelineNavProgress,
   type PipelineNavInput,
 } from "@/components/pipeline/pipeline.nav.tsx";
 import type { AllowedFeatures } from "@/context/TeamFeaturesContext.tsx";
@@ -745,6 +746,7 @@ export function useNavMain({
               // Views and facets are built next to the pipeline's own
               // derivations so the sidebar counts and the board agree.
               items: buildPipelineNavItems(pipelineNav),
+              progress: buildPipelineNavProgress(pipelineNav),
             },
           ]
         : []),

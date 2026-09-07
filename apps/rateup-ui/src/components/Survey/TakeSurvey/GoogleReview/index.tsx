@@ -7,13 +7,13 @@ import { useDeleteReviewSuggestionMutation } from "@/backend/team/reviewSuggesti
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { ReviewPagePlatform } from "@/types/enums.ts";
 import type { ReviewSuggestion } from "@/types/global";
 import { shuffleArray } from "@/utils/index.ts";
 
 import { GoogleIcon } from "../../../Button/GoogleIcon.tsx";
 import RateupRedirectCard from "../../../Card/RateupRedirectCard.tsx";
 import { reviewPageLogosObj } from "../../Question/QuestionReviewPageEditor/constants.tsx";
-import { ReviewPagePlatform } from "../../Question/QuestionReviewPageEditor/index.tsx";
 import WandIcon from "./WandIcon.tsx";
 
 function GoogleReview({

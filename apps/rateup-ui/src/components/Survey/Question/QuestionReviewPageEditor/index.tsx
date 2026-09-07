@@ -20,7 +20,7 @@ import {
 import { Separator } from "@/components/ui/separator.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { QuestionType } from "@/types/enums.ts";
+import { QuestionType, ReviewPagePlatform } from "@/types/enums.ts";
 
 import { QuestionTabsEnum } from "../../EditSurvey.tsx";
 import AddGoogleReviewLinkForTeamModal from "../AddGoogleReviewLinkForTeamModal.tsx";
@@ -28,11 +28,6 @@ import { reviewPageLogosObj } from "./constants.tsx";
 import OpinionQuestionCondition from "./OpinionQuestionCondition/index.tsx";
 import RatingQuestionCondition from "./RatingQuestionCondition/index.tsx";
 import SmileyQuestionCondition from "./SmileyQuestionCondition/index.tsx";
-
-export enum ReviewPagePlatform {
-  Google = "Google",
-  Custom = "Custom",
-}
 
 const platformSelectItems = Object.values(ReviewPagePlatform).map((platform) => ({
   value: platform,

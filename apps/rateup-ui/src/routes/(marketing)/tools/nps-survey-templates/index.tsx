@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import NpsSurveyTemplates from "@/components/HomePage/pages/Tools/NpsSurveyTemplates/index.tsx";
 import ToolsShell from "@/components/HomePage/pages/Tools/shared/ToolsShell.tsx";
-import { buildToolHeadScripts, getToolBySlug } from "@/config/tools.ts";
+import { buildToolJsonLd, getToolBySlug } from "@/config/tools.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
 
 const SLUG = "nps-survey-templates";
@@ -12,14 +12,7 @@ export const Route = createFileRoute("/(marketing)/tools/nps-survey-templates/")
   head: () => {
     const tool = getToolBySlug(SLUG);
 
-    return {
-      ...buildPageHead(`/tools/${SLUG}`),
-      ...(tool
-        ? {
-            scripts: buildToolHeadScripts(tool),
-          }
-        : {}),
-    };
+    return buildPageHead(`/tools/${SLUG}`, tool ? { jsonLd: buildToolJsonLd(tool) } : undefined);
   },
 });
 

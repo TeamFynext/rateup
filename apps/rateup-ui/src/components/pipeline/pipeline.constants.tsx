@@ -1,17 +1,16 @@
 import {
-  IconAdjustmentsHorizontal,
   IconBrandInstagram,
   IconBrandMessenger,
   IconBrandWhatsapp,
-  IconCalendarStats,
-  IconChartBar,
   IconChecklist,
+  IconCircleCheck,
+  IconCircleDashed,
+  IconCircleX,
   IconClipboardList,
   IconFileText,
   IconGift,
-  IconLayoutKanban,
-  IconList,
   IconMessage2,
+  IconMessageChatbot,
   IconPhone,
   IconUsersGroup,
   IconVideo,
@@ -33,12 +32,13 @@ import type { PipelineView } from "@/store/pipeline.store.ts";
 
 export const PIPELINE_LIMIT_PER_ORG = 1;
 
-export const VIEW_TABS: ReadonlyArray<{ id: PipelineView; icon: Icon }> = [
-  { id: "board", icon: IconLayoutKanban },
-  { id: "list", icon: IconList },
-  { id: "forecast", icon: IconCalendarStats },
-  { id: "insights", icon: IconChartBar },
-  { id: "settings", icon: IconAdjustmentsHorizontal },
+/** The pipeline’s view tabs, in bar order. Labels come from `viewTabLabel`. */
+export const VIEW_TABS: ReadonlyArray<{ id: PipelineView }> = [
+  { id: "board" },
+  { id: "list" },
+  { id: "forecast" },
+  { id: "insights" },
+  { id: "settings" },
 ];
 
 interface SourceMeta {
@@ -69,6 +69,14 @@ export const SOURCE_META: Record<LeadSource, SourceMeta> = {
     icon: IconBrandMessenger,
     className: "text-blue-600 dark:text-blue-500",
     fillClassName: "bg-blue-600",
+  },
+  WEBCHAT: {
+    icon: IconMessageChatbot,
+    className: "text-violet-700 dark:text-violet-400",
+    // Steps per theme, unlike its neighbours: violet-500 sat 0.8 ΔE from
+    // Messenger blue under protanopia, and violet-700 is too dark to hold 3:1
+    // against the dark surface. These two clear both.
+    fillClassName: "bg-violet-700 dark:bg-violet-400",
   },
   SURVEY: {
     icon: IconClipboardList,
@@ -120,18 +128,29 @@ export const STAGE_STATUSES: readonly StageStatus[] = ["OPEN", "WON", "LOST"];
  * the two ways a lead leaves. The palette is deliberately the Tailwind ramp
  * rather than bespoke tokens, so both themes come for free.
  */
-export const STATUS_BAND: Record<StageStatus, { text: string; border: string; surface: string }> = {
+/**
+ * The band a group of stage columns sits under. The icon says what the band
+ * does to a lead dropped in it, which is why the columns underneath carry no
+ * status marker of their own.
+ */
+export const STATUS_BAND: Record<
+  StageStatus,
+  { icon: Icon; text: string; border: string; surface: string }
+> = {
   OPEN: {
+    icon: IconCircleDashed,
     text: "text-primary",
     border: "border-primary/35",
     surface: "bg-primary/8 dark:bg-primary/15",
   },
   WON: {
+    icon: IconCircleCheck,
     text: "text-green-700 dark:text-green-500",
     border: "border-green-600/35",
     surface: "bg-green-50 dark:bg-green-950/30",
   },
   LOST: {
+    icon: IconCircleX,
     text: "text-muted-foreground",
     border: "border-border",
     surface: "bg-muted",

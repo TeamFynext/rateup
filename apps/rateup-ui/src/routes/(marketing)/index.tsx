@@ -58,12 +58,9 @@ const homePageJsonLd = {
     name: "RateUp",
     logo: rateupLogoOg,
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "5",
-    reviewCount: "3987",
-    bestRating: "5",
-  },
+  // aggregateRating removed: Google's review-snippet policy requires the reviews to be
+  // visible on the page itself. Self-reported ratings with no on-page reviews are a
+  // manual-action risk. Re-add it only alongside real, rendered reviews.
 };
 
 const marketingSearchSchema = z.object({
@@ -76,15 +73,7 @@ export const Route = createFileRoute("/(marketing)/")({
     middleware: [createMarkdownMiddleware(homepageMarkdown), apiCatalogMiddleware],
   },
   component: RouteComponent,
-  head: () => ({
-    ...buildPageHead("/"),
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(homePageJsonLd),
-      },
-    ],
-  }),
+  head: () => buildPageHead("/", { jsonLd: homePageJsonLd }),
 });
 
 function RouteComponent() {

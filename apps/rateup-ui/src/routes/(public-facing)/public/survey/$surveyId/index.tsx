@@ -56,8 +56,10 @@ export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/"
     const surveyDescription = `Take the ${surveyTitle} survey on Rateup.`;
 
     return {
-      title: surveyTitle,
       meta: [
+        // Must be a `meta` entry — TanStack ignores a top-level `title` key, so this page
+        // rendered the root default title.
+        { title: surveyTitle },
         { name: "description", content: surveyDescription },
         { property: "og:type", content: "website" },
         { property: "og:site_name", content: "Rateup" },

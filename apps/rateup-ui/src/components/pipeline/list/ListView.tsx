@@ -1,12 +1,10 @@
 import {
   IconCalendarX,
   IconChevronDown,
-  IconCircleX,
   IconChevronRight,
   IconMinus,
   IconRosetteDiscountCheck,
   IconLayoutRows,
-  IconTrophy,
   IconX,
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
@@ -51,12 +49,12 @@ interface LeadGroup {
  * so their `hidden` wins the display conflict against a call site's `flex`.
  */
 const COLUMN = {
-  stage: "hidden w-38 shrink-0 lg:flex",
+  stage: "hidden w-37.5 shrink-0 lg:flex",
   status: "hidden w-28 shrink-0 lg:block",
   assignees: "hidden w-33 shrink-0 lg:flex",
-  next: "hidden w-42 shrink-0 lg:flex",
+  next: "hidden w-42.5 shrink-0 lg:flex",
   stageAge: "hidden w-21 shrink-0 text-right lg:block",
-  age: "hidden w-18 shrink-0 text-right lg:block",
+  age: "hidden w-17.5 shrink-0 text-right lg:block",
 } as const;
 
 function HeaderCell({
@@ -66,7 +64,7 @@ function HeaderCell({
   return (
     <span
       className={cn(
-        "text-muted-foreground text-[10px] font-extrabold tracking-[0.06em] uppercase",
+        "text-muted-foreground text-[11.5px] font-semibold tracking-[0.04em] uppercase",
         className,
       )}
     >
@@ -125,7 +123,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div className="border-border flex flex-wrap items-center gap-3 border-b px-4 py-3 sm:px-6">
+      <div className="bg-card border-border flex flex-wrap items-center gap-3 border-b px-4 py-3 sm:px-6">
         <span className="text-muted-foreground text-[13px]">
           {t("{total} leads · {open} open", { total: visibleLeads.length, open: openCount })}
         </span>
@@ -136,20 +134,20 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
           onClick={() => setGrouped((previous) => !previous)}
         >
           <IconLayoutRows className="size-3.5" />
-          {t("Group by stage")}
+          {t("Group by lead stage")}
         </Button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto px-4 pb-6 sm:px-6">
-        <div className="bg-card border-border mt-4 overflow-hidden rounded-xl border lg:min-w-260">
-          <div className="bg-muted border-border flex items-center gap-3 border-b px-4 py-2.5">
+        <div className="bg-card border-border mt-4 overflow-hidden rounded-xl border shadow-xs lg:min-w-270">
+          <div className="bg-muted border-border flex items-center gap-3 border-b px-4 py-2.75">
             <Checkbox
               checked={allSelected}
               onCheckedChange={(checked) => setSelected(checked ? allIds : [])}
               aria-label={t("Select all leads")}
             />
             <HeaderCell className="min-w-0 flex-1">{t("Lead")}</HeaderCell>
-            <HeaderCell className={COLUMN.stage}>{t("Stage")}</HeaderCell>
+            <HeaderCell className={COLUMN.stage}>{t("Lead stage")}</HeaderCell>
             <HeaderCell className={COLUMN.status}>{t("Status")}</HeaderCell>
             <HeaderCell className={COLUMN.assignees}>{t("Assignees")}</HeaderCell>
             <HeaderCell className={COLUMN.next}>{t("Next activity")}</HeaderCell>
@@ -173,26 +171,14 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
                           : [...previous, group.key],
                       )
                     }
-                    className="bg-background hover:bg-muted/60 border-border flex w-full items-center gap-2.5 border-b px-4 py-2.5 text-left transition-colors"
+                    className="bg-background hover:bg-muted/60 border-border flex w-full items-center gap-2.25 border-b px-4 py-2.25 text-left transition-colors"
                   >
                     <ChevronIcon className="text-muted-foreground size-3.5" />
-                    <StageDot color={group.color} />
-                    <span className="font-nunito text-foreground text-xs font-extrabold">
+                    <StageDot color={group.color} className="size-2" />
+                    <span className="font-nunito text-foreground text-[13px] font-semibold">
                       {group.label}
                     </span>
-                    {group.status === "WON" ? (
-                      <IconTrophy
-                        className="size-3.5 text-green-700 dark:text-green-500"
-                        title={t("Leads in this stage are marked won")}
-                      />
-                    ) : null}
-                    {group.status === "LOST" ? (
-                      <IconCircleX
-                        className="text-muted-foreground size-3.5"
-                        title={t("Leads in this stage are marked lost")}
-                      />
-                    ) : null}
-                    <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[11px] font-bold">
+                    <span className="bg-muted border-border text-muted-foreground rounded-full border px-1.75 text-[11.5px] font-medium">
                       {group.leads.length}
                     </span>
                   </button>
@@ -225,7 +211,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
                             if (event.key === "Enter") onOpenLead(lead.id);
                           }}
                           className={cn(
-                            "border-border/60 hover:bg-muted/50 flex cursor-pointer items-center gap-3 border-b px-4 py-2.5 transition-colors",
+                            "border-border/60 hover:bg-muted/50 flex cursor-pointer items-center gap-3 border-b px-4 py-2.75 transition-colors",
                             selected.includes(lead.id) && "bg-primary/5",
                           )}
                         >
@@ -238,9 +224,9 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
                           </span>
 
                           <span className="flex min-w-0 flex-1 items-center gap-2.5">
-                            <LeadAvatar name={lead.name} channel={lead.channel} />
+                            <LeadAvatar name={lead.name} source={lead.source} />
                             <span className="min-w-0">
-                              <span className="text-foreground block truncate text-[13px] font-bold">
+                              <span className="text-foreground block truncate text-[13.5px] font-medium">
                                 {lead.name}
                               </span>
                               <span className="text-muted-foreground block truncate text-[11px]">
@@ -270,8 +256,8 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
                           </span>
 
                           <span className={cn("flex items-center gap-1.5", COLUMN.stage)}>
-                            <StageDot color={stage?.color ?? null} className="size-1.5" />
-                            <span className="text-foreground truncate text-xs font-medium">
+                            <StageDot color={stage?.color ?? null} className="size-1.75" />
+                            <span className="text-foreground truncate text-xs font-semibold">
                               {lead.status === "LOST"
                                 ? t("{stage} (lost)", { stage: lead.stage.name })
                                 : lead.stage.name}
@@ -325,7 +311,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
                                     : "font-semibold text-amber-700 dark:text-amber-500",
                             )}
                           >
-                            <NextIcon className="size-3.5 shrink-0" />
+                            <NextIcon className="size-3 shrink-0" />
                             <span className="truncate">
                               {lead.status !== "OPEN"
                                 ? "—"
@@ -362,7 +348,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
           ) : (
             <div className="bg-muted sticky bottom-0 flex items-center gap-3 px-4 py-3">
               <span className="w-4 shrink-0" />
-              <span className="text-foreground min-w-0 flex-1 text-xs font-extrabold">
+              <span className="text-foreground min-w-0 flex-1 text-xs font-semibold">
                 {t("{total} leads", { total: visibleLeads.length })}
               </span>
               <span className={cn("text-muted-foreground text-xs", COLUMN.stage)}>
@@ -378,10 +364,10 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
               <span className={cn("text-destructive text-xs font-bold", COLUMN.next)}>
                 {t("{total} without a next step", { total: missingNext })}
               </span>
-              <span className={cn("text-foreground text-xs font-extrabold", COLUMN.stageAge)}>
+              <span className={cn("text-foreground text-xs font-semibold", COLUMN.stageAge)}>
                 {t("{days}d", { days: averageStageAge })}
               </span>
-              <span className={cn("text-foreground text-xs font-extrabold", COLUMN.age)}>
+              <span className={cn("text-foreground text-xs font-semibold", COLUMN.age)}>
                 {t("{days}d", { days: averageAge })}
               </span>
             </div>
@@ -390,18 +376,18 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
       </div>
 
       {selected.length > 0 ? (
-        <div className="bg-foreground text-background absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-xl px-3 py-2 shadow-lg">
-          <span className="px-2 text-xs font-extrabold">
+        <div className="bg-sidebar absolute bottom-5.5 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-xl px-3 py-2.25 text-white shadow-lg">
+          <span className="px-2 text-xs font-semibold">
             {t("{total} selected", { total: selected.length })}
           </span>
-          <span className="bg-background/20 h-5 w-px" />
+          <span className="h-5 w-px bg-white/20" />
 
           {pipeline.stages.slice(0, 3).map((stage) => (
             <Button
               key={stage.id}
               variant="ghost"
               size="sm"
-              className="hover:bg-background/15 hover:text-background h-7 text-xs"
+              className="h-auto rounded-lg px-2.75 py-1.75 text-xs font-semibold text-white/90 hover:bg-white/10 hover:text-white"
               onClick={() => {
                 onBulkMove(selected, stage);
                 setSelected([]);
@@ -416,7 +402,7 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
               key={member.id}
               variant="ghost"
               size="sm"
-              className="hover:bg-background/15 hover:text-background h-7 gap-1.5 text-xs"
+              className="h-auto gap-1.5 rounded-lg px-2.75 py-1.75 text-xs font-semibold text-white/90 hover:bg-white/10 hover:text-white"
               onClick={() => {
                 onBulkAssign(selected, [member.id]);
                 setSelected([]);
@@ -436,11 +422,11 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
           <Button
             variant="ghost"
             size="icon"
-            className="hover:bg-background/15 hover:text-background size-7"
+            className="ml-1 size-6 text-white/60 hover:bg-white/10 hover:text-white"
             onClick={() => setSelected([])}
             aria-label={t("Clear selection")}
           >
-            <IconX className="size-4" />
+            <IconX className="size-3.75" />
           </Button>
         </div>
       ) : null}

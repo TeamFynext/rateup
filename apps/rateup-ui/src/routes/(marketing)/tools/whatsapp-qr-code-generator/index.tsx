@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import ToolsShell from "@/components/HomePage/pages/Tools/shared/ToolsShell.tsx";
 import WhatsAppQrGenerator from "@/components/HomePage/pages/Tools/WhatsAppQrGenerator/index.tsx";
-import { buildToolHeadScripts, getToolBySlug } from "@/config/tools.ts";
+import { buildToolJsonLd, getToolBySlug } from "@/config/tools.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
 
 const SLUG = "whatsapp-qr-code-generator";
@@ -12,14 +12,7 @@ export const Route = createFileRoute("/(marketing)/tools/whatsapp-qr-code-genera
   head: () => {
     const tool = getToolBySlug(SLUG);
 
-    return {
-      ...buildPageHead(`/tools/${SLUG}`),
-      ...(tool
-        ? {
-            scripts: buildToolHeadScripts(tool),
-          }
-        : {}),
-    };
+    return buildPageHead(`/tools/${SLUG}`, tool ? { jsonLd: buildToolJsonLd(tool) } : undefined);
   },
 });
 

@@ -54,7 +54,7 @@ function ChipGroup<T extends string>({
           type="button"
           onClick={() => onChange(option.value)}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
+            "inline-flex items-center gap-1.5 rounded-full border px-2.75 py-1.5 text-xs font-bold transition-colors",
             option.value === value
               ? "border-primary bg-primary/10 text-primary"
               : "border-border text-muted-foreground hover:bg-muted",
@@ -126,9 +126,11 @@ export function AddLeadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="rounded-2xl sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-nunito font-extrabold">{t("Add lead")}</DialogTitle>
+          <DialogTitle className="font-nunito text-xl leading-tight font-bold tracking-[-0.01em]">
+            {t("Add lead")}
+          </DialogTitle>
           <DialogDescription>
             {t("New leads land on the board straight away, in the column you pick.")}
           </DialogDescription>
@@ -141,7 +143,7 @@ export function AddLeadDialog({
           </div>
 
           <div className="sm:col-span-2">
-            <Label className="mb-2 block">{t("Stage")}</Label>
+            <Label className="mb-2 block">{t("Lead stage")}</Label>
             <ChipGroup
               options={(pipeline?.stages ?? []).map((candidate) => ({
                 value: candidate.id,
@@ -205,7 +207,7 @@ export function AddLeadDialog({
           ) : null}
 
           {stage && stage.status !== "OPEN" ? (
-            <div className="bg-muted text-muted-foreground flex items-center gap-2.5 rounded-lg p-3 sm:col-span-2">
+            <div className="bg-primary/8 text-primary flex items-center gap-2.5 rounded-md px-3.5 py-3 sm:col-span-2">
               <IconRepeat className="size-4 shrink-0" />
               <span className="text-xs">
                 {t("{stage} is a closing column — the lead opens already closed.", {

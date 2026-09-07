@@ -41,14 +41,14 @@ function KpiCard({
   noteTone?: string;
 }>) {
   return (
-    <Card className="gap-0 p-4 shadow-xs">
-      <span className={cn("mb-2.5 flex size-7.5 items-center justify-center rounded-lg", tone)}>
+    <Card className="gap-0 px-5 py-4.5 shadow-xs">
+      <span className={cn("mb-2.5 flex size-7.5 items-center justify-center rounded-md", tone)}>
         <KpiIcon className="size-4" />
       </span>
-      <div className="font-nunito text-foreground text-[26px] leading-none font-extrabold">
+      <div className="font-nunito text-foreground text-[30px] leading-none font-bold tracking-[-0.02em] tabular-nums">
         {value}
       </div>
-      <div className="text-muted-foreground mt-1.5 text-xs">{label}</div>
+      <div className="text-muted-foreground mt-1.25 text-xs">{label}</div>
       <div className={cn("mt-2 text-[11px] font-bold", noteTone ?? "text-muted-foreground")}>
         {note}
       </div>
@@ -59,7 +59,7 @@ function KpiCard({
 function PanelHeading({ title, subtitle }: Readonly<{ title: string; subtitle?: string }>) {
   return (
     <div className="mb-4.5">
-      <div className="font-nunito text-foreground text-sm font-extrabold">{title}</div>
+      <div className="font-nunito text-foreground text-[15px] font-semibold">{title}</div>
       {subtitle ? <div className="text-muted-foreground text-xs">{subtitle}</div> : null}
     </div>
   );
@@ -75,7 +75,7 @@ function Meter({
   fillClassName,
 }: Readonly<{ percent: number; color?: string | null; fillClassName?: string }>) {
   return (
-    <div className="bg-muted h-2 overflow-hidden rounded-full">
+    <div className="bg-secondary h-2 overflow-hidden rounded-full">
       <div
         className={cn(
           "h-full rounded-full transition-[width] duration-300",
@@ -125,7 +125,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           tone="bg-primary/10 text-primary"
           value={String(open.length)}
           label={t("Leads in pipeline")}
-          note={t("across {total} stages", { total: pipeline.stages.length })}
+          note={t("across {total} lead stages", { total: pipeline.stages.length })}
         />
         <KpiCard
           icon={IconTrophy}
@@ -163,7 +163,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading
             title={t("Conversion funnel")}
             subtitle={t("Leads currently at each stage")}
@@ -191,12 +191,12 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
                         ? t("entry")
                         : t("{percent}% carried", { percent: row.carried })}
                     </span>
-                    <span className="text-foreground text-[13px] font-extrabold">{row.count}</span>
+                    <span className="text-foreground text-[13px] font-semibold">{row.count}</span>
                   </span>
                 </div>
-                <div className="bg-muted h-5.5 overflow-hidden rounded-md">
+                <div className="bg-secondary h-5.5 overflow-hidden rounded-sm">
                   <div
-                    className="bg-primary h-full rounded-md transition-[width] duration-300"
+                    className="bg-primary h-full rounded-sm transition-[width] duration-300"
                     style={{
                       width: `${row.width}%`,
                       ...(row.stage.color ? { backgroundColor: row.stage.color } : {}),
@@ -208,14 +208,14 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading
             title={t("Where leads stall")}
             subtitle={t("Idle beyond the stage rotting limit")}
           />
           {stalls.length === 0 ? (
             <p className="text-muted-foreground text-xs">
-              {t("No stage has a rotting window set.")}
+              {t("No lead stage has a rotting window set.")}
             </p>
           ) : (
             <div className="flex flex-col gap-3.5">
@@ -260,9 +260,9 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading title={t("Leads by source")} />
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-3.75">
             {sources.map((row) => {
               const meta = SOURCE_META[row.source];
               const SourceIcon = meta.icon;
@@ -274,7 +274,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
                           its bar, which carries the same colour. */}
                       <span
                         className={cn(
-                          "flex size-5 shrink-0 items-center justify-center rounded-md text-white",
+                          "flex size-5 shrink-0 items-center justify-center rounded-sm text-white",
                           meta.fillClassName,
                         )}
                       >
@@ -293,10 +293,10 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading title={t("Assignee performance")} />
           <div className="border-border flex items-center border-b pb-2.5">
-            <span className="text-muted-foreground flex-1 text-[10px] font-extrabold tracking-[0.06em] uppercase">
+            <span className="text-muted-foreground flex-1 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
               {t("Assignee")}
             </span>
             {/* "Win rate" and "Stalled" get the wider columns — they are the two
@@ -310,7 +310,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
               <span
                 key={heading.key}
                 className={cn(
-                  "text-muted-foreground shrink-0 text-right text-[10px] font-extrabold tracking-[0.06em] uppercase",
+                  "text-muted-foreground shrink-0 text-right text-[11.5px] font-semibold tracking-[0.04em] uppercase",
                   heading.width,
                 )}
               >
@@ -325,7 +325,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
             return (
               <div
                 key={row.assigneeId ?? "unassigned"}
-                className="border-border/60 flex items-center border-b py-2.5 last:border-b-0"
+                className="border-border/60 flex items-center border-b py-2.75 last:border-b-0"
               >
                 <span className="flex min-w-0 flex-1 items-center gap-2.5">
                   <LeadAvatar
@@ -334,7 +334,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
                     colorKey={row.assigneeId ?? undefined}
                     size="md"
                   />
-                  <span className="text-foreground truncate text-[13px] font-medium">{name}</span>
+                  <span className="text-foreground truncate text-[13px] font-semibold">{name}</span>
                 </span>
                 <span className="text-foreground w-15 shrink-0 text-right text-[13px] font-bold">
                   {row.open}

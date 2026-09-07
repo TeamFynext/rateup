@@ -39,11 +39,11 @@ export function ForecastView({ data, onOpenLead }: Readonly<ForecastViewProps>) 
           {columns.map((column) => (
             <Card
               key={column.key}
-              className="flex w-[78vw] max-w-72 shrink-0 snap-start flex-col gap-0 py-0 sm:w-72"
+              className="flex w-[78vw] max-w-72.5 shrink-0 snap-start flex-col gap-0 py-0 sm:w-72.5"
             >
-              <div className="border-border border-b p-4">
+              <div className="border-border border-b px-3.75 py-3.5">
                 <div className="flex items-baseline justify-between">
-                  <span className="font-nunito text-foreground text-[15px] font-extrabold">
+                  <span className="font-nunito text-foreground text-[15px] font-semibold">
                     {column.unscheduled ? t("Unscheduled") : column.label}
                   </span>
                   <span className="text-muted-foreground text-[11px]">
@@ -51,14 +51,18 @@ export function ForecastView({ data, onOpenLead }: Readonly<ForecastViewProps>) 
                   </span>
                 </div>
                 <div className="mt-2 flex items-baseline gap-1.5">
-                  <span className="font-nunito text-primary text-[28px] leading-none font-black">
+                  <span className="font-nunito text-primary text-[28px] leading-none font-bold tracking-[-0.02em]">
                     {column.expected}
                   </span>
                   <span className="text-muted-foreground text-[11px]">
                     {t("expected to convert")}
                   </span>
                 </div>
-                <StageFill percent={Math.round((column.expected / widest) * 100)} color={null} />
+                <StageFill
+                  percent={Math.round((column.expected / widest) * 100)}
+                  color={null}
+                  className="mt-2.5 h-1.5"
+                />
               </div>
 
               <div className="flex flex-col gap-2 p-2.5">
@@ -67,9 +71,9 @@ export function ForecastView({ data, onOpenLead }: Readonly<ForecastViewProps>) 
                     key={lead.id}
                     type="button"
                     onClick={() => onOpenLead(lead.id)}
-                    className="border-border hover:bg-muted/60 flex items-center gap-2.5 rounded-lg border p-2.5 text-left transition-colors"
+                    className="border-border hover:border-foreground/20 flex items-center gap-2.25 rounded-lg border px-2.5 py-2.25 text-left transition-all hover:shadow-xs"
                   >
-                    <LeadAvatar name={lead.name} channel={lead.channel} />
+                    <LeadAvatar name={lead.name} source={lead.source} />
                     <span className="min-w-0 flex-1">
                       <span className="text-foreground block truncate text-xs font-bold">
                         {lead.name}
@@ -78,7 +82,7 @@ export function ForecastView({ data, onOpenLead }: Readonly<ForecastViewProps>) 
                         {lead.stage.name}
                       </span>
                     </span>
-                    <span className="text-primary text-[11px] font-extrabold">
+                    <span className="text-primary text-[11px] font-bold">
                       {t("{percent}%", { percent: lead.stage.probability })}
                     </span>
                   </button>

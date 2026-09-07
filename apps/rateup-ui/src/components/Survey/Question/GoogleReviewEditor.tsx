@@ -15,12 +15,12 @@ import { Switch } from "@/components/ui/switch.tsx";
 import useFlowStore, { EditorType } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q, SmileyResponse } from "@/types/enums.ts";
+import { ReviewPagePlatform } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
 import AddGoogleReviewLinkForTeamModal from "./AddGoogleReviewLinkForTeamModal.tsx";
-import { ReviewPagePlatform } from "./QuestionReviewPageEditor/index.tsx";
 
 interface IProps {
   selectedQ: Question;
