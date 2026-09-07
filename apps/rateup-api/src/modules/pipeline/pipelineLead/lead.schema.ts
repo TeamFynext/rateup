@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const leadSource = z.enum([
+export const leadSource = z.enum([
   "WHATSAPP",
   "INSTAGRAM",
   "MESSENGER",
@@ -17,9 +17,32 @@ export const idParamsSchema = z.object({
   id: z.uuid(),
 });
 
+export const leadFilter = z.enum(["open", "mine", "rotting", "noactivity", "won", "lost"]);
+
+/**
+ * The board's read query. Every facet the sidebar and header expose is a
+ * parameter here rather than a client-side filter, so a column's page is the
+ * server's answer to the same question the counts were computed from.
+ *
+ * `stageId` names one board column — the board asks per column so a stage
+ * holding a single match still returns it, which a board-wide LIMIT could not.
+ * Omitting it reads the whole board, which is what the list view's ungrouped
+ * mode wants.
+ */
 export const listLeadsQuerySchema = z.object({
   pipelineId: z.uuid(),
+  stageId: z.uuid().optional(),
+  /** Opaque keyset cursor, taken from the previous page's `nextCursor`. */
+  cursor: z.string().max(300).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  filter: leadFilter.default("open"),
+  search: z.string().trim().max(160).optional(),
+  teamId: z.uuid().optional(),
+  source: leadSource.optional(),
+  assigneeId: z.uuid().optional(),
 });
+export type ListLeadsQuerySchema = z.infer<typeof listLeadsQuerySchema>;
+export type LeadFilter = z.infer<typeof leadFilter>;
 
 export const createLeadRequestSchema = z.object({
   pipelineId: z.uuid(),

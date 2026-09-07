@@ -10,6 +10,8 @@ import {
   deletePipelineHandler,
   getPipelineHandler,
   getPipelineMembersHandler,
+  getPipelineStatsHandler,
+  getPipelineForecastHandler,
   getTeamPipelineDefaultsHandler,
   updateTeamPipelineDefaultHandler,
   getPipelinesHandler,
@@ -117,6 +119,20 @@ export async function pipelineRoutes(server: FastifyInstance) {
     "/:id/members",
     { preHandler: [verifyPipelineAccess], schema: { params: idParamsSchema } },
     getPipelineMembersHandler,
+  );
+
+  // Every count the board shows, over the whole pipeline rather than over the
+  // page a column happens to have loaded.
+  server.get(
+    "/:id/stats",
+    { preHandler: [verifyPipelineAccess], schema: { params: idParamsSchema } },
+    getPipelineStatsHandler,
+  );
+
+  server.get(
+    "/:id/forecast",
+    { preHandler: [verifyPipelineAccess], schema: { params: idParamsSchema } },
+    getPipelineForecastHandler,
   );
 
   server.post(
