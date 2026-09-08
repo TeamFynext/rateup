@@ -45,9 +45,7 @@ import {
   fireCampaignSendById,
   reconcileScheduledCampaignSends,
   getRetryCohort,
-  nextAttemptAt,
   scheduleNextRetry,
-  shiftOutOfQuietHours,
 } from "./campaignRetry.service.js";
 import { CampaignParticipantStatus, CampaignType } from "../../types/enums.js";
 import type { CampaignRetryStrategy } from "../../../generated/prisma/enums.js";
@@ -89,6 +87,17 @@ function policy(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/** The send that opened the current cycle — attempt 0 unless a test resends. */
+function cycleStart(overrides: Record<string, unknown> = {}) {
+  return {
+    attemptNo: 0,
+    completedAt: new Date("2026-03-01T10:00:00Z"),
+    startedAt: null,
+    createdAt: new Date("2026-03-01T09:30:00Z"),
+    ...overrides,
+  };
+}
+
 function send(overrides: Record<string, unknown> = {}) {
   return {
     id: SEND_ID,
@@ -109,117 +118,13 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
   // The cycle starts at the initial send and no retry has run yet: the common
-  // case, and what makes the next attempt number 1.
-  db.campaignSend.findFirst.mockResolvedValue({ attemptNo: 0 });
+  // case, and what makes the next attempt number 1. Its completion is also the
+  // anchor a SMART schedule divides its window from.
+  db.campaignSend.findFirst.mockResolvedValue(cycleStart());
   db.campaignSend.count.mockResolvedValue(0);
   createSend.mockResolvedValue({ id: "next-send", attemptNo: 1 });
   enqueue.mockResolvedValue({ status: true, message: "ok" });
   db.campaignSend.update.mockResolvedValue({});
-});
-
-describe("nextAttemptAt", () => {
-  const FROM = new Date("2026-03-01T10:00:00Z");
-
-  test("front-loads the smart schedule, then decays: 45m, 4h, 12h", () => {
-    expect(nextAttemptAt(policy(), 1, FROM).toISOString()).toBe("2026-03-01T10:45:00.000Z");
-    expect(nextAttemptAt(policy(), 2, FROM).toISOString()).toBe("2026-03-01T14:00:00.000Z");
-    expect(nextAttemptAt(policy(), 3, FROM).toISOString()).toBe("2026-03-01T22:00:00.000Z");
-  });
-
-  test("holds at the longest interval past the end of the table", () => {
-    // Only reachable if maxAttempts ever exceeds the offsets we ship. Firing
-    // immediately would be the wrong failure mode.
-    expect(nextAttemptAt(policy(), 9, FROM).toISOString()).toBe("2026-03-01T22:00:00.000Z");
-  });
-
-  test("spaces fixed-interval attempts uniformly", () => {
-    const fixed = policy({
-      strategy: "FIXED_INTERVAL" as CampaignRetryStrategy,
-      intervalHours: 24,
-    });
-    expect(nextAttemptAt(fixed, 1, FROM).toISOString()).toBe("2026-03-02T10:00:00.000Z");
-    expect(nextAttemptAt(fixed, 3, FROM).toISOString()).toBe("2026-03-02T10:00:00.000Z");
-  });
-
-  test("never lets a zero or negative interval collapse to no wait", () => {
-    const broken = policy({
-      strategy: "FIXED_INTERVAL" as CampaignRetryStrategy,
-      intervalHours: 0,
-    });
-    expect(nextAttemptAt(broken, 1, FROM).getTime()).toBeGreaterThan(FROM.getTime());
-  });
-});
-
-describe("shiftOutOfQuietHours", () => {
-  test("leaves a time outside the window alone", () => {
-    const when = new Date("2026-03-01T12:00:00Z");
-    const shifted = shiftOutOfQuietHours(
-      when,
-      policy({
-        quietHoursStart: "22:00",
-        quietHoursEnd: "08:00",
-      }),
-    );
-    expect(shifted).toEqual(when);
-  });
-
-  test("moves the evening head of a wrapping window to the next morning", () => {
-    const shifted = shiftOutOfQuietHours(
-      new Date("2026-03-01T23:30:00Z"),
-      policy({
-        quietHoursStart: "22:00",
-        quietHoursEnd: "08:00",
-      }),
-    );
-    expect(shifted.toISOString()).toBe("2026-03-02T08:00:00.000Z");
-  });
-
-  test("moves the pre-dawn tail of a wrapping window to the same morning", () => {
-    const shifted = shiftOutOfQuietHours(
-      new Date("2026-03-02T03:00:00Z"),
-      policy({
-        quietHoursStart: "22:00",
-        quietHoursEnd: "08:00",
-      }),
-    );
-    expect(shifted.toISOString()).toBe("2026-03-02T08:00:00.000Z");
-  });
-
-  test("handles a window that does not wrap midnight", () => {
-    const shifted = shiftOutOfQuietHours(
-      new Date("2026-03-01T13:00:00Z"),
-      policy({
-        quietHoursStart: "12:00",
-        quietHoursEnd: "14:00",
-      }),
-    );
-    expect(shifted.toISOString()).toBe("2026-03-01T14:00:00.000Z");
-  });
-
-  test("respects the policy's own timezone, not the server's", () => {
-    // 23:30 UTC is 05:00 next day in Kolkata — inside 22:00-08:00 local, and the
-    // shift has to land on the local 08:00, i.e. 02:30 UTC.
-    const shifted = shiftOutOfQuietHours(
-      new Date("2026-03-01T23:30:00Z"),
-      policy({
-        quietHoursStart: "22:00",
-        quietHoursEnd: "08:00",
-        timezone: "Asia/Kolkata",
-      }),
-    );
-    expect(shifted.toISOString()).toBe("2026-03-02T02:30:00.000Z");
-  });
-
-  test("only ever delays — an unparseable or empty window is a no-op", () => {
-    const when = new Date("2026-03-01T23:30:00Z");
-    expect(shiftOutOfQuietHours(when, policy({ quietHoursStart: "22:00" }))).toEqual(when);
-    expect(
-      shiftOutOfQuietHours(when, policy({ quietHoursStart: "nope", quietHoursEnd: "08:00" })),
-    ).toEqual(when);
-    expect(
-      shiftOutOfQuietHours(when, policy({ quietHoursStart: "22:00", quietHoursEnd: "22:00" })),
-    ).toEqual(when);
-  });
 });
 
 describe("scheduleNextRetry", () => {
@@ -320,7 +225,7 @@ describe("scheduleNextRetry", () => {
       }),
     );
     // The cycle opened at attempt 3 (the resend) and no retry has run since.
-    db.campaignSend.findFirst.mockResolvedValue({ attemptNo: 3 });
+    db.campaignSend.findFirst.mockResolvedValue(cycleStart({ attemptNo: 3 }));
     db.campaignSend.count.mockResolvedValue(0);
 
     await scheduleNextRetry(SEND_ID);
@@ -337,10 +242,13 @@ describe("scheduleNextRetry", () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
     db.campaignSend.findUnique.mockResolvedValue(
       send({
-        // Drained an hour and a half ago, so the +45m offset measured from
-        // completion is already inside the floor measured from now.
+        // Drained an hour and a half ago, so the +45m offset measured from the
+        // anchor is already inside the floor measured from now.
         completedAt: new Date("2026-03-01T08:30:00Z"),
       }),
+    );
+    db.campaignSend.findFirst.mockResolvedValue(
+      cycleStart({ completedAt: new Date("2026-03-01T08:30:00Z") }),
     );
 
     await scheduleNextRetry(SEND_ID);
@@ -381,9 +289,9 @@ describe("scheduleNextRetry", () => {
     expect(createSend).not.toHaveBeenCalled();
   });
 
-  test("checks the window after quiet hours, not before", async () => {
-    // The raw offset (22:15) lands inside quiet hours, which push it to 08:00
-    // the next morning — past the deadline the customer set.
+  test("stops when quiet hours push the attempt past the window", async () => {
+    // Half an hour of waking time is left before 22:00, so the settle delay lands
+    // at 08:15 the next morning — past the deadline the customer set.
     db.campaignSend.findUnique.mockResolvedValue(
       send({
         completedAt: new Date("2026-03-01T21:30:00Z"),
@@ -397,6 +305,9 @@ describe("scheduleNextRetry", () => {
           }),
         },
       }),
+    );
+    db.campaignSend.findFirst.mockResolvedValue(
+      cycleStart({ completedAt: new Date("2026-03-01T21:30:00Z") }),
     );
 
     await expect(scheduleNextRetry(SEND_ID)).resolves.toBeNull();

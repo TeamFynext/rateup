@@ -1,6 +1,4 @@
 import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone.js";
-import utc from "dayjs/plugin/utc.js";
 
 import prisma from "../../utils/prisma.js";
 import {
@@ -28,15 +26,22 @@ import {
   countUnresolvedSendMessages,
   getRetryCohort,
 } from "./campaignRetryCohort.js";
+import {
+  MAX_RETRY_WINDOW_DAYS,
+  MINIMUM_SETTLE_MINUTES,
+  nextAttemptAt,
+  shiftOutOfQuietHours,
+} from "./campaignRetry.schedule.js";
+
+// Re-exported: the schedule math lives in its own module so it can be reasoned
+// about without a database, but this is still where callers expect to find it.
+export { MAX_RETRY_WINDOW_DAYS, nextAttemptAt, shiftOutOfQuietHours };
 
 // Re-exported: the cohort query lives in its own module so the settle pass can
 // use it without a cycle, but this is still where callers expect to find it.
 export { getRetryCohort };
 import { enqueueCampaignMessage } from "./campaign.service.js";
 import { finishCampaignIfSettled } from "./campaignSettle.service.js";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 /**
  * The automatic retry engine.
@@ -52,60 +57,7 @@ dayjs.extend(timezone);
  */
 
 /**
- * Offsets from the moment a send drains, for `SMART`.
- *
- * Front-loaded and then decaying: most frequency-cap rejections clear within the
- * first hour, and the ones that do not are usually a longer cap. Trying at +5m
- * and +10m would just spend three attempts discovering the same cap.
- *
- * The first offset is also a *settle delay*, and it is mandatory. When the queue
- * drains, messages that Meta accepted are still `SENT` — they only flip to
- * `FAILED` when the status webhook lands. Building a cohort at drain time + 0
- * would find almost nothing to retry and burn the attempt. 45 minutes is
- * comfortably longer than a Cloud API status webhook takes (seconds, to a few
- * minutes when Meta is backed up), and is what the product surfaces to the
- * customer on the Retries step.
- */
-const SMART_OFFSETS_MINUTES = [45, 4 * 60, 12 * 60] as const;
-
-/** Nothing may be scheduled sooner than this after a send drains. */
-const MINIMUM_SETTLE_MINUTES = 2;
-
-/** A retry window may not extend further than this past the initial send. */
-export const MAX_RETRY_WINDOW_DAYS = 7;
-
-/**
- * The concrete schedule a SMART policy produces, as offsets.
- *
- * Exported so the wizard renders exactly what the engine will do rather than a
- * second copy of the numbers that can drift from it.
- */
-export const SMART_SCHEDULE_OFFSETS: readonly string[] = ["+45m", "+4h", "+12h"];
-
-/**
- * When attempt `attemptNo` should fire, measured from `from`.
- *
- * `attemptNo` is the number of the attempt being scheduled: 1 is the first
- * automatic retry, so it takes the first offset.
- */
-export function nextAttemptAt(
-  policy: Pick<CampaignRetryPolicy, "strategy" | "intervalHours">,
-  attemptNo: number,
-  from: Date,
-): Date {
-  if (policy.strategy === CampaignRetryStrategy.FIXED_INTERVAL) {
-    return dayjs(from).add(Math.max(policy.intervalHours, 1), "hour").toDate();
-  }
-  // Past the end of the table (only reachable if maxAttempts ever exceeds the
-  // offsets we have), hold at the last, longest interval rather than firing
-  // immediately.
-  const index = Math.min(attemptNo - 1, SMART_OFFSETS_MINUTES.length - 1);
-  const minutes = SMART_OFFSETS_MINUTES[Math.max(index, 0)] ?? MINIMUM_SETTLE_MINUTES;
-  return dayjs(from).add(minutes, "minute").toDate();
-}
-
-/**
- * How many automatic retries this campaign has already spent on its current send.
+ * The current retry cycle: how much of the budget is spent, and what it counts from.
  *
  * `attemptNo` is the row's position in the campaign, not a retry count, so using
  * it as one made every send a person asked for eat the retry budget: a campaign
@@ -117,8 +69,18 @@ export function nextAttemptAt(
  * Cancelled retries do not count. One that cancelled itself for want of anything
  * to retry never sent a message, and charging the customer's policy for it would
  * be charging them for our own decision not to send.
+ *
+ * The `anchor` is when that cycle-start send drained, and it is what a SMART
+ * schedule divides its window from. Anchoring on the cycle rather than on the
+ * send that just finished is what makes the offsets absolute: attempt 3 sits at
+ * the end of the window because the window is measured from the same point every
+ * time, not three drains deep from wherever the last one happened to land.
  */
-async function countRetriesInCycle(campaignId: string, throughAttemptNo: number): Promise<number> {
+async function getRetryCycle(
+  campaignId: string,
+  throughAttemptNo: number,
+  fallbackAnchor: Date,
+): Promise<{ retries: number; anchor: Date }> {
   const cycleStart = await prisma.campaignSend.findFirst({
     where: {
       campaignId,
@@ -126,10 +88,10 @@ async function countRetriesInCycle(campaignId: string, throughAttemptNo: number)
       trigger: { not: CampaignSendTrigger.AUTO_RETRY },
     },
     orderBy: { attemptNo: "desc" },
-    select: { attemptNo: true },
+    select: { attemptNo: true, completedAt: true, startedAt: true, createdAt: true },
   });
 
-  return prisma.campaignSend.count({
+  const retries = await prisma.campaignSend.count({
     where: {
       campaignId,
       trigger: CampaignSendTrigger.AUTO_RETRY,
@@ -137,60 +99,13 @@ async function countRetriesInCycle(campaignId: string, throughAttemptNo: number)
       attemptNo: { gt: cycleStart?.attemptNo ?? -1, lte: throughAttemptNo },
     },
   });
-}
 
-/** `"HH:mm"` as minutes past local midnight, or null if unparseable. */
-function parseClock(value: string | null): number | null {
-  if (!value) return null;
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) return null;
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  if (hours > 23 || minutes > 59) return null;
-  return hours * 60 + minutes;
-}
-
-/**
- * Push a fire time out of the policy's quiet hours.
- *
- * Quiet hours are local to the policy's timezone and may wrap midnight
- * (22:00–08:00 is the common case), so "inside the window" is an OR when the
- * start is after the end and an AND when it is not. A time inside the window is
- * moved to the window's end on the appropriate day — never earlier, so this can
- * only ever delay a retry.
- */
-export function shiftOutOfQuietHours(
-  when: Date,
-  policy: Pick<CampaignRetryPolicy, "quietHoursStart" | "quietHoursEnd" | "timezone">,
-): Date {
-  const start = parseClock(policy.quietHoursStart);
-  const end = parseClock(policy.quietHoursEnd);
-  if (start === null || end === null || start === end) return when;
-
-  const zone = policy.timezone || "Etc/UTC";
-  let local: dayjs.Dayjs;
-  try {
-    local = dayjs(when).tz(zone);
-  } catch {
-    // An unknown timezone must not stop a retry; UTC is the schema default.
-    log.warn({ zone }, "Unknown timezone on retry policy — treating quiet hours as UTC");
-    local = dayjs(when).utc();
-  }
-
-  const minutes = local.hour() * 60 + local.minute();
-  const wraps = start > end;
-  const inside = wraps ? minutes >= start || minutes < end : minutes >= start && minutes < end;
-  if (!inside) return when;
-
-  // The end of the window: today when we are in the pre-dawn tail of a wrapping
-  // window, tomorrow when we are in the evening head of one.
-  const endOfWindow = local
-    .hour(Math.floor(end / 60))
-    .minute(end % 60)
-    .second(0)
-    .millisecond(0);
-  const resolved = wraps && minutes >= start ? endOfWindow.add(1, "day") : endOfWindow;
-  return resolved.toDate();
+  // A cycle start that has not drained yet is the send we are reacting to, so
+  // its own completion is the honest anchor; `createdAt` covers a row that never
+  // recorded one at all.
+  const anchor =
+    cycleStart?.completedAt ?? cycleStart?.startedAt ?? cycleStart?.createdAt ?? fallbackAnchor;
+  return { retries, anchor };
 }
 
 /**
@@ -224,14 +139,16 @@ export async function scheduleNextRetry(campaignSendId: string): Promise<Campaig
     const policy = send.campaign.CampaignRetryPolicy;
     if (!policy?.enabled) return null;
 
-    const nextAttemptNo = (await countRetriesInCycle(send.campaignId, send.attemptNo)) + 1;
+    const now = new Date();
+    const drainedAt = send.completedAt ?? now;
+    const cycle = await getRetryCycle(send.campaignId, send.attemptNo, drainedAt);
+    const nextAttemptNo = cycle.retries + 1;
     if (nextAttemptNo > policy.maxAttempts) {
       log.info({ campaignSendId }, "Retry attempts exhausted");
       return null;
     }
 
-    const now = new Date();
-    let scheduledFor = nextAttemptAt(policy, nextAttemptNo, send.completedAt ?? now);
+    let scheduledFor = nextAttemptAt(policy, nextAttemptNo, cycle.anchor, drainedAt);
 
     // Never sooner than the settle delay, however the offsets were configured —
     // a FIXED_INTERVAL of 1 hour would otherwise build a cohort from statuses
