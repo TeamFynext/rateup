@@ -50,6 +50,11 @@ export const useSendNewWaMessage = (
 export const useGetMediaFile = () => {
   return useMutation({
     mutationFn: getWaChatMediaFile,
+    // The response is the whole media file as an ArrayBuffer, which for a
+    // WhatsApp video runs to tens of MB. React Query would otherwise keep it
+    // in the mutation cache for the default 5 minutes after the bubble
+    // unmounts. Callers additionally reset() once the bytes are on disk.
+    gcTime: 0,
   });
 };
 

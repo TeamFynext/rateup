@@ -3,7 +3,6 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   Text,
   Modal,
@@ -11,6 +10,7 @@ import {
   useColorScheme,
   Pressable,
 } from "react-native";
+import Image from "@/components/common/Image";
 
 import { Colors } from "@/constants/colors";
 import { useForm } from "react-hook-form";
@@ -357,6 +357,8 @@ const MessageSendPanel = ({
                       <Image
                         source={{ uri: item.url }}
                         className="w-full h-full rounded-xl"
+                        contentFit="cover"
+                        recyclingKey={item.url}
                         onError={() => {}}
                       />
                     ) : (

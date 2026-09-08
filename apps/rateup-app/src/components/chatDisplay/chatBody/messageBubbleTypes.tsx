@@ -5,7 +5,6 @@ import { Download, Headphones, LucideCheckCircle2, Pause, Play, Reply } from "lu
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Linking,
   Text,
   TouchableOpacity,
@@ -15,6 +14,7 @@ import {
   Platform,
   useColorScheme,
 } from "react-native";
+import Image from "@/components/common/Image";
 import { Colors } from "@/constants/colors";
 import * as FileSystem from "expo-file-system/legacy";
 import Video from "react-native-video";
@@ -74,7 +74,8 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
           <Image
             source={{ uri: imageUrl }}
             className="w-full h-full"
-            style={{ resizeMode: "cover" }}
+            contentFit="cover"
+            recyclingKey={imageUrl}
           />
           {caption && (
             <Text className="absolute bottom-1 left-2 right-2 text-white text-xs bg-black/40 px-2 py-1 rounded">
@@ -86,11 +87,7 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
 
       <Modal visible={isModalVisible} animationType="fade" transparent onRequestClose={closeModal}>
         <View className="flex-1 bg-black justify-center items-center">
-          <Image
-            source={{ uri: imageUrl }}
-            className="w-full h-full"
-            style={{ resizeMode: "contain" }}
-          />
+          <Image source={{ uri: imageUrl }} className="w-full h-full" contentFit="contain" />
           <TouchableOpacity
             onPress={closeModal}
             activeOpacity={0.8}
@@ -113,7 +110,7 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
 export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { mutate, isPending } = useGetMediaFile();
+  const { mutate, isPending, reset } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
   const [id, caption] = messageContent.split("_caption_");
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -158,6 +155,10 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           setLocalPath(downloadPath);
         } catch (error) {
           console.error("File write failed:", error);
+        } finally {
+          // The bytes are on disk now and playback reads from there, so drop
+          // the ArrayBuffer the mutation is still holding.
+          reset();
         }
       },
       onError: () => {
@@ -271,7 +272,7 @@ export function WaInboxAudio({
 }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { mutate, isPending } = useGetMediaFile();
+  const { mutate, isPending, reset } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -347,6 +348,8 @@ export function WaInboxAudio({
           setLocalPath(downloadPath);
         } catch (error) {
           console.error("Audio file write failed:", error);
+        } finally {
+          reset();
         }
       },
       onError: () => {
@@ -537,7 +540,7 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
     checkLocalFile();
   }, [appFolderPath, downloadPath]);
 
-  const { mutateAsync } = useGetMediaFile();
+  const { mutateAsync, reset } = useGetMediaFile();
 
   const handleDownload = async () => {
     const folderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
@@ -590,6 +593,7 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
         });
       } finally {
         setIsPending(false);
+        reset();
       }
     }
   };
@@ -901,7 +905,8 @@ function WaInboxInteractiveHeader({ interactiveBody }: Props1) {
         <Image
           source={{ uri: header.image?.link }}
           style={{ height: 200, width: "100%", borderRadius: 12 }}
-          resizeMode="cover"
+          contentFit="cover"
+          recyclingKey={header.image?.link}
         />
       );
     default:
@@ -970,7 +975,14 @@ const WaInboxTemplateHeader = ({ templateComponent, parameterData }: Props3) => 
         </Text>
       );
     case "IMAGE":
-      return <Image source={{ uri }} className="w-full aspect-square" resizeMode="contain" />;
+      return (
+        <Image
+          source={{ uri }}
+          className="w-full aspect-square"
+          contentFit="contain"
+          recyclingKey={uri}
+        />
+      );
 
     case "DOCUMENT":
       return (

@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   Linking,
   ActivityIndicator,
@@ -11,6 +10,7 @@ import {
   FlatList,
   useColorScheme,
 } from "react-native";
+import Image from "@/components/common/Image";
 import { ReplyIcon, ChevronDown, Check } from "lucide-react-native";
 import {
   WaTemplateComponent,
@@ -132,11 +132,11 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
       return (
         <Image
           source={{ uri: getUrlIfParameterIsPresent() }}
+          contentFit="cover"
           style={{
             width: "100%",
             height: 160,
             borderRadius: 12,
-            resizeMode: "cover",
             marginBottom: 10,
           }}
         />
