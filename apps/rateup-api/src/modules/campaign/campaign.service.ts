@@ -275,6 +275,9 @@ export async function updateCampaign(campaignId: string, orgId: string, data: Up
     // Create a map of existing stages by ID for quick lookup
     const existingStagesMap = new Map(existingDripStages.map((stage) => [stage.id, stage]));
 
+    /** Stages added by this update, which existing participants know nothing about yet. */
+    const createdStageIds: string[] = [];
+
     // Process each drip step
     for (const step of dripStages) {
       if (step.id) {
@@ -291,7 +294,7 @@ export async function updateCampaign(campaignId: string, orgId: string, data: Up
         existingStagesMap.delete(step.id);
       } else {
         // Create new drip stage
-        await prisma.campaignDripStage.create({
+        const created = await prisma.campaignDripStage.create({
           data: {
             campaignId,
             waTemplateId: step.templateId,
@@ -300,7 +303,19 @@ export async function updateCampaign(campaignId: string, orgId: string, data: Up
             sendAtTime: step.sendAtTime || null,
           },
         });
+        createdStageIds.push(created.id);
       }
+    }
+
+    // Enrol everyone already on the campaign into the stages just added.
+    //
+    // The dispatcher reads `CampaignParticipantDripStage`, not the stage table,
+    // and those rows were only ever written when participants were added. A
+    // stage added afterwards — going back to the wizard's Template step, which
+    // sits before Audience, is the ordinary way to do it — therefore had no
+    // recipients and silently sent to nobody.
+    if (createdStageIds.length > 0) {
+      await backfillDripStageParticipants(campaignId, createdStageIds);
     }
 
     // Delete drip stages that weren't in the update
@@ -316,6 +331,53 @@ export async function updateCampaign(campaignId: string, orgId: string, data: Up
   }
 
   return updatedCampaign;
+}
+
+/**
+ * Give every participant on a campaign a row for each of `dripStageIds`.
+ *
+ * Shared with the participant-enrolment path, which does the same thing from the
+ * other side: there a new participant needs a row per existing stage, here a new
+ * stage needs a row per existing participant. `skipDuplicates` covers the race
+ * where both run at once — the pair is uniquely indexed.
+ */
+export async function backfillDripStageParticipants(campaignId: string, dripStageIds: string[]) {
+  if (dripStageIds.length === 0) return { created: 0 };
+
+  const participants = await prisma.campaignParticipant.findMany({
+    where: { campaignId },
+    select: { id: true },
+  });
+  if (participants.length === 0) return { created: 0 };
+
+  const result = await prisma.campaignParticipantDripStage.createMany({
+    data: participants.flatMap((participant) =>
+      dripStageIds.map((dripStageId) => ({
+        participantId: participant.id,
+        dripStageId,
+        status: "PENDING",
+      })),
+    ),
+    skipDuplicates: true,
+  });
+  return { created: result.count };
+}
+
+/**
+ * How many messages each recipient of this campaign receives.
+ *
+ * One for a broadcast; one per stage for a drip. A drip with no stages yet still
+ * counts as one rather than zero — a preflight reporting "costs nothing" for an
+ * unfinished campaign is worse than one that slightly overstates, and the launch
+ * path refuses a stageless drip anyway.
+ */
+export async function getCampaignMessagesPerRecipient(campaignId: string): Promise<number> {
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId },
+    select: { type: true, _count: { select: { CampaignDripStage: true } } },
+  });
+  if (campaign?.type !== CampaignType.DRIP) return 1;
+  return Math.max(campaign._count.CampaignDripStage, 1);
 }
 
 export async function deleteCampaign(campaignId: string, orgId: string) {
@@ -898,6 +960,21 @@ export interface EnqueueCampaignMessageInput {
   scheduledAt?: Date;
   dripStageId?: string;
   dailySendLimit?: number;
+  /**
+   * Hold the fan-out itself until this moment, rather than delaying the messages
+   * it produces.
+   *
+   * `scheduledAt` is the other lever and does something different: it delays each
+   * per-message job and flips the campaign to SCHEDULED. A drip must stay ACTIVE
+   * — the cron only looks at ACTIVE campaigns — so this arms the enqueue instead
+   * and leaves the campaign alone.
+   */
+  fanOutAt?: Date;
+  /**
+   * Stable id for the armed job, so the drip cron re-arming the same stage every
+   * four minutes replaces nothing and resets no delay.
+   */
+  jobId?: string;
 }
 
 /**
@@ -914,8 +991,11 @@ export async function enqueueCampaignMessage({
   scheduledAt,
   dripStageId,
   dailySendLimit,
+  fanOutAt,
+  jobId,
 }: EnqueueCampaignMessageInput): Promise<{ status: boolean; message: string }> {
   try {
+    const delay = fanOutAt ? fanOutAt.getTime() - Date.now() : 0;
     await waCampaignEnqueue.add(
       campaignId,
       {
@@ -930,6 +1010,8 @@ export async function enqueueCampaignMessage({
       },
       {
         removeOnComplete: true,
+        ...(delay > 0 ? { delay } : {}),
+        ...(jobId ? { jobId, deduplication: { id: jobId } } : {}),
       },
     );
     return { status: true, message: "Campaign messages enqueued successfully" };

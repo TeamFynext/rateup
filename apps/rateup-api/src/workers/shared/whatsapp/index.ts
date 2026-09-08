@@ -369,10 +369,22 @@ export async function fetchCampaignParticipants(
       query += ` AND cpds."participantId" = $${paramIndex}`;
       params.push(participantId);
       paramIndex++;
-    } else if (sendToStatuses?.length) {
-      query += ` AND cpds.status = ANY($${paramIndex})`;
-      params.push(sendToStatuses);
-      paramIndex++;
+    } else {
+      // A named cohort and the status filter both apply, unlike the single
+      // participant above which is already an exact row. The drip cron sends the
+      // participants whose delay has elapsed, and they still have to be PENDING —
+      // dropping either half would send to everyone on the stage, which is the
+      // behaviour the per-participant scheduling replaced.
+      if (participantIds?.length) {
+        query += ` AND cpds."participantId" = ANY($${paramIndex}::uuid[])`;
+        params.push(participantIds);
+        paramIndex++;
+      }
+      if (sendToStatuses?.length) {
+        query += ` AND cpds.status = ANY($${paramIndex})`;
+        params.push(sendToStatuses);
+        paramIndex++;
+      }
     }
 
     if (campaign?.useUserConsent) {

@@ -1,5 +1,6 @@
 import { getConversationBudget } from "../subscription/conversationBudget.js";
 import {
+  getCampaignMessagesPerRecipient,
   getCampaignParticipantCountByIds,
   getCampaignParticipantCountByStatuses,
 } from "./campaign.service.js";
@@ -8,6 +9,11 @@ import type { CampaignParticipantStatus } from "../../types/enums.js";
 export interface CampaignSendPreflight {
   /** Participants this send would go out to. */
   recipients: number;
+  /**
+   * Messages per recipient — a drip's stage count, 1 for a broadcast. The
+   * allowance is spent per message, so a 3-stage drip to 50 people is 150.
+   */
+  messagesPerRecipient: number;
   /** False when the plan is not metered — nothing to warn about. */
   metered: boolean;
   /** The conversation allowance and what is left of it, when metered. */
@@ -52,16 +58,24 @@ export async function getCampaignSendPreflight(
    */
   participantIds?: string[],
 ): Promise<CampaignSendPreflight> {
-  const [recipients, budget] = await Promise.all([
+  const [recipients, budget, messagesPerRecipient] = await Promise.all([
     participantIds?.length
       ? getCampaignParticipantCountByIds(campaignId, orgId, participantIds)
       : getCampaignParticipantCountByStatuses(campaignId, orgId, sendToStatuses),
     getConversationBudget(orgId),
+    getCampaignMessagesPerRecipient(campaignId),
   ]);
+
+  // A drip sends its whole sequence to each recipient, so the cost is the
+  // audience times the stages. Counting the audience alone told someone with 60
+  // conversations left that a 3-stage drip to 50 people fit — it needs 150, and
+  // the send would have stopped two thirds of the way through the first stage.
+  const messages = recipients * messagesPerRecipient;
 
   if (!budget.metered) {
     return {
       recipients,
+      messagesPerRecipient,
       metered: false,
       isAnnual: budget.isAnnual,
       exhausted: false,
@@ -73,12 +87,13 @@ export async function getCampaignSendPreflight(
 
   return {
     recipients,
+    messagesPerRecipient,
     metered: true,
     max: budget.max,
     used: budget.used,
     remaining,
     isAnnual: budget.isAnnual,
     exhausted: remaining === 0,
-    shortfall: Math.max(recipients - remaining, 0),
+    shortfall: Math.max(messages - remaining, 0),
   };
 }

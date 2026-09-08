@@ -120,8 +120,8 @@ beforeEach(() => {
 describe("nextAttemptAt", () => {
   const FROM = new Date("2026-03-01T10:00:00Z");
 
-  test("front-loads the smart schedule, then decays: 2m, 4h, 12h", () => {
-    expect(nextAttemptAt(policy(), 1, FROM).toISOString()).toBe("2026-03-01T10:02:00.000Z");
+  test("front-loads the smart schedule, then decays: 45m, 4h, 12h", () => {
+    expect(nextAttemptAt(policy(), 1, FROM).toISOString()).toBe("2026-03-01T10:45:00.000Z");
     expect(nextAttemptAt(policy(), 2, FROM).toISOString()).toBe("2026-03-01T14:00:00.000Z");
     expect(nextAttemptAt(policy(), 3, FROM).toISOString()).toBe("2026-03-01T22:00:00.000Z");
   });
@@ -229,7 +229,7 @@ describe("scheduleNextRetry", () => {
     db.campaignParticipant.count.mockResolvedValue(3);
   });
 
-  test("schedules the first retry 2 minutes out", async () => {
+  test("schedules the first retry 45 minutes out", async () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
     db.campaignSend.findUnique.mockResolvedValue(send());
 
@@ -240,7 +240,7 @@ describe("scheduleNextRetry", () => {
     expect(arg.trigger).toBe("AUTO_RETRY");
     expect(arg.status).toBe("SCHEDULED");
     expect(arg.targetStatuses).toEqual([CampaignParticipantStatus.FAILED]);
-    expect(arg.scheduledFor.toISOString()).toBe("2026-03-01T10:02:00.000Z");
+    expect(arg.scheduledFor.toISOString()).toBe("2026-03-01T10:45:00.000Z");
   });
 
   test("books nothing when every message landed and none failed", async () => {
@@ -337,9 +337,9 @@ describe("scheduleNextRetry", () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
     db.campaignSend.findUnique.mockResolvedValue(
       send({
-        // Drained half an hour ago, so the +2m offset measured from completion
-        // is already inside the floor measured from now.
-        completedAt: new Date("2026-03-01T09:30:00Z"),
+        // Drained an hour and a half ago, so the +45m offset measured from
+        // completion is already inside the floor measured from now.
+        completedAt: new Date("2026-03-01T08:30:00Z"),
       }),
     );
 

@@ -10,6 +10,7 @@ import { Job, Worker } from "bullmq";
 
 import { log } from "../../shared/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
+import prisma from "../../../utils/prisma.js";
 import { CampaignStatus } from "../../shared/types/enum.js";
 import {
   decryptAccessToken,
@@ -20,6 +21,7 @@ import {
 } from "../../shared/whatsapp/index.js";
 import { waMessageQueue } from "../queues/whatsapp.queue.js";
 import {
+  cancelCampaignSend,
   failCampaignSend,
   startCampaignSend,
 } from "../../../modules/campaign/campaignSend.service.js";
@@ -70,6 +72,28 @@ export const campaignEnqueueWorker = new Worker(
     }
 
     try {
+      // A drip stage is armed ahead of its moment, so minutes can pass between
+      // booking this job and running it — long enough for someone to pause the
+      // campaign. The cron's own `status = 'ACTIVE'` filter cannot cover that
+      // window, so the check has to happen here too, at the point of sending.
+      if (dripStageId) {
+        const campaign = await prisma.campaign.findUnique({
+          where: { id: campaignId },
+          select: { status: true },
+        });
+        if (campaign?.status !== CampaignStatus.ACTIVE) {
+          log.info(
+            { campaignId, dripStageId, status: campaign?.status },
+            "Drip stage skipped — the campaign is no longer active",
+          );
+          await cancelCampaignSend(
+            campaignSendId,
+            "The campaign was paused before this stage ran.",
+          );
+          return;
+        }
+      }
+
       const participants = await fetchCampaignParticipants(
         campaignId,
         participantId,

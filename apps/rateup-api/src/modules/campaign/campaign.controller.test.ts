@@ -42,6 +42,7 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
+import { sendCampaignInputSchema } from "./campaign.schema.js";
 import {
   CampaignNotFoundError,
   createCampaign,
@@ -346,6 +347,31 @@ describe("sendCampaignHandler", () => {
     expect(m.update.mock.calls[0][2].startedAt).toBeInstanceOf(Date);
   });
 
+  test("a drip status change needs no participant statuses", async () => {
+    // Start/Pause on a drip sends `sendToStatuses: []` — the handler ignores the
+    // field entirely — and the route schema's `.min(1)` rejected the request
+    // before it arrived, as "expected array to have >=1 items".
+    const parsed = sendCampaignInputSchema.safeParse({
+      sentCampaignChoice: "NOW",
+      status: CampaignStatus.INACTIVE,
+      sendToStatuses: [],
+      type: CampaignType.DRIP,
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  test("a broadcast send still has to name at least one status", async () => {
+    const parsed = sendCampaignInputSchema.safeParse({
+      sentCampaignChoice: "NOW",
+      status: CampaignStatus.ACTIVE,
+      sendToStatuses: [],
+      type: CampaignType.WHATSAPP,
+    });
+
+    expect(parsed.success).toBe(false);
+  });
+
   test("only flips the status for a drip campaign", async () => {
     const rep = reply();
 
@@ -355,6 +381,73 @@ describe("sendCampaignHandler", () => {
     );
 
     expect(m.enqueue).not.toHaveBeenCalled();
+    expect(sent(rep).code).toBe("MSG_SCHEDULED");
+  });
+
+  test.each([
+    ["one recipient", { participantId: "participant-1" }],
+    ["a ticked cohort", { participantIds: ["participant-1", "participant-2"] }],
+  ])("refuses a drip re-send scoped to %s", async (_label, scope) => {
+    // This used to fall through to the status update below: nothing was
+    // re-sent, the response said MSG_SCHEDULED, and the `startedAt` stamp
+    // restarted the whole sequence. The UI hides these controls for a drip now;
+    // the API refusing them is what makes that a rule rather than a convention.
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({
+        body: sendBody({
+          type: CampaignType.DRIP,
+          status: CampaignStatus.ACTIVE,
+          sendToStatuses: ["FAILED"],
+          ...scope,
+        }),
+      }),
+      rep,
+    );
+
+    expect(sent(rep).code).toBe("DRIP_RESEND_UNSUPPORTED");
+    expect(m.update).not.toHaveBeenCalled();
+    expect(m.enqueue).not.toHaveBeenCalled();
+  });
+
+  test("starts the drip clock when a drip is switched on", async () => {
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.INACTIVE,
+      orgId: ORG_A,
+      type: CampaignType.DRIP,
+      dripStages: [{ id: "stage-1" }],
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ type: CampaignType.DRIP, status: CampaignStatus.ACTIVE }) }),
+      rep,
+    );
+
+    expect(m.update.mock.calls[0][2].startedAt).toBeInstanceOf(Date);
+  });
+
+  test("leaves the drip clock alone when a running drip is paused", async () => {
+    // `startedAt` is the base every stage's delay is measured from. Stamping it
+    // on a pause pushed every pending stage out by however long the campaign had
+    // been running.
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.ACTIVE,
+      orgId: ORG_A,
+      type: CampaignType.DRIP,
+      dripStages: [{ id: "stage-1" }],
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ type: CampaignType.DRIP, status: CampaignStatus.INACTIVE }) }),
+      rep,
+    );
+
+    expect(m.update.mock.calls[0][2]).not.toHaveProperty("startedAt");
     expect(sent(rep).code).toBe("MSG_SCHEDULED");
   });
 

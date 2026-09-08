@@ -61,13 +61,12 @@ dayjs.extend(timezone);
  * The first offset is also a *settle delay*, and it is mandatory. When the queue
  * drains, messages that Meta accepted are still `SENT` — they only flip to
  * `FAILED` when the status webhook lands. Building a cohort at drain time + 0
- * would find almost nothing to retry and burn the attempt. TEMPORARY: shortened
- * to 2 minutes for testing (production value is 45m). 45 minutes is
+ * would find almost nothing to retry and burn the attempt. 45 minutes is
  * comfortably longer than a Cloud API status webhook takes (seconds, to a few
  * minutes when Meta is backed up), and is what the product surfaces to the
  * customer on the Retries step.
  */
-const SMART_OFFSETS_MINUTES = [2, 4, 8] as const;
+const SMART_OFFSETS_MINUTES = [45, 4 * 60, 12 * 60] as const;
 
 /** Nothing may be scheduled sooner than this after a send drains. */
 const MINIMUM_SETTLE_MINUTES = 2;
@@ -81,7 +80,7 @@ export const MAX_RETRY_WINDOW_DAYS = 7;
  * Exported so the wizard renders exactly what the engine will do rather than a
  * second copy of the numbers that can drift from it.
  */
-export const SMART_SCHEDULE_OFFSETS: readonly string[] = ["+2m", "+4h", "+12h"];
+export const SMART_SCHEDULE_OFFSETS: readonly string[] = ["+45m", "+4h", "+12h"];
 
 /**
  * When attempt `attemptNo` should fire, measured from `from`.

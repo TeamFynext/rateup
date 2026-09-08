@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createCampaignHandler,
   deleteCampaignByIdHandler,
+  getDripScheduleHandler,
   getCampaignFilterForFlowsHandler,
   getCampaignsHandler,
   getCampaignStatsHandler,
@@ -99,6 +100,18 @@ export async function campaignRoutes(server: FastifyInstance) {
       },
     },
     getCampaignSendPreflightHandler,
+  );
+
+  // A drip books no send ahead of time — the cron derives each stage's moment as
+  // it ticks — so "what happens next" has to be computed rather than read.
+  server.get(
+    "/:campaignId/drip-schedule",
+    {
+      schema: {
+        params: byCampaignIdParamsSchema,
+      },
+    },
+    getDripScheduleHandler,
   );
 
   server.post(

@@ -9,6 +9,7 @@ import {
 } from "./campaign.schema.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 import { getCampaignSendPreflight } from "./campaign.preflight.js";
+import { getDripSchedule } from "./campaignDrip.service.js";
 import {
   createCampaign,
   deleteCampaign,
@@ -162,6 +163,35 @@ export async function getCampaignSendPreflightHandler(
 }
 
 /**
+ * When each stage of a drip campaign next goes out.
+ *
+ * A drip books no send ahead of time, so the Overview's "next batch" card has
+ * nothing to read for one — this is what it reads instead.
+ */
+export async function getDripScheduleHandler(
+  request: FastifyRequest<{ Params: ByCampaignIdParams }>,
+  reply: FastifyReply,
+) {
+  const { campaignId } = request.params;
+  const { orgId } = request.user;
+
+  try {
+    const schedule = await getDripSchedule(campaignId, orgId);
+    if (!schedule) {
+      // Either no such campaign in this org, or not a drip. Both mean there is
+      // no drip schedule to show, and neither is worth distinguishing to a
+      // caller that only renders a card when one comes back.
+      return reply
+        .status(404)
+        .send({ message: "No drip schedule for this campaign", code: "DRIP_SCHEDULE_NOT_FOUND" });
+    }
+    return reply.send(schedule);
+  } catch (error) {
+    return replyForError(reply, error, "Error while handling getDripScheduleHandler");
+  }
+}
+
+/**
  * Why this campaign cannot be launched, or null if it can.
  *
  * A draft is deliberately allowed to be saved half-finished — that is what makes
@@ -290,11 +320,33 @@ export async function sendCampaignHandler(
           code: "STATUS_REQUIRED",
         });
       }
+
+      // A drip has no re-send: the cron owns what goes out and when. This branch
+      // used to ignore a scoped request's `participantId`/`sendToStatuses` and
+      // fall through to the status update, so "Retry now" on one failed
+      // recipient retried nobody and reported success — while the `startedAt`
+      // reset below pushed every pending stage back by however long the campaign
+      // had been running. Refusing is the honest answer.
+      if (participantId || participantIds?.length) {
+        return reply.status(400).send({
+          message:
+            "A drip campaign cannot re-send to specific recipients. Its stages are sent by schedule.",
+          code: "DRIP_RESEND_UNSUPPORTED",
+        });
+      }
+
+      // `startedAt` is the drip clock: every stage is due at
+      // max(participantCreatedAt, startedAt) + delay. Stamping it on each call
+      // restarted the whole sequence, so only an actual start may set it — a
+      // pause must leave the campaign's place in the schedule alone.
+      const isStarting =
+        status === CampaignStatus.ACTIVE && campaign.status !== CampaignStatus.ACTIVE;
+
       await updateCampaign(campaignId, orgId, {
         status,
         campaignSentAt: null,
         scheduledStatuses: [],
-        startedAt: new Date(),
+        ...(isStarting ? { startedAt: new Date() } : {}),
       });
       return reply.status(200).send({
         message: `Campaign status updated to ${status}`,

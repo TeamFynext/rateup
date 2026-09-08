@@ -174,26 +174,37 @@ const sendTestInputSchema = z.object({
   phone: z.string().trim().min(5, "Enter the number to send the test to"),
 });
 
-const sendCampaignInputSchema = z.object({
-  sendToStatuses: z.array(z.enum(CampaignParticipantStatus)).min(1),
-  participantId: z.string().optional(),
-  /**
-   * An exact cohort, narrower than `sendToStatuses` — the recipients ticked in
-   * the participants table. Like `participantId`, it is a scoped resend rather
-   * than a campaign-wide one, so the daily cap does not apply to it.
-   */
-  participantIds: z.array(z.string()).min(1).max(1000).optional(),
-  campaignSentAt: z.coerce.date().optional().nullable(),
-  sentCampaignChoice: z.enum(SentCampaignEnum),
-  status: z.enum(CampaignStatus).optional().nullable(),
-  type: z.string().optional(),
-  dailySendLimit: z.number().int().positive().optional().nullable(),
-  /**
-   * Set alongside the send so the wizard's Launch is one call. Absent leaves any
-   * existing policy untouched — this is not a way to clear one.
-   */
-  retryPolicy: retryPolicyInputSchema.optional(),
-});
+const sendCampaignInputSchema = z
+  .object({
+    // Empty is allowed at the field level and refused below for everything except
+    // a drip. Starting or pausing a drip targets no statuses at all — the handler
+    // ignores them and only flips the campaign's status — so `.min(1)` here made
+    // the Start/Pause button fail validation before it reached the handler, with
+    // "expected array to have >=1 items" about a field the caller had no business
+    // filling in.
+    sendToStatuses: z.array(z.enum(CampaignParticipantStatus)),
+    participantId: z.string().optional(),
+    /**
+     * An exact cohort, narrower than `sendToStatuses` — the recipients ticked in
+     * the participants table. Like `participantId`, it is a scoped resend rather
+     * than a campaign-wide one, so the daily cap does not apply to it.
+     */
+    participantIds: z.array(z.string()).min(1).max(1000).optional(),
+    campaignSentAt: z.coerce.date().optional().nullable(),
+    sentCampaignChoice: z.enum(SentCampaignEnum),
+    status: z.enum(CampaignStatus).optional().nullable(),
+    type: z.string().optional(),
+    dailySendLimit: z.number().int().positive().optional().nullable(),
+    /**
+     * Set alongside the send so the wizard's Launch is one call. Absent leaves any
+     * existing policy untouched — this is not a way to clear one.
+     */
+    retryPolicy: retryPolicyInputSchema.optional(),
+  })
+  .refine((data) => data.type === CampaignType.DRIP || data.sendToStatuses.length > 0, {
+    path: ["sendToStatuses"],
+    error: "Choose at least one participant status to send to.",
+  });
 
 export type BySendIdParams = z.infer<typeof bySendIdParamsSchema>;
 export type SendParticipantsQuery = z.infer<typeof sendParticipantsQuerySchema>;

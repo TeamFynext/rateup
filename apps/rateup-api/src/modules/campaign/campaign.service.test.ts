@@ -25,8 +25,8 @@ vi.mock("../../utils/prisma.js", () => ({
     },
     campaignStats: { create: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
     campaignSend: { findMany: vi.fn(), findFirst: vi.fn() },
-    campaignParticipant: { count: vi.fn() },
-    campaignParticipantDripStage: { count: vi.fn() },
+    campaignParticipant: { count: vi.fn(), findMany: vi.fn() },
+    campaignParticipantDripStage: { count: vi.fn(), createMany: vi.fn() },
     waFlow: { findFirst: vi.fn() },
   },
   excludeFields: vi.fn(),
@@ -80,6 +80,7 @@ import {
 } from "../../workers/bullmq/queues/index.js";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums.js";
 import {
+  backfillDripStageParticipants,
   createCampaign,
   deleteCampaign,
   deleteCampaignParticipantsByCampaignId,
@@ -125,8 +126,8 @@ const db = prisma as unknown as {
   >;
   campaignStats: Record<"create" | "findFirst" | "findUnique", Mock>;
   campaignSend: Record<"findMany" | "findFirst", Mock>;
-  campaignParticipant: { count: Mock };
-  campaignParticipantDripStage: { count: Mock };
+  campaignParticipant: { count: Mock; findMany: Mock };
+  campaignParticipantDripStage: { count: Mock; createMany: Mock };
   waFlow: { findFirst: Mock };
 };
 const limitExceededMock = checkConversationLimitAvailable as unknown as Mock;
@@ -417,6 +418,9 @@ describe("updateCampaign", () => {
   });
 
   test("adds a drip stage that carries no id", async () => {
+    db.campaignDripStage.create.mockResolvedValue({ id: "stage-new" });
+    db.campaignParticipant.findMany.mockResolvedValue([]);
+
     await updateCampaign(CAMPAIGN_ID, ORG_A, {
       dripStages: [{ templateId: "tpl-1", delay: 2, delayUnit: "days" }],
     } as any);
@@ -428,6 +432,33 @@ describe("updateCampaign", () => {
       delayUnit: "days",
       sendAtTime: null,
     });
+  });
+
+  test("enrols the existing audience into a stage added later", async () => {
+    // Without this the new stage has no `CampaignParticipantDripStage` rows, and
+    // the dispatcher — which reads that table, not the stage table — sends it to
+    // nobody without saying so.
+    db.campaignDripStage.create.mockResolvedValue({ id: "stage-new" });
+    db.campaignParticipant.findMany.mockResolvedValue([{ id: "p1" }]);
+    db.campaignParticipantDripStage.createMany.mockResolvedValue({ count: 1 });
+
+    await updateCampaign(CAMPAIGN_ID, ORG_A, {
+      dripStages: [{ templateId: "tpl-1", delay: 2, delayUnit: "days" }],
+    } as any);
+
+    expect(db.campaignParticipantDripStage.createMany.mock.calls[0][0].data).toEqual([
+      { participantId: "p1", dripStageId: "stage-new", status: "PENDING" },
+    ]);
+  });
+
+  test("does not re-enrol anyone when only existing stages are edited", async () => {
+    db.campaignDripStage.findMany.mockResolvedValue([{ id: "stage-1" }]);
+
+    await updateCampaign(CAMPAIGN_ID, ORG_A, {
+      dripStages: [{ id: "stage-1", templateId: "tpl-2", delay: 3 }],
+    } as any);
+
+    expect(db.campaignParticipantDripStage.createMany).not.toHaveBeenCalled();
   });
 
   test("rewrites a drip stage that names an existing id", async () => {
@@ -964,5 +995,59 @@ describe("getFlowIdFromTemplateComponents", () => {
     const components: any = [{ type: "BUTTONS", buttons: [{ type: "FLOW", flow_id: 7 }] }];
 
     expect(getFlowIdFromTemplateComponents(components)).toBe("7");
+  });
+});
+
+/**
+ * A stage added after the audience used to send to nobody.
+ *
+ * The dispatcher reads `CampaignParticipantDripStage`, and those rows were only
+ * ever written when participants were added — so a stage created afterwards had
+ * no recipients at all, silently. Going back to the wizard's Template step,
+ * which sits before Audience, is the ordinary way to hit that.
+ */
+describe("backfillDripStageParticipants", () => {
+  beforeEach(() => {
+    vi.mocked(prisma.campaignParticipant.findMany).mockReset();
+    vi.mocked(prisma.campaignParticipantDripStage.createMany).mockReset().mockResolvedValue({
+      count: 0,
+    });
+  });
+
+  test("enrols every existing participant into each new stage", async () => {
+    vi.mocked(prisma.campaignParticipant.findMany).mockResolvedValue([
+      { id: "p1" },
+      { id: "p2" },
+    ] as never);
+    vi.mocked(prisma.campaignParticipantDripStage.createMany).mockResolvedValue({ count: 4 });
+
+    const result = await backfillDripStageParticipants("campaign-1", ["s1", "s2"]);
+
+    expect(prisma.campaignParticipantDripStage.createMany).toHaveBeenCalledWith({
+      data: [
+        { participantId: "p1", dripStageId: "s1", status: "PENDING" },
+        { participantId: "p1", dripStageId: "s2", status: "PENDING" },
+        { participantId: "p2", dripStageId: "s1", status: "PENDING" },
+        { participantId: "p2", dripStageId: "s2", status: "PENDING" },
+      ],
+      // The pair is uniquely indexed, so a concurrent enrolment is a no-op
+      // rather than a crash.
+      skipDuplicates: true,
+    });
+    expect(result.created).toBe(4);
+  });
+
+  test("writes nothing when the campaign has no participants yet", async () => {
+    vi.mocked(prisma.campaignParticipant.findMany).mockResolvedValue([] as never);
+
+    await backfillDripStageParticipants("campaign-1", ["s1"]);
+
+    expect(prisma.campaignParticipantDripStage.createMany).not.toHaveBeenCalled();
+  });
+
+  test("writes nothing when no stage was added", async () => {
+    await backfillDripStageParticipants("campaign-1", []);
+
+    expect(prisma.campaignParticipant.findMany).not.toHaveBeenCalled();
   });
 });

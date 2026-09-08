@@ -200,6 +200,21 @@ export async function failCampaignSend(campaignSendId: string, note?: string) {
  * Used both by "cancel pending retries" and by a manual send that needs to take
  * the lane back from a scheduled retry.
  */
+/**
+ * Close one send that never ran, without calling it a failure.
+ *
+ * A drip stage armed ahead of its moment and then paused has not failed — the
+ * customer changed their mind, and `failCampaignSend` would put a red attempt in
+ * their history for having done so. It still has to close, or the row keeps the
+ * stage's live-send slot under the partial unique index forever.
+ */
+export async function cancelCampaignSend(campaignSendId: string, note: string) {
+  return prisma.campaignSend.updateMany({
+    where: { id: campaignSendId, status: { in: [...LIVE_SEND_STATUSES] } },
+    data: { status: CampaignSendStatus.CANCELLED, completedAt: new Date(), note },
+  });
+}
+
 export async function cancelCampaignSends(
   campaignId: string,
   options: { note?: string; onlyScheduled?: boolean } = {},
