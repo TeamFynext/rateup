@@ -75,7 +75,7 @@ const AssignStageToContactsModal = ({
     <Dialog open={opened} onOpenChange={setOpened}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("Update Pipeline Stage")}</DialogTitle>
+          <DialogTitle>{t("Update lead stage")}</DialogTitle>
           <DialogDescription>
             {t("Put the selected contacts on a stage of your pipeline.")}
           </DialogDescription>
@@ -87,7 +87,7 @@ const AssignStageToContactsModal = ({
           </span>
         </div>
         <div className="flex flex-col gap-2">
-          <Label>{t("Pipeline Stage")}</Label>
+          <Label>{t("Lead stage")}</Label>
           <StageSelector value={stageId} onChange={setStageId} className="w-full" />
         </div>
         <DialogFooter>

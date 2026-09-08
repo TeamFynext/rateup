@@ -271,7 +271,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
                     }))}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("Select stage")} />
+                      <SelectValue placeholder={t("Select a lead stage")} />
                     </SelectTrigger>
 
                     <SelectContent>

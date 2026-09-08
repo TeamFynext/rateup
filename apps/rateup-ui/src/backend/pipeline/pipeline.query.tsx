@@ -1,5 +1,5 @@
-import type { QueryClient } from "@tanstack/react-query";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData, QueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -12,6 +12,10 @@ import * as api from "./pipeline.api";
 import { pipelineKeys } from "./pipeline.keys";
 import type {
   BulkUpdateLeadsInput,
+  ForecastBucket,
+  LeadListParams,
+  LeadPage,
+  PipelineStats,
   CloseLeadInput,
   CreateLeadInput,
   CreatePipelineInput,
@@ -81,14 +85,46 @@ function findCachedStage(queryClient: QueryClient, stageId: string) {
  * mutations are called from screens that never name one.
  */
 function contactIdsForLeads(queryClient: QueryClient, leadIds: string[]) {
-  const lists = queryClient.getQueriesData<Lead[]>({ queryKey: ["pipeline", "leads"] });
   const found: Array<string | null> = [];
-  for (const [, leads] of lists) {
-    for (const lead of leads ?? []) {
-      if (leadIds.includes(lead.id)) found.push(lead.contactId);
-    }
+  for (const lead of cachedLeads(queryClient)) {
+    if (leadIds.includes(lead.id)) found.push(lead.contactId);
   }
   return found;
+}
+
+/**
+ * Every lead currently in the cache, across each column and each filter.
+ *
+ * The lists are paginated now, so a lead lives inside `InfiniteData.pages`
+ * rather than in one array — and the same lead can sit in several cached
+ * variants of a column at once. Callers looking one up take the first hit;
+ * callers scanning for contacts tolerate the duplicates.
+ */
+function* cachedLeads(queryClient: QueryClient): Generator<Lead> {
+  const lists = queryClient.getQueriesData<InfiniteData<LeadPage>>({
+    queryKey: ["pipeline", "leads"],
+  });
+  for (const [, data] of lists) {
+    for (const page of data?.pages ?? []) {
+      for (const lead of page.items) yield lead;
+    }
+  }
+}
+
+/** The cached copy of one lead, wherever it is loaded. */
+export function findCachedLead(queryClient: QueryClient, leadId: string): Lead | undefined {
+  for (const lead of cachedLeads(queryClient)) {
+    if (lead.id === leadId) return lead;
+  }
+  return undefined;
+}
+
+/** A drag knows where the card came from, which is the column to remove it from. */
+export interface MoveLeadVariables {
+  leadId: string;
+  fromStageId: string;
+  stageId: string;
+  stageName?: string;
 }
 
 // ------------------------------------------------------------------- queries
@@ -122,11 +158,81 @@ export function usePipelineMembersQuery(pipelineId: string | undefined) {
   });
 }
 
-export function useLeadsQuery(pipelineId: string | undefined) {
-  return useQuery({
-    queryKey: pipelineKeys.leads(pipelineId),
-    queryFn: () => api.fetchLeads(pipelineId!),
+/**
+ * Opts a lead list out of the app-wide `placeholderData` default.
+ *
+ * `providers.tsx` gives every query `placeholderData: (previous) => previous`,
+ * which is right for a list whose contents do not depend on the key — it avoids
+ * a flash while the same data refetches. A lead list is the opposite: the key
+ * *is* the filter, so keeping the previous key's data means the board renders
+ * leads that do not match the filter the user just chose, with the header
+ * counting the new answer above them. Better to show the column loading.
+ */
+const NO_STALE_ROWS = { placeholderData: undefined } as const;
+
+/**
+ * One board column's cards.
+ *
+ * Each column runs its own query so the filters are applied per stage: a column
+ * holding one matching lead returns that lead, however many the busy columns
+ * have. The cursor is opaque and comes back from the previous page.
+ */
+export function useStageLeadsQuery(
+  pipelineId: string | undefined,
+  stageId: string,
+  params: LeadListParams,
+) {
+  // The sidebar's stage facet narrows the board to one column. Every column
+  // asks with its own `stageId`, so that facet would otherwise be overwritten
+  // here and silently do nothing — the column it excludes has to answer empty
+  // rather than answer for itself.
+  const excluded = Boolean(params.stageId && params.stageId !== stageId);
+
+  return useInfiniteQuery({
+    queryKey: pipelineKeys.stageLeads(pipelineId, stageId, params),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => api.fetchLeadPage(pipelineId!, { ...params, stageId }, pageParam),
+    getNextPageParam: (last: LeadPage) => last.nextCursor ?? undefined,
+    enabled: Boolean(pipelineId) && !excluded,
+    staleTime: 15_000,
+    ...NO_STALE_ROWS,
+  });
+}
+
+/** The whole board in one list — the list view's ungrouped mode. */
+export function useListLeadsQuery(pipelineId: string | undefined, params: LeadListParams) {
+  return useInfiniteQuery({
+    queryKey: pipelineKeys.listLeads(pipelineId, params),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => api.fetchLeadPage(pipelineId!, params, pageParam),
+    getNextPageParam: (last: LeadPage) => last.nextCursor ?? undefined,
     enabled: Boolean(pipelineId),
+    staleTime: 15_000,
+    ...NO_STALE_ROWS,
+  });
+}
+
+/**
+ * The board's counts, over every lead rather than the loaded page.
+ *
+ * No filters in the key: these answer "how is this board doing", so they stay
+ * put while the user narrows the columns underneath them.
+ */
+export function usePipelineStatsQuery(pipelineId: string | undefined) {
+  return useQuery<PipelineStats>({
+    queryKey: pipelineKeys.stats(pipelineId),
+    queryFn: () => api.fetchPipelineStats(pipelineId!),
+    enabled: Boolean(pipelineId),
+    staleTime: 30_000,
+  });
+}
+
+export function usePipelineForecastQuery(pipelineId: string | undefined) {
+  return useQuery<ForecastBucket[]>({
+    queryKey: pipelineKeys.forecast(pipelineId),
+    queryFn: () => api.fetchPipelineForecast(pipelineId!),
+    enabled: Boolean(pipelineId),
+    staleTime: 30_000,
   });
 }
 
@@ -187,6 +293,10 @@ function usePipelineMutation<TVariables, TResult>(options: {
       toast.error(getApiErrorMessage(error, options.errorFallback(t)), { id: options.toastId });
     },
     onSettled: () => {
+      // Sweeps every column of every board. Correct, and no flicker — React
+      // Query keeps the current rows on screen while it refetches — but it does
+      // refetch each loaded page. TODO: narrow to the affected column + stats,
+      // the way `useMoveLeadMutation` already does.
       queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
     },
   });
@@ -225,7 +335,7 @@ export function useCreateStageMutation() {
   return usePipelineMutation<CreateStageInput, unknown>({
     mutationFn: api.createStage,
     success: (t, _result, variables) => t("{name} added", { name: variables.name }),
-    errorFallback: (t) => t("Could not add the stage"),
+    errorFallback: (t) => t("Could not add the lead stage"),
     toastId: "pipeline-stage-create",
   });
 }
@@ -233,7 +343,7 @@ export function useCreateStageMutation() {
 export function useUpdateStageMutation() {
   return usePipelineMutation<{ stageId: string; input: UpdateStageInput }, unknown>({
     mutationFn: ({ stageId, input }) => api.updateStage(stageId, input),
-    errorFallback: (t) => t("Could not save the stage"),
+    errorFallback: (t) => t("Could not save the lead stage"),
     toastId: "pipeline-stage-update",
   });
 }
@@ -241,8 +351,8 @@ export function useUpdateStageMutation() {
 export function useDeleteStageMutation() {
   return usePipelineMutation<{ stageId: string; moveLeadsToStageId?: string }, unknown>({
     mutationFn: ({ stageId, moveLeadsToStageId }) => api.deleteStage(stageId, moveLeadsToStageId),
-    success: (t) => t("Stage deleted"),
-    errorFallback: (t) => t("Could not delete the stage"),
+    success: (t) => t("Lead stage deleted"),
+    errorFallback: (t) => t("Could not delete the lead stage"),
     toastId: "pipeline-stage-delete",
   });
 }
@@ -291,12 +401,16 @@ export function useReorderStagesMutation() {
       // Put the old order back rather than leaving the board showing a sequence
       // the server rejected.
       if (context?.previous) queryClient.setQueryData(context.key, context.previous);
-      toast.error(getApiErrorMessage(error, t("Could not reorder the stages")), {
+      toast.error(getApiErrorMessage(error, t("Could not reorder the lead stages")), {
         id: "pipeline-stage-reorder",
       });
     },
 
     onSettled: () => {
+      // Sweeps every column of every board. Correct, and no flicker — React
+      // Query keeps the current rows on screen while it refetches — but it does
+      // refetch each loaded page. TODO: narrow to the affected column + stats,
+      // the way `useMoveLeadMutation` already does.
       queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
     },
   });
@@ -365,46 +479,149 @@ export function useDeleteLeadMutation() {
 }
 
 /**
- * Dragging a card has to land instantly, so the lead list is rewritten before
- * the request goes out and rolled back if it fails. The board reads
- * `stage.isWon` off each lead, so the optimistic copy carries the whole stage.
+ * Moves a lead's counts from one column to the other.
+ *
+ * Exported for its own test: the board's headers are read from `stats`, so if
+ * this is wrong a dragged card lands correctly and the number above it does not.
+ */
+export function shiftStageCounts(stats: PipelineStats, before: Lead, after: Lead): PipelineStats {
+  const wasOpen = before.status === "OPEN";
+  const isOpen = after.status === "OPEN";
+
+  const stages = stats.stages.map((row) => {
+    if (row.stageId === before.stageId) {
+      return {
+        ...row,
+        total: Math.max(0, row.total - 1),
+        open: Math.max(0, row.open - (wasOpen ? 1 : 0)),
+      };
+    }
+    if (row.stageId === after.stageId) {
+      return { ...row, total: row.total + 1, open: row.open + (isOpen ? 1 : 0) };
+    }
+    return row;
+  });
+
+  // A move between two open columns leaves the status totals alone; a drop onto
+  // a closing column is what shifts them.
+  const delta = (status: Lead["status"]) =>
+    (after.status === status ? 1 : 0) - (before.status === status ? 1 : 0);
+
+  return {
+    ...stats,
+    stages,
+    totals: {
+      ...stats.totals,
+      open: Math.max(0, stats.totals.open + delta("OPEN")),
+      won: Math.max(0, stats.totals.won + delta("WON")),
+      lost: Math.max(0, stats.totals.lost + delta("LOST")),
+    },
+  };
+}
+
+/**
+ * Dragging a card has to land instantly, so both columns are rewritten before
+ * the request goes out and restored if it fails.
+ *
+ * The write is exact rather than a guess: the card takes `stageEnteredAt = now`,
+ * and a column is ordered by that descending, so index 0 of page 0 is precisely
+ * where the server will put it too. That is why `onSettled` invalidates only the
+ * counts — refetching the lists would re-fetch every loaded page of both columns
+ * to be told what the cache already says, which is the flicker this replaces.
+ *
+ * The target column is read from the board's own stages, never from another lead
+ * already sitting there: dropping onto an empty column would otherwise leave the
+ * card wearing its old stage until a refetch corrected it.
  */
 export function useMoveLeadMutation(pipelineId: string | undefined) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const leadsKey = pipelineKeys.leads(pipelineId);
+
+  const columnPrefix = (stageId: string) => [...pipelineKeys.leads(pipelineId), "stage", stageId];
 
   return useMutation({
-    mutationFn: ({ leadId, stageId }: { leadId: string; stageId: string; stageName?: string }) =>
-      api.moveLead(leadId, stageId),
-    onMutate: async ({ leadId, stageId }) => {
-      await queryClient.cancelQueries({ queryKey: leadsKey });
-      const previous = queryClient.getQueryData<Lead[]>(leadsKey);
-      if (!previous) return { previous };
+    mutationFn: ({ leadId, stageId }: MoveLeadVariables) => api.moveLead(leadId, stageId),
 
-      const target = previous.find((lead) => lead.stageId === stageId)?.stage;
-      queryClient.setQueryData<Lead[]>(
-        leadsKey,
-        previous.map((lead) =>
-          lead.id === leadId
-            ? {
-                ...lead,
-                stageId,
-                stage: target ?? lead.stage,
-                stageEnteredAt: new Date().toISOString(),
-                status: target?.status ?? lead.status,
-              }
-            : lead,
-        ),
+    onMutate: async ({ leadId, fromStageId, stageId }: MoveLeadVariables) => {
+      const fromPrefix = columnPrefix(fromStageId);
+      const toPrefix = columnPrefix(stageId);
+      const statsKey = pipelineKeys.stats(pipelineId);
+
+      // Otherwise an in-flight page or counts fetch can land after this write.
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: fromPrefix }),
+        queryClient.cancelQueries({ queryKey: toPrefix }),
+        queryClient.cancelQueries({ queryKey: statsKey }),
+      ]);
+
+      // Every filter variant of both columns is cached separately, so all of
+      // them are snapshotted and all of them are rewritten.
+      const previous = {
+        from: queryClient.getQueriesData<InfiniteData<LeadPage>>({ queryKey: fromPrefix }),
+        to: queryClient.getQueriesData<InfiniteData<LeadPage>>({ queryKey: toPrefix }),
+        stats: queryClient.getQueryData<PipelineStats>(statsKey),
+      };
+
+      const moving = findCachedLead(queryClient, leadId);
+      const target = findCachedStage(queryClient, stageId);
+      // Nothing to move optimistically — let the server's answer stand.
+      if (!moving || !target) return previous;
+
+      const now = new Date().toISOString();
+      const moved: Lead = {
+        ...moving,
+        stageId,
+        stage: target,
+        stageEnteredAt: now,
+        lastActivityAt: now,
+        status: target.status,
+      };
+
+      queryClient.setQueriesData<InfiniteData<LeadPage>>(
+        { queryKey: fromPrefix },
+        (data) =>
+          data && {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              items: page.items.filter((lead) => lead.id !== leadId),
+            })),
+          },
       );
-      return { previous };
+
+      // A variant the lead does not actually match (say "Mine", and it is not
+      // yours) gains a card it will drop on its next refetch. Re-running the
+      // filters here would rebuild the duplication this endpoint removed.
+      queryClient.setQueriesData<InfiniteData<LeadPage>>(
+        { queryKey: toPrefix },
+        (data) =>
+          data && {
+            ...data,
+            pages: data.pages.map((page, index) =>
+              index === 0 ? { ...page, items: [moved, ...page.items] } : page,
+            ),
+          },
+      );
+
+      queryClient.setQueryData<PipelineStats>(
+        statsKey,
+        (stats) => stats && shiftStageCounts(stats, moving, moved),
+      );
+
+      return previous;
     },
+
     onError: (error, _variables, context) => {
-      if (context?.previous) queryClient.setQueryData(leadsKey, context.previous);
+      for (const [key, data] of context?.from ?? []) queryClient.setQueryData(key, data);
+      for (const [key, data] of context?.to ?? []) queryClient.setQueryData(key, data);
+      if (context?.stats) {
+        queryClient.setQueryData(pipelineKeys.stats(pipelineId), context.stats);
+      }
       toast.error(getApiErrorMessage(error, t("Could not move the lead")), {
         id: "pipeline-lead-move",
       });
     },
+
     onSuccess: (_result, variables) => {
       syncInboxStageChips(
         queryClient,
@@ -419,8 +636,12 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
         });
       }
     },
+
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: pipelineKeys.all() });
+      // Numbers only. The lists already hold the right cards.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.stats(pipelineId) });
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.forecast(pipelineId) });
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.list() });
     },
   });
 }
@@ -537,6 +758,13 @@ export function useContactStageQuery(contactId: string | undefined, enabled = tr
     enabled: Boolean(contactId) && enabled,
   });
 }
+
+/*
+ * The four mutations below each sweep the `["pipeline"]` root, which refetches
+ * every loaded page of every column. They are called from the inbox and the
+ * contacts table, where the board is usually not even mounted, so the cost is
+ * normally nothing. TODO: narrow to the affected column + stats when it is.
+ */
 
 export function useSetContactStageMutation(contactId: string | undefined) {
   const queryClient = useQueryClient();

@@ -37,9 +37,16 @@ export function StageFill({
   percent,
   color,
   fillClassName,
-}: Readonly<{ percent: number; color?: string | null; fillClassName?: string }>) {
+  className,
+}: Readonly<{
+  percent: number;
+  color?: string | null;
+  fillClassName?: string;
+  /** Overrides the track. The forecast draws a heavier bar than a stage column. */
+  className?: string;
+}>) {
   return (
-    <div className="bg-muted mt-2 h-[3px] overflow-hidden rounded-full">
+    <div className={cn("bg-secondary mt-2.25 h-[3px] overflow-hidden rounded-full", className)}>
       <div
         className={cn(
           "h-full rounded-full transition-[width] duration-300",
@@ -88,7 +95,7 @@ export function RottingBadge({ days }: Readonly<{ days: number }>) {
 /** Uppercase micro-label used above field values in the drawer and settings. */
 export function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="text-muted-foreground text-[10px] font-bold tracking-[0.06em] uppercase">
+    <div className="text-muted-foreground text-[11.5px] font-semibold tracking-[0.05em] uppercase">
       {children}
     </div>
   );

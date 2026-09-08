@@ -198,7 +198,7 @@ export const contactColumn = (
     ...(showStage
       ? [
           {
-            header: "Pipeline Stage",
+            header: "Lead stage",
             accessorFn: (row: ContactsData) => row.leads?.[0]?.stage?.name ?? "",
             id: "pipelineStage",
             cell: (info) => {
@@ -216,7 +216,7 @@ export const contactColumn = (
               );
             },
             enableSorting: false,
-            meta: { title: "Pipeline Stage" },
+            meta: { title: "Lead stage" },
           } satisfies ColumnDef<ContactsData>,
         ]
       : showLifecycle

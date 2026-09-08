@@ -2,9 +2,29 @@
    404.module.css
    ───────────────────────────────────────────── */
 
-/* ── Font variables ── */
-:root {
-  --font-body: var(--font-sans);
+/* ── Local tokens ──
+   This screen is rendered from the root router on any route, so the only stylesheet guaranteed
+   to be on the page is `base.css`. That sheet is `source(none)` with narrow `@source` globs, and
+   Tailwind only emits the `@theme` variables its scan can prove are used — a CSS module is never
+   scanned, so none of the `--color-ru-*` / `--font-*` tokens reach it. Referencing them bare left
+   every colour here invalid, i.e. transparent: white text on the light-mode canvas.
+
+   Each token therefore carries the design-system value as a fallback. Where a surface sheet
+   (`app.css`, `marketing.css`) does emit the token, that value still wins. */
+.page {
+  --n4-font-body: var(
+    --font-sans,
+    "Instrument Sans Variable",
+    ui-sans-serif,
+    system-ui,
+    sans-serif
+  );
+  --n4-font-display: var(--font-display, "Figtree Variable", ui-sans-serif, system-ui, sans-serif);
+  --n4-blue-300: var(--color-ru-blue-300, #90b2dc);
+  --n4-blue-900: var(--color-ru-blue-900, #0f2540);
+  --n4-blue-950: var(--color-ru-blue-950, #091729);
+  --n4-star-top: var(--color-ru-star-top, #ffd54c);
+  --n4-amber-500: var(--color-ru-amber-500, #f8951d);
 }
 
 /* ── Keyframes ── */
@@ -90,8 +110,8 @@
 
 /* ── Page shell ── */
 .page {
-  font-family: var(--font-body);
-  background: var(--color-ru-blue-900);
+  font-family: var(--n4-font-body);
+  background: var(--n4-blue-900);
   position: relative;
   min-height: 100vh;
   display: flex;
@@ -108,8 +128,8 @@
   background: radial-gradient(
     ellipse 90% 60% at 50% 0%,
     #0d2e5c 0%,
-    var(--color-ru-blue-900) 55%,
-    var(--color-ru-blue-950) 100%
+    var(--n4-blue-900) 55%,
+    var(--n4-blue-950) 100%
   );
 }
 
@@ -161,7 +181,7 @@
 .particle {
   position: absolute;
   border-radius: 50%;
-  background: var(--color-ru-blue-300);
+  background: var(--n4-blue-300);
   animation: particleRise linear infinite;
 }
 
@@ -204,7 +224,7 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-ru-blue-300);
+  color: var(--n4-blue-300);
   margin-bottom: 36px;
   padding: 6px 14px 6px 10px;
   border: 1px solid rgba(79, 195, 255, 0.25);
@@ -217,9 +237,9 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-ru-blue-300);
+  background: var(--n4-blue-300);
   box-shadow:
-    0 0 8px var(--color-ru-blue-300),
+    0 0 8px var(--n4-blue-300),
     0 0 16px rgba(79, 195, 255, 0.5);
   flex-shrink: 0;
 }
@@ -235,7 +255,7 @@
 }
 
 .num4 {
-  font-family: var(--font-display);
+  font-family: var(--n4-font-display);
   font-weight: 900;
   font-size: clamp(96px, 14vw, 192px);
   line-height: 1;
@@ -266,7 +286,7 @@
 
 /* ── Heading ── */
 .heading {
-  font-family: var(--font-display);
+  font-family: var(--n4-font-display);
   font-weight: 900;
   font-size: clamp(26px, 3.5vw, 44px);
   color: #fff;
@@ -301,7 +321,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-body);
+  font-family: var(--n4-font-body);
   font-size: 14px;
   font-weight: 700;
   padding: 13px 26px;
@@ -319,8 +339,8 @@
 }
 
 .btnWarm {
-  background: linear-gradient(135deg, var(--color-ru-star-top) 0%, var(--color-ru-amber-500) 100%);
-  color: var(--color-ru-blue-900);
+  background: linear-gradient(135deg, var(--n4-star-top) 0%, var(--n4-amber-500) 100%);
+  color: var(--n4-blue-900);
   box-shadow: 0 6px 20px rgba(248, 149, 29, 0.35);
 }
 

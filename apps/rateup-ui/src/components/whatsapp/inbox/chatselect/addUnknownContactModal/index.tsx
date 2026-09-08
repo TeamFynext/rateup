@@ -220,7 +220,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
 
           {stages.length > 0 && (
             <Field>
-              <FieldTitle>{translations("Pipeline Stage")}</FieldTitle>
+              <FieldTitle>{translations("Lead stage")}</FieldTitle>
               <Controller
                 name="stageId"
                 control={control}

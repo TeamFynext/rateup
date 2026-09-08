@@ -7,19 +7,14 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { usePipelineStatsQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { SOURCE_META } from "../pipeline.constants.tsx";
 import { sourceLabel } from "../pipeline.labels.ts";
-import {
-  buildFunnel,
-  buildAssigneePerformance,
-  buildSourceRows,
-  buildStallRows,
-  isRotting,
-  leadAgeDays,
-} from "../pipeline.utils.ts";
+import { buildFunnel, buildSourceRows, buildStallRows } from "../pipeline.utils.ts";
 import { StageDot } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
 import type { PipelineData } from "../usePipelineData.ts";
@@ -41,14 +36,14 @@ function KpiCard({
   noteTone?: string;
 }>) {
   return (
-    <Card className="gap-0 p-4 shadow-xs">
-      <span className={cn("mb-2.5 flex size-7.5 items-center justify-center rounded-lg", tone)}>
+    <Card className="gap-0 px-5 py-4.5 shadow-xs">
+      <span className={cn("mb-2.5 flex size-7.5 items-center justify-center rounded-md", tone)}>
         <KpiIcon className="size-4" />
       </span>
-      <div className="font-nunito text-foreground text-[26px] leading-none font-extrabold">
+      <div className="font-nunito text-foreground text-[30px] leading-none font-bold tracking-[-0.02em] tabular-nums">
         {value}
       </div>
-      <div className="text-muted-foreground mt-1.5 text-xs">{label}</div>
+      <div className="text-muted-foreground mt-1.25 text-xs">{label}</div>
       <div className={cn("mt-2 text-[11px] font-bold", noteTone ?? "text-muted-foreground")}>
         {note}
       </div>
@@ -59,7 +54,7 @@ function KpiCard({
 function PanelHeading({ title, subtitle }: Readonly<{ title: string; subtitle?: string }>) {
   return (
     <div className="mb-4.5">
-      <div className="font-nunito text-foreground text-sm font-extrabold">{title}</div>
+      <div className="font-nunito text-foreground text-[15px] font-semibold">{title}</div>
       {subtitle ? <div className="text-muted-foreground text-xs">{subtitle}</div> : null}
     </div>
   );
@@ -75,7 +70,7 @@ function Meter({
   fillClassName,
 }: Readonly<{ percent: number; color?: string | null; fillClassName?: string }>) {
   return (
-    <div className="bg-muted h-2 overflow-hidden rounded-full">
+    <div className="bg-secondary h-2 overflow-hidden rounded-full">
       <div
         className={cn(
           "h-full rounded-full transition-[width] duration-300",
@@ -90,32 +85,60 @@ function Meter({
 /**
  * The pipeline's health in four panels: how leads narrow through the funnel,
  * where they stall, where they come from, and how each assignee is doing.
- * Everything is derived from the same filtered lead set the board shows.
+ *
+ * Every figure is counted on the server over the whole board, so none of it
+ * depends on which cards a column happens to have loaded — and none of it moves
+ * when the board's filters do. This answers "how is this pipeline doing", not
+ * "how is it doing under the filter I left on".
  */
 export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
   const { t } = useTranslation();
-  const { pipeline, visibleLeads } = data;
+  const { pipeline } = data;
+  const { data: stats, isPending } = usePipelineStatsQuery(pipeline?.id);
+
   if (!pipeline) return null;
 
-  const rottingEnabled = pipeline.rottingEnabled;
-  const open = visibleLeads.filter((lead) => lead.status === "OPEN");
-  const won = visibleLeads.filter((lead) => lead.status === "WON");
-  const closed = visibleLeads.filter((lead) => lead.status !== "OPEN");
-  const stalled = visibleLeads.filter((lead) => isRotting(lead, rottingEnabled));
+  if (isPending || !stats) {
+    return (
+      <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
+        <div className="mb-4 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((card) => (
+            <Skeleton key={card} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <Skeleton className="h-72 rounded-xl" />
+          <Skeleton className="h-72 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
-  const winRate = closed.length ? Math.round((won.length / closed.length) * 100) : null;
+  const rottingEnabled = pipeline.rottingEnabled;
+  const { totals } = stats;
+  const closedCount = totals.won + totals.lost;
+
+  const winRate = closedCount ? Math.round((totals.won / closedCount) * 100) : null;
   // How long a won lead took end to end, which is the number worth watching —
   // average time in stage told you how slow the board is, not how long a sale
   // takes. Null rather than 0 when nothing has been won: there is no cycle yet.
-  const cycleDays = won.length
-    ? Math.round(won.reduce((total, lead) => total + leadAgeDays(lead), 0) / won.length)
-    : null;
-  const noNextActivity = open.filter((lead) => !lead.nextTask).length;
+  const cycleDays = totals.avgCycleDays;
+  const noNextActivity = totals.noactivity;
 
-  const funnel = buildFunnel(pipeline.stages, visibleLeads);
-  const stalls = buildStallRows(pipeline.stages, visibleLeads, rottingEnabled);
-  const sources = buildSourceRows(visibleLeads);
-  const assignees = buildAssigneePerformance(visibleLeads, rottingEnabled);
+  const counts = new Map(
+    stats.stages.map((row) => [
+      row.stageId,
+      { total: row.total, open: row.open, rotting: row.rotting },
+    ]),
+  );
+
+  const funnel = buildFunnel(pipeline.stages, counts);
+  const stalls = buildStallRows(pipeline.stages, counts);
+  const sources = buildSourceRows(stats.sources);
+  const assignees = stats.assignees.map((row) => ({
+    ...row,
+    winRate: row.closed === 0 ? null : Math.round((row.won / row.closed) * 100),
+  }));
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
@@ -123,16 +146,16 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
         <KpiCard
           icon={IconUsers}
           tone="bg-primary/10 text-primary"
-          value={String(open.length)}
+          value={String(totals.open)}
           label={t("Leads in pipeline")}
-          note={t("across {total} stages", { total: pipeline.stages.length })}
+          note={t("across {total} lead stages", { total: pipeline.stages.length })}
         />
         <KpiCard
           icon={IconTrophy}
           tone="bg-green-600/10 text-green-700 dark:text-green-500"
           value={winRate === null ? "—" : t("{percent}%", { percent: winRate })}
           label={t("Win rate")}
-          note={t("{won} won · {lost} lost", { won: won.length, lost: closed.length - won.length })}
+          note={t("{won} won · {lost} lost", { won: totals.won, lost: totals.lost })}
         />
         <KpiCard
           icon={IconClock}
@@ -145,13 +168,13 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           note={
             cycleDays === null
               ? t("Nothing won yet")
-              : t("across {total} won leads", { total: won.length })
+              : t("across {total} won leads", { total: totals.won })
           }
         />
         <KpiCard
           icon={IconAlertTriangle}
           tone="bg-destructive/10 text-destructive"
-          value={String(stalled.length)}
+          value={String(totals.rotting)}
           label={t("Stalled leads")}
           note={
             rottingEnabled
@@ -163,7 +186,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading
             title={t("Conversion funnel")}
             subtitle={t("Leads currently at each stage")}
@@ -191,12 +214,12 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
                         ? t("entry")
                         : t("{percent}% carried", { percent: row.carried })}
                     </span>
-                    <span className="text-foreground text-[13px] font-extrabold">{row.count}</span>
+                    <span className="text-foreground text-[13px] font-semibold">{row.count}</span>
                   </span>
                 </div>
-                <div className="bg-muted h-5.5 overflow-hidden rounded-md">
+                <div className="bg-secondary h-5.5 overflow-hidden rounded-sm">
                   <div
-                    className="bg-primary h-full rounded-md transition-[width] duration-300"
+                    className="bg-primary h-full rounded-sm transition-[width] duration-300"
                     style={{
                       width: `${row.width}%`,
                       ...(row.stage.color ? { backgroundColor: row.stage.color } : {}),
@@ -208,14 +231,14 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading
             title={t("Where leads stall")}
             subtitle={t("Idle beyond the stage rotting limit")}
           />
           {stalls.length === 0 ? (
             <p className="text-muted-foreground text-xs">
-              {t("No stage has a rotting window set.")}
+              {t("No lead stage has a rotting window set.")}
             </p>
           ) : (
             <div className="flex flex-col gap-3.5">
@@ -260,9 +283,9 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading title={t("Leads by source")} />
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-3.75">
             {sources.map((row) => {
               const meta = SOURCE_META[row.source];
               const SourceIcon = meta.icon;
@@ -274,7 +297,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
                           its bar, which carries the same colour. */}
                       <span
                         className={cn(
-                          "flex size-5 shrink-0 items-center justify-center rounded-md text-white",
+                          "flex size-5 shrink-0 items-center justify-center rounded-sm text-white",
                           meta.fillClassName,
                         )}
                       >
@@ -293,10 +316,10 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 shadow-xs">
           <PanelHeading title={t("Assignee performance")} />
           <div className="border-border flex items-center border-b pb-2.5">
-            <span className="text-muted-foreground flex-1 text-[10px] font-extrabold tracking-[0.06em] uppercase">
+            <span className="text-muted-foreground flex-1 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
               {t("Assignee")}
             </span>
             {/* "Win rate" and "Stalled" get the wider columns — they are the two
@@ -310,7 +333,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
               <span
                 key={heading.key}
                 className={cn(
-                  "text-muted-foreground shrink-0 text-right text-[10px] font-extrabold tracking-[0.06em] uppercase",
+                  "text-muted-foreground shrink-0 text-right text-[11.5px] font-semibold tracking-[0.04em] uppercase",
                   heading.width,
                 )}
               >
@@ -325,7 +348,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
             return (
               <div
                 key={row.assigneeId ?? "unassigned"}
-                className="border-border/60 flex items-center border-b py-2.5 last:border-b-0"
+                className="border-border/60 flex items-center border-b py-2.75 last:border-b-0"
               >
                 <span className="flex min-w-0 flex-1 items-center gap-2.5">
                   <LeadAvatar
@@ -334,7 +357,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
                     colorKey={row.assigneeId ?? undefined}
                     size="md"
                   />
-                  <span className="text-foreground truncate text-[13px] font-medium">{name}</span>
+                  <span className="text-foreground truncate text-[13px] font-semibold">{name}</span>
                 </span>
                 <span className="text-foreground w-15 shrink-0 text-right text-[13px] font-bold">
                   {row.open}
