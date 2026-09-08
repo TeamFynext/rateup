@@ -38,6 +38,56 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-08-inbox-image-download",
+    title: "Save an image from the inbox",
+    summary:
+      "Images in a conversation now carry a download button — on the thumbnail itself, and again next to the close button when you open one full size. Until now the only way to keep a photo a customer had sent was to open it and fish it out of the browser, which is also what happens as a fallback if the file cannot be fetched directly. Documents and videos already had this; images were the gap.",
+    publishedAt: "2026-09-08",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-09-08-campaign-retry-failed",
+    title: "Retry a campaign's failures from Overview",
+    summary:
+      'A campaign that has finished sending now shows its failures on Overview, with how many are worth another attempt and one button that re-sends to them — until now the only campaign-wide retry was hidden behind ticking a row in Participants. That control is still there and now does what it says: it re-attempts the recipients you ticked, while "Retry all failed" sits in the Participants header where you can find it without selecting anything first. Adding people to a campaign that already went out is clearer too: after "Send to more", the last step spells out that only the recipients it has never messaged will be sent to, and the button reads "Send to 120 new recipients" instead of "Launch campaign". Behind all of it, a fix: a message rejected the moment it was sent — including one that never reached WhatsApp at all — was stored without its error code, which is what the automatic retries are chosen by. Those failures were never retried and the campaign finished as though nothing could be done. They are now.',
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement", "fix"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-08-campaign-resume-when",
+    title: "Choose when a paused campaign resumes",
+    summary:
+      'Resume now asks when. A campaign paused before its send time offers that schedule back, and alongside it you can send immediately or pick a new date and time — so a schedule overtaken by events no longer means editing the campaign just to start it again. Whichever you pick, only the recipients who were never messaged are sent to. The numbers across the top of Overview changed with it: "Sent" is now "Dispatched", because it counts every message handed to WhatsApp including the ones that came back rejected, and "Delivered" below it is the one that means it arrived. "Recipients" made way for "Pending" — how many are still waiting — and "Failed" now counts recipients that are failed right now rather than every failure ever recorded, so a recipient a retry rescued no longer stays in the count forever. The failure breakdown on the Analytics tab is measured against that same number, so its shares finally add up, and the campaign export follows the page: its \"Count Sent\" column is now \"Count Dispatched\" and its \"Count Failed\" counts recipients that are failed now.',
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-07-campaign-page-controls",
+    title: "Pause a campaign, retry one recipient",
+    summary:
+      'A sending campaign can now be paused and picked back up: Pause takes the recipients it has not reached off the queue, and Resume sends to exactly those, so nobody is messaged twice. A campaign paused before its send time goes back on that schedule when resumed, rather than out immediately. A recipient that failed offers "Retry now" in the Participants tab, so you can send to one person again without resending the campaign; recipients who were reached still open in the inbox as before. The campaign page also has a refresh button — delivery receipts and automatic retries land while you are looking at it — and the "Next batch" card now shows a campaign scheduled for later, not only a booked retry, with the date it goes out and a Cancel schedule button on it.',
+    publishedAt: "2026-09-07",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-06-campaign-wizard",
+    title: "Campaigns: a guided setup, and retries",
+    summary:
+      "Creating a campaign is now a six-step flow you can leave and come back to — name, template, audience, schedule and retries in one place, saved as a draft as you go, with a live preview of the message as it will arrive and a test send before you commit. The Audience step shows who is already on the campaign next to what you are adding, and either can be taken off from there — \"Send to more\" on a campaign opens it, replacing the old add-participants dialog. Messages Meta blocks with a frequency cap are re-sent automatically. The campaign page is rebuilt around that: Overview shows the next attempt and what has happened so far, Participants shows every recipient's attempt history and why any of them failed, and a new Analytics tab has the delivery funnel, a failure breakdown by Meta error code, and what each send and retry actually recovered. Campaign status now reads the way you'd say it — Draft, Scheduled, Sending, Paused, Completed — on the cards, the campaign page and the status filter, and it is finally accurate: a campaign you are still building stays a draft instead of showing as paused, and one that has sent everything says so instead of sending forever.",
+    publishedAt: "2026-09-06",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Create a campaign" },
+  },
+  {
     id: "2026-08-31-channels-page-rebuilt",
     title: "Channels, rebuilt to match setup",
     summary:

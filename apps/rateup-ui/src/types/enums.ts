@@ -204,6 +204,8 @@ export enum WaFlowStatus {
 
 export enum CampaignStatus {
   ACTIVE = "ACTIVE",
+  /// The initial send has drained and an automatic retry is booked for later.
+  RETRYING = "RETRYING",
   INACTIVE = "INACTIVE",
   SCHEDULED = "SCHEDULED",
   COMPLETED = "COMPLETED",
@@ -212,6 +214,37 @@ export enum CampaignStatus {
   DRAFT = "DRAFT",
   FAILED = "FAILED",
 }
+/** Why a send session exists. Mirrors `CampaignSendTrigger` in the API schema. */
+export enum CampaignSendTrigger {
+  MANUAL = "MANUAL",
+  SCHEDULED = "SCHEDULED",
+  AUTO_RETRY = "AUTO_RETRY",
+  DRIP = "DRIP",
+}
+
+export enum CampaignSendStatus {
+  SCHEDULED = "SCHEDULED",
+  QUEUING = "QUEUING",
+  RUNNING = "RUNNING",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+  FAILED = "FAILED",
+}
+
+export enum CampaignRetryStrategy {
+  /** Front-loaded then decaying — most Meta frequency caps lift within hours. */
+  SMART = "SMART",
+  FIXED_INTERVAL = "FIXED_INTERVAL",
+}
+
+/** How the analytics failure breakdown groups Meta error codes. */
+export enum WaFailureReasonGroup {
+  LIMITED_BY_META = "LIMITED_BY_META",
+  INVALID_NUMBER = "INVALID_NUMBER",
+  TEMPLATE_ISSUE = "TEMPLATE_ISSUE",
+  OTHER = "OTHER",
+}
+
 export enum CampaignType {
   WHATSAPP = "WHATSAPP",
   EMAIL = "EMAIL",
