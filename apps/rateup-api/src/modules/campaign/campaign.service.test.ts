@@ -26,6 +26,7 @@ vi.mock("../../utils/prisma.js", () => ({
     campaignStats: { create: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
     campaignSend: { findMany: vi.fn(), findFirst: vi.fn() },
     campaignParticipant: { count: vi.fn() },
+    campaignParticipantDripStage: { count: vi.fn() },
     waFlow: { findFirst: vi.fn() },
   },
   excludeFields: vi.fn(),
@@ -45,6 +46,8 @@ vi.mock("../whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
 }));
 vi.mock("../whatsapp/flows/flow.service.js", () => ({ getFlowBySurveyId: vi.fn() }));
 vi.mock("hucre", () => ({ write: vi.fn(async () => Buffer.from("workbook")) }));
+
+import { write } from "hucre";
 vi.mock("../../workers/bullmq/queues/index.js", () => ({
   getCampaignCount: vi.fn(),
   waCampaignDequeue: { add: vi.fn() },
@@ -123,6 +126,7 @@ const db = prisma as unknown as {
   campaignStats: Record<"create" | "findFirst" | "findUnique", Mock>;
   campaignSend: Record<"findMany" | "findFirst", Mock>;
   campaignParticipant: { count: Mock };
+  campaignParticipantDripStage: { count: Mock };
   waFlow: { findFirst: Mock };
 };
 const limitExceededMock = checkConversationLimitAvailable as unknown as Mock;
@@ -172,6 +176,7 @@ beforeEach(() => {
   db.campaignStats.create.mockResolvedValue({});
   db.campaignStats.findFirst.mockResolvedValue(null);
   db.campaignParticipant.count.mockResolvedValue(0);
+  db.campaignParticipantDripStage.count.mockResolvedValue(0);
   db.waFlow.findFirst.mockResolvedValue({ dbFlowId: "dbflow-1" });
   limitExceededMock.mockResolvedValue(true);
   getCampaignCountMock.mockResolvedValue(0);
@@ -869,6 +874,23 @@ describe("getResponseExcelByCampaignById", () => {
     expect(bound).toContain("another-campaigns-stage");
     expect(bound).toContain(CAMPAIGN_ID);
     expect(sql).toContain('cp."campaignId"');
+  });
+
+  test("counts the failures that still stand, not every failed attempt", async () => {
+    // `CampaignStats.totalFailed` is bumped once per failed attempt, so a
+    // recipient a retry recovered stayed in it forever and the spreadsheet
+    // disagreed with the campaign page. The sheet reads the participants.
+    db.$queryRaw.mockResolvedValue([]);
+    db.campaignParticipant.count.mockResolvedValue(3);
+
+    await getResponseExcelByCampaignById(CAMPAIGN_ID, ORG_A);
+
+    const [sheets] = vi.mocked(write).mock.calls.at(-1) ?? [];
+    const stats = sheets?.sheets.find((sheet) => sheet.name === "Stats");
+    expect(stats?.data?.[0]).toMatchObject({ countFailed: 3 });
+    const headers = stats?.columns?.map((column) => column.header) ?? [];
+    expect(headers).toContain("Count Dispatched");
+    expect(headers).not.toContain("Count Sent");
   });
 
   test("refuses a campaign belonging to another org", async () => {

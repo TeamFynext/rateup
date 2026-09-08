@@ -3,8 +3,8 @@ import { log } from "../../utils/logger.js";
 import { CampaignStatus, CampaignType } from "../../types/enums.js";
 import { CampaignSendStatus } from "../../../generated/prisma/enums.js";
 
-import { LIVE_SEND_STATUSES, cancelCampaignSends } from "./campaignSend.service.js";
-import { countInFlightParticipants, getRetryCohort } from "./campaignRetryCohort.js";
+import { LIVE_SEND_STATUSES } from "./campaignSend.service.js";
+import { countInFlightParticipants } from "./campaignRetryCohort.js";
 
 /** Statuses a settle pass is allowed to move a campaign out of. */
 const SETTLEABLE = [CampaignStatus.ACTIVE, CampaignStatus.QUEUING, CampaignStatus.RETRYING];
@@ -24,9 +24,18 @@ const SETTLEABLE = [CampaignStatus.ACTIVE, CampaignStatus.QUEUING, CampaignStatu
  *    delivered, so at that moment almost everything is still SENT. Concluding
  *    anything here is what made a clean campaign announce a retry it did not
  *    need. The sweep comes back for it.
- * 3. With nothing in flight, the cohort is the whole truth. Empty means nothing
- *    failed retryably, so any booked attempt is cancelled and the campaign is
- *    COMPLETED; non-empty with an attempt still booked is RETRYING.
+ * 3. With nothing in flight, a booked attempt is what decides the status: the
+ *    campaign is RETRYING while one is still scheduled, and COMPLETED only once
+ *    none is left.
+ *
+ * A scheduled attempt is deliberately NOT cancelled here just because the cohort
+ * looks empty. It used to be, and that made the retry a formality: the settle
+ * sweep runs every five minutes and would reach a booked attempt before it fired,
+ * cancel it, and complete the campaign — a race the attempt lost by under a
+ * second in practice. Whether there is anything left to send is the attempt's own
+ * decision at fire time, on a cohort read then rather than up to five minutes
+ * earlier; if it finds nothing it cancels itself, and the next settle pass sees
+ * no live send and completes the campaign.
  *
  * Returns the status it wrote, or null if it left the campaign alone.
  */
@@ -49,22 +58,10 @@ export async function finishCampaignIfSettled(campaignId: string): Promise<Campa
 
   if ((await countInFlightParticipants(campaignId)) > 0) return null;
 
-  const cohort = await getRetryCohort(campaignId);
-  let next: CampaignStatus;
-  if (cohort.length === 0) {
-    if (live.length) {
-      // Booked while the outcome was still unknown, and now known to be pointless.
-      await cancelCampaignSends(campaignId, {
-        onlyScheduled: true,
-        note: "Nothing failed retryably, so no retry was needed.",
-      });
-    }
-    next = CampaignStatus.COMPLETED;
-  } else {
-    // A cohort with no attempt booked means the retry policy is done with this
-    // campaign — exhausted, disabled, or out of window. Nothing more will happen.
-    next = live.length ? CampaignStatus.RETRYING : CampaignStatus.COMPLETED;
-  }
+  // No live send left means the retry policy is done with this campaign —
+  // exhausted, disabled, out of window, or never booked because nothing failed.
+  // Nothing more will happen, so this is the end.
+  const next = live.length ? CampaignStatus.RETRYING : CampaignStatus.COMPLETED;
 
   const { count } = await prisma.campaign.updateMany({
     where: { id: campaignId, status: { in: SETTLEABLE } },
@@ -88,7 +85,8 @@ const SWEEP_LIMIT = 200;
  * finisher of the send that drained, and at that moment the delivery webhooks
  * are still arriving. Without this pass a campaign whose messages all landed
  * cleanly would sit on ACTIVE — or on a booked RETRYING — until the retry came
- * due and cancelled itself, up to an hour later.
+ * due and cancelled itself, up to an hour later. It is also what moves a campaign
+ * onto RETRYING once its messages have landed and a retry is still booked.
  */
 export async function settleSentCampaigns(): Promise<{ settled: number }> {
   const candidates = await prisma.campaign.findMany({

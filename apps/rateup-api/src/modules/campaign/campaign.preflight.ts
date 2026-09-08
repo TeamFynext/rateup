@@ -1,5 +1,8 @@
 import { getConversationBudget } from "../subscription/conversationBudget.js";
-import { getCampaignParticipantCountByStatuses } from "./campaign.service.js";
+import {
+  getCampaignParticipantCountByIds,
+  getCampaignParticipantCountByStatuses,
+} from "./campaign.service.js";
 import type { CampaignParticipantStatus } from "../../types/enums.js";
 
 export interface CampaignSendPreflight {
@@ -37,9 +40,22 @@ export async function getCampaignSendPreflight(
   campaignId: string,
   orgId: string,
   sendToStatuses: CampaignParticipantStatus[],
+  /**
+   * The exact recipients a scoped resend names, when it names any.
+   *
+   * Counted instead of the statuses, because that is who the send will actually
+   * go to — the fan-out lets an exact cohort override the status filter. Counting
+   * the statuses here refused "Retry now" on a named recipient with "No
+   * participants with the specified statuses" whenever the campaign happened to
+   * have none in that status, which is a sentence about a filter the send was
+   * not going to use.
+   */
+  participantIds?: string[],
 ): Promise<CampaignSendPreflight> {
   const [recipients, budget] = await Promise.all([
-    getCampaignParticipantCountByStatuses(campaignId, orgId, sendToStatuses),
+    participantIds?.length
+      ? getCampaignParticipantCountByIds(campaignId, orgId, participantIds)
+      : getCampaignParticipantCountByStatuses(campaignId, orgId, sendToStatuses),
     getConversationBudget(orgId),
   ]);
 

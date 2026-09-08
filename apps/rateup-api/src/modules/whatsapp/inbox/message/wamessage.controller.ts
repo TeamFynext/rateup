@@ -322,8 +322,7 @@ export async function handleWaMessages(
         ? {
             campaignParticipantId: campaign.participantId,
             campaignParticipantDripStageId: campaign.dripStageId,
-            // todo: revisit
-            // campaignSendId: campaign.campaignSendId,
+            campaignSendId: campaign.campaignSendId,
           }
         : undefined,
     );

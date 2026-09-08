@@ -23,6 +23,17 @@ export enum WaFailureClass {
   FREQUENCY_CAP = "FREQUENCY_CAP",
   /** A throttle, a blip, or Meta being briefly unwell. Retry, soon. */
   TRANSIENT = "TRANSIENT",
+  /**
+   * Meta says the message could not be delivered to this number.
+   *
+   * Worth another campaign attempt later — a number can be off WhatsApp at the
+   * moment of the send and back on it hours later, and Meta returns 131026 for
+   * transient device-side conditions as well as for numbers that truly are not
+   * on WhatsApp. It is deliberately *not* `TRANSIENT`: an immediate in-process
+   * retry against the same number seconds later only ever returns 131026 again,
+   * so the dispatcher must not spend its BullMQ attempts on it.
+   */
+  RETRY_LATER = "RETRY_LATER",
   /** Nothing about waiting changes the outcome. Never retried. */
   PERMANENT = "PERMANENT",
   /** Not in the table below. Never retried — see `classifyWaFailure`. */
@@ -51,6 +62,18 @@ interface WaErrorSpec {
 }
 
 /**
+ * The request never reached Meta — DNS, a refused connection, a socket timeout.
+ *
+ * Negative because Meta's own codes are positive, so it can share the `errorCode`
+ * column and every reader that classifies a code — the retry cohort's
+ * `errorCode = ANY(...)` filter, the failure breakdown, the participants table —
+ * handles it without a second column or a special case. Nothing was sent and no
+ * conversation was spent, which is what makes it the most retryable failure
+ * there is.
+ */
+export const WA_TRANSPORT_ERROR_CODE = -1;
+
+/**
  * Explicitly classified codes. Ranges (the 132xxx template block) are handled
  * in `classifyWaFailure` after this lookup misses.
  */
@@ -74,6 +97,14 @@ const WA_ERROR_SPECS: ReadonlyMap<number, WaErrorSpec> = new Map<number, WaError
   ],
 
   // ── Transient ────────────────────────────────────────────────────────────
+  [
+    WA_TRANSPORT_ERROR_CODE,
+    {
+      class: WaFailureClass.TRANSIENT,
+      group: WaFailureReasonGroup.OTHER,
+      label: "Could not reach WhatsApp",
+    },
+  ],
   [
     130429,
     {
@@ -125,23 +156,24 @@ const WA_ERROR_SPECS: ReadonlyMap<number, WaErrorSpec> = new Map<number, WaError
     },
   ],
 
-  // ── Permanent ────────────────────────────────────────────────────────────
+  // ── Not deliverable now, worth one more attempt later ────────────────────
   [
     131026,
     {
-      class: WaFailureClass.PERMANENT,
-      group: WaFailureReasonGroup.INVALID_NUMBER,
-      label: "Number is not on WhatsApp or cannot receive messages",
+      class: WaFailureClass.RETRY_LATER,
+      group: WaFailureReasonGroup.OTHER,
+      label: "Undeliverable now, but may be later (Meta 131026)",
     },
   ],
   [
     131047,
     {
-      class: WaFailureClass.PERMANENT,
+      class: WaFailureClass.RETRY_LATER,
       group: WaFailureReasonGroup.OTHER,
       label: "Outside the 24-hour window — a template is required",
     },
   ],
+  // ── Permanent ────────────────────────────────────────────────────────────
   [
     131051,
     {
@@ -244,8 +276,26 @@ export function isRetryable(
   policy: RetryEligibilityPolicy | null | undefined,
 ): boolean {
   if (!policy?.enabled) return false;
-  const failureClass = classifyWaFailure(code);
-  return failureClass === WaFailureClass.FREQUENCY_CAP || failureClass === WaFailureClass.TRANSIENT;
+  return isRetryableClass(classifyWaFailure(code));
+}
+
+/**
+ * Whether a class earns another *campaign* attempt.
+ *
+ * Not the same question as "retry this send in-process now" — that one is
+ * `TRANSIENT` alone, and the dispatcher asks it directly.
+ */
+export function isRetryableClass(failureClass: WaFailureClass): boolean {
+  return (
+    failureClass === WaFailureClass.FREQUENCY_CAP ||
+    failureClass === WaFailureClass.TRANSIENT ||
+    failureClass === WaFailureClass.RETRY_LATER
+  );
+}
+
+/** Whether a code, on its own, is one the retry engine would pick up. */
+export function isRetryableCode(code?: number | null): boolean {
+  return isRetryableClass(classifyWaFailure(code));
 }
 
 /** Display metadata for the analytics failure breakdown, in render order. */
@@ -257,12 +307,12 @@ export const FAILURE_REASON_GROUPS: ReadonlyArray<{
   {
     group: WaFailureReasonGroup.LIMITED_BY_META,
     label: "Limited by Meta",
-    description: "Frequency caps and rate limits. These are the failures retries recover.",
+    description: "Frequency caps and rate limits. Retries recover these.",
   },
   {
     group: WaFailureReasonGroup.INVALID_NUMBER,
     label: "Invalid number",
-    description: "The number is not reachable on WhatsApp.",
+    description: "The number did not accept the message; some are worth another attempt.",
   },
   {
     group: WaFailureReasonGroup.TEMPLATE_ISSUE,
@@ -281,8 +331,5 @@ export const FAILURE_REASON_GROUPS: ReadonlyArray<{
  * filter in the cohort query rather than classifying row by row in JS.
  */
 export const RETRYABLE_ERROR_CODES: readonly number[] = [...WA_ERROR_SPECS.entries()]
-  .filter(
-    ([, spec]) =>
-      spec.class === WaFailureClass.FREQUENCY_CAP || spec.class === WaFailureClass.TRANSIENT,
-  )
+  .filter(([, spec]) => isRetryableClass(spec.class))
   .map(([code]) => code);

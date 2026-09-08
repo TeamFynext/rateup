@@ -250,6 +250,7 @@ export async function sendCampaignHandler(
     sentCampaignChoice,
     sendToStatuses,
     participantId,
+    participantIds,
     type,
     dailySendLimit,
     retryPolicy,
@@ -331,10 +332,14 @@ export async function sendCampaignHandler(
       await upsertCampaignRetryPolicy(campaignId, orgId, retryPolicy);
     }
 
-    const preflight = await getCampaignSendPreflight(campaignId, orgId, sendToStatuses);
+    // Named recipients are counted as themselves; see `getCampaignSendPreflight`.
+    const cohort = participantId ? [participantId] : participantIds;
+    const preflight = await getCampaignSendPreflight(campaignId, orgId, sendToStatuses, cohort);
     if (preflight.recipients === 0) {
       return reply.status(400).send({
-        message: `No participants with the specified statuses to send the campaign to.`,
+        message: cohort?.length
+          ? `Those recipients are no longer on this campaign.`
+          : `No participants with the specified statuses to send the campaign to.`,
         code: "NO_PARTICIPANTS_FOR_CAMPAIGN",
       });
     }
@@ -357,7 +362,8 @@ export async function sendCampaignHandler(
     // A per-day cap spreads participants over consecutive days. The dispatcher
     // applies it when it fans the campaign out into per-participant jobs. A
     // single-participant resend is never throttled, so it ignores the cap.
-    const effectiveDailySendLimit = participantId ? undefined : (dailySendLimit ?? undefined);
+    const scopedResend = Boolean(participantId || participantIds?.length);
+    const effectiveDailySendLimit = scopedResend ? undefined : (dailySendLimit ?? undefined);
 
     if (campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER) {
       await updateCampaign(campaignId, orgId, {
@@ -399,7 +405,15 @@ export async function sendCampaignHandler(
       campaignSentAt: null,
       scheduledStatuses: [],
       errorMessage: null,
-      ...(participantId ? {} : { dailySendLimit: dailySendLimit ?? null }),
+      // When the campaign first went out. The scheduled dispatcher has always
+      // recorded this and the send-now path never did, so a campaign sent from
+      // the button read "Sent — not yet" for the rest of its life:
+      // `campaignSentAt` is deliberately nulled here (nothing is pending any
+      // more) and nothing wrote the other half. `updateCampaign` only fills it
+      // while it is null, so a resend or a single-recipient retry still reports
+      // the first send rather than the latest one.
+      startedAt: new Date(),
+      ...(scopedResend ? {} : { dailySendLimit: dailySendLimit ?? null }),
     });
 
     const send = await openCampaignSend({
@@ -416,6 +430,7 @@ export async function sendCampaignHandler(
       campaignSendId: send.id,
       sendToStatuses,
       participantId,
+      participantIds,
       dailySendLimit: effectiveDailySendLimit,
     });
     if (!enqueued.status) {

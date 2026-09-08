@@ -39,40 +39,58 @@ export const campaignDequeueWorker = new Worker(
       });
 
       let removedCount = 0;
+      let lockedCount = 0;
       for (const { id: campaignSendId } of liveSends) {
         const key = campaignSendJobsKey(campaignSendId);
         const jobIds = await baseRedis.smembers(key);
-        removedCount += jobIds.length;
 
         for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
           const batch = jobIds.slice(i, i + BATCH_SIZE);
           log.trace(
             `Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(jobIds.length / BATCH_SIZE)}`,
           );
-          await Promise.all(
+          const outcomes = await Promise.all(
             batch.map(async (jobId) => {
-              const queued = await waMessageQueue.getJob(jobId);
-              if (!queued) {
-                // Job is gone from the queue but still in the Redis set — clean up.
-                await baseRedis.srem(key, jobId);
-                return;
-              }
+              try {
+                const queued = await waMessageQueue.getJob(jobId);
+                if (!queued) {
+                  // Job is gone from the queue but still in the Redis set — clean up.
+                  await baseRedis.srem(key, jobId);
+                  return "gone" as const;
+                }
 
-              const state = await queued.getState();
-              if (state === "waiting" || state === "delayed" || state === "failed") {
-                await queued.remove();
-                await baseRedis.srem(key, jobId);
+                const state = await queued.getState();
+                if (state === "waiting" || state === "delayed" || state === "failed") {
+                  await queued.remove();
+                  await baseRedis.srem(key, jobId);
+                  return "removed" as const;
+                }
+                return "running" as const;
+              } catch (error) {
+                // The state check and the removal are two round trips, and at
+                // concurrency 250 a job routinely starts sending in between —
+                // BullMQ then refuses to remove it ("locked by another worker")
+                // and throws. That message is already on its way to Meta and
+                // cannot be recalled, which is the same answer as the `running`
+                // branch above; the only thing that made it different was that
+                // it arrived as an exception, aborting the whole dequeue and
+                // marking a campaign FAILED for doing exactly what was asked.
+                log.warn({ err: error, jobId, campaignId }, "Left a locked campaign job alone");
+                return "locked" as const;
               }
             }),
           );
+          removedCount += outcomes.filter((outcome) => outcome === "removed").length;
+          lockedCount += outcomes.filter((outcome) => outcome === "locked").length;
         }
       }
 
       // Closes scheduled retries too, which never had a Redis set to walk.
       await cancelCampaignSends(campaignId, { note: "Cancelled by the campaign owner." });
 
-      log.trace(
-        `Dequeued ${removedCount} jobs across ${liveSends.length} send(s) for campaign ${campaignId}`,
+      log.info(
+        { campaignId, removedCount, lockedCount, sends: liveSends.length },
+        "Dequeued a campaign's pending messages",
       );
 
       // INACTIVE, not ACTIVE. Leaving a just-cancelled campaign ACTIVE made the

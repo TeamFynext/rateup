@@ -56,19 +56,30 @@ describe("finishCampaignIfSettled", () => {
     expect(call.data.endedAt).toBeInstanceOf(Date);
   });
 
-  // The bug this pass exists for: a retry is booked at drain time, while the
-  // outcome is still unknown. Once nothing failed, that attempt is pointless and
-  // must not leave the campaign claiming it is retrying.
-  test("cancels a booked retry and completes when nothing failed retryably", async () => {
+  // A booked attempt is left alone even when the cohort reads empty here. This
+  // pass runs every five minutes and would otherwise reach the attempt before it
+  // fires and cancel it — the attempt is the one that gets to decide, on a cohort
+  // read at fire time rather than up to five minutes stale.
+  test("stays RETRYING on a booked attempt even when the cohort looks empty", async () => {
     db.campaignSend.findMany.mockResolvedValue([{ status: "SCHEDULED" }]);
+    cohort.mockResolvedValue([]);
+
+    await expect(finishCampaignIfSettled(CAMPAIGN_ID)).resolves.toBe(CampaignStatus.RETRYING);
+
+    expect(cancel).not.toHaveBeenCalled();
+    // Not ended: the attempt still has to run before this campaign is over.
+    expect(db.campaign.updateMany.mock.calls[0][0].data.endedAt).toBeUndefined();
+  });
+
+  // The other half of that: once the attempt has fired and cancelled or completed
+  // itself, nothing is live and the campaign is finished.
+  test("completes once no attempt is left to run", async () => {
+    db.campaignSend.findMany.mockResolvedValue([]);
+    cohort.mockResolvedValue(["p-1"]);
 
     await expect(finishCampaignIfSettled(CAMPAIGN_ID)).resolves.toBe(CampaignStatus.COMPLETED);
 
-    expect(cancel).toHaveBeenCalledWith(
-      CAMPAIGN_ID,
-      expect.objectContaining({ onlyScheduled: true }),
-    );
-    expect(db.campaign.updateMany.mock.calls[0][0].data.status).toBe(CampaignStatus.COMPLETED);
+    expect(db.campaign.updateMany.mock.calls[0][0].data.endedAt).toBeInstanceOf(Date);
   });
 
   test("retries when something failed retryably and an attempt is booked", async () => {

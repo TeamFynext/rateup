@@ -1,4 +1,5 @@
 import prisma from "../../utils/prisma.js";
+import { disarmCampaignRetry } from "../../workers/bullmq/queues/campaignRetry.queue.js";
 import { log } from "../../utils/logger.js";
 import { CampaignSendStatus, CampaignSendTrigger } from "../../../generated/prisma/enums.js";
 import type { CampaignSend } from "../../../generated/prisma/client.js";
@@ -204,13 +205,39 @@ export async function cancelCampaignSends(
   options: { note?: string; onlyScheduled?: boolean } = {},
 ): Promise<number> {
   const { note, onlyScheduled = false } = options;
+  const where = {
+    campaignId,
+    status: onlyScheduled ? CampaignSendStatus.SCHEDULED : { in: [...LIVE_SEND_STATUSES] },
+  };
+
+  // Read the ids before the update, because updateMany does not return them and
+  // after it there is no way to tell which rows this call cancelled.
+  const cancelling = await prisma.campaignSend.findMany({
+    where: { ...where, status: CampaignSendStatus.SCHEDULED },
+    select: { id: true },
+  });
+
   const { count } = await prisma.campaignSend.updateMany({
-    where: {
-      campaignId,
-      status: onlyScheduled ? CampaignSendStatus.SCHEDULED : { in: [...LIVE_SEND_STATUSES] },
-    },
+    where,
     data: { status: CampaignSendStatus.CANCELLED, completedAt: new Date(), note },
   });
+
+  // Housekeeping, not correctness: a surviving job finds the row CANCELLED and
+  // claims nothing. Done after the update so a job that fires mid-flight loses
+  // the race to the status change rather than winning it.
+  //
+  // Each failure is swallowed for that same reason. A delayed job that is firing
+  // right now is locked, and BullMQ throws rather than removing it — which used
+  // to propagate out of a pause and mark the campaign FAILED over bookkeeping
+  // that does not affect the outcome.
+  await Promise.all(
+    cancelling.map((send) =>
+      disarmCampaignRetry(send.id).catch((error: unknown) => {
+        log.warn({ err: error, campaignSendId: send.id }, "Could not disarm a scheduled retry");
+      }),
+    ),
+  );
+
   return count;
 }
 

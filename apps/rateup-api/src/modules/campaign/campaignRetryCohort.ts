@@ -49,3 +49,33 @@ export async function countInFlightParticipants(campaignId: string): Promise<num
     },
   });
 }
+
+/**
+ * Messages this send dispatched whose outcome has not landed yet.
+ *
+ * The gap `countInFlightParticipants` cannot see. A retry re-attempts
+ * participants that are `FAILED` and does not reset them, so during the retry
+ * they still read `FAILED` from the *previous* attempt — nothing is PENDING or
+ * SENT — while their fresh `WaMessage` has no error code yet and so matches no
+ * retry cohort either. For the seconds between the queue draining and Meta's
+ * first receipt, a campaign mid-retry therefore looks completely settled, and
+ * the retry engine concluded there was nothing left to retry and stopped the
+ * chain at attempt 1.
+ *
+ * Scoped to one send rather than the campaign: these rows are seconds old by
+ * construction, so an ancient message that never received a webhook cannot hold
+ * a campaign open forever.
+ */
+export async function countUnresolvedSendMessages(campaignSendId: string): Promise<number> {
+  const [row] = await prisma.$queryRaw<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count
+    FROM "WaMessageCampaginParticipantMap" m
+    JOIN "WaMessage" wm ON wm.id = m."waMessageId"
+    WHERE m."campaignSendId" = ${campaignSendId}::uuid
+      AND wm."errorCode" IS NULL
+      AND COALESCE(wm.stats->>'failed', '') = ''
+      AND COALESCE(wm.stats->>'delivered', '') = ''
+      AND COALESCE(wm.stats->>'read', '') = ''
+  `;
+  return row?.count ?? 0;
+}

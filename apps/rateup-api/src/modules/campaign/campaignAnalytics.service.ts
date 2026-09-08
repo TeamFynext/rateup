@@ -3,6 +3,7 @@ import { CampaignNotFoundError } from "./campaign.errors.js";
 import { CampaignParticipantStatus } from "../../types/enums.js";
 import {
   FAILURE_REASON_GROUPS,
+  isRetryableCode,
   waFailureLabel,
   waFailureReasonGroup,
   WaFailureReasonGroup,
@@ -54,10 +55,24 @@ export interface CampaignSendSummary {
   note: string | null;
 }
 
-function sendLabel(attemptNo: number, trigger: CampaignSendTrigger): string {
+/**
+ * What to call one send, in the sender's words.
+ *
+ * Keyed on the trigger, not on `attemptNo`. `attemptNo` is just the row's
+ * position in the campaign, so calling everything past the first a "Retry" made a
+ * resend, and a scheduled campaign resumed after a pause, both announce
+ * themselves as "Retry 1" in the activity feed.
+ *
+ * `retryNo` counts retries within the current cycle — the run of automatic
+ * attempts since the last send a person asked for — so the first retry after a
+ * resend is "Retry 1" rather than "Retry 3".
+ */
+function sendLabel(trigger: CampaignSendTrigger, attemptNo: number, retryNo: number): string {
   if (trigger === "DRIP") return "Drip stage";
+  if (trigger === "AUTO_RETRY") return `Retry ${retryNo}`;
   if (attemptNo === 0) return "Initial send";
-  return `Retry ${attemptNo}`;
+  if (trigger === "SCHEDULED") return "Scheduled send";
+  return "Resend";
 }
 
 export async function getCampaignSends(
@@ -71,7 +86,15 @@ export async function getCampaignSends(
     orderBy: { attemptNo: "asc" },
   });
 
+  // Retries are numbered per cycle, so the counter restarts at every send a
+  // person asked for. `sends` is ordered by `attemptNo`, which is the order they
+  // happened in.
+  let retryNo = 0;
+
   return sends.map((send) => {
+    if (send.trigger === "AUTO_RETRY") retryNo++;
+    else retryNo = 0;
+
     // Attempted-minus-rejected, not `totalDelivered`: a delivery receipt can
     // arrive hours later, and an attempt row that reads 0 recovered until then
     // would be read as a failed retry rather than a pending one.
@@ -81,7 +104,7 @@ export async function getCampaignSends(
       attemptNo: send.attemptNo,
       trigger: send.trigger,
       status: send.status,
-      label: sendLabel(send.attemptNo, send.trigger),
+      label: sendLabel(send.trigger, send.attemptNo, retryNo),
       targetStatuses: send.targetStatuses,
       dripStageId: send.dripStageId,
       scheduledFor: send.scheduledFor?.toISOString() ?? null,
@@ -201,14 +224,27 @@ export interface FailureReasonRow {
   label: string;
   description: string;
   count: number;
-  /** The individual codes behind the row, for support. */
-  codes: { code: number | null; label: string; count: number }[];
+  /** How many of `count` the retry engine will pick up. */
+  retryableCount: number;
+  /**
+   * The individual codes behind the row, for support.
+   *
+   * `retryable` is per code, not per group: a group is a *cause*, and a cause
+   * can hold both outcomes — `INVALID_NUMBER` carries 131026, which is retried,
+   * alongside 133010, which is not.
+   */
+  codes: { code: number | null; label: string; count: number; retryable: boolean }[];
 }
 
 export interface CampaignAnalytics {
   funnel: FunnelStage[];
   failures: FailureReasonRow[];
+  /** Failed *messages* across every attempt — a recipient recovered by a retry is still counted. */
   totalFailed: number;
+  /** Recipients whose current status is FAILED, i.e. what the failure breakdown adds up to. */
+  activeFailed: number;
+  /** Recipients not yet attempted or still awaiting an outcome. */
+  activePending: number;
   /** Recipients dropped by the conversation allowance across every attempt. */
   totalSkipped: number;
   attemptCount: number;
@@ -220,9 +256,16 @@ export async function getCampaignAnalytics(
 ): Promise<CampaignAnalytics> {
   await assertCampaignInOrg(campaignId, orgId);
 
-  const [stats, attempted, sends, failureRows] = await Promise.all([
+  const [stats, byStatus, sends, failureRows] = await Promise.all([
     prisma.campaignStats.findUnique({ where: { campaignId } }),
-    prisma.campaignParticipant.count({ where: { campaignId } }),
+    // Where each recipient stands *now*. `CampaignStats` counts messages and is
+    // bumped once per attempt, so its `totalFailed` keeps counting someone a
+    // later retry recovered; these are the live per-recipient numbers.
+    prisma.campaignParticipant.groupBy({
+      by: ["status"],
+      where: { campaignId },
+      _count: { _all: true },
+    }),
     prisma.campaignSend.aggregate({
       where: { campaignId },
       _sum: { totalSkipped: true },
@@ -231,6 +274,10 @@ export async function getCampaignAnalytics(
     getFailureBreakdownRows(campaignId),
   ]);
 
+  const countOf = (status: CampaignParticipantStatus) =>
+    byStatus.find((row) => row.status === status)?._count._all ?? 0;
+  const attempted = byStatus.reduce((total, row) => total + row._count._all, 0);
+
   const sent = stats?.totalSend ?? 0;
   const delivered = stats?.totalDelivered ?? 0;
   const read = stats?.totalRead ?? 0;
@@ -238,7 +285,9 @@ export async function getCampaignAnalytics(
 
   const stages: { key: FunnelStage["key"]; label: string; count: number }[] = [
     { key: "attempted", label: "Attempted", count: attempted },
-    { key: "sent", label: "Sent", count: sent },
+    // "Dispatched", not "Sent": `totalSend` is incremented for every message
+    // handed to Meta, rejections included, so the stage counts what went out.
+    { key: "sent", label: "Dispatched", count: sent },
     { key: "delivered", label: "Delivered", count: delivered },
     { key: "read", label: "Read", count: read },
     { key: "replied", label: "Replied", count: replied },
@@ -257,6 +306,8 @@ export async function getCampaignAnalytics(
     funnel,
     failures: failureRows,
     totalFailed: stats?.totalFailed ?? 0,
+    activeFailed: countOf(CampaignParticipantStatus.FAILED),
+    activePending: countOf(CampaignParticipantStatus.PENDING),
     totalSkipped: sends._sum.totalSkipped ?? 0,
     attemptCount: sends._count,
   };
@@ -289,7 +340,7 @@ async function getFailureBreakdownRows(campaignId: string): Promise<FailureReaso
 
   const byGroup = new Map<WaFailureReasonGroup, FailureReasonRow>();
   for (const { group, label, description } of FAILURE_REASON_GROUPS) {
-    byGroup.set(group, { group, label, description, count: 0, codes: [] });
+    byGroup.set(group, { group, label, description, count: 0, retryableCount: 0, codes: [] });
   }
 
   for (const row of rows) {
@@ -297,9 +348,12 @@ async function getFailureBreakdownRows(campaignId: string): Promise<FailureReaso
     const group = waFailureReasonGroup(row.errorCode);
     const bucket = byGroup.get(group);
     if (!bucket) continue;
+    const retryable = row.errorCode !== null && isRetryableCode(row.errorCode);
     bucket.count += count;
+    if (retryable) bucket.retryableCount += count;
     bucket.codes.push({
       code: row.errorCode,
+      retryable,
       // A failure with no code at all predates the errorCode column, or never
       // reached Meta. Saying so beats attributing it to a reason we do not know.
       label: row.errorCode === null ? "Reason not recorded" : waFailureLabel(row.errorCode),

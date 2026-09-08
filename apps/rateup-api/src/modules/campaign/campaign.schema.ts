@@ -177,6 +177,12 @@ const sendTestInputSchema = z.object({
 const sendCampaignInputSchema = z.object({
   sendToStatuses: z.array(z.enum(CampaignParticipantStatus)).min(1),
   participantId: z.string().optional(),
+  /**
+   * An exact cohort, narrower than `sendToStatuses` — the recipients ticked in
+   * the participants table. Like `participantId`, it is a scoped resend rather
+   * than a campaign-wide one, so the daily cap does not apply to it.
+   */
+  participantIds: z.array(z.string()).min(1).max(1000).optional(),
   campaignSentAt: z.coerce.date().optional().nullable(),
   sentCampaignChoice: z.enum(SentCampaignEnum),
   status: z.enum(CampaignStatus).optional().nullable(),

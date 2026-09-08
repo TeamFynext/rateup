@@ -84,11 +84,16 @@ both break silently if a new send path forgets it:
 So: never call `enqueueCampaignMessage` without opening a `CampaignSend` first
 (`campaignSend.service.ts`), and close it on every path that does not enqueue —
 an unclosed live send holds the campaign's lane against the partial unique index
-in `20260906000000_campaign_send_sessions`.
+in `20260907090000_campaign_send_sessions`.
 
-Retry _scheduling_ lives in the database, not in delayed jobs: a `SCHEDULED`
-`CampaignSend` is the source of truth, and the `campaignRetries` cron fires the
-due ones. Cancelling is an UPDATE, and the schedule survives a Redis flush.
+A `SCHEDULED` `CampaignSend` is the source of truth for _what_ is scheduled —
+cancelling is an UPDATE, and the UI reads the row rather than the queue. _When_ it
+fires is owned by one delayed job per row (`queues/campaignRetry.queue.ts`), so a
+retry goes off at its exact `scheduledFor`; the old `campaignRetries` cron capped
+that at its tick interval. Firing re-claims the row with a conditional UPDATE, so a
+job whose row was cancelled is a no-op and a duplicated job still sends once. The
+cost is that Redis can lose a job the database still expects, which
+`reconcileScheduledCampaignSends()` re-arms at worker startup.
 
 `waMessageQueue` has `attempts: 3`. That only does anything because
 `waMessage.processor.ts` rethrows — and it rethrows _only_ for a failure that

@@ -334,6 +334,18 @@ describe("sendCampaignHandler", () => {
     expect(sent(rep).code).toBe("ENQUEUE_REQUEST_ACCEPTED");
   });
 
+  test("records when the campaign first went out", async () => {
+    // The Setup card's "Sent" reads `campaignSentAt || startedAt`, and this path
+    // nulls the first one — so without the second a campaign sent from the button
+    // reported "Not yet" forever. `updateCampaign` only fills a null `startedAt`,
+    // so a later resend does not move it.
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(m.update.mock.calls[0][2].startedAt).toBeInstanceOf(Date);
+  });
+
   test("only flips the status for a drip campaign", async () => {
     const rep = reply();
 

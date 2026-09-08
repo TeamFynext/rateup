@@ -530,6 +530,25 @@ export const getResponseExcelByCampaignById = async (
   format: SpreadsheetExportFormat = "xlsx",
 ) => {
   const stats = await getCampaginStatsById(id, orgId, selectedDripStage);
+  // Recipients that are failed as things stand, counted the way the Overview
+  // tile and the analytics failure breakdown count them — `CampaignStats`
+  // records one per failed *attempt* and so keeps counting a recipient a later
+  // retry rescued.
+  const activeFailed = selectedDripStage
+    ? await prisma.campaignParticipantDripStage.count({
+        where: {
+          dripStageId: selectedDripStage,
+          status: CampaignParticipantStatus.FAILED,
+          participant: { campaignId: id, campaign: { team: { orgId } } },
+        },
+      })
+    : await prisma.campaignParticipant.count({
+        where: {
+          campaignId: id,
+          campaign: { team: { orgId } },
+          status: CampaignParticipantStatus.FAILED,
+        },
+      });
   const pageSize = 10000; // Number of records per batch
   let page = 0;
   let hasMoreRecords = true;
@@ -637,17 +656,24 @@ export const getResponseExcelByCampaignById = async (
     {
       countPending: stats?.countPending,
       countRead: stats?.countRead,
-      countSent: stats?.countSent,
-      countFailed: stats?.countFailed,
+      countDispatched: stats?.countSent,
+      countFailed: activeFailed,
       countDelivered: stats?.countDelivered,
       countCompleted: stats?.countCompleted,
     },
   ];
 
+  // The same words and the same arithmetic as the campaign's Overview. "Sent"
+  // was the dispatch counter, which is bumped for every message handed to Meta
+  // including the ones it rejected, so a spreadsheet column headed "Count Sent"
+  // was larger than what arrived and could not be reconciled with the failures
+  // beside it. "Count Failed" is now recipients that are failed *now* rather
+  // than every failure ever recorded, so a recipient a retry recovered is
+  // counted once, under Delivered, where they belong.
   const statsColumns = [
     { header: "Count Pending", key: "countPending", autoWidth: true },
     { header: "Count Read", key: "countRead", autoWidth: true },
-    { header: "Count Sent", key: "countSent", autoWidth: true },
+    { header: "Count Dispatched", key: "countDispatched", autoWidth: true },
     { header: "Count Failed", key: "countFailed", autoWidth: true },
     { header: "Count Delivered", key: "countDelivered", autoWidth: true },
     { header: "Count Completed", key: "countCompleted", autoWidth: true },
@@ -936,6 +962,21 @@ export const deleteCampaignParticipantsByCampaignId = async (
 // `retryCount: 2` in the latter encoded a retry policy no code implemented.
 // Retries are real now — see `campaignRetry.service.ts` — and leaving a
 // vestigial imitation of one beside it was worse than nothing.
+
+/** How many of these participant ids the campaign actually holds. */
+export const getCampaignParticipantCountByIds = (
+  campaignId: string,
+  orgId: string,
+  participantIds: string[],
+): Promise<number> => {
+  return prisma.campaignParticipant.count({
+    where: {
+      campaignId,
+      campaign: { team: { orgId } },
+      id: { in: participantIds },
+    },
+  });
+};
 
 export const getCampaignParticipantCountByStatuses = (
   campaignId: string,

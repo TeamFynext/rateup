@@ -4,7 +4,13 @@ vi.mock("../../utils/prisma.js", () => ({
   default: {
     $queryRaw: vi.fn(),
     campaign: { findUnique: vi.fn() },
-    campaignSend: { findUnique: vi.fn(), update: vi.fn() },
+    campaignSend: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
+    },
     campaignParticipant: { count: vi.fn() },
   },
 }));
@@ -20,6 +26,11 @@ vi.mock("./campaignSend.service.js", async () => ({
 }));
 vi.mock("./campaign.service.js", () => ({ enqueueCampaignMessage: vi.fn() }));
 vi.mock("./campaignSettle.service.js", () => ({ finishCampaignIfSettled: vi.fn() }));
+vi.mock("../../workers/bullmq/queues/campaignRetry.queue.js", () => ({
+  armCampaignRetry: vi.fn(),
+  campaignRetryFire: { getJob: vi.fn() },
+  campaignRetryJobId: (id: string) => `campaignSend-${id}`,
+}));
 
 import prisma from "../../utils/prisma.js";
 import { getConversationBudget } from "../subscription/conversationBudget.js";
@@ -27,9 +38,14 @@ import { createCampaignSend } from "./campaignSend.service.js";
 import { enqueueCampaignMessage } from "./campaign.service.js";
 import { finishCampaignIfSettled } from "./campaignSettle.service.js";
 import {
+  armCampaignRetry,
+  campaignRetryFire,
+} from "../../workers/bullmq/queues/campaignRetry.queue.js";
+import {
+  fireCampaignSendById,
+  reconcileScheduledCampaignSends,
   getRetryCohort,
   nextAttemptAt,
-  processScheduledCampaignSends,
   scheduleNextRetry,
   shiftOutOfQuietHours,
 } from "./campaignRetry.service.js";
@@ -41,12 +57,19 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   $queryRaw: Mock;
   campaign: { findUnique: Mock };
-  campaignSend: { findUnique: Mock; update: Mock };
+  campaignSend: {
+    findUnique: Mock;
+    findFirst: Mock;
+    update: Mock;
+    findMany: Mock;
+    count: Mock;
+  };
   campaignParticipant: { count: Mock };
 };
 const budget = getConversationBudget as unknown as Mock;
 const createSend = createCampaignSend as unknown as Mock;
 const enqueue = enqueueCampaignMessage as unknown as Mock;
+const arm = armCampaignRetry as unknown as Mock;
 
 const CAMPAIGN_ID = "11111111-1111-1111-1111-111111111111";
 const SEND_ID = "22222222-2222-2222-2222-222222222222";
@@ -85,6 +108,10 @@ function send(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
+  // The cycle starts at the initial send and no retry has run yet: the common
+  // case, and what makes the next attempt number 1.
+  db.campaignSend.findFirst.mockResolvedValue({ attemptNo: 0 });
+  db.campaignSend.count.mockResolvedValue(0);
   createSend.mockResolvedValue({ id: "next-send", attemptNo: 1 });
   enqueue.mockResolvedValue({ status: true, message: "ok" });
   db.campaignSend.update.mockResolvedValue({});
@@ -93,8 +120,8 @@ beforeEach(() => {
 describe("nextAttemptAt", () => {
   const FROM = new Date("2026-03-01T10:00:00Z");
 
-  test("front-loads the smart schedule, then decays: 45m, 4h, 12h", () => {
-    expect(nextAttemptAt(policy(), 1, FROM).toISOString()).toBe("2026-03-01T10:45:00.000Z");
+  test("front-loads the smart schedule, then decays: 2m, 4h, 12h", () => {
+    expect(nextAttemptAt(policy(), 1, FROM).toISOString()).toBe("2026-03-01T10:02:00.000Z");
     expect(nextAttemptAt(policy(), 2, FROM).toISOString()).toBe("2026-03-01T14:00:00.000Z");
     expect(nextAttemptAt(policy(), 3, FROM).toISOString()).toBe("2026-03-01T22:00:00.000Z");
   });
@@ -202,7 +229,7 @@ describe("scheduleNextRetry", () => {
     db.campaignParticipant.count.mockResolvedValue(3);
   });
 
-  test("schedules the first retry 45 minutes out", async () => {
+  test("schedules the first retry 2 minutes out", async () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
     db.campaignSend.findUnique.mockResolvedValue(send());
 
@@ -213,7 +240,7 @@ describe("scheduleNextRetry", () => {
     expect(arg.trigger).toBe("AUTO_RETRY");
     expect(arg.status).toBe("SCHEDULED");
     expect(arg.targetStatuses).toEqual([CampaignParticipantStatus.FAILED]);
-    expect(arg.scheduledFor.toISOString()).toBe("2026-03-01T10:45:00.000Z");
+    expect(arg.scheduledFor.toISOString()).toBe("2026-03-01T10:02:00.000Z");
   });
 
   test("books nothing when every message landed and none failed", async () => {
@@ -248,13 +275,69 @@ describe("scheduleNextRetry", () => {
     expect(createSend).toHaveBeenCalledTimes(1);
   });
 
+  test("books one when the send it just drained is still waiting on receipts", async () => {
+    // The retry case: its recipients still read FAILED from the previous attempt,
+    // so nothing is PENDING or SENT, and the fresh messages have no error code
+    // yet so the cohort is empty too. Only the send's own unresolved messages say
+    // the campaign is mid-attempt — without them the chain stopped at attempt 1.
+    db.campaignSend.findUnique.mockResolvedValue(send());
+    db.campaignParticipant.count.mockResolvedValue(0);
+    // Unresolved messages settle it on their own — the cohort is not even asked,
+    // because an empty one right now says nothing about what the receipts will say.
+    db.$queryRaw.mockResolvedValue([{ count: 19 }]);
+
+    await scheduleNextRetry(SEND_ID);
+
+    expect(createSend).toHaveBeenCalledTimes(1);
+  });
+
+  test("asks about the drained send's own messages, not the campaign's", async () => {
+    // Scoped to this send on purpose: a campaign-wide question would let one
+    // ancient message that never received a webhook hold retries open forever.
+    db.campaignSend.findUnique.mockResolvedValue(send());
+    db.campaignParticipant.count.mockResolvedValue(0);
+    db.$queryRaw.mockResolvedValueOnce([{ count: 0 }]).mockResolvedValueOnce([]);
+
+    await scheduleNextRetry(SEND_ID);
+
+    const [, ...values] = db.$queryRaw.mock.calls[0];
+    expect(values).toContain(SEND_ID);
+    expect(createSend).not.toHaveBeenCalled();
+  });
+
+  test("counts retries per cycle, so a resend does not spend the retry budget", async () => {
+    // Attempt 4 of the campaign, but the fourth attempt is a *resend* — the person
+    // asked for it. Numbering off `attemptNo` made its first retry "attempt 5 of
+    // 3" and refused it, so a campaign that was resent once quietly lost retries.
+    db.campaignSend.findUnique.mockResolvedValue(
+      send({
+        attemptNo: 3,
+        campaign: {
+          id: CAMPAIGN_ID,
+          type: CampaignType.WHATSAPP,
+          CampaignRetryPolicy: policy({ maxAttempts: 3 }),
+        },
+      }),
+    );
+    // The cycle opened at attempt 3 (the resend) and no retry has run since.
+    db.campaignSend.findFirst.mockResolvedValue({ attemptNo: 3 });
+    db.campaignSend.count.mockResolvedValue(0);
+
+    await scheduleNextRetry(SEND_ID);
+
+    expect(createSend).toHaveBeenCalledTimes(1);
+    expect(createSend.mock.calls[0][0].note).toBe("Automatic retry 1 of 3.");
+    // Counted from the send that opened the cycle, not from attempt 0.
+    expect(db.campaignSend.count.mock.calls[0][0].where.attemptNo).toEqual({ gt: 3, lte: 3 });
+  });
+
   test("never schedules sooner than the settle delay, whatever the policy says", async () => {
     // Without the floor this would build a cohort from statuses that have not
     // landed yet — the queue drains before Meta's webhooks arrive.
     vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
     db.campaignSend.findUnique.mockResolvedValue(
       send({
-        // Drained half an hour ago, so the +45m offset measured from completion
+        // Drained half an hour ago, so the +2m offset measured from completion
         // is already inside the floor measured from now.
         completedAt: new Date("2026-03-01T09:30:00Z"),
       }),
@@ -262,7 +345,7 @@ describe("scheduleNextRetry", () => {
 
     await scheduleNextRetry(SEND_ID);
 
-    expect(createSend.mock.calls[0][0].scheduledFor.toISOString()).toBe("2026-03-01T10:45:00.000Z");
+    expect(createSend.mock.calls[0][0].scheduledFor.toISOString()).toBe("2026-03-01T10:02:00.000Z");
   });
 
   test("stops once the attempts are exhausted", async () => {
@@ -276,6 +359,8 @@ describe("scheduleNextRetry", () => {
         },
       }),
     );
+    // Three retries already spent on this send.
+    db.campaignSend.count.mockResolvedValue(3);
 
     await expect(scheduleNextRetry(SEND_ID)).resolves.toBeNull();
     expect(createSend).not.toHaveBeenCalled();
@@ -373,17 +458,19 @@ describe("getRetryCohort", () => {
 
     await expect(getRetryCohort(CAMPAIGN_ID)).resolves.toEqual(["p-1", "p-2"]);
 
-    // The permanent codes must never reach the parameter list, or an
-    // undeliverable number would be retried until the attempts ran out.
+    // The permanent codes must never reach the parameter list, or a template
+    // the campaign will never fix would be retried until the attempts ran out.
     const [, ...values] = db.$queryRaw.mock.calls[0];
     const codes = values.find((v: unknown) => Array.isArray(v)) as number[];
     expect(codes).toContain(131049);
-    expect(codes).not.toContain(131026);
+    // Undeliverable-now: retried on a later attempt, never in place.
+    expect(codes).toContain(131026);
+    expect(codes).not.toContain(133010);
     expect(codes).not.toContain(132001);
   });
 });
 
-describe("processScheduledCampaignSends", () => {
+describe("fireCampaignSendById", () => {
   beforeEach(() => {
     db.campaign.findUnique.mockResolvedValue({
       dailySendLimit: null,
@@ -392,7 +479,7 @@ describe("processScheduledCampaignSends", () => {
     budget.mockResolvedValue({ metered: false, isAnnual: false });
   });
 
-  /** The claim query returns due rows; the cohort query returns participants. */
+  /** The claim query returns the row it won; the cohort query returns participants. */
   function due(rows: unknown[], cohort: string[]) {
     db.$queryRaw.mockResolvedValueOnce(rows).mockResolvedValue(cohort.map((id) => ({ id })));
   }
@@ -400,7 +487,7 @@ describe("processScheduledCampaignSends", () => {
   test("fires a due retry with the exact cohort", async () => {
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], ["p-1", "p-2"]);
 
-    await expect(processScheduledCampaignSends()).resolves.toEqual({ fired: 1, cancelled: 0 });
+    await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("fired");
     expect(enqueue).toHaveBeenCalledWith(
       expect.objectContaining({ campaignSendId: SEND_ID, participantIds: ["p-1", "p-2"] }),
     );
@@ -409,7 +496,7 @@ describe("processScheduledCampaignSends", () => {
   test("settles the campaign when a cancelled retry was the last thing open", async () => {
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], []);
 
-    await processScheduledCampaignSends();
+    await fireCampaignSendById(SEND_ID);
 
     // Otherwise the campaign waits on RETRYING for an attempt that will never run.
     expect(finishCampaignIfSettled).toHaveBeenCalledWith(CAMPAIGN_ID);
@@ -418,7 +505,7 @@ describe("processScheduledCampaignSends", () => {
   test("cancels rather than firing when nothing is left to retry", async () => {
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], []);
 
-    await expect(processScheduledCampaignSends()).resolves.toEqual({ fired: 0, cancelled: 1 });
+    await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("cancelled");
     expect(enqueue).not.toHaveBeenCalled();
     expect(db.campaignSend.update.mock.calls[0][0].data.status).toBe("CANCELLED");
   });
@@ -427,7 +514,7 @@ describe("processScheduledCampaignSends", () => {
     budget.mockResolvedValue({ metered: true, remaining: 2, isAnnual: false });
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], ["p-1", "p-2", "p-3", "p-4"]);
 
-    await expect(processScheduledCampaignSends()).resolves.toEqual({ fired: 1, cancelled: 0 });
+    await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("fired");
 
     const update = db.campaignSend.update.mock.calls[0][0].data;
     expect(update.totalSkipped).toBe(2);
@@ -439,7 +526,7 @@ describe("processScheduledCampaignSends", () => {
     budget.mockResolvedValue({ metered: true, remaining: 0, isAnnual: false });
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], ["p-1"]);
 
-    await expect(processScheduledCampaignSends()).resolves.toEqual({ fired: 0, cancelled: 1 });
+    await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("cancelled");
     expect(enqueue).not.toHaveBeenCalled();
   });
 
@@ -447,12 +534,66 @@ describe("processScheduledCampaignSends", () => {
     enqueue.mockResolvedValue({ status: false, message: "redis is down" });
     due([{ id: SEND_ID, campaignId: CAMPAIGN_ID, attemptNo: 1 }], ["p-1"]);
 
-    await expect(processScheduledCampaignSends()).resolves.toEqual({ fired: 0, cancelled: 0 });
+    await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("skipped");
     expect(db.campaignSend.update.mock.calls.at(-1)![0].data.status).toBe("FAILED");
   });
 
-  test("does nothing when nothing is due", async () => {
+  test("does nothing when the row is no longer claimable", async () => {
+    // Cancelled, already claimed, or not actually due yet — the conditional
+    // UPDATE returns no row and the delayed job is a no-op.
     db.$queryRaw.mockResolvedValue([]);
-    await expect(processScheduledCampaignSends()).resolves.toEqual({ fired: 0, cancelled: 0 });
+    await expect(fireCampaignSendById(SEND_ID)).resolves.toBe("skipped");
+  });
+});
+
+describe("arming the delayed job", () => {
+  test("arms a newly scheduled retry for its scheduledFor", async () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
+    db.campaignSend.findUnique.mockResolvedValue(send());
+    db.campaignParticipant.count.mockResolvedValue(3);
+    createSend.mockResolvedValue({ id: "new-send" });
+
+    await scheduleNextRetry(SEND_ID);
+
+    const [id, when] = arm.mock.calls[0];
+    expect(id).toBe("new-send");
+    // The row and its job must agree, or the job fires before the claim allows it.
+    expect(when.toISOString()).toBe(createSend.mock.calls[0][0].scheduledFor.toISOString());
+  });
+
+  test("does not arm anything when no retry was scheduled", async () => {
+    db.campaignSend.count.mockResolvedValue(3);
+    db.campaignSend.findUnique.mockResolvedValue(
+      send({
+        attemptNo: 3,
+        campaign: {
+          id: CAMPAIGN_ID,
+          type: CampaignType.WHATSAPP,
+          CampaignRetryPolicy: policy({ maxAttempts: 3 }),
+        },
+      }),
+    );
+
+    await scheduleNextRetry(SEND_ID);
+
+    expect(arm).not.toHaveBeenCalled();
+  });
+});
+
+describe("reconcileScheduledCampaignSends", () => {
+  test("re-arms only the rows whose delayed job is gone", async () => {
+    // The whole point of the sweep: a flushed Redis leaves rows nothing will
+    // ever look at, and those must be armed again without disturbing the rest.
+    db.campaignSend.findMany.mockResolvedValue([
+      { id: "has-job", scheduledFor: new Date("2026-03-01T12:00:00Z") },
+      { id: "lost-job", scheduledFor: new Date("2026-03-01T13:00:00Z") },
+    ]);
+    (campaignRetryFire.getJob as unknown as Mock).mockImplementation(async (jobId: string) =>
+      jobId === "campaignSend-has-job" ? { id: jobId } : undefined,
+    );
+
+    await expect(reconcileScheduledCampaignSends()).resolves.toEqual({ checked: 2, armed: 1 });
+    expect(arm).toHaveBeenCalledTimes(1);
+    expect(arm.mock.calls[0][0]).toBe("lost-job");
   });
 });

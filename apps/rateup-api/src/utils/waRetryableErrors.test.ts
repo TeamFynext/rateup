@@ -6,6 +6,7 @@ import {
   RETRYABLE_ERROR_CODES,
   waFailureLabel,
   waFailureReasonGroup,
+  WA_TRANSPORT_ERROR_CODE,
   WaFailureClass,
   WaFailureReasonGroup,
 } from "./waRetryableErrors.js";
@@ -22,8 +23,8 @@ describe("classifyWaFailure", () => {
     [133016, WaFailureClass.TRANSIENT],
     [1, WaFailureClass.TRANSIENT],
     [2, WaFailureClass.TRANSIENT],
-    [131026, WaFailureClass.PERMANENT],
-    [131047, WaFailureClass.PERMANENT],
+    [131026, WaFailureClass.RETRY_LATER],
+    [131047, WaFailureClass.RETRY_LATER],
     [131051, WaFailureClass.PERMANENT],
     [131008, WaFailureClass.PERMANENT],
     [133010, WaFailureClass.PERMANENT],
@@ -52,7 +53,7 @@ describe("classifyWaFailure", () => {
   });
 
   it("keeps a documented permanent failure permanent even when served with a 5xx", () => {
-    expect(classifyWaFailure(131026, 500)).toBe(WaFailureClass.PERMANENT);
+    expect(classifyWaFailure(133010, 500)).toBe(WaFailureClass.PERMANENT);
   });
 
   it("does not treat a 4xx as transient", () => {
@@ -67,8 +68,15 @@ describe("isRetryable", () => {
   });
 
   it("never retries permanent failures", () => {
-    expect(isRetryable(131026, ENABLED)).toBe(false);
+    expect(isRetryable(133010, ENABLED)).toBe(false);
     expect(isRetryable(132001, ENABLED)).toBe(false);
+    expect(isRetryable(131051, ENABLED)).toBe(false);
+  });
+
+  it("retries an undeliverable number later — but the dispatcher never retries it in place", () => {
+    expect(isRetryable(131026, ENABLED)).toBe(true);
+    // Only TRANSIENT earns another BullMQ attempt against the same number.
+    expect(classifyWaFailure(131026)).not.toBe(WaFailureClass.TRANSIENT);
   });
 
   it("never retries an unclassified code — an unknown code burns allowance to learn nothing", () => {
@@ -93,7 +101,7 @@ describe("failure reason grouping", () => {
   });
 
   it("gives a customer-readable label rather than the bare code", () => {
-    expect(waFailureLabel(131026)).toBe("Number is not on WhatsApp or cannot receive messages");
+    expect(waFailureLabel(131026)).toBe("Number could not receive the message");
     expect(waFailureLabel(131049)).toBe("Meta limited marketing messages to this contact");
     // Unmapped codes still say something, and keep the code for support.
     expect(waFailureLabel(999999)).toBe("Unrecognised error (999999)");
@@ -103,7 +111,18 @@ describe("failure reason grouping", () => {
 describe("RETRYABLE_ERROR_CODES", () => {
   it("is exactly the retryable half of the table", () => {
     expect([...RETRYABLE_ERROR_CODES].sort((a, b) => a - b)).toEqual([
-      1, 2, 368, 130429, 130472, 131048, 131049, 133016,
+      // -1 is the transport sentinel: a request that never reached Meta.
+      WA_TRANSPORT_ERROR_CODE,
+      1,
+      2,
+      368,
+      130429,
+      130472,
+      131026,
+      131047,
+      131048,
+      131049,
+      133016,
     ]);
   });
 
@@ -111,5 +130,16 @@ describe("RETRYABLE_ERROR_CODES", () => {
     for (const code of RETRYABLE_ERROR_CODES) {
       expect(isRetryable(code, ENABLED)).toBe(true);
     }
+  });
+});
+
+describe("transport failures", () => {
+  it("is transient, so both retry layers pick it up", () => {
+    expect(classifyWaFailure(WA_TRANSPORT_ERROR_CODE)).toBe(WaFailureClass.TRANSIENT);
+    expect(isRetryable(WA_TRANSPORT_ERROR_CODE, ENABLED)).toBe(true);
+  });
+
+  it("says what happened rather than showing the sentinel", () => {
+    expect(waFailureLabel(WA_TRANSPORT_ERROR_CODE)).toBe("Could not reach WhatsApp");
   });
 });

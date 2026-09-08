@@ -1,9 +1,23 @@
--- Campaign send sessions, per-message error codes, and retry policies.
+-- Campaign send sessions: the tables, the statuses that go with them, and the
+-- indexes the reads need.
 --
--- Hand-authored: the partial unique index guaranteeing one live send per
--- campaign cannot be expressed in the Prisma schema, and the backfill below has
--- to run in the same transaction as the table creation so that no campaign is
--- ever observable with messages that belong to no send.
+-- One migration rather than the five it was authored as. They were written a
+-- change at a time while the feature was being built and none of them stands
+-- alone: every backfill below reads `CampaignSend`, which the first section
+-- creates, and the statuses they settle (DRAFT, FAILED, RETRYING, COMPLETED)
+-- only mean anything once send sessions exist to distinguish them. Squashed
+-- before release, so a fresh database gets one coherent step instead of a
+-- narrative.
+--
+-- Hand-authored throughout: the partial unique indexes cannot be expressed in
+-- the Prisma schema, and each backfill has to run in the same transaction as the
+-- DDL it depends on.
+
+-- ── 1. Campaign send sessions, retry policies, and per-message error codes ------
+--
+-- The partial unique index guaranteeing one live send per campaign is why this
+-- is hand-authored, and the backfill runs beside the table creation so that no
+-- campaign is ever observable with messages belonging to no send.
 
 -- CreateEnum
 CREATE TYPE "CampaignSendTrigger" AS ENUM ('MANUAL', 'SCHEDULED', 'AUTO_RETRY', 'DRIP');
@@ -161,3 +175,129 @@ DROP TYPE IF EXISTS "CampaignMessageQueueStatus";
 -- were previously interpreted as the server's zone, which is UTC in every
 -- deployment).
 ALTER TABLE "Campaign" ADD COLUMN "timezone" TEXT NOT NULL DEFAULT 'Etc/UTC';
+
+
+-- ── 2. A campaign starts as a draft ---------------------------------------------
+
+-- A campaign starts as a draft, not as a paused campaign.
+--
+-- Hand-authored for the backfill. The column default was "INACTIVE", which is
+-- also the status a running campaign is moved to when someone pauses it, so a
+-- campaign that had never been launched was indistinguishable from one that had
+-- been stopped halfway — and the UI, correctly, called both of them paused.
+--
+-- `createCampaign` now writes the status the wizard posts (DRAFT), so this only
+-- has to correct the rows already in the table.
+
+ALTER TABLE "Campaign" ALTER COLUMN "status" SET DEFAULT 'DRAFT';
+
+-- Only campaigns that were never launched. A send session, a start time or a
+-- sent-at stamp each prove the campaign has run at least once, which makes its
+-- INACTIVE a real pause that must be left alone.
+UPDATE "Campaign" c
+SET "status" = 'DRAFT'
+WHERE c."status" = 'INACTIVE'
+  AND c."startedAt" IS NULL
+  AND c."campaignSentAt" IS NULL
+  AND NOT EXISTS (SELECT 1 FROM "CampaignSend" s WHERE s."campaignId" = c."id");
+
+-- The mirror of the same problem at the other end of the lifecycle: nothing ever
+-- wrote COMPLETED, so a campaign that finished sending stayed ACTIVE and went on
+-- reading as though it were still going out. `finishCampaignIfSettled` closes
+-- these from now on; this settles the ones already stranded.
+--
+-- "Nothing in flight" is the whole test: a live send row is what a running or
+-- pending campaign always has, and requiring a finished one keeps this off
+-- campaigns that never actually dispatched. Drip campaigns are excluded — the
+-- drip cron keeps enrolling, so they are never finished by an idle moment.
+UPDATE "Campaign" c
+SET "status" = 'COMPLETED',
+    "endedAt" = COALESCE(
+      c."endedAt",
+      (SELECT MAX(s."completedAt") FROM "CampaignSend" s WHERE s."campaignId" = c."id")
+    )
+WHERE c."status" IN ('ACTIVE', 'QUEUING')
+  AND c."type" <> 'DRIP'
+  AND EXISTS (
+    SELECT 1 FROM "CampaignSend" s
+    WHERE s."campaignId" = c."id" AND s."status" = 'COMPLETED'
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM "CampaignSend" s
+    WHERE s."campaignId" = c."id"
+      AND s."status" IN ('SCHEDULED', 'QUEUING', 'RUNNING')
+  );
+
+
+-- ── 3. Separate "it failed" from "I paused it" ----------------------------------
+
+-- Separate "it failed" from "I paused it".
+--
+-- Every failure path wrote INACTIVE — the same value the pause button writes —
+-- so a campaign that fell over on its way out was indistinguishable in the list
+-- from one its owner had deliberately stopped, and the reason it recorded was
+-- never shown. FAILED is now written instead; this reclassifies the rows that
+-- were already stranded.
+--
+-- An errorMessage is the evidence: nothing sets one when a campaign is paused on
+-- purpose, and every failure path sets one.
+UPDATE "Campaign"
+SET "status" = 'FAILED'
+WHERE "status" = 'INACTIVE'
+  AND "errorMessage" IS NOT NULL
+  AND "errorMessage" <> '';
+
+
+-- ── 4. A campaign waiting on a retry is not sending -----------------------------
+
+-- A campaign waiting on a retry is not sending.
+--
+-- `finishCampaignIfSettled` closed a campaign only when nothing was left open at
+-- all, so one whose initial send had drained with an automatic retry booked kept
+-- the ACTIVE it was given at launch — and read as "Sending" through a retry
+-- window that is usually hours long. RETRYING now names that wait; this moves
+-- the campaigns already sitting in it.
+--
+-- Only where every live send is still SCHEDULED: a QUEUING or RUNNING one means
+-- messages really are going out.
+UPDATE "Campaign" c
+SET "status" = 'RETRYING'
+WHERE c."status" = 'ACTIVE'
+  AND c."type" <> 'DRIP'
+  AND EXISTS (
+    SELECT 1 FROM "CampaignSend" s
+    WHERE s."campaignId" = c."id" AND s."status" = 'SCHEDULED'
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM "CampaignSend" s
+    WHERE s."campaignId" = c."id" AND s."status" IN ('QUEUING', 'RUNNING')
+  );
+
+
+-- ── 5. Indexes for the two queries that walk a campaign's participants ----------
+
+-- Indexes for the two queries that walk a campaign's participants.
+--
+-- `WaMessageCampaginParticipantMap` had indexes on `waMessageId` and
+-- `campaignSendId` but none on `campaignParticipantId`, which is what the
+-- "latest message for this participant" LATERAL joins filter on — the analytics
+-- failure breakdown and the retry cohort both run one per failed participant.
+-- Each of those was a sequential scan of the whole map table, so the work grew
+-- as (failed participants x every message ever sent) and the analytics endpoint
+-- timed out.
+--
+-- NOTE: plain (non-CONCURRENT) CREATE INDEX, because Prisma runs each migration
+-- inside a transaction and CONCURRENTLY is not allowed there. This takes a write
+-- lock on each table for the duration of the build. On a large production table,
+-- build these manually with CREATE INDEX CONCURRENTLY *before* deploying; the
+-- IF NOT EXISTS then makes this migration a no-op.
+
+CREATE INDEX IF NOT EXISTS "WaMessageCampaginParticipantMap_campaignParticipantId_idx"
+    ON "WaMessageCampaginParticipantMap"("campaignParticipantId");
+
+-- Counting a campaign's participants by status: the analytics funnel, the settle
+-- sweep's in-flight count, and the participants tab's status filters. The
+-- existing (campaignId, contactId) unique index serves a campaignId-only lookup
+-- but cannot filter on status.
+CREATE INDEX IF NOT EXISTS "CampaignParticipant_campaignId_status_idx"
+    ON "CampaignParticipant"("campaignId", "status");

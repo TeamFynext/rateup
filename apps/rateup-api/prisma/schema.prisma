@@ -1142,6 +1142,9 @@ model CampaignParticipant {
   CampaignParticipantDripStage CampaignParticipantDripStage[]
 
   @@unique([campaignId, contactId], name: "campaign_contact_unique")
+  /// Counting a campaign's participants by status is on the hot path of the
+  /// analytics funnel, the settle sweep and the participants tab.
+  @@index([campaignId, status])
   @@index([contactId])
 }
 
@@ -1997,6 +2000,11 @@ model WaMessageCampaginParticipantMap {
   campaignSend                   CampaignSend?                 @relation(fields: [campaignSendId], references: [id], onDelete: SetNull)
   campaignSendId                 String?                       @db.Uuid
 
+  /// Every "what was this participant's latest message" lookup filters on this —
+  /// the analytics failure breakdown and the retry cohort both do it once per
+  /// failed participant. Without the index each of those is a sequential scan of
+  /// the whole table.
+  @@index([campaignParticipantId])
   @@index([campaignSendId])
 }
 

@@ -2,10 +2,14 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("./campaign.service.js", () => ({
   getCampaignParticipantCountByStatuses: vi.fn(),
+  getCampaignParticipantCountByIds: vi.fn(),
 }));
 vi.mock("../subscription/conversationBudget.js", () => ({ getConversationBudget: vi.fn() }));
 
-import { getCampaignParticipantCountByStatuses } from "./campaign.service.js";
+import {
+  getCampaignParticipantCountByIds,
+  getCampaignParticipantCountByStatuses,
+} from "./campaign.service.js";
 import { getConversationBudget } from "../subscription/conversationBudget.js";
 import { getCampaignSendPreflight } from "./campaign.preflight.js";
 import { CampaignParticipantStatus } from "../../types/enums.js";
@@ -25,6 +29,7 @@ function budget(max: number, used: number, isAnnual = false) {
 describe("what a campaign would cost before it is sent", () => {
   beforeEach(() => {
     vi.mocked(getCampaignParticipantCountByStatuses).mockReset().mockResolvedValue(50);
+    vi.mocked(getCampaignParticipantCountByIds).mockReset().mockResolvedValue(1);
     vi.mocked(getConversationBudget).mockReset();
   });
 
@@ -95,5 +100,32 @@ describe("what a campaign would cost before it is sent", () => {
       shortfall: 20,
       isAnnual: true,
     });
+  });
+});
+
+describe("a resend that names its recipients", () => {
+  beforeEach(() => {
+    vi.mocked(getCampaignParticipantCountByStatuses).mockReset().mockResolvedValue(0);
+    vi.mocked(getCampaignParticipantCountByIds).mockReset().mockResolvedValue(1);
+    vi.mocked(getConversationBudget).mockReset();
+    budget(5_000, 0);
+  });
+
+  test("counts the cohort, not the statuses it was sent alongside", async () => {
+    // The bug this covers: "Retry now" on one recipient was refused with "No
+    // participants with the specified statuses" whenever the campaign held none
+    // in that status — a filter the fan-out was never going to apply to a named
+    // recipient anyway.
+    const preflight = await getCampaignSendPreflight("c1", "org-1", STATUSES, ["p1"]);
+
+    expect(preflight.recipients).toBe(1);
+    expect(getCampaignParticipantCountByIds).toHaveBeenCalledWith("c1", "org-1", ["p1"]);
+    expect(getCampaignParticipantCountByStatuses).not.toHaveBeenCalled();
+  });
+
+  test("still refuses a cohort the campaign no longer holds", async () => {
+    vi.mocked(getCampaignParticipantCountByIds).mockResolvedValue(0);
+
+    expect((await getCampaignSendPreflight("c1", "org-1", STATUSES, ["gone"])).recipients).toBe(0);
   });
 });

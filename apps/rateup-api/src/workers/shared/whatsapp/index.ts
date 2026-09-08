@@ -449,19 +449,23 @@ export async function fetchCampaignParticipants(
 
   const params: any[] = [campaignId];
   let paramIndex = 2;
+  // An exact cohort replaces the status filter rather than narrowing it. Both
+  // are ways of saying *who*, and the caller that names people has already
+  // decided: "Retry now" on one recipient means that recipient, whatever the
+  // status column says at the moment the job runs. `participantIds` used to be
+  // ANDed with the statuses, so a named recipient the status filter did not also
+  // match was dropped from the fan-out with nothing said anywhere.
   if (participantId) {
     query += ` AND cp.id = $${paramIndex}`;
     params.push(participantId);
     paramIndex++;
+  } else if (participantIds?.length) {
+    query += ` AND cp.id = ANY($${paramIndex}::uuid[])`;
+    params.push(participantIds);
+    paramIndex++;
   } else if (sendToStatuses?.length) {
     query += ` AND cp.status = ANY($${paramIndex})`;
     params.push(sendToStatuses);
-    paramIndex++;
-  }
-
-  if (participantIds?.length) {
-    query += ` AND cp.id = ANY($${paramIndex}::uuid[])`;
-    params.push(participantIds);
     paramIndex++;
   }
 
