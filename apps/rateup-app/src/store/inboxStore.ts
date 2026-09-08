@@ -9,8 +9,6 @@ import { WaMessageAssignStatus } from "../api/inbox/types";
 import { isInboxSessionExpired } from "../utils/chatbox_utils";
 
 import {
-  clearAllContactsFromDB,
-  clearAllMessagesFromIDB,
   deleteMessageFromIDB,
   loadContactIdsForFilter,
   loadContactsFromDB,
@@ -72,7 +70,6 @@ interface ContactsStoreState {
   resetUnreadForContact: (contactId: string, contact?: ContactWithUpdatedAt) => void;
   setSelectedContact: (contact: any) => void;
   getContactsByIds: (ids: string[]) => Promise<ContactWithUpdatedAt[]>;
-  clearAllContacts: () => Promise<void>;
   deleteContactsByIds: (contactIds: string[]) => Promise<void>;
   clearContactsForFilter: (filter: any) => void;
   updateContactList: (tab: string, contactId: string, isMessageUpdated: boolean) => void;
@@ -650,16 +647,6 @@ export const useContactsStore = create<ContactsStoreState>()(
 
         await removeContactsFromDB(contactIds);
       },
-
-      async clearAllContacts() {
-        await clearAllContactsFromDB();
-        set({
-          contactsById: new Map(),
-          contactsByFilter: {},
-          selectedContact: null,
-          currentFilterKey: null,
-        });
-      },
     }),
     {
       name: "inbox-selected-contact",
@@ -682,7 +669,6 @@ interface MessagesStore {
   getMessages: (key: string) => any[];
   isLoading: boolean;
   setIsLoading: (valu: boolean) => void;
-  clearMessages: () => Promise<void>;
   updateMessageByMessageId: (key: string, messageId: string, updatedData: Partial<any>) => void;
   applyMessageStatus: (contactId: string | null | undefined, messageId: string, stats: any) => void;
 }
@@ -867,14 +853,6 @@ export const useMessagesStore = create<MessagesStore>()(
       },
 
       getMessages: (key) => get().messagesByKey.get(key)?.messages ?? [],
-      clearMessages: async () => {
-        await clearAllMessagesFromIDB();
-        set({
-          messagesByKey: new Map(),
-          selectedKey: null,
-          isLoading: false,
-        });
-      },
     }),
     {
       name: "selected-contact-message-key",
