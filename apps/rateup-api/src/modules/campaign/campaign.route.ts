@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createCampaignHandler,
   deleteCampaignByIdHandler,
+  getDripScheduleHandler,
   getCampaignFilterForFlowsHandler,
   getCampaignsHandler,
   getCampaignStatsHandler,
@@ -18,12 +19,26 @@ import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { requireFeature, TeamFeature } from "../../utils/permissions.js";
 import {
   byCampaignIdParamsSchema,
+  bySendIdParamsSchema,
   CreateCampaignInput,
   createCampaignInputSchema,
   getCampaignsQuerySchema,
+  retryPolicyInputSchema,
+  sendCampaignInputSchema,
+  sendTestInputSchema,
+  sendParticipantsQuerySchema,
   sendPreflightQuerySchema,
   updateCampaignInputSchema,
 } from "./campaign.schema.js";
+import {
+  cancelPendingRetriesHandler,
+  getCampaignAnalyticsHandler,
+  getCampaignRetryPolicyHandler,
+  getCampaignSendParticipantsHandler,
+  getCampaignSendsHandler,
+  sendCampaignTestHandler,
+  updateCampaignRetryPolicyHandler,
+} from "./campaignAnalytics.controller.js";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
 
 export async function campaignRoutes(server: FastifyInstance) {
@@ -87,14 +102,87 @@ export async function campaignRoutes(server: FastifyInstance) {
     getCampaignSendPreflightHandler,
   );
 
-  server.post(
-    "/:campaignId/send",
+  // A drip books no send ahead of time — the cron derives each stage's moment as
+  // it ticks — so "what happens next" has to be computed rather than read.
+  server.get(
+    "/:campaignId/drip-schedule",
     {
       schema: {
         params: byCampaignIdParamsSchema,
       },
     },
+    getDripScheduleHandler,
+  );
+
+  server.post(
+    "/:campaignId/send",
+    {
+      schema: {
+        params: byCampaignIdParamsSchema,
+        // `sendCampaignInputSchema` has existed since the send dialog was built;
+        // the route just never registered it, so the body was read untyped.
+        body: sendCampaignInputSchema,
+      },
+    },
     sendCampaignHandler,
+  );
+
+  // A rehearsal, not a send: no CampaignSend, no participant, no counters.
+  server.post(
+    "/:campaignId/send-test",
+    {
+      schema: {
+        params: byCampaignIdParamsSchema,
+        body: sendTestInputSchema,
+      },
+    },
+    sendCampaignTestHandler,
+  );
+
+  // ── Per-attempt analytics ───────────────────────────────────────────────────
+  // Every send and resend is a CampaignSend row, so "this retry re-attempted 340
+  // and 210 landed" is a query rather than a guess.
+  server.get(
+    "/:campaignId/sends",
+    { schema: { params: byCampaignIdParamsSchema } },
+    getCampaignSendsHandler,
+  );
+  server.get(
+    "/:campaignId/sends/:sendId/participants",
+    {
+      schema: {
+        params: bySendIdParamsSchema,
+        querystring: sendParticipantsQuerySchema,
+      },
+    },
+    getCampaignSendParticipantsHandler,
+  );
+  server.get(
+    "/:campaignId/analytics",
+    { schema: { params: byCampaignIdParamsSchema } },
+    getCampaignAnalyticsHandler,
+  );
+
+  // ── Automatic retries ───────────────────────────────────────────────────────
+  server.get(
+    "/:campaignId/retry-policy",
+    { schema: { params: byCampaignIdParamsSchema } },
+    getCampaignRetryPolicyHandler,
+  );
+  server.put(
+    "/:campaignId/retry-policy",
+    {
+      schema: {
+        params: byCampaignIdParamsSchema,
+        body: retryPolicyInputSchema,
+      },
+    },
+    updateCampaignRetryPolicyHandler,
+  );
+  server.post(
+    "/:campaignId/retries/cancel",
+    { schema: { params: byCampaignIdParamsSchema } },
+    cancelPendingRetriesHandler,
   );
   server.get(
     "/flow/filter",

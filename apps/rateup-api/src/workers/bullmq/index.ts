@@ -5,9 +5,11 @@ import { Worker } from "bullmq";
 import { log } from "../../utils/logger.js";
 import { connectKafkaProducer, producer } from "../../plugins/kafka.js";
 import { syncJobSchedulers } from "./queues/cron.queue.js";
+import { reconcileScheduledCampaignSends } from "../../modules/campaign/campaignRetry.service.js";
 
 import * as campaignDequeue from "./processors/campaignDequeue.processor.js";
 import * as campaignEnqueue from "./processors/campaignEnqueue.processor.js";
+import * as campaignRetryFire from "./processors/campaignRetryFire.processor.js";
 import * as integration from "./processors/integration.processor.js";
 import * as notification from "./processors/notification.processor.js";
 import * as outgoingWebhook from "./processors/outgoingWebhook.processor.js";
@@ -37,6 +39,7 @@ import * as zapierTrigger from "./processors/zapierTrigger.processor.js";
 const PROCESSOR_MODULES = [
   campaignDequeue,
   campaignEnqueue,
+  campaignRetryFire,
   integration,
   notification,
   outgoingWebhook,
@@ -69,6 +72,12 @@ async function start() {
 
   const { registered, removed } = await syncJobSchedulers();
   log.info(`Synced ${registered} job schedulers${removed ? ` (removed ${removed} stale)` : ""}`);
+
+  // Scheduled retries fire from delayed jobs in Redis, so a Redis that lost them
+  // leaves rows nothing will look at. Startup is when that is most likely to
+  // have just happened, and re-arming is idempotent.
+  const { checked, armed } = await reconcileScheduledCampaignSends();
+  log.info(`Checked ${checked} scheduled campaign sends (re-armed ${armed})`);
 
   process.on("unhandledRejection", (reason) => {
     log.error(reason, "Unhandled promise rejection");
