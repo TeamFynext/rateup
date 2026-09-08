@@ -1,5 +1,9 @@
 import type { LoyaltyPreset, OnboardingState } from "@/backend/loyalty/onboarding.api";
 
+import { toFiniteNumber } from "../giveback/calculateGiveback.ts";
+import { pricePresetReward } from "../giveback/pricePresetReward.ts";
+import { averageOrderValueOf, defaultEarnRate } from "./givebackContext.ts";
+import { buildJoinReplyText, type JoinMessageInput } from "./joinMessage.ts";
 import type {
   BasicsFormInput,
   EarningFormInput,
@@ -99,6 +103,11 @@ export function buildRewardsDefaults(
 ): RewardsFormInput {
   const saved = state.saved;
   const program = state.program;
+  // Preset rewards are priced for one point per currency unit; the merchant has just chosen
+  // their own rate on the Earning step, so each starter is re-priced to it before it is
+  // shown. Saved rewards are theirs and are never touched here.
+  const earnRate = defaultEarnRate(state, preset);
+  const averageOrderValue = averageOrderValueOf(state);
   return {
     // Programme columns rather than reward rows, but this is the step that edits them.
     signupBonus: program?.signupBonus ?? preset.basics.signupBonus,
@@ -119,7 +128,7 @@ export function buildRewardsDefaults(
       : preset.rewards.map((reward) => ({
           name: reward.name,
           description: reward.description,
-          pointsCost: reward.pointsCost,
+          pointsCost: pricePresetReward(reward, earnRate, averageOrderValue),
           rewardType: reward.rewardType,
           rewardValue: reward.rewardValue,
           stockQuantity: null,
@@ -137,14 +146,26 @@ export function buildMessagesDefaults(
     saved.commands.map((command) => [command.type, richTextToPlainText(command.content)]),
   );
 
-  return {
-    commands: preset.commands.map((command) => ({
+  const commands = preset.commands.map((command) => {
+    const stored = saved.commands.find((c) => c.type === command.type);
+    return {
       type: command.type,
-      requestMessage:
-        saved.commands.find((c) => c.type === command.type)?.requestMessage ??
-        command.requestMessage,
+      requestMessage: stored?.requestMessage ?? command.requestMessage,
       text: savedCommandText.get(command.type) || command.text,
-    })),
+      waTemplateId: stored?.waTemplateId ?? null,
+    };
+  });
+
+  // The welcome is the one reply that can be written from the rest of the programme, so a
+  // merchant who has not touched it gets their own earn rate and rewards rather than the
+  // preset's generic line. Anything they have saved is theirs and is left alone.
+  const join = commands.find((command) => command.type === JOIN_COMMAND_TYPE);
+  if (join && !savedCommandText.get(JOIN_COMMAND_TYPE)) {
+    join.text = buildSuggestedJoinText(state, preset);
+  }
+
+  return {
+    commands,
     eventTemplates: preset.eventTemplates.map((template) => ({
       eventType: template.eventType,
       templateName: template.templateName,
@@ -186,4 +207,59 @@ export function richTextToPlainText(content: unknown): string {
         .filter((line) => line.length > 0)
         .join("\n")
     : "";
+}
+
+/** The two command types the welcome reply is written from and points at. */
+const JOIN_COMMAND_TYPE = "CustomerRegistration";
+const BALANCE_COMMAND_TYPE = "PointInformation";
+
+/**
+ * The welcome as the programme currently reads — what the Messages step offers to write
+ * back over an edited one, and what an untouched one starts as.
+ */
+export function buildSuggestedJoinText(state: OnboardingState, preset: LoyaltyPreset): string {
+  const balance =
+    state.saved.commands.find((command) => command.type === BALANCE_COMMAND_TYPE)?.requestMessage ??
+    preset.commands.find((command) => command.type === BALANCE_COMMAND_TYPE)?.requestMessage;
+
+  return buildJoinReplyText(joinMessageInput(state, preset, balance));
+}
+
+/**
+ * Reuses the other steps' own defaults rather than re-reading `state`, so the welcome
+ * quotes exactly the rules and rewards those steps are showing — including the
+ * saved-beats-preset rule, which lives in one place because of this.
+ */
+function joinMessageInput(
+  state: OnboardingState,
+  preset: LoyaltyPreset,
+  balanceKeyword: string | null | undefined,
+): JoinMessageInput {
+  const basics = buildBasicsDefaults(state, preset);
+  const earning = buildEarningDefaults(state, preset);
+  const rewards = buildRewardsDefaults(state, preset);
+
+  return {
+    programName: String(basics.name),
+    pointsName: String(basics.currencyName),
+    currencySymbol: String(basics.currencySymbol),
+    currencyCode: String(basics.currencyCode),
+    signupBonus: toFiniteNumber(rewards.signupBonus),
+    // The form types come off `z.coerce`, so every number arrives as `unknown` here.
+    rules: earning.rules.map((rule) => ({
+      name: String(rule.name),
+      status: rule.status === "inactive" ? "inactive" : "active",
+      pointsPerUnit: toFiniteNumber(rule.pointsPerUnit),
+      multiplier: toFiniteNumber(rule.multiplier, 1),
+      bonusPoints: toFiniteNumber(rule.bonusPoints),
+      allowedDays: rule.allowedDays,
+      minPurchaseAmount: toFiniteNumber(rule.minPurchaseAmount),
+      isDefault: Boolean(rule.isDefault),
+    })),
+    rewards: rewards.rewards.map((reward) => ({
+      name: String(reward.name),
+      pointsCost: toFiniteNumber(reward.pointsCost),
+    })),
+    balanceKeyword: balanceKeyword ?? "POINTS",
+  };
 }

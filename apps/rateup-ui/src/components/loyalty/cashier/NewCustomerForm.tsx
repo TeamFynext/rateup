@@ -92,65 +92,75 @@ export function NewCustomerForm({
         </div>
       </div>
 
-      <Controller
-        control={form.control}
-        name="phone"
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{t("Phone number")}</FieldLabel>
-            <PhoneInput
-              id={field.name}
-              defaultCountry={defaultCountry as never}
-              value={field.value as never}
-              onChange={field.onChange}
-              aria-invalid={fieldState.invalid}
-              autoFocus={!prefill.phone}
-            />
-            {alreadyMember && (
-              <FieldDescription className="text-amber-700 dark:text-amber-500">
-                {t("This number is already a member.")}
-              </FieldDescription>
+      {/* Two short fields — capped rather than stretched across the whole main column,
+          which on a desktop counter is most of the page. On a staff phone the cap is
+          wider than the viewport, so nothing changes there. */}
+      <div className="flex max-w-sm flex-col gap-4">
+        <Controller
+          control={form.control}
+          name="phone"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{t("Phone number")}</FieldLabel>
+              <PhoneInput
+                id={field.name}
+                defaultCountry={defaultCountry as never}
+                value={field.value as never}
+                onChange={field.onChange}
+                aria-invalid={fieldState.invalid}
+                autoFocus={!prefill.phone}
+              />
+              {alreadyMember && (
+                <FieldDescription className="text-amber-700 dark:text-amber-500">
+                  {t("This number is already a member.")}
+                </FieldDescription>
+              )}
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{t("Name")}</FieldLabel>
+              <Input id={field.name} autoFocus={Boolean(prefill.phone)} {...field} />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        {!programActive && (
+          <p className="text-xs text-amber-700 dark:text-amber-500">
+            {t(
+              "The program is not live, so nobody can join yet. Activate or resume it in Settings.",
             )}
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
+          </p>
         )}
-      />
 
-      <Controller
-        control={form.control}
-        name="name"
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{t("Name")}</FieldLabel>
-            <Input id={field.name} autoFocus={Boolean(prefill.phone)} {...field} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
+        {alreadyMember ? (
+          <Button
+            type="button"
+            className="h-12"
+            onClick={() => onOpenExisting(phone.replace(/\D/g, ""))}
+          >
+            {t("Open {name}", { name: lookup?.contact?.name || t("this customer") })}
+          </Button>
+        ) : (
+          <Button type="submit" className="h-12" disabled={isSaving || !programActive}>
+            {isSaving
+              ? t("Registering…")
+              : signupBonus > 0
+                ? t("Register and give {bonus} {points}", {
+                    bonus: signupBonus,
+                    points: pointsName,
+                  })
+                : t("Register")}
+          </Button>
         )}
-      />
-
-      {!programActive && (
-        <p className="text-xs text-amber-700 dark:text-amber-500">
-          {t("The program is not live, so nobody can join yet. Activate or resume it in Settings.")}
-        </p>
-      )}
-
-      {alreadyMember ? (
-        <Button
-          type="button"
-          className="h-12"
-          onClick={() => onOpenExisting(phone.replace(/\D/g, ""))}
-        >
-          {t("Open {name}", { name: lookup?.contact?.name || t("this customer") })}
-        </Button>
-      ) : (
-        <Button type="submit" className="h-12" disabled={isSaving || !programActive}>
-          {isSaving
-            ? t("Registering…")
-            : signupBonus > 0
-              ? t("Register and give {bonus} {points}", { bonus: signupBonus, points: pointsName })
-              : t("Register")}
-        </Button>
-      )}
+      </div>
     </form>
   );
 }

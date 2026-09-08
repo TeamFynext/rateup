@@ -55,6 +55,7 @@ export function OverviewStatusStrip({
       {templatesPending > 0 && (
         <Link
           to={LOYALTY_PATHS.messages}
+          search={{ tab: "templates" }}
           className="inline-flex items-center gap-1 font-medium text-amber-700 underline-offset-4 hover:underline dark:text-amber-500"
         >
           {t("{count} templates awaiting Meta", { count: templatesPending })}

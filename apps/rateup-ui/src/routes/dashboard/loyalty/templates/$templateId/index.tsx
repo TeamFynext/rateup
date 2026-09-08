@@ -9,11 +9,12 @@ export const Route = createFileRoute("/dashboard/loyalty/templates/$templateId/"
 });
 
 function LoyaltyTemplateEditPage() {
-  // Always a LOYALTY template here, and saving lands back on Messages, not the WhatsApp list.
+  // Always a LOYALTY template here, and saving lands back on Messages › Templates — the
+  // library this editor belongs to, whether the reader arrived from there or from a card.
   return (
     <WhatsappTemplateById
       forceTemplateType={TemplateType.LOYALTY}
-      backTo={LOYALTY_PATHS.messages}
+      backTo={{ to: LOYALTY_PATHS.messages, search: { tab: "templates" } }}
     />
   );
 }

@@ -41,11 +41,12 @@ import { formatMoney } from "../giveback/format.ts";
 import { LOYALTY_PATHS } from "../paths.ts";
 import { programStateOf } from "../program/programState.ts";
 import { ProgramStatusBadge } from "../program/ProgramStatusBadge.tsx";
+import { JoiningCard } from "./JoiningCard.tsx";
 
 /**
  * Only what is not part of the customer promise. Name, points and typical spend are in
- * Program › Basics; every message is on Messages. What is left governs who may override
- * the programme and how it plugs in — and the two things that cannot be undone.
+ * Program › Basics; every message is on Messages. What is left is how customers join, who
+ * may override the programme and how it plugs in — and the two things that cannot be undone.
  */
 export function LoyaltySettingsPage() {
   const { t } = useTranslation();
@@ -128,7 +129,7 @@ export function LoyaltySettingsPage() {
       <PageHeading
         title={t("Settings")}
         description={t(
-          "Program name, points name and typical spend are in Program › Basics; messages are on Messages. This page is only the settings that are not part of what customers are promised.",
+          "Program name, points name and typical spend are in Program › Basics; messages are on Messages. Here: the join link, approvals, integrations, expiry and the danger zone.",
         )}
       />
 
@@ -172,6 +173,9 @@ export function LoyaltySettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── joining ── */}
+      <JoiningCard orgId={user?.orgId} />
 
       {/* ── approvals ── */}
       <Card className="border-border">
@@ -247,6 +251,25 @@ export function LoyaltySettingsPage() {
               id={`${uid}-wa`}
               checked={program.whatsappNotifications ?? true}
               onCheckedChange={(on) => toggle({ whatsappNotifications: on })}
+              disabled={update.isPending}
+            />
+          </Field>
+
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <FieldContent>
+              <FieldLabel htmlFor={`${uid}-text`} className="text-sm font-medium">
+                {t("Send as a plain message inside the 24-hour window")}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t(
+                  "When a customer has messaged you in the last 24 hours, the text of the template is sent as a normal message — free, and it works before Meta approves the template. Templates with buttons are always sent as templates.",
+                )}
+              </FieldDescription>
+            </FieldContent>
+            <Switch
+              id={`${uid}-text`}
+              checked={program.sendTextInSession ?? true}
+              onCheckedChange={(on) => toggle({ sendTextInSession: on })}
               disabled={update.isPending}
             />
           </Field>

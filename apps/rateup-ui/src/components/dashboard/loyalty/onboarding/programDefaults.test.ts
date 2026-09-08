@@ -226,9 +226,84 @@ describe("programDefaults", () => {
     const defaults = buildMessagesDefaults(saved, preset);
 
     expect(defaults.commands).toEqual([
-      { type: "PointInformation", requestMessage: "bal", text: "Balance: {{1}}" },
+      {
+        type: "PointInformation",
+        requestMessage: "bal",
+        text: "Balance: {{1}}",
+        waTemplateId: null,
+      },
     ]);
     expect(defaults.eventTemplates[0]).toMatchObject({ eventType: "POINTS_ISSUED", enabled: true });
+  });
+
+  // Preset rewards ship priced for one point per currency unit. The fixture's preset earns
+  // 0.1 per unit, so its Free coffee — item value unknown, hence unpriceable by worth — is
+  // scaled to a tenth of the shipped cost; a saved rate re-prices it again.
+  test("rewards from the preset are priced for the earn rate in play", () => {
+    expect(buildRewardsDefaults(empty, preset).rewards[0].pointsCost).toBe(50);
+
+    const doubled: OnboardingState = {
+      ...empty,
+      saved: {
+        ...empty.saved,
+        rules: [
+          {
+            id: "r1",
+            name: "Standard",
+            pointsPerUnit: "0.2",
+            multiplier: "1",
+            bonusPoints: 0,
+            allowedDays: [],
+            isDefault: true,
+            priority: 0,
+            status: "active",
+          },
+        ] as unknown as OnboardingState["saved"]["rules"],
+      },
+    };
+    expect(buildRewardsDefaults(doubled, preset).rewards[0].pointsCost).toBe(100);
+  });
+
+  test("a priceable preset reward is priced to about 3% back at the saved rate", () => {
+    const priced: LoyaltyPreset = {
+      ...preset,
+      rewards: [
+        {
+          ...preset.rewards[0],
+          pointsCost: 5000,
+          rewardValue: { type: "free_item", item_name: "Coffee", item_value: 150, quantity: 1 },
+        },
+      ],
+    };
+    // A programme with a saved rate of 0.1 and a ₹300 order value, but no rewards yet:
+    // 150 × 0.1 × 100 / 3 = 500.
+    const ruleOnly: OnboardingState = {
+      ...saved,
+      saved: {
+        ...saved.saved,
+        rewards: [],
+        rules: [
+          {
+            id: "r1",
+            name: "Standard",
+            pointsPerUnit: "0.1",
+            multiplier: "1",
+            bonusPoints: 0,
+            allowedDays: [],
+            isDefault: true,
+            priority: 0,
+            status: "active",
+          },
+        ] as unknown as OnboardingState["saved"]["rules"],
+      },
+    };
+    expect(buildRewardsDefaults(ruleOnly, priced).rewards[0].pointsCost).toBe(500);
+  });
+
+  test("saved rewards keep the cost the merchant gave them", () => {
+    expect(buildRewardsDefaults(saved, preset).rewards[0].pointsCost).toBe(
+      saved.saved.rewards[0].pointsCost,
+    );
   });
 
   test("helpers", () => {

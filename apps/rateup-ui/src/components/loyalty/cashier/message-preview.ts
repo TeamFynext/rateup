@@ -31,6 +31,8 @@ export type PreviewStatus =
 export interface WhatsAppPreview {
   status: PreviewStatus;
   body: string | null;
+  /** How a sent message went out, when the server said. */
+  mode?: "template" | "text" | null;
 }
 
 export interface PreviewInput {
@@ -73,8 +75,10 @@ export function renderBody(template: PreviewTemplate | undefined, params: string
 }
 
 function fromServer(outcome: LoyaltyNotificationOutcome): WhatsAppPreview {
-  if (outcome.sent) return { status: "sent", body: outcome.text };
+  if (outcome.sent) return { status: "sent", body: outcome.text, mode: outcome.mode };
   switch (outcome.skippedReason) {
+    case "template_not_approved":
+      return { status: "template_not_approved", body: outcome.text };
     case "program_inactive":
       return { status: "program_inactive", body: outcome.text };
     case "whatsapp_disabled":

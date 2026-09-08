@@ -38,6 +38,54 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-08-loyalty-giveback-on-rewards",
+    title: "Loyalty: reward prices follow your earn rate",
+    summary:
+      "The 'Your program gives back' figure now appears only where it can be honest — on the Rewards step, the review and the Overview once rewards exist. It is points valued at your best reward, so on Earning and Tiers it used to be computed from the starter rewards priced for one point per unit, whatever rate you had actually set. Those two steps now show what a purchase earns instead: your typical order and a couple of others, and on Tiers the same order tier by tier. The starter rewards themselves are priced for your earn rate the first time the Rewards step opens — set ₹100 → 10 points and a ₹150 coffee costs about 500 points, not 5,000 — and a Re-price from my earn rate button on that step brings rewards you saved earlier back to about 3% whenever you change the rate.",
+    publishedAt: "2026-09-08",
+    kinds: ["improvement", "fix"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/program",
+      search: { section: "rewards" },
+      label: "Open rewards",
+    },
+  },
+  {
+    id: "2026-09-08-loyalty-earn-rate-calculator",
+    title: "Loyalty: earning rules as spend-and-earn",
+    summary:
+      "Earning rules no longer ask for points per one currency unit. Every rule — in setup, on the Program page and in the full earning-rules editor — is now written the way you would say it: spend this much, earn this many points. Type ₹100 and 10, or ₹150 and 1, and the rate underneath shows what that works out to per unit and what your typical purchase earns. Rates are stored precisely enough that ₹150 = 1 point really means one point at ₹150, not a rounded guess. The default rule has lost its multiplier: it is the base rate itself, so a multiplier there was only the rate written a second way. Extra rules keep theirs, on top of their own rate.",
+    publishedAt: "2026-09-08",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/program",
+      search: { section: "earning" },
+      label: "Open earning rules",
+    },
+  },
+  {
+    id: "2026-09-08-loyalty-messages-tabs",
+    title: "Loyalty: one Messages page for every message",
+    summary:
+      "Everything your loyalty program says on WhatsApp is now one page with three tabs. Automatic is what sends on its own — points earned, rewards, tier upgrades, birthdays, reminders — and each one is edited the way the setup guide does it: write the words, press Save and submit to Meta, done. No drafts, no template editor; an approved message is updated in place and reviewed again, a message still in review becomes a new version so you are never stuck waiting. A program that skipped setup gets the four standard notifications with one button. Replies is what customers get when they text you — join, points, rewards, refer, stop — with the same editor, a Write it from my program button on the welcome, and one button to add the standard five. Each reply can also carry a template for customers who have never messaged you, because plain text only reaches someone inside a 24-hour chat. Templates is the library behind both: every template with its Meta status, which event or keyword uses it, search, a status filter, Sync with Meta, a New template starter picker, and delete for anything unused. The count of templates awaiting Meta sits on Messages in the menu and on the Templates tab. Sending got smarter too: inside a 24-hour chat the text goes out as a normal message — free, and even before Meta approves the template — and the cashier receipt says which way it went; a switch in Settings turns that off. The registration link moved to Settings as a Copy registration link button with a Download QR beside it. WhatsApp Templates leaves the Loyalty menu; old links, including Commands and the old Messages sections, redirect.",
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/messages", label: "Open Messages" },
+  },
+  {
+    id: "2026-09-08-loyalty-keyword-replies",
+    title: "Loyalty: keyword replies say what they are",
+    summary:
+      "The five replies customers get when they text you now carry their own titles — Joining the program, Checking their balance, Referring a friend, Browsing rewards, Leaving the program — so you can see at a glance which box you are typing in, with a line under each saying what it does and which values WhatsApp fills in when it sends. Each reply box is now an editor rather than a plain field: emoji, WhatsApp's own bold, italic, strikethrough and monospace formatting, an undo for the last formatting change, and one-click chips for the variables that reply is allowed to use. The welcome is written from the program you just built — your actual earn rate, your weekend or minimum-spend rules, your cheapest rewards first and the joining bonus, closing with the real word for checking a balance — and a Write it from my program button puts it back if you change the earning rules or rewards afterwards. Anything you have already saved is left exactly as you wrote it. The notifications below them get the same treatment: each one now says what WhatsApp fills into {{1}}, {{2}} and the rest — customer name, points earned, balance after — and its body is the same editor, so you can format it and drop a variable in without typing the braces.",
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/messages", label: "Open Messages" },
+  },
+  {
     id: "2026-09-07-loyalty-program-hub",
     title: "Loyalty: one Program page, a new Overview",
     summary:

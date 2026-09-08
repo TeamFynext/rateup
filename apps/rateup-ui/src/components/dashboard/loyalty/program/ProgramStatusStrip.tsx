@@ -48,12 +48,14 @@ export function ProgramStatusStrip({
     ? {
         label: t("WhatsApp not connected"),
         to: LOYALTY_PATHS.settings,
+        search: undefined,
         cta: t("Connect in Settings"),
       }
     : templatesPending > 0
       ? {
           label: t("{count} templates awaiting Meta", { count: templatesPending }),
           to: LOYALTY_PATHS.messages,
+          search: { tab: "templates" as const },
           cta: t("Review in Messages"),
         }
       : null;
@@ -93,6 +95,7 @@ export function ProgramStatusStrip({
               </p>
               <Link
                 to={attention.to}
+                search={attention.search}
                 className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
               >
                 {attention.cta} <IconArrowRight size={12} />

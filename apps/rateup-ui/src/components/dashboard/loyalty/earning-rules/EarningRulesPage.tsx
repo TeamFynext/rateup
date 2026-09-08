@@ -56,6 +56,7 @@ import { useConfirm } from "@/context/confirm-provider";
 import { docsPath } from "@/utils/constants.ts";
 import { randomHexColor } from "@/utils/index.ts";
 
+import { EarnRateField } from "./parts/EarnRateField.tsx";
 import { RuleCard } from "./parts/RuleCard.tsx";
 import { earningRuleSchema } from "./parts/shared.tsx";
 import type { EarningRuleFormValues } from "./parts/shared.tsx";
@@ -627,32 +628,27 @@ export function EarningRulesPage() {
                 {/* Earning rate. The engine picks a single winning rule by priority, so this
                     REPLACES the base rate whenever the rule matches rather than adding to it.
                     Leaving it out of the form silently created rules earning at 1.0. */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <Controller
                     name="pointsPerUnit"
                     control={ruleForm.control}
                     render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          {t("{points} per {symbol}1 spent", {
-                            points: giveback.pointsName,
-                            symbol: giveback.currencySymbol,
-                          })}
-                        </FieldLabel>
-                        <Input
-                          {...field}
-                          id={field.name}
-                          type="number"
-                          aria-invalid={fieldState.invalid}
-                          value={field.value as number}
-                          step="0.01"
-                          min="0"
+                      <div className="sm:col-span-2">
+                        <EarnRateField
+                          id={`${uid}-rate`}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          currencySymbol={giveback.currencySymbol}
+                          currencyCode={giveback.currencyCode}
+                          pointsName={giveback.pointsName}
+                          averageOrderValue={giveback.averageOrderValue}
+                          label={t("Earn rate while this rule applies")}
+                          description={t("Replaces the default rate, it does not add to it.")}
+                          invalid={fieldState.invalid}
+                          error={fieldState.error}
                         />
-                        <FieldDescription>
-                          {t("Replaces the base rate while this rule applies")}
-                        </FieldDescription>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                      </div>
                     )}
                   />
                   <Controller

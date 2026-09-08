@@ -28,11 +28,18 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
+import { EarnRateField } from "./EarnRateField.tsx";
 import { earningRuleSchema, formatStatusLabel, getRuleIcon, toDateInputValue } from "./shared.tsx";
 import type { EarningRuleFormValues } from "./shared.tsx";
 
@@ -108,6 +115,9 @@ export function RuleCard({
     const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } = values;
     const payload = {
       ...rest,
+      // The default rule is the base rate itself; its multiplier is never offered, so a
+      // stale stored value must not ride along.
+      multiplier: isDefaultRule ? 1 : rest.multiplier,
       allowedDays: scheduleEnabled ? (allowedDays ?? []) : [],
       allowedTimeRanges:
         scheduleEnabled && (timeFrom || timeTo)
@@ -324,48 +334,54 @@ export function RuleCard({
               control={ruleForm.control}
               name="pointsPerUnit"
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name} className="text-xs">
-                    {t("{points} per {symbol}1 spent", {
-                      points: pointsName,
-                      symbol: currencySymbol,
-                    })}
-                  </FieldLabel>
-                  <Input
-                    {...field}
-                    id={field.name}
-                    type="number"
-                    aria-invalid={fieldState.invalid}
-                    value={field.value as number}
-                    min="0"
-                    step="0.01"
-                    className="mt-1 h-9"
-                  />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
+                <EarnRateField
+                  id={`${uid}-rate`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  currencySymbol={currencySymbol}
+                  pointsName={pointsName}
+                  label={
+                    isDefaultRule ? t("How customers earn") : t("Earn rate while this rule applies")
+                  }
+                  description={
+                    isDefaultRule
+                      ? undefined
+                      : t("Replaces the default rate, it does not add to it.")
+                  }
+                  invalid={fieldState.invalid}
+                  error={fieldState.error}
+                />
               )}
             />
 
-            <Controller
-              control={ruleForm.control}
-              name="multiplier"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name} className="text-xs">
-                    {t("Multiplier")}
-                  </FieldLabel>
-                  <Input
-                    {...field}
-                    id={field.name}
-                    aria-invalid={fieldState.invalid}
-                    value={field.value as number}
-                    step="0.1"
-                    className="mt-1 h-9"
-                  />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
-            />
+            {/* The default rule IS the base rate, so a multiplier on it would only be the
+                rate in disguise; it stays at 1 and the field is not offered. */}
+            {!isDefaultRule && (
+              <Controller
+                control={ruleForm.control}
+                name="multiplier"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name} className="text-xs">
+                      {t("Multiplier")}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      value={field.value as number}
+                      step="0.1"
+                      className="mt-1 h-9"
+                    />
+                    <FieldDescription className="text-xs">
+                      {t("On top of the rate above — 2 doubles it.")}
+                    </FieldDescription>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+            )}
 
             <Controller
               control={ruleForm.control}

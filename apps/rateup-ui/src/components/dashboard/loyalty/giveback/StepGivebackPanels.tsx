@@ -4,6 +4,7 @@ import { useWatch, type Control } from "react-hook-form";
 import type { GivebackContext } from "../onboarding/givebackContext.ts";
 import type { EarningFormInput, RewardsFormInput, TiersFormInput } from "../onboarding/schemas.ts";
 import { calculateGiveback, toFiniteNumber } from "./calculateGiveback";
+import { EarningPreviewPanel } from "./EarningPreviewPanel.tsx";
 import { GivebackPanel } from "./GivebackPanel";
 
 /**
@@ -15,6 +16,10 @@ import { GivebackPanel } from "./GivebackPanel";
  *
  * No debounce — the calculation is a handful of multiplications over single-digit arrays,
  * and a number that lags behind the input reads as broken.
+ *
+ * Only the Rewards step shows the giveback percentage: it is points earned valued at the
+ * best reward, and means nothing until there is a reward. Earning and Tiers show what a
+ * purchase earns instead, which needs only the rate and the typical order value.
  */
 
 interface WrapperProps<T extends Record<string, unknown>> {
@@ -45,7 +50,7 @@ function panelProps({
   };
 }
 
-export function EarningGivebackPanel({
+export function EarningPreviewFromForm({
   control,
   context,
   onEditAverageOrderValue,
@@ -54,31 +59,28 @@ export function EarningGivebackPanel({
 }: Readonly<WrapperProps<EarningFormInput>>) {
   const rules = useWatch({ control, name: "rules" });
   const rule = rules?.find((r) => r.isDefault) ?? rules?.[0];
+  const pointsPerUnit = toFiniteNumber(rule?.pointsPerUnit);
+  const multiplier = toFiniteNumber(rule?.multiplier, 1);
+  const bonusPoints = toFiniteNumber(rule?.bonusPoints);
 
-  const result = useMemo(
-    () =>
-      calculateGiveback({
-        ...context,
-        earnRate: {
-          pointsPerUnit: toFiniteNumber(rule?.pointsPerUnit),
-          multiplier: toFiniteNumber(rule?.multiplier, 1),
-          bonusPoints: toFiniteNumber(rule?.bonusPoints),
-        },
-      }),
-    // Depend on the scalars, not the watched array — `useWatch` hands back a fresh
-    // array reference every render, which would defeat the memo entirely.
-    [context, rule?.pointsPerUnit, rule?.multiplier, rule?.bonusPoints],
+  // Depend on the scalars, not the watched array — `useWatch` hands back a fresh array
+  // reference every render.
+  const earnRate = useMemo(
+    () => ({ pointsPerUnit, multiplier, bonusPoints }),
+    [pointsPerUnit, multiplier, bonusPoints],
   );
 
   return (
-    <GivebackPanel
-      result={result}
+    <EarningPreviewPanel
+      earnRate={earnRate}
+      tiers={context.tiers}
+      tiersEnabled={context.tiersEnabled}
       {...panelProps({ context, onEditAverageOrderValue, title, hint })}
     />
   );
 }
 
-export function TiersGivebackPanel({
+export function TiersPreviewFromForm({
   control,
   context,
   onEditAverageOrderValue,
@@ -89,30 +91,28 @@ export function TiersGivebackPanel({
   const tiers = useWatch({ control, name: "tiers" });
 
   const key = JSON.stringify(
-    (tiers ?? []).map((tier) => [tier.name, tier.pointsMultiplier, tier.color]),
+    (tiers ?? []).map((tier) => [tier.name, tier.threshold, tier.pointsMultiplier, tier.color]),
   );
 
-  const result = useMemo(
+  const previewTiers = useMemo(
     () =>
-      calculateGiveback({
-        ...context,
-        tiersEnabled: Boolean(tiersEnabled),
-        tiers: (tiers ?? []).map((tier) => ({
-          name: tier.name,
-          threshold: toFiniteNumber(tier.threshold),
-          pointsMultiplier: toFiniteNumber(tier.pointsMultiplier, 1),
-          color: tier.color,
-        })),
-      }),
+      (tiers ?? []).map((tier) => ({
+        name: tier.name,
+        threshold: toFiniteNumber(tier.threshold),
+        pointsMultiplier: toFiniteNumber(tier.pointsMultiplier, 1),
+        color: tier.color,
+      })),
     // `key` collapses the watched array into a stable string; `tiers` itself is a new
     // reference each render. It is read inside, so it is intentionally not a dep.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [context, tiersEnabled, key],
+    [key],
   );
 
   return (
-    <GivebackPanel
-      result={result}
+    <EarningPreviewPanel
+      earnRate={context.earnRate}
+      tiers={previewTiers}
+      tiersEnabled={Boolean(tiersEnabled)}
       {...panelProps({ context, onEditAverageOrderValue, title, hint })}
     />
   );

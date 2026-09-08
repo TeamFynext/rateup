@@ -177,6 +177,8 @@ export async function updateLoyaltyCustomer(
 export interface LoyaltyNotificationOutcome {
   sent: boolean;
   channel: "whatsapp" | null;
+  /** The Meta template, or — inside an open 24-hour chat — the same words as a plain message. */
+  mode: "template" | "text" | null;
   templateId: string | null;
   text: string | null;
   skippedReason:
@@ -186,6 +188,7 @@ export interface LoyaltyNotificationOutcome {
     | "points_alerts_disabled"
     | "no_phone"
     | "no_template"
+    | "template_not_approved"
     | "send_failed"
     | null;
 }

@@ -21,7 +21,7 @@ export type SuggestionTarget =
       to: typeof LOYALTY_PATHS.program;
       search: { section: "basics" | "earning" | "tiers" | "rewards" | "messages" };
     }
-  | { to: typeof LOYALTY_PATHS.messages }
+  | { to: typeof LOYALTY_PATHS.messages; search: { tab: "automatic" | "replies" | "templates" } }
   | { to: typeof LOYALTY_PATHS.settings }
   | { to: typeof LOYALTY_PATHS.onboarding };
 
@@ -102,9 +102,11 @@ export function buildSuggestions(input: SuggestionInput): Suggestion[] {
       id: "templates_pending",
       severity: 2,
       title: t("{count} messages are still waiting on Meta", { count: templatesPending }),
-      body: t("Nothing sends until they are approved. Check they were submitted correctly."),
+      body: t(
+        "Inside a 24-hour chat the text still goes out; outside one nothing sends until Meta approves.",
+      ),
       cta: t("Open Messages"),
-      target: { to: LOYALTY_PATHS.messages },
+      target: { to: LOYALTY_PATHS.messages, search: { tab: "templates" } },
     });
   }
 
@@ -182,8 +184,8 @@ export function buildSuggestions(input: SuggestionInput): Suggestion[] {
       body: t(
         "Members join fastest from a card next to the till. The QR is ready before the program is.",
       ),
-      cta: t("Open Messages"),
-      target: { to: LOYALTY_PATHS.messages },
+      cta: t("Open Settings"),
+      target: { to: LOYALTY_PATHS.settings },
     });
   }
 

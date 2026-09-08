@@ -65,6 +65,7 @@ export function buildLoyaltyNavItems({
       ...(inProgramEditors ? { isActive: true } : {}),
     },
     { title: t("Activity"), url: LOYALTY_PATHS.activity, icon: IconLogs, count: pendingApprovals },
+    // Messages carries the template library as a tab, so the Meta reviews are chased there.
     {
       title: t("Messages"),
       url: LOYALTY_PATHS.messages,

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/dashboard/loyalty/settings/")({
     if (search.tab === "notifications") {
       throw redirect({
         to: LOYALTY_PATHS.messages,
-        search: { section: "reminders" },
+        search: { tab: "automatic" },
         replace: true,
       });
     }

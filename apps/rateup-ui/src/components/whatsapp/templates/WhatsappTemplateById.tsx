@@ -84,13 +84,19 @@ import { toSelectOptions } from "@/utils/select-options.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
 
+/** Where saving a new template lands — the list the template belongs to. */
+type BackTarget =
+  | { to: "/dashboard/whatsapp/templates" }
+  | { to: "/dashboard/loyalty/messages"; search: { tab: "templates" } };
+
+const DEFAULT_BACK: BackTarget = { to: "/dashboard/whatsapp/templates" };
+
 export function WhatsappTemplateById({
   forceTemplateType,
-  backTo = "/dashboard/whatsapp/templates",
+  backTo = DEFAULT_BACK,
 }: Readonly<{
   forceTemplateType?: TemplateType;
-  /** Where saving a new template lands. Loyalty templates go back to Messages. */
-  backTo?: "/dashboard/whatsapp/templates" | "/dashboard/loyalty/messages";
+  backTo?: BackTarget;
 }>) {
   const uid = useId();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -309,7 +315,7 @@ export function WhatsappTemplateById({
     () => {
       form.reset();
       setIsSubmitting(false);
-      navigate({ to: backTo });
+      navigate(backTo);
     },
     () => {
       setIsSubmitting(false);
@@ -360,7 +366,7 @@ export function WhatsappTemplateById({
     () => {
       setIsSubmittingDraft(false);
       if (templateId?.length === 0) {
-        navigate({ to: backTo });
+        navigate(backTo);
       }
     },
     () => {

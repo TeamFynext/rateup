@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
-import { TiersGivebackPanel } from "../../giveback/StepGivebackPanels.tsx";
+import { TiersPreviewFromForm } from "../../giveback/StepGivebackPanels.tsx";
 import type { GivebackContext } from "../givebackContext.ts";
 import { tiersFormSchema, type TiersFormInput, type TiersFormValues } from "../schemas.ts";
 import {
@@ -61,13 +61,14 @@ export function TiersStep({
   const tiersError = form.formState.errors.tiers;
   const footer = useStepFooterProps({ mode, isDirty: form.formState.isDirty, onBack, onCancel });
 
+  // What a purchase earns in each tier — not what it costs; see EarningStep.
   const panel = (
-    <TiersGivebackPanel
+    <TiersPreviewFromForm
       control={form.control}
       context={giveback}
       onEditAverageOrderValue={onEditAverageOrderValue}
       {...(mode === "section"
-        ? { title: t("What this costs you"), hint: t("Updates as you edit") }
+        ? { title: t("What customers earn"), hint: t("Updates as you edit") }
         : {})}
     />
   );

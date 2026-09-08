@@ -10,6 +10,7 @@ import {
   IconBrowser,
   IconBuildingStore,
   IconChartBar,
+  IconChartBarPopular,
   IconChartLine,
   IconCircleCheck,
   IconCirclePlus,
@@ -18,6 +19,7 @@ import {
   IconDashboard,
   IconFileSpreadsheet,
   IconFileText,
+  IconFilterBolt,
   IconFolder,
   IconGift,
   IconBook,
@@ -30,7 +32,6 @@ import {
   IconPlayerPlay,
   IconPlug,
   IconQrcode,
-  IconReportAnalytics,
   IconRobotFace,
   IconRocket,
   IconSend,
@@ -39,13 +40,13 @@ import {
   IconShield,
   IconShieldExclamation,
   IconShoppingCart,
+  IconShoppingCartBolt,
   IconSitemap,
   IconSparkles,
   IconStack2,
   IconStar,
   IconTag,
   IconTemplate,
-  IconGitBranch,
   IconUser,
   IconUserCheck,
   IconUserCog,
@@ -480,7 +481,7 @@ export function useNavMain({
             {
               title: t("Analytics"),
               url: "/dashboard/analytics?tab=overview",
-              icon: IconReportAnalytics,
+              icon: IconChartBarPopular,
               items: [
                 {
                   title: t("Overview"),
@@ -632,7 +633,7 @@ export function useNavMain({
             {
               title: t("Commerce"),
               url: "/dashboard/commerce/overview",
-              icon: IconBuildingStore,
+              icon: IconShoppingCartBolt,
               items: [
                 {
                   title: t("Overview"),
@@ -675,7 +676,7 @@ export function useNavMain({
               title: t("Loyalty"),
               url: LOYALTY_PATHS.overview,
               icon: IconGift,
-              // Seven rows: one defines the programme, six run it. See loyalty.nav.ts.
+              // Eight rows: one defines the programme, the rest run it. See loyalty.nav.ts.
               items: buildLoyaltyNavItems(loyaltyNav ?? { t, programState: null }),
             },
           ]
@@ -694,7 +695,7 @@ export function useNavMain({
             {
               title: t("Pipeline"),
               url: "/dashboard/pipeline",
-              icon: IconGitBranch,
+              icon: IconFilterBolt,
               // Views and facets are built next to the pipeline's own
               // derivations so the sidebar counts and the board agree.
               items: buildPipelineNavItems(pipelineNav),

@@ -162,6 +162,7 @@ export const messagesFormSchema = z.object({
       type: z.string(),
       requestMessage: z.string().min(1, "Give this a keyword"),
       text: z.string().min(1, "Write the reply"),
+      waTemplateId: z.string().nullable().optional(),
     }),
   ),
   eventTemplates: z.array(

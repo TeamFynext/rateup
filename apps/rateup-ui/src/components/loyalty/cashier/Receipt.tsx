@@ -78,7 +78,9 @@ export function Receipt({
   const waLabel = (() => {
     switch (preview.status) {
       case "sent":
-        return t("Sent to {name} on WhatsApp", { name: first });
+        return preview.mode === "text"
+          ? t("Sent to {name} on WhatsApp as a message", { name: first })
+          : t("Sent to {name} on WhatsApp", { name: first });
       case "not_connected":
         return t("Not sent — WhatsApp is not connected");
       case "program_inactive":

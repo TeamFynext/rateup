@@ -14,6 +14,7 @@ import {
   buildEarningDefaults,
   buildMessagesDefaults,
   buildRewardsDefaults,
+  buildSuggestedJoinText,
   buildTiersDefaults,
 } from "./programDefaults.ts";
 import type {
@@ -35,6 +36,10 @@ export interface ProgramEditorData {
   currencySymbol: string;
   pointsName: string;
   hasWhatsappChannel: boolean;
+  /** The welcome reply as the current earning rules and rewards would write it. */
+  suggestedJoinText: string;
+  /** Per event type, what the dispatcher fills `{{1}}`, `{{2}}` … with, in order. */
+  eventParams: Record<string, readonly string[]>;
   defaults: {
     basics: BasicsFormInput;
     earning: EarningFormInput;
@@ -75,6 +80,10 @@ export function useProgramEditorData(): { data: ProgramEditorData | null; isLoad
       currencySymbol: program?.currencySymbol ?? "₹",
       pointsName: program?.currencyName ?? preset.basics.currencyName,
       hasWhatsappChannel: Boolean(waSettings?.length),
+      suggestedJoinText: buildSuggestedJoinText(state, preset),
+      eventParams: Object.fromEntries(
+        preset.eventTemplates.map((template) => [template.eventType, template.params]),
+      ),
       defaults: {
         basics: buildBasicsDefaults(state, preset),
         earning: buildEarningDefaults(state, preset),

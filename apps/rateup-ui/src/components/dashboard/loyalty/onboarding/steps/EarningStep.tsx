@@ -18,7 +18,8 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils.ts";
 import { numberInputValue } from "@/utils/form.ts";
 
-import { EarningGivebackPanel } from "../../giveback/StepGivebackPanels.tsx";
+import { EarnRateField } from "../../earning-rules/parts/EarnRateField.tsx";
+import { EarningPreviewFromForm } from "../../giveback/StepGivebackPanels.tsx";
 import type { GivebackContext } from "../givebackContext.ts";
 import { earningFormSchema, type EarningFormInput, type EarningFormValues } from "../schemas.ts";
 import {
@@ -72,6 +73,14 @@ export function EarningStep({
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "rules" });
   const rulesError = form.formState.errors.rules;
+
+  // The default rule IS the base rate, so a multiplier on it would only be the rate in
+  // disguise; it is hidden for that rule and pinned to 1 on the way out.
+  const submit = (values: EarningFormValues) =>
+    onSubmit({
+      ...values,
+      rules: values.rules.map((rule) => (rule.isDefault ? { ...rule, multiplier: 1 } : rule)),
+    });
   const footer = useStepFooterProps({ mode, isDirty: form.formState.isDirty, onBack, onCancel });
 
   const addRule = () => {
@@ -91,19 +100,21 @@ export function EarningStep({
     window.setTimeout(() => form.setFocus(`rules.${index}.name`), 0);
   };
 
+  // What a purchase earns — not what it costs: the giveback percentage needs rewards to
+  // value the points against, and those come two steps later.
   const panel = (
-    <EarningGivebackPanel
+    <EarningPreviewFromForm
       control={form.control}
       context={giveback}
       onEditAverageOrderValue={onEditAverageOrderValue}
       {...(mode === "section"
-        ? { title: t("What this costs you"), hint: t("Updates as you edit") }
+        ? { title: t("What customers earn"), hint: t("Updates as you edit") }
         : {})}
     />
   );
 
   return (
-    <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(onSubmit)}>
+    <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(submit)}>
       <StepHeader
         title={t("How customers earn points")}
         description={t(
@@ -164,53 +175,64 @@ export function EarningStep({
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <Controller
-                      control={form.control}
-                      name={`rules.${index}.pointsPerUnit`}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor={field.name} className="text-xs">
-                            {t("{points} per {symbol}1 spent", {
-                              points: pointsName,
-                              symbol: currencySymbol,
-                            })}
-                          </FieldLabel>
-                          <Input
-                            id={field.name}
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            className="h-9"
-                            {...field}
-                            value={numberInputValue(field.value)}
-                          />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                        </Field>
-                      )}
-                    />
+                  <Controller
+                    control={form.control}
+                    name={`rules.${index}.pointsPerUnit`}
+                    render={({ field, fieldState }) => (
+                      <EarnRateField
+                        id={field.name}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        currencySymbol={currencySymbol}
+                        currencyCode={giveback.currencyCode}
+                        pointsName={pointsName}
+                        averageOrderValue={giveback.averageOrderValue}
+                        label={
+                          isDefault
+                            ? t("How customers earn")
+                            : t("Earn rate while this rule applies")
+                        }
+                        description={
+                          isDefault
+                            ? undefined
+                            : t("Replaces the default rate, it does not add to it.")
+                        }
+                        invalid={fieldState.invalid}
+                        error={fieldState.error}
+                      />
+                    )}
+                  />
 
-                    <Controller
-                      control={form.control}
-                      name={`rules.${index}.multiplier`}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor={field.name} className="text-xs">
-                            {t("Multiplier")}
-                          </FieldLabel>
-                          <Input
-                            id={field.name}
-                            type="number"
-                            min={0}
-                            step="0.25"
-                            className="h-9"
-                            {...field}
-                            value={numberInputValue(field.value)}
-                          />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                        </Field>
-                      )}
-                    />
+                  <div
+                    className={cn("grid gap-4", isDefault ? "sm:grid-cols-1" : "sm:grid-cols-2")}
+                  >
+                    {!isDefault && (
+                      <Controller
+                        control={form.control}
+                        name={`rules.${index}.multiplier`}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor={field.name} className="text-xs">
+                              {t("Multiplier")}
+                            </FieldLabel>
+                            <Input
+                              id={field.name}
+                              type="number"
+                              min={0}
+                              step="0.25"
+                              className="h-9"
+                              {...field}
+                              value={numberInputValue(field.value)}
+                            />
+                            <FieldDescription className="text-xs">
+                              {t("On top of the rate above — 2 doubles it.")}
+                            </FieldDescription>
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
+                    )}
 
                     <Controller
                       control={form.control}

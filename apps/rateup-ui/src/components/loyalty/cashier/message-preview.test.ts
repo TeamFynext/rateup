@@ -81,13 +81,14 @@ describe("buildWhatsAppPreview", () => {
         notification: {
           sent: true,
           channel: "whatsapp",
+          mode: "template",
           templateId: "x",
           text: "Hi Anjali, 43 Beans.",
           skippedReason: null,
         },
       }),
     });
-    expect(sent).toEqual({ status: "sent", body: "Hi Anjali, 43 Beans." });
+    expect(sent).toEqual({ status: "sent", body: "Hi Anjali, 43 Beans.", mode: "template" });
 
     const failed = buildWhatsAppPreview({
       ...base,
@@ -95,6 +96,7 @@ describe("buildWhatsAppPreview", () => {
         notification: {
           sent: false,
           channel: "whatsapp",
+          mode: "template",
           templateId: "x",
           text: "Hi",
           skippedReason: "send_failed",
@@ -102,6 +104,38 @@ describe("buildWhatsAppPreview", () => {
       }),
     });
     expect(failed.status).toBe("send_failed");
+  });
+
+  test("says how a sent message went out, and when Meta has not approved the template", () => {
+    const asText = buildWhatsAppPreview({
+      ...base,
+      receipt: receipt({
+        notification: {
+          sent: true,
+          channel: "whatsapp",
+          mode: "text",
+          templateId: "x",
+          text: "Hi Anjali",
+          skippedReason: null,
+        },
+      }),
+    });
+    expect(asText).toEqual({ status: "sent", body: "Hi Anjali", mode: "text" });
+
+    const pending = buildWhatsAppPreview({
+      ...base,
+      receipt: receipt({
+        notification: {
+          sent: false,
+          channel: "whatsapp",
+          mode: null,
+          templateId: "x",
+          text: "Hi Anjali",
+          skippedReason: "template_not_approved",
+        },
+      }),
+    });
+    expect(pending).toEqual({ status: "template_not_approved", body: "Hi Anjali" });
   });
 
   test("renders the approved template with the receipt's numbers", () => {

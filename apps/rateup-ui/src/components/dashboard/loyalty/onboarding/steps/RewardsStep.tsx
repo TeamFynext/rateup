@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  IconCalculator,
   IconChevronRight,
   IconGift,
   IconPlus,
@@ -16,6 +17,7 @@ import {
   type ControllerRenderProps,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -56,7 +58,7 @@ import {
 } from "../../giveback/RewardExamplePicker.tsx";
 import { RewardWorthLine } from "../../giveback/RewardWorthLine.tsx";
 import { RewardsGivebackPanel } from "../../giveback/StepGivebackPanels.tsx";
-import { FALLBACK_POINTS_COST } from "../../giveback/suggestPointsCost.ts";
+import { FALLBACK_POINTS_COST, suggestPointsCost } from "../../giveback/suggestPointsCost.ts";
 import type { GivebackContext } from "../givebackContext.ts";
 import {
   asRewardValueType,
@@ -202,14 +204,53 @@ export function RewardsStep({
 
   const existingNames = watchedRewards.map((reward) => (reward?.name ?? "").trim().toLowerCase());
 
+  /**
+   * Every point reward re-priced to the ~3% target at the current earn rate — for rewards
+   * saved before the rate changed. Nothing persists until the merchant saves.
+   */
+  const repriceable = watchedRewards.filter(
+    (reward) =>
+      reward.rewardType === "point" &&
+      suggestPointsCost({
+        rewardValue: reward.rewardValue,
+        earnRate: giveback.earnRate,
+        averageOrderValue: giveback.averageOrderValue,
+      }) !== null,
+  ).length;
+
+  const repriceAll = () => {
+    let changed = 0;
+    watchedRewards.forEach((reward, index) => {
+      if (reward.rewardType !== "point") return;
+      const cost = suggestPointsCost({
+        rewardValue: reward.rewardValue,
+        earnRate: giveback.earnRate,
+        averageOrderValue: giveback.averageOrderValue,
+      });
+      if (cost === null || cost === toFiniteNumber(reward.pointsCost)) return;
+      form.setValue(`rewards.${index}.pointsCost`, cost, { shouldDirty: true });
+      changed += 1;
+    });
+    toast.success(
+      changed > 0
+        ? t("{count} rewards re-priced to about 3% back — save to keep them.", { count: changed })
+        : t("Every reward is already priced for your earn rate."),
+    );
+  };
+
+  // The one place the giveback is shown during setup: points only have a value once there
+  // is a reward to spend them on.
   const panel = (
     <RewardsGivebackPanel
       control={form.control}
       context={giveback}
       onEditAverageOrderValue={onEditAverageOrderValue}
-      {...(mode === "section"
-        ? { title: t("What this costs you"), hint: t("Updates as you edit") }
-        : {})}
+      title={mode === "section" ? t("What this costs you") : t("Your program gives back")}
+      hint={
+        mode === "section"
+          ? t("Updates as you edit")
+          : t("Priced from your earn rate and typical order value.")
+      }
     />
   );
 
@@ -345,6 +386,19 @@ export function RewardsStep({
                   <IconPlus size={16} />
                   {t("Add reward")}
                 </Button>
+                {repriceable > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={repriceAll}
+                    title={t(
+                      "Sets each reward's cost so it gives back about 3% at your current earn rate.",
+                    )}
+                  >
+                    <IconCalculator size={16} />
+                    {t("Re-price from my earn rate")}
+                  </Button>
+                )}
                 {advancedEditorHref && (
                   <span className="text-xs text-muted-foreground">
                     {t("Coupon codes and free gifts:")} {advancedEditorHref}

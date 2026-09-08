@@ -13,6 +13,8 @@ export const LOYALTY_PATHS = {
   programAdvanced: "/dashboard/loyalty/program/advanced",
   activity: "/dashboard/loyalty/activity",
   messages: "/dashboard/loyalty/messages",
+  /** The editor behind each loyalty template; the library itself is Messages › Templates. */
+  templates: "/dashboard/loyalty/templates",
   settings: "/dashboard/loyalty/settings",
   onboarding: "/dashboard/loyalty/onboarding",
 } as const;

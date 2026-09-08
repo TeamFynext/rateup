@@ -272,10 +272,13 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
             skipped={[]}
             eventResults={[]}
             hasWhatsappChannel={data.hasWhatsappChannel}
+            suggestedJoinText={data.suggestedJoinText}
+            eventParams={data.eventParams}
             savedTriggers={state.saved.triggers}
             notificationsHref={
               <Link
                 to={LOYALTY_PATHS.messages}
+                search={{ tab: "automatic" }}
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {t("Edit them in Messages")}

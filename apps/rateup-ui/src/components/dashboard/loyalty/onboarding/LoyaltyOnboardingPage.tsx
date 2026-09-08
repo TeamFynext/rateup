@@ -195,6 +195,8 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
           skipped={skipped}
           eventResults={eventResults}
           hasWhatsappChannel={data.hasWhatsappChannel}
+          suggestedJoinText={data.suggestedJoinText}
+          eventParams={data.eventParams}
           onBack={() => goTo(currentIndex - 1)}
           onSubmit={(values) =>
             messages.mutate({

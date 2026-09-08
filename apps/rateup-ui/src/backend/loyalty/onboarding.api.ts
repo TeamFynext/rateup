@@ -237,7 +237,13 @@ export interface RewardsStepPayload {
 }
 
 export interface MessagesStepPayload {
-  commands: Array<{ type: string; requestMessage: string; text: string }>;
+  commands: Array<{
+    type: string;
+    requestMessage: string;
+    text: string;
+    /** A template for customers who have never messaged; the text still goes out inside a chat. */
+    waTemplateId?: string | null;
+  }>;
   eventTemplates: Array<{ eventType: string; templateName: string; body: string }>;
 }
 
@@ -255,6 +261,10 @@ export interface EventTemplateResult {
   templateId?: string;
   /** A template of that name already existed and was pointed at, not resubmitted. */
   reused?: boolean;
+  /** An existing template's text was changed in place; Meta reviews it again. */
+  edited?: boolean;
+  /** The text became a new template (`…_v2`) because Meta would not take an edit. */
+  versioned?: boolean;
   error?: string;
 }
 

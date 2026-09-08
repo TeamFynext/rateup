@@ -39,6 +39,8 @@ export interface LoyaltyProgram {
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
+  /** Inside an open 24-hour chat, send a notification's text as a plain message. */
+  sendTextInSession?: boolean;
   enableShopifyOrderPoints?: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -71,6 +73,7 @@ export interface LoyaltyProgramInput {
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
+  sendTextInSession?: boolean;
   enableShopifyOrderPoints?: boolean;
   programActive?: boolean;
   pointsActivityAlerts?: boolean;

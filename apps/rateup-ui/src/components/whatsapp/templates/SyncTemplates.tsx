@@ -7,11 +7,16 @@ import { Button } from "@/components/ui/button.tsx";
 export function SyncTemplatesButton({
   disabled = false,
   whatsappSettingsPhoneIds,
+  onSynced,
+  label,
 }: Readonly<{
   disabled?: boolean;
   whatsappSettingsPhoneIds?: string[];
+  /** After the templates cache is swept — for callers with a dependent count to refresh. */
+  onSynced?: () => void;
+  label?: string;
 }>) {
-  const syncMutation = useSyncTemplatesMutation();
+  const syncMutation = useSyncTemplatesMutation(onSynced);
   const { t: translations } = useTranslation();
   function handleSyncClick() {
     syncMutation.mutate(
@@ -22,7 +27,7 @@ export function SyncTemplatesButton({
   return (
     <Button variant="outline" onClick={handleSyncClick} disabled={disabled}>
       <IconRefresh className={syncMutation.isPending ? "animate-spin" : ""} />
-      {translations("Sync")}
+      {label ?? translations("Sync")}
     </Button>
   );
 }
