@@ -1,3 +1,12 @@
+import {
+  IconBrandFacebook,
+  IconBrandInstagram,
+  IconBrandLinkedin,
+  IconBrandPinterestFilled,
+  IconBrandThreads,
+  IconBrandX,
+  IconBrandYoutube,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import type { ReactNode } from "react";
@@ -34,6 +43,47 @@ function FooterCol({ title, children }: Readonly<{ title: string; children: Reac
 }
 
 const LINK = "text-[15px] text-white/72 transition-colors hover:text-white";
+
+/** Same chip as the Meta lockup pill above, sized to a 36px tap target. */
+const SOCIAL =
+  "flex size-9 items-center justify-center rounded-[9px] border border-white/14 bg-white/5 text-white/72 transition-colors hover:border-white/24 hover:bg-white/10 hover:text-white";
+
+const SOCIALS = [
+  { href: "https://x.com/rateup_app", label: "X", Icon: IconBrandX },
+  {
+    href: "https://www.instagram.com/rateupsoftware/",
+    label: "Instagram",
+    Icon: IconBrandInstagram,
+  },
+  { href: "https://www.facebook.com/rateupsapp/", label: "Facebook", Icon: IconBrandFacebook },
+  { href: "https://www.linkedin.com/company/rateup", label: "LinkedIn", Icon: IconBrandLinkedin },
+  { href: "https://www.threads.com/@rateupsoftware", label: "Threads", Icon: IconBrandThreads },
+  { href: "https://www.youtube.com/@TeamRateup", label: "YouTube", Icon: IconBrandYoutube },
+  {
+    href: "https://www.pinterest.com/rateupapp/",
+    label: "Pinterest",
+    Icon: IconBrandPinterestFilled,
+  },
+] as const;
+
+function FooterSocials() {
+  return (
+    <div className="flex flex-wrap items-center gap-2.5">
+      {SOCIALS.map(({ href, label, Icon }) => (
+        <a
+          key={label}
+          href={href}
+          aria-label={label}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={SOCIAL}
+        >
+          <Icon className="size-5" stroke={1.6} />
+        </a>
+      ))}
+    </div>
+  );
+}
 
 export default function HomePageFooter() {
   return (
@@ -177,6 +227,7 @@ export default function HomePageFooter() {
           <span className="text-[13.5px] text-white/42">
             © {new Date().getFullYear()} RateUp. All rights reserved.
           </span>
+          <FooterSocials />
           <span className="text-[13px] tracking-[0.08em] text-white/42">www.rateup.app</span>
         </div>
       </div>

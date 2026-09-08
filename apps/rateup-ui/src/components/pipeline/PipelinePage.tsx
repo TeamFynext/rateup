@@ -1,9 +1,11 @@
 import { IconColumns, IconGitBranch } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
+  findCachedLead,
   useBulkUpdateLeadsMutation,
   useMoveLeadMutation,
 } from "@/backend/pipeline/pipeline.query.tsx";
@@ -53,6 +55,7 @@ export function PipelinePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const data = usePipelineData();
+  const queryClient = useQueryClient();
   const { pipeline, view, setView, members } = data;
 
   const [addOpen, setAddOpen] = useState(false);
@@ -64,6 +67,13 @@ export function PipelinePage() {
 
   const openLead = useCallback((leadId: string) => setView({ leadId }), [setView]);
 
+  // Stable identity, so a memoised column is not re-rendered by a new closure
+  // on every keystroke in the header.
+  const quickAdd = useCallback((stageId: string) => {
+    setAddStageId(stageId);
+    setAddOpen(true);
+  }, []);
+
   /** Jumps to the contact's conversation; leads captured offline have none. */
   const openConversation = useCallback(
     (lead: Lead) => {
@@ -74,19 +84,22 @@ export function PipelinePage() {
   );
 
   const handleMove = useCallback(
-    (leadId: string, stage: PipelineStage) => {
+    (leadId: string, fromStageId: string, stage: PipelineStage) => {
       // Landing on a closing column is a close, not a move: winning wants a
       // confirmation and losing wants a reason, so both route through the
       // dialog. The column dropped on is carried along, so a board with several
       // Lost columns puts the lead in the one the user actually chose.
-      const lead = data.leads.find((candidate) => candidate.id === leadId);
+      //
+      // The lead comes out of the cache rather than a loaded array — the columns
+      // are paginated now, so there is no single list to look in.
+      const lead = findCachedLead(queryClient, leadId);
       if (stage.status !== "OPEN" && lead) {
         setCloseTarget({ lead, status: stage.status, stageId: stage.id });
         return;
       }
-      moveLead.mutate({ leadId, stageId: stage.id, stageName: stage.name });
+      moveLead.mutate({ leadId, fromStageId, stageId: stage.id, stageName: stage.name });
     },
-    [data.leads, moveLead],
+    [queryClient, moveLead],
   );
 
   // Only the view swaps out while loading: the header owns the pipeline switcher
@@ -143,10 +156,7 @@ export function PipelinePage() {
             data={data}
             onOpenLead={openLead}
             onOpenConversation={openConversation}
-            onQuickAdd={(stageId) => {
-              setAddStageId(stageId);
-              setAddOpen(true);
-            }}
+            onQuickAdd={quickAdd}
             onMoveLead={handleMove}
           />
         );
@@ -170,7 +180,11 @@ export function PipelinePage() {
 
   return (
     <div className="flex h-full min-h-0 flex-1">
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* `min-h-0` for the same reason the board's card list needs it: a flex
+          child defaults to `min-height: auto`, so without it this column refuses
+          to shrink below its content and the overflow escapes to the page
+          instead of scrolling inside the view. */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <PipelineHeader
           data={data}
           onAddLead={() => {

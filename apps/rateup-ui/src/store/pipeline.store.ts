@@ -1,15 +1,30 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { LeadFilter, LeadSource } from "@/backend/pipeline/pipeline.types.ts";
+
 /** The five board views, in tab order. */
 export const PIPELINE_VIEWS = ["board", "list", "forecast", "insights", "settings"] as const;
 
 export type PipelineView = (typeof PIPELINE_VIEWS)[number];
 
-/** The saved filters in the sidebar's Views section. */
-export const LEAD_FILTERS = ["open", "mine", "rotting", "noactivity", "won", "lost"] as const;
+/**
+ * The saved filters in the sidebar's Views section.
+ *
+ * The union itself lives with the API contract in `pipeline.types.ts` — it is a
+ * query parameter now, not a client-side predicate — and is re-exported here so
+ * the store's existing importers do not all have to move.
+ */
+export const LEAD_FILTERS: readonly LeadFilter[] = [
+  "open",
+  "mine",
+  "rotting",
+  "noactivity",
+  "won",
+  "lost",
+];
 
-export type LeadFilter = (typeof LEAD_FILTERS)[number];
+export type { LeadFilter };
 
 /**
  * The pipeline screen's view state.
@@ -28,7 +43,8 @@ export interface PipelineViewState {
   search: string;
   stageId: string | null;
   teamId: string | null;
-  source: string | null;
+  /** The board only ever sets this from a lead's own source. */
+  source: LeadSource | null;
   assigneeId: string | null;
   /** Lead shown in the drawer, or null when it is closed. */
   leadId: string | null;

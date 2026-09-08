@@ -3,26 +3,92 @@ import {
   monitorForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { IconAlertTriangle, IconPlus } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { Lead, PipelineStage } from "@/backend/pipeline/pipeline.types.ts";
+import { hasActiveLeadFilters } from "@/backend/pipeline/pipeline.keys.ts";
+import { useStageLeadsQuery } from "@/backend/pipeline/pipeline.query.tsx";
+import type {
+  Lead,
+  LeadListParams,
+  PipelineStage,
+  PipelineStats,
+} from "@/backend/pipeline/pipeline.types.ts";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { STATUS_BAND } from "../pipeline.constants.tsx";
 import { stageStatusHint, stageStatusLabel } from "../pipeline.labels.ts";
-import { daysInStage, groupStagesIntoBands, isRotting, leadsInStage } from "../pipeline.utils.ts";
+import { groupStagesIntoBands } from "../pipeline.utils.ts";
 import { StageFill } from "../shared/atoms.tsx";
 import { useHorizontalWheelScroll } from "../shared/useHorizontalWheelScroll.ts";
 import type { PipelineData } from "../usePipelineData.ts";
 import { isLeadDragData, LeadCard } from "./LeadCard.tsx";
+
+type StageStats = PipelineStats["stages"][number];
 
 interface BoardViewProps {
   data: PipelineData;
   onOpenLead: (leadId: string) => void;
   onOpenConversation: (lead: Lead) => void;
   onQuickAdd: (stageId: string) => void;
-  onMoveLead: (leadId: string, stage: PipelineStage) => void;
+  onMoveLead: (leadId: string, fromStageId: string, stage: PipelineStage) => void;
+}
+
+/**
+ * Pulls the next page in as the bottom of the column comes into view.
+ *
+ * The observer watches the column's own scroll container rather than the
+ * viewport: the board scrolls sideways and each column scrolls inside itself, so
+ * a sentinel can be on screen in the page's terms while its column is nowhere
+ * near the end. `rootMargin` starts the fetch a screenful early, which is what
+ * makes a long column read as continuous rather than as pages.
+ *
+ * Two things this has to get right, both of which look like "scrolling does
+ * nothing":
+ *
+ * - The sentinel mounts *after* the first page arrives, so the observer cannot
+ *   be attached once on mount — it is attached when the node itself appears,
+ *   which is why the node is held in state rather than a ref. Holding it in
+ *   state also means the effect runs after every ref in the tree is set, so the
+ *   column's scroll container is available to use as `root`.
+ * - `IntersectionObserver` reports *changes*, not a standing state. A sentinel
+ *   that is still on screen once a page has loaded never fires again, so the
+ *   fetch is driven by an effect over "is it visible" rather than from the
+ *   observer callback: when a page lands and the sentinel is still in view, the
+ *   effect runs again and asks for the next one.
+ */
+function useInfiniteScroll({
+  rootRef,
+  hasNextPage,
+  isFetching,
+  fetchNextPage,
+}: {
+  rootRef: React.RefObject<HTMLDivElement | null>;
+  hasNextPage: boolean;
+  isFetching: boolean;
+  fetchNextPage: () => void;
+}) {
+  const [sentinel, setSentinel] = useState<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
+      root: rootRef.current,
+      rootMargin: "200px",
+    });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [sentinel, rootRef]);
+
+  useEffect(() => {
+    if (isVisible && hasNextPage && !isFetching) fetchNextPage();
+  }, [isVisible, hasNextPage, isFetching, fetchNextPage]);
+
+  return setSentinel;
 }
 
 /**
@@ -53,9 +119,21 @@ function useDropTarget(dropData: Record<string, unknown>) {
   return { ref, isOver };
 }
 
-function StageColumn({
+/**
+ * Memoised because the board is the expensive part of this screen.
+ *
+ * Every keystroke in the header writes to the pipeline store, which re-renders
+ * the page and the board. Without this, that cascade reaches every loaded card
+ * in every column on each character typed. The props are all stable between
+ * those renders — `params` only changes once the search debounce fires, the
+ * stats rows come from one query result, and the callbacks are `useCallback`ed
+ * upstream — so the columns simply do not re-render until their data does.
+ */
+const StageColumn = memo(function StageColumn({
   stage,
-  leads,
+  pipelineId,
+  params,
+  stageStats,
   widestCount,
   rottingEnabled,
   onOpenLead,
@@ -63,7 +141,10 @@ function StageColumn({
   onQuickAdd,
 }: Readonly<{
   stage: PipelineStage;
-  leads: Lead[];
+  pipelineId: string | undefined;
+  params: LeadListParams;
+  /** Whole-column figures. Absent until the counts land. */
+  stageStats: StageStats | undefined;
   widestCount: number;
   rottingEnabled: boolean;
   onOpenLead: (leadId: string) => void;
@@ -72,11 +153,27 @@ function StageColumn({
 }>) {
   const { t } = useTranslation();
   const { ref, isOver } = useDropTarget({ stageId: stage.id });
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  const rottingCount = leads.filter((lead) => isRotting(lead, rottingEnabled)).length;
-  const averageAge = leads.length
-    ? Math.round(leads.reduce((total, lead) => total + daysInStage(lead), 0) / leads.length)
-    : 0;
+  // Each column asks for its own cards, so the filters are applied per stage: a
+  // column with one match returns it rather than losing the page to a busier one.
+  const query = useStageLeadsQuery(pipelineId, stage.id, params);
+  const leads = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
+
+  const setSentinel = useInfiniteScroll({
+    rootRef: scrollRef,
+    hasNextPage: query.hasNextPage,
+    isFetching: query.isFetchingNextPage,
+    fetchNextPage: query.fetchNextPage,
+  });
+
+  // The counts describe the whole column while the cards describe a filtered
+  // slice of it, so under a filter the header reports what is actually on
+  // screen instead of putting an unrelated total above it.
+  const filtered = hasActiveLeadFilters(params);
+  const count = filtered ? leads.length : (stageStats?.total ?? leads.length);
+  const rottingCount = filtered ? 0 : (stageStats?.rotting ?? 0);
+  const averageAge = stageStats?.avgDaysInStage ?? 0;
 
   return (
     <div
@@ -96,7 +193,7 @@ function StageColumn({
             {stage.name}
           </span>
           <span className="border-border text-muted-foreground rounded-full border px-1.75 text-[11.5px] font-medium">
-            {leads.length}
+            {count}
           </span>
           {/* Only an open column takes a new lead: dropping one straight onto
               Won or Lost is a close, which the close dialog handles instead. */}
@@ -113,12 +210,12 @@ function StageColumn({
         </div>
 
         <div className="mt-1.75 flex items-center gap-2.5 text-[11px]">
-          {stage.status === "OPEN" ? (
+          {stage.status === "OPEN" && !filtered ? (
             <span className="text-muted-foreground">
               {t("{days}d avg in stage", { days: averageAge })}
             </span>
           ) : null}
-          {rottingCount > 0 ? (
+          {rottingEnabled && rottingCount > 0 ? (
             <span className="text-destructive ml-auto inline-flex items-center gap-1 font-semibold">
               <IconAlertTriangle className="size-3" />
               {rottingCount}
@@ -127,7 +224,7 @@ function StageColumn({
         </div>
 
         <StageFill
-          percent={widestCount ? Math.round((leads.length / widestCount) * 100) : 0}
+          percent={widestCount ? Math.round((count / widestCount) * 100) : 0}
           color={stage.color}
         />
       </div>
@@ -141,7 +238,10 @@ function StageColumn({
           its end. It also stops the wheel chaining out to the board, but that is
           not what horizontal scrolling relies on — dropping it does not make the
           board scroll, so it stays. `useHorizontalWheelScroll` does that job. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-2.25 overflow-y-auto overscroll-contain p-2.5">
+      <div
+        ref={scrollRef}
+        className="flex min-h-0 flex-1 flex-col gap-2.25 overflow-y-auto overscroll-contain p-2.5"
+      >
         {leads.map((lead) => (
           <LeadCard
             key={lead.id}
@@ -151,15 +251,47 @@ function StageColumn({
             onOpenConversation={onOpenConversation}
           />
         ))}
-        {leads.length === 0 ? (
+
+        {/* `isLoading`, not `isPending`: a column the stage facet has excluded is
+            pending-but-idle, and would otherwise skeleton for ever. */}
+        {query.isLoading
+          ? [0, 1, 2].map((row) => <Skeleton key={row} className="h-21 shrink-0 rounded-lg" />)
+          : null}
+
+        {/* Always mounted, below the last card: the observer attaches to this
+            node, so rendering it only once there is a next page would mean
+            nothing was ever watching when the first page arrived. */}
+        <div ref={setSentinel} className="flex shrink-0 flex-col gap-2.25">
+          {query.isFetchingNextPage ? <Skeleton className="h-21 rounded-lg" /> : null}
+        </div>
+
+        {/* A failed page renders nothing at all otherwise: not pending, not
+            successful, so neither the skeletons nor the empty state apply, and
+            the column reads as an empty board rather than a broken request. */}
+        {query.isError ? (
+          <div className="border-destructive/40 text-destructive rounded-xl border-[1.5px] border-dashed px-3 py-4.5 text-center text-xs">
+            <p>{t("Could not load this column.")}</p>
+            <button
+              type="button"
+              onClick={() => query.refetch()}
+              className="mt-1.5 font-semibold underline underline-offset-2"
+            >
+              {t("Try again")}
+            </button>
+          </div>
+        ) : null}
+
+        {/* Only once the column is known to be empty — a column still loading
+            its first page is not an invitation to drop. */}
+        {!query.isLoading && !query.isError && leads.length === 0 ? (
           <div className="border-border text-muted-foreground rounded-xl border-[1.5px] border-dashed px-3 py-4.5 text-center text-xs">
-            {t("Drop a lead here")}
+            {filtered ? t("No leads match these filters.") : t("Drop a lead here")}
           </div>
         ) : null}
       </div>
     </div>
   );
-}
+});
 
 /**
  * Stage columns grouped under their status band. Won and Lost are ordinary
@@ -175,7 +307,7 @@ export function BoardView({
   onMoveLead,
 }: Readonly<BoardViewProps>) {
   const { t } = useTranslation();
-  const { pipeline, visibleLeads } = data;
+  const { pipeline, params, stats } = data;
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useHorizontalWheelScroll(scrollRef);
@@ -195,7 +327,9 @@ export function BoardView({
         if (typeof stageId !== "string" || stageId === fromStageId) return;
 
         const stage = pipeline.stages.find((candidate) => candidate.id === stageId);
-        if (stage) onMoveLead(leadId, stage);
+        // The column the card left is what the move has to take it out of, so
+        // it travels with the drop rather than being looked up afterwards.
+        if (stage) onMoveLead(leadId, fromStageId, stage);
       },
     });
   }, [pipeline, onMoveLead]);
@@ -203,13 +337,15 @@ export function BoardView({
   if (!pipeline) return null;
 
   const bands = groupStagesIntoBands(pipeline.stages);
+  const statsByStage = new Map((stats?.stages ?? []).map((row) => [row.stageId, row]));
+
   // Scaled against the open columns only: a Won column holding every lead ever
   // closed would otherwise flatten every working column's bar to nothing.
   const widestCount = Math.max(
     1,
     ...pipeline.stages
       .filter((stage) => stage.status === "OPEN")
-      .map((stage) => leadsInStage(visibleLeads, stage.id).length),
+      .map((stage) => statsByStage.get(stage.id)?.total ?? 0),
   );
 
   return (
@@ -230,7 +366,7 @@ export function BoardView({
           const bandStyle = STATUS_BAND[band.status];
           const BandIcon = bandStyle.icon;
           const bandCount = band.stages.reduce(
-            (total, stage) => total + leadsInStage(visibleLeads, stage.id).length,
+            (total, stage) => total + (statsByStage.get(stage.id)?.total ?? 0),
             0,
           );
 
@@ -266,7 +402,9 @@ export function BoardView({
                   <StageColumn
                     key={stage.id}
                     stage={stage}
-                    leads={leadsInStage(visibleLeads, stage.id)}
+                    pipelineId={pipeline.id}
+                    params={params}
+                    stageStats={statsByStage.get(stage.id)}
                     widestCount={widestCount}
                     rottingEnabled={pipeline.rottingEnabled}
                     onOpenLead={onOpenLead}

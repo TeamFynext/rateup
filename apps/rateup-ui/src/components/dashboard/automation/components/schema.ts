@@ -14,10 +14,10 @@ export const CONDITION_FIELDS = [
   { label: "Contact Email", value: "CONTACT_EMAIL" },
   { label: "Contact Group", value: "CONTACT_GROUP" },
   { label: "Contact Label", value: "CONTACT_LABEL" },
-  // Superseded by Contact Stage. Kept for the same reason as Assign Lifecycle
+  // Superseded by Lead Stage. Kept for the same reason as Assign Lead Stage
   // below: conditions already written against it still have to render and save.
   { label: "Contact Lifecycle (legacy)", value: "CONTACT_LIFECYCLE", legacy: true },
-  { label: "Contact Stage", value: "CONTACT_STAGE" },
+  { label: "Lead Stage", value: "CONTACT_STAGE" },
   // TODO: Enable if needed in future existed in trengo
   // { label: "Message Direction", value: "MESSAGE_DIRECTION" },
   // { label: "Elapsed Time", value: "ELAPSED_TIME" },
@@ -66,14 +66,14 @@ const TRIGGER_EVENTS = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    // Superseded by Stage Updated; still fires for rules already using it.
+    // Superseded by Lead Stage Updated; still fires for rules already using it.
     label: "Lifecycle Updated (legacy)",
     value: "LIFECYCLE_UPDATED",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
     legacy: true,
   },
   {
-    label: "Stage Updated",
+    label: "Lead Stage Updated",
     value: "STAGE_UPDATED",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
@@ -164,7 +164,7 @@ export const ACTION_TYPES = [
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
   {
-    // Superseded by Assign Stage and no longer offered for new actions. It stays
+    // Superseded by Assign Lead Stage and no longer offered for new actions. It stays
     // in the list because rules written against it are still running: dropping
     // the entry would leave those rows with an empty type select, and saving one
     // would quietly rewrite the action.
@@ -174,7 +174,7 @@ export const ACTION_TYPES = [
     legacy: true,
   },
   {
-    label: "Assign Stage",
+    label: "Assign Lead Stage",
     value: "ASSIGN_STAGE",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
