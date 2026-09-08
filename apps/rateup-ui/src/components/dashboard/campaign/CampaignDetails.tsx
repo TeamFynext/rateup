@@ -507,10 +507,7 @@ export function CampaignDetails() {
         </div>
 
         <TabsContent value="info" className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-6 pb-6">
-          <CampaignOverviewTab
-            campaign={campaignQuery.data}
-            onSeeFailures={() => setActiveTab("participants")}
-          />
+          <CampaignOverviewTab campaign={campaignQuery.data} />
         </TabsContent>
 
         <TabsContent

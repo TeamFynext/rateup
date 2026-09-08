@@ -28,10 +28,7 @@ import { NextBatchCard } from "./NextBatchCard.tsx";
  * attempt that has not run yet, what has happened so far, and how the campaign
  * was set up.
  */
-export function CampaignOverviewTab({
-  campaign,
-  onSeeFailures,
-}: Readonly<{ campaign: Campaign; onSeeFailures: () => void }>) {
+export function CampaignOverviewTab({ campaign }: Readonly<{ campaign: Campaign }>) {
   const { t } = useTranslation("campaign.details");
   const campaignId = campaign.id;
 
