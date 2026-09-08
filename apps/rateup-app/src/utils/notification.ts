@@ -3,6 +3,7 @@ import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Colors } from "@/constants/colors";
 import { addToken, deleteToken } from "@/api/notification";
+import { useOpenChatStore } from "@/utils/store";
 
 /**
  * Module-scope on purpose: a handler registered after the first notification
@@ -13,14 +14,52 @@ import { addToken, deleteToken } from "@/api/notification";
  * foregrounded, which is why an open app looked like it received no pushes at
  * all. `shouldShowAlert` is the deprecated spelling; SDK 54+ splits it into the
  * banner (heads-up) and list (notification centre) decisions.
+ *
+ * This only runs while the app is foregrounded — a backgrounded or killed app
+ * never consults it, so nothing here can suppress a notification the user is
+ * not present for.
  */
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
+  handleNotification: async (notification) => {
+    // Reading the store imperatively rather than through the hook: this is not a
+    // component, and `getState()` is the live value at delivery time, which is
+    // what "is the user looking at this chat right now" needs.
+    const openChatId = useOpenChatStore.getState().openChatId;
+    const data = notification.request.content.data as
+      | { type?: string; contactId?: string }
+      | undefined;
+
+    // Announcing a message that is already visible in the open thread is just
+    // noise. Narrow on purpose: only a `wa_message` for the chat on screen is
+    // swallowed, so a message from any *other* contact still banners while the
+    // user sits in a conversation, and any future notification type is
+    // unaffected. `openChatId` is cleared when the chat unmounts, so leaving the
+    // screen restores banners for that contact.
+    const isOpenConversation =
+      data?.type === "wa_message" &&
+      typeof data.contactId === "string" &&
+      !!openChatId &&
+      data.contactId === openChatId;
+
+    if (isOpenConversation) {
+      // No list entry or badge either: the user is reading it, so it is not
+      // pending. Leaving those true would strand an unread badge for a message
+      // that was already on screen.
+      return {
+        shouldShowBanner: false,
+        shouldShowList: false,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      };
+    }
+
+    return {
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    };
+  },
 });
 
 const ANDROID_DEFAULT_CHANNEL = "default";
@@ -35,6 +74,12 @@ const ANDROID_DEFAULT_CHANNEL = "default";
  * Safe to call repeatedly: creating an existing channel is a no-op, and Android
  * deliberately ignores later downgrades to a channel the user has since tuned.
  * No-ops off Android.
+ *
+ * `sound` is deliberately absent: omitting the key is what selects the system
+ * default notification sound. Any string there is read as a custom sound
+ * filename that must be bundled via the expo-notifications plugin, so
+ * `sound: "default"` resolves to nothing and logs an error at startup, and
+ * `sound: null` means silent.
  */
 export async function setupAndroidNotificationChannel() {
   if (Platform.OS !== "android") return;
@@ -46,7 +91,6 @@ export async function setupAndroidNotificationChannel() {
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: Colors.accent.orange,
-      sound: "default",
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     });
   } catch (err) {
