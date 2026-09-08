@@ -8,6 +8,8 @@ import { useCreateCampaignMutation } from "@/backend/campaign/campaign.query";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils";
 import { CampaignStatus, CampaignType } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
@@ -144,30 +146,32 @@ export function BasicsForm({
         render={({ field }) => (
           <Field>
             <FieldLabel>{t("Campaign type")}</FieldLabel>
-            <div className="grid grid-cols-2 gap-3.5">
+            <RadioGroup
+              value={field.value}
+              onValueChange={(next) => {
+                if (!next) return;
+                field.onChange(next);
+                onTypeChange?.(next as CampaignType);
+              }}
+              className="grid-cols-2 gap-3.5"
+            >
               <TypeCard
+                value={CampaignType.WHATSAPP}
                 selected={field.value === CampaignType.WHATSAPP}
                 disabled={lockType && field.value !== CampaignType.WHATSAPP}
                 title={t("Broadcast")}
                 description={t("One template to everyone, once.")}
-                onSelect={() => {
-                  field.onChange(CampaignType.WHATSAPP);
-                  onTypeChange?.(CampaignType.WHATSAPP);
-                }}
                 illustration={<BroadcastShape />}
               />
               <TypeCard
+                value={CampaignType.DRIP}
                 selected={field.value === CampaignType.DRIP}
                 disabled={lockType && field.value !== CampaignType.DRIP}
                 title={t("Drip")}
                 description={t("A sequence of messages spread over days.")}
-                onSelect={() => {
-                  field.onChange(CampaignType.DRIP);
-                  onTypeChange?.(CampaignType.DRIP);
-                }}
                 illustration={<DripShape />}
               />
-            </div>
+            </RadioGroup>
             {lockType ? (
               <FieldDescription>
                 {t("The type is fixed once a campaign exists — create a new one to change it.")}
@@ -181,30 +185,29 @@ export function BasicsForm({
 }
 
 function TypeCard({
+  value,
   selected,
   disabled,
   title,
   description,
   illustration,
-  onSelect,
 }: Readonly<{
+  value: CampaignType;
   selected: boolean;
   disabled: boolean;
   title: string;
   description: string;
   illustration: React.ReactNode;
-  onSelect: () => void;
 }>) {
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onSelect}
-      aria-pressed={selected}
+    <Label
+      data-disabled={disabled || undefined}
       className={cn(
-        "bg-card flex flex-col gap-3 rounded-xl p-4.5 pb-4 text-left shadow-xs ring-1 transition",
+        "bg-card flex flex-col items-stretch gap-3 rounded-xl p-4.5 pb-4 text-left font-normal shadow-xs ring-1 transition",
         selected ? "ring-primary ring-2" : "ring-foreground/10",
-        disabled ? "cursor-not-allowed opacity-50" : "hover:shadow-md cursor-pointer",
+        disabled
+          ? "pointer-events-none cursor-not-allowed opacity-50"
+          : "hover:shadow-md cursor-pointer",
       )}
     >
       <div className="flex items-start justify-between gap-2.5">
@@ -212,13 +215,7 @@ function TypeCard({
           <span className="font-display text-[15px] font-semibold">{title}</span>
           <span className="text-muted-foreground text-[12.5px] leading-relaxed">{description}</span>
         </div>
-        <span
-          className={cn(
-            "mt-0.5 size-4.5 shrink-0 rounded-full border",
-            selected ? "border-primary border-[5px]" : "border-input border-[1.5px]",
-          )}
-          aria-hidden
-        />
+        <RadioGroupItem value={value} disabled={disabled} className="mt-0.5 size-4.5 shrink-0" />
       </div>
       {/* Shows the sending shape rather than describing it — one burst against a
           decaying sequence is the whole difference between the two types. */}
@@ -228,7 +225,7 @@ function TypeCard({
         <span className="text-muted-foreground/70 absolute bottom-1 left-4 text-[9px]">Day 1</span>
         <span className="text-muted-foreground/70 absolute right-4 bottom-1 text-[9px]">Day 7</span>
       </div>
-    </button>
+    </Label>
   );
 }
 

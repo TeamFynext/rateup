@@ -6,6 +6,7 @@ import {
   useCampaignRetryPolicy,
   useCampaignSends,
   useCancelPendingRetriesMutation,
+  useDripSchedule,
   useSendCampaign,
 } from "@/backend/campaign/campaign.query";
 import {
@@ -13,6 +14,7 @@ import {
   CampaignSendStatus,
   CampaignSendTrigger,
   CampaignStatus,
+  CampaignType,
   SentCampaignChoice,
 } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
@@ -21,6 +23,7 @@ import { CampaignActivity } from "./CampaignActivity.tsx";
 import type { CampaignMetric } from "./CampaignMetrics.tsx";
 import { CampaignMetrics } from "./CampaignMetrics.tsx";
 import { CampaignSetupCard } from "./CampaignSetupCard.tsx";
+import { DripScheduleCard } from "./DripScheduleCard.tsx";
 import { NextBatchCard } from "./NextBatchCard.tsx";
 
 /**
@@ -41,6 +44,9 @@ export function CampaignOverviewTab({ campaign }: Readonly<{ campaign: Campaign 
         CampaignSendStatus.RUNNING,
       ].includes(send.status),
     ) ?? false;
+
+  const isDrip = campaign.type === CampaignType.DRIP;
+  const dripSchedule = useDripSchedule(campaignId, isDrip);
 
   const analytics = useCampaignAnalytics(campaignId, live);
   const { data: policy } = useCampaignRetryPolicy(campaignId);
@@ -143,34 +149,41 @@ export function CampaignOverviewTab({ campaign }: Readonly<{ campaign: Campaign 
 
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.3fr_1fr]">
         <div className="flex flex-col gap-4">
-          <NextBatchCard
-            send={pending}
-            policy={policy}
-            recipients={campaign.campaignParticipantsCount ?? 0}
-            eligible={eligible}
-            isCancelling={cancelRetries.isPending || sendCampaign.isPending}
-            isRetrying={sendCampaign.isPending}
-            onCancel={() =>
-              isPendingRetry
-                ? cancelRetries.mutate()
-                : // Unscheduling a campaign is the same operation as stopping one:
-                  // INACTIVE takes it off the schedule and dequeues what was booked.
-                  sendCampaign.mutate({
-                    status: CampaignStatus.INACTIVE,
-                    statuses: pendingStatuses,
-                    sentCampaignChoice: SentCampaignChoice.NOW,
-                    type: campaign.type,
-                  })
-            }
-            onRetryNow={() =>
-              sendCampaign.mutate({
-                statuses: [CampaignParticipantStatus.FAILED],
-                sentCampaignChoice: SentCampaignChoice.NOW,
-                status: CampaignStatus.ACTIVE,
-                type: campaign.type,
-              })
-            }
-          />
+          {/* A drip books no send ahead of time, so `NextBatchCard` — which reads
+              one — renders nothing for it. Its stages are the same question
+              asked of a different source. */}
+          {isDrip ? (
+            <DripScheduleCard schedule={dripSchedule.data} isLoading={dripSchedule.isLoading} />
+          ) : (
+            <NextBatchCard
+              send={pending}
+              policy={policy}
+              recipients={campaign.campaignParticipantsCount ?? 0}
+              eligible={eligible}
+              isCancelling={cancelRetries.isPending || sendCampaign.isPending}
+              isRetrying={sendCampaign.isPending}
+              onCancel={() =>
+                isPendingRetry
+                  ? cancelRetries.mutate()
+                  : // Unscheduling a campaign is the same operation as stopping one:
+                    // INACTIVE takes it off the schedule and dequeues what was booked.
+                    sendCampaign.mutate({
+                      status: CampaignStatus.INACTIVE,
+                      statuses: pendingStatuses,
+                      sentCampaignChoice: SentCampaignChoice.NOW,
+                      type: campaign.type,
+                    })
+              }
+              onRetryNow={() =>
+                sendCampaign.mutate({
+                  statuses: [CampaignParticipantStatus.FAILED],
+                  sentCampaignChoice: SentCampaignChoice.NOW,
+                  status: CampaignStatus.ACTIVE,
+                  type: campaign.type,
+                })
+              }
+            />
+          )}
           <CampaignActivity sends={sends.data} />
         </div>
 

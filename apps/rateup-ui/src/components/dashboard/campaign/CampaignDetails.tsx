@@ -40,6 +40,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -52,7 +59,7 @@ import {
   CampaignType,
   SentCampaignChoice,
 } from "@/types/enums.ts";
-import type { Campaign } from "@/types/global";
+import type { Campaign, CampaignDripStage } from "@/types/global";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
@@ -72,7 +79,10 @@ export function CampaignDetails() {
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const [selectedDripStage] = useState("all");
+  // "all", or a stage id. The setter existed nowhere, so this was frozen on
+  // "all" and the per-stage stats, recipients and delivery report the API has
+  // always supported were unreachable from the page.
+  const [selectedDripStage, setSelectedDripStage] = useState("all");
   const [resumeOpen, setResumeOpen] = useState(false);
 
   const { t } = useTranslation("campaign.details");
@@ -131,6 +141,25 @@ export function CampaignDetails() {
     // the future is not "the schedule", it is one the sender moved away from.
     return new Date(latest.scheduledFor).getTime() > Date.now() ? latest.scheduledFor : null;
   }, [campaignQuery.data?.status, sendsQuery.data]);
+  // The stages a drip sends, in the order they go out, plus the "All stages"
+  // default. Labelled by position rather than by template name: the same
+  // template can appear at more than one stage, and "Stage 2" is what the rest
+  // of the page calls it.
+  const dripStages = useMemo<CampaignDripStage[]>(
+    () =>
+      campaignQuery.data?.type === CampaignType.DRIP ? (campaignQuery.data.dripStages ?? []) : [],
+    [campaignQuery.data?.type, campaignQuery.data?.dripStages],
+  );
+  const stageItems = useMemo(
+    () => [
+      { value: "all", label: t("All stages") },
+      ...dripStages.flatMap((stage, index) =>
+        stage.id ? [{ value: stage.id, label: t("Stage {number}", { number: index + 1 }) }] : [],
+      ),
+    ],
+    [dripStages, t],
+  );
+
   const sendCampaignMutation = useSendCampaign(campaignId ?? "", campaignQuery.data?.teamId ?? "");
   const { refresh, isRefreshing } = useRefreshCampaign(campaignId ?? "");
 
@@ -489,6 +518,31 @@ export function CampaignDetails() {
                     </Button>
                   )}
 
+                {/* Only on Recipients. The participants endpoint takes a stage;
+                    the analytics one has no stage dimension at all, and the
+                    Overview's metrics are campaign-wide — so offering the picker
+                    there would be a control that quietly does nothing. */}
+                {campaign.type === CampaignType.DRIP &&
+                  dripStages.length > 0 &&
+                  activeTab === "participants" && (
+                    <Select
+                      items={stageItems}
+                      value={selectedDripStage}
+                      onValueChange={(value) => setSelectedDripStage(value ?? "all")}
+                    >
+                      <SelectTrigger size="sm" className="w-44" aria-label={t("Drip stage")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stageItems.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
                 {campaign.type === CampaignType.DRIP && (
                   <Button
                     variant={campaign.status === CampaignStatus.ACTIVE ? "destructive" : "outline"}
@@ -514,7 +568,10 @@ export function CampaignDetails() {
           value="participants"
           className="mt-0 flex min-h-0 flex-1 flex-col px-8 pt-4 pb-6"
         >
-          <CampaignParticipantsTab campaign={campaignQuery.data} />
+          <CampaignParticipantsTab
+            campaign={campaignQuery.data}
+            selectedDripStage={selectedDripStage}
+          />
         </TabsContent>
 
         <TabsContent value="analytics" className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-4 pb-6">

@@ -7,9 +7,12 @@ import {
   useUpdateCampaignRetryPolicyMutation,
 } from "@/backend/campaign/campaign.query";
 import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 import { CampaignRetryStrategy } from "@/types/enums.ts";
@@ -25,7 +28,7 @@ import type { CampaignWizardStepProps } from "./step.types.ts";
  * webhook lands, so an earlier retry would find nothing to re-attempt. Keep the
  * two lists in step — the point of showing them is that they are what happens.
  */
-const SMART_OFFSETS = ["+2m", "+4h", "+12h"] as const;
+const SMART_OFFSETS = ["+45m", "+4h", "+12h"] as const;
 
 /** Retries stop this far out regardless of attempts left; the API clamps to it too. */
 const MAX_WINDOW_DAYS = 7;
@@ -153,8 +156,13 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
 
         {enabled ? (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <RadioGroup
+              value={strategy}
+              onValueChange={(next) => next && setStrategy(next as CampaignRetryStrategy)}
+              className="grid-cols-2 gap-4"
+            >
               <StrategyCard
+                value={CampaignRetryStrategy.SMART}
                 selected={strategy === CampaignRetryStrategy.SMART}
                 title={t("Smart retries")}
                 recommended
@@ -162,16 +170,15 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
                   "Retries soon, then backs off — most caps lift within the first hour.",
                 )}
                 offsets={SMART_OFFSETS.slice(0, maxAttempts)}
-                onSelect={() => setStrategy(CampaignRetryStrategy.SMART)}
               />
               <StrategyCard
+                value={CampaignRetryStrategy.FIXED_INTERVAL}
                 selected={strategy === CampaignRetryStrategy.FIXED_INTERVAL}
                 title={t("Every 24 hours")}
                 description={t("Same time each day. Predictable, but slower to recover.")}
                 offsets={Array.from({ length: maxAttempts }, (_, i) => `+${24 * (i + 1)}h`)}
-                onSelect={() => setStrategy(CampaignRetryStrategy.FIXED_INTERVAL)}
               />
-            </div>
+            </RadioGroup>
 
             <Card data-size="sm">
               <CardContent className="grid grid-cols-[1fr_1fr_1.4fr] gap-6">
@@ -262,31 +269,28 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
  * as words, and completely different as a shape.
  */
 function StrategyCard({
+  value,
   selected,
   title,
   description,
   offsets,
   recommended = false,
-  onSelect,
 }: Readonly<{
+  value: CampaignRetryStrategy;
   selected: boolean;
   title: string;
   description: string;
   offsets: readonly string[];
   recommended?: boolean;
-  onSelect: () => void;
 }>) {
   const { t } = useTranslation("campaign.wizard");
   // Spread the markers evenly; the first is the send itself.
   const positions = offsets.map((_, index) => ((index + 1) / offsets.length) * 100);
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
+    <Label
       className={cn(
-        "bg-card flex cursor-pointer flex-col gap-4 rounded-xl p-5 text-left shadow-xs ring-1 transition",
+        "bg-card flex cursor-pointer flex-col items-stretch gap-4 rounded-xl p-5 text-left font-normal shadow-xs ring-1 transition",
         selected ? "ring-primary ring-2" : "ring-foreground/10 hover:shadow-md",
       )}
     >
@@ -298,13 +302,7 @@ function StrategyCard({
           </span>
           <span className="text-muted-foreground text-[12.5px] leading-relaxed">{description}</span>
         </div>
-        <span
-          className={cn(
-            "mt-0.5 size-4.5 shrink-0 rounded-full border",
-            selected ? "border-primary border-[5px]" : "border-input border-[1.5px]",
-          )}
-          aria-hidden
-        />
+        <RadioGroupItem value={value} className="mt-0.5 size-4.5 shrink-0" />
       </div>
 
       <div className="relative h-16 px-2">
@@ -361,7 +359,7 @@ function StrategyCard({
           );
         })}
       </div>
-    </button>
+    </Label>
   );
 }
 
@@ -389,30 +387,34 @@ function NumberStepper({
 }>) {
   return (
     <div className="ring-border inline-flex h-9 w-max items-center overflow-hidden rounded-lg ring-1">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={decrementLabel}
         disabled={value <= min}
         onClick={onDecrement}
-        className="border-border text-secondary-foreground hover:bg-muted flex size-9 cursor-pointer items-center justify-center border-r disabled:cursor-default disabled:opacity-40"
+        className="border-border size-9 rounded-none border-r"
       >
-        <IconMinus className="size-4" aria-hidden />
-      </button>
+        <IconMinus aria-hidden />
+      </Button>
       <span
         aria-live="polite"
         className={cn("text-center text-sm font-semibold tabular-nums", wide ? "w-20" : "w-14")}
       >
         {display}
       </span>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={incrementLabel}
         disabled={value >= max}
         onClick={onIncrement}
-        className="border-border text-secondary-foreground hover:bg-muted flex size-9 cursor-pointer items-center justify-center border-l disabled:cursor-default disabled:opacity-40"
+        className="border-border size-9 rounded-none border-l"
       >
-        <IconPlus className="size-4" aria-hidden />
-      </button>
+        <IconPlus aria-hidden />
+      </Button>
     </div>
   );
 }

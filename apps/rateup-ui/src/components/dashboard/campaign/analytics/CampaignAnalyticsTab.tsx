@@ -8,6 +8,7 @@ import {
   useCampaignSends,
   useCancelPendingRetriesMutation,
 } from "@/backend/campaign/campaign.query";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 import {
   Sheet,
   SheetContent,
@@ -122,9 +123,11 @@ function SendParticipantsSheet({
               <Skeleton className="h-12 w-full" />
             </div>
           ) : !data?.participants.length ? (
-            <p className="text-muted-foreground py-8 text-center text-[13px]">
-              {t("Nothing to show for this attempt.")}
-            </p>
+            <Empty className="py-8">
+              <EmptyHeader>
+                <EmptyDescription>{t("Nothing to show for this attempt.")}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <ul className="divide-border divide-y">
               {data.participants.map((participant) => (

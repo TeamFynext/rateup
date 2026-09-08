@@ -1,6 +1,7 @@
 import { IconCornerDownRight } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { CampaignFunnelStage } from "@/types/global";
 
@@ -52,9 +53,11 @@ export function DeliveryFunnel({
           <Skeleton className="h-6.5 w-full" />
         </div>
       ) : !funnel?.length || attempted === 0 ? (
-        <p className="text-muted-foreground py-10 text-center text-[13px]">
-          {t("Nothing has been sent yet.")}
-        </p>
+        <Empty className="py-10">
+          <EmptyHeader>
+            <EmptyDescription>{t("Nothing has been sent yet.")}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <div className="grid grid-cols-[70px_1fr_132px] items-center gap-x-3">
           {/* Attempted is the base, not a stage: its bar is 100% by definition

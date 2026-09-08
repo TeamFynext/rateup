@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils";
 import { WaFailureReasonGroup } from "@/types/enums.ts";
@@ -97,9 +98,11 @@ export function FailureBreakdown({
           <Skeleton className="h-20 w-full" />
         </div>
       ) : !failures?.length ? (
-        <p className="text-muted-foreground py-10 text-center text-[13px]">
-          {t("No failures — Meta accepted every message.")}
-        </p>
+        <Empty className="py-10">
+          <EmptyHeader>
+            <EmptyDescription>{t("No failures — Meta accepted every message.")}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <>
           {/* The shape of the problem, before any numbers. */}
@@ -149,9 +152,9 @@ export function FailureBreakdown({
                       {code.label}
                     </span>
                   </div>
-                  <span className="bg-secondary text-secondary-foreground w-max rounded-md px-1.5 py-0.5 font-mono text-xs">
+                  <Badge variant="secondary" className="w-max font-mono">
                     {code.code ?? "—"}
-                  </span>
+                  </Badge>
                   <div>
                     <Badge
                       variant="secondary"

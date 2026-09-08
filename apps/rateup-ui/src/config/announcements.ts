@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-08-inbox-image-download",
+    title: "Save an image from the inbox",
+    summary:
+      "Images in a conversation now carry a download button — on the thumbnail itself, and again next to the close button when you open one full size. Until now the only way to keep a photo a customer had sent was to open it and fish it out of the browser, which is also what happens as a fallback if the file cannot be fetched directly. Documents and videos already had this; images were the gap.",
+    publishedAt: "2026-09-08",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
     id: "2026-09-08-campaign-retry-failed",
     title: "Retry a campaign's failures from Overview",
     summary:

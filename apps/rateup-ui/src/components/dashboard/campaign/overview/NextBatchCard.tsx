@@ -7,7 +7,7 @@ import { CampaignRetryStrategy, CampaignSendStatus, CampaignSendTrigger } from "
 import type { CampaignRetryPolicy, CampaignSend } from "@/types/global";
 
 /** "in 19h" — the number people read off this card. */
-function untilLabel(iso: string, t: (k: string, o?: Record<string, unknown>) => string) {
+export function untilLabel(iso: string, t: (k: string, o?: Record<string, unknown>) => string) {
   const ms = new Date(iso).getTime() - Date.now();
   if (ms <= 0) return t("any moment now");
   const minutes = Math.round(ms / 60_000);
@@ -169,7 +169,7 @@ export function NextBatchCard({
   );
 }
 
-function Detail({
+export function Detail({
   label,
   value,
   children,

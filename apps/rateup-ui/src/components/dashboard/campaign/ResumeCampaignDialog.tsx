@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils";
 
@@ -140,10 +141,10 @@ export function ResumeCampaignDialog({
         <div className="-mx-1 flex min-h-0 flex-col gap-6 overflow-y-auto px-1">
           <RadioGroup value={choice} onValueChange={(value) => setChoice(value as ResumeChoice)}>
             {options.map((option) => (
-              <label
+              <Label
                 key={option.value}
                 className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-lg border px-3.5 py-3 text-left",
+                  "flex cursor-pointer items-start gap-3 rounded-lg border px-3.5 py-3 text-left font-normal",
                   choice === option.value ? "border-primary bg-primary/5" : "border-input",
                 )}
               >
@@ -152,7 +153,7 @@ export function ResumeCampaignDialog({
                   <span className="text-[13.5px] font-medium">{option.label}</span>
                   <span className="text-muted-foreground text-xs">{option.hint}</span>
                 </span>
-              </label>
+              </Label>
             ))}
           </RadioGroup>
 

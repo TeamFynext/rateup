@@ -7,7 +7,7 @@ import {
   IconUserX,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCampaignAnalytics, useSendCampaign } from "@/backend/campaign/campaign.query";
@@ -21,8 +21,14 @@ import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { cn } from "@/lib/utils";
-import { CampaignParticipantStatus, CampaignStatus, SentCampaignChoice } from "@/types/enums.ts";
+import {
+  CampaignParticipantStatus,
+  CampaignStatus,
+  CampaignType,
+  SentCampaignChoice,
+} from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
 
 import type { ParticipantAttempt } from "./ParticipantAttemptChips.tsx";
@@ -80,7 +86,14 @@ function initialsOf(value: string | null | undefined): string {
  * reason its most recent attempt failed. Selecting rows offers the two actions
  * that make sense on a set of recipients — retry them, or take them out.
  */
-export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campaign }>) {
+export function CampaignParticipantsTab({
+  campaign,
+  selectedDripStage,
+}: Readonly<{
+  campaign: Campaign;
+  /** "all", or a stage id — the header's drip stage picker. */
+  selectedDripStage?: string;
+}>) {
   const { t } = useTranslation("campaign.details");
   const campaignId = campaign.id;
 
@@ -90,6 +103,13 @@ export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campa
   const [selected, setSelected] = useState<string[]>([]);
 
   const debouncedSearch = useDebounce(search, 200);
+
+  // Page 3 of every stage is rarely page 3 of one stage, and the table would
+  // otherwise land on an empty page with no way to tell why.
+  useEffect(() => {
+    setPage(0);
+    setSelected([]);
+  }, [selectedDripStage]);
   const columnFilters = useMemo(
     () => (status === "ALL" ? [] : [{ id: "status", value: status }]),
     [status],
@@ -101,6 +121,10 @@ export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campa
     debouncedSearch,
     [],
     columnFilters,
+    // The header's stage picker was wired to the page's own count query only, so
+    // choosing a stage moved the tab's badge and left this table showing every
+    // stage. The endpoint has taken `selectedDripStage` all along.
+    selectedDripStage,
   );
   const removeParticipants = useRemoveMulitpleGroupParticipants(campaignId, () => setSelected([]));
   const sendCampaign = useSendCampaign(campaignId, campaign.teamId);
@@ -118,6 +142,12 @@ export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campa
   // its failures.
   const analytics = useCampaignAnalytics(campaignId);
   const failedCount = analytics.data?.activeFailed ?? 0;
+
+  // A drip has no re-send: its stages go out on the cron's schedule, and the API
+  // refuses a scoped one. These buttons used to be offered anyway — the request
+  // fell through to a plain status update, so nothing was retried, the toast said
+  // it worked, and the campaign's drip clock was reset under the customer.
+  const canRetry = campaign.type !== CampaignType.DRIP;
 
   /** Re-attempt FAILED recipients: every one of them, or just the ticked rows. */
   const retryFailed = (participantIds?: string[]) =>
@@ -159,27 +189,25 @@ export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campa
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3.5">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+        <ToggleGroup
+          variant="pill"
+          size="xs"
+          spacing={1.5}
+          value={[status]}
+          onValueChange={(next) => {
+            if (next.length === 0) return;
+            setStatus(next[0]);
+            setPage(0);
+          }}
+          className="flex-wrap"
+        >
           {FILTERS.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              onClick={() => {
-                setStatus(filter.value);
-                setPage(0);
-              }}
-              className={cn(
-                "inline-flex h-7.5 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap",
-                filter.value === status
-                  ? "bg-foreground text-background"
-                  : "text-secondary-foreground ring-foreground/10 hover:bg-muted ring-1",
-              )}
-            >
+            <ToggleGroupItem key={filter.value} value={filter.value} className="h-7.5">
               <span className={cn("size-2 rounded-full", filter.dot)} aria-hidden />
               {t(filter.label)}
-            </button>
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
       </div>
 
       <div className="bg-card ring-foreground/10 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-xs ring-1">
@@ -191,7 +219,7 @@ export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campa
             </span>
           </span>
           <div className="flex items-center gap-2">
-            {failedCount > 0 ? (
+            {canRetry && failedCount > 0 ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -370,7 +398,7 @@ export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campa
                 </span>
 
                 <div className="flex justify-end">
-                  {row.status === CampaignParticipantStatus.FAILED ? (
+                  {canRetry && row.status === CampaignParticipantStatus.FAILED ? (
                     // A failed recipient has one useful next action, and reading the
                     // thread in the inbox is not it: nothing was delivered to read.
                     // Trying again is, and the send API takes a single participant.

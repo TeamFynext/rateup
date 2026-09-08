@@ -3384,7 +3384,28 @@
     "See who failed and why": "See who failed and why",
     "Retry all failed": "Retry all failed",
     "Retry selected": "Retry selected",
-    "Nothing to retry — no recipient failed with a retryable error.": "Nothing to retry — no recipient failed with a retryable error."
+    "Nothing to retry — no recipient failed with a retryable error.": "Nothing to retry — no recipient failed with a retryable error.",
+    "All stages": "All stages",
+    "Stage {number}": "Stage {number}",
+    "Drip stage": "Drip stage",
+    "Next stage": "Next stage",
+    "Paused": "Paused",
+    "Sending": "Sending",
+    "Stage {number} of {total}": "Stage {number} of {total}",
+    "No template": "No template",
+    "Sends": "Sends",
+    "Due now": "Due now",
+    "Not scheduled": "Not scheduled",
+    "Resume the campaign to send it": "Resume the campaign to send it",
+    "On the next check": "On the next check",
+    "still waiting on it": "still waiting on it",
+    "{count} waiting": "{count} waiting",
+    "Drip schedule": "Drip schedule",
+    "All stages sent": "All stages sent",
+    "No recipients": "No recipients",
+    "All {count} stages have gone out. Nothing further is scheduled.": "All {count} stages have gone out. Nothing further is scheduled.",
+    "{count} sent": "{count} sent",
+    "{done} of {total} stages complete": "{done} of {total} stages complete"
   },
   "campaign.status": {
     "Campaign stopped": "Campaign stopped",
@@ -3677,7 +3698,12 @@
     "Map every placeholder to a contact field to continue.": "Map every placeholder to a contact field to continue.",
     "{count} placeholders still need a contact field.": "{count} placeholders still need a contact field.",
     "Every placeholder needs a contact field before this step can continue.": "Every placeholder needs a contact field before this step can continue.",
-    "Enter phone number": "Enter phone number"
+    "Enter phone number": "Enter phone number",
+    "Discard": "Discard",
+    "Discard draft": "Discard draft",
+    "Keep editing": "Keep editing",
+    "This draft and everything set up on it are deleted. This cannot be undone.": "This draft and everything set up on it are deleted. This cannot be undone.",
+    "Uses {messages} of {remaining} remaining — {stages} stages each": "Uses {messages} of {remaining} remaining — {stages} stages each"
   },
   "campaign.analytics": {
     "{count} dropped off here_one": "{count} dropped off here",

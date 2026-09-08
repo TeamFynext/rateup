@@ -22,6 +22,7 @@ import {
   getCampaignSendParticipants,
   getCampaignSendPreflight,
   getCampaignSends,
+  getDripSchedule,
   getCampaignStatsById,
   sendCampaign,
   sendCampaignTest,
@@ -169,7 +170,12 @@ export const useUpdateCampaignMutation = (
   });
 };
 
-export const useDeleteCampaignMutation = (teamId: string, type: string) => {
+/**
+ * `teamId`/`type` are only the keys to invalidate, and both are absent while the
+ * campaign is still loading — widened rather than coalesced at each caller, which
+ * would invent a team id that matches no cached list.
+ */
+export const useDeleteCampaignMutation = (teamId?: string, type?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteCampaign,
@@ -323,6 +329,20 @@ export const useCampaignSends = (campaignId: string, poll = false) => {
     queryFn: () => getCampaignSends(campaignId),
     enabled: !!campaignId,
     refetchInterval: poll ? 15_000 : false,
+  });
+};
+
+/**
+ * When each stage of a drip next sends.
+ *
+ * Only fetched for a drip — the endpoint 404s for anything else, which would be
+ * a failed query on every broadcast's Overview.
+ */
+export const useDripSchedule = (campaignId: string, isDrip: boolean) => {
+  return useQuery({
+    queryKey: campaignKeys.dripSchedule(campaignId),
+    queryFn: () => getDripSchedule(campaignId),
+    enabled: !!campaignId && isDrip,
   });
 };
 

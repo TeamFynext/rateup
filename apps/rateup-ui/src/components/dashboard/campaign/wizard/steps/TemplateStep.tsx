@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Select,
@@ -22,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { cn } from "@/lib/utils";
 import { WaTemplateCategory } from "@/types/enums.ts";
@@ -179,32 +181,35 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
           />
         </div>
 
-        <div className="flex gap-1.5">
+        <ToggleGroup
+          variant="pill"
+          size="xs"
+          spacing={1.5}
+          value={[category]}
+          onValueChange={(next) => {
+            // The group's values come back untyped; match against the source list
+            // rather than casting, so a renamed filter fails to compile.
+            const picked = CATEGORY_FILTERS.find((option) => option === next[0]);
+            if (picked) setCategory(picked);
+          }}
+        >
           {CATEGORY_FILTERS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setCategory(option)}
-              className={cn(
-                "inline-flex h-6.5 cursor-pointer items-center rounded-full px-2.5 text-xs font-medium",
-                option === category
-                  ? "bg-foreground text-background"
-                  : "text-secondary-foreground ring-foreground/10 ring-1",
-              )}
-            >
+            <ToggleGroupItem key={option} value={option}>
               {option === "ALL" ? t("All") : option.charAt(0) + option.slice(1).toLowerCase()}
-            </button>
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
 
         {/* p-0.5 is the ring's own width: `ring` paints outside the border box, so
             a scroller with no padding clips the hairline off every card's left and
             right edge — and 2px of it off the selected card's `ring-2`. */}
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-0.5">
           {filtered.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center text-[13px]">
-              {t("No approved templates for this team yet.")}
-            </p>
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>{t("No approved templates for this team yet.")}</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
           ) : (
             filtered.map((tpl) => (
               <button

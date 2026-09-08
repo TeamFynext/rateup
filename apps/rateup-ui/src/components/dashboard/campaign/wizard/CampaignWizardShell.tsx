@@ -1,4 +1,4 @@
-import { IconArrowLeft, IconArrowRight, IconCloud } from "@tabler/icons-react";
+import { IconArrowLeft, IconArrowRight, IconCloud, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,12 @@ interface CampaignWizardShellProps {
   onSaveAndExit?: () => void;
   /** The last step launches from its own body, so the footer drops Next. */
   showNext: boolean;
+  /**
+   * Throws the draft away. Only passed while the campaign is still a draft — a
+   * launched campaign is deleted from its own page, where the consequences of
+   * doing so are in front of you.
+   */
+  onDiscard?: () => void;
   isBusy: boolean;
   /** Steps that lay out their own full-height panels manage their own overflow. */
   scrollBody: boolean;
@@ -51,6 +57,7 @@ export function CampaignWizardShell({
   onNext,
   onSaveAndExit,
   showNext,
+  onDiscard,
   isBusy,
   scrollBody,
   children,
@@ -86,6 +93,20 @@ export function CampaignWizardShell({
       </div>
 
       <footer className="border-border bg-card flex h-16 shrink-0 items-center justify-end gap-2 border-t px-8">
+        {/* Pushed to the far left, away from the three controls that move the
+            wizard forward — a destructive action next to "Next" is one slip
+            from throwing away the thing you were building. */}
+        {onDiscard ? (
+          <Button
+            variant="ghost"
+            onClick={onDiscard}
+            disabled={isBusy}
+            className="text-destructive hover:text-destructive mr-auto"
+          >
+            <IconTrash className="size-4" aria-hidden />
+            {t("Discard draft")}
+          </Button>
+        ) : null}
         <Button variant="ghost" onClick={onBack} disabled={!canGoBack}>
           {t("Back")}
         </Button>

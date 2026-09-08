@@ -82,6 +82,11 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
   const shortfall = preflight.data?.metered ? preflight.data.shortfall : 0;
   const exhausted = preflight.data?.exhausted ?? false;
   const remaining = preflight.data?.remaining ?? 0;
+  // What the launch actually spends. A drip sends its whole sequence to each
+  // recipient, so the allowance line has to count messages, not people — showing
+  // the audience size there told a 3-stage drip to 50 people it cost 50.
+  const messagesPerRecipient = preflight.data?.messagesPerRecipient ?? 1;
+  const messages = recipients * messagesPerRecipient;
   const perDay = campaign.dailySendLimit ?? null;
 
   const startsAt = scheduled
@@ -269,7 +274,7 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
                 <div className="flex justify-between gap-3">
                   <span className="text-muted-foreground">{t("Allowance after launch")}</span>
                   <span className="font-medium tabular-nums">
-                    {t("{count} left", { count: Math.max(remaining - recipients, 0) })}
+                    {t("{count} left", { count: Math.max(remaining - messages, 0) })}
                   </span>
                 </div>
                 {/* Used, then what this send takes — so the bar shows the cost. */}
@@ -283,15 +288,21 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
                   <span
                     className="bg-primary block h-full"
                     style={{
-                      width: `${Math.min((recipients / Math.max(preflight.data.max ?? 1, 1)) * 100, 100)}%`,
+                      width: `${Math.min((messages / Math.max(preflight.data.max ?? 1, 1)) * 100, 100)}%`,
                     }}
                   />
                 </span>
                 <span className="text-muted-foreground/70 text-[11.5px]">
-                  {t("Uses {recipients} of {remaining} remaining", {
-                    recipients: recipients.toLocaleString(),
-                    remaining: remaining.toLocaleString(),
-                  })}
+                  {messagesPerRecipient > 1
+                    ? t("Uses {messages} of {remaining} remaining — {stages} stages each", {
+                        messages: messages.toLocaleString(),
+                        remaining: remaining.toLocaleString(),
+                        stages: messagesPerRecipient,
+                      })
+                    : t("Uses {recipients} of {remaining} remaining", {
+                        recipients: recipients.toLocaleString(),
+                        remaining: remaining.toLocaleString(),
+                      })}
                 </span>
               </div>
             </>

@@ -50,9 +50,51 @@ export const deleteCampaign = async (campaignId: string) => {
   return res;
 };
 
+/** One stage of a drip, and when it next sends. */
+export interface DripStageSchedule {
+  dripStageId: string;
+  /** 1-based position in the sequence — what the page calls "Stage 2". */
+  position: number;
+  templateName: string | null;
+  delay: number;
+  delayUnit: string;
+  sendAtTime: string | null;
+  /** Recipients still waiting on this stage. */
+  pending: number;
+  /** Recipients this stage has already gone out to. */
+  sent: number;
+  /** When the earliest of them becomes sendable. Null when none are waiting. */
+  nextDueAt: string | null;
+  /** When this stage last went out, so a finished stage still carries a date. */
+  lastSentAt: string | null;
+  /** Already past its time: the next cron tick takes it. */
+  overdue: boolean;
+}
+
+export interface DripSchedule {
+  /** A paused drip still has due dates; nothing acts on them. */
+  running: boolean;
+  stages: DripStageSchedule[];
+  next: DripStageSchedule | null;
+}
+
+/**
+ * When a drip's stages next go out.
+ *
+ * A drip books no send ahead of time the way a scheduled broadcast does — the
+ * cron derives each stage's moment as it ticks — so this is computed server-side
+ * rather than read off the campaign's sends.
+ */
+export const getDripSchedule = async (campaignId: string) => {
+  const res = await axiosClient.get(`/campaign/${campaignId}/drip-schedule`);
+  return res.data as DripSchedule;
+};
+
 /** What a campaign would cost against the org's conversation allowance, before sending. */
 export interface CampaignSendPreflight {
   recipients: number;
+  /** Messages each recipient gets — a drip's stage count, 1 for a broadcast. */
+  messagesPerRecipient: number;
   /** False when the plan is not metered — there is nothing to run out of. */
   metered: boolean;
   max?: number;
@@ -61,7 +103,7 @@ export interface CampaignSendPreflight {
   isAnnual: boolean;
   /** The allowance is already spent: the send would deliver nothing. */
   exhausted: boolean;
-  /** Recipients beyond what is left. An upper bound — see the API's campaign.preflight.ts. */
+  /** Messages beyond what is left. An upper bound — see the API's campaign.preflight.ts. */
   shortfall: number;
 }
 

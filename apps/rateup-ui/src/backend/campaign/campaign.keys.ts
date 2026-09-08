@@ -35,6 +35,7 @@ export const campaignKeys = {
    */
   participantsRoot: (campaignId: KeyPart) => ["campaignParticipants", campaignId] as const,
   retryPolicy: (campaignId: KeyPart) => ["campaignRetryPolicy", campaignId] as const,
+  dripSchedule: (campaignId: KeyPart) => ["campaignDripSchedule", campaignId] as const,
 } as const;
 
 export const subscriptionKeys = {
