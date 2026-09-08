@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { unregisterPushToken } from "../utils/notification";
 import { clearLocalUserData } from "../utils/clearLocalData";
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 

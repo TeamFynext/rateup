@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import { View, Text, ScrollView, TextInput, Modal, Pressable } from "react-native";
 import Image from "@/components/common/Image";
 import React, { useState, useEffect } from "react";

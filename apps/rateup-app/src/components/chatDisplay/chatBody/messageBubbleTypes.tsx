@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import { useGetMediaFile } from "@/api/inbox/messages/message.query";
 import { getFileUrlFromKey } from "@/utils/fileUpload";
 import { Download, Headphones, LucideCheckCircle2, Pause, Play, Reply } from "lucide-react-native";

@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import React, { useEffect, useState } from "react";
 import { Linking, Platform, Text, TouchableOpacity, View } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";

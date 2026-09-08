@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import React, { useState, useEffect } from "react";
 import {
   View,

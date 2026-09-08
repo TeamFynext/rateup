@@ -1,5 +1,5 @@
 import { useColorScheme } from "nativewind";
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import {
   View,
   Text,

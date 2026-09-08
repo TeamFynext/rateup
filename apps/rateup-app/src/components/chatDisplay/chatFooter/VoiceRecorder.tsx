@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import { Mic, CircleStop } from "lucide-react-native";

@@ -11,7 +11,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import dayjs from "dayjs";
 import { ArrowLeft, Check, Copy, Pencil, User, Phone } from "lucide-react-native";
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import {
   getInboxHeaderBg,
   getInboxRowTheme,

@@ -82,7 +82,6 @@
     "supertokens-react-native": "^5.1.5",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^3.4.17",
-    "toastify-react-native": "^7.2.3",
     "toggle-switch-react-native": "^3.3.0",
     "zustand": "^5.0.11"
   },

@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   assignRewardToCustomer,

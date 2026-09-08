@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import { setConversationFavorite } from "./contacts.api";
 import { useContactsStore } from "@/store/inboxStore";
 import { useSelectedContactStore } from "@/utils/store";
