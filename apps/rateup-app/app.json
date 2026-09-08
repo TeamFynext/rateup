@@ -56,9 +56,15 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile"
           }
         }
       ],
+      "./plugins/withR8Optimize.js",
       ["expo-apple-authentication"],
       "@react-native-google-signin/google-signin",
       [
