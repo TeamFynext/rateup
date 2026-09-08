@@ -284,7 +284,7 @@ describe("createAppleUserHandler", () => {
 
 describe("checkEmailExistHandler", () => {
   test("reports success:true when the email is already taken", async () => {
-    checkEmailExistMock.mockResolvedValue({ id: "user-1" });
+    checkEmailExistMock.mockResolvedValue(true);
     const reply = makeReply();
 
     await checkEmailExistHandler(makeRequest({ email: "owner@acme.com" }), reply);
@@ -295,7 +295,7 @@ describe("checkEmailExistHandler", () => {
   });
 
   test("reports success:false when the email is free", async () => {
-    checkEmailExistMock.mockResolvedValue(null);
+    checkEmailExistMock.mockResolvedValue(false);
     const reply = makeReply();
 
     await checkEmailExistHandler(makeRequest({ email: "new@acme.com" }), reply);
