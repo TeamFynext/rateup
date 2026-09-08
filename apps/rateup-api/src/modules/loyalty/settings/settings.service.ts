@@ -12,6 +12,7 @@ import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
 import dayjs from "dayjs";
 import { getLCustomerByPhone, updateCustomerAccount } from "../accounts/account.service.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { renderReplyText } from "../richText.js";
 import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import {
   createListMessage,
@@ -213,13 +214,13 @@ async function handleReferralCommand(phone: string, loyaltyWaCommand: LoyaltyWaC
       })
     : null;
 
-  if (responseType === WaAutomatedReplyResponseType.Template) {
-    const dynamicVariables = [referralCode, joinLink ?? referralCode];
+  const dynamicVariables = [referralCode, joinLink ?? referralCode];
+  // Inbound keyword → open window → the reply's own text first; template only without one.
+  const text = renderReplyText(content, dynamicVariables);
+  if (text.trim().length > 0) {
+    await sendTextMessage({ phone, orgId }, null, text);
+  } else if (responseType === WaAutomatedReplyResponseType.Template && waTemplateId) {
     return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
-  } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    const dynamicVariables = [referralCode, joinLink ?? referralCode];
-    const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(message));
   } else {
     const linkText = joinLink ? `\n\nShare your referral link: ${joinLink}` : "";
     await sendTextMessage(
@@ -365,11 +366,14 @@ export async function handleLoyaltyPointsCommand(
     customer.lifetimePoints,
   ];
 
-  if (responseType === WaAutomatedReplyResponseType.Template)
+  // The customer just texted us, so the 24-hour window is open: the reply's own text is
+  // free and immediate. The template is for customers who have not messaged (see
+  // contact.controller's registration reply) and is only used here when there is no text.
+  const text = renderReplyText(content, dynamicVariables);
+  if (text.trim().length > 0) {
+    await sendTextMessage({ phone, orgId }, null, text);
+  } else if (responseType === WaAutomatedReplyResponseType.Template) {
     return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
-  else if (responseType === WaAutomatedReplyResponseType.Text) {
-    const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(message));
   }
 }
 export async function handleLoyaltyFeedback(
@@ -439,56 +443,9 @@ export async function handleLoyaltyFeedback(
   await handleSendTemplate(waTemplateId, orgId, phone, []);
 }
 
-/**
- * `content` is the loyaltyWaCommand's raw `Json?` column: a rich-text document that is
- * either the document node itself (`{ content: [...] }`) or already the node array.
- */
-export function replacedContentByDynamicVariable(
-  content: string | RichTextNode | RichTextNode[] | null | undefined,
-  dynamicVariables: (string | number)[],
-): RichTextNode[] {
-  const contentArray: RichTextNode[] = Array.isArray(content)
-    ? content
-    : typeof content === "string"
-      ? []
-      : (content?.content ?? []);
-  const contentCopy = structuredClone(contentArray);
-  for (const para of contentCopy) {
-    const contents = para.content;
-    if (contents) {
-      for (const content of contents) {
-        if (content.text) {
-          content.text = content.text.replace(/\{\{(\d+)\}\}/g, (_: string, index: string) =>
-            String(dynamicVariables[Number(index) - 1] ?? `{{${index}}}`),
-          );
-        }
-      }
-    }
-  }
-  return contentCopy;
-}
-
-/**
- * WhatsApp text messages carry a plain string, but loyalty command bodies are stored as
- * rich-text documents. Flatten to text (one line per top-level block) before sending —
- * passing the node array straight through rendered as "[object Object]".
- */
-export function richTextToPlainText(
-  content: string | RichTextNode | RichTextNode[] | null | undefined,
-): string {
-  // Older rows store the body as a plain string rather than a rich-text document.
-  if (typeof content === "string") return content;
-  const nodes = Array.isArray(content) ? content : (content?.content ?? []);
-  return nodes
-    .map((node) => collectText(node))
-    .filter((line) => line.length > 0)
-    .join("\n");
-}
-
-function collectText(node: RichTextNode): string {
-  if (typeof node.text === "string") return node.text;
-  return (node.content ?? []).map((child) => collectText(child)).join("");
-}
+// The rich-text helpers live in ../richText.ts so the account service can use them too;
+// re-exported because the contact controller and the tests import them from here.
+export { replacedContentByDynamicVariable, richTextToPlainText } from "../richText.js";
 
 export async function deleteLoyaltyWaCommandById(id: string, orgId: string) {
   return await prisma.loyaltyWaCommand.delete({
@@ -511,10 +468,12 @@ export async function handleCustomerRemovalFromLoyalty(
     return;
   }
   await updateCustomerAccount(customer.id, { status: "inactive" }, customer.programId);
-  if (responseType === WaAutomatedReplyResponseType.Template) {
+  // Inbound keyword → open window → the reply's own text first; template only without one.
+  const text = renderReplyText(content, []);
+  if (text.trim().length > 0) {
+    await sendTextMessage({ phone, orgId }, null, text);
+  } else if (responseType === WaAutomatedReplyResponseType.Template) {
     await handleSendTemplate(waTemplateId, orgId, phone, []);
-  } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(content));
   }
 }
 

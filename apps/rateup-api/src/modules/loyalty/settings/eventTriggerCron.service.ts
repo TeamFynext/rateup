@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { sendLoyaltyMessage } from "../loyaltyMessaging.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { assignRewardToCustomer } from "../accounts/account.service.js";
 
@@ -107,13 +107,16 @@ export async function checkBirthdayEventTriggers() {
               trigger?.reward?.name || "a special reward",
             ];
 
-            // Send WhatsApp template
-            await handleSendTemplate(
-              trigger.waTemplateId,
-              customer.contact.orgId,
-              customer.contact.phone,
-              dynamicVariables,
-            );
+            // Send the notification — as text inside an open window, else the template
+            if (trigger.program.whatsappNotifications) {
+              await sendLoyaltyMessage({
+                orgId: customer.contact.orgId,
+                phone: customer.contact.phone,
+                waTemplateId: trigger.waTemplateId,
+                params: dynamicVariables,
+                preferTextInSession: trigger.program.sendTextInSession,
+              });
+            }
 
             // If a reward is configured, issue it automatically
             if (trigger.rewardId) {
@@ -250,13 +253,16 @@ export async function checkInactivityEventTriggers() {
               customer?.currentPoints?.toString() || "0",
             ];
 
-            // Send WhatsApp template
-            await handleSendTemplate(
-              trigger.waTemplateId,
-              customer.contact.orgId,
-              customer.contact.phone,
-              dynamicVariables,
-            );
+            // Send the notification — as text inside an open window, else the template
+            if (trigger.program.whatsappNotifications) {
+              await sendLoyaltyMessage({
+                orgId: customer.contact.orgId,
+                phone: customer.contact.phone,
+                waTemplateId: trigger.waTemplateId,
+                params: dynamicVariables,
+                preferTextInSession: trigger.program.sendTextInSession,
+              });
+            }
             // If a reward is configured to incentivize return, issue it
             if (trigger.rewardId) {
               await issueRewardToCustomer(customer.id, trigger.rewardId);
@@ -331,6 +337,8 @@ export async function checkPointsExpiryAlerts() {
         name: true,
         orgId: true,
         pointsExpirationMonths: true,
+        whatsappNotifications: true,
+        sendTextInSession: true,
       },
     });
 
@@ -394,16 +402,19 @@ export async function checkPointsExpiryAlerts() {
           try {
             if (!account.contact.phone) continue;
 
-            await handleSendTemplate(
-              trigger.waTemplateId,
-              account.contact.orgId,
-              account.contact.phone,
-              [
+            if (!program.whatsappNotifications) continue;
+
+            await sendLoyaltyMessage({
+              orgId: account.contact.orgId,
+              phone: account.contact.phone,
+              waTemplateId: trigger.waTemplateId,
+              params: [
                 account.contact.name || "Valued Customer",
                 account.currentPoints.toString(),
                 dayjs(expiryDate).format("DD MMM YYYY"),
               ],
-            );
+              preferTextInSession: program.sendTextInSession,
+            });
 
             log.info(
               `Points Expiry Alert - Sent to customer ${account.id} (expires ${dayjs(expiryDate).format("DD MMM YYYY")})`,
@@ -445,6 +456,8 @@ export async function checkPointsExpiration() {
         name: true,
         orgId: true,
         pointsExpirationMonths: true,
+        whatsappNotifications: true,
+        sendTextInSession: true,
       },
     });
 
@@ -575,13 +588,17 @@ export async function checkPointsExpiration() {
             );
 
             // Send WA notification for points expiry
-            if (account.contact.phone) {
-              await handleSendTemplate(
-                await resolveEventTriggerTemplateId(program.orgId, LoyaltyEventType.POINTS_EXPIRED),
-                program.orgId,
-                account.contact.phone,
-                [account.contact.name || "Valued Customer", pointsToExpire.toString()],
-              );
+            if (account.contact.phone && program.whatsappNotifications) {
+              await sendLoyaltyMessage({
+                orgId: program.orgId,
+                phone: account.contact.phone,
+                waTemplateId: await resolveEventTriggerTemplateId(
+                  program.orgId,
+                  LoyaltyEventType.POINTS_EXPIRED,
+                ),
+                params: [account.contact.name || "Valued Customer", pointsToExpire.toString()],
+                preferTextInSession: program.sendTextInSession,
+              });
             }
           } catch (error) {
             log.error(

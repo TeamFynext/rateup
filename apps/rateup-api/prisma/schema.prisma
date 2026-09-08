@@ -2108,6 +2108,9 @@ model LoyaltyProgram {
   enableShopifyOrderPoints Boolean @default(false)
   enablePointsExpiration   Boolean @default(false)
   pointsExpirationMonths   Int     @default(12)
+  // Inside an open 24-hour customer-service window, send a notification's text as a
+  // plain message instead of the Meta template (free, and works before approval).
+  sendTextInSession        Boolean @default(true)
   referralMessageTemplate  Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
 
   // Guided setup wizard (/dashboard/loyalty/onboarding) progress. The wizard commits each
@@ -2174,7 +2177,9 @@ model LoyaltyEarningRule {
   priority    Int     @default(0) // Higher priority = applied first
 
   // Earning Rate
-  pointsPerUnit Decimal @default(1.00) @db.Decimal(10, 2) // Points per currency unit spent
+  // Six places: "₹150 = 1 point" is 0.006667, which two places would round to 0.01 (a 50% error)
+  // and "₹250 = 1 point" to 0.00 — nothing earned. Editors enter a spend/points pair.
+  pointsPerUnit Decimal @default(1.00) @db.Decimal(12, 6) // Points per currency unit spent
   multiplier    Decimal @default(1.00) @db.Decimal(4, 2) // Additional multiplier (e.g., 2.0 for double points)
   bonusPoints   Int?    @default(0) // Flat bonus points per transaction
 

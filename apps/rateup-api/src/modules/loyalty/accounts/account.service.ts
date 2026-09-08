@@ -17,7 +17,8 @@ import {
   type LoyaltyNotificationOutcome,
 } from "../loyaltyWaDispatcher.js";
 import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
-import { LoyaltyEventType } from "../../../types/enums.js";
+import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js";
+import { renderReplyText } from "../richText.js";
 
 export async function findAccountByReferralCode(programId: string, referralCode: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
@@ -245,10 +246,22 @@ export async function createCustomerAccount(
       referralCode: account.referralCode,
       source: data.source,
     });
+    // The merchant's own "Joining the program" reply when they wrote one (Messages ›
+    // Replies); the stock welcome otherwise. The customer just messaged us, so plain text
+    // is the right channel either way.
+    const joinReply = await prisma.loyaltyWaCommand.findFirst({
+      where: { orgId, type: LoyaltyTemplateTypes.CustomerRegistration },
+      select: { content: true },
+    });
+    const customText = joinReply
+      ? renderReplyText(joinReply.content, [account.contact?.name || ""])
+      : "";
     await sendTextMessage(
       { phone, orgId },
       null,
-      `🎉 Welcome ${account.contact?.name || ""}!
+      customText.trim().length > 0
+        ? customText
+        : `🎉 Welcome ${account.contact?.name || ""}!
 
 You are now registered in our Loyalty Program.
 

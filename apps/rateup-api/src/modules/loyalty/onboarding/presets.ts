@@ -2,6 +2,7 @@ import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js"
 import { LoyaltyPointRewardSubType, LoyaltyRewardType } from "../../../types/loyalty.js";
 import type { TierConfiguration } from "../../../types/loyalty.js";
 import { LoyaltyRewardStatus } from "../rewards/reward.schema.js";
+import { LOYALTY_EVENT_TEMPLATE_NAMES } from "../loyaltyEventTemplates.js";
 
 /**
  * Business-type starter packs for the guided setup wizard. Each pack is a complete,
@@ -140,25 +141,25 @@ function commonEventTemplates(): PresetEventTemplate[] {
   return [
     {
       eventType: LoyaltyEventType.POINTS_ISSUED,
-      templateName: "loyalty_points_issued",
+      templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.POINTS_ISSUED],
       body: "Hi {{1}}, you just earned {{2}} points. Your balance is now {{3}}.",
       params: ["customer name", "points earned", "balance after"],
     },
     {
       eventType: LoyaltyEventType.REWARD_REDEEMED,
-      templateName: "loyalty_reward_redeemed",
+      templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.REWARD_REDEEMED],
       body: "Hi {{1}}, your reward {{2}} is confirmed. Show code {{3}} to redeem it. ({{4}} points used)",
       params: ["customer name", "reward name", "redemption code", "points spent"],
     },
     {
       eventType: LoyaltyEventType.TIER_UPGRADED,
-      templateName: "loyalty_tier_upgraded",
+      templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.TIER_UPGRADED],
       body: "Congratulations {{1}} — you've reached {{2}}! Enjoy your new benefits.",
       params: ["customer name", "new tier"],
     },
     {
       eventType: LoyaltyEventType.BIRTHDAY,
-      templateName: "loyalty_birthday",
+      templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.BIRTHDAY],
       body: "Happy birthday, {{1}}! Here's a little something from us — drop in and enjoy.",
       params: ["customer name"],
     },

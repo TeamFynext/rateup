@@ -8,7 +8,10 @@ import {
   EventTriggerInput,
   UpdateEventTriggerInput,
   ProgramIdQueryInput,
+  EventMessageParamsInput,
+  EventMessageBodyInput,
 } from "./settings.schema.js";
+import { saveEventMessage } from "./eventMessage.service.js";
 import {
   createLoyaltyWaCommand,
   deleteLoyaltyWaCommandById,
@@ -200,5 +203,30 @@ export async function deleteEventTriggerHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+/**
+ * Messages › Automatic: the merchant's words for one event, turned into the Meta template
+ * that event sends (created, edited in place, or versioned — see eventMessage.service).
+ */
+export async function saveEventMessageHandler(
+  request: FastifyRequest<{ Params: EventMessageParamsInput; Body: EventMessageBodyInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const programId = await requireProgramId(request, reply);
+    if (!programId) return;
+    const result = await saveEventMessage({
+      orgId: request.user.orgId,
+      programId,
+      eventType: request.params.eventType,
+      body: request.body.body,
+      enabled: request.body.enabled,
+    });
+    reply.code(200).send(result);
+  } catch (e) {
+    log.error({ err: e }, "Error saving loyalty event message");
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Could not save the message" });
   }
 }

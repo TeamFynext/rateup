@@ -22,11 +22,11 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../contact/contact.utils.js", () => ({ handleSendTemplate: vi.fn() }));
+vi.mock("../loyaltyMessaging.js", () => ({ sendLoyaltyMessage: vi.fn() }));
 vi.mock("../accounts/account.service.js", () => ({ assignRewardToCustomer: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { sendLoyaltyMessage } from "../loyaltyMessaging.js";
 import { assignRewardToCustomer } from "../accounts/account.service.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
@@ -64,8 +64,25 @@ interface TriggerFixture {
   waTemplateId: string | null;
   rewardId: string | null;
   triggerDays: number | null;
-  program: { id: string; name: string; orgId: string };
+  program: {
+    id: string;
+    name: string;
+    orgId: string;
+    whatsappNotifications: boolean;
+    sendTextInSession: boolean;
+  };
   reward: { id: string; name: string; pointsCost: number } | null;
+}
+
+/** The send the crons hand to the session-aware sender, as toHaveBeenCalledWith wants it. */
+function sentTo(phone: string, params: string[], templateId = "tmpl-1") {
+  return {
+    orgId: ORG,
+    phone,
+    waTemplateId: templateId,
+    params,
+    preferTextInSession: true,
+  };
 }
 
 function trigger(over: Record<string, unknown> = {}) {
@@ -75,7 +92,13 @@ function trigger(over: Record<string, unknown> = {}) {
     waTemplateId: "tmpl-1",
     rewardId: null,
     triggerDays: null,
-    program: { id: PROGRAM, name: "Rewards", orgId: ORG },
+    program: {
+      id: PROGRAM,
+      name: "Rewards",
+      orgId: ORG,
+      whatsappNotifications: true,
+      sendTextInSession: true,
+    },
     reward: null,
   };
   return { ...base, ...over };
@@ -146,10 +169,9 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, "919000000001", [
-      "Ann",
-      "a special reward",
-    ]);
+    expect(sendLoyaltyMessage).toHaveBeenCalledWith(
+      sentTo("919000000001", ["Ann", "a special reward"]),
+    );
   });
 
   test("ignores a customer whose birthday is another day", async () => {
@@ -160,7 +182,7 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("names the configured reward in the message when there is one", async () => {
@@ -176,7 +198,7 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect((handleSendTemplate as Mock).mock.calls[0][3]).toEqual(["Ann", "Free cake"]);
+    expect((sendLoyaltyMessage as Mock).mock.calls[0][0].params).toEqual(["Ann", "Free cake"]);
     expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-1", "rwd-1");
   });
 
@@ -191,7 +213,7 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("keeps going when one customer's send fails", async () => {
@@ -203,11 +225,11 @@ describe("checkBirthdayEventTriggers", () => {
       account({ id: "a1", contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
       account({ id: "a2", contact: { ...account().contact, dob: localDate(1991, 4, 15) } }),
     ]);
-    (handleSendTemplate as Mock).mockRejectedValueOnce(new Error("meta down"));
+    (sendLoyaltyMessage as Mock).mockRejectedValueOnce(new Error("meta down"));
 
     await checkBirthdayEventTriggers();
 
-    expect((handleSendTemplate as Mock).mock.calls).toHaveLength(2);
+    expect((sendLoyaltyMessage as Mock).mock.calls).toHaveLength(2);
   });
 
   test("claims each customer before sending, so a second run greets nobody twice", async () => {
@@ -239,7 +261,7 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("matches the month and day in SQL rather than in memory", async () => {
@@ -252,7 +274,7 @@ describe("checkBirthdayEventTriggers", () => {
 
     expect(db.$queryRaw).toHaveBeenCalled();
     // Nothing came back, so nothing is greeted.
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("survives a trigger whose program query fails", async () => {
@@ -308,7 +330,7 @@ describe("checkInactivityEventTriggers", () => {
         { lastInactivityReminderAt: { lte: new Date("2026-01-30T00:00:00.000Z") } },
       ],
     });
-    expect(handleSendTemplate).toHaveBeenCalled();
+    expect(sendLoyaltyMessage).toHaveBeenCalled();
   });
 
   test("skips a customer another process already claimed", async () => {
@@ -318,7 +340,7 @@ describe("checkInactivityEventTriggers", () => {
 
     await checkInactivityEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("sends the customer's name and current points", async () => {
@@ -327,7 +349,7 @@ describe("checkInactivityEventTriggers", () => {
 
     await checkInactivityEventTriggers();
 
-    expect((handleSendTemplate as Mock).mock.calls[0][3]).toEqual(["Ann", "500"]);
+    expect((sendLoyaltyMessage as Mock).mock.calls[0][0].params).toEqual(["Ann", "500"]);
   });
 
   test("issues the win-back reward when one is configured", async () => {
@@ -380,7 +402,7 @@ describe("issuing a reward from a trigger", () => {
     (assignRewardToCustomer as Mock).mockRejectedValue(new Error("Reward not found"));
 
     await expect(checkBirthdayEventTriggers()).resolves.toBeUndefined();
-    expect(handleSendTemplate).toHaveBeenCalled();
+    expect(sendLoyaltyMessage).toHaveBeenCalled();
   });
 });
 
@@ -406,7 +428,14 @@ describe("checkPointsExpiryAlerts", () => {
 
   test("skips a program with no expiry-alert trigger", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+      },
     ]);
 
     await checkPointsExpiryAlerts();
@@ -416,7 +445,14 @@ describe("checkPointsExpiryAlerts", () => {
 
   test("targets customers holding an earning that expires in fourteen days", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+      },
     ]);
     db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
 
@@ -434,14 +470,21 @@ describe("checkPointsExpiryAlerts", () => {
 
   test("tells the customer their balance and the expiry date", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+      },
     ]);
     db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
 
     await checkPointsExpiryAlerts();
 
-    const params = (handleSendTemplate as Mock).mock.calls[0][3];
+    const params = (sendLoyaltyMessage as Mock).mock.calls[0][0].params;
     expect(params[0]).toBe("Ann");
     expect(params[1]).toBe("500");
     expect(params[2]).toMatch(/^\d{2} \w{3} \d{4}$/);
@@ -449,7 +492,14 @@ describe("checkPointsExpiryAlerts", () => {
 
   test("selects on the same clock the expiry itself uses", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+      },
     ]);
     db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
 
@@ -469,7 +519,14 @@ describe("checkPointsExpiryAlerts", () => {
 // ===========================================================================
 
 describe("checkPointsExpiration", () => {
-  const program = { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 };
+  const program = {
+    id: PROGRAM,
+    name: "Rewards",
+    orgId: ORG,
+    pointsExpirationMonths: 12,
+    whatsappNotifications: true,
+    sendTextInSession: true,
+  };
 
   test("does nothing when no program has expiration enabled", async () => {
     await checkPointsExpiration();
@@ -622,6 +679,19 @@ describe("checkPointsExpiration", () => {
     expect(db.loyaltyTransaction.createMany).toHaveBeenCalled();
   });
 
+  // The crons used to bypass the program's WhatsApp switch that Settings promises is
+  // the master one; the points still expire, only the message is held.
+  test("expires the points but says nothing when WhatsApp notifications are off", async () => {
+    db.loyaltyProgram.findMany.mockResolvedValue([{ ...program, whatsappNotifications: false }]);
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
+    db.$queryRaw.mockResolvedValue([{ id: "txn-a", points: 10 }]);
+
+    await checkPointsExpiration();
+
+    expect(db.loyaltyTransaction.createMany).toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
+  });
+
   test("notifies the customer once per account, not once per transaction", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
@@ -632,6 +702,6 @@ describe("checkPointsExpiration", () => {
 
     await checkPointsExpiration();
 
-    expect((handleSendTemplate as Mock).mock.calls).toHaveLength(1);
+    expect((sendLoyaltyMessage as Mock).mock.calls).toHaveLength(1);
   });
 });

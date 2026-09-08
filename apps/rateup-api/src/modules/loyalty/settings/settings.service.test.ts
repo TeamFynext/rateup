@@ -346,6 +346,38 @@ describe("handleLoyaltyPointsCommand", () => {
   });
 });
 
+describe("keyword replies inside the open window", () => {
+  // The customer has just texted the keyword, so the window is open and the reply's own
+  // text is free: it wins over an attached template, which is for customers who have
+  // never messaged (see the registration reply in contact.controller).
+  test("a points reply with text sends the text even when a template is attached", async () => {
+    await handleLoyaltyPointsCommand(
+      PHONE,
+      command({
+        responseType: WaAutomatedReplyResponseType.Template,
+        content: "You have {{1}} points ({{3}} lifetime).",
+      }),
+    );
+
+    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendTextMessage).toHaveBeenCalledWith(
+      { phone: PHONE, orgId: ORG },
+      null,
+      "You have 500 points (900 lifetime).",
+    );
+  });
+
+  test("a removal reply with text sends the text even when a template is attached", async () => {
+    await handleCustomerRemovalFromLoyalty(
+      PHONE,
+      command({ responseType: WaAutomatedReplyResponseType.Template, content: "Bye" }) as any,
+    );
+
+    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendTextMessage).toHaveBeenCalledWith({ phone: PHONE, orgId: ORG }, null, "Bye");
+  });
+});
+
 describe("handleCustomerRemovalFromLoyalty", () => {
   test("turns away a non-member without changing anything", async () => {
     (getLCustomerByPhone as Mock).mockResolvedValue(null);

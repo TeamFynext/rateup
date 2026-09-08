@@ -12,6 +12,7 @@ vi.mock("../../../utils/prisma.js", () => ({
     },
     customerReward: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     loyaltyProgram: { findUnique: vi.fn() },
+    loyaltyWaCommand: { findFirst: vi.fn() },
     loyaltyTier: { findFirst: vi.fn() },
     loyaltyReward: { findUnique: vi.fn(), findFirst: vi.fn() },
     loyaltyTransaction: { create: vi.fn() },
@@ -38,6 +39,7 @@ vi.mock("../loyaltyWaDispatcher.js", () => ({
   NOTIFICATION_NOT_SENT: {
     sent: false,
     channel: null,
+    mode: null,
     templateId: null,
     text: null,
     skippedReason: null,
@@ -645,6 +647,7 @@ describe("awardPoints", () => {
     expect(result.notification).toEqual({
       sent: false,
       channel: null,
+      mode: null,
       templateId: null,
       text: null,
       skippedReason: null,

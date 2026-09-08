@@ -160,6 +160,12 @@ const commandSchema = z.object({
   /** The keyword the customer texts. Matched case-insensitively on the way in. */
   requestMessage: z.string().min(1, "Keyword is required"),
   text: z.string().min(1, "Reply text is required"),
+  /**
+   * A Meta template for customers who have never messaged the business (a till
+   * registration, say), where a plain text reply cannot be delivered. The text above is
+   * still what goes out inside an open 24-hour window.
+   */
+  waTemplateId: z.uuid().nullable().optional(),
 });
 
 const eventTemplateSchema = z.object({
@@ -194,6 +200,10 @@ export const eventTemplateResultSchema = z.object({
   templateId: z.string().optional(),
   /** True when a template of that name already existed and was pointed at, not resubmitted. */
   reused: z.boolean().optional(),
+  /** True when an existing template's text was changed in place (Meta reviews it again). */
+  edited: z.boolean().optional(),
+  /** True when the text became a new template (`…_v2`) because Meta would not take an edit. */
+  versioned: z.boolean().optional(),
   error: z.string().optional(),
 });
 

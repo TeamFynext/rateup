@@ -2,7 +2,11 @@ import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 
 import { LoyaltyEventType } from "../../types/enums.js";
-import { handleSendTemplate } from "../contact/contact.utils.js";
+import { renderTemplateBody, sendLoyaltyMessage } from "./loyaltyMessaging.js";
+
+// The body renderer moved to loyaltyMessaging.ts with the rest of the send logic; it is
+// re-exported so the cashier receipt code and the tests keep their import.
+export { renderTemplateBody };
 
 export type LoyaltyNotificationSkipReason =
   | "no_program"
@@ -11,16 +15,19 @@ export type LoyaltyNotificationSkipReason =
   | "points_alerts_disabled"
   | "no_phone"
   | "no_template"
+  | "template_not_approved"
   | "send_failed";
 
 /**
  * What happened to one notification. `sent` means our send path accepted it, not that
  * Meta delivered it. `text` is the template body with its variables filled — the same
- * words the customer sees — so the cashier receipt can show what went out.
+ * words the customer sees — so the cashier receipt can show what went out. `mode` says
+ * whether that was the Meta template or, inside an open 24-hour window, a plain message.
  */
 export interface LoyaltyNotificationOutcome {
   sent: boolean;
   channel: "whatsapp" | null;
+  mode: "template" | "text" | null;
   templateId: string | null;
   text: string | null;
   skippedReason: LoyaltyNotificationSkipReason | null;
@@ -29,6 +36,7 @@ export interface LoyaltyNotificationOutcome {
 export const NOTIFICATION_NOT_SENT: LoyaltyNotificationOutcome = {
   sent: false,
   channel: null,
+  mode: null,
   templateId: null,
   text: null,
   skippedReason: null,
@@ -36,27 +44,6 @@ export const NOTIFICATION_NOT_SENT: LoyaltyNotificationOutcome = {
 
 function skipped(reason: LoyaltyNotificationSkipReason): LoyaltyNotificationOutcome {
   return { ...NOTIFICATION_NOT_SENT, skippedReason: reason };
-}
-
-interface TemplateComponentLike {
-  type?: string;
-  text?: string;
-}
-
-/**
- * Fills `{{n}}` placeholders in a template's BODY component with the parameters sent to
- * Meta, in order. Returns null when the template has no body text.
- */
-export function renderTemplateBody(components: unknown, params: string[]): string | null {
-  if (!Array.isArray(components)) return null;
-  const body = (components as TemplateComponentLike[]).find(
-    (component) => String(component?.type ?? "").toUpperCase() === "BODY",
-  );
-  if (!body?.text) return null;
-  return body.text.replace(/\{\{(\d+)\}\}/g, (_match, index: string) => {
-    const value = params[Number(index) - 1];
-    return value === undefined ? "" : value;
-  });
 }
 
 /**
@@ -96,6 +83,7 @@ export async function dispatchLoyaltyNotification(
         status: true,
         whatsappNotifications: true,
         pointsActivityAlerts: true,
+        sendTextInSession: true,
       },
     });
 
@@ -142,14 +130,7 @@ export async function dispatchLoyaltyNotification(
         eventType: commandKey as LoyaltyEventType,
         enabled: true,
       },
-      include: {
-        waTemplate: true,
-        program: {
-          select: {
-            whatsappSettingsId: true,
-          },
-        },
-      },
+      include: { waTemplate: true },
     });
 
     if (eventTrigger) {
@@ -192,26 +173,24 @@ export async function dispatchLoyaltyNotification(
 
     renderedText = renderTemplateBody(components, params);
 
-    log.trace(`[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`);
-    // Called even with no template: handleSendTemplate returns early on a null id, and
-    // keeping one code path here means one place to reason about.
-    const result = await handleSendTemplate(templateId, orgId, payload.customerPhone, params);
-
     if (!templateId) return skipped("no_template");
 
-    const failed =
-      result !== undefined &&
-      result !== null &&
-      typeof result === "object" &&
-      "status" in result &&
-      result.status === false;
+    log.trace(`[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`);
+    const result = await sendLoyaltyMessage({
+      orgId,
+      phone: payload.customerPhone,
+      waTemplateId: templateId,
+      params,
+      preferTextInSession: program.sendTextInSession,
+    });
 
     return {
-      sent: !failed,
+      sent: result.sent,
       channel: "whatsapp",
+      mode: result.mode,
       templateId,
-      text: renderedText,
-      skippedReason: failed ? "send_failed" : null,
+      text: result.text ?? renderedText,
+      skippedReason: result.skippedReason,
     };
   } catch (error) {
     log.error(
@@ -221,6 +200,7 @@ export async function dispatchLoyaltyNotification(
     return {
       sent: false,
       channel: templateId ? "whatsapp" : null,
+      mode: null,
       templateId,
       text: renderedText,
       skippedReason: "send_failed",

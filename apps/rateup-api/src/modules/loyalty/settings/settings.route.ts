@@ -11,6 +11,7 @@ import {
   getEventTriggerHandler,
   getAllEventTriggersHandler,
   deleteEventTriggerHandler,
+  saveEventMessageHandler,
 } from "./settings.controller.js";
 import {
   loyaltyTemplateSchema,
@@ -19,6 +20,8 @@ import {
   eventTriggerSchema,
   updateEventTriggerSchema,
   programIdQuerySchema,
+  eventMessageParamsSchema,
+  eventMessageBodySchema,
 } from "./settings.schema.js";
 
 export async function LoyaltySettingsRoutes(server: FastifyInstance) {
@@ -116,5 +119,17 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
       },
     },
     deleteEventTriggerHandler,
+  );
+
+  // The notification's text for one event, submitted to Meta in one step (Messages page).
+  server.put(
+    "/event-message/:eventType",
+    {
+      schema: {
+        params: eventMessageParamsSchema,
+        body: eventMessageBodySchema,
+      },
+    },
+    saveEventMessageHandler,
   );
 }

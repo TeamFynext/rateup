@@ -9,6 +9,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { calculateGiveback, givebackBand } from "../giveback.js";
 import { buildGivebackInput, loadProgramGivebackSources } from "../giveback/giveback.service.js";
+import { toRichText } from "../richText.js";
 import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 import {
   createTemplate,
@@ -251,7 +252,8 @@ export async function applyEarningStep(orgId: string, input: EarningStepInput) {
         // The default rule can never be switched off — without it nothing earns.
         status: rule.isDefault ? ACTIVE : (rule.status ?? ACTIVE),
         pointsPerUnit: rule.pointsPerUnit,
-        multiplier: rule.multiplier,
+        // The default rule is the base rate itself; a multiplier on it is the rate in disguise.
+        multiplier: rule.isDefault ? 1 : rule.multiplier,
         bonusPoints: rule.bonusPoints,
         allowedDays: rule.allowedDays,
         minPurchaseAmount: rule.minPurchaseAmount ?? null,
@@ -535,21 +537,6 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
 
 /* ── step: messages ─────────────────────────────────────────────────────────── */
 
-/**
- * Wraps preset copy in the rich-text document `LoyaltyWaCommand.content` holds
- * (`PRichTextContent` — a single node, not an array). `richTextToPlainText` unwraps the
- * document's `content` and joins one line per top-level block on the way out.
- */
-function toRichText(text: string): RichTextNode {
-  return {
-    type: "doc",
-    content: text.split("\n").map((line) => ({
-      type: "paragraph",
-      content: line.length > 0 ? [{ type: "text", text: line }] : [],
-    })),
-  };
-}
-
 export async function applyMessagesStep(orgId: string, input: MessagesStepInput) {
   const program = await requireProgram(orgId);
 
@@ -580,12 +567,17 @@ export async function applyMessagesStep(orgId: string, input: MessagesStepInput)
       continue;
     }
 
+    // The text is always kept: it is what goes out inside an open 24-hour window. A
+    // template, when attached, is for customers who have never messaged the business.
+    const waTemplateId = command.waTemplateId ?? null;
     const data = {
       type: command.type,
       requestMessage: keyword,
       content: toRichText(command.text),
-      responseType: WaAutomatedReplyResponseType.Text,
-      waTemplateId: null,
+      responseType: waTemplateId
+        ? WaAutomatedReplyResponseType.Template
+        : WaAutomatedReplyResponseType.Text,
+      waTemplateId,
     };
 
     if (existing) {
@@ -632,7 +624,7 @@ export async function applyMessagesStep(orgId: string, input: MessagesStepInput)
   return { skipped, eventTemplates };
 }
 
-async function submitEventTemplate(
+export async function submitEventTemplate(
   orgId: string,
   programId: string,
   template: { eventType: LoyaltyEventType; templateName: string; body: string },
@@ -652,29 +644,10 @@ async function submitEventTemplate(
     };
   }
 
-  const placeholderCount = countPlaceholders(template.body);
-
-  const metaTemplate: WaMetaTemplate = {
-    name: template.templateName,
-    language: "en",
-    category: WaTemplateCategory.UTILITY,
-    components: [
-      {
-        type: WaTemplateComponentTypeUpperCase.BODY,
-        text: template.body,
-        // Meta rejects a body with variables unless it is given a sample for each one.
-        ...(placeholderCount > 0
-          ? {
-              example: {
-                body_text: [Array.from({ length: placeholderCount }, (_, i) => `Sample ${i + 1}`)],
-              },
-            }
-          : {}),
-      },
-    ],
-  };
-
-  const submitted = await createTemplate(orgId, metaTemplate);
+  const submitted = await createTemplate(
+    orgId,
+    buildLoyaltyBodyTemplate(template.templateName, template.body),
+  );
   const saved = await saveTemplate(submitted, orgId, {}, TemplateType.LOYALTY);
 
   await upsertTrigger(programId, template.eventType, saved.id);
@@ -688,10 +661,42 @@ async function submitEventTemplate(
 }
 
 /**
+ * The Meta payload every loyalty notification is submitted as: body only, UTILITY, English.
+ * Shared by the wizard and by Messages › Automatic, so a notification written in either
+ * place is the same kind of template.
+ */
+export function buildLoyaltyBodyTemplate(templateName: string, body: string): WaMetaTemplate {
+  const placeholderCount = countPlaceholders(body);
+  return {
+    name: templateName,
+    language: "en",
+    category: WaTemplateCategory.UTILITY,
+    components: [
+      {
+        type: WaTemplateComponentTypeUpperCase.BODY,
+        text: body,
+        // Meta rejects a body with variables unless it is given a sample for each one.
+        ...(placeholderCount > 0
+          ? {
+              example: {
+                body_text: [Array.from({ length: placeholderCount }, (_, i) => `Sample ${i + 1}`)],
+              },
+            }
+          : {}),
+      },
+    ],
+  };
+}
+
+/**
  * `LoyaltyEventTrigger` has no @@unique([programId, eventType]), so a re-run would
  * otherwise leave two enabled triggers racing for the same event.
  */
-async function upsertTrigger(programId: string, eventType: LoyaltyEventType, waTemplateId: string) {
+export async function upsertTrigger(
+  programId: string,
+  eventType: LoyaltyEventType,
+  waTemplateId: string,
+) {
   const existingTrigger = await prisma.loyaltyEventTrigger.findFirst({
     where: { programId, eventType },
   });
@@ -708,7 +713,7 @@ async function upsertTrigger(programId: string, eventType: LoyaltyEventType, waT
   }
 }
 
-function metaStatusToStep(status: unknown): EventTemplateResult["status"] {
+export function metaStatusToStep(status: unknown): EventTemplateResult["status"] {
   if (status === "APPROVED") return "approved";
   if (status === "REJECTED") return "rejected";
   return "pending";

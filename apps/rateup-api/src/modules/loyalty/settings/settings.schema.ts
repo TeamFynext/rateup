@@ -40,6 +40,16 @@ const programIdQuerySchema = z.object({
   programId: z.string().optional(),
 });
 
+/** `PUT /event-message/:eventType` — the notification's text, saved the way the wizard does. */
+const eventMessageParamsSchema = z.object({
+  eventType: z.enum(LoyaltyEventType),
+});
+
+const eventMessageBodySchema = z.object({
+  body: z.string().trim().min(1, "Write the message"),
+  enabled: z.boolean().optional(),
+});
+
 export type LoyaltyTemplateInput = z.infer<typeof loyaltyTemplateSchema>;
 export type UpdateLoyaltyTemplateInput = z.infer<typeof updateLoyaltyTemplateSchema>;
 export type ByTypeQueryInput = z.infer<typeof byTypeQuerySchema>;
@@ -47,6 +57,8 @@ export type IdParamInput = z.infer<typeof byIdSchema>;
 export type EventTriggerInput = z.infer<typeof eventTriggerSchema>;
 export type UpdateEventTriggerInput = z.infer<typeof updateEventTriggerSchema>;
 export type ProgramIdQueryInput = z.infer<typeof programIdQuerySchema>;
+export type EventMessageParamsInput = z.infer<typeof eventMessageParamsSchema>;
+export type EventMessageBodyInput = z.infer<typeof eventMessageBodySchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -57,4 +69,6 @@ export {
   eventTriggerSchema,
   updateEventTriggerSchema,
   programIdQuerySchema,
+  eventMessageParamsSchema,
+  eventMessageBodySchema,
 };
