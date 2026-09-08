@@ -485,13 +485,36 @@ export async function updateUserActiveStatus(userId: string) {
   return user;
 }
 
+/**
+ * Whether an email is already taken, checked against BOTH stores.
+ *
+ * The signup wizard gates step one on this, but the rejection at "Finish setup"
+ * comes from SuperTokens (`config.ts`, the EmailPassword `signUp` override), whose
+ * user store can hold an email the local `User` table does not: a signup that
+ * created the SuperTokens user but never reached `createUserSignup`, a row deleted
+ * from Prisma alone, or an account that only exists via Google/Apple/passwordless.
+ * Checking only Prisma let those through step one and failed three steps later, on
+ * a screen with no email field to correct. Both stores are asked here so the gate
+ * and the rejection can never disagree.
+ *
+ * SuperTokens stores emails lower-cased, and local rows are seeded from what it
+ * returns, so the address is normalised before either lookup.
+ */
 export async function checkEmailExist(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+
   const user = await prisma.user.findFirst({
     where: {
-      email,
+      email: normalizedEmail,
     },
   });
-  return user;
+
+  if (user) {
+    return true;
+  }
+
+  const superTokensUsers = await getUserInfo(normalizedEmail);
+  return superTokensUsers.length > 0;
 }
 
 export async function deleteUser(userId: string) {
