@@ -65,6 +65,19 @@
         }
       ],
       "./plugins/withR8Optimize.js",
+      [
+        "react-native-video",
+        {
+          "enableNotificationControls": false,
+          "enableADSExtension": false,
+          "androidExtensions": {
+            "useExoplayerRtsp": false,
+            "useExoplayerSmoothStreaming": false,
+            "useExoplayerDash": false,
+            "useExoplayerHls": true
+          }
+        }
+      ],
       ["expo-apple-authentication"],
       "@react-native-google-signin/google-signin",
       [
