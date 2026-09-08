@@ -23,10 +23,26 @@ vi.mock("./campaign.service.js", async () => ({
 // participant count the send used to read directly, plus the allowance it now checks.
 vi.mock("./campaign.preflight.js", () => ({ getCampaignSendPreflight: vi.fn() }));
 
+// Send sessions are exercised in campaignSend.service.test.ts. Here they stand in
+// for the row every send now opens before it enqueues — and, for the in-progress
+// guard, for how long the live send has been sitting there.
+vi.mock("./campaignRetry.service.js", () => ({ upsertCampaignRetryPolicy: vi.fn() }));
+
+vi.mock("./campaignSend.service.js", async () => ({
+  CampaignSendInProgressError: (
+    await vi.importActual<typeof import("./campaignSend.service.js")>("./campaignSend.service.js")
+  ).CampaignSendInProgressError,
+  cancelCampaignSends: vi.fn(),
+  createCampaignSend: vi.fn(),
+  failCampaignSend: vi.fn(),
+  getLiveCampaignSend: vi.fn(),
+}));
+
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
+import { sendCampaignInputSchema } from "./campaign.schema.js";
 import {
   CampaignNotFoundError,
   createCampaign,
@@ -39,6 +55,13 @@ import {
   getCampaignParticipantCountByStatuses,
 } from "./campaign.service.js";
 import { getCampaignSendPreflight } from "./campaign.preflight.js";
+import {
+  cancelCampaignSends,
+  CampaignSendInProgressError,
+  createCampaignSend,
+  getLiveCampaignSend,
+} from "./campaignSend.service.js";
+import { upsertCampaignRetryPolicy } from "./campaignRetry.service.js";
 import {
   getCampaignsByOrgId,
   getCampaignsByTeamId,
@@ -76,7 +99,12 @@ const m = {
   responses: getResponseByCampaignById as unknown as Mock,
   excel: getResponseExcelByCampaignById as unknown as Mock,
   update: updateCampaign as unknown as Mock,
+  createSend: createCampaignSend as unknown as Mock,
+  cancelSends: cancelCampaignSends as unknown as Mock,
+  liveSend: getLiveCampaignSend as unknown as Mock,
 };
+
+const SEND_ID = "00000000-0000-0000-0000-0000000000ff";
 
 const ORG_A = "org-a";
 const CAMPAIGN_ID = "camp-1";
@@ -112,7 +140,17 @@ beforeEach(() => {
   m.create.mockResolvedValue({ id: CAMPAIGN_ID });
   m.update.mockResolvedValue({ id: CAMPAIGN_ID });
   m.delete.mockResolvedValue({ id: CAMPAIGN_ID });
-  m.byId.mockResolvedValue({ id: CAMPAIGN_ID, status: CampaignStatus.ACTIVE, orgId: ORG_A });
+  // `waTemplateId` matters now: a campaign with no template is refused at
+  // launch, which is where the create schema's completeness check moved to when
+  // drafts were allowed to be saved half-finished.
+  m.byId.mockResolvedValue({
+    id: CAMPAIGN_ID,
+    status: CampaignStatus.ACTIVE,
+    orgId: ORG_A,
+    type: CampaignType.WHATSAPP,
+    waTemplateId: "tpl-1",
+    dripStages: [],
+  });
   m.byTeam.mockResolvedValue([{ id: CAMPAIGN_ID }]);
   m.byOrg.mockResolvedValue([{ id: CAMPAIGN_ID }]);
   m.countByStatuses.mockResolvedValue(5);
@@ -127,6 +165,10 @@ beforeEach(() => {
     shortfall: 0,
   });
   m.enqueue.mockResolvedValue({ status: true, message: "ok" });
+  m.createSend.mockResolvedValue({ id: SEND_ID, attemptNo: 0 });
+  m.cancelSends.mockResolvedValue(0);
+  // A live send that only just started, so the in-progress guard holds.
+  m.liveSend.mockResolvedValue({ id: SEND_ID, startedAt: new Date(), createdAt: new Date() });
   m.dequeue.mockResolvedValue({ status: true, message: "ok" });
   m.stats.mockResolvedValue({ countSent: 10 });
   m.responses.mockResolvedValue([{ id: "resp-1" }]);
@@ -283,15 +325,51 @@ describe("sendCampaignHandler", () => {
     await sendCampaignHandler(request({ body: sendBody() }), rep);
 
     expect(m.update.mock.calls[0][2]).toMatchObject({ status: CampaignStatus.QUEUING });
-    expect(m.enqueue).toHaveBeenCalledWith(
-      CAMPAIGN_ID,
-      ["PENDING"],
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-    );
+    expect(m.enqueue).toHaveBeenCalledWith({
+      campaignId: CAMPAIGN_ID,
+      campaignSendId: SEND_ID,
+      sendToStatuses: ["PENDING"],
+      participantId: undefined,
+      dailySendLimit: undefined,
+    });
     expect(sent(rep).code).toBe("ENQUEUE_REQUEST_ACCEPTED");
+  });
+
+  test("records when the campaign first went out", async () => {
+    // The Setup card's "Sent" reads `campaignSentAt || startedAt`, and this path
+    // nulls the first one — so without the second a campaign sent from the button
+    // reported "Not yet" forever. `updateCampaign` only fills a null `startedAt`,
+    // so a later resend does not move it.
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(m.update.mock.calls[0][2].startedAt).toBeInstanceOf(Date);
+  });
+
+  test("a drip status change needs no participant statuses", async () => {
+    // Start/Pause on a drip sends `sendToStatuses: []` — the handler ignores the
+    // field entirely — and the route schema's `.min(1)` rejected the request
+    // before it arrived, as "expected array to have >=1 items".
+    const parsed = sendCampaignInputSchema.safeParse({
+      sentCampaignChoice: "NOW",
+      status: CampaignStatus.INACTIVE,
+      sendToStatuses: [],
+      type: CampaignType.DRIP,
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  test("a broadcast send still has to name at least one status", async () => {
+    const parsed = sendCampaignInputSchema.safeParse({
+      sentCampaignChoice: "NOW",
+      status: CampaignStatus.ACTIVE,
+      sendToStatuses: [],
+      type: CampaignType.WHATSAPP,
+    });
+
+    expect(parsed.success).toBe(false);
   });
 
   test("only flips the status for a drip campaign", async () => {
@@ -303,6 +381,73 @@ describe("sendCampaignHandler", () => {
     );
 
     expect(m.enqueue).not.toHaveBeenCalled();
+    expect(sent(rep).code).toBe("MSG_SCHEDULED");
+  });
+
+  test.each([
+    ["one recipient", { participantId: "participant-1" }],
+    ["a ticked cohort", { participantIds: ["participant-1", "participant-2"] }],
+  ])("refuses a drip re-send scoped to %s", async (_label, scope) => {
+    // This used to fall through to the status update below: nothing was
+    // re-sent, the response said MSG_SCHEDULED, and the `startedAt` stamp
+    // restarted the whole sequence. The UI hides these controls for a drip now;
+    // the API refusing them is what makes that a rule rather than a convention.
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({
+        body: sendBody({
+          type: CampaignType.DRIP,
+          status: CampaignStatus.ACTIVE,
+          sendToStatuses: ["FAILED"],
+          ...scope,
+        }),
+      }),
+      rep,
+    );
+
+    expect(sent(rep).code).toBe("DRIP_RESEND_UNSUPPORTED");
+    expect(m.update).not.toHaveBeenCalled();
+    expect(m.enqueue).not.toHaveBeenCalled();
+  });
+
+  test("starts the drip clock when a drip is switched on", async () => {
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.INACTIVE,
+      orgId: ORG_A,
+      type: CampaignType.DRIP,
+      dripStages: [{ id: "stage-1" }],
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ type: CampaignType.DRIP, status: CampaignStatus.ACTIVE }) }),
+      rep,
+    );
+
+    expect(m.update.mock.calls[0][2].startedAt).toBeInstanceOf(Date);
+  });
+
+  test("leaves the drip clock alone when a running drip is paused", async () => {
+    // `startedAt` is the base every stage's delay is measured from. Stamping it
+    // on a pause pushed every pending stage out by however long the campaign had
+    // been running.
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.ACTIVE,
+      orgId: ORG_A,
+      type: CampaignType.DRIP,
+      dripStages: [{ id: "stage-1" }],
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ type: CampaignType.DRIP, status: CampaignStatus.INACTIVE }) }),
+      rep,
+    );
+
+    expect(m.update.mock.calls[0][2]).not.toHaveProperty("startedAt");
     expect(sent(rep).code).toBe("MSG_SCHEDULED");
   });
 
@@ -359,7 +504,7 @@ describe("sendCampaignHandler", () => {
       status: CampaignStatus.QUEUING,
       campaignSentAt,
     });
-    expect(m.enqueue.mock.calls[0][3]).toBe(campaignSentAt);
+    expect(m.enqueue.mock.calls[0][0].scheduledAt).toBe(campaignSentAt);
     expect(sent(rep).code).toBe("MSG_SCHEDULE_REQUESTED");
   });
 
@@ -367,7 +512,7 @@ describe("sendCampaignHandler", () => {
     await sendCampaignHandler(request({ body: sendBody({ dailySendLimit: 500 }) }), reply());
 
     expect(m.update.mock.calls[0][2].dailySendLimit).toBe(500);
-    expect(m.enqueue.mock.calls[0][5]).toBe(500);
+    expect(m.enqueue.mock.calls[0][0].dailySendLimit).toBe(500);
   });
 
   test("ignores the daily cap when resending to a single participant", async () => {
@@ -377,7 +522,97 @@ describe("sendCampaignHandler", () => {
     );
 
     expect(m.update.mock.calls[0][2]).not.toHaveProperty("dailySendLimit");
-    expect(m.enqueue.mock.calls[0][5]).toBeUndefined();
+    expect(m.enqueue.mock.calls[0][0].dailySendLimit).toBeUndefined();
+  });
+
+  test("refuses to launch a campaign that has no template yet", async () => {
+    // The wizard lets a draft be saved with only a name. That is deliberate, and
+    // this is where the missing pieces are caught instead.
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.DRAFT,
+      orgId: ORG_A,
+      type: CampaignType.WHATSAPP,
+      waTemplateId: null,
+      dripStages: [],
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(sent(rep).code).toBe("CAMPAIGN_INCOMPLETE");
+    expect(m.enqueue).not.toHaveBeenCalled();
+  });
+
+  test("refuses to launch a drip campaign that has no stages yet", async () => {
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.DRAFT,
+      orgId: ORG_A,
+      type: CampaignType.DRIP,
+      waTemplateId: null,
+      dripStages: [],
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody({ type: CampaignType.WHATSAPP }) }), rep);
+
+    expect(sent(rep).code).toBe("CAMPAIGN_INCOMPLETE");
+  });
+
+  test("saves a retry policy passed with the send, before anything is queued", async () => {
+    const retryPolicy = { enabled: true, strategy: "SMART", maxAttempts: 2 };
+    await sendCampaignHandler(request({ body: sendBody({ retryPolicy }) }), reply());
+
+    // Ordering matters: the policy has to be in place by the time the first
+    // attempt drains and asks whether to schedule a retry.
+    expect(upsertCampaignRetryPolicy).toHaveBeenCalledWith(CAMPAIGN_ID, ORG_A, retryPolicy);
+    expect(m.enqueue).toHaveBeenCalled();
+  });
+
+  test("cancels a pending automatic retry before a manual send takes over", async () => {
+    await sendCampaignHandler(request({ body: sendBody() }), reply());
+
+    expect(m.cancelSends).toHaveBeenCalledWith(
+      CAMPAIGN_ID,
+      expect.objectContaining({ onlyScheduled: true }),
+    );
+  });
+
+  test("reports a conflict when another send already owns the campaign", async () => {
+    m.createSend.mockRejectedValue(new CampaignSendInProgressError());
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(409);
+    expect(sent(rep).code).toBe("CAMPAIGN_SEND_IN_PROGRESS");
+    expect(m.enqueue).not.toHaveBeenCalled();
+  });
+
+  test("lets go of a campaign stuck mid-queue once its send has gone stale", async () => {
+    // Before this, a lost fan-out job left the campaign refusing every further
+    // action — including its own cancellation.
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.QUEUING,
+      orgId: ORG_A,
+      type: CampaignType.WHATSAPP,
+      waTemplateId: "tpl-1",
+      dripStages: [],
+    });
+    m.liveSend.mockResolvedValue({
+      id: SEND_ID,
+      startedAt: new Date(Date.now() - 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 60 * 60 * 1000),
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(m.cancelSends).toHaveBeenCalled();
+    expect(sent(rep).code).toBe("ENQUEUE_REQUEST_ACCEPTED");
   });
 
   test("refuses a send when the allowance is already spent", async () => {
@@ -473,7 +708,11 @@ describe("sendCampaignHandler", () => {
 
     expect(rep.status).toHaveBeenCalledWith(502);
     expect(sent(rep).code).toBe("ENQUEUE_FAILED");
-    expect(m.update.mock.calls.at(-1)![2]).toMatchObject({ status: CampaignStatus.INACTIVE });
+    // The rollback records why, and marks the campaign failed rather than paused.
+    expect(m.update.mock.calls.at(-1)![2]).toMatchObject({
+      status: CampaignStatus.FAILED,
+      errorMessage: "Campaign not scheduled",
+    });
   });
 
   test("reports a failed dequeue rather than confirming the cancellation", async () => {

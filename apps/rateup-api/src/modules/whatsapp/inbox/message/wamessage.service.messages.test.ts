@@ -281,6 +281,32 @@ describe("addNewWaMessage", () => {
     });
   });
 
+  test("attributes a campaign message to its send session", async () => {
+    // Every per-attempt number — the attempts table, the send's own sent/failed
+    // counters — is derived from this column, and the status consumer reads it to
+    // decide which send a receipt belongs to. Dropped here, every attempt reads 0.
+    await addNewWaMessage(
+      { exchangeProcess: "send" } as any,
+      "contact-1",
+      WA_CREATED_AT,
+      PlatformType.WHATSAPP,
+      "phone-1",
+      "conv-1",
+      undefined,
+      undefined,
+      undefined,
+      false,
+      "campaign",
+      {},
+      undefined,
+      { campaignParticipantId: "participant-1", campaignSendId: "send-1" },
+    );
+
+    expect(
+      db.waMessage.create.mock.calls[0][0].data.WaMessageCampaginParticipantMap.create,
+    ).toMatchObject({ campaignParticipantId: "participant-1", campaignSendId: "send-1" });
+  });
+
   test("leaves stats unset for a normal WhatsApp message", async () => {
     await addNewWaMessage(
       { exchangeProcess: "receive" } as any,

@@ -21,6 +21,12 @@ import connection from "../../../utils/redisConnection.js";
 export const SCHEDULED_JOBS = [
   { id: "publishSurveys", pattern: "0/15 * * * *" },
   { id: "dripCampaigns", pattern: "*/4 * * * *", tz: "Etc/UTC" },
+  // Closes campaigns that drained cleanly. Firing due retries is NOT here: each
+  // scheduled retry carries its own delayed job (queues/campaignRetry.queue.ts)
+  // and goes off at its exact time, which a tick this coarse could not do. What
+  // is left is the other half of the old pairing — a campaign drains before its
+  // delivery webhooks land, so recognising a finished send still needs a sweep.
+  { id: "campaignSettle", pattern: "*/5 * * * *", tz: "Etc/UTC" },
   { id: "hourlyJobs", pattern: "0 * * * *" },
   { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },

@@ -35,6 +35,7 @@ import { downgradeExpiredSubscriptions } from "../../../modules/subscription/sub
 import { sweepMissedPayments } from "../../../modules/payment/payment.service.js";
 import { subscriptionExpiryAlert } from "../../../utils/email/payments/subscriptionExpiryAlert.js";
 import type { ScheduledJobId } from "../queues/cron.queue.js";
+import { settleSentCampaigns } from "../../../modules/campaign/campaignSettle.service.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -63,6 +64,13 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
   dripCampaigns: async () => {
     log.info("Running every 4min JOB --> Drip Campaign Processing");
     await safeRun("processDripCampaigns", processDripCampaigns);
+  },
+
+  campaignSettle: async () => {
+    log.info("Running every 5min JOB --> Campaign settle processing");
+    // Retries fire from their own delayed jobs now, so all this tick does is
+    // close campaigns whose sends turned out not to need a retry at all.
+    await safeRun("settleSentCampaigns", settleSentCampaigns);
   },
 
   hourlyJobs: async () => {

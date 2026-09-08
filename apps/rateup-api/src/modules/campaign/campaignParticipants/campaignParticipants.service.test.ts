@@ -365,10 +365,31 @@ describe("getCampaignParticipantsByCampaignIdPaginated", () => {
       limit: 50,
     } as any);
 
+    // `id` comes back too: the participants table links a row through to the
+    // contact, and to the inbox thread for a reply.
     expect(db.campaignParticipant.findMany.mock.calls[0][0].include.contact.select).toEqual({
+      id: true,
       name: true,
       phone: true,
       consent: true,
+    });
+  });
+
+  test("brings each participant's attempt history back with them", async () => {
+    await getCampaignParticipantsByCampaignIdPaginated(CAMPAIGN_ID, ORG_A, {
+      page: 0,
+      limit: 50,
+    } as any);
+
+    // One chip per attempt in the table, so the messages have to arrive ordered
+    // by the send they belonged to.
+    const include = db.campaignParticipant.findMany.mock.calls[0][0].include;
+    expect(include.WaMessageCampaginParticipantMap.orderBy).toEqual({
+      campaignSend: { attemptNo: "asc" },
+    });
+    expect(include.WaMessageCampaginParticipantMap.select.campaignSend.select).toEqual({
+      attemptNo: true,
+      trigger: true,
     });
   });
 
