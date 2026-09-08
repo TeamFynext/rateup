@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/config/queryClient";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Stack } from "expo-router";
 import { StatusBar, Text, TextInput } from "react-native";
@@ -52,7 +53,7 @@ if ((TextInput as any).defaultProps) {
   };
 }
 
-export const queryClient = new QueryClient();
+export { queryClient };
 
 function RootLayout() {
   const { colorScheme } = useColorScheme();

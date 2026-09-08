@@ -70,12 +70,16 @@ const AccountBar = ({
   const handleSignOut = async () => {
     setLoading(true);
     const res = await signOut();
+    setLoading(false);
 
+    // The device is cleared and the sign-in screen shown either way, so this
+    // is not a retry prompt. It reports the one thing that can still be wrong:
+    // the server session outliving the local one.
     if (!res.success) {
-      setLoading(false);
       return Toast.show({
         type: "error",
-        text1: "Sign Out failed, please try again later",
+        text1: "Signed out on this device",
+        text2: "We could not reach the server to end the session everywhere.",
       });
     }
 
@@ -83,8 +87,6 @@ const AccountBar = ({
       type: "success",
       text1: "Logged out successfully",
     });
-
-    setLoading(false);
   };
 
   const handleDeleteUser = () => {

@@ -4,6 +4,7 @@ import SuperTokens from "supertokens-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { unregisterPushToken } from "../utils/notification";
+import { clearLocalUserData } from "../utils/clearLocalData";
 import { Toast } from "toastify-react-native";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -54,16 +55,29 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   try {
-    await unregisterPushToken();
-    await AsyncStorage.removeItem("accessToken");
+    // Best effort, and deliberately not awaited into the failure path below:
+    // the device should still be cleared even if the server cannot be told to
+    // stop pushing to it.
+    try {
+      await unregisterPushToken();
+    } catch (error) {
+      console.error("Failed to unregister the push token on sign-out:", error);
+    }
+
     await SuperTokens.signOut();
-    router.replace("/auth/SignIn");
     return { success: true };
   } catch {
     return {
       success: false,
       message: "Sign Out failed. Please try again",
     };
+  } finally {
+    // Runs on both paths on purpose. If the session teardown fails we are left
+    // signed in locally, and leaving the previous account's contacts and
+    // messages on disk is the outcome worth avoiding most: the schema has no
+    // per-account scoping, so the next sign-in would hydrate them.
+    await clearLocalUserData();
+    router.replace("/auth/SignIn");
   }
 };
 
