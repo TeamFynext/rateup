@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { View, useColorScheme } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useLocalSearchParams } from "expo-router";
@@ -14,7 +14,23 @@ import {
 } from "@/utils/store";
 import { useContactById } from "@/api/inbox/contacts/contacts.query";
 import { useContactsStore } from "@/store/inboxStore";
+import { loadContactFromDB } from "@/utils/sqlite";
 import { Colors } from "@/constants/colors";
+
+/**
+ * `/api/contact/:id` and the cached row both return a bare Contact, which
+ * carries no session flag. Derive it from the 24h WhatsApp reply window, the
+ * same way the inbox does.
+ *
+ * Safe to run against cached data: the window is computed from the contact's
+ * last inbound timestamp, and a stale timestamp can only make the window look
+ * *more* expired, never less. The worst case is the template-only footer for a
+ * moment, never a free-form composer on a closed session.
+ */
+function deriveSessionActive(contact: { lastReceivedMessageTimeStamp?: string | null }) {
+  if (!contact?.lastReceivedMessageTimeStamp) return false;
+  return dayjs(contact.lastReceivedMessageTimeStamp).add(24, "hour").diff(dayjs(), "minute") > 0;
+}
 
 const ChatDisplay = () => {
   const params = useLocalSearchParams();
@@ -27,22 +43,49 @@ const ChatDisplay = () => {
 
   // The store is populated by the inbox row that was tapped, so every other way
   // into this screen — a notification deep link, and any cold start on this
-  // route — arrives with it empty or holding the *previous* contact, and the
-  // header renders blank or, worse, someone else's name. Refetch by id whenever
-  // the store does not already describe this route's contact.
-  const needsHydration = !!id && selectedContact?.id !== id;
-  const { data: fetchedContact } = useContactById(needsHydration ? id : "");
+  // route — arrives with it empty or holding the *previous* contact.
+  //
+  // Captured once, at mount, and deliberately not recomputed: the cache
+  // hydration below seeds the very store this reads, so a live check would flip
+  // to false the moment the cached row lands and switch the network fetch off,
+  // pinning the screen to stale data for as long as it stayed open.
+  const arrivedWithoutContact = useRef(
+    useSelectedContactStore.getState().selectedContact?.id !== id,
+  );
+  const { data: fetchedContact } = useContactById(arrivedWithoutContact.current ? id : "");
 
+  // Paint from the last inbox sync while the request is in flight. The row is
+  // already on disk for any contact the inbox has loaded, so a notification tap
+  // shows the real header immediately instead of a blank one. A miss — fresh
+  // install, a contact never listed, or the first open after a sign-out cleared
+  // the cache — simply falls through to the fetch, exactly as before.
   useEffect(() => {
-    if (!needsHydration || !fetchedContact) return;
-    // `/api/contact/:id` returns the bare Contact row, which has no session flag;
-    // it is derived from the 24h WhatsApp reply window exactly as the inbox does.
-    const sessionActive = fetchedContact.lastReceivedMessageTimeStamp
-      ? dayjs(fetchedContact.lastReceivedMessageTimeStamp).add(24, "hour").diff(dayjs(), "minute") >
-        0
-      : false;
-    setSelectedContact({ ...fetchedContact, sessionActive });
-  }, [needsHydration, fetchedContact, setSelectedContact]);
+    if (!id || !arrivedWithoutContact.current) return;
+    let cancelled = false;
+
+    loadContactFromDB(id)
+      .then((cached) => {
+        if (cancelled || !cached) return;
+        // The fetch may have resolved while we were reading disk. Cached data is
+        // older by definition, so it must never land on top of a fresh row.
+        if (useSelectedContactStore.getState().selectedContact?.id === id) return;
+        setSelectedContact({ ...cached, sessionActive: deriveSessionActive(cached) });
+      })
+      .catch((error) => {
+        // A cache miss is not a failure worth surfacing; the fetch still runs.
+        console.error("Failed to read the cached contact:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, setSelectedContact]);
+
+  // The network result always wins, including over anything seeded above.
+  useEffect(() => {
+    if (!fetchedContact) return;
+    setSelectedContact({ ...fetchedContact, sessionActive: deriveSessionActive(fetchedContact) });
+  }, [fetchedContact, setSelectedContact]);
 
   // Clear the unread badge on open, the way rateup-ui does it from
   // `setSelectedContact`. Placed on the route rather than on the inbox row's

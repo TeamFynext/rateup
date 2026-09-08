@@ -21,7 +21,8 @@ const ChatFooter = ({ id }: { id: string }) => {
   const t = getInboxRowTheme(isDark);
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
-  const { data: assignedUsers } = useGetAssignedUserForContact(id);
+  const { data: assignedUsers, isLoading: assignmentLoading } =
+    useGetAssignedUserForContact(id);
   const { userId } = useAuth();
   let currentUserAssignment = assignedUsers?.find((entry: any) => entry.assignedUserId == userId);
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
@@ -54,6 +55,19 @@ const ChatFooter = ({ id }: { id: string }) => {
       waSettings?.find((s: any) => s?.phone === sourceMessage?.sourceIdentifier)?.phoneId || ""
     );
   }, [waSettings, platform, sourceMessage]);
+
+  // Until the assignment request answers, we do not know whether this chat is
+  // unassigned — `assignedUsers` is undefined while loading, which the check
+  // below cannot tell apart from a genuine empty list. Asserting "Unassigned
+  // conversation" here was showing a confident wrong answer, most visibly on a
+  // notification tap, where the request starts from cold. Hold the space
+  // instead and let the real state land.
+  //
+  // `isLoading`, not `isPending`: the query is disabled without an id, and a
+  // disabled query stays pending forever, which would blank the footer for good.
+  if (assignmentLoading) {
+    return <View style={{ paddingBottom: insets.bottom }} />;
+  }
 
   if (
     !hasAssignedUsers ||

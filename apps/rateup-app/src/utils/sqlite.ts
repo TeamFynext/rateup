@@ -51,7 +51,7 @@ export async function saveContactsToDB(contacts: any[]) {
   }
 }
 
-export async function _loadContactFromDB(id: string): Promise<any | undefined> {
+export async function loadContactFromDB(id: string): Promise<any | undefined> {
   const db = await getDB();
   const result = await db.getFirstAsync<{ data: string }>(
     "SELECT data FROM contacts_global WHERE id = ?",

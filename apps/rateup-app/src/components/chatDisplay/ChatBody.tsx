@@ -20,7 +20,8 @@ import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
 import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
 import { Colors } from "@/constants/colors";
-import { useMessagesStore } from "@/store/inboxStore"; // NEW
+import { useMessagesStore } from "@/store/inboxStore";
+import { getMessagesFromIDB } from "@/utils/sqlite";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -45,6 +46,34 @@ const ChatBody = ({ id }: { id: string }) => {
   const key = `${id}_all`;
   const storeMessages = useMessagesStore((state) => state.messagesByKey.get(key)?.messages) ?? [];
   const mergeMessages = useMessagesStore((state) => state.mergeMessages);
+
+  // Paint the thread from disk while the first page is in flight.
+  //
+  // Every merge already writes messages to SQLite under this same key, so a
+  // chat the user has opened before is fully cached; nothing read it back,
+  // which is why a notification tap opened an empty thread and then filled in.
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    getMessagesFromIDB(key)
+      .then((cached) => {
+        if (cancelled || !cached?.length) return;
+        // `mergeMessages` lets the incoming object win field by field, and
+        // cached rows are older by definition, so they may only ever be applied
+        // to a thread the network has not populated yet.
+        if (useMessagesStore.getState().messagesByKey.get(key)?.messages?.length) return;
+        mergeMessages(key, cached, false);
+      })
+      .catch((error) => {
+        // A miss just means the thread paints when the request lands.
+        console.error("Failed to read cached messages:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, key, mergeMessages]);
 
   // Sync API data to Zustand
   useEffect(() => {
