@@ -3192,6 +3192,9 @@
     "{strategy} schedule": "{strategy} Zeitplan",
     "Activity": "Aktivität",
     "All": "Alle",
+    "All {count} stages have gone out": {
+      " Nothing further is scheduled": {}
+    },
     "All {count} stages have gone out. Nothing further is scheduled._one": "Alle {count}-Stufen sind ausgefallen. Weiteres ist nicht geplant._one",
     "All {count} stages have gone out. Nothing further is scheduled._other": "Alle {count}-Stufen sind ausgefallen. Weiteres ist nicht geplant._Sonstiges",
     "All recipients": "Alle Empfänger",
@@ -3204,7 +3207,6 @@
     "Attempts": "Versuche",
     "Audience": "Publikum",
     "Broadcast": "Ausstrahlung",
-    "Campaigns": "Kampagnen",
     "Cancel": "Abbrechen",
     "Cancel pending retries": "Ausstehende Wiederholungsversuche abbrechen",
     "Cancel schedule": "Planung abbrechen",
@@ -3258,6 +3260,7 @@
     "Off": "Aus",
     "On": "Auf",
     "On the next check": "Beim nächsten Check",
+    "Only the {count} recipients who were never messaged are sent to": {},
     "Only the {count} recipients who were never messaged are sent to._one": "Nur die {count}-Empfänger, die nie eine Nachricht erhalten haben, werden an._one gesendet",
     "Only the {count} recipients who were never messaged are sent to._other": "Nur die {count}-Empfänger, die nie eine Nachricht erhalten haben, werden an._other gesendet",
     "Open": "Offen",
@@ -3398,6 +3401,9 @@
     "Search {type}...": "Suche {type}...",
     "Select all on this page": "Wählen Sie alle auf dieser Seite aus",
     "Selected": "Ausgewählt",
+    "This takes all {count} recipients off the campaign": {
+      " Contacts and groups themselves are not deleted": {}
+    },
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._one": "Dadurch werden alle {count}-Empfänger aus der Kampagne entfernt. Kontakte und Gruppen selbst werden nicht gelöscht._one",
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._other": "Dadurch werden alle {count}-Empfänger aus der Kampagne entfernt. Kontakte und Gruppen selbst werden nicht gelöscht._andere",
     "Tick contacts on the left or pick a group. You can also save this draft and add recipients later.": "Klicken Sie links auf „Kontakte“ oder wählen Sie eine Gruppe aus. Sie können diesen Entwurf auch speichern und später Empfänger hinzufügen.",
@@ -3524,6 +3530,7 @@
     "{count} items aren't set. You can still launch — or fix them in a click._other": "{count} Elemente sind nicht festgelegt. Sie können sie weiterhin starten – oder sie mit einem Klick beheben._other",
     "{count} left_one": "{count} left_one",
     "{count} left_other": "{count} left_other",
+    "{count} placeholders still need a contact field": {},
     "{count} placeholders still need a contact field._one": "{count}-Platzhalter benötigen weiterhin ein Kontaktfeld._one",
     "{count} placeholders still need a contact field._other": "{count}-Platzhalter benötigen weiterhin ein Kontaktfeld._other",
     "{count}/day_one": "{count}/Tag_eins",
@@ -3575,6 +3582,7 @@
     "Every placeholder needs a contact field before this step can continue.": "Jeder Platzhalter benötigt ein Kontaktfeld, bevor dieser Schritt fortgesetzt werden kann.",
     "Every stage needs a template.": "Jede Phase benötigt eine Vorlage.",
     "Everything ready?": "Alles bereit?",
+    "Excluded from the spacing, so no attempt is due in this range": "Ausgenommen vom Abstand, daher ist in diesem Bereich kein Versuch fällig",
     "Fewer attempts": "Weniger Versuche",
     "Give up on anything still blocked after this": "Geben Sie alles auf, was danach noch blockiert ist",
     "hours": "Stunden",
@@ -3630,7 +3638,7 @@
     "Retries": "Wiederholungen",
     "Retries due in this range wait for the morning": "In diesem Bereich fällige Wiederholungsversuche warten auf den Morgen",
     "Retries of blocked messages don't count twice.": "Wiederholungsversuche blockierter Nachrichten werden nicht zweimal gezählt.",
-    "Retries soon, then backs off — most caps lift within the first hour.": "Versucht es bald noch einmal und macht dann einen Rückzieher – die meisten Großbuchstaben werden innerhalb der ersten Stunde aufgehoben.",
+    "Retries soon, then spreads the rest across your window — most caps lift within the first hour.": "Versucht es bald noch einmal und verteilt dann den Rest über Ihr Fenster – die meisten Großbuchstaben werden innerhalb der ersten Stunde hochgehoben.",
     "Retry blocked messages": "Blockierte Nachrichten erneut versuchen",
     "Retry window": "Fenster „Wiederholen“.",
     "Same time each day. Predictable, but slower to recover.": "Jeden Tag zur gleichen Zeit. Vorhersehbar, aber langsamere Erholung.",
@@ -3665,7 +3673,11 @@
     "Team": "Team",
     "Template": "Vorlage",
     "Template details": "Details zur Vorlage",
+    "The last attempt lands here; anything still blocked is given up": "Der letzte Versuch landet hier; alles, was noch blockiert ist, wird aufgegeben",
     "The type is fixed once a campaign exists — create a new one to change it.": "Der Typ ist festgelegt, sobald eine Kampagne vorhanden ist. Erstellen Sie eine neue, um ihn zu ändern.",
+    "This campaign has already been sent": {
+      " Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice": {}
+    },
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._one": "Diese Kampagne wurde bereits versendet. Es werden nur die {count} Empfänger gesendet, an die noch nie eine Nachricht gesendet wurde – niemand erhält zweimal eine Nachricht._einen",
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._other": "Diese Kampagne wurde bereits versendet. Es werden nur die {count} Empfänger gesendet, an die noch nie eine Nachricht gesendet wurde – niemand erhält zweimal eine Nachricht._andere",
     "This draft and everything set up on it are deleted. This cannot be undone.": "Dieser Entwurf und alle darauf eingerichteten Elemente werden gelöscht. Dies kann nicht rückgängig gemacht werden.",

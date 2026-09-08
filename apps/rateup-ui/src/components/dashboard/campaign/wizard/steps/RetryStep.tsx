@@ -1,5 +1,5 @@
 import { IconMinus, IconPlus, IconRefresh, IconSend, IconSparkles } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -17,21 +17,8 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 import { CampaignRetryStrategy } from "@/types/enums.ts";
 
+import { formatOffset, MAX_WINDOW_DAYS, previewSchedule, quietHoursOf } from "../retrySchedule.ts";
 import type { CampaignWizardStepProps } from "./step.types.ts";
-
-/**
- * The attempt schedule each strategy produces.
- *
- * Mirrors `SMART_OFFSETS_MINUTES` in rateup-api's `campaignRetry.service.ts`.
- * The first offset is also the settle delay: when the queue drains, messages
- * Meta accepted are still `SENT` and only flip to `FAILED` when the status
- * webhook lands, so an earlier retry would find nothing to re-attempt. Keep the
- * two lists in step — the point of showing them is that they are what happens.
- */
-const SMART_OFFSETS = ["+45m", "+4h", "+12h"] as const;
-
-/** Retries stop this far out regardless of attempts left; the API clamps to it too. */
-const MAX_WINDOW_DAYS = 7;
 
 /**
  * Automatic retries for messages Meta refused.
@@ -110,6 +97,18 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
     quietEnd,
   ]);
 
+  // The smart schedule is not a fixed table: it divides the retry window across
+  // the attempts, in waking time, so all three controls change the timeline. The
+  // preview is anchored on a fixed hour rather than `new Date()` so it does not
+  // re-shuffle under the user as the minutes tick past while they read it.
+  const smartOffsets = useMemo(() => {
+    const quiet = quietHoursOf(quietStart, quietEnd, quietOn);
+    const from = new Date(new Date().setMinutes(0, 0, 0));
+    return previewSchedule(maxAttempts, windowDays, quiet, from).map((attempt) =>
+      formatOffset(attempt.elapsedMinutes),
+    );
+  }, [maxAttempts, windowDays, quietOn, quietStart, quietEnd]);
+
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
   const summary = t(
     "Messages Meta refused with a retryable error will be {cadence} up to {attempts} over {window}{quiet}.",
@@ -167,9 +166,9 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
                 title={t("Smart retries")}
                 recommended
                 description={t(
-                  "Retries soon, then backs off — most caps lift within the first hour.",
+                  "Retries soon, then spreads the rest across your window — most caps lift within the first hour.",
                 )}
-                offsets={SMART_OFFSETS.slice(0, maxAttempts)}
+                offsets={smartOffsets}
               />
               <StrategyCard
                 value={CampaignRetryStrategy.FIXED_INTERVAL}
@@ -213,7 +212,9 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
                     incrementLabel={t("Longer window")}
                   />
                   <span className="text-muted-foreground/70 text-xs">
-                    {t("Give up on anything still blocked after this")}
+                    {strategy === CampaignRetryStrategy.SMART
+                      ? t("The last attempt lands here; anything still blocked is given up")
+                      : t("Give up on anything still blocked after this")}
                   </span>
                 </div>
 
@@ -245,7 +246,9 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
                     />
                   </div>
                   <span className="text-muted-foreground/70 text-xs">
-                    {t("Retries due in this range wait for the morning")}
+                    {strategy === CampaignRetryStrategy.SMART
+                      ? t("Excluded from the spacing, so no attempt is due in this range")
+                      : t("Retries due in this range wait for the morning")}
                   </span>
                 </div>
               </CardContent>
@@ -333,7 +336,7 @@ function StrategyCard({
           const isLast = index === offsets.length - 1;
           return (
             <span
-              key={offset}
+              key={`${index}-${offset}`}
               className={cn(
                 "absolute top-0 flex w-7 flex-col items-center gap-2",
                 isLast && "right-0",

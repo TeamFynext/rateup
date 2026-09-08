@@ -364,28 +364,28 @@ export function CampaignDetails() {
     <div className="flex flex-col relative h-full">
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="bg-card flex shrink-0 flex-col gap-3.5 px-8 pt-5">
-        <Link
-          to="/dashboard/campaign"
-          className="text-muted-foreground hover:text-foreground inline-flex w-max items-center gap-1 text-[13px]"
-        >
-          <IconArrowLeft className="size-3.5" aria-hidden />
-          {t("Campaigns")}
-        </Link>
-
         <div className="flex items-center justify-between gap-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <h1 className="font-display truncate text-2xl font-bold tracking-tight">
-              {campaign.name}
-            </h1>
-            <CampaignStatusBadge status={campaign.status} errorMessage={campaign.errorMessage} />
-            {/* The template is the single most-asked question about a running
+          <div className="flex gap-3">
+            <Link
+              to="/dashboard/campaign"
+              className="text-muted-foreground hover:text-foreground inline-flex w-max items-center gap-1 text-[13px]"
+            >
+              <IconArrowLeft className="size-3.5" aria-hidden />
+            </Link>
+            <div className="flex min-w-0 items-center gap-3">
+              <h1 className="font-display truncate text-2xl font-bold tracking-tight">
+                {campaign.name}
+              </h1>
+              <CampaignStatusBadge status={campaign.status} errorMessage={campaign.errorMessage} />
+              {/* The template is the single most-asked question about a running
                   campaign, so it sits in the title row rather than a tab away. */}
-            {campaign.template ? (
-              <span className="bg-secondary text-secondary-foreground inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs">
-                <IconFileText className="text-muted-foreground size-3.5" aria-hidden />
-                {campaign.template}
-              </span>
-            ) : null}
+              {campaign.template ? (
+                <span className="bg-secondary text-secondary-foreground inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs">
+                  <IconFileText className="text-muted-foreground size-3.5" aria-hidden />
+                  {campaign.template}
+                </span>
+              ) : null}
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">

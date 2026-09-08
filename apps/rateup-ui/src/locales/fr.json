@@ -3205,6 +3205,9 @@
     "{strategy} schedule": "Horaire {strategy}",
     "Activity": "Activité",
     "All": "Tout",
+    "All {count} stages have gone out": {
+      " Nothing further is scheduled": {}
+    },
     "All {count} stages have gone out. Nothing further is scheduled._one": "Toutes les étapes {count} sont sorties. Rien d'autre n'est prévu._one",
     "All {count} stages have gone out. Nothing further is scheduled._many": "Toutes les étapes {count} sont sorties. Rien d'autre n'est prévu._many",
     "All {count} stages have gone out. Nothing further is scheduled._other": "Toutes les étapes {count} sont sorties. Rien d'autre n'est prévu._other",
@@ -3218,7 +3221,6 @@
     "Attempts": "Tentatives",
     "Audience": "Public",
     "Broadcast": "Diffusion",
-    "Campaigns": "Campagnes",
     "Cancel": "Annuler",
     "Cancel pending retries": "Annuler les tentatives en attente",
     "Cancel schedule": "Annuler la programmation",
@@ -3273,6 +3275,7 @@
     "Off": "Désactivé",
     "On": "Sur",
     "On the next check": "Au prochain chèque",
+    "Only the {count} recipients who were never messaged are sent to": {},
     "Only the {count} recipients who were never messaged are sent to._one": "Seuls les destinataires {count} qui n'ont jamais reçu de message sont envoyés à._one",
     "Only the {count} recipients who were never messaged are sent to._many": "Seuls les destinataires {count} qui n'ont jamais reçu de message sont envoyés à._many",
     "Only the {count} recipients who were never messaged are sent to._other": "Seuls les destinataires {count} qui n'ont jamais reçu de message sont envoyés à._other",
@@ -3426,6 +3429,9 @@
     "Search {type}...": "Rechercher {type}...",
     "Select all on this page": "Sélectionnez tout sur cette page",
     "Selected": "Sélectionné",
+    "This takes all {count} recipients off the campaign": {
+      " Contacts and groups themselves are not deleted": {}
+    },
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._one": "Cela retire tous les destinataires {count} de la campagne. Les contacts et les groupes eux-mêmes ne sont pas supprimés._one",
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._many": "Cela retire tous les destinataires {count} de la campagne. Les contacts et les groupes eux-mêmes ne sont pas supprimés._many",
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._other": "Cela retire tous les destinataires {count} de la campagne. Les contacts et les groupes eux-mêmes ne sont pas supprimés._other",
@@ -3557,6 +3563,7 @@
     "{count} left_one": "{count} gauche_one",
     "{count} left_many": "{count} gauche_beaucoup",
     "{count} left_other": "{count} gauche_autre",
+    "{count} placeholders still need a contact field": {},
     "{count} placeholders still need a contact field._one": "Les espaces réservés {count} ont toujours besoin d'un champ de contact._one",
     "{count} placeholders still need a contact field._many": "Les espaces réservés {count} ont toujours besoin d'un champ de contact._many",
     "{count} placeholders still need a contact field._other": "Les espaces réservés {count} ont toujours besoin d'un champ de contact._other",
@@ -3610,6 +3617,7 @@
     "Every placeholder needs a contact field before this step can continue.": "Chaque espace réservé a besoin d'un champ de contact avant que cette étape puisse continuer.",
     "Every stage needs a template.": "Chaque étape a besoin d'un modèle.",
     "Everything ready?": "Tout est prêt ?",
+    "Excluded from the spacing, so no attempt is due in this range": "Exclu de l'espacement, aucune tentative n'est donc due dans cette plage",
     "Fewer attempts": "Moins de tentatives",
     "Give up on anything still blocked after this": "Abandonnez tout ce qui est encore bloqué après cela",
     "hours": "heures",
@@ -3666,7 +3674,7 @@
     "Retries": "Nouvelles tentatives",
     "Retries due in this range wait for the morning": "Les tentatives dues dans cette plage attendent le matin",
     "Retries of blocked messages don't count twice.": "Les tentatives de messages bloqués ne comptent pas deux fois.",
-    "Retries soon, then backs off — most caps lift within the first hour.": "Réessaye bientôt, puis recule : la plupart des majuscules se lèvent au cours de la première heure.",
+    "Retries soon, then spreads the rest across your window — most caps lift within the first hour.": "Réessaye bientôt, puis répartit le reste sur votre fenêtre : la plupart des majuscules se lèvent au cours de la première heure.",
     "Retry blocked messages": "Réessayez les messages bloqués",
     "Retry window": "Fenêtre de nouvelle tentative",
     "Same time each day. Predictable, but slower to recover.": "Même heure chaque jour. Prévisible, mais plus lent à récupérer.",
@@ -3703,7 +3711,11 @@
     "Team": "Équipe",
     "Template": "Modèle",
     "Template details": "Détails du modèle",
+    "The last attempt lands here; anything still blocked is given up": "La dernière tentative atterrit ici ; tout ce qui est encore bloqué est abandonné",
     "The type is fixed once a campaign exists — create a new one to change it.": "Le type est fixe une fois qu'une campagne existe : créez-en une nouvelle pour la modifier.",
+    "This campaign has already been sent": {
+      " Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice": {}
+    },
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._one": "Cette campagne a déjà été envoyée. Seuls les destinataires {count} auxquels il n’a jamais envoyé de message seront envoyés – personne ne reçoit de message deux fois._one",
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._many": "Cette campagne a déjà été envoyée. Seuls les destinataires {count} auxquels il n’a jamais envoyé de message seront envoyés – personne ne reçoit de message deux fois._many",
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._other": "Cette campagne a déjà été envoyée. Seuls les destinataires {count} auxquels il n’a jamais envoyé de message seront envoyés — personne ne reçoit de message deux fois._other",

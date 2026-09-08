@@ -3244,6 +3244,9 @@
     "{strategy} schedule": "{strategy} الجدول الزمني",
     "Activity": "نشاط",
     "All": "الجميع",
+    "All {count} stages have gone out": {
+      " Nothing further is scheduled": {}
+    },
     "All {count} stages have gone out. Nothing further is scheduled._zero": "لقد انتهت جميع مراحل {count}. لم تتم جدولة أي شيء آخر._صفر",
     "All {count} stages have gone out. Nothing further is scheduled._one": "لقد انتهت جميع مراحل {count}. لم تتم جدولة أي شيء آخر._واحد",
     "All {count} stages have gone out. Nothing further is scheduled._two": "لقد انتهت جميع مراحل {count}. لم تتم جدولة أي شيء آخر._two",
@@ -3260,7 +3263,6 @@
     "Attempts": "محاولات",
     "Audience": "جمهور",
     "Broadcast": "إذاعة",
-    "Campaigns": "الحملات",
     "Cancel": "يلغي",
     "Cancel pending retries": "إلغاء المحاولات المعلقة",
     "Cancel schedule": "إلغاء الجدولة",
@@ -3318,6 +3320,7 @@
     "Off": "عن",
     "On": "على",
     "On the next check": "في الفحص التالي",
+    "Only the {count} recipients who were never messaged are sent to": {},
     "Only the {count} recipients who were never messaged are sent to._zero": "يتم إرسال فقط المستلمين {count} الذين لم يتم مراسلتهم مطلقًا إلى._zero",
     "Only the {count} recipients who were never messaged are sent to._one": "يتم إرسال فقط المستلمين {count} الذين لم يتم مراسلتهم مطلقًا إلى._one",
     "Only the {count} recipients who were never messaged are sent to._two": "يتم إرسال فقط المستلمين {count} الذين لم يتم مراسلتهم مطلقًا إلى._two",
@@ -3510,6 +3513,9 @@
     "Search {type}...": "بحث {type}...",
     "Select all on this page": "حدد الكل في هذه الصفحة",
     "Selected": "مختارة",
+    "This takes all {count} recipients off the campaign": {
+      " Contacts and groups themselves are not deleted": {}
+    },
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._zero": "يؤدي هذا إلى إخراج جميع مستلمي {count} من الحملة. لا يتم حذف جهات الاتصال والمجموعات نفسها._صفر",
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._one": "يؤدي هذا إلى إخراج جميع مستلمي {count} من الحملة. لا يتم حذف جهات الاتصال والمجموعات نفسها._واحد",
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._two": "يؤدي هذا إلى إخراج جميع مستلمي {count} من الحملة. لا يتم حذف جهات الاتصال والمجموعات نفسها._two",
@@ -3656,6 +3662,7 @@
     "{count} left_few": "{count} اليسار_قليل",
     "{count} left_many": "{count} left_many",
     "{count} left_other": "{count} اليسار_أخرى",
+    "{count} placeholders still need a contact field": {},
     "{count} placeholders still need a contact field._zero": "لا تزال العناصر النائبة {count} بحاجة إلى حقل جهة اتصال._صفر",
     "{count} placeholders still need a contact field._one": "{count} لا تزال العناصر النائبة بحاجة إلى حقل جهة اتصال._واحد",
     "{count} placeholders still need a contact field._two": "{count} لا تزال العناصر النائبة بحاجة إلى حقل جهة اتصال._اثنان",
@@ -3715,6 +3722,7 @@
     "Every placeholder needs a contact field before this step can continue.": "يحتاج كل عنصر نائب إلى حقل جهة اتصال قبل أن تتمكن من متابعة هذه الخطوة.",
     "Every stage needs a template.": "كل مرحلة تحتاج إلى قالب.",
     "Everything ready?": "كل شيء جاهز؟",
+    "Excluded from the spacing, so no attempt is due in this range": "تم استبعاده من التباعد، لذا لا توجد محاولة مستحقة في هذا النطاق",
     "Fewer attempts": "محاولات أقل",
     "Give up on anything still blocked after this": "التخلي عن أي شيء لا يزال محظورا بعد هذا",
     "hours": "ساعات",
@@ -3774,7 +3782,7 @@
     "Retries": "إعادة المحاولة",
     "Retries due in this range wait for the morning": "إعادة المحاولة المستحقة في هذا النطاق تنتظر الصباح",
     "Retries of blocked messages don't count twice.": "لا يتم احتساب محاولات إعادة الرسائل المحظورة مرتين.",
-    "Retries soon, then backs off — most caps lift within the first hour.": "قم بإعادة المحاولة قريبًا، ثم التراجع — يتم رفع معظم الحدود القصوى خلال الساعة الأولى.",
+    "Retries soon, then spreads the rest across your window — most caps lift within the first hour.": "أعد المحاولة قريبًا، ثم قم بتوزيع الباقي عبر نافذتك — يتم رفع معظم الأحرف الاستهلالية خلال الساعة الأولى.",
     "Retry blocked messages": "أعد محاولة الرسائل المحظورة",
     "Retry window": "نافذة إعادة المحاولة",
     "Same time each day. Predictable, but slower to recover.": "نفس الوقت كل يوم. يمكن التنبؤ به، ولكنه أبطأ في التعافي.",
@@ -3817,7 +3825,11 @@
     "Team": "فريق",
     "Template": "نموذج",
     "Template details": "تفاصيل القالب",
+    "The last attempt lands here; anything still blocked is given up": "المحاولة الأخيرة تهبط هنا؛ يتم التخلي عن أي شيء لا يزال محظورًا",
     "The type is fixed once a campaign exists — create a new one to change it.": "يتم إصلاح النوع بمجرد وجود الحملة — قم بإنشاء حملة جديدة لتغييره.",
+    "This campaign has already been sent": {
+      " Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice": {}
+    },
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._zero": "لقد تم إرسال هذه الحملة بالفعل. لن يتم إرسال سوى المستلمين {count} الذين لم يتم مراسلتهم مطلقًا - ولن تتم مراسلة أي شخص مرتين._صفر",
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._one": "لقد تم إرسال هذه الحملة بالفعل. لن يتم إرسال سوى المستلمين {count} الذين لم يتم مراسلتهم مطلقًا - لن تتم مراسلة أي شخص مرتين._واحد",
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._two": "لقد تم إرسال هذه الحملة بالفعل. لن يتم إرسال سوى المستلمين {count} الذين لم يتم مراسلتهم مطلقًا - ولن تتم مراسلة أي شخص مرتين._two",

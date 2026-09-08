@@ -3192,6 +3192,9 @@
     "{strategy} schedule": "{strategy} शेड्यूल",
     "Activity": "गतिविधि",
     "All": "सभी",
+    "All {count} stages have gone out": {
+      " Nothing further is scheduled": {}
+    },
     "All {count} stages have gone out. Nothing further is scheduled._one": "सभी {count} चरण समाप्त हो गए हैं। आगे कुछ भी निर्धारित नहीं है._एक",
     "All {count} stages have gone out. Nothing further is scheduled._other": "सभी {count} चरण समाप्त हो गए हैं। आगे कुछ भी निर्धारित नहीं है._अन्य",
     "All recipients": "सभी प्राप्तकर्ता",
@@ -3204,7 +3207,6 @@
     "Attempts": "प्रयास",
     "Audience": "श्रोता",
     "Broadcast": "प्रसारण",
-    "Campaigns": "अभियान",
     "Cancel": "रद्द करना",
     "Cancel pending retries": "लंबित पुनर्प्रयासों को रद्द करें",
     "Cancel schedule": "शेड्यूल रद्द करें",
@@ -3258,6 +3260,7 @@
     "Off": "बंद",
     "On": "पर",
     "On the next check": "अगले चेक पर",
+    "Only the {count} recipients who were never messaged are sent to": {},
     "Only the {count} recipients who were never messaged are sent to._one": "केवल {count} प्राप्तकर्ताओं को, जिन्हें कभी संदेश नहीं भेजा गया, भेजा जाता है._one",
     "Only the {count} recipients who were never messaged are sent to._other": "केवल {count} प्राप्तकर्ताओं को, जिन्हें कभी संदेश नहीं भेजा गया था, अन्य को भेजा जाता है",
     "Open": "खुला",
@@ -3398,6 +3401,9 @@
     "Search {type}...": "खोजें {type}...",
     "Select all on this page": "इस पृष्ठ पर सभी का चयन करें",
     "Selected": "चयनित",
+    "This takes all {count} recipients off the campaign": {
+      " Contacts and groups themselves are not deleted": {}
+    },
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._one": "इससे सभी {count} प्राप्तकर्ता अभियान से बाहर हो जाते हैं। संपर्क और समूह स्वयं हटाए नहीं जाते._एक",
     "This takes all {count} recipients off the campaign. Contacts and groups themselves are not deleted._other": "इससे सभी {count} प्राप्तकर्ता अभियान से बाहर हो जाते हैं। संपर्क और समूह स्वयं नहीं हटाए जाते._अन्य",
     "Tick contacts on the left or pick a group. You can also save this draft and add recipients later.": "बाईं ओर संपर्कों पर निशान लगाएं या कोई समूह चुनें. आप इस ड्राफ्ट को सहेज भी सकते हैं और बाद में प्राप्तकर्ताओं को जोड़ सकते हैं।",
@@ -3524,6 +3530,7 @@
     "{count} items aren't set. You can still launch — or fix them in a click._other": "{count} आइटम सेट नहीं हैं. आप अभी भी लॉन्च कर सकते हैं - या उन्हें एक क्लिक में ठीक कर सकते हैं।_अन्य",
     "{count} left_one": "{count} बायां_एक",
     "{count} left_other": "{count} बाएँ_अन्य",
+    "{count} placeholders still need a contact field": {},
     "{count} placeholders still need a contact field._one": "{count} प्लेसहोल्डर्स को अभी भी एक संपर्क फ़ील्ड की आवश्यकता है।_एक",
     "{count} placeholders still need a contact field._other": "{count} प्लेसहोल्डर्स को अभी भी एक संपर्क फ़ील्ड की आवश्यकता है।_अन्य",
     "{count}/day_one": "{count}/दिन_एक",
@@ -3575,6 +3582,7 @@
     "Every placeholder needs a contact field before this step can continue.": "इस चरण को जारी रखने से पहले प्रत्येक प्लेसहोल्डर को एक संपर्क फ़ील्ड की आवश्यकता होती है।",
     "Every stage needs a template.": "प्रत्येक चरण को एक टेम्पलेट की आवश्यकता होती है।",
     "Everything ready?": "सब कुछ तैयार है?",
+    "Excluded from the spacing, so no attempt is due in this range": "रिक्ति से बाहर रखा गया है, इसलिए इस सीमा में कोई प्रयास देय नहीं है",
     "Fewer attempts": "कम प्रयास",
     "Give up on anything still blocked after this": "इसके बाद भी अवरुद्ध किसी भी चीज़ को छोड़ दें",
     "hours": "घंटे",
@@ -3630,7 +3638,7 @@
     "Retries": "पुनर्प्रयास",
     "Retries due in this range wait for the morning": "इस सीमा में पुनः प्रयास होने पर सुबह का इंतजार करें",
     "Retries of blocked messages don't count twice.": "अवरुद्ध संदेशों के पुनः प्रयास को दो बार नहीं गिना जाता है।",
-    "Retries soon, then backs off — most caps lift within the first hour.": "जल्द ही पुनः प्रयास करता है, फिर पीछे हट जाता है - अधिकांश कैप पहले घंटे के भीतर उठा लेते हैं।",
+    "Retries soon, then spreads the rest across your window — most caps lift within the first hour.": "जल्द ही पुनः प्रयास करें, फिर बाकी को अपनी विंडो पर फैला दें - अधिकांश कैप पहले घंटे के भीतर उठ जाते हैं।",
     "Retry blocked messages": "अवरुद्ध संदेशों को पुनः प्रयास करें",
     "Retry window": "पुनः प्रयास करें विंडो",
     "Same time each day. Predictable, but slower to recover.": "हर दिन एक ही समय. पूर्वानुमानित, लेकिन ठीक होने में धीमा।",
@@ -3665,7 +3673,11 @@
     "Team": "टीम",
     "Template": "खाका",
     "Template details": "टेम्पलेट विवरण",
+    "The last attempt lands here; anything still blocked is given up": "आखिरी प्रयास यहीं हुआ; जो कुछ भी अभी भी अवरुद्ध है उसे छोड़ दिया गया है",
     "The type is fixed once a campaign exists — create a new one to change it.": "अभियान मौजूद होने पर प्रकार तय हो जाता है - इसे बदलने के लिए एक नया बनाएं।",
+    "This campaign has already been sent": {
+      " Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice": {}
+    },
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._one": "यह अभियान पहले ही भेजा जा चुका है. केवल {count} प्राप्तकर्ताओं को ही भेजा जाएगा जिन्हें इसने कभी संदेश नहीं भेजा है - किसी को भी दो बार संदेश नहीं भेजा जाता है।_एक",
     "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice._other": "यह अभियान पहले ही भेजा जा चुका है. केवल {count} प्राप्तकर्ताओं को ही भेजा जाएगा जिन्हें इसने कभी संदेश नहीं भेजा है - किसी को भी दो बार संदेश नहीं भेजा जाता है।_अन्य",
     "This draft and everything set up on it are deleted. This cannot be undone.": "यह ड्राफ्ट और इस पर सेट की गई सभी चीजें हटा दी गई हैं। इसे असंपादित नहीं किया जा सकता है।",
