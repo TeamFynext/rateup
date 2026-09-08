@@ -9,10 +9,8 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { useCampaignData } from "@/backend/campaign/campaign.query";
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
-import { useConversationLimit } from "@/backend/stats/stats.query";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
@@ -57,8 +55,6 @@ import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
-import { CampaignStatus, CampaignType } from "@/types/enums.ts";
-import type { Campaign } from "@/types/global";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import DocsButton from "./docs-button.tsx";
@@ -650,21 +646,6 @@ export default function AppSidebar({
     [userData],
   );
 
-  // The campaigns sub-nav's counts and the allowance meter beneath it. Both are
-  // cheap reads the sidebar already has a query client for, and both are what
-  // the campaigns panel is otherwise missing next to every other section.
-  const { data: campaignList } = useCampaignData(CampaignType.WHATSAPP);
-  const conversations = useConversationLimit();
-
-  const campaignCounts = useMemo(() => {
-    const rows: Campaign[] = campaignList?.data ?? [];
-    return {
-      total: rows.length,
-      drafts: rows.filter((row) => row.status === CampaignStatus.DRAFT).length,
-      scheduled: rows.filter((row) => row.status === CampaignStatus.SCHEDULED).length,
-    };
-  }, [campaignList]);
-
   const navMain = useNavMain({
     subscription,
     lifecycles: user?.showLifecycle ? lifecycles : [],
@@ -681,8 +662,6 @@ export default function AppSidebar({
     sectionCounts: useChatContactCountStore().sectionCounts,
     pipelineNav,
     setupNav,
-    campaignCounts,
-    conversationAllowance: conversations,
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);

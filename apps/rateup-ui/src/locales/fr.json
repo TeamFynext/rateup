@@ -3140,32 +3140,6 @@
   "Example": {
     " /points": "Exemple : /points"
   },
-  "campaign.resend": {
-    "{total} recipients will be sent over {days} day(s)": "{total} destinataires seront envoyés sur {days} jour(s)",
-    "Cancel": "Annuler",
-    "Choose when to send and which participants to resend to": "Choisissez quand envoyer et à quels participants renvoyer",
-    "Date": "Date",
-    "Enter a daily send limit of at least 1": "Saisissez une limite d'envoi quotidienne d'au moins 1",
-    "It goes to {recipients} people and you have {remaining} conversations left {period}, so up to {shortfall} may not be delivered. A contact you are already in an open conversation with costs nothing extra, so the real number may be lower.": "Il est destiné à {recipients} personnes et il vous reste {remaining} conversations à {period} ; il est donc possible que jusqu'à {shortfall} ne soient pas diffusées. Un contact avec lequel vous êtes déjà en conversation ouverte ne coûte rien de plus, le nombre réel peut donc être inférieur.",
-    "Limit messages per day": "Limiter les messages par jour",
-    "messages per day": "messages par jour",
-    "Messages per day": "Messages par jour",
-    "No conversations left": "Il ne reste plus aucune conversation",
-    "Participant Status": "Statut des participants",
-    "Resend Campaign": "Renvoyer la campagne",
-    "Schedule Later": "Planifier plus tard",
-    "Select at least one status": "Sélectionnez au moins un statut",
-    "Select date and time": "Sélectionnez la date et l'heure",
-    "Send Now": "Envoyer maintenant",
-    "Send time": "Heure d'envoi",
-    "Sending...": "Envoi...",
-    "Spread this campaign across consecutive days instead of sending at once. Saved to the campaign.": "Répartissez cette campagne sur plusieurs jours consécutifs au lieu de l'envoyer en une seule fois. Enregistré dans la campagne.",
-    "This campaign may not reach everyone": "Cette campagne pourrait ne pas toucher tout le monde",
-    "this month": "ce mois-ci",
-    "this year": "cette année",
-    "When to send": "Quand envoyer",
-    "You have used all {max} conversations on your plan {period}, so this campaign cannot be sent yet. Buy a conversation pack or wait for your allowance to reset.": "Vous avez utilisé toutes les conversations {max} sur votre forfait {period}, cette campagne ne peut donc pas encore être envoyée. Achetez un pack de conversation ou attendez que votre allocation soit réinitialisée."
-  },
   "campaign.performance": {
     "Campaign Performance": "Performances de la campagne",
     "Delivered": "Livré",
@@ -3394,7 +3368,22 @@
     "Timezone": "Fuseau horaire",
     "Type": "Tapez",
     "Unnamed contact": "Contact anonyme",
-    "We couldn't load this campaign.": "Nous n'avons pas pu charger cette campagne."
+    "We couldn't load this campaign.": "Nous n'avons pas pu charger cette campagne.",
+    "Wait for the campaign's current send to finish.": "Attendez la fin de l'envoi en cours de la campagne.",
+    "Retrying": "Nouvelle tentative",
+    "Scheduled send": "Envoi programmé",
+    "Set when the campaign was scheduled": "Défini lors de la programmation de la campagne",
+    "Cancel schedule": "Annuler la programmation",
+    "failed with a retryable error": "en échec avec une erreur réessayable",
+    "in this campaign": "dans cette campagne",
+    "Pause": "Mettre en pause",
+    "Pause campaign": "Mettre la campagne en pause",
+    "Resume": "Reprendre",
+    "Recipients who have not been messaged yet are taken off the queue. Messages already sent cannot be recalled. You can resume the campaign later.": "Les destinataires qui n'ont pas encore été contactés sont retirés de la file d'attente. Les messages déjà envoyés ne peuvent pas être rappelés. Vous pourrez reprendre la campagne plus tard.",
+    "Sends to the {count} recipients not messaged yet": "Envoie aux {count} destinataires pas encore contactés",
+    "Initial send": "Envoi initial",
+    "{count} recipients queued for {when}": "{count} destinataires en file pour le {when}",
+    "Puts the campaign back on its schedule for {when}": "Reprogramme la campagne pour le {when}"
   },
   "Important": {
     " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Sélectionnez uniquement les étapes qui appartiennent à la configuration de pipeline et de sous-pipeline sélectionnée."
@@ -3589,7 +3578,7 @@
     "Live preview · as {name} will see it": "Aperçu en direct · comme {name} le verra",
     "Longer window": "Fenêtre plus longue",
     "Max attempts": "Nombre maximum de tentatives",
-    "Messages Meta blocked for frequency capping will be {cadence} up to {attempts} over {window}{quiet}.": "Les messages méta bloqués pour la limitation du nombre d'expositions s'étendront de {cadence} à {attempts} sur {window}{quiet}.",
+    "Messages Meta refused with a retryable error will be {cadence} up to {attempts} over {window}{quiet}.": "Les messages refusés par Meta avec une erreur réessayable seront {cadence} jusqu'à {attempts} sur {window}{quiet}.",
     "Messages per day": "Messages par jour",
     "minutes": "minutes",
     "More attempts": "Plus de tentatives",
@@ -3612,7 +3601,7 @@
     "Only approved templates can be sent. {count} approved._one": "Seuls les modèles approuvés peuvent être envoyés. {count} approuvé._one",
     "Only approved templates can be sent. {count} approved._many": "Seuls les modèles approuvés peuvent être envoyés. {count} approuvé._beaucoup",
     "Only approved templates can be sent. {count} approved._other": "Seuls les modèles approuvés peuvent être envoyés. {count} approuvé._autre",
-    "Only frequency caps and temporary errors. Invalid numbers are never retried.": "Uniquement les limites de fréquence et les erreurs temporaires. Les numéros invalides ne sont jamais réessayés.",
+    "Only failures worth another attempt: frequency caps, temporary errors, and numbers that could not receive the message. Rejected templates are never retried.": "Uniquement les échecs qui méritent une nouvelle tentative : limites de fréquence, erreurs temporaires et numéros n'ayant pas pu recevoir le message. Les modèles refusés ne sont jamais réessayés.",
     "Only send to contacts who opted in": "Envoyer uniquement aux contacts qui se sont inscrits",
     "Optional — you can add recipients after saving.": "Facultatif : vous pouvez ajouter des destinataires après l'enregistrement.",
     "Pace": "Rythme",
@@ -3681,7 +3670,8 @@
     "Who should receive this?": "Qui devrait recevoir cela ?",
     "You can change everything else later.": "Vous pourrez changer tout le reste plus tard.",
     "Your business": "Votre entreprise",
-    "Your conversation allowance is fully used, so nothing would be delivered.": "Votre allocation de conversation est entièrement utilisée, donc rien ne sera livré."
+    "Your conversation allowance is fully used, so nothing would be delivered.": "Votre allocation de conversation est entièrement utilisée, donc rien ne sera livré.",
+    "Draft saved": "Brouillon enregistré"
   },
   "campaign.analytics": {
     "{count} dropped off here_one": "{count} a été déposé ici_one",
@@ -3703,7 +3693,7 @@
     "Delivered": "Livré",
     "Delivery funnel": "Entonnoir de livraison",
     "Drip": "Goutte à goutte",
-    "Every send is numbered. Retries only re-attempt messages Meta limited.": "Chaque envoi est numéroté. Les tentatives ne font que réessayer les messages Meta limités.",
+    "Every send is numbered. Retries only re-attempt failures worth another try.": "Chaque envoi est numéroté. Les tentatives ne réessaient que les échecs qui méritent une nouvelle tentative.",
     "Everyone this attempt went out to.": "Tout le monde à qui cette tentative a été adressée.",
     "Failed": "Échec",
     "Manual": "Manuel",

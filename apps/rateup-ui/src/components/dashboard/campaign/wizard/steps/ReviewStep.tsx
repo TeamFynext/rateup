@@ -2,6 +2,7 @@ import { IconAlertTriangle, IconPencil, IconRocket, IconSend } from "@tabler/ico
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 import {
   useCampaignRetryPolicy,
@@ -12,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,9 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
   const sendCampaign = useSendCampaign(campaignId, campaign?.teamId ?? "");
   const sendTest = useSendCampaignTestMutation();
   const [testPhone, setTestPhone] = useState("");
+  // A number the picker itself calls valid: the button is the only guard here,
+  // and a test send spends a conversation whether or not anyone receives it.
+  const testPhoneIsValid = Boolean(testPhone) && isValidPhoneNumber(testPhone);
 
   // Review has no "Next"; the shell hides the button on the last step. Registered
   // anyway so a stale submit from the previous step can never fire here — and so
@@ -69,6 +73,11 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
   if (!campaign) return null;
 
   const scheduled = Boolean(campaign.campaignSentAt);
+  // A campaign that has already gone out once — reached through "Send to more"
+  // rather than through creating one. `statuses` is PENDING, so the preflight
+  // count is already exactly the recipients it has never messaged; what was
+  // missing is anywhere that says so before the button is pressed.
+  const alreadySent = Boolean(campaign.startedAt);
   const recipients = preflight.data?.recipients ?? campaign.campaignParticipantsCount ?? 0;
   const shortfall = preflight.data?.metered ? preflight.data.shortfall : 0;
   const exhausted = preflight.data?.exhausted ?? false;
@@ -306,6 +315,15 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
           </div>
         ) : null}
 
+        {alreadySent ? (
+          <div className="bg-muted text-secondary-foreground rounded-lg px-3 py-2.5 text-[12.5px] leading-snug">
+            {t(
+              "This campaign has already been sent. Only the {count} recipients it has never messaged will be sent to — nobody is messaged twice.",
+              { count: recipients.toLocaleString() },
+            )}
+          </div>
+        ) : null}
+
         {wizard.canLaunch ? null : (
           <div className="bg-muted text-secondary-foreground rounded-lg px-3 py-2.5 text-[12.5px] leading-snug">
             {t("Add a template before launching — everything else is optional.")}
@@ -319,7 +337,13 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
           onClick={() => void launch()}
         >
           <IconRocket className="size-4" aria-hidden />
-          {scheduled ? t("Schedule campaign") : t("Launch campaign")}
+          {alreadySent
+            ? scheduled
+              ? t("Schedule for {count} new recipients", { count: recipients.toLocaleString() })
+              : t("Send to {count} new recipients", { count: recipients.toLocaleString() })
+            : scheduled
+              ? t("Schedule campaign")
+              : t("Launch campaign")}
         </Button>
 
         {/* A rehearsal before spending the audience. Opens no send session and
@@ -338,24 +362,32 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
               className="flex flex-col gap-3"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (testPhone.trim()) sendTest.mutate({ campaignId, phone: testPhone });
+                if (testPhoneIsValid) sendTest.mutate({ campaignId, phone: testPhone });
               }}
             >
               <Field>
                 <FieldLabel htmlFor="campaign-test-phone">{t("Send a test to")}</FieldLabel>
-                <Input
+                {/* The same country-picker input as every other number in the
+                    product. A bare text field let a national number through with
+                    no country code, which Meta accepts and delivers to nobody —
+                    a test that appears to be sent and never arrives is worse than
+                    no test at all. */}
+                <PhoneInput
                   id="campaign-test-phone"
-                  type="tel"
-                  autoComplete="tel"
-                  placeholder="+91 98765 43210"
+                  name="campaign-test-phone"
+                  defaultCountry="IN"
+                  international
+                  countryCallingCodeEditable={false}
+                  placeholder={t("Enter phone number")}
                   value={testPhone}
-                  onChange={(event) => setTestPhone(event.target.value)}
+                  onChange={(value) => setTestPhone(value ?? "")}
+                  className="w-full"
                 />
                 <FieldDescription>
                   {t("Sends the real template. It counts towards your allowance.")}
                 </FieldDescription>
               </Field>
-              <Button type="submit" disabled={!testPhone.trim() || sendTest.isPending}>
+              <Button type="submit" disabled={!testPhoneIsValid || sendTest.isPending}>
                 {sendTest.isPending ? t("Sending…") : t("Send test")}
               </Button>
             </form>

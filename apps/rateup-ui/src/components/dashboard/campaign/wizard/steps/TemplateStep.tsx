@@ -9,6 +9,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -66,6 +67,20 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
   );
   const { placeholders, options } = useTemplateVariables(selected);
 
+  // What Next refuses on. A template with no placeholders is complete the moment
+  // it is picked; one with placeholders is not a message until every slot says
+  // where its text comes from — an unmapped one is delivered as the literal
+  // "{{2}}", to a real customer, and no later step asks about it again.
+  const unmapped = useMemo(
+    () => placeholders.map((_, index) => index).filter((index) => !dynamicTags[index]),
+    [placeholders, dynamicTags],
+  );
+  const incomplete = !templateId || unmapped.length > 0;
+  // Raised by pressing Next, not by arriving: the mapping starts empty for every
+  // template, and a step that opens shouting at you is not a step anyone reads.
+  const [showErrors, setShowErrors] = useState(false);
+  const blocking = showErrors && incomplete;
+
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return templates.filter((tpl) => {
@@ -85,7 +100,24 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
 
   useEffect(() => {
     registerSubmit(async () => {
-      if (!templateId) return;
+      // Next used to do nothing at all with no template chosen — the button
+      // looked broken rather than refusing — and it let an unmapped placeholder
+      // through without a word.
+      //
+      // "Save & exit" is held to the lower bar: a template is needed to write
+      // anything at all, but a half-finished mapping is exactly the sort of
+      // thing a draft is meant to hold on to until you come back.
+      const blocked = wizard.isExiting() ? !templateId : incomplete;
+      if (blocked) {
+        setShowErrors(true);
+        toast.error(
+          !templateId
+            ? t("Choose a template to continue.")
+            : t("Map every placeholder to a contact field to continue."),
+          { id: "campaign-template-step" },
+        );
+        return;
+      }
       // The flow id travels with the template: a template whose button opens a
       // flow only works if the campaign records which flow.
       const flowId =
@@ -97,7 +129,7 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
         ...(flowId ? { flowId: String(flowId) } : {}),
       });
     });
-  }, [registerSubmit, wizard, templateId, dynamicTags, selected]);
+  }, [registerSubmit, wizard, templateId, dynamicTags, selected, incomplete, t]);
 
   // What the preview substitutes for each `{{n}}`, so the phone shows a real
   // message rather than a template with holes in it.
@@ -120,10 +152,17 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
           <h1 className="font-display text-xl font-bold tracking-tight">
             {t("Choose a template")}
           </h1>
-          <p className="text-muted-foreground text-[13px]">
-            {t("Only approved templates can be sent. {count} approved.", {
-              count: templates.length,
-            })}
+          <p
+            className={cn(
+              "text-[13px]",
+              blocking && !templateId ? "text-destructive font-medium" : "text-muted-foreground",
+            )}
+          >
+            {blocking && !templateId
+              ? t("Choose a template to continue.")
+              : t("Only approved templates can be sent. {count} approved.", {
+                  count: templates.length,
+                })}
           </p>
         </div>
 
@@ -251,7 +290,11 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
                           })
                         }
                       >
-                        <SelectTrigger size="sm" className="w-full min-w-0">
+                        <SelectTrigger
+                          size="sm"
+                          className="w-full min-w-0"
+                          aria-invalid={blocking && !field}
+                        >
                           <SelectValue placeholder={t("Choose a field")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -275,12 +318,24 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
                 })}
               </div>
 
-              {dynamicTags.some((tag) => !tag) ? (
-                <div className="text-secondary-foreground flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-[12.5px] leading-snug dark:bg-blue-950/30">
-                  <IconInfoCircle className="text-primary mt-px size-4 shrink-0" aria-hidden />
-                  {t(
-                    "Unmapped placeholders are sent as-is. Map every one before launching, or the message will read oddly.",
+              {unmapped.length > 0 ? (
+                <div
+                  className={cn(
+                    "flex items-start gap-2 rounded-lg px-3 py-2.5 text-[12.5px] leading-snug",
+                    blocking
+                      ? "bg-destructive/10 text-destructive"
+                      : "text-secondary-foreground bg-blue-50 dark:bg-blue-950/30",
                   )}
+                >
+                  <IconInfoCircle
+                    className={cn("mt-px size-4 shrink-0", blocking ? "" : "text-primary")}
+                    aria-hidden
+                  />
+                  {blocking
+                    ? t("{count} placeholders still need a contact field.", {
+                        count: unmapped.length,
+                      })
+                    : t("Every placeholder needs a contact field before this step can continue.")}
                 </div>
               ) : null}
             </CardContent>

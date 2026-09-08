@@ -28,6 +28,12 @@ export const campaignKeys = {
   sendParticipants: (campaignId: KeyPart, sendId: KeyPart, filters: KeyPart) =>
     ["campaignSendParticipants", campaignId, sendId, filters] as const,
   analytics: (campaignId: KeyPart) => ["campaignAnalytics", campaignId] as const,
+  /**
+   * Every recipient-table key for a campaign. The list key carries paging, search,
+   * sort and filters after this prefix, so anything invalidating "the recipients"
+   * has to match on the prefix rather than rebuild whatever the table is showing.
+   */
+  participantsRoot: (campaignId: KeyPart) => ["campaignParticipants", campaignId] as const,
   retryPolicy: (campaignId: KeyPart) => ["campaignRetryPolicy", campaignId] as const,
 } as const;
 

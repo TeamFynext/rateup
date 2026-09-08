@@ -3134,32 +3134,6 @@
   "Example": {
     " /points": "उदाहरण: /अंक"
   },
-  "campaign.resend": {
-    "{total} recipients will be sent over {days} day(s)": "{total} प्राप्तकर्ताओं को {days} दिन में भेजा जाएगा",
-    "Cancel": "रद्द करना",
-    "Choose when to send and which participants to resend to": "चुनें कि कब भेजना है और किन प्रतिभागियों को दोबारा भेजना है",
-    "Date": "तारीख",
-    "Enter a daily send limit of at least 1": "कम से कम 1 की दैनिक भेजने की सीमा दर्ज करें",
-    "It goes to {recipients} people and you have {remaining} conversations left {period}, so up to {shortfall} may not be delivered. A contact you are already in an open conversation with costs nothing extra, so the real number may be lower.": "यह {recipients} लोगों को जाता है और आपके पास {remaining} वार्तालाप {period} बचे हैं, इसलिए {shortfall} तक वितरित नहीं किया जा सकता है। जिस संपर्क में आप पहले से ही खुली बातचीत में हैं, उसकी कोई अतिरिक्त लागत नहीं है, इसलिए वास्तविक संख्या कम हो सकती है।",
-    "Limit messages per day": "संदेशों को प्रतिदिन सीमित करें",
-    "messages per day": "प्रति दिन संदेश",
-    "Messages per day": "प्रति दिन संदेश",
-    "No conversations left": "कोई बातचीत नहीं बची",
-    "Participant Status": "प्रतिभागी स्थिति",
-    "Resend Campaign": "अभियान पुनः भेजें",
-    "Schedule Later": "बाद में शेड्यूल करें",
-    "Select at least one status": "कम से कम एक स्थिति चुनें",
-    "Select date and time": "दिनांक और समय चुनें",
-    "Send Now": "अब भेजें",
-    "Send time": "समय भेजें",
-    "Sending...": "भेजा जा रहा है...",
-    "Spread this campaign across consecutive days instead of sending at once. Saved to the campaign.": "इस अभियान को एक बार में भेजने के बजाय लगातार दिनों में फैलाएं। अभियान में सहेजा गया.",
-    "This campaign may not reach everyone": "यह अभियान सभी तक नहीं पहुंच पाएगा",
-    "this month": "इस महीने",
-    "this year": "इस साल",
-    "When to send": "कब भेजना है",
-    "You have used all {max} conversations on your plan {period}, so this campaign cannot be sent yet. Buy a conversation pack or wait for your allowance to reset.": "आपने अपनी योजना {period} पर सभी {max} वार्तालापों का उपयोग किया है, इसलिए यह अभियान अभी तक नहीं भेजा जा सकता है। एक वार्तालाप पैक खरीदें या अपने भत्ते के रीसेट होने की प्रतीक्षा करें।"
-  },
   "campaign.performance": {
     "Campaign Performance": "अभियान प्रदर्शन",
     "Delivered": "पहुंचा दिया",
@@ -3373,7 +3347,22 @@
     "Timezone": "समयक्षेत्र",
     "Type": "प्रकार",
     "Unnamed contact": "अनाम संपर्क",
-    "We couldn't load this campaign.": "हम इस अभियान को लोड नहीं कर सके."
+    "We couldn't load this campaign.": "हम इस अभियान को लोड नहीं कर सके.",
+    "Wait for the campaign's current send to finish.": "कैंपेन का मौजूदा प्रेषण पूरा होने तक प्रतीक्षा करें।",
+    "Retrying": "पुनः प्रयास हो रहा है",
+    "Scheduled send": "निर्धारित प्रेषण",
+    "Set when the campaign was scheduled": "कैंपेन शेड्यूल करते समय तय किया गया",
+    "Cancel schedule": "शेड्यूल रद्द करें",
+    "failed with a retryable error": "पुनः प्रयास योग्य त्रुटि के साथ विफल",
+    "in this campaign": "इस कैंपेन में",
+    "Pause": "रोकें",
+    "Pause campaign": "कैंपेन रोकें",
+    "Resume": "फिर से शुरू करें",
+    "Recipients who have not been messaged yet are taken off the queue. Messages already sent cannot be recalled. You can resume the campaign later.": "जिन प्राप्तकर्ताओं को अभी तक संदेश नहीं भेजा गया है, उन्हें कतार से हटा दिया जाता है। पहले से भेजे गए संदेश वापस नहीं लिए जा सकते। आप कैंपेन को बाद में फिर से शुरू कर सकते हैं।",
+    "Sends to the {count} recipients not messaged yet": "उन {count} प्राप्तकर्ताओं को भेजता है जिन्हें अभी तक संदेश नहीं मिला",
+    "Initial send": "पहला प्रेषण",
+    "{count} recipients queued for {when}": "{when} के लिए {count} प्राप्तकर्ता कतार में",
+    "Puts the campaign back on its schedule for {when}": "कैंपेन को {when} के अपने शेड्यूल पर वापस रखता है"
   },
   "Important": {
     " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
@@ -3562,7 +3551,7 @@
     "Live preview · as {name} will see it": "लाइव पूर्वावलोकन · {name} इसे देखेगा",
     "Longer window": "लम्बी खिड़की",
     "Max attempts": "अधिकतम प्रयास",
-    "Messages Meta blocked for frequency capping will be {cadence} up to {attempts} over {window}{quiet}.": "फ़्रीक्वेंसी कैपिंग के लिए मेटा ब्लॉक किए गए संदेश {cadence} से {attempts} तक {window}{quiet} से अधिक होंगे।",
+    "Messages Meta refused with a retryable error will be {cadence} up to {attempts} over {window}{quiet}.": "जिन संदेशों को मेटा ने पुनः प्रयास योग्य त्रुटि के साथ अस्वीकार किया, वे {cadence} से {attempts} तक {window}{quiet} होंगे।",
     "Messages per day": "प्रति दिन संदेश",
     "minutes": "मिनट",
     "More attempts": "और अधिक प्रयास",
@@ -3584,7 +3573,7 @@
     },
     "Only approved templates can be sent. {count} approved._one": "केवल स्वीकृत टेम्प्लेट ही भेजे जा सकते हैं. {count} स्वीकृत._एक",
     "Only approved templates can be sent. {count} approved._other": "केवल स्वीकृत टेम्प्लेट ही भेजे जा सकते हैं. {count} स्वीकृत._अन्य",
-    "Only frequency caps and temporary errors. Invalid numbers are never retried.": "केवल फ़्रीक्वेंसी कैप और अस्थायी त्रुटियाँ। अमान्य संख्याओं का कभी पुनः प्रयास नहीं किया जाता.",
+    "Only failures worth another attempt: frequency caps, temporary errors, and numbers that could not receive the message. Rejected templates are never retried.": "केवल वे विफलताएँ जो एक और प्रयास के योग्य हैं: फ़्रीक्वेंसी कैप, अस्थायी त्रुटियाँ, और वे नंबर जो संदेश प्राप्त नहीं कर सके। अस्वीकृत टेम्पलेट का कभी पुनः प्रयास नहीं किया जाता।",
     "Only send to contacts who opted in": "केवल उन संपर्कों को भेजें जिन्होंने ऑप्ट इन किया है",
     "Optional — you can add recipients after saving.": "वैकल्पिक - आप सहेजने के बाद प्राप्तकर्ताओं को जोड़ सकते हैं।",
     "Pace": "गति",
@@ -3652,7 +3641,8 @@
     "Who should receive this?": "इसे किसे प्राप्त करना चाहिए?",
     "You can change everything else later.": "आप बाद में बाकी सब कुछ बदल सकते हैं.",
     "Your business": "तुम्हारा व्यापार",
-    "Your conversation allowance is fully used, so nothing would be delivered.": "आपके वार्तालाप भत्ते का पूरा उपयोग हो चुका है, इसलिए कुछ भी वितरित नहीं किया जाएगा।"
+    "Your conversation allowance is fully used, so nothing would be delivered.": "आपके वार्तालाप भत्ते का पूरा उपयोग हो चुका है, इसलिए कुछ भी वितरित नहीं किया जाएगा।",
+    "Draft saved": "ड्राफ़्ट सहेजा गया"
   },
   "campaign.analytics": {
     "{count} dropped off here_one": "{count} ने यहां_एक को छोड़ दिया",
@@ -3671,7 +3661,7 @@
     "Delivered": "पहुंचा दिया",
     "Delivery funnel": "डिलिवरी फ़नल",
     "Drip": "टपक",
-    "Every send is numbered. Retries only re-attempt messages Meta limited.": "प्रत्येक प्रेषण को क्रमांकित किया गया है। केवल पुन:प्रयास संदेशों का पुन:प्रयास मेटा सीमित है।",
+    "Every send is numbered. Retries only re-attempt failures worth another try.": "प्रत्येक प्रेषण को क्रमांकित किया गया है। पुनः प्रयास केवल उन विफलताओं का पुनः प्रयास करते हैं जो एक और प्रयास के योग्य हैं।",
     "Everyone this attempt went out to.": "यह प्रयास हर किसी के लिए गया।",
     "Failed": "असफल",
     "Manual": "नियमावली",

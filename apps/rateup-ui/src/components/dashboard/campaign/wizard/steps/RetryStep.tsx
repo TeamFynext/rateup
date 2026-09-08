@@ -25,7 +25,7 @@ import type { CampaignWizardStepProps } from "./step.types.ts";
  * webhook lands, so an earlier retry would find nothing to re-attempt. Keep the
  * two lists in step — the point of showing them is that they are what happens.
  */
-const SMART_OFFSETS = ["+45m", "+4h", "+12h"] as const;
+const SMART_OFFSETS = ["+2m", "+4h", "+12h"] as const;
 
 /** Retries stop this far out regardless of attempts left; the API clamps to it too. */
 const MAX_WINDOW_DAYS = 7;
@@ -33,16 +33,17 @@ const MAX_WINDOW_DAYS = 7;
 /**
  * Automatic retries for messages Meta refused.
  *
- * Only frequency caps and transient errors are ever re-attempted — a number that
- * is not on WhatsApp, or a template Meta rejected, is never retried, because
- * waiting changes nothing and each attempt spends a conversation from the org's
+ * Only failures a later attempt could clear are re-attempted: frequency caps,
+ * transient errors, and a number that could not receive the message at the time
+ * of the send. A template Meta rejected is never retried, because waiting
+ * changes nothing and each attempt spends a conversation from the org's
  * allowance.
  */
 export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardStepProps>) {
   const { t } = useTranslation("campaign.wizard");
   const campaignId = wizard.campaign?.id ?? "";
   const { data: policy } = useCampaignRetryPolicy(campaignId);
-  const updatePolicy = useUpdateCampaignRetryPolicyMutation(campaignId);
+  const updatePolicy = useUpdateCampaignRetryPolicyMutation(campaignId, { silent: true });
 
   const [enabled, setEnabled] = useState(false);
   const [strategy, setStrategy] = useState<CampaignRetryStrategy>(CampaignRetryStrategy.SMART);
@@ -108,7 +109,7 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
 
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
   const summary = t(
-    "Messages Meta blocked for frequency capping will be {cadence} up to {attempts} over {window}{quiet}.",
+    "Messages Meta refused with a retryable error will be {cadence} up to {attempts} over {window}{quiet}.",
     {
       cadence:
         strategy === CampaignRetryStrategy.SMART ? t("retried") : t("retried every 24 hours,"),
@@ -142,7 +143,7 @@ export function RetryStep({ wizard, registerSubmit }: Readonly<CampaignWizardSte
                 <FieldLabel htmlFor="campaign-retries">{t("Retry blocked messages")}</FieldLabel>
                 <FieldDescription>
                   {t(
-                    "Only frequency caps and temporary errors. Invalid numbers are never retried.",
+                    "Only failures worth another attempt: frequency caps, temporary errors, and numbers that could not receive the message. Rejected templates are never retried.",
                   )}
                 </FieldDescription>
               </div>

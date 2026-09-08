@@ -954,6 +954,8 @@ export interface Campaign {
   campaignParticipantsCount?: number;
   /** The template's own name, joined by the list endpoint for the card. */
   templateName?: string | null;
+  /** The whole joined WaTemplate row, as the single-campaign endpoint returns it. */
+  templateData?: WaTemplate | null;
   /** Lifetime counters, joined by the list endpoint for the card's bar. */
   totalSent?: number;
   totalDelivered?: number;
@@ -1045,13 +1047,20 @@ export interface CampaignFailureReason {
   label: string;
   description: string;
   count: number;
-  codes: { code: number | null; label: string; count: number }[];
+  /** How many of `count` the retry engine will pick up. */
+  retryableCount: number;
+  codes: { code: number | null; label: string; count: number; retryable: boolean }[];
 }
 
 export interface CampaignAnalytics {
   funnel: CampaignFunnelStage[];
   failures: CampaignFailureReason[];
+  /** Failed *messages* across every attempt — a recipient a retry recovered is still counted. */
   totalFailed: number;
+  /** Recipients whose current status is FAILED, i.e. what the failure breakdown adds up to. */
+  activeFailed: number;
+  /** Recipients not yet attempted or still awaiting an outcome. */
+  activePending: number;
   /** Recipients dropped by the conversation allowance across every attempt. */
   totalSkipped: number;
   attemptCount: number;

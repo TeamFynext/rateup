@@ -8,11 +8,13 @@ import { WaFailureReasonGroup } from "@/types/enums.ts";
 import type { CampaignFailureReason } from "@/types/global";
 
 /**
- * Colour and outcome per reason group.
+ * Colour per reason group, and the outcome to show for a code the retry engine
+ * will not pick up.
  *
- * The outcome column is the one that decides what to do next: a frequency cap
- * clears on its own and the retry engine will pick it up, a dead number never
- * will, and a template problem needs someone to go and fix the template.
+ * The outcome column is the one that decides what to do next, so it is read off
+ * the code's own `retryable` flag rather than off the group: a group is a cause,
+ * and "invalid number" holds both an undeliverable-for-now number the engine
+ * retries and a landline it never will.
  */
 const GROUP_STYLE: Record<
   WaFailureReasonGroup,
@@ -21,7 +23,7 @@ const GROUP_STYLE: Record<
   [WaFailureReasonGroup.LIMITED_BY_META]: {
     swatch: "bg-amber-500",
     badge: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
-    outcome: "Retryable",
+    outcome: "Limited",
   },
   [WaFailureReasonGroup.INVALID_NUMBER]: {
     swatch: "bg-destructive",
@@ -39,6 +41,8 @@ const GROUP_STYLE: Record<
     outcome: "Unclassified",
   },
 };
+
+const RETRYABLE_BADGE = "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500";
 
 const COLUMNS = "grid-cols-[10px_minmax(150px,1.6fr)_72px_104px_56px_56px_auto]";
 
@@ -61,8 +65,7 @@ export function FailureBreakdown({
   onDrillDown?: () => void;
 }>) {
   const { t } = useTranslation("campaign.analytics");
-  const retryable =
-    failures?.find((row) => row.group === WaFailureReasonGroup.LIMITED_BY_META)?.count ?? 0;
+  const retryable = failures?.reduce((total, row) => total + row.retryableCount, 0) ?? 0;
 
   return (
     <div className="bg-card ring-foreground/10 flex flex-col gap-2.5 rounded-xl px-5 pt-4 pb-1.5 shadow-xs ring-1">
@@ -150,8 +153,11 @@ export function FailureBreakdown({
                     {code.code ?? "—"}
                   </span>
                   <div>
-                    <Badge variant="secondary" className={GROUP_STYLE[row.group].badge}>
-                      {t(GROUP_STYLE[row.group].outcome)}
+                    <Badge
+                      variant="secondary"
+                      className={code.retryable ? RETRYABLE_BADGE : GROUP_STYLE[row.group].badge}
+                    >
+                      {code.retryable ? t("Retryable") : t(GROUP_STYLE[row.group].outcome)}
                     </Badge>
                   </div>
                   <span className="text-right font-semibold tabular-nums">{code.count}</span>

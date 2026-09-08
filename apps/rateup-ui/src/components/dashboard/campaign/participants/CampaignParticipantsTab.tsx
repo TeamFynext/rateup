@@ -2,7 +2,6 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconInbox,
-  IconPlus,
   IconRefresh,
   IconSearch,
   IconUserX,
@@ -11,7 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useSendCampaign } from "@/backend/campaign/campaign.query";
+import { useCampaignAnalytics, useSendCampaign } from "@/backend/campaign/campaign.query";
 import {
   useCampaignParticipants,
   useRemoveMulitpleGroupParticipants,
@@ -81,10 +80,7 @@ function initialsOf(value: string | null | undefined): string {
  * reason its most recent attempt failed. Selecting rows offers the two actions
  * that make sense on a set of recipients — retry them, or take them out.
  */
-export function CampaignParticipantsTab({
-  campaign,
-  onAddParticipants,
-}: Readonly<{ campaign: Campaign; onAddParticipants: () => void }>) {
+export function CampaignParticipantsTab({ campaign }: Readonly<{ campaign: Campaign }>) {
   const { t } = useTranslation("campaign.details");
   const campaignId = campaign.id;
 
@@ -108,6 +104,44 @@ export function CampaignParticipantsTab({
   );
   const removeParticipants = useRemoveMulitpleGroupParticipants(campaignId, () => setSelected([]));
   const sendCampaign = useSendCampaign(campaignId, campaign.teamId);
+
+  // Which row's retry is in flight, so only that button spins. The mutation is
+  // shared with the bulk action above, so `isPending` alone cannot say which.
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const isSending = sendCampaign.isPending;
+  // A send already owns the campaign's lane; the API would refuse another one.
+  const campaignBusy =
+    campaign.status === CampaignStatus.QUEUING || campaign.status === CampaignStatus.DEQUEUING;
+
+  // What "Retry all failed" would take, and the reason the button exists at all:
+  // a campaign that has finished sending has no other control that re-attempts
+  // its failures.
+  const analytics = useCampaignAnalytics(campaignId);
+  const failedCount = analytics.data?.activeFailed ?? 0;
+
+  /** Re-attempt FAILED recipients: every one of them, or just the ticked rows. */
+  const retryFailed = (participantIds?: string[]) =>
+    sendCampaign.mutate({
+      statuses: [CampaignParticipantStatus.FAILED],
+      participantIds,
+      sentCampaignChoice: SentCampaignChoice.NOW,
+      status: CampaignStatus.ACTIVE,
+      type: campaign.type,
+    });
+
+  const retryOne = (participantId: string) => {
+    setRetryingId(participantId);
+    sendCampaign.mutate(
+      {
+        statuses: [CampaignParticipantStatus.FAILED],
+        participantId,
+        sentCampaignChoice: SentCampaignChoice.NOW,
+        status: CampaignStatus.ACTIVE,
+        type: campaign.type,
+      },
+      { onSettled: () => setRetryingId(null) },
+    );
+  };
 
   const rows = (query.data?.participants ?? []) as ParticipantRow[];
   const total = query.data?.searchCount ?? query.data?.totalCount ?? 0;
@@ -146,10 +180,6 @@ export function CampaignParticipantsTab({
             </button>
           ))}
         </div>
-        <Button size="sm" onClick={onAddParticipants}>
-          <IconPlus className="size-4" aria-hidden />
-          {t("Add participants")}
-        </Button>
       </div>
 
       <div className="bg-card ring-foreground/10 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-xs ring-1">
@@ -160,21 +190,40 @@ export function CampaignParticipantsTab({
               · {total.toLocaleString()}
             </span>
           </span>
-          <div className="relative w-60">
-            <IconSearch
-              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
-              aria-hidden
-            />
-            <Input
-              type="search"
-              placeholder={t("Search name or phone")}
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(0);
-              }}
-              className="h-8 pl-8 text-[13px]"
-            />
+          <div className="flex items-center gap-2">
+            {failedCount > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={sendCampaign.isPending || campaignBusy}
+                onClick={() => retryFailed()}
+              >
+                <IconRefresh
+                  className={cn("size-4", isSending && selected.length === 0 && "animate-spin")}
+                  aria-hidden
+                />
+                {t("Retry all failed")}
+                <span className="text-muted-foreground tabular-nums">
+                  {failedCount.toLocaleString()}
+                </span>
+              </Button>
+            ) : null}
+            <div className="relative w-60">
+              <IconSearch
+                className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+                aria-hidden
+              />
+              <Input
+                type="search"
+                placeholder={t("Search name or phone")}
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(0);
+                }}
+                className="h-8 pl-8 text-[13px]"
+              />
+            </div>
           </div>
         </div>
 
@@ -184,21 +233,18 @@ export function CampaignParticipantsTab({
               {t("{count} selected", { count: selected.length })}
             </span>
             <span className="bg-primary/20 h-4 w-px" aria-hidden />
+            {/* Scoped to the ticked rows. It used to ignore the selection and
+                re-attempt every failure in the campaign, which is a different
+                action entirely — that one now lives in the header, where it can
+                say so and be found without ticking anything first. */}
             <Button
               variant="outline"
               size="sm"
-              disabled={sendCampaign.isPending}
-              onClick={() =>
-                sendCampaign.mutate({
-                  statuses: [CampaignParticipantStatus.FAILED],
-                  sentCampaignChoice: SentCampaignChoice.NOW,
-                  status: CampaignStatus.ACTIVE,
-                  type: campaign.type,
-                })
-              }
+              disabled={sendCampaign.isPending || campaignBusy}
+              onClick={() => retryFailed(selected)}
             >
               <IconRefresh className="size-4" aria-hidden />
-              {t("Retry failed now")}
+              {t("Retry selected")}
             </Button>
             <Button
               variant="ghost"
@@ -324,7 +370,28 @@ export function CampaignParticipantsTab({
                 </span>
 
                 <div className="flex justify-end">
-                  {row.contact?.id ? (
+                  {row.status === CampaignParticipantStatus.FAILED ? (
+                    // A failed recipient has one useful next action, and reading the
+                    // thread in the inbox is not it: nothing was delivered to read.
+                    // Trying again is, and the send API takes a single participant.
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isSending || campaignBusy}
+                      title={
+                        campaignBusy
+                          ? t("Wait for the campaign's current send to finish.")
+                          : undefined
+                      }
+                      onClick={() => retryOne(row.id)}
+                    >
+                      <IconRefresh
+                        className={cn("size-4", retryingId === row.id && "animate-spin")}
+                        aria-hidden
+                      />
+                      {retryingId === row.id ? t("Retrying") : t("Retry now")}
+                    </Button>
+                  ) : row.contact?.id ? (
                     <Button
                       variant="ghost"
                       size="sm"

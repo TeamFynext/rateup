@@ -67,7 +67,9 @@ export function BasicsForm({
 
   const teamId = form.watch("teamId");
   const type = form.watch("type");
-  const createMutation = useCreateCampaignMutation(teamId, type);
+  // Silent: creating the campaign is pressing Next on step 1. The wizard's header
+  // says it saved, and a toast here lands on top of the Next button.
+  const createMutation = useCreateCampaignMutation(teamId, type, { silent: true });
 
   const submit = form.handleSubmit(async (values) => {
     if (onSave) {

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { campaignKeys } from "@/backend/campaign/campaign.keys";
@@ -63,16 +64,26 @@ export const useCampaignSendPreflight = (
   });
 };
 
-export const useCreateCampaignMutation = (teamId: string, type: string) => {
+export const useCreateCampaignMutation = (
+  teamId: string,
+  type: string,
+  /**
+   * Suppresses the success toast, for the same reason `useUpdateCampaignMutation`
+   * has one: creating the campaign is step 1 of the wizard, not an outcome
+   * anyone is waiting to hear about — the header's saved indicator says it, and
+   * a toast lands over the Next button. Failures still toast.
+   */
+  options: { silent?: boolean } = {},
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createCampaign,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: campaignKeys.byType(type) });
       queryClient.invalidateQueries({ queryKey: campaignKeys.byTeam(teamId) });
-      toast.success("Campaign created successfully", {
-        id: "campaign-create",
-      });
+      if (!options.silent) {
+        toast.success("Campaign created successfully", { id: "campaign-create" });
+      }
     },
     onError: (error) => {
       if (!(getApiErrorData(error)?.displayMessageInClient ?? false))
@@ -181,6 +192,8 @@ interface sendCampaignProps {
   statuses: CampaignParticipantStatus[];
   sentCampaignChoice: string;
   participantId?: string;
+  /** An exact cohort — the rows ticked in the participants table. */
+  participantIds?: string[];
   status?: CampaignStatus;
   type?: string;
   /** Max messages dispatched per day. Null/undefined = send to everyone at once. */
@@ -193,26 +206,9 @@ const SCHEDULED_CODES = ["MSG_SCHEDULED", "MSG_SCHEDULE_REQUESTED"];
 export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      statuses,
-      participantId,
-      campaignSentAt,
-      sentCampaignChoice,
-      status,
-      type,
-      dailySendLimit,
-    }: sendCampaignProps) =>
-      sendCampaign(
-        campaignId,
-        statuses,
-        sentCampaignChoice,
-        participantId,
-        campaignSentAt,
-        status,
-        type,
-        dailySendLimit,
-      ),
-    onSuccess: (res) => {
+    mutationFn: ({ statuses, ...rest }: sendCampaignProps) =>
+      sendCampaign(campaignId, { sendToStatuses: statuses, ...rest }),
+    onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: campaignKeys.byTeam(teamId) });
       queryClient.invalidateQueries({ queryKey: campaignKeys.byId(campaignId) });
       // The list card carries the status too, and a launch is the moment it
@@ -223,10 +219,19 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
       // are both stale the moment this returns.
       queryClient.invalidateQueries({ queryKey: campaignKeys.sends(campaignId) });
       queryClient.invalidateQueries({ queryKey: campaignKeys.analytics(campaignId) });
+      // The recipient table is what a resend visibly changes, and it was the one
+      // list left showing the old status until something else refetched it.
+      queryClient.invalidateQueries({ queryKey: campaignKeys.participantsRoot(campaignId) });
       toast.success(
         SCHEDULED_CODES.includes(res?.data?.code)
           ? (res?.data?.message ?? "Campaign scheduled successfully")
-          : "Campaign started successfully. It may take a few minutes to send to all participants.",
+          : variables.participantId
+            ? // One recipient, not the campaign: "may take a few minutes to send to
+              // all participants" is the wrong sentence for a single retry.
+              "Retrying this recipient."
+            : variables.participantIds?.length
+              ? `Retrying ${variables.participantIds.length.toLocaleString()} recipients.`
+              : "Campaign started successfully. It may take a few minutes to send to all participants.",
         { id: "campaign-start" },
       );
     },
@@ -239,6 +244,44 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         });
     },
   });
+};
+
+/**
+ * Re-read everything the campaign detail page shows.
+ *
+ * A campaign's numbers move without anyone touching the page: delivery receipts
+ * land over Kafka minutes after the queue drains, and an automatic retry fires on
+ * its own schedule. Refreshing only the visible tab is how a stale recipient count
+ * survives a refresh, so this invalidates every query the three tabs read.
+ *
+ * `isRefreshing` follows the refetches rather than a timer — `invalidateQueries`
+ * resolves once the active queries have settled, which is exactly as long as the
+ * button should look busy.
+ */
+export const useRefreshCampaign = (campaignId: string) => {
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!campaignId) return;
+    setIsRefreshing(true);
+    try {
+      await Promise.all(
+        [
+          campaignKeys.byId(campaignId),
+          campaignKeys.statsRoot(campaignId),
+          campaignKeys.sends(campaignId),
+          campaignKeys.analytics(campaignId),
+          campaignKeys.retryPolicy(campaignId),
+          campaignKeys.participantsRoot(campaignId),
+        ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [campaignId, queryClient]);
+
+  return { refresh, isRefreshing };
 };
 
 export const useCampaignFilterForFlows = (surveyId: string) => {
@@ -316,13 +359,19 @@ export const useCampaignRetryPolicy = (campaignId: string) => {
   });
 };
 
-export const useUpdateCampaignRetryPolicyMutation = (campaignId: string) => {
+export const useUpdateCampaignRetryPolicyMutation = (
+  campaignId: string,
+  /** Silent inside the wizard, where saving the policy is just leaving a step. */
+  options: { silent?: boolean } = {},
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateCampaignRetryPolicy,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: campaignKeys.retryPolicy(campaignId) });
-      toast.success("Retry settings saved", { id: "campaign-retry-policy" });
+      if (!options.silent) {
+        toast.success("Retry settings saved", { id: "campaign-retry-policy" });
+      }
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Could not save the retry settings"), {

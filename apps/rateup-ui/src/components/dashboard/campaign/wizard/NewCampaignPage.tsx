@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import type { StepperStep } from "@/components/ui/stepper.tsx";
 import { CampaignStatus, CampaignType } from "@/types/enums.ts";
@@ -82,15 +83,19 @@ export function NewCampaignPage() {
           registerSubmit={registerSubmit}
           onTypeChange={setType}
           onPendingChange={setIsCreating}
-          onCreated={(campaignId) =>
-            void (exitAfterCreate.current
+          onCreated={(campaignId) => {
+            // Same rule as the rest of the wizard: silent on Next, said out loud
+            // when leaving, because the page that would show it is going away.
+            if (exitAfterCreate.current)
+              toast.success(t("Draft saved"), { id: "campaign-wizard-save" });
+            return void (exitAfterCreate.current
               ? navigate({ to: "/dashboard/campaign" })
               : navigate({
                   to: "/dashboard/campaign/$campaignId/edit",
                   params: { campaignId },
                   search: { step: "template" },
-                }))
-          }
+                }));
+          }}
         />
       </div>
     </CampaignWizardShell>

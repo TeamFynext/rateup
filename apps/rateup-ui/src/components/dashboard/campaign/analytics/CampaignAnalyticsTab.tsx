@@ -59,7 +59,7 @@ export function CampaignAnalyticsTab({ campaignId }: Readonly<{ campaignId: stri
         <DeliveryFunnel funnel={analytics.data?.funnel} isLoading={analytics.isLoading} />
         <FailureBreakdown
           failures={analytics.data?.failures}
-          totalFailed={analytics.data?.totalFailed ?? 0}
+          totalFailed={analytics.data?.activeFailed ?? 0}
           isLoading={analytics.isLoading}
           onDrillDown={
             latestSend ? () => setDrillDown({ send: latestSend, failedOnly: true }) : undefined

@@ -93,7 +93,7 @@ export function SendAttemptsTable({
           <div className="flex flex-col gap-0.5">
             <span className="font-display text-[15px] font-semibold">{t("Send attempts")}</span>
             <span className="text-muted-foreground text-[12.5px]">
-              {t("Every send is numbered. Retries only re-attempt messages Meta limited.")}
+              {t("Every send is numbered. Retries only re-attempt failures worth another try.")}
             </span>
           </div>
           {retriesEnabled ? <Badge variant="system">{t("Retries on")}</Badge> : null}
@@ -172,7 +172,9 @@ export function SendAttemptsTable({
                     #{send.attemptNo + 1}
                   </span>
                   <span className={cn(pending && "text-secondary-foreground")}>
-                    {isRetry ? t("Retry") : send.label}
+                    {/* The server names the row — including the retry's number,
+                        which restarts after each send someone asked for. */}
+                    {send.label}
                   </span>
                   <TriggerCell trigger={send.trigger} />
 

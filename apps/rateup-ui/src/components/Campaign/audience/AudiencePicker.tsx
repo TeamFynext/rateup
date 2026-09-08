@@ -49,10 +49,11 @@ import { PAGE_SIZE, WHATSAPP_CONTACT_CHANNEL } from "@/utils/constants.ts";
  * The audience picker: three tabs (individual contacts, contact groups, previous
  * campaigns), an available panel and a selected panel.
  *
- * Extracted from `AddParticipantModal` so the creation wizard's Audience step and
- * the detail page's "Add participants" dialog run the same code. Only the dialog
- * chrome stayed behind; the three row components are exported rather than
- * module-private, so neither caller has to reimplement a row.
+ * The one place an audience is chosen. It replaced `AddParticipantModal`, a
+ * near-identical copy that the detail page opened as a dialog — the two drifted,
+ * and only this one shows who is already on the campaign or lets them be
+ * removed. Adding recipients now goes through the wizard's Audience step, so
+ * there is a single picker and a single set of row components.
  */
 export interface AudiencePickerProps {
   campaign: Campaign;
@@ -155,9 +156,15 @@ export function AudiencePicker({
   const removeParticipant = useRemoveCampaignParticipant(campaign?.id ?? "");
   const clearParticipants = useClearCampaignParticipants(campaign?.id ?? "");
   const confirm = useConfirm();
-  const addCampaignParticipants = useAddCampaignParticipants(campaign?.id, () => {
-    onAdded?.();
-  });
+  // Enrolling is how the wizard's Audience step advances, so its toast fired on
+  // Next and covered the button. The step's own progress tick is the feedback.
+  const addCampaignParticipants = useAddCampaignParticipants(
+    campaign?.id,
+    () => {
+      onAdded?.();
+    },
+    { silent: true },
+  );
 
   // Debounce search
   useEffect(() => {

@@ -77,7 +77,7 @@ import type { User } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
 import type { ChatContactCountStore } from "@/store/inbox.store.ts";
-import { CampaignStatus, MessagePlatform, TeamFeature } from "@/types/enums.ts";
+import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
 type NavIcon = React.ComponentType<{ size?: number | string; className?: string }>;
@@ -180,17 +180,6 @@ interface NavMainInput {
   sectionCounts: ChatContactCountStore["sectionCounts"];
   pipelineNav: PipelineNavInput;
   setupNav: SetupNavInput;
-  /** Row counts for the campaigns sub-nav. Absent while the list is loading. */
-  campaignCounts?: CampaignNavCounts;
-  /** Raw allowance numbers; the label is built here, where `t` lives. */
-  conversationAllowance?: { used: number; limit: number; hasLimit: boolean };
-}
-
-/** What the campaigns sub-nav counts beside each filter. */
-export interface CampaignNavCounts {
-  total: number;
-  drafts: number;
-  scheduled: number;
 }
 
 export function useNavMain({
@@ -209,8 +198,6 @@ export function useNavMain({
   sectionCounts,
   pipelineNav,
   setupNav,
-  campaignCounts,
-  conversationAllowance,
 }: NavMainInput) {
   const { t } = useTranslation();
 
@@ -221,14 +208,6 @@ export function useNavMain({
     // Empty once the org has finished or dismissed setup, which is what takes the
     // rocket back out of the rail.
     const setupItems = user?.role === UserRole.SUPADM ? buildSetupNavItems(setupNav) : [];
-
-    const conversationProgress: NavProgress | undefined = conversationAllowance?.hasLimit
-      ? {
-          label: t("Conversations remaining"),
-          done: Math.max(conversationAllowance.limit - conversationAllowance.used, 0),
-          total: conversationAllowance.limit,
-        }
-      : undefined;
 
     return [
       ...(setupItems.length > 0
@@ -566,40 +545,9 @@ export function useNavMain({
       ...(hasTeamFeature(TeamFeature.Campaigns)
         ? [
             {
-              title: t("Campaigns"),
+              title: t("Campaign"),
               url: "/dashboard/campaign",
               icon: IconSend,
-              // The conversation allowance is the number that decides whether a
-              // campaign can be sent at all, so it sits under the section that
-              // spends it rather than three clicks away in billing.
-              progress: conversationProgress,
-              items: [
-                {
-                  title: t("All campaigns"),
-                  url: "/dashboard/campaign",
-                  count: campaignCounts?.total,
-                },
-                {
-                  title: t("Drafts"),
-                  url: "/dashboard/campaign",
-                  search: { status: CampaignStatus.DRAFT },
-                  count: campaignCounts?.drafts,
-                },
-                {
-                  title: t("Scheduled"),
-                  url: "/dashboard/campaign",
-                  search: { status: CampaignStatus.SCHEDULED },
-                  count: campaignCounts?.scheduled,
-                },
-                ...(hasTeamFeature(TeamFeature.Templates)
-                  ? [
-                      {
-                        title: t("Templates"),
-                        url: "/dashboard/whatsapp/templates",
-                      },
-                    ]
-                  : []),
-              ],
             },
           ]
         : []),
@@ -985,8 +933,6 @@ export function useNavMain({
     lifecycles,
     pipelineNav,
     setupNav,
-    campaignCounts,
-    conversationAllowance,
     staff.length,
     subscription,
     t,

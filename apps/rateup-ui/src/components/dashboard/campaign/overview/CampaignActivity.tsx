@@ -27,10 +27,35 @@ export function CampaignActivity({ sends }: Readonly<{ sends: CampaignSend[] | u
   const entries = useMemo<ActivityEntry[]>(() => {
     const out: ActivityEntry[] = [];
     for (const send of sends ?? []) {
-      const isRetry = send.trigger === CampaignSendTrigger.AUTO_RETRY;
-      const label = isRetry ? t("Retry {n}", { n: send.attemptNo }) : send.label;
+      // The server names the send — by what asked for it, and numbering retries
+      // per cycle. Rebuilding the label here from `attemptNo` is what made a
+      // resumed schedule read "Retry 1" in this feed while the attempts table
+      // called it something else.
+      const label = send.label;
+      const scheduledAhead =
+        send.scheduledFor &&
+        send.trigger !== CampaignSendTrigger.AUTO_RETRY &&
+        new Date(send.scheduledFor).getTime() > Date.now();
 
-      if (send.startedAt) {
+      // A scheduled campaign fans out the moment it is booked and delays each
+      // message, so `startedAt` is stamped weeks before anything is sent. Saying
+      // "started" then is wrong; what happened is that it was scheduled.
+      if (scheduledAhead && send.scheduledFor) {
+        out.push({
+          at: new Date(send.startedAt ?? send.scheduledFor),
+          dot: "bg-primary/40",
+          title: t("{label} scheduled", { label }),
+          detail: t("{count} recipients queued for {when}", {
+            count: send.totalTargeted.toLocaleString(),
+            when: new Date(send.scheduledFor).toLocaleString(undefined, {
+              day: "numeric",
+              month: "short",
+              hour: "numeric",
+              minute: "2-digit",
+            }),
+          }),
+        });
+      } else if (send.startedAt) {
         out.push({
           at: new Date(send.startedAt),
           dot: "bg-primary",
@@ -80,7 +105,12 @@ export function CampaignActivity({ sends }: Readonly<{ sends: CampaignSend[] | u
         <IconActivity className="text-muted-foreground size-4" aria-hidden />
         <span className="font-display text-[15px] font-semibold">{t("Activity")}</span>
       </div>
-      <div className="flex flex-col px-5 pt-2 pb-3.5">
+      {/* Capped and scrolled rather than left to grow: every send, retry and pause
+          adds entries for the life of the campaign, and the card sits beside the
+          Setup panel — an unbounded list pushed the whole column past the fold.
+          A plain div carries both the cap and the overflow; `ScrollArea` needs a
+          definite height and would just overflow inside this auto-height card. */}
+      <div className="flex max-h-88 flex-col overflow-y-auto overscroll-contain px-5 pt-2 pb-3.5">
         {entries.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center text-[13px]">
             {t("Nothing has happened yet.")}

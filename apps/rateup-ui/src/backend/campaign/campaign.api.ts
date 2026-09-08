@@ -74,25 +74,28 @@ export const getCampaignSendPreflight = async (
     .data as CampaignSendPreflight;
 };
 
-export const sendCampaign = async (
-  campaignId: string,
-  sendToStatuses: CampaignParticipantStatus[],
-  sentCampaignChoice: string,
-  participantId?: string,
-  campaignSentAt?: Date,
-  status?: CampaignStatus,
-  type?: string,
-  dailySendLimit?: number | null,
-) => {
-  return axiosClient.post(`/campaign/${campaignId}/send`, {
-    sendToStatuses,
-    participantId,
-    campaignSentAt,
-    sentCampaignChoice,
-    status,
-    type,
-    dailySendLimit,
-  });
+/**
+ * Body of `POST /campaign/:id/send`, mirroring `sendCampaignInputSchema`.
+ *
+ * An object rather than the run of eight optional positionals it used to be:
+ * `participantIds` was the ninth, and a cohort silently landing in the
+ * `dailySendLimit` slot is exactly the mistake positional arguments invite.
+ */
+export interface SendCampaignBody {
+  sendToStatuses: CampaignParticipantStatus[];
+  sentCampaignChoice: string;
+  /** One recipient — the participants table's per-row "Retry now". */
+  participantId?: string;
+  /** An exact cohort, for the rows ticked in the participants table. */
+  participantIds?: string[];
+  campaignSentAt?: Date;
+  status?: CampaignStatus;
+  type?: string;
+  dailySendLimit?: number | null;
+}
+
+export const sendCampaign = async (campaignId: string, body: SendCampaignBody) => {
+  return axiosClient.post(`/campaign/${campaignId}/send`, body);
 };
 
 // this get req is primarily used in flows result page

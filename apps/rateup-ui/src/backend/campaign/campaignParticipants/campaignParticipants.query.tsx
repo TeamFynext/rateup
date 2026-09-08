@@ -108,6 +108,12 @@ export const useCampaignParticipants = (
 export const useAddCampaignParticipants = (
   campaignId: string,
   onSuccess: () => void = () => {},
+  /**
+   * Suppresses the success toast. Enrolling recipients is how the wizard's
+   * Audience step advances, so the toast fired on Next and covered the button
+   * that had just been pressed. Failures still toast.
+   */
+  options: { silent?: boolean } = {},
 ) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
@@ -129,7 +135,9 @@ export const useAddCampaignParticipants = (
       // reads that off the contact rows — so it goes stale the moment enrolment
       // changes.
       queryClient.invalidateQueries({ queryKey: contactKeys.all() });
-      toast.success(translations("Campaign particiants added successfully."));
+      if (!options.silent) {
+        toast.success(translations("Campaign particiants added successfully."));
+      }
       onSuccess();
     },
     onError: (error) => {

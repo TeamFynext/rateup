@@ -17,7 +17,7 @@ const percent = (value: number | null) =>
   value === null ? "—" : `${(value * 100).toFixed(value >= 0.995 || value === 0 ? 0 : 1)}%`;
 
 /**
- * Attempted → Sent → Delivered → Read → Replied.
+ * Dispatched → Delivered → Read → Replied, measured against what was attempted.
  *
  * Bars rather than a recharts chart on purpose: a funnel is five values whose
  * only interesting relationship is "what fraction of the row above", and a
@@ -57,9 +57,13 @@ export function DeliveryFunnel({
         </p>
       ) : (
         <div className="grid grid-cols-[70px_1fr_132px] items-center gap-x-3">
-          {funnel.map((stage, index) => {
-            const previous = index === 0 ? null : funnel[index - 1];
-            const dropped = previous ? previous.count - stage.count : 0;
+          {/* Attempted is the base, not a stage: its bar is 100% by definition
+              and its "0 dropped off here" says nothing. The number itself is in
+              the subtitle, where the rates are already declared against it, and
+              every row below still measures against it. */}
+          {funnel.slice(1).map((stage, index) => {
+            const previous = funnel[index];
+            const dropped = previous.count - stage.count;
             return (
               <div key={stage.key} className="contents">
                 <span className="text-secondary-foreground flex h-6.5 items-center justify-end text-right text-[12.5px]">
@@ -70,7 +74,7 @@ export function DeliveryFunnel({
                 <span className="relative flex h-6.5 items-center">
                   <span className="bg-input absolute inset-y-0 left-0 w-px" aria-hidden />
                   <span
-                    className={`ml-px block h-4 rounded-r-[3px] ${STAGE_BAR[index] ?? STAGE_BAR[4]}`}
+                    className={`ml-px block h-4 rounded-r-[3px] ${STAGE_BAR[index] ?? STAGE_BAR.at(-1)}`}
                     style={{ width: `${(stage.rateOfAttempted ?? 0) * 100}%` }}
                   />
                 </span>

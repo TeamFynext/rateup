@@ -2,27 +2,13 @@ import {
   IconArrowRight,
   IconCircleCheck,
   IconCircleDashed,
-  IconDotsVertical,
   IconFileText,
-  IconEye,
-  IconPencil,
-  IconTrash,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 
-import { useDeleteCampaignMutation } from "@/backend/campaign/campaign.query";
 import { CampaignStatusBadge } from "@/components/dashboard/campaign/campaignStatus.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { useConfirm } from "@/context/confirm-provider.tsx";
 import { CampaignStatus, CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
 
@@ -32,98 +18,27 @@ interface CampaignCardProps {
   readonly onEdit: (campaign: Campaign) => void;
 }
 
+/**
+ * The card carries no menu of its own.
+ *
+ * It used to open a three-dot dropdown holding View / Edit / Delete — three
+ * copies of decisions the card already makes by being clicked (a live campaign
+ * opens its page, a draft opens the wizard), plus a destructive one sitting a
+ * pixel away from them in a grid of cards. Editing and deleting live on the
+ * campaign's own page, where the campaign you are acting on is unambiguous.
+ */
 export default function CampaignCard(props: Readonly<CampaignCardProps>) {
   const { campaign, onView, onEdit } = props;
-  const { t } = useTranslation("campaign.card");
-  const confirm = useConfirm();
-  const deleteCampaignMutation = useDeleteCampaignMutation(campaign.teamId, campaign.type);
-  const handleDelete = async () => {
-    const shouldDelete = await confirm({
-      title: t("Delete Campaign"),
-      description: t('Are you sure you want to delete "{name}"? This action cannot be undone.', {
-        name: campaign.name,
-      }),
-      confirmText: t("Delete"),
-      cancelText: t("Cancel"),
-    });
-
-    if (!shouldDelete) return;
-
-    try {
-      await deleteCampaignMutation.mutateAsync(campaign.id);
-      toast.success(t("Campaign deleted successfully"));
-    } catch {
-      toast.error(t("Failed to delete campaign"));
-    }
-  };
-
-  const actions = (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        onClick={(event) => event.stopPropagation()}
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          />
-        }
-      >
-        <IconDotsVertical className="h-4 w-4" />
-      </DropdownMenuTrigger>
-
-      {/* Sized to its content: the popup defaults to `w-(--anchor-width)`, and the anchor is a
-          32px icon button, so labels like "View Details" wrapped onto two lines. */}
-      <DropdownMenuContent
-        align="end"
-        className="w-auto min-w-40"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <DropdownMenuItem
-          onClick={(event) => {
-            event.stopPropagation();
-            // A draft has no results to view — the useful thing to do with one
-            // is finish it, so its primary action is the wizard.
-            if (campaign.status === CampaignStatus.DRAFT) onEdit(campaign);
-            else onView(campaign);
-          }}
-        >
-          <IconEye className="mr-2 h-4 w-4" />
-          {campaign.status === CampaignStatus.DRAFT ? t("Continue setup") : t("View Details")}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={(event) => {
-            event.stopPropagation();
-            onEdit(campaign);
-          }}
-        >
-          <IconPencil className="mr-2 h-4 w-4" />
-          {t("Edit")}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={(event) => {
-            event.stopPropagation();
-            handleDelete();
-          }}
-        >
-          <IconTrash className="mr-2 h-4 w-4" />
-          {t("Delete")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 
   // A draft is a different object from a campaign: it has no results, no
   // status to toggle, and exactly one useful action. Giving it the live card's
   // chrome — a switch, a delivered count of zero — describes something that has
   // not happened yet as though it went badly.
   if (campaign.status === CampaignStatus.DRAFT) {
-    return <DraftCampaignCard campaign={campaign} onEdit={onEdit} actions={actions} />;
+    return <DraftCampaignCard campaign={campaign} onEdit={onEdit} />;
   }
 
-  return <LiveCampaignCard campaign={campaign} onView={onView} actions={actions} />;
+  return <LiveCampaignCard campaign={campaign} onView={onView} />;
 }
 
 /**
@@ -137,11 +52,9 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
 function LiveCampaignCard({
   campaign,
   onView,
-  actions,
 }: Readonly<{
   campaign: Campaign;
   onView: (campaign: Campaign) => void;
-  actions: React.ReactNode;
 }>) {
   const { t } = useTranslation("campaign.card");
 
@@ -161,12 +74,12 @@ function LiveCampaignCard({
       onClick={() => onView(campaign)}
       className="bg-card ring-foreground/10 flex cursor-pointer flex-col gap-3 rounded-xl p-5 shadow-xs ring-1 transition hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="font-display truncate text-[15px] font-semibold">{campaign.name}</span>
-          <CampaignStatusBadge status={campaign.status} errorMessage={campaign.errorMessage} />
-        </div>
-        {actions}
+      {/* Status sits at the end of the title line, where the eye lands last and
+          where every card puts it — so a column of cards reads as a column of
+          statuses rather than as badges scattered at the end of each name. */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-display truncate text-[15px] font-semibold">{campaign.name}</span>
+        <CampaignStatusBadge status={campaign.status} errorMessage={campaign.errorMessage} />
       </div>
 
       {campaign.templateName ? (
@@ -239,11 +152,9 @@ function draftChecklist(campaign: Campaign) {
 function DraftCampaignCard({
   campaign,
   onEdit,
-  actions,
 }: Readonly<{
   campaign: Campaign;
   onEdit: (campaign: Campaign) => void;
-  actions: React.ReactNode;
 }>) {
   const { t } = useTranslation("campaign.card");
 
@@ -252,14 +163,11 @@ function DraftCampaignCard({
       onClick={() => onEdit(campaign)}
       className="border-input bg-card hover:border-primary/40 flex cursor-pointer flex-col gap-3 rounded-xl border border-dashed p-5 transition hover:shadow-md"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="font-display truncate text-[15px] font-semibold">{campaign.name}</span>
-          <Badge variant="outline" className="shrink-0">
-            {t("Draft")}
-          </Badge>
-        </div>
-        {actions}
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-display truncate text-[15px] font-semibold">{campaign.name}</span>
+        <Badge variant="outline" className="shrink-0">
+          {t("Draft")}
+        </Badge>
       </div>
 
       <div className="flex flex-col gap-1.5">

@@ -1,5 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import {
   useCampaignById,
@@ -59,6 +61,12 @@ export interface CampaignWizardState {
   continueAfterSave: () => void;
   /** Run the current step's submit, then leave the wizard instead of advancing. */
   saveAndExit: (submit: () => void | Promise<void>) => Promise<void>;
+  /**
+   * Whether the submit now running was asked for by "Save & exit" rather than by
+   * "Next". A step that refuses to *advance* on an incomplete draft still has to
+   * let someone save one and come back — that is what a draft is for.
+   */
+  isExiting: () => boolean;
   isSaving: boolean;
   /** When the draft was last written, for the header's saved indicator. */
   lastSavedAt: Date | null;
@@ -95,6 +103,7 @@ export function useCampaignWizard(
   // would not have reached that submit's closure in time.
   const destinationRef = useRef<"next" | "exit">("next");
 
+  const { t } = useTranslation("campaign.wizard");
   const { data: campaign, isLoading } = useCampaignById(campaignId);
   const { data: retryPolicy } = useCampaignRetryPolicy(campaignId);
 
@@ -194,8 +203,13 @@ export function useCampaignWizard(
   );
 
   const leave = useCallback(() => {
+    // The one save worth announcing. Every step saves on Next, silently — the
+    // header's "Draft · saved just now" is that feedback, and a toast per step
+    // covered the Next button. Leaving is different: the page the confirmation
+    // would appear on is about to be replaced, so it has to be said here.
+    toast.success(t("Draft saved"), { id: "campaign-wizard-save" });
     void navigate({ to: "/dashboard/campaign" });
-  }, [navigate]);
+  }, [navigate, t]);
 
   const continueAfterSave = useCallback(() => {
     const destination = destinationRef.current;
@@ -231,6 +245,8 @@ export function useCampaignWizard(
     }
   }, []);
 
+  const isExiting = useCallback(() => destinationRef.current === "exit", []);
+
   return {
     campaign,
     isLoading,
@@ -245,6 +261,7 @@ export function useCampaignWizard(
     isLastStep: index === visibleSteps.length - 1,
     save,
     saveAndContinue,
+    isExiting,
     continueAfterSave,
     saveAndExit,
     isSaving: updateMutation.isPending,

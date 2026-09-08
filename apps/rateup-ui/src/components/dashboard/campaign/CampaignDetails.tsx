@@ -5,17 +5,16 @@ import {
   IconArrowLeft,
   IconChartBar,
   IconFileText,
-  IconDotsVertical,
   IconFileDownload,
   IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
   IconSend,
-  IconSquare,
   IconTrash,
   IconTrendingUp,
   IconUsers,
 } from "@tabler/icons-react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -23,20 +22,22 @@ import { toast } from "sonner";
 import {
   useCampaignById,
   useCampaignResponseDownloadById,
+  useCampaignSends,
   useCampaignStatsById,
   useDeleteCampaignMutation,
+  useRefreshCampaign,
   useSendCampaign,
 } from "@/backend/campaign/campaign.query";
 import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
-import AddParticipantModal from "@/components/Campaign/AddParticipantModal.tsx";
-import type { ResendOptions } from "@/components/Campaign/ResendCampaignModal.tsx";
-import { ResendCampaignModal } from "@/components/Campaign/ResendCampaignModal.tsx";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -46,9 +47,9 @@ import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import {
   CampaignParticipantStatus,
+  CampaignSendTrigger,
   CampaignStatus,
   CampaignType,
-  SendMode,
   SentCampaignChoice,
 } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
@@ -59,19 +60,20 @@ import { CampaignAnalyticsTab } from "./analytics/CampaignAnalyticsTab.tsx";
 import { CampaignStatusBadge } from "./campaignStatus.tsx";
 import { CampaignOverviewTab } from "./overview/CampaignOverviewTab.tsx";
 import { CampaignParticipantsTab } from "./participants/CampaignParticipantsTab.tsx";
+import { ResumeCampaignDialog } from "./ResumeCampaignDialog.tsx";
+import type { CampaignWizardStep } from "./wizard/useCampaignWizard.ts";
 
 export function CampaignDetails() {
   const [activeTab, setActiveTab] = useState("info");
   const [sorting] = useState([CONTACT_SORT]);
   const [columnFilters] = useDebouncedState([], 200);
-  const [isResendModalOpen, setIsResendModalOpen] = useState(false);
 
   const [pagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
   const [selectedDripStage] = useState("all");
-  const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+  const [resumeOpen, setResumeOpen] = useState(false);
 
   const { t } = useTranslation("campaign.details");
   const navigate = useNavigate();
@@ -105,7 +107,32 @@ export function CampaignDetails() {
 
   const statsQuery = useCampaignStatsById(campaignId, selectedDripStage);
   const queueCount = statsQuery.data?.queueCount ?? 0;
+  // Recipients still waiting to be messaged — what a resume would send to.
+  const pendingCount = statsQuery.data?.countPending ?? 0;
+
+  // The send time a pause took away, if it has not passed in the meantime. The
+  // row the pause cancelled still carries it; the campaign row does not.
+  //
+  // The *last* scheduled send, not the soonest one still ahead. Every pause and
+  // resume leaves another cancelled row behind, so a campaign rescheduled twice
+  // has several — and picking the earliest date offered back the schedule the
+  // sender had already replaced, which then became the row the next resume
+  // offered again.
+  const sendsQuery = useCampaignSends(campaignId);
+  const pausedSchedule = useMemo(() => {
+    if (campaignQuery.data?.status !== CampaignStatus.INACTIVE) return null;
+    // `useCampaignSends` is ordered by `attemptNo`, which is the order they
+    // happened in, so the last scheduled row is the most recent decision.
+    const latest = (sendsQuery.data ?? []).findLast(
+      (send) => send.trigger === CampaignSendTrigger.SCHEDULED && send.scheduledFor,
+    );
+    if (!latest?.scheduledFor) return null;
+    // Past its time, there is nothing to keep — and an older row that is still in
+    // the future is not "the schedule", it is one the sender moved away from.
+    return new Date(latest.scheduledFor).getTime() > Date.now() ? latest.scheduledFor : null;
+  }, [campaignQuery.data?.status, sendsQuery.data]);
   const sendCampaignMutation = useSendCampaign(campaignId ?? "", campaignQuery.data?.teamId ?? "");
+  const { refresh, isRefreshing } = useRefreshCampaign(campaignId ?? "");
 
   useEffect(() => {
     if (campaignQuery.data) {
@@ -154,7 +181,13 @@ export function CampaignDetails() {
     // Why a failed campaign stopped — the status badge is the only place it surfaces.
     errorMessage: campaignQuery.data.errorMessage ?? null,
     dailySendLimit: campaignQuery.data.dailySendLimit ?? null,
-    template: campaignQuery.data.template?.name ?? campaignQuery.data.waTemplateId,
+    // The single-campaign endpoint joins the whole WaTemplate row as
+    // `templateData`; the list endpoint flattens just the name. Read both, and
+    // only fall back to the raw id when neither join came back.
+    template:
+      campaignQuery.data.templateData?.name ??
+      campaignQuery.data.templateName ??
+      campaignQuery.data.waTemplateId,
     participants: stats.participants,
     pending: stats.pending,
     sent: stats.sent,
@@ -166,49 +199,17 @@ export function CampaignDetails() {
   // Edit reopens the creation wizard rather than a second, smaller dialog: the
   // wizard is now the only place a campaign is described, so there is exactly
   // one set of fields and one validation path.
-  const openEditCampaign = (campaign: Campaign) => {
+  const openEditCampaign = (campaign: Campaign, step: CampaignWizardStep = "review") => {
     void navigate({
       to: "/dashboard/campaign/$campaignId/edit",
       params: { campaignId: campaign.id },
-      search: { step: "review" },
+      search: { step },
     });
   };
 
   const handleDeliveryReport = (format: "xlsx" | "ods" = "xlsx") => {
     toast.loading("Generating delivery report...", { id: "delivery-report" });
     deliveryReportMutation.mutate({ campaignId, selectedDripStage, format });
-  };
-
-  const isQueuing =
-    campaign.status === CampaignStatus.QUEUING || campaign.status === CampaignStatus.DEQUEUING;
-
-  const canSend =
-    campaign.type !== CampaignType.DRIP &&
-    [CampaignStatus.DRAFT, CampaignStatus.INACTIVE].includes(campaign.status);
-  const handleSend = () => {
-    setIsResendModalOpen(true);
-  };
-
-  const handleResendSubmit = (options: ResendOptions) => {
-    sendCampaignMutation.mutate(
-      {
-        statuses: options.statuses,
-        sentCampaignChoice:
-          options.sendMode === SendMode.NOW ? SentCampaignChoice.NOW : SentCampaignChoice.LATER,
-        campaignSentAt:
-          options.sendMode === SendMode.SCHEDULED
-            ? dayjs(`${options.scheduleDate} ${options.scheduleTime}`, "YYYY-MM-DD HH:mm").toDate()
-            : undefined,
-        type: campaign.type,
-        status: canSend ? CampaignStatus.ACTIVE : campaign.status,
-        dailySendLimit: options.dailySendLimit,
-      },
-      {
-        onSuccess: () => {
-          setIsResendModalOpen(false);
-        },
-      },
-    );
   };
 
   const handleToggleDrip = () => {
@@ -262,11 +263,31 @@ export function CampaignDetails() {
     });
   };
 
-  const handleStopCampaign = () => {
+  /**
+   * Take the campaign off the queue.
+   *
+   * "Pause" rather than "Stop" because that is what it does and what the status
+   * has always been called — the badge reads Paused, and the campaign can be
+   * picked up again from where it stopped. Messages Meta has already accepted
+   * cannot be recalled, which is what the dialog says before it runs.
+   */
+  const handlePauseCampaign = async () => {
+    const shouldPause = await confirm({
+      title: t("Pause campaign"),
+      description: t(
+        "Recipients who have not been messaged yet are taken off the queue. Messages already sent cannot be recalled. You can resume the campaign later.",
+      ),
+      confirmText: t("Pause"),
+      cancelText: t("Cancel"),
+    });
+    if (!shouldPause) return;
+
     sendCampaignMutation.mutate(
       {
         status: CampaignStatus.INACTIVE,
-        statuses: [CampaignParticipantStatus.FAILED],
+        // Ignored by the API on this path — it dequeues rather than sends — but
+        // the schema demands a non-empty list.
+        statuses: [CampaignParticipantStatus.PENDING],
         type: campaign.type,
         sentCampaignChoice: SentCampaignChoice.NOW,
       },
@@ -281,218 +302,237 @@ export function CampaignDetails() {
     );
   };
 
+  /**
+   * Pick a paused campaign back up.
+   *
+   * Only the recipients it never reached: a resume is a fresh send targeting
+   * PENDING, so nobody who already received the message gets it twice. Failures
+   * are deliberately not included — re-attempting those is what Resend and the
+   * retry engine are for, and folding them in here would make Resume mean two
+   * different things depending on when it was pressed.
+   *
+   * When it goes out is the sender's choice, taken in `ResumeCampaignDialog`:
+   * back on the schedule the pause took away, immediately, or at a new time.
+   * Pausing clears `campaignSentAt`, so the old time is read off the send row the
+   * pause cancelled — the dequeue only marks it CANCELLED and leaves
+   * `scheduledFor` alone — and is offered as the default, because resuming a
+   * campaign scheduled for next month by sending it now is a mistake nobody can
+   * undo.
+   */
+  const handleResumeCampaign = (sendAt: Date | null) => {
+    setResumeOpen(false);
+    sendCampaignMutation.mutate({
+      status: CampaignStatus.ACTIVE,
+      statuses: [CampaignParticipantStatus.PENDING],
+      type: campaign.type,
+      ...(sendAt
+        ? { sentCampaignChoice: SentCampaignChoice.LATER, campaignSentAt: sendAt }
+        : { sentCampaignChoice: SentCampaignChoice.NOW }),
+    });
+  };
+
   return (
-    <>
-      <div className="flex flex-col relative h-full">
-        {/* ── Header (fixed height) ─────────────────────────────────── */}
-        {/* ── Header ───────────────────────────────────────────────── */}
-        <div className="bg-card flex shrink-0 flex-col gap-3.5 px-8 pt-5">
-          <Link
-            to="/dashboard/campaign"
-            className="text-muted-foreground hover:text-foreground inline-flex w-max items-center gap-1 text-[13px]"
-          >
-            <IconArrowLeft className="size-3.5" aria-hidden />
-            {t("Campaigns")}
-          </Link>
+    <div className="flex flex-col relative h-full">
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <div className="bg-card flex shrink-0 flex-col gap-3.5 px-8 pt-5">
+        <Link
+          to="/dashboard/campaign"
+          className="text-muted-foreground hover:text-foreground inline-flex w-max items-center gap-1 text-[13px]"
+        >
+          <IconArrowLeft className="size-3.5" aria-hidden />
+          {t("Campaigns")}
+        </Link>
 
-          <div className="flex items-center justify-between gap-5">
-            <div className="flex min-w-0 items-center gap-3">
-              <h1 className="font-display truncate text-2xl font-bold tracking-tight">
-                {campaign.name}
-              </h1>
-              <CampaignStatusBadge status={campaign.status} errorMessage={campaign.errorMessage} />
-              {/* The template is the single most-asked question about a running
+        <div className="flex items-center justify-between gap-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <h1 className="font-display truncate text-2xl font-bold tracking-tight">
+              {campaign.name}
+            </h1>
+            <CampaignStatusBadge status={campaign.status} errorMessage={campaign.errorMessage} />
+            {/* The template is the single most-asked question about a running
                   campaign, so it sits in the title row rather than a tab away. */}
-              {campaign.template ? (
-                <span className="bg-secondary text-secondary-foreground inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 font-mono text-xs">
-                  <IconFileText className="text-muted-foreground size-3.5" aria-hidden />
-                  {campaign.template}
-                </span>
-              ) : null}
-            </div>
+            {campaign.template ? (
+              <span className="bg-secondary text-secondary-foreground inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs">
+                <IconFileText className="text-muted-foreground size-3.5" aria-hidden />
+                {campaign.template}
+              </span>
+            ) : null}
+          </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <Button variant="ghost" onClick={() => openEditCampaign(campaignQuery.data)}>
-                <IconPencil className="size-4" aria-hidden />
-                {t("Edit")}
-              </Button>
-              <Button variant="ghost" onClick={() => handleDeliveryReport("xlsx")}>
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Statuses arrive after the send drains and retries fire on their
+                  own, so the page a customer is watching goes stale on its own.
+                  One button re-reads all three tabs, not just the visible one —
+                  the same control the campaigns list carries, so it looks and
+                  behaves the same on both screens. */}
+            <RefreshButton onClick={() => void refresh()} isLoading={isRefreshing} />
+            <Button variant="ghost" onClick={() => openEditCampaign(campaignQuery.data)}>
+              <IconPencil className="size-4" aria-hidden />
+              {t("Edit")}
+            </Button>
+            {/* One control, not two. Export used to be a bare button hardcoded
+                  to xlsx while a second "Delivery Report" dropdown lower down
+                  offered the same download with a format choice — the same
+                  action in two places, one of which quietly ignored half of it. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="ghost" disabled={deliveryReportMutation.isPending} />}
+              >
                 <IconFileDownload className="size-4" aria-hidden />
-                {t("Export")}
-              </Button>
-              <Button onClick={() => setIsAddParticipantOpen(true)}>
-                <IconSend className="size-4" aria-hidden />
-                {t("Send to more")}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={<Button variant="outline" size="icon" aria-label={t("More actions")} />}
-                >
-                  <IconDotsVertical className="size-4" aria-hidden />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                    <IconTrash className="mr-2 size-4" aria-hidden />
-                    {t("Delete")}
+                {deliveryReportMutation.isPending ? t("Generating...") : t("Export")}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {/* The label is a Base UI menu group part, so it only works
+                      inside a Group — on its own it throws for a missing
+                      MenuGroupContext. */}
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>{t("Delivery Report")}</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => handleDeliveryReport("xlsx")}>
+                    {t("Download as Excel")}
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  <DropdownMenuItem onClick={() => handleDeliveryReport("ods")}>
+                    {t("Download as OpenDocument (ODS)")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* Adding recipients is editing the audience, and the wizard's
+                  Audience step is the one place that does it — it shows who is
+                  already on the campaign, adds, and removes. The dialog this
+                  used to open was a second, older copy of the same picker. */}
+            <Button onClick={() => openEditCampaign(campaignQuery.data, "audience")}>
+              <IconSend className="size-4" aria-hidden />
+              {t("Send to more")}
+            </Button>
+            {/* Delete is the whole menu, so it is the button. A dropdown holding
+                one item asks for a click to learn what is behind it, and the
+                confirm dialog is what actually guards the action. */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+              aria-label={t("Delete")}
+              title={t("Delete")}
+              onClick={handleDelete}
+            >
+              <IconTrash className="size-4" aria-hidden />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col">
+        {/* ── Tab nav bar. Part of the header band above it, not a second
+                 bar: same surface, same padding, one border underneath. ──── */}
+        <div className="border-border bg-card shrink-0 border-b">
+          <div className="px-8">
+            <div className="flex items-center justify-between py-2">
+              <TabsList>
+                <TabsTrigger value="info">
+                  <IconTrendingUp className="w-4 h-4 mr-2" />
+                  {t("Overview")}
+                </TabsTrigger>
+                <TabsTrigger value="participants">
+                  <IconUsers className="w-4 h-4 mr-2" />
+                  {t("Participants")}
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 data-[state=active]:bg-white/20 data-[state=active]:text-white"
+                  >
+                    {participantsQuery.data?.totalCount}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="analytics">
+                  <IconChartBar className="w-4 h-4 mr-2" />
+                  {t("Analytics")}
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Sending and scheduling belong to the wizard's Review step, which
+                    is the one place that describes what is about to go out. The
+                    old Send/Resend dialog here was a second, older copy of that
+                    decision — a different set of fields reaching the same API. */}
+              <div className="flex items-center gap-2 py-2.5">
+                {campaign.type !== CampaignType.DRIP &&
+                  queueCount > 0 &&
+                  ![CampaignStatus.QUEUING, CampaignStatus.DEQUEUING].includes(campaign.status) && (
+                    <Button
+                      variant="outline"
+                      className="rounded-md gap-2"
+                      disabled={sendCampaignMutation.isPending}
+                      onClick={() => void handlePauseCampaign()}
+                    >
+                      <IconPlayerPause className="w-4 h-4" />
+                      {t("Pause")}
+                    </Button>
+                  )}
+
+                {/* A paused campaign with nobody left to message is finished, not
+                      resumable — offering Resume there would send to no one and
+                      come back as "no participants with the specified statuses". */}
+                {campaign.type !== CampaignType.DRIP &&
+                  campaign.status === CampaignStatus.INACTIVE &&
+                  pendingCount > 0 && (
+                    <Button
+                      className="rounded-md gap-2"
+                      disabled={sendCampaignMutation.isPending}
+                      title={t("Sends to the {count} recipients not messaged yet", {
+                        count: pendingCount.toLocaleString(),
+                      })}
+                      onClick={() => setResumeOpen(true)}
+                    >
+                      <IconPlayerPlay className="w-4 h-4" />
+                      {t("Resume")}
+                      <span className="text-xs opacity-80 tabular-nums">
+                        {pendingCount.toLocaleString()}
+                      </span>
+                    </Button>
+                  )}
+
+                {campaign.type === CampaignType.DRIP && (
+                  <Button
+                    variant={campaign.status === CampaignStatus.ACTIVE ? "destructive" : "outline"}
+                    onClick={handleToggleDrip}
+                    className="rounded-full gap-2"
+                  >
+                    {campaign.status === CampaignStatus.INACTIVE
+                      ? t("Start Drip")
+                      : t("Pause Drip")}
+                    <IconSend className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex-1 min-h-0 flex flex-col"
+        <TabsContent value="info" className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-6 pb-6">
+          <CampaignOverviewTab
+            campaign={campaignQuery.data}
+            onSeeFailures={() => setActiveTab("participants")}
+          />
+        </TabsContent>
+
+        <TabsContent
+          value="participants"
+          className="mt-0 flex min-h-0 flex-1 flex-col px-8 pt-4 pb-6"
         >
-          {/* ── Tab nav bar. Part of the header band above it, not a second
-                 bar: same surface, same padding, one border underneath. ──── */}
-          <div className="border-border bg-card shrink-0 border-b">
-            <div className="px-8">
-              <div className="flex items-center justify-between">
-                <TabsList>
-                  <TabsTrigger value="info">
-                    <IconTrendingUp className="w-4 h-4 mr-2" />
-                    {t("Overview")}
-                  </TabsTrigger>
-                  <TabsTrigger value="participants">
-                    <IconUsers className="w-4 h-4 mr-2" />
-                    {t("Participants")}
-                    <Badge
-                      variant="secondary"
-                      className="ml-2 data-[state=active]:bg-white/20 data-[state=active]:text-white"
-                    >
-                      {participantsQuery.data?.totalCount}
-                    </Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="analytics">
-                    <IconChartBar className="w-4 h-4 mr-2" />
-                    {t("Analytics")}
-                  </TabsTrigger>
-                </TabsList>
+          <CampaignParticipantsTab campaign={campaignQuery.data} />
+        </TabsContent>
 
-                <div className="flex items-center gap-2 py-2.5">
-                  {campaign.type !== CampaignType.DRIP && !isQueuing && (
-                    <Button
-                      variant="outline"
-                      className="rounded-md gap-2"
-                      onClick={() => {
-                        if (canSend) {
-                          handleSend();
-                        } else {
-                          setIsResendModalOpen(true);
-                        }
-                      }}
-                    >
-                      <IconSend className="w-4 h-4" />
-                      {canSend ? t("Send") : t("Resend")}
-                    </Button>
-                  )}
-                  {campaign.type !== CampaignType.DRIP &&
-                    queueCount > 0 &&
-                    ![CampaignStatus.QUEUING, CampaignStatus.DEQUEUING].includes(
-                      campaign.status,
-                    ) && (
-                      <Button
-                        variant="destructive"
-                        className="rounded-full gap-2"
-                        onClick={handleStopCampaign}
-                      >
-                        Stop
-                        <IconSquare className="w-4 h-4" />
-                      </Button>
-                    )}
+        <TabsContent value="analytics" className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-4 pb-6">
+          <CampaignAnalyticsTab campaignId={campaignId} />
+        </TabsContent>
+      </Tabs>
 
-                  {campaign.type === CampaignType.DRIP && (
-                    <Button
-                      variant={
-                        campaign.status === CampaignStatus.ACTIVE ? "destructive" : "outline"
-                      }
-                      onClick={handleToggleDrip}
-                      className="rounded-full gap-2"
-                    >
-                      {campaign.status === CampaignStatus.INACTIVE
-                        ? t("Start Drip")
-                        : t("Pause Drip")}
-                      <IconSend className="w-4 h-4" />
-                    </Button>
-                  )}
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button
-                          size="sm"
-                          disabled={deliveryReportMutation.isPending}
-                          className="gap-2"
-                        />
-                      }
-                    >
-                      <IconFileDownload className="w-3.5 h-3.5" />
-                      {deliveryReportMutation.isPending ? t("Generating...") : t("Delivery Report")}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleDeliveryReport("xlsx")}>
-                        {t("Download as Excel")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeliveryReport("ods")}>
-                        {t("Download as OpenDocument (ODS)")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <TabsContent value="info" className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-6 pb-8">
-            <CampaignOverviewTab campaign={campaignQuery.data} />
-          </TabsContent>
-
-          <TabsContent
-            value="participants"
-            className="mt-0 flex min-h-0 flex-1 flex-col px-8 pt-4 pb-6"
-          >
-            <CampaignParticipantsTab
-              campaign={campaignQuery.data}
-              onAddParticipants={() => setIsAddParticipantOpen(true)}
-            />
-          </TabsContent>
-
-          <TabsContent
-            value="analytics"
-            className="mt-0 min-h-0 flex-1 overflow-auto px-8 pt-4 pb-6"
-          >
-            <CampaignAnalyticsTab campaignId={campaignId} />
-          </TabsContent>
-        </Tabs>
-      </div>
-      {/* ── Dialogs (portalled, outside layout flow) ──────────────────── */}
-      {isAddParticipantOpen && campaignQuery.data && (
-        <AddParticipantModal
-          close={() => setIsAddParticipantOpen(false)}
-          campaign={campaignQuery.data}
-          campaignType={campaignQuery.data.type}
-        />
-      )}
-      <ResendCampaignModal
-        isOpen={isResendModalOpen}
-        onClose={() => setIsResendModalOpen(false)}
-        onSubmit={handleResendSubmit}
-        isLoading={sendCampaignMutation.isPending}
-        isFirstSend={canSend}
-        campaignId={campaignId ?? undefined}
-        campaignDailySendLimit={campaignQuery.data?.dailySendLimit ?? null}
-        stats={{
-          failed: statsQuery.data?.countFailed,
-          pending: statsQuery.data?.countPending,
-          sent: statsQuery.data?.countSent,
-          delivered: statsQuery.data?.countDelivered,
-          read: statsQuery.data?.countRead,
-          completed: statsQuery.data?.countCompleted,
-        }}
+      <ResumeCampaignDialog
+        open={resumeOpen}
+        onOpenChange={setResumeOpen}
+        scheduledFor={pausedSchedule}
+        pendingCount={pendingCount}
+        isPending={sendCampaignMutation.isPending}
+        onConfirm={handleResumeCampaign}
       />
-    </>
+    </div>
   );
 }

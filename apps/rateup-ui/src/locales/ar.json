@@ -3158,32 +3158,6 @@
   "Example": {
     " /points": "مثال: / نقطة"
   },
-  "campaign.resend": {
-    "{total} recipients will be sent over {days} day(s)": "سيتم إرسال المستلمين {total} خلال {days} يوم (أيام)",
-    "Cancel": "يلغي",
-    "Choose when to send and which participants to resend to": "اختر وقت الإرسال والمشاركين الذين تريد إعادة الإرسال إليهم",
-    "Date": "تاريخ",
-    "Enter a daily send limit of at least 1": "أدخل حد إرسال يومي لا يقل عن 1",
-    "It goes to {recipients} people and you have {remaining} conversations left {period}, so up to {shortfall} may not be delivered. A contact you are already in an open conversation with costs nothing extra, so the real number may be lower.": "يتم إرساله إلى {recipients} من الأشخاص ويتبقى لديك {remaining} من المحادثات {period}، لذلك قد لا يتم تسليم ما يصل إلى {shortfall}. جهة الاتصال التي تجري بالفعل محادثة مفتوحة معها لا تكلف شيئًا إضافيًا، لذا قد يكون الرقم الحقيقي أقل.",
-    "Limit messages per day": "الحد من الرسائل يوميا",
-    "messages per day": "رسائل يوميا",
-    "Messages per day": "الرسائل يوميا",
-    "No conversations left": "لم يتبق أي محادثات",
-    "Participant Status": "حالة المشارك",
-    "Resend Campaign": "حملة إعادة الإرسال",
-    "Schedule Later": "الجدول الزمني في وقت لاحق",
-    "Select at least one status": "حدد حالة واحدة على الأقل",
-    "Select date and time": "حدد التاريخ والوقت",
-    "Send Now": "أرسل الآن",
-    "Send time": "إرسال الوقت",
-    "Sending...": "إرسال...",
-    "Spread this campaign across consecutive days instead of sending at once. Saved to the campaign.": "انشر هذه الحملة على مدار أيام متتالية بدلاً من إرسالها مرة واحدة. تم الحفظ في الحملة.",
-    "This campaign may not reach everyone": "قد لا تصل هذه الحملة إلى الجميع",
-    "this month": "هذا الشهر",
-    "this year": "هذا العام",
-    "When to send": "متى ترسل",
-    "You have used all {max} conversations on your plan {period}, so this campaign cannot be sent yet. Buy a conversation pack or wait for your allowance to reset.": "لقد استخدمت جميع محادثات {max} في خطتك {period}، لذلك لا يمكن إرسال هذه الحملة بعد. قم بشراء حزمة محادثة أو انتظر حتى تتم إعادة ضبط رصيدك."
-  },
   "campaign.performance": {
     "Campaign Performance": "أداء الحملة",
     "Delivered": "تم التوصيل",
@@ -3457,7 +3431,22 @@
     "Timezone": "المنطقة الزمنية",
     "Type": "يكتب",
     "Unnamed contact": "جهة اتصال بدون اسم",
-    "We couldn't load this campaign.": "لم نتمكن من تحميل هذه الحملة."
+    "We couldn't load this campaign.": "لم نتمكن من تحميل هذه الحملة.",
+    "Wait for the campaign's current send to finish.": "انتظر حتى ينتهي الإرسال الحالي للحملة.",
+    "Retrying": "جارٍ إعادة المحاولة",
+    "Scheduled send": "إرسال مجدول",
+    "Set when the campaign was scheduled": "تم تحديده عند جدولة الحملة",
+    "Cancel schedule": "إلغاء الجدولة",
+    "failed with a retryable error": "فشلت بخطأ قابل لإعادة المحاولة",
+    "in this campaign": "في هذه الحملة",
+    "Pause": "إيقاف مؤقت",
+    "Pause campaign": "إيقاف الحملة مؤقتًا",
+    "Resume": "استئناف",
+    "Recipients who have not been messaged yet are taken off the queue. Messages already sent cannot be recalled. You can resume the campaign later.": "تتم إزالة المستلمين الذين لم تُرسل إليهم رسائل بعد من قائمة الانتظار. لا يمكن استرجاع الرسائل المُرسلة بالفعل. يمكنك استئناف الحملة لاحقًا.",
+    "Sends to the {count} recipients not messaged yet": "يرسل إلى {count} من المستلمين الذين لم تُرسل إليهم رسائل بعد",
+    "Initial send": "الإرسال الأولي",
+    "{count} recipients queued for {when}": "{count} مستلمًا في قائمة الانتظار لـ {when}",
+    "Puts the campaign back on its schedule for {when}": "يعيد الحملة إلى موعدها المحدد في {when}"
   },
   "Important": {
     " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
@@ -3670,7 +3659,7 @@
     "Live preview · as {name} will see it": "معاينة مباشرة · كما سيراها {name}",
     "Longer window": "نافذة أطول",
     "Max attempts": "ماكس المحاولات",
-    "Messages Meta blocked for frequency capping will be {cadence} up to {attempts} over {window}{quiet}.": "الرسائل المحظورة بسبب تحديد عدد مرات الظهور ستكون {cadence} حتى {attempts} على {window}{quiet}.",
+    "Messages Meta refused with a retryable error will be {cadence} up to {attempts} over {window}{quiet}.": "الرسائل التي رفضتها Meta بخطأ قابل لإعادة المحاولة ستكون {cadence} حتى {attempts} على {window}{quiet}.",
     "Messages per day": "الرسائل يوميا",
     "minutes": "دقائق",
     "More attempts": "المزيد من المحاولات",
@@ -3696,7 +3685,7 @@
     "Only approved templates can be sent. {count} approved._few": "يمكن إرسال النماذج المعتمدة فقط. {count} تمت الموافقة عليه._قليل",
     "Only approved templates can be sent. {count} approved._many": "يمكن إرسال النماذج المعتمدة فقط. {count} تمت الموافقة عليه._كثير",
     "Only approved templates can be sent. {count} approved._other": "يمكن إرسال النماذج المعتمدة فقط. {count} تمت الموافقة عليه._أخرى",
-    "Only frequency caps and temporary errors. Invalid numbers are never retried.": "تحديد عدد مرات الظهور والأخطاء المؤقتة فقط. لا يتم إعادة محاولة الأرقام غير الصالحة أبدًا.",
+    "Only failures worth another attempt: frequency caps, temporary errors, and numbers that could not receive the message. Rejected templates are never retried.": "فقط حالات الفشل التي تستحق محاولة أخرى: تحديد عدد مرات الظهور، والأخطاء المؤقتة، والأرقام التي تعذر عليها استلام الرسالة. لا تتم إعادة محاولة القوالب المرفوضة أبدًا.",
     "Only send to contacts who opted in": "أرسل فقط إلى جهات الاتصال التي اشتركت",
     "Optional — you can add recipients after saving.": "اختياري — يمكنك إضافة مستلمين بعد الحفظ.",
     "Pace": "خطوة",
@@ -3768,7 +3757,8 @@
     "Who should receive this?": "من يجب أن يتلقى هذا؟",
     "You can change everything else later.": "يمكنك تغيير كل شيء آخر في وقت لاحق.",
     "Your business": "عملك",
-    "Your conversation allowance is fully used, so nothing would be delivered.": "تم استخدام بدل المحادثة الخاص بك بالكامل، لذلك لن يتم تسليم أي شيء."
+    "Your conversation allowance is fully used, so nothing would be delivered.": "تم استخدام بدل المحادثة الخاص بك بالكامل، لذلك لن يتم تسليم أي شيء.",
+    "Draft saved": "تم حفظ المسودة"
   },
   "campaign.analytics": {
     "{count} dropped off here_zero": "{count} انخفض هنا_صفر",
@@ -3799,7 +3789,7 @@
     "Delivered": "تم التوصيل",
     "Delivery funnel": "قمع التسليم",
     "Drip": "تقطر",
-    "Every send is numbered. Retries only re-attempt messages Meta limited.": "يتم ترقيم كل إرسال. إعادة المحاولة فقط إعادة محاولة الرسائل Meta محدودة.",
+    "Every send is numbered. Retries only re-attempt failures worth another try.": "يتم ترقيم كل إرسال. إعادة المحاولة تشمل فقط حالات الفشل التي تستحق محاولة أخرى.",
     "Everyone this attempt went out to.": "الجميع ذهبت هذه المحاولة ل.",
     "Failed": "فشل",
     "Manual": "يدوي",
