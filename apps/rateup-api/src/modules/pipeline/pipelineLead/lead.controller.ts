@@ -9,7 +9,8 @@ import {
   deleteNote,
   deleteTask,
   getLeadById,
-  getLeads,
+  listLeads,
+  BadCursorError,
   moveLead,
   reopenLead,
   updateLead,
@@ -21,6 +22,7 @@ import {
 } from "./lead.service.js";
 import type {
   BulkUpdateLeadsRequestSchema,
+  ListLeadsQuerySchema,
   CloseLeadRequestSchema,
   CreateLeadRequestSchema,
   CreateNoteRequestSchema,
@@ -30,13 +32,17 @@ import type {
 } from "./lead.schema.js";
 
 export async function getLeadsHandler(
-  request: FastifyRequest<{ Querystring: { pipelineId: string } }>,
+  request: FastifyRequest<{ Querystring: ListLeadsQuerySchema }>,
   reply: FastifyReply,
 ) {
   try {
-    const leads = await getLeads(request.query.pipelineId);
-    return reply.code(200).send(leads);
+    const page = await listLeads(request.query, request.userId);
+    return reply.code(200).send(page);
   } catch (error) {
+    // A cursor the client mangled is its mistake, not the server's.
+    if (error instanceof BadCursorError) {
+      return reply.code(400).send({ message: error.message });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error retrieving leads" });
   }
