@@ -14,23 +14,36 @@ export const basicsFormSchema = z.object({
   currencyName: z.string().min(1, "Name your points"),
   currencyCode: z.string().min(1),
   currencySymbol: z.string().min(1),
-  signupBonus: z.coerce.number().int().min(0),
-  referralBonus: z.coerce.number().int().min(0),
-  refereeBonus: z.coerce.number().int().min(0),
   averageOrderValue: z.coerce.number().min(0),
 });
+
+/**
+ * An optional whole number where the empty input means "not set", stored as null. Plain
+ * `z.coerce.number()` would read "" as 0 — for stock that is "sold out", not "unlimited".
+ */
+const optionalCount = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.coerce.number().int().min(0).nullable(),
+);
 
 export const earningFormSchema = z
   .object({
     rules: z
       .array(
         z.object({
+          /** Present on a saved rule; the API updates by it so a rename does not fork. */
+          id: z.string().optional(),
           name: z.string().min(1, "Name this rule"),
           description: z.string().optional(),
+          /** Only the Program editor shows this; the wizard leaves every rule on. */
+          status: z.enum(["active", "inactive"]).optional(),
           pointsPerUnit: z.coerce.number().min(0),
           multiplier: z.coerce.number().min(0),
           bonusPoints: z.coerce.number().int().min(0),
           allowedDays: z.array(z.string()),
+          // 0 and "" both mean "no minimum", so plain coercion is right here.
+          minPurchaseAmount: z.coerce.number().min(0).optional(),
+          applicableToTiers: z.array(z.string()).optional(),
           isDefault: z.boolean(),
           priority: z.coerce.number().int(),
         }),
@@ -47,6 +60,7 @@ export const tiersFormSchema = z
     tiersEnabled: z.boolean(),
     tiers: z.array(
       z.object({
+        id: z.string().optional(),
         name: z.string().min(1, "Name this tier"),
         threshold: z.coerce.number().min(0),
         pointsMultiplier: z.coerce.number().min(0),
@@ -72,6 +86,14 @@ export const tiersFormSchema = z
 
 export const rewardsFormSchema = z
   .object({
+    /**
+     * Points paid for a behaviour rather than for spend. They are `LoyaltyProgram` columns,
+     * not reward rows, but they belong beside the rewards they compete with for budget —
+     * the giveback estimate counts them all the same.
+     */
+    signupBonus: z.coerce.number().int().min(0),
+    referralBonus: z.coerce.number().int().min(0),
+    refereeBonus: z.coerce.number().int().min(0),
     rewards: z.array(
       z.object({
         /** Present on a saved reward, absent on one just added. The API updates by it. */
@@ -81,6 +103,10 @@ export const rewardsFormSchema = z
         pointsCost: z.coerce.number().int().min(0),
         rewardType: z.enum(["point", "coupon", "assigned"]),
         rewardValue: z.record(z.string(), z.unknown()),
+        /** null = unlimited. Only the Program editor's Advanced disclosure shows it. */
+        stockQuantity: optionalCount.optional(),
+        /** Tier ids or names that may redeem it; empty = everyone. */
+        availableForTiers: z.array(z.string()).optional(),
       }),
     ),
   })

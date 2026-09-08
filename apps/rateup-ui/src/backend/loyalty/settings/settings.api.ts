@@ -21,6 +21,19 @@ export async function getLoyaltyTemplate(id: string) {
   return (await axiosClient.get(`${base}/template/${id}`)).data;
 }
 
-export async function getAllLoyaltyTemplates() {
+/** An inbound keyword and the reply it gets — `LoyaltyWaCommand` on the API. */
+export interface LoyaltyWaCommand {
+  id: string;
+  orgId: string;
+  type: string;
+  requestMessage: string | null;
+  /** Rich-text document (the editor's JSON); plain text when written by the wizard. */
+  content: unknown;
+  responseType: "Text" | "Template" | string;
+  waTemplateId: string | null;
+  whatsappSettingsPhoneId?: string | null;
+}
+
+export async function getAllLoyaltyTemplates(): Promise<LoyaltyWaCommand[]> {
   return (await axiosClient.get(`${base}/template/all`)).data;
 }

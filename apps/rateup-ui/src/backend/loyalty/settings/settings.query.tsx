@@ -70,3 +70,6 @@ export const useGetAllLoyaltyTemplates = () => {
     queryKey: ["allLoyaltyTemplates"],
   });
 };
+
+/** The keyword replies, under the name the Messages page uses for them. */
+export const useLoyaltyCommands = useGetAllLoyaltyTemplates;

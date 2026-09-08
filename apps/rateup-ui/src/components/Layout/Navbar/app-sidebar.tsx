@@ -15,6 +15,7 @@ import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
+import type { LoyaltyNavInput } from "@/components/dashboard/loyalty/loyalty.nav.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -53,6 +54,7 @@ import {
 } from "@/components/ui/sidebar.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -298,6 +300,19 @@ function NavItemContent({
         {item.count != null && item.count > 0 && (
           <Badge variant="secondary" className="ml-auto tabular-nums" title={String(item.count)}>
             {countFormatter.format(item.count)}
+          </Badge>
+        )}
+        {item.badge && (
+          <Badge
+            variant="secondary"
+            className={cn(
+              "ml-auto",
+              item.badgeTone === "success" && "bg-green-600/10 text-green-700 dark:text-green-500",
+              item.badgeTone === "warning" &&
+                "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
+            )}
+          >
+            {item.badge}
           </Badge>
         )}
         {chevron}
@@ -587,6 +602,7 @@ export default function AppSidebar({
   teams,
   pipelineNav,
   setupNav,
+  loyaltyNav,
 }: Readonly<{
   subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
@@ -598,6 +614,7 @@ export default function AppSidebar({
   teams: Array<{ id: string; name?: string; color?: string }>;
   pipelineNav: PipelineNavInput;
   setupNav: SetupNavInput;
+  loyaltyNav?: LoyaltyNavInput;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
@@ -662,6 +679,7 @@ export default function AppSidebar({
     sectionCounts: useChatContactCountStore().sectionCounts,
     pipelineNav,
     setupNav,
+    loyaltyNav,
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);

@@ -25,6 +25,19 @@ export const useGetApprovalRequests = (filters?: GetApprovalRequestsInput) =>
     queryFn: () => getApprovalRequests(filters),
   });
 
+/**
+ * How many requests are waiting. The list endpoint already counts, so one row is fetched
+ * for the total — the Activity tab badge and the Pending filter read the same cache.
+ */
+export const usePendingApprovalCount = (enabled = true) =>
+  useQuery({
+    queryKey: loyaltyKeys.approvalsFiltered({ status: "PENDING", limit: 1 }),
+    queryFn: () => getApprovalRequests({ status: "PENDING", limit: 1 }),
+    enabled,
+    staleTime: 60_000,
+    select: (response) => response.pagination.total,
+  });
+
 export const useGetApprovalRequestById = (approvalId: string) =>
   useQuery({
     queryKey: loyaltyKeys.approval(approvalId),

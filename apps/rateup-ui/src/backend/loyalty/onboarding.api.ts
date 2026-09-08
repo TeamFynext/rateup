@@ -87,6 +87,7 @@ export interface PresetsResponse {
 /** Rows the wizard has already written, used to prefill a step the user returns to. */
 export interface SavedOnboardingData {
   tiers: Array<{
+    id: string;
     name: string;
     threshold: string | number;
     pointsMultiplier: string | number;
@@ -94,12 +95,18 @@ export interface SavedOnboardingData {
     benefitsDescription: string | null;
   }>;
   rules: Array<{
+    id: string;
     name: string;
     description: string | null;
+    status?: string;
     pointsPerUnit: string | number;
     multiplier: string | number;
     bonusPoints: number | null;
     allowedDays: string[];
+    minPurchaseAmount?: string | number | null;
+    applicableToTiers?: string[];
+    validFrom?: string | null;
+    validUntil?: string | null;
     isDefault: boolean;
     priority: number;
   }>;
@@ -107,12 +114,33 @@ export interface SavedOnboardingData {
     id: string;
     name: string;
     description: string | null;
+    status?: string;
     pointsCost: number;
     rewardType: string;
     rewardValue: Record<string, unknown>;
+    stockQuantity?: number | null;
+    stockRedeemed?: number;
+    availableForTiers?: string[];
   }>;
-  commands: Array<{ type: string; requestMessage: string | null; content: unknown }>;
-  triggers: Array<{ eventType: string; enabled: boolean }>;
+  commands: Array<{
+    id?: string;
+    type: string;
+    requestMessage: string | null;
+    content: unknown;
+    responseType?: string;
+    waTemplateId?: string | null;
+  }>;
+  triggers: Array<{
+    id?: string;
+    eventType: string;
+    enabled: boolean;
+    waTemplateId?: string | null;
+    triggerDays?: number | null;
+    rewardId?: string | null;
+    /** Meta's name and verdict for the template this trigger sends, when it has one. */
+    templateName?: string | null;
+    templateStatus?: string | null;
+  }>;
 }
 
 export interface OnboardingState {
@@ -130,6 +158,10 @@ export interface OnboardingState {
     rewards: number;
     commands: number;
     triggers: number;
+    /** The three the sidebar badges show, so the nav needs this one request. */
+    members?: number;
+    pendingApprovals?: number;
+    templatesPending?: number;
   };
 }
 
@@ -141,37 +173,54 @@ export interface BasicsStepPayload {
   currencySymbol: string;
   defaultCountryCode?: string;
   whatsappSettingsId?: string;
-  signupBonus: number;
-  referralBonus: number;
-  refereeBonus: number;
   averageOrderValue?: number | null;
 }
 
 export interface EarningStepPayload {
   rules: Array<{
+    /** Present to update that exact row, so a rename does not fork a second rule. */
+    id?: string;
     name: string;
     description?: string | null;
+    /** Absent = active. */
+    status?: "active" | "inactive";
     pointsPerUnit: number;
     multiplier: number;
     bonusPoints: number;
     allowedDays: string[];
+    minPurchaseAmount?: number | null;
+    /** Absent = leave the stored tier restriction alone. */
+    applicableToTiers?: string[];
     isDefault: boolean;
     priority: number;
   }>;
+  /** True from the Program editor, whose payload is the whole desired list. */
+  deleteMissing?: boolean;
 }
 
 export interface TiersStepPayload {
   tiersEnabled: boolean;
   tiers: Array<{
+    id?: string;
     name: string;
     threshold: number;
     pointsMultiplier: number;
     color: string;
     benefitsDescription?: string | null;
   }>;
+  deleteMissing?: boolean;
+  /** A removed tier that still has members needs this, or the API refuses with 409. */
+  downgradeCustomers?: boolean;
 }
 
 export interface RewardsStepPayload {
+  /**
+   * Points paid for joining and for a referral. Stored on the programme, edited on this
+   * step alongside the rewards they are budgeted against.
+   */
+  signupBonus: number;
+  referralBonus: number;
+  refereeBonus: number;
   rewards: Array<{
     /** Absent for a reward being created; present to update that exact row. */
     id?: string;
@@ -180,6 +229,10 @@ export interface RewardsStepPayload {
     pointsCost: number;
     rewardType: "point" | "coupon" | "assigned";
     rewardValue: Record<string, unknown>;
+    /** Absent = leave stored stock alone; null = unlimited. */
+    stockQuantity?: number | null;
+    /** Absent = leave the stored tier restriction alone. */
+    availableForTiers?: string[];
   }>;
 }
 
@@ -198,7 +251,10 @@ export interface SkippedCommand {
 export interface EventTemplateResult {
   eventType: string;
   templateName: string;
-  status: "pending" | "failed";
+  status: "pending" | "approved" | "rejected" | "failed";
+  templateId?: string;
+  /** A template of that name already existed and was pointed at, not resubmitted. */
+  reused?: boolean;
   error?: string;
 }
 

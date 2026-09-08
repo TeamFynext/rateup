@@ -16,6 +16,10 @@ export interface GivebackPanelProps {
   averageOrderValue: number | null;
   /** Sends the user back to where the typical order value is set. */
   onEditAverageOrderValue?: () => void;
+  /** Replaces "Your program gives back" — the section rail says "What this costs you". */
+  title?: string;
+  /** A muted line under the title, e.g. "Updates as you edit". */
+  hint?: string;
 }
 
 /**
@@ -33,6 +37,8 @@ export function GivebackPanel({
   pointsName,
   averageOrderValue,
   onEditAverageOrderValue,
+  title,
+  hint,
 }: Readonly<GivebackPanelProps>) {
   const { t } = useTranslation();
 
@@ -44,7 +50,9 @@ export function GivebackPanel({
         <CardContent className="flex items-start gap-2.5 p-4">
           <IconInfoCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-foreground">{t("What your program costs")}</p>
+            <p className="text-sm font-medium text-foreground">
+              {title ?? t("What your program costs")}
+            </p>
             <p className="text-xs text-muted-foreground">{emptyStateMessage(result.status, t)}</p>
             {result.status === "needs_average_order_value" && onEditAverageOrderValue && (
               <button
@@ -82,13 +90,14 @@ export function GivebackPanel({
       <CardContent className="flex flex-col gap-4 p-4">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <div>
-            <p className="text-xs text-muted-foreground">{t("Your program gives back")}</p>
+            <p className="text-xs text-muted-foreground">{title ?? t("Your program gives back")}</p>
             <p className="text-2xl font-semibold text-foreground">
               {t("up to {pct} of revenue", { pct: formatPercent(pct) })}
             </p>
           </div>
           <BandBadge band={result.band} />
         </div>
+        {hint && <p className="-mt-3 text-xs text-muted-foreground">{hint}</p>}
 
         {showTierRange && topTier && (
           <p className="-mt-2 text-xs text-muted-foreground">

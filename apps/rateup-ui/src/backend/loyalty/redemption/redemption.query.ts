@@ -2,22 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
+import { getApiErrorMessage } from "@/utils/apiError";
+import { downloadBlob } from "@/utils/downloadBlob";
 
 import type { TransactionFilter } from "./redemption.api";
 import {
-  approveRedemption,
-  getRedemptions,
+  applyRedemption,
+  exportTransactions,
   getRedemptionsByCustomer,
   getTransactions,
-  rejectRedemption,
+  verifyRedemption,
 } from "./redemption.api";
-
-export const useGetRedemptions = (enabled = true) =>
-  useQuery({
-    queryKey: loyaltyKeys.redemptions(),
-    queryFn: () => getRedemptions(),
-    enabled: !!enabled,
-  });
 
 export const useGetRedemptionsByCustomer = (customerId: string) =>
   useQuery({
@@ -33,36 +28,42 @@ export const useGetTransactions = (filters?: TransactionFilter, enabled = true) 
     enabled: !!enabled,
   });
 
-export const useApproveRedemptionMutation = () => {
-  const qc = useQueryClient();
-  const approveMutation = useMutation({
-    mutationFn: approveRedemption,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: loyaltyKeys.redemptions() });
-      qc.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
-      qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
-      toast.success("Redemption approved successfully");
+export const useExportTransactionsMutation = () =>
+  useMutation({
+    mutationFn: ({
+      filters,
+      format,
+    }: {
+      filters: Omit<TransactionFilter, "page" | "limit">;
+      format: "csv" | "excel";
+    }) => exportTransactions(filters, format),
+    onSuccess: (blob, { format }) => {
+      downloadBlob(blob, `loyalty-activity.${format === "csv" ? "csv" : "xlsx"}`);
     },
-    onError: (error) => {
-      toast.error(error?.message || "Error approving redemption");
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Could not export the activity"));
     },
   });
-  return approveMutation;
-};
 
-export const useRejectRedemptionMutation = () => {
-  const qc = useQueryClient();
-  const rejectMutation = useMutation({
-    mutationFn: rejectRedemption,
+export const useVerifyRedemption = () =>
+  useMutation({
+    mutationFn: verifyRedemption,
+  });
+
+/** Marks a redemption used and refreshes the customer it belonged to. */
+export const useApplyRedemption = (customerPhone?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: applyRedemption,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: loyaltyKeys.redemptions() });
-      qc.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
-      qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
-      toast.success("Redemption rejected successfully");
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer(customerPhone) });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.redemptions() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
     },
-    onError: (error) => {
-      toast.error(error?.message || "Error rejecting redemption");
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Could not mark the redemption as used"));
     },
   });
-  return rejectMutation;
 };

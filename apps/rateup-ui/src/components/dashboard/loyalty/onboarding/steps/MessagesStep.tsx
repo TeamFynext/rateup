@@ -3,7 +3,11 @@ import { IconAlertTriangle, IconCheck, IconClock } from "@tabler/icons-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import type { EventTemplateResult, SkippedCommand } from "@/backend/loyalty/onboarding.api";
+import type {
+  EventTemplateResult,
+  SavedOnboardingData,
+  SkippedCommand,
+} from "@/backend/loyalty/onboarding.api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -12,7 +16,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
 import { messagesFormSchema, type MessagesFormInput, type MessagesFormValues } from "../schemas.ts";
-import { StepFooter, StepHeader } from "../StepChrome.tsx";
+import { StepFooter, StepHeader, useStepFooterProps, type StepMode } from "../StepChrome.tsx";
 
 interface MessagesStepProps {
   defaultValues: MessagesFormInput;
@@ -22,7 +26,18 @@ interface MessagesStepProps {
   /** Meta submission outcomes from the last save. */
   eventResults: EventTemplateResult[];
   hasWhatsappChannel: boolean;
-  onBack: () => void;
+  /**
+   * "section" edits keyword replies only. Notifications are real Meta templates, so from
+   * the Program page they are shown with their approval state and edited in Messages —
+   * re-submitting them on every save would file duplicates.
+   */
+  mode?: StepMode;
+  /** Section mode: the stored triggers, for each notification's Meta status. */
+  savedTriggers?: SavedOnboardingData["triggers"];
+  /** Section mode: the link to the Messages page. */
+  notificationsHref?: React.ReactNode;
+  onBack?: () => void;
+  onCancel?: () => void;
   onSubmit: (values: MessagesFormValues) => void;
 }
 
@@ -32,7 +47,11 @@ export function MessagesStep({
   skipped,
   eventResults,
   hasWhatsappChannel,
+  mode = "wizard",
+  savedTriggers = [],
+  notificationsHref,
   onBack,
+  onCancel,
   onSubmit,
 }: Readonly<MessagesStepProps>) {
   const { t } = useTranslation();
@@ -50,6 +69,8 @@ export function MessagesStep({
 
   const resultByEvent = new Map(eventResults.map((r) => [r.eventType, r]));
   const skippedKeywords = new Set(skipped.map((s) => s.requestMessage.toLowerCase()));
+  const triggerByEvent = new Map(savedTriggers.map((trigger) => [trigger.eventType, trigger]));
+  const footer = useStepFooterProps({ mode, isDirty: form.formState.isDirty, onBack, onCancel });
 
   return (
     <form className="flex flex-col gap-8" onSubmit={form.handleSubmit(onSubmit)}>
@@ -141,72 +162,145 @@ export function MessagesStep({
         })}
       </section>
 
-      <section className="flex flex-col gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">{t("Notifications you send")}</h3>
-          <p className="text-xs text-muted-foreground">
-            {t(
-              "WhatsApp requires Meta to approve these first, which usually takes a few hours. We'll submit them now — you don't have to wait.",
+      {mode === "section" ? (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">{t("Notifications you send")}</h3>
+            <p className="text-xs text-muted-foreground">
+              {t("Each one is a WhatsApp template Meta has approved.")} {notificationsHref}
+            </p>
+          </div>
+          {templateFields.map((item, index) => {
+            const eventType = String(form.watch(`eventTemplates.${index}.eventType`));
+            const trigger = triggerByEvent.get(eventType);
+            return (
+              <Card key={item.id} className="border-border">
+                <CardContent className="flex items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">
+                      {t(humanEventLabel(eventType))}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {form.watch(`eventTemplates.${index}.body`)}
+                    </p>
+                  </div>
+                  <TriggerStatusBadge trigger={trigger} />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </section>
+      ) : (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">{t("Notifications you send")}</h3>
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "WhatsApp requires Meta to approve these first, which usually takes a few hours. We'll submit them now — you don't have to wait.",
+              )}
+            </p>
+          </div>
+
+          {templateFields.map((item, index) => {
+            const eventType = form.watch(`eventTemplates.${index}.eventType`);
+            const result = resultByEvent.get(String(eventType));
+
+            return (
+              <Card key={item.id} className="border-border">
+                <CardContent className="flex flex-col gap-3 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-foreground">
+                      {t(humanEventLabel(String(eventType)))}
+                    </span>
+                    {result && (
+                      <Badge
+                        variant={
+                          result.status === "failed" || result.status === "rejected"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
+                        {result.status === "approved" ? (
+                          <>
+                            <IconCheck size={12} /> {t("Approved by Meta")}
+                          </>
+                        ) : result.status === "pending" ? (
+                          <>
+                            <IconClock size={12} /> {t("Awaiting Meta approval")}
+                          </>
+                        ) : result.status === "rejected" ? (
+                          <>
+                            <IconAlertTriangle size={12} /> {t("Rejected by Meta")}
+                          </>
+                        ) : (
+                          <>
+                            <IconAlertTriangle size={12} /> {t("Could not submit")}
+                          </>
+                        )}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <Controller
+                    control={form.control}
+                    name={`eventTemplates.${index}.body`}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <Textarea id={field.name} rows={2} {...field} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  {result?.status === "failed" && result.error && (
+                    <p className="text-xs text-destructive">{result.error}</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {eventResults.length > 0 &&
+            eventResults.every((r) => r.status === "pending" || r.status === "approved") && (
+              <p className="flex items-center gap-1.5 text-xs text-green-600">
+                <IconCheck size={13} />
+                {t("All notifications submitted for approval.")}
+              </p>
             )}
-          </p>
-        </div>
+        </section>
+      )}
 
-        {templateFields.map((item, index) => {
-          const eventType = form.watch(`eventTemplates.${index}.eventType`);
-          const result = resultByEvent.get(String(eventType));
-
-          return (
-            <Card key={item.id} className="border-border">
-              <CardContent className="flex flex-col gap-3 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-foreground">
-                    {t(humanEventLabel(String(eventType)))}
-                  </span>
-                  {result && (
-                    <Badge variant={result.status === "pending" ? "secondary" : "destructive"}>
-                      {result.status === "pending" ? (
-                        <>
-                          <IconClock size={12} /> {t("Awaiting Meta approval")}
-                        </>
-                      ) : (
-                        <>
-                          <IconAlertTriangle size={12} /> {t("Could not submit")}
-                        </>
-                      )}
-                    </Badge>
-                  )}
-                </div>
-
-                <Controller
-                  control={form.control}
-                  name={`eventTemplates.${index}.body`}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <Textarea id={field.name} rows={2} {...field} />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-
-                {result?.status === "failed" && result.error && (
-                  <p className="text-xs text-destructive">{result.error}</p>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {eventResults.length > 0 && eventResults.every((r) => r.status === "pending") && (
-          <p className="flex items-center gap-1.5 text-xs text-green-600">
-            <IconCheck size={13} />
-            {t("All notifications submitted for approval.")}
-          </p>
-        )}
-      </section>
-
-      <StepFooter isSaving={isSaving} onBack={onBack} />
+      <StepFooter isSaving={isSaving} {...footer} />
     </form>
   );
+}
+
+/** Meta's verdict on the template behind a trigger, or that there is none yet. */
+function TriggerStatusBadge({
+  trigger,
+}: Readonly<{ trigger: SavedOnboardingData["triggers"][number] | undefined }>) {
+  const { t } = useTranslation();
+  if (!trigger?.waTemplateId) return <Badge variant="outline">{t("Not set up")}</Badge>;
+  if (!trigger.enabled) return <Badge variant="outline">{t("Off")}</Badge>;
+  switch (trigger.templateStatus) {
+    case "APPROVED":
+      return (
+        <Badge variant="secondary" className="bg-green-600/10 text-green-700 dark:text-green-500">
+          <IconCheck size={12} /> {t("Live")}
+        </Badge>
+      );
+    case "REJECTED":
+      return <Badge variant="destructive">{t("Rejected by Meta")}</Badge>;
+    default:
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500"
+        >
+          <IconClock size={12} /> {t("Awaiting Meta")}
+        </Badge>
+      );
+  }
 }
 
 /** Turns the API's `POINTS_ISSUED` style event names into something readable. */

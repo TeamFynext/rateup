@@ -25,6 +25,7 @@ import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-kno
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
+import { Route as DashboardLoyaltyRouteRouteImport } from './routes/dashboard/loyalty/route'
 import { Route as DashboardMetaAgentRouteRouteImport } from './routes/dashboard/meta-agent/route'
 import { Route as authInviteIndexRouteImport } from './routes/(auth)/invite/index'
 import { Route as authLoginIndexRouteImport } from './routes/(auth)/login/index'
@@ -132,13 +133,16 @@ import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashb
 import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
 import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/dashboard/contacts/lifecycle/index'
 import { Route as DashboardInstagramFlowbotsFlowbotIdRouteImport } from './routes/dashboard/instagram/flowbots/$flowbotId'
+import { Route as DashboardLoyaltyActivityIndexRouteImport } from './routes/dashboard/loyalty/activity/index'
 import { Route as DashboardLoyaltyApprovalsIndexRouteImport } from './routes/dashboard/loyalty/approvals/index'
 import { Route as DashboardLoyaltyCashierIndexRouteImport } from './routes/dashboard/loyalty/cashier/index'
 import { Route as DashboardLoyaltyCommandIndexRouteImport } from './routes/dashboard/loyalty/command/index'
 import { Route as DashboardLoyaltyCustomersIndexRouteImport } from './routes/dashboard/loyalty/customers/index'
 import { Route as DashboardLoyaltyDashboardIndexRouteImport } from './routes/dashboard/loyalty/dashboard/index'
 import { Route as DashboardLoyaltyEarningRulesIndexRouteImport } from './routes/dashboard/loyalty/earning-rules/index'
+import { Route as DashboardLoyaltyMessagesIndexRouteImport } from './routes/dashboard/loyalty/messages/index'
 import { Route as DashboardLoyaltyOnboardingIndexRouteImport } from './routes/dashboard/loyalty/onboarding/index'
+import { Route as DashboardLoyaltyProgramIndexRouteImport } from './routes/dashboard/loyalty/program/index'
 import { Route as DashboardLoyaltyRewardsIndexRouteImport } from './routes/dashboard/loyalty/rewards/index'
 import { Route as DashboardLoyaltySettingsIndexRouteImport } from './routes/dashboard/loyalty/settings/index'
 import { Route as DashboardLoyaltyTemplatesIndexRouteImport } from './routes/dashboard/loyalty/templates/index'
@@ -175,6 +179,7 @@ import { Route as publicFacingWsShortIdEndIndexRouteImport } from './routes/(pub
 import { Route as publicFacingWsShortIdResponseSubmittedIndexRouteImport } from './routes/(public-facing)/ws/$shortId/response-submitted/index'
 import { Route as DashboardAnalyticsTeamTeamidIndexRouteImport } from './routes/dashboard/analytics/team/$teamid/index'
 import { Route as DashboardContactsGroupsGroupIdIndexRouteImport } from './routes/dashboard/contacts/groups/$groupId/index'
+import { Route as DashboardLoyaltyProgramAdvancedIndexRouteImport } from './routes/dashboard/loyalty/program/advanced/index'
 import { Route as DashboardLoyaltyTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/loyalty/templates/$templateId/index'
 import { Route as DashboardSettingsChannelsChannelIndexRouteImport } from './routes/dashboard/settings/channels/$channel/index'
 import { Route as DashboardSettingsIntegrationsIdIndexRouteImport } from './routes/dashboard/settings/integrations/$id/index'
@@ -265,6 +270,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
 const DashboardCommerceRouteRoute = DashboardCommerceRouteRouteImport.update({
   id: '/commerce',
   path: '/commerce',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardLoyaltyRouteRoute = DashboardLoyaltyRouteRouteImport.update({
+  id: '/loyalty',
+  path: '/loyalty',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardMetaAgentRouteRoute = DashboardMetaAgentRouteRouteImport.update({
@@ -864,71 +874,89 @@ const DashboardInstagramFlowbotsFlowbotIdRoute =
     path: '/instagram/flowbots/$flowbotId',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardLoyaltyActivityIndexRoute =
+  DashboardLoyaltyActivityIndexRouteImport.update({
+    id: '/activity/',
+    path: '/activity/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
 const DashboardLoyaltyApprovalsIndexRoute =
   DashboardLoyaltyApprovalsIndexRouteImport.update({
-    id: '/loyalty/approvals/',
-    path: '/loyalty/approvals/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/approvals/',
+    path: '/approvals/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyCashierIndexRoute =
   DashboardLoyaltyCashierIndexRouteImport.update({
-    id: '/loyalty/cashier/',
-    path: '/loyalty/cashier/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/cashier/',
+    path: '/cashier/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyCommandIndexRoute =
   DashboardLoyaltyCommandIndexRouteImport.update({
-    id: '/loyalty/command/',
-    path: '/loyalty/command/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/command/',
+    path: '/command/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyCustomersIndexRoute =
   DashboardLoyaltyCustomersIndexRouteImport.update({
-    id: '/loyalty/customers/',
-    path: '/loyalty/customers/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/customers/',
+    path: '/customers/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyDashboardIndexRoute =
   DashboardLoyaltyDashboardIndexRouteImport.update({
-    id: '/loyalty/dashboard/',
-    path: '/loyalty/dashboard/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/dashboard/',
+    path: '/dashboard/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyEarningRulesIndexRoute =
   DashboardLoyaltyEarningRulesIndexRouteImport.update({
-    id: '/loyalty/earning-rules/',
-    path: '/loyalty/earning-rules/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/earning-rules/',
+    path: '/earning-rules/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
+const DashboardLoyaltyMessagesIndexRoute =
+  DashboardLoyaltyMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyOnboardingIndexRoute =
   DashboardLoyaltyOnboardingIndexRouteImport.update({
-    id: '/loyalty/onboarding/',
-    path: '/loyalty/onboarding/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/onboarding/',
+    path: '/onboarding/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
+const DashboardLoyaltyProgramIndexRoute =
+  DashboardLoyaltyProgramIndexRouteImport.update({
+    id: '/program/',
+    path: '/program/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyRewardsIndexRoute =
   DashboardLoyaltyRewardsIndexRouteImport.update({
-    id: '/loyalty/rewards/',
-    path: '/loyalty/rewards/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/rewards/',
+    path: '/rewards/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltySettingsIndexRoute =
   DashboardLoyaltySettingsIndexRouteImport.update({
-    id: '/loyalty/settings/',
-    path: '/loyalty/settings/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyTemplatesIndexRoute =
   DashboardLoyaltyTemplatesIndexRouteImport.update({
-    id: '/loyalty/templates/',
-    path: '/loyalty/templates/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/templates/',
+    path: '/templates/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardLoyaltyTransactionsIndexRoute =
   DashboardLoyaltyTransactionsIndexRouteImport.update({
-    id: '/loyalty/transactions/',
-    path: '/loyalty/transactions/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/transactions/',
+    path: '/transactions/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardQrCreatorShortUrlIdIndexRoute =
   DashboardQrCreatorShortUrlIdIndexRouteImport.update({
@@ -1122,11 +1150,17 @@ const DashboardContactsGroupsGroupIdIndexRoute =
     path: '/contacts/groups/$groupId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardLoyaltyProgramAdvancedIndexRoute =
+  DashboardLoyaltyProgramAdvancedIndexRouteImport.update({
+    id: '/program/advanced/',
+    path: '/program/advanced/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
 const DashboardLoyaltyTemplatesTemplateIdIndexRoute =
   DashboardLoyaltyTemplatesTemplateIdIndexRouteImport.update({
-    id: '/loyalty/templates/$templateId/',
-    path: '/loyalty/templates/$templateId/',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/templates/$templateId/',
+    path: '/templates/$templateId/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
 const DashboardSettingsChannelsChannelIndexRoute =
   DashboardSettingsChannelsChannelIndexRouteImport.update({
@@ -1217,6 +1251,7 @@ export interface FileRoutesByFullPath {
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/blog': typeof marketingBlogRouteRouteWithChildren
   '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
+  '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/': typeof marketingIndexRoute
@@ -1328,13 +1363,16 @@ export interface FileRoutesByFullPath {
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
+  '/dashboard/loyalty/activity/': typeof DashboardLoyaltyActivityIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier/': typeof DashboardLoyaltyCashierIndexRoute
   '/dashboard/loyalty/command/': typeof DashboardLoyaltyCommandIndexRoute
   '/dashboard/loyalty/customers/': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard/': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/messages/': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
+  '/dashboard/loyalty/program/': typeof DashboardLoyaltyProgramIndexRoute
   '/dashboard/loyalty/rewards/': typeof DashboardLoyaltyRewardsIndexRoute
   '/dashboard/loyalty/settings/': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates/': typeof DashboardLoyaltyTemplatesIndexRoute
@@ -1371,6 +1409,7 @@ export interface FileRoutesByFullPath {
   '/ws/$shortId/response-submitted/': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
+  '/dashboard/loyalty/program/advanced/': typeof DashboardLoyaltyProgramAdvancedIndexRoute
   '/dashboard/loyalty/templates/$templateId/': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1392,6 +1431,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
+  '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/': typeof marketingIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -1502,13 +1542,16 @@ export interface FileRoutesByTo {
   '/dashboard/contacts/groups': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle': typeof DashboardContactsLifecycleIndexRoute
+  '/dashboard/loyalty/activity': typeof DashboardLoyaltyActivityIndexRoute
   '/dashboard/loyalty/approvals': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier': typeof DashboardLoyaltyCashierIndexRoute
   '/dashboard/loyalty/command': typeof DashboardLoyaltyCommandIndexRoute
   '/dashboard/loyalty/customers': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/messages': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding': typeof DashboardLoyaltyOnboardingIndexRoute
+  '/dashboard/loyalty/program': typeof DashboardLoyaltyProgramIndexRoute
   '/dashboard/loyalty/rewards': typeof DashboardLoyaltyRewardsIndexRoute
   '/dashboard/loyalty/settings': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates': typeof DashboardLoyaltyTemplatesIndexRoute
@@ -1545,6 +1588,7 @@ export interface FileRoutesByTo {
   '/ws/$shortId/response-submitted': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
   '/dashboard/analytics/team/$teamid': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId': typeof DashboardContactsGroupsGroupIdIndexRoute
+  '/dashboard/loyalty/program/advanced': typeof DashboardLoyaltyProgramAdvancedIndexRoute
   '/dashboard/loyalty/templates/$templateId': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1574,6 +1618,7 @@ export interface FileRoutesById {
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/(marketing)/blog': typeof marketingBlogRouteRouteWithChildren
   '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
+  '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/(marketing)/': typeof marketingIndexRoute
@@ -1685,13 +1730,16 @@ export interface FileRoutesById {
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
+  '/dashboard/loyalty/activity/': typeof DashboardLoyaltyActivityIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier/': typeof DashboardLoyaltyCashierIndexRoute
   '/dashboard/loyalty/command/': typeof DashboardLoyaltyCommandIndexRoute
   '/dashboard/loyalty/customers/': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard/': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/messages/': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
+  '/dashboard/loyalty/program/': typeof DashboardLoyaltyProgramIndexRoute
   '/dashboard/loyalty/rewards/': typeof DashboardLoyaltyRewardsIndexRoute
   '/dashboard/loyalty/settings/': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates/': typeof DashboardLoyaltyTemplatesIndexRoute
@@ -1728,6 +1776,7 @@ export interface FileRoutesById {
   '/(public-facing)/ws/$shortId/response-submitted/': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
+  '/dashboard/loyalty/program/advanced/': typeof DashboardLoyaltyProgramAdvancedIndexRoute
   '/dashboard/loyalty/templates/$templateId/': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1755,6 +1804,7 @@ export interface FileRouteTypes {
     | '/sitemap_index.xml'
     | '/blog'
     | '/dashboard/commerce'
+    | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
     | '/'
@@ -1866,13 +1916,16 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
+    | '/dashboard/loyalty/activity/'
     | '/dashboard/loyalty/approvals/'
     | '/dashboard/loyalty/cashier/'
     | '/dashboard/loyalty/command/'
     | '/dashboard/loyalty/customers/'
     | '/dashboard/loyalty/dashboard/'
     | '/dashboard/loyalty/earning-rules/'
+    | '/dashboard/loyalty/messages/'
     | '/dashboard/loyalty/onboarding/'
+    | '/dashboard/loyalty/program/'
     | '/dashboard/loyalty/rewards/'
     | '/dashboard/loyalty/settings/'
     | '/dashboard/loyalty/templates/'
@@ -1909,6 +1962,7 @@ export interface FileRouteTypes {
     | '/ws/$shortId/response-submitted/'
     | '/dashboard/analytics/team/$teamid/'
     | '/dashboard/contacts/groups/$groupId/'
+    | '/dashboard/loyalty/program/advanced/'
     | '/dashboard/loyalty/templates/$templateId/'
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
@@ -1930,6 +1984,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/sitemap_index.xml'
+    | '/dashboard/loyalty'
     | '/.well-known/api-catalog'
     | '/'
     | '/admin'
@@ -2040,13 +2095,16 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups'
     | '/dashboard/contacts/labels'
     | '/dashboard/contacts/lifecycle'
+    | '/dashboard/loyalty/activity'
     | '/dashboard/loyalty/approvals'
     | '/dashboard/loyalty/cashier'
     | '/dashboard/loyalty/command'
     | '/dashboard/loyalty/customers'
     | '/dashboard/loyalty/dashboard'
     | '/dashboard/loyalty/earning-rules'
+    | '/dashboard/loyalty/messages'
     | '/dashboard/loyalty/onboarding'
+    | '/dashboard/loyalty/program'
     | '/dashboard/loyalty/rewards'
     | '/dashboard/loyalty/settings'
     | '/dashboard/loyalty/templates'
@@ -2083,6 +2141,7 @@ export interface FileRouteTypes {
     | '/ws/$shortId/response-submitted'
     | '/dashboard/analytics/team/$teamid'
     | '/dashboard/contacts/groups/$groupId'
+    | '/dashboard/loyalty/program/advanced'
     | '/dashboard/loyalty/templates/$templateId'
     | '/dashboard/settings/channels/$channel'
     | '/dashboard/settings/integrations/$id'
@@ -2111,6 +2170,7 @@ export interface FileRouteTypes {
     | '/sitemap_index.xml'
     | '/(marketing)/blog'
     | '/dashboard/commerce'
+    | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
     | '/(marketing)/'
@@ -2222,13 +2282,16 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
+    | '/dashboard/loyalty/activity/'
     | '/dashboard/loyalty/approvals/'
     | '/dashboard/loyalty/cashier/'
     | '/dashboard/loyalty/command/'
     | '/dashboard/loyalty/customers/'
     | '/dashboard/loyalty/dashboard/'
     | '/dashboard/loyalty/earning-rules/'
+    | '/dashboard/loyalty/messages/'
     | '/dashboard/loyalty/onboarding/'
+    | '/dashboard/loyalty/program/'
     | '/dashboard/loyalty/rewards/'
     | '/dashboard/loyalty/settings/'
     | '/dashboard/loyalty/templates/'
@@ -2265,6 +2328,7 @@ export interface FileRouteTypes {
     | '/(public-facing)/ws/$shortId/response-submitted/'
     | '/dashboard/analytics/team/$teamid/'
     | '/dashboard/contacts/groups/$groupId/'
+    | '/dashboard/loyalty/program/advanced/'
     | '/dashboard/loyalty/templates/$templateId/'
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
@@ -2407,6 +2471,13 @@ declare module '@tanstack/react-router' {
       path: '/commerce'
       fullPath: '/dashboard/commerce'
       preLoaderRoute: typeof DashboardCommerceRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty': {
+      id: '/dashboard/loyalty'
+      path: '/loyalty'
+      fullPath: '/dashboard/loyalty'
+      preLoaderRoute: typeof DashboardLoyaltyRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/meta-agent': {
@@ -3158,82 +3229,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardInstagramFlowbotsFlowbotIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/loyalty/activity/': {
+      id: '/dashboard/loyalty/activity/'
+      path: '/activity'
+      fullPath: '/dashboard/loyalty/activity/'
+      preLoaderRoute: typeof DashboardLoyaltyActivityIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
     '/dashboard/loyalty/approvals/': {
       id: '/dashboard/loyalty/approvals/'
-      path: '/loyalty/approvals'
+      path: '/approvals'
       fullPath: '/dashboard/loyalty/approvals/'
       preLoaderRoute: typeof DashboardLoyaltyApprovalsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/cashier/': {
       id: '/dashboard/loyalty/cashier/'
-      path: '/loyalty/cashier'
+      path: '/cashier'
       fullPath: '/dashboard/loyalty/cashier/'
       preLoaderRoute: typeof DashboardLoyaltyCashierIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/command/': {
       id: '/dashboard/loyalty/command/'
-      path: '/loyalty/command'
+      path: '/command'
       fullPath: '/dashboard/loyalty/command/'
       preLoaderRoute: typeof DashboardLoyaltyCommandIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/customers/': {
       id: '/dashboard/loyalty/customers/'
-      path: '/loyalty/customers'
+      path: '/customers'
       fullPath: '/dashboard/loyalty/customers/'
       preLoaderRoute: typeof DashboardLoyaltyCustomersIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/dashboard/': {
       id: '/dashboard/loyalty/dashboard/'
-      path: '/loyalty/dashboard'
+      path: '/dashboard'
       fullPath: '/dashboard/loyalty/dashboard/'
       preLoaderRoute: typeof DashboardLoyaltyDashboardIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/earning-rules/': {
       id: '/dashboard/loyalty/earning-rules/'
-      path: '/loyalty/earning-rules'
+      path: '/earning-rules'
       fullPath: '/dashboard/loyalty/earning-rules/'
       preLoaderRoute: typeof DashboardLoyaltyEarningRulesIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
+    '/dashboard/loyalty/messages/': {
+      id: '/dashboard/loyalty/messages/'
+      path: '/messages'
+      fullPath: '/dashboard/loyalty/messages/'
+      preLoaderRoute: typeof DashboardLoyaltyMessagesIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/onboarding/': {
       id: '/dashboard/loyalty/onboarding/'
-      path: '/loyalty/onboarding'
+      path: '/onboarding'
       fullPath: '/dashboard/loyalty/onboarding/'
       preLoaderRoute: typeof DashboardLoyaltyOnboardingIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
+    '/dashboard/loyalty/program/': {
+      id: '/dashboard/loyalty/program/'
+      path: '/program'
+      fullPath: '/dashboard/loyalty/program/'
+      preLoaderRoute: typeof DashboardLoyaltyProgramIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/rewards/': {
       id: '/dashboard/loyalty/rewards/'
-      path: '/loyalty/rewards'
+      path: '/rewards'
       fullPath: '/dashboard/loyalty/rewards/'
       preLoaderRoute: typeof DashboardLoyaltyRewardsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/settings/': {
       id: '/dashboard/loyalty/settings/'
-      path: '/loyalty/settings'
+      path: '/settings'
       fullPath: '/dashboard/loyalty/settings/'
       preLoaderRoute: typeof DashboardLoyaltySettingsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/templates/': {
       id: '/dashboard/loyalty/templates/'
-      path: '/loyalty/templates'
+      path: '/templates'
       fullPath: '/dashboard/loyalty/templates/'
       preLoaderRoute: typeof DashboardLoyaltyTemplatesIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/loyalty/transactions/': {
       id: '/dashboard/loyalty/transactions/'
-      path: '/loyalty/transactions'
+      path: '/transactions'
       fullPath: '/dashboard/loyalty/transactions/'
       preLoaderRoute: typeof DashboardLoyaltyTransactionsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/qrCreator/$shortUrlId/': {
       id: '/dashboard/qrCreator/$shortUrlId/'
@@ -3459,12 +3551,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardContactsGroupsGroupIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/loyalty/program/advanced/': {
+      id: '/dashboard/loyalty/program/advanced/'
+      path: '/program/advanced'
+      fullPath: '/dashboard/loyalty/program/advanced/'
+      preLoaderRoute: typeof DashboardLoyaltyProgramAdvancedIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
     '/dashboard/loyalty/templates/$templateId/': {
       id: '/dashboard/loyalty/templates/$templateId/'
-      path: '/loyalty/templates/$templateId'
+      path: '/templates/$templateId'
       fullPath: '/dashboard/loyalty/templates/$templateId/'
       preLoaderRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardLoyaltyRouteRoute
     }
     '/dashboard/settings/channels/$channel/': {
       id: '/dashboard/settings/channels/$channel/'
@@ -3838,6 +3937,53 @@ const DashboardCommerceRouteRouteWithChildren =
     DashboardCommerceRouteRouteChildren,
   )
 
+interface DashboardLoyaltyRouteRouteChildren {
+  DashboardLoyaltyActivityIndexRoute: typeof DashboardLoyaltyActivityIndexRoute
+  DashboardLoyaltyApprovalsIndexRoute: typeof DashboardLoyaltyApprovalsIndexRoute
+  DashboardLoyaltyCashierIndexRoute: typeof DashboardLoyaltyCashierIndexRoute
+  DashboardLoyaltyCommandIndexRoute: typeof DashboardLoyaltyCommandIndexRoute
+  DashboardLoyaltyCustomersIndexRoute: typeof DashboardLoyaltyCustomersIndexRoute
+  DashboardLoyaltyDashboardIndexRoute: typeof DashboardLoyaltyDashboardIndexRoute
+  DashboardLoyaltyEarningRulesIndexRoute: typeof DashboardLoyaltyEarningRulesIndexRoute
+  DashboardLoyaltyMessagesIndexRoute: typeof DashboardLoyaltyMessagesIndexRoute
+  DashboardLoyaltyOnboardingIndexRoute: typeof DashboardLoyaltyOnboardingIndexRoute
+  DashboardLoyaltyProgramIndexRoute: typeof DashboardLoyaltyProgramIndexRoute
+  DashboardLoyaltyRewardsIndexRoute: typeof DashboardLoyaltyRewardsIndexRoute
+  DashboardLoyaltySettingsIndexRoute: typeof DashboardLoyaltySettingsIndexRoute
+  DashboardLoyaltyTemplatesIndexRoute: typeof DashboardLoyaltyTemplatesIndexRoute
+  DashboardLoyaltyTransactionsIndexRoute: typeof DashboardLoyaltyTransactionsIndexRoute
+  DashboardLoyaltyProgramAdvancedIndexRoute: typeof DashboardLoyaltyProgramAdvancedIndexRoute
+  DashboardLoyaltyTemplatesTemplateIdIndexRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
+}
+
+const DashboardLoyaltyRouteRouteChildren: DashboardLoyaltyRouteRouteChildren = {
+  DashboardLoyaltyActivityIndexRoute: DashboardLoyaltyActivityIndexRoute,
+  DashboardLoyaltyApprovalsIndexRoute: DashboardLoyaltyApprovalsIndexRoute,
+  DashboardLoyaltyCashierIndexRoute: DashboardLoyaltyCashierIndexRoute,
+  DashboardLoyaltyCommandIndexRoute: DashboardLoyaltyCommandIndexRoute,
+  DashboardLoyaltyCustomersIndexRoute: DashboardLoyaltyCustomersIndexRoute,
+  DashboardLoyaltyDashboardIndexRoute: DashboardLoyaltyDashboardIndexRoute,
+  DashboardLoyaltyEarningRulesIndexRoute:
+    DashboardLoyaltyEarningRulesIndexRoute,
+  DashboardLoyaltyMessagesIndexRoute: DashboardLoyaltyMessagesIndexRoute,
+  DashboardLoyaltyOnboardingIndexRoute: DashboardLoyaltyOnboardingIndexRoute,
+  DashboardLoyaltyProgramIndexRoute: DashboardLoyaltyProgramIndexRoute,
+  DashboardLoyaltyRewardsIndexRoute: DashboardLoyaltyRewardsIndexRoute,
+  DashboardLoyaltySettingsIndexRoute: DashboardLoyaltySettingsIndexRoute,
+  DashboardLoyaltyTemplatesIndexRoute: DashboardLoyaltyTemplatesIndexRoute,
+  DashboardLoyaltyTransactionsIndexRoute:
+    DashboardLoyaltyTransactionsIndexRoute,
+  DashboardLoyaltyProgramAdvancedIndexRoute:
+    DashboardLoyaltyProgramAdvancedIndexRoute,
+  DashboardLoyaltyTemplatesTemplateIdIndexRoute:
+    DashboardLoyaltyTemplatesTemplateIdIndexRoute,
+}
+
+const DashboardLoyaltyRouteRouteWithChildren =
+  DashboardLoyaltyRouteRoute._addFileChildren(
+    DashboardLoyaltyRouteRouteChildren,
+  )
+
 interface DashboardMetaAgentRouteRouteChildren {
   DashboardMetaAgentConnectorsRoute: typeof DashboardMetaAgentConnectorsRoute
   DashboardMetaAgentKnowledgeRoute: typeof DashboardMetaAgentKnowledgeRoute
@@ -3868,6 +4014,7 @@ const DashboardMetaAgentRouteRouteWithChildren =
 
 interface DashboardRouteRouteChildren {
   DashboardCommerceRouteRoute: typeof DashboardCommerceRouteRouteWithChildren
+  DashboardLoyaltyRouteRoute: typeof DashboardLoyaltyRouteRouteWithChildren
   DashboardMetaAgentRouteRoute: typeof DashboardMetaAgentRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
@@ -3893,17 +4040,6 @@ interface DashboardRouteRouteChildren {
   DashboardContactsGroupsIndexRoute: typeof DashboardContactsGroupsIndexRoute
   DashboardContactsLabelsIndexRoute: typeof DashboardContactsLabelsIndexRoute
   DashboardContactsLifecycleIndexRoute: typeof DashboardContactsLifecycleIndexRoute
-  DashboardLoyaltyApprovalsIndexRoute: typeof DashboardLoyaltyApprovalsIndexRoute
-  DashboardLoyaltyCashierIndexRoute: typeof DashboardLoyaltyCashierIndexRoute
-  DashboardLoyaltyCommandIndexRoute: typeof DashboardLoyaltyCommandIndexRoute
-  DashboardLoyaltyCustomersIndexRoute: typeof DashboardLoyaltyCustomersIndexRoute
-  DashboardLoyaltyDashboardIndexRoute: typeof DashboardLoyaltyDashboardIndexRoute
-  DashboardLoyaltyEarningRulesIndexRoute: typeof DashboardLoyaltyEarningRulesIndexRoute
-  DashboardLoyaltyOnboardingIndexRoute: typeof DashboardLoyaltyOnboardingIndexRoute
-  DashboardLoyaltyRewardsIndexRoute: typeof DashboardLoyaltyRewardsIndexRoute
-  DashboardLoyaltySettingsIndexRoute: typeof DashboardLoyaltySettingsIndexRoute
-  DashboardLoyaltyTemplatesIndexRoute: typeof DashboardLoyaltyTemplatesIndexRoute
-  DashboardLoyaltyTransactionsIndexRoute: typeof DashboardLoyaltyTransactionsIndexRoute
   DashboardQrCreatorShortUrlIdIndexRoute: typeof DashboardQrCreatorShortUrlIdIndexRoute
   DashboardQuickAccessLinksShortUrlIdIndexRoute: typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   DashboardSettingsAccountIndexRoute: typeof DashboardSettingsAccountIndexRoute
@@ -3925,7 +4061,6 @@ interface DashboardRouteRouteChildren {
   DashboardWhatsappTemplatesIndexRoute: typeof DashboardWhatsappTemplatesIndexRoute
   DashboardAnalyticsTeamTeamidIndexRoute: typeof DashboardAnalyticsTeamTeamidIndexRoute
   DashboardContactsGroupsGroupIdIndexRoute: typeof DashboardContactsGroupsGroupIdIndexRoute
-  DashboardLoyaltyTemplatesTemplateIdIndexRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   DashboardSettingsChannelsChannelIndexRoute: typeof DashboardSettingsChannelsChannelIndexRoute
   DashboardSettingsIntegrationsIdIndexRoute: typeof DashboardSettingsIntegrationsIdIndexRoute
   DashboardSettingsTeamTeamIdIndexRoute: typeof DashboardSettingsTeamTeamIdIndexRoute
@@ -3939,6 +4074,7 @@ interface DashboardRouteRouteChildren {
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardCommerceRouteRoute: DashboardCommerceRouteRouteWithChildren,
+  DashboardLoyaltyRouteRoute: DashboardLoyaltyRouteRouteWithChildren,
   DashboardMetaAgentRouteRoute: DashboardMetaAgentRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
@@ -3967,19 +4103,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardContactsGroupsIndexRoute: DashboardContactsGroupsIndexRoute,
   DashboardContactsLabelsIndexRoute: DashboardContactsLabelsIndexRoute,
   DashboardContactsLifecycleIndexRoute: DashboardContactsLifecycleIndexRoute,
-  DashboardLoyaltyApprovalsIndexRoute: DashboardLoyaltyApprovalsIndexRoute,
-  DashboardLoyaltyCashierIndexRoute: DashboardLoyaltyCashierIndexRoute,
-  DashboardLoyaltyCommandIndexRoute: DashboardLoyaltyCommandIndexRoute,
-  DashboardLoyaltyCustomersIndexRoute: DashboardLoyaltyCustomersIndexRoute,
-  DashboardLoyaltyDashboardIndexRoute: DashboardLoyaltyDashboardIndexRoute,
-  DashboardLoyaltyEarningRulesIndexRoute:
-    DashboardLoyaltyEarningRulesIndexRoute,
-  DashboardLoyaltyOnboardingIndexRoute: DashboardLoyaltyOnboardingIndexRoute,
-  DashboardLoyaltyRewardsIndexRoute: DashboardLoyaltyRewardsIndexRoute,
-  DashboardLoyaltySettingsIndexRoute: DashboardLoyaltySettingsIndexRoute,
-  DashboardLoyaltyTemplatesIndexRoute: DashboardLoyaltyTemplatesIndexRoute,
-  DashboardLoyaltyTransactionsIndexRoute:
-    DashboardLoyaltyTransactionsIndexRoute,
   DashboardQrCreatorShortUrlIdIndexRoute:
     DashboardQrCreatorShortUrlIdIndexRoute,
   DashboardQuickAccessLinksShortUrlIdIndexRoute:
@@ -4008,8 +4131,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardAnalyticsTeamTeamidIndexRoute,
   DashboardContactsGroupsGroupIdIndexRoute:
     DashboardContactsGroupsGroupIdIndexRoute,
-  DashboardLoyaltyTemplatesTemplateIdIndexRoute:
-    DashboardLoyaltyTemplatesTemplateIdIndexRoute,
   DashboardSettingsChannelsChannelIndexRoute:
     DashboardSettingsChannelsChannelIndexRoute,
   DashboardSettingsIntegrationsIdIndexRoute:

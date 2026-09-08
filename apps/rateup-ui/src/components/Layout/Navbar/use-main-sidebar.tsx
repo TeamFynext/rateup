@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
+import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import { useChecklist, useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import {
   useLeadsQuery,
@@ -18,6 +19,8 @@ import { useUserInfo } from "@/backend/user/user.query";
 import { useConversationTags } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.query.ts";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { LoyaltyNavInput } from "@/components/dashboard/loyalty/loyalty.nav.ts";
+import { programStateOf } from "@/components/dashboard/loyalty/program/programState.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
@@ -152,6 +155,27 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     ],
   );
 
+  // Same rule as the pipeline: the sidebar is mounted app-wide, so the loyalty state —
+  // which carries the badge counts — is only fetched while the user is on a loyalty page,
+  // where the pages read the same query anyway.
+  const isLoyalty = Boolean(pathname?.includes("/dashboard/loyalty"));
+  const { data: loyaltyState } = useLoyaltyOnboardingState(isLoyalty);
+  const loyaltyNav = useMemo<LoyaltyNavInput>(
+    () => ({
+      t,
+      programState: loyaltyState
+        ? loyaltyState.program
+          ? programStateOf(loyaltyState.program)
+          : null
+        : null,
+      members: loyaltyState?.counts.members,
+      pendingApprovals: loyaltyState?.counts.pendingApprovals,
+      templatesPending: loyaltyState?.counts.templatesPending,
+      pathname,
+    }),
+    [t, loyaltyState, pathname],
+  );
+
   const isSetup = pathname?.includes("/dashboard/setup");
 
   // Once the org has finished (or dismissed) setup the guide is gone for good, so
@@ -284,6 +308,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     isCorruptedSession,
     isLoading,
     lifecycles,
+    loyaltyNav,
     paddingExclusion,
     pathname,
     pipelineNav,

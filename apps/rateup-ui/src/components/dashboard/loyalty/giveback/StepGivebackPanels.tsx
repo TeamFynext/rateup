@@ -21,15 +21,27 @@ interface WrapperProps<T extends Record<string, unknown>> {
   control: Control<T>;
   context: GivebackContext;
   onEditAverageOrderValue?: () => void;
+  title?: string;
+  hint?: string;
 }
 
-function panelProps(context: GivebackContext, onEditAverageOrderValue?: () => void) {
+function panelProps({
+  context,
+  onEditAverageOrderValue,
+  title,
+  hint,
+}: Pick<
+  WrapperProps<Record<string, unknown>>,
+  "context" | "onEditAverageOrderValue" | "title" | "hint"
+>) {
   return {
     currencySymbol: context.currencySymbol,
     currencyCode: context.currencyCode,
     pointsName: context.pointsName,
     averageOrderValue: context.averageOrderValue,
     onEditAverageOrderValue,
+    title,
+    hint,
   };
 }
 
@@ -37,6 +49,8 @@ export function EarningGivebackPanel({
   control,
   context,
   onEditAverageOrderValue,
+  title,
+  hint,
 }: Readonly<WrapperProps<EarningFormInput>>) {
   const rules = useWatch({ control, name: "rules" });
   const rule = rules?.find((r) => r.isDefault) ?? rules?.[0];
@@ -56,13 +70,20 @@ export function EarningGivebackPanel({
     [context, rule?.pointsPerUnit, rule?.multiplier, rule?.bonusPoints],
   );
 
-  return <GivebackPanel result={result} {...panelProps(context, onEditAverageOrderValue)} />;
+  return (
+    <GivebackPanel
+      result={result}
+      {...panelProps({ context, onEditAverageOrderValue, title, hint })}
+    />
+  );
 }
 
 export function TiersGivebackPanel({
   control,
   context,
   onEditAverageOrderValue,
+  title,
+  hint,
 }: Readonly<WrapperProps<TiersFormInput>>) {
   const tiersEnabled = useWatch({ control, name: "tiersEnabled" });
   const tiers = useWatch({ control, name: "tiers" });
@@ -89,15 +110,27 @@ export function TiersGivebackPanel({
     [context, tiersEnabled, key],
   );
 
-  return <GivebackPanel result={result} {...panelProps(context, onEditAverageOrderValue)} />;
+  return (
+    <GivebackPanel
+      result={result}
+      {...panelProps({ context, onEditAverageOrderValue, title, hint })}
+    />
+  );
 }
 
 export function RewardsGivebackPanel({
   control,
   context,
   onEditAverageOrderValue,
+  title,
+  hint,
 }: Readonly<WrapperProps<RewardsFormInput>>) {
   const rewards = useWatch({ control, name: "rewards" });
+  // The join and referral bonuses are edited on this step too, and they are part of what
+  // the programme gives back — so the panel has to move when they do.
+  const signupBonus = useWatch({ control, name: "signupBonus" });
+  const referralBonus = useWatch({ control, name: "referralBonus" });
+  const refereeBonus = useWatch({ control, name: "refereeBonus" });
 
   const key = JSON.stringify(
     (rewards ?? []).map((reward) => [reward.name, reward.pointsCost, reward.rewardValue]),
@@ -107,6 +140,11 @@ export function RewardsGivebackPanel({
     () =>
       calculateGiveback({
         ...context,
+        bonuses: {
+          signupBonus: toFiniteNumber(signupBonus),
+          referralBonus: toFiniteNumber(referralBonus),
+          refereeBonus: toFiniteNumber(refereeBonus),
+        },
         rewards: (rewards ?? []).map((reward) => ({
           name: reward.name,
           pointsCost: toFiniteNumber(reward.pointsCost),
@@ -114,8 +152,13 @@ export function RewardsGivebackPanel({
         })),
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [context, key],
+    [context, key, signupBonus, referralBonus, refereeBonus],
   );
 
-  return <GivebackPanel result={result} {...panelProps(context, onEditAverageOrderValue)} />;
+  return (
+    <GivebackPanel
+      result={result}
+      {...panelProps({ context, onEditAverageOrderValue, title, hint })}
+    />
+  );
 }

@@ -1,49 +1,27 @@
-// Extracted verbatim from the `/dashboard/loyalty/settings/` route so the route file carries routing
-// config only. Behaviour is unchanged.
-
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconLoader2 } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { IconLoader2, IconPlayerPause, IconPlayerPlay, IconRocket } from "@tabler/icons-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import type { z } from "zod";
 
-import { LoyaltyEventType, updateEventTrigger } from "@/backend/loyalty/eventTriggers.api";
+import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
 import {
-  useCreateEventTriggerMutation,
-  useEventTriggers,
-} from "@/backend/loyalty/eventTriggers.query";
-import {
-  useCreateLoyaltyProgramMutation,
   useDeleteLoyaltyProgramMutation,
   useLoyaltyProgram,
   useResetLoyaltyProgramPointsMutation,
   useUpdateLoyaltyProgramMutation,
 } from "@/backend/loyalty/program.query";
-import { automationKeys } from "@/backend/whatsapp/automation.keys";
-import InfoButton from "@/components/Button/InfoButton.tsx";
-import { BasicSettings } from "@/components/loyalty/settings/BasicSettings.tsx";
-import { BirthdayReminderSettings } from "@/components/loyalty/settings/BirthdayReminderSettings.tsx";
-import { DEFAULT_JOIN_MESSAGE_TEXT } from "@/components/loyalty/settings/constants.ts";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { PageHeading } from "@/components/common/page-heading.tsx";
+import ApiAccessKeyPage from "@/components/ExternalApi/ApiAccessKey.tsx";
+import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { DangerZone } from "@/components/loyalty/settings/DangerZone.tsx";
-import { NotificationSettings } from "@/components/loyalty/settings/NotificationSettings.tsx";
 import { PointsExpirationSettings } from "@/components/loyalty/settings/PointsExpirationSettings.tsx";
-import { PointsExpirySettings } from "@/components/loyalty/settings/PointsExpirySettings.tsx";
-import { PointsReminderSettings } from "@/components/loyalty/settings/PointsReminderSettings.tsx";
-import { ReferralMessageSettings } from "@/components/loyalty/settings/ReferralMessageSettings.tsx";
-import {
-  BasicSettingsSchema,
-  EventTriggersFormSchema,
-  ExpirationSettingsSchema,
-  NotificationsSettingsSchema,
-} from "@/components/loyalty/settings/schemas.ts";
-import { TierUpdateSettings } from "@/components/loyalty/settings/TierUpdateSettings.tsx";
-import { TransactionNotifications } from "@/components/loyalty/settings/TransactionNotifications.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
+import { ExpirationSettingsSchema } from "@/components/loyalty/settings/schemas.ts";
 import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
   Dialog,
   DialogContent,
@@ -52,588 +30,355 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { docsPath } from "@/utils/constants.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
+import { formatMoney } from "../giveback/format.ts";
+import { LOYALTY_PATHS } from "../paths.ts";
+import { programStateOf } from "../program/programState.ts";
+import { ProgramStatusBadge } from "../program/ProgramStatusBadge.tsx";
+
+/**
+ * Only what is not part of the customer promise. Name, points and typical spend are in
+ * Program › Basics; every message is on Messages. What is left governs who may override
+ * the programme and how it plugs in — and the two things that cannot be undone.
+ */
 export function LoyaltySettingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const searchParams = useSearch({ strict: false });
-  const activeTab = searchParams.tab ?? "general";
+  const confirm = useConfirm();
+  const uid = useId();
   const { user } = useUser();
   const isSuperAdmin = user?.role === UserRole.SUPADM;
 
-  const { data: program, isLoading: isProgramLoading } = useLoyaltyProgram();
-  const { data: eventTriggers } = useEventTriggers(program?.id || "");
-
-  const updateProgramMutation = useUpdateLoyaltyProgramMutation(program?.id || "");
-  const createProgramMutation = useCreateLoyaltyProgramMutation();
-  const resetPointsMutation = useResetLoyaltyProgramPointsMutation();
-  const deleteProgramMutation = useDeleteLoyaltyProgramMutation(() => {
-    navigate({
-      to: "/dashboard/loyalty/dashboard",
-      replace: true,
-    });
+  const { data: program, isLoading } = useLoyaltyProgram();
+  const { data: dashboard } = useLoyaltyDashboardData();
+  const { data: waSettings } = useWaSettings();
+  const update = useUpdateLoyaltyProgramMutation(program?.id ?? "");
+  const resetPoints = useResetLoyaltyProgramPointsMutation();
+  const deleteProgram = useDeleteLoyaltyProgramMutation(() => {
+    navigate({ to: LOYALTY_PATHS.overview, replace: true });
   });
 
-  const createTriggerMutation = useCreateEventTriggerMutation();
-  const confirm = useConfirm();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
 
-  // States for Modals
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-
-  // States for modified buttons
-  const [pointsReminderModified, setPointsReminderModified] = useState(false);
-  const [tierUpgradedModified, setTierUpgradedModified] = useState(false);
-  const [birthdayReminderModified, setBirthdayReminderModified] = useState(false);
-  const [pointsIssuedModified, setPointsIssuedModified] = useState(false);
-  const [pointsAdjustedModified, setPointsAdjustedModified] = useState(false);
-  const [rewardIssuedModified, setRewardIssuedModified] = useState(false);
-  const [rewardRedeemedModified, setRewardRedeemedModified] = useState(false);
-  const [pointsExpiryAlertModified, setPointsExpiryAlertModified] = useState(false);
-  const [pointsExpiredModified, setPointsExpiredModified] = useState(false);
-
-  // Form
-  const eventTriggersForm = useForm<z.infer<typeof EventTriggersFormSchema>>({
-    resolver: zodResolver(EventTriggersFormSchema),
-    defaultValues: {
-      [LoyaltyEventType.POINTS_ISSUED]: {
-        enabled: false,
-        waTemplateId: undefined,
-      },
-      [LoyaltyEventType.POINTS_ADJUSTED]: {
-        enabled: false,
-        waTemplateId: undefined,
-      },
-      [LoyaltyEventType.REWARD_ISSUED]: {
-        enabled: false,
-        waTemplateId: undefined,
-      },
-      [LoyaltyEventType.REWARD_REDEEMED]: {
-        enabled: false,
-        waTemplateId: undefined,
-      },
-      [LoyaltyEventType.TIER_UPGRADED]: {
-        enabled: false,
-        waTemplateId: undefined,
-      },
-      [LoyaltyEventType.INACTIVITY_REMINDER]: {
-        enabled: false,
-        waTemplateId: undefined,
-        triggerDays: "30",
-      },
-      [LoyaltyEventType.BIRTHDAY]: {
-        enabled: false,
-        waTemplateId: undefined,
-        rewardId: undefined,
-      },
-      [LoyaltyEventType.POINTS_EXPIRY_ALERT]: {
-        enabled: false,
-        waTemplateId: undefined,
-      },
-      [LoyaltyEventType.POINTS_EXPIRED]: {
-        enabled: false,
-        waTemplateId: undefined,
-      },
-    },
-  });
-
-  // The trigger fields are addressed by a runtime `<eventType>.<field>` path,
-  // which react-hook-form's per-path value type cannot express.
-  const setEventTriggerField = eventTriggersForm.setValue as (path: string, value: unknown) => void;
-
-  // Basic Settings Form
-  const basicForm = useForm<z.infer<typeof BasicSettingsSchema>>({
-    resolver: zodResolver(BasicSettingsSchema),
-    defaultValues: {
-      programName: "",
-      pointsCurrency: "Points",
-      moneyCurrency: "INR",
-      defaultCountryCode: "IN",
-      averageOrderValue: null,
-      whatsappSettingsId: undefined,
-      referralMessageTemplate: DEFAULT_JOIN_MESSAGE_TEXT,
-    },
-  });
-
-  // Notifications Form
-  const notificationsForm = useForm<z.infer<typeof NotificationsSettingsSchema>>({
-    resolver: zodResolver(NotificationsSettingsSchema),
-    defaultValues: {
-      programActive: true,
-      customerNotifications: true,
-      autoApproveAdjustments: false,
-      emailNotifications: true,
-      whatsappNotifications: true,
-      enableShopifyOrderPoints: false,
-    },
-  });
-
-  // Expiration Form
   const expirationForm = useForm<z.infer<typeof ExpirationSettingsSchema>>({
     resolver: zodResolver(ExpirationSettingsSchema),
-    defaultValues: {
-      enabled: false,
-      months: 12,
-    },
+    defaultValues: { enabled: false, months: 12 },
   });
-
-  // Store trigger IDs for updates
-  const [triggerIds, setTriggerIds] = useState<{
-    [key in LoyaltyEventType]?: string;
-  }>({});
-
-  // Sync state with data
   useEffect(() => {
-    if (program) {
-      if (!notificationsForm.formState.isDirty) {
-        notificationsForm.reset({
-          programActive: program.status === "active",
-          customerNotifications: program.pointsActivityAlerts ?? true,
-          autoApproveAdjustments: program.autoApproveAdjustments ?? false,
-          emailNotifications: program.emailNotifications ?? true,
-          whatsappNotifications: program.whatsappNotifications ?? true,
-          enableShopifyOrderPoints: program.enableShopifyOrderPoints ?? false,
-        });
-      }
-
-      if (!basicForm.formState.isDirty) {
-        basicForm.reset({
-          programName: program.name || "",
-          pointsCurrency: program.currencyName || "Points",
-          moneyCurrency: program.currencyCode || "INR",
-          defaultCountryCode: program.defaultCountryCode || "IN",
-          averageOrderValue: program.averageOrderValue ?? null,
-          whatsappSettingsId: program.whatsappSettingsId,
-          referralMessageTemplate: program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEXT,
-        });
-      }
-
-      if (!expirationForm.formState.isDirty) {
-        expirationForm.reset({
-          enabled: program.enablePointsExpiration ?? false,
-          months: program.pointsExpirationMonths || 12,
-        });
-      }
+    if (program && !expirationForm.formState.isDirty) {
+      expirationForm.reset({
+        enabled: program.enablePointsExpiration ?? false,
+        months: program.pointsExpirationMonths || 12,
+      });
     }
-  }, [program, basicForm, expirationForm, notificationsForm]);
+  }, [program, expirationForm]);
 
-  // Sync event triggers with UI state
-  useEffect(() => {
-    if (!eventTriggers || eventTriggers.length === 0) return;
-
-    const triggerMap: { [key in LoyaltyEventType]?: string } = {};
-
-    eventTriggers.forEach((trigger) => {
-      triggerMap[trigger.eventType] = trigger.id;
-
-      const eventType = trigger.eventType;
-      switch (eventType) {
-        case LoyaltyEventType.POINTS_ISSUED:
-        case LoyaltyEventType.POINTS_ADJUSTED:
-        case LoyaltyEventType.REWARD_ISSUED:
-        case LoyaltyEventType.REWARD_REDEEMED:
-        case LoyaltyEventType.TIER_UPGRADED:
-          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
-          if (trigger.waTemplateId) {
-            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
-          }
-          break;
-        case LoyaltyEventType.BIRTHDAY:
-          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
-          if (trigger.waTemplateId) {
-            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
-          }
-          if (trigger.rewardId) {
-            setEventTriggerField(`${eventType}.rewardId`, trigger.rewardId);
-          }
-          break;
-        case LoyaltyEventType.INACTIVITY_REMINDER:
-          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
-          if (trigger.triggerDays) {
-            setEventTriggerField(`${eventType}.triggerDays`, trigger.triggerDays.toString());
-          }
-          if (trigger.waTemplateId) {
-            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
-          }
-          break;
-        case LoyaltyEventType.POINTS_EXPIRY_ALERT:
-        case LoyaltyEventType.POINTS_EXPIRED:
-          setEventTriggerField(`${eventType}.enabled`, trigger.enabled);
-          if (trigger.waTemplateId) {
-            setEventTriggerField(`${eventType}.waTemplateId`, trigger.waTemplateId);
-          }
-          break;
-      }
-    });
-
-    setTriggerIds(triggerMap);
-  }, [eventTriggers, eventTriggersForm]);
-
-  // Save Handlers
-  const onSaveBasicSettings = async (data: z.infer<typeof BasicSettingsSchema>) => {
-    const payload = {
-      name: data.programName,
-      currencyName: data.pointsCurrency,
-      currencyCode: data.moneyCurrency,
-      defaultCountryCode: data.defaultCountryCode,
-      // Null clears it back to "never told us", which the estimate reads as a prompt.
-      averageOrderValue: data.averageOrderValue ?? null,
-      whatsappSettingsId: data.whatsappSettingsId,
-      referralMessageTemplate: data.referralMessageTemplate,
-    };
-    if (program?.id) {
-      updateProgramMutation.mutate(payload, { onSuccess: () => basicForm.reset(data) });
-    } else {
-      // Defaults are no longer seeded from here. The guided setup at
-      // /dashboard/loyalty/onboarding writes tiers, rules and rewards server-side in one
-      // transaction; the fire-and-forget Promise.all that used to live here was
-      // non-atomic, swallowed every error, and wrote reward values the schema rejects.
-      await createProgramMutation.mutateAsync(payload);
-    }
-  };
-
-  const handleSaveEventTrigger = async (eventType: LoyaltyEventType) => {
-    if (!program?.id) return;
-
-    const values = eventTriggersForm.getValues(eventType);
-    const triggerId = triggerIds[eventType];
-
-    const triggerData = {
-      programId: program.id,
-      eventType,
-      enabled: values.enabled,
-      waTemplateId: values.waTemplateId,
-      triggerDays: values.triggerDays ? Number.parseInt(values.triggerDays) : undefined,
-      rewardId: values.rewardId,
-    };
-
-    try {
-      if (triggerId) {
-        // Update existing trigger
-        await updateEventTrigger(triggerId, triggerData);
-        // Invalidate queries to refetch
-        queryClient.invalidateQueries({
-          queryKey: automationKeys.eventTriggers(program.id),
-        });
-        toast.success(t("Settings saved"));
-      } else {
-        // Create new trigger
-        const newTrigger = await createTriggerMutation.mutateAsync(triggerData);
-        setTriggerIds((prev) => ({ ...prev, [eventType]: newTrigger.id }));
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error saving event trigger:", error);
-      toast.error(t("Failed to save settings"));
-      return false;
-    }
-  };
-
-  const handleToggleEventTrigger = async (eventType: LoyaltyEventType, enabled: boolean) => {
-    setEventTriggerField(`${eventType}.enabled`, enabled);
-    const success = await handleSaveEventTrigger(eventType);
-    if (success) {
-      toast.success(enabled ? t("Notification enabled") : t("Notification disabled"));
-    } else {
-      // Revert if failed
-      setEventTriggerField(`${eventType}.enabled`, !enabled);
-    }
-  };
-
-  const handleSavePointsReminder = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.INACTIVITY_REMINDER);
-    setPointsReminderModified(false);
-  };
-
-  const handleSaveTierUpgraded = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.TIER_UPGRADED);
-    setTierUpgradedModified(false);
-  };
-
-  const handleSaveBirthdayReminder = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.BIRTHDAY);
-    setBirthdayReminderModified(false);
-  };
-
-  const handleSavePointsIssued = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.POINTS_ISSUED);
-    setPointsIssuedModified(false);
-  };
-
-  const handleSavePointsAdjusted = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.POINTS_ADJUSTED);
-    setPointsAdjustedModified(false);
-  };
-
-  const handleSaveRewardIssued = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.REWARD_ISSUED);
-    setRewardIssuedModified(false);
-  };
-
-  const handleSaveRewardRedeemed = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.REWARD_REDEEMED);
-    setRewardRedeemedModified(false);
-  };
-
-  const handleSavePointsExpiryAlert = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.POINTS_EXPIRY_ALERT);
-    setPointsExpiryAlertModified(false);
-  };
-
-  const handleSavePointsExpired = async () => {
-    await handleSaveEventTrigger(LoyaltyEventType.POINTS_EXPIRED);
-    setPointsExpiredModified(false);
-  };
-
-  const handleResetPoints = async () => {
-    if (!program?.id) return;
-
-    const shouldReset = await confirm({
-      title: t("Reset Loyalty Points"),
-      description: t(
-        "Are you sure you want to reset all loyalty points? This action cannot be undone.",
-      ),
-      confirmText: t("Reset Points"),
-    });
-
-    if (!shouldReset) return;
-
-    resetPointsMutation.mutate(program.id);
-  };
-
-  const handleDeleteProgram = () => {
-    if (program?.id && deleteConfirmText === program.name) {
-      deleteProgramMutation.mutate({ programId: program.id, force: true });
-      setDeleteModalOpen(false);
-      setDeleteConfirmText("");
-    }
-  };
-
-  if (isProgramLoading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <IconLoader2 className="w-8 h-8 animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <IconLoader2 className="size-8 animate-spin" />
       </div>
     );
   }
+  if (!program) return null;
 
-  const noProgram = !program?.id;
+  const state = programStateOf(program);
+  const pointsName = program.currencyName;
+  const money = (amount: number) =>
+    formatMoney(amount, program.currencyCode, program.currencySymbol);
+  const outstanding = dashboard?.liability.outstandingPoints ?? 0;
+  const liability = dashboard?.liability.monetaryValue ?? null;
+
+  const setStatus = async (next: "active" | "paused") => {
+    if (next === "paused") {
+      const ok = await confirm({
+        title: t("Pause the program?"),
+        description: t(
+          "Earning stops and nothing sends. Every balance is kept, and staff can still redeem rewards at the counter.",
+        ),
+        confirmText: t("Pause"),
+      });
+      if (!ok) return;
+    }
+    update.mutate({ status: next });
+  };
+
+  const toggle = (patch: Parameters<typeof update.mutate>[0]) => update.mutate(patch);
+
+  const onReset = async () => {
+    const ok = await confirm({
+      title: t("Reset every balance to zero?"),
+      description: t("All {points} are removed from every member. This cannot be undone.", {
+        points: pointsName,
+      }),
+      confirmText: t("Reset {points}", { points: pointsName }),
+    });
+    if (ok) resetPoints.mutate(program.id);
+  };
+
   return (
-    <div className="space-y-4 p-6 relative">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl mb-1">{t("Loyalty Program Settings")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("Configure your loyalty program settings")}
+    <div className="flex flex-col gap-6">
+      <PageHeading
+        title={t("Settings")}
+        description={t(
+          "Program name, points name and typical spend are in Program › Basics; messages are on Messages. This page is only the settings that are not part of what customers are promised.",
+        )}
+      />
+
+      {/* ── status ── */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            {t("Program")} <ProgramStatusBadge state={state} />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <p className="max-w-[60ch] text-sm text-muted-foreground">
+            {state === "live"
+              ? t("On. {points} are earned on every purchase and messages send.", {
+                  points: pointsName,
+                })
+              : state === "paused"
+                ? t("Paused. Every balance is kept, earning is stopped, nothing sends.")
+                : t(
+                    "Not activated yet. Finish setup to start it — nothing reaches customers before that.",
+                  )}
+          </p>
+          {state === "live" && (
+            <Button
+              variant="outline"
+              onClick={() => setStatus("paused")}
+              disabled={update.isPending}
+            >
+              <IconPlayerPause size={16} /> {t("Pause earning")}
+            </Button>
+          )}
+          {state === "paused" && (
+            <Button onClick={() => setStatus("active")} disabled={update.isPending}>
+              <IconPlayerPlay size={16} /> {t("Resume earning")}
+            </Button>
+          )}
+          {state === "draft" && (
+            <Button render={<Link to={LOYALTY_PATHS.onboarding} />}>
+              <IconRocket size={16} /> {t("Continue setup")}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── approvals ── */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="text-base">{t("Approvals")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <FieldContent>
+              <FieldLabel htmlFor={`${uid}-auto`} className="text-sm font-medium">
+                {t("Auto-approve staff adjustments")}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t(
+                  "On: a correction posts at once. Off: it waits under Activity › Pending for someone to approve.",
+                )}
+              </FieldDescription>
+            </FieldContent>
+            <Switch
+              id={`${uid}-auto`}
+              checked={program.autoApproveAdjustments ?? false}
+              onCheckedChange={(on) => toggle({ autoApproveAdjustments: on })}
+              disabled={update.isPending}
+            />
+          </Field>
+        </CardContent>
+      </Card>
+
+      {/* ── integrations ── */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="text-base">{t("Integrations")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <div className="rounded-lg border border-border p-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">{t("WhatsApp Business")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {waSettings?.length
+                    ? t("Connected. Pick which number the program sends from.")
+                    : t("Not connected — notifications will not send.")}
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" render={<Link to="/dashboard/settings/channels" />}>
+                {waSettings?.length ? t("Manage channels") : t("Connect")}
+              </Button>
+            </div>
+            {Boolean(waSettings?.length) && (
+              <div className="mt-3 max-w-sm">
+                <AccountSelector
+                  value={program.whatsappSettingsId ?? undefined}
+                  onChange={(value) =>
+                    value &&
+                    value !== program.whatsappSettingsId &&
+                    toggle({ whatsappSettingsId: value })
+                  }
+                />
+              </div>
+            )}
+          </div>
+
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <FieldContent>
+              <FieldLabel htmlFor={`${uid}-wa`} className="text-sm font-medium">
+                {t("Send WhatsApp notifications")}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t("The master switch. Which messages send is decided on Messages.")}
+              </FieldDescription>
+            </FieldContent>
+            <Switch
+              id={`${uid}-wa`}
+              checked={program.whatsappNotifications ?? true}
+              onCheckedChange={(on) => toggle({ whatsappNotifications: on })}
+              disabled={update.isPending}
+            />
+          </Field>
+
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <FieldContent>
+              <FieldLabel htmlFor={`${uid}-email`} className="text-sm font-medium">
+                {t("Email notifications")}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t("Program notices by email.")}
+              </FieldDescription>
+            </FieldContent>
+            <Switch
+              id={`${uid}-email`}
+              checked={program.emailNotifications ?? true}
+              onCheckedChange={(on) => toggle({ emailNotifications: on })}
+              disabled={update.isPending}
+            />
+          </Field>
+
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <FieldContent>
+              <FieldLabel htmlFor={`${uid}-shopify`} className="text-sm font-medium">
+                {t("Shopify orders earn {points}", { points: pointsName })}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t("Online orders follow the same earning rules as the counter.")}
+              </FieldDescription>
+            </FieldContent>
+            <Switch
+              id={`${uid}-shopify`}
+              checked={program.enableShopifyOrderPoints ?? false}
+              onCheckedChange={(on) => toggle({ enableShopifyOrderPoints: on })}
+              disabled={update.isPending}
+            />
+          </Field>
+
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-sm font-medium text-foreground">{t("POS and API access")}</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              {t("For a till or ordering system that awards {points} directly.", {
+                points: pointsName,
+              })}
+            </p>
+            <ApiAccessKeyPage />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── expiry ── */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <PointsExpirationSettings form={expirationForm} programId={program.id} />
+          {outstanding > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {liability !== null
+                ? t(
+                    "{points} {name} are currently unspent — worth {value} if every one is redeemed.",
+                    {
+                      points: outstanding.toLocaleString(),
+                      name: pointsName,
+                      value: money(liability),
+                    },
+                  )
+                : t("{points} {name} are currently unspent.", {
+                    points: outstanding.toLocaleString(),
+                    name: pointsName,
+                  })}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <DangerZone
+            onReset={onReset}
+            onDelete={() => {
+              setDeleteText("");
+              setDeleteOpen(true);
+            }}
+            showDelete={isSuperAdmin}
+          />
+          <p className="text-xs text-muted-foreground">
+            {t(
+              "Pausing keeps every balance intact and simply stops earning. These two cannot be undone.",
+            )}
           </p>
         </div>
-        <InfoButton docUrl={`${docsPath}/loyality/settings`} />
       </div>
-      {noProgram && (
-        <Alert className="mb-4">
-          <AlertTitle>{t("No loyalty program yet")}</AlertTitle>
-          <AlertDescription className="flex flex-wrap items-center gap-3">
-            <span>
-              {t(
-                "The guided setup builds your points, tiers, rewards and WhatsApp messages from a starting point you can edit — it's the quickest way in. You can still fill in the basics below by hand.",
-              )}
-            </span>
-            <Button size="sm" render={<Link to="/dashboard/loyalty/onboarding" />}>
-              {t("Run guided setup")}
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-      <Tabs
-        defaultValue={activeTab}
-        className="w-full space-y-4"
-        onValueChange={(value) => {
-          navigate({
-            to: `/dashboard/loyalty/settings?tab=${value}`,
-          });
-        }}
-      >
-        <TabsList>
-          <TabsTrigger value="general">{t("General")}</TabsTrigger>
-          <TabsTrigger value="notifications">{t("Notifications")}</TabsTrigger>
-        </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
-          <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <BasicSettings
-                form={basicForm}
-                onSave={onSaveBasicSettings}
-                isPending={updateProgramMutation.isPending}
-                programId={program?.id ?? null}
-              />
-
-              <NotificationSettings
-                form={notificationsForm}
-                programId={program?.id ?? null}
-                disabled={noProgram}
-              />
-
-              <ReferralMessageSettings
-                form={basicForm}
-                onSave={onSaveBasicSettings}
-                isPending={updateProgramMutation.isPending}
-                disabled={noProgram}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <PointsExpirationSettings
-                form={expirationForm}
-                programId={program?.id ?? null}
-                disabled={noProgram}
-              />
-
-              <DangerZone
-                onReset={handleResetPoints}
-                onDelete={() => {
-                  setDeleteConfirmText("");
-                  setDeleteModalOpen(true);
-                }}
-                disabled={noProgram}
-                showDelete={isSuperAdmin}
-              />
-            </div>
-          </>
-        </TabsContent>
-
-        <TabsContent value="notifications" className="space-y-4">
-          <>
-            <div className="space-y-4">
-              <TransactionNotifications
-                form={eventTriggersForm}
-                isPending={createTriggerMutation.isPending}
-                onToggle={handleToggleEventTrigger}
-                onSavePointsIssued={handleSavePointsIssued}
-                onSavePointsAdjusted={handleSavePointsAdjusted}
-                onSaveRewardIssued={handleSaveRewardIssued}
-                onSaveRewardRedeemed={handleSaveRewardRedeemed}
-                pointsIssuedModified={pointsIssuedModified}
-                pointsAdjustedModified={pointsAdjustedModified}
-                rewardIssuedModified={rewardIssuedModified}
-                rewardRedeemedModified={rewardRedeemedModified}
-                setPointsIssuedModified={setPointsIssuedModified}
-                setPointsAdjustedModified={setPointsAdjustedModified}
-                setRewardIssuedModified={setRewardIssuedModified}
-                setRewardRedeemedModified={setRewardRedeemedModified}
-                disabled={noProgram}
-              />
-
-              <TierUpdateSettings
-                form={eventTriggersForm}
-                isPending={createTriggerMutation.isPending}
-                onToggle={handleToggleEventTrigger}
-                onSave={handleSaveTierUpgraded}
-                isModified={tierUpgradedModified}
-                onModify={() => setTierUpgradedModified(true)}
-                disabled={noProgram}
-              />
-
-              <PointsReminderSettings
-                form={eventTriggersForm}
-                isPending={createTriggerMutation.isPending}
-                onToggle={handleToggleEventTrigger}
-                onSave={handleSavePointsReminder}
-                isModified={pointsReminderModified}
-                onModify={() => setPointsReminderModified(true)}
-                disabled={noProgram}
-              />
-
-              <BirthdayReminderSettings
-                form={eventTriggersForm}
-                isPending={createTriggerMutation.isPending}
-                onToggle={handleToggleEventTrigger}
-                onSave={handleSaveBirthdayReminder}
-                isModified={birthdayReminderModified}
-                onModify={() => setBirthdayReminderModified(true)}
-                disabled={noProgram}
-              />
-
-              <PointsExpirySettings
-                form={eventTriggersForm}
-                isPending={createTriggerMutation.isPending}
-                onToggle={handleToggleEventTrigger}
-                onSaveAlert={handleSavePointsExpiryAlert}
-                onSaveExpired={handleSavePointsExpired}
-                isAlertModified={pointsExpiryAlertModified}
-                isExpiredModified={pointsExpiredModified}
-                onModifyAlert={() => setPointsExpiryAlertModified(true)}
-                onModifyExpired={() => setPointsExpiredModified(true)}
-                disabled={noProgram}
-              />
-            </div>
-          </>
-        </TabsContent>
-      </Tabs>
       <Dialog
-        open={deleteModalOpen}
+        open={deleteOpen}
         onOpenChange={(open) => {
           if (!open) {
-            setDeleteModalOpen(false);
-            setDeleteConfirmText("");
+            setDeleteOpen(false);
+            setDeleteText("");
           }
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">{t("Delete Loyalty Program")}</DialogTitle>
+            <DialogTitle className="text-destructive">{t("Delete the program")}</DialogTitle>
             <DialogDescription>
-              {t(
-                "This action is permanent and cannot be undone. All program data will be removed.",
-              )}
+              {t("This is permanent. Every member, balance, rule and reward is removed.")}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
+          <div className="flex flex-col gap-2 py-2">
             <p className="text-sm text-muted-foreground">
-              {t("Type")}{" "}
-              <span className="font-semibold text-foreground">&quot;{program?.name}&quot;</span>{" "}
-              {t("to confirm deletion")}
+              {t("Type")} <span className="font-semibold text-foreground">“{program.name}”</span>{" "}
+              {t("to confirm")}
             </p>
             <Input
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && deleteConfirmText === program?.name) {
-                  handleDeleteProgram();
-                }
-              }}
-              placeholder={program?.name ?? ""}
+              value={deleteText}
+              onChange={(event) => setDeleteText(event.target.value)}
+              placeholder={program.name}
               autoComplete="off"
             />
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeleteModalOpen(false);
-                setDeleteConfirmText("");
-              }}
-            >
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               {t("Cancel")}
             </Button>
             <Button
               variant="destructive"
-              disabled={deleteConfirmText !== program?.name || deleteProgramMutation.isPending}
-              onClick={handleDeleteProgram}
+              disabled={deleteText !== program.name || deleteProgram.isPending}
+              onClick={() => {
+                deleteProgram.mutate({ programId: program.id, force: true });
+                setDeleteOpen(false);
+              }}
             >
-              {deleteProgramMutation.isPending ? (
-                <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              {t("Delete Program")}
+              {deleteProgram.isPending && <IconLoader2 className="size-4 animate-spin" />}
+              {t("Delete program")}
             </Button>
           </DialogFooter>
         </DialogContent>

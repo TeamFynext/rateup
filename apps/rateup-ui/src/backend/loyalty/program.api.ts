@@ -28,6 +28,10 @@ export interface LoyaltyProgram {
   averageOrderValue?: number | null;
   /** Which starter pack the setup wizard used, if it ran. Picks example vocabulary. */
   onboardingPresetKey?: string | null;
+  /** The last wizard step saved; what "Continue setup" resumes from. */
+  onboardingStep?: string | null;
+  /** When the programme was first activated — the "live since" date. */
+  onboardingCompletedAt?: string | null;
   referralMessageTemplate?: ReferralMessageTemplate;
   enablePointsExpiration?: boolean;
   pointsExpirationMonths?: number;

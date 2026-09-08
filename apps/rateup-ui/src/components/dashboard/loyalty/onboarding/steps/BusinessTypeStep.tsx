@@ -1,10 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Controller, useForm, useWatch, type Control } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyPreset, LoyaltyPresetKey } from "@/backend/loyalty/onboarding.api";
-import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
@@ -14,6 +13,7 @@ import { cn } from "@/lib/utils.ts";
 import { numberInputValue } from "@/utils/form.ts";
 
 import { basicsFormSchema, type BasicsFormInput, type BasicsFormValues } from "../schemas.ts";
+import { StepFooter, StepHeader, useStepFooterProps, type StepMode } from "../StepChrome.tsx";
 
 interface BusinessTypeStepProps {
   presets: LoyaltyPreset[];
@@ -21,6 +21,9 @@ interface BusinessTypeStepProps {
   onSelectPreset: (key: LoyaltyPresetKey) => void;
   defaultValues: BasicsFormInput;
   isSaving: boolean;
+  /** "section" hides the business-type picker: a live programme has already chosen. */
+  mode?: StepMode;
+  onCancel?: () => void;
   onSubmit: (values: BasicsFormValues) => void;
 }
 
@@ -30,6 +33,8 @@ export function BusinessTypeStep({
   onSelectPreset,
   defaultValues,
   isSaving,
+  mode = "wizard",
+  onCancel,
   onSubmit,
 }: Readonly<BusinessTypeStepProps>) {
   const { t } = useTranslation();
@@ -51,58 +56,75 @@ export function BusinessTypeStep({
     reset(defaultValues);
   }, [reset, selectedKey]);
 
+  const footer = useStepFooterProps({
+    mode,
+    isDirty: form.formState.isDirty,
+    onCancel,
+  });
+
   return (
     <form className="flex flex-col gap-8" onSubmit={form.handleSubmit(onSubmit)}>
-      <section className="flex flex-col gap-3">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">
-            {t("What kind of business is this?")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t(
-              "We'll suggest points, tiers, rewards and messages that suit it. You can change every one of them.",
-            )}
-          </p>
-        </div>
+      {mode === "section" && (
+        <StepHeader
+          title={t("Basics")}
+          description={t("Name, points, currency and typical spend — what customers see.")}
+        />
+      )}
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {presets.map((preset) => {
-            const isSelected = preset.key === selectedKey;
+      {mode === "wizard" && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">
+              {t("What kind of business is this?")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "We'll suggest points, tiers, rewards and messages that suit it. You can change every one of them.",
+              )}
+            </p>
+          </div>
 
-            return (
-              <Card
-                key={preset.key}
-                className={cn(
-                  "cursor-pointer border transition-colors",
-                  isSelected
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/40",
-                )}
-              >
-                <CardContent className="p-0">
-                  <button
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => onSelectPreset(preset.key)}
-                    className="flex h-full w-full flex-col gap-1 p-4 text-left"
-                  >
-                    <span className="text-sm font-semibold text-foreground">{t(preset.label)}</span>
-                    <span className="text-xs leading-relaxed text-muted-foreground">
-                      {t(preset.description)}
-                    </span>
-                  </button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {presets.map((preset) => {
+              const isSelected = preset.key === selectedKey;
+
+              return (
+                <Card
+                  key={preset.key}
+                  className={cn(
+                    "cursor-pointer border transition-colors",
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40",
+                  )}
+                >
+                  <CardContent className="p-0">
+                    <button
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => onSelectPreset(preset.key)}
+                      className="flex h-full w-full flex-col gap-1 p-4 text-left"
+                    >
+                      <span className="text-sm font-semibold text-foreground">
+                        {t(preset.label)}
+                      </span>
+                      <span className="text-xs leading-relaxed text-muted-foreground">
+                        {t(preset.description)}
+                      </span>
+                    </button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="flex flex-col gap-4">
         <div>
           <h2 className="text-base font-semibold text-foreground">{t("Program basics")}</h2>
           <p className="text-sm text-muted-foreground">
-            {t("What customers will see, and what they get for signing up.")}
+            {t("What customers will see, and the currency your numbers are in.")}
           </p>
         </div>
 
@@ -210,66 +232,9 @@ export function BusinessTypeStep({
             )}
           />
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <BonusField control={form.control} name="signupBonus" label={t("Points for joining")} />
-          <BonusField
-            control={form.control}
-            name="referralBonus"
-            label={t("Points for referring a friend")}
-          />
-          <BonusField
-            control={form.control}
-            name="refereeBonus"
-            label={t("Points for the friend who joins")}
-          />
-        </div>
       </section>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? t("Saving…") : t("Continue")}
-        </Button>
-      </div>
+      <StepFooter isSaving={isSaving} {...footer} />
     </form>
-  );
-}
-
-/**
- * The three bonus inputs differ only by field. Mapping over them inline widens `name` to
- * a union, which erases the per-field value type — hence a component with one concrete
- * name per call site.
- */
-function BonusField({
-  control,
-  name,
-  label,
-}: Readonly<{
-  control: Control<BasicsFormInput>;
-  name: "signupBonus" | "referralBonus" | "refereeBonus";
-  label: string;
-}>) {
-  return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name} className="text-xs">
-            {label}
-          </FieldLabel>
-          <Input
-            id={field.name}
-            type="number"
-            min={0}
-            className="h-9"
-            aria-invalid={fieldState.invalid}
-            {...field}
-            value={numberInputValue(field.value)}
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
   );
 }

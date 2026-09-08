@@ -21,11 +21,10 @@ import { toast } from "sonner";
 
 import {
   useExportCustomersMutation,
-  useGetLoyaltyCustomerById,
   useLoyaltyCustomers,
 } from "@/backend/loyalty/customer/customer.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import { CustomerDetailPanel } from "@/components/loyalty/CustomerDetailPanel.tsx";
+import { CustomerSummaryPanel } from "@/components/loyalty/cashier/CustomerSummaryPanel.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -113,7 +112,6 @@ export function CustomerPage() {
   const [viewMode, setViewMode] = useState<"list" | "details">("list");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
 
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination] = useState({
     pageIndex: 0,
@@ -131,11 +129,8 @@ export function CustomerPage() {
     sorting,
     [],
   );
-  const { data: customerDetails } = useGetLoyaltyCustomerById(selectedCustomerId ?? "");
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
-
-  const panelTier = customerDetails?.currentTier ?? selectedCustomer?.currentTier ?? null;
 
   const getTierBadgeClassName = (tierColor: string) => {
     if (tierColor === "purple") {
@@ -281,7 +276,6 @@ export function CustomerPage() {
 
   const handleViewCustomer = (customer: CustomerDetails) => {
     setSelectedCustomer(customer);
-    setSelectedCustomerId(customer.id);
     setViewMode("details");
   };
 
@@ -350,35 +344,13 @@ export function CustomerPage() {
               variant="ghost"
               onClick={() => {
                 setViewMode("list");
-                setSelectedCustomerId(null);
               }}
             >
               <IconArrowLeft className="w-4 h-4 mr-2" />
               {t("Back to Customers")}
             </Button>
-            <CustomerDetailPanel
-              customer={{
-                id: selectedCustomer.id,
-                contactId: selectedCustomer.contactId,
-                name: selectedCustomer.contact.name,
-                phone: selectedCustomer.contact.phone,
-                email: selectedCustomer.contact.email,
-                currentPoints: customerDetails?.currentPoints ?? selectedCustomer.currentPoints,
-                lifetimePoints: customerDetails?.lifetimePoints ?? selectedCustomer.lifetimePoints,
-                currentTier: panelTier
-                  ? {
-                      id: panelTier.id,
-                      name: panelTier.name,
-                      color: panelTier.color,
-                    }
-                  : null,
-                status: customerDetails?.status ?? selectedCustomer.status,
-                referralCode: customerDetails?.referralCode ?? selectedCustomer.referralCode,
-                createdAt: selectedCustomer.createdAt,
-              }}
-              transactions={customerDetails?.transactions}
-              orgId={user?.user?.orgId || ""}
-            />
+            {/* The same panel staff see at the counter; actions open the cashier. */}
+            <CustomerSummaryPanel phone={selectedCustomer.contact.phone} />
           </div>
         )
       )}

@@ -11,12 +11,17 @@ export interface AssignRewardRequest {
 export interface AssignRewardResponse {
   success: boolean;
   message: string;
+  /** The `CustomerReward` row the API minted — `shortCode` is what staff type to use it. */
   data?: {
     id: string;
-    customerId: string;
+    customerId?: string;
+    accountId?: string;
     rewardId: string;
+    shortCode?: string;
+    status?: string;
     assignedAt: string;
     notes?: string;
+    reward?: { id: string; name: string; pointsCost: number; rewardType: string };
   };
 }
 

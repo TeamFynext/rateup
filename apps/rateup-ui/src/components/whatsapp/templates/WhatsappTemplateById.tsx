@@ -86,7 +86,12 @@ import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templa
 
 export function WhatsappTemplateById({
   forceTemplateType,
-}: Readonly<{ forceTemplateType?: TemplateType }>) {
+  backTo = "/dashboard/whatsapp/templates",
+}: Readonly<{
+  forceTemplateType?: TemplateType;
+  /** Where saving a new template lands. Loyalty templates go back to Messages. */
+  backTo?: "/dashboard/whatsapp/templates" | "/dashboard/loyalty/messages";
+}>) {
   const uid = useId();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
@@ -304,9 +309,7 @@ export function WhatsappTemplateById({
     () => {
       form.reset();
       setIsSubmitting(false);
-      navigate({
-        to: "/dashboard/whatsapp/templates",
-      });
+      navigate({ to: backTo });
     },
     () => {
       setIsSubmitting(false);
@@ -357,9 +360,7 @@ export function WhatsappTemplateById({
     () => {
       setIsSubmittingDraft(false);
       if (templateId?.length === 0) {
-        navigate({
-          to: "/dashboard/whatsapp/templates",
-        });
+        navigate({ to: backTo });
       }
     },
     () => {

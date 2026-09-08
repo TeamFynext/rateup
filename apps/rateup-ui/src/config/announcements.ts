@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-07-loyalty-program-hub",
+    title: "Loyalty: one Program page, a new Overview",
+    summary:
+      "The Loyalty menu is down from eleven entries to seven. Everything that defines what your program promises — basics, earning, tiers, rewards, messages — now lives on one Program page as five cards, each opening the same form the setup guide uses and saving on its own, with the cost estimate updating beside it as you type. Earning Rules, Rewards and Setup Guide are gone from the menu: the first two are Program sections, and while a program is still a draft the Overview carries the remaining setup steps and a Continue setup button. The Overview itself is new — what your program gives back is the headline, every number compares with the previous period and translates points into money, each chart says one thing in a sentence, and a short what-to-do-next list names the figure that triggered it and links to the fix. The cashier now opens on your recent customers, registers a new customer on the spot, previews the points before you give them, and ends every action with a receipt showing the new balance and the WhatsApp message that went out; a full-screen version for a staff device is one link away. Transactions and Approvals are one page, Activity, with a Pending filter and inline approve and reject. Commands, WhatsApp Templates and the notification settings are one page, Messages, with the registration link and QR at the top. Settings keeps only program status, approvals, integrations, points expiry and the danger zone. Old links redirect.",
+    publishedAt: "2026-09-07",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
     id: "2026-08-31-channels-page-rebuilt",
     title: "Channels, rebuilt to match setup",
     summary:

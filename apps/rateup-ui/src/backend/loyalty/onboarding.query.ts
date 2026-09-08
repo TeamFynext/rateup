@@ -27,10 +27,14 @@ export const useLoyaltyPresets = () =>
     staleTime: Infinity,
   });
 
-export const useLoyaltyOnboardingState = () =>
+export const useLoyaltyOnboardingState = (enabled = true) =>
   useQuery({
     queryKey: loyaltyKeys.onboardingState(),
     queryFn: getLoyaltyOnboardingState,
+    enabled,
+    // The loyalty layout route fetches this on every navigation between loyalty pages;
+    // a short stale window keeps that from becoming a request per click.
+    staleTime: 30_000,
   });
 
 /**
@@ -47,7 +51,14 @@ function useStepMutation<TPayload, TResult>(
   return useMutation({
     mutationFn,
     onSuccess: (result) => {
-      for (const queryKey of [loyaltyKeys.onboardingState(), ...affectedKeys]) {
+      // Every step changes what the programme costs, so the Overview's numbers and the
+      // server-side giveback are swept along with the wizard's own state.
+      for (const queryKey of [
+        loyaltyKeys.onboardingState(),
+        loyaltyKeys.dashboard(),
+        loyaltyKeys.giveback(),
+        ...affectedKeys,
+      ]) {
         queryClient.invalidateQueries({ queryKey });
       }
       onSuccess?.(result);
@@ -97,6 +108,8 @@ export const useActivateLoyaltyProgramMutation = (
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.onboardingState() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.program() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.giveback() });
       toast.success("Your loyalty program is live");
       onSuccess?.(result);
     },

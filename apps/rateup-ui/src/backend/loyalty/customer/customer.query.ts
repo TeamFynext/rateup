@@ -206,7 +206,7 @@ export const useAwardPointsMutation = () => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer() });
-      toast.success("Points awarded successfully");
+      // No success toast: the cashier shows a receipt, which says more and stays put.
     },
     onError: (error) => {
       toast.error(error?.message || `Error awarding points`);

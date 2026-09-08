@@ -17,7 +17,12 @@
 type KeyPart = unknown;
 
 export const loyaltyKeys = {
-  dashboard: () => ["loyaltyDashboardData"] as const,
+  /** Without a period this is the prefix that sweeps every Overview window. */
+  dashboard: (period?: KeyPart, tz?: KeyPart) =>
+    (period === undefined
+      ? ["loyaltyDashboardData"]
+      : ["loyaltyDashboardData", period, tz]) as readonly unknown[],
+  giveback: () => ["loyalty-giveback"] as const,
 
   /**
    * NOTE — behaviour change. Two invalidations in `customer.query.ts` (the assign-reward
@@ -77,6 +82,7 @@ export const loyaltyKeys = {
 
 export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
   loyaltyKeys.dashboard(),
+  loyaltyKeys.giveback(),
   loyaltyKeys.customers(),
   loyaltyKeys.customer(),
   ["loyaltyCustomerByContact"],

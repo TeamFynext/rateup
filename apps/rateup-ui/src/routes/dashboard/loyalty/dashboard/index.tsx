@@ -1,36 +1,21 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 
-import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
-import { getLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.api";
-import { LoyaltyPrograms } from "@/components/dashboard/loyalty/dashboard/LoyaltyPrograms.tsx";
+import { DASHBOARD_PERIODS } from "@/backend/loyalty/dashboard/dashboard.query";
+import { OverviewPage } from "@/components/dashboard/loyalty/overview/OverviewPage.tsx";
+
+// The no-programme redirect lives on the parent `/dashboard/loyalty` layout route, so
+// every loyalty URL gets it, not just this one.
+const searchSchema = z.object({
+  period: z.enum(DASHBOARD_PERIODS).optional().catch(undefined),
+});
 
 export const Route = createFileRoute("/dashboard/loyalty/dashboard/")({
-  ssr: false,
-  loader: async ({ context }) => {
-    const queryClient = context.getQueryClient();
-
-    // An org with no programme at all lands on empty charts, so send it to the wizard
-    // instead. A *draft* programme deliberately does not redirect — someone who stepped
-    // out mid-setup should not be dragged back in every time they click Loyalty; they
-    // get a "Resume setup" banner on this page instead.
-    try {
-      const state = await queryClient.fetchQuery({
-        queryKey: loyaltyKeys.onboardingState(),
-        queryFn: getLoyaltyOnboardingState,
-      });
-
-      if (!state.program) {
-        throw redirect({ to: "/dashboard/loyalty/onboarding", replace: true });
-      }
-    } catch (error) {
-      // A redirect is thrown, so it has to pass through. Anything else (the org lacks
-      // the feature, the request failed) should not block the dashboard from rendering.
-      if (error && typeof error === "object" && "to" in error) throw error;
-    }
-  },
+  validateSearch: searchSchema,
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  return <LoyaltyPrograms />;
+  const { period } = Route.useSearch();
+  return <OverviewPage period={period ?? "30d"} />;
 }

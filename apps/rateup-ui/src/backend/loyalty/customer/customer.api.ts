@@ -173,6 +173,53 @@ export async function updateLoyaltyCustomer(
   return (await axiosClient.put(`${base}/${customerId}`, data)).data;
 }
 
+/** What the dispatcher did with the WhatsApp message, so a receipt can show it. */
+export interface LoyaltyNotificationOutcome {
+  sent: boolean;
+  channel: "whatsapp" | null;
+  templateId: string | null;
+  text: string | null;
+  skippedReason:
+    | "no_program"
+    | "program_inactive"
+    | "whatsapp_disabled"
+    | "points_alerts_disabled"
+    | "no_phone"
+    | "no_template"
+    | "send_failed"
+    | null;
+}
+
+export interface AwardPointsTierSummary {
+  id: string;
+  name: string;
+  threshold: number;
+  pointsMultiplier: number;
+  color: string | null;
+}
+
+/** Mirrors `awardPoints` in rateup-api — everything a counter receipt reads. */
+export interface AwardPointsResponse {
+  customer: {
+    id: string;
+    currentPoints: number;
+    lifetimePoints: number;
+    totalSpend: number | string;
+  };
+  transaction: { id: string; points: number; balanceAfter: number; createdAt: string };
+  pointsAwarded: number;
+  rule: { id: string; name: string; multiplier: number; bonusPoints: number } | null;
+  tier: {
+    current: AwardPointsTierSummary | null;
+    previous: string | null;
+    upgraded: boolean;
+    next: AwardPointsTierSummary | null;
+    amountToNext: number | null;
+  };
+  notification: LoyaltyNotificationOutcome;
+  tierNotification: LoyaltyNotificationOutcome | null;
+}
+
 export async function awardPoints(data: {
   contactId: string;
   purchaseAmount: number;
@@ -183,6 +230,6 @@ export async function awardPoints(data: {
   channel?: string;
   orderId?: string;
   notes?: string;
-}) {
+}): Promise<AwardPointsResponse> {
   return (await axiosClient.post(`${base}/award-points`, data)).data;
 }
