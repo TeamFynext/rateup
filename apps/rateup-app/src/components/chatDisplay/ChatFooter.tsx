@@ -14,6 +14,8 @@ import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
 import { useMessagesStore } from "@/store/inboxStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Skeleton, SkeletonCircle } from "@/components/common/Skeleton";
+import { Colors } from "@/constants/colors";
 
 const ChatFooter = ({ id }: { id: string }) => {
   const { colorScheme } = useColorScheme();
@@ -66,7 +68,33 @@ const ChatFooter = ({ id }: { id: string }) => {
   // `isLoading`, not `isPending`: the query is disabled without an id, and a
   // disabled query stays pending forever, which would blank the footer for good.
   if (assignmentLoading) {
-    return <View style={{ paddingBottom: insets.bottom }} />;
+    return (
+      <View
+        style={{
+          paddingBottom: insets.bottom,
+          borderTopWidth: 1,
+          borderTopColor: t.border1,
+          backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
+        }}
+      >
+        {/* Shaped like the send panel it is standing in for — a round action, the
+            composer, and the send button — so the footer does not resize when
+            the real one arrives. */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+          }}
+        >
+          <SkeletonCircle size={38} />
+          <Skeleton height={38} borderRadius={19} style={{ flex: 1 }} />
+          <SkeletonCircle size={38} />
+        </View>
+      </View>
+    );
   }
 
   if (

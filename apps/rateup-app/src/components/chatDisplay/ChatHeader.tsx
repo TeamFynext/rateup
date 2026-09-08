@@ -38,6 +38,7 @@ import {
 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
+import { Skeleton, SkeletonCircle } from "@/components/common/Skeleton";
 import { MessagePlatform } from "@/constants/enums";
 import { FontAwesome } from "@expo/vector-icons";
 import { useEditContactMutation, useToggleFavorite } from "@/api/inbox/contacts/contacts.query";
@@ -373,11 +374,14 @@ const ChatHeader = ({
   name,
   phone,
   lastReceivedMessageTimeStamp,
+  loading = false,
 }: {
   id: string;
   name: string;
   phone: number;
   lastReceivedMessageTimeStamp: any;
+  /** No contact yet: neither the cache nor the request has answered. */
+  loading?: boolean;
 }) => {
   const router = useRouter();
   const [optionsVisible, setOptionsVisible] = useState(false);
@@ -470,26 +474,32 @@ const ChatHeader = ({
         >
           {/* 36px avatar with the 15px channel dot */}
           <View style={{ position: "relative", alignSelf: "center" }}>
-            <View
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: avatarColor,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
+            {loading ? (
+              // The initials come from the name, so an un-hydrated contact
+              // renders a coloured circle with nothing in it.
+              <SkeletonCircle size={36} />
+            ) : (
+              <View
                 style={{
-                  fontFamily: "Nunito_800ExtraBold",
-                  fontSize: 14,
-                  color: "#fff",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: avatarColor,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {namePreview(name)}
-              </Text>
-            </View>
+                <Text
+                  style={{
+                    fontFamily: "Nunito_800ExtraBold",
+                    fontSize: 14,
+                    color: "#fff",
+                  }}
+                >
+                  {namePreview(name)}
+                </Text>
+              </View>
+            )}
             <View
               style={{
                 position: "absolute",
@@ -510,27 +520,40 @@ const ChatHeader = ({
           </View>
 
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 15,
-                fontFamily: "Nunito_800ExtraBold",
-                color: t.fg1,
-              }}
-            >
-              {formatName(name) || phone}
-            </Text>
-            <Text
-              numberOfLines={1}
-              style={{
-                fontSize: 11,
-                fontFamily: "Nunito_400Regular",
-                color: t.fg4,
-                marginTop: 1,
-              }}
-            >
-              {platformLabel(platform)} · {phone}
-            </Text>
+            {loading ? (
+              // Without this the header prints the `phone` fallback while the
+              // contact is still unknown, which is literally "0" and
+              // "WhatsApp · 0". Sized to the real lines so nothing shifts when
+              // the name arrives.
+              <>
+                <Skeleton width="55%" height={13} style={{ marginVertical: 2 }} />
+                <Skeleton width="38%" height={9} style={{ marginTop: 4 }} />
+              </>
+            ) : (
+              <>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 15,
+                    fontFamily: "Nunito_800ExtraBold",
+                    color: t.fg1,
+                  }}
+                >
+                  {formatName(name) || phone}
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "Nunito_400Regular",
+                    color: t.fg4,
+                    marginTop: 1,
+                  }}
+                >
+                  {platformLabel(platform)} · {phone}
+                </Text>
+              </>
+            )}
           </View>
         </TouchableOpacity>
 

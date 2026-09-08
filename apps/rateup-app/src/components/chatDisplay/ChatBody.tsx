@@ -22,8 +22,18 @@ import { useWsData } from "@/context/UserContext";
 import { Colors } from "@/constants/colors";
 import { useMessagesStore } from "@/store/inboxStore";
 import { getMessagesFromIDB } from "@/utils/sqlite";
+import { Skeleton } from "@/components/common/Skeleton";
 
 const { height: screenHeight } = Dimensions.get("window");
+
+/** Static shape for the loading thread; deliberately uneven so it reads as chat. */
+const SKELETON_BUBBLES = [
+  { width: 180, height: 44, outgoing: false },
+  { width: 130, height: 32, outgoing: true },
+  { width: 220, height: 58, outgoing: false },
+  { width: 160, height: 32, outgoing: true },
+  { width: 140, height: 44, outgoing: false },
+];
 
 const viewabilityConfig = {
   itemVisiblePercentThreshold: 50,
@@ -188,12 +198,27 @@ const ChatBody = ({ id }: { id: string }) => {
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
+          justifyContent: "flex-end",
           backgroundColor: threadBg,
+          paddingHorizontal: 12,
+          paddingBottom: 12,
         }}
       >
-        <ActivityIndicator size="large" color={Colors.brand.blue} />
+        {/* Bubble-shaped rather than a centred spinner, to match the skeletons
+            in the header and footer and to suggest a thread rather than an
+            empty screen. Bottom-aligned because the list is inverted. */}
+        {SKELETON_BUBBLES.map((bubble, index) => (
+          <View
+            key={index}
+            style={{
+              alignSelf: bubble.outgoing ? "flex-end" : "flex-start",
+              marginTop: 10,
+              maxWidth: "78%",
+            }}
+          >
+            <Skeleton width={bubble.width} height={bubble.height} borderRadius={14} />
+          </View>
+        ))}
       </View>
     );
   }

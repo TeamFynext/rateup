@@ -52,7 +52,9 @@ const ChatDisplay = () => {
   const arrivedWithoutContact = useRef(
     useSelectedContactStore.getState().selectedContact?.id !== id,
   );
-  const { data: fetchedContact } = useContactById(arrivedWithoutContact.current ? id : "");
+  const { data: fetchedContact, isError: contactFetchFailed } = useContactById(
+    arrivedWithoutContact.current ? id : "",
+  );
 
   // Paint from the last inbox sync while the request is in flight. The row is
   // already on disk for any contact the inbox has loaded, so a notification tap
@@ -150,6 +152,11 @@ const ChatDisplay = () => {
           name={name}
           phone={phone}
           lastReceivedMessageTimeStamp={lastReceivedMessageTimeStamp}
+          // Neither the cache nor the request has produced this contact yet.
+          // Not gated on the request still being in flight: on failure we stop
+          // waiting and let the header fall back to the phone number rather
+          // than pulse forever.
+          loading={!contact && !contactFetchFailed}
         />
 
         <ChatBody id={id} />
