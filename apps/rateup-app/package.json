@@ -16,7 +16,8 @@
     "lint:ox:fix": "oxlint src --fix",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "brand:assets": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",
@@ -94,6 +95,7 @@
     "lint-staged": "^17.3.0",
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",
+    "sharp": "^0.35.4",
     "typescript": "~6.0.3"
   }
 }

@@ -7,13 +7,13 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  Image,
 } from "react-native";
 import React from "react";
 import SignInScreen from "@/components/signInScreen";
 import GoogleLogin from "@/components/googleSignInScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppleLogin from "@/components/appleSignInScreen";
+import { StarMark } from "@/constants/imageExports";
 
 const SignIn = () => {
   const showError = (message: string) => {
@@ -45,18 +45,11 @@ const SignIn = () => {
           >
             <View className="space-y-8">
               <View className="flex flex-col items-center space-y-4 mb-8">
-                {/* The star mark on its own, not the full logo: the wordmark
-                    would repeat the "LOGIN TO RATEUP" heading directly below.
-                    This PNG has a transparent background, so it sits correctly
-                    on both the light and dark variants of this screen —
-                    icon.png is deliberately opaque for iOS and would show as a
-                    white block in dark mode. */}
-                <Image
-                  source={require("@/assets/images/splash-icon.png")}
-                  style={{ width: 64, height: 64 }}
-                  resizeMode="contain"
-                  accessibilityIgnoresInvertColors
-                />
+                {/* The star mark on its own, not the full logo: the wordmark would
+                    repeat the "LOGIN TO RATEUP" heading directly below. Drawn
+                    from the source SVG so it stays crisp and allocates no
+                    bitmap, rather than decoding a 1024px PNG for a 64pt icon. */}
+                <StarMark width={64} height={64} />
 
                 <View>
                   <Text className="text-center font-bold text-2xl uppercase font-[Geist] text-black dark:text-white">
