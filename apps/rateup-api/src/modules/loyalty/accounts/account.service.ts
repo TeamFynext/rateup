@@ -11,7 +11,11 @@ import {
 import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { parsePhoneforWa } from "../util.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import {
+  dispatchLoyaltyNotification,
+  NOTIFICATION_NOT_SENT,
+  type LoyaltyNotificationOutcome,
+} from "../loyaltyWaDispatcher.js";
 import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 
@@ -371,10 +375,11 @@ export async function getCustomerAccountByPhone(
   phoneNumber: string,
   orgId: string,
 ) {
-  // First find the contact by phone number
+  // Contacts store the number without a leading "+" (see `createCustomerAccount`), so
+  // normalise the way `lookupContactByPhone` does — a "+91…" from a QR scan must still hit.
   const contact = await prisma.contact.findFirst({
     where: {
-      phone: phoneNumber,
+      phone: parsePhoneforWa(phoneNumber),
       orgId,
     },
   });
@@ -410,8 +415,10 @@ export async function getCustomerAccountByPhone(
         take: 20,
         orderBy: { createdAt: "desc" },
       },
+      // Deep enough that an approved-but-unused redemption is still in view for the
+      // cashier's "waiting" strip after a run of newer ones.
       redemptions: {
-        take: 10,
+        take: 25,
         orderBy: { createdAt: "desc" },
         include: {
           reward: true,
@@ -470,101 +477,149 @@ export async function awardPoints(
     throw new Error("Customer account not found. Create account first.");
   }
 
-  const { points, updatedCustomer, transaction } = await prisma.$transaction(async (tx) => {
-    const calculated = await calculatePointsForPurchase(
-      programId,
-      customer.id,
-      purchaseAmount,
-      {
-        purchase_amount: purchaseAmount,
-        location_id: context.locationId,
-        categories: context.productCategories,
-        product_skus: context.productSkus,
-        payment_method: context.paymentMethod,
-        channel:
-          context.channel === "online" ||
-          context.channel === "in_store" ||
-          context.channel === "mobile_app"
-            ? context.channel
-            : undefined,
-        orderId: context.orderId,
-        notes: context.notes,
-      },
-      tx,
-    );
-
-    // Update customer points and total spend
-    const account = await tx.customerLoyaltyAccount.update({
-      where: { id: customer.id },
-      data: {
-        currentPoints: {
-          increment: calculated.points,
-        },
-        lifetimePoints: {
-          increment: calculated.points,
-        },
-        totalSpend: {
-          increment: purchaseAmount,
-        },
-      },
-    });
-
-    // Create transaction
-    const ledgerRow = await tx.loyaltyTransaction.create({
-      data: {
-        accountId: customer.id,
+  const { points, updatedCustomer, transaction, calculated } = await prisma.$transaction(
+    async (tx) => {
+      const calculated = await calculatePointsForPurchase(
         programId,
-        transactionType: "earn",
-        source: "purchase",
-        points: calculated.points,
-        balanceAfter: account.currentPoints,
-        metadata: {
-          purchaseAmount,
+        customer.id,
+        purchaseAmount,
+        {
+          purchase_amount: purchaseAmount,
+          location_id: context.locationId,
+          categories: context.productCategories,
+          product_skus: context.productSkus,
+          payment_method: context.paymentMethod,
+          channel:
+            context.channel === "online" ||
+            context.channel === "in_store" ||
+            context.channel === "mobile_app"
+              ? context.channel
+              : undefined,
           orderId: context.orderId,
-          appliedRuleId: calculated.rule?.id,
-          appliedRuleName: calculated.rule?.name,
-          ...context,
+          notes: context.notes,
         },
-      },
-    });
+        tx,
+      );
 
-    return {
-      points: calculated.points,
-      updatedCustomer: account,
-      transaction: ledgerRow,
-    };
-  });
+      // Update customer points and total spend
+      const account = await tx.customerLoyaltyAccount.update({
+        where: { id: customer.id },
+        data: {
+          currentPoints: {
+            increment: calculated.points,
+          },
+          lifetimePoints: {
+            increment: calculated.points,
+          },
+          totalSpend: {
+            increment: purchaseAmount,
+          },
+        },
+      });
+
+      // Create transaction
+      const ledgerRow = await tx.loyaltyTransaction.create({
+        data: {
+          accountId: customer.id,
+          programId,
+          transactionType: "earn",
+          source: "purchase",
+          points: calculated.points,
+          balanceAfter: account.currentPoints,
+          metadata: {
+            purchaseAmount,
+            orderId: context.orderId,
+            appliedRuleId: calculated.rule?.id,
+            appliedRuleName: calculated.rule?.name,
+            ...context,
+          },
+        },
+      });
+
+      return {
+        points: calculated.points,
+        updatedCustomer: account,
+        transaction: ledgerRow,
+        calculated,
+      };
+    },
+  );
 
   // Check for tier upgrade
   const upgradeResult = await checkAndUpgradeTier(customer.id, Number(updatedCustomer.totalSpend));
 
-  // Dispatch Notifications
+  // Dispatch Notifications. The outcomes come back so the cashier receipt can show the
+  // message that went out — or say why nothing did.
+  let notification: LoyaltyNotificationOutcome = NOTIFICATION_NOT_SENT;
+  let tierNotification: LoyaltyNotificationOutcome | null = null;
+
   if (customer.contact?.phone && customer.contact?.orgId) {
     // Points Issued
-    await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
-      customerPhone: customer.contact.phone,
-      customerName: customer.contact.name || "Customer",
-      points,
-      balanceAfter: updatedCustomer.currentPoints,
-      reason: "Purchase",
-    });
+    notification =
+      (await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
+        customerPhone: customer.contact.phone,
+        customerName: customer.contact.name || "Customer",
+        points,
+        balanceAfter: updatedCustomer.currentPoints,
+        reason: "Purchase",
+      })) ?? NOTIFICATION_NOT_SENT;
 
     // Tier Upgraded
     if (upgradeResult?.upgraded) {
-      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.TIER_UPGRADED, {
-        customerPhone: customer.contact.phone,
-        customerName: customer.contact.name || "Customer",
-        newTier: upgradeResult.newTier?.name || "New Tier",
-        oldTier: customer.currentTier?.name || undefined, // We only have ID here, ideal would be name
-        lifetimePoints: updatedCustomer.lifetimePoints,
-      });
+      tierNotification =
+        (await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.TIER_UPGRADED, {
+          customerPhone: customer.contact.phone,
+          customerName: customer.contact.name || "Customer",
+          newTier: upgradeResult.newTier?.name || "New Tier",
+          oldTier: customer.currentTier?.name || undefined, // We only have ID here, ideal would be name
+          lifetimePoints: updatedCustomer.lifetimePoints,
+        })) ?? NOTIFICATION_NOT_SENT;
     }
+  } else {
+    notification = { ...NOTIFICATION_NOT_SENT, skippedReason: "no_phone" };
   }
 
   return {
     customer: updatedCustomer,
     transaction,
     pointsAwarded: points,
+    /* Receipt detail. Additive — Shopify and the external API keep reading the three
+       fields above. */
+    calculation: calculated,
+    rule: calculated.rule
+      ? {
+          id: calculated.rule.id,
+          name: calculated.rule.name,
+          multiplier: Number(calculated.rule.multiplier ?? 1),
+          bonusPoints: Number(calculated.rule.bonusPoints ?? 0),
+        }
+      : null,
+    tier: {
+      current: tierSummary(upgradeResult?.currentTier),
+      previous: customer.currentTier?.name ?? null,
+      upgraded: Boolean(upgradeResult?.upgraded),
+      next: tierSummary(upgradeResult?.nextTier),
+      amountToNext: upgradeResult?.amountToNext ?? null,
+    },
+    notification,
+    tierNotification,
+  };
+}
+
+/** Tier rows carry Decimal columns; the receipt wants plain numbers. */
+function tierSummary(
+  tier:
+    | { id: string; name: string; threshold: unknown; pointsMultiplier: unknown; color?: string }
+    | null
+    | undefined,
+) {
+  if (!tier) return null;
+  return {
+    id: tier.id,
+    name: tier.name,
+    threshold: Number(tier.threshold),
+    pointsMultiplier: Number(tier.pointsMultiplier),
+    color: tier.color ?? null,
   };
 }
 

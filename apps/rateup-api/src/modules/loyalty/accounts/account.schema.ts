@@ -58,7 +58,8 @@ const verifyRedemptionSchema = z.object({
 
 const applyRedemptionSchema = z.object({
   redemptionCode: z.string().min(1),
-  appliedBy: z.string().min(1),
+  /** Who marked it used. Optional: the controller fills it from the session. */
+  appliedBy: z.string().min(1).optional(),
   notes: z.string().optional(),
 });
 

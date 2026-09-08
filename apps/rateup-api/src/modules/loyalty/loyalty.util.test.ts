@@ -4,6 +4,7 @@ vi.mock("../../utils/prisma.js", () => ({
   default: {
     loyaltyProgram: { findUnique: vi.fn() },
     loyaltyEventTrigger: { findFirst: vi.fn() },
+    waTemplate: { findUnique: vi.fn() },
   },
 }));
 
@@ -26,6 +27,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   loyaltyProgram: Record<string, Mock>;
   loyaltyEventTrigger: Record<string, Mock>;
+  waTemplate: Record<string, Mock>;
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
@@ -44,6 +46,7 @@ beforeEach(() => {
   (getLoyaltyProgramByOrg as Mock).mockResolvedValue({ id: "prog-1" });
   db.loyaltyProgram.findUnique.mockResolvedValue(activeProgram());
   db.loyaltyEventTrigger.findFirst.mockResolvedValue(null);
+  db.waTemplate.findUnique.mockResolvedValue(null);
 });
 
 // ===========================================================================
@@ -146,12 +149,27 @@ describe("dispatchLoyaltyNotification — the gates", () => {
     expect(handleSendTemplate).not.toHaveBeenCalled();
   });
 
-  test("swallows the failure rather than blocking the caller", async () => {
-    (handleSendTemplate as Mock).mockRejectedValue(new Error("meta rejected the template"));
+  test("swallows the failure rather than blocking the caller, and says so", async () => {
+    // clearAllMocks keeps implementations, so a sticky rejection would leak into later tests.
+    (handleSendTemplate as Mock).mockRejectedValueOnce(new Error("meta rejected the template"));
 
     await expect(
       dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, payload),
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ sent: false, skippedReason: "send_failed" });
+  });
+
+  test("names the gate that stopped it", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(activeProgram({ status: "draft" }));
+
+    expect(await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, payload)).toEqual(
+      {
+        sent: false,
+        channel: null,
+        templateId: null,
+        text: null,
+        skippedReason: "program_inactive",
+      },
+    );
   });
 });
 
@@ -182,12 +200,76 @@ describe("dispatchLoyaltyNotification — resolving the template", () => {
   });
 
   // handleSendTemplate returns early on a null id, so this is a silent no-send.
-  test("sends a null template id when neither is configured", async () => {
-    await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
+  test("sends a null template id when neither is configured, and reports no template", async () => {
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
       customerPhone: "919000000001",
     });
 
     expect((handleSendTemplate as Mock).mock.calls[0][0]).toBeNull();
+    expect(outcome).toMatchObject({ sent: false, skippedReason: "no_template" });
+  });
+
+  test("reports an accepted send with the words the customer received", async () => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({
+      waTemplateId: "tmpl-trigger",
+      waTemplate: {
+        data: {
+          components: [
+            { type: "HEADER", text: "Kettle & Co" },
+            { type: "BODY", text: "Hi {{1}}, you earned {{2}} Beans. Balance {{3}}." },
+          ],
+        },
+      },
+    });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+      points: 43,
+      balanceAfter: 1283,
+    });
+
+    expect(outcome).toEqual({
+      sent: true,
+      channel: "whatsapp",
+      templateId: "tmpl-trigger",
+      text: "Hi Ann, you earned 43 Beans. Balance 1283.",
+      skippedReason: null,
+    });
+  });
+
+  test("a refused send is reported, text and all", async () => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
+    (handleSendTemplate as Mock).mockResolvedValueOnce({ status: false, message: "no channel" });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+      points: 43,
+      balanceAfter: 1283,
+    });
+
+    expect(outcome).toMatchObject({
+      sent: false,
+      templateId: "tmpl-trigger",
+      skippedReason: "send_failed",
+    });
+  });
+
+  test("looks the reward's own template up to render its text", async () => {
+    db.waTemplate.findUnique.mockResolvedValue({
+      data: { components: [{ type: "BODY", text: "{{1}}, show code {{3}} for your {{2}}." }] },
+    });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+      rewardName: "Free coffee",
+      redemptionCode: "KC-4471",
+      rewardWaTemplateId: "tmpl-reward",
+    });
+
+    expect(outcome.text).toBe("Ann, show code KC-4471 for your Free coffee.");
   });
 });
 

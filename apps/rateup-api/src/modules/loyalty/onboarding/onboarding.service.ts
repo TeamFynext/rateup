@@ -7,10 +7,12 @@ import {
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { calculateGiveback, givebackBand, toFiniteNumber } from "../giveback.js";
+import { calculateGiveback, givebackBand } from "../giveback.js";
+import { buildGivebackInput, loadProgramGivebackSources } from "../giveback/giveback.service.js";
 import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 import {
   createTemplate,
+  getTemplateByNameAndOrgId,
   saveTemplate,
 } from "../../whatsapp/messageTemplates/wa_templates.service.js";
 import type {
@@ -76,7 +78,16 @@ export async function getOnboardingState(orgId: string) {
       presetKey: null,
       lastCompletedStep: null,
       saved: { tiers: [], rules: [], rewards: [], commands: [], triggers: [] },
-      counts: { tiers: 0, rules: 0, rewards: 0, commands: 0, triggers: 0 },
+      counts: {
+        tiers: 0,
+        rules: 0,
+        rewards: 0,
+        commands: 0,
+        triggers: 0,
+        members: 0,
+        pendingApprovals: 0,
+        templatesPending: 0,
+      },
     };
   }
 
@@ -84,18 +95,35 @@ export async function getOnboardingState(orgId: string) {
   // what is already stored and only falls back to the preset for steps never saved.
   // Without this, stepping back to an earlier step would redisplay preset values and
   // saving would overwrite the user's edits.
-  const [rules, rewards, commands, triggers] = await Promise.all([
-    prisma.loyaltyEarningRule.findMany({
-      where: { programId: program.id },
-      orderBy: { priority: "desc" },
-    }),
-    prisma.loyaltyReward.findMany({
-      where: { programId: program.id },
-      orderBy: { pointsCost: "asc" },
-    }),
-    prisma.loyaltyWaCommand.findMany({ where: { orgId } }),
-    prisma.loyaltyEventTrigger.findMany({ where: { programId: program.id } }),
-  ]);
+  // The three trailing counts feed the sidebar badges, so the nav needs this one request
+  // and nothing else.
+  const [rules, rewards, commands, triggers, members, pendingApprovals, templatesPending] =
+    await Promise.all([
+      prisma.loyaltyEarningRule.findMany({
+        where: { programId: program.id },
+        orderBy: { priority: "desc" },
+      }),
+      prisma.loyaltyReward.findMany({
+        where: { programId: program.id },
+        orderBy: { pointsCost: "asc" },
+      }),
+      prisma.loyaltyWaCommand.findMany({ where: { orgId } }),
+      prisma.loyaltyEventTrigger.findMany({
+        where: { programId: program.id },
+        include: { waTemplate: { select: { id: true, data: true } } },
+      }),
+      prisma.customerLoyaltyAccount.count({ where: { programId: program.id } }),
+      prisma.approvalRequest.count({
+        where: { status: "PENDING", account: { programId: program.id } },
+      }),
+      prisma.waTemplate.count({
+        where: {
+          orgId,
+          templateType: TemplateType.LOYALTY,
+          data: { path: ["status"], equals: "PENDING" },
+        },
+      }),
+    ]);
 
   return {
     program,
@@ -106,7 +134,14 @@ export async function getOnboardingState(orgId: string) {
       rules,
       rewards,
       commands,
-      triggers,
+      triggers: triggers.map(({ waTemplate, ...trigger }) => {
+        const data = waTemplate?.data as { name?: string; status?: string } | null | undefined;
+        return {
+          ...trigger,
+          templateName: data?.name ?? null,
+          templateStatus: data?.status ?? null,
+        };
+      }),
     },
     counts: {
       tiers: program.tiers.length,
@@ -114,6 +149,9 @@ export async function getOnboardingState(orgId: string) {
       rewards: rewards.length,
       commands: commands.length,
       triggers: triggers.length,
+      members,
+      pendingApprovals,
+      templatesPending,
     },
   };
 }
@@ -140,6 +178,25 @@ export class OnboardingError extends Error {
 
 /* ── step: basics ───────────────────────────────────────────────────────────── */
 
+/**
+ * The join and referral bonuses, as a Prisma update fragment.
+ *
+ * They are edited on the rewards step but stored on `LoyaltyProgram`, and both steps may
+ * send them. Only the ones actually present are written, so a step that says nothing about
+ * a bonus never resets it.
+ */
+function bonusFieldsOf(input: {
+  signupBonus?: number;
+  referralBonus?: number;
+  refereeBonus?: number;
+}) {
+  return {
+    ...(input.signupBonus === undefined ? {} : { signupBonus: input.signupBonus }),
+    ...(input.referralBonus === undefined ? {} : { referralBonus: input.referralBonus }),
+    ...(input.refereeBonus === undefined ? {} : { refereeBonus: input.refereeBonus }),
+  };
+}
+
 export async function applyBasicsStep(orgId: string, input: BasicsStepInput) {
   const existing = await prisma.loyaltyProgram.findUnique({ where: { orgId } });
 
@@ -150,17 +207,18 @@ export async function applyBasicsStep(orgId: string, input: BasicsStepInput) {
     currencySymbol: input.currencySymbol,
     defaultCountryCode: input.defaultCountryCode,
     whatsappSettingsId: input.whatsappSettingsId,
-    signupBonus: input.signupBonus,
-    referralBonus: input.referralBonus,
-    refereeBonus: input.refereeBonus,
     averageOrderValue: input.averageOrderValue,
     onboardingPresetKey: input.presetKey,
     onboardingStep: "basics",
+    // The bonuses belong to the rewards step now. A payload that still carries them is
+    // honoured; one that does not must leave the stored values where they are.
+    ...bonusFieldsOf(input),
   };
 
   if (!existing) {
     return await prisma.loyaltyProgram.create({
-      data: { orgId, status: DRAFT, ...shared },
+      // A brand-new programme has nothing stored to preserve, so absent means zero here.
+      data: { signupBonus: 0, referralBonus: 0, refereeBonus: 0, orgId, status: DRAFT, ...shared },
     });
   }
 
@@ -182,30 +240,70 @@ export async function applyEarningStep(orgId: string, input: EarningStepInput) {
       where: { programId: program.id },
       select: { id: true, name: true },
     });
+    const existingIds = new Set(existing.map((r) => r.id));
     const byName = new Map(existing.map((r) => [r.name.trim().toLowerCase(), r.id]));
+    const keptIds = new Set<string>();
 
     for (const rule of input.rules) {
       const data = {
         name: rule.name,
         description: rule.description ?? null,
-        status: ACTIVE,
+        // The default rule can never be switched off — without it nothing earns.
+        status: rule.isDefault ? ACTIVE : (rule.status ?? ACTIVE),
         pointsPerUnit: rule.pointsPerUnit,
         multiplier: rule.multiplier,
         bonusPoints: rule.bonusPoints,
         allowedDays: rule.allowedDays,
-        applicableToTiers: [],
         minPurchaseAmount: rule.minPurchaseAmount ?? null,
         isDefault: rule.isDefault,
         priority: rule.priority,
+        // A tier restriction the payload does not mention is left as stored: the Program
+        // editor only shows it under Advanced, and a save must not silently clear it.
+        ...(rule.applicableToTiers === undefined
+          ? {}
+          : { applicableToTiers: rule.applicableToTiers }),
       };
 
-      // There is no unique constraint on [programId, name], so matching by name is what
-      // keeps a re-run from stacking up duplicate rules.
-      const id = byName.get(rule.name.trim().toLowerCase());
+      // Prefer the id the client round-tripped, so a rename updates the same row. There
+      // is no unique constraint on [programId, name], so matching by name is what keeps
+      // an older client's re-run from stacking up duplicate rules.
+      const id =
+        rule.id && existingIds.has(rule.id) ? rule.id : byName.get(rule.name.trim().toLowerCase());
       if (id) {
         await tx.loyaltyEarningRule.update({ where: { id }, data });
+        keptIds.add(id);
       } else {
-        await tx.loyaltyEarningRule.create({ data: { ...data, programId: program.id } });
+        const created = await tx.loyaltyEarningRule.create({
+          data: { ...data, applicableToTiers: rule.applicableToTiers ?? [], programId: program.id },
+        });
+        keptIds.add(created.id);
+      }
+    }
+
+    if (input.deleteMissing) {
+      const removedIds = existing.map((r) => r.id).filter((id) => !keptIds.has(id));
+      if (removedIds.length > 0) {
+        // A rule that has priced a transaction is referenced from the ledger (no cascade),
+        // so it is switched off rather than deleted; the rest simply go.
+        const used = await tx.loyaltyTransaction.findMany({
+          where: { earningRuleId: { in: removedIds } },
+          select: { earningRuleId: true },
+          distinct: ["earningRuleId"],
+        });
+        const inUse = new Set(
+          used.map((t) => t.earningRuleId).filter((id): id is string => id !== null),
+        );
+        const deletable = removedIds.filter((id) => !inUse.has(id));
+
+        if (inUse.size > 0) {
+          await tx.loyaltyEarningRule.updateMany({
+            where: { id: { in: [...inUse] } },
+            data: { status: "inactive" },
+          });
+        }
+        if (deletable.length > 0) {
+          await tx.loyaltyEarningRule.deleteMany({ where: { id: { in: deletable } } });
+        }
       }
     }
 
@@ -232,13 +330,16 @@ export async function applyTiersStep(orgId: string, input: TiersStepInput) {
       data: { tiersEnabled: input.tiersEnabled, onboardingStep: "tiers" },
     });
 
+    // Turning tiers off must never delete data — the ladder is still there to switch on.
     if (!input.tiersEnabled) return;
 
     const existing = await tx.loyaltyTier.findMany({
       where: { programId: program.id },
       select: { id: true, name: true },
     });
+    const existingIds = new Set(existing.map((t) => t.id));
     const byName = new Map(existing.map((t) => [t.name.trim().toLowerCase(), t.id]));
+    const keptIds = new Set<string>();
 
     // `LoyaltyTier` is unique on both name and threshold within a programme. The payload
     // has already been checked for internal collisions; this clears any *existing* tier
@@ -262,11 +363,54 @@ export async function applyTiersStep(orgId: string, input: TiersStepInput) {
         priority: index + 1,
       };
 
-      const id = byName.get(tier.name.trim().toLowerCase());
+      const id =
+        tier.id && existingIds.has(tier.id) ? tier.id : byName.get(tier.name.trim().toLowerCase());
       if (id) {
         await tx.loyaltyTier.update({ where: { id }, data });
+        keptIds.add(id);
       } else {
-        await tx.loyaltyTier.create({ data: { ...data, programId: program.id } });
+        const created = await tx.loyaltyTier.create({ data: { ...data, programId: program.id } });
+        keptIds.add(created.id);
+      }
+    }
+
+    if (input.deleteMissing) {
+      const removed = existing.filter((t) => !keptIds.has(t.id));
+      for (const tier of removed) {
+        const members = await tx.customerLoyaltyAccount.count({
+          where: { currentTierId: tier.id },
+        });
+        if (members > 0) {
+          if (!input.downgradeCustomers) {
+            throw new OnboardingError(
+              `${members} members sit in ${tier.name}. Confirm the downgrade before removing it.`,
+              409,
+            );
+          }
+          // Move them to the nearest surviving tier below; if none is lower, the lowest
+          // survivor. Worked out from the payload's thresholds rather than `priority`,
+          // which this step has just rewritten.
+          const survivors = await tx.loyaltyTier.findMany({
+            where: { programId: program.id, id: { in: [...keptIds] } },
+            select: { id: true, threshold: true },
+            orderBy: { threshold: "asc" },
+          });
+          const gone = await tx.loyaltyTier.findUnique({
+            where: { id: tier.id },
+            select: { threshold: true },
+          });
+          const below = survivors.filter(
+            (t) => gone !== null && Number(t.threshold) < Number(gone.threshold),
+          );
+          const target = below.at(-1) ?? survivors[0];
+          if (target) {
+            await tx.customerLoyaltyAccount.updateMany({
+              where: { currentTierId: tier.id },
+              data: { currentTierId: target.id },
+            });
+          }
+        }
+        await tx.loyaltyTier.deleteMany({ where: { id: tier.id } });
       }
     }
   });
@@ -304,9 +448,15 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
         pointsCost: reward.pointsCost,
         rewardType: reward.rewardType,
         rewardValue: reward.rewardValue,
-        stockQuantity: reward.stockQuantity ?? null,
-        availableForTiers: [],
-        redemptionRules: {},
+      };
+      // Stock and tier restriction are only written when the payload speaks to them. The
+      // Program editor reuses this step on live rewards, and a save that reset both to
+      // "unlimited, everyone" would quietly undo the merchant's settings.
+      const optional = {
+        ...(reward.stockQuantity === undefined ? {} : { stockQuantity: reward.stockQuantity }),
+        ...(reward.availableForTiers === undefined
+          ? {}
+          : { availableForTiers: reward.availableForTiers }),
       };
 
       // Prefer the id the client round-tripped. Falling back to the name keeps older
@@ -317,12 +467,18 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
           : byName.get(reward.name.trim().toLowerCase());
 
       if (id) {
-        const { redemptionRules: _skip, ...updatable } = data;
-        await tx.loyaltyReward.update({ where: { id }, data: updatable });
+        // `redemptionRules` is deliberately never touched here; the full editor owns it.
+        await tx.loyaltyReward.update({ where: { id }, data: { ...data, ...optional } });
         keptIds.add(id);
       } else {
         const created = await tx.loyaltyReward.create({
-          data: { ...data, programId: program.id },
+          data: {
+            ...data,
+            stockQuantity: reward.stockQuantity ?? null,
+            availableForTiers: reward.availableForTiers ?? [],
+            redemptionRules: {},
+            programId: program.id,
+          },
         });
         keptIds.add(created.id);
       }
@@ -365,7 +521,9 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
 
     await tx.loyaltyProgram.update({
       where: { id: program.id },
-      data: { onboardingStep: "rewards" },
+      // The join and referral bonuses are edited on this step; they are programme columns
+      // rather than reward rows, so they ride along with the step marker.
+      data: { onboardingStep: "rewards", ...bonusFieldsOf(input) },
     });
   });
 
@@ -479,6 +637,21 @@ async function submitEventTemplate(
   programId: string,
   template: { eventType: LoyaltyEventType; templateName: string; body: string },
 ): Promise<EventTemplateResult> {
+  // Meta template names are unique per account. Re-running the step — or saving the
+  // Program › Messages section — must point the trigger at the template that already
+  // exists rather than file a duplicate submission Meta will reject.
+  const existing = await getTemplateByNameAndOrgId(template.templateName, orgId);
+  if (existing) {
+    await upsertTrigger(programId, template.eventType, existing.id);
+    return {
+      eventType: template.eventType,
+      templateName: template.templateName,
+      status: metaStatusToStep(existing.data?.status),
+      templateId: existing.id,
+      reused: true,
+    };
+  }
+
   const placeholderCount = countPlaceholders(template.body);
 
   const metaTemplate: WaMetaTemplate = {
@@ -504,33 +677,41 @@ async function submitEventTemplate(
   const submitted = await createTemplate(orgId, metaTemplate);
   const saved = await saveTemplate(submitted, orgId, {}, TemplateType.LOYALTY);
 
-  // `LoyaltyEventTrigger` has no @@unique([programId, eventType]), so a re-run would
-  // otherwise leave two enabled triggers racing for the same event.
-  const existingTrigger = await prisma.loyaltyEventTrigger.findFirst({
-    where: { programId, eventType: template.eventType },
-  });
-
-  if (existingTrigger) {
-    await prisma.loyaltyEventTrigger.update({
-      where: { id: existingTrigger.id },
-      data: { waTemplateId: saved.id, enabled: true },
-    });
-  } else {
-    await prisma.loyaltyEventTrigger.create({
-      data: {
-        programId,
-        eventType: template.eventType,
-        enabled: true,
-        waTemplateId: saved.id,
-      },
-    });
-  }
+  await upsertTrigger(programId, template.eventType, saved.id);
 
   return {
     eventType: template.eventType,
     templateName: template.templateName,
     status: "pending",
+    templateId: saved.id,
   };
+}
+
+/**
+ * `LoyaltyEventTrigger` has no @@unique([programId, eventType]), so a re-run would
+ * otherwise leave two enabled triggers racing for the same event.
+ */
+async function upsertTrigger(programId: string, eventType: LoyaltyEventType, waTemplateId: string) {
+  const existingTrigger = await prisma.loyaltyEventTrigger.findFirst({
+    where: { programId, eventType },
+  });
+
+  if (existingTrigger) {
+    await prisma.loyaltyEventTrigger.update({
+      where: { id: existingTrigger.id },
+      data: { waTemplateId, enabled: true },
+    });
+  } else {
+    await prisma.loyaltyEventTrigger.create({
+      data: { programId, eventType, enabled: true, waTemplateId },
+    });
+  }
+}
+
+function metaStatusToStep(status: unknown): EventTemplateResult["status"] {
+  if (status === "APPROVED") return "approved";
+  if (status === "REJECTED") return "rejected";
+  return "pending";
 }
 
 function countPlaceholders(body: string): number {
@@ -544,32 +725,21 @@ function countPlaceholders(body: string): number {
 export async function activateProgram(orgId: string) {
   const program = await requireProgram(orgId);
 
+  // The same reads the giveback endpoint uses, so the number quoted here is the one the
+  // Overview shows afterwards.
+  const [{ defaultRule, rewards, tiers }, waSettingsCount] = await Promise.all([
+    loadProgramGivebackSources(program.id),
+    prisma.whatsappSettings.count({ where: { orgId } }),
+  ]);
+
   // Hard guard: without a default earning rule the engine awards nothing, so an
   // "active" programme would silently do nothing at all.
-  const defaultRule = await prisma.loyaltyEarningRule.findFirst({
-    where: { programId: program.id, isDefault: true, status: ACTIVE },
-    select: { id: true, pointsPerUnit: true, multiplier: true, bonusPoints: true },
-  });
-
   if (!defaultRule) {
     throw new OnboardingError(
       "Add a default earning rule before activating — without one, customers earn nothing",
       409,
     );
   }
-
-  // Soft gaps: worth telling the user about, not worth blocking a launch over.
-  const [rewards, waSettingsCount, tiers] = await Promise.all([
-    prisma.loyaltyReward.findMany({
-      where: { programId: program.id, status: PRESET_REWARD_STATUS },
-      select: { name: true, pointsCost: true, rewardValue: true },
-    }),
-    prisma.whatsappSettings.count({ where: { orgId } }),
-    prisma.loyaltyTier.findMany({
-      where: { programId: program.id },
-      select: { name: true, threshold: true, pointsMultiplier: true },
-    }),
-  ]);
 
   const warnings: string[] = [];
   if (rewards.length === 0) {
@@ -584,31 +754,7 @@ export async function activateProgram(orgId: string) {
   // to review, a direct call), and the rewards catalog keeps changing after launch — so
   // this is the last point at which anyone checks. It never blocks: a deliberately
   // generous programme is a legitimate choice, the goal is only informed consent.
-  const giveback = calculateGiveback({
-    earnRate: {
-      pointsPerUnit: toFiniteNumber(defaultRule.pointsPerUnit),
-      multiplier: toFiniteNumber(defaultRule.multiplier, 1),
-      bonusPoints: toFiniteNumber(defaultRule.bonusPoints),
-    },
-    rewards: rewards.map((reward) => ({
-      name: reward.name,
-      pointsCost: reward.pointsCost,
-      rewardValue: reward.rewardValue,
-    })),
-    averageOrderValue:
-      program.averageOrderValue === null ? null : toFiniteNumber(program.averageOrderValue),
-    tiersEnabled: program.tiersEnabled,
-    tiers: tiers.map((tier) => ({
-      name: tier.name,
-      threshold: toFiniteNumber(tier.threshold),
-      pointsMultiplier: toFiniteNumber(tier.pointsMultiplier, 1),
-    })),
-    bonuses: {
-      signupBonus: program.signupBonus,
-      referralBonus: program.referralBonus,
-      refereeBonus: program.refereeBonus,
-    },
-  });
+  const giveback = calculateGiveback(buildGivebackInput(program, defaultRule, rewards, tiers));
 
   // `band` is judged at the most generous tier, so the figure quoted has to be the same
   // one — quoting the base rate here would warn about a number the merchant cannot find.

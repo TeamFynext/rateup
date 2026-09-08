@@ -1,11 +1,15 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getLoyaltyDashboardStats } from "./dashboard.service.js";
-import { log } from "../../../utils/logger.js";
 
-export const getLoyaltyDashboardStatsHandler = async (req: FastifyRequest, res: FastifyReply) => {
+import { log } from "../../../utils/logger.js";
+import type { DashboardQuery } from "./dashboard.schema.js";
+import { getLoyaltyDashboardStats } from "./dashboard.service.js";
+
+export const getLoyaltyDashboardStatsHandler = async (
+  req: FastifyRequest<{ Querystring: DashboardQuery }>,
+  res: FastifyReply,
+) => {
   try {
-    const orgId = req.user.orgId;
-    const response = await getLoyaltyDashboardStats(orgId);
+    const response = await getLoyaltyDashboardStats(req.user.orgId, req.query ?? {});
     res.code(200).send(response);
   } catch (error) {
     log.error(error);

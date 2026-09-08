@@ -639,6 +639,9 @@ describe("checkAndUpgradeTier", () => {
     expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
       upgraded: false,
       direction: "none",
+      currentTier: null,
+      nextTier: null,
+      amountToNext: null,
     });
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
@@ -649,6 +652,9 @@ describe("checkAndUpgradeTier", () => {
     expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
       upgraded: false,
       direction: "none",
+      currentTier: null,
+      nextTier: null,
+      amountToNext: null,
     });
   });
 
@@ -674,19 +680,55 @@ describe("checkAndUpgradeTier", () => {
   test("does nothing when the customer is already in that tier", async () => {
     withTiers([{ id: "gold", threshold: 1000 }], { currentTierId: "gold" });
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
+    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toMatchObject({
       upgraded: false,
       direction: "none",
+      nextTier: null,
+      amountToNext: null,
     });
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
-  test("does nothing when the spend qualifies for no tier", async () => {
+  test("does nothing when the spend qualifies for no tier, but says how far the first is", async () => {
     withTiers([{ id: "gold", threshold: 1000 }]);
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 10)).toEqual({
+    expect(await checkAndUpgradeTier(CUSTOMER, 10)).toMatchObject({
       upgraded: false,
       direction: "none",
+      nextTier: { id: "gold" },
+      amountToNext: 990,
+    });
+  });
+
+  test("reports the tier now held and the next one up, with the spend still needed", async () => {
+    withTiers([
+      { id: "platinum", threshold: 10000, name: "Platinum" },
+      { id: "gold", threshold: 1000, name: "Gold" },
+      { id: "bronze", threshold: 0, name: "Bronze" },
+    ]);
+
+    const res = await checkAndUpgradeTier(CUSTOMER, 5000);
+
+    expect(res.currentTier?.id).toBe("gold");
+    expect(res.nextTier?.id).toBe("platinum");
+    expect(res.amountToNext).toBe(5000);
+  });
+
+  test("at the top tier there is no next tier", async () => {
+    withTiers(
+      [
+        { id: "platinum", threshold: 10000 },
+        { id: "bronze", threshold: 0 },
+      ],
+      {
+        currentTierId: "platinum",
+        currentTier: { id: "platinum", threshold: 10000 },
+      },
+    );
+
+    expect(await checkAndUpgradeTier(CUSTOMER, 20000)).toMatchObject({
+      nextTier: null,
+      amountToNext: null,
     });
   });
 

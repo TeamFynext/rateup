@@ -397,6 +397,183 @@ describe("getCustomerAccountByPhoneHandler", () => {
 
     expect(answer(rep).body.activeCoupons.map((c: any) => c.id)).toEqual(["r1"]);
   });
+
+  test("lists everything still waiting to be handed over, of either kind", async () => {
+    const reward = { id: "rwd-1", name: "Free coffee", pointsCost: 500, rewardType: "point" };
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(
+      account({
+        redemptions: [
+          {
+            id: "r1",
+            redemptionCode: "KC-4471",
+            reward,
+            status: "APPROVED",
+            usedAt: null,
+            createdAt: new Date("2026-09-01"),
+            expiresAt: null,
+          },
+          {
+            id: "r2",
+            redemptionCode: "KC-1",
+            reward,
+            status: "USED",
+            usedAt: new Date(),
+            createdAt: new Date(),
+          },
+          {
+            id: "r3",
+            redemptionCode: "KC-2",
+            reward,
+            status: "PENDING",
+            usedAt: null,
+            createdAt: new Date(),
+          },
+        ],
+        assignedRewards: [
+          {
+            id: "a1",
+            rewardId: "rwd-2",
+            shortCode: "GIFT1",
+            status: "ISSUED",
+            assignedAt: new Date("2026-09-02"),
+            reward: { ...reward, id: "rwd-2", name: "Birthday brownie", rewardType: "assigned" },
+          },
+          {
+            id: "a2",
+            rewardId: "rwd-3",
+            shortCode: "GIFT2",
+            status: "REDEEMED",
+            assignedAt: new Date(),
+            reward,
+          },
+        ],
+      }),
+    );
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    const body = answer(rep).body;
+    expect(body.pendingRedemptions).toEqual([
+      expect.objectContaining({
+        kind: "redemption",
+        id: "r1",
+        code: "KC-4471",
+        reward: expect.objectContaining({ name: "Free coffee" }),
+      }),
+      expect.objectContaining({
+        kind: "assigned",
+        id: "a1",
+        code: "GIFT1",
+        reward: expect.objectContaining({ name: "Birthday brownie" }),
+      }),
+    ]);
+    expect(body.awaitingApproval.map((r: any) => r.id)).toEqual(["r3"]);
+  });
+
+  test("shows the last five visits with what was spent", async () => {
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(
+      account({
+        transactions: Array.from({ length: 7 }, (_, i) => ({
+          id: `t${i}`,
+          transactionType: "earn",
+          source: "purchase",
+          points: 10 + i,
+          balanceAfter: 100,
+          description: null,
+          createdAt: new Date(2026, 8, 7 - i),
+          metadata: i === 0 ? { purchaseAmount: 340 } : { purchaseAmount: "oops" },
+        })),
+      }),
+    );
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    const visits = answer(rep).body.recentTransactions;
+    expect(visits).toHaveLength(5);
+    expect(visits[0]).toMatchObject({ id: "t0", points: 10, purchaseAmount: 340 });
+    expect(visits[1].purchaseAmount).toBeNull();
+  });
+
+  test("works out the next tier from the programme's ladder and the customer's spend", async () => {
+    (getLoyaltyProgramByOrg as Mock).mockResolvedValue({
+      id: PROGRAM,
+      status: "active",
+      tiersEnabled: true,
+      currencySymbol: "₹",
+      currencyName: "Beans",
+      signupBonus: 50,
+      tiers: [
+        { id: "tier-2", name: "Gold", threshold: "15000", pointsMultiplier: "1.5", color: "#fc0" },
+        {
+          id: "tier-1",
+          name: "Silver",
+          threshold: "5000",
+          pointsMultiplier: "1.25",
+          color: "#ccc",
+        },
+        { id: "tier-0", name: "Bronze", threshold: "0", pointsMultiplier: "1", color: "#a00" },
+      ],
+    });
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(
+      account({
+        totalSpend: "13820.00",
+        currentTier: {
+          id: "tier-1",
+          name: "Silver",
+          threshold: "5000",
+          pointsMultiplier: "1.25",
+          color: "#ccc",
+        },
+      }),
+    );
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    const body = answer(rep).body;
+    expect(body.tier).toEqual({
+      current: {
+        id: "tier-1",
+        name: "Silver",
+        threshold: 5000,
+        pointsMultiplier: 1.25,
+        color: "#ccc",
+      },
+      next: { id: "tier-2", name: "Gold", threshold: 15000 },
+      amountToNext: 1180,
+    });
+    expect(body.customer.totalSpend).toBe(13820);
+    expect(body.program).toEqual({ currencySymbol: "₹", pointsName: "Beans", signupBonus: 50 });
+  });
+
+  test("has no next tier when tiers are switched off", async () => {
+    (getLoyaltyProgramByOrg as Mock).mockResolvedValue({
+      id: PROGRAM,
+      status: "active",
+      tiersEnabled: false,
+      tiers: [{ id: "tier-2", name: "Gold", threshold: "15000", pointsMultiplier: "1.5" }],
+    });
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(account({ totalSpend: "10" }));
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    expect(answer(rep).body.tier.next).toBeNull();
+  });
 });
 
 // ===========================================================================

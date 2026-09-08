@@ -530,7 +530,7 @@ describe("the dashboard controller", () => {
 
     await getLoyaltyDashboardStatsHandler(request(), rep);
 
-    expect(getLoyaltyDashboardStats).toHaveBeenCalledWith(ORG);
+    expect(getLoyaltyDashboardStats).toHaveBeenCalledWith(ORG, {});
     expect(answer(rep)).toEqual({ code: 200, body: { programExists: true } });
   });
 

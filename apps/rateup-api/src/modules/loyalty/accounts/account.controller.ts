@@ -225,12 +225,74 @@ export async function getCustomerAccountByPhoneHandler(
       return true;
     });
 
+    // Everything the counter still has to hand over. Two kinds, because two tables hold
+    // them: an approved redemption is used with its code; an issued gift with its short
+    // code. `kind` tells the cashier which endpoint to call.
+    const pendingRedemptions = [
+      ...(account.redemptions ?? [])
+        .filter((r) => r.status === "APPROVED" && !r.usedAt)
+        .map((r) => ({
+          kind: "redemption" as const,
+          id: r.id,
+          code: r.redemptionCode,
+          status: r.status,
+          createdAt: r.createdAt,
+          expiresAt: r.expiresAt ?? null,
+          reward: rewardSummary(r.reward),
+        })),
+      ...(account.assignedRewards ?? [])
+        .filter((a) => a.status === "ISSUED")
+        .map((a) => ({
+          kind: "assigned" as const,
+          id: a.id,
+          code: a.shortCode,
+          status: a.status,
+          createdAt: a.assignedAt,
+          expiresAt: null,
+          reward: rewardSummary(a.reward),
+        })),
+    ];
+
+    const awaitingApproval = (account.redemptions ?? [])
+      .filter((r) => r.status === "PENDING")
+      .map((r) => ({
+        id: r.id,
+        code: r.redemptionCode,
+        createdAt: r.createdAt,
+        reward: rewardSummary(r.reward),
+      }));
+
+    const recentTransactions = (account.transactions ?? []).slice(0, 5).map((t) => {
+      const metadata = (t.metadata ?? {}) as { purchaseAmount?: unknown };
+      return {
+        id: t.id,
+        transactionType: t.transactionType,
+        source: t.source,
+        points: t.points,
+        balanceAfter: t.balanceAfter,
+        description: t.description,
+        createdAt: t.createdAt,
+        purchaseAmount:
+          typeof metadata.purchaseAmount === "number" ? metadata.purchaseAmount : null,
+      };
+    });
+
+    // Tier progress from the programme's own ladder; thresholds are lifetime spend.
+    const totalSpend = Number(account.totalSpend ?? 0);
+    const ladder = [...(program.tiers ?? [])].sort(
+      (a, b) => Number(a.threshold) - Number(b.threshold),
+    );
+    const nextTier = program.tiersEnabled
+      ? (ladder.find((tier) => Number(tier.threshold) > totalSpend) ?? null)
+      : null;
+
     reply.code(200).send({
       customer: {
         id: account.id,
         contactId: account.contactId,
         currentPoints: account.currentPoints,
         lifetimePoints: account.lifetimePoints,
+        totalSpend,
         referralCode: account.referralCode,
         currentTier: account.currentTier,
         name: account.contact.name,
@@ -238,11 +300,35 @@ export async function getCustomerAccountByPhoneHandler(
         email: account.contact.email,
         points: account.currentPoints,
         status: account.status,
+        createdAt: account.createdAt,
       },
       availableRewards: eligibleRewards,
       issuableRewards: issuableRewards,
       activeCoupons: couponRedemptions, // Active coupon redemptions
       redeemedRewards: account.redemptions || [], // Full redemption history
+      pendingRedemptions,
+      awaitingApproval,
+      recentTransactions,
+      tier: {
+        current: account.currentTier
+          ? {
+              id: account.currentTier.id,
+              name: account.currentTier.name,
+              threshold: Number(account.currentTier.threshold),
+              pointsMultiplier: Number(account.currentTier.pointsMultiplier),
+              color: account.currentTier.color,
+            }
+          : null,
+        next: nextTier
+          ? { id: nextTier.id, name: nextTier.name, threshold: Number(nextTier.threshold) }
+          : null,
+        amountToNext: nextTier ? Number(nextTier.threshold) - totalSpend : null,
+      },
+      program: {
+        currencySymbol: program.currencySymbol,
+        pointsName: program.currencyName,
+        signupBonus: program.signupBonus,
+      },
     });
   } catch (e) {
     log.error(e);
@@ -446,4 +532,17 @@ export async function redeemRewardByShortCodeHandler(
     log.error(e);
     reply.code(400).send({ error: e instanceof Error ? e.message : "Unknown error" });
   }
+}
+
+/** The few reward fields the counter shows on a pending strip. */
+function rewardSummary(
+  reward: { id: string; name: string; pointsCost: number; rewardType: string } | null | undefined,
+) {
+  if (!reward) return null;
+  return {
+    id: reward.id,
+    name: reward.name,
+    pointsCost: reward.pointsCost,
+    rewardType: reward.rewardType,
+  };
 }

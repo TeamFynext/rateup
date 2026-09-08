@@ -2375,6 +2375,8 @@ model LoyaltyTransaction {
   @@index([createdAt(sort: Desc)])
   @@index([earningRuleId])
   @@index([programId])
+  // The loyalty Overview scans one programme over a date window.
+  @@index([programId, createdAt(sort: Desc)])
 }
 
 // Tracks reward redemption lifecycle

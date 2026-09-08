@@ -33,7 +33,16 @@ vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendTextMe
 vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
   generateWhatsAppJoinLink: vi.fn(() => "https://wa.me/join"),
 }));
-vi.mock("../loyaltyWaDispatcher.js", () => ({ dispatchLoyaltyNotification: vi.fn() }));
+vi.mock("../loyaltyWaDispatcher.js", () => ({
+  dispatchLoyaltyNotification: vi.fn(),
+  NOTIFICATION_NOT_SENT: {
+    sent: false,
+    channel: null,
+    templateId: null,
+    text: null,
+    skippedReason: null,
+  },
+}));
 
 import prisma from "../../../utils/prisma.js";
 import { calculatePointsForPurchase, checkAndUpgradeTier } from "../earningRulesEngine.js";
@@ -565,6 +574,89 @@ describe("awardPoints", () => {
     expect(db.customerLoyaltyAccount.update.mock.invocationCallOrder[0]).toBeLessThan(
       db.loyaltyTransaction.create.mock.invocationCallOrder[0],
     );
+  });
+
+  test("hands the receipt the rule that priced it, in plain numbers", async () => {
+    (calculatePointsForPurchase as Mock).mockResolvedValue({
+      points: 100,
+      rule: { id: "rule-1", name: "Happy hour", multiplier: "2.00", bonusPoints: 10 },
+    });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.rule).toEqual({
+      id: "rule-1",
+      name: "Happy hour",
+      multiplier: 2,
+      bonusPoints: 10,
+    });
+    expect(result.pointsAwarded).toBe(100);
+  });
+
+  test("hands the receipt where the customer sits and how far the next tier is", async () => {
+    (checkAndUpgradeTier as Mock).mockResolvedValue({
+      upgraded: false,
+      direction: "none",
+      currentTier: {
+        id: "tier-1",
+        name: "Bronze",
+        threshold: "0",
+        pointsMultiplier: "1.00",
+        color: "#a00",
+      },
+      nextTier: { id: "tier-2", name: "Silver", threshold: "5000", pointsMultiplier: "1.25" },
+      amountToNext: 4000,
+    });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.tier).toEqual({
+      current: { id: "tier-1", name: "Bronze", threshold: 0, pointsMultiplier: 1, color: "#a00" },
+      previous: "Bronze",
+      upgraded: false,
+      next: { id: "tier-2", name: "Silver", threshold: 5000, pointsMultiplier: 1.25, color: null },
+      amountToNext: 4000,
+    });
+  });
+
+  test("reports what the dispatcher did with the WhatsApp message", async () => {
+    (dispatchLoyaltyNotification as Mock).mockResolvedValue({
+      sent: true,
+      channel: "whatsapp",
+      templateId: "tmpl-1",
+      text: "Hi Ann, you earned 100 points.",
+      skippedReason: null,
+    });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.notification).toMatchObject({
+      sent: true,
+      text: "Hi Ann, you earned 100 points.",
+    });
+    expect(result.tierNotification).toBeNull();
+  });
+
+  test("treats a dispatcher that returns nothing as not sent", async () => {
+    (dispatchLoyaltyNotification as Mock).mockResolvedValue(undefined);
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.notification).toEqual({
+      sent: false,
+      channel: null,
+      templateId: null,
+      text: null,
+      skippedReason: null,
+    });
+  });
+
+  test("says why nothing was sent when the contact has no phone", async () => {
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ ...customer, contact: null });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.notification.skippedReason).toBe("no_phone");
   });
 });
 

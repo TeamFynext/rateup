@@ -268,12 +268,13 @@ export class EarningRulesEngine {
   }
 
   /**
-   * Check if customer's tier should be upgraded based on total spend
+   * Check if customer's tier should be upgraded based on total spend.
+   *
+   * Besides performing the move, reports where the customer now sits and how far the
+   * next tier is — the cashier receipt reads "Silver · ₹1,180 to Gold" from this, so no
+   * caller has to reload the tier table.
    */
-  async checkAndUpgradeTier(
-    customerId: string,
-    totalSpend: number,
-  ): Promise<{ upgraded: boolean; direction: TierMoveDirection; newTier?: LoyaltyTier }> {
+  async checkAndUpgradeTier(customerId: string, totalSpend: number): Promise<TierCheckResult> {
     const customer = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: customerId },
       include: {
@@ -291,21 +292,44 @@ export class EarningRulesEngine {
     });
 
     if (!customer?.program.tiersEnabled) {
-      return { upgraded: false, direction: "none" };
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer?.currentTier ?? null,
+        nextTier: null,
+        amountToNext: null,
+      };
     }
 
+    const tiers = customer.program.tiers;
+    // Tiers arrive highest threshold first; the next tier is the lowest one still above
+    // the customer's spend.
+    const nextTier =
+      [...tiers].reverse().find((tier) => Number(tier.threshold) > totalSpend) ?? null;
+    const amountToNext = nextTier ? Number(nextTier.threshold) - totalSpend : null;
+
     // Find the highest tier that the customer qualifies for
-    const qualifiedTier = customer.program.tiers.find(
-      (tier) => totalSpend >= Number(tier.threshold),
-    );
+    const qualifiedTier = tiers.find((tier) => totalSpend >= Number(tier.threshold));
 
     if (!qualifiedTier) {
-      return { upgraded: false, direction: "none" };
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer.currentTier,
+        nextTier,
+        amountToNext,
+      };
     }
 
     // Check if it's a different tier
     if (customer.currentTierId === qualifiedTier.id) {
-      return { upgraded: false, direction: "none" };
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer.currentTier,
+        nextTier,
+        amountToNext,
+      };
     }
 
     const direction: TierMoveDirection = !customer.currentTier
@@ -321,7 +345,14 @@ export class EarningRulesEngine {
       },
     });
 
-    return { upgraded: direction === "up", direction, newTier: qualifiedTier };
+    return {
+      upgraded: direction === "up",
+      direction,
+      newTier: qualifiedTier,
+      currentTier: qualifiedTier,
+      nextTier,
+      amountToNext,
+    };
   }
 
   async generateReferralCode(customerName: string, _customerPhone: string): Promise<string> {
@@ -343,6 +374,19 @@ export class EarningRulesEngine {
 }
 
 export type TierMoveDirection = "up" | "down" | "none";
+
+export interface TierCheckResult {
+  upgraded: boolean;
+  direction: TierMoveDirection;
+  /** Set only when the customer actually moved. */
+  newTier?: LoyaltyTier;
+  /** Where the customer sits after the check. */
+  currentTier: LoyaltyTier | null;
+  /** The lowest tier still above the customer's spend; null at the top or with tiers off. */
+  nextTier: LoyaltyTier | null;
+  /** Spend still needed to reach `nextTier`. */
+  amountToNext: number | null;
+}
 
 /** How many times to redraw a referral code before giving up. */
 const CODE_ATTEMPTS = 5;
