@@ -7,6 +7,9 @@ import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessa
 
 import type { RequestPayload } from "./api.ts";
 import type {
+  CampaignRetryStrategy,
+  CampaignSendStatus,
+  CampaignSendTrigger,
   CampaignStatus,
   IntegratedApps,
   LogicAction,
@@ -26,6 +29,7 @@ import type {
   WaAutomatedReplyMatchType,
   WaFlowFormElementType,
   WaFlowLayoutType,
+  WaFailureReasonGroup,
   WaFlowStatus,
   WaMessageAssignStatus,
   WaMessageTypes,
@@ -948,6 +952,15 @@ export interface Campaign {
   dailySendLimit?: number | null;
   /** Participants enrolled, when the list endpoint includes the aggregate. */
   campaignParticipantsCount?: number;
+  /** The template's own name, joined by the list endpoint for the card. */
+  templateName?: string | null;
+  /** The whole joined WaTemplate row, as the single-campaign endpoint returns it. */
+  templateData?: WaTemplate | null;
+  /** Lifetime counters, joined by the list endpoint for the card's bar. */
+  totalSent?: number;
+  totalDelivered?: number;
+  totalRead?: number;
+  totalFailed?: number;
   /** Drip campaigns only: the ordered stages and their templates. */
   dripStages?: CampaignDripStage[];
   /** The flow a flow campaign sends, when its template carries a flow button. */
@@ -956,8 +969,118 @@ export interface Campaign {
   dynamicTags?: string[];
   /** Whether the send respects each contact's marketing consent. */
   useUserConsent?: boolean;
+  /** IANA zone the schedule is expressed in, e.g. "Asia/Kolkata". */
+  timezone?: string;
   /** Set by the survey share flow when the campaign targets one survey/team pair. */
   surveyTeamMapId?: string;
+  /** Why a FAILED campaign stopped. Cleared when it is sent again. */
+  errorMessage?: string | null;
+}
+
+/**
+ * One send or resend of a campaign.
+ *
+ * Every outbound message belongs to exactly one, which is what makes "this retry
+ * re-attempted 340 and 210 landed" a number the API can answer rather than an
+ * estimate. Mirrors `CampaignSend` in rateup-api's prisma/schema.prisma, shaped
+ * by `campaignAnalytics.service.ts`.
+ */
+export interface CampaignSend {
+  id: string;
+  /** 0 = the initial send. 1..n = automatic retries. */
+  attemptNo: number;
+  trigger: CampaignSendTrigger;
+  status: CampaignSendStatus;
+  /** "Initial send" / "Retry 1" / "Drip stage", computed server-side. */
+  label: string;
+  targetStatuses: string[];
+  dripStageId: string | null;
+  scheduledFor: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  totalTargeted: number;
+  /** Recipients dropped because the conversation allowance ran out. */
+  totalSkipped: number;
+  totalSent: number;
+  totalDelivered: number;
+  totalRead: number;
+  totalFailed: number;
+  totalCompleted: number;
+  /** Messages Meta accepted out of those attempted. */
+  recovered: number;
+  /** `recovered / totalTargeted`, or null when nothing has been attempted yet. */
+  recoveryRate: number | null;
+  note: string | null;
+}
+
+export interface CampaignSendParticipant {
+  participantId: string;
+  contactId: string;
+  name: string | null;
+  phone: string | null;
+  status: string;
+  errorMessage: string | null;
+  errorCode: number | null;
+  /** Customer-readable wording for `errorCode`, never "Graph error 131026". */
+  errorLabel: string | null;
+  sentAt: string | null;
+}
+
+export interface CampaignSendParticipantsPage {
+  participants: CampaignSendParticipant[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface CampaignFunnelStage {
+  key: "attempted" | "sent" | "delivered" | "read" | "replied";
+  label: string;
+  count: number;
+  /** Share of the stage above, so the drop-off reads without arithmetic. */
+  rateOfPrevious: number | null;
+  rateOfAttempted: number | null;
+}
+
+export interface CampaignFailureReason {
+  group: WaFailureReasonGroup;
+  label: string;
+  description: string;
+  count: number;
+  /** How many of `count` the retry engine will pick up. */
+  retryableCount: number;
+  codes: { code: number | null; label: string; count: number; retryable: boolean }[];
+}
+
+export interface CampaignAnalytics {
+  funnel: CampaignFunnelStage[];
+  failures: CampaignFailureReason[];
+  /** Failed *messages* across every attempt — a recipient a retry recovered is still counted. */
+  totalFailed: number;
+  /** Recipients whose current status is FAILED, i.e. what the failure breakdown adds up to. */
+  activeFailed: number;
+  /** Recipients not yet attempted or still awaiting an outcome. */
+  activePending: number;
+  /** Recipients dropped by the conversation allowance across every attempt. */
+  totalSkipped: number;
+  attemptCount: number;
+}
+
+/** Absent (null) means automatic retries are off for the campaign. */
+export interface CampaignRetryPolicy {
+  id: string;
+  campaignId: string;
+  enabled: boolean;
+  strategy: CampaignRetryStrategy;
+  /** 1-3 automatic attempts after the initial send. */
+  maxAttempts: number;
+  /** FIXED_INTERVAL only. */
+  intervalHours: number;
+  windowEndsAt: string | null;
+  /** "HH:mm", local to `timezone`. Both ends or neither. */
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
+  timezone: string;
 }
 
 /** One stage of a drip campaign. */
