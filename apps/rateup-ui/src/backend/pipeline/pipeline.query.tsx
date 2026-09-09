@@ -13,6 +13,7 @@ import { pipelineKeys } from "./pipeline.keys";
 import type {
   BulkUpdateLeadsInput,
   ForecastBucket,
+  LeadDetail,
   LeadListParams,
   LeadPage,
   PipelineStats,
@@ -454,10 +455,16 @@ export function useCreateLeadMutation() {
     success: (t, _result, variables) => t("{name} added to the pipeline", { name: variables.name }),
     errorFallback: (t) => t("Could not add the lead"),
     toastId: "pipeline-lead-create",
-    // Opening a lead for an existing contact puts them on the board for the
-    // first time, so the chip has to appear rather than change.
-    afterSuccess: (queryClient, _result, variables) =>
-      syncInboxStageChips(queryClient, [variables.contactId], variables.stageId),
+    afterSuccess: (queryClient, _result, variables) => {
+      // Opening a lead for an existing contact puts them on the board for the
+      // first time, so the chip has to appear rather than change.
+      syncInboxStageChips(queryClient, [variables.contactId], variables.stageId);
+      // A typed-in number the contact book did not have becomes a contact,
+      // server-side, so the contacts list has a row it does not know about.
+      if (!variables.contactId && variables.phone) {
+        queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+      }
+    },
   });
 }
 
@@ -546,12 +553,14 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
       const fromPrefix = columnPrefix(fromStageId);
       const toPrefix = columnPrefix(stageId);
       const statsKey = pipelineKeys.stats(pipelineId);
+      const detailKey = pipelineKeys.lead(leadId);
 
       // Otherwise an in-flight page or counts fetch can land after this write.
       await Promise.all([
         queryClient.cancelQueries({ queryKey: fromPrefix }),
         queryClient.cancelQueries({ queryKey: toPrefix }),
         queryClient.cancelQueries({ queryKey: statsKey }),
+        queryClient.cancelQueries({ queryKey: detailKey }),
       ]);
 
       // Every filter variant of both columns is cached separately, so all of
@@ -560,6 +569,11 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
         from: queryClient.getQueriesData<InfiniteData<LeadPage>>({ queryKey: fromPrefix }),
         to: queryClient.getQueriesData<InfiniteData<LeadPage>>({ queryKey: toPrefix }),
         stats: queryClient.getQueryData<PipelineStats>(statsKey),
+        // The modal fetches the lead on its own key, so moving a stage from the
+        // stepper has to write here too — otherwise the drawer keeps showing the
+        // old column until it is closed and reopened.
+        detail: queryClient.getQueryData<LeadDetail>(detailKey),
+        detailKey,
       };
 
       const moving = findCachedLead(queryClient, leadId);
@@ -608,6 +622,21 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
         (stats) => stats && shiftStageCounts(stats, moving, moved),
       );
 
+      // Only the moved fields: the detail carries notes, tasks and a timeline
+      // the list rows do not, and `moved` would drop them.
+      queryClient.setQueryData<LeadDetail>(
+        detailKey,
+        (detail) =>
+          detail && {
+            ...detail,
+            stageId: moved.stageId,
+            stage: moved.stage,
+            stageEnteredAt: moved.stageEnteredAt,
+            lastActivityAt: moved.lastActivityAt,
+            status: moved.status,
+          },
+      );
+
       return previous;
     },
 
@@ -616,6 +645,9 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
       for (const [key, data] of context?.to ?? []) queryClient.setQueryData(key, data);
       if (context?.stats) {
         queryClient.setQueryData(pipelineKeys.stats(pipelineId), context.stats);
+      }
+      if (context?.detail && context.detailKey) {
+        queryClient.setQueryData(context.detailKey, context.detail);
       }
       toast.error(getApiErrorMessage(error, t("Could not move the lead")), {
         id: "pipeline-lead-move",
@@ -637,11 +669,14 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
       }
     },
 
-    onSettled: () => {
+    onSettled: (_result, _error, variables) => {
       // Numbers only. The lists already hold the right cards.
       queryClient.invalidateQueries({ queryKey: pipelineKeys.stats(pipelineId) });
       queryClient.invalidateQueries({ queryKey: pipelineKeys.forecast(pipelineId) });
       queryClient.invalidateQueries({ queryKey: pipelineKeys.list() });
+      // The open lead, though, gains a timeline entry for the move that only
+      // the server can write.
+      queryClient.invalidateQueries({ queryKey: pipelineKeys.lead(variables.leadId) });
     },
   });
 }

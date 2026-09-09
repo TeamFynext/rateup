@@ -78,21 +78,30 @@ export function PipelinePage() {
   const openConversation = useCallback(
     (lead: Lead) => {
       if (!lead.contactId) return;
-      void navigate({ to: "/dashboard/inbox", search: { contactId: lead.contactId } });
+      // With the tab named, as every other link into the inbox does: the route
+      // rewrites a tab-less URL on mount, and that rewrite used to race the
+      // deep link.
+      void navigate({
+        to: "/dashboard/inbox",
+        search: { tab: "open", contactId: lead.contactId },
+      });
     },
     [navigate],
   );
 
   const handleMove = useCallback(
-    (leadId: string, fromStageId: string, stage: PipelineStage) => {
+    (leadId: string, fromStageId: string, stage: PipelineStage, known?: Lead) => {
       // Landing on a closing column is a close, not a move: winning wants a
       // confirmation and losing wants a reason, so both route through the
       // dialog. The column dropped on is carried along, so a board with several
       // Lost columns puts the lead in the one the user actually chose.
       //
       // The lead comes out of the cache rather than a loaded array — the columns
-      // are paginated now, so there is no single list to look in.
-      const lead = findCachedLead(queryClient, leadId);
+      // are paginated now, so there is no single list to look in. The modal
+      // hands its own copy over: it fetched the lead by id, so a lead whose
+      // column was never loaded — a closed one, most often — still reaches the
+      // dialog rather than skipping it and closing without a reason.
+      const lead = known ?? findCachedLead(queryClient, leadId);
       if (stage.status !== "OPEN" && lead) {
         setCloseTarget({ lead, status: stage.status, stageId: stage.id });
         return;

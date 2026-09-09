@@ -88,10 +88,18 @@ function WhatsAppInbox() {
         replace: true,
         // Lowercase: every consumer compares against lowercase tab values, so
         // "All" silently fell through to the legacy branch.
-        search: { tab: "open" } as never,
+        //
+        // `contactId` is carried across rather than dropped: this runs on the
+        // same mount as the effect above, and a deep link whose contact is not
+        // in the store yet — the list has not loaded, the fetch by id is still
+        // in flight — has not been consumed at that point. Rewriting the URL
+        // without it threw the link away, and the thread only opened on a
+        // second click, once the contact was in cache to be resolved
+        // synchronously.
+        search: { tab: "open", ...(contactId && { contactId }) } as never,
       });
     }
-  }, [tab]);
+  }, [tab, contactId]);
 
   return (
     <div className="h-full min-h-0">
