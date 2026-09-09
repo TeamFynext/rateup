@@ -134,7 +134,7 @@ describe("scheduleNextRetry", () => {
     db.campaignParticipant.count.mockResolvedValue(3);
   });
 
-  test("schedules the first retry 45 minutes out", async () => {
+  test("schedules the first retry a sixteenth of the window out", async () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
     db.campaignSend.findUnique.mockResolvedValue(send());
 
@@ -145,7 +145,9 @@ describe("scheduleNextRetry", () => {
     expect(arg.trigger).toBe("AUTO_RETRY");
     expect(arg.status).toBe("SCHEDULED");
     expect(arg.targetStatuses).toEqual([CampaignParticipantStatus.FAILED]);
-    expect(arg.scheduledFor.toISOString()).toBe("2026-03-01T10:45:00.000Z");
+    // A sixteenth of the default 3-day window is 4h30m. On a 12-hour window this
+    // same rung is the familiar 45 minutes.
+    expect(arg.scheduledFor.toISOString()).toBe("2026-03-01T14:30:00.000Z");
   });
 
   test("books nothing when every message landed and none failed", async () => {
@@ -240,16 +242,12 @@ describe("scheduleNextRetry", () => {
     // Without the floor this would build a cohort from statuses that have not
     // landed yet — the queue drains before Meta's webhooks arrive.
     vi.useFakeTimers().setSystemTime(new Date("2026-03-01T10:00:00Z"));
-    db.campaignSend.findUnique.mockResolvedValue(
-      send({
-        // Drained an hour and a half ago, so the +45m offset measured from the
-        // anchor is already inside the floor measured from now.
-        completedAt: new Date("2026-03-01T08:30:00Z"),
-      }),
-    );
-    db.campaignSend.findFirst.mockResolvedValue(
-      cycleStart({ completedAt: new Date("2026-03-01T08:30:00Z") }),
-    );
+    // Drained yesterday evening, so the attempt's absolute slot — the anchor plus
+    // a sixteenth of the window — has already passed and the floor is the only
+    // thing left deciding when it fires.
+    const drained = new Date("2026-02-28T20:00:00Z");
+    db.campaignSend.findUnique.mockResolvedValue(send({ completedAt: drained }));
+    db.campaignSend.findFirst.mockResolvedValue(cycleStart({ completedAt: drained }));
 
     await scheduleNextRetry(SEND_ID);
 
