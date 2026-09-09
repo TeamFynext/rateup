@@ -9,7 +9,7 @@ import ScreenShot from "@/components/Screenshot";
 **lead** card, each card sits in a **stage** column, and moving it across the board is how your team
 says where things stand.
 
-<ScreenShot src="/docs/screenshots/pipelines/pipeline-overview.png" alt="The Pipeline board, with the sidebar's views and stage facets beside it" />
+<ScreenShot src="/docs/screenshots/pipelines/pipelines-overview.png" alt="The Pipeline board, with the sidebar's views and stage facets beside it" />
 
 ---
 
@@ -53,8 +53,9 @@ them is yours to change — see [Stages](/pipeline/stages).
 
 ## The Five Views
 
-The same filtered set of leads, rendered five ways. Switching tabs never refetches, so the counts
-never disagree.
+The same board, rendered five ways. **Board** and **List** answer to the sidebar's filters;
+**Forecast** and **Insights** report on the whole board and ignore them, so a facet you left on
+never quietly rewrites a figure you are reading.
 
 <Cards>
   <Card
@@ -111,14 +112,15 @@ never disagree.
 ## The Sidebar
 
 Under **Pipeline**, the sidebar carries the board's own filters. Everything except the board name is
-a click, not a page load, and each row counts across **every** lead so a count never shrinks just
-because another filter is on.
+a click, not a page load, and each row counts across **every** lead on the board — counts come from
+the server rather than from the cards on screen, so a row never shrinks because another filter is on
+or because a column has only loaded its first page.
 
 | Section | Rows |
 |---------|------|
 | **Pipelines** | Each board, with its open-lead count, plus **New pipeline** |
 | **Views** | **All leads on board** · **Mine** · **Needs attention** · **No next activity** · **Won** · **Lost** |
-| **Stages** | One row per column, in board order |
+| **Lead stages** | One row per column, in board order |
 | **Teams** | One row per team with leads on the board |
 | **Sources** | One row per source in use |
 

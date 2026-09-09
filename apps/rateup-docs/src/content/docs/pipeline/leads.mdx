@@ -9,7 +9,7 @@ import ScreenShot from "@/components/Screenshot";
 Everything about one lead lives in a drawer that slides in from the right. Open it by clicking a
 card on the [Board](/pipeline/board), or a row in the [List](/pipeline/list).
 
-<ScreenShot src="/docs/screenshots/pipelines/pipeline-lead.png" alt="The lead drawer open on Details, over the board" />
+<ScreenShot src="/docs/screenshots/pipelines/pipelines-lead.png" alt="The lead drawer open on Details, over the board" />
 
 ---
 
@@ -20,8 +20,10 @@ one.
 
 <Steps>
 <Step>
-Pick the **Customer**. This is a search over your existing [contacts](/contacts) — by name, phone or
-email. A lead is always raised against a contact, so there is no free-text option.
+Pick the **Customer**, either way round. **Choose from contacts** searches your existing
+[contacts](/contacts) by name, phone or email; **Enter details manually** takes a **Contact name**,
+an optional **Business / company** and an optional **WhatsApp number** for somebody who is not in
+your contacts yet.
 </Step>
 <Step>
 Pick the **Stage** it starts in.
@@ -38,6 +40,20 @@ Optionally tap the **Assignees** you want on it, then **Add lead**.
 
 The lead copies the contact's name, phone and email so a card can render without a second lookup,
 but it is the contact link that matters — it is what makes **Open conversation** work.
+
+A number typed in manually is looked up as you finish it, and the line under the field says what
+will happen with it:
+
+| It says | Meaning |
+|---------|---------|
+| *Nobody has this number yet — it will be added to your contacts* | A new contact is created with the lead |
+| *{`{name}`} already has this number — the lead will be linked to them* | **Use their details** links the lead to that contact instead of duplicating them |
+| *Linked to {`{name}`} — the lead opens their conversation in Inbox* | Already linked. **Unlink** breaks it |
+
+A name on its own is enough to save. That lead has no contact behind it, so its card carries the
+broken-link icon and **Open conversation** stays disabled until somebody gives it a number.
+A number that is typed has to be dialable — *"That number doesn't look right."* refuses anything
+else, since the lead carries it verbatim.
 
 <Callout type="info">
   Choosing a closing column says so: *"{`{stage}`} is a closing column — the lead opens already

@@ -8,7 +8,7 @@ import ScreenShot from "@/components/Screenshot";
 **Forecast** answers one question: how much is likely to land, and when. It groups your open leads
 by their **expected close** month and weights each one by the win probability of the stage it is in.
 
-<ScreenShot src="/docs/screenshots/pipelines/pipeline-forcast.png" alt="The Forecast view, with every open lead in the Unscheduled column" />
+<ScreenShot src="/docs/screenshots/pipelines/pipelines-forcast.png" alt="The Forecast view, with every open lead in the Unscheduled column" />
 
 ---
 
@@ -20,7 +20,7 @@ by their **expected close** month and weights each one by the win probability of
 | **{`{n}`} leads** | How many open leads fall in that month |
 | The big number | **Expected to convert** — the probability-weighted count |
 | The bar | That number against the strongest month showing |
-| Each row | A lead, with its stage and that stage's probability. Click to open it |
+| Each row | A lead, with its stage and that stage's probability. Click to open it. A column carries up to twenty cards — the count above them is the answer, the cards are the evidence |
 
 The headline number is deliberately not the raw lead count. Five leads sitting at 20% are one
 expected win, and the column says **1** rather than **5**.
@@ -48,9 +48,11 @@ Set a date from the lead drawer's **Expected close** field — see
 Only **open** leads. Won and lost leads have already landed, so they belong in
 [Insights](/pipeline/insights) rather than a forecast.
 
-Everything else the board is filtering on still applies — a search, an assignee, a team or a source
-facet narrows the forecast the same way it narrows the board. That makes *"what is Priya expected to
-close this quarter"* a two-click question.
+Every open lead on the board, counted on the server. The sidebar's facets and the search box narrow
+the **Board** and **List** views only — they do not narrow the forecast, which answers *"what is
+this pipeline expected to close"* rather than *"what is it expected to close under the filter I left
+on"*. To read one person's forecast, open [Insights](/pipeline/insights) for their win rate, or the
+[List](/pipeline/list) filtered to them.
 
 ---
 

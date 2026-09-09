@@ -5,11 +5,12 @@ description: Funnel, where leads stall, where they come from, and how each assig
 
 import ScreenShot from "@/components/Screenshot";
 
-**Insights** is the board's health in four panels and four headline figures. Everything on it is
-derived from the same filtered set of leads the board is showing, so a facet you set in the sidebar
-narrows the report too.
+**Insights** is the board's health in four panels and four headline figures. Every one of them is
+counted on the server over the **whole board**: the sidebar's facets and the search box narrow the
+[Board](/pipeline/board) and the [List](/pipeline/list), and leave this report alone. It answers
+*"how is this pipeline doing"*, not *"how is it doing under the filter I left on"*.
 
-<ScreenShot src="/docs/screenshots/pipelines/pipeline-insights.png" alt="Insights: the four figures, the conversion funnel and where leads stall" />
+<ScreenShot src="/docs/screenshots/pipelines/pipelines-insights.png" alt="Insights: the four figures, the conversion funnel and where leads stall" />
 
 ---
 
@@ -17,7 +18,7 @@ narrows the report too.
 
 | Card | What it counts |
 |------|----------------|
-| **Leads in pipeline** | Open leads, with the number of stages under it |
+| **Leads in pipeline** | Open leads, with the number of lead stages under it |
 | **Win rate** | Won as a share of everything closed — won *and* lost. An em dash until something closes |
 | **Average time to win** | Days from creation to close, across won leads only |
 | **Stalled leads** | Leads flagged as needing attention, with how many have no next activity |
@@ -60,11 +61,12 @@ Stages with no rotting window are left out entirely: nothing there can be late. 
 
 ## Leads by Source
 
-Every source in use, ranked, with a bar scaled against the largest. This counts every lead in view,
-closed ones included — it answers where your leads come from, not which ones are still live.
+Every source in use, ranked, with a bar scaled against the largest. This counts every lead on the
+board, closed ones included — it answers where your leads come from, not which ones are still live.
 
-Pair it with **Win rate** filtered by source in the sidebar to find the channel that is loud but not
-worth much.
+A loud source is not the same as a good one: read it against **Assignee performance** and the
+funnel, and use the sidebar's **Sources** rows on the [Board](/pipeline/board) or the
+[List](/pipeline/list) to go and look at the leads themselves.
 
 ---
 
