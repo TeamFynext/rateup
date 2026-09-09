@@ -17,6 +17,8 @@ import {
   updateLostReason,
   updatePipeline,
 } from "./pipeline.service.js";
+import { getPipelineStats } from "./pipeline.stats.js";
+import { getPipelineForecast } from "./pipeline.forecast.js";
 import type {
   CreateLabelRequestSchema,
   CreateLostReasonRequestSchema,
@@ -102,6 +104,32 @@ export async function deletePipelineHandler(
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error deleting pipeline" });
+  }
+}
+
+export async function getPipelineStatsHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const stats = await getPipelineStats(request.params.id, request.userId);
+    return reply.code(200).send(stats);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error retrieving pipeline stats" });
+  }
+}
+
+export async function getPipelineForecastHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const buckets = await getPipelineForecast(request.params.id);
+    return reply.code(200).send(buckets);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error retrieving pipeline forecast" });
   }
 }
 

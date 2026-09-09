@@ -708,6 +708,8 @@ model Team {
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
+  /// Every org-scoped listing reaches its rows through the org's teams.
+  @@index([orgId])
 }
 
 model TeamFeatureAccess {
@@ -1078,7 +1080,7 @@ model Campaign {
   name      String
   startedAt DateTime?
   endedAt   DateTime?
-  status    String    @default("INACTIVE") // enums.ts: CampaignStatus
+  status    String    @default("DRAFT") // enums.ts: CampaignStatus
   type      String // enums.ts: CampaignType
 
   // Max messages dispatched per day. Null = dispatch every participant at once.
@@ -1096,8 +1098,18 @@ model Campaign {
   errorMessage         String?
   dynamicTags          String[]              @default([])
   useUserConsent       Boolean               @default(true)
+  /// IANA zone the schedule is expressed in. A campaign scheduled for "10:00" is
+  /// scheduled for 10:00 *somewhere*, and the person who set it is rarely in the
+  /// same place as the server or the next person to open the campaign.
+  timezone             String                @default("Etc/UTC")
   CampaignStats        CampaignStats?
   CampaignDripStage    CampaignDripStage[]
+  CampaignSend         CampaignSend[]
+  CampaignRetryPolicy  CampaignRetryPolicy?
+
+  /// The campaign list is scoped by org through Team and filtered by type,
+  /// newest first.
+  @@index([teamId, type, createdAt(sort: Desc)])
 }
 
 model CampaignStats {
@@ -1132,11 +1144,13 @@ model CampaignParticipant {
 
   errorMessage                    String?
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
-  CampaignMessageQueue            CampaignMessageQueue[]
 
   CampaignParticipantDripStage CampaignParticipantDripStage[]
 
   @@unique([campaignId, contactId], name: "campaign_contact_unique")
+  /// Counting a campaign's participants by status is on the hot path of the
+  /// analytics funnel, the settle sweep and the participants tab.
+  @@index([campaignId, status])
   @@index([contactId])
 }
 
@@ -1179,20 +1193,97 @@ model CampaignParticipantDripStage {
   @@unique([participantId, dripStageId], name: "participant_stage_unique")
 }
 
-enum CampaignMessageQueueStatus {
-  PENDING
-  SENT
+/// One send or resend of a campaign. Every outbound message belongs to exactly
+/// one, so "this retry re-attempted 340 and 210 landed" is a query, not a guess.
+///
+/// Scheduling for automatic retries lives here rather than as multi-day BullMQ
+/// delayed jobs: a row in SCHEDULED is the source of truth, so cancelling is a
+/// DB update, the schedule survives a Redis flush, and the UI can render the
+/// next attempt without scanning a queue.
+model CampaignSend {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt  DateTime @default(now())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String   @db.Uuid
+
+  /// 0 = the initial send. 1..n = automatic retries.
+  attemptNo Int                 @default(0)
+  trigger   CampaignSendTrigger
+  status    CampaignSendStatus  @default(SCHEDULED)
+
+  /// Participant statuses this send targeted, e.g. ["PENDING"] or ["FAILED"].
+  targetStatuses String[] @default([])
+  dripStageId    String?  @db.Uuid
+
+  scheduledFor DateTime?
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  /// Recipients this send fanned out to, decided at fire time.
+  totalTargeted Int @default(0)
+  /// Recipients dropped because the conversation allowance ran out.
+  totalSkipped  Int @default(0)
+
+  totalSent      Int @default(0)
+  totalDelivered Int @default(0)
+  totalRead      Int @default(0)
+  totalFailed    Int @default(0)
+  totalCompleted Int @default(0)
+
+  /// Why this attempt exists, or why it was cancelled/skipped.
+  note String?
+
+  messages WaMessageCampaginParticipantMap[]
+
+  @@unique([campaignId, attemptNo])
+  @@index([status, scheduledFor])
+  @@index([campaignId])
+}
+
+enum CampaignSendTrigger {
+  MANUAL
+  SCHEDULED
+  AUTO_RETRY
+  DRIP
+}
+
+enum CampaignSendStatus {
+  SCHEDULED
+  QUEUING
+  RUNNING
+  COMPLETED
+  CANCELLED
   FAILED
 }
 
-model CampaignMessageQueue {
-  id                    String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  campaignParticipant   CampaignParticipant        @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
-  campaignParticipantId String                     @db.Uuid
-  status                CampaignMessageQueueStatus @default(PENDING)
-  retryCount            Int                        @default(0)
-  scheduledAt           DateTime                   @default(now())
-  createdAt             DateTime                   @default(now())
+/// Retry behaviour for a campaign's failed messages. 1:1 with the campaign;
+/// an absent row means retries are off.
+model CampaignRetryPolicy {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String   @unique @db.Uuid
+
+  enabled       Boolean               @default(false)
+  strategy      CampaignRetryStrategy @default(SMART)
+  /// Hard cap on automatic attempts after the initial send. 1-3.
+  maxAttempts   Int                   @default(3)
+  /// Only used by FIXED_INTERVAL.
+  intervalHours Int                   @default(24)
+  /// Retries stop here regardless of attempts left. Max 7 days out.
+  windowEndsAt  DateTime?
+
+  /// Local no-retry window, e.g. 22:00-08:00. Null = always allowed.
+  quietHoursStart String?
+  quietHoursEnd   String?
+  timezone        String  @default("Etc/UTC")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CampaignRetryStrategy {
+  SMART
+  FIXED_INTERVAL
 }
 
 model SurveyTheme {
@@ -1863,6 +1954,10 @@ model WaMessage {
   waMessageOrgTeamMaps            WaMessageOrgTeamMap[]
   /// [PWaGraphApiErrorDetail]
   logs                            Json?
+  /// Meta Graph error code for a failed send, lifted out of `logs` so retry
+  /// eligibility and the failure-reason breakdown are indexable queries rather
+  /// than jsonb path scans.
+  errorCode                       Int?
   /// Source of the message (e.g., api, inbox, campaign, automation)
   sourceMessage                   String?
   /// Set when the sender revoked (deleted) the message on WhatsApp. The body is
@@ -1895,6 +1990,7 @@ model WaMessage {
   // in bulkUpdateStatuses; without this the batch degrades to a seq scan.
   @@index([messageId])
   @@index([meteredConversationId])
+  @@index([errorCode])
 }
 
 model WaMessageCampaginParticipantMap {
@@ -1904,6 +2000,18 @@ model WaMessageCampaginParticipantMap {
   waMessageId                    String                        @unique @db.Uuid
   CampaignParticipantDripStage   CampaignParticipantDripStage? @relation(fields: [campaignParticipantDripStageId], references: [id])
   campaignParticipantDripStageId String?                       @db.Uuid
+  /// The send session this message belongs to. This table already has exactly
+  /// one row per WaMessage and is already joined by the status consumer, so it
+  /// is the cheapest attribution point for per-attempt analytics.
+  campaignSend                   CampaignSend?                 @relation(fields: [campaignSendId], references: [id], onDelete: SetNull)
+  campaignSendId                 String?                       @db.Uuid
+
+  /// Every "what was this participant's latest message" lookup filters on this —
+  /// the analytics failure breakdown and the retry cohort both do it once per
+  /// failed participant. Without the index each of those is a sequential scan of
+  /// the whole table.
+  @@index([campaignParticipantId])
+  @@index([campaignSendId])
 }
 
 enum AssignType {
@@ -3305,7 +3413,6 @@ model Lead {
   tasks      LeadTask[]
   /// A lead can be worked by several people, the same way a ticket card is.
   assignees  LeadAssignee[]
-
   /// One lead per contact per board. Postgres counts NULLs as distinct, so this
   /// leaves contact-less leads — walk-ins, manual board entries — unconstrained
   /// while closing the race in `setContactStage`, where two concurrent syncs
@@ -3313,6 +3420,12 @@ model Lead {
   @@unique([contactId, pipelineId], name: "contact_pipeline_unique")
   @@index([pipelineId, status])
   @@index([stageId])
+  /// Column paging: one stage, newest arrival first, keyset on (stageEnteredAt, id).
+  @@index([stageId, stageEnteredAt(sort: Desc), id(sort: Desc)])
+  /// Ungrouped list paging across the whole board.
+  @@index([pipelineId, stageEnteredAt(sort: Desc), id(sort: Desc)])
+  /// Rotting counts compare lastActivityAt against each stage's window.
+  @@index([pipelineId, lastActivityAt])
 }
 
 model LeadAssignee {

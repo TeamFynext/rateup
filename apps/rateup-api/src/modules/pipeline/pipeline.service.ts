@@ -267,14 +267,22 @@ export async function deletePipeline(id: string) {
   return prisma.pipeline.delete({ where: { id } });
 }
 
-/** Everyone on the pipeline's teams — the assignee picker and the assignee filters. */
+/**
+ * Everyone on the pipeline's teams — the assignee picker and the assignee filters.
+ *
+ * Deleting a user only soft-deletes them (`active: false`, `deletedAt` set) and
+ * leaves their `TeamMember` rows in place, so both flags are checked here or the
+ * header's avatar strip keeps offering people who are gone.
+ */
 export async function getPipelineMembers(pipelineId: string) {
   return prisma.$queryRaw<Array<{ id: string; name: string | null; profilePhoto: string | null }>>`
     SELECT DISTINCT u.id, u.name, u."profilePhoto"
     FROM "User" u
     INNER JOIN "TeamMember" tm ON u.id = tm."userId"
     INNER JOIN "PipelineTeam" pt ON tm."teamId" = pt."teamId"
-    WHERE pt."pipelineId" = ${pipelineId}::uuid;
+    WHERE pt."pipelineId" = ${pipelineId}::uuid
+      AND u.active = true
+      AND u."deletedAt" IS NULL;
   `;
 }
 

@@ -67,6 +67,40 @@ Rules to keep in mind when adding code:
 - Railway config-as-code lives in `railway.api.json`, `railway.bullmq.json`,
   `railway.kafka.json`; set each service's config path in its Railway settings.
 
+## Campaign send sessions
+
+Every outbound campaign message belongs to exactly one `CampaignSend` row — the
+initial send, a resend, or an automatic retry. Two things depend on that, and
+both break silently if a new send path forgets it:
+
+- **BullMQ job ids are scoped to the send** (`${campaignSendId}:${participantId}`
+  in `enqueueCampaignMessages`). The queue's `deduplication` exists so the drip
+  cron's four-minute re-enqueue does not reset delays; without the send prefix it
+  also swallows every retry to a participant already messaged, and the retry
+  engine goes inert with no error anywhere.
+- **Completion is tracked per send**, in `campaignSend:<sendId>:jobs`. Draining
+  that set is what closes the `CampaignSend` and schedules the next retry.
+
+So: never call `enqueueCampaignMessage` without opening a `CampaignSend` first
+(`campaignSend.service.ts`), and close it on every path that does not enqueue —
+an unclosed live send holds the campaign's lane against the partial unique index
+in `20260907090000_campaign_send_sessions`.
+
+A `SCHEDULED` `CampaignSend` is the source of truth for _what_ is scheduled —
+cancelling is an UPDATE, and the UI reads the row rather than the queue. _When_ it
+fires is owned by one delayed job per row (`queues/campaignRetry.queue.ts`), so a
+retry goes off at its exact `scheduledFor`; the old `campaignRetries` cron capped
+that at its tick interval. Firing re-claims the row with a conditional UPDATE, so a
+job whose row was cancelled is a no-op and a duplicated job still sends once. The
+cost is that Redis can lose a job the database still expects, which
+`reconcileScheduledCampaignSends()` re-arms at worker startup.
+
+`waMessageQueue` has `attempts: 3`. That only does anything because
+`waMessage.processor.ts` rethrows — and it rethrows _only_ for a failure that
+classifies as `TRANSIENT` (`src/utils/waRetryableErrors.ts`). It also drains the
+job set on both `completed` and `failed`; a job that exhausts its attempts never
+reaches `completed`, and a set that keeps its id never empties.
+
 ## Email
 
 Bulk and background email leaves from the `bullmq` service: callers enqueue and the worker calls

@@ -1,15 +1,19 @@
 // Ported from message-dispatcher/src/index.ts.
 //
-// Cancellation: walks the job ids recorded for a campaign and removes the ones
-// that have not started yet (waiting/delayed/failed). Jobs already in flight are
-// left to finish — a half-sent message cannot be recalled anyway.
+// Cancellation, as asked for by pausing a campaign. The walk that actually
+// empties the queue is `cancelPendingCampaignJobs`, shared with `deleteCampaign`
+// — deleting a campaign has to take its pending messages out of the queue too,
+// and a delete cannot wait on a job of its own to do it. What is left here is
+// the part specific to a pause: closing the send sessions and settling the
+// campaign's own status afterwards.
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../shared/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { CampaignStatus } from "../../shared/types/enum.js";
-import { BATCH_SIZE, updateCampaignStatus } from "../../shared/whatsapp/index.js";
-import { waMessageQueue } from "../queues/whatsapp.queue.js";
+import { updateCampaignStatus } from "../../shared/whatsapp/index.js";
+import { cancelPendingCampaignJobs } from "../../../modules/campaign/campaignCancel.service.js";
+import { cancelCampaignSends } from "../../../modules/campaign/campaignSend.service.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -18,38 +22,28 @@ export const campaignDequeueWorker = new Worker(
   async (job: Job) => {
     const { campaignId } = job.data;
     try {
-      const jobIds = await baseRedis.smembers(`campaign:${campaignId}:jobs`);
+      const cancelled = await cancelPendingCampaignJobs(campaignId);
 
-      if (jobIds.length > 0) {
-        for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
-          const batch = jobIds.slice(i, i + BATCH_SIZE);
-          log.trace(
-            `Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(jobIds.length / BATCH_SIZE)}`,
-          );
-          await Promise.all(
-            batch.map(async (jobId) => {
-              const queued = await waMessageQueue.getJob(jobId);
-              if (!queued) {
-                // Job is gone from the queue but still in the Redis set — clean up.
-                await baseRedis.srem(`campaign:${campaignId}:jobs`, jobId);
-                return;
-              }
+      // Closes scheduled retries too, which never had a Redis set to walk.
+      await cancelCampaignSends(campaignId, { note: "Cancelled by the campaign owner." });
 
-              const state = await queued.getState();
-              if (state === "waiting" || state === "delayed" || state === "failed") {
-                await queued.remove();
-                await baseRedis.srem(`campaign:${campaignId}:jobs`, jobId);
-              }
-            }),
-          );
-        }
-      }
-      log.trace(`Dequeueing ${jobIds.length} jobs for campaign ${campaignId}`);
+      log.info({ campaignId, ...cancelled }, "Dequeued a campaign's pending messages");
 
-      await updateCampaignStatus(campaignId, CampaignStatus.ACTIVE);
+      // INACTIVE, not ACTIVE. Leaving a just-cancelled campaign ACTIVE made the
+      // list show it as running with nothing left in the queue, and let the drip
+      // cron pick it back up on its next tick.
+      await updateCampaignStatus(campaignId, CampaignStatus.INACTIVE);
     } catch (error) {
-      log.error("Error dequeuing campaign: %o", error);
-      await updateCampaignStatus(campaignId, CampaignStatus.INACTIVE, null, true);
+      log.error({ err: error, campaignId }, "Error dequeuing campaign");
+      // The stop itself failed, so the campaign is not cleanly paused — say so
+      // rather than reporting the pause the owner asked for but did not get.
+      await updateCampaignStatus(
+        campaignId,
+        CampaignStatus.FAILED,
+        null,
+        true,
+        "The campaign could not be stopped cleanly. Check it before sending again.",
+      );
     }
   },
   {

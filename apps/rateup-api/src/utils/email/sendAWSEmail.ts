@@ -30,8 +30,29 @@ export interface EmailParams {
   attachments?: [{ filename: string; path: string }];
 }
 
+/**
+ * Suppress every outbound email.
+ *
+ * For development and for any environment restored from a copy of production
+ * data, where the addresses on file belong to real people. Guarding here rather
+ * than at each caller means one switch covers every path — campaign completion
+ * reports, invites, password resets, weekly digests — with no chance of a new
+ * sender being added that forgets to check it.
+ *
+ * In-app and push notifications are unaffected: only the SES call is skipped.
+ */
+const emailDisabled = () => process.env.DISABLE_EMAIL === "true";
+
 export const sendAWSEmail = async (emailParams: EmailParams): Promise<boolean> => {
   const { to, subject, text, html, attachments } = emailParams;
+
+  if (emailDisabled()) {
+    // True, not false: the caller reads false as "SES rejected it" and throws to
+    // make BullMQ retry, which would turn every suppressed email into three.
+    log.info({ to, subject }, "DISABLE_EMAIL is set — email suppressed, not sent");
+    return true;
+  }
+
   try {
     const from = "RateUp.app <hello@rateup.app>"; // replace with your verified email address
 

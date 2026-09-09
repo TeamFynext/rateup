@@ -158,8 +158,7 @@ export async function addNewWaMessage(
     // The send session this message belongs to. Every per-attempt number in the
     // analytics tab is derived from this column, so a send that leaves it null is
     // invisible to the attempts table even though the campaign totals move.
-    // todo: revisit
-    // campaignSendId?: string | null;
+    campaignSendId?: string | null;
   },
 ) {
   const initialStats = {
@@ -205,12 +204,21 @@ export async function addNewWaMessage(
       ...statsData,
       sourceMessage,
       logs,
+      // A send Meta rejected outright never reaches the status consumer — the row
+      // is written with a NULL `messageId`, so no webhook can ever match it — and
+      // the consumer was the only writer of `errorCode`. Every immediate
+      // rejection therefore stored its code in `logs` and left the column NULL,
+      // which is what the retry cohort (`errorCode = ANY(...)`) and the failure
+      // breakdown both read: a campaign's send-time failures were unclassifiable
+      // and so never retried. Persisting it here is what makes them visible.
+      errorCode: typeof logs.code === "number" ? logs.code : null,
       ...(campaignLink
         ? {
             WaMessageCampaginParticipantMap: {
               create: {
                 campaignParticipantId: campaignLink.campaignParticipantId,
                 campaignParticipantDripStageId: campaignLink.campaignParticipantDripStageId ?? null,
+                campaignSendId: campaignLink.campaignSendId ?? null,
               },
             },
           }

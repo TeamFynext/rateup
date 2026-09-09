@@ -10,11 +10,13 @@ import { buildTemplateComponents } from "../../../../modules/whatsapp/messageTem
 import { signFlowToken } from "../../../../modules/whatsapp/flows/flowToken.js";
 import {
   updateCampaignParticipant,
+  updateCampaignSendStats,
   updateCampaignStats,
   updateDripCampaignParticipant,
   updateDripCampaignStats,
 } from "../../campaign.js";
 import type { WaTemplateData, WaTemplateDefaultValues } from "../../types/dispatcher.types.js";
+import { classifyWaFailure, WaFailureClass } from "../../../../utils/waRetryableErrors.js";
 import dbPool from "../../../../utils/db.js";
 
 // Define proper interfaces
@@ -35,8 +37,16 @@ interface Participant {
   phoneId: string;
   contactId: string;
   campaignId: string;
+  /** The send session this job belongs to; set by `enqueueCampaignMessages`. */
+  campaignSendId: string;
   sourceIdentifier: string;
-  dripCampaignId?: string;
+  /**
+   * The drip *stage* this job is for. The job payload has always carried this
+   * (`enqueueCampaignMessages` puts it there); the field this code read instead,
+   * `dripCampaignId`, was never in the payload, so the drip failure branch below
+   * was unreachable and drip-stage failures were booked against the participant.
+   */
+  dripStageId?: string;
   dripCampaignParticipantId?: string;
   teamId: string;
 }
@@ -55,11 +65,38 @@ interface MessageOptions {
   phoneId: string;
   contactId: string;
   campaignId: string;
+  campaignSendId: string;
   phone: string;
   sourceIdentifier: string;
 }
 
-export async function processParticipant(participant: Participant): Promise<void> {
+/**
+ * What happened to one message, in the only terms the job wrapper cares about.
+ *
+ * `failureClass` is what decides whether BullMQ should try again: only
+ * `TRANSIENT` earns a fast in-queue retry. Everything else — a frequency cap, a
+ * dead number, an unclassified code — is either handled by the scheduled retry
+ * engine hours later or not worth repeating at all.
+ */
+export interface DispatchOutcome {
+  ok: boolean;
+  failureClass?: WaFailureClass;
+}
+
+export interface ProcessParticipantOptions {
+  /**
+   * False while BullMQ still has attempts left. Failure bookkeeping is deferred
+   * until the last one: the participant status and the three counters below are
+   * written inside one transaction, and running that on attempt 1 of 3 would
+   * count the same failure three times.
+   */
+  isFinalAttempt?: boolean;
+}
+
+export async function processParticipant(
+  participant: Participant,
+  options: ProcessParticipantOptions = {},
+): Promise<DispatchOutcome> {
   try {
     const {
       id,
@@ -75,14 +112,16 @@ export async function processParticipant(participant: Participant): Promise<void
       phoneId,
       contactId,
       campaignId,
+      campaignSendId,
       sourceIdentifier,
-      dripCampaignId,
+      dripStageId,
       dripCampaignParticipantId,
       teamId,
     } = participant;
 
     // Send campaign message using database connections only when needed
-    await sendCampaignMessage({
+    return await sendCampaignMessage({
+      isFinalAttempt: options.isFinalAttempt ?? true,
       participantId: id,
       contact: {
         name,
@@ -100,10 +139,11 @@ export async function processParticipant(participant: Participant): Promise<void
         phoneId,
         contactId,
         campaignId,
+        campaignSendId,
         phone,
         sourceIdentifier,
       },
-      dripCampaignId,
+      dripStageId,
       dripCampaignParticipantId,
     });
   } catch (error) {
@@ -149,8 +189,9 @@ interface SendCampaignParams {
   contactTags: string[];
   surveyTeamMapId: string;
   messageOptions: MessageOptions;
-  dripCampaignId?: string;
+  dripStageId?: string;
   dripCampaignParticipantId?: string;
+  isFinalAttempt: boolean;
 }
 
 async function sendCampaignMessage({
@@ -163,12 +204,14 @@ async function sendCampaignMessage({
   contactTags,
   surveyTeamMapId,
   messageOptions,
-  dripCampaignId,
+  dripStageId,
   dripCampaignParticipantId,
-}: SendCampaignParams): Promise<void> {
+  isFinalAttempt,
+}: SendCampaignParams): Promise<DispatchOutcome> {
   if (!contact.phone) {
     log.warn("Contact %o does not have a phone number", contact);
-    return;
+    // Nothing to send and nothing a retry would fix.
+    return { ok: false, failureClass: WaFailureClass.PERMANENT };
   }
 
   // The same builder the single-send path uses, so a template produces identical
@@ -203,14 +246,15 @@ async function sendCampaignMessage({
     components,
   });
   // Send message and process response
-  await sendTemplateMessage(
+  return await sendTemplateMessage(
     orgId,
     teamId,
     templateMessage,
     participantId,
     templateData,
     messageOptions,
-    dripCampaignId,
+    isFinalAttempt,
+    dripStageId,
     dripCampaignParticipantId,
     templateData?.category,
   );
@@ -222,11 +266,12 @@ async function sendTemplateMessage(
   templateMessage: any,
   campaignParticipantId: string,
   templateData: WaTemplateData,
-  { accessToken, phoneId, campaignId, sourceIdentifier }: MessageOptions,
-  dripCampaignId?: string,
+  { accessToken, phoneId, campaignId, campaignSendId, sourceIdentifier }: MessageOptions,
+  isFinalAttempt: boolean,
+  dripStageId?: string,
   dripCampaignParticipantId?: string,
   category?: WaTemplateCategory,
-): Promise<void> {
+): Promise<DispatchOutcome> {
   // Sends and records in one call — including recording a rejection, which is
   // what the failure bookkeeping below reacts to.
   //
@@ -254,13 +299,19 @@ async function sendTemplateMessage(
     },
     campaign: {
       participantId: campaignParticipantId,
+      // Despite the name, `handleWaMessages` files this against the per-stage
+      // participant row (`campaignParticipantDripStageId`), not the stage.
       dripStageId: dripCampaignParticipantId ?? null,
+      campaignSendId,
       templateData,
     },
   }).catch((error: unknown) => {
     if (error instanceof ConversationLimitError) {
       log.warn({ orgId, campaignId }, "Campaign send blocked — conversation limit reached");
-      return { ok: false as const, error: error.message };
+      // No `detail`: a quota breach is ours, not Meta's, and carries no Graph
+      // code — so it classifies as UNKNOWN and is never retried. That is the
+      // intended outcome; see the note above.
+      return { ok: false as const, error: error.message, detail: undefined };
     }
     throw error;
   });
@@ -277,13 +328,23 @@ async function sendTemplateMessage(
 
     if (data.ok) {
       await client.query("COMMIT");
-      return;
+      return { ok: true };
+    }
+
+    const failureClass = classifyWaFailure(data.detail?.code);
+
+    // Deferred while BullMQ still has attempts left. `updateWaMonthlyStat` above
+    // is not deferred, deliberately: every call to Meta is a call to Meta,
+    // whether or not it succeeded.
+    if (!isFinalAttempt && failureClass === WaFailureClass.TRANSIENT) {
+      await client.query("COMMIT");
+      return { ok: false, failureClass };
     }
 
     // Failure bookkeeping. These write to different tables, so they are
     // independent — but they share the one connection holding the transaction,
     // hence sequential rather than Promise.all.
-    if (dripCampaignId && dripCampaignParticipantId) {
+    if (dripStageId && dripCampaignParticipantId) {
       await updateDripCampaignParticipant(
         dripCampaignParticipantId,
         {
@@ -293,7 +354,7 @@ async function sendTemplateMessage(
         },
         client,
       );
-      await updateDripCampaignStats(dripCampaignId, "totalFailed", client);
+      await updateDripCampaignStats(dripStageId, "totalFailed", client);
     } else {
       await updateCampaignParticipant(
         campaignParticipantId,
@@ -305,9 +366,22 @@ async function sendTemplateMessage(
         client,
       );
     }
+    // Both branches also bump the campaign-level total. A drip stage's counters
+    // are a breakdown *within* the campaign, not an alternative to it — this is
+    // the same shape `bulkUpdateStatuses` uses, where a drip message increments
+    // `CampaignStats` by campaignId and `CampaignDripStage` by stage id
+    // independently. Booking the stage total only would leave a drip campaign's
+    // Overview showing zero failures.
     await updateCampaignStats(campaignId, "totalFailed", client);
 
+    // Send-time failures never reach the status consumer: the WaMessage row is
+    // written with a NULL messageId, so `WHERE wm."messageId" = ANY(...)` can
+    // never match it. The per-attempt failure count has to be booked here or it
+    // is lost entirely.
+    await updateCampaignSendStats(campaignSendId, "totalFailed", client);
+
     await client.query("COMMIT");
+    return { ok: false, failureClass };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
     log.error(`Error in sendTemplateMessage: %o`, error);

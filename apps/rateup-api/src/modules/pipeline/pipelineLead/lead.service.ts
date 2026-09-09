@@ -15,12 +15,15 @@ import type {
   CreateLeadRequestSchema,
   CreateNoteRequestSchema,
   CreateTaskRequestSchema,
+  ListLeadsQuerySchema,
   UpdateLeadRequestSchema,
   UpdateTaskRequestSchema,
 } from "./lead.schema.js";
+import { decodeLeadCursor, encodeLeadCursor } from "./lead.cursor.js";
+import { leadWhere } from "./lead.filters.js";
 
 /** Everything the board, list, forecast and insights views read off a lead. */
-const leadListInclude = {
+export const leadListInclude = {
   assignees: {
     orderBy: { createdAt: "asc" },
     include: { assignee: { select: { id: true, name: true, profilePhoto: true } } },
@@ -84,7 +87,7 @@ function contactSourceToLeadSource(raw: string | null | undefined): LeadSource |
 type RawLead = Prisma.LeadGetPayload<{ include: typeof leadListInclude }>;
 
 /** Flattens the join rows and lifts the single open task to `nextTask`. */
-function serialiseLead({ labels, tasks, assignees, ...lead }: RawLead) {
+export function serialiseLead({ labels, tasks, assignees, ...lead }: RawLead) {
   return {
     ...lead,
     labels: labels.map((l) => l.label),
@@ -129,13 +132,80 @@ async function replaceAssignees(tx: Prisma.TransactionClient, leadId: string, ne
   };
 }
 
-export async function getLeads(pipelineId: string) {
+/** A cursor this server did not mint. The handler answers 400 rather than 500. */
+export class BadCursorError extends Error {
+  constructor() {
+    super("Invalid cursor");
+    this.name = "BadCursorError";
+  }
+}
+
+export interface LeadPage {
+  items: ReturnType<typeof serialiseLead>[];
+  /** Null on the last page. Feed it back as `cursor` for the next one. */
+  nextCursor: string | null;
+}
+
+/**
+ * One page of one board column.
+ *
+ * Two statements rather than one: the keyset predicate and the filters are
+ * raw SQL (a tuple comparison and a per-stage rotting window are not
+ * expressible through Prisma's query API), while the page's rows are then
+ * hydrated through Prisma so `leadListInclude` and `serialiseLead` stay the one
+ * definition of a lead's shape. The first statement reads ids off an index; the
+ * second reads at most `limit` rows by primary key.
+ *
+ * Ordering is `stageEnteredAt DESC` — most recently arrived in this column
+ * first — rather than by creation. That is what a column means, and it puts a
+ * card the user just dropped at the top where they left it.
+ */
+export async function listLeads(query: ListLeadsQuerySchema, userId: string): Promise<LeadPage> {
+  const cursor = decodeLeadCursor(query.cursor);
+  if (cursor === null) throw new BadCursorError();
+
+  const { rottingEnabled } = await prisma.pipeline.findUniqueOrThrow({
+    where: { id: query.pipelineId },
+    select: { rottingEnabled: true },
+  });
+
+  // One row past the page, which is how the reply knows whether to offer a
+  // cursor without also running a count over the column.
+  const rows = await prisma.$queryRaw<Array<{ id: string; stageEnteredAt: Date }>>`
+    SELECT l.id, l."stageEnteredAt"
+    FROM "Lead" l
+    JOIN "PipelineStage" s ON s.id = l."stageId"
+    WHERE ${leadWhere(query, { userId, rottingEnabled })}
+      ${
+        cursor
+          ? Prisma.sql`AND (l."stageEnteredAt", l.id) < (${cursor.t}::timestamptz, ${cursor.id}::uuid)`
+          : Prisma.empty
+      }
+    ORDER BY l."stageEnteredAt" DESC, l.id DESC
+    LIMIT ${query.limit + 1}
+  `;
+
+  const page = rows.slice(0, query.limit);
+  const hasMore = rows.length > query.limit;
+  if (page.length === 0) return { items: [], nextCursor: null };
+
   const leads = await prisma.lead.findMany({
-    where: { pipelineId },
-    orderBy: { createdAt: "desc" },
+    where: { id: { in: page.map((row) => row.id) } },
     include: leadListInclude,
   });
-  return leads.map(serialiseLead);
+
+  // `findMany` does not honour the order of an `in`, so the page's own order is
+  // reapplied here. A lead deleted between the two statements simply drops out.
+  const byId = new Map(leads.map((lead) => [lead.id, lead]));
+  const items = page
+    .map((row) => byId.get(row.id))
+    .filter((lead) => lead !== undefined)
+    .map(serialiseLead);
+
+  return {
+    items,
+    nextCursor: hasMore ? encodeLeadCursor(page[page.length - 1]) : null,
+  };
 }
 
 export async function getLeadById(id: string) {

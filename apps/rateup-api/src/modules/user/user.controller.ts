@@ -422,8 +422,8 @@ export async function checkEmailExistHandler(
   reply: FastifyReply,
 ) {
   try {
-    const user = await checkEmailExist(request.body.email);
-    return reply.code(200).send({ success: !!user });
+    const exists = await checkEmailExist(request.body.email);
+    return reply.code(200).send({ success: exists });
   } catch (e) {
     return reply
       .code(500)
