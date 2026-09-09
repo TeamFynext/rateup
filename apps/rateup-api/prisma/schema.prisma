@@ -708,6 +708,8 @@ model Team {
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
+  /// Every org-scoped listing reaches its rows through the org's teams.
+  @@index([orgId])
 }
 
 model TeamFeatureAccess {
@@ -1104,6 +1106,10 @@ model Campaign {
   CampaignDripStage    CampaignDripStage[]
   CampaignSend         CampaignSend[]
   CampaignRetryPolicy  CampaignRetryPolicy?
+
+  /// The campaign list is scoped by org through Team and filtered by type,
+  /// newest first.
+  @@index([teamId, type, createdAt(sort: Desc)])
 }
 
 model CampaignStats {
