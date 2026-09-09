@@ -6,6 +6,16 @@ import { campaignSendJobsKey } from "../../../workers/shared/campaignSendKeys.js
 import type { TaskContext, TaskOutcome } from "../task.js";
 
 /**
+ * How many jobs to remove per round.
+ *
+ * Removals are issued together so ioredis pipelines them, which is what makes a
+ * five-thousand-message campaign finish in seconds rather than minutes. Bounded
+ * rather than unbounded so a very large campaign does not build one enormous
+ * pipeline and hold every job object live at once.
+ */
+const REMOVE_BATCH_SIZE = 500;
+
+/**
  * Removes queued campaign messages whose campaign no longer exists.
  *
  * `deleteCampaign` used to be a bare row delete. A scheduled campaign is not a row
@@ -103,36 +113,71 @@ export async function purgeOrphanedCampaignJobs({ apply, log }: TaskContext): Pr
 
   let removed = 0;
   let failed = 0;
-  for (const job of orphanedJobs) {
-    try {
-      await job.remove();
-      // The job set is keyed by send, and a campaign can have several. Removing only
-      // this job's own id leaves any other campaign sharing nothing disturbed.
-      if (job.data?.campaignSendId && job.id) {
-        await baseRedis.srem(campaignSendJobsKey(job.data.campaignSendId), job.id);
-      }
-      removed++;
-    } catch (error) {
-      // A job that started sending between the read and the removal is locked, and
-      // BullMQ throws rather than removing it. That message is already gone; one of
-      // them must not abort the removal of the other ten thousand.
-      failed++;
-      log(`could not remove ${job.id}: ${error instanceof Error ? error.message : "unknown"}`);
+
+  // A batch at a time, not a job at a time. Removing one job is two round trips to
+  // Redis, and awaiting each in turn made a campaign of five thousand messages ten
+  // thousand sequential round trips — minutes of wall clock on a hosted Redis, long
+  // enough that the request carrying this task timed out partway and left the
+  // operator re-running it a couple of hundred jobs at a time. Issued together they
+  // pipeline, and the same five thousand finish in a handful of round trips.
+  for (let index = 0; index < orphanedJobs.length; index += REMOVE_BATCH_SIZE) {
+    const batch = orphanedJobs.slice(index, index + REMOVE_BATCH_SIZE);
+
+    const outcomes = await Promise.all(
+      batch.map(async (job) => {
+        try {
+          await job.remove();
+          return job;
+        } catch (error) {
+          // A job that started sending between the read and the removal is locked,
+          // and BullMQ throws rather than removing it. That message is already gone;
+          // one of them must not abort the removal of the other ten thousand.
+          log(`could not remove ${job.id}: ${error instanceof Error ? error.message : "unknown"}`);
+          return null;
+        }
+      }),
+    );
+
+    const gone = outcomes.filter((job) => job !== null);
+    removed += gone.length;
+    failed += batch.length - gone.length;
+
+    // The job set is keyed by send, and a campaign can have several. Members are
+    // grouped by key so each send takes one SREM per batch rather than one per
+    // message, and only the ids actually removed are dropped — anything left behind
+    // stays in the set, where a later run will find it.
+    const membersByKey = new Map<string, string[]>();
+    for (const job of gone) {
+      if (!job.data?.campaignSendId || !job.id) continue;
+      const key = campaignSendJobsKey(job.data.campaignSendId);
+      const members = membersByKey.get(key) ?? [];
+      members.push(job.id);
+      membersByKey.set(key, members);
     }
+    if (membersByKey.size) {
+      const pipeline = baseRedis.pipeline();
+      for (const [key, members] of membersByKey) pipeline.srem(key, ...members);
+      await pipeline.exec();
+    }
+
+    log(`removed ${removed}/${orphanedJobs.length} message job(s)`);
   }
 
-  let retriesRemoved = 0;
-  for (const job of orphanedRetries) {
-    try {
-      await job.remove();
-      retriesRemoved++;
-    } catch (error) {
-      failed++;
-      log(
-        `could not remove retry ${job.id}: ${error instanceof Error ? error.message : "unknown"}`,
-      );
-    }
-  }
+  const retryOutcomes = await Promise.all(
+    orphanedRetries.map(async (job) => {
+      try {
+        await job.remove();
+        return true;
+      } catch (error) {
+        log(
+          `could not remove retry ${job.id}: ${error instanceof Error ? error.message : "unknown"}`,
+        );
+        return false;
+      }
+    }),
+  );
+  const retriesRemoved = retryOutcomes.filter(Boolean).length;
+  failed += retryOutcomes.length - retriesRemoved;
 
   log(`removed ${removed} message job(s) and ${retriesRemoved} retry job(s)`);
 
