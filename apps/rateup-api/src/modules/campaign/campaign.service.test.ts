@@ -60,10 +60,15 @@ vi.mock("./campaignSend.service.js", async () => {
   );
   return {
     ...actual,
+    cancelCampaignSends: vi.fn(),
     createCampaignSend: vi.fn(),
     failCampaignSend: vi.fn(),
   };
 });
+// Reaches Redis and the message queue, which this suite has neither of.
+vi.mock("./campaignCancel.service.js", () => ({
+  cancelPendingCampaignJobs: vi.fn(async () => ({ removed: 0, locked: 0, sends: 0 })),
+}));
 
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
@@ -81,6 +86,7 @@ import {
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums.js";
 import {
   backfillDripStageParticipants,
+  CampaignNotFoundError,
   createCampaign,
   deleteCampaign,
   deleteCampaignParticipantsByCampaignId,
@@ -99,12 +105,15 @@ import {
   sendCampaignCronAction,
   updateCampaign,
 } from "./campaign.service.js";
-import { createCampaignSend } from "./campaignSend.service.js";
+import { cancelCampaignSends, createCampaignSend } from "./campaignSend.service.js";
+import { cancelPendingCampaignJobs } from "./campaignCancel.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 const SEND_ID = "00000000-0000-0000-0000-0000000000ff";
 const createSendMock = createCampaignSend as unknown as Mock;
+const cancelSendsMock = cancelCampaignSends as unknown as Mock;
+const cancelJobsMock = cancelPendingCampaignJobs as unknown as Mock;
 
 const db = prisma as unknown as {
   $queryRaw: Mock;
@@ -508,11 +517,56 @@ describe("updateCampaign", () => {
   });
 
   test("scopes the delete to the caller's org", async () => {
+    db.campaign.findFirst.mockResolvedValue({ id: CAMPAIGN_ID });
+
     await deleteCampaign(CAMPAIGN_ID, ORG_A);
 
     expect(db.campaign.delete.mock.calls[0][0]).toEqual({
       where: { id: CAMPAIGN_ID, team: { orgId: ORG_A } },
     });
+  });
+
+  test("takes the campaign's pending messages out of the queue before deleting it", async () => {
+    db.campaign.findFirst.mockResolvedValue({ id: CAMPAIGN_ID });
+    const order: string[] = [];
+    cancelJobsMock.mockImplementation(async () => {
+      order.push("cancel");
+      return { removed: 3, locked: 0, sends: 1 };
+    });
+    db.campaign.delete.mockImplementation(async () => {
+      order.push("delete");
+      return {};
+    });
+
+    await deleteCampaign(CAMPAIGN_ID, ORG_A);
+
+    expect(cancelJobsMock).toHaveBeenCalledWith(CAMPAIGN_ID);
+    // The cancellation finds its sends by querying rows the delete cascades
+    // away, so it cannot run after — or alongside — the delete.
+    expect(order).toEqual(["cancel", "delete"]);
+  });
+
+  test("disarms scheduled retries, which have a job but no queued messages", async () => {
+    db.campaign.findFirst.mockResolvedValue({ id: CAMPAIGN_ID });
+
+    await deleteCampaign(CAMPAIGN_ID, ORG_A);
+
+    expect(cancelSendsMock).toHaveBeenCalledWith(
+      CAMPAIGN_ID,
+      expect.objectContaining({ note: expect.stringContaining("deleted") }),
+    );
+  });
+
+  test("cancels nothing when the campaign belongs to another org", async () => {
+    db.campaign.findFirst.mockResolvedValue(null);
+
+    await expect(deleteCampaign(CAMPAIGN_ID, ORG_A)).rejects.toThrow(CampaignNotFoundError);
+
+    // Otherwise a guessed id from another org would stop that org's campaign on
+    // its way to a 404.
+    expect(cancelJobsMock).not.toHaveBeenCalled();
+    expect(cancelSendsMock).not.toHaveBeenCalled();
+    expect(db.campaign.delete).not.toHaveBeenCalled();
   });
 });
 

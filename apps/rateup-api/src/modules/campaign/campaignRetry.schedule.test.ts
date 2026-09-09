@@ -33,27 +33,42 @@ const NIGHTS = { quietHoursStart: "22:00", quietHoursEnd: "08:00" };
 const DAY = 24 * 60;
 
 describe("smartOffsetMinutes", () => {
-  test("divides the window geometrically from the settle delay to its end", () => {
-    // 3 days, 3 attempts: 45m, then 7h21m, then the deadline itself.
-    expect(smartOffsetMinutes(3, 3 * DAY)).toEqual([45, 441, 4320]);
+  test("reproduces the 45m / 4h / 12h cadence on a 12-hour window", () => {
+    // The shape the ladder is taken from: 45m is a sixteenth of twelve hours and
+    // 4h is a third of it, so the reference window returns the cadence exactly.
+    expect(smartOffsetMinutes(3, 12 * 60)).toEqual([45, 240, 720]);
+  });
+
+  test("stretches the same proportions across a longer window", () => {
+    // 3 days: a sixteenth is 4h30m and a third is 24h. The shape is unchanged —
+    // only its scale — which is what separates this from the geometric division
+    // it replaced, where three days came out 45m / 7h21m / 3d.
+    expect(smartOffsetMinutes(3, 3 * DAY)).toEqual([270, 1440, 4320]);
   });
 
   test("spends a longer window instead of finishing early in it", () => {
-    // The whole point of the change: 7 days of window is 7 days of retrying,
-    // not twelve hours of retrying and six days of nothing.
+    // 7 days of window is 7 days of retrying, not twelve hours of retrying and
+    // six days of nothing.
     const [first, , last] = smartOffsetMinutes(3, 7 * DAY);
-    expect(first).toBe(45);
+    expect(first).toBe(Math.round((7 * DAY) / 16));
     expect(last).toBe(7 * DAY);
   });
 
-  test("puts a single attempt at the settle delay, not at the deadline", () => {
-    // One attempt is one chance, and most frequency caps lift within the hour.
-    // Spending it a week out would be spending it on the least likely moment.
-    expect(smartOffsetMinutes(1, 7 * DAY)).toEqual([45]);
+  test("spends a single attempt at the deadline", () => {
+    // One attempt is one chance. The window end is the moment a frequency cap is
+    // likeliest to have lifted, and a window the customer chose is one to use.
+    expect(smartOffsetMinutes(1, 7 * DAY)).toEqual([7 * DAY]);
   });
 
-  test("splits two attempts across the settle delay and the deadline", () => {
-    expect(smartOffsetMinutes(2, 3 * DAY)).toEqual([45, 4320]);
+  test("drops the middle rung for two attempts, keeping both ends", () => {
+    expect(smartOffsetMinutes(2, 12 * 60)).toEqual([45, 720]);
+    expect(smartOffsetMinutes(2, 3 * DAY)).toEqual([270, 4320]);
+  });
+
+  test("never places an attempt before the settle delay", () => {
+    // A sixteenth of a two-hour window is seven minutes, and at seven minutes the
+    // messages this would retry are still SENT — there is nothing to re-attempt.
+    expect(smartOffsetMinutes(3, 120)[0]).toBe(45);
   });
 
   test("holds every attempt at the settle delay when the window is shorter than it", () => {
@@ -138,17 +153,27 @@ describe("nextAttemptAt", () => {
   const ANCHOR = new Date("2026-03-01T10:00:00Z");
   const threeDays = policy({ windowEndsAt: new Date("2026-03-04T10:00:00Z") });
 
-  test("front-loads the schedule and ends it on the window", () => {
-    expect(nextAttemptAt(threeDays, 1, ANCHOR).toISOString()).toBe("2026-03-01T10:45:00.000Z");
-    expect(nextAttemptAt(threeDays, 2, ANCHOR).toISOString()).toBe("2026-03-01T17:21:00.000Z");
+  test("lays the ladder's proportions across the window and ends on it", () => {
+    // A sixteenth, then a third, then the deadline — 4h30m, 24h, 3d.
+    expect(nextAttemptAt(threeDays, 1, ANCHOR).toISOString()).toBe("2026-03-01T14:30:00.000Z");
+    expect(nextAttemptAt(threeDays, 2, ANCHOR).toISOString()).toBe("2026-03-02T10:00:00.000Z");
     expect(nextAttemptAt(threeDays, 3, ANCHOR).toISOString()).toBe("2026-03-04T10:00:00.000Z");
+  });
+
+  test("reads as the familiar cadence on a twelve-hour window", () => {
+    const halfDay = policy({ windowEndsAt: new Date("2026-03-01T22:00:00Z") });
+    expect(nextAttemptAt(halfDay, 1, ANCHOR).toISOString()).toBe("2026-03-01T10:45:00.000Z");
+    expect(nextAttemptAt(halfDay, 2, ANCHOR).toISOString()).toBe("2026-03-01T14:00:00.000Z");
+    expect(nextAttemptAt(halfDay, 3, ANCHOR).toISOString()).toBe("2026-03-01T22:00:00.000Z");
   });
 
   test("stretches with the window rather than ignoring it", () => {
     const sevenDays = policy({ windowEndsAt: new Date("2026-03-08T10:00:00Z") });
     expect(nextAttemptAt(sevenDays, 3, ANCHOR).toISOString()).toBe("2026-03-08T10:00:00.000Z");
-    // ...and the first attempt is still 45 minutes out, whatever the window.
-    expect(nextAttemptAt(sevenDays, 1, ANCHOR).toISOString()).toBe("2026-03-01T10:45:00.000Z");
+    // The first attempt moves out with the window rather than staying pinned to
+    // 45 minutes: a sixteenth of seven days is 10h30m. This is what "proportional"
+    // costs, and it is the point — the shape is the same at every scale.
+    expect(nextAttemptAt(sevenDays, 1, ANCHOR).toISOString()).toBe("2026-03-01T20:30:00.000Z");
   });
 
   test("re-divides when the campaign is given fewer attempts", () => {
@@ -165,12 +190,13 @@ describe("nextAttemptAt", () => {
   });
 
   test("holds the schedule back when the previous attempt drained late", () => {
-    // Attempt 2's absolute slot is 17:21, but attempt 1 only drained at 17:00, so
-    // its statuses have not landed. The settle delay wins and the rest of the
-    // schedule moves with it instead of stacking on top of it.
-    const drained = new Date("2026-03-01T17:00:00Z");
-    expect(nextAttemptAt(threeDays, 2, ANCHOR, drained).toISOString()).toBe(
-      "2026-03-01T17:45:00.000Z",
+    // On a 12-hour window attempt 2's absolute slot is 14:00, but attempt 1 only
+    // drained at 15:00, so its statuses have not landed. The settle delay wins and
+    // the schedule moves with it instead of stacking on top of it.
+    const halfDay = policy({ windowEndsAt: new Date("2026-03-01T22:00:00Z") });
+    const drained = new Date("2026-03-01T15:00:00Z");
+    expect(nextAttemptAt(halfDay, 2, ANCHOR, drained).toISOString()).toBe(
+      "2026-03-01T15:45:00.000Z",
     );
   });
 
