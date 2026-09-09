@@ -9,7 +9,7 @@ import ScreenShot from "@/components/Screenshot";
 The **Board** is the default view: your columns left to right, and a card for every lead sitting in
 one of them.
 
-<ScreenShot src="/docs/screenshots/pipelines/pipeline-board.png" alt="The board, with the Open band and the start of the Won band" />
+<ScreenShot src="/docs/screenshots/pipelines/pipelines-board.png" alt="The board, with the Open band and the start of the Won band" />
 
 ---
 
@@ -34,14 +34,28 @@ The header carries everything you need to judge a column without opening anythin
 
 | Element | Meaning |
 |---------|---------|
-| **Name** and count | The column, and how many leads are in it |
-| **{`{n}`}% likely** | The stage's win probability, used by the [Forecast](/pipeline/forecast) |
-| **{`{n}`}d avg** | Average days its leads have sat in this column |
+| **Name** and count | The column, and how many leads sit in it — its own total, not the cards loaded so far |
+| **{`{n}`}d avg in stage** | Average days its leads have sat in this column. Hidden while a filter is on |
 | Red triangle and a number | How many of them have gone quiet — see below |
-| **+** | Adds a lead straight into this column |
+| **+** | Adds a lead straight into this column. Only on an open column |
 
 A trophy on a **Won** column and a cross on a **Lost** column mark the ones that close a lead.
 An empty column reads *"Drop a lead here"*.
+
+---
+
+## How a Column Loads
+
+Each column asks the server for its own cards, fifty at a time, and fetches the next page as you
+scroll to the bottom of it. Nothing is counted from what is on screen: the header count, the red
+triangle, the attention chip and every sidebar row come from the board's own totals, so a column
+that has loaded one page still says how many leads it really holds.
+
+While a filter or a search is on, the header count and the triangle describe what actually matched
+rather than putting an unrelated total above the cards, and the average is hidden.
+
+A page that fails to load says *"Could not load this column."* with a **Try again** underneath, so a
+broken request never reads as an empty column.
 
 ---
 
@@ -119,13 +133,17 @@ those leads.
 
 | Control | Where | Does |
 |---------|-------|------|
-| **Search leads** | Header | Matches the lead's name and company |
+| **Search leads** | Header | Matches the lead's name, company and phone number. Two characters minimum |
 | Assignee avatars | Header | Click one to show only their leads; click again to clear |
 | **Views** | Sidebar | The six saved filters |
-| **Stages**, **Teams**, **Sources** | Sidebar | Click to apply, click the active one again to clear |
+| **Lead stages**, **Teams**, **Sources** | Sidebar | Click to apply, click the active one again to clear |
 
-The header badge reads **{`{n}`} open · {`{n}`} showing**, so you can always see how much a filter
-is hiding.
+Filtering runs on the server, so a facet narrows what each column asks for rather than hiding cards
+it already has. The search waits for your typing to settle, and a single character is ignored — it
+would match nearly every lead on the board.
+
+The header badge reads **{`{n}`} open · {`{n}`} leads**, and both numbers describe the whole board
+whatever is filtered — it is the board's size, not the size of what you are looking at.
 
 <Callout type="info">
   **All leads on board** means all of them, won and lost included. Hiding closed leads made the Won
@@ -141,6 +159,8 @@ is hiding.
 | *This board has no columns* | Every stage was deleted | **Open settings** and add one, with a status |
 | A card will not drop on a column | It was released between columns | Drop it on the column body, not the gap |
 | A column looks empty but the sidebar counts leads | A facet or search is on | Clear the active sidebar row, or empty the search |
+| *Could not load this column.* | That column's request failed | **Try again** in the column; the rest of the board is unaffected |
+| Typing one letter changes nothing | A search needs two characters | Type one more |
 | No **need attention** chip despite old leads | **Flag stalled leads** is off, or the stage has no rotting window | [Settings](/pipeline/settings) and [Stages](/pipeline/stages) |
 
 ---
