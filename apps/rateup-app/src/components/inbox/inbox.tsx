@@ -5,14 +5,12 @@ import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/type
 import { useFilteredContacts } from "@/api/inbox/contacts/contacts.query";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
-import { useChatFilterStore, useOpenChatStore, useSelectedContactStore } from "@/utils/store";
+import { useChatFilterStore, useSelectedContactStore } from "@/utils/store";
 import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
 } from "@/api/inbox/messages/utils";
-import { useWsData } from "@/context/UserContext";
 import { useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
@@ -39,7 +37,6 @@ export default function Inbox({
   const filter = useChatFilterStore((state) => state.filter);
   const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const mergedFilter = {
     ...filter,
@@ -49,7 +46,6 @@ export default function Inbox({
     status: statusOverride !== undefined ? statusOverride : filter.status,
     favorite,
   };
-  const { wsData } = useWsData();
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
 
@@ -59,7 +55,6 @@ export default function Inbox({
   const contactsByFilter = useContactsStore((state) => state.contactsByFilter);
   const contactsById = useContactsStore((state) => state.contactsById);
   const addContactsForFilter = useContactsStore((state) => state.addContactsForFilter);
-  const updateContactById = useContactsStore((state) => state.updateContactById);
   const currentUser = useContactsStore((state) => state.currentUser);
   const { colorScheme } = useColorScheme();
   const screenBg = colorScheme === "dark" ? Colors.dark.bg : Colors.light.bg;
@@ -130,49 +125,10 @@ export default function Inbox({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, filterKey]);
 
-  // Websocket hook
-  useEffect(() => {
-    if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
-      const contactId = wsData.inbox.contact.id;
-      const isUnread =
-        Array.isArray(wsData.inbox?.message.readUsers) &&
-        wsData.inbox.message.readUsers.length === 0 &&
-        wsData.inbox.message.sendBy === null;
-
-      const isOpenInThread = useOpenChatStore.getState().openChatId === contactId;
-
-      updateContactById(
-        contactId,
-        (oldContact) => {
-          if (!oldContact) return oldContact;
-          return {
-            ...oldContact,
-            ...wsData.inbox?.contact,
-            lastMessage: wsData.inbox?.message,
-            lastReceivedMessageTimeStamp: wsData.inbox?.contact.lastReceivedMessageTimeStamp,
-            // `isOpenInThread` mirrors rateup-ui's realtime handler: a message
-            // that lands while you are looking at that very chat is already
-            // read, so counting it would put a badge on the row you are
-            // standing in — and nothing would clear it until you left and came
-            // back.
-            unReadMessageCount: isOpenInThread
-              ? 0
-              : isUnread
-                ? (oldContact.unReadMessageCount ?? 0) + 1
-                : (oldContact.unReadMessageCount ?? 0),
-          };
-        },
-        isUnread,
-      );
-
-      if (wsData.inbox.message) {
-        const msg = wsData.inbox.message as any;
-        const k = `${contactId}_${msg.sourceIdentifier || msg.id}`;
-        useMessagesStore.getState().mergeMessages(k, [msg], false);
-        useMessagesStore.getState().mergeMessages(`${contactId}_all`, [msg], false);
-      }
-    }
-  }, [wsData, queryClient, updateContactById]);
+  // NB: no websocket effect here. Inbound `inbox` frames are folded into the
+  // stores by `applyInboxUpdate` in UserContext, straight off the socket — an
+  // effect keyed on `wsData` dropped every frame but the last of a React batch,
+  // and never ran at all while this screen was unmounted.
 
   const contactIds = contactsByFilter[filterKey] || [];
   let displayedContacts = contactIds.map((id) => contactsById.get(id)).filter(Boolean);

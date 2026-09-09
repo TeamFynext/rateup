@@ -6,6 +6,9 @@ import { getMobileId } from "../util";
 import SuperTokens from "supertokens-react-native";
 import { isEqual } from "lodash";
 import { mergeStats, useContactsStore, useMessagesStore } from "../store/inboxStore";
+import { useInboxCountStore } from "../store/inboxCountStore";
+import { useOpenChatStore } from "../utils/store";
+import { WaMessageAssignStatus } from "../api/inbox/types";
 
 interface UserContextProps {
   user: any;
@@ -55,6 +58,94 @@ const applyMessageStatusUpdate = (
     ...c,
     lastMessage: { ...c.lastMessage, stats: mergedStats },
   }));
+};
+
+/**
+ * Fold an inbound `inbox` frame into the contacts/messages stores.
+ *
+ * Applied straight off the socket rather than through `wsData` for the same
+ * reason `applyMessageStatusUpdate` is: `setWsData` keeps only the last frame of
+ * a React batch, so two messages arriving together left the earlier one out of
+ * the list entirely. It also has to land while the inbox screen is unmounted —
+ * previously this lived in an effect inside <Inbox>, so anything that arrived
+ * while the user was on another tab was lost until a manual refresh.
+ */
+const applyInboxUpdate = (inbox: orgWsMessage["inbox"] | undefined) => {
+  const contactId = inbox?.contact?.id;
+  const message = inbox?.message as any;
+  if (!contactId) return;
+
+  const contactsStore = useContactsStore.getState();
+  const isUnread =
+    Array.isArray(message?.readUsers) && message.readUsers.length === 0 && message?.sendBy === null;
+  const isOpenInThread = useOpenChatStore.getState().openChatId === contactId;
+  const isKnown = contactsStore.contactsById.has(contactId);
+
+  if (isKnown) {
+    contactsStore.updateContactById(
+      contactId,
+      (oldContact) => {
+        if (!oldContact) return oldContact;
+        return {
+          ...oldContact,
+          ...inbox?.contact,
+          lastMessage: message,
+          lastReceivedMessageTimeStamp: inbox?.contact?.lastReceivedMessageTimeStamp,
+          // `isOpenInThread` mirrors rateup-ui's realtime handler: a message
+          // that lands while you are looking at that very chat is already
+          // read, so counting it would put a badge on the row you are
+          // standing in — and nothing would clear it until you left and came
+          // back.
+          unReadMessageCount: isOpenInThread
+            ? 0
+            : isUnread
+              ? (oldContact.unReadMessageCount ?? 0) + 1
+              : (oldContact.unReadMessageCount ?? 0),
+        };
+      },
+      isUnread,
+    );
+  } else if (contactsStore.currentFilterKey) {
+    // A message that opens a ticket the list has never seen. `updateContactById`
+    // bails on an unknown contact, so without this branch the very first message
+    // of a new conversation never appeared in Open — only after a refresh.
+    // rateup-ui's socket handler does exactly this.
+    contactsStore.addContactsForFilter(
+      contactsStore.currentFilterKey,
+      [
+        {
+          ...inbox?.contact,
+          lastMessage: message,
+          lastReceivedMessageTimeStamp:
+            inbox?.contact?.lastReceivedMessageTimeStamp ?? message?.waCreatedAt,
+          unReadMessageCount: isOpenInThread ? 0 : isUnread ? 1 : 0,
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+      true,
+    );
+
+    // Optimistic; the next `/count` fetch overwrites it with the real figure.
+    const status = inbox?.contact?.waMessageAssignStatus;
+    const { bumpCounts } = useInboxCountStore.getState();
+    if (status === WaMessageAssignStatus.ASSIGNED || status === WaMessageAssignStatus.UNASSIGNED) {
+      bumpCounts({ openCount: 1, allCount: 1 });
+    } else if (status === WaMessageAssignStatus.CLOSED) {
+      bumpCounts({ closedCount: 1, allCount: 1 });
+    } else {
+      bumpCounts({ allCount: 1 });
+    }
+    if (status === WaMessageAssignStatus.UNASSIGNED) bumpCounts({ newCount: 1 });
+  }
+
+  if (!message) return;
+  const messagesStore = useMessagesStore.getState();
+  messagesStore.mergeMessages(
+    `${contactId}_${message.sourceIdentifier || message.id}`,
+    [message],
+    false,
+  );
+  messagesStore.mergeMessages(`${contactId}_all`, [message], false);
 };
 
 const UserProvider = ({ children }: { children: ReactNode }) => {
@@ -112,6 +203,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         const message = JSON.parse(event.data);
         if (message?.type === "message_status_update") {
           applyMessageStatusUpdate(message.message_status_update);
+        }
+        if (message?.type === "inbox") {
+          applyInboxUpdate(message.inbox);
         }
         setWsData(message);
       } catch (err) {
