@@ -110,7 +110,6 @@ export function WhatsappTemplateById({
 
   templateId = templateId === "create" ? "" : templateId;
   const { data: editingItem, isPending } = useWaTemplateById(templateId);
-  const [selectedText, setSelectedText] = useState("");
   /** Undo stack for the body text. */
   const contentHistory = useRef<string[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -562,11 +561,17 @@ export function WhatsappTemplateById({
       );
     }
   }
-  const handleSelect = () => {
-    const selection = window.getSelection();
-    const selectedText = selection?.toString();
-    setSelectedText(selectedText?.trim() ?? "");
+  /** Writes the body and restores the caret, which `setValue` would otherwise send to the end. */
+  const writeBody = (text: string, cursor: number) => {
+    setTemplateValue("body", text);
+    requestAnimationFrame(() => {
+      const input = inputRef.current;
+      if (!input) return;
+      input.focus();
+      input.setSelectionRange(cursor, cursor);
+    });
   };
+
   const getNextVariable = () => {
     const variables = parseStringWithVariables(values.body);
     if (variables.length === 0) return "{{1}}";
@@ -575,16 +580,21 @@ export function WhatsappTemplateById({
     return `{{${max + 1}}}`;
   };
   const applyFormatting = (style: string) => {
-    const content = values.body;
     if (style.startsWith("{{")) {
       insertValue(getNextVariable());
       return;
     }
-    if (!selectedText) return;
-    const formattedText = `${style}${selectedText}${style}`;
-    contentHistory.current.push(content);
-    const newContent = content.replace(selectedText, formattedText);
-    setTemplateValue("body", newContent);
+    const input = inputRef.current;
+    if (!input) return;
+    // The textarea keeps its selection range after focus moves to the toolbar button,
+    // so the range is read from the element rather than mirrored into state.
+    const { selectionStart: start, selectionEnd: end, value: text } = input;
+    if (start === end) return;
+    contentHistory.current.push(text);
+    writeBody(
+      text.slice(0, start) + style + text.slice(start, end) + style + text.slice(end),
+      end + style.length * 2,
+    );
   };
 
   const undo = () => {
@@ -600,13 +610,7 @@ export function WhatsappTemplateById({
     const start = input.selectionStart;
     const end = input.selectionEnd;
     const text = input.value;
-    const newText = text.substring(0, start) + value + text.substring(end);
-    setTemplateValue("body", newText);
-    const newCursorPosition = start + value.length;
-    requestAnimationFrame(() => {
-      input.setSelectionRange(newCursorPosition, newCursorPosition);
-      input.focus();
-    });
+    writeBody(text.slice(0, start) + value + text.slice(end), start + value.length);
   };
   const handleMenuSelection = (e: string, text: string = "") => {
     let newObject;
@@ -699,6 +703,7 @@ export function WhatsappTemplateById({
     removeButton(index);
   };
   const dynamicVariables = parseStringWithVariables(values.body);
+  const { ref: registerBodyRef, ...bodyField } = registerField("body");
 
   const requiredIcon = (
     <sup>
@@ -719,27 +724,31 @@ export function WhatsappTemplateById({
   const messageContent = (
     <div className="flex flex-col p-4">
       <ResponseMessageContainer backgroundColor={bubbleBg}>
-        <div>
-          <p className="text-xs">
-            {translations("ORDER")} #{"{{Order number}}"}
-          </p>
-          <Separator className="border-dashed" />
+        {/* The order card is part of the message only for the order flows; every other
+            template type is header + body + footer + buttons. */}
+        {(isOrderCreate || values.templateType === TemplateType.PAYMENT_CONFIRMATION) && (
+          <div>
+            <p className="text-xs">
+              {translations("ORDER")} #{"{{Order number}}"}
+            </p>
+            <Separator className="border-dashed" />
 
-          <div className="flex items-center">
-            <IconImageInPicture height={50} size={32} />
-            <div>
-              <p className="text-xs">{"{{Product name}}"}</p>
-              <p className="text-xs">
-                {translations("Quantity")} {"{{#}}"}
-              </p>
+            <div className="flex items-center">
+              <IconImageInPicture height={50} size={32} />
+              <div>
+                <p className="text-xs">{"{{Product name}}"}</p>
+                <p className="text-xs">
+                  {translations("Quantity")} {"{{#}}"}
+                </p>
+              </div>
+            </div>
+            <Separator className="border-dashed" />
+            <div className="flex items-center justify-between">
+              <p className="text-xs">{translations("Total")}</p>
+              <p className="text-xs">${"{{}}"}</p>
             </div>
           </div>
-          <Separator className="border-dashed" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs">{translations("Total")}</p>
-            <p className="text-xs">${"{{}}"}</p>
-          </div>
-        </div>
+        )}
         {HeaderWithFormatting(values?.header ?? "", values?.format ?? "")}
         <p
           style={{
@@ -1082,15 +1091,18 @@ export function WhatsappTemplateById({
                     />
                     <div className="relative">
                       <Textarea
-                        // NOTE: the `registerField` spread below also sets `ref`,
-                        // so `inputRef` stays null and `insertValue` no-ops.
-                        // Left as-is; see the migration notes.
                         className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
                         placeholder={translations("Enter the text")}
                         rows={3}
-                        onSelect={handleSelect}
                         aria-invalid={!!formErrors.body}
-                        {...registerField("body")}
+                        {...bodyField}
+                        // The toolbar inserts at the caret, so the element has to be reachable
+                        // as well as registered: `registerField` also sets `ref`, and spreading
+                        // it alone left `inputRef` null and every insert a no-op.
+                        ref={(element) => {
+                          registerBodyRef(element);
+                          inputRef.current = element;
+                        }}
                       />
                       <div className="pointer-events-none absolute right-2 bottom-2">
                         <LengthTracker length={values?.body?.length ?? 0} maxValue={1024} atStart />

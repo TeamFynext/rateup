@@ -208,6 +208,92 @@ export interface UpdateTeamDefaultInput {
   autoCreateLeads?: boolean;
 }
 
+// ------------------------------------------------------- reads & aggregates
+
+/** The saved views in the sidebar, as the API names them. */
+export type LeadFilter = "open" | "mine" | "rotting" | "noactivity" | "won" | "lost";
+
+/**
+ * Everything that narrows a lead read, sent to the server rather than applied
+ * here. A board column asks with its own `stageId`; the list view's ungrouped
+ * mode leaves it out and reads the whole board.
+ *
+ * Optional keys are absent rather than undefined — `normaliseLeadParams` builds
+ * these so two equal filters produce one cache key.
+ */
+export interface LeadListParams {
+  filter: LeadFilter;
+  search?: string;
+  stageId?: string;
+  teamId?: string;
+  source?: LeadSource;
+  assigneeId?: string;
+}
+
+/** One keyset page. `nextCursor` is null on the last one. */
+export interface LeadPage {
+  items: Lead[];
+  nextCursor: string | null;
+}
+
+/**
+ * Every count the board shows, over the whole pipeline.
+ *
+ * Unfiltered on purpose: the columns are paginated and filtered, so these cannot
+ * come from what is loaded. A column header reading 412 above fifty cards is the
+ * point — the number describes the pipeline, the cards describe the page.
+ */
+export interface PipelineStats {
+  totals: {
+    /** Every lead on the board, closed ones included. */
+    leads: number;
+    open: number;
+    won: number;
+    lost: number;
+    /** Open leads assigned to the signed-in user. */
+    mine: number;
+    rotting: number;
+    /** Open leads with no incomplete task. */
+    noactivity: number;
+    avgDaysInStage: number;
+    avgAgeDays: number;
+    /** Creation to close over won leads; null when nothing has been won. */
+    avgCycleDays: number | null;
+  };
+  stages: Array<{
+    stageId: string;
+    total: number;
+    open: number;
+    avgDaysInStage: number;
+    rotting: number;
+  }>;
+  teams: Array<{ id: string; name: string; color: string; open: number; total: number }>;
+  sources: Array<{ source: LeadSource; open: number; total: number }>;
+  assignees: Array<{
+    /** Null on the unassigned bucket. */
+    assigneeId: string | null;
+    name: string | null;
+    profilePhoto: string | null;
+    open: number;
+    won: number;
+    /** Won plus lost — what `won` is a share of. */
+    closed: number;
+    stalled: number;
+  }>;
+}
+
+/** One month of the forecast: the whole count, plus a sample to show. */
+export interface ForecastBucket {
+  /** "YYYY-MM", or "unscheduled" for leads with no expected close date. */
+  key: string;
+  unscheduled: boolean;
+  count: number;
+  /** Leads weighted by their stage probability — the expected conversions. */
+  expected: number;
+  /** At most 20; `count` says how many the bucket really holds. */
+  leads: Lead[];
+}
+
 // ------------------------------------------------------------------- payloads
 
 export interface CreatePipelineInput {

@@ -38,62 +38,54 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
-    id: "2026-09-08-loyalty-giveback-on-rewards",
-    title: "Loyalty: reward prices follow your earn rate",
+    id: "2026-09-08-inbox-image-download",
+    title: "Save an image from the inbox",
     summary:
-      "The 'Your program gives back' figure now appears only where it can be honest — on the Rewards step, the review and the Overview once rewards exist. It is points valued at your best reward, so on Earning and Tiers it used to be computed from the starter rewards priced for one point per unit, whatever rate you had actually set. Those two steps now show what a purchase earns instead: your typical order and a couple of others, and on Tiers the same order tier by tier. The starter rewards themselves are priced for your earn rate the first time the Rewards step opens — set ₹100 → 10 points and a ₹150 coffee costs about 500 points, not 5,000 — and a Re-price from my earn rate button on that step brings rewards you saved earlier back to about 3% whenever you change the rate.",
+      "Images in a conversation now carry a download button — on the thumbnail itself, and again next to the close button when you open one full size. Until now the only way to keep a photo a customer had sent was to open it and fish it out of the browser, which is also what happens as a fallback if the file cannot be fetched directly. Documents and videos already had this; images were the gap.",
     publishedAt: "2026-09-08",
-    kinds: ["improvement", "fix"],
-    area: "Loyalty",
-    link: {
-      to: "/dashboard/loyalty/program",
-      search: { section: "rewards" },
-      label: "Open rewards",
-    },
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
   },
   {
-    id: "2026-09-08-loyalty-earn-rate-calculator",
-    title: "Loyalty: earning rules as spend-and-earn",
+    id: "2026-09-08-campaign-retry-failed",
+    title: "Retry a campaign's failures from Overview",
     summary:
-      "Earning rules no longer ask for points per one currency unit. Every rule — in setup, on the Program page and in the full earning-rules editor — is now written the way you would say it: spend this much, earn this many points. Type ₹100 and 10, or ₹150 and 1, and the rate underneath shows what that works out to per unit and what your typical purchase earns. Rates are stored precisely enough that ₹150 = 1 point really means one point at ₹150, not a rounded guess. The default rule has lost its multiplier: it is the base rate itself, so a multiplier there was only the rate written a second way. Extra rules keep theirs, on top of their own rate.",
+      'A campaign that has finished sending now shows its failures on Overview, with how many are worth another attempt and one button that re-sends to them — until now the only campaign-wide retry was hidden behind ticking a row in Participants. That control is still there and now does what it says: it re-attempts the recipients you ticked, while "Retry all failed" sits in the Participants header where you can find it without selecting anything first. Adding people to a campaign that already went out is clearer too: after "Send to more", the last step spells out that only the recipients it has never messaged will be sent to, and the button reads "Send to 120 new recipients" instead of "Launch campaign". Behind all of it, a fix: a message rejected the moment it was sent — including one that never reached WhatsApp at all — was stored without its error code, which is what the automatic retries are chosen by. Those failures were never retried and the campaign finished as though nothing could be done. They are now.',
     publishedAt: "2026-09-08",
-    kinds: ["improvement"],
-    area: "Loyalty",
-    link: {
-      to: "/dashboard/loyalty/program",
-      search: { section: "earning" },
-      label: "Open earning rules",
-    },
+    kinds: ["new", "improvement", "fix"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
   },
   {
-    id: "2026-09-08-loyalty-messages-tabs",
-    title: "Loyalty: one Messages page for every message",
+    id: "2026-09-08-campaign-resume-when",
+    title: "Choose when a paused campaign resumes",
     summary:
-      "Everything your loyalty program says on WhatsApp is now one page with three tabs. Automatic is what sends on its own — points earned, rewards, tier upgrades, birthdays, reminders — and each one is edited the way the setup guide does it: write the words, press Save and submit to Meta, done. No drafts, no template editor; an approved message is updated in place and reviewed again, a message still in review becomes a new version so you are never stuck waiting. A program that skipped setup gets the four standard notifications with one button. Replies is what customers get when they text you — join, points, rewards, refer, stop — with the same editor, a Write it from my program button on the welcome, and one button to add the standard five. Each reply can also carry a template for customers who have never messaged you, because plain text only reaches someone inside a 24-hour chat. Templates is the library behind both: every template with its Meta status, which event or keyword uses it, search, a status filter, Sync with Meta, a New template starter picker, and delete for anything unused. The count of templates awaiting Meta sits on Messages in the menu and on the Templates tab. Sending got smarter too: inside a 24-hour chat the text goes out as a normal message — free, and even before Meta approves the template — and the cashier receipt says which way it went; a switch in Settings turns that off. The registration link moved to Settings as a Copy registration link button with a Download QR beside it. WhatsApp Templates leaves the Loyalty menu; old links, including Commands and the old Messages sections, redirect.",
+      'Resume now asks when. A campaign paused before its send time offers that schedule back, and alongside it you can send immediately or pick a new date and time — so a schedule overtaken by events no longer means editing the campaign just to start it again. Whichever you pick, only the recipients who were never messaged are sent to. The numbers across the top of Overview changed with it: "Sent" is now "Dispatched", because it counts every message handed to WhatsApp including the ones that came back rejected, and "Delivered" below it is the one that means it arrived. "Recipients" made way for "Pending" — how many are still waiting — and "Failed" now counts recipients that are failed right now rather than every failure ever recorded, so a recipient a retry rescued no longer stays in the count forever. The failure breakdown on the Analytics tab is measured against that same number, so its shares finally add up, and the campaign export follows the page: its \"Count Sent\" column is now \"Count Dispatched\" and its \"Count Failed\" counts recipients that are failed now.',
     publishedAt: "2026-09-08",
     kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/messages", label: "Open Messages" },
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
   },
   {
-    id: "2026-09-08-loyalty-keyword-replies",
-    title: "Loyalty: keyword replies say what they are",
+    id: "2026-09-07-campaign-page-controls",
+    title: "Pause a campaign, retry one recipient",
     summary:
-      "The five replies customers get when they text you now carry their own titles — Joining the program, Checking their balance, Referring a friend, Browsing rewards, Leaving the program — so you can see at a glance which box you are typing in, with a line under each saying what it does and which values WhatsApp fills in when it sends. Each reply box is now an editor rather than a plain field: emoji, WhatsApp's own bold, italic, strikethrough and monospace formatting, an undo for the last formatting change, and one-click chips for the variables that reply is allowed to use. The welcome is written from the program you just built — your actual earn rate, your weekend or minimum-spend rules, your cheapest rewards first and the joining bonus, closing with the real word for checking a balance — and a Write it from my program button puts it back if you change the earning rules or rewards afterwards. Anything you have already saved is left exactly as you wrote it. The notifications below them get the same treatment: each one now says what WhatsApp fills into {{1}}, {{2}} and the rest — customer name, points earned, balance after — and its body is the same editor, so you can format it and drop a variable in without typing the braces.",
-    publishedAt: "2026-09-08",
-    kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/messages", label: "Open Messages" },
-  },
-  {
-    id: "2026-09-07-loyalty-program-hub",
-    title: "Loyalty: one Program page, a new Overview",
-    summary:
-      "The Loyalty menu is down from eleven entries to seven. Everything that defines what your program promises — basics, earning, tiers, rewards, messages — now lives on one Program page as five cards, each opening the same form the setup guide uses and saving on its own, with the cost estimate updating beside it as you type. Earning Rules, Rewards and Setup Guide are gone from the menu: the first two are Program sections, and while a program is still a draft the Overview carries the remaining setup steps and a Continue setup button. The Overview itself is new — what your program gives back is the headline, every number compares with the previous period and translates points into money, each chart says one thing in a sentence, and a short what-to-do-next list names the figure that triggered it and links to the fix. The cashier now opens on your recent customers, registers a new customer on the spot, previews the points before you give them, and ends every action with a receipt showing the new balance and the WhatsApp message that went out; a full-screen version for a staff device is one link away. Transactions and Approvals are one page, Activity, with a Pending filter and inline approve and reject. Commands, WhatsApp Templates and the notification settings are one page, Messages, with the registration link and QR at the top. Settings keeps only program status, approvals, integrations, points expiry and the danger zone. Old links redirect.",
+      'A sending campaign can now be paused and picked back up: Pause takes the recipients it has not reached off the queue, and Resume sends to exactly those, so nobody is messaged twice. A campaign paused before its send time goes back on that schedule when resumed, rather than out immediately. A recipient that failed offers "Retry now" in the Participants tab, so you can send to one person again without resending the campaign; recipients who were reached still open in the inbox as before. The campaign page also has a refresh button — delivery receipts and automatic retries land while you are looking at it — and the "Next batch" card now shows a campaign scheduled for later, not only a booked retry, with the date it goes out and a Cancel schedule button on it.',
     publishedAt: "2026-09-07",
     kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-06-campaign-wizard",
+    title: "Campaigns: a guided setup, and retries",
+    summary:
+      "Creating a campaign is now a six-step flow you can leave and come back to — name, template, audience, schedule and retries in one place, saved as a draft as you go, with a live preview of the message as it will arrive and a test send before you commit. The Audience step shows who is already on the campaign next to what you are adding, and either can be taken off from there — \"Send to more\" on a campaign opens it, replacing the old add-participants dialog. Messages Meta blocks with a frequency cap are re-sent automatically. The campaign page is rebuilt around that: Overview shows the next attempt and what has happened so far, Participants shows every recipient's attempt history and why any of them failed, and a new Analytics tab has the delivery funnel, a failure breakdown by Meta error code, and what each send and retry actually recovered. Campaign status now reads the way you'd say it — Draft, Scheduled, Sending, Paused, Completed — on the cards, the campaign page and the status filter, and it is finally accurate: a campaign you are still building stays a draft instead of showing as paused, and one that has sent everything says so instead of sending forever.",
+    publishedAt: "2026-09-06",
+    kinds: ["new", "improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Create a campaign" },
   },
   {
     id: "2026-08-31-channels-page-rebuilt",
@@ -184,60 +176,6 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new", "improvement"],
     area: "Billing",
     link: { to: "/dashboard/settings/billing", label: "Open billing" },
-  },
-  {
-    id: "2026-08-31-loyalty-earning-rules-rework",
-    title: "Earning Rules now shows what your program costs",
-    summary:
-      'The Earning Rules page never showed your base earning rule — the one number every purchase is scored on — so it could only be changed by rerunning setup. It is now the first thing on the page, and editable, including the points earned per unit spent. Tiers get the same on/off switch as setup, and turning it off now genuinely stops tier earning rather than only stopping promotions. Above both sits the same live cost estimate you saw during setup, which now accounts for tiers: a tier that earns at a multiple raises what you give back, and the estimate says so instead of quoting only the base rate. New tiers are also created at 1x rather than 10x, and the tier rate reads as a multiplier ("2x the base rate") rather than a points-per-currency figure it never was. The ambiguous Add Rule button is gone, replaced by Add tier and Add earning rule in the sections they belong to.',
-    publishedAt: "2026-08-31",
-    kinds: ["improvement", "fix"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/earning-rules", label: "Open earning rules" },
-  },
-  {
-    id: "2026-08-30-loyalty-reward-examples-page",
-    title: "Reward examples on the Rewards page too",
-    summary:
-      "Create Reward on the Rewards page now opens the same picker as setup: reward types with worked examples, each priced against your typical order so it lands where a loyalty program should. Pick one and the create form opens prefilled, with every field still yours to change before it goes live — or start blank as before. Free Gifts gets the picker too, offering the free-item examples. Typical order value has also moved into loyalty settings, so the cost estimates work whether or not you went through setup.",
-    publishedAt: "2026-08-30",
-    kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/rewards", label: "Open rewards" },
-  },
-  {
-    id: "2026-08-30-loyalty-reward-types",
-    title: "Free items and cash-off rewards in loyalty setup",
-    summary:
-      "Setup could only really offer a percentage discount — everything else meant finishing the wizard and hunting through the Rewards page. Add reward now opens a picker with all three kinds: something free, a percentage off, or a flat amount off, each with examples already priced against your typical order so they land where a loyalty program should. Pick one and edit anything, including switching a reward from one kind to another. Removing or renaming a reward in setup now does what it says: renaming updates the reward instead of quietly creating a second one, and removing takes it out (a reward customers already hold is retired rather than deleted).",
-    publishedAt: "2026-08-30",
-    kinds: ["new", "improvement", "fix"],
-    area: "Loyalty",
-    link: {
-      to: "/dashboard/loyalty/onboarding",
-      search: { step: "rewards" },
-      label: "Add a reward",
-    },
-  },
-  {
-    id: "2026-08-30-loyalty-giveback",
-    title: "See what your loyalty program costs you",
-    summary:
-      "Setting an earn rate and a reward price told you nothing about what the two add up to. Loyalty setup now shows what share of revenue your program gives back, live as you type, with the arithmetic spelled out — and warns when it is more than a typical margin can carry. Each reward carries its own line too, in setup and on the Rewards page: what it is worth in cash, what a customer spends to earn it, and the percentage that works out to. Setup asks for a typical order value to work from, and the starter packs have been repriced — several were giving away more than they took in.",
-    publishedAt: "2026-08-30",
-    kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/onboarding", label: "Open loyalty setup" },
-  },
-  {
-    id: "2026-08-21-loyalty-guided-setup",
-    title: "Guided setup for your loyalty program",
-    summary:
-      "Building a loyalty program used to mean piecing it together across five screens with no idea what good numbers look like. There is now a guided setup that does it in six steps: pick your kind of business and it fills in points, tiers, rewards and WhatsApp messages tuned for it, which you accept or edit as you go. Everything saves as you go and nothing reaches customers until you activate, so you can stop halfway and pick it up later. Loyalty steps have moved out of the general setup checklist, which now covers connecting RateUp itself.",
-    publishedAt: "2026-08-21",
-    kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/onboarding", label: "Set up your program" },
   },
   {
     id: "2026-08-17-pipeline-feature-access",

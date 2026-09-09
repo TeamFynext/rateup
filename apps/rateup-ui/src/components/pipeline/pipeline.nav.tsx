@@ -25,9 +25,9 @@ import {
 import type { TFunction } from "i18next";
 
 import type {
-  Lead,
   LeadSource,
   PipelineDetail,
+  PipelineStats,
   PipelineSummary,
 } from "@/backend/pipeline/pipeline.types.ts";
 import type { NavEntry, NavProgress } from "@/components/Layout/Navbar/hooks.tsx";
@@ -37,7 +37,6 @@ import type { LeadFilter } from "@/store/pipeline.store.ts";
 
 import { PIPELINE_LIMIT_PER_ORG, SOURCE_META, STATUS_BAND } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel } from "./pipeline.labels.ts";
-import { countByStatus, isAssignedTo, isRotting, stageFacets } from "./pipeline.utils.ts";
 
 const PIPELINE_PATH = "/dashboard/pipeline";
 
@@ -88,8 +87,12 @@ export interface PipelineNavInput {
   pipelines: PipelineSummary[];
   /** The open pipeline, once loaded — needed for its stages and rotting setting. */
   pipeline: PipelineDetail | undefined;
-  /** Unfiltered leads, so a facet count never shrinks because another facet is on. */
-  leads: Lead[];
+  /**
+   * Counts over the whole board. They come from the server unfiltered, so a
+   * facet count never shrinks because another facet is on — and never reflects
+   * only the page a column happens to have loaded.
+   */
+  stats: PipelineStats | undefined;
   /** The board's live view state, so the active row matches what is on screen. */
   view: PipelineViewState;
   activePipelineId: string | undefined;
@@ -121,27 +124,12 @@ export function buildPipelineNavProgress({
   };
 }
 
-function countFor(
-  filter: LeadFilter,
-  leads: Lead[],
-  options: { rottingEnabled: boolean; currentUserId: string | undefined },
-): number {
-  switch (filter) {
-    case "open":
-      return leads.length;
-    case "mine":
-      return leads.filter(
-        (lead) => lead.status === "OPEN" && isAssignedTo(lead, options.currentUserId),
-      ).length;
-    case "rotting":
-      return leads.filter((lead) => isRotting(lead, options.rottingEnabled)).length;
-    case "noactivity":
-      return leads.filter((lead) => lead.status === "OPEN" && !lead.nextTask).length;
-    case "won":
-      return countByStatus(leads, "WON");
-    case "lost":
-      return countByStatus(leads, "LOST");
-  }
+/** A view's row count, or undefined while the counts are still loading. */
+function countFor(filter: LeadFilter, stats: PipelineStats | undefined): number | undefined {
+  if (!stats) return undefined;
+  // "All leads on board" counts every lead, which is what the board shows under
+  // that view — won and lost included.
+  return filter === "open" ? stats.totals.leads : stats.totals[filter];
 }
 
 /**
@@ -158,14 +146,12 @@ export function buildPipelineNavItems({
   t,
   pipelines,
   pipeline,
-  leads,
+  stats,
   view,
   activePipelineId,
-  currentUserId,
   setView,
   toggleFacet,
 }: PipelineNavInput): NavEntry[] {
-  const rottingEnabled = pipeline?.rottingEnabled ?? false;
   // Every non-switcher row keeps the board you are on: navigating to the bare
   // path would drop `?p=` and bounce you to the first pipeline.
   const boardHref = activePipelineId ? `${PIPELINE_PATH}?p=${activePipelineId}` : PIPELINE_PATH;
@@ -200,48 +186,44 @@ export function buildPipelineNavItems({
     title: leadFilterLabel(t, row.id),
     url: boardHref,
     icon: row.icon,
-    count: countFor(row.id, leads, { rottingEnabled, currentUserId }),
+    count: countFor(row.id, stats),
     variant: "inbox-tab",
     isActive: view.filter === row.id,
     handleClick: () => setView({ filter: row.id }),
   }));
 
-  const stageRows: NavEntry[] = (pipeline ? stageFacets(pipeline, leads) : []).map((facet) => ({
-    title: facet.name,
+  // Board order comes from the pipeline, the numbers from the counts — a column
+  // the user has emptied still lists, because the stats carry every stage.
+  const countByStage = new Map((stats?.stages ?? []).map((row) => [row.stageId, row.total]));
+
+  const stageRows: NavEntry[] = (pipeline?.stages ?? []).map((stage) => ({
+    title: stage.name,
     url: boardHref,
-    icon: STATUS_BAND[facet.status].icon,
-    count: facet.count,
+    icon: STATUS_BAND[stage.status].icon,
+    count: countByStage.get(stage.id),
     variant: "inbox-tab",
-    isActive: view.stageId === facet.id,
-    handleClick: () => toggleFacet("stageId", facet.id),
+    isActive: view.stageId === stage.id,
+    handleClick: () => toggleFacet("stageId", stage.id),
   }));
 
-  const teams = [
-    ...new Map(
-      leads.filter((lead) => lead.team).map((lead) => [lead.team!.id, lead.team!]),
-    ).values(),
-  ];
-
-  const teamRows: NavEntry[] = teams.map((team) => ({
+  const teamRows: NavEntry[] = (stats?.teams ?? []).map((team) => ({
     title: team.name,
     url: boardHref,
     icon: IconUsersGroup,
-    count: leads.filter((lead) => lead.teamId === team.id && lead.status === "OPEN").length,
+    count: team.open,
     variant: "inbox-tab",
     isActive: view.teamId === team.id,
     handleClick: () => toggleFacet("teamId", team.id),
   }));
 
-  const sources = [...new Set(leads.map((lead) => lead.source))] as LeadSource[];
-
-  const sourceRows: NavEntry[] = sources.map((source) => ({
-    title: sourceLabel(t, source),
+  const sourceRows: NavEntry[] = (stats?.sources ?? []).map((row) => ({
+    title: sourceLabel(t, row.source),
     url: boardHref,
-    icon: SOURCE_DOT[source],
-    count: leads.filter((lead) => lead.source === source && lead.status === "OPEN").length,
+    icon: SOURCE_DOT[row.source],
+    count: row.open,
     variant: "inbox-tab",
-    isActive: view.source === source,
-    handleClick: () => toggleFacet("source", source),
+    isActive: view.source === row.source,
+    handleClick: () => toggleFacet("source", row.source),
   }));
 
   return [

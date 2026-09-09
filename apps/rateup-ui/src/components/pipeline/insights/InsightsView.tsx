@@ -7,19 +7,14 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { usePipelineStatsQuery } from "@/backend/pipeline/pipeline.query.tsx";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { SOURCE_META } from "../pipeline.constants.tsx";
 import { sourceLabel } from "../pipeline.labels.ts";
-import {
-  buildFunnel,
-  buildAssigneePerformance,
-  buildSourceRows,
-  buildStallRows,
-  isRotting,
-  leadAgeDays,
-} from "../pipeline.utils.ts";
+import { buildFunnel, buildSourceRows, buildStallRows } from "../pipeline.utils.ts";
 import { StageDot } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
 import type { PipelineData } from "../usePipelineData.ts";
@@ -90,32 +85,60 @@ function Meter({
 /**
  * The pipeline's health in four panels: how leads narrow through the funnel,
  * where they stall, where they come from, and how each assignee is doing.
- * Everything is derived from the same filtered lead set the board shows.
+ *
+ * Every figure is counted on the server over the whole board, so none of it
+ * depends on which cards a column happens to have loaded — and none of it moves
+ * when the board's filters do. This answers "how is this pipeline doing", not
+ * "how is it doing under the filter I left on".
  */
 export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
   const { t } = useTranslation();
-  const { pipeline, visibleLeads } = data;
+  const { pipeline } = data;
+  const { data: stats, isPending } = usePipelineStatsQuery(pipeline?.id);
+
   if (!pipeline) return null;
 
-  const rottingEnabled = pipeline.rottingEnabled;
-  const open = visibleLeads.filter((lead) => lead.status === "OPEN");
-  const won = visibleLeads.filter((lead) => lead.status === "WON");
-  const closed = visibleLeads.filter((lead) => lead.status !== "OPEN");
-  const stalled = visibleLeads.filter((lead) => isRotting(lead, rottingEnabled));
+  if (isPending || !stats) {
+    return (
+      <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
+        <div className="mb-4 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((card) => (
+            <Skeleton key={card} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <Skeleton className="h-72 rounded-xl" />
+          <Skeleton className="h-72 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
-  const winRate = closed.length ? Math.round((won.length / closed.length) * 100) : null;
+  const rottingEnabled = pipeline.rottingEnabled;
+  const { totals } = stats;
+  const closedCount = totals.won + totals.lost;
+
+  const winRate = closedCount ? Math.round((totals.won / closedCount) * 100) : null;
   // How long a won lead took end to end, which is the number worth watching —
   // average time in stage told you how slow the board is, not how long a sale
   // takes. Null rather than 0 when nothing has been won: there is no cycle yet.
-  const cycleDays = won.length
-    ? Math.round(won.reduce((total, lead) => total + leadAgeDays(lead), 0) / won.length)
-    : null;
-  const noNextActivity = open.filter((lead) => !lead.nextTask).length;
+  const cycleDays = totals.avgCycleDays;
+  const noNextActivity = totals.noactivity;
 
-  const funnel = buildFunnel(pipeline.stages, visibleLeads);
-  const stalls = buildStallRows(pipeline.stages, visibleLeads, rottingEnabled);
-  const sources = buildSourceRows(visibleLeads);
-  const assignees = buildAssigneePerformance(visibleLeads, rottingEnabled);
+  const counts = new Map(
+    stats.stages.map((row) => [
+      row.stageId,
+      { total: row.total, open: row.open, rotting: row.rotting },
+    ]),
+  );
+
+  const funnel = buildFunnel(pipeline.stages, counts);
+  const stalls = buildStallRows(pipeline.stages, counts);
+  const sources = buildSourceRows(stats.sources);
+  const assignees = stats.assignees.map((row) => ({
+    ...row,
+    winRate: row.closed === 0 ? null : Math.round((row.won / row.closed) * 100),
+  }));
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
@@ -123,7 +146,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
         <KpiCard
           icon={IconUsers}
           tone="bg-primary/10 text-primary"
-          value={String(open.length)}
+          value={String(totals.open)}
           label={t("Leads in pipeline")}
           note={t("across {total} lead stages", { total: pipeline.stages.length })}
         />
@@ -132,7 +155,7 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           tone="bg-green-600/10 text-green-700 dark:text-green-500"
           value={winRate === null ? "—" : t("{percent}%", { percent: winRate })}
           label={t("Win rate")}
-          note={t("{won} won · {lost} lost", { won: won.length, lost: closed.length - won.length })}
+          note={t("{won} won · {lost} lost", { won: totals.won, lost: totals.lost })}
         />
         <KpiCard
           icon={IconClock}
@@ -145,13 +168,13 @@ export function InsightsView({ data }: Readonly<{ data: PipelineData }>) {
           note={
             cycleDays === null
               ? t("Nothing won yet")
-              : t("across {total} won leads", { total: won.length })
+              : t("across {total} won leads", { total: totals.won })
           }
         />
         <KpiCard
           icon={IconAlertTriangle}
           tone="bg-destructive/10 text-destructive"
-          value={String(stalled.length)}
+          value={String(totals.rotting)}
           label={t("Stalled leads")}
           note={
             rottingEnabled

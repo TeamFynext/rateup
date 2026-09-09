@@ -62,6 +62,7 @@ import { Route as AuthShopifyIndexRouteImport } from './routes/auth/shopify/inde
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
 import { Route as DashboardAutomationIndexRouteImport } from './routes/dashboard/automation/index'
 import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/campaign/index'
+import { Route as DashboardCampaignNewRouteImport } from './routes/dashboard/campaign/new'
 import { Route as DashboardCommerceIndexRouteImport } from './routes/dashboard/commerce/index'
 import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
@@ -122,6 +123,7 @@ import { Route as DashboardAnalyticsStaffidIndexRouteImport } from './routes/das
 import { Route as DashboardAnalyticsAuditLogIndexRouteImport } from './routes/dashboard/analytics/audit-log/index'
 import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
 import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
+import { Route as DashboardCampaignCampaignIdEditRouteImport } from './routes/dashboard/campaign/$campaignId/edit'
 import { Route as DashboardCommerceCatalogsIndexRouteImport } from './routes/dashboard/commerce/catalogs/index'
 import { Route as DashboardCommerceCouponsIndexRouteImport } from './routes/dashboard/commerce/coupons/index'
 import { Route as DashboardCommerceOrdersIndexRouteImport } from './routes/dashboard/commerce/orders/index'
@@ -462,6 +464,11 @@ const DashboardAutomationIndexRoute =
 const DashboardCampaignIndexRoute = DashboardCampaignIndexRouteImport.update({
   id: '/campaign/',
   path: '/campaign/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCampaignNewRoute = DashboardCampaignNewRouteImport.update({
+  id: '/campaign/new',
+  path: '/campaign/new',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardCommerceIndexRoute = DashboardCommerceIndexRouteImport.update({
@@ -806,6 +813,12 @@ const DashboardCampaignCampaignIdIndexRoute =
   DashboardCampaignCampaignIdIndexRouteImport.update({
     id: '/campaign/$campaignId/',
     path: '/campaign/$campaignId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCampaignCampaignIdEditRoute =
+  DashboardCampaignCampaignIdEditRouteImport.update({
+    id: '/campaign/$campaignId/edit',
+    path: '/campaign/$campaignId/edit',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardCommerceCatalogsIndexRoute =
@@ -1260,6 +1273,7 @@ export interface FileRoutesByFullPath {
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
+  '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
@@ -1314,6 +1328,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password/': typeof authLoginResetPasswordIndexRoute
@@ -1439,6 +1454,7 @@ export interface FileRoutesByTo {
   '/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
+  '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
@@ -1493,6 +1509,7 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/login/complete-login': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password': typeof authLoginResetPasswordIndexRoute
@@ -1627,6 +1644,7 @@ export interface FileRoutesById {
   '/(marketing)/blog/rss.xml': typeof marketingBlogRssDotxmlRoute
   '/(marketing)/blog/sitemap.xml': typeof marketingBlogSitemapDotxmlRoute
   '/(marketing)/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
+  '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
@@ -1681,6 +1699,7 @@ export interface FileRoutesById {
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/(marketing)/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/(marketing)/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/(auth)/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/(auth)/login/reset-password/': typeof authLoginResetPasswordIndexRoute
@@ -1813,6 +1832,7 @@ export interface FileRouteTypes {
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
     | '/tools/sitemap.xml'
+    | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
@@ -1867,6 +1887,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
+    | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/login/complete-login/'
     | '/login/reset-password/'
@@ -1992,6 +2013,7 @@ export interface FileRouteTypes {
     | '/blog/rss.xml'
     | '/blog/sitemap.xml'
     | '/tools/sitemap.xml'
+    | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
@@ -2046,6 +2068,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
+    | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/login/complete-login'
     | '/login/reset-password'
@@ -2179,6 +2202,7 @@ export interface FileRouteTypes {
     | '/(marketing)/blog/rss.xml'
     | '/(marketing)/blog/sitemap.xml'
     | '/(marketing)/tools/sitemap.xml'
+    | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
@@ -2233,6 +2257,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/'
     | '/(marketing)/blog/author/sitemap.xml'
     | '/(marketing)/blog/tag/sitemap.xml'
+    | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
     | '/(auth)/login/complete-login/'
     | '/(auth)/login/reset-password/'
@@ -2732,6 +2757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCampaignIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/campaign/new': {
+      id: '/dashboard/campaign/new'
+      path: '/campaign/new'
+      fullPath: '/dashboard/campaign/new'
+      preLoaderRoute: typeof DashboardCampaignNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/commerce/': {
       id: '/dashboard/commerce/'
       path: '/'
@@ -3150,6 +3182,13 @@ declare module '@tanstack/react-router' {
       path: '/campaign/$campaignId'
       fullPath: '/dashboard/campaign/$campaignId/'
       preLoaderRoute: typeof DashboardCampaignCampaignIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/campaign/$campaignId/edit': {
+      id: '/dashboard/campaign/$campaignId/edit'
+      path: '/campaign/$campaignId/edit'
+      fullPath: '/dashboard/campaign/$campaignId/edit'
+      preLoaderRoute: typeof DashboardCampaignCampaignIdEditRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/commerce/catalogs/': {
@@ -4017,6 +4056,7 @@ interface DashboardRouteRouteChildren {
   DashboardLoyaltyRouteRoute: typeof DashboardLoyaltyRouteRouteWithChildren
   DashboardMetaAgentRouteRoute: typeof DashboardMetaAgentRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardCampaignNewRoute: typeof DashboardCampaignNewRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardAutomationIndexRoute: typeof DashboardAutomationIndexRoute
   DashboardCampaignIndexRoute: typeof DashboardCampaignIndexRoute
@@ -4031,6 +4071,7 @@ interface DashboardRouteRouteChildren {
   DashboardSurveysIndexRoute: typeof DashboardSurveysIndexRoute
   DashboardTestimonialIndexRoute: typeof DashboardTestimonialIndexRoute
   DashboardWhatsappIndexRoute: typeof DashboardWhatsappIndexRoute
+  DashboardCampaignCampaignIdEditRoute: typeof DashboardCampaignCampaignIdEditRoute
   DashboardInstagramFlowbotsFlowbotIdRoute: typeof DashboardInstagramFlowbotsFlowbotIdRoute
   DashboardAnalyticsStaffidIndexRoute: typeof DashboardAnalyticsStaffidIndexRoute
   DashboardAnalyticsAuditLogIndexRoute: typeof DashboardAnalyticsAuditLogIndexRoute
@@ -4077,6 +4118,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardLoyaltyRouteRoute: DashboardLoyaltyRouteRouteWithChildren,
   DashboardMetaAgentRouteRoute: DashboardMetaAgentRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardCampaignNewRoute: DashboardCampaignNewRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardAutomationIndexRoute: DashboardAutomationIndexRoute,
   DashboardCampaignIndexRoute: DashboardCampaignIndexRoute,
@@ -4091,6 +4133,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSurveysIndexRoute: DashboardSurveysIndexRoute,
   DashboardTestimonialIndexRoute: DashboardTestimonialIndexRoute,
   DashboardWhatsappIndexRoute: DashboardWhatsappIndexRoute,
+  DashboardCampaignCampaignIdEditRoute: DashboardCampaignCampaignIdEditRoute,
   DashboardInstagramFlowbotsFlowbotIdRoute:
     DashboardInstagramFlowbotsFlowbotIdRoute,
   DashboardAnalyticsStaffidIndexRoute: DashboardAnalyticsStaffidIndexRoute,

@@ -24,6 +24,10 @@ import type {
   UpdateTeamDefaultInput,
   ContactStage,
   BulkStageResult,
+  ForecastBucket,
+  LeadListParams,
+  LeadPage,
+  PipelineStats,
 } from "./pipeline.types";
 
 const PIPELINE_URL = "/pipelines";
@@ -37,6 +41,19 @@ export async function fetchPipelines() {
 
 export async function fetchPipeline(pipelineId: string) {
   const { data } = await axiosClient.get<PipelineDetail>(`${PIPELINE_URL}/${pipelineId}`);
+  return data;
+}
+
+/** Every count the board shows, over the whole pipeline rather than one page. */
+export async function fetchPipelineStats(pipelineId: string) {
+  const { data } = await axiosClient.get<PipelineStats>(`${PIPELINE_URL}/${pipelineId}/stats`);
+  return data;
+}
+
+export async function fetchPipelineForecast(pipelineId: string) {
+  const { data } = await axiosClient.get<ForecastBucket[]>(
+    `${PIPELINE_URL}/${pipelineId}/forecast`,
+  );
   return data;
 }
 
@@ -138,9 +155,21 @@ export async function deleteLabel(labelId: string) {
 
 // ---------------------------------------------------------------------- leads
 
-export async function fetchLeads(pipelineId: string) {
-  const { data } = await axiosClient.get<Lead[]>(`${PIPELINE_URL}/leads`, {
-    params: { pipelineId },
+/**
+ * One keyset page of leads.
+ *
+ * The board calls this once per column (with that column's `stageId`), so a
+ * stage holding a single match still returns it — a board-wide limit would let
+ * the busiest column swallow the page.
+ */
+export async function fetchLeadPage(
+  pipelineId: string,
+  params: LeadListParams,
+  cursor?: string,
+  limit = 50,
+) {
+  const { data } = await axiosClient.get<LeadPage>(`${PIPELINE_URL}/leads`, {
+    params: { pipelineId, limit, ...(cursor ? { cursor } : {}), ...params },
   });
   return data;
 }

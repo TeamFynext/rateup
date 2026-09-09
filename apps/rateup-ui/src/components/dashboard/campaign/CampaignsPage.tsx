@@ -2,16 +2,16 @@
 // config only. Behaviour is unchanged.
 
 import { IconFilter, IconMessage, IconRotate, IconSend } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useCampaignById, useCampaignData } from "@/backend/campaign/campaign.query";
+import { useCampaignData } from "@/backend/campaign/campaign.query";
+import { useConversationLimit } from "@/backend/stats/stats.query";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError.tsx";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import CampaignCard from "@/components/Campaign/CampaignCard.tsx";
-import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
 import {
   ListPage,
@@ -22,6 +22,10 @@ import {
   ListPageSortDropdown,
 } from "@/components/common/list-page-layout.tsx";
 import { PlanUpgradeRequired } from "@/components/common/plan-upgrade-required.tsx";
+import {
+  CAMPAIGN_STATUS_FILTERS,
+  matchesCampaignStatusFilter,
+} from "@/components/dashboard/campaign/campaignStatus.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
@@ -37,56 +41,69 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { CampaignType } from "@/types/enums.ts";
+import { CampaignStatus, CampaignType } from "@/types/enums.ts";
 import type { Campaign } from "@/types/global";
 import { getAccessDenialReason, isPlanDenial } from "@/utils/apiError.ts";
 import { docsPath } from "@/utils/constants.ts";
 
-export function CampaignsPage() {
+export function CampaignsPage({
+  initialStatus,
+}: Readonly<{ initialStatus?: CampaignStatus }> = {}) {
   const uid = useId();
   const { t } = useTranslation("campaign.list");
+  // Status wording is shared with the badges on the cards, so it lives in its own namespace.
+  const { t: tStatus } = useTranslation("campaign.status");
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<CampaignType>(CampaignType.WHATSAPP);
   const [search, setSearch] = useState("");
   const [sortOption, setSortOption] = useState("latest");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>(initialStatus ?? "all");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-
-  const campaignByIdQuery = useCampaignById(selectedCampaignId ?? "");
   const whatsappQuery = useCampaignData(CampaignType.WHATSAPP);
   const dripQuery = useCampaignData(CampaignType.DRIP);
 
   const activeQuery = activeTab === CampaignType.WHATSAPP ? whatsappQuery : dripQuery;
+  const conversations = useConversationLimit();
 
   const { data, isPending, isError, error, refetch } = activeQuery;
 
+  // Edit reopens the wizard on the step that owns what is being changed —
+  // "Continue setup" on a draft and "Edit" on a live campaign are the same
+  // journey, so they land in the same place.
   const openEditCampaign = (campaign: Campaign) => {
-    setSelectedCampaignId(campaign.id);
+    void navigate({
+      to: "/dashboard/campaign/$campaignId/edit",
+      params: { campaignId: campaign.id },
+      search: { step: campaign.waTemplateId ? "review" : "template" },
+    });
   };
 
   const debouncedSearch = useDebounce(search.trim(), 200);
 
   const campaigns: Campaign[] = data?.data ?? [];
+  const draftCount = campaigns.filter((c) => c.status === CampaignStatus.DRAFT).length;
+  const summaryLine = [
+    t("{count} campaigns", { count: campaigns.length }),
+    draftCount > 0 ? t("{count} drafts", { count: draftCount }) : null,
+    conversations.hasLimit
+      ? t("{count} conversations left {period}", {
+          count: Math.max(conversations.limit - conversations.used, 0).toLocaleString(),
+          period: conversations.isAnnual ? t("this year") : t("this month"),
+        })
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const filteredCampaigns = useMemo(() => {
     const filtered = campaigns
       .filter((c: Campaign) => selectedTeam === "all" || c.teamId === selectedTeam)
-      .filter((c: Campaign) => selectedStatus === "all" || c.status === selectedStatus)
+      .filter((c: Campaign) => matchesCampaignStatusFilter(c.status, selectedStatus))
       .filter((c: Campaign) => c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()));
 
     return sortData(filtered, sortOption);
   }, [campaigns, debouncedSearch, selectedStatus, selectedTeam, sortOption]);
-
-  const openCreateCampaign = () => {
-    setIsCreateOpen(true);
-  };
-
-  const closeCreateCampaign = () => {
-    setIsCreateOpen(false);
-  };
 
   /* -------------------- HANDLERS -------------------- */
   const resetFilters = () => {
@@ -113,6 +130,14 @@ export function CampaignsPage() {
       <UnauthorizedPage />
     );
   }
+
+  // The filter reads in the same words as the badges on the cards, so picking
+  // "Sending" and scanning for it are the same vocabulary. QUEUING/DEQUEUING are
+  // left out: they are seconds-long transitions, never a set worth filtering to.
+  const statusItems = [
+    { value: "all", label: t("All Statuses") },
+    ...CAMPAIGN_STATUS_FILTERS.map(({ value, label }) => ({ value, label: tStatus(label) })),
+  ];
 
   const rightControls = (
     <Popover open={showFilters} onOpenChange={setShowFilters}>
@@ -142,25 +167,17 @@ export function CampaignsPage() {
             <Select
               value={selectedStatus}
               onValueChange={(value) => setSelectedStatus(value ?? "")}
-              items={[
-                { value: "all", label: t("All Statuses") },
-                { value: "ACTIVE", label: t("Active") },
-                { value: "INACTIVE", label: t("Inactive") },
-                { value: "DRAFT", label: t("Draft") },
-                { value: "SCHEDULED", label: t("Scheduled") },
-                { value: "COMPLETED", label: t("Completed") },
-              ]}
+              items={statusItems}
             >
               <SelectTrigger id={`${uid}-field`} className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("All Statuses")}</SelectItem>
-                <SelectItem value="ACTIVE">{t("Active")}</SelectItem>
-                <SelectItem value="INACTIVE">{t("Inactive")}</SelectItem>
-                <SelectItem value="DRAFT">{t("Draft")}</SelectItem>
-                <SelectItem value="SCHEDULED">{t("Scheduled")}</SelectItem>
-                <SelectItem value="COMPLETED">{t("Completed")}</SelectItem>
+                {statusItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
@@ -200,9 +217,21 @@ export function CampaignsPage() {
   return (
     <>
       <ListPage>
+        {/* The design's title block: what this page is, and the two numbers
+            someone opening it is usually here to check. */}
+        <div className="flex items-end justify-between gap-5 px-1 pb-1">
+          <div className="flex flex-col gap-1">
+            <h1 className="font-display text-2xl font-bold tracking-tight">{t("Campaigns")}</h1>
+            <p className="text-muted-foreground text-[13px]">{summaryLine}</p>
+          </div>
+        </div>
+
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
-            <Button onClick={openCreateCampaign} disabled={isPending}>
+            {/* Creation is a route now, not a modal: a half-built campaign is
+                a real DRAFT with a URL, so it survives a refresh and can be
+                picked up again from the list. */}
+            <Button render={<Link to="/dashboard/campaign/new" />} disabled={isPending}>
               {t("Create Campaign")}
             </Button>
             <InfoButton docUrl={`${docsPath}/campaign`} />
@@ -242,18 +271,6 @@ export function CampaignsPage() {
           />
         </ListPageContent>
       </ListPage>
-
-      {isCreateOpen && <CreateCampaignModal close={closeCreateCampaign} campaignType={activeTab} />}
-      {selectedCampaignId && campaignByIdQuery?.data && (
-        <CreateCampaignModal
-          isEdit
-          campaign={campaignByIdQuery.data}
-          close={() => {
-            setSelectedCampaignId(null);
-          }}
-          campaignType={campaignByIdQuery.data.type}
-        />
-      )}
     </>
   );
 }

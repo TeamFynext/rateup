@@ -96,7 +96,7 @@ interface MetricCardProps {
 function MetricCard({ icon, value, label, badge, color, badgeColor, iconColor }: MetricCardProps) {
   const colorMap = {
     primary:
-      "text-primary border-[#2E5BFF]/20 " +
+      "text-primary border-primary/20 " +
       "bg-linear-to-br from-blue-50 to-white " +
       "dark:from-blue-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
@@ -127,16 +127,18 @@ function MetricCard({ icon, value, label, badge, color, badgeColor, iconColor }:
   };
 
   const badgeColrMap = {
-    sent: "bg-[#2E5BFF]/10 text-[#2E5BFF] text-xs border-0",
-    delivered: "bg-green-100 text-green-700 text-xs border-0",
-    read: "bg-emerald-100 text-emerald-700 text-xs border-0",
-    pending: "bg-amber-100 text-amber-700 text-xs border-0",
-    failed: "bg-red-100 text-red-700 text-xs border-0",
+    sent: "bg-primary/10 text-primary text-xs border-0",
+    delivered:
+      "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-xs border-0",
+    read: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-xs border-0",
+    pending:
+      "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-xs border-0",
+    failed: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-xs border-0",
   };
 
   const iconColrMap = {
     sentBadge:
-      "w-10 h-10 rounded-lg bg-[#2E5BFF]/10 flex items-center justify-center group-hover:bg-[#2E5BFF]/20 transition-colors",
+      "w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors",
     delBadge:
       "w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors",
     readBadge:
