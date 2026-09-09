@@ -17,17 +17,25 @@ describe("smartOffsetMinutes", () => {
   // timeline is only worth drawing if it is the schedule that will actually run,
   // so a divergence here is a divergence the customer sees.
   test("matches the engine for the wizard's defaults", () => {
-    expect(smartOffsetMinutes(3, 3 * DAY)).toEqual([45, 441, 4320]);
+    expect(smartOffsetMinutes(3, 3 * DAY)).toEqual([270, 1440, 4320]);
+  });
+
+  test("reproduces the 45m / 4h / 12h cadence the ladder is taken from", () => {
+    expect(smartOffsetMinutes(3, 12 * 60)).toEqual([45, 240, 720]);
   });
 
   test("spends the whole window rather than finishing early in it", () => {
     const offsets = smartOffsetMinutes(3, 7 * DAY);
-    expect(offsets[0]).toBe(SETTLE_MINUTES);
+    expect(offsets[0]).toBe(Math.round((7 * DAY) / 16));
     expect(offsets[2]).toBe(7 * DAY);
   });
 
-  test("puts a single attempt at the settle delay", () => {
-    expect(smartOffsetMinutes(1, 7 * DAY)).toEqual([SETTLE_MINUTES]);
+  test("puts a single attempt at the deadline", () => {
+    expect(smartOffsetMinutes(1, 7 * DAY)).toEqual([7 * DAY]);
+  });
+
+  test("never previews an attempt before the settle delay", () => {
+    expect(smartOffsetMinutes(3, 120)[0]).toBe(SETTLE_MINUTES);
   });
 
   test("holds every attempt at the settle delay when the window cannot be divided", () => {
@@ -85,18 +93,19 @@ describe("previewSchedule", () => {
   test("reads as elapsed wall-clock time, which is what the label promises", () => {
     const from = new Date(2026, 2, 1, 10, 0);
     const attempts = previewSchedule(3, 3, null, from);
-    expect(attempts.map((a) => a.elapsedMinutes)).toEqual([45, 441, 4320]);
+    expect(attempts.map((a) => a.elapsedMinutes)).toEqual([270, 1440, 4320]);
   });
 
   test("still ends on the deadline once quiet hours are taken out of the window", () => {
-    // Quiet hours shrink the window to waking time, so the middle attempt comes
-    // sooner than it would without them — but the last one still lands on the
-    // day the customer chose, because that is what the window means.
+    // Quiet hours shrink the window to waking time, so a sixteenth of it is a
+    // smaller slice and the first attempt comes sooner in wall-clock terms than
+    // it would without them — but the last one still lands on the day the
+    // customer chose, because that is what the window means.
     const from = new Date(2026, 2, 1, 10, 0);
     const withQuiet = previewSchedule(3, 3, NIGHTS, from);
     const without = previewSchedule(3, 3, null, from);
-    expect(withQuiet[0].elapsedMinutes).toBe(45);
-    expect(withQuiet[1].elapsedMinutes).toBeLessThan(without[1].elapsedMinutes);
+    expect(withQuiet[0].elapsedMinutes).toBe(158);
+    expect(withQuiet[0].elapsedMinutes).toBeLessThan(without[0].elapsedMinutes);
     expect(withQuiet[2].elapsedMinutes).toBe(3 * DAY);
   });
 
