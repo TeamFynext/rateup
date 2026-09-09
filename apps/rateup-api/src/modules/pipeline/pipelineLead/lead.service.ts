@@ -19,6 +19,7 @@ import type {
   UpdateLeadRequestSchema,
   UpdateTaskRequestSchema,
 } from "./lead.schema.js";
+import { resolveContactForLead } from "./lead.contact.js";
 import { decodeLeadCursor, encodeLeadCursor } from "./lead.cursor.js";
 import { leadWhere } from "./lead.filters.js";
 
@@ -140,6 +141,36 @@ export class BadCursorError extends Error {
   }
 }
 
+/**
+ * One contact can hold only one lead per board — `contact_pipeline_unique` — so
+ * adding a second one for a customer who is already on it is a request that
+ * cannot be honoured, not a server fault. The handler answers 409 and says who
+ * they are and where they sit, which is what the user needs to go and find the
+ * card they already have.
+ */
+export class LeadExistsForContactError extends Error {
+  constructor(
+    readonly leadId: string,
+    readonly leadName: string,
+    readonly stageId: string,
+    readonly stageName: string,
+  ) {
+    super(`${leadName} is already on this board, in ${stageName}.`);
+    this.name = "LeadExistsForContactError";
+  }
+}
+
+/** The lead that contact already holds on this board, if they hold one. */
+async function existingLeadForContact(contactId: string, pipelineId: string) {
+  const lead = await prisma.lead.findUnique({
+    where: { contact_pipeline_unique: { contactId, pipelineId } },
+    select: { id: true, name: true, stageId: true, stage: { select: { name: true } } },
+  });
+  return lead
+    ? new LeadExistsForContactError(lead.id, lead.name, lead.stageId, lead.stage.name)
+    : null;
+}
+
 export interface LeadPage {
   items: ReturnType<typeof serialiseLead>[];
   /** Null on the last page. Feed it back as `cursor` for the next one. */
@@ -257,12 +288,42 @@ export async function createLead(
     automated?: boolean;
     /** See {@link setContactStage}. False when an integration opened this lead. */
     syncIntegrations?: boolean;
+    /**
+     * False when the caller has already resolved the contact itself, or wants a
+     * board-only lead. See {@link resolveContactForLead}.
+     */
+    linkContact?: boolean;
+    /**
+     * True from the internal callers that have just looked the lead up
+     * themselves and recover from `P2002` on their own. It only skips the
+     * duplicate query and leaves their error handling exactly as it was; the
+     * constraint still has the last word.
+     */
+    contactLeadChecked?: boolean;
   },
 ) {
   const stage = await prisma.pipelineStage.findUniqueOrThrow({
     where: { id: data.stageId },
-    select: { status: true },
+    select: { status: true, pipeline: { select: { orgId: true } } },
   });
+
+  // A typed-in number is enough to know who the customer is, so the lead gets a
+  // contact even though the caller named none.
+  const resolved =
+    !data.contactId && data.phone && data.linkContact !== false
+      ? await resolveContactForLead(stage.pipeline.orgId, data.phone, data.name, data.email ?? null)
+      : null;
+  const contactId = data.contactId ?? resolved?.contactId ?? null;
+
+  // Whichever way the contact was arrived at — named by the caller or resolved
+  // from the number — a board holds one lead per contact. Checked before the
+  // insert so the answer names the card that is in the way, instead of a bare
+  // constraint violation the handler could only report as a 500.
+  const guardContactConflict = Boolean(contactId) && !data.contactLeadChecked;
+  if (contactId && guardContactConflict) {
+    const clash = await existingLeadForContact(contactId, data.pipelineId);
+    if (clash) throw clash;
+  }
 
   // A lead opened against a contact takes that contact’s source. Every caller but
   // the WhatsApp auto-reply hardcodes MANUAL, so the board used to record nothing
@@ -280,48 +341,70 @@ export async function createLead(
     : null;
   const source = contactSourceToLeadSource(contact?.source) ?? data.source;
 
-  const created = await prisma.$transaction(async (tx) => {
-    const lead = await tx.lead.create({
-      data: {
-        pipelineId: data.pipelineId,
-        stageId: data.stageId,
-        name: data.name,
-        company: data.company,
-        phone: data.phone,
-        email: data.email,
-        source,
-        channel: data.channel,
-        teamId: data.teamId ?? null,
-        contactId: data.contactId ?? null,
-        ownerId: data.automated ? null : data.userId,
-        expectedCloseAt: data.expectedCloseAt ? new Date(data.expectedCloseAt) : null,
-        // A lead can be opened straight onto a closing column, so the stage's
-        // own status decides rather than a default of OPEN.
-        status: stage.status,
-        closedAt: stage.status === "OPEN" ? null : new Date(),
-        ...(data.labelIds?.length && {
-          labels: { createMany: { data: data.labelIds.map((labelId) => ({ labelId })) } },
-        }),
-        ...(data.assigneeIds?.length && {
-          assignees: {
-            createMany: { data: data.assigneeIds.map((assigneeId) => ({ assigneeId })) },
+  const created = await prisma
+    .$transaction(async (tx) => {
+      const lead = await tx.lead.create({
+        data: {
+          pipelineId: data.pipelineId,
+          stageId: data.stageId,
+          name: data.name,
+          company: data.company,
+          phone: data.phone,
+          email: data.email,
+          source,
+          channel: data.channel,
+          teamId: data.teamId ?? null,
+          contactId,
+          ownerId: data.automated ? null : data.userId,
+          expectedCloseAt: data.expectedCloseAt ? new Date(data.expectedCloseAt) : null,
+          // A lead can be opened straight onto a closing column, so the stage's
+          // own status decides rather than a default of OPEN.
+          status: stage.status,
+          closedAt: stage.status === "OPEN" ? null : new Date(),
+          ...(data.labelIds?.length && {
+            labels: { createMany: { data: data.labelIds.map((labelId) => ({ labelId })) } },
+          }),
+          ...(data.assigneeIds?.length && {
+            assignees: {
+              createMany: { data: data.assigneeIds.map((assigneeId) => ({ assigneeId })) },
+            },
+          }),
+        },
+        include: leadListInclude,
+      });
+
+      await tx.leadActivity.create({
+        data: {
+          leadId: lead.id,
+          userId: data.userId,
+          type: "CREATED",
+          details: {
+            sourceLabel: source,
+            ...(data.automated && { automated: true }),
+            // Worth recording: the lead put someone in the contact book who was
+            // not there before.
+            ...(resolved?.created && { contactCreated: true }),
           },
-        }),
-      },
-      include: leadListInclude,
-    });
+        },
+      });
 
-    await tx.leadActivity.create({
-      data: {
-        leadId: lead.id,
-        userId: data.userId,
-        type: "CREATED",
-        details: { sourceLabel: source, ...(data.automated && { automated: true }) },
-      },
+      return serialiseLead(lead);
+    })
+    .catch(async (error: unknown) => {
+      // The pre-check above lost a race, or two requests arrived together: either
+      // way the constraint is telling us the same thing the check would have, so
+      // it is reported the same way rather than as a 500.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002" &&
+        contactId &&
+        guardContactConflict
+      ) {
+        const clash = await existingLeadForContact(contactId, data.pipelineId);
+        if (clash) throw clash;
+      }
+      throw error;
     });
-
-    return serialiseLead(lead);
-  });
 
   // A lead opening straight onto a mapped column is as much a stage change as a
   // move is, so the CRMs hear about it the same way.
@@ -843,6 +926,7 @@ export async function setContactStage({
       userId,
       automated,
       syncIntegrations,
+      contactLeadChecked: true,
     });
   } catch (err) {
     // Two syncs racing on the same contact: the unique index rejected the loser,
@@ -1064,6 +1148,7 @@ export async function openLeadOnPipelineForContact({
     teamId: null,
     userId,
     automated: true,
+    contactLeadChecked: true,
   });
 }
 
