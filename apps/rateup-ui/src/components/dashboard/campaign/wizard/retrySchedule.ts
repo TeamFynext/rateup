@@ -4,7 +4,7 @@
  * Mirrors `campaignRetry.schedule.ts` in rateup-api — deliberately, because the
  * point of drawing the timeline is that it is what will actually happen. The two
  * are separate deployables with no shared package, so keep them in step: the
- * offsets are geometric from the settle delay to the end of the retry window,
+ * offsets are the retry ladder's proportions stretched across the retry window,
  * laid out in *waking* time so quiet hours change the shape rather than merely
  * bumping each attempt afterwards.
  */
@@ -53,22 +53,36 @@ export function quietHoursOf(start: string, end: string, on: boolean): QuietHour
 }
 
 /**
+ * The retry ladder, as fractions of the retry window. Index is attempts - 1.
+ *
+ * The product's cadence — 45m, 4h, 12h — read as proportions of a twelve-hour
+ * window rather than as absolute times: 45m is a sixteenth of it, 4h a third. The
+ * same shape then stretches to whatever window the customer picked. Fewer attempts
+ * drop rungs from the middle, never the ends.
+ */
+const SMART_LADDER: readonly (readonly number[])[] = [[1], [1 / 16, 1], [1 / 16, 1 / 3, 1]];
+
+/**
  * The waking-time offsets, one per attempt.
  *
- * Geometric from the settle delay to the end of the window: the first attempt
- * sits at 45 minutes because most frequency caps lift within the first hour, the
- * last sits on the customer's own deadline, and the ones between decay smoothly.
+ * A 12-hour window reads 45m → 4h → 12h; three days, 4h30m → 24h → 3d. Every
+ * offset is floored at the settle delay, because before it the messages a retry
+ * would target are still `SENT` and there is nothing to re-attempt yet.
  */
 export function smartOffsetMinutes(maxAttempts: number, wakingWindowMinutes: number): number[] {
   const attempts = Math.max(Math.trunc(maxAttempts), 1);
   if (!Number.isFinite(wakingWindowMinutes) || wakingWindowMinutes <= SETTLE_MINUTES) {
     return Array.from({ length: attempts }, () => SETTLE_MINUTES);
   }
-  if (attempts === 1) return [SETTLE_MINUTES];
 
-  const ratio = (wakingWindowMinutes / SETTLE_MINUTES) ** (1 / (attempts - 1));
-  const offsets = Array.from({ length: attempts }, (_, index) =>
-    Math.round(SETTLE_MINUTES * ratio ** index),
+  // The API caps attempts at 3, so the ladder covers every policy the wizard can
+  // save. The fallback keeps the preview total for anything else.
+  const fractions =
+    SMART_LADDER[attempts - 1] ??
+    Array.from({ length: attempts }, (_, index) => (1 / 16) ** (1 - index / (attempts - 1)));
+
+  const offsets = fractions.map((fraction) =>
+    Math.max(Math.round(fraction * wakingWindowMinutes), SETTLE_MINUTES),
   );
   offsets[attempts - 1] = Math.floor(wakingWindowMinutes);
   return offsets;
