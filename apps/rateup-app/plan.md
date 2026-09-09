@@ -7,6 +7,7 @@ bitmap-memory thresholds, and clean up the duplicated brand icons in
 `assets/images`.
 
 Sources:
+
 - https://docs.expo.dev/versions/latest/sdk/build-properties/
 - https://android-developers.googleblog.com/2026/08/app-quality-memory-optimization-secure-onboarding.html
 
@@ -41,13 +42,13 @@ says what to change, why, and how to verify.
 
 ## 1. Why the Play scores are what they are (root causes)
 
-| Play Console row | Current | Root cause in repo |
-|---|---|---|
-| Obfuscation percentage | 1% | The `enableMinifyInReleaseBuilds` / `enableShrinkResourcesInReleaseBuilds` flags in `app.json` lines 59-64 are **uncommitted working-tree changes**. Every build Play has analyzed was built with R8 off. |
-| Shrinking percentage | – | Same as above. |
-| Optimization percentage | – | Even with minify on, the Expo/RN template's release block uses `getDefaultProguardFile("proguard-android.txt")`, which contains `-dontoptimize`. Optimization stays at 0 until the file is switched to `proguard-android-optimize.txt`. |
-| R8 configuration | – | Requires AGP 9.0 metadata. Out of scope until React Native adopts AGP 9. Ignore. |
-| Total uncompressed DEX | 51.5 MB | No shrinking at all, plus heavy native deps (Media3 via react-native-video, Play Services via Google Sign-In, Firebase Messaging via expo-notifications). |
+| Play Console row        | Current | Root cause in repo                                                                                                                                                                                                                      |
+| ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Obfuscation percentage  | 1%      | The `enableMinifyInReleaseBuilds` / `enableShrinkResourcesInReleaseBuilds` flags in `app.json` lines 59-64 are **uncommitted working-tree changes**. Every build Play has analyzed was built with R8 off.                               |
+| Shrinking percentage    | –       | Same as above.                                                                                                                                                                                                                          |
+| Optimization percentage | –       | Even with minify on, the Expo/RN template's release block uses `getDefaultProguardFile("proguard-android.txt")`, which contains `-dontoptimize`. Optimization stays at 0 until the file is switched to `proguard-android-optimize.txt`. |
+| R8 configuration        | –       | Requires AGP 9.0 metadata. Out of scope until React Native adopts AGP 9. Ignore.                                                                                                                                                        |
+| Total uncompressed DEX  | 51.5 MB | No shrinking at all, plus heavy native deps (Media3 via react-native-video, Play Services via Google Sign-In, Firebase Messaging via expo-notifications).                                                                               |
 
 ---
 
@@ -102,7 +103,7 @@ module.exports = function withR8Optimize(config) {
     if (!config.modResults.contents.includes(from)) {
       throw new Error(
         "[withR8Optimize] Could not find proguard-android.txt in app/build.gradle. " +
-          "The template changed; update the plugin."
+          "The template changed; update the plugin.",
       );
     }
     config.modResults.contents = config.modResults.contents.replace(from, to);
@@ -170,12 +171,12 @@ native path that obfuscation can break:
 Then upload to Play internal testing and wait for the App Optimization card
 to refresh (typically 24 to 48 h). Expected:
 
-| Row | Expected after Phase A |
-|---|---|
-| Optimization percentage | 40 to 70% |
-| Obfuscation percentage | 60 to 80% |
-| Shrinking percentage | 40 to 60% |
-| Uncompressed DEX | roughly 25 to 35 MB |
+| Row                     | Expected after Phase A |
+| ----------------------- | ---------------------- |
+| Optimization percentage | 40 to 70%              |
+| Obfuscation percentage  | 60 to 80%              |
+| Shrinking percentage    | 40 to 60%              |
+| Uncompressed DEX        | roughly 25 to 35 MB    |
 
 EAS uploads `mapping.txt` automatically for AAB builds. Confirm in
 Play Console > App bundle explorer > the build > "Deobfuscation file" says
@@ -213,8 +214,8 @@ formats exist; if only progressive MP4 and HLS, use this):
     "enableADSExtension": false,
     "androidExtensions": {
       "useExoplayerRtsp": false,
-      "useExoplayerSmoothStreaming": false,
-      "useExoplayerDash": false,
+      "useExoplayerSmoothStreaming": true,
+      "useExoplayerDash": true,
       "useExoplayerHls": true
     }
   }
@@ -223,6 +224,25 @@ formats exist; if only progressive MP4 and HLS, use this):
 
 Verify video still plays in `src/components/chatDisplay/chatBody/messageBubbleTypes.tsx`
 and `src/components/webform/HappyIndex.tsx`.
+
+**DASH and SmoothStreaming must stay `true`, despite being unused.** Turning an
+extension off does not drop those classes from the app — it makes
+`react-native-video` compile its own no-op stubs at the real Media3 package
+names (`android/src/main/java/androidx/media3/exoplayer/dash/...`). Its
+`sourceSets` block excludes those stubs only when the extension is _enabled_
+(`node_modules/react-native-video/android/build.gradle`, the
+`if (ExoplayerDependencies["useExoplayerDash"]) { exclude ... }` blocks).
+
+`expo-audio` pins `androidxMedia3Version = "1.9.0"` and pulls
+`media3-exoplayer-dash` and `media3-exoplayer-smoothstreaming`
+unconditionally, so the real classes are on the classpath either way. With the
+extensions off, `androidx.media3.exoplayer.dash.DashMediaSource$Factory` is
+defined twice and `:app:minifyReleaseWithR8` fails with "Type ... is defined
+multiple times". Debug builds do not run R8, which is why this only surfaced on
+an EAS release build.
+
+RTSP and IMA stay off: `expo-audio` does not pull those two, so their stubs are
+the only copy and no collision occurs.
 
 ### B3. Remove `react-native-paper`
 
@@ -245,16 +265,16 @@ Low priority; skip if time is short.
 
 ### C1. What is there today
 
-| File | Dimensions | Alpha | Content bbox | Used by | Verdict |
-|---|---|---|---|---|---|
-| `icon.png` | 1024×1024 | opaque (white fill) | full canvas | `expo.icon` (iOS App Store icon) | **Keep.** Apple requires an opaque 1024 icon. |
-| `adaptive-icon.png` | 1024×1024 | transparent | 242..782 (540 px, inside the 66% safe zone) | `android.adaptiveIcon.foregroundImage` | **Keep.** Android needs transparent + safe-zone padding. |
-| `splash-icon.png` | 1024×1024 | transparent | 102..921 | **only** `src/app/auth/SignIn.tsx` at 64×64 | **Delete.** Not used by the splash plugin at all. Decoding a 1024² PNG (4 MB bitmap) to draw a 64 pt icon is the exact pattern the new bitmap-memory metric penalises. |
-| `logo.png` | 2500×992 | transparent | 289..2215 × 297..760 (1926×463 of content, 60% padding) | `expo-splash-screen.image` with `imageWidth: 200` | **Keep but shrink.** Source is ~4× larger than needed and mostly empty margin. |
-| `favicon.png` | 48×48 | transparent | – | `web.favicon` | Keep. Web only. |
-| `notification-icon.png` | 96×96 | white silhouette | – | `expo-notifications.icon` | **Keep.** Android requires a white-on-transparent silhouette; cannot be shared with anything else. |
-| `signinpage-icon.svg` | vector | – | – | exported as `RateLogo` in `src/constants/imageExports.ts`, **zero consumers** | Reuse it: this is the vector star mark and should replace `splash-icon.png` in SignIn. |
-| `google-icon.svg` | vector | – | – | `googleSignInScreen.tsx` | Keep. |
+| File                    | Dimensions | Alpha               | Content bbox                                            | Used by                                                                       | Verdict                                                                                                                                                                |
+| ----------------------- | ---------- | ------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon.png`              | 1024×1024  | opaque (white fill) | full canvas                                             | `expo.icon` (iOS App Store icon)                                              | **Keep.** Apple requires an opaque 1024 icon.                                                                                                                          |
+| `adaptive-icon.png`     | 1024×1024  | transparent         | 242..782 (540 px, inside the 66% safe zone)             | `android.adaptiveIcon.foregroundImage`                                        | **Keep.** Android needs transparent + safe-zone padding.                                                                                                               |
+| `splash-icon.png`       | 1024×1024  | transparent         | 102..921                                                | **only** `src/app/auth/SignIn.tsx` at 64×64                                   | **Delete.** Not used by the splash plugin at all. Decoding a 1024² PNG (4 MB bitmap) to draw a 64 pt icon is the exact pattern the new bitmap-memory metric penalises. |
+| `logo.png`              | 2500×992   | transparent         | 289..2215 × 297..760 (1926×463 of content, 60% padding) | `expo-splash-screen.image` with `imageWidth: 200`                             | **Keep but shrink.** Source is ~4× larger than needed and mostly empty margin.                                                                                         |
+| `favicon.png`           | 48×48      | transparent         | –                                                       | `web.favicon`                                                                 | Keep. Web only.                                                                                                                                                        |
+| `notification-icon.png` | 96×96      | white silhouette    | –                                                       | `expo-notifications.icon`                                                     | **Keep.** Android requires a white-on-transparent silhouette; cannot be shared with anything else.                                                                     |
+| `signinpage-icon.svg`   | vector     | –                   | –                                                       | exported as `RateLogo` in `src/constants/imageExports.ts`, **zero consumers** | Reuse it: this is the vector star mark and should replace `splash-icon.png` in SignIn.                                                                                 |
+| `google-icon.svg`       | vector     | –                   | –                                                       | `googleSignInScreen.tsx`                                                      | Keep.                                                                                                                                                                  |
 
 ### C2. Answer to "can we use one file everywhere?"
 
@@ -307,9 +327,9 @@ assets/
      margins, resize to 800 px wide (200 dp × 4 for xxxhdpi), add 10%
      padding, save as `splash-logo.png`. Update
      `expo-splash-screen.image` to point at it. Keep `imageWidth: 200`.
-   Add `"brand:assets": "node scripts/generate-brand-assets.mjs"` to
-   `package.json` scripts. Commit the generated PNGs (EAS does not run the
-   script).
+     Add `"brand:assets": "node scripts/generate-brand-assets.mjs"` to
+     `package.json` scripts. Commit the generated PNGs (EAS does not run the
+     script).
 6. Run `npx expo prebuild -p android --clean` and check
    `android/app/src/main/res/mipmap-*/` and `drawable-*/splashscreen_logo.png`
    are produced with sensible sizes. Run the app once and eyeball the
@@ -387,14 +407,14 @@ All code phases are implemented, committed, and verified locally. The
 remaining work is device testing and the builds, which need your hardware and
 EAS quota.
 
-| # | Phase | Commit | Status |
-|---|---|---|---|
-| 1 | A1-A3 R8 enablement | `a20c17b` | Done. Prebuild confirms `proguard-android-optimize.txt` and both R8 flags. |
-| 2 | A4 preview build | - | **Yours to run.** `eas build -p android --profile preview`, then the test matrix in section 2. |
-| 3 | C brand assets | `7d3397b` | Done. Bundled brand assets 1.02MB to 92KB. |
-| 4 | B Media3 + paper | `69d9b03` | Done. RTSP/SmoothStreaming/DASH/IMA off, HLS kept. |
-| 5 | D expo-image + buffers | `aaa2514` | Done. Verified with `expo export`. |
-| 6 | Production build | - | **Yours to run**, after step 2 passes. |
+| #   | Phase                  | Commit    | Status                                                                                                                                                     |
+| --- | ---------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | A1-A3 R8 enablement    | `a20c17b` | Done. Prebuild confirms `proguard-android-optimize.txt` and both R8 flags.                                                                                 |
+| 2   | A4 preview build       | -         | **Yours to run.** `eas build -p android --profile preview`, then the test matrix in section 2.                                                             |
+| 3   | C brand assets         | `7d3397b` | Done. Bundled brand assets 1.02MB to 92KB.                                                                                                                 |
+| 4   | B Media3 + paper       | `69d9b03` | Done, then partly reverted. RTSP/IMA off; DASH/SmoothStreaming had to go back on (R8 duplicate-class clash with `expo-audio`'s Media3 — see B2). HLS kept. |
+| 5   | D expo-image + buffers | `aaa2514` | Done. Verified with `expo export`.                                                                                                                         |
+| 6   | Production build       | -         | **Yours to run**, after step 2 passes.                                                                                                                     |
 
 Verified locally on every phase: `tsc --noEmit` clean, `oxlint src` clean,
 `expo prebuild -p android --clean` produces the intended native config, and

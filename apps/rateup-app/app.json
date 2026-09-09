@@ -60,7 +60,7 @@
           "android": {
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
-            "extraProguardRules": "-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile"
+            "extraProguardRules": "-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile\n\n# @expo/ui (transitive, via expo-router) ships a prebuilt AAR compiled against a\n# newer expo-modules-core than the 57.0.1 resolved here, and references\n# expo.modules.kotlin.types.ColorCompat, which that version does not define.\n# R8 aborts on the dangling reference. Nothing in src/ imports @expo/ui, so the\n# one call site (expo.modules.ui.UtilsKt.colorToComposeColorOrNull) is dead code.\n# Drop these once expo-modules-core is bumped to a version that has ColorCompat.\n-dontwarn expo.modules.kotlin.types.ColorCompat\n-dontwarn expo.modules.kotlin.types.ColorCompat$Companion"
           }
         }
       ],
@@ -72,8 +72,8 @@
           "enableADSExtension": false,
           "androidExtensions": {
             "useExoplayerRtsp": false,
-            "useExoplayerSmoothStreaming": false,
-            "useExoplayerDash": false,
+            "useExoplayerSmoothStreaming": true,
+            "useExoplayerDash": true,
             "useExoplayerHls": true
           }
         }
