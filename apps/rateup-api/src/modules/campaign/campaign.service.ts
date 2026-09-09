@@ -122,6 +122,14 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
   // The list cards show a delivered/read bar and a template name, so both come
   // back with the list. Joined rather than fetched per card: a page of 20 cards
   // would otherwise be 40 extra round trips to draw one progress bar each.
+  //
+  // The participant count is a correlated subquery, not a join. Joining
+  // CampaignParticipant and grouping produced one row per participant across
+  // every campaign in the org before aggregating them back down — an org with
+  // a few hundred campaigns of a few thousand recipients each materialised
+  // millions of rows (and grouped by the template's whole jsonb blob) to draw
+  // a count, which is what timed the list out in production. The subquery is
+  // answered per campaign from the (campaignId, status) index instead.
   const campaigns = await prisma.$queryRaw`SELECT 
     c.id,
     c."name",
@@ -139,16 +147,18 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
     COALESCE(s."totalDelivered", 0) AS "totalDelivered",
     COALESCE(s."totalRead", 0) AS "totalRead",
     COALESCE(s."totalFailed", 0) AS "totalFailed",
-    COUNT(cp.id)::INTEGER AS "campaignParticipantsCount"
+    (
+      SELECT COUNT(*)::INTEGER
+      FROM "CampaignParticipant" cp
+      WHERE cp."campaignId" = c.id
+    ) AS "campaignParticipantsCount"
   FROM "Campaign" c
   LEFT JOIN "Team" t ON c."teamId" = t.id
   LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
   LEFT JOIN "CampaignStats" s ON s."campaignId" = c.id
-  LEFT JOIN "CampaignParticipant" cp ON c.id = cp."campaignId"
   WHERE t."orgId" = ${orgId}::uuid
   ${type ? Prisma.sql`AND c.type = ${type}` : Prisma.empty}
-  GROUP BY c.id, c."name", c."createdAt", c."status", c."teamId", c."errorMessage", t."name",
-           wt."data", s."totalSend", s."totalDelivered", s."totalRead", s."totalFailed";`;
+  ORDER BY c."createdAt" DESC;`;
   return campaigns;
 }
 
