@@ -1,30 +1,19 @@
 // Ported from message-dispatcher/src/index.ts.
 //
-// Cancellation: walks the job ids recorded for each of a campaign's live send
-// sessions and removes the ones that have not started yet
-// (waiting/delayed/failed). Jobs already in flight are left to finish — a
-// half-sent message cannot be recalled anyway.
-//
-// Live sends are read from the database rather than guessed from a Redis key,
-// because a campaign can have several (a drip campaign runs one per stage) and
-// because a scheduled retry that has not been enqueued yet has no Redis set at
-// all — cancelling it is purely a status change.
+// Cancellation, as asked for by pausing a campaign. The walk that actually
+// empties the queue is `cancelPendingCampaignJobs`, shared with `deleteCampaign`
+// — deleting a campaign has to take its pending messages out of the queue too,
+// and a delete cannot wait on a job of its own to do it. What is left here is
+// the part specific to a pause: closing the send sessions and settling the
+// campaign's own status afterwards.
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../shared/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { CampaignStatus } from "../../shared/types/enum.js";
-import {
-  BATCH_SIZE,
-  campaignSendJobsKey,
-  updateCampaignStatus,
-} from "../../shared/whatsapp/index.js";
-import { waMessageQueue } from "../queues/whatsapp.queue.js";
-import prisma from "../../../utils/prisma.js";
-import {
-  cancelCampaignSends,
-  LIVE_SEND_STATUSES,
-} from "../../../modules/campaign/campaignSend.service.js";
+import { updateCampaignStatus } from "../../shared/whatsapp/index.js";
+import { cancelPendingCampaignJobs } from "../../../modules/campaign/campaignCancel.service.js";
+import { cancelCampaignSends } from "../../../modules/campaign/campaignSend.service.js";
 
 const workerConnection = baseRedis.duplicate();
 
@@ -33,65 +22,12 @@ export const campaignDequeueWorker = new Worker(
   async (job: Job) => {
     const { campaignId } = job.data;
     try {
-      const liveSends = await prisma.campaignSend.findMany({
-        where: { campaignId, status: { in: [...LIVE_SEND_STATUSES] } },
-        select: { id: true },
-      });
-
-      let removedCount = 0;
-      let lockedCount = 0;
-      for (const { id: campaignSendId } of liveSends) {
-        const key = campaignSendJobsKey(campaignSendId);
-        const jobIds = await baseRedis.smembers(key);
-
-        for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
-          const batch = jobIds.slice(i, i + BATCH_SIZE);
-          log.trace(
-            `Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(jobIds.length / BATCH_SIZE)}`,
-          );
-          const outcomes = await Promise.all(
-            batch.map(async (jobId) => {
-              try {
-                const queued = await waMessageQueue.getJob(jobId);
-                if (!queued) {
-                  // Job is gone from the queue but still in the Redis set — clean up.
-                  await baseRedis.srem(key, jobId);
-                  return "gone" as const;
-                }
-
-                const state = await queued.getState();
-                if (state === "waiting" || state === "delayed" || state === "failed") {
-                  await queued.remove();
-                  await baseRedis.srem(key, jobId);
-                  return "removed" as const;
-                }
-                return "running" as const;
-              } catch (error) {
-                // The state check and the removal are two round trips, and at
-                // concurrency 250 a job routinely starts sending in between —
-                // BullMQ then refuses to remove it ("locked by another worker")
-                // and throws. That message is already on its way to Meta and
-                // cannot be recalled, which is the same answer as the `running`
-                // branch above; the only thing that made it different was that
-                // it arrived as an exception, aborting the whole dequeue and
-                // marking a campaign FAILED for doing exactly what was asked.
-                log.warn({ err: error, jobId, campaignId }, "Left a locked campaign job alone");
-                return "locked" as const;
-              }
-            }),
-          );
-          removedCount += outcomes.filter((outcome) => outcome === "removed").length;
-          lockedCount += outcomes.filter((outcome) => outcome === "locked").length;
-        }
-      }
+      const cancelled = await cancelPendingCampaignJobs(campaignId);
 
       // Closes scheduled retries too, which never had a Redis set to walk.
       await cancelCampaignSends(campaignId, { note: "Cancelled by the campaign owner." });
 
-      log.info(
-        { campaignId, removedCount, lockedCount, sends: liveSends.length },
-        "Dequeued a campaign's pending messages",
-      );
+      log.info({ campaignId, ...cancelled }, "Dequeued a campaign's pending messages");
 
       // INACTIVE, not ACTIVE. Leaving a just-cancelled campaign ACTIVE made the
       // list show it as running with nothing left in the queue, and let the drip

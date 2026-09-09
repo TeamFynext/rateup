@@ -188,17 +188,36 @@ export function addWakingMinutes(from: Date, minutes: number, quiet: QuietHours 
 }
 
 /**
+ * The retry ladder, as fractions of the retry window. Index is attempts - 1.
+ *
+ * The shape comes from the cadence the product has always described — 45m, then
+ * 4h, then 12h — read as proportions of a 12-hour window rather than as a table
+ * of absolute times: 45m is a sixteenth of it and 4h is a third. Expressed that
+ * way the same shape stretches to whatever window the customer picked, so a
+ * 12-hour window reproduces 45m / 4h / 12h exactly and a 3-day window spreads
+ * the identical proportions across three days.
+ *
+ * A geometric division was tried first and is what this replaces. It fitted a
+ * smooth curve between the settle delay and the window end, which meant the
+ * shape changed with the window instead of stretching with it: three attempts
+ * over three days came out 45m → 7h21m → 3d, where the middle attempt has drifted
+ * far past the point the cadence puts it.
+ *
+ * Fewer attempts drop rungs from the middle, never the ends. The first attempt is
+ * the fast one that catches a lifted frequency cap; the last is the customer's own
+ * deadline, and a window they chose should be a window that gets used.
+ */
+const SMART_LADDER: readonly (readonly number[])[] = [[1], [1 / 16, 1], [1 / 16, 1 / 3, 1]];
+
+/**
  * The waking-time offsets a SMART policy produces, one per attempt.
  *
- * Geometric from the settle delay to the end of the window: the first attempt
- * sits at 45 minutes because most frequency-cap rejections clear within the
- * first hour, the last sits at the customer's own deadline because a window they
- * chose should be a window we use, and the ones between decay smoothly rather
- * than clustering at either end. Trying at +5m and +10m would just spend three
- * attempts discovering the same cap.
+ * With a 12-hour window and 3 attempts this reads 45m → 4h → 12h; with a 3-day
+ * window, 4h30m → 24h → 3d; with a single attempt, one try at the window's end.
  *
- * With a 3-day window and 3 attempts that reads 45m → 7h21m → 3d; with one
- * attempt it is a single try at the settle delay.
+ * Every offset is floored at the settle delay however short the window is, because
+ * that floor is not a preference — before it, the messages this would retry are
+ * still `SENT` and there is nothing yet to re-attempt.
  */
 export function smartOffsetMinutes(maxAttempts: number, wakingWindowMinutes: number): number[] {
   const attempts = Math.max(Math.trunc(maxAttempts), 1);
@@ -208,11 +227,16 @@ export function smartOffsetMinutes(maxAttempts: number, wakingWindowMinutes: num
   if (!Number.isFinite(wakingWindowMinutes) || wakingWindowMinutes <= settle) {
     return Array.from({ length: attempts }, () => settle);
   }
-  if (attempts === 1) return [settle];
 
-  const ratio = (wakingWindowMinutes / settle) ** (1 / (attempts - 1));
-  const offsets = Array.from({ length: attempts }, (_, index) =>
-    Math.round(settle * ratio ** index),
+  // The schema caps attempts at 3, so the ladder covers every case a policy can
+  // actually hold. The fallback keeps the function total for a caller that is not
+  // the policy — the same proportions, divided evenly across the extra rungs.
+  const fractions =
+    SMART_LADDER[attempts - 1] ??
+    Array.from({ length: attempts }, (_, index) => (1 / 16) ** (1 - index / (attempts - 1)));
+
+  const offsets = fractions.map((fraction) =>
+    Math.max(Math.round(fraction * wakingWindowMinutes), settle),
   );
   // The last offset is the window end, to the minute. Rounding it up instead
   // would put the final attempt a few seconds past the customer's own deadline,

@@ -18,10 +18,12 @@ import {
 } from "../../workers/bullmq/queues/index.js";
 import { Campaign, CampaignDripStage, Prisma } from "../../../generated/prisma/client.js";
 import {
+  cancelCampaignSends,
   createCampaignSend,
   failCampaignSend,
   LIVE_SEND_STATUSES,
 } from "./campaignSend.service.js";
+import { cancelPendingCampaignJobs } from "./campaignCancel.service.js";
 import { CampaignSendTrigger } from "../../../generated/prisma/enums.js";
 
 export interface WaMessageStats {
@@ -390,7 +392,39 @@ export async function getCampaignMessagesPerRecipient(campaignId: string): Promi
   return Math.max(campaign._count.CampaignDripStage, 1);
 }
 
+/**
+ * Delete a campaign, and take its unsent messages with it.
+ *
+ * The cancellation is not optional housekeeping. A scheduled campaign lives as
+ * one delayed job per participant in `waMessageQueue`, each carrying its own
+ * copy of the phone number, template and access token; the dispatcher never
+ * re-reads the `Campaign` row. So a bare `prisma.campaign.delete` — which is all
+ * this used to be — removed the row and left every delayed job armed. At the
+ * scheduled hour they fired and Meta delivered them: real messages, from a
+ * campaign that no longer existed, which then failed their own bookkeeping
+ * writes because `campaignParticipantId` pointed at a cascade-deleted row.
+ *
+ * Done inline rather than through the `waCampaignDequeue` job the pause path
+ * uses, because that job finds the sends to walk by querying `CampaignSend` for
+ * this campaign — rows the delete is about to cascade away. Enqueuing it and
+ * deleting would race it to its own input.
+ *
+ * Ownership is checked before anything is cancelled, so a campaign id from
+ * another org cannot stop that org's campaign on its way to a 404.
+ */
 export async function deleteCampaign(campaignId: string, orgId: string) {
+  const owned = await prisma.campaign.findFirst({
+    where: { id: campaignId, team: { orgId } },
+    select: { id: true },
+  });
+  if (!owned) throw new CampaignNotFoundError("Campaign not found");
+
+  const cancelled = await cancelPendingCampaignJobs(campaignId);
+  // Disarms any scheduled retry, which has a delayed job but no queued messages.
+  // Its rows are about to be deleted anyway; the point is the job in Redis.
+  await cancelCampaignSends(campaignId, { note: "The campaign was deleted." });
+  log.info({ campaignId, orgId, ...cancelled }, "Cancelled a deleted campaign's pending messages");
+
   return await prisma.campaign.delete({
     where: {
       id: campaignId,
