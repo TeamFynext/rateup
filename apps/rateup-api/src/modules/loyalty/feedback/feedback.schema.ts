@@ -2,16 +2,14 @@ import z from "zod";
 
 import { LoyaltyFeedbackRequestStatus } from "../../../../generated/prisma/client.js";
 import { DASHBOARD_PERIODS } from "../dashboard/dashboard.period.js";
-import { FEEDBACK_DRAFT_KEYS } from "./feedback.drafts.js";
 
 /* ── requests ───────────────────────────────────────────────────────────────── */
 
 export const setupFeedbackBodySchema = z.object({
-  draftKey: z.enum(FEEDBACK_DRAFT_KEYS),
+  /** An existing flow carrying the LOYALTY_FEEDBACK category (created in WhatsApp → Flow). */
+  dbFlowId: z.uuid(),
   /** The team whose Google review link happy customers are sent to. */
   teamId: z.uuid(),
-  /** WhatsApp number to create the flow on; the programme's channel, then the org default. */
-  whatsappSettingsPhoneId: z.string().min(1).optional(),
 });
 export type SetupFeedbackBody = z.infer<typeof setupFeedbackBodySchema>;
 
@@ -53,23 +51,21 @@ export type ReviewRedirectParams = z.infer<typeof reviewRedirectParamsSchema>;
 
 /* ── responses ──────────────────────────────────────────────────────────────── */
 
-const isFlowJson = (value: unknown): value is WaFlowJson =>
-  typeof value === "object" && value !== null && Array.isArray((value as WaFlowJson).screens);
-
-export const feedbackDraftSchema = z.object({
-  key: z.enum(FEEDBACK_DRAFT_KEYS),
-  label: z.string(),
-  description: z.string(),
-  questions: z.array(z.object({ title: z.string(), kind: z.enum(["rating", "text"]) })),
-  /** v2 WaFlow JSON, renderable by the UI's flow preview without the editor. */
-  previewJson: z.custom<WaFlowJson>(isFlowJson),
+/** A flow Feedback may select, and — when it may not — why. */
+export const feedbackFlowCandidateSchema = z.object({
+  dbFlowId: z.string(),
+  name: z.string(),
+  status: z.string(),
+  pendingSave: z.boolean(),
+  version: z.number(),
+  eligible: z.boolean(),
+  reason: z.string().nullable(),
 });
-
-export const feedbackDraftsResponseSchema = z.object({
-  drafts: z.array(feedbackDraftSchema),
-  suggestedKey: z.enum(FEEDBACK_DRAFT_KEYS),
+export const feedbackFlowCandidatesSchema = z.object({
+  flows: z.array(feedbackFlowCandidateSchema),
 });
-export type FeedbackDraftsResponse = z.infer<typeof feedbackDraftsResponseSchema>;
+export type FeedbackFlowCandidate = z.infer<typeof feedbackFlowCandidateSchema>;
+export type FeedbackFlowCandidates = z.infer<typeof feedbackFlowCandidatesSchema>;
 
 export const feedbackSettingSchema = z.object({
   id: z.string(),
@@ -79,7 +75,6 @@ export const feedbackSettingSchema = z.object({
   teamId: z.string(),
   rewardId: z.string().nullable(),
   happyMinRating: z.number(),
-  draftKey: z.string(),
 });
 
 export const feedbackFlowSchema = z.object({

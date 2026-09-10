@@ -9,12 +9,12 @@ import { assignRewardToCustomer } from "../accounts/account.service.js";
 import { resolveTeamGoogleLink } from "./feedback.googleLink.js";
 import { verifyReviewRedirect } from "./feedback.redirect.js";
 import {
+  detachFeedback,
   FeedbackError,
   getFeedbackOverview,
   getFeedbackResults,
-  listFeedbackDrafts,
+  listFeedbackFlowCandidates,
   listFeedbackRequests,
-  resetFeedback,
   setupFeedback,
   submitFeedbackFlow,
   updateFeedbackSetting,
@@ -38,9 +38,12 @@ function sendError(reply: FastifyReply, error: unknown) {
   return reply.code(500).send({ error: error instanceof Error ? error.message : "Unknown error" });
 }
 
-export async function getFeedbackDraftsHandler(request: FastifyRequest, reply: FastifyReply) {
+export async function listFeedbackFlowCandidatesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   try {
-    reply.code(200).send(await listFeedbackDrafts(request.user.orgId));
+    reply.code(200).send(await listFeedbackFlowCandidates(request.user.orgId));
   } catch (error) {
     sendError(reply, error);
   }
@@ -59,7 +62,7 @@ export async function setupFeedbackHandler(
   reply: FastifyReply,
 ) {
   try {
-    reply.code(200).send(await setupFeedback(request.user.orgId, request.body, request));
+    reply.code(200).send(await setupFeedback(request.user.orgId, request.body));
   } catch (error) {
     sendError(reply, error);
   }
@@ -84,9 +87,9 @@ export async function submitFeedbackFlowHandler(request: FastifyRequest, reply: 
   }
 }
 
-export async function resetFeedbackHandler(request: FastifyRequest, reply: FastifyReply) {
+export async function detachFeedbackHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    await resetFeedback(request.user.orgId);
+    await detachFeedback(request.user.orgId);
     reply.code(204).send();
   } catch (error) {
     sendError(reply, error);

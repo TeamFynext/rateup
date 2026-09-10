@@ -107,11 +107,14 @@ reaches `completed`, and a set that keeps its id never empties.
 points are earned, and sends happy customers to the team's Google review link. It is built
 out of things that already existed, and the seams matter:
 
-- **The flow is an ordinary `WaFlow`/`Survey` pair** (`feedback.drafts.ts` builds the v2
-  JSON), so answers land in `SurveyResponse` and the flow editor can open it. The only
-  loyalty-specific fact on the flow is `googleReview.minRating` on the overall-rating
-  element — the same gate `shouldShowGoogleReviewV2` applies to every flow. It is stripped
-  before Meta sees the JSON, so the threshold can change without a re-publish.
+- **Feedback never owns the flow.** The business creates an ordinary `WaFlow`/`Survey` pair
+  in WhatsApp → Flow with the RateUp-only `LOYALTY_FEEDBACK` category — stored on the row,
+  swapped for `SURVEY` before Meta sees it (`flows/flowCategories.ts`) — and pre-filled from a
+  template in `flows/flowTemplates.ts`; Feedback then *selects* it (`feedback.eligibility.ts`
+  decides which flows qualify) and detaching leaves it alone. The only loyalty-specific fact
+  on the flow is `googleReview.minRating` on the overall-rating element — the same gate
+  `shouldShowGoogleReviewV2` applies to every flow. It is stripped before Meta sees the JSON,
+  so the threshold can change without a re-publish.
 - **A run is attributed by the flow token.** `feedbackRequestId` (`f`) rides in the token
   the sender signs; `flow.service.ts`'s two completion paths call
   `onFeedbackFlowCompleted` when it is present and skip the plain Google CTA. A flow sent

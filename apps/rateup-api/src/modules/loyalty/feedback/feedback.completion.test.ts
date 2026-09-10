@@ -19,7 +19,7 @@ process.env.API_URL = "https://api.example.test";
 import prisma from "../../../utils/prisma.js";
 import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { createCTAButtonMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
-import { buildFeedbackFlowJson, getFeedbackDraft } from "./feedback.drafts.js";
+import { buildFeedbackFlowJson, getFeedbackDraft } from "../../whatsapp/flows/flowTemplates.js";
 import { onFeedbackFlowCompleted } from "./feedback.completion.js";
 import { resolveTeamGoogleLink } from "./feedback.googleLink.js";
 

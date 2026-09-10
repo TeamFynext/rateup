@@ -14,7 +14,7 @@ import {
   isFeedbackDraftKey,
   setHappyMinRating,
   suggestFeedbackDraftKey,
-} from "./feedback.drafts.js";
+} from "./flowTemplates.js";
 
 describe("the draft catalogue", () => {
   test("has one definition per key, and the restaurant draft asks the three things the brief named", () => {

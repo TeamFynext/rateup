@@ -212,6 +212,7 @@ export async function getFlowsFromDb(
       flowId: true,
       surveyId: true,
       whatsappSettingsId: true,
+      categories: true,
       // The inbox draws the flow's invitation message as a pending bubble the moment
       // it is sent, so the list carries it rather than re-reading each flow.
       templateMessage: true,
@@ -480,7 +481,8 @@ export async function cloneFlow(
   const newClonedSurvey = await shortIdUniqueConstraintErrHandler(createClonedSurvey);
   // The clone is created at Meta under the source flow's channel (see cloneFlowHandler),
   // so it inherits that channel here too.
-  const { json, map, orgId, logicJumps, templateMessage, whatsappSettingsId } = previousFlow;
+  const { json, map, orgId, logicJumps, templateMessage, whatsappSettingsId, categories } =
+    previousFlow;
   await prisma.waFlow.create({
     data: {
       flowId,
@@ -491,6 +493,8 @@ export async function cloneFlow(
       logicJumps,
       templateMessage,
       whatsappSettingsId,
+      // A copy of a loyalty feedback flow is still one.
+      categories,
       name: title,
       surveyId: newClonedSurvey.id,
       version: previousFlow?.version ?? 1,
@@ -634,6 +638,8 @@ interface CreateFlowCopyInDbArgs {
     cta: string;
   };
   version?: number;
+  /** As chosen at creation — Meta's categories and RateUp's own (see flowCategories.ts). */
+  categories?: string[];
   /** Channel the flow was created under at Meta — see getWaSettingsForFlow. */
   whatsappSettingsId?: string | null;
 }
@@ -652,6 +658,7 @@ export async function createFlowCopyInDb({
     cta: "Open",
   },
   version = 2,
+  categories = [],
   whatsappSettingsId,
 }: CreateFlowCopyInDbArgs) {
   const flow = await prisma.waFlow.create({
@@ -666,6 +673,7 @@ export async function createFlowCopyInDb({
       status: status,
       name: name,
       version: version,
+      categories,
       whatsappSettingsId,
     },
   });

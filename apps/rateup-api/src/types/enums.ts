@@ -185,6 +185,12 @@ export enum WaFlowStatus {
   BLOCKED = "BLOCKED",
   THROTTLED = "THROTTLED",
 }
+/**
+ * A RateUp-only flow category, alongside Meta's (SURVEY, SIGN_UP, …). It is stored on the
+ * WaFlow row and never sent to Meta — `metaCategoriesFor` swaps it for SURVEY — and it is
+ * how Loyalty → Feedback finds the flows it may select.
+ */
+export const LOYALTY_FEEDBACK_FLOW_CATEGORY = "LOYALTY_FEEDBACK";
 // changes.field
 export enum WaEvent {
   TemplateStatusChange = "message_template_status_update",

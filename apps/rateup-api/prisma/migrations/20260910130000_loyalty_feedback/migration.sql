@@ -8,6 +8,12 @@
 --
 -- LoyaltyFeedbackRequest.transactionId is unique so a single purchase can never
 -- schedule two asks, whatever races between the cashier, the external API and Shopify.
+--
+-- WaFlow.categories stores what was picked at creation. Meta's own categories were never
+-- persisted before; the RateUp-only LOYALTY_FEEDBACK category is how Feedback finds flows.
+
+-- AlterTable
+ALTER TABLE "WaFlow" ADD COLUMN "categories" TEXT[] DEFAULT ARRAY[]::TEXT[];
 
 -- CreateEnum
 CREATE TYPE "LoyaltyFeedbackRequestStatus" AS ENUM ('SCHEDULED', 'SENT', 'COMPLETED', 'CANCELLED', 'FAILED');
@@ -19,7 +25,6 @@ CREATE TABLE "LoyaltyFeedbackSetting" (
     "teamId" UUID NOT NULL,
     "dbFlowId" UUID,
     "waTemplateId" UUID,
-    "draftKey" TEXT NOT NULL,
     "enabled" BOOLEAN NOT NULL DEFAULT false,
     "sendDelayMinutes" INTEGER NOT NULL DEFAULT 120,
     "cooldownDays" INTEGER NOT NULL DEFAULT 30,

@@ -1590,6 +1590,10 @@ model WaFlow {
   flowId      String?
   name        String
   status      String
+  // The categories chosen at creation. Mostly Meta's list (SURVEY, SIGN_UP, …), but
+  // LOYALTY_FEEDBACK is ours — it never reaches Meta (see metaCategoriesFor) and is what
+  // Loyalty → Feedback selects flows by.
+  categories  String[] @default([])
   /// [PWaFlowJson]
   json        Json
   /// [PWaFlowPreview]
@@ -2312,7 +2316,6 @@ model LoyaltyFeedbackSetting {
   waTemplateId String?     @db.Uuid
   waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: SetNull)
 
-  draftKey         String
   enabled          Boolean        @default(false)
   sendDelayMinutes Int            @default(120)
   cooldownDays     Int            @default(30)

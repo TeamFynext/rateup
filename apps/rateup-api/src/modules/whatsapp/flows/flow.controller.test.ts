@@ -40,6 +40,10 @@ vi.mock("../../stats/stats.service.js", () => ({ updateMonthlyStat: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
+// Flow templates look up the org's loyalty programme for the suggestion / business name.
+vi.mock("../../../utils/prisma.js", () => ({
+  default: { loyaltyProgram: { findUnique: vi.fn(async () => null) } },
+}));
 
 import {
   cloneFlow,
@@ -742,6 +746,37 @@ describe("createFlowHandler", () => {
     await createFlowHandler(request({ body }), reply());
 
     expect(m.createFlowCopyInDb.mock.calls[0][0].json).toEqual({ version: "7.2", screens: [] });
+  });
+
+  test("stores the categories as given but sends Meta only its own", async () => {
+    await createFlowHandler(
+      request({ body: { ...body, categories: ["LOYALTY_FEEDBACK"], templateKey: "restaurant" } }),
+      reply(),
+    );
+
+    // LOYALTY_FEEDBACK is ours; Meta would reject it, so it travels as SURVEY.
+    expect(m.createFlowInWa.mock.calls[0][1]).toEqual({ name: "Feedback", categories: ["SURVEY"] });
+    const stored = m.createFlowCopyInDb.mock.calls[0][0];
+    expect(stored.categories).toEqual(["LOYALTY_FEEDBACK"]);
+    // The template supplies the questions, including the rating that gates the review.
+    const children = stored.json.screens[0].layout.children;
+    expect(children.find((c: { name?: string }) => c.name === "overall_rating")).toMatchObject({
+      metaType: "Rating",
+      googleReview: { minRating: 4 },
+    });
+    expect(stored.templateMessage.cta).toBe("Share feedback");
+  });
+
+  test("refuses an unknown template before touching Meta", async () => {
+    const rep = reply();
+
+    await createFlowHandler(
+      request({ body: { ...body, categories: ["LOYALTY_FEEDBACK"], templateKey: "nope" } }),
+      rep,
+    );
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(m.createFlowInWa).not.toHaveBeenCalled();
   });
 
   test("reports Meta's own words when Meta refuses to create the flow", async () => {

@@ -1,8 +1,9 @@
 import { WaFlowLayoutType, WaQuestions } from "../../../types/enums.js";
 
 /**
- * Ready-made feedback flows, one per kind of business. Picking one turns it into a real
- * WaFlow/Survey pair (see feedback.service.ts), so everything here has to be the v2 flow
+ * Ready-made flows the create-flow wizard offers — today, feedback surveys, one per kind of
+ * business, for flows created with the LOYALTY_FEEDBACK category. `createFlowHandler` turns
+ * the chosen one into a real WaFlow/Survey pair, so everything here has to be the v2 flow
  * dialect the editor writes and the reply handlers read:
  *
  * - every interactive element has `id === name`. v2 answers come back keyed by element
@@ -241,18 +242,30 @@ export function buildFeedbackTemplateMessage(
   };
 }
 
-/** Every rating element in the flow, in screen order. */
+/**
+ * Every rating element in the flow, in screen order. v2 answers are keyed by element name
+ * and the Google-review gate looks the element up by id, so only elements where the two
+ * agree count — an imported flow with Meta-authored names and injected ids does not.
+ */
 export function ratingElements(json: WaFlowJson): WaFlowForm[] {
   return json.screens.flatMap((screen) =>
     screen.layout.children.filter(
-      (element) => element.metaType === WaQuestions.Rating && typeof element.name === "string",
+      (element) =>
+        element.metaType === WaQuestions.Rating &&
+        typeof element.name === "string" &&
+        element.id === element.name,
     ),
   );
 }
 
-/** The element the Google-review decision is made on: the rating carrying `googleReview`. */
+/** Whether an element is the one the Google-review decision can be made on. */
+export function isReviewGatedRating(element: WaFlowForm): boolean {
+  return typeof element.googleReview?.minRating === "number";
+}
+
+/** The element the Google-review decision is made on: the rating carrying a threshold. */
 export function findOverallRatingElement(json: WaFlowJson): WaFlowForm | undefined {
-  return ratingElements(json).find((element) => element.googleReview !== undefined);
+  return ratingElements(json).find(isReviewGatedRating);
 }
 
 /**

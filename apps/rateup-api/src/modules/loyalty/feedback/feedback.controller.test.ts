@@ -24,9 +24,9 @@ vi.mock("./feedback.service.js", () => ({
   },
   getFeedbackOverview: vi.fn(),
   getFeedbackResults: vi.fn(),
-  listFeedbackDrafts: vi.fn(),
+  listFeedbackFlowCandidates: vi.fn(),
   listFeedbackRequests: vi.fn(),
-  resetFeedback: vi.fn(),
+  detachFeedback: vi.fn(),
   setupFeedback: vi.fn(),
   submitFeedbackFlow: vi.fn(),
   updateFeedbackSetting: vi.fn(),
@@ -204,7 +204,7 @@ describe("setupFeedbackHandler", () => {
     vi.mocked(setupFeedback).mockRejectedValue(new FeedbackError(409, "Already set up"));
     const res = reply();
     await setupFeedbackHandler(
-      { user: { orgId: "org-1" }, body: { draftKey: "restaurant", teamId: "t" } } as never,
+      { user: { orgId: "org-1" }, body: { dbFlowId: "flow-1", teamId: "t" } } as never,
       res as never,
     );
     expect(res.statusCode).toBe(409);

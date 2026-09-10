@@ -1,18 +1,18 @@
 import { FastifyInstance } from "fastify";
 
 import {
-  getFeedbackDraftsHandler,
+  detachFeedbackHandler,
   getFeedbackOverviewHandler,
   getFeedbackResultsHandler,
+  listFeedbackFlowCandidatesHandler,
   listFeedbackRequestsHandler,
-  resetFeedbackHandler,
   setupFeedbackHandler,
   submitFeedbackFlowHandler,
   updateFeedbackSettingHandler,
 } from "./feedback.controller.js";
 import {
-  feedbackDraftsResponseSchema,
   feedbackErrorSchema,
+  feedbackFlowCandidatesSchema,
   feedbackOverviewSchema,
   feedbackRequestsPageSchema,
   feedbackRequestsQuerySchema,
@@ -31,10 +31,11 @@ export async function loyaltyFeedbackRoutes(server: FastifyInstance) {
     500: feedbackErrorSchema,
   };
 
+  // Flows Feedback may select: those created with the Loyalty feedback category.
   server.get(
-    "/drafts",
-    { schema: { response: { 200: feedbackDraftsResponseSchema, ...errors } } },
-    getFeedbackDraftsHandler,
+    "/flows",
+    { schema: { response: { 200: feedbackFlowCandidatesSchema, ...errors } } },
+    listFeedbackFlowCandidatesHandler,
   );
 
   server.get(
@@ -71,7 +72,7 @@ export async function loyaltyFeedbackRoutes(server: FastifyInstance) {
     submitFeedbackFlowHandler,
   );
 
-  server.post("/reset", { schema: { response: errors } }, resetFeedbackHandler);
+  server.post("/detach", { schema: { response: errors } }, detachFeedbackHandler);
 
   server.get(
     "/results",

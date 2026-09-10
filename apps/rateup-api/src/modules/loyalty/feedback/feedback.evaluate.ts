@@ -1,4 +1,4 @@
-import { findOverallRatingElement, ratingElements } from "./feedback.drafts.js";
+import { findOverallRatingElement, ratingElements } from "../../whatsapp/flows/flowTemplates.js";
 
 /**
  * Reads star ratings back out of v2 flow answers. Whether a run counts as *happy* is not

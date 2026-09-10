@@ -1,51 +1,36 @@
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
+import { LoyaltyFeedbackRequestStatus, TemplateType } from "../../../../generated/prisma/client.js";
 import {
-  LoyaltyFeedbackRequestStatus,
-  TemplateType,
-  type Survey,
-} from "../../../../generated/prisma/client.js";
-import {
-  SurveyType,
+  LOYALTY_FEEDBACK_FLOW_CATEGORY,
   WaFlowStatus,
   WaTemplateCategory,
   WaTemplateComponentTypeUpperCase,
 } from "../../../types/enums.js";
 import {
-  createFlowCopyInDb,
-  createFlowInWa,
-  deleteFlowInWa,
-  deprecateFlowInWa,
   getWaSettingsForFlow,
   syncLocalFlowToWhatsapp,
   updateFlowInDb,
 } from "../../whatsapp/flows/flow.service.js";
-import { createSurvey, deleteSurveyById } from "../../survey/survey.service.js";
-import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
+import {
+  DEFAULT_HAPPY_MIN_RATING,
+  findOverallRatingElement,
+  setHappyMinRating,
+} from "../../whatsapp/flows/flowTemplates.js";
 import {
   createTemplate,
   getTemplateByNameAndOrgId,
   saveTemplate,
 } from "../../whatsapp/messageTemplates/wa_templates.service.js";
 import { isValidTimeZone, resolvePeriod } from "../dashboard/dashboard.period.js";
-import {
-  buildFeedbackFlowJson,
-  buildFeedbackTemplateMessage,
-  DEFAULT_HAPPY_MIN_RATING,
-  FEEDBACK_DRAFTS,
-  FEEDBACK_FLOW_SCREEN_ID,
-  feedbackDraftForApi,
-  getFeedbackDraft,
-  setHappyMinRating,
-  suggestFeedbackDraftKey,
-} from "./feedback.drafts.js";
+import { feedbackEligibility } from "./feedback.eligibility.js";
 import { ratingAveragesByElement, type FlowAnswer } from "./feedback.evaluate.js";
 import { resolveTeamGoogleLink } from "./feedback.googleLink.js";
 import { cancelScheduledFeedbackRequests } from "./feedback.scheduler.js";
 import { ensureSurveyTeamMap } from "./feedback.teamMap.js";
 import type {
   FeedbackCounts,
-  FeedbackDraftsResponse,
+  FeedbackFlowCandidates,
   FeedbackOverview,
   FeedbackRequestRow,
   FeedbackRequestsPage,
@@ -58,8 +43,11 @@ import type {
 } from "./feedback.schema.js";
 
 /**
- * The admin side of loyalty feedback: turning a draft into a real flow, submitting it to
- * Meta, the settings, and the results. Sending and completion live in their own files.
+ * The admin side of loyalty feedback. Feedback never owns the flow: the business creates one
+ * in WhatsApp → Flow with the LOYALTY_FEEDBACK category (from a template, so it carries the
+ * rating question and its Google-review threshold) and selects it here. This module attaches
+ * it to the programme, submits the FLOW-button template to Meta, holds the settings and reads
+ * the results. Sending and completion live in their own files.
  */
 
 export class FeedbackError extends Error {
@@ -72,11 +60,13 @@ export class FeedbackError extends Error {
   }
 }
 
-/** Meta template name; templates are unique per account, so a re-setup reuses this one. */
-export const FEEDBACK_TEMPLATE_NAME = "loyalty_feedback_request_v1";
-
-interface AuthedRequest {
-  user?: { userId?: string; email?: string; orgId?: string };
+/**
+ * Meta template names are unique per account and the FLOW button binds to one flow, so the
+ * template is named after the flow — a later selection gets its own, and reselecting a flow
+ * finds its earlier template again.
+ */
+export function feedbackTemplateName(dbFlowId: string): string {
+  return `loyalty_feedback_${dbFlowId.replaceAll("-", "").slice(0, 8).toLowerCase()}`;
 }
 
 function templateStep(data: unknown): TemplateStep {
@@ -86,9 +76,10 @@ function templateStep(data: unknown): TemplateStep {
   return "pending";
 }
 
-function templateName(data: unknown): string {
+function templateName(data: unknown, dbFlowId: string | null): string {
   const name = (data as { name?: unknown } | null)?.name;
-  return typeof name === "string" ? name : FEEDBACK_TEMPLATE_NAME;
+  if (typeof name === "string") return name;
+  return dbFlowId ? feedbackTemplateName(dbFlowId) : "loyalty_feedback";
 }
 
 /** `+91••••••12`: enough to recognise a number, not enough to dial it. */
@@ -145,8 +136,6 @@ async function loadProgram(orgId: string) {
       name: true,
       businessName: true,
       status: true,
-      whatsappSettingsId: true,
-      onboardingPresetKey: true,
       feedbackSetting: { include: SETTING_INCLUDE },
     },
   });
@@ -200,7 +189,6 @@ function toOverview(
       teamId: setting.teamId,
       rewardId: setting.rewardId,
       happyMinRating: setting.happyMinRating,
-      draftKey: setting.draftKey,
     },
     flow: setting.flow
       ? {
@@ -216,7 +204,7 @@ function toOverview(
     template: setting.waTemplate
       ? {
           id: setting.waTemplate.id,
-          name: templateName(setting.waTemplate.data),
+          name: templateName(setting.waTemplate.data, setting.dbFlowId),
           status: templateStep(setting.waTemplate.data),
         }
       : null,
@@ -238,104 +226,86 @@ export async function getFeedbackOverview(orgId: string): Promise<FeedbackOvervi
   return toOverview(program, await feedbackCounts(program.id));
 }
 
-export async function listFeedbackDrafts(orgId: string): Promise<FeedbackDraftsResponse> {
-  const program = await prisma.loyaltyProgram.findUnique({
-    where: { orgId },
-    select: { onboardingPresetKey: true, feedbackSetting: { select: { happyMinRating: true } } },
+/* ── selecting a flow ───────────────────────────────────────────────────────── */
+
+/**
+ * Every flow in the org carrying the LOYALTY_FEEDBACK category, with whether Feedback may
+ * select it. Org-wide rather than filtered by the caller's teams: loyalty is an org-level
+ * programme.
+ */
+export async function listFeedbackFlowCandidates(orgId: string): Promise<FeedbackFlowCandidates> {
+  const flows = await prisma.waFlow.findMany({
+    where: { orgId, categories: { has: LOYALTY_FEEDBACK_FLOW_CATEGORY } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      dbFlowId: true,
+      name: true,
+      status: true,
+      pendingSave: true,
+      version: true,
+      json: true,
+    },
   });
-  const happyMinRating = program?.feedbackSetting?.happyMinRating ?? DEFAULT_HAPPY_MIN_RATING;
   return {
-    drafts: FEEDBACK_DRAFTS.map((draft) => feedbackDraftForApi(draft, happyMinRating)),
-    suggestedKey: suggestFeedbackDraftKey(program?.onboardingPresetKey),
+    flows: flows.map((flow) => {
+      const eligibility = feedbackEligibility(flow);
+      return {
+        dbFlowId: flow.dbFlowId,
+        name: flow.name,
+        status: flow.status,
+        pendingSave: flow.pendingSave,
+        version: flow.version,
+        eligible: eligibility.eligible,
+        reason: eligibility.eligible ? null : eligibility.reason,
+      };
+    }),
   };
 }
-
-/* ── setup ──────────────────────────────────────────────────────────────────── */
 
 export async function setupFeedback(
   orgId: string,
   input: SetupFeedbackBody,
-  req: AuthedRequest,
 ): Promise<FeedbackOverview> {
   const program = await loadProgram(orgId);
   if (!program) throw new FeedbackError(404, "Loyalty programme not found");
   if (program.feedbackSetting) {
     throw new FeedbackError(409, "Feedback is already set up for this programme");
   }
-  const draft = getFeedbackDraft(input.draftKey);
-  if (!draft) throw new FeedbackError(400, "Unknown feedback draft");
   const team = await prisma.team.findFirst({
     where: { id: input.teamId, orgId },
     select: { id: true },
   });
   if (!team) throw new FeedbackError(404, "Team not found");
 
-  // The flow is created on the requested number, else the programme's channel, else the
-  // org default — a flow id only resolves against the WABA it was created under.
-  let whatsappSettingsId: string | undefined = program.whatsappSettingsId ?? undefined;
-  if (input.whatsappSettingsPhoneId) {
-    const waSettings = await getWaSettings(orgId, input.whatsappSettingsPhoneId);
-    if (!waSettings) {
-      throw new FeedbackError(404, "WhatsApp number not found for this organisation");
-    }
-    whatsappSettingsId = waSettings.id;
+  const flow = await prisma.waFlow.findFirst({
+    where: { dbFlowId: input.dbFlowId, orgId },
+    select: {
+      dbFlowId: true,
+      surveyId: true,
+      json: true,
+      version: true,
+      status: true,
+      categories: true,
+    },
+  });
+  if (!flow) throw new FeedbackError(404, "Flow not found");
+  if (!flow.categories.includes(LOYALTY_FEEDBACK_FLOW_CATEGORY)) {
+    throw new FeedbackError(400, "That flow was not created with the Loyalty feedback category");
   }
+  const eligibility = feedbackEligibility(flow);
+  if (!eligibility.eligible) throw new FeedbackError(400, eligibility.reason);
 
-  const name = `Feedback – ${draft.label}`;
-  const created = await createFlowInWa(orgId, { name, categories: ["SURVEY"] }, whatsappSettingsId);
+  // The flow token needs a survey↔team mapping for the team whose Google link is used.
+  await ensureSurveyTeamMap(flow.surveyId, team.id);
 
-  let surveyId: string | undefined;
-  try {
-    const survey = (await createSurvey(
-      {
-        title: name,
-        teamIds: [team.id],
-        type: SurveyType.WaFlow,
-        languages: ["en"],
-        orgId,
-        active: true,
-        getLocation: false,
-        welcomePageEnabled: false,
-      },
-      req,
-    )) as Survey;
-    surveyId = survey.id;
+  // The flow is the source of truth for the threshold on attach; the settings form writes it
+  // back into the flow afterwards (updateFeedbackSetting), so the two stay in step.
+  const happyMinRating =
+    findOverallRatingElement(flow.json)?.googleReview?.minRating ?? DEFAULT_HAPPY_MIN_RATING;
 
-    const flow = await createFlowCopyInDb({
-      orgId,
-      flowId: created.id,
-      json: buildFeedbackFlowJson(draft, { happyMinRating: DEFAULT_HAPPY_MIN_RATING }),
-      flowMap: {},
-      surveyId: survey.id,
-      status: WaFlowStatus.DRAFT,
-      name,
-      templateMessage: buildFeedbackTemplateMessage(program.businessName ?? program.name),
-      version: 2,
-      whatsappSettingsId: created.whatsappSettingsId,
-    });
-
-    await prisma.loyaltyFeedbackSetting.create({
-      data: {
-        programId: program.id,
-        teamId: team.id,
-        dbFlowId: flow.dbFlowId,
-        draftKey: draft.key,
-        happyMinRating: DEFAULT_HAPPY_MIN_RATING,
-      },
-    });
-  } catch (error) {
-    // Roll back what Meta and the database already hold so the org can try again.
-    await deleteFlowInWa(orgId, created.id, created.whatsappSettingsId).catch((e) =>
-      log.error({ err: e, flowId: created.id }, "Could not delete orphaned feedback flow at Meta"),
-    );
-    if (surveyId) {
-      await deleteSurveyById(surveyId).catch((e) =>
-        log.error({ err: e, surveyId }, "Could not delete orphaned feedback survey"),
-      );
-    }
-    throw error;
-  }
-
+  await prisma.loyaltyFeedbackSetting.create({
+    data: { programId: program.id, teamId: team.id, dbFlowId: flow.dbFlowId, happyMinRating },
+  });
   return await getFeedbackOverview(orgId);
 }
 
@@ -416,8 +386,16 @@ export async function updateFeedbackSetting(
 
 /* ── submit to Meta ─────────────────────────────────────────────────────────── */
 
-/** The UTILITY template with a FLOW button that reaches customers outside a service window. */
-export function buildFeedbackRequestTemplate(name: string, flowId: string): WaMetaTemplate {
+/**
+ * The UTILITY template with a FLOW button that reaches customers outside a service window.
+ * `navigateScreen` is the selected flow's first screen — flows built outside our templates
+ * name their screens however they like.
+ */
+export function buildFeedbackRequestTemplate(
+  name: string,
+  flowId: string,
+  navigateScreen: string,
+): WaMetaTemplate {
   return {
     name,
     language: "en",
@@ -436,7 +414,7 @@ export function buildFeedbackRequestTemplate(name: string, flowId: string): WaMe
             text: "Share feedback",
             flow_id: flowId,
             flow_action: "navigate",
-            navigate_screen: FEEDBACK_FLOW_SCREEN_ID,
+            navigate_screen: navigateScreen,
           },
         ],
       },
@@ -447,32 +425,34 @@ export function buildFeedbackRequestTemplate(name: string, flowId: string): WaMe
 export async function submitFeedbackFlow(orgId: string): Promise<FeedbackOverview> {
   const { program, setting } = await requireSetting(orgId);
   const flow = setting.flow;
-  if (!flow) throw new FeedbackError(404, "Feedback flow not found");
+  if (!flow)
+    throw new FeedbackError(404, "The selected flow no longer exists — detach and pick another");
 
   if (flow.status !== WaFlowStatus.PUBLISHED || flow.pendingSave) {
     await syncLocalFlowToWhatsapp(orgId, flow.dbFlowId);
   }
   const published = await prisma.waFlow.findUnique({
     where: { dbFlowId: flow.dbFlowId },
-    select: { flowId: true, whatsappSettingsId: true },
+    select: { flowId: true, whatsappSettingsId: true, json: true },
   });
   if (!published?.flowId) {
     throw new FeedbackError(400, "The flow has not been created at Meta yet");
   }
+  const firstScreen = published.json.screens[0]?.id;
+  if (!firstScreen) throw new FeedbackError(400, "The flow has no screens yet");
 
   if (!setting.waTemplateId) {
-    // Templates are unique per account: a programme that was reset and set up again gets
-    // its earlier template back rather than a duplicate submission Meta would reject.
+    const name = feedbackTemplateName(flow.dbFlowId);
     const channel = await getWaSettingsForFlow(orgId, published.whatsappSettingsId);
     const phoneId = channel.phoneId ?? undefined;
-    const existing = await getTemplateByNameAndOrgId(FEEDBACK_TEMPLATE_NAME, orgId);
+    const existing = await getTemplateByNameAndOrgId(name, orgId);
     let templateId: string;
     if (existing) {
       templateId = existing.id;
     } else {
       const submitted = await createTemplate(
         orgId,
-        buildFeedbackRequestTemplate(FEEDBACK_TEMPLATE_NAME, published.flowId),
+        buildFeedbackRequestTemplate(name, published.flowId, firstScreen),
         phoneId,
       );
       const saved = await saveTemplate(
@@ -495,33 +475,17 @@ export async function submitFeedbackFlow(orgId: string): Promise<FeedbackOvervie
   return await getFeedbackOverview(orgId);
 }
 
-/* ── reset ──────────────────────────────────────────────────────────────────── */
+/* ── detach ─────────────────────────────────────────────────────────────────── */
 
-export async function resetFeedback(orgId: string): Promise<void> {
+/**
+ * Stops asking and forgets the selection. The flow stays in WhatsApp → Flow untouched;
+ * requests already sent still complete (the flow is resolved from the token), just without a
+ * review link, and the request history is kept.
+ */
+export async function detachFeedback(orgId: string): Promise<void> {
   const { program, setting } = await requireSetting(orgId);
-  await cancelScheduledFeedbackRequests(program.id, "Feedback reset");
-  // The setting goes first: the flow/survey deletes below cascade into it otherwise.
+  await cancelScheduledFeedbackRequests(program.id, "Feedback detached");
   await prisma.loyaltyFeedbackSetting.delete({ where: { id: setting.id } });
-
-  const flow = setting.flow;
-  if (!flow) return;
-  if (flow.status === WaFlowStatus.DRAFT) {
-    if (flow.flowId) {
-      await deleteFlowInWa(orgId, flow.flowId, flow.whatsappSettingsId).catch((e) =>
-        log.error({ err: e, flowId: flow.flowId }, "Could not delete feedback flow at Meta"),
-      );
-    }
-    // Deleting the survey cascades the WaFlow row; responses (none for a draft) go too.
-    await deleteSurveyById(flow.surveyId);
-    return;
-  }
-  // A published flow keeps its survey and responses as history; Meta only allows deprecation.
-  if (flow.flowId) {
-    await deprecateFlowInWa(orgId, flow.flowId, flow.whatsappSettingsId).catch((e) =>
-      log.error({ err: e, flowId: flow.flowId }, "Could not deprecate feedback flow at Meta"),
-    );
-  }
-  await updateFlowInDb(orgId, flow.dbFlowId, { status: WaFlowStatus.DEPRECATED });
 }
 
 /* ── results ────────────────────────────────────────────────────────────────── */
