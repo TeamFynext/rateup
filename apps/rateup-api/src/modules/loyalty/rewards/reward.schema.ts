@@ -88,7 +88,24 @@ const redemptionRulesSchema = z.object({
   approval_rules: approvalRulesSchema.optional(),
 });
 
-export const loyaltyRewardSchema = z.object({
+/**
+ * A review reward is earned by tapping the Google review link, never bought, so a points
+ * cost on one would be misleading. Written to tolerate the partial update shape.
+ */
+function reviewRewardCostsNothing(
+  value: { rewardType?: LoyaltyRewardType; pointsCost?: number },
+  ctx: z.RefinementCtx,
+) {
+  if (value.rewardType === LoyaltyRewardType.REVIEW && (value.pointsCost ?? 0) !== 0) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["pointsCost"],
+      message: "Review rewards cannot cost points",
+    });
+  }
+}
+
+const loyaltyRewardBaseSchema = z.object({
   name: z.string().min(1, "Reward name is required"),
   description: z.string().optional().nullable(),
   rewardType: z.enum(LoyaltyRewardType),
@@ -109,7 +126,11 @@ export const loyaltyRewardSchema = z.object({
   waTemplateId: z.string().optional().nullable(),
 });
 
-export const loyaltyRewardUpdateSchema = loyaltyRewardSchema.partial();
+export const loyaltyRewardSchema = loyaltyRewardBaseSchema.superRefine(reviewRewardCostsNothing);
+
+export const loyaltyRewardUpdateSchema = loyaltyRewardBaseSchema
+  .partial()
+  .superRefine(reviewRewardCostsNothing);
 
 export const rewardIdParamSchema = z.object({
   rewardId: z.string(),

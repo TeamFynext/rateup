@@ -632,6 +632,12 @@ declare global {
     text?: string;
     markdown?: boolean;
     condition?: string;
+    /** v2 interactive elements: whether an answer is mandatory. */
+    required?: boolean;
+    /** v2 elements: hidden elements are skipped by the preview and by Meta. */
+    visible?: boolean;
+    /** v2 text inputs: Meta's character cap. */
+    "max-length"?: number;
     // Only present on the "Footer" variant of a screen's layout children —
     // this interface models every layout-child kind (Form, Footer, ...), so
     // it's optional here even though a real Footer node always has it.
@@ -660,6 +666,8 @@ declare global {
   interface WaFlowFormChoice {
     id: string;
     title: string;
+    /** Secondary line under the title; Rating choices carry the scale label here. */
+    description?: string;
   }
 
   interface WaFlowOnClickAction {

@@ -101,6 +101,35 @@ classifies as `TRANSIENT` (`src/utils/waRetryableErrors.ts`). It also drains the
 job set on both `completed` and `failed`; a job that exhausts its attempts never
 reaches `completed`, and a set that keeps its id never empties.
 
+## Loyalty feedback
+
+`src/modules/loyalty/feedback/` asks a customer how their visit went, some time after
+points are earned, and sends happy customers to the team's Google review link. It is built
+out of things that already existed, and the seams matter:
+
+- **The flow is an ordinary `WaFlow`/`Survey` pair** (`feedback.drafts.ts` builds the v2
+  JSON), so answers land in `SurveyResponse` and the flow editor can open it. The only
+  loyalty-specific fact on the flow is `googleReview.minRating` on the overall-rating
+  element — the same gate `shouldShowGoogleReviewV2` applies to every flow. It is stripped
+  before Meta sees the JSON, so the threshold can change without a re-publish.
+- **A run is attributed by the flow token.** `feedbackRequestId` (`f`) rides in the token
+  the sender signs; `flow.service.ts`'s two completion paths call
+  `onFeedbackFlowCompleted` when it is present and skip the plain Google CTA. A flow sent
+  any other way (campaign, automation) is not feedback, whatever its questions.
+- **Two send channels.** An interactive flow message only delivers inside the customer's
+  24-hour service window; outside it the `submit` step's UTILITY template with a FLOW
+  button (`loyalty_feedback_request_v1`) is sent instead — the thing that actually waits on
+  Meta approval. `feedback.sender.ts` picks per request via `isCustomerSessionOpen`.
+- **API vs worker.** `feedback.scheduler.ts` is imported by `awardPoints` and may only open
+  a `LoyaltyFeedbackRequest` row and arm its delayed job (`queues/loyaltyFeedback.queue.ts`).
+  Sending lives in `feedback.sender.ts`, which only the worker loads — the same split as
+  campaign retries, with the same conditional-UPDATE claim and startup reconciler.
+- **The review reward is granted once** because the public redirect
+  (`/api/public/loyalty/feedback/review/:requestId/:sig`) calls `assignRewardToCustomer`,
+  and `CustomerReward`'s unique `(rewardId, accountId)` is what makes a second grant fail.
+  `LoyaltyRewardType.REVIEW` rewards cost no points and are excluded from every catalogue a
+  customer can buy from (`getActiveLoyaltyRewards`, the public programme, the wizard).
+
 ## Email
 
 Bulk and background email leaves from the `bullmq` service: callers enqueue and the worker calls

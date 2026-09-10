@@ -36,7 +36,19 @@ export enum LoyaltyRewardType {
   POINT = "point",
   COUPON = "coupon",
   ASSIGNED = "assigned",
+  /**
+   * Granted once per customer for tapping the Google review link that follows the
+   * loyalty feedback flow. Costs no points and cannot be bought — it is issued to the
+   * account and redeemed by short code like an assigned reward.
+   */
+  REVIEW = "review",
 }
+
+/** Reward types a customer cannot buy with points: they must be issued to the account first. */
+export const ASSIGNMENT_ONLY_REWARD_TYPES: readonly string[] = [
+  LoyaltyRewardType.ASSIGNED,
+  LoyaltyRewardType.REVIEW,
+];
 
 export enum LoyaltyTransactionType {
   EARN = "earn",

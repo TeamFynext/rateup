@@ -679,20 +679,21 @@ model Team {
   invitations   Invitation[]
   contactGroups ContactGroup[]
 
-  campaigns              Campaign[]
-  reviewSuggestions      ReviewSuggestion[]
-  Review                 Review[]
-  RM_Topic               RM_Topic[]
-  testimonialCollections TestimonialCollection[]
-  Ticket                 Ticket[]
-  waInboxAssign          WaInboxAssign[]
-  ticketBoards           TicketBoardTeam[]
-  assignedConversations  ConversationAssignedUserTeamMap[]
-  waMessageOrgTeamMaps   WaMessageOrgTeamMap[]
-  waMessageSchedule      WaMessageSchedule[]
-  featureAccess          TeamFeatureAccess[]
-  pipelines              PipelineTeam[]
-  leads                  Lead[]
+  campaigns               Campaign[]
+  reviewSuggestions       ReviewSuggestion[]
+  Review                  Review[]
+  RM_Topic                RM_Topic[]
+  testimonialCollections  TestimonialCollection[]
+  Ticket                  Ticket[]
+  waInboxAssign           WaInboxAssign[]
+  ticketBoards            TicketBoardTeam[]
+  assignedConversations   ConversationAssignedUserTeamMap[]
+  waMessageOrgTeamMaps    WaMessageOrgTeamMap[]
+  waMessageSchedule       WaMessageSchedule[]
+  featureAccess           TeamFeatureAccess[]
+  pipelines               PipelineTeam[]
+  leads                   Lead[]
+  loyaltyFeedbackSettings LoyaltyFeedbackSetting[]
 
   /// Board this team's contacts land on. Several teams may share one pipeline.
   defaultPipeline   Pipeline? @relation("TeamDefaultPipeline", fields: [defaultPipelineId], references: [id], onDelete: SetNull)
@@ -855,23 +856,24 @@ model SurveyResponse {
   platform           ResponsePlatform @default(WEB)
   tag                String?          @default("")
 
-  ip                   String?
+  ip                      String?
   /// [PResponseLocation]
-  location             Json?
-  deviceData           Json?
-  Contact              Contact?              @relation(fields: [contactId], references: [id])
-  contactId            String?               @db.Uuid
-  CampaignParticipants CampaignParticipant[]
-  Testimonial          Testimonial[]
-  Ticket               Ticket[]
-  ticketCards          TicketCard[]
+  location                Json?
+  deviceData              Json?
+  Contact                 Contact?                 @relation(fields: [contactId], references: [id])
+  contactId               String?                  @db.Uuid
+  CampaignParticipants    CampaignParticipant[]
+  Testimonial             Testimonial[]
+  Ticket                  Ticket[]
+  ticketCards             TicketCard[]
   /// Caller-supplied key that makes a submission idempotent. WhatsApp Flow runs
   /// pass their flow token: Meta retries a `data_exchange` request that 500s,
   /// and the answers may already have been filed by the attempt that failed.
   /// Null for every path that has no natural key (web responses, legacy
   /// phone-token flow runs) — Postgres treats nulls as distinct, so any number
   /// of rows may leave it unset.
-  idempotencyKey       String?               @unique
+  idempotencyKey          String?                  @unique
+  loyaltyFeedbackRequests LoyaltyFeedbackRequest[]
 }
 
 model SurveyStats {
@@ -1321,19 +1323,19 @@ model ContactForm {
 }
 
 model WaTemplate {
-  id                      String                @id @default(uuid()) @db.Uuid
-  createdAt               DateTime              @default(now())
+  id                      String                   @id @default(uuid()) @db.Uuid
+  createdAt               DateTime                 @default(now())
   /// [PWaTemplateWithTypesData]
   data                    Json
   acceptButton            String? // QuickReplyButton text which on clicking will send the survey to the user
   /// [PWaTemplateDefaultValues]
   defaultValues           Json? // default values for images and other fields
-  templateType            TemplateType          @default(GENERAL_NOTIFICATION)
+  templateType            TemplateType             @default(GENERAL_NOTIFICATION)
   /// [PWaTemplateConfig]
   config                  Json?
-  org                     Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                   String                @db.Uuid
-  WhatsappSettings        WhatsappSettings?     @relation(fields: [whatsappSettingsPhoneId], references: [phoneId], onDelete: SetNull)
+  org                     Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                   String                   @db.Uuid
+  WhatsappSettings        WhatsappSettings?        @relation(fields: [whatsappSettingsPhoneId], references: [phoneId], onDelete: SetNull)
   whatsappSettingsPhoneId String?
   Campaign                Campaign[]
   waMessageSchedule       WaMessageSchedule[]
@@ -1341,6 +1343,7 @@ model WaTemplate {
   CampaignDripStage       CampaignDripStage[]
   loyaltyRewards          LoyaltyReward[]
   eventTriggers           LoyaltyEventTrigger[]
+  loyaltyFeedbackSettings LoyaltyFeedbackSetting[]
 }
 
 model ReviewSuggestion {
@@ -1620,14 +1623,15 @@ model WaFlow {
   /// [PWaFlowStartMessageConfig]
   startMessageConfig Json @default("{}")
 
-  org          Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId        String  @db.Uuid
-  survey       Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId     String  @unique @db.Uuid
-  anonymous    Boolean @default(false)
-  version      Int     @default(1)
+  org                     Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                   String                   @db.Uuid
+  survey                  Survey                   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId                String                   @unique @db.Uuid
+  anonymous               Boolean                  @default(false)
+  version                 Int                      @default(1)
   ///[FlowTicket[]]
-  ticketIssued Json[]
+  ticketIssued            Json[]
+  loyaltyFeedbackSettings LoyaltyFeedbackSetting[]
 
   // The WhatsApp channel this flow lives on. Meta scopes `flowId` to a WABA, so a
   // flow can only be referenced (sent, or attached to a template's FLOW button) from
@@ -2178,11 +2182,11 @@ model LoyaltyProgram {
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   // Program Identity
-  name   String
+  name         String
   /// The business behind the programme ("Kettle & Co"), distinct from the programme's own
   /// name ("Kettle Rewards"). Null on programmes created before the two were separated.
   businessName String?
-  status String @default("draft") // 'draft', 'active', 'paused'
+  status       String  @default("draft") // 'draft', 'active', 'paused'
 
   // Currency Configuration
   currencyName       String @default("Points") // Points, Stars, Beans, etc.
@@ -2206,23 +2210,23 @@ model LoyaltyProgram {
   refereeRewardId   String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
 
   // Tier Configuration
-  tiersEnabled    Boolean @default(true)
-  tierResetPeriod String? // 'never', 'yearly', 'monthly'
+  tiersEnabled                  Boolean @default(true)
+  tierResetPeriod               String? // 'never', 'yearly', 'monthly'
   // Rolling window for tier qualification: a member's tier is judged on purchase spend in
   // the trailing N months, and can move down when it lapses. Null = lifetime spend (legacy).
   tierQualificationWindowMonths Int?
 
   // Venue & branding profile (onboarding "profile" step). Hero image and brand colour are
   // stored now for digital wallet passes / web widgets later.
-  timezone       String?
-  logoUrl        String?
-  brandColor     String?
-  heroImageUrl   String?
-  contactName    String?
-  contactPhone   String?
-  contactEmail   String?
+  timezone     String?
+  logoUrl      String?
+  brandColor   String?
+  heroImageUrl String?
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
   // Print materials — QR card and brochure copy/settings. Owned and versioned by the UI.
-  materials      Json?
+  materials    Json?
 
   // WhatsApp Business Account / Number
   whatsappSettingsId String?
@@ -2251,13 +2255,15 @@ model LoyaltyProgram {
   updatedAt DateTime @updatedAt
 
   // Relations
-  tiers         LoyaltyTier[]
-  earningRules  LoyaltyEarningRule[]
-  rewards       LoyaltyReward[]
-  customers     CustomerLoyaltyAccount[]
-  transactions  LoyaltyTransaction[]
-  referrals     LoyaltyReferral[]
-  eventTriggers LoyaltyEventTrigger[]
+  tiers            LoyaltyTier[]
+  earningRules     LoyaltyEarningRule[]
+  rewards          LoyaltyReward[]
+  customers        CustomerLoyaltyAccount[]
+  transactions     LoyaltyTransaction[]
+  referrals        LoyaltyReferral[]
+  eventTriggers    LoyaltyEventTrigger[]
+  feedbackSetting  LoyaltyFeedbackSetting?
+  feedbackRequests LoyaltyFeedbackRequest[]
 
   @@index([orgId])
   @@index([status])
@@ -2389,6 +2395,7 @@ model LoyaltyReward {
   loyaltyTransactions LoyaltyTransaction[]
   assignedRewards     CustomerReward[]
   eventTriggers       LoyaltyEventTrigger[]
+  feedbackSettings    LoyaltyFeedbackSetting[]
 
   @@index([programId])
   @@index([status])
@@ -2442,9 +2449,10 @@ model CustomerLoyaltyAccount {
   transactions        LoyaltyTransaction[]
   redemptions         LoyaltyRedemption[]
   assignedRewards     CustomerReward[]
-  referralsAsReferrer LoyaltyReferral[]    @relation("ReferrerAccount")
-  referralsAsReferee  LoyaltyReferral[]    @relation("RefereeAccount")
+  referralsAsReferrer LoyaltyReferral[]        @relation("ReferrerAccount")
+  referralsAsReferee  LoyaltyReferral[]        @relation("RefereeAccount")
   approvalRequests    ApprovalRequest[]
+  feedbackRequests    LoyaltyFeedbackRequest[]
 
   @@unique([programId, contactId])
   @@index([programId])
@@ -2456,17 +2464,98 @@ model CustomerLoyaltyAccount {
 }
 
 model CustomerReward {
-  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  shortCode  String                 @unique
-  status     CustomerRewardStatus   @default(ISSUED)
-  rewardId   String                 @db.Uuid
-  reward     LoyaltyReward          @relation(fields: [rewardId], references: [id], onDelete: Cascade)
-  accountId  String                 @db.Uuid
-  account    CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  assignedAt DateTime               @default(now())
+  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shortCode        String                   @unique
+  status           CustomerRewardStatus     @default(ISSUED)
+  rewardId         String                   @db.Uuid
+  reward           LoyaltyReward            @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  accountId        String                   @db.Uuid
+  account          CustomerLoyaltyAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  assignedAt       DateTime                 @default(now())
+  feedbackRequests LoyaltyFeedbackRequest[]
 
   @@unique([rewardId, accountId])
   @@index([accountId])
+}
+
+enum LoyaltyFeedbackRequestStatus {
+  SCHEDULED
+  SENT
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+/// Post-visit feedback for one programme: which draft became the WhatsApp Flow, the team
+/// whose Google review link happy customers are sent to, the timing, and the reward for
+/// reviewing. The flow itself is an ordinary WaFlow/Survey pair, so its answers land in
+/// SurveyResponse like any other flow's.
+model LoyaltyFeedbackSetting {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId String         @unique @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  teamId String @db.Uuid
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  dbFlowId     String?     @db.Uuid
+  flow         WaFlow?     @relation(fields: [dbFlowId], references: [dbFlowId], onDelete: SetNull)
+  // The UTILITY template carrying a FLOW button, used when the customer's 24-hour
+  // service window is closed — an interactive flow message can only be sent inside one.
+  waTemplateId String?     @db.Uuid
+  waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: SetNull)
+
+  draftKey         String
+  enabled          Boolean        @default(false)
+  sendDelayMinutes Int            @default(120)
+  cooldownDays     Int            @default(30)
+  // Granted once per customer, on the first tap of the review link.
+  rewardId         String?        @db.Uuid
+  reward           LoyaltyReward? @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+  // Mirrors googleReview.minRating on the flow's overall-rating element.
+  happyMinRating   Int            @default(4)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// One feedback ask to one customer. Created when points are earned, fired by a delayed
+/// BullMQ job, completed by the flow's data-exchange / nfm_reply path, and clicked and
+/// rewarded by the public review redirect.
+model LoyaltyFeedbackRequest {
+  id            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId     String                 @db.Uuid
+  program       LoyaltyProgram         @relation(fields: [programId], references: [id], onDelete: Cascade)
+  accountId     String                 @db.Uuid
+  account       CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  // Unique so one purchase can never schedule two asks, whatever races.
+  transactionId String?                @unique @db.Uuid
+  transaction   LoyaltyTransaction?    @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  status        LoyaltyFeedbackRequestStatus @default(SCHEDULED)
+  happy         Boolean?
+  overallRating Int?
+  // 'interactive' inside the service window, 'template' otherwise.
+  channel       String?
+  failReason    String?
+
+  scheduledFor    DateTime
+  sentAt          DateTime?
+  completedAt     DateTime?
+  reviewClickedAt DateTime?
+  rewardGrantedAt DateTime?
+
+  customerRewardId String?         @db.Uuid
+  customerReward   CustomerReward? @relation(fields: [customerRewardId], references: [id], onDelete: SetNull)
+  surveyResponseId String?         @db.Uuid
+  surveyResponse   SurveyResponse? @relation(fields: [surveyResponseId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([programId, status])
+  @@index([programId, createdAt(sort: Desc)])
+  @@index([accountId, createdAt(sort: Desc)])
 }
 
 // Complete ledger of all point movements
@@ -2505,10 +2594,11 @@ model LoyaltyTransaction {
   program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
 
   // Metadata
-  createdAt          DateTime            @default(now())
-  createdBy          String?             @db.Uuid
+  createdAt          DateTime                @default(now())
+  createdBy          String?                 @db.Uuid
   loyaltyRedemptions LoyaltyRedemption[]
   approvalRequest    ApprovalRequest?
+  feedbackRequest    LoyaltyFeedbackRequest?
 
   @@index([accountId])
   @@index([accountId, createdAt(sort: Desc)])
@@ -3442,6 +3532,7 @@ model Lead {
   tasks      LeadTask[]
   /// A lead can be worked by several people, the same way a ticket card is.
   assignees  LeadAssignee[]
+
   /// One lead per contact per board. Postgres counts NULLs as distinct, so this
   /// leaves contact-less leads — walk-ins, manual board entries — unconstrained
   /// while closing the race in `setContactStage`, where two concurrent syncs

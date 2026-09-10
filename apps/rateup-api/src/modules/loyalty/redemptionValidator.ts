@@ -17,6 +17,7 @@ import {
   TierRestrictions,
   LoyaltyRedemptionContext,
   DayOfWeek,
+  ASSIGNMENT_ONLY_REWARD_TYPES,
 } from "../../types/loyalty.js";
 
 dayjs.extend(utc);
@@ -64,8 +65,8 @@ export class RedemptionValidator {
       };
     }
 
-    // Check if reward type is 'assigned' and if it is assigned to the customer
-    if (reward.rewardType === "assigned") {
+    // Assigned and review rewards cannot be bought: they have to be on the account already
+    if (ASSIGNMENT_ONLY_REWARD_TYPES.includes(reward.rewardType)) {
       const assignment = await prisma.customerReward.findUnique({
         where: {
           rewardId_accountId: {
@@ -82,8 +83,11 @@ export class RedemptionValidator {
 
     const rules = (reward.redemptionRules ?? {}) as LoyaltyRedemptionRules;
 
-    // 1. Check points balance (skip for assigned type rewards)
-    if (reward.rewardType !== "assigned" && customer.currentPoints < reward.pointsCost) {
+    // 1. Check points balance (skip for rewards that are issued rather than bought)
+    if (
+      !ASSIGNMENT_ONLY_REWARD_TYPES.includes(reward.rewardType) &&
+      customer.currentPoints < reward.pointsCost
+    ) {
       violations.push(
         `Not enough points. Need ${reward.pointsCost}, have ${customer.currentPoints}`,
       );

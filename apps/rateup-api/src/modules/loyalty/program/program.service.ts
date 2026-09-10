@@ -2,6 +2,7 @@ import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.schema.js";
 import { LoyaltyRewardStatus } from "../rewards/reward.schema.js";
+import { LoyaltyRewardType } from "../../../types/loyalty.js";
 
 export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: string) {
   // Check if program already exists
@@ -60,7 +61,11 @@ export async function getLoyaltyProgramByOrg(orgId: string) {
         orderBy: { priority: "desc" },
       },
       rewards: {
-        where: { status: LoyaltyRewardStatus.ACTIVE },
+        // Review rewards are earned, not bought, so they are not part of the catalogue.
+        where: {
+          status: LoyaltyRewardStatus.ACTIVE,
+          rewardType: { not: LoyaltyRewardType.REVIEW },
+        },
       },
     },
   });

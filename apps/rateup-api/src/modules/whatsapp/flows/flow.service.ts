@@ -35,6 +35,7 @@ import {
 import { validateLogic, validateLogicV2 } from "../../question/question.utils.js";
 import { signFlowToken, verifyFlowToken } from "./flowToken.js";
 import { appendFlowResponses, clearFlowResponses, getFlowResponses } from "./flowState.js";
+import { onFeedbackFlowCompleted } from "../../loyalty/feedback/feedback.completion.js";
 import { unusableRequest } from "./flow.errors.js";
 import { createCTAButtonMessage, parseMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../../utils/commonUtils.js";
@@ -556,6 +557,8 @@ interface sendFlowProps {
     campaignParticipantId?: string | null;
     campaignParticipantDripStageId?: string | null;
     tag?: string | null;
+    /** Set by the loyalty feedback scheduler so the completion is filed against its request. */
+    feedbackRequestId?: string | null;
   };
 }
 export async function sendFlow({
@@ -599,6 +602,7 @@ export async function sendFlow({
             campaignParticipantId: context.campaignParticipantId,
             campaignParticipantDripStageId: context.campaignParticipantDripStageId,
             tag: context.tag,
+            feedbackRequestId: context.feedbackRequestId,
           })
         : undefined,
     });
@@ -1154,6 +1158,8 @@ export interface FlowRun {
   tag?: string | null;
   campaignParticipantId?: string | null;
   campaignParticipantDripStageId?: string | null;
+  /** Loyalty feedback request this run answers, when the feedback scheduler sent it. */
+  feedbackRequestId?: string | null;
   surveyTeamMap: NonNullable<Awaited<ReturnType<typeof getSurveyTeamMapWithFlow>>>;
   /** v1 answers carry `type`; v2 flow answers legitimately omit it. */
   responses: WaFlowQuestionResponse[];
@@ -1188,6 +1194,7 @@ export async function resolveFlowRun(flowToken: string, orgId: string): Promise<
     tag: context.tag,
     campaignParticipantId: context.campaignParticipantId,
     campaignParticipantDripStageId: context.campaignParticipantDripStageId,
+    feedbackRequestId: context.feedbackRequestId,
     surveyTeamMap,
     responses: await getFlowResponses<WaFlowQuestionResponse>(flowToken),
   };
@@ -1213,7 +1220,7 @@ interface handleFlowEndProps {
 async function handleFlowEnd({ run, decryptedBody }: handleFlowEndProps) {
   const { version, flow_token } = decryptedBody;
   const uniqueResponses = removeDuplicateResponses(run.responses);
-  await saveResponses({
+  const saved = await saveResponses({
     ...run,
     responses: uniqueResponses,
     idempotencyKey: run.flowToken,
@@ -1239,7 +1246,19 @@ async function handleFlowEnd({ run, decryptedBody }: handleFlowEndProps) {
     });
   }
 
-  if (sendGRLink) {
+  if (run.feedbackRequestId) {
+    // A loyalty feedback run files its own completion and sends the review link
+    // through the tracked redirect, so the plain Google CTA below is skipped.
+    onFeedbackFlowCompleted({
+      requestId: run.feedbackRequestId,
+      orgId: run.orgId,
+      phone: run.phone,
+      surveyResponseId: saved.id,
+      happy: sendGRLink,
+      screens: waFlow?.json.screens ?? [],
+      responses: uniqueResponses,
+    }).catch((e) => log.error({ err: e }, "Loyalty feedback completion failed"));
+  } else if (sendGRLink) {
     sendGReviewLink({
       phone: run.phone,
       surveyTeamMapId: run.surveyTeamMap.id,
@@ -1302,7 +1321,7 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
   // A static flow submits every answer in this one payload, so the collected
   // set is replaced rather than appended to.
   const uniqueResponses = removeDuplicateResponses(questionResponses);
-  await saveResponses({
+  const saved = await saveResponses({
     ...run,
     responses: uniqueResponses,
     idempotencyKey: run.flowToken,
@@ -1321,7 +1340,18 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
         responses: uniqueResponses,
       });
 
-  if (sendGRLink) {
+  if (run.feedbackRequestId) {
+    // See handleFlowEnd: the feedback module owns the review CTA for its own runs.
+    await onFeedbackFlowCompleted({
+      requestId: run.feedbackRequestId,
+      orgId: run.orgId,
+      phone: run.phone,
+      surveyResponseId: saved.id,
+      happy: sendGRLink,
+      screens: run.surveyTeamMap.survey.WaFlow.json.screens,
+      responses: uniqueResponses,
+    });
+  } else if (sendGRLink) {
     await sendGReviewLink({
       phone: run.phone,
       surveyTeamMapId: run.surveyTeamMap.id,

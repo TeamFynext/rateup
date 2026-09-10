@@ -53,6 +53,7 @@ import { externalIntegrationRoutes } from "./modules/integrations/external/exter
 import healthRoutes from "./routes/health.js";
 import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.public.route.js";
 import { loyaltyProgramPublicRoutes } from "./modules/loyalty/program/program.public.route.js";
+import { loyaltyFeedbackPublicRoutes } from "./modules/loyalty/feedback/feedback.public.route.js";
 import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
 import { webhookRoutes } from "./modules/webhook/webhook.route.js";
 import { referralRoutes } from "./modules/referrals/referrals.route.js";
@@ -81,6 +82,7 @@ const routeConfigs = [
     prefix: "/api/public/loyalty/accounts",
   },
   { plugin: loyaltyProgramPublicRoutes, prefix: "/api/public/loyalty/programs" },
+  { plugin: loyaltyFeedbackPublicRoutes, prefix: "/api/public/loyalty/feedback" },
 
   // // Protected routes
   { plugin: surveyRoutes, prefix: "/api/survey" },

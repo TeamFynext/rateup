@@ -9,7 +9,6 @@ import {
 } from "./settings.schema.js";
 import { sendMessage, sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
-import dayjs from "dayjs";
 import { getLCustomerByPhone, updateCustomerAccount } from "../accounts/account.service.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
 import { renderReplyText } from "../richText.js";
@@ -375,72 +374,6 @@ export async function handleLoyaltyPointsCommand(
   } else if (responseType === WaAutomatedReplyResponseType.Template) {
     return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
   }
-}
-export async function handleLoyaltyFeedback(
-  phone: string,
-  action: {
-    waTemplateId: string;
-    orgId: string;
-    startDate: Date | string;
-    endDate: Date | string;
-    rewardId?: string | null;
-  },
-) {
-  const { waTemplateId, orgId } = action;
-  if (dayjs().isBefore(dayjs(action.startDate)) || dayjs().isAfter(dayjs(action.endDate))) {
-    return { success: false, message: "Action Not available on this date" };
-  }
-  const customer = await getLCustomerByPhone(phone, orgId);
-
-  if (!customer) {
-    const message = `You are not a member of loyalty program yet`;
-    await sendTextMessage({ phone, orgId }, null, message);
-    return;
-  }
-  // if (customer.status !== "active") await updateLCustomer(phone, orgId, { status: "active" });
-  // const existing = await prisma.loyaltyActionCustomerMap.findFirst({
-  //   where: {
-  //     customerId: customer.id,
-  //     actionId: action.id,
-  //   },
-  // });
-  // if (existing) {
-  //   const message = `You have already given feedback for this action`;
-  //   await sendTextMessage({ phone, orgId }, null, message);
-  //   return;
-  // }
-
-  //handling referrer/customer action having reward
-  if (action.rewardId) {
-    // const { redeem, message } = await createRedeem(
-    //   customer.id,
-    //   action.rewardId,
-    //   true
-    // );
-    // if (redeem.status === RedeemStatus.FAILED) {
-    //   return {
-    //     success: false,
-    //     message,
-    //   };
-    // }
-    // await createCustomerAction({
-    //   customerId: customer.id,
-    //   actionId: action.id,
-    //   refereePhone: "",
-    //   amount: action.points,
-    // });
-  } else {
-    //handling referrer/customer action having points
-    // await createCustomerAction({
-    //   customerId: customer.id,
-    //   actionId: action.id,
-    //   refereePhone: "",
-    //   amount: action.points,
-    // });
-    // await updateLCustomerPoint(customer.id, customerPoints);
-  }
-
-  await handleSendTemplate(waTemplateId, orgId, phone, []);
 }
 
 // The rich-text helpers live in ../richText.ts so the account service can use them too;

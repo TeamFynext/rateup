@@ -21,6 +21,8 @@ import {
 import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { renderReplyText } from "../richText.js";
+import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
+import { log } from "../../../utils/logger.js";
 
 export async function findAccountByReferralCode(programId: string, referralCode: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
@@ -685,6 +687,17 @@ export async function awardPoints(
         calculated,
       };
     },
+  );
+
+  // Ask for feedback later, if the programme has it switched on. Off the request path: the
+  // scheduler only opens a row and arms a delayed job, and a failure there is not the
+  // cashier's problem — the points are already awarded.
+  void scheduleFeedbackRequest({
+    programId,
+    accountId: customer.id,
+    transactionId: transaction.id,
+  }).catch((e) =>
+    log.error({ err: e, accountId: customer.id }, "Could not schedule a feedback request"),
   );
 
   // Check for tier upgrade

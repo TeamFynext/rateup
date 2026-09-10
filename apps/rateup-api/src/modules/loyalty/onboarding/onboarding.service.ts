@@ -7,6 +7,7 @@ import {
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { LoyaltyRewardType } from "../../../types/loyalty.js";
 import { calculateGiveback, givebackBand } from "../giveback.js";
 import { buildGivebackInput, loadProgramGivebackSources } from "../giveback/giveback.service.js";
 import { toRichText } from "../richText.js";
@@ -108,8 +109,10 @@ export async function getOnboardingState(orgId: string) {
         where: { programId: program.id },
         orderBy: { priority: "desc" },
       }),
+      // Review rewards belong to Feedback, not the wizard's Rewards step: shown there they
+      // would be misread as point rewards and re-saved as such.
       prisma.loyaltyReward.findMany({
-        where: { programId: program.id },
+        where: { programId: program.id, rewardType: { not: LoyaltyRewardType.REVIEW } },
         orderBy: { pointsCost: "asc" },
       }),
       prisma.loyaltyWaCommand.findMany({ where: { orgId } }),
@@ -626,7 +629,7 @@ export async function applyRewardsStep(orgId: string, input: RewardsStepInput) {
   });
 
   return await prisma.loyaltyReward.findMany({
-    where: { programId: program.id },
+    where: { programId: program.id, rewardType: { not: LoyaltyRewardType.REVIEW } },
     orderBy: { pointsCost: "asc" },
   });
 }

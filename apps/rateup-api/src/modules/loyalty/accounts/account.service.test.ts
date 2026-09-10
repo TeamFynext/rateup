@@ -46,11 +46,16 @@ vi.mock("../loyaltyWaDispatcher.js", () => ({
     skippedReason: null,
   },
 }));
+// The scheduler opens a BullMQ queue at import time; awardPoints only needs its result.
+vi.mock("../feedback/feedback.scheduler.js", () => ({
+  scheduleFeedbackRequest: vi.fn(async () => ({ scheduled: false, reason: "no_setting" })),
+}));
 
 import prisma from "../../../utils/prisma.js";
 import { calculatePointsForPurchase, checkAndUpgradeTier } from "../earningRulesEngine.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   assignRewardToCustomer,
@@ -855,6 +860,26 @@ describe("awardPoints", () => {
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
     expect(checkAndUpgradeTier).toHaveBeenCalledWith("acct-1", 1000);
+  });
+
+  test("asks the feedback scheduler to follow up on the purchase", async () => {
+    db.loyaltyTransaction.create.mockResolvedValueOnce({ id: "txn-9" });
+
+    await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(scheduleFeedbackRequest).toHaveBeenCalledWith({
+      programId: PROGRAM,
+      accountId: "acct-1",
+      transactionId: "txn-9",
+    });
+  });
+
+  test("a scheduler failure never fails the award", async () => {
+    (scheduleFeedbackRequest as Mock).mockRejectedValueOnce(new Error("redis down"));
+
+    await expect(awardPoints(PROGRAM, "contact-1", 500, {})).resolves.toMatchObject({
+      pointsAwarded: 100,
+    });
   });
 
   test("records the purchase amount as a typed column as well as in the metadata", async () => {

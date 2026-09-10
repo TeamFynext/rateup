@@ -657,16 +657,6 @@ export async function saveResponses(session: SaveResponsesContext) {
   };
   const res = await createResponse(surveyResponse, false, null);
   await updateResponse(res.id, { ip: session.ip, location: undefined });
-  // TODO: CHECK LOYALTY FEATURE
-  // const loyalty = await prisma.loyaltyAction.findFirst({
-  //   where: {
-  //     flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
-  //     type: LoyaltyActionType.FeedBack,
-  //   },
-  // });
-  // if (loyalty) {
-  //   await handleLoyaltyFeedback(session.phone, loyalty);
-  // }
   log.info(
     {
       responseId: res.id,

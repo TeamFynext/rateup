@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma.js";
+import { LoyaltyRewardType } from "../../../types/loyalty.js";
 import { LoyaltyRewardInput, LoyaltyRewardUpdateInput } from "./reward.schema.js";
 
 export async function createLoyaltyReward(data: LoyaltyRewardInput, programId: string) {
@@ -27,11 +28,17 @@ export async function getLoyaltyRewards(programId: string) {
   });
 }
 
+/**
+ * The catalogue a customer can pick from — the WhatsApp "rewards" keyword, the external
+ * API and the setup wizard. Review rewards are left out: they cannot be bought with points,
+ * only earned by tapping the Google review link after the feedback flow.
+ */
 export async function getActiveLoyaltyRewards(programId: string) {
   return await prisma.loyaltyReward.findMany({
     where: {
       programId,
       status: "ACTIVE",
+      rewardType: { not: LoyaltyRewardType.REVIEW },
     },
     orderBy: { pointsCost: "asc" },
   });

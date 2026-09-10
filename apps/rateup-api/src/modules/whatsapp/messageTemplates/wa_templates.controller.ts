@@ -421,6 +421,8 @@ export async function sendTemplateToUserCore(
   buttonVariable?: string,
   quickReplyPayload?: string[],
   externalApi: boolean = false,
+  /** Extra run context signed into a FLOW button's token, e.g. the loyalty feedback request. */
+  flowContext?: { feedbackRequestId?: string | null },
 ): Promise<
   // The timeDelay branch returns the raw createWaMessageSchedule() row (its own
   // `status`/`id` fields, not this boolean/message shape) — callers that pass
@@ -482,7 +484,14 @@ export async function sendTemplateToUserCore(
     buttonVariable,
     quickReplyPayload,
     includeFlowButton: containsFlowButton,
-    flowToken: surveyTeamMapId ? signFlowToken({ surveyTeamMapId, orgId, phone }) : undefined,
+    flowToken: surveyTeamMapId
+      ? signFlowToken({
+          surveyTeamMapId,
+          orgId,
+          phone,
+          feedbackRequestId: flowContext?.feedbackRequestId,
+        })
+      : undefined,
   });
 
   const templateQuery = {

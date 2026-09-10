@@ -143,6 +143,8 @@ describe("getLoyaltyProgramByOrg", () => {
 
     expect(db.loyaltyProgram.findUnique.mock.calls[0][0].include.rewards.where).toEqual({
       status: "ACTIVE",
+      // Review rewards are earned by tapping the Google review link, never bought.
+      rewardType: { not: "review" },
     });
   });
 
@@ -430,6 +432,7 @@ describe("rewards", () => {
     expect(db.loyaltyReward.findMany.mock.calls[0][0].where).toEqual({
       programId: PROGRAM,
       status: "ACTIVE",
+      rewardType: { not: "review" },
     });
   });
 

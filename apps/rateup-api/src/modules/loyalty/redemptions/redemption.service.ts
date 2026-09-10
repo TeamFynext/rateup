@@ -5,6 +5,7 @@ import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { ApplyRedemptionInput, RedeemRewardInput } from "../accounts/account.schema.js";
 import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
+import { ASSIGNMENT_ONLY_REWARD_TYPES } from "../../../types/loyalty.js";
 
 /**
  * A transaction client — what `prisma.$transaction(async (tx) => …)` hands the
@@ -53,8 +54,11 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     throw new Error("Reward not found");
   }
 
-  // Check if customer has enough points (skip for assigned type rewards)
-  if (reward.rewardType !== "assigned" && customer.currentPoints < reward.pointsCost) {
+  // Check if customer has enough points (skip for rewards that are issued, not bought)
+  if (
+    !ASSIGNMENT_ONLY_REWARD_TYPES.includes(reward.rewardType) &&
+    customer.currentPoints < reward.pointsCost
+  ) {
     throw new Error(
       `Insufficient points. Required: ${reward.pointsCost}, Available: ${customer.currentPoints}`,
     );
