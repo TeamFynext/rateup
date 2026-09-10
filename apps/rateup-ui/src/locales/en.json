@@ -46,7 +46,7 @@
     "{name} +{total}": "{name} +{total}",
     "{name} added": "{name} added",
     "{name} added to the pipeline": "{name} added to the pipeline",
-    "{name} already has this number in your contacts.": "{name} already has this number in your contacts.",
+    "{name} already has this number — the lead will be linked to them.": "{name} already has this number — the lead will be linked to them.",
     "{name} created": "{name} created",
     "{name} is a {status} column, so the open leads moved there are closed on arrival.": "{name} is a {status} column, so the open leads moved there are closed on arrival.",
     "{name} tier settings saved": "{name} tier settings saved",
@@ -88,6 +88,7 @@
     "A delivery was refused at {time}: {reason}": "A delivery was refused at {time}: {reason}",
     "A label sticks to the customer — it stays visible on every ticket they open.": "A label sticks to the customer — it stays visible on every ticket they open.",
     "a new stage": "a new stage",
+    "A number links the lead to that contact, or adds them to your contacts.": "A number links the lead to that contact, or adds them to your contacts.",
     "A one-off top-up on your plan's monthly conversation allowance.": "A one-off top-up on your plan's monthly conversation allowance.",
     "A pipeline needs at least one lead stage": "A pipeline needs at least one lead stage",
     "A pipeline turns conversations into a board of stages you can drag leads across. Create one to get started.": "A pipeline turns conversations into a board of stages you can drag leads across. Create one to get started.",
@@ -502,6 +503,7 @@
     "Check back later for more survey templates.": "Check back later for more survey templates.",
     "Check Status": "Check Status",
     "Check your inbox": "Check your inbox",
+    "Check your internet connection": "Check your internet connection",
     "Checking key...": "Checking key...",
     "Checking...": "Checking...",
     "Checkout Settings": "Checkout Settings",
@@ -720,6 +722,7 @@
     "Could not update the activity": "Could not update the activity",
     "Could not update the selected leads": "Could not update the selected leads",
     "Could not update the team's pipeline": "Could not update the team's pipeline",
+    "Couldn't load your account": "Couldn't load your account",
     "Couldn't read the display name from Meta": "Couldn't read the display name from Meta",
     "Couldn't read the profile from Meta": "Couldn't read the profile from Meta",
     "Coupon Code": "Coupon Code",
@@ -1528,7 +1531,6 @@
     "Lifetime": "Lifetime",
     "Lifetime Points": "Lifetime Points",
     "Link a specific phone number only when your flow sends outgoing WhatsApp messages.": "Link a specific phone number only when your flow sends outgoing WhatsApp messages.",
-    "Link this lead": "Link this lead",
     "Link your WhatsApp Business account to enable customer messaging, loyalty commands, and broadcast campaigns.": "Link your WhatsApp Business account to enable customer messaging, loyalty commands, and broadcast campaigns.",
     "Linked to {name} — the lead opens their conversation in Inbox.": "Linked to {name} — the lead opens their conversation in Inbox.",
     "List": "List",
@@ -1573,6 +1575,7 @@
     "Loyalty Program Settings": "Loyalty Program Settings",
     "Loyalty WhatsApp Command Configuration": "Loyalty WhatsApp Command Configuration",
     "Make it work for you": "Make it work for you",
+    "Make sure you are online, then reload. If it keeps happening, log out and log back in to refresh your session": "Make sure you are online, then reload. If it keeps happening, log out and log back in to refresh your session",
     "Make your messages personal using variables and get more replies!": "Make your messages personal using variables and get more replies!",
     "Manage": "Manage",
     "Manage Automations": "Manage Automations",
@@ -1602,7 +1605,9 @@
     "Mark contact as spam": "Mark contact as spam",
     "Mark done": "Mark done",
     "Mark lost": "Mark lost",
+    "Mark lost in {stage}": "Mark lost in {stage}",
     "Mark won": "Mark won",
+    "Mark won in {stage}": "Mark won in {stage}",
     "Marked lost": "Marked lost",
     "Marked won": "Marked won",
     "Match Data": "Match Data",
@@ -1679,6 +1684,7 @@
     "More packs": "More packs",
     "Most Recent SignUps": "Most Recent SignUps",
     "Move its leads to": "Move its leads to",
+    "Move to {stage}": "Move to {stage}",
     "Moved to {stage}": "Moved to {stage}",
     "Multi-value": "Multi-value",
     "Multiplier": "Multiplier",
@@ -1812,6 +1818,7 @@
     "No upcoming charges": "No upcoming charges",
     "No WhatsApp Business accounts connected yet.": "No WhatsApp Business accounts connected yet.",
     "NO_RESPONSE": "NO_RESPONSE",
+    "Nobody has this number yet — it will be added to your contacts.": "Nobody has this number yet — it will be added to your contacts.",
     "Nobody is on this pipeline's teams yet.": "Nobody is on this pipeline's teams yet.",
     "Nobody matches “{query}”.": "Nobody matches “{query}”.",
     "Non-profit": "Non-profit",
@@ -2028,7 +2035,6 @@
     "Please enter your Other input": "Please enter your Other input",
     "Please fill question": "Please fill question",
     "Please hold on while publishing your survey": "Please hold on while publishing your survey",
-    "Please retry loading the application. If the problem continues, you may need to logout and login again": "Please retry loading the application. If the problem continues, you may need to logout and login again",
     "Please select a category": "Please select a category",
     "Please select a CSV file to import.": "Please select a CSV file to import.",
     "Please select a page": "Please select a page",
@@ -2223,6 +2229,7 @@
     "Rename the quick access link for your campaigns": "Rename the quick access link for your campaigns",
     "Renew your plan": "Renew your plan",
     "Renew your plan to pick up where you left off. Your data is exactly where you left it.": "Renew your plan to pick up where you left off. Your data is exactly where you left it.",
+    "Reopen in {stage}": "Reopen in {stage}",
     "Reopen lead": "Reopen lead",
     "Reopened": "Reopened",
     "Reorder {stage}, currently {position} of {total}": "Reorder {stage}, currently {position} of {total}",
@@ -2296,7 +2303,6 @@
     "Rewards": "Rewards",
     "Rewards Issue list": "Rewards Issue list",
     "Rewards Redeemed": "Rewards Redeemed",
-    "Ritu Bansal": "Ritu Bansal",
     "Role": "Role",
     "Rotting after": "Rotting after",
     "Rotting checks are off": "Rotting checks are off",
@@ -2497,7 +2503,6 @@
     "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)": "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)",
     "Service Type": "Service Type",
     "serviceId": "serviceId",
-    "Session Error": "Session Error",
     "Set a new password": "Set a new password",
     "Set all to zero": "Set all to zero",
     "Set hours": "Set hours",
@@ -2702,6 +2707,7 @@
     "Thank you for choosing Rateup Premium subscription.": "Thank you for choosing Rateup Premium subscription.",
     "Thank You!": "Thank You!",
     "That channel does not exist, or is not available on your plan.": "That channel does not exist, or is not available on your plan.",
+    "That customer is already on this board.": "That customer is already on this board.",
     "That number doesn't look right.": "That number doesn't look right.",
     "The board starts with a standard funnel — New Lead through to Won and Lost. Rename the columns, or change what each one does, afterwards in pipeline settings.": "The board starts with a standard funnel — New Lead through to Won and Lost. Rename the columns, or change what each one does, afterwards in pipeline settings.",
     "The column is removed from the board. Its leads are not deleted — they move to the column you pick below, keeping their notes, timelines and activities.": "The column is removed from the board. Its leads are not deleted — they move to the column you pick below, keeping their notes, timelines and activities.",
@@ -2744,6 +2750,7 @@
     "This gift will be automatically sent on customer's birthday": "This gift will be automatically sent on customer's birthday",
     "This is how the automation looks with sample data": "This is how the automation looks with sample data",
     "This is the beginning of your conversation": "This is the beginning of your conversation",
+    "This is usually a connection problem, or your session may have expired": "This is usually a connection problem, or your session may have expired",
     "This lead is up to date in {crm}.": "This lead is up to date in {crm}.",
     "This message was deleted": "This message was deleted",
     "This Month": "This Month",
@@ -2828,7 +2835,6 @@
     "Unable to get data, please try again later.": "Unable to get data, please try again later.",
     "Unable to get survey, please try again later": "Unable to get survey, please try again later",
     "Unable to get theme, please try again later": "Unable to get theme, please try again later",
-    "Unable to load user data": "Unable to load user data",
     "Unable to Save Image": "Unable to Save Image",
     "Unable to save settings, Please try again later": "Unable to save settings, Please try again later",
     "Unassign everyone": "Unassign everyone",
@@ -2914,6 +2920,7 @@
     "Use points": "Use points",
     "Use Redemption": "Use Redemption",
     "Use Template": "Use Template",
+    "Use their details": "Use their details",
     "Use this key to set up your Zapier connection": "Use this key to set up your Zapier connection",
     "Use variables": "Use variables",
     "used": "used",
@@ -3077,7 +3084,6 @@
     "Your current Rateup plan subscription is successfully cancelled.": "Your current Rateup plan subscription is successfully cancelled.",
     "your email address": "your email address",
     "Your last payment did not go through. Razorpay will retry it — update your card if it keeps failing.": "Your last payment did not go through. Razorpay will retry it — update your card if it keeps failing.",
-    "Your login session data appears to be corrupted": "Your login session data appears to be corrupted",
     "Your packs add": "Your packs add",
     "Your password must meet all security requirements": "Your password must meet all security requirements",
     "Your payment was successful..!": "Your payment was successful..!",
@@ -3113,6 +3119,26 @@
     "العربية": "العربية",
     "हिन्दी": "हिन्दी"
   },
+  "Example": {
+    " /points": "Example: /points"
+  },
+  "campaign.performance": {
+    "Campaign Performance": "Campaign Performance",
+    "Delivered": "Delivered",
+    "Failed": "Failed",
+    "Last updated: Just now": "Last updated: Just now",
+    "Pending": "Pending",
+    "Read": "Read",
+    "Sent": "Sent"
+  },
+  "campaign.card": {
+    "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",
+    "Continue setup": "Continue setup",
+    "Created {date}": "Created {date}",
+    "Draft": "Draft",
+    "Not sent yet": "Not sent yet",
+    "recipients": "recipients"
+  },
   "apianalytics": {
     "All": "All",
     "Avg Delivery Time": "Avg Delivery Time",
@@ -3139,28 +3165,10 @@
     "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
     "WhatsApp Template Analytics": "WhatsApp Template Analytics"
   },
-  "Example": {
-    " /points": "Example: /points"
-  },
-  "campaign.performance": {
-    "Campaign Performance": "Campaign Performance",
-    "Delivered": "Delivered",
-    "Failed": "Failed",
-    "Last updated: Just now": "Last updated: Just now",
-    "Pending": "Pending",
-    "Read": "Read",
-    "Sent": "Sent"
-  },
-  "campaign.card": {
-    "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",
-    "Continue setup": "Continue setup",
-    "Created {date}": "Created {date}",
-    "Draft": "Draft",
-    "Not sent yet": "Not sent yet",
-    "recipients": "recipients"
-  },
-  "campaign.status": {
-    "Campaign stopped": "Campaign stopped"
+  "https": {
+    "//example": {
+      "com/webhook": "https://example.com/webhook"
+    }
   },
   "campaign.details": {
     "{count} recipients_one": "{count} recipients",
@@ -3315,6 +3323,9 @@
     "Wait for the campaign's current send to finish.": "Wait for the campaign's current send to finish.",
     "We couldn't load this campaign.": "We couldn't load this campaign."
   },
+  "campaign.status": {
+    "Campaign stopped": "Campaign stopped"
+  },
   "campaign.list": {
     "{count} campaigns_one": "{count} campaigns",
     "{count} campaigns_other": "{count} campaigns",
@@ -3337,17 +3348,6 @@
     "this month": "this month",
     "this year": "this year",
     "Try adjusting your filters or create a new campaign.": "Try adjusting your filters or create a new campaign."
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
-  },
-  "*Note": {
-    " The updated feature will be valid only till end of the current billing cycle": "*Note: The updated feature will be valid only till end of the current billing cycle"
-  },
-  "https": {
-    "//example": {
-      "com/webhook": "https://example.com/webhook"
-    }
   },
   "campaign.addParticipants": {
     "{count} contacts_one": "{count} contacts",
@@ -3400,6 +3400,21 @@
     "Unnamed contact": "Unnamed contact",
     "WhatsApp contacts only": "WhatsApp contacts only",
     "You have not selected any participant": "You have not selected any participant"
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
+  },
+  "*Note": {
+    " The updated feature will be valid only till end of the current billing cycle": "*Note: The updated feature will be valid only till end of the current billing cycle"
+  },
+  "Note": {
+    " *": "Note: *",
+    " * The OTP expires in 10 minutes once it is sent.": "Note: * The OTP expires in 10 minutes once it is sent.",
+    " * The OTP expires in 10 minutes once it is sent. You can resend in": "Note: * The OTP expires in 10 minutes once it is sent. You can resend in"
+  },
+  "eg": {
+    " I agree to": "eg: I agree to",
+    " terms and conditions": "eg: terms and conditions"
   },
   "Warning": {
     " High Risk Action": "Warning: High Risk Action"
@@ -3725,15 +3740,6 @@
     "Type": "Type",
     "Unknown contact": "Unknown contact",
     "Why messages failed": "Why messages failed"
-  },
-  "Note": {
-    " *": "Note: *",
-    " * The OTP expires in 10 minutes once it is sent.": "Note: * The OTP expires in 10 minutes once it is sent.",
-    " * The OTP expires in 10 minutes once it is sent. You can resend in": "Note: * The OTP expires in 10 minutes once it is sent. You can resend in"
-  },
-  "eg": {
-    " I agree to": "eg: I agree to",
-    " terms and conditions": "eg: terms and conditions"
   },
   "campaign.resend": {},
   "campaign.create": {},
