@@ -16,12 +16,28 @@ interface LeadStageStepperProps {
  * The lead's position in the funnel as a segmented bar — every stage is a
  * button, so the drawer can move a lead without going back to the board. Stages
  * behind the current one read as done, ahead of it as still to come.
+ *
+ * A won or lost lead moves too. The board has always let one be dragged out of a
+ * closing column, and the server treats the column as the authority — landing on
+ * an open one reopens the lead and clears its lost reason — so refusing it here
+ * only made the modal disagree with the board, with the fix buried in a menu.
+ * The button says what it will do when that is more than a move.
  */
 export function LeadStageStepper({ lead, pipeline, onMoveStage }: Readonly<LeadStageStepperProps>) {
   const { t } = useTranslation();
   const currentIndex = pipeline.stages.findIndex((stage) => stage.id === lead.stageId);
   const stage = pipeline.stages[currentIndex];
   const closed = lead.status !== "OPEN";
+
+  /** What landing on this column does, for the button's label. */
+  const actionLabel = (candidate: PipelineStage) => {
+    if (closed && candidate.status === "OPEN") {
+      return t("Reopen in {stage}", { stage: candidate.name });
+    }
+    if (candidate.status === "WON") return t("Mark won in {stage}", { stage: candidate.name });
+    if (candidate.status === "LOST") return t("Mark lost in {stage}", { stage: candidate.name });
+    return t("Move to {stage}", { stage: candidate.name });
+  };
 
   // A board can carry a lot of columns. Past this many the labels are too
   // narrow to read, and the segments become plain bars — the line underneath
@@ -31,31 +47,34 @@ export function LeadStageStepper({ lead, pipeline, onMoveStage }: Readonly<LeadS
   return (
     <div className="border-border shrink-0 border-b px-6 py-4">
       <div className="flex items-center gap-[3px]">
-        {pipeline.stages.map((candidate, index) => (
-          <button
-            key={candidate.id}
-            type="button"
-            title={candidate.name}
-            aria-label={candidate.name}
-            disabled={closed || index === currentIndex}
-            onClick={() => onMoveStage(candidate)}
-            className={cn(
-              // min-w-0 is what keeps a long funnel inside the drawer: without it
-              // each segment refuses to shrink below its label.
-              "min-w-0 flex-1 overflow-hidden",
-              "first:rounded-l-md last:rounded-r-md",
-              "disabled:cursor-default not-disabled:cursor-pointer not-disabled:hover:brightness-95",
-              labelled ? "h-7 px-1 text-[11.5px] font-semibold" : "h-2.5",
-              index === currentIndex && "bg-primary text-primary-foreground",
-              index < currentIndex && "bg-primary/15 text-primary",
-              index > currentIndex && "bg-muted text-muted-foreground",
-            )}
-          >
-            {labelled ? (
-              <span className="block truncate">{candidate.short ?? candidate.name}</span>
-            ) : null}
-          </button>
-        ))}
+        {pipeline.stages.map((candidate, index) => {
+          const label = index === currentIndex ? candidate.name : actionLabel(candidate);
+          return (
+            <button
+              key={candidate.id}
+              type="button"
+              title={label}
+              aria-label={label}
+              disabled={index === currentIndex}
+              onClick={() => onMoveStage(candidate)}
+              className={cn(
+                // min-w-0 is what keeps a long funnel inside the drawer: without it
+                // each segment refuses to shrink below its label.
+                "min-w-0 flex-1 overflow-hidden",
+                "first:rounded-l-md last:rounded-r-md",
+                "disabled:cursor-default not-disabled:cursor-pointer not-disabled:hover:brightness-95",
+                labelled ? "h-7 px-1 text-[11.5px] font-semibold" : "h-2.5",
+                index === currentIndex && "bg-primary text-primary-foreground",
+                index < currentIndex && "bg-primary/15 text-primary",
+                index > currentIndex && "bg-muted text-muted-foreground",
+              )}
+            >
+              {labelled ? (
+                <span className="block truncate">{candidate.short ?? candidate.name}</span>
+              ) : null}
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-2.5 flex items-center justify-between gap-3">
