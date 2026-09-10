@@ -1428,6 +1428,7 @@ declare global {
     type PQuestionResponse = QuestionResponse;
     type PResponseLocation = ResponseLocation;
     type PBusinessHourSchedule = BusinessHourSchedule;
+    type PLoyaltyPendingBonuses = import("./loyalty.js").LoyaltyPendingBonuses;
     type PWaAutomatedReplyMatchData = WaAutomatedReplyMatchData;
 
     type PWaMessageBody = WaInboxMessageBody;

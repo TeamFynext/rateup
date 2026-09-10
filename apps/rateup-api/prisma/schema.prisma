@@ -904,6 +904,7 @@ model Contact {
   consent                      Boolean                   @default(true)
   email                        String?
   dob                          DateTime?
+  gender                       Gender?
   external_id                  String?
   aiWaChat                     Boolean                   @default(false)
   isAiBotActive                Boolean                   @default(false)
@@ -2178,6 +2179,9 @@ model LoyaltyProgram {
 
   // Program Identity
   name   String
+  /// The business behind the programme ("Kettle & Co"), distinct from the programme's own
+  /// name ("Kettle Rewards"). Null on programmes created before the two were separated.
+  businessName String?
   status String @default("draft") // 'draft', 'active', 'paused'
 
   // Currency Configuration
@@ -2204,6 +2208,21 @@ model LoyaltyProgram {
   // Tier Configuration
   tiersEnabled    Boolean @default(true)
   tierResetPeriod String? // 'never', 'yearly', 'monthly'
+  // Rolling window for tier qualification: a member's tier is judged on purchase spend in
+  // the trailing N months, and can move down when it lapses. Null = lifetime spend (legacy).
+  tierQualificationWindowMonths Int?
+
+  // Venue & branding profile (onboarding "profile" step). Hero image and brand colour are
+  // stored now for digital wallet passes / web widgets later.
+  timezone       String?
+  logoUrl        String?
+  brandColor     String?
+  heroImageUrl   String?
+  contactName    String?
+  contactPhone   String?
+  contactEmail   String?
+  // Print materials — QR card and brochure copy/settings. Owned and versioned by the UI.
+  materials      Json?
 
   // WhatsApp Business Account / Number
   whatsappSettingsId String?
@@ -2404,6 +2423,13 @@ model CustomerLoyaltyAccount {
   // Status
   status String @default("active") // 'active', 'suspended', 'closed'
 
+  // Null while a web self-signup waits for its first WhatsApp message or purchase; the
+  // bonuses promised at signup sit in `pendingBonuses` until then. Every other signup path
+  // credits immediately, so the default marks the account verified on creation.
+  verifiedAt     DateTime? @default(now())
+  /// [PLoyaltyPendingBonuses]
+  pendingBonuses Json?
+
   // Metadata
   createdAt      DateTime @default(now())
   lastActivityAt DateTime @default(now())
@@ -2466,6 +2492,9 @@ model LoyaltyTransaction {
   earningRule           LoyaltyEarningRule? @relation(fields: [earningRuleId], references: [id])
   earningRuleMultiplier Decimal?            @db.Decimal(4, 2)
   basePoints            Int?
+  // Purchase amount behind an 'earn'/'purchase' row, as a typed column so trailing-window
+  // tier qualification can be summed with an index (metadata.purchaseAmount is kept too).
+  purchaseAmount        Decimal?            @db.Decimal(12, 2)
 
   // Related Records
   rewardId String?        @db.Uuid

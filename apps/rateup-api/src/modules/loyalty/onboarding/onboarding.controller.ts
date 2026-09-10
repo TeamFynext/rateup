@@ -3,16 +3,17 @@ import { ZodError } from "zod";
 
 import { log } from "../../../utils/logger.js";
 import {
-  basicsStepSchema,
   earningStepSchema,
+  LEGACY_STEP_ALIASES,
   messagesStepSchema,
+  profileStepSchema,
   rewardsStepSchema,
   tiersStepSchema,
   type StepParam,
 } from "./onboarding.schema.js";
 import {
   activateProgram,
-  applyBasicsStep,
+  applyProfileStep,
   applyEarningStep,
   applyMessagesStep,
   applyRewardsStep,
@@ -72,14 +73,14 @@ export async function applyStepHandler(
   reply: FastifyReply,
 ) {
   const { orgId } = request.user;
-  const { step } = request.params;
+  const step = LEGACY_STEP_ALIASES[request.params.step] ?? request.params.step;
 
   try {
     switch (step) {
-      case "basics":
+      case "profile":
         return reply
           .code(200)
-          .send(await applyBasicsStep(orgId, basicsStepSchema.parse(request.body)));
+          .send(await applyProfileStep(orgId, profileStepSchema.parse(request.body)));
       case "earning":
         return reply
           .code(200)

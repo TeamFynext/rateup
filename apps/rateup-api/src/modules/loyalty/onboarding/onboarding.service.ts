@@ -10,6 +10,10 @@ import prisma from "../../../utils/prisma.js";
 import { calculateGiveback, givebackBand } from "../giveback.js";
 import { buildGivebackInput, loadProgramGivebackSources } from "../giveback/giveback.service.js";
 import { toRichText } from "../richText.js";
+import {
+  reevaluateProgramTiers,
+  type ProgramTierMoves,
+} from "../tiers/tierReevaluation.service.js";
 import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 import {
   createTemplate,
@@ -17,10 +21,10 @@ import {
   saveTemplate,
 } from "../../whatsapp/messageTemplates/wa_templates.service.js";
 import type {
-  BasicsStepInput,
   EarningStepInput,
   EventTemplateResult,
   MessagesStepInput,
+  ProfileStepInput,
   RewardsStepInput,
   SkippedCommand,
   TiersStepInput,
@@ -162,7 +166,7 @@ export async function getOnboardingState(orgId: string) {
 async function requireProgram(orgId: string) {
   const program = await prisma.loyaltyProgram.findUnique({ where: { orgId } });
   if (!program) {
-    throw new OnboardingError("Start with the basics step before this one", 409);
+    throw new OnboardingError("Start with the profile step before this one", 409);
   }
   return program;
 }
@@ -177,7 +181,7 @@ export class OnboardingError extends Error {
   }
 }
 
-/* ── step: basics ───────────────────────────────────────────────────────────── */
+/* ── step: profile ──────────────────────────────────────────────────────────── */
 
 /**
  * The join and referral bonuses, as a Prisma update fragment.
@@ -198,7 +202,25 @@ function bonusFieldsOf(input: {
   };
 }
 
-export async function applyBasicsStep(orgId: string, input: BasicsStepInput) {
+/**
+ * The venue & branding fields, as a Prisma update fragment. `undefined` is dropped so a
+ * payload that does not mention a field leaves it alone; `null` goes through and clears it.
+ */
+function profileFieldsOf(input: ProfileStepInput) {
+  const fields = {
+    businessName: input.businessName,
+    timezone: input.timezone,
+    contactName: input.contactName,
+    contactPhone: input.contactPhone,
+    contactEmail: input.contactEmail,
+    logoUrl: input.logoUrl,
+    brandColor: input.brandColor,
+    heroImageUrl: input.heroImageUrl,
+  };
+  return Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
+}
+
+export async function applyProfileStep(orgId: string, input: ProfileStepInput) {
   const existing = await prisma.loyaltyProgram.findUnique({ where: { orgId } });
 
   const shared = {
@@ -209,22 +231,38 @@ export async function applyBasicsStep(orgId: string, input: BasicsStepInput) {
     defaultCountryCode: input.defaultCountryCode,
     whatsappSettingsId: input.whatsappSettingsId,
     averageOrderValue: input.averageOrderValue,
-    onboardingPresetKey: input.presetKey,
-    onboardingStep: "basics",
+    onboardingStep: "profile",
     // The bonuses belong to the rewards step now. A payload that still carries them is
     // honoured; one that does not must leave the stored values where they are.
     ...bonusFieldsOf(input),
+    ...profileFieldsOf(input),
+    // An explicit preset always wins; when absent, an existing programme keeps the one it
+    // was seeded from (the later steps' defaults must not change under the user).
+    ...(input.presetKey === undefined ? {} : { onboardingPresetKey: input.presetKey }),
   };
 
   if (!existing) {
+    // The wizard no longer asks what kind of business this is, so the starter pack is
+    // read off the org's industry — the same guess `GET /presets` makes.
+    const presetKey = input.presetKey ?? (await getOnboardingPresets(orgId)).suggestedPresetKey;
     return await prisma.loyaltyProgram.create({
       // A brand-new programme has nothing stored to preserve, so absent means zero here.
-      data: { signupBonus: 0, referralBonus: 0, refereeBonus: 0, orgId, status: DRAFT, ...shared },
+      data: {
+        signupBonus: 0,
+        referralBonus: 0,
+        refereeBonus: 0,
+        orgId,
+        status: DRAFT,
+        ...shared,
+        // The points name is asked on the earning step; until then the pack's name stands.
+        currencyName: input.currencyName ?? LOYALTY_PRESETS[presetKey].basics.currencyName,
+        onboardingPresetKey: presetKey,
+      },
     });
   }
 
-  // Re-running basics on a live programme must not take it off the air, so `status` is
-  // deliberately absent from the update — only `activate` and the settings page move it.
+  // Re-running the profile on a live programme must not take it off the air, so `status`
+  // is deliberately absent from the update — only `activate` and the settings page move it.
   return await prisma.loyaltyProgram.update({
     where: { id: existing.id },
     data: shared,
@@ -311,7 +349,13 @@ export async function applyEarningStep(orgId: string, input: EarningStepInput) {
 
     await tx.loyaltyProgram.update({
       where: { id: program.id },
-      data: { onboardingStep: "earning" },
+      data: {
+        onboardingStep: "earning",
+        ...(input.averageOrderValue === undefined
+          ? {}
+          : { averageOrderValue: input.averageOrderValue }),
+        ...(input.currencyName === undefined ? {} : { currencyName: input.currencyName }),
+      },
     });
   });
 
@@ -323,13 +367,40 @@ export async function applyEarningStep(orgId: string, input: EarningStepInput) {
 
 /* ── step: tiers ────────────────────────────────────────────────────────────── */
 
+type TierInput = TiersStepInput["tiers"][number];
+
+/** Where everyone starts. Injected when the payload only describes the tiers above it. */
+export const BASE_TIER: TierInput = {
+  name: "Member",
+  threshold: 0,
+  pointsMultiplier: 1,
+  color: "#5a8cc6",
+  benefitsDescription: null,
+};
+
+/**
+ * A ladder needs a rung at 0: signup places a new member in the lowest-threshold tier and a
+ * reward with no tier restriction means "everyone". The wizard sends only the VIP tier it
+ * asked about, so the base row is added here — never replacing one the payload names.
+ */
+export function ensureBaseTier(tiers: TierInput[]): TierInput[] {
+  if (tiers.some((tier) => tier.threshold === 0)) return tiers;
+  return [BASE_TIER, ...tiers];
+}
+
 export async function applyTiersStep(orgId: string, input: TiersStepInput) {
   const program = await requireProgram(orgId);
 
   await prisma.$transaction(async (tx) => {
     await tx.loyaltyProgram.update({
       where: { id: program.id },
-      data: { tiersEnabled: input.tiersEnabled, onboardingStep: "tiers" },
+      data: {
+        tiersEnabled: input.tiersEnabled,
+        onboardingStep: "tiers",
+        ...(input.qualificationWindowMonths === undefined
+          ? {}
+          : { tierQualificationWindowMonths: input.qualificationWindowMonths }),
+      },
     });
 
     // Turning tiers off must never delete data — the ladder is still there to switch on.
@@ -337,25 +408,17 @@ export async function applyTiersStep(orgId: string, input: TiersStepInput) {
 
     const existing = await tx.loyaltyTier.findMany({
       where: { programId: program.id },
-      select: { id: true, name: true },
+      select: { id: true, name: true, threshold: true },
     });
     const existingIds = new Set(existing.map((t) => t.id));
     const byName = new Map(existing.map((t) => [t.name.trim().toLowerCase(), t.id]));
+    const byThreshold = new Map(existing.map((t) => [Number(t.threshold), t.id]));
     const keptIds = new Set<string>();
 
-    // `LoyaltyTier` is unique on both name and threshold within a programme. The payload
-    // has already been checked for internal collisions; this clears any *existing* tier
-    // whose threshold one of the incoming tiers is about to claim, which the name-based
-    // match alone would miss (e.g. renaming "Silver" at 1000 to "Local" at 1000).
-    await tx.loyaltyTier.deleteMany({
-      where: {
-        programId: program.id,
-        threshold: { in: input.tiers.map((t) => t.threshold) },
-        name: { notIn: input.tiers.map((t) => t.name) },
-      },
-    });
+    const tiers = ensureBaseTier(input.tiers);
+    const incomingNames = new Set(tiers.map((t) => t.name.trim().toLowerCase()));
 
-    for (const [index, tier] of input.tiers.entries()) {
+    for (const [index, tier] of tiers.entries()) {
       const data = {
         name: tier.name,
         threshold: tier.threshold,
@@ -365,8 +428,21 @@ export async function applyTiersStep(orgId: string, input: TiersStepInput) {
         priority: index + 1,
       };
 
+      // `LoyaltyTier` is unique on both name and threshold within a programme. Match by
+      // id, then name, then threshold: a tier renamed onto an occupied threshold ("Bronze"
+      // at 0 becoming "Member" at 0) is an update of that row, so its members keep their
+      // tier — deleting and recreating would have set their `currentTierId` to null.
+      const byThresholdId = byThreshold.get(tier.threshold);
+      const thresholdOwner = existing.find((t) => t.id === byThresholdId);
+      const thresholdFree =
+        thresholdOwner !== undefined &&
+        !keptIds.has(thresholdOwner.id) &&
+        !incomingNames.has(thresholdOwner.name.trim().toLowerCase());
       const id =
-        tier.id && existingIds.has(tier.id) ? tier.id : byName.get(tier.name.trim().toLowerCase());
+        tier.id && existingIds.has(tier.id)
+          ? tier.id
+          : (byName.get(tier.name.trim().toLowerCase()) ??
+            (thresholdFree ? byThresholdId : undefined));
       if (id) {
         await tx.loyaltyTier.update({ where: { id }, data });
         keptIds.add(id);
@@ -417,10 +493,30 @@ export async function applyTiersStep(orgId: string, input: TiersStepInput) {
     }
   });
 
-  return await prisma.loyaltyTier.findMany({
+  const tiers = await prisma.loyaltyTier.findMany({
     where: { programId: program.id },
     orderBy: { threshold: "asc" },
   });
+
+  // The ladder is different now, so where each member stands may be too: a raised
+  // threshold demotes, a lowered one or a new rung in the middle promotes. Settle it here
+  // rather than leaving it to the next purchase or the nightly sweep, so the merchant sees
+  // the effect of the change they just made.
+  let moves: ProgramTierMoves = { evaluated: 0, promoted: 0, demoted: 0 };
+  if (input.tiersEnabled && tiers.length > 0) {
+    const windowMonths =
+      input.qualificationWindowMonths === undefined
+        ? program.tierQualificationWindowMonths
+        : input.qualificationWindowMonths;
+    moves = await reevaluateProgramTiers({
+      id: program.id,
+      orgId,
+      windowMonths,
+      tiers: [...tiers].reverse(),
+    });
+  }
+
+  return { tiers, moves };
 }
 
 /* ── step: rewards ──────────────────────────────────────────────────────────── */
@@ -752,6 +848,11 @@ export async function activateProgram(orgId: string) {
   }
   if (waSettingsCount === 0) {
     warnings.push("No WhatsApp channel connected — loyalty messages cannot be delivered.");
+  }
+  if (program.tiersEnabled && program.tierQualificationWindowMonths !== null && tiers.length < 2) {
+    warnings.push(
+      "Tiers are on with a qualification window, but there is no VIP tier above Member — nobody can move up.",
+    );
   }
 
   // What the programme costs. The wizard shows this live while the user is setting the

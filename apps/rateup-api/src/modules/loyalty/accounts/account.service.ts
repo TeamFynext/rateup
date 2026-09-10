@@ -1,4 +1,6 @@
+import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import type { LoyaltyPendingBonuses } from "../../../types/loyalty.js";
 import {
   CustomerLoyaltyAccountInput,
   CustomerLoyaltyAccountUpdateInput,
@@ -29,11 +31,32 @@ export async function findAccountByReferralCode(programId: string, referralCode:
   });
 }
 
+type Db = Prisma.TransactionClient | typeof prisma;
+
+/** How a new account is enrolled. */
+export interface CreateCustomerAccountOptions {
+  /**
+   * Hold the joining and referral bonuses instead of crediting them now. Used by the
+   * public join form, where nothing proves the phone is real: the bonuses are frozen in
+   * `pendingBonuses` and paid by `releasePendingSignupBonus` the first time the customer
+   * messages the business or buys something.
+   */
+  holdBonuses?: boolean;
+  /**
+   * The name, birthday and gender in the payload were typed by staff who could see what
+   * the contact already said, so they overwrite it. Off for the public join form and the
+   * WhatsApp flows, where the payload only fills in what the contact is missing — an
+   * open form must not be able to rename someone else's contact.
+   */
+  trustedDetails?: boolean;
+}
+
 export async function createCustomerAccount(
   data: CustomerLoyaltyAccountInput,
   programId: string,
   orgId: string,
   sourceIdentifier?: string,
+  options: CreateCustomerAccountOptions = {},
 ) {
   let contactId;
   let contact;
@@ -49,6 +72,21 @@ export async function createCustomerAccount(
   if (existingContact) {
     contactId = existingContact.id;
     contact = existingContact;
+    // The form may know something the contact record does not — a name for a contact that
+    // only ever had a phone, a birthday typed in at the counter. Staff (`trustedDetails`)
+    // saw the stored values in the form and may change them; anyone else only fills blanks,
+    // because the public join form reaches this code too.
+    const trusted = options.trustedDetails === true;
+    const changes: Prisma.ContactUpdateInput = {};
+    const name = data.name?.trim();
+    if (name && (trusted ? name !== existingContact.name : !existingContact.name?.trim())) {
+      changes.name = name;
+    }
+    if (data.dob && (trusted || !existingContact.dob)) changes.dob = new Date(data.dob);
+    if (data.gender && (trusted || !existingContact.gender)) changes.gender = data.gender;
+    if (Object.keys(changes).length > 0) {
+      contact = await prisma.contact.update({ where: { id: contactId }, data: changes });
+    }
   } else {
     // Create new contact
     contact = await prisma.contact.create({
@@ -59,6 +97,7 @@ export async function createCustomerAccount(
         email: data.email,
         source: "loyalty_program",
         dob: data.dob ? new Date(data.dob) : null,
+        gender: data.gender ?? null,
       },
     });
     contactId = contact.id;
@@ -123,54 +162,30 @@ export async function createCustomerAccount(
     },
   });
 
-  const signupBonus = program?.signupBonus || 0;
-
-  const referralBonus = program?.referralBonus || 0;
-  const referralBonusType = program?.referralBonusType || "points";
-  const referralRewardId = program?.referralRewardId || null;
-
-  const refereeBonus = program?.refereeBonus || 0;
-  const refereeBonusType = program?.refereeBonusType || "points";
-  const refereeRewardId = program?.refereeRewardId || null;
-
-  // Points credited immediately at account creation
-  const refereeBonusPoints = refereeBonusType === "points" ? refereeBonus : 0;
-
   const currentTierId = tier ? tier.id : null;
-  let referredById = null;
-  let referrerAccount: { id: string; currentPoints: number } | null = null;
+  const referredBy = data.referCode
+    ? await findAccountByReferralCode(programId, data.referCode)
+    : null;
 
-  if (data.referCode) {
-    const referredBy = await findAccountByReferralCode(programId, data.referCode);
-    if (referredBy) {
-      referredById = referredBy.id;
-      referrerAccount = referredBy;
+  // What this signup is worth, frozen now. The immediate path pays it straight away; the
+  // held path stores it and pays the same figures later, whatever the programme says then.
+  const snapshot: LoyaltyPendingBonuses = {
+    signupBonus: program?.signupBonus || 0,
+    refereeBonus: program?.refereeBonus || 0,
+    refereeBonusType: program?.refereeBonusType || "points",
+    refereeRewardId: program?.refereeRewardId || null,
+    referralBonus: program?.referralBonus || 0,
+    referralBonusType: program?.referralBonusType || "points",
+    referralRewardId: program?.referralRewardId || null,
+    referredById: referredBy?.id ?? null,
+  };
+  const hold = options.holdBonuses === true;
 
-      if (referralBonusType === "points" && referralBonus > 0) {
-        const updatedReferrer = await prisma.customerLoyaltyAccount.update({
-          where: { id: referredBy.id },
-          data: {
-            currentPoints: { increment: referralBonus },
-            lifetimePoints: { increment: referralBonus },
-          },
-        });
-        await prisma.loyaltyTransaction.create({
-          data: {
-            accountId: referredBy.id,
-            programId,
-            transactionType: "earn",
-            source: "referral",
-            points: referralBonus,
-            balanceAfter: updatedReferrer.currentPoints,
-            metadata: { refereeContactId: contactId },
-          },
-        });
-      }
-      // Gift path is handled after the new account is created below
-    }
+  if (!hold) {
+    await creditReferrer(prisma, programId, snapshot, contactId);
   }
 
-  const openingPoints = refereeBonusPoints + signupBonus;
+  const openingPoints = hold ? 0 : pointsOwedToNewMember(snapshot);
   const account = await prisma.customerLoyaltyAccount.create({
     data: {
       programId,
@@ -178,66 +193,17 @@ export async function createCustomerAccount(
       referralCode,
       currentPoints: openingPoints,
       lifetimePoints: openingPoints,
-      referredById,
+      referredById: snapshot.referredById,
       currentTierId,
+      ...(hold ? { verifiedAt: null, pendingBonuses: snapshot } : {}),
     },
     include: {
       contact: true,
     },
   });
 
-  // Award referral gift to referrer (requires referrer account to exist — always true here)
-  if (referrerAccount && referralBonusType === "gift" && referralRewardId) {
-    try {
-      await assignRewardToCustomer(referrerAccount.id, referralRewardId);
-    } catch (e) {
-      if (!(e as Error).message?.includes("already assigned")) throw e;
-    }
-  }
-
-  // Award referee bonus (gift or points transaction)
-  if (referredById) {
-    if (refereeBonusType === "gift" && refereeRewardId) {
-      await assignRewardToCustomer(account.id, refereeRewardId);
-    } else if (refereeBonusPoints > 0) {
-      // Record a transaction for the referee bonus points
-      await prisma.loyaltyTransaction.create({
-        data: {
-          accountId: account.id,
-          programId,
-          transactionType: "earn",
-          source: "referral",
-          points: refereeBonusPoints,
-          balanceAfter: openingPoints,
-          metadata: { referrerAccountId: referredById },
-        },
-      });
-    }
-  }
-
-  // Create transaction if signup bonus exists
-  if (signupBonus > 0) {
-    await prisma.loyaltyTransaction.create({
-      data: {
-        accountId: account.id,
-        programId,
-        transactionType: "earn",
-        source: "signup_bonus",
-        points: signupBonus,
-        // The account's balance after this row, not the bonus in isolation — a
-        // referee who also gets a signup bonus holds both.
-        balanceAfter: openingPoints,
-      },
-    });
-    // Only meaningful when there were points to announce.
-    await dispatchLoyaltyNotification(orgId, LoyaltyEventType.POINTS_ISSUED, {
-      customerPhone: phone,
-      customerName: contact?.name || "Customer",
-      points: signupBonus,
-      balanceAfter: openingPoints,
-      reason: "Signup Bonus",
-      referralCode, // passing just in case
-    });
+  if (!hold) {
+    await creditNewMember(prisma, account, snapshot, openingPoints, orgId);
   }
 
   if (account && sourceIdentifier) {
@@ -274,6 +240,163 @@ You are now registered in our Loyalty Program.
   }
 
   return account;
+}
+
+/** The points the new member is owed: the joining bonus plus a points-type referee bonus. */
+function pointsOwedToNewMember(snapshot: LoyaltyPendingBonuses): number {
+  const refereePoints = snapshot.refereeBonusType === "points" ? snapshot.refereeBonus : 0;
+  return snapshot.signupBonus + refereePoints;
+}
+
+/** Pay the person whose code was used — points into their balance, or a gift reward. */
+async function creditReferrer(
+  db: Db,
+  programId: string,
+  snapshot: LoyaltyPendingBonuses,
+  refereeContactId: string,
+) {
+  if (!snapshot.referredById) return;
+
+  if (snapshot.referralBonusType === "points" && snapshot.referralBonus > 0) {
+    const updatedReferrer = await db.customerLoyaltyAccount.update({
+      where: { id: snapshot.referredById },
+      data: {
+        currentPoints: { increment: snapshot.referralBonus },
+        lifetimePoints: { increment: snapshot.referralBonus },
+      },
+    });
+    await db.loyaltyTransaction.create({
+      data: {
+        accountId: snapshot.referredById,
+        programId,
+        transactionType: "earn",
+        source: "referral",
+        points: snapshot.referralBonus,
+        balanceAfter: updatedReferrer.currentPoints,
+        metadata: { refereeContactId },
+      },
+    });
+  } else if (snapshot.referralBonusType === "gift" && snapshot.referralRewardId) {
+    try {
+      await assignRewardToCustomer(snapshot.referredById, snapshot.referralRewardId);
+    } catch (e) {
+      if (!(e as Error).message?.includes("already assigned")) throw e;
+    }
+  }
+}
+
+/**
+ * The new member's side: the referee gift or ledger row, the joining-bonus ledger row and
+ * the "points issued" message. `balanceAfter` is the account's balance once the points are
+ * in — a referee who also gets a joining bonus holds both.
+ */
+async function creditNewMember(
+  db: Db,
+  account: {
+    id: string;
+    programId: string;
+    referralCode: string;
+    contact: { phone: string | null; name: string | null } | null;
+  },
+  snapshot: LoyaltyPendingBonuses,
+  balanceAfter: number,
+  orgId: string,
+) {
+  const refereePoints = snapshot.refereeBonusType === "points" ? snapshot.refereeBonus : 0;
+
+  if (snapshot.referredById) {
+    if (snapshot.refereeBonusType === "gift" && snapshot.refereeRewardId) {
+      await assignRewardToCustomer(account.id, snapshot.refereeRewardId);
+    } else if (refereePoints > 0) {
+      await db.loyaltyTransaction.create({
+        data: {
+          accountId: account.id,
+          programId: account.programId,
+          transactionType: "earn",
+          source: "referral",
+          points: refereePoints,
+          balanceAfter,
+          metadata: { referrerAccountId: snapshot.referredById },
+        },
+      });
+    }
+  }
+
+  if (snapshot.signupBonus > 0) {
+    await db.loyaltyTransaction.create({
+      data: {
+        accountId: account.id,
+        programId: account.programId,
+        transactionType: "earn",
+        source: "signup_bonus",
+        points: snapshot.signupBonus,
+        balanceAfter,
+      },
+    });
+    // Only meaningful when there were points to announce.
+    if (account.contact?.phone) {
+      await dispatchLoyaltyNotification(orgId, LoyaltyEventType.POINTS_ISSUED, {
+        customerPhone: account.contact.phone,
+        customerName: account.contact.name || "Customer",
+        points: snapshot.signupBonus,
+        balanceAfter,
+        reason: "Signup Bonus",
+        referralCode: account.referralCode, // passing just in case
+      });
+    }
+  }
+}
+
+/**
+ * Pay out a held web signup. Exactly once: the `verifiedAt IS NULL` guard on the first
+ * write is what makes a second caller (a purchase and a message in the same minute) a
+ * no-op. Returns whether anything was released.
+ */
+export async function releasePendingSignupBonus(
+  accountId: string,
+  db: Db = prisma,
+): Promise<boolean> {
+  const claimed = await db.customerLoyaltyAccount.updateMany({
+    where: { id: accountId, verifiedAt: null },
+    data: { verifiedAt: new Date() },
+  });
+  if (claimed.count === 0) return false;
+
+  const account = await db.customerLoyaltyAccount.findUnique({
+    where: { id: accountId },
+    include: { contact: { select: { phone: true, name: true, orgId: true } } },
+  });
+  const snapshot = account?.pendingBonuses ?? null;
+  if (!account || !snapshot) return false;
+
+  await creditReferrer(db, account.programId, snapshot, account.contactId);
+
+  const points = pointsOwedToNewMember(snapshot);
+  const updated = await db.customerLoyaltyAccount.update({
+    where: { id: accountId },
+    data: {
+      ...(points > 0
+        ? { currentPoints: { increment: points }, lifetimePoints: { increment: points } }
+        : {}),
+      pendingBonuses: Prisma.DbNull,
+    },
+  });
+
+  await creditNewMember(db, account, snapshot, updated.currentPoints, account.contact.orgId);
+  return true;
+}
+
+/** The inbound-WhatsApp form of the release: the customer is known only by their number. */
+export async function releasePendingSignupBonusByPhone(
+  phone: string,
+  orgId: string,
+): Promise<boolean> {
+  const pending = await prisma.customerLoyaltyAccount.findFirst({
+    where: { verifiedAt: null, contact: { phone: parsePhoneforWa(phone), orgId } },
+    select: { id: true },
+  });
+  if (!pending) return false;
+  return await releasePendingSignupBonus(pending.id);
 }
 
 export async function getCustomerAccounts(programId: string, search?: string, name?: string) {
@@ -490,6 +613,10 @@ export async function awardPoints(
     throw new Error("Customer account not found. Create account first.");
   }
 
+  // A purchase verifies a held web signup. Paid before the purchase is booked so the
+  // purchase row's balance-after includes the joining bonus.
+  await releasePendingSignupBonus(customer.id);
+
   const { points, updatedCustomer, transaction, calculated } = await prisma.$transaction(
     async (tx) => {
       const calculated = await calculatePointsForPurchase(
@@ -539,6 +666,8 @@ export async function awardPoints(
           source: "purchase",
           points: calculated.points,
           balanceAfter: account.currentPoints,
+          // Typed as well as in metadata: trailing-window tier qualification sums it.
+          purchaseAmount,
           metadata: {
             purchaseAmount,
             orderId: context.orderId,
@@ -654,7 +783,7 @@ export async function lookupContactByPhone(phone: string, orgId: string) {
 
   const contact = await prisma.contact.findFirst({
     where: { phone: normalized, orgId },
-    select: { id: true, name: true, email: true, dob: true },
+    select: { id: true, name: true, email: true, dob: true, gender: true },
   });
 
   if (!contact) {
@@ -672,6 +801,62 @@ export async function lookupContactByPhone(phone: string, orgId: string) {
     // the same "already a member" dead end as an active one.
     alreadyMember: Boolean(account && account.status === "active"),
   };
+}
+
+/**
+ * The org's contacts as candidates for enrolment, for the cashier's "from contacts" list.
+ *
+ * Only contacts with a phone number qualify — a loyalty account is keyed on the phone the
+ * customer messages from, so a contact without one has nothing to enrol. Each row says
+ * whether the person is already in the programme, so the picker can label members
+ * rather than let the cashier register someone twice.
+ */
+export async function searchContactsForEnrolment(
+  orgId: string,
+  { search, limit }: { search?: string; limit: number },
+) {
+  const term = search?.trim() ?? "";
+  const digits = term.replace(/\D/g, "");
+  const textMatch: Prisma.ContactWhereInput[] = [];
+  if (term.length > 0) {
+    textMatch.push({ name: { contains: term, mode: "insensitive" } });
+    textMatch.push({ email: { contains: term, mode: "insensitive" } });
+    // Matching on digits alone lets "+91 90000" find the contact stored as "9190000…".
+    if (digits.length > 0) textMatch.push({ phone: { contains: digits } });
+  }
+
+  const contacts = await prisma.contact.findMany({
+    where: {
+      orgId,
+      phone: { not: null },
+      isSpam: false,
+      ...(textMatch.length > 0 ? { OR: textMatch } : {}),
+    },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      email: true,
+      dob: true,
+      gender: true,
+      loyaltyAccounts: {
+        where: { program: { orgId } },
+        select: { status: true },
+        take: 1,
+      },
+    },
+    orderBy: [
+      { lastReceivedMessageTimeStamp: { sort: "desc", nulls: "last" } },
+      { createdAt: "desc" },
+    ],
+    take: limit,
+  });
+
+  return contacts.map(({ loyaltyAccounts, ...contact }) => ({
+    ...contact,
+    /** `null` when the contact has never joined; otherwise the account's status. */
+    memberStatus: loyaltyAccounts[0]?.status ?? null,
+  }));
 }
 
 export async function getLCustomerByPhone(phone: string, orgId: string) {

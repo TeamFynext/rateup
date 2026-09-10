@@ -8,6 +8,7 @@ import utc from "dayjs/plugin/utc.js";
 import prisma from "../../utils/prisma.js";
 import { randomCode } from "../../utils/misc/random.utils.js";
 import type { LoyaltyTier, Prisma } from "../../../generated/prisma/client.js";
+import { computeQualifyingSpend, pickQualifiedTier } from "./tiers/qualifyingSpend.js";
 import {
   EarningContext,
   PointsCalculationResult,
@@ -268,7 +269,13 @@ export class EarningRulesEngine {
   }
 
   /**
-   * Check if customer's tier should be upgraded based on total spend.
+   * Check if customer's tier should change.
+   *
+   * `totalSpend` is the lifetime figure the caller already holds. When the programme judges
+   * tiers on a trailing window (`tierQualificationWindowMonths`), the spend inside that
+   * window is read from the ledger instead, and a member whose window has lapsed moves
+   * down. A lifetime ladder never moves anyone down: lifetime spend only grows, so a
+   * "down" there could only come from a manual placement, which this must not undo.
    *
    * Besides performing the move, reports where the customer now sits and how far the
    * next tier is — the cashier receipt reads "Silver · ₹1,180 to Gold" from this, so no
@@ -302,14 +309,18 @@ export class EarningRulesEngine {
     }
 
     const tiers = customer.program.tiers;
+    const windowMonths = customer.program.tierQualificationWindowMonths;
+    const spend =
+      windowMonths === null
+        ? totalSpend
+        : await computeQualifyingSpend(customerId, customer.program.id, windowMonths);
+
     // Tiers arrive highest threshold first; the next tier is the lowest one still above
     // the customer's spend.
-    const nextTier =
-      [...tiers].reverse().find((tier) => Number(tier.threshold) > totalSpend) ?? null;
-    const amountToNext = nextTier ? Number(nextTier.threshold) - totalSpend : null;
+    const nextTier = [...tiers].reverse().find((tier) => Number(tier.threshold) > spend) ?? null;
+    const amountToNext = nextTier ? Number(nextTier.threshold) - spend : null;
 
-    // Find the highest tier that the customer qualifies for
-    const qualifiedTier = tiers.find((tier) => totalSpend >= Number(tier.threshold));
+    const qualifiedTier = pickQualifiedTier(tiers, spend);
 
     if (!qualifiedTier) {
       return {
@@ -337,6 +348,16 @@ export class EarningRulesEngine {
       : Number(qualifiedTier.threshold) > Number(customer.currentTier.threshold)
         ? "up"
         : "down";
+
+    if (direction === "down" && windowMonths === null) {
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer.currentTier,
+        nextTier,
+        amountToNext,
+      };
+    }
 
     await prisma.customerLoyaltyAccount.update({
       where: { id: customerId },

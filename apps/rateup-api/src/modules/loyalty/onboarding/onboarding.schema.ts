@@ -8,21 +8,41 @@ import { LOYALTY_PRESET_KEYS } from "./presets.js";
  * Wizard step ids, in order. `onboardingStep` on `LoyaltyProgram` stores the last one
  * completed, which is what lets the wizard resume.
  */
-export const ONBOARDING_STEPS = ["basics", "earning", "tiers", "rewards", "messages"] as const;
+export const ONBOARDING_STEPS = ["profile", "earning", "tiers", "rewards", "messages"] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+/**
+ * The first step was called "basics" until the venue-and-branding profile replaced it.
+ * A UI built against the old id still posts `steps/basics`; it lands on the profile step
+ * for one release, then this alias goes.
+ */
+export const LEGACY_STEP_ALIASES: Readonly<Record<string, OnboardingStep>> = { basics: "profile" };
 
 export const presetKeySchema = z.enum(LOYALTY_PRESET_KEYS);
 
 export const stepParamSchema = z.object({
-  step: z.enum(ONBOARDING_STEPS),
+  step: z.enum([...ONBOARDING_STEPS, "basics"]),
 });
 
-/* ── basics ─────────────────────────────────────────────────────────────────── */
+/* ── profile ────────────────────────────────────────────────────────────────── */
 
-export const basicsStepSchema = z.object({
-  presetKey: presetKeySchema,
-  name: z.string().min(1, "Programme name is required"),
-  currencyName: z.string().min(1).default("Points"),
+/** A six-digit hex colour, the only form the wallet pass / widget generators accept. */
+const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #1C518E");
+
+export const profileStepSchema = z.object({
+  /**
+   * Which starter pack seeds the later steps. The wizard no longer asks; when absent the
+   * server infers it from the org's industry (see `applyProfileStep`), so it is optional.
+   */
+  presetKey: presetKeySchema.optional(),
+  name: z.string().min(1, "Program name is required"),
+  /** The business behind the programme. Absent = keep; null = clear. */
+  businessName: z.string().min(1).max(120).optional().nullable(),
+  /**
+   * The points name moved to the earning step. Still accepted here for older clients;
+   * absent leaves the stored value alone (a new programme takes its pack's name).
+   */
+  currencyName: z.string().min(1).optional(),
   currencyCode: z.string().min(1).default("INR"),
   currencySymbol: z.string().min(1).default("₹"),
   defaultCountryCode: z.string().optional(),
@@ -37,6 +57,18 @@ export const basicsStepSchema = z.object({
   refereeBonus: z.number().int().min(0).optional(),
   /** Typical spend in one visit. Nullable — null means the merchant skipped it. */
   averageOrderValue: z.number().min(0).nullable().optional(),
+  /*
+   * Venue & branding. Absent = leave the stored value alone; null = clear it — the same
+   * convention as `averageOrderValue`, so a section editor that shows only some of these
+   * cannot wipe the rest.
+   */
+  timezone: z.string().min(1).optional(),
+  contactName: z.string().max(120).optional().nullable(),
+  contactPhone: z.string().max(32).optional().nullable(),
+  contactEmail: z.email("Enter a valid email").optional().nullable(),
+  logoUrl: z.url().optional().nullable(),
+  brandColor: hexColorSchema.optional().nullable(),
+  heroImageUrl: z.url().optional().nullable(),
 });
 
 /* ── earning ────────────────────────────────────────────────────────────────── */
@@ -68,6 +100,13 @@ export const earningStepSchema = z
      * partial payloads harmless.
      */
     deleteMissing: z.boolean().optional(),
+    /**
+     * Typical spend in one visit. It is edited beside the earn rate because that is where
+     * the giveback estimate needs it. Absent = leave stored; null = the merchant skipped it.
+     */
+    averageOrderValue: z.number().min(0).nullable().optional(),
+    /** What the programme calls its points ("Beans", "Stars"). Absent = leave stored. */
+    currencyName: z.string().trim().min(1).max(40).optional(),
   })
   // `activate` refuses a programme with no default rule, so catching it here gives the
   // user the error on the step that caused it rather than four steps later.
@@ -91,10 +130,19 @@ const tierSchema = z.object({
   benefitsDescription: z.string().optional().nullable(),
 });
 
+/** The base plus at most two above it. Longer ladders belong to the full tier editor. */
+export const TIERS_STEP_MAX = 3;
+
 export const tiersStepSchema = z
   .object({
     tiersEnabled: z.boolean().default(true),
-    tiers: z.array(tierSchema).default([]),
+    tiers: z.array(tierSchema).max(TIERS_STEP_MAX, "Up to three tiers").default([]),
+    /**
+     * Judge tier membership on purchase spend in the trailing N months instead of lifetime
+     * spend. Absent = leave stored; null = lifetime. One window for the whole ladder — a
+     * customer is measured once, against one spend figure.
+     */
+    qualificationWindowMonths: z.number().int().min(1).max(24).nullable().optional(),
     /** See `earningStepSchema.deleteMissing`. */
     deleteMissing: z.boolean().optional(),
     /** A removed tier that still has members needs this, or the step refuses with 409. */
@@ -207,7 +255,7 @@ export const eventTemplateResultSchema = z.object({
   error: z.string().optional(),
 });
 
-export type BasicsStepInput = z.infer<typeof basicsStepSchema>;
+export type ProfileStepInput = z.infer<typeof profileStepSchema>;
 export type EarningStepInput = z.infer<typeof earningStepSchema>;
 export type TiersStepInput = z.infer<typeof tiersStepSchema>;
 export type RewardsStepInput = z.infer<typeof rewardsStepSchema>;

@@ -17,6 +17,23 @@ const loyaltyProgramFields = {
   refereeRewardId: z.uuid().optional().nullable(),
   tiersEnabled: z.boolean(),
   tierResetPeriod: z.enum(["never", "yearly", "monthly"]).optional().nullable(),
+  /** Trailing months of spend that decide a member's tier; null = lifetime spend. */
+  tierQualificationWindowMonths: z.number().int().min(1).max(24).optional().nullable(),
+  // Venue & branding profile — written by the onboarding profile step, editable here too.
+  businessName: z.string().min(1).max(120).optional().nullable(),
+  timezone: z.string().min(1).optional().nullable(),
+  logoUrl: z.url().optional().nullable(),
+  brandColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #1C518E")
+    .optional()
+    .nullable(),
+  heroImageUrl: z.url().optional().nullable(),
+  contactName: z.string().max(120).optional().nullable(),
+  contactPhone: z.string().max(32).optional().nullable(),
+  contactEmail: z.email().optional().nullable(),
+  /** Print materials (QR card, brochure). Shape is the UI's; the API only stores it. */
+  materials: z.record(z.string(), z.unknown()).optional().nullable(),
   pointsActivityAlerts: z.boolean(),
   autoApproveAdjustments: z.boolean(),
   emailNotifications: z.boolean(),

@@ -13,7 +13,18 @@ const customerLoyaltyAccountSchema = z.object({
   referCode: z.string().optional(),
   source: z.string().optional(),
   orgId: z.string().min(1),
-  dob: z.iso.datetime().optional(),
+  /**
+   * A birthday is a calendar date, so a plain `YYYY-MM-DD` is accepted alongside the full
+   * timestamp older clients send (which is a local midnight run through `toISOString`).
+   */
+  dob: z.iso.datetime().or(z.iso.date()).optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  /**
+   * Honeypot. The public join form renders this off-screen and no person fills it in; a
+   * bot that autofills every field does. The public handler answers a filled one with a
+   * fake success and creates nothing.
+   */
+  website: z.string().max(200).optional(),
 });
 
 const customerLoyaltyAccountUpdateSchema = z.object({
@@ -78,6 +89,12 @@ const searchQuerySchema = z.object({
   name: z.string().optional(),
 });
 
+/** `GET /accounts/contacts` — the org's contacts, for enrolling one from the counter. */
+const contactSearchQuerySchema = z.object({
+  search: z.string().trim().max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
 export type CustomerLoyaltyAccountInput = z.infer<typeof customerLoyaltyAccountSchema>;
 export type CustomerLoyaltyAccountUpdateInput = z.infer<typeof customerLoyaltyAccountUpdateSchema>;
 export type CustomerIdParam = z.infer<typeof customerIdParamSchema>;
@@ -89,6 +106,7 @@ export type VerifyRedemptionInput = z.infer<typeof verifyRedemptionSchema>;
 export type ApplyRedemptionInput = z.infer<typeof applyRedemptionSchema>;
 export type AssignRewardInput = z.infer<typeof assignRewardSchema>;
 export type SearchQueryInput = z.infer<typeof searchQuerySchema>;
+export type ContactSearchQueryInput = z.infer<typeof contactSearchQuerySchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -104,4 +122,5 @@ export {
   assignRewardSchema,
   shortCodeParamSchema,
   searchQuerySchema,
+  contactSearchQuerySchema,
 };

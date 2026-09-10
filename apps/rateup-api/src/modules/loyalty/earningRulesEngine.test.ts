@@ -9,7 +9,7 @@ vi.mock("../../utils/prisma.js", () => ({
       updateMany: vi.fn(),
     },
     customerLoyaltyAccount: { findUnique: vi.fn(), update: vi.fn() },
-    loyaltyTransaction: { count: vi.fn() },
+    loyaltyTransaction: { count: vi.fn(), aggregate: vi.fn() },
   },
 }));
 
@@ -628,9 +628,23 @@ describe("checkAndUpgradeTier", () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({
       id: CUSTOMER,
       currentTierId: null,
-      program: { tiersEnabled: true, tiers },
+      program: { id: PROGRAM, tiersEnabled: true, tierQualificationWindowMonths: null, tiers },
       ...over,
     });
+  }
+
+  /** A programme that judges tiers on the trailing `months`, with `spent` inside them. */
+  function withWindow(
+    tiers: Array<Record<string, unknown>>,
+    months: number,
+    spent: number,
+    over: Record<string, unknown> = {},
+  ) {
+    withTiers(tiers, {
+      program: { id: PROGRAM, tiersEnabled: true, tierQualificationWindowMonths: months, tiers },
+      ...over,
+    });
+    db.loyaltyTransaction.aggregate.mockResolvedValue({ _sum: { purchaseAmount: spent } });
   }
 
   test("does nothing when the program has tiers switched off", async () => {
@@ -732,7 +746,7 @@ describe("checkAndUpgradeTier", () => {
     });
   });
 
-  test("moves the customer DOWN a tier without calling it an upgrade", async () => {
+  test("never moves a customer down on a lifetime ladder", async () => {
     withTiers(
       [
         { id: "platinum", threshold: 10000, name: "Platinum" },
@@ -741,12 +755,60 @@ describe("checkAndUpgradeTier", () => {
       { currentTierId: "platinum", currentTier: { id: "platinum", threshold: 10000 } },
     );
 
+    // Lifetime spend only grows, so a "down" here could only be undoing a manual placement.
     const res = await checkAndUpgradeTier(CUSTOMER, 5);
+
+    expect(res).toMatchObject({
+      upgraded: false,
+      direction: "none",
+      currentTier: { id: "platinum" },
+    });
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+  });
+
+  test("uses trailing-window spend, not lifetime spend, when the programme sets a window", async () => {
+    withWindow(
+      [
+        { id: "vip", threshold: 10000, name: "VIP" },
+        { id: "member", threshold: 0, name: "Member" },
+      ],
+      6,
+      12000,
+      { currentTierId: "member", currentTier: { id: "member", threshold: 0 } },
+    );
+
+    // Lifetime spend says Member; the last six months say VIP.
+    const res = await checkAndUpgradeTier(CUSTOMER, 500);
+
+    expect(res).toMatchObject({ upgraded: true, direction: "up", newTier: { id: "vip" } });
+    expect(db.loyaltyTransaction.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          accountId: CUSTOMER,
+          programId: PROGRAM,
+          transactionType: "earn",
+          source: "purchase",
+        }),
+      }),
+    );
+  });
+
+  test("moves the customer DOWN when a window is set and the spend inside it lapsed", async () => {
+    withWindow(
+      [
+        { id: "platinum", threshold: 10000, name: "Platinum" },
+        { id: "bronze", threshold: 0, name: "Bronze" },
+      ],
+      6,
+      5,
+      { currentTierId: "platinum", currentTier: { id: "platinum", threshold: 10000 } },
+    );
+
+    const res = await checkAndUpgradeTier(CUSTOMER, 50000);
 
     expect(res.upgraded).toBe(false);
     expect(res.direction).toBe("down");
     expect(res.newTier?.id).toBe("bronze");
-    // The move itself still happens — that is what a tier reset is for.
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.currentTierId).toBe("bronze");
   });
 

@@ -33,6 +33,9 @@ export const SCHEDULED_JOBS = [
   { id: "loyaltyBirthdayCheck", pattern: "0 0 * * *" }, // Every day at 12:00 AM
   { id: "loyaltyPointsExpiration", pattern: "0 1 * * *" }, // Every day at 1:00 AM
   { id: "loyaltyInactivityCheck", pattern: "0 2 * * *" }, // Every day at 2:00 AM
+  // Programmes that judge tiers on a trailing window: a member whose spend has lapsed is
+  // only ever re-checked when they buy, so this sweep is what moves the quiet ones.
+  { id: "loyaltyTierReevaluation", pattern: "30 2 * * *" }, // Every day at 2:30 AM
   { id: "loyaltyPointsExpiryAlerts", pattern: "0 3 * * *" }, // Every day at 3:00 AM
   { id: "inboxAutomation", pattern: "0 * * * *" }, // Every hour
   // Hourly, at :20. A dropped payment webhook leaves a paying customer's expiresAt in

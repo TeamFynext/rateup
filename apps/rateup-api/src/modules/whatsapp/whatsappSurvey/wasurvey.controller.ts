@@ -124,7 +124,10 @@ import {
 } from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
-import { createCustomerAccount } from "../../loyalty/accounts/account.service.js";
+import {
+  createCustomerAccount,
+  releasePendingSignupBonusByPhone,
+} from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { notificationQueue, pausedAutomationQueue } from "../../../workers/bullmq/queues/index.js";
 import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
@@ -589,6 +592,13 @@ async function whatsappMessageHandler(
   log.trace("message => %s", message);
   const messageLowerCase =
     type === "text" || type === "interactive" ? message?.trim()?.toLocaleLowerCase() : "";
+  // A web self-signup is verified by the customer's first message. Released before the
+  // command lookup so a pending customer texting POINTS sees the bonus in the reply.
+  try {
+    await releasePendingSignupBonusByPhone(from, orgId);
+  } catch (e) {
+    log.error({ err: e }, "Error releasing a pending loyalty signup bonus");
+  }
   const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(orgId, message);
   if (parsedMessage?.buttonId) {
     const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(from, parsedMessage, orgId);

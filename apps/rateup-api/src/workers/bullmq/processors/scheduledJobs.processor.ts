@@ -35,6 +35,7 @@ import { downgradeExpiredSubscriptions } from "../../../modules/subscription/sub
 import { sweepMissedPayments } from "../../../modules/payment/payment.service.js";
 import { subscriptionExpiryAlert } from "../../../utils/email/payments/subscriptionExpiryAlert.js";
 import type { ScheduledJobId } from "../queues/cron.queue.js";
+import { reevaluateRollingTiers } from "../../../modules/loyalty/tiers/tierReevaluation.service.js";
 import { settleSentCampaigns } from "../../../modules/campaign/campaignSettle.service.js";
 
 const workerConnection = baseRedis.duplicate();
@@ -105,6 +106,11 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
   loyaltyInactivityCheck: async () => {
     log.info("Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers");
     await safeRun("checkInactivityEventTriggers", checkInactivityEventTriggers);
+  },
+
+  loyaltyTierReevaluation: async () => {
+    log.info("Running Daily at 2:30 AM --> Loyalty rolling-window tier re-evaluation");
+    await safeRun("reevaluateRollingTiers", reevaluateRollingTiers);
   },
 
   loyaltyPointsExpiryAlerts: async () => {

@@ -16,6 +16,7 @@ vi.mock("./account.service.js", () => ({
   assignRewardToCustomer: vi.fn(),
   getRewardByShortCode: vi.fn(),
   markRewardAsRedeemed: vi.fn(),
+  searchContactsForEnrolment: vi.fn(),
 }));
 
 vi.mock("../program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
@@ -31,6 +32,7 @@ import {
   getCustomerAccountsForExport,
   getRewardByShortCode,
   markRewardAsRedeemed,
+  searchContactsForEnrolment,
   updateCustomerAccount,
 } from "./account.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
@@ -46,6 +48,7 @@ import {
   getCustomerAccountsHandler,
   getRewardByShortCodeHandler,
   redeemRewardByShortCodeHandler,
+  searchContactsForEnrolmentHandler,
   updateCustomerAccountHandler,
 } from "./account.controller.js";
 
@@ -69,7 +72,11 @@ function answer(rep: any) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (getLoyaltyProgramByOrg as Mock).mockResolvedValue({ id: PROGRAM, status: "active" });
+  (getLoyaltyProgramByOrg as Mock).mockResolvedValue({
+    id: PROGRAM,
+    status: "active",
+    defaultCountryCode: "IN",
+  });
   (getActiveLoyaltyRewards as Mock).mockResolvedValue([]);
   (getCustomerAccountsForExport as Mock).mockResolvedValue([]);
 });
@@ -87,7 +94,10 @@ describe("createCustomerAccountHandler", () => {
 
     await createCustomerAccountHandler(request({ body }), rep);
 
-    expect(createCustomerAccount).toHaveBeenCalledWith(body, PROGRAM, ORG);
+    // Staff typed these details with the stored ones in front of them, so they overwrite.
+    expect(createCustomerAccount).toHaveBeenCalledWith(body, PROGRAM, ORG, undefined, {
+      trustedDetails: true,
+    });
     expect(answer(rep)).toEqual({ code: 201, body: { id: "acct-1" } });
   });
 
@@ -157,6 +167,60 @@ describe("createCustomerAccountHandler", () => {
     expect((createCustomerAccount as Mock).mock.calls[0][2]).toBe("org-target");
   });
 
+  test("the public handler holds the bonuses and hands over a normalised phone; the staff handler does neither", async () => {
+    (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, phone: "90000 00001" }, params: {} } as any,
+      reply(),
+    );
+    await createCustomerAccountHandler(request({ body }), reply());
+
+    const [publicCall, staffCall] = (createCustomerAccount as Mock).mock.calls;
+    expect(publicCall[0]).toMatchObject({ phone: "919000000001" });
+    expect(publicCall[4]).toEqual({ holdBonuses: true });
+    expect(staffCall[3]).toBeUndefined();
+    expect(staffCall[4]).toEqual({ trustedDetails: true });
+  });
+
+  test("the public handler refuses a number that is not real for the programme's country", async () => {
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, phone: "12345" }, params: {} } as any,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "Enter a valid mobile number" } });
+    expect(createCustomerAccount).not.toHaveBeenCalled();
+  });
+
+  test("a filled honeypot is answered as a success that created nothing, before any read", async () => {
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, website: "https://spam.example" }, params: {}, ip: "203.0.113.9" } as any,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 201, body: { success: true } });
+    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
+    expect(createCustomerAccount).not.toHaveBeenCalled();
+  });
+
+  test("an empty honeypot is clean", async () => {
+    (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, website: "" }, params: {} } as any,
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(201);
+    expect(createCustomerAccount).toHaveBeenCalled();
+  });
+
   test("the public handler refuses a body with no org", async () => {
     const rep = reply();
 
@@ -173,7 +237,8 @@ describe("createCustomerAccountHandler", () => {
 
     await createCustomerAccountHandler(request({ body }), reply());
 
-    expect((createCustomerAccount as Mock).mock.calls[0]).toHaveLength(3);
+    // The fourth argument is the sending number; the staff handler leaves it out.
+    expect((createCustomerAccount as Mock).mock.calls[0][3]).toBeUndefined();
   });
 
   test("leaks the service's raw error text in the 500", async () => {
@@ -208,6 +273,27 @@ describe("getCustomerAccountsHandler", () => {
     await getCustomerAccountsHandler(request(), rep);
 
     expect(answer(rep)).toEqual({ code: 200, body: [] });
+  });
+});
+
+describe("searchContactsForEnrolmentHandler", () => {
+  test("searches the session's org with the parsed query", async () => {
+    (searchContactsForEnrolment as Mock).mockResolvedValue([{ id: "c1" }]);
+    const rep = reply();
+
+    await searchContactsForEnrolmentHandler(request({ query: { search: "ann", limit: 5 } }), rep);
+
+    expect(searchContactsForEnrolment).toHaveBeenCalledWith(ORG, { search: "ann", limit: 5 });
+    expect(answer(rep)).toEqual({ code: 200, body: [{ id: "c1" }] });
+  });
+
+  test("answers 500 with the message when the search fails", async () => {
+    (searchContactsForEnrolment as Mock).mockRejectedValue(new Error("boom"));
+    const rep = reply();
+
+    await searchContactsForEnrolmentHandler(request({ query: { limit: 20 } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "boom" } });
   });
 });
 
@@ -552,6 +638,9 @@ describe("getCustomerAccountByPhoneHandler", () => {
       },
       next: { id: "tier-2", name: "Gold", threshold: 15000 },
       amountToNext: 1180,
+      // A lifetime ladder: the spend that counts is the lifetime figure.
+      qualifyingSpend: 13820,
+      qualificationWindowMonths: null,
     });
     expect(body.customer.totalSpend).toBe(13820);
     expect(body.program).toEqual({ currencySymbol: "₹", pointsName: "Beans", signupBonus: 50 });

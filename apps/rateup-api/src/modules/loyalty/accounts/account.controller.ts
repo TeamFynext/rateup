@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   lookupContactByPhone,
+  searchContactsForEnrolment,
   awardPoints,
   createCustomerAccount,
   getCustomerAccountById,
@@ -24,9 +25,12 @@ import {
   PhoneNumberParam,
   AssignRewardInput,
   SearchQueryInput,
+  ContactSearchQueryInput,
 } from "./account.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 import { toCsv } from "../../../utils/spreadsheet.js";
+import { computeQualifyingSpend } from "../tiers/qualifyingSpend.js";
+import { normalisePhone } from "../util.js";
 
 export async function createPublicCustomerAccountHandler(
   request: FastifyRequest<{ Body: CustomerLoyaltyAccountInput }>,
@@ -37,6 +41,12 @@ export async function createPublicCustomerAccountHandler(
     if (!orgId) {
       return reply.code(400).send({ error: "orgId is required" });
     }
+    // The honeypot was filled: a bot. Answer as if it worked, before touching the
+    // database, so the bot learns nothing from the response.
+    if ((request.body.website?.length ?? 0) > 0) {
+      log.warn({ ip: request.ip, orgId }, "Loyalty signup honeypot tripped");
+      return reply.code(201).send({ success: true });
+    }
     const program = await getLoyaltyProgramByOrg(orgId);
     if (!program) {
       return reply.code(404).send({ error: "Loyalty program not found" });
@@ -44,7 +54,21 @@ export async function createPublicCustomerAccountHandler(
     if (program.status !== "active") {
       return reply.code(400).send({ error: "Loyalty program is not active" });
     }
-    const result = await createCustomerAccount(request.body, program.id, orgId);
+    const phone = normalisePhone(request.body.phone, program.defaultCountryCode);
+    if (!phone) {
+      return reply.code(400).send({ error: "Enter a valid mobile number" });
+    }
+    // A web signup earns its bonus points once the customer is seen on WhatsApp or at the
+    // till — a bot that never shows up gets nothing.
+    const result = await createCustomerAccount(
+      { ...request.body, phone },
+      program.id,
+      orgId,
+      undefined,
+      {
+        holdBonuses: true,
+      },
+    );
     reply.code(201).send(result);
   } catch (e) {
     log.error(e);
@@ -68,7 +92,10 @@ export async function createCustomerAccountHandler(
     if (program.status !== "active") {
       return reply.code(400).send({ error: "Loyalty program is not active" });
     }
-    const result = await createCustomerAccount(request.body, program.id, orgId);
+    // Staff at the counter saw the contact's stored details in the form; what they typed wins.
+    const result = await createCustomerAccount(request.body, program.id, orgId, undefined, {
+      trustedDetails: true,
+    });
     reply.code(201).send(result);
   } catch (e) {
     log.error(e);
@@ -148,6 +175,20 @@ export async function lookupContactByPhoneHandler(
 ) {
   try {
     const result = await lookupContactByPhone(request.params.phoneNumber, request.user.orgId);
+    reply.code(200).send(result);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+  }
+}
+
+/** Authenticated only, like the lookup above: it lists the org's contacts by name. */
+export async function searchContactsForEnrolmentHandler(
+  request: FastifyRequest<{ Querystring: ContactSearchQueryInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await searchContactsForEnrolment(request.user.orgId, request.query);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -277,13 +318,20 @@ export async function getCustomerAccountByPhoneHandler(
       };
     });
 
-    // Tier progress from the programme's own ladder; thresholds are lifetime spend.
+    // Tier progress from the programme's own ladder. Thresholds are lifetime spend unless
+    // the programme judges tiers on a trailing window, in which case the spend that
+    // counts is what the ledger holds inside that window.
     const totalSpend = Number(account.totalSpend ?? 0);
+    const windowMonths = program.tierQualificationWindowMonths ?? null;
+    const qualifyingSpend =
+      windowMonths === null
+        ? totalSpend
+        : await computeQualifyingSpend(account.id, program.id, windowMonths);
     const ladder = [...(program.tiers ?? [])].sort(
       (a, b) => Number(a.threshold) - Number(b.threshold),
     );
     const nextTier = program.tiersEnabled
-      ? (ladder.find((tier) => Number(tier.threshold) > totalSpend) ?? null)
+      ? (ladder.find((tier) => Number(tier.threshold) > qualifyingSpend) ?? null)
       : null;
 
     reply.code(200).send({
@@ -322,7 +370,10 @@ export async function getCustomerAccountByPhoneHandler(
         next: nextTier
           ? { id: nextTier.id, name: nextTier.name, threshold: Number(nextTier.threshold) }
           : null,
-        amountToNext: nextTier ? Number(nextTier.threshold) - totalSpend : null,
+        amountToNext: nextTier ? Number(nextTier.threshold) - qualifyingSpend : null,
+        /** The spend the ladder is judged on — lifetime, or the trailing window's. */
+        qualifyingSpend,
+        qualificationWindowMonths: windowMonths,
       },
       program: {
         currencySymbol: program.currencySymbol,

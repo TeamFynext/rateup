@@ -24,6 +24,8 @@ vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
   saveTemplate: vi.fn(),
   updateTemplateInDb: vi.fn(),
 }));
+// The tiers step's re-placement pulls in the WhatsApp dispatcher; nothing here needs it.
+vi.mock("../tiers/tierReevaluation.service.js", () => ({ reevaluateProgramTiers: vi.fn() }));
 // The wizard's helpers are real; only the trigger upsert is watched.
 vi.mock("../onboarding/onboarding.service.js", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../onboarding/onboarding.service.js")>()),

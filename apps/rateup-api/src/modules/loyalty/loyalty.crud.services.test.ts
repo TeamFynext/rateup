@@ -40,6 +40,7 @@ vi.mock("../../utils/prisma.js", () => ({
   },
 }));
 
+import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import {
   createLoyaltyProgram,
@@ -210,6 +211,7 @@ describe("resetProgramPoints", () => {
         lifetimePoints: 0,
         totalSpend: 0,
         currentTierId: "tier-entry",
+        pendingBonuses: Prisma.DbNull,
       },
     });
   });

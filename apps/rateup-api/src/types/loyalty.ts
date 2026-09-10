@@ -250,6 +250,23 @@ export interface LoyaltyTransactionMetadata {
   [key: string]: unknown;
 }
 
+/**
+ * The bonuses a web self-signup was promised, frozen at signup. Credited by
+ * `releasePendingSignupBonus` the first time the customer is seen on WhatsApp or at the
+ * till, so a merchant changing the programme's bonuses later does not change what a
+ * waiting customer gets.
+ */
+export interface LoyaltyPendingBonuses {
+  signupBonus: number;
+  refereeBonus: number;
+  refereeBonusType: string;
+  refereeRewardId: string | null;
+  referralBonus: number;
+  referralBonusType: string;
+  referralRewardId: string | null;
+  referredById: string | null;
+}
+
 export interface LoyaltyRedemptionContext {
   purchase_amount?: number;
   order_id?: string;

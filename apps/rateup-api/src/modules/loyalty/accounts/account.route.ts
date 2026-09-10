@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   lookupContactByPhoneHandler,
+  searchContactsForEnrolmentHandler,
   awardPointsHandler,
   createCustomerAccountHandler,
   exportCustomerAccountsHandler,
@@ -23,6 +24,7 @@ import {
   assignRewardSchema,
   shortCodeParamSchema,
   searchQuerySchema,
+  contactSearchQuerySchema,
 } from "./account.schema.js";
 
 export async function customerAccountRoutes(server: FastifyInstance) {
@@ -77,6 +79,18 @@ export async function customerAccountRoutes(server: FastifyInstance) {
       },
     },
     lookupContactByPhoneHandler,
+  );
+
+  // The org's contacts — members flagged — so the cashier can enrol someone who already
+  // exists from a WhatsApp chat or an import without retyping their number.
+  server.get(
+    "/contacts",
+    {
+      schema: {
+        querystring: contactSearchQuerySchema,
+      },
+    },
+    searchContactsForEnrolmentHandler,
   );
 
   server.get(

@@ -56,6 +56,10 @@ vi.mock("../../../utils/prisma.js", () => {
   return { default: client };
 });
 
+vi.mock("../tiers/tierReevaluation.service.js", () => ({
+  reevaluateProgramTiers: vi.fn(async () => ({ evaluated: 0, promoted: 0, demoted: 0 })),
+}));
+
 vi.mock("../../whatsapp/automatedReply/wa_automatedReply.service.js", () => ({
   getAutomatedRepliesByKeyWeords: vi.fn(),
 }));
@@ -75,11 +79,12 @@ import {
   getTemplateByNameAndOrgId,
   saveTemplate,
 } from "../../whatsapp/messageTemplates/wa_templates.service.js";
-import { tiersStepSchema, earningStepSchema, basicsStepSchema } from "./onboarding.schema.js";
+import { reevaluateProgramTiers } from "../tiers/tierReevaluation.service.js";
+import { tiersStepSchema, earningStepSchema, profileStepSchema } from "./onboarding.schema.js";
 import { LOYALTY_PRESETS, suggestPresetKey } from "./presets.js";
 import {
   activateProgram,
-  applyBasicsStep,
+  applyProfileStep,
   applyEarningStep,
   applyMessagesStep,
   applyRewardsStep,
@@ -219,12 +224,36 @@ describe("step validation", () => {
     expect(tiersStepSchema.safeParse({ tiersEnabled: true, tiers: [] }).success).toBe(false);
   });
 
-  test("basics no longer defaults the bonuses — they are the rewards step's to set", () => {
-    const parsed = basicsStepSchema.parse({ presetKey: "cafe", name: "Beans" });
+  test("profile no longer defaults the bonuses — they are the rewards step's to set", () => {
+    const parsed = profileStepSchema.parse({ name: "Beans" });
 
     expect(parsed.signupBonus).toBeUndefined();
     expect(parsed.referralBonus).toBeUndefined();
     expect(parsed.refereeBonus).toBeUndefined();
+    // The wizard no longer asks what kind of business this is.
+    expect(parsed.presetKey).toBeUndefined();
+  });
+
+  test("a brand colour must be a six-digit hex", () => {
+    expect(profileStepSchema.safeParse({ name: "Beans", brandColor: "#1C518E" }).success).toBe(
+      true,
+    );
+    expect(profileStepSchema.safeParse({ name: "Beans", brandColor: "navy" }).success).toBe(false);
+    expect(profileStepSchema.safeParse({ name: "Beans", brandColor: "#fff" }).success).toBe(false);
+  });
+
+  test("the tier qualification window is one to twenty-four months, or null for lifetime", () => {
+    const base = { tiersEnabled: false, tiers: [] };
+    expect(tiersStepSchema.safeParse({ ...base, qualificationWindowMonths: 6 }).success).toBe(true);
+    expect(tiersStepSchema.safeParse({ ...base, qualificationWindowMonths: null }).success).toBe(
+      true,
+    );
+    expect(tiersStepSchema.safeParse({ ...base, qualificationWindowMonths: 0 }).success).toBe(
+      false,
+    );
+    expect(tiersStepSchema.safeParse({ ...base, qualificationWindowMonths: 36 }).success).toBe(
+      false,
+    );
   });
 
   test("a rule set without exactly one default is rejected", () => {
@@ -327,12 +356,22 @@ describe("idempotency", () => {
     expect(db.loyaltyTier.create).not.toHaveBeenCalled();
   });
 
-  test("a tier renamed onto an existing threshold clears the old row first", async () => {
-    db.loyaltyTier.findMany.mockResolvedValueOnce([{ id: "tier-1", name: "Silver" }]);
+  test("a tier at the same threshold under a new name is updated in place, keeping its members", async () => {
+    db.loyaltyTier.findMany.mockResolvedValueOnce([
+      { id: "tier-0", name: "Bronze", threshold: 0 },
+      { id: "tier-1", name: "Silver", threshold: 1000 },
+    ]);
 
     await applyTiersStep(ORG, {
       tiersEnabled: true,
       tiers: [
+        {
+          name: "Member",
+          threshold: 0,
+          pointsMultiplier: 1,
+          color: "#5a8cc6",
+          benefitsDescription: null,
+        },
         {
           name: "Local",
           threshold: 1000,
@@ -343,15 +382,129 @@ describe("idempotency", () => {
       ],
     });
 
-    // Without this delete the create would violate @@unique([programId, threshold]).
-    expect(db.loyaltyTier.deleteMany).toHaveBeenCalledWith({
-      where: {
-        programId: "prog-1",
-        threshold: { in: [1000] },
-        name: { notIn: ["Local"] },
-      },
+    // @@unique([programId, threshold]) used to be satisfied by deleting the old row, which
+    // silently set every member's currentTierId to null. Both rows are renamed in place.
+    expect(db.loyaltyTier.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "tier-0" },
+        data: expect.objectContaining({ name: "Member" }),
+      }),
+    );
+    expect(db.loyaltyTier.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "tier-1" },
+        data: expect.objectContaining({ name: "Local" }),
+      }),
+    );
+    expect(db.loyaltyTier.create).not.toHaveBeenCalled();
+    expect(db.loyaltyTier.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test("a payload without a 0-threshold tier gets a Member base tier added", async () => {
+    await applyTiersStep(ORG, {
+      tiersEnabled: true,
+      tiers: [
+        {
+          name: "VIP",
+          threshold: 5000,
+          pointsMultiplier: 1,
+          color: "#f8951d",
+          benefitsDescription: null,
+        },
+      ],
     });
-    expect(db.loyaltyTier.create).toHaveBeenCalledTimes(1);
+
+    const created = db.loyaltyTier.create.mock.calls.map((c) => c[0].data);
+    expect(created).toEqual([
+      expect.objectContaining({ name: "Member", threshold: 0, priority: 1 }),
+      expect.objectContaining({ name: "VIP", threshold: 5000, priority: 2 }),
+    ]);
+  });
+
+  test("qualificationWindowMonths is written to the programme, and null clears it", async () => {
+    const vip = {
+      name: "VIP",
+      threshold: 5000,
+      pointsMultiplier: 1,
+      color: "#f8951d",
+      benefitsDescription: null,
+    };
+
+    await applyTiersStep(ORG, { tiersEnabled: true, tiers: [vip], qualificationWindowMonths: 6 });
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).toMatchObject({
+      tierQualificationWindowMonths: 6,
+    });
+
+    await applyTiersStep(ORG, {
+      tiersEnabled: true,
+      tiers: [vip],
+      qualificationWindowMonths: null,
+    });
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).toMatchObject({
+      tierQualificationWindowMonths: null,
+    });
+
+    await applyTiersStep(ORG, { tiersEnabled: true, tiers: [vip] });
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).not.toHaveProperty(
+      "tierQualificationWindowMonths",
+    );
+  });
+
+  test("re-places every member on the new ladder once it is saved, and reports the moves", async () => {
+    db.loyaltyTier.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      { id: "tier-1", name: "Member", threshold: 0 },
+      { id: "tier-2", name: "VIP", threshold: 5000 },
+    ]);
+    (reevaluateProgramTiers as Mock).mockResolvedValueOnce({
+      evaluated: 40,
+      promoted: 3,
+      demoted: 1,
+    });
+
+    const result = await applyTiersStep(ORG, {
+      tiersEnabled: true,
+      tiers: [
+        {
+          name: "VIP",
+          threshold: 5000,
+          pointsMultiplier: 1,
+          color: "#f8951d",
+          benefitsDescription: null,
+        },
+      ],
+      qualificationWindowMonths: 6,
+    });
+
+    expect(reevaluateProgramTiers).toHaveBeenCalledWith({
+      id: "prog-1",
+      orgId: ORG,
+      windowMonths: 6,
+      // Highest threshold first — the order `pickQualifiedTier` reads.
+      tiers: [
+        { id: "tier-2", name: "VIP", threshold: 5000 },
+        { id: "tier-1", name: "Member", threshold: 0 },
+      ],
+    });
+    expect(result.moves).toEqual({ evaluated: 40, promoted: 3, demoted: 1 });
+  });
+
+  test("the step accepts three tiers and refuses a fourth", () => {
+    const tier = (name: string, threshold: number) => ({ name, threshold, pointsMultiplier: 1 });
+    expect(
+      tiersStepSchema.safeParse({
+        tiers: [tier("Member", 0), tier("Silver", 2000), tier("Gold", 8000)],
+      }).success,
+    ).toBe(true);
+    expect(
+      tiersStepSchema.safeParse({
+        tiers: [
+          tier("Member", 0),
+          tier("Silver", 2000),
+          tier("Gold", 8000),
+          tier("Platinum", 20000),
+        ],
+      }).success,
+    ).toBe(false);
   });
 
   test("turning tiers off writes no tiers", async () => {
@@ -365,15 +518,16 @@ describe("idempotency", () => {
   });
 });
 
-describe("basics", () => {
+describe("profile", () => {
+  const profile = {
+    name: "Beans",
+    currencyName: "Beans",
+    currencyCode: "INR",
+    currencySymbol: "\u20b9",
+  };
+
   test("a payload without bonuses does not reset the stored ones to zero", async () => {
-    await applyBasicsStep(ORG, {
-      presetKey: "cafe",
-      name: "Beans",
-      currencyName: "Beans",
-      currencyCode: "INR",
-      currencySymbol: "\u20b9",
-    });
+    await applyProfileStep(ORG, { presetKey: "cafe", ...profile });
 
     const data = db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data;
     expect(data).not.toHaveProperty("signupBonus");
@@ -385,19 +539,137 @@ describe("basics", () => {
     db.loyaltyProgram.findUnique.mockResolvedValueOnce(null);
     db.loyaltyProgram.create.mockResolvedValueOnce(PROGRAM);
 
-    await applyBasicsStep(ORG, {
-      presetKey: "cafe",
-      name: "Beans",
-      currencyName: "Beans",
-      currencyCode: "INR",
-      currencySymbol: "\u20b9",
-    });
+    await applyProfileStep(ORG, { presetKey: "cafe", ...profile });
 
     expect(db.loyaltyProgram.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ signupBonus: 0, referralBonus: 0, refereeBonus: 0 }),
       }),
     );
+  });
+
+  test("infers the preset from the org's industry when the payload sends none", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValueOnce(null);
+    db.loyaltyProgram.create.mockResolvedValueOnce(PROGRAM);
+    db.org.findUnique.mockResolvedValueOnce({ onboarding: { industry: "Hair salon" } });
+
+    await applyProfileStep(ORG, profile);
+
+    expect(db.loyaltyProgram.create.mock.calls[0][0].data).toMatchObject({
+      onboardingPresetKey: "salon",
+      onboardingStep: "profile",
+    });
+  });
+
+  test("an explicit presetKey still wins over the inferred one", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValueOnce(null);
+    db.loyaltyProgram.create.mockResolvedValueOnce(PROGRAM);
+    db.org.findUnique.mockResolvedValueOnce({ onboarding: { industry: "Hair salon" } });
+
+    await applyProfileStep(ORG, { presetKey: "gym", ...profile });
+
+    expect(db.loyaltyProgram.create.mock.calls[0][0].data).toMatchObject({
+      onboardingPresetKey: "gym",
+    });
+  });
+
+  test("re-running the profile without a preset keeps the one the programme was seeded from", async () => {
+    await applyProfileStep(ORG, profile);
+
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).not.toHaveProperty(
+      "onboardingPresetKey",
+    );
+  });
+
+  test("a payload without branding fields leaves the stored branding alone", async () => {
+    await applyProfileStep(ORG, profile);
+
+    const data = db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data;
+    for (const key of [
+      "logoUrl",
+      "brandColor",
+      "heroImageUrl",
+      "timezone",
+      "contactName",
+      "businessName",
+    ]) {
+      expect(data).not.toHaveProperty(key);
+    }
+  });
+
+  test("branding is written through, and a null clears", async () => {
+    await applyProfileStep(ORG, {
+      ...profile,
+      businessName: "Kettle & Co",
+      timezone: "Asia/Kolkata",
+      brandColor: null,
+      logoUrl: "https://cdn.example.com/logo.png",
+      contactEmail: "owner@example.com",
+    });
+
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).toMatchObject({
+      businessName: "Kettle & Co",
+      timezone: "Asia/Kolkata",
+      brandColor: null,
+      logoUrl: "https://cdn.example.com/logo.png",
+      contactEmail: "owner@example.com",
+    });
+  });
+});
+
+describe("controller step aliases", () => {
+  test("the legacy 'basics' step id is routed to the profile step", async () => {
+    const { applyStepHandler } = await import("./onboarding.controller.js");
+    const rep: Record<string, Mock> = { code: vi.fn(() => rep), send: vi.fn(() => rep) };
+
+    await applyStepHandler(
+      { user: { orgId: ORG }, params: { step: "basics" }, body: { name: "Beans" } } as never,
+      rep as never,
+    );
+
+    expect(rep.code).toHaveBeenCalledWith(200);
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).toMatchObject({
+      onboardingStep: "profile",
+    });
+  });
+});
+
+describe("earning — typical order value", () => {
+  const rule = {
+    name: "Standard Earning",
+    description: null,
+    pointsPerUnit: 1,
+    multiplier: 1,
+    bonusPoints: 0,
+    allowedDays: [],
+    minPurchaseAmount: null,
+    isDefault: true,
+    priority: 0,
+  };
+
+  test("is written to the programme when the payload carries it", async () => {
+    await applyEarningStep(ORG, { rules: [rule], averageOrderValue: 320 });
+
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).toMatchObject({
+      onboardingStep: "earning",
+      averageOrderValue: 320,
+    });
+  });
+
+  test("is left alone when the payload says nothing about it", async () => {
+    await applyEarningStep(ORG, { rules: [rule] });
+
+    const data = db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data;
+    expect(data).not.toHaveProperty("averageOrderValue");
+    expect(data).not.toHaveProperty("currencyName");
+  });
+
+  test("renames the points when the payload carries a name", async () => {
+    await applyEarningStep(ORG, { rules: [rule], currencyName: "Stars" });
+
+    expect(db.loyaltyProgram.update.mock.calls.at(-1)?.[0].data).toMatchObject({
+      currencyName: "Stars",
+    });
   });
 });
 
@@ -770,9 +1042,41 @@ describe("section editing — the steps reused on a live programme", () => {
 
     await applyTiersStep(ORG, { tiersEnabled: true, tiers: [tier({ id: "tier-1" })] });
 
-    // Only the threshold-collision clear ran, never a delete of tier-2.
-    expect(db.loyaltyTier.deleteMany).toHaveBeenCalledTimes(1);
-    expect(db.loyaltyTier.deleteMany.mock.calls[0][0].where).not.toHaveProperty("id");
+    expect(db.loyaltyTier.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test("a two-row payload against a four-tier programme with deleteMissing refuses until the downgrade is confirmed", async () => {
+    db.loyaltyTier.findMany.mockResolvedValueOnce([
+      { id: "tier-1", name: "Bronze", threshold: 0 },
+      { id: "tier-2", name: "Silver", threshold: 5000 },
+      { id: "tier-3", name: "Gold", threshold: 15000 },
+      { id: "tier-4", name: "Platinum", threshold: 50000 },
+    ]);
+    db.customerLoyaltyAccount.count.mockResolvedValueOnce(0).mockResolvedValueOnce(7);
+
+    await expect(
+      applyTiersStep(ORG, {
+        tiersEnabled: true,
+        tiers: [
+          tier({ name: "Member", threshold: 0 }),
+          tier({ name: "VIP", threshold: 15000, color: "#f8951d" }),
+        ],
+        deleteMissing: true,
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: expect.stringContaining("7 members sit in Platinum"),
+    });
+
+    // Bronze@0 became Member and Gold@15000 became VIP, both in place; Silver (empty) and
+    // Platinum (7 members) were the removed rows, and Platinum is what stops the step.
+    expect(db.loyaltyTier.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "tier-1" } }),
+    );
+    expect(db.loyaltyTier.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "tier-3" } }),
+    );
+    expect(db.loyaltyTier.create).not.toHaveBeenCalled();
   });
 
   test("with deleteMissing, an empty tier is removed outright", async () => {
@@ -1030,6 +1334,25 @@ describe("activate", () => {
     db.whatsappSettings.count.mockResolvedValue(1);
 
     expect((await activateProgram(ORG)).warnings).toEqual([]);
+  });
+
+  test("warns when tiers run on a window but the ladder has no rung above Member", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue({
+      ...PROGRAM,
+      tiersEnabled: true,
+      tierQualificationWindowMonths: 6,
+    });
+    db.loyaltyEarningRule.findFirst.mockResolvedValue(DEFAULT_RULE);
+    db.loyaltyReward.findMany.mockResolvedValue([HEALTHY_REWARD]);
+    db.loyaltyTier.findMany.mockResolvedValue([
+      { id: "t0", name: "Member", threshold: 0, pointsMultiplier: 1 },
+    ]);
+    db.whatsappSettings.count.mockResolvedValue(1);
+
+    const result = await activateProgram(ORG);
+
+    expect(result.warnings).toContainEqual(expect.stringContaining("no VIP tier above Member"));
+    expect(db.loyaltyProgram.update).toHaveBeenCalled();
   });
 
   test("warns, without blocking, when the programme gives back more than a margin", async () => {
