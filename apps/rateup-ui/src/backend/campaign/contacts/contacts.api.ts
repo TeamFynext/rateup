@@ -51,6 +51,12 @@ export async function getContactById(contactId: string) {
   return (await axiosClient.get(`${CONTACT_BASE_URL}/${contactId}`)).data as ContactsData;
 }
 
+/** Everything the contact detail dialog renders — labels, groups, leads, tickets, loyalty. */
+export async function getContactFullDetails(contactId: string) {
+  return (await axiosClient.get(`${CONTACT_BASE_URL}/${contactId}/details`))
+    .data as ContactFullDetails;
+}
+
 export const createContact = async (data: ICreateContact) => {
   const res = await axiosClient.post(CONTACT_BASE_URL, data, {
     timeout: 60000,

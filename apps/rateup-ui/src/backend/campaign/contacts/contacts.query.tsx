@@ -27,6 +27,7 @@ import {
   editContactLabels,
   exportContacts,
   getContactById,
+  getContactFullDetails,
   getContactLabels,
   getContactsList,
   getCustomField,
@@ -116,6 +117,17 @@ export const useContactById = (contactId: string) =>
     enabled: !!contactId,
     queryKey: contactKeys.detail(contactId),
     queryFn: () => getContactById(contactId),
+  });
+
+/**
+ * Backs the contact detail dialog. Disabled until the dialog is actually open so a
+ * 500-row contacts table does not fire 500 detail requests on mount.
+ */
+export const useContactFullDetails = (contactId: string, enabled = true) =>
+  useQuery({
+    enabled: enabled && !!contactId,
+    queryKey: contactKeys.fullDetails(contactId),
+    queryFn: () => getContactFullDetails(contactId),
   });
 
 export const useCreateContactMutation = () => {

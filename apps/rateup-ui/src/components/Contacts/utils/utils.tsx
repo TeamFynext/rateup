@@ -15,6 +15,7 @@ import type { Column, ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
+import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -27,6 +28,29 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
+
+/**
+ * The name doubles as the row's "View Details" trigger. It only publishes the row to the
+ * table store — `ContactDetailHost` renders the single dialog — so this stays a button
+ * rather than a per-row copy of the whole modal stack.
+ */
+const ContactNameCell = ({ contact }: { contact: ContactsData }) => {
+  const setSelectedContact = useContactTableStore((state) => state.setSelectedContact);
+  return (
+    <button
+      type="button"
+      onClick={() => setSelectedContact(contact)}
+      className="group flex gap-1 items-center text-left cursor-pointer"
+    >
+      <Avatar>
+        <AvatarFallback className="rounded-lg bg-blue-200 text-primary p-1 text-xs">
+          {getInitials(contact?.name)}
+        </AvatarFallback>
+      </Avatar>
+      <span className="group-hover:underline">{contact?.name}</span>
+    </button>
+  );
+};
 
 const selectCheckBox: ColumnDef<ContactsData>[] = [
   {
@@ -66,16 +90,7 @@ const contactDetailsColumn: ColumnDef<ContactsData>[] = [
   {
     header: ({ column }) => <HeaderWithSort column={column} title={"Name"} />,
     accessorKey: "name",
-    cell: (info) => (
-      <div className="flex gap-1 items-center">
-        <Avatar>
-          <AvatarFallback className="rounded-lg bg-blue-200 text-primary p-1 text-xs">
-            {getInitials(info?.getValue() as string)}
-          </AvatarFallback>
-        </Avatar>
-        <span>{info?.getValue() as string}</span>
-      </div>
-    ),
+    cell: ({ row }) => <ContactNameCell contact={row.original} />,
     enableSorting: true,
     meta: { title: "Name" },
   },

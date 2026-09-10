@@ -1,7 +1,9 @@
 import {
+  IconAlertTriangle,
   IconLink,
   IconLinkOff,
   IconRepeat,
+  IconUserPlus,
   IconUserSearch,
   IconWriting,
 } from "@tabler/icons-react";
@@ -32,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
+import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { SOURCE_META } from "../pipeline.constants.tsx";
 import { sourceLabel } from "../pipeline.labels.ts";
@@ -81,15 +84,17 @@ function ChipGroup<T extends string>({
 }
 
 /**
- * A manually typed customer opens a lead with no `contactId` — a walk-in or a
- * phone enquiry that is not in the contact book. The board already draws that
- * state: `LeadCard` swaps the open-conversation button for an unlinked marker,
- * and `LeadDetailModal` flags the name in amber.
+ * A manually typed customer with no number opens a lead with no `contactId` — a
+ * walk-in who left nothing to reach them on. The board draws that state:
+ * `LeadCard` swaps the open-conversation button for an unlinked marker, and
+ * `LeadDetailModal` flags the name in amber.
  *
- * Typing a number that *is* already a contact is the common case though — the
- * WhatsApp webhook creates a contact for every inbound sender — so the number
- * is looked up as it is typed and the lead can be linked to what is already
- * there. Nothing is created either way; linking is always the user's click.
+ * A number, though, is enough to know who the customer is, so the server resolves
+ * one: it links the contact that already holds that number — the common case,
+ * since the WhatsApp webhook creates a contact for every inbound sender — and
+ * adds the person to the contact book when nobody does. The lookup here runs as
+ * the number is typed so the dialog can say which of the two will happen, and the
+ * link button pulls the contact's own spelling of the name across.
  */
 type CustomerMode = "manual" | "existing";
 
@@ -130,6 +135,13 @@ export function AddLeadDialog({
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [source, setSource] = useState<LeadSource>("WHATSAPP");
   const [saving, setSaving] = useState(false);
+  /**
+   * Why the board refused this lead — in practice always the one refusal a user
+   * can act on: that customer already holds a card here, one per contact per
+   * board. Kept beside the form as well as in the toast, since the dialog stays
+   * open and the fix is to change the customer.
+   */
+  const [conflict, setConflict] = useState<string | null>(null);
 
   // Reopening resets the form and honours whichever column launched it.
   useEffect(() => {
@@ -143,12 +155,15 @@ export function AddLeadDialog({
     setAssigneeIds([]);
     setSource("WHATSAPP");
     setSaving(false);
+    setConflict(null);
   }, [open, defaultStageId, pipeline]);
 
   const stage = pipeline?.stages.find((candidate) => candidate.id === stageId);
 
   const editManual = (patch: Partial<ManualCustomer>) => {
     setManual((current) => ({ ...current, ...patch }));
+    // A different customer is a different answer; the refusal no longer holds.
+    setConflict(null);
     // A different number is a different person; the old link no longer holds.
     if (patch.phone !== undefined) setLinked(null);
     setManualErrors((current) => {
@@ -175,7 +190,11 @@ export function AddLeadDialog({
   // Only look a number up once it is complete enough to mean one person.
   const lookupPhone =
     mode === "manual" && manual.phone && isValidPhoneNumber(manual.phone) ? manual.phone : null;
-  const { match } = useContactByPhone(useDebounce(lookupPhone, 400));
+  // The debounced copy is what the notice below reads: `lookupPhone` is current
+  // as of this keystroke, so using it would claim "nobody has this number"
+  // before the lookup for that number has even started.
+  const settledPhone = useDebounce(lookupPhone, 400);
+  const { match, isLoading: matching } = useContactByPhone(settledPhone);
 
   const linkTo = (found: PickedContact) => {
     setLinked(found);
@@ -206,7 +225,14 @@ export function AddLeadDialog({
         setSaving(false);
         onOpenChange(false);
       },
-      onError: () => setSaving(false),
+      onError: (error) => {
+        setSaving(false);
+        // 409 only: anything else is a failure to save, which the toast already
+        // reports and the form cannot help with.
+        if (asApiError(error).response?.status === 409) {
+          setConflict(getApiErrorMessage(error, t("That customer is already on this board.")));
+        }
+      },
     });
   };
 
@@ -228,8 +254,8 @@ export function AddLeadDialog({
     if (!validateManual()) return;
     setSaving(true);
     openLead({
-      // Set only when the user accepted the match; a typed customer never
-      // silently creates or attaches a contact.
+      // Only when the user accepted the match here. Left null otherwise — the
+      // server resolves the number itself, linking or creating the contact.
       contactId: linked?.id ?? null,
       name: manual.name.trim(),
       // Company lives on the lead; the contact record has no such column.
@@ -242,6 +268,7 @@ export function AddLeadDialog({
   const switchMode = (next: CustomerMode) => {
     setMode(next);
     setManualErrors({});
+    setConflict(null);
     // Each mode owns its own idea of the customer, so leaving one drops it —
     // including a link the abandoned number had picked up.
     setLinked(null);
@@ -285,7 +312,13 @@ export function AddLeadDialog({
 
           {mode === "existing" ? (
             <div className="sm:col-span-2">
-              <ContactPicker value={contact} onChange={setContact} />
+              <ContactPicker
+                value={contact}
+                onChange={(picked) => {
+                  setContact(picked);
+                  setConflict(null);
+                }}
+              />
             </div>
           ) : (
             <>
@@ -294,7 +327,7 @@ export function AddLeadDialog({
                   <FieldLabel htmlFor="add-lead-name">{t("Contact name")}</FieldLabel>
                   <Input
                     id="add-lead-name"
-                    placeholder={t("Ritu Bansal")}
+                    placeholder={t("Name")}
                     value={manual.name}
                     onChange={(event) => editManual({ name: event.target.value })}
                     aria-invalid={Boolean(manualErrors.name)}
@@ -329,48 +362,79 @@ export function AddLeadDialog({
                 {manualErrors.phone ? <FieldError>{manualErrors.phone}</FieldError> : null}
               </Field>
 
-              {linked ? (
-                <div className="bg-primary/8 text-primary flex items-center gap-2.5 rounded-md px-3.5 py-3 sm:col-span-2">
-                  <IconLink className="size-4 shrink-0" />
-                  <span className="flex-1 text-xs">
-                    {t("Linked to {name} — the lead opens their conversation in Inbox.", {
-                      name: linked.name,
-                    })}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setLinked(null)}
-                    className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold hover:underline"
-                  >
-                    <IconLinkOff className="size-3.5" />
-                    {t("Unlink")}
-                  </button>
-                </div>
-              ) : match ? (
-                <div className="flex items-center gap-2.5 rounded-md bg-amber-500/10 px-3.5 py-3 text-amber-700 sm:col-span-2 dark:text-amber-500">
-                  <IconUserSearch className="size-4 shrink-0" />
-                  <span className="flex-1 text-xs">
-                    {t("{name} already has this number in your contacts.", { name: match.name })}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      linkTo({
-                        id: match.id,
+              {/* One fixed-height line, always rendered: this row changes on
+                  every keystroke that completes a number, and as a block that
+                  appears and disappears it resized the whole modal under the
+                  user's cursor. */}
+              <div className="flex min-h-9 items-center gap-2 text-xs sm:col-span-2">
+                {linked ? (
+                  <>
+                    <IconLink className="text-primary size-3.5 shrink-0" />
+                    <span className="text-primary min-w-0 flex-1 truncate">
+                      {t("Linked to {name} — the lead opens their conversation in Inbox.", {
+                        name: linked.name,
+                      })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setLinked(null)}
+                      className="text-muted-foreground inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
+                    >
+                      <IconLinkOff className="size-3.5" />
+                      {t("Unlink")}
+                    </button>
+                  </>
+                ) : match ? (
+                  <>
+                    <IconUserSearch className="size-3.5 shrink-0 text-amber-600 dark:text-amber-500" />
+                    <span className="min-w-0 flex-1 truncate text-amber-700 dark:text-amber-500">
+                      {t("{name} already has this number — the lead will be linked to them.", {
                         name: match.name,
-                        phone: match.phone || null,
-                        email: match.email || null,
-                      })
-                    }
-                    className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold hover:underline"
-                  >
-                    <IconLink className="size-3.5" />
-                    {t("Link this lead")}
-                  </button>
-                </div>
-              ) : null}
+                      })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        linkTo({
+                          id: match.id,
+                          name: match.name,
+                          phone: match.phone || null,
+                          email: match.email || null,
+                        })
+                      }
+                      className="text-primary inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
+                    >
+                      <IconLink className="size-3.5" />
+                      {t("Use their details")}
+                    </button>
+                  </>
+                ) : settledPhone === lookupPhone && lookupPhone && !matching ? (
+                  <>
+                    <IconUserPlus className="text-muted-foreground size-3.5 shrink-0" />
+                    <span className="text-muted-foreground min-w-0 flex-1 truncate">
+                      {t("Nobody has this number yet — it will be added to your contacts.")}
+                    </span>
+                  </>
+                ) : (
+                  // The slot is never empty, so it reads as a hint about the
+                  // field above rather than as a hole the messages drop into.
+                  <>
+                    <IconUserSearch className="text-muted-foreground/70 size-3.5 shrink-0" />
+                    <span className="text-muted-foreground/70 min-w-0 flex-1 truncate">
+                      {t("A number links the lead to that contact, or adds them to your contacts.")}
+                    </span>
+                  </>
+                )}
+              </div>
             </>
           )}
+
+          {conflict ? (
+            <div className="border-destructive/30 bg-destructive/8 text-destructive flex items-start gap-2 rounded-md border px-3 py-2.5 text-xs sm:col-span-2">
+              <IconAlertTriangle className="mt-px size-3.5 shrink-0" />
+              <span>{conflict}</span>
+            </div>
+          ) : null}
 
           <div className="sm:col-span-2">
             <Label className="mb-2 block">{t("Lead stage")}</Label>
