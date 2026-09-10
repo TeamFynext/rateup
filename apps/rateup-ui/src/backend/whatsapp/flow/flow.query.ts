@@ -13,6 +13,7 @@ import {
   deleteFlow,
   deprecateFlow,
   getFlowPreview,
+  getFlowTemplates,
   getUnsyncedFlows,
   getWaFlowFromDb,
   getWaFlowJson,
@@ -44,6 +45,15 @@ export const useWaFlowsFromWa = () =>
   useQuery({
     queryKey: ["flow", "wa"],
     queryFn: getWaFlowsFromWa,
+  });
+
+/** The catalogue never changes between deploys, so it does not need refetching. */
+export const useFlowTemplates = (category: string, enabled = true) =>
+  useQuery({
+    queryKey: ["flow", "templates", category],
+    queryFn: () => getFlowTemplates(category),
+    enabled,
+    staleTime: Infinity,
   });
 
 export const useUnsyncedFlows = (enabled: boolean) =>

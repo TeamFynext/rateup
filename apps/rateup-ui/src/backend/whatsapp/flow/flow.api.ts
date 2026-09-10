@@ -80,12 +80,34 @@ export async function cloneFlows({ flowId, teamId }: cloneFlowsProps) {
 export interface createFlowInput {
   name: string;
   teamIds: string[];
+  /** Meta's categories and RateUp's own LOYALTY_FEEDBACK; stored as given, mapped for Meta. */
   categories: string[];
+  /** A ready-made flow (see getFlowTemplates) to start from. */
+  templateKey?: string;
   /** Number to create the flow on; the org's default channel when omitted. */
   whatsappSettingsPhoneId?: string;
 }
 export async function createFlow(data: createFlowInput) {
   return (await axiosClient.post(`${BASE}`, data))?.data;
+}
+
+export interface FlowTemplate {
+  key: string;
+  label: string;
+  description: string;
+  questions: Array<{ title: string; kind: "rating" | "text" }>;
+  /** v2 WaFlow JSON, renderable by the flow preview without the editor store. */
+  previewJson: WaFlowJson;
+}
+export interface FlowTemplatesResponse {
+  templates: FlowTemplate[];
+  /** The one to preselect for this org, when the category has a sensible guess. */
+  suggestedKey: string | null;
+}
+/** Ready-made flows for a category — what the create-flow wizard offers. */
+export async function getFlowTemplates(category: string): Promise<FlowTemplatesResponse> {
+  const res = await axiosClient.get(`${BASE}/templates`, { params: { category } });
+  return res.data;
 }
 export async function updateFlow(dbFlowId: string, data: Partial<Omit<DbFlow, "id">>) {
   try {

@@ -12,7 +12,7 @@ import type { WaFlowJson } from "@/types/global";
  * A flow JSON on a phone, without opening it in the editor. Key the component by the
  * draft so a different draft starts on its first screen again.
  */
-export function FeedbackFlowPreview({ json }: Readonly<{ json: WaFlowJson }>) {
+export function FlowTemplatePreview({ json }: Readonly<{ json: WaFlowJson }>) {
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
 

@@ -1,20 +1,11 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 
-import { FEEDBACK_DRAFT_KEYS } from "@/backend/loyalty/feedback.api.ts";
-
 /**
  * Forms on the Feedback page. Numeric fields are `z.coerce.number()` so the form values
  * (`z.input`) and the parsed values (`z.output`) differ — same convention as the rewards
  * forms.
  */
-
-export const feedbackSetupSchema = z.object({
-  draftKey: z.enum(FEEDBACK_DRAFT_KEYS),
-  teamId: z.string().min(1, "Pick the team whose Google review link customers are sent to"),
-  whatsappSettingsPhoneId: z.string().optional(),
-});
-export type FeedbackSetupFormValues = z.infer<typeof feedbackSetupSchema>;
 
 export const feedbackSettingsSchema = z.object({
   sendDelayMinutes: z.coerce

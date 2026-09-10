@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
-import { WaFlowStatus } from "@/types/enums.ts";
+import { LOYALTY_FEEDBACK_FLOW_CATEGORY, WaFlowStatus } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
@@ -50,7 +50,8 @@ interface FlowCardProps {
   createdAt: Date;
   teamsData?: TeamData[];
   version: number;
-  category?: string;
+  /** As chosen at creation; a Loyalty feedback flow is labelled as such on the card. */
+  categories?: string[];
   responseCount?: number;
 }
 
@@ -61,10 +62,13 @@ function FlowCard({
   createdAt,
   teamsData,
   version,
-  category = "Customer Engagement",
+  categories = [],
   responseCount = 0,
 }: Readonly<FlowCardProps>) {
   const navigate = useNavigate();
+  const category = categories.includes(LOYALTY_FEEDBACK_FLOW_CATEGORY)
+    ? "Loyalty feedback"
+    : "Customer Engagement";
   const confirm = useConfirm();
   const [cloneDialogOpened, setCloneDialogOpened] = useState(false);
   const [teamId, setTeamId] = useState("");

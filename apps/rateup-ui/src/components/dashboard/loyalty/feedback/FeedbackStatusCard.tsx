@@ -1,10 +1,10 @@
-import { IconChartBar, IconEdit, IconLoader2, IconRefresh, IconSend } from "@tabler/icons-react";
+import { IconChartBar, IconEdit, IconLoader2, IconUnlink, IconSend } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import type { FeedbackState } from "@/backend/loyalty/feedback.api.ts";
 import {
-  useResetFeedbackMutation,
+  useDetachFeedbackMutation,
   useSubmitFeedbackFlowMutation,
   useUpdateFeedbackSettingsMutation,
 } from "@/backend/loyalty/feedback.query.ts";
@@ -19,7 +19,7 @@ import { FeedbackStatusBadge } from "./FeedbackStatusBadge.tsx";
 
 /**
  * Where the flow stands and what to do next: submit it, edit its questions while it is
- * still a draft, switch sending on once Meta has approved everything, or start over.
+ * still a draft, switch sending on once Meta has approved everything, or detach it.
  */
 export function FeedbackStatusCard({
   state,
@@ -28,7 +28,7 @@ export function FeedbackStatusCard({
   const { t } = useTranslation();
   const confirm = useConfirm();
   const submit = useSubmitFeedbackFlowMutation();
-  const reset = useResetFeedbackMutation();
+  const detach = useDetachFeedbackMutation();
   const update = useUpdateFeedbackSettingsMutation();
 
   const { flow, template, setting, team, reward, counts } = state;
@@ -50,15 +50,15 @@ export function FeedbackStatusCard({
     if (ok) submit.mutate();
   };
 
-  const onReset = async () => {
+  const onDetach = async () => {
     const ok = await confirm({
-      title: t("Start over?"),
+      title: t("Detach this flow?"),
       description: t(
-        "The draft flow and these settings are removed so you can pick another survey. Feedback already collected is kept.",
+        "The flow stays in WhatsApp → Flow and you can pick another here. Surveys already sent still record their answers, but no review link is sent for them. Results are kept.",
       ),
-      confirmText: t("Start over"),
+      confirmText: t("Detach"),
     });
-    if (ok) reset.mutate();
+    if (ok) detach.mutate();
   };
 
   const summary = [
@@ -101,8 +101,10 @@ export function FeedbackStatusCard({
                     "Meta is reviewing the message template — usually hours, sometimes a day. Sending switches on as soon as it is approved.",
                   )
                 : tone === "rejected"
-                  ? t("Meta rejected the message template. Reset and submit again.")
-                  : t("This flow can no longer be sent. Start over with a new draft.")}
+                  ? t(
+                      "Meta rejected the message template. Detach, then select the flow again to resubmit.",
+                    )
+                  : t("This flow can no longer be sent. Detach it and pick another.")}
           </p>
         )}
         <div className="flex flex-wrap gap-2">
@@ -138,11 +140,11 @@ export function FeedbackStatusCard({
             type="button"
             variant="ghost"
             className="ml-auto text-muted-foreground"
-            onClick={onReset}
-            disabled={reset.isPending}
+            onClick={onDetach}
+            disabled={detach.isPending}
           >
-            <IconRefresh size={16} />
-            {t("Start over")}
+            <IconUnlink size={16} />
+            {t("Detach")}
           </Button>
         </div>
       </CardContent>

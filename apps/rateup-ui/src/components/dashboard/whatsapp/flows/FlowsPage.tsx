@@ -22,7 +22,7 @@ import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import CreateFlowModal from "@/components/whatsapp/flows/CreateFlowModal/CreateFlowModal.tsx";
+import { CreateFlowWizard } from "@/components/whatsapp/flows/CreateFlowWizard/CreateFlowWizard.tsx";
 import FlowCardsList from "@/components/whatsapp/flows/FlowCardsList/index.tsx";
 import { SyncFlowsButton } from "@/components/whatsapp/flows/SyncFlows.tsx";
 
@@ -136,7 +136,7 @@ export function FlowsPage() {
           </div>
         </ListPageContent>
       </ListPage>
-      <CreateFlowModal opened={isCreateFlowModalOpened} onClose={handleCreateFlowModalClose} />
+      <CreateFlowWizard open={isCreateFlowModalOpened} onClose={handleCreateFlowModalClose} />
     </>
   );
 }

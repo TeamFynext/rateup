@@ -78,7 +78,7 @@ export const loyaltyKeys = {
   templates: () => ["LoyaltyTemplate"] as const,
 
   feedback: () => ["loyalty-feedback"] as const,
-  feedbackDrafts: () => ["loyalty-feedback-drafts"] as const,
+  feedbackFlows: () => ["loyalty-feedback-flows"] as const,
   /** Without a period this is the prefix that sweeps every results window. */
   feedbackResults: (period?: KeyPart, tz?: KeyPart) =>
     (period === undefined
@@ -119,7 +119,7 @@ export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
   loyaltyKeys.approvals(),
   loyaltyKeys.templates(),
   loyaltyKeys.feedback(),
-  loyaltyKeys.feedbackDrafts(),
+  loyaltyKeys.feedbackFlows(),
   loyaltyKeys.feedbackResults(),
   loyaltyKeys.feedbackRequests(),
   ["loyalty-cashier-search"],

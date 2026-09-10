@@ -1,34 +1,26 @@
 import { axiosClient } from "@/backend/apiClient.ts";
 import type { WaFlowStatus } from "@/types/enums.ts";
-import type { WaFlowJson } from "@/types/global";
 
 import { LOYALTY_BASE } from "./base.ts";
 import type { LoyaltyRewardStatus } from "./reward.api.ts";
 
 /**
- * Loyalty → Feedback: the post-visit WhatsApp Flow, its review reward and its results.
- * Mirrors `rateup-api/src/modules/loyalty/feedback/feedback.schema.ts`.
+ * Loyalty → Feedback: the selected WhatsApp Flow, its review reward and its results.
+ * Mirrors `rateup-api/src/modules/loyalty/feedback/feedback.schema.ts`. The flow itself is
+ * created in WhatsApp → Flow with the Loyalty feedback category; Feedback only selects it.
  */
 
 const FEEDBACK_BASE = `${LOYALTY_BASE}/feedback`;
 
-export const FEEDBACK_DRAFT_KEYS = ["restaurant", "retail", "salon", "gym", "generic"] as const;
-export type FeedbackDraftKey = (typeof FEEDBACK_DRAFT_KEYS)[number];
-
-export type FeedbackQuestionKind = "rating" | "text";
-
-export interface FeedbackDraft {
-  key: FeedbackDraftKey;
-  label: string;
-  description: string;
-  questions: Array<{ title: string; kind: FeedbackQuestionKind }>;
-  /** v2 WaFlow JSON, renderable by the flow preview without the editor store. */
-  previewJson: WaFlowJson;
-}
-
-export interface FeedbackDraftsResponse {
-  drafts: FeedbackDraft[];
-  suggestedKey: FeedbackDraftKey;
+/** A flow Feedback may select, and — when it may not — why. */
+export interface FeedbackFlowCandidate {
+  dbFlowId: string;
+  name: string;
+  status: WaFlowStatus | string;
+  pendingSave: boolean;
+  version: number;
+  eligible: boolean;
+  reason: string | null;
 }
 
 export interface FeedbackSetting {
@@ -39,7 +31,6 @@ export interface FeedbackSetting {
   teamId: string;
   rewardId: string | null;
   happyMinRating: number;
-  draftKey: string;
 }
 
 export interface FeedbackFlow {
@@ -82,9 +73,8 @@ export interface FeedbackState {
 }
 
 export interface FeedbackSetupPayload {
-  draftKey: FeedbackDraftKey;
+  dbFlowId: string;
   teamId: string;
-  whatsappSettingsPhoneId?: string;
 }
 
 export type FeedbackSettingsPatch = Partial<
@@ -158,8 +148,8 @@ export interface FeedbackRequestsPage {
   pageSize: number;
 }
 
-export const getFeedbackDrafts = async (): Promise<FeedbackDraftsResponse> => {
-  const response = await axiosClient.get(`${FEEDBACK_BASE}/drafts`);
+export const getFeedbackFlowCandidates = async (): Promise<{ flows: FeedbackFlowCandidate[] }> => {
+  const response = await axiosClient.get(`${FEEDBACK_BASE}/flows`);
   return response.data;
 };
 
@@ -180,14 +170,15 @@ export const updateFeedbackSettings = async (
   return response.data;
 };
 
-/** Publishes the flow at Meta and submits the FLOW-button template for review. */
+/** Publishes the flow at Meta if needed and submits the FLOW-button template for review. */
 export const submitFeedbackFlow = async (): Promise<FeedbackState> => {
   const response = await axiosClient.post(`${FEEDBACK_BASE}/submit`);
   return response.data;
 };
 
-export const resetFeedback = async (): Promise<void> => {
-  await axiosClient.post(`${FEEDBACK_BASE}/reset`);
+/** Forgets the selection and stops asking; the flow itself is left alone. */
+export const detachFeedback = async (): Promise<void> => {
+  await axiosClient.post(`${FEEDBACK_BASE}/detach`);
 };
 
 export const getFeedbackResults = async (

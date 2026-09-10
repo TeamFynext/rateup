@@ -1071,6 +1071,8 @@ declare global {
 
   interface DbFlow {
     dbFlowId: string;
+    /** Categories chosen at creation — Meta's and RateUp's own LOYALTY_FEEDBACK. */
+    categories: string[];
     createdAt: Date;
     flowId: string;
     name: string;

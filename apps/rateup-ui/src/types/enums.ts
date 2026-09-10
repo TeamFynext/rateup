@@ -201,6 +201,12 @@ export enum WaFlowStatus {
   BLOCKED = "BLOCKED",
   THROTTLED = "THROTTLED",
 }
+/**
+ * RateUp's own flow category, beside Meta's (SURVEY, SIGN_UP, …). Stored on the flow and
+ * mapped to SURVEY by the API before Meta sees it; Loyalty → Feedback selects flows by it.
+ * Mirrors `LOYALTY_FEEDBACK_FLOW_CATEGORY` in rateup-api.
+ */
+export const LOYALTY_FEEDBACK_FLOW_CATEGORY = "LOYALTY_FEEDBACK";
 
 export enum CampaignStatus {
   ACTIVE = "ACTIVE",

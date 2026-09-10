@@ -4,11 +4,11 @@ import { toast } from "sonner";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 import {
-  getFeedbackDrafts,
+  detachFeedback,
+  getFeedbackFlowCandidates,
   getFeedbackRequests,
   getFeedbackResults,
   getFeedbackState,
-  resetFeedback,
   setupFeedback,
   submitFeedbackFlow,
   updateFeedbackSettings,
@@ -22,17 +22,16 @@ import { loyaltyKeys } from "./loyalty.keys.ts";
 
 /**
  * The WhatsApp → Flow list and the flow editor read the same rows under their own inline
- * keys (`flow.query.ts`), so anything that creates, publishes or removes the feedback flow
- * refreshes them too.
+ * keys (`flow.query.ts`), so anything that publishes the selected flow refreshes them too.
  */
 const FLOW_KEY_ROOT = ["flow"] as const;
 
-/** The catalogue never changes between deploys, so it does not need refetching. */
-export const useFeedbackDrafts = () =>
+/** Flows Feedback may select — refetched on focus so a flow created in another tab shows up. */
+export const useFeedbackFlowCandidates = (enabled = true) =>
   useQuery({
-    queryKey: loyaltyKeys.feedbackDrafts(),
-    queryFn: getFeedbackDrafts,
-    staleTime: Infinity,
+    queryKey: loyaltyKeys.feedbackFlows(),
+    queryFn: getFeedbackFlowCandidates,
+    enabled,
   });
 
 export const useLoyaltyFeedback = (enabled = true) =>
@@ -73,14 +72,13 @@ export const useSetupFeedbackMutation = (onSuccess?: (state: FeedbackState) => v
     mutationFn: (payload: FeedbackSetupPayload) => setupFeedback(payload),
     onSuccess: (state) => {
       apply(state);
-      queryClient.invalidateQueries({ queryKey: FLOW_KEY_ROOT });
-      toast.success("Feedback flow created as a draft");
+      toast.success("Feedback flow selected");
       onSuccess?.(state);
     },
     onError: (error) => {
       // 409: another tab finished setup first — show what exists rather than the error.
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.feedback() });
-      toast.error(getApiErrorMessage(error, "Could not create the feedback flow"));
+      toast.error(getApiErrorMessage(error, "Could not select the feedback flow"));
     },
   });
 };
@@ -117,20 +115,20 @@ export const useSubmitFeedbackFlowMutation = (onSuccess?: (state: FeedbackState)
   });
 };
 
-export const useResetFeedbackMutation = (onSuccess?: () => void) => {
+export const useDetachFeedbackMutation = (onSuccess?: () => void) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: resetFeedback,
+    mutationFn: detachFeedback,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.feedback() });
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.feedbackFlows() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.feedbackResults() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.feedbackRequests() });
-      queryClient.invalidateQueries({ queryKey: FLOW_KEY_ROOT });
-      toast.success("Feedback reset — pick a draft to start again");
+      toast.success("Flow detached — pick another to continue");
       onSuccess?.();
     },
     onError: (error) => {
-      toast.error(getApiErrorMessage(error, "Could not reset feedback"));
+      toast.error(getApiErrorMessage(error, "Could not detach the flow"));
     },
   });
 };
