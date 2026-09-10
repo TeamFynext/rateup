@@ -11,6 +11,7 @@ import {
   getLeadById,
   listLeads,
   BadCursorError,
+  LeadExistsForContactError,
   moveLead,
   reopenLead,
   updateLead,
@@ -72,6 +73,16 @@ export async function createLeadHandler(
     const lead = await createLead({ ...request.body, userId: request.userId });
     return reply.code(201).send(lead);
   } catch (error) {
+    // Not a fault: that customer already has a card on this board, and the reply
+    // says which one so the client can point at it.
+    if (error instanceof LeadExistsForContactError) {
+      return reply.code(409).send({
+        message: error.message,
+        leadId: error.leadId,
+        stageId: error.stageId,
+        stageName: error.stageName,
+      });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error creating lead" });
   }
