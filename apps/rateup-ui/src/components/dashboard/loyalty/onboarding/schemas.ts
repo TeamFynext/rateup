@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod";
 
 /**
@@ -9,12 +10,24 @@ import { z } from "zod";
  * strings, which is why each schema has a separate input/output type below.
  */
 
-export const basicsFormSchema = z.object({
-  name: z.string().min(1, "Give your program a name"),
-  currencyName: z.string().min(1, "Name your points"),
+/** A six-digit hex colour — what the API's `brandColor` column accepts. */
+export const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
+
+export const profileFormSchema = z.object({
+  businessName: z.string().min(1, "Give your business a name"),
+  name: z.string().min(1, "Name your loyalty program"),
   currencyCode: z.string().min(1),
   currencySymbol: z.string().min(1),
-  averageOrderValue: z.coerce.number().min(0),
+  timezone: z.string().min(1, "Pick a timezone"),
+  contactName: z.string().optional(),
+  contactPhone: z
+    .string()
+    .refine((v) => !v || isValidPhoneNumber(v), "Enter a valid phone number")
+    .optional(),
+  contactEmail: z.email("Enter a valid email").or(z.literal("")).optional(),
+  logoUrl: z.string().optional(),
+  brandColor: z.string().regex(HEX_COLOUR, "Use a hex colour like #1C518E"),
+  heroImageUrl: z.string().optional(),
 });
 
 /**
@@ -28,6 +41,8 @@ const optionalCount = z.preprocess(
 
 export const earningFormSchema = z
   .object({
+    /** What the programme calls its points — asked here, beside the rate that mints them. */
+    currencyName: z.string().trim().min(1, "Name your points"),
     rules: z
       .array(
         z.object({
@@ -49,39 +64,80 @@ export const earningFormSchema = z
         }),
       )
       .min(1, "Keep at least one earning rule"),
+    /**
+     * Typical spend in one visit — edited here, beside the rate, because this is where the
+     * preview first needs it. Empty means "not set" and is stored as null.
+     */
+    averageOrderValue: z.preprocess(
+      (value) => (value === "" || value === undefined ? null : value),
+      z.coerce.number().min(0).nullable(),
+    ),
   })
   .refine((v) => v.rules.filter((r) => r.isDefault).length === 1, {
     message: "Exactly one rule must be the default",
     path: ["rules"],
   });
 
-export const tiersFormSchema = z
+/** One tier as the VIP step edits it: a name and a colour; the rest is fixed. */
+const tierRowSchema = z.object({
+  /** Present on a saved tier; the API updates by it so a rename does not fork. */
+  id: z.string().optional(),
+  name: z.string().min(1, "Name this tier"),
+  color: z.string().regex(HEX_COLOUR, "Pick a colour"),
+});
+
+/** The windows a merchant can pick from. Strings because they come off a `Select`. */
+/** The slider's range. 0 means lifetime spend — no window at all. */
+export const VIP_WINDOW_MAX_MONTHS = 12;
+
+/** The base plus at most this many above it. Longer ladders belong to the full tier editor. */
+export const UPPER_TIERS_MAX = 2;
+
+/** A tier above the base: reached by spend, with its own perks and, optionally, a faster rate. */
+export const upperTierRowSchema = tierRowSchema.extend({
+  threshold: z.coerce.number().min(1, "Set the spend that unlocks it"),
+  /** How much faster this tier earns. 1 = the same rate as everyone. */
+  pointsMultiplier: z.coerce
+    .number()
+    .min(1, "A tier cannot earn slower than everyone else")
+    .max(10, "Keep the multiplier at 10× or under"),
+  benefitsDescription: z.string().max(500, "Keep the perks under 500 characters").optional(),
+});
+
+export const vipTierFormSchema = z
   .object({
     tiersEnabled: z.boolean(),
-    tiers: z.array(
-      z.object({
-        id: z.string().optional(),
-        name: z.string().min(1, "Name this tier"),
-        threshold: z.coerce.number().min(0),
-        pointsMultiplier: z.coerce.number().min(0),
-        color: z.string(),
-        benefitsDescription: z.string().optional(),
-      }),
-    ),
+    qualificationWindowMonths: z.number().int().min(0).max(VIP_WINDOW_MAX_MONTHS),
+    /** Everyone starts here; only the name and colour are the merchant's. */
+    base: tierRowSchema,
+    /** The rungs above the base, lowest first. */
+    upper: z
+      .array(upperTierRowSchema)
+      .min(1, "Add a tier above the base, or turn tiers off")
+      .max(UPPER_TIERS_MAX, "Up to three tiers in all"),
   })
-  // Mirrors LoyaltyTier's @@unique([programId, name]) and @@unique([programId, threshold]).
-  // Catching both here is what turns a Prisma constraint violation into a field error.
-  .refine((v) => new Set(v.tiers.map((t) => t.name.trim().toLowerCase())).size === v.tiers.length, {
-    message: "Two tiers share a name",
-    path: ["tiers"],
-  })
-  .refine((v) => new Set(v.tiers.map((t) => t.threshold)).size === v.tiers.length, {
-    message: "Two tiers share a threshold — each needs its own",
-    path: ["tiers"],
-  })
-  .refine((v) => !v.tiersEnabled || v.tiers.length > 0, {
-    message: "Add a tier, or turn tiers off",
-    path: ["tiers"],
+  // Mirrors LoyaltyTier's @@unique([programId, name]).
+  .superRefine((v, ctx) => {
+    const names = [v.base.name, ...v.upper.map((tier) => tier.name)].map((name) =>
+      name.trim().toLowerCase(),
+    );
+    v.upper.forEach((tier, index) => {
+      if (names.indexOf(names[index + 1]) !== index + 1) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Give each tier its own name",
+          path: ["upper", index, "name"],
+        });
+      }
+      // Mirrors @@unique([programId, threshold]) — and a ladder has to climb.
+      if (index > 0 && tier.threshold <= v.upper[index - 1].threshold) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Each tier must take more spend than the one below it",
+          path: ["upper", index, "threshold"],
+        });
+      }
+    });
   });
 
 export const rewardsFormSchema = z
@@ -175,12 +231,12 @@ export const messagesFormSchema = z.object({
   ),
 });
 
-export type BasicsFormInput = z.input<typeof basicsFormSchema>;
-export type BasicsFormValues = z.output<typeof basicsFormSchema>;
+export type ProfileFormInput = z.input<typeof profileFormSchema>;
+export type ProfileFormValues = z.output<typeof profileFormSchema>;
 export type EarningFormInput = z.input<typeof earningFormSchema>;
 export type EarningFormValues = z.output<typeof earningFormSchema>;
-export type TiersFormInput = z.input<typeof tiersFormSchema>;
-export type TiersFormValues = z.output<typeof tiersFormSchema>;
+export type VipTierFormInput = z.input<typeof vipTierFormSchema>;
+export type VipTierFormValues = z.output<typeof vipTierFormSchema>;
 export type RewardsFormInput = z.input<typeof rewardsFormSchema>;
 /** One row of the rewards field array — shared by the step, the dialog and the converters. */
 export type RewardFormRow = RewardsFormInput["rewards"][number];

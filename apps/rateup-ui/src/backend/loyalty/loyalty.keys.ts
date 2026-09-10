@@ -43,6 +43,11 @@ export const loyaltyKeys = {
       : ["loyaltyCustomer", customerId]) as readonly unknown[],
   customerByContact: (contactId: KeyPart) => ["loyaltyCustomerByContact", contactId] as const,
   contactLookup: (phone: KeyPart) => ["loyaltyContactLookup", phone] as const,
+  /** The cashier's "from contacts" list. Without a search this is the prefix that sweeps every one. */
+  enrolmentContacts: (search?: KeyPart) =>
+    (search === undefined
+      ? ["loyaltyEnrolmentContacts"]
+      : ["loyaltyEnrolmentContacts", search]) as readonly unknown[],
 
   tiers: () => ["loyalty-tiers"] as const,
   tier: (tierId: KeyPart) => ["loyalty-tier", tierId] as const,

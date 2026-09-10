@@ -17,6 +17,7 @@ import {
   getLoyaltyCustomerByContactId,
   getLoyaltyCustomerById,
   lookupContactByPhone,
+  searchContactsForEnrolment,
   importCustomers,
   updateLoyaltyCustomer,
 } from "./customer.api";
@@ -28,6 +29,8 @@ export const useCreateLoyaltyCustomerMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
+      // The new member's row in the cashier's "from contacts" list now needs its badge.
+      qc.invalidateQueries({ queryKey: loyaltyKeys.enrolmentContacts() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error creating customer");
@@ -51,6 +54,19 @@ export const useContactLookupByPhone = (phone: string, enabled: boolean) => {
     // A contact's name does not change between keystrokes; don't refetch on every focus.
     staleTime: 5 * 60 * 1000,
     retry: false,
+  });
+};
+
+/**
+ * The org's contacts for the cashier's "from contacts" picker. An empty search lists the
+ * most recently active ones, so the list is useful before anything is typed.
+ */
+export const useEnrolmentContacts = (search: string) => {
+  return useQuery({
+    queryKey: loyaltyKeys.enrolmentContacts(search),
+    queryFn: () => searchContactsForEnrolment(search),
+    staleTime: 60 * 1000,
+    placeholderData: (previous) => previous,
   });
 };
 

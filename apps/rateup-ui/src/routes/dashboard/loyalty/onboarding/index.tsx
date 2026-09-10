@@ -2,10 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { LoyaltyOnboardingPage } from "@/components/dashboard/loyalty/onboarding/LoyaltyOnboardingPage.tsx";
+import { WIZARD_STEPS } from "@/components/dashboard/loyalty/onboarding/wizardSteps.ts";
 
 const searchSchema = z.object({
   /** Deep-link into a specific step. Omitted, the wizard resumes where the user left off. */
-  step: z.enum(["basics", "earning", "tiers", "rewards", "messages", "review"]).optional(),
+  step: z.enum(WIZARD_STEPS).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/dashboard/loyalty/onboarding/")({

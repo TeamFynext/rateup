@@ -200,8 +200,8 @@ describe("buildSectionSummaries", () => {
   const sections = buildSectionSummaries({ t, state, dashboard, giveback, templatesPending: 2 });
   const byKey = Object.fromEntries(sections.map((s) => [s.key, s]));
 
-  test("basics reads as one sentence about what customers see", () => {
-    expect(byKey.basics.line).toBe("Points called Beans · ₹ INR · ₹240 a visit");
+  test("profile reads as one sentence about what customers see", () => {
+    expect(byKey.profile.line).toBe("Points called Beans · ₹ INR · ₹240 a visit · no logo yet");
   });
 
   test("earning quotes the default rule, tags the extras and counts rules switched off", () => {

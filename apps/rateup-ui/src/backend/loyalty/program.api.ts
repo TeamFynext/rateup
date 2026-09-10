@@ -8,7 +8,10 @@ export type ReferralMessageTemplate = string | unknown[] | JSONContent;
 export interface LoyaltyProgram {
   id: string;
   orgId: string;
+  /** The programme's own name, e.g. "Kettle Rewards". */
   name: string;
+  /** The business behind it, e.g. "Kettle & Co". Null on programmes set up before it was asked. */
+  businessName?: string | null;
   status: "draft" | "active" | "paused";
   currencyName: string;
   currencyCode: string;
@@ -42,6 +45,18 @@ export interface LoyaltyProgram {
   /** Inside an open 24-hour chat, send a notification's text as a plain message. */
   sendTextInSession?: boolean;
   enableShopifyOrderPoints?: boolean;
+  /** Months of trailing spend that count towards a tier; null = lifetime. */
+  tierQualificationWindowMonths?: number | null;
+  /* ── Venue & branding profile ── */
+  timezone?: string | null;
+  logoUrl?: string | null;
+  brandColor?: string | null;
+  heroImageUrl?: string | null;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  /** Print materials (QR card, brochure) — narrowed with `parseMaterials` on the UI. */
+  materials?: unknown;
   createdAt: Date;
   updatedAt: Date;
   whatsappSettingsId?: string;
@@ -79,6 +94,8 @@ export interface LoyaltyProgramInput {
   pointsActivityAlerts?: boolean;
   enablePointsExpiration?: boolean;
   whatsappSettingsId?: string;
+  /** The Materials page's document; null clears it. */
+  materials?: Record<string, unknown> | null;
 }
 
 export interface LoyaltyProgramUpdateInput extends Partial<LoyaltyProgramInput> {}

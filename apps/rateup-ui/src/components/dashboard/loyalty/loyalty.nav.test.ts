@@ -6,7 +6,7 @@ import { buildLoyaltyNavItems } from "./loyalty.nav";
 const t = ((key: string) => key) as unknown as TFunction;
 
 describe("buildLoyaltyNavItems", () => {
-  test("seven rows, in the order the owner works through them", () => {
+  test("eight rows, in the order the owner works through them", () => {
     const rows = buildLoyaltyNavItems({ t, programState: "live" });
     expect(rows.map((r) => r.title)).toEqual([
       "Overview",
@@ -15,6 +15,7 @@ describe("buildLoyaltyNavItems", () => {
       "Program",
       "Activity",
       "Messages",
+      "Materials",
       "Settings",
     ]);
   });
@@ -50,6 +51,7 @@ describe("buildLoyaltyNavItems", () => {
       undefined,
       3,
       2,
+      undefined,
       undefined,
     ]);
   });

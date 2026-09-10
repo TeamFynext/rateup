@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useWatch, type Control } from "react-hook-form";
 
 import type { GivebackContext } from "../onboarding/givebackContext.ts";
-import type { EarningFormInput, RewardsFormInput, TiersFormInput } from "../onboarding/schemas.ts";
+import type { EarningFormInput, RewardsFormInput } from "../onboarding/schemas.ts";
 import { calculateGiveback, toFiniteNumber } from "./calculateGiveback";
 import { EarningPreviewPanel } from "./EarningPreviewPanel.tsx";
 import { GivebackPanel } from "./GivebackPanel";
@@ -18,8 +18,8 @@ import { GivebackPanel } from "./GivebackPanel";
  * and a number that lags behind the input reads as broken.
  *
  * Only the Rewards step shows the giveback percentage: it is points earned valued at the
- * best reward, and means nothing until there is a reward. Earning and Tiers show what a
- * purchase earns instead, which needs only the rate and the typical order value.
+ * best reward, and means nothing until there is a reward. Earning shows what a purchase
+ * earns instead, which needs only the rate and the typical order value.
  */
 
 interface WrapperProps<T extends Record<string, unknown>> {
@@ -75,44 +75,6 @@ export function EarningPreviewFromForm({
       earnRate={earnRate}
       tiers={context.tiers}
       tiersEnabled={context.tiersEnabled}
-      {...panelProps({ context, onEditAverageOrderValue, title, hint })}
-    />
-  );
-}
-
-export function TiersPreviewFromForm({
-  control,
-  context,
-  onEditAverageOrderValue,
-  title,
-  hint,
-}: Readonly<WrapperProps<TiersFormInput>>) {
-  const tiersEnabled = useWatch({ control, name: "tiersEnabled" });
-  const tiers = useWatch({ control, name: "tiers" });
-
-  const key = JSON.stringify(
-    (tiers ?? []).map((tier) => [tier.name, tier.threshold, tier.pointsMultiplier, tier.color]),
-  );
-
-  const previewTiers = useMemo(
-    () =>
-      (tiers ?? []).map((tier) => ({
-        name: tier.name,
-        threshold: toFiniteNumber(tier.threshold),
-        pointsMultiplier: toFiniteNumber(tier.pointsMultiplier, 1),
-        color: tier.color,
-      })),
-    // `key` collapses the watched array into a stable string; `tiers` itself is a new
-    // reference each render. It is read inside, so it is intentionally not a dep.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [key],
-  );
-
-  return (
-    <EarningPreviewPanel
-      earnRate={context.earnRate}
-      tiers={previewTiers}
-      tiersEnabled={Boolean(tiersEnabled)}
       {...panelProps({ context, onEditAverageOrderValue, title, hint })}
     />
   );

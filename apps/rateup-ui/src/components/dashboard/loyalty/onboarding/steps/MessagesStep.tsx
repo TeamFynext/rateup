@@ -1,5 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconAlertTriangle, IconCheck, IconClock, IconRefresh } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconBrandWhatsapp,
+  IconCheck,
+  IconClock,
+  IconMessageCircle,
+  IconRefresh,
+  IconSend,
+} from "@tabler/icons-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -26,7 +34,13 @@ import {
 import { LoyaltyTemplateStatusBadge } from "../../messages/LoyaltyTemplateStatusBadge.tsx";
 import { MessageBodyEditor } from "../../messages/MessageBodyEditor.tsx";
 import { messagesFormSchema, type MessagesFormInput, type MessagesFormValues } from "../schemas.ts";
-import { StepFooter, StepHeader, useStepFooterProps, type StepMode } from "../StepChrome.tsx";
+import {
+  SectionHeading,
+  StepFooter,
+  StepHeader,
+  useStepFooterProps,
+  type StepMode,
+} from "../StepChrome.tsx";
 
 interface MessagesStepProps {
   defaultValues: MessagesFormInput;
@@ -98,6 +112,8 @@ export function MessagesStep({
   return (
     <form className="flex flex-col gap-8" onSubmit={form.handleSubmit(onSubmit)}>
       <StepHeader
+        icon={<IconBrandWhatsapp />}
+        tone="green"
         title={t("WhatsApp messages")}
         description={t(
           "Two kinds: replies to what customers text you, and notifications you send them.",
@@ -130,14 +146,12 @@ export function MessagesStep({
       )}
 
       <section className="flex flex-col gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">
-            {t("When a customer texts you")}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            {t("These are plain replies — they work as soon as your program is live.")}
-          </p>
-        </div>
+        <SectionHeading
+          icon={<IconMessageCircle />}
+          tone="green"
+          title={t("When a customer texts you")}
+          description={t("These are plain replies — they work as soon as your program is live.")}
+        />
 
         {commandFields.map((item, index) => {
           const type = String(form.watch(`commands.${index}.type`));
@@ -153,9 +167,16 @@ export function MessagesStep({
               <CardContent className="flex flex-col gap-4 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {kind ? kind.label : type}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">
+                        {kind ? kind.label : type}
+                      </p>
+                      {String(keyword).trim() !== "" && (
+                        <Badge variant="outline" className="font-mono uppercase">
+                          {String(keyword)}
+                        </Badge>
+                      )}
+                    </div>
                     {kind && <p className="text-xs text-muted-foreground">{kind.description}</p>}
                   </div>
                   {rewritable && (
@@ -225,12 +246,13 @@ export function MessagesStep({
 
       {mode === "section" ? (
         <section className="flex flex-col gap-3">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">{t("Notifications you send")}</h3>
-            <p className="text-xs text-muted-foreground">
-              {t("Each one is a WhatsApp template Meta has approved.")} {notificationsHref}
-            </p>
-          </div>
+          <SectionHeading
+            icon={<IconSend />}
+            tone="green"
+            title={t("What we send")}
+            description={t("Each one is a WhatsApp template Meta has approved.")}
+            action={<span className="text-xs text-muted-foreground">{notificationsHref}</span>}
+          />
           {templateFields.map((item, index) => {
             const eventType = String(form.watch(`eventTemplates.${index}.eventType`));
             const trigger = triggerByEvent.get(eventType);
@@ -260,14 +282,14 @@ export function MessagesStep({
         </section>
       ) : (
         <section className="flex flex-col gap-3">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">{t("Notifications you send")}</h3>
-            <p className="text-xs text-muted-foreground">
-              {t(
-                "WhatsApp requires Meta to approve these first, which usually takes a few hours. We'll submit them now — you don't have to wait.",
-              )}
-            </p>
-          </div>
+          <SectionHeading
+            icon={<IconSend />}
+            tone="green"
+            title={t("What we send")}
+            description={t(
+              "WhatsApp requires Meta to approve these first, which usually takes a few hours. We'll submit them now — you don't have to wait.",
+            )}
+          />
 
           {templateFields.map((item, index) => {
             const eventType = form.watch(`eventTemplates.${index}.eventType`);
@@ -341,7 +363,7 @@ export function MessagesStep({
 
           {eventResults.length > 0 &&
             eventResults.every((r) => r.status === "pending" || r.status === "approved") && (
-              <p className="flex items-center gap-1.5 text-xs text-green-600">
+              <p className="flex items-center gap-1.5 text-xs text-ru-green-600 dark:text-ru-green-300">
                 <IconCheck size={13} />
                 {t("All notifications submitted for approval.")}
               </p>

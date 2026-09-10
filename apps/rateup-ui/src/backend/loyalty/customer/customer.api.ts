@@ -16,7 +16,18 @@ import { LOYALTY_BASE, PUBLIC_LOYALTY_BASE } from "../base.ts";
 const base = `${LOYALTY_BASE}/accounts`;
 const publicbase = `${PUBLIC_LOYALTY_BASE}/accounts`;
 
-type CreateLoyaltyCustomerInput = Partial<Omit<LoyaltyCustomer, "id">>;
+/** Prisma's `Gender` enum, as the API takes and returns it. */
+export type LoyaltyGender = "MALE" | "FEMALE" | "OTHER";
+export const LOYALTY_GENDERS: readonly LoyaltyGender[] = ["MALE", "FEMALE", "OTHER"];
+
+type CreateLoyaltyCustomerInput = Partial<Omit<LoyaltyCustomer, "id" | "dob">> & {
+  /** A `Date` serialises to an ISO timestamp; a `YYYY-MM-DD` string is accepted as-is. */
+  dob?: Date | string | null;
+  gender?: LoyaltyGender | null;
+  referCode?: string;
+  /** Honeypot on the public form; see RegisterPage. */
+  website?: string;
+};
 export async function createLoyaltyCustomer(
   lc: CreateLoyaltyCustomerInput & { isPublic?: boolean },
 ) {
@@ -26,9 +37,39 @@ export async function createLoyaltyCustomer(
 
 /** What the org already knows about a phone number, for the add-customer form. */
 export interface ContactLookupResult {
-  contact: { id: string; name: string | null; email: string | null; dob: string | null } | null;
+  contact: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    dob: string | null;
+    gender: LoyaltyGender | null;
+  } | null;
   /** True only for an *active* member — an inactive account is reactivated on submit. */
   alreadyMember: boolean;
+}
+
+/** One of the org's contacts, as a candidate for enrolment from the counter. */
+export interface EnrolmentContact {
+  id: string;
+  name: string | null;
+  /** Never null: the endpoint only returns contacts that have a number. */
+  phone: string;
+  email: string | null;
+  dob: string | null;
+  gender: LoyaltyGender | null;
+  /** `null` when they have never joined; otherwise the account's status (`active`, `inactive`, …). */
+  memberStatus: string | null;
+}
+
+/**
+ * The org's contacts (from WhatsApp chats, imports, surveys) with a phone number, most
+ * recently active first, so the cashier can enrol one without retyping the number.
+ * Authenticated and org-scoped server-side.
+ */
+export async function searchContactsForEnrolment(search: string): Promise<EnrolmentContact[]> {
+  const params = new URLSearchParams({ limit: "20" });
+  if (search.trim()) params.set("search", search.trim());
+  return (await axiosClient.get(`${base}/contacts?${params.toString()}`)).data;
 }
 
 /**

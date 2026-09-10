@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
 import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
+import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import {
   useDeleteLoyaltyProgramMutation,
   useLoyaltyProgram,
@@ -38,6 +39,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import { UserRole } from "@/utils/enums/index.ts";
 
 import { formatMoney } from "../giveback/format.ts";
+import { pickJoinKeyword, pickWhatsappNumber } from "../joinLink.ts";
 import { LOYALTY_PATHS } from "../paths.ts";
 import { programStateOf } from "../program/programState.ts";
 import { ProgramStatusBadge } from "../program/ProgramStatusBadge.tsx";
@@ -45,7 +47,7 @@ import { JoiningCard } from "./JoiningCard.tsx";
 
 /**
  * Only what is not part of the customer promise. Name, points and typical spend are in
- * Program › Basics; every message is on Messages. What is left is how customers join, who
+ * Program › Profile; every message is on Messages. What is left is how customers join, who
  * may override the programme and how it plugs in — and the two things that cannot be undone.
  */
 export function LoyaltySettingsPage() {
@@ -59,6 +61,10 @@ export function LoyaltySettingsPage() {
   const { data: program, isLoading } = useLoyaltyProgram();
   const { data: dashboard } = useLoyaltyDashboardData();
   const { data: waSettings } = useWaSettings();
+  // The join QR needs the connected number and the keyword the "joining" reply listens for.
+  const { data: onboardingState } = useLoyaltyOnboardingState();
+  const whatsappNumber = pickWhatsappNumber(waSettings, program?.whatsappSettingsId);
+  const joinKeyword = pickJoinKeyword(onboardingState?.saved.commands ?? []);
   const update = useUpdateLoyaltyProgramMutation(program?.id ?? "");
   const resetPoints = useResetLoyaltyProgramPointsMutation();
   const deleteProgram = useDeleteLoyaltyProgramMutation(() => {
@@ -129,7 +135,7 @@ export function LoyaltySettingsPage() {
       <PageHeading
         title={t("Settings")}
         description={t(
-          "Program name, points name and typical spend are in Program › Basics; messages are on Messages. Here: the join link, approvals, integrations, expiry and the danger zone.",
+          "Business and program names and branding are in Program › Profile, the points name under Earning; messages are on Messages. Here: the join link, approvals, integrations, expiry and the danger zone.",
         )}
       />
 
@@ -175,7 +181,12 @@ export function LoyaltySettingsPage() {
       </Card>
 
       {/* ── joining ── */}
-      <JoiningCard orgId={user?.orgId} />
+      <JoiningCard
+        orgId={user?.orgId}
+        program={program}
+        whatsappNumber={whatsappNumber}
+        joinKeyword={joinKeyword}
+      />
 
       {/* ── approvals ── */}
       <Card className="border-border">

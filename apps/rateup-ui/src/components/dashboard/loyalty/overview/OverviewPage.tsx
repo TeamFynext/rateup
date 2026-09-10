@@ -211,7 +211,7 @@ export function OverviewPage({ period }: Readonly<{ period: DashboardPeriod }>) 
                 : undefined
           }
           onEditAverageOrderValue={() =>
-            navigate({ to: LOYALTY_PATHS.program, search: { section: "basics" } })
+            navigate({ to: LOYALTY_PATHS.program, search: { section: "earning" } })
           }
         />
         <SuggestionsCard suggestions={suggestions} />

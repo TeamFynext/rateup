@@ -1,4 +1,4 @@
-import { IconExternalLink, IconUserPlus } from "@tabler/icons-react";
+import { IconAddressBook, IconExternalLink, IconUserPlus } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -44,12 +45,17 @@ import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { LOYALTY_PATHS } from "../../dashboard/loyalty/paths.ts";
 import { AddPurchaseForm } from "./AddPurchaseForm.tsx";
 import type { Receipt as ReceiptData } from "./cashier.types.ts";
+import { ContactPicker } from "./ContactPicker.tsx";
 import { CouponCodeForm, lookupFromVerify, type CouponLookup } from "./CouponCodeForm.tsx";
 import { CustomerSearch } from "./CustomerSearch.tsx";
 import { CustomerView } from "./CustomerView.tsx";
 import { GrantGiftForm } from "./GrantGiftForm.tsx";
 import { buildWhatsAppPreview } from "./message-preview.ts";
-import { NewCustomerForm } from "./NewCustomerForm.tsx";
+import {
+  NewCustomerForm,
+  type NewCustomerPrefill,
+  type NewCustomerValues,
+} from "./NewCustomerForm.tsx";
 import { estimateEarn } from "./points-estimate.ts";
 import { Receipt } from "./Receipt.tsx";
 import { servedInLastHour } from "./recentCustomers.ts";
@@ -58,6 +64,13 @@ import { RedeemList } from "./RedeemList.tsx";
 import { useCashierNavigation } from "./useCashierNavigation.ts";
 import { useRecentCustomers } from "./useRecentCustomers.ts";
 import { WhatsAppBanner } from "./WhatsAppBanner.tsx";
+
+/** `YYYY-MM-DD` in the picker's own time zone — what the API's `z.iso.date()` accepts. */
+function toCalendarDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
 /**
  * The counter. Search → customer → one action → receipt, with the three states that go
@@ -71,7 +84,7 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
   const { user } = useUser();
   const nav = useCashierNavigation();
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
-  const [prefill, setPrefill] = useState<{ phone?: string; name?: string }>({});
+  const [prefill, setPrefill] = useState<NewCustomerPrefill>({});
   const [couponLookup, setCouponLookup] = useState<CouponLookup | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
@@ -327,7 +340,7 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
     }
   };
 
-  const onRegister = async (values: { name: string; phone: string }) => {
+  const onRegister = async (values: NewCustomerValues) => {
     if (!user?.orgId || !program) return;
     const phone = values.phone.replace(/\D/g, "");
     try {
@@ -335,6 +348,11 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
         name: values.name,
         phone,
         orgId: user.orgId,
+        // Sent as a calendar date, not `toISOString()`: a birthday picked as local midnight
+        // would otherwise land on the previous day for anyone east of Greenwich.
+        dob: values.dob ? toCalendarDate(values.dob) : undefined,
+        gender: values.gender,
+        referCode: values.referCode?.trim() || undefined,
         isPublic: false,
       });
       const created =
@@ -432,18 +450,36 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
         }}
         autoFocus={step === "search"}
       />
-      <Button
-        variant="outline"
-        className="h-11 justify-start"
-        onClick={() => {
-          setPrefill({});
-          setReceipt(null);
-          nav.go("new", null);
-        }}
-      >
-        <IconUserPlus size={18} />
-        {t("New customer")}
-      </Button>
+      <Card className="border-border">
+        <CardContent className="flex flex-col gap-2 p-3">
+          <p className="text-xs font-medium text-muted-foreground">{t("Add customer")}</p>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              className="h-11 justify-start"
+              onClick={() => {
+                setPrefill({});
+                setReceipt(null);
+                nav.go("new", null);
+              }}
+            >
+              <IconUserPlus size={18} />
+              {t("New")}
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 justify-start"
+              onClick={() => {
+                setReceipt(null);
+                nav.go("contacts", null);
+              }}
+            >
+              <IconAddressBook size={18} />
+              {t("From Contacts")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
       {step === "search" && (
         <Button variant="ghost" className="justify-start" onClick={() => nav.go("coupon", null)}>
           {t("Coupon code")}
@@ -491,6 +527,23 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
           onBack={() => nav.go("search", null)}
           onSubmit={onRegister}
           onOpenExisting={openCustomer}
+        />
+      );
+    }
+    if (step === "contacts") {
+      return (
+        <ContactPicker
+          onBack={() => nav.go("search", null)}
+          onPick={(contact) => {
+            setPrefill({
+              phone: contact.phone,
+              name: contact.name ?? undefined,
+              dob: contact.dob,
+              gender: contact.gender,
+            });
+            nav.go("new", null);
+          }}
+          onOpenMember={openCustomer}
         />
       );
     }

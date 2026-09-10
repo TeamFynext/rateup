@@ -6,9 +6,9 @@ import { ONBOARDING_STEPS } from "@/backend/loyalty/onboarding.api";
  * Program page both read this, so both count the same steps done.
  */
 
-export type ProgramStepId = OnboardingStep | "review";
+export type ProgramStepId = OnboardingStep | "launch";
 
-export const PROGRAM_STEPS: readonly ProgramStepId[] = [...ONBOARDING_STEPS, "review"];
+export const PROGRAM_STEPS: readonly ProgramStepId[] = [...ONBOARDING_STEPS, "launch"];
 
 export interface ProgramStepProgress {
   id: ProgramStepId;
@@ -32,8 +32,8 @@ export function buildProgramProgress(state: OnboardingState | null | undefined):
 
   const steps: ProgramStepProgress[] = PROGRAM_STEPS.map((id, index) => ({
     id,
-    // Every saved step is done; review is done once the programme has been activated.
-    done: id === "review" ? isLive : isLive || index <= lastIndex,
+    // Every saved step is done; launch is done once the programme has been activated.
+    done: id === "launch" ? isLive : isLive || index <= lastIndex,
   }));
 
   const doneCount = steps.filter((s) => s.done).length;

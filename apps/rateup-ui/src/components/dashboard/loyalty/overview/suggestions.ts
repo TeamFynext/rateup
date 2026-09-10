@@ -19,7 +19,7 @@ import type { ProgramState } from "../program/programState.ts";
 export type SuggestionTarget =
   | {
       to: typeof LOYALTY_PATHS.program;
-      search: { section: "basics" | "earning" | "tiers" | "rewards" | "messages" };
+      search: { section: "profile" | "earning" | "tiers" | "rewards" | "messages" };
     }
   | { to: typeof LOYALTY_PATHS.messages; search: { tab: "automatic" | "replies" | "templates" } }
   | { to: typeof LOYALTY_PATHS.settings }

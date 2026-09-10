@@ -19,12 +19,12 @@ export function DraftStepsCard({
 }: Readonly<{ progress: ProgramProgress; state: OnboardingState }>) {
   const { t } = useTranslation();
   const labels: Record<ProgramStepId, string> = {
-    basics: t("Basics"),
+    profile: t("Profile"),
     earning: t("Earning"),
-    tiers: t("Tiers"),
+    tiers: t("VIP tier"),
     rewards: t("Rewards"),
     messages: t("Messages"),
-    review: t("Review"),
+    launch: t("Launch"),
   };
   const hints: Partial<Record<ProgramStepId, string>> = {
     messages: state.counts.triggers === 0 ? t("{count} to write", { count: 2 }) : undefined,
@@ -51,7 +51,7 @@ export function DraftStepsCard({
             {progress.steps.map((step) => (
               <li key={step.id} className="inline-flex items-center gap-1.5">
                 {step.done ? (
-                  <IconCircleCheckFilled className="size-4 text-green-600 dark:text-green-500" />
+                  <IconCircleCheckFilled className="size-4 text-ru-green-600 dark:text-ru-green-300" />
                 ) : (
                   <IconCircle className="size-4 text-muted-foreground/50" />
                 )}

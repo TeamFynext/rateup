@@ -57,14 +57,16 @@ export function buildSectionSummaries({
   const money = (amount: number) => formatMoney(amount, code, symbol);
   const { rules, tiers, rewards, commands, triggers } = state.saved;
 
-  /* ── basics ── */
+  /* ── profile ── */
   const basicsParts = [
     t("Points called {points}", { points: pointsName }),
     `${symbol} ${code}`,
     program?.averageOrderValue != null
       ? t("{spend} a visit", { spend: money(Number(program.averageOrderValue)) })
       : t("typical spend not set"),
+    program?.logoUrl ? t("logo set") : t("no logo yet"),
   ];
+  if (program?.timezone) basicsParts.push(program.timezone);
 
   /* ── earning ── */
   const active = rules.filter((r) => r.status !== "inactive");
@@ -211,9 +213,9 @@ export function buildSectionSummaries({
 
   return [
     {
-      key: "basics",
-      title: t("Basics"),
-      caption: t("Name, points, currency, typical spend"),
+      key: "profile",
+      title: t("Profile"),
+      caption: t("Name, brand, contact, hours"),
       line: basicsParts.join(" · "),
       tags: [],
     },

@@ -9,12 +9,14 @@ export const LOYALTY_PATHS = {
   cashierStandalone: "/cashier",
   customers: "/dashboard/loyalty/customers",
   program: "/dashboard/loyalty/program",
-  /** The full editors the Program sections link to for fields they do not carry yet. */
+  /** Redirects to `program?section=`; the sections show the full editors themselves now. */
   programAdvanced: "/dashboard/loyalty/program/advanced",
   activity: "/dashboard/loyalty/activity",
   messages: "/dashboard/loyalty/messages",
   /** The editor behind each loyalty template; the library itself is Messages › Templates. */
   templates: "/dashboard/loyalty/templates",
+  /** Print-ready pieces: the join QR card and the rewards brochure. */
+  materials: "/dashboard/loyalty/materials",
   settings: "/dashboard/loyalty/settings",
   onboarding: "/dashboard/loyalty/onboarding",
 } as const;

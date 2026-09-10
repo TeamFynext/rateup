@@ -1,22 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getApiErrorMessage } from "@/utils/apiError";
+import { asApiError, getApiErrorMessage } from "@/utils/apiError";
 
 import { loyaltyKeys } from "./loyalty.keys";
 import {
   activateLoyaltyProgram,
-  applyBasicsStep,
+  applyProfileStep,
   applyEarningStep,
   applyMessagesStep,
   applyRewardsStep,
   applyTiersStep,
   getLoyaltyOnboardingState,
   getLoyaltyPresets,
-  type BasicsStepPayload,
+  type ProfileStepPayload,
   type EarningStepPayload,
   type RewardsStepPayload,
   type TiersStepPayload,
+  type TiersStepResult,
 } from "./onboarding.api";
 
 /** The catalogue never changes between deploys, so it does not need refetching. */
@@ -45,6 +46,8 @@ function useStepMutation<TPayload, TResult>(
   mutationFn: (payload: TPayload) => Promise<TResult>,
   affectedKeys: readonly (readonly unknown[])[],
   onSuccess?: (result: TResult) => void,
+  /** Statuses the caller handles itself (a 409 it will confirm and retry), so no toast. */
+  handledStatuses: readonly number[] = [],
 ) {
   const queryClient = useQueryClient();
 
@@ -64,13 +67,23 @@ function useStepMutation<TPayload, TResult>(
       onSuccess?.(result);
     },
     onError: (error: unknown) => {
+      const status = asApiError(error).response?.status;
+      if (status !== undefined && handledStatuses.includes(status)) return;
       toast.error(getApiErrorMessage(error, "Could not save this step"));
     },
   });
 }
 
-export const useApplyBasicsStepMutation = (onSuccess?: () => void) =>
-  useStepMutation<BasicsStepPayload, unknown>(applyBasicsStep, [loyaltyKeys.program()], onSuccess);
+/** True for the API's "members sit in a removed tier — confirm the downgrade" refusal. */
+export const isTierDowngradeRefusal = (error: unknown) =>
+  asApiError(error).response?.status === 409;
+
+export const useApplyProfileStepMutation = (onSuccess?: () => void) =>
+  useStepMutation<ProfileStepPayload, unknown>(
+    applyProfileStep,
+    [loyaltyKeys.program()],
+    onSuccess,
+  );
 
 export const useApplyEarningStepMutation = (onSuccess?: () => void) =>
   useStepMutation<EarningStepPayload, unknown>(
@@ -79,11 +92,12 @@ export const useApplyEarningStepMutation = (onSuccess?: () => void) =>
     onSuccess,
   );
 
-export const useApplyTiersStepMutation = (onSuccess?: () => void) =>
-  useStepMutation<TiersStepPayload, unknown>(
+export const useApplyTiersStepMutation = (onSuccess?: (result: TiersStepResult) => void) =>
+  useStepMutation<TiersStepPayload, TiersStepResult>(
     applyTiersStep,
     [loyaltyKeys.tiers(), loyaltyKeys.program()],
     onSuccess,
+    [409],
   );
 
 export const useApplyRewardsStepMutation = (onSuccess?: () => void) =>

@@ -6,11 +6,20 @@ import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod";
 
+import { LOYALTY_GENDERS, type LoyaltyGender } from "@/backend/loyalty/customer/customer.api";
 import { useContactLookupByPhone } from "@/backend/loyalty/customer/customer.query";
 import { Button } from "@/components/ui/button.tsx";
+import { DatePicker } from "@/components/ui/date-picker.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 
 const schema = z.object({
@@ -19,11 +28,34 @@ const schema = z.object({
     .string()
     .min(1, "Their phone number")
     .refine((value) => isValidPhoneNumber(value), "That does not look like a phone number"),
+  // Both optional: plenty of people would rather not say, and the counter should not stall.
+  dob: z.date().optional(),
+  gender: z.enum(LOYALTY_GENDERS).optional(),
+  /** A friend's referral code; the referrer is paid when the account is created. */
+  referCode: z.string().trim().max(32, "That code is too long").optional(),
 });
-type NewCustomerValues = z.infer<typeof schema>;
+export type NewCustomerValues = z.infer<typeof schema>;
+
+/** What the form opens with — from the search box, a "not found" lookup, or a picked contact. */
+export interface NewCustomerPrefill {
+  phone?: string;
+  name?: string;
+  dob?: string | null;
+  gender?: LoyaltyGender | null;
+}
+
+/** The Select needs a real value for "unset"; this one never reaches the API. */
+const GENDER_UNSET = "unset";
+
+/** A birthday from the API is an ISO timestamp; only its calendar date matters here. */
+function parseDob(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
 
 interface NewCustomerFormProps {
-  prefill: { phone?: string; name?: string };
+  prefill: NewCustomerPrefill;
   defaultCountry: string;
   signupBonus: number;
   pointsName: string;
@@ -57,6 +89,9 @@ export function NewCustomerForm({
           ? prefill.phone
           : `+${prefill.phone.replace(/\D/g, "")}`
         : "",
+      dob: parseDob(prefill.dob),
+      gender: prefill.gender ?? undefined,
+      referCode: "",
     },
   });
 
@@ -64,12 +99,28 @@ export function NewCustomerForm({
   const lookupEnabled = Boolean(phone) && isValidPhoneNumber(phone);
   const { data: lookup } = useContactLookupByPhone(phone.replace(/\D/g, ""), lookupEnabled);
 
-  // The org may already know the name from a WhatsApp conversation — save the typing.
+  // The org may already know these from a WhatsApp conversation or an import — save the
+  // typing, but only into fields the cashier has not filled in themselves.
   useEffect(() => {
-    if (lookup?.contact?.name && !form.getValues("name")) {
-      form.setValue("name", lookup.contact.name);
+    const contact = lookup?.contact;
+    if (!contact) return;
+    if (contact.name && !form.getValues("name")) form.setValue("name", contact.name);
+    if (contact.dob && !form.getValues("dob")) {
+      const dob = parseDob(contact.dob);
+      if (dob) form.setValue("dob", dob);
     }
+    if (contact.gender && !form.getValues("gender")) form.setValue("gender", contact.gender);
   }, [lookup, form]);
+
+  const genderLabels: Record<LoyaltyGender, string> = {
+    MALE: t("Male"),
+    FEMALE: t("Female"),
+    OTHER: t("Other"),
+  };
+  const genderItems = [
+    { value: GENDER_UNSET, label: t("Prefer not to say") },
+    ...LOYALTY_GENDERS.map((value) => ({ value, label: genderLabels[value] })),
+  ];
 
   const alreadyMember = Boolean(lookup?.alreadyMember);
 
@@ -92,7 +143,7 @@ export function NewCustomerForm({
         </div>
       </div>
 
-      {/* Two short fields — capped rather than stretched across the whole main column,
+      {/* Short fields — capped rather than stretched across the whole main column,
           which on a desktop counter is most of the page. On a staff phone the cap is
           wider than the viewport, so nothing changes there. */}
       <div className="flex max-w-sm flex-col gap-4">
@@ -127,6 +178,83 @@ export function NewCustomerForm({
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor={field.name}>{t("Name")}</FieldLabel>
               <Input id={field.name} autoFocus={Boolean(prefill.phone)} {...field} />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Controller
+            control={form.control}
+            name="dob"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="new-customer-dob">{t("Date of birth (optional)")}</FieldLabel>
+                <DatePicker
+                  id="new-customer-dob"
+                  value={field.value}
+                  onChange={field.onChange}
+                  startMonth={new Date(1900, 0)}
+                  placeholder={t("Pick a date")}
+                  invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+
+          <Controller
+            control={form.control}
+            name="gender"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="new-customer-gender">{t("Gender (optional)")}</FieldLabel>
+                <Select
+                  value={field.value ?? GENDER_UNSET}
+                  onValueChange={(value) =>
+                    // `find` narrows to the enum without a cast; the "unset" sentinel misses.
+                    field.onChange(LOYALTY_GENDERS.find((gender) => gender === value))
+                  }
+                  items={genderItems}
+                >
+                  <SelectTrigger
+                    id="new-customer-gender"
+                    className="w-full"
+                    aria-invalid={fieldState.invalid}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {genderItems.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </div>
+
+        <Controller
+          control={form.control}
+          name="referCode"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{t("Referral code (optional)")}</FieldLabel>
+              <Input
+                id={field.name}
+                autoComplete="off"
+                autoCapitalize="characters"
+                placeholder={t("Enter a code if they have one")}
+                {...field}
+                value={field.value ?? ""}
+              />
+              <FieldDescription>
+                {t("The friend who referred them gets their bonus when this account is created.")}
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}

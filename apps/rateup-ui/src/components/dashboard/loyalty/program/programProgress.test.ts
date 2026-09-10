@@ -30,10 +30,10 @@ const program = (status: "draft" | "active" | "paused") =>
   }) as NonNullable<OnboardingState["program"]>;
 
 describe("buildProgramProgress", () => {
-  test("nothing saved means six steps left and basics next", () => {
+  test("nothing saved means six steps left and profile next", () => {
     const p = buildProgramProgress(base);
     expect(p.leftCount).toBe(6);
-    expect(p.nextStep).toBe("basics");
+    expect(p.nextStep).toBe("profile");
     expect(p.isLive).toBe(false);
   });
 

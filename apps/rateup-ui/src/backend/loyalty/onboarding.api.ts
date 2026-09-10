@@ -11,7 +11,7 @@ import type { LoyaltyProgram } from "./program.api";
  * so a half-finished wizard is invisible to customers.
  */
 
-export const ONBOARDING_STEPS = ["basics", "earning", "tiers", "rewards", "messages"] as const;
+export const ONBOARDING_STEPS = ["profile", "earning", "tiers", "rewards", "messages"] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
@@ -165,18 +165,37 @@ export interface OnboardingState {
   };
 }
 
-export interface BasicsStepPayload {
-  presetKey: LoyaltyPresetKey;
+/**
+ * The venue & branding profile — strictly operational: who and where the business is, and
+ * the assets a wallet pass or web widget is generated from. Absent = keep what is stored,
+ * `null` = clear it. The business-type preset is inferred server-side from the org's
+ * industry, so it is no longer sent.
+ */
+export interface ProfileStepPayload {
+  /** The starter pack the later steps are seeded from. Absent = keep the stored one. */
+  presetKey?: LoyaltyPresetKey;
   name: string;
-  currencyName: string;
+  businessName?: string | null;
+  /** Asked on the earning step now; still accepted here. Absent = keep. */
+  currencyName?: string;
   currencyCode: string;
   currencySymbol: string;
+  timezone?: string;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  logoUrl?: string | null;
+  brandColor?: string | null;
+  heroImageUrl?: string | null;
   defaultCountryCode?: string;
   whatsappSettingsId?: string;
+  /** Still accepted for the Program page's section editor; the wizard leaves it out. */
   averageOrderValue?: number | null;
 }
 
 export interface EarningStepPayload {
+  /** What the programme calls its points. Absent leaves the stored name alone. */
+  currencyName?: string;
   rules: Array<{
     /** Present to update that exact row, so a rename does not fork a second rule. */
     id?: string;
@@ -196,6 +215,11 @@ export interface EarningStepPayload {
   }>;
   /** True from the Program editor, whose payload is the whole desired list. */
   deleteMissing?: boolean;
+  /**
+   * Typical spend in one visit. Edited beside the earn rate because that is where the
+   * giveback estimate first needs it; absent leaves the stored value alone.
+   */
+  averageOrderValue?: number | null;
 }
 
 export interface TiersStepPayload {
@@ -208,9 +232,21 @@ export interface TiersStepPayload {
     color: string;
     benefitsDescription?: string | null;
   }>;
+  /**
+   * Months of trailing spend that count towards a tier. Null = lifetime spend; absent =
+   * leave the stored window alone.
+   */
+  qualificationWindowMonths?: number | null;
   deleteMissing?: boolean;
   /** A removed tier that still has members needs this, or the API refuses with 409. */
   downgradeCustomers?: boolean;
+}
+
+/** What the tiers step hands back: the saved ladder and who moved when it was re-checked. */
+export interface TiersStepResult {
+  tiers: SavedOnboardingData["tiers"];
+  /** Every active member is re-placed against the new ladder as part of the save. */
+  moves: { evaluated: number; promoted: number; demoted: number };
 }
 
 export interface RewardsStepPayload {
@@ -289,15 +325,15 @@ export async function getLoyaltyOnboardingState(): Promise<OnboardingState> {
   return (await axiosClient.get(`${ONBOARDING_BASE}/state`)).data;
 }
 
-export async function applyBasicsStep(payload: BasicsStepPayload): Promise<LoyaltyProgram> {
-  return (await axiosClient.post(`${ONBOARDING_BASE}/steps/basics`, payload)).data;
+export async function applyProfileStep(payload: ProfileStepPayload): Promise<LoyaltyProgram> {
+  return (await axiosClient.post(`${ONBOARDING_BASE}/steps/profile`, payload)).data;
 }
 
 export async function applyEarningStep(payload: EarningStepPayload): Promise<unknown> {
   return (await axiosClient.post(`${ONBOARDING_BASE}/steps/earning`, payload)).data;
 }
 
-export async function applyTiersStep(payload: TiersStepPayload): Promise<unknown> {
+export async function applyTiersStep(payload: TiersStepPayload): Promise<TiersStepResult> {
   return (await axiosClient.post(`${ONBOARDING_BASE}/steps/tiers`, payload)).data;
 }
 

@@ -8,6 +8,7 @@ import { z } from "zod";
 export const CASHIER_STEPS = [
   "search",
   "new",
+  "contacts",
   "customer",
   "purchase",
   "redeem",

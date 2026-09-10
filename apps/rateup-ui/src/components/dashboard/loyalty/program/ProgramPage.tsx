@@ -6,26 +6,28 @@ import { toast } from "sonner";
 
 import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
 import {
-  useApplyBasicsStepMutation,
-  useApplyEarningStepMutation,
+  isTierDowngradeRefusal,
   useApplyMessagesStepMutation,
-  useApplyRewardsStepMutation,
+  useApplyProfileStepMutation,
   useApplyTiersStepMutation,
 } from "@/backend/loyalty/onboarding.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useConfirm } from "@/context/confirm-provider";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
+import { EarningRulesPage } from "../earning-rules/EarningRulesPage.tsx";
 import { useGivebackResult } from "../giveback/useGivebackResult.ts";
-import { BusinessTypeStep } from "../onboarding/steps/BusinessTypeStep.tsx";
-import { EarningStep } from "../onboarding/steps/EarningStep.tsx";
+import { toProfilePayload } from "../onboarding/profile.ts";
 import { MessagesStep } from "../onboarding/steps/MessagesStep.tsx";
-import { RewardsStep } from "../onboarding/steps/RewardsStep.tsx";
-import { TiersStep } from "../onboarding/steps/TiersStep.tsx";
+import { ProfileStep } from "../onboarding/steps/ProfileStep.tsx";
+import { VipTierStep } from "../onboarding/steps/VipTierStep.tsx";
 import { useProgramEditorData } from "../onboarding/useProgramEditorData.ts";
+import { removedTiers, toTiersPayload } from "../onboarding/vipTier.ts";
 import { LOYALTY_PATHS } from "../paths.ts";
+import { RewardsPage } from "../rewards/RewardsPage.tsx";
 import { ProgramSectionCard } from "./ProgramSectionCard.tsx";
 import { ProgramSectionEditor } from "./ProgramSectionEditor.tsx";
 import { programStateOf } from "./programState.ts";
@@ -36,10 +38,11 @@ import { buildSectionSummaries, type SectionKey } from "./programSummary.ts";
 /**
  * The Program page: everything that defines what the programme promises, in one place.
  *
- * The five cards are the six wizard steps minus Review. Editing one opens the same form
- * the wizard uses, in section mode, and saves through the same endpoint — so there is
- * exactly one place a rule, a tier or a reward can be edited, and one giveback figure
- * that reacts to it.
+ * The five cards are the six wizard steps minus Launch. Editing one opens that section's
+ * full editor under a Back button. Profile, VIP tier and Messages are the wizard's own
+ * forms in section mode; Earning and Rewards are the complete editors (time windows and
+ * tier restrictions on a rule; coupons, gifts, limits and validity on a reward), which
+ * used to sit one more click away behind an "open the full editor" link.
  */
 export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
   const { t } = useTranslation();
@@ -50,17 +53,24 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
   const { result: giveback } = useGivebackResult();
 
   const closeSection = () => navigate({ to: LOYALTY_PATHS.program, search: {} });
-  const openSection = (key: SectionKey) =>
-    navigate({ to: LOYALTY_PATHS.program, search: { section: key } });
   const saved = () => {
     toast.success(t("Saved"));
     closeSection();
   };
 
-  const basics = useApplyBasicsStepMutation(saved);
-  const earning = useApplyEarningStepMutation(saved);
-  const tiers = useApplyTiersStepMutation(saved);
-  const rewards = useApplyRewardsStepMutation(saved);
+  const profile = useApplyProfileStepMutation(saved);
+  const tiers = useApplyTiersStepMutation((result) => {
+    // Every member was re-checked against the new ladder as part of the save; say who moved.
+    const { promoted, demoted } = result.moves;
+    if (promoted === 0 && demoted === 0) {
+      saved();
+      return;
+    }
+    toast.success(
+      t("Saved · {up} members moved up, {down} moved down", { up: promoted, down: demoted }),
+    );
+    closeSection();
+  });
   const messages = useApplyMessagesStepMutation((result) => {
     if (result.skipped.length > 0) {
       toast.error(
@@ -102,16 +112,6 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
       ].join(" · ")
     : undefined;
 
-  const advancedLink = (target: "earning" | "rewards") => (
-    <Link
-      to={LOYALTY_PATHS.programAdvanced}
-      search={{ section: target }}
-      className="font-medium text-primary underline-offset-4 hover:underline"
-    >
-      {t("open the full editor")}
-    </Link>
-  );
-
   const memberCounts = new Map(
     (dashboard?.tierDistribution ?? [])
       .filter((tier) => tier.id !== null)
@@ -120,25 +120,27 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeading
-        title={t("Program")}
-        description={
-          description ? (
-            <span className="flex flex-wrap items-center gap-2">
-              <span>{description}</span>
-              <ProgramStatusBadge state={programState} />
-            </span>
-          ) : undefined
-        }
-        actions={
-          programState === "draft" ? (
-            <Button render={<Link to={LOYALTY_PATHS.onboarding} />}>
-              <IconRocket size={16} />
-              {t("Continue setup")}
-            </Button>
-          ) : undefined
-        }
-      />
+      {!section && (
+        <PageHeading
+          title={t("Program")}
+          description={
+            description ? (
+              <span className="flex flex-wrap items-center gap-2">
+                <span>{description}</span>
+                <ProgramStatusBadge state={programState} />
+              </span>
+            ) : undefined
+          }
+          actions={
+            programState === "draft" ? (
+              <Button render={<Link to={LOYALTY_PATHS.onboarding} />}>
+                <IconRocket size={16} />
+                {t("Continue setup")}
+              </Button>
+            ) : undefined
+          }
+        />
+      )}
 
       {!section && (
         <>
@@ -169,55 +171,50 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
         </>
       )}
 
-      {section === "basics" && (
-        <ProgramSectionEditor section="basics">
-          <BusinessTypeStep
+      {section === "profile" && (
+        <ProgramSectionEditor>
+          <ProfileStep
             mode="section"
-            presets={data.presets}
-            selectedKey={data.selectedKey}
-            onSelectPreset={data.setPresetKeyOverride}
-            defaultValues={defaults.basics}
-            isSaving={basics.isPending}
+            defaultValues={defaults.profile}
+            isSaving={profile.isPending}
+            pointsName={pointsName}
             onCancel={closeSection}
-            onSubmit={(values) => basics.mutate({ ...values, presetKey: data.selectedKey })}
+            onSubmit={(values) => profile.mutate(toProfilePayload(values))}
           />
         </ProgramSectionEditor>
       )}
 
       {section === "earning" && (
-        <ProgramSectionEditor section="earning">
-          <EarningStep
-            mode="section"
-            defaultValues={defaults.earning}
-            currencySymbol={context.currencySymbol}
-            pointsName={pointsName}
-            giveback={context}
-            isSaving={earning.isPending}
-            onCancel={closeSection}
-            onEditAverageOrderValue={() => openSection("basics")}
-            advancedEditorHref={advancedLink("earning")}
-            onSubmit={(values) => earning.mutate({ ...values, deleteMissing: true })}
-          />
+        <ProgramSectionEditor>
+          <EarningRulesPage />
         </ProgramSectionEditor>
       )}
 
       {section === "tiers" && (
-        <ProgramSectionEditor section="tiers">
-          <TiersStep
+        <ProgramSectionEditor>
+          <VipTierStep
             mode="section"
             defaultValues={defaults.tiers}
             currencySymbol={context.currencySymbol}
-            giveback={context}
+            currencyCode={context.currencyCode}
             isSaving={tiers.isPending}
             memberCounts={memberCounts}
+            savedTiers={state.saved.tiers}
+            advancedEditorHref={
+              <Link
+                to={LOYALTY_PATHS.program}
+                search={{ section: "earning" }}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {t("Need more than three tiers? Edit the ladder in Earning.")}
+              </Link>
+            }
             onCancel={closeSection}
-            onEditAverageOrderValue={() => openSection("basics")}
             onSubmit={async (values) => {
               // A removed tier that still has members needs an explicit yes: they move
               // down to the nearest surviving tier and earn at its rate from now on.
-              const keptIds = new Set(values.tiers.map((tier) => tier.id).filter(Boolean));
-              const removedWithMembers = state.saved.tiers
-                .filter((tier) => !keptIds.has(tier.id))
+              const payload = toTiersPayload(values);
+              const removedWithMembers = removedTiers(state.saved.tiers, values)
                 .map((tier) => ({ ...tier, members: memberCounts.get(tier.id) ?? 0 }))
                 .filter((tier) => tier.members > 0);
               let downgradeCustomers = false;
@@ -228,10 +225,7 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
                     .map((tier) =>
                       t(
                         "{count} members sit in {name}. They move to the tier below and earn at its rate.",
-                        {
-                          count: tier.members,
-                          name: tier.name,
-                        },
+                        { count: tier.members, name: tier.name },
                       ),
                     )
                     .join(" "),
@@ -240,31 +234,35 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
                 if (!ok) return;
                 downgradeCustomers = true;
               }
-              tiers.mutate({ ...values, deleteMissing: true, downgradeCustomers });
+              try {
+                await tiers.mutateAsync({ ...payload, downgradeCustomers });
+              } catch (error) {
+                // The dashboard's counts can lag; the API is the last word on who sits where.
+                if (!isTierDowngradeRefusal(error)) return;
+                const ok = await confirm({
+                  title: t("Move members down a tier?"),
+                  description: getApiErrorMessage(error, ""),
+                  confirmText: t("Downgrade and remove"),
+                });
+                if (ok) {
+                  await tiers
+                    .mutateAsync({ ...payload, downgradeCustomers: true })
+                    .catch(() => undefined);
+                }
+              }
             }}
           />
         </ProgramSectionEditor>
       )}
 
       {section === "rewards" && (
-        <ProgramSectionEditor section="rewards">
-          <RewardsStep
-            mode="section"
-            defaultValues={defaults.rewards}
-            pointsName={pointsName}
-            giveback={context}
-            isSaving={rewards.isPending}
-            tierOptions={state.saved.tiers.map((tier) => ({ value: tier.id, label: tier.name }))}
-            onCancel={closeSection}
-            onEditAverageOrderValue={() => openSection("basics")}
-            advancedEditorHref={advancedLink("rewards")}
-            onSubmit={(values) => rewards.mutate(values)}
-          />
+        <ProgramSectionEditor>
+          <RewardsPage />
         </ProgramSectionEditor>
       )}
 
       {section === "messages" && (
-        <ProgramSectionEditor section="messages">
+        <ProgramSectionEditor>
           <MessagesStep
             mode="section"
             defaultValues={defaults.messages}

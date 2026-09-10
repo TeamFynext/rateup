@@ -38,6 +38,80 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-10-rewards-per-tier-brochure-redesign",
+    title: "Rewards per tier, and a new brochure",
+    summary:
+      "With more than one tier above Member, the Rewards step in setup now shows a band for each — Rewards for everyone, then Silver and above, then Gold-only perks — each with its own Add button; a reward added into a band can be redeemed by that tier and every tier above it. The rewards brochure under Materials has been redrawn as a menu card: a slim band in your brand colour with your logo, business and programme names, a paper-white body, your earn rate as a stamped pill, and every reward as a menu line with a dotted leader to its points. Rewards a tier unlocks print under a labelled rule in that tier's colour, and the editor marks them with the tier's name beside the points.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/materials",
+      search: { tab: "brochure" },
+      label: "Open the brochure",
+    },
+  },
+  {
+    id: "2026-09-10-loyalty-three-tiers",
+    title: "Loyalty tiers: up to three, with members re-placed on save",
+    summary:
+      "The Tiers step — in setup and under Program — now takes up to two tiers above Member, three in all. Add a tier above sets a sensible spend for the new rung; each tier has its own name, colour, spend, multiplier and perks, and any tier can be removed with the bin icon. The moment you save, every member is re-checked against the new ladder and moved to the tier their spend now earns: a raised threshold moves people down, a lowered one or a new rung in the middle moves them up, and the save message says how many went each way. Anyone promoted gets the usual WhatsApp tier message; demotions are quiet. One spend window still applies to the whole ladder.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", search: { section: "tiers" }, label: "Open Tiers" },
+  },
+  {
+    id: "2026-09-10-program-sections-full-editors",
+    title: "Program: every section opens its full editor",
+    summary:
+      "Opening a section on the Loyalty Program page now shows the whole editor for it, full width, with a single Back to Program button at the top — the breadcrumb and the side list of other sections are gone. Earning and Rewards open the complete editors directly, with time windows and tier restrictions on rules, and coupons, free gifts, limits and validity on rewards, instead of a short form with an open the full editor link at the bottom. Profile, VIP tier and Messages are unchanged apart from the new header.",
+    publishedAt: "2026-09-10",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
+    id: "2026-09-10-cashier-add-from-contacts",
+    title: "Cashier: add from contacts, birthday and gender",
+    summary:
+      "The cashier can now enrol someone you already have a number for. Add from contacts lists your contacts — from WhatsApp chats, imports and surveys — with a search over name, phone and email; anyone already in the programme is marked Member and opens at the counter instead of being registered twice. Picking a contact carries their name, number and any birthday you hold into the register form. That form also has two new optional fields, date of birth and gender, so a birthday reward has a date to fire on and you learn a little more about who joins. Neither field is required, and nothing already on the contact is overwritten.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/cashier", label: "Open the cashier" },
+  },
+  {
+    id: "2026-09-09-loyalty-materials",
+    title: "Loyalty Materials: QR card and rewards brochure",
+    summary:
+      "A new Materials page in Loyalty holds the print-ready pieces for your venue. The QR card is the counter card from setup — edit its headline, the promise in the coloured pill and the line under the code, and switch the hero photo on or off; the code itself opens WhatsApp with your join keyword ready to send. The brochure is new: a tall card in your brand colour with your photo and logo, the programme name, a tagline, your earn rate in plain words (₹1 spent = 1 point), and every point reward as a line — the points on the left, what the customer gets on the right — with a Terms & Conditions box at the foot. Tick which rewards go on it, rewrite any line, and download or print. Logo, colour and photo come from Program › Profile.",
+    publishedAt: "2026-09-09",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/materials", label: "Open Materials" },
+  },
+  {
+    id: "2026-09-09-loyalty-onboarding-profile-launch",
+    title: "Loyalty setup: profile, VIP tier and a QR poster",
+    summary:
+      "The loyalty setup guide has been rebuilt around what a venue actually needs on day one. It opens with a two-minute Venue & Branding profile — pick your kind of business and every later step is seeded to suit it, then your business and programme names, a contact, currency and time zone, plus your logo, brand colour and a hero image, with a live preview of the card customers will see. Earning is now one rule: spend this, earn that, with the typical spend that drives every estimate edited right beside it. Tiers are a single VIP tier above Member: set the spend that unlocks it and the window it must happen in — spend ₹5,000 in 6 months, say — and list the perks; both tiers earn at the same rate, so VIP is about treatment, not a faster ladder. Rewards are split into two bands, for everyone and VIP-only, so a reward only VIPs can reach is one click. Messages are unchanged. Activation now ends with a printable QR poster — your hero, logo and colour, the join code, and powered by rateup.app at the foot — with Download, Print and Copy link; the same poster is one click from Settings. The public join page wears your branding too, and a web signup's joining points are held until the customer's first WhatsApp message or purchase, so bots gain nothing.",
+    publishedAt: "2026-09-09",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/onboarding", label: "Open setup" },
+  },
+  {
+    id: "2026-09-08-loyalty-onboarding-simplified",
+    title: "Simplified loyalty onboarding flow",
+    summary:
+      "Setting up a loyalty program used to mean piecing it together across eleven menu entries with no idea what good numbers look like. It is now a guided setup in six steps: pick your kind of business and it fills in points, tiers, rewards and WhatsApp messages tuned for it, saving as you go, with nothing reaching customers until you activate. Everything that defines what your program promises — basics, earning, tiers, rewards, messages — then lives on one Program page as five cards, each opening the same form the setup guide uses. Earning rules are written the way you would say them: spend ₹100, earn 10 points, with the rate underneath showing what that works out to per unit and what a typical purchase earns. Rewards get a picker with worked examples for all three kinds — something free, a percentage off, a flat amount off — priced against your earn rate, so a ₹150 coffee costs about 500 points rather than 5,000, and a Re-price from my earn rate button brings rewards you saved earlier back into line whenever you change the rate. Beside it a live cost estimate says what share of revenue your program gives back, tiers included, and warns when that is more than a typical margin can carry. Everything your program says on WhatsApp is one Messages page with three tabs — Automatic, Replies and Templates — where you write the words, press Save and it is submitted to Meta for you; the welcome reply can be written from the program you just built, each message says what WhatsApp fills into {{1}} and {{2}}, and inside a 24-hour chat the text goes out as a normal message rather than a template. The Loyalty menu is down from eleven entries to seven: the cashier opens on your recent customers and ends every action with a receipt showing the new balance, Transactions and Approvals are one Activity page with inline approve and reject, and a new Overview leads with what your program gives back, compares every number with the previous period and names the figure behind each thing it suggests you do next. Old links redirect.",
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement", "fix"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
     id: "2026-09-08-inbox-image-download",
     title: "Save an image from the inbox",
     summary:

@@ -1,6 +1,6 @@
 // The loyalty section's sidebar rows, as data for the shared app sidebar.
 //
-// Seven entries. One (Program) defines the programme; the other six run it, named after
+// Eight entries. One (Program) defines the programme; the others run it, named after
 // what the owner or staff came to do. The badges carry the only two things that ever need
 // chasing — pending approvals and Meta template reviews — plus the member count.
 
@@ -8,6 +8,7 @@ import {
   IconDashboard,
   IconLogs,
   IconMessage,
+  IconPrinter,
   IconSettings,
   IconShoppingCart,
   IconStar,
@@ -72,6 +73,8 @@ export function buildLoyaltyNavItems({
       icon: IconMessage,
       count: templatesPending,
     },
+    // What goes on the counter and the table: the join QR card and the rewards brochure.
+    { title: t("Materials"), url: LOYALTY_PATHS.materials, icon: IconPrinter },
     { title: t("Settings"), url: LOYALTY_PATHS.settings, icon: IconSettings },
   ];
 }
