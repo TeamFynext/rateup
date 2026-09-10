@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { ContactDetailHost } from "@/components/Contacts/ContactDetailedView.tsx";
 import ContactMenu from "@/components/Contacts/ContactMenu.tsx";
 import { contactColumn } from "@/components/Contacts/utils/utils.tsx";
 import { DataTableToolbar } from "@/components/dashboard/contacts/components/data-table-toolbar.tsx";
@@ -107,6 +108,7 @@ export function ContactsPage() {
         isPending={isLoadingContacts}
         defaultColumnVisibility={defaultColumnVisibility}
       />
+      <ContactDetailHost />
     </div>
   );
 }

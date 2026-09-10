@@ -774,6 +774,98 @@ declare global {
     }>;
   }
 
+  /**
+   * The payload of `GET /contacts/:contactId/details` — every scalar column on the
+   * contact plus the joins the detail dialog renders. Distinct from `ContactsData`,
+   * which is the *list* row: that one carries only the joins the table's columns need,
+   * and spells the assignment relation without the user attached.
+   */
+  interface ContactFullDetails {
+    id: string;
+    createdAt: string;
+    name: string | null;
+    phone: string | null;
+    email: string | null;
+    source: string | null;
+    dob: string | null;
+    other: string | null;
+    notes: string | null;
+    external_id: string | null;
+    consent: boolean;
+    tags: string[] | null;
+    whatsappUserName: string | null;
+    blockedOnWhatsApp: boolean;
+    isSpam: boolean;
+    spamMarkedAt: string | null;
+    waMessageAssignStatus: WaMessageAssignStatus;
+    aiWaChat: boolean;
+    isAiBotActive: boolean;
+    chatbotId: string | null;
+    profilePic: string | null;
+    igsId: string | null;
+    psid: string | null;
+    isIgVerifiedUser: boolean | null;
+    followerCount: number | null;
+    lifecycleId: string | null;
+    lastReceivedMessageTimeStamp: string | null;
+    lastSentMessageTimeStamp: string | null;
+    lastMessagePlatform: string | null;
+    closedAt: string | null;
+    closedByUser: { id: string; name: string | null; email: string } | null;
+
+    ContactLabelMap: Array<{
+      label?: { id: string; name: string; color?: string | null; description?: string | null };
+    }>;
+    contactGroups: Array<{ contactGroup?: { id: string; name: string; createdAt: string } }>;
+    Lifecycle: { id: string; name: string } | null;
+    customFields: Array<{
+      id: string;
+      fieldId: string;
+      value: string;
+      createdAt: string;
+      field?: { id: string; name: string; type: string; visibility: boolean };
+    }>;
+    /** Contact-level inbox assignment, with the assignee resolved. */
+    waInboxAssign: Array<{
+      assignedUser?: {
+        id: string;
+        name: string | null;
+        email: string;
+        profilePhoto?: string | null;
+      };
+      Team?: { id: string; name: string };
+    }>;
+    leads: Array<{
+      id: string;
+      name: string;
+      status: string;
+      source: string;
+      channel: string;
+      stageEnteredAt: string;
+      expectedCloseAt: string | null;
+      closedAt: string | null;
+      createdAt: string;
+      stage?: { id: string; name: string; color?: string | null; status: string };
+      pipeline?: { id: string; name: string };
+      owner?: { id: string; name: string | null } | null;
+      assignees: Array<{ assignee?: { id: string; name: string | null } }>;
+    }>;
+    campaignParticipants: Array<{
+      id: string;
+      campaignId: string;
+      campaign?: { id: string; name: string };
+    }>;
+    loyaltyAccounts: Array<{
+      id: string;
+      currentPoints: number;
+      lifetimePoints: number;
+      totalSpend: string;
+      referralCode: string;
+      currentTier?: { id: string; name: string } | null;
+      program?: { id: string; name: string };
+    }>;
+  }
+
   interface ContactsResponse {
     message: string;
     data: ContactsData[];

@@ -25,6 +25,7 @@ import {
   useEditContactGroupMutation,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { ContactDetailHost } from "@/components/Contacts/ContactDetailedView.tsx";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant.tsx";
 import { contactColumn } from "@/components/Contacts/utils/utils.tsx";
@@ -354,6 +355,7 @@ export function ContactGroup() {
         body={getApiErrorData(createNewContactsFromCSV?.error)}
         isError={createNewContactsFromCSV.isError}
       />
+      <ContactDetailHost />
     </div>
   );
 }
