@@ -13,8 +13,9 @@ export interface ContactTableFilter {
 export const useContactTableStore = create<{
   filter: ContactTableFilter;
   setFilter: (value: ContactTableFilter) => void;
-  selectedContact: ContactsData;
-  setSelectedContact: (contact: ContactsData) => void;
+  /** The contact whose detail dialog is open, or null when none is. */
+  selectedContact: ContactsData | null;
+  setSelectedContact: (contact: ContactsData | null) => void;
 }>()(
   immer((set, _get) => ({
     filter: {
@@ -24,7 +25,7 @@ export const useContactTableStore = create<{
       source: "all",
       labelId: "all",
     },
-    selectedContact: null as unknown as ContactsData,
+    selectedContact: null,
     setFilter: (filter: ContactTableFilter) => {
       set({ filter });
     },

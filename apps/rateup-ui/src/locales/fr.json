@@ -55,7 +55,7 @@
     "{name} +{total}": "{name} +{total}",
     "{name} added": "{name} ajouté",
     "{name} added to the pipeline": "{name} ajouté au pipeline",
-    "{name} already has this number in your contacts.": "{name} a déjà ce numéro dans vos contacts.",
+    "{name} already has this number — the lead will be linked to them.": "{name} possède déjà ce numéro ; le prospect lui sera lié.",
     "{name} created": "{name} créé",
     "{name} is a {status} column, so the open leads moved there are closed on arrival.": "{name} est une colonne {status}, donc les pistes ouvertes qui y sont déplacées sont fermées à l'arrivée.",
     "{name} tier settings saved": "Paramètres de niveau {name} enregistrés",
@@ -97,6 +97,7 @@
     "A delivery was refused at {time}: {reason}": "Une livraison a été refusée à {time} : {reason}",
     "A label sticks to the customer — it stays visible on every ticket they open.": "Une étiquette colle au client : elle reste visible sur chaque ticket ouvert.",
     "a new stage": "une nouvelle étape",
+    "A number links the lead to that contact, or adds them to your contacts.": "Un numéro relie le prospect à ce contact ou l'ajoute à vos contacts.",
     "A one-off top-up on your plan's monthly conversation allowance.": "Une recharge unique sur le forfait mensuel de conversations de votre forfait.",
     "A pipeline needs at least one lead stage": "Un pipeline a besoin d'au moins une étape principale",
     "A pipeline turns conversations into a board of stages you can drag leads across. Create one to get started.": "Un pipeline transforme les conversations en un tableau d'étapes sur lesquelles vous pouvez faire glisser des prospects. Créez-en un pour commencer.",
@@ -511,6 +512,7 @@
     "Check back later for more survey templates.": "Revenez plus tard pour plus de modèles d’enquête.",
     "Check Status": "Vérifier l'état",
     "Check your inbox": "Vérifiez votre boîte de réception",
+    "Check your internet connection": "Vérifiez votre connexion Internet",
     "Checking key...": "Vérification de la clé...",
     "Checking...": "Vérification...",
     "Checkout Settings": "Paramètres de paiement",
@@ -729,6 +731,7 @@
     "Could not update the activity": "Impossible de mettre à jour l'activité",
     "Could not update the selected leads": "Impossible de mettre à jour les prospects sélectionnés",
     "Could not update the team's pipeline": "Impossible de mettre à jour le pipeline de l'équipe",
+    "Couldn't load your account": "Impossible de charger votre compte",
     "Couldn't read the display name from Meta": "Impossible de lire le nom d'affichage de Meta",
     "Couldn't read the profile from Meta": "Impossible de lire le profil de Meta",
     "Coupon Code": "Code promo",
@@ -1537,7 +1540,6 @@
     "Lifetime": "Durée de vie",
     "Lifetime Points": "Points à vie",
     "Link a specific phone number only when your flow sends outgoing WhatsApp messages.": "Associez un numéro de téléphone spécifique uniquement lorsque votre flux envoie des messages WhatsApp sortants.",
-    "Link this lead": "Associer ce prospect",
     "Link your WhatsApp Business account to enable customer messaging, loyalty commands, and broadcast campaigns.": "Associez votre compte WhatsApp Business pour activer la messagerie client, les commandes de fidélité et les campagnes de diffusion.",
     "Linked to {name} — the lead opens their conversation in Inbox.": "Lié à {name} : le prospect ouvre sa conversation dans la boîte de réception.",
     "List": "Liste",
@@ -1582,6 +1584,7 @@
     "Loyalty Program Settings": "Paramètres du programme de fidélité",
     "Loyalty WhatsApp Command Configuration": "Configuration des commandes WhatsApp de fidélité",
     "Make it work for you": "Faites en sorte que cela fonctionne pour vous",
+    "Make sure you are online, then reload. If it keeps happening, log out and log back in to refresh your session": "Assurez-vous que vous êtes en ligne, puis rechargez. Si cela continue, déconnectez-vous et reconnectez-vous pour actualiser votre session.",
     "Make your messages personal using variables and get more replies!": "Personnalisez vos messages en utilisant des variables et obtenez plus de réponses !",
     "Manage": "Gérer",
     "Manage Automations": "Gérer les automatisations",
@@ -1611,7 +1614,9 @@
     "Mark contact as spam": "Marquer le contact comme spam",
     "Mark done": "Marquer comme terminé",
     "Mark lost": "Marc a perdu",
+    "Mark lost in {stage}": "Marque perdue en {stage}",
     "Mark won": "Marc a gagné",
+    "Mark won in {stage}": "Mark a gagné en {stage}",
     "Marked lost": "Marqué perdu",
     "Marked won": "Marqué gagné",
     "Match Data": "Faire correspondre les données",
@@ -1688,6 +1693,7 @@
     "More packs": "Plus de packs",
     "Most Recent SignUps": "Inscriptions les plus récentes",
     "Move its leads to": "Déplacer ses leads vers",
+    "Move to {stage}": "Déplacer vers {stage}",
     "Moved to {stage}": "Déplacé vers {stage}",
     "Multi-value": "Valeurs multiples",
     "Multiplier": "Multiplicateur",
@@ -1821,6 +1827,7 @@
     "No upcoming charges": "Aucun frais à venir",
     "No WhatsApp Business accounts connected yet.": "Aucun compte WhatsApp Business connecté pour le moment.",
     "NO_RESPONSE": "NO_RESPONSE",
+    "Nobody has this number yet — it will be added to your contacts.": "Personne ne possède encore ce numéro : il sera ajouté à vos contacts.",
     "Nobody is on this pipeline's teams yet.": "Personne ne fait encore partie des équipes de ce pipeline.",
     "Nobody matches “{query}”.": "Personne ne correspond à « {query} ».",
     "Non-profit": "À but non lucratif",
@@ -2037,7 +2044,6 @@
     "Please enter your Other input": "Veuillez entrer votre autre entrée",
     "Please fill question": "Veuillez remplir la question",
     "Please hold on while publishing your survey": "Merci de patienter pendant la publication de votre enquête",
-    "Please retry loading the application. If the problem continues, you may need to logout and login again": "Veuillez réessayer de charger l'application. Si le problème persiste, vous devrez peut-être vous déconnecter et vous reconnecter",
     "Please select a category": "Veuillez sélectionner une catégorie",
     "Please select a CSV file to import.": "Veuillez sélectionner un fichier CSV à importer.",
     "Please select a page": "Veuillez sélectionner une page",
@@ -2232,6 +2238,7 @@
     "Rename the quick access link for your campaigns": "Renommez le lien d'accès rapide à vos campagnes",
     "Renew your plan": "Renouvelez votre forfait",
     "Renew your plan to pick up where you left off. Your data is exactly where you left it.": "Renouvelez votre plan pour reprendre là où vous vous étiez arrêté. Vos données sont exactement là où vous les avez laissées.",
+    "Reopen in {stage}": "Réouverture dans {stage}",
     "Reopen lead": "Rouvrir le prospect",
     "Reopened": "Rouvert",
     "Reorder {stage}, currently {position} of {total}": "Récommander {stage}, actuellement {position} sur {total}",
@@ -2305,7 +2312,6 @@
     "Rewards": "Récompenses",
     "Rewards Issue list": "Liste des problèmes de récompenses",
     "Rewards Redeemed": "Récompenses échangées",
-    "Ritu Bansal": "Ritu Bansal",
     "Role": "Rôle",
     "Rotting after": "Pourrir après",
     "Rotting checks are off": "Les chèques pourris sont éteints",
@@ -2506,7 +2512,6 @@
     "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)": "Envoyé lorsque le dernier achat du client remonte à 11 mois et 11 jours (14 jours avant l'expiration)",
     "Service Type": "Type de service",
     "serviceId": "ID de service",
-    "Session Error": "Erreur de session",
     "Set a new password": "Définir un nouveau mot de passe",
     "Set all to zero": "Remettre tout à zéro",
     "Set hours": "Définir les heures",
@@ -2711,6 +2716,7 @@
     "Thank you for choosing Rateup Premium subscription.": "Merci d'avoir choisi l'abonnement Rateup Premium.",
     "Thank You!": "Merci!",
     "That channel does not exist, or is not available on your plan.": "Cette chaîne n'existe pas ou n'est pas disponible sur votre forfait.",
+    "That customer is already on this board.": "Ce client est déjà sur ce forum.",
     "That number doesn't look right.": "Ce numéro ne semble pas correct.",
     "The board starts with a standard funnel — New Lead through to Won and Lost. Rename the columns, or change what each one does, afterwards in pipeline settings.": "Le tableau commence par un entonnoir standard : du nouveau lead jusqu'aux gains et aux pertes. Renommez les colonnes ou modifiez ensuite ce que chacune fait, dans les paramètres du pipeline.",
     "The column is removed from the board. Its leads are not deleted — they move to the column you pick below, keeping their notes, timelines and activities.": "La colonne est supprimée du tableau. Ses prospects ne sont pas supprimés : ils sont déplacés vers la colonne que vous choisissez ci-dessous, conservant leurs notes, leurs calendriers et leurs activités.",
@@ -2753,6 +2759,7 @@
     "This gift will be automatically sent on customer's birthday": "Ce cadeau sera automatiquement envoyé le jour de l'anniversaire du client",
     "This is how the automation looks with sample data": "Voici à quoi ressemble l'automatisation avec des exemples de données",
     "This is the beginning of your conversation": "C'est le début de votre conversation",
+    "This is usually a connection problem, or your session may have expired": "Il s'agit généralement d'un problème de connexion ou votre session a peut-être expiré.",
     "This lead is up to date in {crm}.": "Ce prospect est à jour en {crm}.",
     "This message was deleted": "Ce message a été supprimé",
     "This Month": "Ce mois-ci",
@@ -2837,7 +2844,6 @@
     "Unable to get data, please try again later.": "Impossible d'obtenir des données, veuillez réessayer plus tard.",
     "Unable to get survey, please try again later": "Impossible de recevoir l'enquête, veuillez réessayer plus tard",
     "Unable to get theme, please try again later": "Impossible d'obtenir le thème, veuillez réessayer plus tard",
-    "Unable to load user data": "Impossible de charger les données utilisateur",
     "Unable to Save Image": "Impossible d'enregistrer l'image",
     "Unable to save settings, Please try again later": "Impossible d'enregistrer les paramètres, veuillez réessayer plus tard",
     "Unassign everyone": "Annuler l'attribution de tout le monde",
@@ -2923,6 +2929,7 @@
     "Use points": "Utiliser des points",
     "Use Redemption": "Utiliser la rédemption",
     "Use Template": "Utiliser le modèle",
+    "Use their details": "Utilisez leurs coordonnées",
     "Use this key to set up your Zapier connection": "Utilisez cette clé pour configurer votre connexion Zapier",
     "Use variables": "Utiliser des variables",
     "used": "utilisé",
@@ -3086,7 +3093,6 @@
     "Your current Rateup plan subscription is successfully cancelled.": "Votre abonnement actuel au plan Rateup a été annulé avec succès.",
     "your email address": "votre adresse email",
     "Your last payment did not go through. Razorpay will retry it — update your card if it keeps failing.": "Votre dernier paiement n'a pas été effectué. Razorpay réessayera – mettez à jour votre carte si elle continue d'échouer.",
-    "Your login session data appears to be corrupted": "Les données de votre session de connexion semblent corrompues",
     "Your packs add": "Vos packs ajoutent",
     "Your password must meet all security requirements": "Votre mot de passe doit répondre à toutes les exigences de sécurité",
     "Your payment was successful..!": "Votre paiement a réussi.. !",
@@ -3122,6 +3128,26 @@
     "العربية": "العربية",
     "हिन्दी": "हिन्दी"
   },
+  "Example": {
+    " /points": "Exemple : /points"
+  },
+  "campaign.performance": {
+    "Campaign Performance": "Performances de la campagne",
+    "Delivered": "Livré",
+    "Failed": "Échec",
+    "Last updated: Just now": "Dernière mise à jour : Tout à l'heure",
+    "Pending": "En attente",
+    "Read": "Lire",
+    "Sent": "Envoyé"
+  },
+  "campaign.card": {
+    "{delivered}% delivered · {read}% read": "{delivered}% livré · {read}% lu",
+    "Continue setup": "Continuer la configuration",
+    "Created {date}": "Créé {date}",
+    "Draft": "Brouillon",
+    "Not sent yet": "Pas encore envoyé",
+    "recipients": "destinataires"
+  },
   "apianalytics": {
     "All": "Tout",
     "Avg Delivery Time": "Délai de livraison moyen",
@@ -3148,28 +3174,10 @@
     "WhatsApp Messages Analytics": "Analyse des messages WhatsApp",
     "WhatsApp Template Analytics": "Analyse des modèles WhatsApp"
   },
-  "Example": {
-    " /points": "Exemple : /points"
-  },
-  "campaign.performance": {
-    "Campaign Performance": "Performances de la campagne",
-    "Delivered": "Livré",
-    "Failed": "Échec",
-    "Last updated: Just now": "Dernière mise à jour : Tout à l'heure",
-    "Pending": "En attente",
-    "Read": "Lire",
-    "Sent": "Envoyé"
-  },
-  "campaign.card": {
-    "{delivered}% delivered · {read}% read": "{delivered}% livré · {read}% lu",
-    "Continue setup": "Continuer la configuration",
-    "Created {date}": "Créé {date}",
-    "Draft": "Brouillon",
-    "Not sent yet": "Pas encore envoyé",
-    "recipients": "destinataires"
-  },
-  "campaign.status": {
-    "Campaign stopped": "Campagne arrêtée"
+  "https": {
+    "//example": {
+      "com/webhook": "https://exemple.com/webhook"
+    }
   },
   "campaign.details": {
     "{count} recipients_one": "{count} destinataires_un",
@@ -3339,6 +3347,9 @@
     "Wait for the campaign's current send to finish.": "Attendez la fin de l'envoi en cours de la campagne.",
     "We couldn't load this campaign.": "Nous n'avons pas pu charger cette campagne."
   },
+  "campaign.status": {
+    "Campaign stopped": "Campagne arrêtée"
+  },
   "campaign.list": {
     "{count} campaigns_one": "{count} campagnes_one",
     "{count} campaigns_many": "{count} campagnes_many",
@@ -3364,17 +3375,6 @@
     "this month": "ce mois-ci",
     "this year": "cette année",
     "Try adjusting your filters or create a new campaign.": "Essayez d'ajuster vos filtres ou créez une nouvelle campagne."
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Sélectionnez uniquement les étapes qui appartiennent à la configuration de pipeline et de sous-pipeline sélectionnée."
-  },
-  "*Note": {
-    " The updated feature will be valid only till end of the current billing cycle": "*Remarque : la fonctionnalité mise à jour ne sera valable que jusqu'à la fin du cycle de facturation en cours."
-  },
-  "https": {
-    "//example": {
-      "com/webhook": "https://exemple.com/webhook"
-    }
   },
   "campaign.addParticipants": {
     "{count} contacts_one": "{count} contacts_un",
@@ -3439,6 +3439,21 @@
     "Unnamed contact": "Contact anonyme",
     "WhatsApp contacts only": "Contacts WhatsApp uniquement",
     "You have not selected any participant": "Vous n'avez sélectionné aucun participant"
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Sélectionnez uniquement les étapes qui appartiennent à la configuration de pipeline et de sous-pipeline sélectionnée."
+  },
+  "*Note": {
+    " The updated feature will be valid only till end of the current billing cycle": "*Remarque : la fonctionnalité mise à jour ne sera valable que jusqu'à la fin du cycle de facturation en cours."
+  },
+  "Note": {
+    " *": "Remarque : *",
+    " * The OTP expires in 10 minutes once it is sent.": "* L'OTP expire dans 10 minutes une fois envoyé.",
+    " * The OTP expires in 10 minutes once it is sent. You can resend in": " * L'OTP expire dans 10 minutes une fois envoyé. Vous pouvez renvoyer"
+  },
+  "eg": {
+    " I agree to": " J'accepte",
+    " terms and conditions": " termes et conditions"
   },
   "Warning": {
     " High Risk Action": "Avertissement : action à haut risque"
@@ -3790,15 +3805,6 @@
     "Type": "Tapez",
     "Unknown contact": "Contact inconnu",
     "Why messages failed": "Pourquoi les messages ont échoué"
-  },
-  "Note": {
-    " *": "Remarque : *",
-    " * The OTP expires in 10 minutes once it is sent.": "* L'OTP expire dans 10 minutes une fois envoyé.",
-    " * The OTP expires in 10 minutes once it is sent. You can resend in": " * L'OTP expire dans 10 minutes une fois envoyé. Vous pouvez renvoyer"
-  },
-  "eg": {
-    " I agree to": " J'accepte",
-    " terms and conditions": " termes et conditions"
   },
   "campaign.resend": {},
   "campaign.create": {},

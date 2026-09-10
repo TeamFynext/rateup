@@ -73,7 +73,7 @@
     "{name} +{total}": "{name} +{total}",
     "{name} added": "تمت إضافة {name}",
     "{name} added to the pipeline": "تمت إضافة {name} إلى المسار",
-    "{name} already has this number in your contacts.": "{name} لديه هذا الرقم بالفعل في جهات الاتصال الخاصة بك.",
+    "{name} already has this number — the lead will be linked to them.": "{name} لديه هذا الرقم بالفعل — سيتم ربط العميل المتوقع به.",
     "{name} created": "تم إنشاء {name}",
     "{name} is a {status} column, so the open leads moved there are closed on arrival.": "{name} هو عمود {status}، وبالتالي فإن العملاء المحتملين المفتوحين الذين تم نقلهم هناك يتم إغلاقهم عند الوصول.",
     "{name} tier settings saved": "تم حفظ إعدادات الطبقة {name}",
@@ -115,6 +115,7 @@
     "A delivery was refused at {time}: {reason}": "تم رفض التسليم في {time}: {reason}",
     "A label sticks to the customer — it stays visible on every ticket they open.": "يتم لصق الملصق على العميل — ويظل مرئيًا على كل تذكرة يفتحها.",
     "a new stage": "مرحلة جديدة",
+    "A number links the lead to that contact, or adds them to your contacts.": "يربط الرقم العميل المتوقع بجهة الاتصال هذه، أو يضيفه إلى جهات الاتصال الخاصة بك.",
     "A one-off top-up on your plan's monthly conversation allowance.": "زيادة لمرة واحدة على بدل المحادثة الشهري لباقتك.",
     "A pipeline needs at least one lead stage": "يحتاج خط الأنابيب إلى مرحلة رئيسية واحدة على الأقل",
     "A pipeline turns conversations into a board of stages you can drag leads across. Create one to get started.": "يحول المسار المحادثات إلى لوحة من المراحل يمكنك سحب العملاء المحتملين عبرها. قم بإنشاء واحدة للبدء.",
@@ -529,6 +530,7 @@
     "Check back later for more survey templates.": "تحقق مرة أخرى لاحقًا للحصول على المزيد من قوالب الاستطلاع.",
     "Check Status": "التحقق من الحالة",
     "Check your inbox": "تحقق من البريد الوارد الخاص بك",
+    "Check your internet connection": "تحقق من اتصالك بالإنترنت",
     "Checking key...": "فحص المفتاح...",
     "Checking...": "جارٍ التحقق...",
     "Checkout Settings": "إعدادات الخروج",
@@ -747,6 +749,7 @@
     "Could not update the activity": "لا يمكن تحديث النشاط",
     "Could not update the selected leads": "تعذر تحديث العملاء المتوقعين المحددين",
     "Could not update the team's pipeline": "تعذر تحديث مسار الفريق",
+    "Couldn't load your account": "تعذر تحميل حسابك",
     "Couldn't read the display name from Meta": "تعذرت قراءة اسم العرض من Meta",
     "Couldn't read the profile from Meta": "لا يمكن قراءة الملف الشخصي من ميتا",
     "Coupon Code": "رمز القسيمة",
@@ -1555,7 +1558,6 @@
     "Lifetime": "حياة",
     "Lifetime Points": "نقاط مدى الحياة",
     "Link a specific phone number only when your flow sends outgoing WhatsApp messages.": "قم بربط رقم هاتف محدد فقط عندما يرسل تدفقك رسائل WhatsApp صادرة.",
-    "Link this lead": "ربط هذا الرصاص",
     "Link your WhatsApp Business account to enable customer messaging, loyalty commands, and broadcast campaigns.": "اربط حساب WhatsApp Business الخاص بك لتمكين مراسلة العملاء وأوامر الولاء وحملات البث.",
     "Linked to {name} — the lead opens their conversation in Inbox.": "مرتبط بـ {name} — يفتح العميل المتوقع محادثته في البريد الوارد.",
     "List": "قائمة",
@@ -1600,6 +1602,7 @@
     "Loyalty Program Settings": "إعدادات برنامج الولاء",
     "Loyalty WhatsApp Command Configuration": "تكوين أمر الولاء WhatsApp",
     "Make it work for you": "اجعلها تعمل من أجلك",
+    "Make sure you are online, then reload. If it keeps happening, log out and log back in to refresh your session": "تأكد من أنك متصل بالإنترنت، ثم أعد التحميل. إذا استمر الأمر، فقم بتسجيل الخروج ثم قم بتسجيل الدخول مرة أخرى لتحديث جلستك",
     "Make your messages personal using variables and get more replies!": "اجعل رسائلك شخصية باستخدام المتغيرات واحصل على المزيد من الردود!",
     "Manage": "يدير",
     "Manage Automations": "إدارة الأتمتة",
@@ -1629,7 +1632,9 @@
     "Mark contact as spam": "وضع علامة على جهة الاتصال كرسالة غير مرغوب فيها",
     "Mark done": "ضع علامة على الانتهاء",
     "Mark lost": "خسر مارك",
+    "Mark lost in {stage}": "العلامة المفقودة في {stage}",
     "Mark won": "فاز مارك",
+    "Mark won in {stage}": "فاز مارك في {stage}",
     "Marked lost": "تم وضع علامة على الضياع",
     "Marked won": "فاز ملحوظ",
     "Match Data": "مطابقة البيانات",
@@ -1706,6 +1711,7 @@
     "More packs": "المزيد من الحزم",
     "Most Recent SignUps": "أحدث الاشتراكات",
     "Move its leads to": "انقل خيوطها إلى",
+    "Move to {stage}": "الانتقال إلى {stage}",
     "Moved to {stage}": "تم النقل إلى {stage}",
     "Multi-value": "متعدد القيمة",
     "Multiplier": "المضاعف",
@@ -1839,6 +1845,7 @@
     "No upcoming charges": "لا توجد رسوم قادمة",
     "No WhatsApp Business accounts connected yet.": "لم يتم ربط حسابات WhatsApp Business حتى الآن.",
     "NO_RESPONSE": "NO_RESPONSE",
+    "Nobody has this number yet — it will be added to your contacts.": "لا أحد لديه هذا الرقم بعد - ستتم إضافته إلى جهات الاتصال الخاصة بك.",
     "Nobody is on this pipeline's teams yet.": "لا أحد ضمن فرق خط الأنابيب هذا حتى الآن.",
     "Nobody matches “{query}”.": "لا أحد يطابق \"{query}\".",
     "Non-profit": "غير ربحية",
@@ -2055,7 +2062,6 @@
     "Please enter your Other input": "الرجاء إدخال المدخلات الأخرى الخاصة بك",
     "Please fill question": "يرجى ملء السؤال",
     "Please hold on while publishing your survey": "يرجى الانتظار أثناء نشر الاستطلاع الخاص بك",
-    "Please retry loading the application. If the problem continues, you may need to logout and login again": "يرجى إعادة محاولة تحميل التطبيق. إذا استمرت المشكلة، فقد تحتاج إلى تسجيل الخروج وتسجيل الدخول مرة أخرى",
     "Please select a category": "الرجاء تحديد فئة",
     "Please select a CSV file to import.": "الرجاء تحديد ملف CSV لاستيراده.",
     "Please select a page": "الرجاء تحديد صفحة",
@@ -2250,6 +2256,7 @@
     "Rename the quick access link for your campaigns": "أعد تسمية رابط الوصول السريع لحملاتك",
     "Renew your plan": "جدد خطتك",
     "Renew your plan to pick up where you left off. Your data is exactly where you left it.": "قم بتجديد خطتك للمتابعة من حيث توقفت. بياناتك هي بالضبط المكان الذي تركتها فيه.",
+    "Reopen in {stage}": "إعادة الفتح في {stage}",
     "Reopen lead": "أعد فتح الرصاص",
     "Reopened": "أعيد فتحه",
     "Reorder {stage}, currently {position} of {total}": "إعادة ترتيب {stage}، حاليًا {position} من {total}",
@@ -2323,7 +2330,6 @@
     "Rewards": "المكافآت",
     "Rewards Issue list": "قائمة قضايا المكافآت",
     "Rewards Redeemed": "تم استرداد المكافآت",
-    "Ritu Bansal": "ريتو بانسال",
     "Role": "دور",
     "Rotting after": "تعفن بعد",
     "Rotting checks are off": "الشيكات المتعفنة معطلة",
@@ -2524,7 +2530,6 @@
     "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)": "تم إرساله عندما كانت آخر عملية شراء للعميل قبل 11 شهرًا و11 يومًا (قبل 14 يومًا من انتهاء الصلاحية)",
     "Service Type": "نوع الخدمة",
     "serviceId": "معرف الخدمة",
-    "Session Error": "خطأ في الجلسة",
     "Set a new password": "قم بتعيين كلمة مرور جديدة",
     "Set all to zero": "اضبط الكل على الصفر",
     "Set hours": "ضبط ساعات",
@@ -2729,6 +2734,7 @@
     "Thank you for choosing Rateup Premium subscription.": "شكرًا لك على اختيار اشتراك Rateup Premium.",
     "Thank You!": "شكرًا لك!",
     "That channel does not exist, or is not available on your plan.": "هذه القناة غير موجودة، أو غير متوفرة في خطتك.",
+    "That customer is already on this board.": "هذا العميل موجود بالفعل في هذا المنتدى.",
     "That number doesn't look right.": "هذا الرقم لا يبدو صحيحا.",
     "The board starts with a standard funnel — New Lead through to Won and Lost. Rename the columns, or change what each one does, afterwards in pipeline settings.": "تبدأ اللوحة بمسار تحويل قياسي — عميل محتمل جديد وصولاً إلى الفوز والخسارة. أعد تسمية الأعمدة، أو قم بتغيير ما يفعله كل منها، بعد ذلك في إعدادات المسار.",
     "The column is removed from the board. Its leads are not deleted — they move to the column you pick below, keeping their notes, timelines and activities.": "تتم إزالة العمود من اللوحة. ولا يتم حذف العملاء المتوقعين — بل ينتقلون إلى العمود الذي تختاره أدناه، مع الاحتفاظ بملاحظاتهم وجداولهم الزمنية وأنشطتهم.",
@@ -2771,6 +2777,7 @@
     "This gift will be automatically sent on customer's birthday": "سيتم إرسال هذه الهدية تلقائيًا في عيد ميلاد العميل",
     "This is how the automation looks with sample data": "هذه هي الطريقة التي تبدو بها الأتمتة مع بيانات العينة",
     "This is the beginning of your conversation": "هذه هي بداية محادثتك",
+    "This is usually a connection problem, or your session may have expired": "عادةً ما تكون هذه مشكلة في الاتصال، أو قد تكون جلسة العمل الخاصة بك قد انتهت صلاحيتها",
     "This lead is up to date in {crm}.": "هذا العميل المتوقع محدث في {crm}.",
     "This message was deleted": "تم حذف هذه الرسالة",
     "This Month": "هذا الشهر",
@@ -2855,7 +2862,6 @@
     "Unable to get data, please try again later.": "تعذر الحصول على البيانات، يرجى المحاولة مرة أخرى لاحقًا.",
     "Unable to get survey, please try again later": "غير قادر على الحصول على الاستبيان، يرجى المحاولة مرة أخرى في وقت لاحق",
     "Unable to get theme, please try again later": "تعذر الحصول على المظهر، يرجى المحاولة مرة أخرى لاحقًا",
-    "Unable to load user data": "غير قادر على تحميل بيانات المستخدم",
     "Unable to Save Image": "غير قادر على حفظ الصورة",
     "Unable to save settings, Please try again later": "غير قادر على حفظ الإعدادات، يرجى المحاولة مرة أخرى في وقت لاحق",
     "Unassign everyone": "إلغاء تعيين الجميع",
@@ -2941,6 +2947,7 @@
     "Use points": "استخدم النقاط",
     "Use Redemption": "استخدم الفداء",
     "Use Template": "استخدم القالب",
+    "Use their details": "استخدم التفاصيل الخاصة بهم",
     "Use this key to set up your Zapier connection": "استخدم هذا المفتاح لإعداد اتصال Zapier الخاص بك",
     "Use variables": "استخدم المتغيرات",
     "used": "مستخدم",
@@ -3104,7 +3111,6 @@
     "Your current Rateup plan subscription is successfully cancelled.": "تم إلغاء اشتراكك الحالي في خطة Rateup بنجاح.",
     "your email address": "عنوان بريدك  الإلكتروني",
     "Your last payment did not go through. Razorpay will retry it — update your card if it keeps failing.": "لم تتم دفعتك الأخيرة. سوف يقوم Razorpay بإعادة المحاولة — قم بتحديث بطاقتك إذا استمرت في الفشل.",
-    "Your login session data appears to be corrupted": "يبدو أن بيانات جلسة تسجيل الدخول الخاصة بك تالفة",
     "Your packs add": "تضيف حزمك",
     "Your password must meet all security requirements": "يجب أن تفي كلمة المرور الخاصة بك بجميع متطلبات الأمان",
     "Your payment was successful..!": "تم الدفع بنجاح..!",
@@ -3140,6 +3146,26 @@
     "العربية": "العربية",
     "हिन्दी": "الهندية"
   },
+  "Example": {
+    " /points": "مثال: / نقطة"
+  },
+  "campaign.performance": {
+    "Campaign Performance": "أداء الحملة",
+    "Delivered": "تم التوصيل",
+    "Failed": "فشل",
+    "Last updated: Just now": "آخر تحديث: الآن",
+    "Pending": "قيد الانتظار",
+    "Read": "يقرأ",
+    "Sent": "مرسل"
+  },
+  "campaign.card": {
+    "{delivered}% delivered · {read}% read": "{delivered}% تم التسليم · {read}% قراءة",
+    "Continue setup": "متابعة الإعداد",
+    "Created {date}": "تم الإنشاء {date}",
+    "Draft": "مسودة",
+    "Not sent yet": "لم ترسل بعد",
+    "recipients": "المستلمين"
+  },
   "apianalytics": {
     "All": "الجميع",
     "Avg Delivery Time": "متوسط ​​وقت التسليم",
@@ -3166,28 +3192,10 @@
     "WhatsApp Messages Analytics": "تحليل رسائل الواتس اب",
     "WhatsApp Template Analytics": "تحليلات قالب الواتساب"
   },
-  "Example": {
-    " /points": "مثال: / نقطة"
-  },
-  "campaign.performance": {
-    "Campaign Performance": "أداء الحملة",
-    "Delivered": "تم التوصيل",
-    "Failed": "فشل",
-    "Last updated: Just now": "آخر تحديث: الآن",
-    "Pending": "قيد الانتظار",
-    "Read": "يقرأ",
-    "Sent": "مرسل"
-  },
-  "campaign.card": {
-    "{delivered}% delivered · {read}% read": "{delivered}% تم التسليم · {read}% قراءة",
-    "Continue setup": "متابعة الإعداد",
-    "Created {date}": "تم الإنشاء {date}",
-    "Draft": "مسودة",
-    "Not sent yet": "لم ترسل بعد",
-    "recipients": "المستلمين"
-  },
-  "campaign.status": {
-    "Campaign stopped": "توقفت الحملة"
+  "https": {
+    "//example": {
+      "com/webhook": "https://example.com/webhook"
+    }
   },
   "campaign.details": {
     "{count} recipients_zero": "{count} المستلمون_صفر",
@@ -3390,6 +3398,9 @@
     "Wait for the campaign's current send to finish.": "انتظر حتى ينتهي الإرسال الحالي للحملة.",
     "We couldn't load this campaign.": "لم نتمكن من تحميل هذه الحملة."
   },
+  "campaign.status": {
+    "Campaign stopped": "توقفت الحملة"
+  },
   "campaign.list": {
     "{count} campaigns_zero": "{count} الحملات_صفر",
     "{count} campaigns_one": "{count} الحملات_واحدة",
@@ -3424,17 +3435,6 @@
     "this month": "هذا الشهر",
     "this year": "هذا العام",
     "Try adjusting your filters or create a new campaign.": "حاول تعديل عوامل التصفية أو إنشاء حملة جديدة."
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
-  },
-  "*Note": {
-    " The updated feature will be valid only till end of the current billing cycle": "*ملاحظة: الميزة المحدثة ستكون صالحة فقط حتى نهاية دورة الفوترة الحالية"
-  },
-  "https": {
-    "//example": {
-      "com/webhook": "https://example.com/webhook"
-    }
   },
   "campaign.addParticipants": {
     "{count} contacts_zero": "{count} جهات الاتصال_صفر",
@@ -3526,6 +3526,21 @@
     "Unnamed contact": "جهة اتصال بدون اسم",
     "WhatsApp contacts only": "التواصل واتساب فقط",
     "You have not selected any participant": "لم تقم باختيار أي مشارك"
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
+  },
+  "*Note": {
+    " The updated feature will be valid only till end of the current billing cycle": "*ملاحظة: الميزة المحدثة ستكون صالحة فقط حتى نهاية دورة الفوترة الحالية"
+  },
+  "Note": {
+    " *": "ملحوظة: *",
+    " * The OTP expires in 10 minutes once it is sent.": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها.",
+    " * The OTP expires in 10 minutes once it is sent. You can resend in": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها. يمكنك إعادة الإرسال"
+  },
+  "eg": {
+    " I agree to": "أنا أوافق على",
+    " terms and conditions": "الشروط والأحكام"
   },
   "Warning": {
     " High Risk Action": "تحذير: عمل عالي المخاطر"
@@ -3922,15 +3937,6 @@
     "Type": "يكتب",
     "Unknown contact": "جهة اتصال غير معروفة",
     "Why messages failed": "لماذا فشلت الرسائل"
-  },
-  "Note": {
-    " *": "ملحوظة: *",
-    " * The OTP expires in 10 minutes once it is sent.": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها.",
-    " * The OTP expires in 10 minutes once it is sent. You can resend in": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها. يمكنك إعادة الإرسال"
-  },
-  "eg": {
-    " I agree to": "أنا أوافق على",
-    " terms and conditions": "الشروط والأحكام"
   },
   "campaign.resend": {},
   "campaign.create": {},
