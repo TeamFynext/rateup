@@ -142,6 +142,7 @@ import { Route as DashboardLoyaltyCommandIndexRouteImport } from './routes/dashb
 import { Route as DashboardLoyaltyCustomersIndexRouteImport } from './routes/dashboard/loyalty/customers/index'
 import { Route as DashboardLoyaltyDashboardIndexRouteImport } from './routes/dashboard/loyalty/dashboard/index'
 import { Route as DashboardLoyaltyEarningRulesIndexRouteImport } from './routes/dashboard/loyalty/earning-rules/index'
+import { Route as DashboardLoyaltyFeedbackIndexRouteImport } from './routes/dashboard/loyalty/feedback/index'
 import { Route as DashboardLoyaltyMaterialsIndexRouteImport } from './routes/dashboard/loyalty/materials/index'
 import { Route as DashboardLoyaltyMessagesIndexRouteImport } from './routes/dashboard/loyalty/messages/index'
 import { Route as DashboardLoyaltyOnboardingIndexRouteImport } from './routes/dashboard/loyalty/onboarding/index'
@@ -930,6 +931,12 @@ const DashboardLoyaltyEarningRulesIndexRoute =
     path: '/earning-rules/',
     getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
+const DashboardLoyaltyFeedbackIndexRoute =
+  DashboardLoyaltyFeedbackIndexRouteImport.update({
+    id: '/feedback/',
+    path: '/feedback/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
 const DashboardLoyaltyMaterialsIndexRoute =
   DashboardLoyaltyMaterialsIndexRouteImport.update({
     id: '/materials/',
@@ -1392,6 +1399,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/loyalty/customers/': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard/': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/feedback/': typeof DashboardLoyaltyFeedbackIndexRoute
   '/dashboard/loyalty/materials/': typeof DashboardLoyaltyMaterialsIndexRoute
   '/dashboard/loyalty/messages/': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
@@ -1574,6 +1582,7 @@ export interface FileRoutesByTo {
   '/dashboard/loyalty/customers': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/feedback': typeof DashboardLoyaltyFeedbackIndexRoute
   '/dashboard/loyalty/materials': typeof DashboardLoyaltyMaterialsIndexRoute
   '/dashboard/loyalty/messages': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding': typeof DashboardLoyaltyOnboardingIndexRoute
@@ -1765,6 +1774,7 @@ export interface FileRoutesById {
   '/dashboard/loyalty/customers/': typeof DashboardLoyaltyCustomersIndexRoute
   '/dashboard/loyalty/dashboard/': typeof DashboardLoyaltyDashboardIndexRoute
   '/dashboard/loyalty/earning-rules/': typeof DashboardLoyaltyEarningRulesIndexRoute
+  '/dashboard/loyalty/feedback/': typeof DashboardLoyaltyFeedbackIndexRoute
   '/dashboard/loyalty/materials/': typeof DashboardLoyaltyMaterialsIndexRoute
   '/dashboard/loyalty/messages/': typeof DashboardLoyaltyMessagesIndexRoute
   '/dashboard/loyalty/onboarding/': typeof DashboardLoyaltyOnboardingIndexRoute
@@ -1954,6 +1964,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/customers/'
     | '/dashboard/loyalty/dashboard/'
     | '/dashboard/loyalty/earning-rules/'
+    | '/dashboard/loyalty/feedback/'
     | '/dashboard/loyalty/materials/'
     | '/dashboard/loyalty/messages/'
     | '/dashboard/loyalty/onboarding/'
@@ -2136,6 +2147,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/customers'
     | '/dashboard/loyalty/dashboard'
     | '/dashboard/loyalty/earning-rules'
+    | '/dashboard/loyalty/feedback'
     | '/dashboard/loyalty/materials'
     | '/dashboard/loyalty/messages'
     | '/dashboard/loyalty/onboarding'
@@ -2326,6 +2338,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/customers/'
     | '/dashboard/loyalty/dashboard/'
     | '/dashboard/loyalty/earning-rules/'
+    | '/dashboard/loyalty/feedback/'
     | '/dashboard/loyalty/materials/'
     | '/dashboard/loyalty/messages/'
     | '/dashboard/loyalty/onboarding/'
@@ -3330,6 +3343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLoyaltyEarningRulesIndexRouteImport
       parentRoute: typeof DashboardLoyaltyRouteRoute
     }
+    '/dashboard/loyalty/feedback/': {
+      id: '/dashboard/loyalty/feedback/'
+      path: '/feedback'
+      fullPath: '/dashboard/loyalty/feedback/'
+      preLoaderRoute: typeof DashboardLoyaltyFeedbackIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
     '/dashboard/loyalty/materials/': {
       id: '/dashboard/loyalty/materials/'
       path: '/materials'
@@ -4004,6 +4024,7 @@ interface DashboardLoyaltyRouteRouteChildren {
   DashboardLoyaltyCustomersIndexRoute: typeof DashboardLoyaltyCustomersIndexRoute
   DashboardLoyaltyDashboardIndexRoute: typeof DashboardLoyaltyDashboardIndexRoute
   DashboardLoyaltyEarningRulesIndexRoute: typeof DashboardLoyaltyEarningRulesIndexRoute
+  DashboardLoyaltyFeedbackIndexRoute: typeof DashboardLoyaltyFeedbackIndexRoute
   DashboardLoyaltyMaterialsIndexRoute: typeof DashboardLoyaltyMaterialsIndexRoute
   DashboardLoyaltyMessagesIndexRoute: typeof DashboardLoyaltyMessagesIndexRoute
   DashboardLoyaltyOnboardingIndexRoute: typeof DashboardLoyaltyOnboardingIndexRoute
@@ -4025,6 +4046,7 @@ const DashboardLoyaltyRouteRouteChildren: DashboardLoyaltyRouteRouteChildren = {
   DashboardLoyaltyDashboardIndexRoute: DashboardLoyaltyDashboardIndexRoute,
   DashboardLoyaltyEarningRulesIndexRoute:
     DashboardLoyaltyEarningRulesIndexRoute,
+  DashboardLoyaltyFeedbackIndexRoute: DashboardLoyaltyFeedbackIndexRoute,
   DashboardLoyaltyMaterialsIndexRoute: DashboardLoyaltyMaterialsIndexRoute,
   DashboardLoyaltyMessagesIndexRoute: DashboardLoyaltyMessagesIndexRoute,
   DashboardLoyaltyOnboardingIndexRoute: DashboardLoyaltyOnboardingIndexRoute,

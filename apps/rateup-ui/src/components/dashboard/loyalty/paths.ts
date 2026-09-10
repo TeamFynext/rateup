@@ -15,6 +15,8 @@ export const LOYALTY_PATHS = {
   messages: "/dashboard/loyalty/messages",
   /** The editor behind each loyalty template; the library itself is Messages › Templates. */
   templates: "/dashboard/loyalty/templates",
+  /** The post-visit WhatsApp feedback flow, its review reward and its results. */
+  feedback: "/dashboard/loyalty/feedback",
   /** Print-ready pieces: the join QR card and the rewards brochure. */
   materials: "/dashboard/loyalty/materials",
   settings: "/dashboard/loyalty/settings",

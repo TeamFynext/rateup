@@ -1,13 +1,14 @@
 // The loyalty section's sidebar rows, as data for the shared app sidebar.
 //
-// Eight entries. One (Program) defines the programme; the others run it, named after
-// what the owner or staff came to do. The badges carry the only two things that ever need
-// chasing — pending approvals and Meta template reviews — plus the member count.
+// Nine entries. One (Program) defines the programme; the others run it, named after what
+// the owner or staff came to do. The badges carry the things that need chasing — pending
+// approvals, Meta template reviews, an unfinished feedback flow — plus the member count.
 
 import {
   IconDashboard,
   IconLogs,
   IconMessage,
+  IconMessageStar,
   IconPrinter,
   IconSettings,
   IconShoppingCart,
@@ -29,6 +30,11 @@ export interface LoyaltyNavInput {
   members?: number;
   pendingApprovals?: number;
   templatesPending?: number;
+  /**
+   * Where the feedback flow stands: "draft" until it is submitted to Meta, "pending" while
+   * Meta reviews the template, "live" once it can send. Null with no flow.
+   */
+  feedbackState?: "draft" | "pending" | "live" | null;
   /** Highlights Program while the wizard or a full editor is open. */
   pathname?: string;
 }
@@ -39,6 +45,7 @@ export function buildLoyaltyNavItems({
   members,
   pendingApprovals,
   templatesPending,
+  feedbackState,
   pathname,
 }: LoyaltyNavInput): NavEntry[] {
   const badge =
@@ -72,6 +79,18 @@ export function buildLoyaltyNavItems({
       url: LOYALTY_PATHS.messages,
       icon: IconMessage,
       count: templatesPending,
+    },
+    // A feedback flow that exists but cannot send yet is the one loyalty step that is easy
+    // to forget about; the chip says which half is outstanding.
+    {
+      title: t("Feedback"),
+      url: LOYALTY_PATHS.feedback,
+      icon: IconMessageStar,
+      ...(feedbackState === "draft"
+        ? { badge: t("Draft"), badgeTone: "neutral" as const }
+        : feedbackState === "pending"
+          ? { badge: t("Awaiting Meta"), badgeTone: "warning" as const }
+          : {}),
     },
     // What goes on the counter and the table: the join QR card and the rewards brochure.
     { title: t("Materials"), url: LOYALTY_PATHS.materials, icon: IconPrinter },

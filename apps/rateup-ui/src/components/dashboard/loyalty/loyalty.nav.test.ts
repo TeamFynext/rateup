@@ -6,7 +6,7 @@ import { buildLoyaltyNavItems } from "./loyalty.nav";
 const t = ((key: string) => key) as unknown as TFunction;
 
 describe("buildLoyaltyNavItems", () => {
-  test("eight rows, in the order the owner works through them", () => {
+  test("nine rows, in the order the owner works through them", () => {
     const rows = buildLoyaltyNavItems({ t, programState: "live" });
     expect(rows.map((r) => r.title)).toEqual([
       "Overview",
@@ -15,6 +15,7 @@ describe("buildLoyaltyNavItems", () => {
       "Program",
       "Activity",
       "Messages",
+      "Feedback",
       "Materials",
       "Settings",
     ]);
@@ -53,7 +54,21 @@ describe("buildLoyaltyNavItems", () => {
       2,
       undefined,
       undefined,
+      undefined,
     ]);
+  });
+
+  test("Feedback flags a flow that cannot send yet, and says nothing once it can", () => {
+    expect(
+      buildLoyaltyNavItems({ t, programState: "live", feedbackState: "draft" })[6],
+    ).toMatchObject({ title: "Feedback", badge: "Draft", badgeTone: "neutral" });
+    expect(
+      buildLoyaltyNavItems({ t, programState: "live", feedbackState: "pending" })[6],
+    ).toMatchObject({ badge: "Awaiting Meta", badgeTone: "warning" });
+    expect(
+      buildLoyaltyNavItems({ t, programState: "live", feedbackState: "live" })[6],
+    ).not.toHaveProperty("badge");
+    expect(buildLoyaltyNavItems({ t, programState: "live" })[6]).not.toHaveProperty("badge");
   });
 
   test("Program stays lit while the wizard or a full editor is open", () => {

@@ -77,6 +77,19 @@ export const loyaltyKeys = {
 
   templates: () => ["LoyaltyTemplate"] as const,
 
+  feedback: () => ["loyalty-feedback"] as const,
+  feedbackDrafts: () => ["loyalty-feedback-drafts"] as const,
+  /** Without a period this is the prefix that sweeps every results window. */
+  feedbackResults: (period?: KeyPart, tz?: KeyPart) =>
+    (period === undefined
+      ? ["loyalty-feedback-results"]
+      : ["loyalty-feedback-results", period, tz]) as readonly unknown[],
+  /** Without a query this is the prefix that sweeps every requests page. */
+  feedbackRequests: (query?: KeyPart) =>
+    (query === undefined
+      ? ["loyalty-feedback-requests"]
+      : ["loyalty-feedback-requests", query]) as readonly unknown[],
+
   cashierSearch: (search: KeyPart) => ["loyalty-cashier-search", search] as const,
   /** Without a phone this is the prefix that sweeps every cashier lookup. */
   cashierCustomer: (phone?: KeyPart) =>
@@ -105,6 +118,10 @@ export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
   loyaltyKeys.transactions(),
   loyaltyKeys.approvals(),
   loyaltyKeys.templates(),
+  loyaltyKeys.feedback(),
+  loyaltyKeys.feedbackDrafts(),
+  loyaltyKeys.feedbackResults(),
+  loyaltyKeys.feedbackRequests(),
   ["loyalty-cashier-search"],
   loyaltyKeys.cashierCustomer(),
 ];

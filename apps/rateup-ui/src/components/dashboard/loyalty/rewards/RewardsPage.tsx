@@ -9,6 +9,7 @@ import {
   IconLink,
   IconLoader2,
   IconMessageCircle,
+  IconMessageStar,
   IconPlus,
   IconShoppingBag,
   IconSparkles,
@@ -50,6 +51,7 @@ import {
 import { useProgrammeGiveback } from "@/components/dashboard/loyalty/giveback/useProgrammeGiveback.ts";
 import { useRewardEconomicsContext } from "@/components/dashboard/loyalty/giveback/useRewardEconomicsContext.ts";
 import { asPresetKey } from "@/components/dashboard/loyalty/onboarding/rewardExamples.ts";
+import { ReviewRewardsTab } from "@/components/dashboard/loyalty/rewards/ReviewRewardsTab.tsx";
 import {
   couponSchema,
   giftSchema,
@@ -578,6 +580,9 @@ export function RewardsPage() {
 
   const freeGiftsList = rewards?.filter((r) => r.rewardType === "assigned") || [];
 
+  // Earned by tapping the Google review link after the feedback flow; managed there.
+  const reviewRewardsList = rewards?.filter((r) => r.rewardType === "review") || [];
+
   if (isRewardsLoading || isSubscriptionLoading || isTiersLoading) {
     return <RateupLoader />;
   }
@@ -644,6 +649,15 @@ export function RewardsPage() {
                   <span>Referral Program</span>
                   <Badge variant="outline" className="text-xs">
                     Auto
+                  </Badge>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="review">
+                <div className="flex items-center gap-2">
+                  <IconMessageStar className="w-4 h-4" />
+                  <span>{translations("Review Rewards")}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {reviewRewardsList.length}
                   </Badge>
                 </div>
               </TabsTrigger>
@@ -1126,6 +1140,11 @@ export function RewardsPage() {
                   </div>
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Review rewards — read-only here; created and attached under Feedback */}
+            <TabsContent value="review" className="space-y-3 mt-0">
+              <ReviewRewardsTab rewards={reviewRewardsList} />
             </TabsContent>
           </Tabs>
         </>

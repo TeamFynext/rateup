@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-10-loyalty-feedback",
+    title: "Feedback: a WhatsApp survey after every visit",
+    summary:
+      "Loyalty has a new Feedback page. Pick a ready-made survey for your kind of business — a restaurant asks about the overall experience, the food and the service; the retail, salon and gym drafts ask what matters there — preview it screen by screen on a phone, choose the team whose Google review link to use, and create it. Submit to Meta when the questions are right, then switch it on: a set time after a customer earns points they get the survey, and anyone who rates you well is asked to leave a Google review. A new Review reward, granted once to each customer who taps that link, can be created right there in Feedback and shows up read-only under Rewards. Results show how many were asked and answered, how many were happy, review-link taps and rewards granted, the average for each question, and every request with its rating and status.",
+    publishedAt: "2026-09-10",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/feedback", label: "Set up Feedback" },
+  },
+  {
     id: "2026-09-10-rewards-per-tier-brochure-redesign",
     title: "Rewards per tier, and a new brochure",
     summary:
