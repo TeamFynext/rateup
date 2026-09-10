@@ -622,6 +622,37 @@ describe("a lead's owner", () => {
     expect(created.details.automated).toBe(true);
   });
 
+  // One card per contact per board is a constraint the user can hit by hand —
+  // adding a lead for someone the board already holds. It has to come back as a
+  // refusal that names the card in the way, not as a 500 from the unique index.
+  test("is refused when that contact already has a lead on the board", async () => {
+    db.lead.findUnique.mockResolvedValue({
+      id: "lead-existing",
+      name: "Ritu Bansal",
+      stageId: "stage-qualified",
+      stage: { name: "Qualified" },
+    });
+
+    await expect(
+      createLead({
+        pipelineId: PIPELINE,
+        stageId: STAGE,
+        name: "Ritu",
+        contactId: CONTACT,
+        source: "MANUAL",
+        channel: "NONE",
+        userId: USER,
+      } as never),
+    ).rejects.toMatchObject({
+      name: "LeadExistsForContactError",
+      leadId: "lead-existing",
+      message: "Ritu Bansal is already on this board, in Qualified.",
+    });
+
+    // Refused before the insert, so nothing was written.
+    expect(db.lead.create).not.toHaveBeenCalled();
+  });
+
   test("a hand-added lead is not marked automated", async () => {
     await createLead({
       pipelineId: PIPELINE,

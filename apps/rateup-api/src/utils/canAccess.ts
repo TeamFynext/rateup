@@ -27,10 +27,10 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
   [TeamFeature.apps_services]: null,
   [TeamFeature.settings]: null,
 
-  // RETIRED: ticket boards were removed. The enum value still exists in Postgres
-  // (and on teams that had it switched on), so this map — which must be total over
-  // TeamFeature — still needs the key. Nothing reads it; drop it together with the
-  // enum value when the Ticket* tables are dropped.
+  // RETIRED: ticket boards were removed and every Ticket* table dropped, but the
+  // enum value stays in Postgres because teams in production still carry it in
+  // TeamFeatureAccess. This map must be total over TeamFeature, so the key stays
+  // too. Nothing reads it.
   [TeamFeature.tickets]: null,
 };
 
