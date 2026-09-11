@@ -157,13 +157,13 @@ export function setupCopy(t: TFunction): Record<CardId, CardCopy> {
       navLabel: t("Add payment"),
     },
     instagram: {
-      title: t("Add Instagram to the same inbox"),
+      title: t("Connect an Instagram Business Account to RateUp"),
       desc: t("Story replies and DMs land next to your WhatsApp threads."),
       btnLabel: t("Connect Instagram"),
       navLabel: t("Instagram"),
     },
     messenger: {
-      title: t("Add Facebook Messenger"),
+      title: t("Connect Facebook Messenger to RateUp"),
       desc: t(
         "Page messages join the same queue, with the same auto-replies and assignment rules.",
       ),

@@ -175,11 +175,9 @@
     "Add Element": "إضافة عنصر",
     "Add Else Component": "إضافة مكون آخر",
     "Add Existing Contacts": "إضافة جهات الاتصال الموجودة",
-    "Add Facebook Messenger": "إضافة فيسبوك ماسنجر",
     "Add Field": "إضافة حقل",
     "Add Ice Breaker": "أضف كاسر الجليد",
     "Add If Block": "أضف إذا بلوك",
-    "Add Instagram to the same inbox": "أضف Instagram إلى نفس البريد الوارد",
     "Add item": "إضافة عنصر",
     "Add job title": "أضف المسمى الوظيفي",
     "Add lead": "أضف الرصاص",
@@ -242,7 +240,19 @@
     "All channels": "جميع القنوات",
     "All chats and contacts": "جميع الدردشات وجهات الاتصال",
     "All Contacts": "كافة جهات الاتصال",
+    "All Facebook Pages ({count})_zero": "جميع صفحات الفيسبوك ({count})_صفر",
+    "All Facebook Pages ({count})_one": "جميع صفحات الفيسبوك ({count})_one",
+    "All Facebook Pages ({count})_two": "جميع صفحات الفيسبوك ({count})_two",
+    "All Facebook Pages ({count})_few": "جميع صفحات الفيسبوك ({count})_قليلة",
+    "All Facebook Pages ({count})_many": "جميع صفحات الفيسبوك ({count})_many",
+    "All Facebook Pages ({count})_other": "جميع صفحات الفيسبوك ({count})_other",
     "all healthy": "كل شيء صحي",
+    "All Instagram Business accounts ({count})_zero": "جميع حسابات Instagram Business ({count})_zero",
+    "All Instagram Business accounts ({count})_one": "جميع حسابات Instagram Business ({count})_one",
+    "All Instagram Business accounts ({count})_two": "جميع حسابات Instagram Business ({count})_two",
+    "All Instagram Business accounts ({count})_few": "جميع حسابات Instagram Business ({count})_قليلة",
+    "All Instagram Business accounts ({count})_many": "جميع حسابات Instagram Business ({count})_العديد",
+    "All Instagram Business accounts ({count})_other": "جميع حسابات Instagram Business ({count})_other",
     "All integrations": "جميع عمليات التكامل",
     "All lead stages": "جميع المراحل الرائدة",
     "All leads on board": "جميع الخيوط على متن الطائرة",
@@ -652,8 +662,10 @@
     "Connect account": "ربط الحساب",
     "Connect an Instagram account to generate a link": "قم بتوصيل حساب Instagram لإنشاء رابط",
     "Connect an Instagram Business account to manage ice breakers, chatbots, comment automations, and more.": "قم بتوصيل حساب Instagram Business لإدارة أدوات كسر الجمود وروبوتات الدردشة وأتمتة التعليقات والمزيد.",
+    "Connect an Instagram Business Account to RateUp": "قم بتوصيل حساب Instagram Business بـ RateUp",
     "Connect at least one WhatsApp Business account first to enable Facebook Messenger.": "قم بتوصيل حساب WhatsApp Business واحد على الأقل أولاً لتمكين Facebook Messenger.",
     "Connect at least one WhatsApp Business account first to enable Instagram.": "قم بتوصيل حساب WhatsApp Business واحد على الأقل أولاً لتمكين Instagram.",
+    "Connect Facebook Messenger to RateUp": "اربط فيسبوك ماسنجر بـ RateUp",
     "Connect Instagram": "ربط انستغرام",
     "Connect Messenger": "ربط رسول",
     "Connect Page": "ربط الصفحة",
@@ -666,8 +678,6 @@
     "Connect Zoho": "ربط زوهو",
     "Connected": "متصل",
     "Connected accounts": "الحسابات المتصلة",
-    "Connected Facebook account - FB Page": "حساب الفيسبوك المتصل - صفحة الفيسبوك",
-    "Connected Instagram account - FB Page": "حساب Instagram متصل - صفحة FB",
     "Connected Store": "متجر متصل",
     "Connecting Zoho CRM": "ربط Zoho CRM",
     "Connection Mode": "وضع الاتصال",
@@ -1187,7 +1197,6 @@
     "extra conversations": "محادثات اضافية",
     "extra conversations, good for": "محادثات اضافية، جيدة ل",
     "Eye Dropper": "قطارة العين",
-    "Facebook Connected Page": "صفحة الفيسبوك المتصلة",
     "Facebook Messenger": "فيسبوك ماسنجر",
     "Facebook Messenger connections": "اتصالات الفيسبوك ماسنجر",
     "Failed": "فشل",
@@ -1442,12 +1451,11 @@
     "Insights": "رؤى",
     "Instagram": "انستغرام",
     "Instagram account": "حساب انستقرام",
-    "Instagram account not found. Try after syncing page or choose another page": "لم يتم العثور على حساب Instagram. حاول بعد مزامنة الصفحة أو اختر صفحة أخرى",
     "Instagram automation created!": "تم إنشاء أتمتة Instagram!",
     "Instagram Automation updated successfully": "تم تحديث Instagram Automation بنجاح",
     "Instagram Chatbots": "روبوتات الدردشة على إنستغرام",
-    "Instagram Connected Facebook Page": "صفحة فيسبوك متصلة بالانستغرام",
     "Instagram connections": "اتصالات انستغرام",
+    "Instagram connects through the Facebook Page it's linked to. DMs and story replies will arrive in your inbox. You can change or disconnect it later.": "يتصل Instagram من خلال صفحة Facebook المرتبطة بها. ستصل الرسائل المباشرة وردود القصة إلى بريدك الوارد. ويمكنك تغييره أو فصله لاحقًا.",
     "Instagram DM": "إنستغرام دي إم",
     "Instagram DMs will stop arriving in the inbox for this WhatsApp channel.": "ستتوقف رسائل Instagram DMs عن الوصول إلى البريد الوارد لقناة WhatsApp هذه.",
     "Instagram Messaging": "رسائل الانستقرام",
@@ -1674,6 +1682,7 @@
     "Messages handled per day": "يتم التعامل مع الرسائل يوميا",
     "Messenger": "رسول",
     "Messenger and Instagram hang off this connection": "يقوم Messenger و Instagram بتعليق هذا الاتصال",
+    "Messenger conversations from the Page you select will arrive in your inbox. You can change or disconnect it later.": "ستصل محادثات المراسلة من الصفحة التي تحددها إلى بريدك الوارد. ويمكنك تغييره أو فصله لاحقًا.",
     "Meta approves templates before you can send them. An order update is the easiest place to start.": "يوافق Meta على القوالب قبل أن تتمكن من إرسالها. تحديث الطلب هو أسهل مكان للبدء.",
     "Meta Conversions API (CAPI)": "واجهة برمجة تطبيقات التحويلات التعريفية (CAPI)",
     "Meta has approved this name, but the number still shows the current one. Re-register it to switch over — you have 14 days from approval.": "لقد وافق ميتا على هذا الاسم، لكن الرقم لا يزال يظهر الاسم الحالي. أعد تسجيله للتبديل — لديك 14 يومًا من تاريخ الموافقة.",
@@ -1797,6 +1806,7 @@
     "No group found": "لم يتم العثور على مجموعة",
     "No groups found": "لم يتم العثور على مجموعات",
     "No Instagram accounts connected": "لا توجد حسابات Instagram متصلة",
+    "No Instagram Business account linked to this Page": "لا يوجد حساب Instagram Business مرتبط بهذه الصفحة",
     "No languages found": "لم يتم العثور على لغات",
     "No lead stage has a rotting window set.": "لا توجد مرحلة رئيسية بها مجموعة نوافذ متعفنة.",
     "No leads match these filters.": "لا يوجد عملاء محتملين يتطابقون مع هذه المرشحات.",
@@ -1813,7 +1823,7 @@
     "No next step": "لا توجد خطوة تالية",
     "No notes yet — anything the team types here stays with the lead.": "لا توجد ملاحظات حتى الآن — أي شيء يكتبه الفريق هنا يبقى في المقدمة.",
     "No open leads to forecast yet.": "لا يوجد أي يؤدي مفتوح للتنبؤ حتى الآن.",
-    "No Pages found": "لم يتم العثور على صفحات",
+    "No Pages found. Make sure you gave access to your Page on Facebook, then sync again.": "لم يتم العثور على صفحات. تأكد من أنك منحت حق الوصول إلى صفحتك على فيسبوك، ثم قم بالمزامنة مرة أخرى.",
     "No phone or email": "لا يوجد هاتف أو بريد إلكتروني",
     "No pipeline columns found.": "لم يتم العثور على أعمدة خط الأنابيب.",
     "No pipelines yet": "لا توجد خطوط أنابيب حتى الآن",
@@ -2474,7 +2484,6 @@
     "Select one / type in to search": "اختر واحدًا / اكتب للبحث",
     "Select one or more / type in to search": "حدد واحدًا أو أكثر / اكتب للبحث",
     "Select operator": "حدد المشغل",
-    "Select Page": "حدد الصفحة",
     "Select Photo Source": "حدد مصدر الصورة",
     "Select question": "اختر السؤال",
     "Select Redemption": "حدد الاسترداد",
@@ -2651,7 +2660,7 @@
     "Swap the order of flow screens": "تبديل ترتيب شاشات التدفق",
     "Switched to": "تحولت إلى",
     "Sync": "مزامنة",
-    "Sync FB pages": "مزامنة صفحات الفيسبوك",
+    "Sync Facebook Pages": "مزامنة صفحات فيسبوك",
     "Sync from Meta": "المزامنة من ميتا",
     "Sync from WhatsApp": "المزامنة من الواتس اب",
     "Sync Google Account": "مزامنة حساب جوجل",
@@ -3058,6 +3067,8 @@
     "WhatsApp Templates": "قوالب الواتساب",
     "Wheel Size": "حجم العجلة",
     "Where leads stall": "حيث يؤدي المماطلة",
+    "Which Facebook Page do you want to connect?": "ما هي صفحة الفيسبوك التي تريد ربطها؟",
+    "Which Instagram Business account do you want to connect?": "ما هو حساب Instagram Business الذي تريد ربطه؟",
     "Which WhatsApp channel?": "اي قناة واتساب ؟",
     "Widget Id": "معرف القطعة",
     "width": "عرض",
@@ -3146,26 +3157,6 @@
     "العربية": "العربية",
     "हिन्दी": "الهندية"
   },
-  "Example": {
-    " /points": "مثال: / نقطة"
-  },
-  "campaign.performance": {
-    "Campaign Performance": "أداء الحملة",
-    "Delivered": "تم التوصيل",
-    "Failed": "فشل",
-    "Last updated: Just now": "آخر تحديث: الآن",
-    "Pending": "قيد الانتظار",
-    "Read": "يقرأ",
-    "Sent": "مرسل"
-  },
-  "campaign.card": {
-    "{delivered}% delivered · {read}% read": "{delivered}% تم التسليم · {read}% قراءة",
-    "Continue setup": "متابعة الإعداد",
-    "Created {date}": "تم الإنشاء {date}",
-    "Draft": "مسودة",
-    "Not sent yet": "لم ترسل بعد",
-    "recipients": "المستلمين"
-  },
   "apianalytics": {
     "All": "الجميع",
     "Avg Delivery Time": "متوسط ​​وقت التسليم",
@@ -3192,10 +3183,28 @@
     "WhatsApp Messages Analytics": "تحليل رسائل الواتس اب",
     "WhatsApp Template Analytics": "تحليلات قالب الواتساب"
   },
-  "https": {
-    "//example": {
-      "com/webhook": "https://example.com/webhook"
-    }
+  "Example": {
+    " /points": "مثال: / نقطة"
+  },
+  "campaign.performance": {
+    "Campaign Performance": "أداء الحملة",
+    "Delivered": "تم التوصيل",
+    "Failed": "فشل",
+    "Last updated: Just now": "آخر تحديث: الآن",
+    "Pending": "قيد الانتظار",
+    "Read": "يقرأ",
+    "Sent": "مرسل"
+  },
+  "campaign.card": {
+    "{delivered}% delivered · {read}% read": "{delivered}% تم التسليم · {read}% قراءة",
+    "Continue setup": "متابعة الإعداد",
+    "Created {date}": "تم الإنشاء {date}",
+    "Draft": "مسودة",
+    "Not sent yet": "لم ترسل بعد",
+    "recipients": "المستلمين"
+  },
+  "campaign.status": {
+    "Campaign stopped": "توقفت الحملة"
   },
   "campaign.details": {
     "{count} recipients_zero": "{count} المستلمون_صفر",
@@ -3398,9 +3407,6 @@
     "Wait for the campaign's current send to finish.": "انتظر حتى ينتهي الإرسال الحالي للحملة.",
     "We couldn't load this campaign.": "لم نتمكن من تحميل هذه الحملة."
   },
-  "campaign.status": {
-    "Campaign stopped": "توقفت الحملة"
-  },
   "campaign.list": {
     "{count} campaigns_zero": "{count} الحملات_صفر",
     "{count} campaigns_one": "{count} الحملات_واحدة",
@@ -3435,6 +3441,17 @@
     "this month": "هذا الشهر",
     "this year": "هذا العام",
     "Try adjusting your filters or create a new campaign.": "حاول تعديل عوامل التصفية أو إنشاء حملة جديدة."
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
+  },
+  "*Note": {
+    " The updated feature will be valid only till end of the current billing cycle": "*ملاحظة: الميزة المحدثة ستكون صالحة فقط حتى نهاية دورة الفوترة الحالية"
+  },
+  "https": {
+    "//example": {
+      "com/webhook": "https://example.com/webhook"
+    }
   },
   "campaign.addParticipants": {
     "{count} contacts_zero": "{count} جهات الاتصال_صفر",
@@ -3526,21 +3543,6 @@
     "Unnamed contact": "جهة اتصال بدون اسم",
     "WhatsApp contacts only": "التواصل واتساب فقط",
     "You have not selected any participant": "لم تقم باختيار أي مشارك"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
-  },
-  "*Note": {
-    " The updated feature will be valid only till end of the current billing cycle": "*ملاحظة: الميزة المحدثة ستكون صالحة فقط حتى نهاية دورة الفوترة الحالية"
-  },
-  "Note": {
-    " *": "ملحوظة: *",
-    " * The OTP expires in 10 minutes once it is sent.": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها.",
-    " * The OTP expires in 10 minutes once it is sent. You can resend in": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها. يمكنك إعادة الإرسال"
-  },
-  "eg": {
-    " I agree to": "أنا أوافق على",
-    " terms and conditions": "الشروط والأحكام"
   },
   "Warning": {
     " High Risk Action": "تحذير: عمل عالي المخاطر"
@@ -3937,6 +3939,15 @@
     "Type": "يكتب",
     "Unknown contact": "جهة اتصال غير معروفة",
     "Why messages failed": "لماذا فشلت الرسائل"
+  },
+  "Note": {
+    " *": "ملحوظة: *",
+    " * The OTP expires in 10 minutes once it is sent.": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها.",
+    " * The OTP expires in 10 minutes once it is sent. You can resend in": "* تنتهي صلاحية كلمة المرور لمرة واحدة (OTP) خلال 10 دقائق بمجرد إرسالها. يمكنك إعادة الإرسال"
+  },
+  "eg": {
+    " I agree to": "أنا أوافق على",
+    " terms and conditions": "الشروط والأحكام"
   },
   "campaign.resend": {},
   "campaign.create": {},

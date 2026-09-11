@@ -148,11 +148,9 @@
     "Add Element": "Add Element",
     "Add Else Component": "Add Else Component",
     "Add Existing Contacts": "Add Existing Contacts",
-    "Add Facebook Messenger": "Add Facebook Messenger",
     "Add Field": "Add Field",
     "Add Ice Breaker": "Add Ice Breaker",
     "Add If Block": "Add If Block",
-    "Add Instagram to the same inbox": "Add Instagram to the same inbox",
     "Add item": "Add item",
     "Add job title": "Add job title",
     "Add lead": "Add lead",
@@ -215,7 +213,11 @@
     "All channels": "All channels",
     "All chats and contacts": "All chats and contacts",
     "All Contacts": "All Contacts",
+    "All Facebook Pages ({count})_one": "All Facebook Pages ({count})",
+    "All Facebook Pages ({count})_other": "All Facebook Pages ({count})",
     "all healthy": "all healthy",
+    "All Instagram Business accounts ({count})_one": "All Instagram Business accounts ({count})",
+    "All Instagram Business accounts ({count})_other": "All Instagram Business accounts ({count})",
     "All integrations": "All integrations",
     "All lead stages": "All lead stages",
     "All leads on board": "All leads on board",
@@ -625,8 +627,10 @@
     "Connect account": "Connect account",
     "Connect an Instagram account to generate a link": "Connect an Instagram account to generate a link",
     "Connect an Instagram Business account to manage ice breakers, chatbots, comment automations, and more.": "Connect an Instagram Business account to manage ice breakers, chatbots, comment automations, and more.",
+    "Connect an Instagram Business Account to RateUp": "Connect an Instagram Business Account to RateUp",
     "Connect at least one WhatsApp Business account first to enable Facebook Messenger.": "Connect at least one WhatsApp Business account first to enable Facebook Messenger.",
     "Connect at least one WhatsApp Business account first to enable Instagram.": "Connect at least one WhatsApp Business account first to enable Instagram.",
+    "Connect Facebook Messenger to RateUp": "Connect Facebook Messenger to RateUp",
     "Connect Instagram": "Connect Instagram",
     "Connect Messenger": "Connect Messenger",
     "Connect Page": "Connect Page",
@@ -639,8 +643,6 @@
     "Connect Zoho": "Connect Zoho",
     "Connected": "Connected",
     "Connected accounts": "Connected accounts",
-    "Connected Facebook account - FB Page": "Connected Facebook account - FB Page",
-    "Connected Instagram account - FB Page": "Connected Instagram account - FB Page",
     "Connected Store": "Connected Store",
     "Connecting Zoho CRM": "Connecting Zoho CRM",
     "Connection Mode": "Connection Mode",
@@ -1160,7 +1162,6 @@
     "extra conversations": "extra conversations",
     "extra conversations, good for": "extra conversations, good for",
     "Eye Dropper": "Eye Dropper",
-    "Facebook Connected Page": "Facebook Connected Page",
     "Facebook Messenger": "Facebook Messenger",
     "Facebook Messenger connections": "Facebook Messenger connections",
     "Failed": "Failed",
@@ -1415,12 +1416,11 @@
     "Insights": "Insights",
     "Instagram": "Instagram",
     "Instagram account": "Instagram account",
-    "Instagram account not found. Try after syncing page or choose another page": "Instagram account not found. Try after syncing page or choose another page",
     "Instagram automation created!": "Instagram automation created!",
     "Instagram Automation updated successfully": "Instagram Automation updated successfully",
     "Instagram Chatbots": "Instagram Chatbots",
-    "Instagram Connected Facebook Page": "Instagram Connected Facebook Page",
     "Instagram connections": "Instagram connections",
+    "Instagram connects through the Facebook Page it's linked to. DMs and story replies will arrive in your inbox. You can change or disconnect it later.": "Instagram connects through the Facebook Page it's linked to. DMs and story replies will arrive in your inbox. You can change or disconnect it later.",
     "Instagram DM": "Instagram DM",
     "Instagram DMs will stop arriving in the inbox for this WhatsApp channel.": "Instagram DMs will stop arriving in the inbox for this WhatsApp channel.",
     "Instagram Messaging": "Instagram Messaging",
@@ -1647,6 +1647,7 @@
     "Messages handled per day": "Messages handled per day",
     "Messenger": "Messenger",
     "Messenger and Instagram hang off this connection": "Messenger and Instagram hang off this connection",
+    "Messenger conversations from the Page you select will arrive in your inbox. You can change or disconnect it later.": "Messenger conversations from the Page you select will arrive in your inbox. You can change or disconnect it later.",
     "Meta approves templates before you can send them. An order update is the easiest place to start.": "Meta approves templates before you can send them. An order update is the easiest place to start.",
     "Meta Conversions API (CAPI)": "Meta Conversions API (CAPI)",
     "Meta has approved this name, but the number still shows the current one. Re-register it to switch over — you have 14 days from approval.": "Meta has approved this name, but the number still shows the current one. Re-register it to switch over — you have 14 days from approval.",
@@ -1770,6 +1771,7 @@
     "No group found": "No group found",
     "No groups found": "No groups found",
     "No Instagram accounts connected": "No Instagram accounts connected",
+    "No Instagram Business account linked to this Page": "No Instagram Business account linked to this Page",
     "No languages found": "No languages found",
     "No lead stage has a rotting window set.": "No lead stage has a rotting window set.",
     "No leads match these filters.": "No leads match these filters.",
@@ -1786,7 +1788,7 @@
     "No next step": "No next step",
     "No notes yet — anything the team types here stays with the lead.": "No notes yet — anything the team types here stays with the lead.",
     "No open leads to forecast yet.": "No open leads to forecast yet.",
-    "No Pages found": "No Pages found",
+    "No Pages found. Make sure you gave access to your Page on Facebook, then sync again.": "No Pages found. Make sure you gave access to your Page on Facebook, then sync again.",
     "No phone or email": "No phone or email",
     "No pipeline columns found.": "No pipeline columns found.",
     "No pipelines yet": "No pipelines yet",
@@ -2447,7 +2449,6 @@
     "Select one / type in to search": "Select one / type in to search",
     "Select one or more / type in to search": "Select one or more / type in to search",
     "Select operator": "Select operator",
-    "Select Page": "Select Page",
     "Select Photo Source": "Select Photo Source",
     "Select question": "Select question",
     "Select Redemption": "Select Redemption",
@@ -2624,7 +2625,7 @@
     "Swap the order of flow screens": "Swap the order of flow screens",
     "Switched to": "Switched to",
     "Sync": "Sync",
-    "Sync FB pages": "Sync FB pages",
+    "Sync Facebook Pages": "Sync Facebook Pages",
     "Sync from Meta": "Sync from Meta",
     "Sync from WhatsApp": "Sync from WhatsApp",
     "Sync Google Account": "Sync Google Account",
@@ -3031,6 +3032,8 @@
     "WhatsApp Templates": "WhatsApp Templates",
     "Wheel Size": "Wheel Size",
     "Where leads stall": "Where leads stall",
+    "Which Facebook Page do you want to connect?": "Which Facebook Page do you want to connect?",
+    "Which Instagram Business account do you want to connect?": "Which Instagram Business account do you want to connect?",
     "Which WhatsApp channel?": "Which WhatsApp channel?",
     "Widget Id": "Widget Id",
     "width": "width",
@@ -3119,26 +3122,6 @@
     "العربية": "العربية",
     "हिन्दी": "हिन्दी"
   },
-  "Example": {
-    " /points": "Example: /points"
-  },
-  "campaign.performance": {
-    "Campaign Performance": "Campaign Performance",
-    "Delivered": "Delivered",
-    "Failed": "Failed",
-    "Last updated: Just now": "Last updated: Just now",
-    "Pending": "Pending",
-    "Read": "Read",
-    "Sent": "Sent"
-  },
-  "campaign.card": {
-    "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",
-    "Continue setup": "Continue setup",
-    "Created {date}": "Created {date}",
-    "Draft": "Draft",
-    "Not sent yet": "Not sent yet",
-    "recipients": "recipients"
-  },
   "apianalytics": {
     "All": "All",
     "Avg Delivery Time": "Avg Delivery Time",
@@ -3165,10 +3148,28 @@
     "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
     "WhatsApp Template Analytics": "WhatsApp Template Analytics"
   },
-  "https": {
-    "//example": {
-      "com/webhook": "https://example.com/webhook"
-    }
+  "Example": {
+    " /points": "Example: /points"
+  },
+  "campaign.performance": {
+    "Campaign Performance": "Campaign Performance",
+    "Delivered": "Delivered",
+    "Failed": "Failed",
+    "Last updated: Just now": "Last updated: Just now",
+    "Pending": "Pending",
+    "Read": "Read",
+    "Sent": "Sent"
+  },
+  "campaign.card": {
+    "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",
+    "Continue setup": "Continue setup",
+    "Created {date}": "Created {date}",
+    "Draft": "Draft",
+    "Not sent yet": "Not sent yet",
+    "recipients": "recipients"
+  },
+  "campaign.status": {
+    "Campaign stopped": "Campaign stopped"
   },
   "campaign.details": {
     "{count} recipients_one": "{count} recipients",
@@ -3323,9 +3324,6 @@
     "Wait for the campaign's current send to finish.": "Wait for the campaign's current send to finish.",
     "We couldn't load this campaign.": "We couldn't load this campaign."
   },
-  "campaign.status": {
-    "Campaign stopped": "Campaign stopped"
-  },
   "campaign.list": {
     "{count} campaigns_one": "{count} campaigns",
     "{count} campaigns_other": "{count} campaigns",
@@ -3348,6 +3346,17 @@
     "this month": "this month",
     "this year": "this year",
     "Try adjusting your filters or create a new campaign.": "Try adjusting your filters or create a new campaign."
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
+  },
+  "*Note": {
+    " The updated feature will be valid only till end of the current billing cycle": "*Note: The updated feature will be valid only till end of the current billing cycle"
+  },
+  "https": {
+    "//example": {
+      "com/webhook": "https://example.com/webhook"
+    }
   },
   "campaign.addParticipants": {
     "{count} contacts_one": "{count} contacts",
@@ -3400,21 +3409,6 @@
     "Unnamed contact": "Unnamed contact",
     "WhatsApp contacts only": "WhatsApp contacts only",
     "You have not selected any participant": "You have not selected any participant"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
-  },
-  "*Note": {
-    " The updated feature will be valid only till end of the current billing cycle": "*Note: The updated feature will be valid only till end of the current billing cycle"
-  },
-  "Note": {
-    " *": "Note: *",
-    " * The OTP expires in 10 minutes once it is sent.": "Note: * The OTP expires in 10 minutes once it is sent.",
-    " * The OTP expires in 10 minutes once it is sent. You can resend in": "Note: * The OTP expires in 10 minutes once it is sent. You can resend in"
-  },
-  "eg": {
-    " I agree to": "eg: I agree to",
-    " terms and conditions": "eg: terms and conditions"
   },
   "Warning": {
     " High Risk Action": "Warning: High Risk Action"
@@ -3740,6 +3734,15 @@
     "Type": "Type",
     "Unknown contact": "Unknown contact",
     "Why messages failed": "Why messages failed"
+  },
+  "Note": {
+    " *": "Note: *",
+    " * The OTP expires in 10 minutes once it is sent.": "Note: * The OTP expires in 10 minutes once it is sent.",
+    " * The OTP expires in 10 minutes once it is sent. You can resend in": "Note: * The OTP expires in 10 minutes once it is sent. You can resend in"
+  },
+  "eg": {
+    " I agree to": "eg: I agree to",
+    " terms and conditions": "eg: terms and conditions"
   },
   "campaign.resend": {},
   "campaign.create": {},
