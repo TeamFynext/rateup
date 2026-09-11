@@ -449,6 +449,9 @@ describe("updating a channel", () => {
 });
 
 describe("upsertWaSettings", () => {
+  // The inline `<32-hex iv>:<ciphertext>` form; the mocked aes_decrypt reads it as "plain-token".
+  const STORED_PAGE_TOKEN = `${"0".repeat(32)}:cipher-text`;
+
   test("creates a manual channel when the org has none for that number", async () => {
     db.whatsappSettings.findUnique.mockResolvedValue(null);
 
@@ -490,20 +493,84 @@ describe("upsertWaSettings", () => {
     });
   });
 
-  test("clears every page field when the page is disconnected", async () => {
+  test.each([null, ""])(
+    "clears every page field when the page is disconnected (fbPageId %j)",
+    async (fbPageId) => {
+      db.whatsappSettings.findUnique.mockResolvedValue(row({ fbPageId: "page-1" }));
+
+      await upsertWaSettings(ORG_A, PHONE_ID, { appId: "app-1", fbPageId } as any);
+
+      expect(db.whatsappSettings.update.mock.calls[0][0].data).toMatchObject({
+        fbPageId: null,
+        ibaId: null,
+        pageAccessToken: null,
+        igUserName: null,
+        igDisplayName: null,
+        fbUserName: null,
+      });
+    },
+  );
+
+  test("leaves the page connected when an update doesn't mention it", async () => {
     db.whatsappSettings.findUnique.mockResolvedValue(row({ fbPageId: "page-1" }));
 
     await upsertWaSettings(ORG_A, PHONE_ID, { appId: "app-1" } as any);
 
-    expect(db.whatsappSettings.update.mock.calls[0][0].data).toMatchObject({
-      fbPageId: null,
-      ibaId: null,
-      pageAccessToken: null,
-      igUserName: null,
-      igDisplayName: null,
-      fbUserName: null,
-    });
+    const { data } = db.whatsappSettings.update.mock.calls[0][0];
+    expect(data).not.toHaveProperty("fbPageId");
+    expect(data).not.toHaveProperty("ibaId");
+    expect(data).not.toHaveProperty("pageAccessToken");
   });
+
+  test("re-saving the connected page falls back to its stored token", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue(
+      row({ fbPageId: "page-1", pageAccessToken: STORED_PAGE_TOKEN }),
+    );
+
+    await upsertWaSettings(ORG_A, PHONE_ID, { fbPageId: "page-1" } as any);
+
+    expect(subscribePageToAppMock).toHaveBeenCalledWith("page-1", "plain-token", expect.anything());
+    // The stored token is reused, not rewritten.
+    expect(db.whatsappSettings.update.mock.calls[0][0].data.pageAccessToken).toBeUndefined();
+  });
+
+  test("still needs a token to switch to a different page", async () => {
+    db.whatsappSettings.findUnique.mockResolvedValue(
+      row({ fbPageId: "page-1", pageAccessToken: STORED_PAGE_TOKEN }),
+    );
+
+    await expect(upsertWaSettings(ORG_A, PHONE_ID, { fbPageId: "page-2" } as any)).rejects.toThrow(
+      "pageAccessToken is required to connect a Facebook page",
+    );
+    expect(db.whatsappSettings.update).not.toHaveBeenCalled();
+  });
+
+  test.each([null, ""])(
+    "disconnecting Instagram alone keeps the Facebook page (ibaId %j)",
+    async (ibaId) => {
+      db.whatsappSettings.findUnique.mockResolvedValue(
+        row({
+          fbPageId: "page-1",
+          pageAccessToken: STORED_PAGE_TOKEN,
+          ibaId: "iba-1",
+          igUserName: "the_shop",
+        }),
+      );
+      callMetaApiMock.mockResolvedValue({ data: { name: "The Shop" } });
+
+      await upsertWaSettings(ORG_A, PHONE_ID, { fbPageId: "page-1", ibaId } as any);
+
+      const { data } = db.whatsappSettings.update.mock.calls[0][0];
+      expect(data).toMatchObject({
+        fbPageId: "page-1",
+        ibaId: null,
+        igUserName: null,
+        igDisplayName: null,
+        fbUserName: "The Shop",
+      });
+      expect(data.pageAccessToken).toBeUndefined();
+    },
+  );
 
   test("passes the org's access token as the auth header on both lookups", async () => {
     await upsertWaSettings(ORG_A, PHONE_ID, {
@@ -550,6 +617,57 @@ describe("reading Meta assets for onboarding", () => {
     await expect(getFbPagesFromWa(SETTINGS_ID, ORG_A)).resolves.toEqual([
       { id: "page-1", name: "The Shop" },
     ]);
+  });
+
+  test("flattens each page's profile picture to pictureUrl", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: {
+        data: [
+          { id: "page-1", name: "The Shop", picture: { data: { url: "https://cdn/p1.jpg" } } },
+        ],
+      },
+    });
+
+    const [page] = await getFbPagesFromWa(SETTINGS_ID, ORG_A);
+
+    expect(page.pictureUrl).toBe("https://cdn/p1.jpg");
+    expect(page).not.toHaveProperty("picture");
+    expect(callMetaApiMock.mock.calls[0][0]).toContain("picture.type(large){url}");
+  });
+
+  test("attaches the linked Instagram account's username and picture", async () => {
+    callMetaApiMock
+      .mockResolvedValueOnce({
+        data: {
+          data: [{ id: "page-1", name: "The Shop", instagram_business_account: { id: "ig-1" } }],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: { username: "theshop", profile_picture_url: "https://cdn/ig1.jpg" },
+      });
+
+    const [page] = await getFbPagesFromWa(SETTINGS_ID, ORG_A);
+
+    expect(callMetaApiMock.mock.calls[1][0]).toBe("/ig-1?fields=username,profile_picture_url");
+    expect(page.instagram_business_account).toEqual({
+      id: "ig-1",
+      username: "theshop",
+      profile_picture_url: "https://cdn/ig1.jpg",
+    });
+  });
+
+  test("still lists a page when its Instagram profile can't be read", async () => {
+    callMetaApiMock
+      .mockResolvedValueOnce({
+        data: {
+          data: [{ id: "page-1", name: "The Shop", instagram_business_account: { id: "ig-1" } }],
+        },
+      })
+      .mockRejectedValueOnce(new Error("(#10) missing instagram_basic"));
+
+    const [page] = await getFbPagesFromWa(SETTINGS_ID, ORG_A);
+
+    expect(page.instagram_business_account).toEqual({ id: "ig-1" });
   });
 
   test("refuses when the channel has no access token", async () => {

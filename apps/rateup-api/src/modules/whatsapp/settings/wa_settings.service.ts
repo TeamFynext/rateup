@@ -363,23 +363,38 @@ export async function upsertWaSettings(
 
   if (existingSettings) {
     if (data.fbPageId?.length) {
-      if (!data.pageAccessToken) {
+      const { accessToken, pageAccessToken: storedPageToken } =
+        getWaSettingsWithAccessTokenDecrypted(existingSettings);
+      // The dashboard no longer receives pageAccessToken in the channel list (13.2), so a
+      // save that keeps the connected page can't send it back — fall back to the stored
+      // one. Switching to a different page still needs that page's own token.
+      const pageAccessToken =
+        data.pageAccessToken ??
+        (data.fbPageId === existingSettings.fbPageId ? storedPageToken : null);
+      if (!pageAccessToken) {
         throw new Error("pageAccessToken is required to connect a Facebook page");
       }
-      await subscribePageToApp(data.fbPageId, data.pageAccessToken, [
+      await subscribePageToApp(data.fbPageId, pageAccessToken, [
         "messages",
         "message_reads",
         "message_reactions",
       ]);
-      const { accessToken } = getWaSettingsWithAccessTokenDecrypted(existingSettings);
       if (data.ibaId) {
         const igData = await callMetaApi(`/${data.ibaId}?fields=username`, "GET", accessToken);
         data.igUserName = igData.data.username;
+      } else if ((data.ibaId === null || data.ibaId === "") && existingSettings.ibaId) {
+        // Disconnecting Instagram alone: the Page (and Messenger on it) stays connected.
+        data.ibaId = null;
+        data.igUserName = null;
+        data.igDisplayName = null;
       }
       const fbData = await callMetaApi(`/${data.fbPageId}?fields=name`, "GET", accessToken);
       data.fbUserName = fbData.data.name;
     }
-    if (!data.fbPageId?.length && existingSettings.fbPageId?.length) {
+    // Only an explicit empty fbPageId disconnects the Page. Leaving the field out of a
+    // partial update must not silently drop the Messenger and Instagram connections.
+    // Instagram hangs off the Page, so it goes with it.
+    if ((data.fbPageId === null || data.fbPageId === "") && existingSettings.fbPageId?.length) {
       data.fbPageId = null;
       data.ibaId = null;
       data.pageAccessToken = null;
@@ -446,7 +461,19 @@ export interface MetaGraphPage {
   id: string;
   name: string;
   access_token: string;
-  instagram_business_account?: { id: string };
+  /** Page profile picture. A signed CDN URL that expires, so it's refreshed on every sync. */
+  pictureUrl?: string;
+  instagram_business_account?: {
+    id: string;
+    username?: string;
+    /** Same caveat as `pictureUrl` — signed and short-lived. */
+    profile_picture_url?: string;
+  };
+}
+
+/** `/me/accounts` as Meta returns it, before `picture` is flattened to `pictureUrl`. */
+interface MetaGraphAccount extends Omit<MetaGraphPage, "pictureUrl"> {
+  picture?: { data?: { url?: string } };
 }
 export interface MetaGraphAd {
   id: string;
@@ -471,13 +498,45 @@ export async function getFbPagesFromWa(
     throw new Error("accesstoken not found");
   }
   const { accessToken } = settings;
-  const url = `/me/accounts?fields=id,name,access_token,instagram_business_account`;
+  const url = `/me/accounts?fields=id,name,access_token,picture.type(large){url},instagram_business_account`;
   const res = await callMetaApi(url, "GET", accessToken);
-  log.trace(
-    { pages: (res?.data?.data as MetaGraphPage[] | undefined)?.map((page) => page.id) },
-    "Pages fetched from meta",
+  const accounts = res.data?.data as MetaGraphAccount[] | undefined;
+  log.trace({ pages: accounts?.map((page) => page.id) }, "Pages fetched from meta");
+  if (!accounts) return [];
+
+  return Promise.all(
+    accounts.map(async ({ picture, ...page }) => ({
+      ...page,
+      pictureUrl: picture?.data?.url,
+      instagram_business_account: page.instagram_business_account
+        ? await getInstagramProfile(page.instagram_business_account.id, accessToken)
+        : undefined,
+    })),
   );
-  return res.data?.data;
+}
+
+// Fetched per account rather than expanded inside `/me/accounts`: if the token lacks
+// instagram_basic, an expansion would fail the whole page list, while this only costs
+// the picture. Pages without the picture still sync.
+async function getInstagramProfile(
+  ibaId: string,
+  accessToken: string,
+): Promise<NonNullable<MetaGraphPage["instagram_business_account"]>> {
+  try {
+    const res = await callMetaApi(
+      `/${ibaId}?fields=username,profile_picture_url`,
+      "GET",
+      accessToken,
+    );
+    return {
+      id: ibaId,
+      username: res.data?.username,
+      profile_picture_url: res.data?.profile_picture_url,
+    };
+  } catch (err) {
+    log.warn({ err, ibaId }, "Could not read Instagram profile for page sync");
+    return { id: ibaId };
+  }
 }
 
 export async function getAdsFromWa(
@@ -642,8 +701,11 @@ export interface MetaAsset {
     id: string;
     name: string;
     access_token: string;
+    pictureUrl?: string;
     instagram_business_account: {
       id: string;
+      username?: string;
+      profile_picture_url?: string;
     };
     subscribedFields: string[];
     pageAccessTokenByUser?: string;
