@@ -11,6 +11,7 @@ import { getThemePreference } from "@/utils/theme";
 // channel helper: the handler has to be registered before the first notification
 // arrives, and this is the earliest module the app loads.
 import { setupAndroidNotificationChannel } from "@/utils/notification";
+import { configurePlaybackAudioMode } from "@/utils/audio";
 import { Colors } from "@/constants/colors";
 import { NoticeHost } from "@/components/common/Notice";
 import {
@@ -103,6 +104,12 @@ export default function LayoutWrapper() {
 
   useEffect(() => {
     setupAndroidNotificationChannel();
+  }, []);
+
+  // Without this the app runs on iOS's default `.soloAmbient` session, so voice
+  // notes and video are muted by the hardware Ring/Silent switch.
+  useEffect(() => {
+    configurePlaybackAudioMode();
   }, []);
 
   if (!fontsLoaded) {
