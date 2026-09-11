@@ -229,7 +229,13 @@ export async function upsertWaSettingsHandler(
     return res.status(200).send(waSettings);
   } catch (e) {
     log.error({ err: e }, "Error while upserting WhatsApp settings");
-    res.code(500).send(e);
+    // `return` matters: without it the async handler resolves before the async onSend
+    // hook has written this reply, Fastify sends a second one, and the process logs
+    // ERR_HTTP_HEADERS_SENT as an unhandled rejection.
+    return res.code(500).send({
+      statusCode: 500,
+      message: e instanceof Error ? e.message : "Something went wrong",
+    });
   }
 }
 
