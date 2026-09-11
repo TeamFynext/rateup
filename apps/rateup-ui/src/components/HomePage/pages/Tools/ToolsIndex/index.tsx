@@ -43,13 +43,13 @@ export default function ToolsIndex() {
                     <Link
                       key={tool.slug}
                       to={toolPath(tool.slug)}
-                      className="flex flex-col rounded-xl border border-border bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[#CBD9EA] hover:shadow-[0_8px_24px_rgba(11,31,72,.08)]"
+                      className="flex flex-col rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-border hover:shadow-[0_8px_24px_rgba(11,31,72,.08)]"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <span className="flex size-11 items-center justify-center rounded-[10px] bg-accent">
                           <Icon className="size-5 text-primary" />
                         </span>
-                        <span className="rounded-full bg-[#F3F7FC] px-2 py-1 text-[11px] font-bold text-muted-foreground">
+                        <span className="rounded-full bg-accent px-2 py-1 text-[11px] font-bold text-muted-foreground">
                           {tool.badge}
                         </span>
                       </div>
@@ -76,7 +76,7 @@ export default function ToolsIndex() {
         </h2>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
           {PROMISES.map((promise) => (
-            <div key={promise.n} className="rounded-xl border border-border bg-white p-6">
+            <div key={promise.n} className="rounded-xl border border-border bg-card p-6">
               <div className="bg-ru-star bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
                 {promise.n}
               </div>
