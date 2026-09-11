@@ -85,7 +85,7 @@ export function ResultFigure({
   value,
   suffix,
   note,
-}: Readonly<{ value: string; suffix?: string; note?: string }>) {
+}: Readonly<{ value: string; suffix?: string; note?: React.ReactNode }>) {
   return (
     <>
       <div className="mt-2.5 flex flex-wrap items-end gap-3.5">
