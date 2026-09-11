@@ -40,7 +40,7 @@ export function ToolCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-white p-6 shadow-[0_1px_2px_rgba(11,31,72,.06),0_8px_24px_rgba(11,31,72,.06)] sm:p-7",
+        "rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(11,31,72,.06),0_8px_24px_rgba(11,31,72,.06)] sm:p-7",
         className,
       )}
     >
@@ -126,7 +126,7 @@ export function ResultRows({
 /** Soft blue note block used under the inputs. */
 export function InfoNote({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="mt-5 rounded-[10px] bg-[#F3F7FC] px-4 py-3.5 text-[12.5px] leading-[1.5] text-[#3A4A61]">
+    <div className="mt-5 rounded-[10px] bg-accent px-4 py-3.5 text-[12.5px] leading-[1.5] text-muted-foreground">
       {children}
     </div>
   );
@@ -144,7 +144,7 @@ export function WarnNote({ children }: Readonly<{ children: React.ReactNode }>) 
 /* ── Form controls ─────────────────────────────────────────────────────────── */
 
 const CONTROL =
-  "w-full rounded border border-[#E5E7EB] bg-white px-3 py-2.5 text-[14px] text-foreground outline-none transition-colors focus:border-primary";
+  "w-full rounded border border-input bg-card px-3 py-2.5 text-[14px] text-foreground outline-none transition-colors focus:border-primary";
 
 export function Field({
   label,
@@ -209,7 +209,7 @@ export function PhoneControl({
   // names that appear literally in the source.
   const border = invalid
     ? "[&>button]:border-[#B4231E] [&_input]:border-[#B4231E]"
-    : "[&>button]:border-[#E5E7EB] [&_input]:border-[#E5E7EB]";
+    : "[&>button]:border-input [&_input]:border-input";
   return (
     <PhoneInput
       id={id}
@@ -219,8 +219,8 @@ export function PhoneControl({
       onChange={(next) => onChange(next ?? "")}
       placeholder={placeholder}
       className={cn(
-        "[&>button]:h-[42px] [&>button]:rounded-l [&>button]:rounded-r-none [&>button]:bg-white [&>button]:px-3 [&>button]:shadow-none [&>button]:hover:bg-[#F6F7F5]",
-        "[&_input]:h-[42px] [&_input]:rounded-r [&_input]:rounded-l-none [&_input]:bg-white [&_input]:px-3 [&_input]:text-[14px] [&_input]:text-foreground [&_input]:shadow-none [&_input]:focus-visible:ring-0",
+        "[&>button]:h-[42px] [&>button]:rounded-l [&>button]:rounded-r-none [&>button]:bg-card [&>button]:px-3 [&>button]:shadow-none [&>button]:hover:bg-muted",
+        "[&_input]:h-[42px] [&_input]:rounded-r [&_input]:rounded-l-none [&_input]:bg-card [&_input]:px-3 [&_input]:text-[14px] [&_input]:text-foreground [&_input]:shadow-none [&_input]:focus-visible:ring-0",
         border,
         "[&_input]:focus-visible:border-primary",
       )}
@@ -252,7 +252,7 @@ export function LightButton({ className, ...props }: Readonly<React.ComponentPro
     <button
       type="button"
       {...props}
-      className={cn(BTN_BASE, "bg-white text-ru-blue-900 hover:bg-white/90", className)}
+      className={cn(BTN_BASE, "bg-card text-foreground hover:bg-card/90", className)}
     />
   );
 }
@@ -264,7 +264,7 @@ export function OutlineButton({ className, ...props }: Readonly<React.ComponentP
       {...props}
       className={cn(
         BTN_BASE,
-        "border border-[#CBD9EA] bg-white font-bold text-primary hover:bg-[#F3F7FC]",
+        "border border-border bg-card font-bold text-primary hover:bg-accent",
         className,
       )}
     />
@@ -336,7 +336,7 @@ export function HowItWorks({ steps }: Readonly<{ steps: ToolStep[] }>) {
       </h2>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         {steps.map((step) => (
-          <div key={step.n} className="rounded-xl border border-border bg-white p-6">
+          <div key={step.n} className="rounded-xl border border-border bg-card p-6">
             <div className="bg-ru-star bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
               {step.n}
             </div>
@@ -371,7 +371,7 @@ export function FaqSection({ faqs }: Readonly<{ faqs: ToolFaq[] }>) {
         </div>
         <div className="flex flex-col gap-0.5">
           {faqs.map((faq) => (
-            <div key={faq.question} className="rounded-xl border border-border bg-white px-6 py-5">
+            <div key={faq.question} className="rounded-xl border border-border bg-card px-6 py-5">
               <div className="font-nunito text-[16px] font-extrabold text-foreground">
                 {faq.question}
               </div>
@@ -399,7 +399,7 @@ export function RelatedTools({ slug }: Readonly<{ slug: string }>) {
           <Link
             key={tool.slug}
             to={toolPath(tool.slug)}
-            className="block rounded-xl border border-border bg-white p-[22px] transition-colors hover:border-[#CBD9EA]"
+            className="block rounded-xl border border-border bg-card p-[22px] transition-colors hover:border-border"
           >
             <div className="font-nunito text-[16px] font-extrabold text-foreground">
               {tool.name}
@@ -434,13 +434,13 @@ export function ToolCta({ title, description }: Readonly<{ title: string; descri
         <div className="flex flex-col gap-3">
           <Link
             to="/signup"
-            className="cursor-pointer rounded-[10px] bg-ru-star px-6 py-4 text-center text-[15px] font-extrabold text-ru-blue-900 transition-transform hover:-translate-y-0.5"
+            className="cursor-pointer rounded-[10px] bg-ru-star px-6 py-4 text-center text-[15px] font-extrabold text-foreground transition-transform hover:-translate-y-0.5"
           >
             Start free trial
           </Link>
           <Link
             to="/contact-us"
-            className="cursor-pointer rounded-[10px] border border-white/[0.22] px-6 py-4 text-center text-[15px] font-semibold text-white transition-colors hover:bg-white/10"
+            className="cursor-pointer rounded-[10px] border border-white/[0.22] px-6 py-4 text-center text-[15px] font-semibold text-white transition-colors hover:bg-card/10"
           >
             Talk to us
           </Link>

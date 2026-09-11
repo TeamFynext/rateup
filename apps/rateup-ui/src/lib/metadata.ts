@@ -232,6 +232,41 @@ const pageMetadata = {
       "Industry-specific NPS questions with follow-ups for promoters, passives and detractors. Copy, edit, send.",
     sitemap: false,
   },
+  "/tools/shopify-bulk-discount-code-generator": {
+    title: "Shopify Bulk Discount Code Generator - Unique CSV Export | RateUp",
+    description:
+      "Generate up to 5,000 unique, random discount codes for Shopify with custom prefixes. Download as a clean CSV ready for bulk import.",
+    ogTitle: "Shopify Bulk Discount Code Generator - Unique CSV Export",
+    ogDescription:
+      "Generate random, unique discount codes for your Shopify store in bulk and download a CSV ready to import.",
+    sitemap: false,
+  },
+  "/tools/clv-calculator": {
+    title: "CLV & CAC Calculator - Customer Lifetime Value | RateUp",
+    description:
+      "Calculate Customer Lifetime Value (CLV), payback period, and LTV:CAC ratio. Know when to increase acquisition spend and when to focus on retention.",
+    ogTitle: "CLV & CAC Calculator - Customer Lifetime Value",
+    ogDescription:
+      "Calculate your LTV:CAC ratio and find out if you are under-investing or burning money.",
+    sitemap: false,
+  },
+  "/tools/shopify-fee-calculator": {
+    title: "Shopify Fee Calculator - Transaction Profit & Costs | RateUp",
+    description:
+      "Calculate your exact net profit on a single Shopify transaction. Factor in Shopify transaction fees, payment processing costs, COGS, and shipping.",
+    ogTitle: "Shopify Fee Calculator - Transaction Profit & Costs",
+    ogDescription:
+      "Calculate your exact net profit per order including Shopify transaction fees and payment processing costs.",
+    sitemap: false,
+  },
+  "/tools/profit-margin-calculator": {
+    title: "Ecommerce Profit Margin & Breakeven ROAS Calculator | RateUp",
+    description:
+      "Calculate gross margin, net margin, markup percentage, and breakeven ROAS for your D2C ecommerce orders. Factor in COGS, shipping, ad spend, and gateway fees.",
+    ogTitle: "Ecommerce Profit Margin & Breakeven ROAS Calculator",
+    ogDescription: "Calculate gross margin, net margin, markup and breakeven ROAS per order.",
+    sitemap: false,
+  },
   // ── Partner / reseller ──────────────────────────────────────────────────────
   "/partner-page": {
     title: "Become a RateUp Partner - WhatsApp Business API Reseller Program",

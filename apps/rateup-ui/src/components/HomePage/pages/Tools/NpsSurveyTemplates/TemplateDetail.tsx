@@ -58,7 +58,7 @@ export default function NpsTemplateDetail({ template }: Readonly<{ template: Nps
             <div className="mt-5 text-[11px] font-extrabold tracking-[0.12em] text-muted-foreground uppercase">
               The rating question
             </div>
-            <blockquote className="mt-3 rounded-[14px] border border-[#D9E4F0] bg-[#F3F7FC] p-5 text-[16px] leading-[1.55] font-medium text-foreground">
+            <blockquote className="mt-3 rounded-[14px] border border-border bg-accent p-5 text-[16px] leading-[1.55] font-medium text-foreground">
               {template.ratingQuestion}
             </blockquote>
             <p className="mt-2 text-[11.5px] text-muted-foreground">
@@ -110,7 +110,7 @@ export default function NpsTemplateDetail({ template }: Readonly<{ template: Nps
                       key={sibling.slug}
                       to="/tools/nps-survey-templates/$slug"
                       params={{ slug: sibling.slug }}
-                      className="rounded-lg border border-border px-4 py-3 text-[13.5px] font-bold text-foreground transition-colors hover:border-[#CBD9EA] hover:bg-[#F3F7FC]"
+                      className="rounded-lg border border-border px-4 py-3 text-[13.5px] font-bold text-foreground transition-colors hover:border-border hover:bg-accent"
                     >
                       {sibling.industry}
                     </Link>

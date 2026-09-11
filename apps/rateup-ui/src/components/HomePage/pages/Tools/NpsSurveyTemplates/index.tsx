@@ -47,10 +47,10 @@ export default function NpsSurveyTemplates() {
                 onClick={() => setSector(option)}
                 aria-pressed={sector === option}
                 className={cn(
-                  "cursor-pointer rounded-full border border-[#E0E5EC] px-3 py-1.5 text-[12.5px] font-bold transition-colors",
+                  "cursor-pointer rounded-full border border-border px-3 py-1.5 text-[12.5px] font-bold transition-colors",
                   sector === option
                     ? "border-primary bg-primary text-white"
-                    : "bg-white text-muted-foreground hover:border-[#CBD9EA]",
+                    : "bg-card text-muted-foreground hover:border-border",
                 )}
               >
                 {option}
@@ -65,7 +65,7 @@ export default function NpsSurveyTemplates() {
               key={template.slug}
               to="/tools/nps-survey-templates/$slug"
               params={{ slug: template.slug }}
-              className="block rounded-xl border border-border bg-white p-[22px] transition-colors hover:border-[#CBD9EA]"
+              className="block rounded-xl border border-border bg-card p-[22px] transition-colors hover:border-border"
             >
               <div className="flex items-center justify-between gap-2.5">
                 <span className="rounded-full bg-accent px-2 py-1 text-[11px] font-extrabold tracking-[0.1em] text-primary uppercase">
@@ -152,7 +152,7 @@ function NpsCalculator() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-6 rounded-[14px] bg-[#F3F7FC] px-6 py-5">
+        <div className="flex flex-wrap items-center gap-6 rounded-[14px] bg-accent px-6 py-5">
           {result && verdict ? (
             <>
               <div>
@@ -163,7 +163,7 @@ function NpsCalculator() {
                   {result.score}
                 </div>
               </div>
-              <div className="border-l border-[#D9E4F0] pl-6">
+              <div className="border-l border-border pl-6">
                 <div className="text-[14px] font-extrabold text-foreground">{verdict.label}</div>
                 <p className="mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
                   {result.promoterShare}% promoters − {result.detractorShare}% detractors
