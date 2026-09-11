@@ -23,6 +23,7 @@ import {
   exportContactHandler,
   getAllContactsHandler,
   getContactByIdHandler,
+  getContactFullDetailsByIdHandler,
   getCustomFieldHandler,
   importCSVContactsHandler,
   updateContactByIdHandler,
@@ -101,6 +102,18 @@ export async function contactRoutes(server: FastifyInstance) {
       },
     },
     getContactByIdHandler,
+  );
+
+  // Everything the contacts table's detail dialog renders. A route of its own so
+  // `GET /:contactId` stays the lean payload its other callers expect.
+  server.get(
+    "/:contactId/details",
+    {
+      schema: {
+        params: byContactIdSchema,
+      },
+    },
+    getContactFullDetailsByIdHandler,
   );
 
   server.put(
