@@ -32,7 +32,7 @@ export default function ToolsShell({
 }: Readonly<ToolsShellProps>) {
   return (
     <Layout
-      contentClassName={styles.themeDefault}
+      contentClassName={`${styles.themeDefault} bg-background`}
       subheader={<ToolsTabs activeSlug={activeSlug} />}
     >
       <div className="bg-background font-sans text-foreground">

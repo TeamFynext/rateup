@@ -155,8 +155,13 @@ export interface MetaAssets {
     name: string;
     access_token: string;
     subscribedFields: string[];
+    /** Signed Meta CDN URL — expires, so it can be stale until the next page sync. */
+    pictureUrl?: string;
     instagram_business_account: {
       id: string;
+      username?: string;
+      /** Same caveat as `pictureUrl`. */
+      profile_picture_url?: string;
     };
     pageAccessTokenByUser?: string;
   }[];

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactDeleteMutation } from "@/backend/campaign/contacts/contacts.query";
+import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import { useConfirm } from "@/context/confirm-provider";
 
 import { Button } from "../ui/button.tsx";
@@ -21,16 +22,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
-import AddToGroupModal from "./AddToGroupModal.tsx";
-import ContactDetailedView from "./ContactDetailedView.tsx";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import SendMessageModal from "./SendMessageModal.tsx";
 
 const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: string }) => {
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
+  // Opening the details dialog is publishing the row — `ContactDetailHost` renders it.
+  const setSelectedContact = useContactTableStore((state) => state.setSelectedContact);
   const [openedEditModal, setOpenedEditModal] = useState(false);
-  const [isAddToGroupOpen, setIsAddToGroupOpen] = useState(false);
   const openDeleteModal = async () => {
     const ok = await confirm({
       title: translations("Delete contact"),
@@ -42,7 +42,6 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
     deleteContact();
   };
   const deleteMutation = useContactDeleteMutation(groupId);
-  const [viewDetails, setViewDetails] = useState(false);
   const [isSendMessageOpen, setIsSendMessageOpen] = useState(false);
   const deleteContact = () => {
     deleteMutation.mutate(contact?.id);
@@ -65,7 +64,7 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
       <DropdownMenuContent align="end" className="w-auto min-w-40">
         <DropdownMenuItem
           onClick={() => {
-            setViewDetails(true);
+            setSelectedContact(contact);
           }}
         >
           <IconEye className="w-4 h-4 mr-2" />
@@ -99,23 +98,10 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
         setOpened={setOpenedEditModal}
         initialValues={initialValues}
       />
-      <ContactDetailedView
-        setIsAddToGroupOpen={setIsAddToGroupOpen}
-        opened={viewDetails}
-        setOpened={setViewDetails}
-        selectedContact={contact}
-        setIsSendMessageOpen={setIsSendMessageOpen}
-      />
       <SendMessageModal
         opened={isSendMessageOpen}
         setOpened={setIsSendMessageOpen}
         selectedContact={contact}
-      />
-      <AddToGroupModal
-        opened={isAddToGroupOpen}
-        setOpened={setIsAddToGroupOpen}
-        selectedContactIds={[contact.id]}
-        contact={contact}
       />
     </DropdownMenu>
   );

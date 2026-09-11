@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-11-facebook-page-picker",
+    title: "Pick your Page for Messenger and Instagram",
+    summary:
+      "Connecting Messenger or Instagram now shows the Pages you gave RateUp access to as a list, so you can tick the one you want instead of opening a dropdown. For Instagram, Pages without a linked Instagram Business account are greyed out with a note, rather than failing after you pick them. The list refreshes from Facebook on its own each time you open it, so a Page you only just granted shows up without pressing sync first. The sync button is still there if you need it.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels", label: "Open channels" },
+  },
+  {
     id: "2026-09-08-inbox-image-download",
     title: "Save an image from the inbox",
     summary:

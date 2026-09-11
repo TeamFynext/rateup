@@ -23,6 +23,8 @@ export const contactKeys = {
     groupType: KeyPart,
   ) => ["contacts", pagination, search, sort, filters, groupType] as const,
   detail: (contactId: string) => ["contacts", contactId] as const,
+  /** The detail dialog's fully-joined contact — a separate endpoint, so a separate key. */
+  fullDetails: (contactId: string) => ["contacts", contactId, "details"] as const,
   /** The inbox's filtered contact list. */
   filtered: () => ["contacts", "filtered"] as const,
   filteredBy: (filterData: KeyPart) => ["contacts", "filtered", filterData] as const,

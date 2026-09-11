@@ -104,8 +104,12 @@ import { Route as marketingProductsWhatsappBusinessApiIndexRouteImport } from '.
 import { Route as marketingProductsWhatsappFeedbackIndexRouteImport } from './routes/(marketing)/products/whatsapp-feedback/index'
 import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
 import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
+import { Route as marketingToolsClvCalculatorIndexRouteImport } from './routes/(marketing)/tools/clv-calculator/index'
 import { Route as marketingToolsNpsSurveyTemplatesIndexRouteImport } from './routes/(marketing)/tools/nps-survey-templates/index'
+import { Route as marketingToolsProfitMarginCalculatorIndexRouteImport } from './routes/(marketing)/tools/profit-margin-calculator/index'
 import { Route as marketingToolsRtoLossCalculatorIndexRouteImport } from './routes/(marketing)/tools/rto-loss-calculator/index'
+import { Route as marketingToolsShopifyBulkDiscountCodeGeneratorIndexRouteImport } from './routes/(marketing)/tools/shopify-bulk-discount-code-generator/index'
+import { Route as marketingToolsShopifyFeeCalculatorIndexRouteImport } from './routes/(marketing)/tools/shopify-fee-calculator/index'
 import { Route as marketingToolsWhatsappLinkGeneratorIndexRouteImport } from './routes/(marketing)/tools/whatsapp-link-generator/index'
 import { Route as marketingToolsWhatsappPricingCalculatorIndexRouteImport } from './routes/(marketing)/tools/whatsapp-pricing-calculator/index'
 import { Route as marketingToolsWhatsappQrCodeGeneratorIndexRouteImport } from './routes/(marketing)/tools/whatsapp-qr-code-generator/index'
@@ -699,16 +703,40 @@ const marketingProductsWhatsappSurveyIndexRoute =
     path: '/products/whatsapp-survey/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
+const marketingToolsClvCalculatorIndexRoute =
+  marketingToolsClvCalculatorIndexRouteImport.update({
+    id: '/tools/clv-calculator/',
+    path: '/tools/clv-calculator/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
 const marketingToolsNpsSurveyTemplatesIndexRoute =
   marketingToolsNpsSurveyTemplatesIndexRouteImport.update({
     id: '/tools/nps-survey-templates/',
     path: '/tools/nps-survey-templates/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
+const marketingToolsProfitMarginCalculatorIndexRoute =
+  marketingToolsProfitMarginCalculatorIndexRouteImport.update({
+    id: '/tools/profit-margin-calculator/',
+    path: '/tools/profit-margin-calculator/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
 const marketingToolsRtoLossCalculatorIndexRoute =
   marketingToolsRtoLossCalculatorIndexRouteImport.update({
     id: '/tools/rto-loss-calculator/',
     path: '/tools/rto-loss-calculator/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
+const marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute =
+  marketingToolsShopifyBulkDiscountCodeGeneratorIndexRouteImport.update({
+    id: '/tools/shopify-bulk-discount-code-generator/',
+    path: '/tools/shopify-bulk-discount-code-generator/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
+const marketingToolsShopifyFeeCalculatorIndexRoute =
+  marketingToolsShopifyFeeCalculatorIndexRouteImport.update({
+    id: '/tools/shopify-fee-calculator/',
+    path: '/tools/shopify-fee-calculator/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
 const marketingToolsWhatsappLinkGeneratorIndexRoute =
@@ -1308,8 +1336,12 @@ export interface FileRoutesByFullPath {
   '/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
+  '/tools/clv-calculator/': typeof marketingToolsClvCalculatorIndexRoute
   '/tools/nps-survey-templates/': typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  '/tools/profit-margin-calculator/': typeof marketingToolsProfitMarginCalculatorIndexRoute
   '/tools/rto-loss-calculator/': typeof marketingToolsRtoLossCalculatorIndexRoute
+  '/tools/shopify-bulk-discount-code-generator/': typeof marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute
+  '/tools/shopify-fee-calculator/': typeof marketingToolsShopifyFeeCalculatorIndexRoute
   '/tools/whatsapp-link-generator/': typeof marketingToolsWhatsappLinkGeneratorIndexRoute
   '/tools/whatsapp-pricing-calculator/': typeof marketingToolsWhatsappPricingCalculatorIndexRoute
   '/tools/whatsapp-qr-code-generator/': typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
@@ -1483,8 +1515,12 @@ export interface FileRoutesByTo {
   '/products/whatsapp-feedback': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey': typeof marketingProductsWhatsappSurveyIndexRoute
+  '/tools/clv-calculator': typeof marketingToolsClvCalculatorIndexRoute
   '/tools/nps-survey-templates': typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  '/tools/profit-margin-calculator': typeof marketingToolsProfitMarginCalculatorIndexRoute
   '/tools/rto-loss-calculator': typeof marketingToolsRtoLossCalculatorIndexRoute
+  '/tools/shopify-bulk-discount-code-generator': typeof marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute
+  '/tools/shopify-fee-calculator': typeof marketingToolsShopifyFeeCalculatorIndexRoute
   '/tools/whatsapp-link-generator': typeof marketingToolsWhatsappLinkGeneratorIndexRoute
   '/tools/whatsapp-pricing-calculator': typeof marketingToolsWhatsappPricingCalculatorIndexRoute
   '/tools/whatsapp-qr-code-generator': typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
@@ -1667,8 +1703,12 @@ export interface FileRoutesById {
   '/(marketing)/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/(marketing)/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/(marketing)/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
+  '/(marketing)/tools/clv-calculator/': typeof marketingToolsClvCalculatorIndexRoute
   '/(marketing)/tools/nps-survey-templates/': typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  '/(marketing)/tools/profit-margin-calculator/': typeof marketingToolsProfitMarginCalculatorIndexRoute
   '/(marketing)/tools/rto-loss-calculator/': typeof marketingToolsRtoLossCalculatorIndexRoute
+  '/(marketing)/tools/shopify-bulk-discount-code-generator/': typeof marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute
+  '/(marketing)/tools/shopify-fee-calculator/': typeof marketingToolsShopifyFeeCalculatorIndexRoute
   '/(marketing)/tools/whatsapp-link-generator/': typeof marketingToolsWhatsappLinkGeneratorIndexRoute
   '/(marketing)/tools/whatsapp-pricing-calculator/': typeof marketingToolsWhatsappPricingCalculatorIndexRoute
   '/(marketing)/tools/whatsapp-qr-code-generator/': typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
@@ -1849,8 +1889,12 @@ export interface FileRouteTypes {
     | '/products/whatsapp-feedback/'
     | '/products/whatsapp-loyalty/'
     | '/products/whatsapp-survey/'
+    | '/tools/clv-calculator/'
     | '/tools/nps-survey-templates/'
+    | '/tools/profit-margin-calculator/'
     | '/tools/rto-loss-calculator/'
+    | '/tools/shopify-bulk-discount-code-generator/'
+    | '/tools/shopify-fee-calculator/'
     | '/tools/whatsapp-link-generator/'
     | '/tools/whatsapp-pricing-calculator/'
     | '/tools/whatsapp-qr-code-generator/'
@@ -2024,8 +2068,12 @@ export interface FileRouteTypes {
     | '/products/whatsapp-feedback'
     | '/products/whatsapp-loyalty'
     | '/products/whatsapp-survey'
+    | '/tools/clv-calculator'
     | '/tools/nps-survey-templates'
+    | '/tools/profit-margin-calculator'
     | '/tools/rto-loss-calculator'
+    | '/tools/shopify-bulk-discount-code-generator'
+    | '/tools/shopify-fee-calculator'
     | '/tools/whatsapp-link-generator'
     | '/tools/whatsapp-pricing-calculator'
     | '/tools/whatsapp-qr-code-generator'
@@ -2207,8 +2255,12 @@ export interface FileRouteTypes {
     | '/(marketing)/products/whatsapp-feedback/'
     | '/(marketing)/products/whatsapp-loyalty/'
     | '/(marketing)/products/whatsapp-survey/'
+    | '/(marketing)/tools/clv-calculator/'
     | '/(marketing)/tools/nps-survey-templates/'
+    | '/(marketing)/tools/profit-margin-calculator/'
     | '/(marketing)/tools/rto-loss-calculator/'
+    | '/(marketing)/tools/shopify-bulk-discount-code-generator/'
+    | '/(marketing)/tools/shopify-fee-calculator/'
     | '/(marketing)/tools/whatsapp-link-generator/'
     | '/(marketing)/tools/whatsapp-pricing-calculator/'
     | '/(marketing)/tools/whatsapp-qr-code-generator/'
@@ -2974,6 +3026,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingProductsWhatsappSurveyIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(marketing)/tools/clv-calculator/': {
+      id: '/(marketing)/tools/clv-calculator/'
+      path: '/tools/clv-calculator'
+      fullPath: '/tools/clv-calculator/'
+      preLoaderRoute: typeof marketingToolsClvCalculatorIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(marketing)/tools/nps-survey-templates/': {
       id: '/(marketing)/tools/nps-survey-templates/'
       path: '/tools/nps-survey-templates'
@@ -2981,11 +3040,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingToolsNpsSurveyTemplatesIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(marketing)/tools/profit-margin-calculator/': {
+      id: '/(marketing)/tools/profit-margin-calculator/'
+      path: '/tools/profit-margin-calculator'
+      fullPath: '/tools/profit-margin-calculator/'
+      preLoaderRoute: typeof marketingToolsProfitMarginCalculatorIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(marketing)/tools/rto-loss-calculator/': {
       id: '/(marketing)/tools/rto-loss-calculator/'
       path: '/tools/rto-loss-calculator'
       fullPath: '/tools/rto-loss-calculator/'
       preLoaderRoute: typeof marketingToolsRtoLossCalculatorIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/tools/shopify-bulk-discount-code-generator/': {
+      id: '/(marketing)/tools/shopify-bulk-discount-code-generator/'
+      path: '/tools/shopify-bulk-discount-code-generator'
+      fullPath: '/tools/shopify-bulk-discount-code-generator/'
+      preLoaderRoute: typeof marketingToolsShopifyBulkDiscountCodeGeneratorIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/tools/shopify-fee-calculator/': {
+      id: '/(marketing)/tools/shopify-fee-calculator/'
+      path: '/tools/shopify-fee-calculator'
+      fullPath: '/tools/shopify-fee-calculator/'
+      preLoaderRoute: typeof marketingToolsShopifyFeeCalculatorIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
     '/(marketing)/tools/whatsapp-link-generator/': {
@@ -3665,8 +3745,12 @@ interface marketingRouteRouteChildren {
   marketingProductsWhatsappFeedbackIndexRoute: typeof marketingProductsWhatsappFeedbackIndexRoute
   marketingProductsWhatsappLoyaltyIndexRoute: typeof marketingProductsWhatsappLoyaltyIndexRoute
   marketingProductsWhatsappSurveyIndexRoute: typeof marketingProductsWhatsappSurveyIndexRoute
+  marketingToolsClvCalculatorIndexRoute: typeof marketingToolsClvCalculatorIndexRoute
   marketingToolsNpsSurveyTemplatesIndexRoute: typeof marketingToolsNpsSurveyTemplatesIndexRoute
+  marketingToolsProfitMarginCalculatorIndexRoute: typeof marketingToolsProfitMarginCalculatorIndexRoute
   marketingToolsRtoLossCalculatorIndexRoute: typeof marketingToolsRtoLossCalculatorIndexRoute
+  marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute: typeof marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute
+  marketingToolsShopifyFeeCalculatorIndexRoute: typeof marketingToolsShopifyFeeCalculatorIndexRoute
   marketingToolsWhatsappLinkGeneratorIndexRoute: typeof marketingToolsWhatsappLinkGeneratorIndexRoute
   marketingToolsWhatsappPricingCalculatorIndexRoute: typeof marketingToolsWhatsappPricingCalculatorIndexRoute
   marketingToolsWhatsappQrCodeGeneratorIndexRoute: typeof marketingToolsWhatsappQrCodeGeneratorIndexRoute
@@ -3709,10 +3793,17 @@ const marketingRouteRouteChildren: marketingRouteRouteChildren = {
     marketingProductsWhatsappLoyaltyIndexRoute,
   marketingProductsWhatsappSurveyIndexRoute:
     marketingProductsWhatsappSurveyIndexRoute,
+  marketingToolsClvCalculatorIndexRoute: marketingToolsClvCalculatorIndexRoute,
   marketingToolsNpsSurveyTemplatesIndexRoute:
     marketingToolsNpsSurveyTemplatesIndexRoute,
+  marketingToolsProfitMarginCalculatorIndexRoute:
+    marketingToolsProfitMarginCalculatorIndexRoute,
   marketingToolsRtoLossCalculatorIndexRoute:
     marketingToolsRtoLossCalculatorIndexRoute,
+  marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute:
+    marketingToolsShopifyBulkDiscountCodeGeneratorIndexRoute,
+  marketingToolsShopifyFeeCalculatorIndexRoute:
+    marketingToolsShopifyFeeCalculatorIndexRoute,
   marketingToolsWhatsappLinkGeneratorIndexRoute:
     marketingToolsWhatsappLinkGeneratorIndexRoute,
   marketingToolsWhatsappPricingCalculatorIndexRoute:

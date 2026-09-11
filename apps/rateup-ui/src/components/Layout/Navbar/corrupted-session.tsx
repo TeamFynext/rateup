@@ -33,18 +33,20 @@ export default function CorruptedSessionScreen() {
       <Card className="w-[420px]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <IconAlertTriangle className="text-red-500" size={18} />
-            {t("Session Error")}
+            <IconAlertTriangle className="text-amber-500" size={18} />
+            {t("Couldn't load your account")}
           </CardTitle>
-          <CardDescription>{t("Your login session data appears to be corrupted")}.</CardDescription>
+          <CardDescription>
+            {t("This is usually a connection problem, or your session may have expired")}.
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <Alert variant="destructive">
-            <AlertTitle>{t("Unable to load user data")}</AlertTitle>
+          <Alert>
+            <AlertTitle>{t("Check your internet connection")}</AlertTitle>
             <AlertDescription>
               {t(
-                "Please retry loading the application. If the problem continues, you may need to logout and login again",
+                "Make sure you are online, then reload. If it keeps happening, log out and log back in to refresh your session",
               )}
               .
             </AlertDescription>
@@ -56,7 +58,7 @@ export default function CorruptedSessionScreen() {
             {t("Reload")}
           </Button>
 
-          <Button variant="destructive" className="w-full" onClick={handleLogout}>
+          <Button variant="outline" className="w-full" onClick={handleLogout}>
             {t("Logout")}
           </Button>
         </CardFooter>
