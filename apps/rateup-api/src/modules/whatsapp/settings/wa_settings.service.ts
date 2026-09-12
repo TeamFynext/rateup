@@ -14,6 +14,7 @@ import {
 import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
 import { getChannelScope } from "./wa_channel_access.js";
+import { channelDigits } from "../../../utils/channelIdentifier.js";
 
 /**
  * Reads the AES key used to encrypt WhatsApp access tokens at rest from the environment.
@@ -99,6 +100,31 @@ export async function getWaSettings(orgId: string, whatsappSettingsPhoneId?: str
   }
 
   return getWaSettingsWithAccessTokenDecrypted(res);
+}
+
+/**
+ * Settings for the channel a WhatsApp *send* goes out on.
+ *
+ * The same lookup as {@link getWaSettings}, minus the silent org default: with no
+ * phone id, an org that has connected more than one number gets null rather than
+ * its oldest one. A reply that leaves on a number the customer never wrote to has
+ * no 24h window open on that pair, so Meta rejects it as 131047 "Re-engagement
+ * message" — and the agent sees a failed send with nothing on it to explain why,
+ * because the message itself looks right. A missing channel is a caller bug, and
+ * the only safe guess is none.
+ *
+ * Single-channel orgs keep the fallback: there is exactly one answer, and it is
+ * the one the org default would have picked anyway.
+ */
+export async function getWaSendingSettings(orgId: string, whatsappSettingsPhoneId?: string) {
+  if (!whatsappSettingsPhoneId) {
+    const connected = await prisma.whatsappSettings.count({
+      where: { orgId, phoneId: { not: null } },
+    });
+    if (connected > 1) return null;
+  }
+
+  return getWaSettings(orgId, whatsappSettingsPhoneId);
 }
 
 export async function getWaSettingsById(whatsappSettingsId: string, orgId: string) {
@@ -1047,12 +1073,29 @@ export async function reRegisterPhoneNumber(orgId: string, phoneId: string) {
   return await registerPhoneNumber(phoneId, settings.accessToken);
 }
 
+/**
+ * The channel whose number this is, matched on digits.
+ *
+ * `phone` is a display string — Meta formats it, so the column holds
+ * `+9655-033-4145` and `+965 5033 4145` as readily as `+96550334145` — while the
+ * callers pass a message's `sourceIdentifier`, which is stored as bare digits. An
+ * `=` between the two matches only by luck, and the failure is silent: the read
+ * receipt that this backs simply stops being sent, and the customer's ticks never
+ * turn blue.
+ *
+ * An org has a handful of channels, so this compares in memory rather than
+ * reaching for a functional index on a table that small.
+ */
 export async function getWaSettingsByPhone(phone: string) {
-  return await prisma.whatsappSettings.findFirst({
-    where: {
-      phone,
-    },
+  const digits = channelDigits(phone);
+  if (!digits) return null;
+
+  const channels = await prisma.whatsappSettings.findMany({
+    where: { phone: { not: null } },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
+
+  return channels.find((channel) => channelDigits(channel.phone) === digits) ?? null;
 }
 
 export async function updateWaSettingsStatus(phoneId: string, status: WhatsappSettingsStatus) {
