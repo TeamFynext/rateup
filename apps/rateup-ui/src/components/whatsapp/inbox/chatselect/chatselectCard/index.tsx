@@ -22,7 +22,7 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
-import { hasMultipleChannels, resolveChannel } from "@/components/input/channelOptions.ts";
+import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { StageDot } from "@/components/pipeline/shared/atoms.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -111,20 +111,17 @@ export default function WaInboxChatSelectCard({
 
   const { platform, identifier: channelIdentifier } = getContactChannelSource(contact);
   /**
-   * Which of the org's numbers/accounts this ticket came in on.
-   *
-   * Suppressed only when the chip would tell the reader nothing: the org runs a
-   * single channel and this ticket is on it, so every row would carry the same
-   * label. A ticket on a number the org is NOT currently connected to — an old or
-   * since-removed number — always shows, which is the case most worth flagging
-   * and the one an org-wide "more than one channel" gate got backwards.
+   * Which of the org's numbers/accounts this ticket came in on. Always shown when
+   * the ticket has one: two earlier attempts to hide it as "redundant" on
+   * single-channel orgs each just made the chip vanish somewhere it was wanted,
+   * and a label that is always present is one an org can actually rely on
+   * reading. It disappears on its own for tickets with no channel to name —
+   * webchat and internal-only threads.
    */
-  const channel = useMemo(() => {
-    const resolved = resolveChannel(waSettings, platform, channelIdentifier);
-    if (!resolved) return null;
-    if (resolved.isConnected && !hasMultipleChannels(waSettings)) return null;
-    return resolved;
-  }, [waSettings, platform, channelIdentifier]);
+  const channel = useMemo(
+    () => resolveChannel(waSettings, platform, channelIdentifier),
+    [waSettings, platform, channelIdentifier],
+  );
   const lifecycleInfo = useMemo(() => {
     const label = lifeCycleLabels?.find((label) => label.id === contact?.lifecycleId);
     return label;
@@ -391,8 +388,7 @@ export default function WaInboxChatSelectCard({
             </span>
           )}
 
-          {/* Which number/account the ticket came in on. Rendered only for orgs
-              running more than one channel — see `hasMultipleChannels`. */}
+          {/* Which number/account the ticket came in on. */}
           {channel && (
             <CustomTooltip
               trigger={

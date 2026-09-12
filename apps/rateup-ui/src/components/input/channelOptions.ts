@@ -145,25 +145,3 @@ export function resolveChannel(
     isConnected: false,
   };
 }
-
-/**
- * Whether the org runs more than one channel. The per-row channel chip is only
- * worth its space when there is a choice — a single-number org would get the same
- * label on every row.
- *
- * Counted the same way `resolveChannel` identifies a channel, NOT via
- * `getChannelOptions`: that keys a WhatsApp entry on `phoneId`, which is nullable
- * (a manually configured channel can carry only `phone`). Counting through it
- * scored such a channel as zero, so an org with two numbers could fall below the
- * threshold and lose a chip that `resolveChannel` would have named perfectly well.
- */
-export function hasMultipleChannels(waSettings: WaSettings | undefined): boolean {
-  let count = 0;
-  for (const account of waSettings ?? []) {
-    if (account.phone || account.phoneId) count += 1;
-    if (account.ibaId) count += 1;
-    if (account.fbPageId) count += 1;
-    if (count > 1) return true;
-  }
-  return false;
-}
