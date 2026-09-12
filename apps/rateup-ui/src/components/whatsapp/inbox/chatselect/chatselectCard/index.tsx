@@ -110,15 +110,21 @@ export default function WaInboxChatSelectCard({
   const isSelected = !!selectedContact && getRowKey(selectedContact) === rowKey;
 
   const { platform, identifier: channelIdentifier } = getContactChannelSource(contact);
-  /** Which of the org's numbers/accounts this ticket came in on — only worth a
-      chip once there is more than one to tell apart. */
-  const channel = useMemo(
-    () =>
-      hasMultipleChannels(waSettings)
-        ? resolveChannel(waSettings, platform, channelIdentifier)
-        : null,
-    [waSettings, platform, channelIdentifier],
-  );
+  /**
+   * Which of the org's numbers/accounts this ticket came in on.
+   *
+   * Suppressed only when the chip would tell the reader nothing: the org runs a
+   * single channel and this ticket is on it, so every row would carry the same
+   * label. A ticket on a number the org is NOT currently connected to — an old or
+   * since-removed number — always shows, which is the case most worth flagging
+   * and the one an org-wide "more than one channel" gate got backwards.
+   */
+  const channel = useMemo(() => {
+    const resolved = resolveChannel(waSettings, platform, channelIdentifier);
+    if (!resolved) return null;
+    if (resolved.isConnected && !hasMultipleChannels(waSettings)) return null;
+    return resolved;
+  }, [waSettings, platform, channelIdentifier]);
   const lifecycleInfo = useMemo(() => {
     const label = lifeCycleLabels?.find((label) => label.id === contact?.lifecycleId);
     return label;
@@ -390,7 +396,16 @@ export default function WaInboxChatSelectCard({
           {channel && (
             <CustomTooltip
               trigger={
-                <span className="inline-flex max-w-36 items-center gap-1 rounded-full border border-border px-2 py-px text-[10px] font-bold text-muted-foreground">
+                <span
+                  className={cn(
+                    "inline-flex max-w-36 items-center gap-1 rounded-full border px-2 py-px text-[10px] font-bold text-muted-foreground",
+                    // A number the org no longer has connected reads as dashed, so
+                    // it is tellable from a live channel without opening the row.
+                    channel.isConnected
+                      ? "border-border"
+                      : "border-dashed border-muted-foreground/50",
+                  )}
+                >
                   <span
                     className={cn(
                       "size-1.5 shrink-0 rounded-full",

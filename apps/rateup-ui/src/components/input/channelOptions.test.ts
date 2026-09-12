@@ -86,4 +86,17 @@ describe("hasMultipleChannels", () => {
     expect(hasMultipleChannels(settings(account({ ibaId: "iba-1" })))).toBe(true);
     expect(hasMultipleChannels(undefined)).toBe(false);
   });
+
+  it("counts a manually configured number that has no phoneId", () => {
+    // `phoneId` is nullable, so counting channels through it scored these as zero
+    // and hid the chip on orgs that do run two numbers.
+    expect(
+      hasMultipleChannels(
+        settings(
+          account({ phoneId: undefined, phone: "+15551230000" }),
+          account({ id: "s2", phoneId: undefined, phone: "+15551230001" }),
+        ),
+      ),
+    ).toBe(true);
+  });
 });
