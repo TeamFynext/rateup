@@ -274,13 +274,186 @@ export async function getConversationById(conversationId: string, orgId: string)
   });
 }
 
-export async function deleteConversation(conversationId: string, orgId: string) {
-  return await prisma.conversation.delete({
-    where: {
-      id: conversationId,
-      contact: { orgId },
+/**
+ * Permanently delete tickets, together with the messages that belong to them.
+ *
+ * The messages go with the ticket deliberately. `WaMessage.conversationId` is an
+ * optional FK, so the database would merely null it out — leaving the thread
+ * carrying messages that belong to no ticket at all, which is the same silent
+ * NULL attribution the backfill existed to get rid of. Tags, assignees and
+ * mentions are handled by the schema (cascade, cascade, set-null), and a
+ * message's own children (campaign participant map, org/team map) cascade off
+ * WaMessage.
+ *
+ * Ids the org does not own are dropped rather than refused: the caller is told
+ * how many were actually deleted, so a partly-stale selection deletes what it
+ * legitimately can instead of failing whole.
+ */
+async function deleteConversationsForOrg(conversationIds: string[], orgId: string) {
+  // The contact and ticket number come back with the rows because they are gone
+  // once the delete commits, and the audit entry has to name what was removed —
+  // a conversation id alone tells a reader nothing after the fact.
+  const conversations = await prisma.conversation.findMany({
+    where: { id: { in: conversationIds }, contact: { orgId } },
+    select: {
+      id: true,
+      contactId: true,
+      number: true,
+      contact: { select: { name: true, phone: true } },
     },
   });
+  if (conversations.length === 0) {
+    return {
+      ids: [],
+      contactIds: [],
+      tickets: [],
+      deletedMessages: 0,
+      remaining: new Map<string, boolean>(),
+    };
+  }
+
+  const ids = conversations.map((conversation) => conversation.id);
+  const contactIds = [...new Set(conversations.map((conversation) => conversation.contactId))];
+  const contactsBefore = await prisma.contact.findMany({
+    where: { id: { in: contactIds } },
+    select: {
+      id: true,
+      orgId: true,
+      waMessageAssignStatus: true,
+      blockedOnWhatsApp: true,
+      lastReceivedMessageTimeStamp: true,
+    },
+  });
+
+  const result = await prisma.$transaction(async (tx) => {
+    const { count: deletedMessages } = await tx.waMessage.deleteMany({
+      where: { conversationId: { in: ids } },
+    });
+    await tx.conversation.deleteMany({ where: { id: { in: ids } } });
+
+    // `Contact.waMessageAssignStatus` mirrors the contact's latest ticket. Having
+    // just removed tickets, that mirror can be describing one that no longer
+    // exists — re-derive it from whatever is left, or reset it when the contact
+    // has no tickets at all. This runs once per affected contact, after every
+    // delete, so a contact losing several tickets is reconciled from the state
+    // they are all gone rather than from each intermediate one.
+    //
+    // `lastReceivedMessageTimeStamp` is left alone on purpose: it records when the
+    // customer last wrote on WhatsApp, which is what the 24h session window is
+    // about. Deleting our copy of those messages does not change that fact.
+    const mirrors = new Map<string, { status: InboxStatus; remaining: boolean }>();
+    for (const contactId of contactIds) {
+      const latest = await tx.conversation.findFirst({
+        where: { contactId },
+        orderBy: { createdAt: "desc" },
+        select: { status: true, closedAt: true, closedBy: true },
+      });
+
+      const contact = await tx.contact.update({
+        where: { id: contactId },
+        data: latest
+          ? {
+              waMessageAssignStatus: latest.status,
+              closedAt: latest.closedAt,
+              closedBy: latest.closedBy,
+            }
+          : {
+              waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+              closedAt: null,
+              closedBy: null,
+            },
+        select: { waMessageAssignStatus: true },
+      });
+
+      mirrors.set(contactId, {
+        status: contact.waMessageAssignStatus,
+        remaining: Boolean(latest),
+      });
+    }
+
+    return { deletedMessages, mirrors };
+  });
+
+  // InboxStats is an org-level counter cache maintained after commit, exactly as
+  // `setInboxStatus` treats it. The tab badges themselves are derived live from
+  // Conversation, so nothing here has to account for the deleted tickets — only
+  // for a contact's mirrored status moving.
+  for (const before of contactsBefore) {
+    const after = result.mirrors.get(before.id);
+    if (
+      after &&
+      before.waMessageAssignStatus !== after.status &&
+      before.lastReceivedMessageTimeStamp &&
+      !before.blockedOnWhatsApp
+    ) {
+      await transitionInboxStat(
+        before.orgId,
+        mapStatusToField(before.waMessageAssignStatus),
+        mapStatusToField(after.status),
+        1,
+      );
+    }
+  }
+
+  return {
+    ids,
+    contactIds,
+    tickets: conversations.map((conversation) => ({
+      id: conversation.id,
+      number: conversation.number,
+      contactId: conversation.contactId,
+      contactName: conversation.contact?.name ?? null,
+      contactPhone: conversation.contact?.phone ?? null,
+    })),
+    deletedMessages: result.deletedMessages,
+    remaining: new Map([...result.mirrors].map(([id, mirror]) => [id, mirror.remaining])),
+  };
+}
+
+/** One deleted ticket, as the audit entry needs to describe it. */
+export interface DeletedTicket {
+  id: string;
+  number: number;
+  contactId: string;
+  contactName: string | null;
+  contactPhone: string | null;
+}
+
+/**
+ * Delete one ticket. Returns null when the org owns no such ticket, so the caller
+ * can answer 404 rather than reporting a delete that never happened.
+ */
+export async function deleteConversation(conversationId: string, orgId: string) {
+  const result = await deleteConversationsForOrg([conversationId], orgId);
+  const ticket = result.tickets[0];
+  if (!ticket) return null;
+
+  return {
+    id: conversationId,
+    contactId: ticket.contactId,
+    ticket,
+    deletedMessages: result.deletedMessages,
+    remainingConversations: result.remaining.get(ticket.contactId) ?? false,
+  };
+}
+
+/**
+ * Delete several tickets at once — the inbox list's bulk action.
+ *
+ * Unlike the single delete this never 404s: a selection can easily hold a ticket
+ * somebody else has just deleted, and failing the whole batch over one stale id
+ * would be worse than deleting the rest and saying how many went.
+ */
+export async function deleteConversations(conversationIds: string[], orgId: string) {
+  const result = await deleteConversationsForOrg(conversationIds, orgId);
+
+  return {
+    conversationIds: result.ids,
+    contactIds: result.contactIds,
+    tickets: result.tickets,
+    deletedConversations: result.ids.length,
+    deletedMessages: result.deletedMessages,
+  };
 }
 
 export async function updateConversationAssignees(

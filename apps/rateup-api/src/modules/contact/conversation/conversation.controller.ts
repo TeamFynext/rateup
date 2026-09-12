@@ -1,14 +1,19 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { recordAuditEvent } from "../../../utils/auditLog.js";
 import { log } from "../../../utils/logger.js";
 import {
   ContactConversationsParamsSchema,
   ConversationParamsSchema,
+  DeleteConversationsSchema,
   StaffIdParamsSchema,
   StatsQuerySchema,
   TeamIdParamsSchema,
   UpdateConversationSchema,
 } from "./conversation.schema.js";
+import type { DeletedTicket } from "./conversation.service.js";
 import {
+  deleteConversation,
+  deleteConversations,
   getAvargeResponseTimeofTodyaInEveryHour,
   getConversationOnAccountDistribution,
   getConversationOverview,
@@ -53,6 +58,88 @@ export async function updateConversationHandler(
   } catch (error) {
     log.error({ err: error }, "Error updating conversation:");
     reply.status(500).send({ error: "An error occurred while updating the conversation." });
+  }
+}
+
+/**
+ * How a deleted ticket is named in the audit log. The contact goes in by name and
+ * number because the row it came from no longer exists to look up — the entry is
+ * the only record left of whose conversation this was.
+ */
+function describeTicket(ticket: DeletedTicket) {
+  return {
+    ticket: ticket.number ? `#${ticket.number}` : ticket.id,
+    contact: ticket.contactName ?? ticket.contactPhone ?? ticket.contactId,
+    contactPhone: ticket.contactPhone,
+    contactId: ticket.contactId,
+    conversationId: ticket.id,
+  };
+}
+
+/**
+ * Inbox Tickets v2 — permanently delete a ticket and its messages.
+ *
+ * A missing ticket answers 404 rather than 200: the service returns null when the
+ * org owns no such ticket, and reporting that as a successful delete would let
+ * the UI drop a row it never actually removed.
+ */
+export async function deleteConversationHandler(
+  request: FastifyRequest<{
+    Params: ConversationParamsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { conversationId } = request.params;
+    const res = await deleteConversation(conversationId, request.user.orgId);
+    if (!res) {
+      reply.status(404).send({ error: "Conversation not found." });
+      return;
+    }
+    await recordAuditEvent(request, "Conversation deleted", {
+      ...describeTicket(res.ticket),
+      messagesDeleted: res.deletedMessages,
+    });
+    reply.send(res);
+  } catch (error) {
+    log.error({ err: error }, "Error deleting conversation:");
+    reply.status(500).send({ error: "An error occurred while deleting the conversation." });
+  }
+}
+
+/**
+ * Inbox Tickets v2 — delete several tickets at once.
+ *
+ * Answers with what actually went, which can be less than was asked for: ids the
+ * org does not own (or that somebody else has already deleted) are skipped rather
+ * than failing the batch.
+ */
+export async function deleteConversationsHandler(
+  request: FastifyRequest<{
+    Body: DeleteConversationsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await deleteConversations(request.body.conversationIds, request.user.orgId);
+    if (res.deletedConversations > 0) {
+      await recordAuditEvent(
+        request,
+        res.deletedConversations === 1
+          ? "Conversation deleted"
+          : `${res.deletedConversations} conversations deleted`,
+        {
+          // One row for the batch, listing every ticket it took, so the log says
+          // whose conversations went rather than just how many.
+          conversations: res.tickets.map(describeTicket),
+          messagesDeleted: res.deletedMessages,
+        },
+      );
+    }
+    reply.send(res);
+  } catch (error) {
+    log.error({ err: error }, "Error deleting conversations:");
+    reply.status(500).send({ error: "An error occurred while deleting the conversations." });
   }
 }
 

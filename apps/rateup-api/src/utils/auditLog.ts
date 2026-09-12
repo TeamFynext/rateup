@@ -30,6 +30,20 @@ const SKIPPED_ROUTES = new Set([
 ]);
 
 /**
+ * Skips keyed by method as well as route, for a path where only one verb records
+ * its own event. `"/api/contact/conversations/:conversationId"` is both the ticket
+ * edit (worth logging generically) and the delete (which records a richer event of
+ * its own), so the route alone cannot decide.
+ */
+const SKIPPED_METHOD_ROUTES = new Set([
+  // Deleting a conversation records its own event, naming the contact and ticket.
+  // The generic hook cannot: the rows are gone by the time it runs, and all it
+  // would write is the conversation id (or, for the bulk route, a list of them).
+  "DELETE /api/contact/conversations/:conversationId",
+  "DELETE /api/contact/conversations/",
+]);
+
+/**
  * Record a team-activity entry the generic hook can't describe on its own, e.g.
  * "Channel added". `action` is shown verbatim in the Team Activity table, so keep
  * it short and human-readable, and pass only non-sensitive details in `body`.
@@ -64,6 +78,7 @@ export async function auditLogHook(request: FastifyRequest, _reply: FastifyReply
 
   const routePattern = request.routeOptions?.url;
   if (routePattern && SKIPPED_ROUTES.has(routePattern)) return;
+  if (routePattern && SKIPPED_METHOD_ROUTES.has(`${request.method} ${routePattern}`)) return;
 
   try {
     // Assuming user info is available on request.user (e.g. from JWT)
