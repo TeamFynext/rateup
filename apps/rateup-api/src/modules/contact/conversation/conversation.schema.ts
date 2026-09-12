@@ -53,6 +53,17 @@ const conversationParamsSchema = z.object({
   conversationId: z.uuid(),
 });
 
+/**
+ * Inbox Tickets v2 — the list's bulk delete.
+ *
+ * Capped so one request cannot be asked to delete an unbounded number of threads
+ * (and their messages) inside a single transaction; the list selects a page at a
+ * time, well under this.
+ */
+const deleteConversationsSchema = z.object({
+  conversationIds: z.array(z.uuid()).min(1).max(200),
+});
+
 /** Inbox Tickets v2 — params for a contact's ticket history. */
 const contactConversationsParamsSchema = z.object({
   contactId: z.uuid(),
@@ -76,6 +87,7 @@ export type ConversationCore = z.infer<typeof conversationCoreSchema>;
 export type UpdateConversationSchema = z.infer<typeof updateConversationSchema>;
 export type InboxActor = z.infer<typeof inboxActorSchema>;
 export type ConversationParamsSchema = z.infer<typeof conversationParamsSchema>;
+export type DeleteConversationsSchema = z.infer<typeof deleteConversationsSchema>;
 export type ContactConversationsParamsSchema = z.infer<typeof contactConversationsParamsSchema>;
 export type ConversationAssigneeUpdateSchema = z.infer<typeof conversationAssigneeUpdateSchema>;
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
@@ -87,6 +99,7 @@ export {
   conversationCoreSchema,
   updateConversationSchema,
   conversationParamsSchema,
+  deleteConversationsSchema,
   contactConversationsParamsSchema,
   conversationAssigneeUpdateSchema,
   statsQuerySchema,
