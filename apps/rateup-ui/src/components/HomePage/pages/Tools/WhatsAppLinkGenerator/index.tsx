@@ -76,7 +76,7 @@ export default function WhatsAppLinkGenerator() {
           </ToolCard>
 
           <ResultPanel eyebrow="Your link">
-            <div className="mt-3.5 rounded-[10px] border border-white/[0.12] bg-white/[0.06] p-4 font-mono text-[13.5px] leading-[1.5] break-all text-[#EAF4FF]">
+            <div className="mt-3.5 rounded-[10px] border border-white/[0.12] bg-card/[0.06] p-4 font-mono text-[13.5px] leading-[1.5] break-all text-[#EAF4FF]">
               {result.url || "https://wa.me/…"}
             </div>
 

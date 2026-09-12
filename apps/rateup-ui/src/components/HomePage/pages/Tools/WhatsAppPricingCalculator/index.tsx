@@ -174,7 +174,7 @@ export default function WhatsAppPricingCalculator() {
                 htmlFor="pc-service"
                 hint="Never billed, so it does not change the total."
               >
-                <TextControl id="pc-service" value="Free" readOnly className="bg-[#F6F7F5]" />
+                <TextControl id="pc-service" value="Free" readOnly className="bg-muted" />
               </Field>
             </div>
 
@@ -268,7 +268,7 @@ export default function WhatsAppPricingCalculator() {
             />
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[10px] bg-white/[0.06] p-3.5">
+              <div className="rounded-[10px] bg-card/[0.06] p-3.5">
                 <div className="text-[11px] font-bold tracking-[0.1em] text-white/55 uppercase">
                   Saved by the 24h window
                 </div>
@@ -276,7 +276,7 @@ export default function WhatsAppPricingCalculator() {
                   {money(breakdown.savedByWindow)}
                 </div>
               </div>
-              <div className="rounded-[10px] bg-white/[0.06] p-3.5">
+              <div className="rounded-[10px] bg-card/[0.06] p-3.5">
                 <div className="text-[11px] font-bold tracking-[0.1em] text-white/55 uppercase">
                   Per billed message
                 </div>

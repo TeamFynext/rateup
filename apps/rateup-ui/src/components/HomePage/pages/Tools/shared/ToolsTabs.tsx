@@ -10,6 +10,10 @@ const TAB_LABELS: Record<string, string> = {
   "whatsapp-pricing-calculator": "API pricing",
   "rto-loss-calculator": "RTO loss",
   "nps-survey-templates": "NPS templates",
+  "shopify-bulk-discount-code-generator": "Bulk discounts",
+  "clv-calculator": "CLV",
+  "shopify-fee-calculator": "Shopify fees",
+  "profit-margin-calculator": "Profit margin",
 };
 
 /**

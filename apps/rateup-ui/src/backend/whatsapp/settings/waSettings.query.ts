@@ -164,10 +164,12 @@ export const useMetaAssets = (waSettingsId: string) =>
 export const useSyncFbPages = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => syncFbPages(waSettingsId),
-    onSuccess: () => {
+    // `silent` skips the success toast for syncs the user didn't ask for (e.g. on open).
+    // `void` keeps the argument optional at `mutate()` call sites.
+    mutationFn: (_options: { silent?: boolean } | void) => syncFbPages(waSettingsId),
+    onSuccess: (_data, options) => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
-      toast.success("success");
+      if (!options?.silent) toast.success("success");
     },
     onError: (error) => {
       toast.error(error?.message || "something went wrong");
