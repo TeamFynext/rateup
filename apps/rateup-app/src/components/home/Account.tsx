@@ -1,5 +1,5 @@
 import { Toast } from "@/components/common/Notice";
-import { View, Text, ScrollView, TextInput, Modal, Pressable } from "react-native";
+import { Alert, View, Text, ScrollView, TextInput, Modal, Pressable } from "react-native";
 import Image from "@/components/common/Image";
 import React, { useState, useEffect } from "react";
 import { namePreview } from "../../utils/chatbox_utils";
@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { getThemePreference, setThemePreference, ThemePreference } from "../../utils/theme";
 import { Colors } from "@/constants/colors";
+import { pendingCashierWrites } from "@/utils/clearLocalData";
 
 interface UserProfile {
   email: string;
@@ -68,6 +69,27 @@ const AccountBar = ({
   const isValid = confirmText === "DELETE ACCOUNT";
 
   const handleSignOut = async () => {
+    // A counter write that has not reached the server is a customer who paid and got
+    // nothing. The rows survive sign-out, but only whoever is signed in to that org can
+    // send them — so this asks rather than clearing silently like every other cache.
+    const outstanding = await pendingCashierWrites();
+    if (outstanding > 0) {
+      const confirmed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          outstanding === 1
+            ? "1 counter entry has not been sent"
+            : `${outstanding} counter entries have not been sent`,
+          "They are saved on this phone and can only be sent while signed in to this account. Sign out anyway?",
+          [
+            { text: "Stay signed in", style: "cancel", onPress: () => resolve(false) },
+            { text: "Sign out", style: "destructive", onPress: () => resolve(true) },
+          ],
+          { onDismiss: () => resolve(false) },
+        );
+      });
+      if (!confirmed) return;
+    }
+
     setLoading(true);
     const res = await signOut();
     setLoading(false);

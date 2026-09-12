@@ -12,6 +12,8 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:watch": "tsc --noEmit -p tsconfig.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint:ox": "oxlint src",
     "lint:ox:fix": "oxlint src --fix",
     "format": "oxfmt .",
@@ -95,6 +97,7 @@
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",
     "sharp": "^0.35.4",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.0"
   }
 }
