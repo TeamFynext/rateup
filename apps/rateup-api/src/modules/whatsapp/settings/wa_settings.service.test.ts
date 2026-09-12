@@ -10,6 +10,7 @@ vi.mock("../../../utils/prisma.js", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
+      count: vi.fn(),
     },
     waAccountSettings: { findFirst: vi.fn(), upsert: vi.fn() },
     metaAssets: { findUnique: vi.fn(), upsert: vi.fn() },
@@ -57,6 +58,7 @@ import {
   getConversationalAutomation,
   getFbPagesFromWa,
   getMetaDatasetsFromWa,
+  getWaSendingSettings,
   getWaSettings,
   getWaSettingsById,
   getWaSettingsByIbaId,
@@ -79,7 +81,14 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
   whatsappSettings: Record<
-    "create" | "delete" | "findFirst" | "findMany" | "findUnique" | "update" | "updateMany",
+    | "count"
+    | "create"
+    | "delete"
+    | "findFirst"
+    | "findMany"
+    | "findUnique"
+    | "update"
+    | "updateMany",
     Mock
   >;
   waAccountSettings: Record<"findFirst" | "upsert", Mock>;
@@ -238,6 +247,33 @@ describe("reading a channel", () => {
 
     expect(result!.accessToken).toBe("plain-token");
     expect(result).not.toHaveProperty("accessToken_iv");
+  });
+
+  // A reply that leaves on a number the customer never wrote to has no 24h window
+  // open on that pair, and Meta rejects it as 131047 "Re-engagement message". The
+  // org default is a fine guess for reading a WABA; it is not one for a send.
+  test("refuses to guess a sending channel for an org with several connected", async () => {
+    db.whatsappSettings.count.mockResolvedValue(3);
+
+    await expect(getWaSendingSettings(ORG_A)).resolves.toBeNull();
+    expect(db.whatsappSettings.findFirst).not.toHaveBeenCalled();
+  });
+
+  test("keeps the fallback for a single-channel org, which has one answer", async () => {
+    db.whatsappSettings.count.mockResolvedValue(1);
+
+    await expect(getWaSendingSettings(ORG_A)).resolves.not.toBeNull();
+    expect(db.whatsappSettings.findFirst.mock.calls[0][0].where).toEqual({ orgId: ORG_A });
+  });
+
+  test("never counts when the send already names its number", async () => {
+    await getWaSendingSettings(ORG_A, PHONE_ID);
+
+    expect(db.whatsappSettings.count).not.toHaveBeenCalled();
+    expect(db.whatsappSettings.findFirst.mock.calls[0][0].where).toEqual({
+      orgId: ORG_A,
+      phoneId: PHONE_ID,
+    });
   });
 
   test("lists the org's channels oldest first", async () => {

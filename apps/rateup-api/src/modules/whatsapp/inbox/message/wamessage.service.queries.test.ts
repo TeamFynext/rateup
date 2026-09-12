@@ -261,7 +261,11 @@ describe("filterChats - channel scoping", () => {
 
     const { sql, params } = await runFilter({}, { role: Role.MEMBER });
 
+    // Matched against every spelling the scope lists, and on the column itself so
+    // the existing index still serves it — an expression match would seq-scan a
+    // table of millions on every inbox request.
     expect(sql).toContain(`wm."sourceIdentifier" = ANY`);
+    expect(sql).not.toContain("regexp_replace");
     expect(params).toContainEqual(["15550001"]);
   });
 
@@ -371,10 +375,24 @@ describe("filterChats - narrowing and sorting", () => {
   });
 
   test("narrows to one channel when a phone is picked", async () => {
-    const { params } = await runFilter({ phone: "15550001" });
+    const { sql, params } = await runFilter({ phone: "15550001" });
 
-    expect(params).toContain("15550001");
-    expect(params).toContain("+15550001");
+    expect(sql).toContain(`wm."sourceIdentifier" = ANY`);
+    expect(params).toContainEqual(expect.arrayContaining(["15550001", "+15550001"]));
+  });
+
+  /**
+   * A channel picked in its formatted spelling still has to find the messages
+   * stored in the others. The pair this used to list left out whichever spelling
+   * the writing path happened to use, which for some orgs was most of them.
+   */
+  test("matches a formatted channel against every spelling its messages hold", async () => {
+    const { params } = await runFilter({ phone: "+1555-000-1" });
+
+    const spellings = params.find(Array.isArray) as string[];
+    expect(spellings).toEqual(
+      expect.arrayContaining(["+1555-000-1", "1555-000-1", "15550001", "+15550001"]),
+    );
   });
 
   test.each([

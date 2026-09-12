@@ -72,6 +72,7 @@ import type {
 } from "../../../../types/whatsapp.types.js";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { ByContactIdParams } from "../../../contact/contact.schema.js";
+import { channelDigits, channelIdentifierSpellings } from "../../../../utils/channelIdentifier.js";
 
 /**
  * One row of the raw inbox-list query. The projection is built by hand in SQL and spread
@@ -257,6 +258,31 @@ export async function addNewWaMessage(
   return newMessage;
 }
 
+/**
+ * The stored `sourceIdentifier` values on this contact's messages that are the
+ * channel `phone` names, whatever spelling each was written in — plus `internal`,
+ * which shares the column for system notes and must never be filtered out of a
+ * thread.
+ *
+ * Returns an empty condition for "all", so the thread is unfiltered.
+ */
+async function channelFilterForContact(contactId: string, phone?: string) {
+  if (!phone || phone === "all") return {};
+
+  const digits = channelDigits(phone);
+  const stored = await prisma.waMessage.findMany({
+    where: { contactId },
+    select: { sourceIdentifier: true },
+    distinct: ["sourceIdentifier"],
+  });
+
+  const spellings = stored
+    .map((row) => row.sourceIdentifier)
+    .filter((value): value is string => Boolean(value) && channelDigits(value) === digits);
+
+  return { OR: [{ sourceIdentifier: { in: spellings } }, { sourceIdentifier: "internal" }] };
+}
+
 export async function getWaMessagesByContactId(
   contactId: string,
   cursor: string | null,
@@ -264,16 +290,17 @@ export async function getWaMessagesByContactId(
   conversationId?: string | null,
 ) {
   let messages: WaMessage[];
-  const sourceIdentifierCondition =
-    phone && phone !== "all"
-      ? {
-          OR: [
-            { sourceIdentifier: phone },
-            { sourceIdentifier: `+${phone}` },
-            { sourceIdentifier: "internal" },
-          ],
-        }
-      : {};
+  /**
+   * Narrow the thread to one channel, matching on digits.
+   *
+   * This used to list two spellings — `phone` and `+phone` — and the column holds
+   * at least four, so filtering a thread by channel dropped whichever of its
+   * messages happened to be stored with Meta's separators. The spellings are
+   * resolved from the contact's own rows rather than guessed: that is a small,
+   * `contactId`-indexed read, and it keeps the paginated query below a plain
+   * indexed equality instead of an expression Prisma cannot express.
+   */
+  const sourceIdentifierCondition = await channelFilterForContact(contactId, phone);
   // Scope the thread to one conversation (ticket). Legacy messages predate the
   // conversation backfill and carry a null conversationId — keep showing them so
   // an un-backfilled contact's history doesn't vanish; once backfilled, the null
@@ -436,6 +463,10 @@ export async function filterChats(
           // Scoped to zero channels: match nothing rather than falling through to no filter.
           filters.push(`1 = 0`);
         } else {
+          // Every spelling of each channel (see `getScopedSourceIdentifiers`), so
+          // the match covers rows written before identifiers were settled on
+          // digits — and stays on the `sourceIdentifier` index, which an
+          // expression match would not.
           params.push(scope.identifiers);
           filters.push(`EXISTS (
             SELECT 1 FROM "WaMessage" wm
@@ -701,15 +732,15 @@ export async function filterChats(
       //   );
       // }
       if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
-        params.push(bodyFilterProps.phone);
-        params.push(`+${bodyFilterProps.phone}`);
+        // All of the channel's spellings, not the bare and `+`-prefixed pair this
+        // used to list — the column holds at least four, so picking a channel hid
+        // every ticket whose messages happened to be stored with the separators
+        // Meta formats the number with.
+        params.push(channelIdentifierSpellings(bodyFilterProps.phone));
         filters.push(`EXISTS (
           SELECT 1 FROM "WaMessage" wm
           WHERE wm."contactId" = c.id
-          AND (
-            wm."sourceIdentifier" = $${paramIndex++}
-            OR wm."sourceIdentifier" = $${paramIndex++}
-          )
+          AND wm."sourceIdentifier" = ANY($${paramIndex++}::TEXT[])
         )`);
       }
 
@@ -2177,7 +2208,7 @@ export async function generateInboxResponse(
           accessToken: settings.accessToken,
           phoneId: settings.phoneId,
           phone: settings.phone,
-          sourceIdentifier: settings.phone?.replace("+", "") || "",
+          sourceIdentifier: channelDigits(settings.phone),
           orgId: orgId,
           profileName: contact?.name,
           to: contact.phone,
