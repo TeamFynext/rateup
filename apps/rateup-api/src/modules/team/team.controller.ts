@@ -313,7 +313,9 @@ export async function addMembertoTeamsHandler(
 ) {
   try {
     const user = request.user;
-    if (!user.id) {
+    // checkSession populates `userId` (never `id`), so testing `id` here rejected
+    // every session-authenticated request.
+    if (!user.userId) {
       reply.code(401).send({ message: "Missing user" });
       return;
     }
@@ -323,7 +325,7 @@ export async function addMembertoTeamsHandler(
       throw new Error("Team not found");
     }
     await addMembersToTeamsMail(request.body.userEmail, team.name, {
-      id: user.id,
+      id: user.userId,
       orgId: user.orgId,
     });
     reply.send(res);

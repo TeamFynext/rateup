@@ -35,13 +35,18 @@ vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
   ZapierTriggers: { NEW_TEAM_MEMBER_CREATED: "NEW_TEAM_MEMBER_CREATED" },
 }));
 
-import { completeInvite } from "./team.service.js";
+import {
+  addMemberToTeams,
+  addMembersToTeamsMail,
+  completeInvite,
+  getTeamById,
+} from "./team.service.js";
 import { log } from "../../utils/logger.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../integrations/external/zapier/zapier.service.js";
-import { completeInviteHandler } from "./team.controller.js";
+import { addMembertoTeamsHandler, completeInviteHandler } from "./team.controller.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -141,5 +146,46 @@ describe("completeInviteHandler", () => {
 
     expect(reply.code).toHaveBeenCalledTimes(1);
     expect(reply.code).toHaveBeenCalledWith(500);
+  });
+});
+
+describe("addMembertoTeamsHandler", () => {
+  // checkSession puts the caller's id on `user.userId`; an earlier `user.id` check
+  // here turned every authenticated call into a 401 "Missing user".
+  function memberRequest(user: Record<string, unknown>) {
+    return {
+      params: { id: "user-2" },
+      body: { teamIds: ["team-1"], userEmail: "invitee@acme.com" },
+      user,
+    } as any;
+  }
+
+  beforeEach(() => {
+    (addMemberToTeams as unknown as Mock).mockResolvedValue({ count: 1 });
+    (getTeamById as unknown as Mock).mockResolvedValue({ name: "Support" });
+    (addMembersToTeamsMail as unknown as Mock).mockResolvedValue(undefined);
+  });
+
+  test("adds the member for a session-authenticated caller", async () => {
+    const reply = makeReply();
+
+    await addMembertoTeamsHandler(memberRequest({ userId: "user-1", orgId: "org-1" }), reply);
+
+    expect(addMemberToTeams).toHaveBeenCalledWith(["team-1"], "user-2");
+    expect(addMembersToTeamsMail).toHaveBeenCalledWith("invitee@acme.com", "Support", {
+      id: "user-1",
+      orgId: "org-1",
+    });
+    expect(reply.payload).toEqual({ count: 1 });
+  });
+
+  test("rejects a caller with no user id", async () => {
+    const reply = makeReply();
+
+    await addMembertoTeamsHandler(memberRequest({ orgId: "org-1" }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.payload).toEqual({ message: "Missing user" });
+    expect(addMemberToTeams).not.toHaveBeenCalled();
   });
 });
