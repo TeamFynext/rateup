@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useMemo } from "react";
@@ -11,6 +12,7 @@ import { useGetTransactions } from "@/backend/loyalty/redemption/redemption.quer
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 
+import { LOYALTY_PATHS } from "../paths.ts";
 import { PAGE_SIZE } from "./activity.filters.ts";
 
 const KIND_LABEL: Record<string, string> = {
@@ -73,11 +75,25 @@ export function ActivityLedgerTable({
                   amount: amount.toLocaleString(),
                 })
               : row.original.description || row.original.source.replaceAll("_", " "));
+          const contact = row.original.account?.contact;
+          const name = contact?.name ?? t("Unknown");
           return (
             <div className="min-w-0">
-              <p className="truncate font-medium text-foreground">
-                {row.original.account?.contact?.name ?? t("Unknown")}
-              </p>
+              {/* The name opens the member on Customers, the same view their row there
+                  opens — a ledger line was a dead end before. Without a number there is
+                  nothing to open: the details view is keyed on the phone. */}
+              {contact?.phone ? (
+                <Link
+                  to={LOYALTY_PATHS.customers}
+                  search={{ phone: contact.phone }}
+                  title={t("Open {name}", { name })}
+                  className="block truncate font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                >
+                  {name}
+                </Link>
+              ) : (
+                <p className="truncate font-medium text-foreground">{name}</p>
+              )}
               <p className="truncate text-xs text-muted-foreground">{detail}</p>
             </div>
           );

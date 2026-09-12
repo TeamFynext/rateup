@@ -28,6 +28,44 @@ export function templateHasRichParts(
   });
 }
 
+/**
+ * Which of a starter's template names this is, if any: `loyalty_birthday` is version 1,
+ * `loyalty_birthday_v2` version 2, and so on. The API versions a name forward
+ * (`versionedTemplateName`) whenever Meta will not take an edit in place, so a message's
+ * template is a small family rather than one fixed name.
+ */
+export function starterTemplateVersion(baseName: string, name: string | undefined): number | null {
+  if (!name || !name.startsWith(baseName)) return null;
+  const suffix = name.slice(baseName.length);
+  if (suffix === "") return 1;
+  const match = /^_v(\d+)$/.exec(suffix);
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * The newest template a starter has already produced, whatever its status — including a
+ * draft saved in the editor and never submitted.
+ *
+ * An event's own trigger is the first place to look for its template; this is the second.
+ * A template created in the WhatsApp editor cannot write itself back onto the trigger (the
+ * create and save-as-draft endpoints answer without an id), so without this the message
+ * still reads as "not written" and offers to make the template a second time.
+ */
+export function findStarterTemplate(
+  templates: readonly WaTemplateListEntry[],
+  baseName: string,
+): WaTemplateListEntry | undefined {
+  const matches: Array<{ entry: WaTemplateListEntry; version: number }> = [];
+  for (const entry of templates) {
+    const version = starterTemplateVersion(baseName, entry.data?.name);
+    if (version !== null) matches.push({ entry, version });
+  }
+  matches.sort(
+    (a, b) => b.version - a.version || b.entry.createdAt.localeCompare(a.entry.createdAt),
+  );
+  return matches[0]?.entry;
+}
+
 export interface TemplateUsage {
   kind: "event" | "keyword";
   /** "When points are earned", or the keyword itself for a reply. */

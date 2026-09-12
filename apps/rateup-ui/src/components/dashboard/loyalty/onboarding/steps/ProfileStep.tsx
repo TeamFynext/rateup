@@ -17,10 +17,12 @@ import { BrandPreviewCard } from "../parts/BrandPreviewCard.tsx";
 import { ImageUploadTile } from "../parts/ImageUploadTile.tsx";
 import { profileFormSchema, type ProfileFormInput, type ProfileFormValues } from "../schemas.ts";
 import {
+  SectionActions,
   SectionHeading,
   StepFooter,
   StepHeader,
   StepLayout,
+  useBlockedSubmitNotice,
   useStepFooterProps,
   type StepMode,
 } from "../StepChrome.tsx";
@@ -69,9 +71,28 @@ export function ProfileStep({
   const showPicker = mode === "wizard" && Boolean(presets?.length) && Boolean(onSelectPreset);
 
   const footer = useStepFooterProps({ mode, isDirty: form.formState.isDirty, onCancel });
+  const reportBlockedSubmit = useBlockedSubmitNotice();
+
+  /**
+   * On the Program page each card ends with its own Save, so there is no row under the
+   * form at all — the fields and the button that keeps them stay together as you scroll,
+   * which is what the pinned row was reaching for. The wizard keeps Back / Continue: there
+   * the step is one move in a sequence, not two independent-looking panels.
+   */
+  const cardActions =
+    mode === "section" ? (
+      <SectionActions
+        isSaving={isSaving}
+        submitLabel={footer.submitLabel}
+        secondaryAction={footer.secondaryAction}
+      />
+    ) : null;
 
   return (
-    <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      className="flex flex-col gap-6"
+      onSubmit={form.handleSubmit(onSubmit, reportBlockedSubmit)}
+    >
       <StepHeader
         icon={<IconBuildingStore />}
         tone="blue"
@@ -298,6 +319,8 @@ export function ProfileStep({
                   )}
                 />
               </div>
+
+              {cardActions}
             </CardContent>
           </Card>
 
@@ -326,6 +349,7 @@ export function ProfileStep({
                       onChange={field.onChange}
                       aspect="square"
                       invalid={fieldState.invalid}
+                      error={fieldState.error}
                     />
                   )}
                 />
@@ -363,15 +387,18 @@ export function ProfileStep({
                     aspect="wide"
                     accept="image/png,image/jpeg,image/webp"
                     invalid={fieldState.invalid}
+                    error={fieldState.error}
                   />
                 )}
               />
+
+              {cardActions}
             </CardContent>
           </Card>
         </div>
       </StepLayout>
 
-      <StepFooter isSaving={isSaving} {...footer} />
+      {mode === "wizard" && <StepFooter isSaving={isSaving} {...footer} />}
     </form>
   );
 }

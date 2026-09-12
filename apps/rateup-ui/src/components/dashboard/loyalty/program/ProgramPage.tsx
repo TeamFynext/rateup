@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
 import {
   isTierDowngradeRefusal,
-  useApplyMessagesStepMutation,
   useApplyProfileStepMutation,
   useApplyTiersStepMutation,
 } from "@/backend/loyalty/onboarding.query";
@@ -21,7 +20,6 @@ import { formatIsoDateString } from "@/utils/dateTime.ts";
 import { EarningRulesPage } from "../earning-rules/EarningRulesPage.tsx";
 import { useGivebackResult } from "../giveback/useGivebackResult.ts";
 import { toProfilePayload } from "../onboarding/profile.ts";
-import { MessagesStep } from "../onboarding/steps/MessagesStep.tsx";
 import { ProfileStep } from "../onboarding/steps/ProfileStep.tsx";
 import { VipTierStep } from "../onboarding/steps/VipTierStep.tsx";
 import { useProgramEditorData } from "../onboarding/useProgramEditorData.ts";
@@ -38,7 +36,10 @@ import { buildSectionSummaries, type SectionKey } from "./programSummary.ts";
 /**
  * The Program page: everything that defines what the programme promises, in one place.
  *
- * The five cards are the six wizard steps minus Launch. Editing one opens that section's
+ * The four cards are what the programme promises: its profile, how points are earned, its
+ * tiers and its rewards. The wizard walks a fifth step, Messages, but that is not shown
+ * here — what the programme *says* belongs to Loyalty → Messages, and when it says it to
+ * Loyalty → Reminders. Editing one opens that section's
  * full editor under a Back button. Profile, VIP tier and Messages are the wizard's own
  * forms in section mode; Earning and Rewards are the complete editors (time windows and
  * tier restrictions on a rule; coupons, gifts, limits and validity on a reward), which
@@ -71,26 +72,11 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
     );
     closeSection();
   });
-  const messages = useApplyMessagesStepMutation((result) => {
-    if (result.skipped.length > 0) {
-      toast.error(
-        t("Some keywords are already in use: {keywords}", {
-          keywords: result.skipped.map((s) => s.requestMessage).join(", "),
-        }),
-      );
-      return;
-    }
-    saved();
-  });
-
   const templatesPending = data?.state.counts.templatesPending ?? 0;
 
   const summaries = useMemo(
-    () =>
-      data
-        ? buildSectionSummaries({ t, state: data.state, dashboard, giveback, templatesPending })
-        : [],
-    [t, data, dashboard, giveback, templatesPending],
+    () => (data ? buildSectionSummaries({ t, state: data.state, dashboard, giveback }) : []),
+    [t, data, dashboard, giveback],
   );
 
   if (isLoading || !data) return <Loader />;
@@ -258,36 +244,6 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
       {section === "rewards" && (
         <ProgramSectionEditor>
           <RewardsPage />
-        </ProgramSectionEditor>
-      )}
-
-      {section === "messages" && (
-        <ProgramSectionEditor>
-          <MessagesStep
-            mode="section"
-            defaultValues={defaults.messages}
-            isSaving={messages.isPending}
-            skipped={[]}
-            eventResults={[]}
-            hasWhatsappChannel={data.hasWhatsappChannel}
-            suggestedJoinText={data.suggestedJoinText}
-            eventParams={data.eventParams}
-            savedTriggers={state.saved.triggers}
-            notificationsHref={
-              <Link
-                to={LOYALTY_PATHS.messages}
-                search={{ tab: "automatic" }}
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {t("Edit them in Messages")}
-              </Link>
-            }
-            onCancel={closeSection}
-            // Notifications are never re-submitted from here — see MessagesStep.
-            onSubmit={(values) =>
-              messages.mutate({ commands: values.commands, eventTemplates: [] })
-            }
-          />
         </ProgramSectionEditor>
       )}
     </div>

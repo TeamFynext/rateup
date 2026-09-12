@@ -5,9 +5,12 @@ import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { TeamFeature } from "@/types/enums.ts";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import { AutomaticMessagesTab } from "./AutomaticMessagesTab.tsx";
+import { ChatbotTab } from "./ChatbotTab.tsx";
 import { isMessagesTab, type MessagesTab } from "./messagesTabs.ts";
 import { RepliesTab } from "./RepliesTab.tsx";
 import { TemplateLibraryTab } from "./TemplateLibraryTab.tsx";
@@ -20,7 +23,15 @@ export function MessagesPage({ tab }: Readonly<{ tab?: MessagesTab }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: state } = useLoyaltyOnboardingState();
-  const active: MessagesTab = tab ?? "automatic";
+  const { allowedFeatures } = useTeamFeatures();
+  // The Chatbot tab writes into WhatsApp › Chatbot and Automation. A member who cannot
+  // open those should not be offered it here either — and a stale `?tab=chatbot` link
+  // lands on Automatic rather than an empty page.
+  const canBuildChatbot =
+    allowedFeatures === null ||
+    (allowedFeatures.has(TeamFeature.Chatbots) && allowedFeatures.has(TeamFeature.Automation));
+  const requested: MessagesTab = tab ?? "automatic";
+  const active: MessagesTab = requested === "chatbot" && !canBuildChatbot ? "automatic" : requested;
   const templatesPending = state?.counts.templatesPending ?? 0;
 
   return (
@@ -43,6 +54,7 @@ export function MessagesPage({ tab }: Readonly<{ tab?: MessagesTab }>) {
         <TabsList>
           <TabsTrigger value="automatic">{t("Automatic")}</TabsTrigger>
           <TabsTrigger value="replies">{t("Replies")}</TabsTrigger>
+          {canBuildChatbot && <TabsTrigger value="chatbot">{t("Chatbot")}</TabsTrigger>}
           <TabsTrigger value="templates" className="gap-1.5">
             {t("Templates")}
             {templatesPending > 0 && (
@@ -61,6 +73,11 @@ export function MessagesPage({ tab }: Readonly<{ tab?: MessagesTab }>) {
         <TabsContent value="replies" className="pt-4">
           <RepliesTab />
         </TabsContent>
+        {canBuildChatbot && (
+          <TabsContent value="chatbot" className="pt-4">
+            <ChatbotTab />
+          </TabsContent>
+        )}
         <TabsContent value="templates" className="pt-4">
           <TemplateLibraryTab />
         </TabsContent>

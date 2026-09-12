@@ -13,6 +13,19 @@ import { z } from "zod";
 /** A six-digit hex colour — what the API's `brandColor` column accepts. */
 export const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
 
+/**
+ * An uploaded image: the stored absolute URL, or nothing.
+ *
+ * The API stores both image columns as `z.url()`, so a value that is not one is refused —
+ * and because the profile step is a single payload, that 400 takes the business details
+ * down with the logo. `z.string()` here let such a value through to the server, where the
+ * only sign of it was a generic "Could not save this step". Checking it in the form puts
+ * the message on the tile that produced it. `""`/absent both mean "no image".
+ */
+const uploadedImageUrl = z
+  .union([z.literal(""), z.url("That image did not finish uploading — add it again")])
+  .optional();
+
 export const profileFormSchema = z.object({
   businessName: z.string().min(1, "Give your business a name"),
   name: z.string().min(1, "Name your loyalty program"),
@@ -25,9 +38,9 @@ export const profileFormSchema = z.object({
     .refine((v) => !v || isValidPhoneNumber(v), "Enter a valid phone number")
     .optional(),
   contactEmail: z.email("Enter a valid email").or(z.literal("")).optional(),
-  logoUrl: z.string().optional(),
+  logoUrl: uploadedImageUrl,
   brandColor: z.string().regex(HEX_COLOUR, "Use a hex colour like #1C518E"),
-  heroImageUrl: z.string().optional(),
+  heroImageUrl: uploadedImageUrl,
 });
 
 /**
@@ -212,6 +225,26 @@ export const rewardsFormSchema = z
     });
   });
 
+/**
+ * A Meta template body. Meta refuses a submission whose body starts or ends with a
+ * variable, and one whose variables are not numbered in order of appearance — both come
+ * back as a rejected template minutes later, so they are caught here.
+ *
+ * Only event bodies go through this. A keyword reply's text is stored as reply content and
+ * never submitted; the template a never-messaged customer gets is a separate record.
+ */
+const templateBody = z
+  .string()
+  .min(1, "Write the message")
+  .refine(
+    (body) => !/^\{\{\d+\}\}/.test(body.trim()) && !/\{\{\d+\}\}$/.test(body.trim()),
+    "Meta will not accept a message that starts or ends with a variable. Put a word before or after it.",
+  )
+  .refine((body) => {
+    const slots = [...body.matchAll(/\{\{(\d+)\}\}/g)].map((match) => Number(match[1]));
+    return slots.every((slot, index) => slot === index + 1);
+  }, "Variables have to be used in order, starting from the first one.");
+
 export const messagesFormSchema = z.object({
   commands: z.array(
     z.object({
@@ -225,7 +258,7 @@ export const messagesFormSchema = z.object({
     z.object({
       eventType: z.string(),
       templateName: z.string(),
-      body: z.string().min(1, "Write the message"),
+      body: templateBody,
       enabled: z.boolean(),
     }),
   ),

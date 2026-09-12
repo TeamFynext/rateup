@@ -41,6 +41,9 @@ import { LOYALTY_FEEDBACK_FLOW_CATEGORY, WaFlowStatus } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
+import { isFlowType } from "../CreateFlowWizard/createFlowWizard.steps.ts";
+import { useFlowPurposeCopy } from "../flowPurposeCopy.ts";
+
 import styles from "./FlowCard.module.css";
 
 interface FlowCardProps {
@@ -66,9 +69,6 @@ function FlowCard({
   responseCount = 0,
 }: Readonly<FlowCardProps>) {
   const navigate = useNavigate();
-  const category = categories.includes(LOYALTY_FEEDBACK_FLOW_CATEGORY)
-    ? "Loyalty feedback"
-    : "Customer Engagement";
   const confirm = useConfirm();
   const [cloneDialogOpened, setCloneDialogOpened] = useState(false);
   const [teamId, setTeamId] = useState("");
@@ -86,6 +86,16 @@ function FlowCard({
     label: team?.name,
   }));
   const { t: translations } = useTranslation();
+
+  // The purpose the flow was created with. Flows made before a flow had a single purpose can
+  // carry several categories; the RateUp one decides what the flow is used for, so it wins. An
+  // unrecognised category — one Meta adds later — falls back to the generic word rather than
+  // being mislabelled as something it is not.
+  const purposeCopy = useFlowPurposeCopy();
+  const purpose = categories.includes(LOYALTY_FEEDBACK_FLOW_CATEGORY)
+    ? LOYALTY_FEEDBACK_FLOW_CATEGORY
+    : categories.find(isFlowType);
+  const category = purpose ? purposeCopy[purpose].label : translations("Flow");
 
   const closeCloneDialog = () => {
     setCloneDialogOpened(false);

@@ -38,6 +38,82 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-12-loyalty-keyword-menu-chatbot",
+    title: "Turn your keyword replies into a tappable menu",
+    summary:
+      'Messages has a fourth tab, Chatbot. It builds a WhatsApp chatbot out of the keywords you already answer on Replies \u2014 one tappable row per keyword, with the description you gave it \u2014 and a rule so that texting one word ("menu" by default) brings the list up. Customers no longer have to know that POINTS or REFER are the magic words. The answers do not move: tapping a row sends that keyword, so the reply that comes back is the same live one they get by typing it, balance and referral code and current rewards included. The bot itself lands under WhatsApp \u203a Chatbot and is yours to edit in the flow editor afterwards \u2014 add a greeting before the menu, branch off it, whatever you like. Add or rename a keyword later and the tab says which rows are out of date, with a button that rewrites just the list and leaves your edits alone. A keyword longer than 24 characters cannot be a row and is called out rather than quietly shortened, because the row title is what triggers the reply.',
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/messages",
+      search: { tab: "chatbot" },
+      label: "Open Messages",
+    },
+  },
+  {
+    id: "2026-09-11-loyalty-message-opens-editor",
+    title: "Loyalty messages open straight in the template editor",
+    summary:
+      'On Messages \u203a Automatic, a message you have not written yet used to offer to design it: you picked a WhatsApp account in a dialog, a draft was written for you, and only then did the editor open. It now says "Open in WhatsApp template editor" and does exactly that \u2014 the editor opens on that message\'s suggested words, with the account picker it has always had, and nothing is saved until you press Save as draft or Save & Submit yourself. Two things follow. A message whose template you saved as a draft and never submitted now shows that draft on its card, with its words and its Draft badge, and the button opens the draft rather than starting again. And opening a message twice can no longer leave two templates in the library, which is what creating the draft up front did every time the editor was opened and closed.',
+    publishedAt: "2026-09-11",
+    kinds: ["improvement", "fix"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/messages",
+      search: { tab: "automatic" },
+      label: "Open Messages",
+    },
+  },
+  {
+    id: "2026-09-11-brochure-background-colour",
+    title: "Brochure: your photo in the header, any background",
+    summary:
+      "Two changes to the rewards brochure under Materials. On the menu card, your hero photo is now the background of the top section rather than a separate strip beneath it \u2014 the business name, the programme name and the tagline sit on the photo over a scrim built to keep them readable whatever the picture is, and a card with no photo still gets the flat brand band it always had. And the background is no longer one of eleven named papers: it is a colour picker. The eleven remain as swatches to start from, next to a colour wheel and a hex box, so a card can be any shade you like. What the card cannot do is become unreadable \u2014 the text and the accent colour are worked out from the background you choose rather than picked separately, so a dark card prints light type and gives up the brand accent that would disappear into it, and a pale one keeps dark type. A small sample under the picker shows the body text and the accent in the colour they will actually print. Brochures saved before today keep the exact paper they were designed with.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/materials",
+      search: { tab: "brochure" },
+      label: "Open Materials",
+    },
+  },
+  {
+    id: "2026-09-11-activity-customer-links",
+    title: "Open a customer from the Activity ledger",
+    summary:
+      "Every line on Loyalty \u2192 Activity names the customer it belongs to, and until now that name was a dead end \u2014 finding the person behind a redemption meant going to Customers and searching for them by hand. The name is now a link: it opens that member on the Customers page, the same view their own row there opens, with their points, tier, rewards and full history. A line with no phone number behind it stays plain text, since that view is found by number. The customer you have open is also part of the address now, so the page can be bookmarked, reloaded without dropping back to the list, and shared with a colleague, and the browser's back button returns you to where you came from instead of leaving the screen.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/activity", label: "Open Activity" },
+  },
+  {
+    id: "2026-09-10-loyalty-reminders",
+    title: "Reminders: choose when each one sends",
+    summary:
+      "The messages your programme sends on a schedule — a birthday, a customer who has gone quiet, points about to expire — have a page of their own under Loyalty \u2192 Reminders. Until now two of those settings were buried on the Messages page and the rest could not be changed at all. Each reminder is a card: switch it on, say how far ahead it should go, and pick the hour it sends at. That hour is read in your own time zone, which is new — reminders used to go out at midnight on our servers, so a venue several hours ahead had its birthday greetings arriving in the small hours. The warning before points expire was fixed at fourteen days and is now yours to set. A customer who has gone quiet is nudged once, and nudged again only if they come back and go quiet a second time; before, they were nudged again every month forever. Three occasions are new: a heads-up before a member loses their VIP tier while they can still keep it, a reminder before a reward they already claimed runs out of time, and a note on the anniversary of the day they joined. What each message says is still written in one place, on Messages \u2192 Automatic, and every card links straight to it.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "fix"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/reminders", label: "Open Reminders" },
+  },
+  {
+    id: "2026-09-10-flow-purpose-grid",
+    title: "Creating a Flow starts with what it is for",
+    summary:
+      "The Create Flow wizard used to open on a choice between Loyalty feedback and everything else, which gave one use case the same weight as all of Meta's categories put together. It now opens on the purposes themselves — sign up, sign in, appointment booking, lead generation, contact us, customer support, survey, loyalty feedback and other — as one grid, each with a line saying what it is for, and the purpose you pick is the flow's category. That means one fewer thing to fill in later: the Categories field is gone from the details step, since the tile already answered it. A flow now carries the single purpose you chose rather than a set of them, and the steps along the top show only the ones your purpose actually visits. Loyalty feedback is one tile among nine and still the only one that comes with ready-made questions for your kind of business, and Loyalty → Feedback opens the wizard with it already chosen. Flow cards now name the purpose the flow was created for instead of labelling everything \"Customer Engagement\". Looking at the loyalty surveys and then changing your mind no longer carries one of them into a flow that is not a survey, which the create step used to refuse.",
+    publishedAt: "2026-09-10",
+    kinds: ["improvement", "fix"],
+    area: "WhatsApp",
+    link: {
+      to: "/dashboard/whatsapp/flows",
+      search: { action: "create" },
+      label: "Create a Flow",
+    },
+  },
+  {
     id: "2026-09-10-loyalty-feedback",
     title: "Feedback: a WhatsApp survey after every visit",
     summary:

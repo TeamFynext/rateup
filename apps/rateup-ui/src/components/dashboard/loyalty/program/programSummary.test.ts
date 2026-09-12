@@ -197,7 +197,7 @@ const dashboard = {
 } as unknown as LoyaltyDashboardStats;
 
 describe("buildSectionSummaries", () => {
-  const sections = buildSectionSummaries({ t, state, dashboard, giveback, templatesPending: 2 });
+  const sections = buildSectionSummaries({ t, state, dashboard, giveback });
   const byKey = Object.fromEntries(sections.map((s) => [s.key, s]));
 
   test("profile reads as one sentence about what customers see", () => {
@@ -233,14 +233,13 @@ describe("buildSectionSummaries", () => {
     ]);
   });
 
-  test("messages counts live notifications and flags what Meta still holds", () => {
-    expect(byKey.messages.line).toBe("5 keyword replies · 1 notifications live");
-    expect(byKey.messages.tags).toEqual([
-      { label: "2 awaiting Meta approval", tone: "warning" },
-      { label: "Birthday gift", tone: "neutral" },
-      { label: "Inactivity 45 days", tone: "neutral" },
-    ]);
-    expect(byKey.messages.attention).toBe(true);
+  // Program describes what the programme promises — its economics. What it *says* is the
+  // Messages page's, and when it says it is Reminders'. A Messages card here showed the
+  // same keyword replies and notifications a click away, and once the birthday gift and
+  // quiet-days settings moved to Reminders its tags advertised controls it no longer held.
+  test("Program carries no messages card — Messages owns that", () => {
+    expect(byKey.messages).toBeUndefined();
+    expect(Object.keys(byKey)).toEqual(["profile", "earning", "tiers", "rewards"]);
   });
 
   test("a bare draft is honest about what is missing", () => {
@@ -253,13 +252,11 @@ describe("buildSectionSummaries", () => {
       },
       dashboard: undefined,
       giveback: { ...giveback, pointsPerOrder: null },
-      templatesPending: 0,
     });
     const d = Object.fromEntries(draft.map((s) => [s.key, s]));
     expect(d.earning.line).toBe("No default rule — customers earn nothing yet");
     expect(d.earning.attention).toBe(true);
     expect(d.tiers.caption).toBe("Off · one flat rate");
     expect(d.rewards.attention).toBe(true);
-    expect(d.messages.tags).toEqual([]);
   });
 });

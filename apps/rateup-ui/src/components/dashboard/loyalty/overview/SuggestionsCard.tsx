@@ -6,7 +6,15 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import type { Suggestion } from "./suggestions.ts";
 
-/** "What to do next": each nudge names the number that triggered it and links to the fix. */
+/**
+ * "What to do next": each nudge names the number that triggered it and links to the fix.
+ *
+ * The subtitle deliberately does not mention the period picker. Every rule in
+ * `buildSuggestions` reads programme config, onboarding progress, the template queue, or a
+ * *current* count — total members, the tier breakdown, balances under the cheapest reward —
+ * and none of those carry a date filter. Saying "this period's numbers" invited the reader
+ * to change the period and watch for a card that cannot move.
+ */
 export function SuggestionsCard({ suggestions }: Readonly<{ suggestions: Suggestion[] }>) {
   const { t } = useTranslation();
 
@@ -17,7 +25,7 @@ export function SuggestionsCard({ suggestions }: Readonly<{ suggestions: Suggest
           <p className="text-sm font-semibold text-foreground">{t("What to do next")}</p>
           <p className="text-xs text-muted-foreground">
             {suggestions.length > 0
-              ? t("What this period's numbers suggest")
+              ? t("Based on how your program is set up and where members stand today")
               : t("Nothing needs your attention right now.")}
           </p>
         </div>
@@ -37,9 +45,6 @@ export function SuggestionsCard({ suggestions }: Readonly<{ suggestions: Suggest
             ))}
           </ol>
         )}
-        <p className="text-xs text-muted-foreground">
-          {t("Refreshed from the selected period's activity.")}
-        </p>
       </CardContent>
     </Card>
   );

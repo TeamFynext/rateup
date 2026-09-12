@@ -1,8 +1,8 @@
 /**
- * The three faces of the Messages page, and the `?tab=` value each one answers to.
+ * The four faces of the Messages page, and the `?tab=` value each one answers to.
  * Shared by the route's search schema and the page so the two cannot disagree.
  */
-export const MESSAGES_TABS = ["automatic", "replies", "templates"] as const;
+export const MESSAGES_TABS = ["automatic", "replies", "chatbot", "templates"] as const;
 
 export type MessagesTab = (typeof MESSAGES_TABS)[number];
 

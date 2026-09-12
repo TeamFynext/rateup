@@ -13,6 +13,8 @@ export const LOYALTY_PATHS = {
   programAdvanced: "/dashboard/loyalty/program/advanced",
   activity: "/dashboard/loyalty/activity",
   messages: "/dashboard/loyalty/messages",
+  /** When each scheduled message sends. The words themselves live on Messages › Automatic. */
+  reminders: "/dashboard/loyalty/reminders",
   /** The editor behind each loyalty template; the library itself is Messages › Templates. */
   templates: "/dashboard/loyalty/templates",
   /** The post-visit WhatsApp feedback flow, its review reward and its results. */

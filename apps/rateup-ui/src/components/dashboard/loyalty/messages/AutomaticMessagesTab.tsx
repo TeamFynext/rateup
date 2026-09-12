@@ -1,37 +1,29 @@
-import { IconMessageCircle, IconSparkles } from "@tabler/icons-react";
+import { IconClock, IconMessageCircle, IconSparkles } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useSaveEventMessageMutation } from "@/backend/loyalty/eventMessages.query";
-import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
 import type { EventTemplateResult } from "@/backend/loyalty/onboarding.api";
 import { useApplyMessagesStepMutation } from "@/backend/loyalty/onboarding.query";
 import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
-import { useLoyaltyRewards } from "@/backend/loyalty/reward.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
 import { useProgramEditorData } from "../onboarding/useProgramEditorData.ts";
+import { LOYALTY_PATHS } from "../paths.ts";
 import { EventMessageCard } from "./EventMessageCard.tsx";
 import { loyaltyEventCatalog, type LoyaltyEventDefinition } from "./loyaltyMessageCatalog.ts";
 import { templateStatusTone } from "./LoyaltyTemplateStatusBadge.tsx";
-import { NewTemplateDialog } from "./NewTemplateDialog.tsx";
+import { findStarterTemplate } from "./templateUsage.ts";
 import { useEventTriggerEditor } from "./useEventTriggerEditor.ts";
 
 /**
@@ -44,12 +36,9 @@ export function AutomaticMessagesTab() {
   const queryClient = useQueryClient();
   const { data: program } = useLoyaltyProgram();
   const { data: templates = [] } = useWaTemplates(TemplateType.LOYALTY);
-  const { data: rewards = [] } = useLoyaltyRewards();
   const { data: editorData } = useProgramEditorData();
   const editor = useEventTriggerEditor(program?.id);
   const catalog = useMemo(() => loyaltyEventCatalog(t), [t]);
-  /** The event whose template is being designed in the full editor, from its starter. */
-  const [designing, setDesigning] = useState<LoyaltyEventDefinition | null>(null);
 
   const saveText = useSaveEventMessageMutation(program?.id, (result) =>
     toast[result.status === "failed" ? "error" : "success"](describe(t, result)),
@@ -72,18 +61,34 @@ export function AutomaticMessagesTab() {
     () => templates.map((entry) => ({ value: entry.id, label: entry.data?.name ?? entry.id })),
     [templates],
   );
-  const gifts = rewards.filter(
-    (reward) => reward.rewardType === "assigned" && reward.status === "ACTIVE",
+
+  /**
+   * The template behind a message. The trigger's own column first; failing that, the
+   * template the starter's name already produced — a draft saved in the editor and never
+   * submitted, or one made before anything wrote the link. `linked` says which, because an
+   * unlinked template still has to be put on the trigger before the message can send.
+   */
+  const resolve = useCallback(
+    (definition: LoyaltyEventDefinition) => {
+      const trigger = editor.byEvent.get(definition.eventType);
+      const onTrigger = trigger?.waTemplateId ? templateById.get(trigger.waTemplateId) : undefined;
+      if (onTrigger) return { trigger, template: onTrigger, linked: true };
+      return {
+        trigger,
+        template: findStarterTemplate(templates, definition.templateName),
+        linked: false,
+      };
+    },
+    [editor.byEvent, templateById, templates],
   );
 
   const summary = useMemo(() => {
     const counts = { live: 0, pending: 0, missing: 0 };
     for (const definition of catalog) {
-      const trigger = editor.byEvent.get(definition.eventType);
-      const template = trigger?.waTemplateId ? templateById.get(trigger.waTemplateId) : undefined;
+      const { trigger, template } = resolve(definition);
       const tone = templateStatusTone({
         status: template?.data?.status,
-        hasTemplate: Boolean(trigger?.waTemplateId),
+        hasTemplate: Boolean(template),
         enabled: trigger?.enabled,
       });
       if (tone === "live") counts.live += 1;
@@ -91,24 +96,30 @@ export function AutomaticMessagesTab() {
       else if (tone === "missing") counts.missing += 1;
     }
     return counts;
-  }, [catalog, editor.byEvent, templateById]);
+  }, [catalog, resolve]);
 
   const refreshCounts = () =>
     queryClient.invalidateQueries({ queryKey: loyaltyKeys.onboardingState() });
 
   const card = (definition: LoyaltyEventDefinition, extra?: React.ReactNode) => {
-    const trigger = editor.byEvent.get(definition.eventType);
+    const { trigger, template, linked } = resolve(definition);
     return (
       <EventMessageCard
         key={definition.eventType}
         definition={definition}
         trigger={trigger}
-        template={trigger?.waTemplateId ? templateById.get(trigger.waTemplateId) : undefined}
+        template={template}
         templateItems={templateItems}
         isSaving={editor.isSaving && editor.savingEvent === definition.eventType}
         isSavingText={saveText.isPending && saveText.variables?.eventType === definition.eventType}
         onToggle={(enabled) =>
-          editor.save.mutate({ eventType: definition.eventType, patch: { enabled } })
+          editor.save.mutate({
+            eventType: definition.eventType,
+            // The editor cannot write its new template back onto the trigger — neither
+            // create nor save-as-draft answers with an id — so a template matched by name
+            // is put on the trigger the moment the merchant switches the message on.
+            patch: linked ? { enabled } : { enabled, waTemplateId: template?.id },
+          })
         }
         onTemplateChange={(waTemplateId) =>
           editor.save.mutate({
@@ -116,70 +127,22 @@ export function AutomaticMessagesTab() {
             patch: { waTemplateId: waTemplateId ?? undefined },
           })
         }
-        onSaveText={(body) => saveText.mutateAsync({ eventType: definition.eventType, body })}
-        onDesign={() => setDesigning(definition)}
+        onSaveText={async (body) => {
+          // Same reason as the switch, and it matters more here: saving text against an
+          // event with no template on its trigger makes the API submit a fresh one, so an
+          // unlinked draft would be left behind and its words submitted as a new version.
+          // Linked first, the draft itself is what gets submitted.
+          if (!linked && template) {
+            await editor.save.mutateAsync({
+              eventType: definition.eventType,
+              patch: { waTemplateId: template.id },
+            });
+          }
+          return saveText.mutateAsync({ eventType: definition.eventType, body });
+        }}
         extra={extra}
       />
     );
-  };
-
-  const reminderExtra = (definition: LoyaltyEventDefinition) => {
-    const trigger = editor.byEvent.get(definition.eventType);
-    if (definition.eventType === LoyaltyEventType.INACTIVITY_REMINDER) {
-      return (
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          {t("After")}
-          <Input
-            type="number"
-            min={1}
-            className="h-9 w-20"
-            defaultValue={trigger?.triggerDays ?? 30}
-            onBlur={(event) => {
-              const days = Number(event.target.value);
-              if (days > 0 && days !== trigger?.triggerDays) {
-                editor.save.mutate({
-                  eventType: definition.eventType,
-                  patch: { triggerDays: days },
-                });
-              }
-            }}
-          />
-          {t("quiet days")}
-        </label>
-      );
-    }
-    if (definition.eventType === LoyaltyEventType.BIRTHDAY) {
-      return (
-        <div className="min-w-48">
-          <p className="mb-1 text-xs text-muted-foreground">{t("Gift")}</p>
-          <Select
-            value={trigger?.rewardId ?? null}
-            items={gifts.map((gift) => ({ value: gift.id, label: gift.name }))}
-            onValueChange={(value) =>
-              editor.save.mutate({
-                eventType: definition.eventType,
-                patch: { rewardId: value ?? undefined },
-              })
-            }
-            disabled={gifts.length === 0}
-          >
-            <SelectTrigger className="h-9">
-              <SelectValue
-                placeholder={gifts.length === 0 ? t("No free gifts yet") : t("Pick a gift")}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {gifts.map((gift) => (
-                <SelectItem key={gift.id} value={gift.id}>
-                  {gift.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      );
-    }
-    return undefined;
   };
 
   if (editor.isPending) return <Skeleton className="h-40 rounded-xl" />;
@@ -250,27 +213,21 @@ export function AutomaticMessagesTab() {
       </section>
 
       <section className="flex flex-col gap-3">
+        {/* The words live here; when each one goes out is set on Reminders. Two halves of
+            one message, each in one place — the quiet-days count and the birthday gift
+            used to sit on this page, away from every other timing control. */}
         <SectionHeading
           title={t("Reminders")}
-          hint={t("Scheduled nudges, and the tier upgrade.")}
-        />
-        {catalog.filter((d) => d.group === "reminder").map((d) => card(d, reminderExtra(d)))}
-      </section>
-
-      <NewTemplateDialog
-        open={designing !== null}
-        starter={designing}
-        onClose={() => setDesigning(null)}
-        onCreated={(templateId) => {
-          // The draft is this event's message now; the editor opens on it next.
-          if (designing) {
-            editor.save.mutate({
-              eventType: designing.eventType,
-              patch: { waTemplateId: templateId },
-            });
+          hint={t("Sent on a schedule rather than on a purchase.")}
+          actions={
+            <Button variant="ghost" size="xs" render={<Link to={LOYALTY_PATHS.reminders} />}>
+              <IconClock size={13} />
+              {t("Set when these send")}
+            </Button>
           }
-        }}
-      />
+        />
+        {catalog.filter((d) => d.group === "reminder").map((d) => card(d))}
+      </section>
     </div>
   );
 }

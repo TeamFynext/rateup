@@ -22,7 +22,11 @@ import {
 import { Switch } from "@/components/ui/switch.tsx";
 
 import { EventMessageBodyField } from "./EventMessageBodyField.tsx";
-import { variableHint, type LoyaltyEventDefinition } from "./loyaltyMessageCatalog.ts";
+import {
+  templateBodyProblem,
+  variableHint,
+  type LoyaltyEventDefinition,
+} from "./loyaltyMessageCatalog.ts";
 import { LoyaltyTemplateStatusBadge } from "./LoyaltyTemplateStatusBadge.tsx";
 import { MessageBubble } from "./MessageBubble.tsx";
 import { templateBodyOf, templateHasRichParts } from "./templateUsage.ts";
@@ -40,12 +44,6 @@ interface EventMessageCardProps {
   onTemplateChange: (waTemplateId: string | null) => void;
   /** Resolves once the text is saved; the editor closes on success. */
   onSaveText: (body: string) => Promise<unknown>;
-  /**
-   * Opens the full template editor for an event that has no template yet — a draft is made
-   * from this event's starter first, so the merchant lands on a body they can add an image
-   * or buttons to.
-   */
-  onDesign: () => void;
   /** Extra controls under the message — reminder days, the birthday gift. */
   extra?: React.ReactNode;
 }
@@ -53,8 +51,13 @@ interface EventMessageCardProps {
 /**
  * One automatic message, the way the setup wizard shows it: what it says, whether it is
  * on, and where it stands with Meta. Two ways to change it: "Edit message" rewrites the
- * words in place and submits them; "Template editor" opens the full WhatsApp editor for
- * an image header, a footer or buttons.
+ * words in place and submits them; "Open in WhatsApp template editor" opens the full
+ * WhatsApp editor for an image header, a footer or buttons, and for saving as a draft or
+ * publishing to Meta.
+ *
+ * That second one is a link either way. With a template it opens that template — a draft
+ * the merchant saved and never submitted included. Without one it opens the editor on this
+ * message's starter, and nothing is stored until they save there.
  */
 export function EventMessageCard({
   definition,
@@ -66,7 +69,6 @@ export function EventMessageCard({
   onToggle,
   onTemplateChange,
   onSaveText,
-  onDesign,
   extra,
 }: Readonly<EventMessageCardProps>) {
   const { t } = useTranslation();
@@ -75,7 +77,10 @@ export function EventMessageCard({
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const body = templateBodyOf(template);
-  const hasTemplate = Boolean(trigger?.waTemplateId);
+  // The resolved template, not the trigger's own column: a template made in the editor is
+  // matched back to this message by name, and it can be switched on before anything has
+  // written that link onto the trigger.
+  const hasTemplate = Boolean(template);
   const richParts = templateHasRichParts(template);
   const editorId = `event-message-${definition.eventType}`;
 
@@ -84,8 +89,12 @@ export function EventMessageCard({
     setEditing(true);
   };
 
+  // This button submits to Meta, and a refusal comes back minutes later as a rejected
+  // template. Saying so here costs one line and saves that round trip.
+  const problem = editing ? templateBodyProblem(draft, t) : null;
+
   const save = async () => {
-    if (!draft.trim()) return;
+    if (!draft.trim() || problem) return;
     await onSaveText(draft.trim());
     setEditing(false);
   };
@@ -126,6 +135,8 @@ export function EventMessageCard({
               value={draft}
               onChange={setDraft}
               params={definition.params}
+              invalid={Boolean(problem)}
+              error={problem ? { message: problem } : undefined}
             />
             <div className="flex justify-end gap-2">
               <Button
@@ -139,7 +150,7 @@ export function EventMessageCard({
               <Button
                 size="sm"
                 onClick={() => void save()}
-                disabled={isSavingText || !draft.trim()}
+                disabled={isSavingText || !draft.trim() || Boolean(problem)}
               >
                 {isSavingText ? t("Submitting…") : t("Save and submit to Meta")}
               </Button>
@@ -161,26 +172,28 @@ export function EventMessageCard({
                 {body ? t("Edit message") : t("Write it")}
               </Button>
             )}
-            {template ? (
-              <Button
-                variant={richParts ? "default" : "outline"}
-                size="sm"
-                render={
+            <Button
+              variant={richParts ? "default" : "outline"}
+              size="sm"
+              render={
+                template ? (
                   <Link
                     to="/dashboard/loyalty/templates/$templateId"
                     params={{ templateId: template.id }}
+                    search={{ starter: undefined }}
                   />
-                }
-              >
-                <IconPhoto size={14} />
-                {t("Open in WhatsApp template editor")}
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" onClick={onDesign}>
-                <IconPhoto size={14} />
-                {t("Design in WhatsApp template editor")}
-              </Button>
-            )}
+                ) : (
+                  <Link
+                    to="/dashboard/loyalty/templates/$templateId"
+                    params={{ templateId: "create" }}
+                    search={{ starter: definition.templateName }}
+                  />
+                )
+              }
+            >
+              <IconPhoto size={14} />
+              {t("Open in WhatsApp template editor")}
+            </Button>
             {richParts && (
               <span className="text-xs text-muted-foreground">
                 {t("Has an image, footer or buttons — edited in the WhatsApp template editor.")}

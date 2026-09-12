@@ -10,6 +10,9 @@ export enum LoyaltyEventType {
   INACTIVITY_REMINDER = "INACTIVITY_REMINDER",
   POINTS_EXPIRY_ALERT = "POINTS_EXPIRY_ALERT",
   POINTS_EXPIRED = "POINTS_EXPIRED",
+  TIER_AT_RISK = "TIER_AT_RISK",
+  REWARD_EXPIRING = "REWARD_EXPIRING",
+  SIGNUP_ANNIVERSARY = "SIGNUP_ANNIVERSARY",
 }
 
 export interface EventTrigger {
@@ -18,6 +21,10 @@ export interface EventTrigger {
   eventType: LoyaltyEventType;
   enabled: boolean;
   triggerDays?: number; // For INACTIVITY_REMINDER
+  /** Days ahead of a dated occasion to send — set on the Reminders page. */
+  leadDays?: number | null;
+  /** Local hour to send at, in the programme's own timezone. */
+  sendHour?: number | null;
   waTemplateId?: string;
   whatsappSettingsId?: string;
   rewardId?: string;

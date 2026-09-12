@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import type { SavedOnboardingData } from "@/backend/loyalty/onboarding.api";
 
+import { paperHex } from "./brochurePapers.ts";
 import {
   autoBlurb,
   brochureRows,
@@ -17,6 +18,7 @@ const program = {
   currencyName: "Points",
   currencyCode: "INR",
   currencySymbol: "₹",
+  brandColor: "#1c518e",
 };
 
 const rewards: SavedOnboardingData["rewards"] = [
@@ -134,6 +136,75 @@ describe("buildMaterialsDefaults", () => {
       { rewardId: "r-pct", include: true, blurb: "10% off your bill" },
       { rewardId: "r-cash", include: false, blurb: "A grand off the bill" },
     ]);
+  });
+
+  test("a brochure with nothing stored opens on the menu card, warm white, no QR", () => {
+    const brochure = buildMaterialsDefaults(context, null).brochure;
+    expect(brochure.design).toBe("menu");
+    expect(brochure.background).toBe(paperHex("warm-white", program.brandColor));
+    // Off by default: the counter poster already carries a code, so this one is opt-in.
+    expect(brochure.showQr).toBe(false);
+  });
+
+  test("a stored design and background colour are kept", () => {
+    const stored = parseMaterials({
+      version: 1,
+      brochure: { design: "tent", background: "#2D211C", showQr: true },
+    });
+    const brochure = buildMaterialsDefaults(context, stored).brochure;
+    expect(brochure.design).toBe("tent");
+    // Normalised, so the picker and the card agree on one spelling.
+    expect(brochure.background).toBe("#2d211c");
+    expect(brochure.showQr).toBe(true);
+  });
+
+  // The background used to be one of eleven named papers. A document written then still
+  // has to print the colour the merchant chose, not fall back to warm white.
+  test("a document stored before the background was a free colour keeps its look", () => {
+    const stored = parseMaterials({ version: 1, brochure: { paper: "deep-ink" } });
+    const brochure = buildMaterialsDefaults(context, stored).brochure;
+    expect(brochure.background).toBe(paperHex("deep-ink", program.brandColor));
+  });
+
+  test("a saved hex wins over a paper name left beside it", () => {
+    const stored = parseMaterials({
+      version: 1,
+      brochure: { paper: "deep-ink", background: "#faf3e3" },
+    });
+    expect(buildMaterialsDefaults(context, stored).brochure.background).toBe("#faf3e3");
+  });
+
+  test("a background that is not a colour falls back rather than printing junk", () => {
+    const stored = parseMaterials({ version: 1, brochure: { background: "rebeccapurple" } });
+    expect(buildMaterialsDefaults(context, stored).brochure.background).toBe(
+      paperHex("warm-white", program.brandColor),
+    );
+  });
+
+  // A document written by a later build, or hand-edited. The copy must survive even when
+  // the layout it names does not, which is why these are parsed as plain strings and
+  // narrowed here rather than by the schema.
+  test("a design or paper this build does not know falls back without losing the copy", () => {
+    const stored = parseMaterials({
+      version: 1,
+      brochure: { design: "trifold", paper: "letterpress", title: "Foodinn Club" },
+    });
+    const brochure = buildMaterialsDefaults(context, stored).brochure;
+    expect(brochure.design).toBe("menu");
+    expect(brochure.background).toBe(paperHex("warm-white", program.brandColor));
+    expect(brochure.title).toBe("Foodinn Club");
+  });
+
+  // The rateup.app footer prints on every design now, so a document that switched it off
+  // is read for its copy and that one field ignored.
+  test("an older document's powered-by preference is ignored, not honoured", () => {
+    const stored = parseMaterials({
+      version: 1,
+      brochure: { title: "Foodinn Club", showPoweredBy: false },
+    });
+    const brochure = buildMaterialsDefaults(context, stored).brochure;
+    expect(brochure.title).toBe("Foodinn Club");
+    expect(brochure).not.toHaveProperty("showPoweredBy");
   });
 });
 

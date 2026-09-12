@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -19,6 +19,8 @@ interface ImageUploadTileProps {
   aspect: "square" | "wide";
   accept?: string;
   invalid?: boolean;
+  /** Shown under the tile. Without it a rejected image reads as a dead Save button. */
+  error?: { message?: string };
 }
 
 /**
@@ -36,6 +38,7 @@ export function ImageUploadTile({
   aspect,
   accept = "image/png,image/jpeg,image/webp,image/svg+xml",
   invalid,
+  error,
 }: Readonly<ImageUploadTileProps>) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -131,6 +134,7 @@ export function ImageUploadTile({
           event.target.value = "";
         }}
       />
+      {invalid && error && <FieldError errors={[error]} />}
     </Field>
   );
 }

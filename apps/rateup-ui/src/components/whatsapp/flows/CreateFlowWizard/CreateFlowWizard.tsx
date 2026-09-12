@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconMessageStar, IconStar, IconTemplate, IconMessage } from "@tabler/icons-react";
+import { IconStar, IconMessage } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useState } from "react";
+import { type KeyboardEvent, useId, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
@@ -27,16 +27,16 @@ import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Stepper, type StepperStep } from "@/components/ui/stepper.tsx";
 import { cn } from "@/lib/utils.ts";
-import { LOYALTY_FEEDBACK_FLOW_CATEGORY } from "@/types/enums.ts";
 
-import { flowsCategories } from "../constants.tsx";
+import { FLOW_PURPOSES } from "../constants.tsx";
+import { useFlowPurposeCopy } from "../flowPurposeCopy.ts";
 import { FlowTemplatePreview } from "../FlowTemplatePreview.tsx";
 import {
-  FLOW_TYPE_META,
+  hasTemplates,
   nextStep,
   previousStep,
   stepsFor,
-  WIZARD_STEPS,
+  templateCategoryFor,
   type FlowType,
   type WizardStep,
 } from "./createFlowWizard.steps.ts";
@@ -49,34 +49,51 @@ import {
 export function CreateFlowWizard({
   open,
   onClose,
-}: Readonly<{ open: boolean; onClose: () => void }>) {
+  initialType,
+}: Readonly<{
+  open: boolean;
+  onClose: () => void;
+  /** Purpose to arrive with already chosen — Loyalty → Feedback links in this way. */
+  initialType?: FlowType;
+}>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<WizardStep>("type");
-  const [type, setType] = useState<FlowType | undefined>();
-  const [templateKey, setTemplateKey] = useState<string | undefined>();
+  // Read once: the wizard mounts with the page, and `?for=` is already in the URL on arrival.
+  const [type, setType] = useState<FlowType | undefined>(initialType);
+  const [templateChoice, setTemplateChoice] = useState<string | undefined>();
 
-  const templates = useFlowTemplates(
-    LOYALTY_FEEDBACK_FLOW_CATEGORY,
-    open && type === "loyalty_feedback",
-  );
+  const templates = useFlowTemplates(templateCategoryFor(type), open);
+  const catalogue = templates.data;
   const create = useCreateFlowMutation();
 
   const close = () => {
     setStep("type");
+    // The deep link is a one-shot hint, consumed on arrival. Holding on to it would reopen
+    // every later "Create Flow" click on the loyalty tile, on a page where no purpose should
+    // start ahead of the others.
     setType(undefined);
-    setTemplateKey(undefined);
+    setTemplateChoice(undefined);
     onClose();
   };
 
-  // Preselect the suggested template once the catalogue lands, unless the user got there first.
-  useEffect(() => {
-    if (templates.data && !templateKey) {
-      setTemplateKey(templates.data.suggestedKey ?? templates.data.templates[0]?.key);
-    }
-  }, [templates.data, templateKey]);
+  const chooseType = (next: FlowType) => {
+    if (next === type) return;
+    setType(next);
+    setTemplateChoice(undefined);
+  };
 
-  const path = type ? stepsFor(type) : WIZARD_STEPS;
+  /**
+   * The user's pick, else the suggestion for their programme, else the first. Derived rather
+   * than copied into state by an effect: a key held in state outlived the catalogue it came
+   * from, so switching away from loyalty feedback carried a templateKey into a flow that is
+   * not a survey and the create call was rejected as an unknown template.
+   */
+  const templateKey = templateChoice ?? catalogue?.suggestedKey ?? catalogue?.templates[0]?.key;
+
+  // The rail follows the purpose's own path, so it shows two circles for the eight purposes
+  // that have no templates instead of a Template step they never visit.
+  const path = stepsFor(type);
   const stepLabel: Record<WizardStep, string> = {
     type: t("What for"),
     template: t("Template"),
@@ -88,7 +105,7 @@ export function CreateFlowWizard({
     complete: path.indexOf(id) < path.indexOf(step),
   }));
 
-  const selectedTemplate = templates.data?.templates.find((tpl) => tpl.key === templateKey);
+  const selectedTemplate = catalogue?.templates.find((tpl) => tpl.key === templateKey);
   const forward = nextStep(type, step);
   const back = previousStep(type, step);
 
@@ -113,7 +130,7 @@ export function CreateFlowWizard({
 
         {step === "type" && (
           <StepTransition stepKey="type">
-            <TypeStep value={type} onChange={setType} />
+            <PurposeStep value={type} onChange={chooseType} />
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={close}>
                 {t("Cancel")}
@@ -132,11 +149,11 @@ export function CreateFlowWizard({
         {step === "template" && (
           <StepTransition stepKey="template">
             <TemplateStep
-              templates={templates.data?.templates ?? []}
-              suggestedKey={templates.data?.suggestedKey ?? null}
+              templates={catalogue?.templates ?? []}
+              suggestedKey={catalogue?.suggestedKey ?? null}
               isLoading={templates.isPending}
               value={templateKey}
-              onChange={setTemplateKey}
+              onChange={setTemplateChoice}
             />
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => back && setStep(back)}>
@@ -156,7 +173,6 @@ export function CreateFlowWizard({
         {step === "details" && type && (
           <StepTransition stepKey="details">
             <DetailsStep
-              type={type}
               template={selectedTemplate}
               isPending={create.isPending}
               onBack={() => back && setStep(back)}
@@ -164,14 +180,16 @@ export function CreateFlowWizard({
                 create.mutate(
                   {
                     name: values.name,
-                    categories: FLOW_TYPE_META[type].categories
-                      ? [...FLOW_TYPE_META[type].categories]
-                      : values.categories,
+                    // The purpose is the category.
+                    categories: [type],
                     teamIds: values.teamIds,
                     ...(values.whatsappSettingsPhoneId
                       ? { whatsappSettingsPhoneId: values.whatsappSettingsPhoneId }
                       : {}),
-                    ...(selectedTemplate ? { templateKey: selectedTemplate.key } : {}),
+                    // Only a purpose that has templates may carry one.
+                    ...(selectedTemplate && hasTemplates(type)
+                      ? { templateKey: selectedTemplate.key }
+                      : {}),
                   },
                   { onSuccess: onCreated },
                 )
@@ -186,60 +204,82 @@ export function CreateFlowWizard({
 
 /* ── step 1: what is this flow for ─────────────────────────────────────────── */
 
-function TypeStep({
+/**
+ * The nine purposes as one grid. Loyalty feedback is a tile like any other — no badge, no
+ * accent, no larger card — because it is one thing a flow can be for, not a headline.
+ *
+ * Three columns from `sm` rather than from `lg`: the dialog is capped at `max-w-3xl` from `sm`
+ * up, so a viewport breakpoint above that would leave a ~700px dialog carrying two very wide
+ * tiles over five rows.
+ */
+function PurposeStep({
   value,
   onChange,
 }: Readonly<{ value: FlowType | undefined; onChange: (type: FlowType) => void }>) {
   const { t } = useTranslation();
-  const options: Array<{
-    type: FlowType;
-    title: string;
-    description: string;
-    icon: typeof IconStar;
-  }> = [
-    {
-      type: "loyalty_feedback",
-      title: t("Loyalty feedback"),
-      description: t(
-        "A short survey sent after a customer earns points. Starts from a ready-made set of questions and can be selected under Loyalty → Feedback.",
-      ),
-      icon: IconMessageStar,
-    },
-    {
-      type: "other",
-      title: t("Something else"),
-      description: t(
-        "Sign-ups, bookings, lead capture, support — an empty flow you build in the editor, with Meta's categories.",
-      ),
-      icon: IconTemplate,
-    },
-  ];
+  const copy = useFlowPurposeCopy();
+  const tiles = useRef<Array<HTMLButtonElement | null>>([]);
+
+  // A radiogroup is one tab stop, and arrows move within it. Movement follows DOM order rather
+  // than rows and columns: the column count is responsive, so "down moves by three" would be
+  // wrong at one of the two widths.
+  const activeIndex = Math.max(
+    FLOW_PURPOSES.findIndex((purpose) => purpose.value === value),
+    0,
+  );
+
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const delta =
+      event.key === "ArrowRight" || event.key === "ArrowDown"
+        ? 1
+        : event.key === "ArrowLeft" || event.key === "ArrowUp"
+          ? -1
+          : 0;
+    if (delta === 0) return;
+    event.preventDefault();
+    const next = (index + delta + FLOW_PURPOSES.length) % FLOW_PURPOSES.length;
+    const purpose = FLOW_PURPOSES[next];
+    if (!purpose) return;
+    onChange(purpose.value);
+    tiles.current[next]?.focus();
+  };
 
   return (
     <div
       role="radiogroup"
       aria-label={t("What is this flow for?")}
-      className="grid gap-3 sm:grid-cols-2"
+      className="grid grid-cols-2 gap-2 sm:grid-cols-3"
     >
-      {options.map((option) => {
-        const selected = option.type === value;
-        const Icon = option.icon;
+      {FLOW_PURPOSES.map((purpose, index) => {
+        const selected = purpose.value === value;
+        const Icon = purpose.icon;
         return (
           <button
-            key={option.type}
+            key={purpose.value}
+            ref={(el) => {
+              tiles.current[index] = el;
+            }}
             type="button"
             role="radio"
             aria-checked={selected}
-            onClick={() => onChange(option.type)}
+            tabIndex={index === activeIndex ? 0 : -1}
+            onClick={() => onChange(purpose.value)}
+            onKeyDown={(event) => onKeyDown(event, index)}
             className={cn(
-              "flex flex-col gap-2 rounded-xl border p-4 text-left transition-colors",
-              "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              selected ? "border-primary bg-primary/5" : "border-border bg-card",
+              "flex h-full w-full flex-col gap-1 rounded-lg border p-3 text-left transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              selected
+                ? "border-primary bg-primary/5"
+                : "border-border bg-card hover:border-primary/40",
             )}
           >
-            <Icon size={20} className="text-primary" />
-            <span className="font-medium text-foreground">{option.title}</span>
-            <span className="text-sm text-muted-foreground">{option.description}</span>
+            <Icon size={18} className="text-primary" />
+            <span className="text-sm font-semibold text-foreground">
+              {copy[purpose.value].label}
+            </span>
+            <span className="text-xs leading-snug text-muted-foreground">
+              {copy[purpose.value].description}
+            </span>
           </button>
         );
       })}
@@ -328,19 +368,16 @@ function TemplateStep({
 
 interface DetailsValues {
   name: string;
-  categories: string[];
   teamIds: string[];
   whatsappSettingsPhoneId?: string;
 }
 
 function DetailsStep({
-  type,
   template,
   isPending,
   onBack,
   onSubmit,
 }: Readonly<{
-  type: FlowType;
   template: FlowTemplate | undefined;
   isPending: boolean;
   onBack: () => void;
@@ -348,13 +385,10 @@ function DetailsStep({
 }>) {
   const uid = useId();
   const { t } = useTranslation();
-  const asksCategories = !FLOW_TYPE_META[type].categories;
 
+  // No category field: the purpose chosen in step 1 is the flow's category.
   const schema = z.object({
     name: z.string().trim().min(1, t("Please enter a name")),
-    categories: asksCategories
-      ? z.array(z.string()).min(1, t("Please select a category"))
-      : z.array(z.string()),
     teamIds: z.array(z.string()).min(1, t("Please select at least one team")),
     whatsappSettingsPhoneId: z.string().optional(),
   });
@@ -363,7 +397,6 @@ function DetailsStep({
     resolver: zodResolver(schema),
     defaultValues: {
       name: template ? t("Feedback – {label}", { label: template.label }) : "",
-      categories: [],
       teamIds: [],
       whatsappSettingsPhoneId: undefined,
     },
@@ -390,26 +423,6 @@ function DetailsStep({
             </Field>
           )}
         />
-
-        {asksCategories && (
-          <Controller
-            name="categories"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={`${uid}-categories`}>{t("Categories")}</FieldLabel>
-                <MultiSelect
-                  id={`${uid}-categories`}
-                  options={flowsCategories}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder={t("Select Categories")}
-                />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-        )}
 
         <Controller
           name="whatsappSettingsPhoneId"

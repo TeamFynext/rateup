@@ -94,9 +94,16 @@ const DEFAULT_BACK: BackTarget = { to: "/dashboard/whatsapp/templates" };
 export function WhatsappTemplateById({
   forceTemplateType,
   backTo = DEFAULT_BACK,
+  initialValues,
 }: Readonly<{
   forceTemplateType?: TemplateType;
   backTo?: BackTarget;
+  /**
+   * Opening state for a template that does not exist yet, over the blank defaults below —
+   * how the loyalty Messages page hands a starter message to the editor. Read once, as
+   * RHF reads `defaultValues`, so it has to be resolvable on the first render.
+   */
+  initialValues?: Partial<TemplateFormValues>;
 }>) {
   const uid = useId();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,6 +152,7 @@ export function WhatsappTemplateById({
         },
         whatsappSettingsPhoneId: "",
       },
+      ...initialValues,
     },
   });
   const configForm = useForm<z.infer<typeof configSchema>>({

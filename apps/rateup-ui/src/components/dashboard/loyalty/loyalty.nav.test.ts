@@ -6,7 +6,7 @@ import { buildLoyaltyNavItems } from "./loyalty.nav";
 const t = ((key: string) => key) as unknown as TFunction;
 
 describe("buildLoyaltyNavItems", () => {
-  test("nine rows, in the order the owner works through them", () => {
+  test("ten rows, in the order the owner works through them", () => {
     const rows = buildLoyaltyNavItems({ t, programState: "live" });
     expect(rows.map((r) => r.title)).toEqual([
       "Overview",
@@ -15,6 +15,8 @@ describe("buildLoyaltyNavItems", () => {
       "Program",
       "Activity",
       "Messages",
+      // Beside Messages: what a message says, then when it goes.
+      "Reminders",
       "Feedback",
       "Materials",
       "Settings",
@@ -52,6 +54,8 @@ describe("buildLoyaltyNavItems", () => {
       undefined,
       3,
       2,
+      // Reminders carries no count: nothing about a schedule needs chasing.
+      undefined,
       undefined,
       undefined,
       undefined,
@@ -59,16 +63,21 @@ describe("buildLoyaltyNavItems", () => {
   });
 
   test("Feedback flags a flow that cannot send yet, and says nothing once it can", () => {
-    expect(
-      buildLoyaltyNavItems({ t, programState: "live", feedbackState: "draft" })[6],
-    ).toMatchObject({ title: "Feedback", badge: "Draft", badgeTone: "neutral" });
-    expect(
-      buildLoyaltyNavItems({ t, programState: "live", feedbackState: "pending" })[6],
-    ).toMatchObject({ badge: "Awaiting Meta", badgeTone: "warning" });
-    expect(
-      buildLoyaltyNavItems({ t, programState: "live", feedbackState: "live" })[6],
-    ).not.toHaveProperty("badge");
-    expect(buildLoyaltyNavItems({ t, programState: "live" })[6]).not.toHaveProperty("badge");
+    // Looked up by title rather than by index: inserting a row should not silently move
+    // this assertion onto its neighbour.
+    const feedback = (feedbackState: "draft" | "pending" | "live" | undefined) =>
+      buildLoyaltyNavItems({ t, programState: "live", feedbackState }).find(
+        (row) => row.title === "Feedback",
+      );
+
+    expect(feedback("draft")).toMatchObject({
+      title: "Feedback",
+      badge: "Draft",
+      badgeTone: "neutral",
+    });
+    expect(feedback("pending")).toMatchObject({ badge: "Awaiting Meta", badgeTone: "warning" });
+    expect(feedback("live")).not.toHaveProperty("badge");
+    expect(feedback(undefined)).not.toHaveProperty("badge");
   });
 
   test("Program stays lit while the wizard or a full editor is open", () => {

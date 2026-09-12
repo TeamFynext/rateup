@@ -62,7 +62,6 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import DocsButton from "./docs-button.tsx";
 import { useNavMain } from "./hooks.tsx";
 import { NavUser } from "./user-nav.tsx";
-import { WhatsAppSettingsModal } from "./utils.tsx";
 import WhatsNewButton from "./whats-new/WhatsNewButton.tsx";
 
 const sidebarIconProps = { className: "size-5!", strokeWidth: 1.75 };
@@ -633,35 +632,25 @@ export default function AppSidebar({
   // null = bypass (SUPER_ADMIN), Set = restrict (MEMBER).
   const { allowedFeatures } = useTeamFeatures();
 
-  const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
-  const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
-
   const isSubscriptionExpired = Boolean(
     subscription?.expiresAt && checkExpiry(subscription.expiresAt),
   );
 
-  const handleRouteGuard = useCallback(
-    (route?: string): boolean => {
-      if (
-        userData?.data?.status === UserAvailabilityStatus.offline &&
-        userData?.data?.presenceMode !== "automatic"
-      ) {
-        toast.warning("You are currently offline. Please switch to online.");
-      }
+  // The WhatsApp section used to be gated here on `hasWhatsAppSettings`, blocking
+  // the click and putting a "WhatsApp Account Required" dialog in its place. The
+  // pages behind it already read as unconnected on their own — Flows disables
+  // Create and shows its empty state — so the section is reachable before a
+  // channel is connected and this only reports presence.
+  const handleRouteGuard = useCallback<RouteGuard>(() => {
+    if (
+      userData?.data?.status === UserAvailabilityStatus.offline &&
+      userData?.data?.presenceMode !== "automatic"
+    ) {
+      toast.warning("You are currently offline. Please switch to online.");
+    }
 
-      if (route?.startsWith("/dashboard/whatsapp")) {
-        if (userData?.message !== "Success") return false;
-        if (!userData?.data?.hasWhatsAppSettings) {
-          setWhatsAppModalOpened(true);
-          setIntendedRoute(route);
-          return false;
-        }
-      }
-
-      return true;
-    },
-    [userData],
-  );
+    return true;
+  }, [userData]);
 
   const navMain = useNavMain({
     subscription,
@@ -762,11 +751,6 @@ export default function AppSidebar({
 
   return (
     <>
-      <WhatsAppSettingsModal
-        opened={whatsAppModalOpened}
-        onClose={() => setWhatsAppModalOpened(false)}
-        intendedRoute={intendedRoute}
-      />
       {/* Icon rail */}
       {/* The rail sits on brand navy, so it carries its own copy of the sidebar
           palette rather than the panel's: icons rest at 55% white and the active

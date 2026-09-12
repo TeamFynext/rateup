@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
 import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 
 import type { AssignRewardRequest } from "./assignReward.api";
@@ -20,6 +21,7 @@ import {
   searchContactsForEnrolment,
   importCustomers,
   updateLoyaltyCustomer,
+  type UpdateLoyaltyCustomerInput,
 } from "./customer.api";
 
 export const useCreateLoyaltyCustomerMutation = () => {
@@ -175,23 +177,22 @@ export const useExportCustomersMutation = () => {
 export const useUpdateLoyaltyCustomerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      customerId,
-      data,
-    }: {
-      customerId: string;
-      data: { status?: "active" | "suspended" | "closed" };
-    }) => updateLoyaltyCustomer(customerId, data),
+    mutationFn: ({ customerId, data }: { customerId: string; data: UpdateLoyaltyCustomerInput }) =>
+      updateLoyaltyCustomer(customerId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       queryClient.invalidateQueries({
         queryKey: loyaltyKeys.customer(variables.customerId),
       });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
+      // The panel on the Customers page reads the customer through the cashier's
+      // by-phone lookup, not the list — an edited name would otherwise stay stale there
+      // until the query went cold.
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer() });
       toast.success("Customer updated successfully");
     },
-    onError: (error) => {
-      toast.error(error?.message || `Error updating customer`);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Could not save the customer"));
     },
   });
 };

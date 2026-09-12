@@ -1,10 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 
-import { useSaveTemplateAsDraftMutation } from "@/backend/whatsapp/whatsapp.query";
-import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -17,79 +14,48 @@ import {
 } from "@/components/ui/dialog.tsx";
 
 import {
-  loyaltyDraftPayload,
   loyaltyMessageCatalog,
   variableHint,
   type LoyaltyMessageDefinition,
 } from "./loyaltyMessageCatalog.ts";
 import { MessageBubble } from "./MessageBubble.tsx";
 
-/** The new draft's id, off the axios response the mutation hands back. */
-function draftIdOf(data: unknown): string | undefined {
-  if (typeof data !== "object" || data === null || !("data" in data)) return undefined;
-  const body = (data as { data?: unknown }).data;
-  if (typeof body !== "object" || body === null || !("id" in body)) return undefined;
-  const id = (body as { id?: unknown }).id;
-  return typeof id === "string" ? id : undefined;
-}
-
 interface NewTemplateDialogProps {
   open: boolean;
   /** Preselected starter; when absent the dialog opens on the picker. */
   starter?: LoyaltyMessageDefinition | null;
   onClose: () => void;
-  onCreated?: (templateId: string, starter: LoyaltyMessageDefinition | null) => void;
 }
 
 /**
- * A new Meta template for the library: from one of the catalog's starters, or blank in
- * the full editor. Starters become a draft on the chosen WhatsApp account first — Meta
- * approval takes hours and a wrong number is cheap to fix before that.
+ * Which message a new Meta template starts from — one of the catalog's starters, or
+ * nothing at all. Either way it only picks; the WhatsApp template editor opens on the
+ * choice and nothing is stored until the merchant saves there, as a draft or to Meta.
+ *
+ * This used to create the draft itself, on an account chosen here. The editor asks for
+ * the account anyway, and the draft endpoint answers without an id, so the template it
+ * made could never be handed back to the message that asked for it — every visit left
+ * another unattached draft in the library.
  */
-export function NewTemplateDialog({
-  open,
-  starter,
-  onClose,
-  onCreated,
-}: Readonly<NewTemplateDialogProps>) {
+export function NewTemplateDialog({ open, starter, onClose }: Readonly<NewTemplateDialogProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [picked, setPicked] = useState<LoyaltyMessageDefinition | null>(null);
-  const [accountId, setAccountId] = useState("");
-  const saveDraft = useSaveTemplateAsDraftMutation(
-    "",
-    () => {},
-    () => {},
-  );
 
   const chosen = starter ?? picked;
   const catalog = loyaltyMessageCatalog(t);
 
   const close = () => {
     setPicked(null);
-    setAccountId("");
     onClose();
   };
 
-  const startBlank = () => {
+  const openEditor = (from: LoyaltyMessageDefinition | null) => {
     close();
-    navigate({ to: "/dashboard/loyalty/templates/$templateId", params: { templateId: "create" } });
-  };
-
-  const create = () => {
-    if (!chosen || !accountId) {
-      toast.error(t("Pick a WhatsApp account first."));
-      return;
-    }
-    saveDraft.mutate(loyaltyDraftPayload(chosen, accountId), {
-      onSuccess: (data) => {
-        const templateId = draftIdOf(data);
-        close();
-        if (templateId) {
-          onCreated?.(templateId, chosen);
-          navigate({ to: "/dashboard/loyalty/templates/$templateId", params: { templateId } });
-        }
-      },
+    navigate({
+      to: "/dashboard/loyalty/templates/$templateId",
+      params: { templateId: "create" },
+      search: { starter: from?.templateName },
     });
   };
 
@@ -101,7 +67,7 @@ export function NewTemplateDialog({
           <DialogDescription>
             {chosen
               ? t(
-                  "A draft on the account you pick. The editor opens next — add an image, a footer or buttons there, then submit it to Meta.",
+                  "The WhatsApp template editor opens on these words. Add an image, a footer or buttons there, then save it as a draft or submit it to Meta.",
                 )
               : t("Start from one of the program's messages, or from a blank template.")}
           </DialogDescription>
@@ -115,13 +81,6 @@ export function NewTemplateDialog({
                 {variableHint(chosen.params)}
               </p>
             )}
-            <AccountSelector
-              value={accountId}
-              onChange={(value) => setAccountId(value ?? "")}
-              label={t("WhatsApp account")}
-              withAllOption={false}
-              optional={false}
-            />
             <DialogFooter>
               {!starter && (
                 <Button variant="ghost" onClick={() => setPicked(null)}>
@@ -131,9 +90,7 @@ export function NewTemplateDialog({
               <Button variant="outline" onClick={close}>
                 {t("Cancel")}
               </Button>
-              <Button onClick={create} disabled={saveDraft.isPending || !accountId}>
-                {saveDraft.isPending ? t("Creating…") : t("Create draft")}
-              </Button>
+              <Button onClick={() => openEditor(chosen)}>{t("Open in template editor")}</Button>
             </DialogFooter>
           </>
         ) : (
@@ -150,7 +107,7 @@ export function NewTemplateDialog({
             />
             <button
               type="button"
-              onClick={startBlank}
+              onClick={() => openEditor(null)}
               className="mt-3 w-full rounded-lg border border-dashed border-border p-3 text-left text-sm text-muted-foreground hover:bg-muted/40"
             >
               <span className="font-medium text-foreground">{t("Start blank")}</span>{" "}

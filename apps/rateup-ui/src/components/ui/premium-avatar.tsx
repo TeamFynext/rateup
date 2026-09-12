@@ -12,8 +12,27 @@ interface PremiumAvatarProps {
   showWhatsApp?: boolean;
   showInstagram?: boolean;
   onClick?: () => void;
+  /**
+   * How strong the brand tint is. `blue` is the light default; `light-blue` is a shade up,
+   * for sitting on an already-tinted surface.
+   */
   variant?: "blue" | "light-blue";
 }
+
+/**
+ * The tint behind the initials.
+ *
+ * A light brand chip with navy initials, the same treatment `StepIconChip` gives every
+ * loyalty section header. It used to be a saturated `#2E5BFF → #1E4FDF` gradient with white
+ * initials — a blue that is not in the RateUp palette at all, and loud enough to pull the
+ * eye off the name beside it. White on a mid-blue also only just cleared 3.5:1; navy on
+ * `ru-blue-50` clears 7.3:1.
+ */
+const VARIANT_CLASSES = {
+  blue: "bg-ru-blue-50 text-ru-blue-600 ring-ru-blue-100 dark:bg-ru-blue-900/40 dark:text-ru-blue-200 dark:ring-ru-blue-800",
+  "light-blue":
+    "bg-ru-blue-100 text-ru-blue-700 ring-ru-blue-200 dark:bg-ru-blue-900/60 dark:text-ru-blue-200 dark:ring-ru-blue-800",
+} as const;
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -96,7 +115,7 @@ export function PremiumAvatar({
 
   return (
     <div className={`relative inline-block ${className}`}>
-      {/* Main Avatar Container - Blue Only */}
+      {/* The initials chip: a light brand tint, navy initials. */}
       <div
         onClick={handleClick}
         className={`
@@ -105,15 +124,15 @@ export function PremiumAvatar({
           flex items-center justify-center
           relative
           overflow-hidden
-          ${variant === "blue" ? "bg-linear-to-br from-[#2E5BFF] to-[#1E4FDF]" : "bg-linear-to-br from-[#60A5FA] to-[#3B82F6]"}
-          ${sizes.ring} ring-white
-          shadow-lg shadow-blue-500/30
+          ${VARIANT_CLASSES[variant]}
+          ${sizes.ring}
+          shadow-xs
           transition-all duration-300 ease-out
           ${onClick ? "cursor-pointer" : "cursor-default"}
-          hover:shadow-xl hover:shadow-blue-500/40
+          hover:shadow-sm
           hover:scale-105
           active:scale-95
-          focus:outline-none focus:ring-4 focus:ring-blue-500/20
+          focus:outline-none focus-visible:ring-ring focus-visible:ring-2
           will-change-transform
           group/avatar
         `}
@@ -121,33 +140,23 @@ export function PremiumAvatar({
         role={onClick ? "button" : undefined}
         aria-label={onClick ? `View ${name}'s profile` : undefined}
       >
-        {/* Subtle Top Highlight */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent pointer-events-none opacity-60" />
-
-        {/* Bottom Shadow Depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none" />
-
-        {/* Shimmer Effect on Hover */}
-        <div className="absolute inset-0 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover/avatar:translate-x-full transition-transform duration-1000 ease-out" />
-        </div>
-
-        {/* Ripple Effect */}
-        {isRippling && <span className="absolute inset-0 animate-ping bg-white/30 rounded-full" />}
+        {/* Ripple Effect — brand-tinted, since the chip is no longer a dark fill. */}
+        {isRippling && (
+          <span className="absolute inset-0 animate-ping rounded-full bg-ru-blue-200/60" />
+        )}
 
         {/* Initials */}
+        {/* Inherits the chip's brand text colour; no drop shadow, which was there to lift
+            white off a saturated fill. */}
         <span
           className={`
-            ${sizes.text} 
-            font-bold 
-            text-white
+            ${sizes.text}
+            font-bold
             relative
             z-10
-            drop-shadow-sm
             transition-transform duration-300
             group-hover/avatar:scale-110
           `}
-          style={{ textShadow: "0 1px 2px rgba(0,0,0,0.2)" }}
         >
           {initials}
         </span>

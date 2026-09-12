@@ -676,7 +676,7 @@ export function useNavMain({
               title: t("Loyalty"),
               url: LOYALTY_PATHS.overview,
               icon: IconGift,
-              // Eight rows: one defines the programme, the rest run it. See loyalty.nav.ts.
+              // Ten rows: one defines the programme, the rest run it. See loyalty.nav.ts.
               items: buildLoyaltyNavItems(loyaltyNav ?? { t, programState: null }),
             },
           ]

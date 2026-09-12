@@ -37,7 +37,6 @@ export interface SummaryInput {
   dashboard: LoyaltyDashboardStats | undefined;
   giveback: GivebackResult;
   /** Loyalty WhatsApp templates still awaiting Meta. */
-  templatesPending: number;
 }
 
 const ACTIVE_REWARD = "ACTIVE";
@@ -47,7 +46,6 @@ export function buildSectionSummaries({
   state,
   dashboard,
   giveback,
-  templatesPending,
 }: SummaryInput): SectionSummary[] {
   const program = state.program;
   const pointsName = program?.currencyName ?? "Points";
@@ -55,7 +53,7 @@ export function buildSectionSummaries({
   const symbol = program?.currencySymbol ?? "₹";
   const code = program?.currencyCode ?? "INR";
   const money = (amount: number) => formatMoney(amount, code, symbol);
-  const { rules, tiers, rewards, commands, triggers } = state.saved;
+  const { rules, tiers, rewards } = state.saved;
 
   /* ── profile ── */
   const basicsParts = [
@@ -186,31 +184,6 @@ export function buildSectionSummaries({
     });
   }
 
-  /* ── messages ── */
-  const liveNotifications = triggers.filter(
-    (trigger) => trigger.enabled && trigger.templateStatus === "APPROVED",
-  ).length;
-  const messagesTags: SummaryTag[] = [];
-  if (templatesPending > 0) {
-    messagesTags.push({
-      label: t("{count} awaiting Meta approval", { count: templatesPending }),
-      tone: "warning",
-    });
-  }
-  for (const trigger of triggers) {
-    if (!trigger.enabled) continue;
-    if (trigger.eventType === "BIRTHDAY")
-      messagesTags.push({ label: t("Birthday gift"), tone: "neutral" });
-    if (trigger.eventType === "INACTIVITY_REMINDER") {
-      messagesTags.push({
-        label: trigger.triggerDays
-          ? t("Inactivity {days} days", { days: trigger.triggerDays })
-          : t("Inactivity reminder"),
-        tone: "neutral",
-      });
-    }
-  }
-
   return [
     {
       key: "profile",
@@ -246,17 +219,6 @@ export function buildSectionSummaries({
       line: rewardsLine,
       tags: rewardsTags,
       attention: live.length === 0,
-    },
-    {
-      key: "messages",
-      title: t("Messages"),
-      caption: t("What customers get on WhatsApp"),
-      line: t("{replies} keyword replies · {notifications} notifications live", {
-        replies: commands.length,
-        notifications: liveNotifications,
-      }),
-      tags: messagesTags,
-      attention: templatesPending > 0,
     },
   ];
 }

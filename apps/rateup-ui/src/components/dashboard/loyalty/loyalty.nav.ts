@@ -1,10 +1,11 @@
 // The loyalty section's sidebar rows, as data for the shared app sidebar.
 //
-// Nine entries. One (Program) defines the programme; the others run it, named after what
+// Ten entries. One (Program) defines the programme; the others run it, named after what
 // the owner or staff came to do. The badges carry the things that need chasing — pending
 // approvals, Meta template reviews, an unfinished feedback flow — plus the member count.
 
 import {
+  IconClock,
   IconDashboard,
   IconLogs,
   IconMessage,
@@ -79,6 +80,14 @@ export function buildLoyaltyNavItems({
       url: LOYALTY_PATHS.messages,
       icon: IconMessage,
       count: templatesPending,
+    },
+    // Beside Messages, because the two halves of one message: Messages is what it says,
+    // Reminders is when it goes. Everything with a schedule to set lives here — birthdays,
+    // anniversaries, a quiet member, points and rewards about to lapse, VIP at risk.
+    {
+      title: t("Reminders"),
+      url: LOYALTY_PATHS.reminders,
+      icon: IconClock,
     },
     // A feedback flow that exists but cannot send yet is the one loyalty step that is easy
     // to forget about; the chip says which half is outstanding.

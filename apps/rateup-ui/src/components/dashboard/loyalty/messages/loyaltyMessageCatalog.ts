@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
 
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
-import type { WaTemplateDraftPayload } from "@/backend/whatsapp/whatsapp.api";
-import { TemplateType } from "@/types/enums.ts";
+import type { TemplateFormValues } from "@/components/whatsapp/templates/Details/template-form.ts";
+import { TemplateType, WaTemplateStatus } from "@/types/enums.ts";
 
 /**
  * Every message the loyalty programme can say on WhatsApp, in one list.
@@ -17,6 +17,16 @@ import { TemplateType } from "@/types/enums.ts";
  *
  * `templateName` / `body` / `example` are the starter each message can be created from.
  * The event names mirror `LOYALTY_EVENT_TEMPLATE_NAMES` on the API; keep them in step.
+ *
+ * Two of Meta's template rules bind every `body` here, and both are rejections at submit
+ * time rather than warnings:
+ *
+ *  - A body may not **begin or end with a variable** — "Variables can't be at the start or
+ *    end of the template." So a slot that wants to be last needs words after it.
+ *  - Variables must be **numbered sequentially in order of appearance**, which is why a
+ *    trailing `{{2}}` cannot be fixed by swapping it with `{{1}}`.
+ *
+ * `loyaltyMessageCatalog.test.ts` holds both to every entry.
  */
 
 export type LoyaltyMessageKind = "event" | "keyword";
@@ -110,7 +120,9 @@ export function loyaltyEventCatalog(t: TFunction): LoyaltyEventDefinition[] {
     {
       kind: "event",
       eventType: LoyaltyEventType.TIER_UPGRADED,
-      group: "reminder",
+      // Fires the moment a tier changes, so there is no schedule to set for it: it
+      // belongs with the transaction notifications, not on the Reminders page.
+      group: "notification",
       label: t("Tier upgrade"),
       description: t("Sent the moment someone reaches a new tier."),
       params: [name, t("new tier")],
@@ -148,7 +160,7 @@ export function loyaltyEventCatalog(t: TFunction): LoyaltyEventDefinition[] {
       description: t("Sent before points expire, if expiry is on in Settings."),
       params: [name, t("points"), t("date")],
       templateName: "loyalty_points_expiry_alert",
-      body: "{{1}}, {{2}} points expire on {{3}}. Use them before then.",
+      body: "Hi {{1}}, {{2}} points expire on {{3}}. Use them before then.",
       example: ["Anjali", "300", "30 Sep"],
     },
     {
@@ -161,6 +173,39 @@ export function loyaltyEventCatalog(t: TFunction): LoyaltyEventDefinition[] {
       templateName: "loyalty_points_expired",
       body: "Hi {{1}}, {{2}} points expired today.",
       example: ["Anjali", "300"],
+    },
+    {
+      kind: "event",
+      eventType: LoyaltyEventType.TIER_AT_RISK,
+      group: "reminder",
+      label: t("VIP status at risk"),
+      description: t("Sent before a member drops out of their tier, while they can still keep it."),
+      params: [name, t("tier"), t("days"), t("amount")],
+      templateName: "loyalty_tier_at_risk",
+      body: "Hi {{1}}, your {{2}} status ends in {{3}} days. Spend {{4}} more to keep it.",
+      example: ["Anjali", "Gold", "30", "1200"],
+    },
+    {
+      kind: "event",
+      eventType: LoyaltyEventType.REWARD_EXPIRING,
+      group: "reminder",
+      label: t("Reward expiring"),
+      description: t("Sent before a reward the customer already claimed runs out of time."),
+      params: [name, t("reward"), t("date"), t("code")],
+      templateName: "loyalty_reward_expiring",
+      body: "Hi {{1}}, your {{2}} expires on {{3}}. Show code {{4}} at the counter.",
+      example: ["Anjali", "free coffee", "30 Sep", "K4P2"],
+    },
+    {
+      kind: "event",
+      eventType: LoyaltyEventType.SIGNUP_ANNIVERSARY,
+      group: "reminder",
+      label: t("Joining anniversary"),
+      description: t("Sent each year on the day the customer joined."),
+      params: [name, t("years"), t("balance")],
+      templateName: "loyalty_signup_anniversary",
+      body: "Hi {{1}}, it is {{2}} years since you joined us. You have {{3}} points to spend.",
+      example: ["Anjali", "1", "1283"],
     },
   ];
 }
@@ -202,7 +247,7 @@ export function loyaltyKeywordCatalog(t: TFunction): LoyaltyKeywordDefinition[] 
       keyword: "refer",
       params: [t("referral code"), t("joining link")],
       templateName: "loyalty_referral",
-      body: "Your referral code is {{1}}. Share this link: {{2}}",
+      body: "Your referral code is {{1}}. Share this link with a friend:\n{{2}}\nThanks for spreading the word!",
       example: ["ABC123", "https://wa.me/919000000000?text=Join"],
     },
     {
@@ -244,6 +289,29 @@ export function loyaltyKeywordDefinition(
   return loyaltyKeywordCatalog(t).find((kind) => kind.type === type);
 }
 
+/**
+ * Why Meta would refuse this body, or `null` when it would accept it.
+ *
+ * Both rules are rejections at submit time, not warnings, and the merchant only sees them
+ * as a Meta error several minutes later — so the editor asks first.
+ *
+ * The copy deliberately contains no `{{n}}`: these strings go through i18next-icu, which
+ * reads a brace as the start of a format element.
+ */
+export function templateBodyProblem(body: string, t: TFunction): string | null {
+  const trimmed = body.trim();
+  if (/^\{\{\d+\}\}/.test(trimmed) || /\{\{\d+\}\}$/.test(trimmed)) {
+    return t(
+      "Meta will not accept a message that starts or ends with a variable. Put a word before or after it.",
+    );
+  }
+  const slots = [...trimmed.matchAll(/\{\{(\d+)\}\}/g)].map((match) => Number(match[1]));
+  if (slots.some((slot, index) => slot !== index + 1)) {
+    return t("Variables have to be used in order, starting from the first one.");
+  }
+  return null;
+}
+
 /** `["customer name", "points earned"]` → insertable `{{1}}`, `{{2}}` with those labels. */
 export function messageVariables(params: readonly string[]): LoyaltyMessageVariable[] {
   return params.map((label, index) => ({ token: `{{${index + 1}}}`, label }));
@@ -257,36 +325,39 @@ export function variableHint(params: readonly string[]): string {
 }
 
 /**
- * A draft template on the chosen WhatsApp account, from a starter. Draft first: Meta
- * approval takes hours and a wrong number is cheap to fix before that.
+ * A starter as the WhatsApp template editor's opening state, for a message the merchant
+ * has no template for yet.
+ *
+ * Nothing is stored by opening the editor: the merchant saves it there as a draft or
+ * submits it to Meta, exactly as they would for a template that already exists. Creating
+ * the draft up front — what the card used to do — wrote a row before anyone had looked at
+ * it, and left a second one behind every time the message was opened again.
  */
-export function loyaltyDraftPayload(
+export function loyaltyStarterValues(
   starter: Pick<LoyaltyMessageDefinition, "templateName" | "body" | "example">,
-  whatsappSettingsPhoneId: string,
-): WaTemplateDraftPayload {
+): Partial<TemplateFormValues> {
   return {
     name: starter.templateName,
     header: null,
     language: "en",
     body: starter.body,
     footer: "Powered by rateup.app",
+    // UTILITY, not the editor's MARKETING default: these go out on the back of something
+    // the customer did, and Meta prices and reviews the two differently.
     category: "UTILITY",
     format: "NONE",
     buttons: [],
-    status: "DRAFT",
-    example: starter.example,
+    status: WaTemplateStatus.DRAFT,
+    example: [...starter.example],
     templateType: TemplateType.LOYALTY,
-    mediaCarousel: [],
-    productCarousel: [],
-    whatsappSettingsPhoneId,
-    defaultValues: {
-      catalog: {
-        thumbnail_product_retailer_id: "",
-        mpm: { sections: [] },
-        spm: { product_retailer_id: "" },
-        catalogId: "",
-      },
-      whatsappSettingsPhoneId,
-    },
   };
+}
+
+/** The starter a `?starter=` search param names, if the catalog still has one. */
+export function starterByTemplateName(
+  catalog: readonly LoyaltyMessageDefinition[],
+  templateName: string | undefined,
+): LoyaltyMessageDefinition | undefined {
+  if (!templateName) return undefined;
+  return catalog.find((entry) => entry.templateName === templateName);
 }

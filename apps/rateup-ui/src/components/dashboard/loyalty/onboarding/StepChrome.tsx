@@ -1,5 +1,8 @@
+import { IconX } from "@tabler/icons-react";
 import { motion, useReducedMotion } from "motion/react";
+import type { FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider";
@@ -156,8 +159,11 @@ export function StepTransition({
 }
 
 /**
- * Back / continue pair. In section mode the left slot becomes Discard and the submit
- * reads Save — pass `secondaryAction` and `submitLabel`.
+ * The step's actions, at opposite ends of the bar in both modes: the way out on the left,
+ * the way on on the right. A wizard spells both out — Back, then Continue. A section editor
+ * is not a sequence, so leaving without saving is a dismissal rather than a step back and
+ * reduces to an X, leaving Save the only labelled button. Pass `secondaryAction` and
+ * `submitLabel` for that arrangement.
  */
 export function StepFooter({
   isSaving,
@@ -165,6 +171,7 @@ export function StepFooter({
   submitLabel,
   extra,
   secondaryAction,
+  sticky = false,
 }: Readonly<{
   isSaving: boolean;
   onBack?: () => void;
@@ -172,20 +179,43 @@ export function StepFooter({
   extra?: React.ReactNode;
   /** Replaces Back: a way out of the editor that does not save. */
   secondaryAction?: { label: string; onClick: () => void };
+  /**
+   * Pin the row to the bottom of the scroll area. Nothing here saves as you type, so Save
+   * is the only way to keep an edit — and a section editor is two or three tall cards, so
+   * at the end of the page the button was below the fold on a laptop and read as missing.
+   */
+  sticky?: boolean;
 }>) {
   const { t } = useTranslation();
 
+  const submit = (
+    <Button type="submit" disabled={isSaving}>
+      {isSaving ? t("Saving…") : (submitLabel ?? t("Continue"))}
+    </Button>
+  );
+
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div
+      className={cn(
+        "flex items-center justify-between gap-3",
+        sticky &&
+          "sticky bottom-0 z-10 rounded-lg border border-border bg-background/95 p-2 shadow-sm backdrop-blur",
+      )}
+    >
       <div>
         {secondaryAction ? (
+          /* The label stays as the name and the tooltip — an unlabelled X is only readable
+             if it still says what it does to a screen reader and on hover. */
           <Button
             type="button"
             variant="ghost"
+            size="icon"
+            aria-label={secondaryAction.label}
+            title={secondaryAction.label}
             onClick={secondaryAction.onClick}
             disabled={isSaving}
           >
-            {secondaryAction.label}
+            <IconX size={16} />
           </Button>
         ) : (
           onBack && (
@@ -197,10 +227,46 @@ export function StepFooter({
       </div>
       <div className="flex items-center gap-2">
         {extra}
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? t("Saving…") : (submitLabel ?? t("Continue"))}
-        </Button>
+        {submit}
       </div>
+    </div>
+  );
+}
+
+/**
+ * One card's own actions, bottom-right inside it.
+ *
+ * For a step whose cards each carry the pair instead of a single row under the whole form.
+ * The submit is still the form's — there is one payload either way, so whichever card it
+ * is pressed from saves the step.
+ */
+export function SectionActions({
+  isSaving,
+  submitLabel,
+  secondaryAction,
+}: Readonly<
+  Pick<React.ComponentProps<typeof StepFooter>, "isSaving" | "submitLabel" | "secondaryAction">
+>) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex items-center justify-end gap-2">
+      {secondaryAction && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={secondaryAction.label}
+          title={secondaryAction.label}
+          onClick={secondaryAction.onClick}
+          disabled={isSaving}
+        >
+          <IconX size={16} />
+        </Button>
+      )}
+      <Button type="submit" disabled={isSaving}>
+        {isSaving ? t("Saving…") : (submitLabel ?? t("Save"))}
+      </Button>
     </div>
   );
 }
@@ -219,7 +285,10 @@ export function useStepFooterProps({
   isDirty: boolean;
   onBack?: () => void;
   onCancel?: () => void;
-}>): Pick<React.ComponentProps<typeof StepFooter>, "onBack" | "submitLabel" | "secondaryAction"> {
+}>): Pick<
+  React.ComponentProps<typeof StepFooter>,
+  "onBack" | "submitLabel" | "secondaryAction" | "sticky"
+> {
   const { t } = useTranslation();
   const confirm = useConfirm();
 
@@ -227,6 +296,9 @@ export function useStepFooterProps({
 
   return {
     submitLabel: t("Save"),
+    // The wizard's Continue sits under one step's worth of fields and needs no pinning;
+    // a section editor is the whole of a step and does.
+    sticky: true,
     secondaryAction: onCancel
       ? {
           label: t("Discard changes"),
@@ -243,5 +315,27 @@ export function useStepFooterProps({
           },
         }
       : undefined,
+  };
+}
+
+/**
+ * Says why a Save did nothing.
+ *
+ * A step form is one payload, so one refused field stops the whole save — and not every
+ * field has a line to show it on: the two image tiles carry the message now, but the
+ * currency symbol has no input of its own at all, and a step can only grow more of those.
+ * Without this the button looks broken. Pass it as `handleSubmit`'s second argument.
+ */
+export function useBlockedSubmitNotice() {
+  const { t } = useTranslation();
+
+  return (errors: FieldErrors) => {
+    const first = Object.values(errors).find((error) => error?.message);
+    toast.error(
+      typeof first?.message === "string"
+        ? first.message
+        : t("Check the highlighted fields and save again"),
+      { id: "step-invalid" },
+    );
   };
 }

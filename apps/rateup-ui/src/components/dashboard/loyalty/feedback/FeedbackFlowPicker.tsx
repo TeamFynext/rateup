@@ -37,7 +37,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { cn } from "@/lib/utils.ts";
-import { WaFlowStatus } from "@/types/enums.ts";
+import { LOYALTY_FEEDBACK_FLOW_CATEGORY, WaFlowStatus } from "@/types/enums.ts";
 
 import { TeamGoogleLinkRow } from "./TeamGoogleLinkRow.tsx";
 
@@ -84,7 +84,14 @@ export function FeedbackFlowPicker({ state }: Readonly<{ state: FeedbackState }>
   }
 
   const createLink = (
-    <Button render={<Link to="/dashboard/whatsapp/flows" search={{ action: "create" }} />}>
+    <Button
+      render={
+        <Link
+          to="/dashboard/whatsapp/flows"
+          search={{ action: "create", for: LOYALTY_FEEDBACK_FLOW_CATEGORY }}
+        />
+      }
+    >
       <IconExternalLink size={16} />
       {t("Create one in WhatsApp → Flow")}
     </Button>
@@ -127,7 +134,12 @@ export function FeedbackFlowPicker({ state }: Readonly<{ state: FeedbackState }>
           <Button
             variant="outline"
             size="sm"
-            render={<Link to="/dashboard/whatsapp/flows" search={{ action: "create" }} />}
+            render={
+              <Link
+                to="/dashboard/whatsapp/flows"
+                search={{ action: "create", for: LOYALTY_FEEDBACK_FLOW_CATEGORY }}
+              />
+            }
           >
             <IconExternalLink size={16} />
             {t("Create another")}

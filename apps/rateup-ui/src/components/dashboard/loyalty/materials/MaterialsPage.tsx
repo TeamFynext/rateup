@@ -27,7 +27,7 @@ export function MaterialsPage({ tab }: Readonly<{ tab?: MaterialsTab }>) {
   const navigate = useNavigate();
   const { data: state, isLoading } = useLoyaltyOnboardingState();
   const { data: waSettings } = useWaSettings();
-  const active: MaterialsTab = tab ?? "qr";
+  const active: MaterialsTab = tab ?? "brochure";
 
   if (isLoading || !state) return <Loader />;
 
@@ -78,13 +78,13 @@ export function MaterialsPage({ tab }: Readonly<{ tab?: MaterialsTab }>) {
         }}
       >
         <TabsList>
-          <TabsTrigger value="qr" className="gap-1.5">
-            <IconQrcode size={15} />
-            {t("QR card")}
-          </TabsTrigger>
           <TabsTrigger value="brochure" className="gap-1.5">
             <IconFileDescription size={15} />
             {t("Brochure")}
+          </TabsTrigger>
+          <TabsTrigger value="qr" className="gap-1.5">
+            <IconQrcode size={15} />
+            {t("QR card")}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="qr" className="pt-4">
@@ -103,6 +103,7 @@ export function MaterialsPage({ tab }: Readonly<{ tab?: MaterialsTab }>) {
             rules={state.saved.rules}
             tiers={program.tiersEnabled ? state.saved.tiers : []}
             joinKeyword={joinKeyword}
+            whatsappNumber={whatsappNumber}
             design={materials.brochure}
             compose={(brochure) => ({ ...materials, brochure })}
           />

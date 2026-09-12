@@ -207,10 +207,23 @@ export async function getLoyaltyCustomerByContactId(contactId: string) {
   return (await axiosClient.get(`${base}/contact/${contactId}`)).data;
 }
 
-export async function updateLoyaltyCustomer(
-  customerId: string,
-  data: { status?: "active" | "suspended" | "closed" },
-) {
+/**
+ * Editing a member.
+ *
+ * `status` is the loyalty account's own; name, birthday, gender and email belong to the
+ * contact behind it and are written through. `null` clears a field and `undefined` leaves
+ * it alone, so a mistyped birthday can be removed rather than only replaced.
+ */
+export interface UpdateLoyaltyCustomerInput {
+  status?: "active" | "suspended" | "closed";
+  name?: string;
+  /** `YYYY-MM-DD`. Filling this in is what lets the birthday reminder find them. */
+  dob?: string | null;
+  gender?: "MALE" | "FEMALE" | "OTHER" | null;
+  email?: string | null;
+}
+
+export async function updateLoyaltyCustomer(customerId: string, data: UpdateLoyaltyCustomerInput) {
   return (await axiosClient.put(`${base}/${customerId}`, data)).data;
 }
 

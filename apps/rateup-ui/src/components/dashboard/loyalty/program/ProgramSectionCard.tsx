@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils.ts";
 import { LOYALTY_PATHS } from "../paths.ts";
 import type { SectionSummary, SummaryTag } from "./programSummary.ts";
 
-/** One of the five sections on the Program page: the sentence, the tags, and Edit. */
+/** One of the four sections on the Program page: the sentence, the tags, and Edit. */
 export function ProgramSectionCard({ summary }: Readonly<{ summary: SectionSummary }>) {
   const { t } = useTranslation();
 

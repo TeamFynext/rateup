@@ -47,12 +47,21 @@ export const useWaFlowsFromWa = () =>
     queryFn: getWaFlowsFromWa,
   });
 
-/** The catalogue never changes between deploys, so it does not need refetching. */
-export const useFlowTemplates = (category: string, enabled = true) =>
+/**
+ * The ready-made flows for a category. The catalogue never changes between deploys, so it does
+ * not need refetching.
+ *
+ * `undefined` means there is nothing to load and the query stays idle. Passing the category
+ * rather than gating a fixed key on `enabled` matters: a disabled query still hands back
+ * whatever is cached under its key, so a constant key would serve the loyalty catalogue to a
+ * run for a purpose that has no templates.
+ */
+export const useFlowTemplates = (category: string | undefined, enabled = true) =>
   useQuery({
-    queryKey: ["flow", "templates", category],
-    queryFn: () => getFlowTemplates(category),
-    enabled,
+    queryKey: ["flow", "templates", category ?? null],
+    // Never reached without a category: the query is disabled.
+    queryFn: () => getFlowTemplates(category ?? ""),
+    enabled: enabled && category !== undefined,
     staleTime: Infinity,
   });
 

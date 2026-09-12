@@ -5,6 +5,8 @@ import type { LoyaltyProgram } from "@/backend/loyalty/program.api";
 
 import { earnPairFromRate } from "../earning-rules/parts/earnRate.ts";
 import { formatMoney, singularPoints } from "../giveback/format.ts";
+import { parseHex } from "../onboarding/brand.ts";
+import { DEFAULT_BRAND_COLOR } from "../onboarding/programDefaults.ts";
 import { orderTiers, rewardGroupOf, type TierRef } from "../onboarding/rewardGroups.ts";
 import {
   readAmount,
@@ -12,6 +14,8 @@ import {
   readPercentage,
   readRewardValueType,
 } from "../onboarding/rewardValue.ts";
+import { isBrochureDesign, type BrochureDesignKind } from "./brochureDesigns.ts";
+import { isBrochurePaper, paperHex } from "./brochurePapers.ts";
 
 /**
  * The print materials a merchant designs on the Materials page: the QR card's copy and
@@ -33,12 +37,22 @@ export interface BrochureRewardLine {
 }
 
 export interface BrochureDesign {
+  /** Which layout prints. The copy below is the same whichever is chosen. */
+  design: BrochureDesignKind;
+  /**
+   * The card's background, as a six-digit hex — any colour, not one of a fixed list. The
+   * ink and the accent are derived from it rather than stored, so the card cannot end up
+   * grey on grey; see `brochurePapers.ts`. Documents written before this was a free colour
+   * carry a `paper` preset name instead, which `buildMaterialsDefaults` resolves.
+   */
+  background: string;
   title: string;
   tagline: string;
   earnLine: string;
   rewards: BrochureRewardLine[];
   terms: string;
-  showPoweredBy: boolean;
+  /** Print the join QR. Where it lands is the design's decision, not a setting. */
+  showQr: boolean;
 }
 
 /** A type alias, not an interface, so it satisfies the API client's `Record<string, unknown>`. */
@@ -67,12 +81,19 @@ const lineSchema = z.object({
 
 const brochureSchema = z
   .object({
+    // Read as plain strings and narrowed by the guards when the defaults are built: a
+    // document naming a design or paper this build has retired falls back rather than
+    // failing the whole parse and losing the merchant's copy with it.
+    design: z.string(),
+    background: z.string(),
+    /** Retired in favour of `background`; still read so an older document keeps its look. */
+    paper: z.string(),
     title: z.string(),
     tagline: z.string(),
     earnLine: z.string(),
     rewards: z.array(lineSchema),
     terms: z.string(),
-    showPoweredBy: z.boolean(),
+    showQr: z.boolean(),
   })
   .partial();
 
@@ -98,7 +119,10 @@ export function parseMaterials(raw: unknown): StoredMaterials | null {
 /* ── defaults from the programme ────────────────────────────────────────────── */
 
 export interface MaterialsContext {
-  program: Pick<LoyaltyProgram, "name" | "currencyName" | "currencyCode" | "currencySymbol">;
+  program: Pick<
+    LoyaltyProgram,
+    "name" | "currencyName" | "currencyCode" | "currencySymbol" | "brandColor"
+  >;
   rules: SavedOnboardingData["rules"];
   rewards: SavedOnboardingData["rewards"];
   /** What the QR pre-types into the WhatsApp chat. */
@@ -202,9 +226,25 @@ export function buildMaterialsDefaults(
       earnLine: stored?.brochure?.earnLine ?? defaultEarnLine(context),
       rewards,
       terms: stored?.brochure?.terms ?? "Minimum purchase may apply. Offers cannot be combined.",
-      showPoweredBy: stored?.brochure?.showPoweredBy ?? true,
+      design: isBrochureDesign(stored?.brochure?.design) ? stored.brochure.design : "menu",
+      background: storedBackground(stored, program.brandColor ?? DEFAULT_BRAND_COLOR),
+      // Off by default: the QR earns its place on a card the merchant chose to put it on,
+      // and the counter poster already carries one.
+      showQr: stored?.brochure?.showQr ?? false,
     },
   };
+}
+
+/**
+ * The stored background: the hex if one was saved, else the preset an older document named,
+ * else warm white. A junk hex is discarded rather than printed — `brochureTones` would fall
+ * back anyway, but then the picker would open on a value it is not using.
+ */
+function storedBackground(stored: StoredMaterials | null, brandColor: string): string {
+  const saved = stored?.brochure?.background?.trim().toLowerCase();
+  if (saved && parseHex(saved)) return saved;
+  const paper = stored?.brochure?.paper;
+  return paperHex(isBrochurePaper(paper) ? paper : "warm-white", brandColor);
 }
 
 /** A tier as the brochure names it beside a reward that only that tier (and up) can redeem. */
