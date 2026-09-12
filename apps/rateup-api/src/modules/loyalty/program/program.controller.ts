@@ -82,7 +82,7 @@ export async function resetProgramPointsHandler(
   reply: FastifyReply,
 ) {
   try {
-    await resetProgramPoints(request.params.programId, request.user.orgId, request.user.id);
+    await resetProgramPoints(request.params.programId, request.user.orgId, request.user.userId);
     reply.code(200).send({ message: "Points reset successfully" });
   } catch (e) {
     log.error(e);
