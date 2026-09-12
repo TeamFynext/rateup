@@ -20,39 +20,102 @@ import { WaMessageClosedStatus } from "../constants.ts";
 
 dayjs.extend(utc);
 
+/** The channel a conversation ran on, and which connected account it ran through. */
+export interface ContactChannelSource {
+  platform: MessagePlatform;
+  /**
+   * The connected account the messages went to: a WhatsApp number, an Instagram
+   * account id or a Facebook page id. Null for webchat, for internal-only rows,
+   * and for legacy messages written before the identifier was recorded.
+   */
+  identifier: string | null;
+}
+
+interface ChannelSourceMessage {
+  sourcePlatform?: MessagePlatform | string | null;
+  sourceIdentifier?: string | null;
+}
+
 /**
  * Resolve the channel (WhatsApp / Instagram / Facebook / Webchat) a conversation
- * lives on. `lastMessage.sourcePlatform` alone is unreliable: the last message can
- * be an INTERNAL note (private or system message), whose `sourcePlatform` is
- * "INTERNAL" — not the real channel — and "INTERNAL" is truthy so a plain
- * `|| WHATSAPP` fallback never fires. Resolve in order of confidence:
+ * lives on, together with the account it came in on. `lastMessage.sourcePlatform`
+ * alone is unreliable: the last message can be an INTERNAL note (private or
+ * system message), whose `sourcePlatform` is "INTERNAL" — not the real channel —
+ * and "INTERNAL" is truthy so a plain `|| WHATSAPP` fallback never fires. Resolve
+ * in order of confidence:
  *   1. the last message, when it is a real channel message
  *   2. the most recent non-internal message the row already carries
  *   3. the contact's channel identity (igsId → Instagram, psid → Facebook)
  *   4. WhatsApp as the default
+ *
+ * The identifier is read off the *same* message that settled the platform, so the
+ * pair always describes one real send — never a WhatsApp number paired with an
+ * Instagram thread. Steps 3 and 4 are guesses about the platform only and carry
+ * no identifier.
  */
-export function getContactPlatform(
+export function getContactChannelSource(
   contact?: {
-    lastMessage?: { sourcePlatform?: MessagePlatform | string | null } | null;
-    messages?: Array<
-      { sourcePlatform?: MessagePlatform | string | null } | null | undefined
-    > | null;
+    lastMessage?: ChannelSourceMessage | null;
+    messages?: Array<ChannelSourceMessage | null | undefined> | null;
     igsId?: string | null;
     psid?: string | null;
   } | null,
-): MessagePlatform {
+): ContactChannelSource {
   const asChannel = (p?: MessagePlatform | string | null): MessagePlatform | undefined =>
     p && p !== "INTERNAL" ? (p as MessagePlatform) : undefined;
 
+  const fromMessage = (m?: ChannelSourceMessage | null): ContactChannelSource | undefined => {
+    const platform = asChannel(m?.sourcePlatform);
+    return platform ? { platform, identifier: m?.sourceIdentifier || null } : undefined;
+  };
+
   return (
-    asChannel(contact?.lastMessage?.sourcePlatform) ??
-    asChannel(contact?.messages?.find((m) => asChannel(m?.sourcePlatform))?.sourcePlatform) ??
-    (contact?.igsId
-      ? MessagePlatform.INSTAGRAM
-      : contact?.psid
-        ? MessagePlatform.FACEBOOK
-        : MessagePlatform.WHATSAPP)
+    fromMessage(contact?.lastMessage) ??
+    fromMessage(contact?.messages?.find((m) => asChannel(m?.sourcePlatform))) ?? {
+      platform: contact?.igsId
+        ? MessagePlatform.INSTAGRAM
+        : contact?.psid
+          ? MessagePlatform.FACEBOOK
+          : MessagePlatform.WHATSAPP,
+      identifier: null,
+    }
   );
+}
+
+/** The channel a conversation lives on. See {@link getContactChannelSource}. */
+export function getContactPlatform(
+  contact?: Parameters<typeof getContactChannelSource>[0],
+): MessagePlatform {
+  return getContactChannelSource(contact).platform;
+}
+
+/**
+ * The phone number to show for a contact.
+ *
+ * A webchat visitor types their number into the widget and it is stored on
+ * `other`, not on `phone` — the org has no WhatsApp thread with that number, and
+ * `phone` is the key the WhatsApp pipeline is unique on, so webchat deliberately
+ * leaves it null. Without this the inbox shows a webchat ticket with no number at
+ * all, even though the visitor gave one.
+ *
+ * Scoped to webchat on purpose: Messenger writes its PSID to the same `other`
+ * column, and a raw PSID rendered as a phone number is worse than nothing.
+ *
+ * For display only. Anything that *sends* — templates, flows, block/unblock —
+ * must keep using `phone`, since a webchat number is not a reachable WhatsApp
+ * thread.
+ */
+export function getContactDisplayPhone(
+  contact?:
+    | (Parameters<typeof getContactChannelSource>[0] & {
+        phone?: string | null;
+        other?: string | null;
+      })
+    | null,
+): string | undefined {
+  if (contact?.phone) return contact.phone;
+  if (getContactPlatform(contact) === MessagePlatform.WEBCHAT) return contact?.other || undefined;
+  return undefined;
 }
 
 /**

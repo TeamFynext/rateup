@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-12-inbox-delete-conversation",
+    title: "Delete a conversation",
+    summary:
+      "Admins can now delete a conversation outright, from the … menu in the thread header or the ticket details sidebar, and several at once by ticking chats in the list and using the bin in the selection bar. It removes that one ticket and every message in it — the contact and their other tickets stay exactly as they are. This is meant for threads that should not be kept at all, such as a test chat or something a customer asked you to erase, and it cannot be undone, so you are asked to confirm first. Anyone below admin will not see the option.",
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
     id: "2026-09-11-facebook-page-picker",
     title: "Pick your Page for Messenger and Instagram",
     summary:

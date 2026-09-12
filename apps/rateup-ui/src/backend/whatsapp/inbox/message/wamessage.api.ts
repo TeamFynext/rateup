@@ -362,6 +362,41 @@ export async function updateConversation(
     .data as UpdatedConversation;
 }
 
+/**
+ * Inbox Tickets v2 — permanently delete a ticket **and its messages**.
+ *
+ * Admin-only on the server. The whole row goes: the thread's messages are deleted
+ * with the conversation rather than left behind attached to nothing, so there is
+ * nothing to undo this with.
+ */
+export async function deleteConversation(conversationId: string) {
+  // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
+  return (await axiosClient.delete(`/contact/conversations/${conversationId}`)).data as {
+    id: string;
+    contactId: string;
+    deletedMessages: number;
+    remainingConversations: boolean;
+  };
+}
+
+/**
+ * Inbox Tickets v2 — delete several tickets at once (the list's bulk action).
+ *
+ * Admin-only, and as final as the single delete. Ids the org no longer owns are
+ * skipped server-side rather than failing the batch, so the answer says how many
+ * actually went.
+ */
+export async function deleteConversations(conversationIds: string[]) {
+  // NB: axiosClient's baseURL already ends in `/api` — paths must not repeat it.
+  return (await axiosClient.delete(`/contact/conversations`, { data: { conversationIds } }))
+    .data as {
+    conversationIds: string[];
+    contactIds: string[];
+    deletedConversations: number;
+    deletedMessages: number;
+  };
+}
+
 /** What the conversation edit endpoint echoes back. */
 export interface UpdatedConversation {
   subject?: string | null;
