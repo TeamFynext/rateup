@@ -172,8 +172,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
     expect(prismaMock.whatsappSettings.findMany).not.toHaveBeenCalled();
   });
 
-  test("a WhatsApp channel yields both the +-prefixed and stripped phone", async () => {
-    // Inbound webhooks write "+1555...", the send queue writes "1555..." — both must match.
+  test("a WhatsApp channel yields every spelling of its number", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
     prismaMock.whatsappSettings.findMany.mockResolvedValue([
       { phone: "+15551323034", ibaId: null, fbPageId: null },
@@ -183,6 +182,39 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
 
     expect(result.all).toBe(false);
     expect(result.identifiers.sort()).toEqual(["+15551323034", "15551323034"]);
+  });
+
+  /**
+   * `phone` is a display string and Meta formats it, so this is the spelling many
+   * of these rows actually hold — while the same number is stored bare by other
+   * write paths. Listing only one of them is how a scoped agent lost most of
+   * their own inbox.
+   */
+  test("a formatted number covers the bare spellings its messages hold", async () => {
+    prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
+    prismaMock.whatsappSettings.findMany.mockResolvedValue([
+      { phone: "+1555-132-3034", ibaId: null, fbPageId: null },
+    ]);
+
+    const result = await getScopedSourceIdentifiers(ORG, USER);
+
+    expect(result.identifiers.sort()).toEqual(
+      ["+1555-132-3034", "1555-132-3034", "15551323034", "+15551323034"].sort(),
+    );
+  });
+
+  // An empty entry would compare equal to nothing useful and only bloats the
+  // query parameter — but a value with no digits at all must not silently become
+  // one.
+  test("never lists an empty identifier", async () => {
+    prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
+    prismaMock.whatsappSettings.findMany.mockResolvedValue([
+      { phone: "+", ibaId: null, fbPageId: null },
+    ]);
+
+    const result = await getScopedSourceIdentifiers(ORG, USER);
+
+    expect(result.identifiers).not.toContain("");
   });
 
   test("Instagram and Facebook identifiers are included", async () => {

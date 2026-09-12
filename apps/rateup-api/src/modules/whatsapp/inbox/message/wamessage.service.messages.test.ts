@@ -353,15 +353,52 @@ describe("getWaMessagesByContactId", () => {
     expect(result.nextCursor).toBe("m49");
   });
 
-  test("narrows the thread to one channel when a phone is named", async () => {
-    await getWaMessagesByContactId("contact-1", null, "15550001");
-
-    const [identifierCondition] = db.waMessage.findMany.mock.calls[0][0].where.AND;
-    expect(identifierCondition.OR).toEqual([
+  /**
+   * Matched on digits rather than on a guessed pair of spellings. The column
+   * holds at least four spellings of one number, so listing `phone` and `+phone`
+   * dropped whichever of the thread's messages were stored with the separators
+   * Meta formats the number with — most of them, for some orgs.
+   */
+  test("narrows the thread to one channel, whatever spelling its messages hold", async () => {
+    db.waMessage.findMany.mockResolvedValueOnce([
       { sourceIdentifier: "15550001" },
       { sourceIdentifier: "+15550001" },
+      { sourceIdentifier: "+1555-000-1" },
+      { sourceIdentifier: "+1555 0001" },
+      // A different channel, and the system-note marker, which is added back
+      // separately rather than matched by number.
+      { sourceIdentifier: "15559999" },
       { sourceIdentifier: "internal" },
     ]);
+
+    await getWaMessagesByContactId("contact-1", null, "15550001");
+
+    const [identifierCondition] = db.waMessage.findMany.mock.calls[1][0].where.AND;
+    expect(identifierCondition.OR).toEqual([
+      { sourceIdentifier: { in: ["15550001", "+15550001", "+1555-000-1", "+1555 0001"] } },
+      { sourceIdentifier: "internal" },
+    ]);
+  });
+
+  test("resolves the thread's spellings from that contact's own messages", async () => {
+    db.waMessage.findMany.mockResolvedValueOnce([]);
+
+    await getWaMessagesByContactId("contact-1", null, "15550001");
+
+    expect(db.waMessage.findMany.mock.calls[0][0]).toMatchObject({
+      where: { contactId: "contact-1" },
+      distinct: ["sourceIdentifier"],
+    });
+  });
+
+  // A channel the contact has no messages on must match nothing, not everything.
+  test("matches no message when the contact never used that channel", async () => {
+    db.waMessage.findMany.mockResolvedValueOnce([{ sourceIdentifier: "15559999" }]);
+
+    await getWaMessagesByContactId("contact-1", null, "15550001");
+
+    const [identifierCondition] = db.waMessage.findMany.mock.calls[1][0].where.AND;
+    expect(identifierCondition.OR[0]).toEqual({ sourceIdentifier: { in: [] } });
   });
 
   test('treats the "all" channel as no channel filter', async () => {

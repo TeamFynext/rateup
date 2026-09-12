@@ -5,6 +5,7 @@ const handleWaMessages = vi.fn();
 const getWaMessageByMessageId = vi.fn();
 const assertWithinConversationLimit = vi.fn();
 const getWaSettings = vi.fn();
+const getWaSendingSettings = vi.fn();
 const getWaSettingsByIbaId = vi.fn();
 const getWaSettingsByPageId = vi.fn();
 
@@ -24,6 +25,7 @@ vi.mock("../inbox/message/wamessage.service.js", () => ({ getWaMessageByMessageI
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({ assertWithinConversationLimit }));
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
+  getWaSendingSettings,
   getWaSettingsByIbaId,
   getWaSettingsByPageId,
 }));
@@ -37,6 +39,11 @@ const payload = { messaging_product: "whatsapp", to: "+100" };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  getWaSendingSettings.mockResolvedValue({
+    accessToken: "wa-token",
+    phoneId: "phone-1",
+    phone: "+919",
+  });
   getWaSettings.mockResolvedValue({ accessToken: "wa-token", phoneId: "phone-1", phone: "+919" });
   getWaSettingsByIbaId.mockResolvedValue({ pageAccessToken: "ig-token" });
   getWaSettingsByPageId.mockResolvedValue({ pageAccessToken: "fb-token" });
@@ -113,7 +120,11 @@ describe("sendMetaMessage", () => {
   });
 
   it("reports missing credentials instead of throwing, and sends nothing", async () => {
-    getWaSettings.mockResolvedValue(null);
+    // Also the shape a multi-channel org gets when the send names no number:
+    // `getWaSendingSettings` refuses to guess one rather than falling back to
+    // the org's oldest, so the send is reported rather than sent on a number
+    // with no 24h window open.
+    getWaSendingSettings.mockResolvedValue(null);
 
     const result = await send();
 
