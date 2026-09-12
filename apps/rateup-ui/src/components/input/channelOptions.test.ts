@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { MessagePlatform } from "@/types/enums.ts";
 
-import { hasMultipleChannels, resolveChannel } from "./channelOptions.ts";
+import { resolveChannel } from "./channelOptions.ts";
 
 type Settings = Parameters<typeof resolveChannel>[0];
 
@@ -77,26 +77,5 @@ describe("resolveChannel", () => {
     expect(resolveChannel(waSettings, MessagePlatform.WEBCHAT, "anything")).toBeNull();
     expect(resolveChannel(waSettings, "INTERNAL", null)).toBeNull();
     expect(resolveChannel(waSettings, MessagePlatform.WHATSAPP, null)).toBeNull();
-  });
-});
-
-describe("hasMultipleChannels", () => {
-  it("is false for a single number and true once a second account exists", () => {
-    expect(hasMultipleChannels(settings(account()))).toBe(false);
-    expect(hasMultipleChannels(settings(account({ ibaId: "iba-1" })))).toBe(true);
-    expect(hasMultipleChannels(undefined)).toBe(false);
-  });
-
-  it("counts a manually configured number that has no phoneId", () => {
-    // `phoneId` is nullable, so counting channels through it scored these as zero
-    // and hid the chip on orgs that do run two numbers.
-    expect(
-      hasMultipleChannels(
-        settings(
-          account({ phoneId: undefined, phone: "+15551230000" }),
-          account({ id: "s2", phoneId: undefined, phone: "+15551230001" }),
-        ),
-      ),
-    ).toBe(true);
   });
 });

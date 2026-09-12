@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-12-inbox-channel-on-ticket",
+    title: "See which number a ticket came in on",
+    summary:
+      "Each inbox row now carries a chip naming the channel the ticket arrived on, and the thread's Ticket Info panel names it in full — your own label for the number where you have set one, otherwise the number itself. It reads the channel off the ticket's own messages rather than the contact's last activity, so a customer who writes to two of your numbers no longer makes both tickets claim the same one. A number you have since disconnected is still named, marked as no longer connected and outlined with a dashed border so it reads differently from a live channel. Webchat tickets now also show the number the visitor typed into the widget, which the inbox used to leave blank.",
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
     id: "2026-09-12-inbox-delete-conversation",
     title: "Delete a conversation",
     summary:
