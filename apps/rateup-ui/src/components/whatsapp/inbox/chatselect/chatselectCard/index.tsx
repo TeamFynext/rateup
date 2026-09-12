@@ -22,6 +22,7 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import { hasMultipleChannels, resolveChannel } from "@/components/input/channelOptions.ts";
 import { StageDot } from "@/components/pipeline/shared/atoms.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -37,7 +38,8 @@ import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTime.ts";
 import {
-  getContactPlatform,
+  getContactChannelSource,
+  getContactDisplayPhone,
   isInboxSessionExpired,
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
@@ -89,6 +91,7 @@ interface WaInboxChatSelectCardProps {
 }
 export default function WaInboxChatSelectCard({
   contact,
+  waSettings,
   lifeCycleLabels,
   isSelectionMode,
   selectedChats,
@@ -106,7 +109,16 @@ export default function WaInboxChatSelectCard({
   const rowKey = contact ? getRowKey(contact) : "";
   const isSelected = !!selectedContact && getRowKey(selectedContact) === rowKey;
 
-  const platform = getContactPlatform(contact);
+  const { platform, identifier: channelIdentifier } = getContactChannelSource(contact);
+  /** Which of the org's numbers/accounts this ticket came in on — only worth a
+      chip once there is more than one to tell apart. */
+  const channel = useMemo(
+    () =>
+      hasMultipleChannels(waSettings)
+        ? resolveChannel(waSettings, platform, channelIdentifier)
+        : null,
+    [waSettings, platform, channelIdentifier],
+  );
   const lifecycleInfo = useMemo(() => {
     const label = lifeCycleLabels?.find((label) => label.id === contact?.lifecycleId);
     return label;
@@ -115,7 +127,7 @@ export default function WaInboxChatSelectCard({
   const displayName =
     contact?.name ||
     contact?.whatsappUserName ||
-    contact?.phone ||
+    getContactDisplayPhone(contact) ||
     contact?.igsId ||
     contact?.psid ||
     "Unknown";
@@ -128,6 +140,25 @@ export default function WaInboxChatSelectCard({
 
   const { mutate: toggleFavorite } = useToggleFavorite();
   const assignMut = useAssignInboxToUer(contact?.id, filterData ?? "");
+
+  const isChecked = selectedChats.includes(rowKey);
+
+  /**
+   * Select or deselect this row — a *set* to `next`, never a flip.
+   *
+   * Two things can act on one click: the row, and the checkbox whose
+   * `onCheckedChange` also fires when the row's click flips its `checked` prop.
+   * A flip would then undo itself, and the previous `[...prev, rowKey]` appended
+   * the same key twice, which is what showed "2 selected" for one card. Setting
+   * an explicit value off a deduped list makes both paths agree no matter how
+   * many of them run.
+   */
+  function setRowSelected(next: boolean) {
+    setSelectedChats((prev) => {
+      const without = prev.filter((id) => id !== rowKey);
+      return next ? [...without, rowKey] : without;
+    });
+  }
 
   function handleToggleFavorite(e: React.MouseEvent) {
     e.stopPropagation();
@@ -199,11 +230,10 @@ export default function WaInboxChatSelectCard({
     <div
       onClick={() => {
         if (isSelectionMode) {
-          setSelectedChats((prev) =>
-            prev.includes(contact.id)
-              ? prev.filter((id) => id !== contact.id)
-              : [...prev, contact.id],
-          );
+          // Selection is keyed by ticket (`rowKey`), like the list itself and
+          // "select all" — keying it by contact would tick every row of a contact
+          // who has several, and hand bulk actions an id that names no one row.
+          setRowSelected(!isChecked);
           return;
         }
         // Selecting the row is all it takes to open the thread — stacked layouts
@@ -221,14 +251,8 @@ export default function WaInboxChatSelectCard({
         <Checkbox
           className="mt-1 shrink-0 border border-muted-foreground shadow-sm"
           onClick={(e) => e.stopPropagation()}
-          checked={selectedChats.includes(contact.id)}
-          onCheckedChange={(checked) => {
-            if (checked) {
-              setSelectedChats((prev) => [...prev, contact.id]);
-            } else {
-              setSelectedChats((prev) => prev.filter((id) => id !== contact.id));
-            }
-          }}
+          checked={isChecked}
+          onCheckedChange={(checked) => setRowSelected(Boolean(checked))}
         />
       )}
 
@@ -359,6 +383,31 @@ export default function WaInboxChatSelectCard({
               <span className="size-1.25 rounded-full bg-current" />
               {translations(STATUS_LABEL[status])}
             </span>
+          )}
+
+          {/* Which number/account the ticket came in on. Rendered only for orgs
+              running more than one channel — see `hasMultipleChannels`. */}
+          {channel && (
+            <CustomTooltip
+              trigger={
+                <span className="inline-flex max-w-36 items-center gap-1 rounded-full border border-border px-2 py-px text-[10px] font-bold text-muted-foreground">
+                  <span
+                    className={cn(
+                      "size-1.5 shrink-0 rounded-full",
+                      getSoucePlatformIconAndColor(platform)?.bgColor,
+                    )}
+                  />
+                  <span className="truncate">{channel.label}</span>
+                </span>
+              }
+              content={
+                <span>
+                  {translations("Received on")}{" "}
+                  {[channel.label, channel.account].filter(Boolean).join(" · ")}
+                  {!channel.isConnected && ` (${translations("no longer connected")})`}
+                </span>
+              }
+            />
           )}
 
           {(contact?.mentionCount ?? 0) > 0 && (

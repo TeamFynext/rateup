@@ -1,5 +1,7 @@
 {
   "translation": {
+    "no longer connected": "no longer connected",
+    "Received on": "Received on",
     "…": "…",
     "... not answered...": "... not answered...",
     "(empty message)": "(empty message)",
@@ -1776,6 +1778,7 @@
     "No lead stage has a rotting window set.": "No lead stage has a rotting window set.",
     "No leads match these filters.": "No leads match these filters.",
     "No logic jumps configured for this element": "No logic jumps configured for this element",
+    "no longer connected": "no longer connected",
     "No lost reasons are configured yet — add some in pipeline settings to track why deals slip.": "No lost reasons are configured yet — add some in pipeline settings to track why deals slip.",
     "No Loyalty Program Found": "No Loyalty Program Found",
     "No members in this team yet": "No members in this team yet",
@@ -2157,6 +2160,7 @@
     "Real-time overview of your team performance and activities": "Real-time overview of your team performance and activities",
     "Reason": "Reason",
     "Received from other agents": "Received from other agents",
+    "Received on": "Received on",
     "Recent actions performed by team members": "Recent actions performed by team members",
     "Recent Activity": "Recent Activity",
     "Recent Conversations": "Recent Conversations",
