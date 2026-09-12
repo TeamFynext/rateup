@@ -31,30 +31,36 @@ const STATUS_TONE: Record<string, { tone: InboxStatusTone; label: string }> = {
   [WaMessageAssignStatus.SPAM]: { tone: "spam", label: "Spam" },
 };
 
-function channelIcon(platform: string | undefined) {
+function channelIcon(platform: string | undefined, color = "#fff", size = 11) {
   switch (platform) {
     case MessagePlatform.WHATSAPP:
-      return <FontAwesome name="whatsapp" color="#fff" size={11} />;
+      return <FontAwesome name="whatsapp" color={color} size={size} />;
     case MessagePlatform.INSTAGRAM:
-      return <FontAwesome name="instagram" color="#fff" size={11} />;
+      return <FontAwesome name="instagram" color={color} size={size} />;
     case MessagePlatform.FACEBOOK:
-      return <FontAwesome name="facebook" color="#fff" size={10} />;
+      return <FontAwesome name="facebook" color={color} size={size - 1} />;
     case MessagePlatform.WEBCHAT:
-      return <MessageCircle color="#fff" size={10} />;
+      return <MessageCircle color={color} size={size - 1} />;
     default:
       return null;
   }
 }
 
 type ChipProps = {
-  label: string;
+  label?: string;
   color: string;
   background: string;
   /** Status pills carry a 5px leading dot; label chips don't. */
   dot?: string;
+  /** Outlined chips (the channel) read as metadata next to the filled ones. */
+  border?: string;
+  /** A channel the org no longer has connected is dashed, so it tells apart at a glance. */
+  dashed?: boolean;
+  /** Leading glyph — the channel pill puts its platform icon here. */
+  icon?: React.ReactNode;
 };
 
-function Chip({ label, color, background, dot }: ChipProps) {
+function Chip({ label, color, background, dot, border, dashed, icon }: ChipProps) {
   return (
     <View
       style={{
@@ -65,6 +71,9 @@ function Chip({ label, color, background, dot }: ChipProps) {
         paddingHorizontal: 10,
         borderRadius: 9999,
         backgroundColor: background,
+        ...(border
+          ? { borderWidth: 1, borderColor: border, borderStyle: dashed ? "dashed" : "solid" }
+          : null),
       }}
     >
       {dot ? (
@@ -77,9 +86,12 @@ function Chip({ label, color, background, dot }: ChipProps) {
           }}
         />
       ) : null}
-      <Text numberOfLines={1} style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}>
-        {label}
-      </Text>
+      {icon}
+      {label ? (
+        <Text numberOfLines={1} style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}>
+          {label}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -92,6 +104,10 @@ export type ChatBoxProps = ContactsWithLastMessage & {
   selected?: boolean;
   /** Used to pick the warm "you" capsule for the assignee chip. */
   currentUserId?: string;
+  /** Which of the org's numbers/accounts the ticket came in on — see `resolveChannel`. */
+  channelLabel?: string;
+  /** False when that number is no longer connected; the chip then reads dashed. */
+  channelConnected?: boolean;
 };
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -112,6 +128,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onAssignPress,
   selected,
   currentUserId,
+  channelLabel,
+  channelConnected,
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -163,6 +181,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   }, [lastMessage]);
 
   const channelColor = platform ? inboxChannelColors[platform] : undefined;
+  /** The pill shows for any known platform; the source label fills in when we can name it. */
+  const channelPill = !!channelColor || !!channelLabel;
   const code = ticketNumber != null ? `${ticketNumber}` : null;
 
   const renderAssigneeBadge = () => {
@@ -257,25 +277,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             {namePreview(name)}
           </Text>
         </View>
-
-        {/* Spacer to push channel icon down */}
-        <View style={{ flex: 1, minHeight: 12 }} />
-
-        {channelColor ? (
-          <View
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 11,
-              backgroundColor: channelColor,
-              alignItems: "center",
-              justifyContent: "center",
-              alignSelf: "flex-end", // Aligns it to the right to be inline with chips
-            }}
-          >
-            {channelIcon(platform)}
-          </View>
-        ) : null}
       </View>
 
       {/* Right Column Container */}
@@ -324,8 +325,24 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </View>
 
           {/* Chips */}
-          {status || lifecycleInfo || contactLabels?.length ? (
+          {status || lifecycleInfo || channelPill || contactLabels?.length ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+              {/* Platform + which of the org's numbers/accounts the ticket came in
+                  on, in one pill: the icon says WhatsApp/Instagram/Facebook, the
+                  label says which account within it. The label is dropped when
+                  the source can't be named (webchat, pre-identifier messages), so
+                  the pill still carries the platform on its own. */}
+              {channelPill ? (
+                <Chip
+                  label={channelLabel}
+                  color={t.fg3}
+                  background={tint(channelColor, 0.1, t.brandSoft)}
+                  border={channelConnected === false ? t.fg4 : t.border1}
+                  dashed={channelConnected === false}
+                  icon={channelIcon(platform, channelColor ?? t.fg3, 11)}
+                />
+              ) : null}
+
               {status && statusTone ? (
                 <Chip
                   label={status.label}

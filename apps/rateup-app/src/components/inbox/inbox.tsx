@@ -10,11 +10,13 @@ import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
 } from "@/api/inbox/messages/utils";
+import { resolveChannel } from "@/utils/chatbox_utils";
 import { useEffect } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
 import { useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inboxStore";
+import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 
 /** Gutter around the whole conversation list, on top of each row's own 16px. */
 const LIST_PADDING_X = 0;
@@ -37,6 +39,10 @@ export default function Inbox({
   const filter = useChatFilterStore((state) => state.filter);
   const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
   const router = useRouter();
+  // Which of the org's numbers/accounts each ticket came in on. Resolved here
+  // rather than in the row so the list shares one `waSettings` read instead of
+  // one hook per visible row, and `ChatBox` keeps only primitive props to memo on.
+  const { data: waSettings } = useWaSettings();
 
   const mergedFilter = {
     ...filter,
@@ -156,6 +162,7 @@ export default function Inbox({
     const diffInMinutes = sessionExpiry.diff(now, "minute");
     const isSessionActive = diffInMinutes > 0;
     const platform = item?.lastMessage?.sourcePlatform;
+    const channel = resolveChannel(waSettings, platform, item?.lastMessage?.sourceIdentifier);
     const name = item.name || item?.whatsappUserName || item.igsId || item.phone;
 
     return (
@@ -164,6 +171,8 @@ export default function Inbox({
         phone={item.phone}
         name={name}
         platform={platform}
+        channelLabel={channel?.label}
+        channelConnected={channel?.isConnected}
         lastMessage={messagePreview}
         waMessageAssignStatus={item.waMessageAssignStatus}
         assignedUsers={item.assignedUsers}
