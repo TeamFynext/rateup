@@ -19,7 +19,11 @@ import { cn } from "@/lib/utils.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
-import { getContactPlatform, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
+import {
+  getContactDisplayPhone,
+  getContactPlatform,
+  isInboxSessionExpired,
+} from "@/utils/whatsapp/inbox.ts";
 
 import { getSoucePlatformIconAndColor } from "../../util.tsx";
 import CloseTicketMenu from "./CloseTicketMenu.tsx";
@@ -65,19 +69,19 @@ export default function WaInboxChatDisplayHeader({
 
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
 
+  const phone = getContactDisplayPhone(contact);
+
   const displayName =
-    contact?.name || contact?.whatsappUserName || contact?.phone || contact?.igsId || contact?.psid;
+    contact?.name || contact?.whatsappUserName || phone || contact?.igsId || contact?.psid;
 
   const status = deriveStatus(contact);
 
-  /** "<channel> · <account> · <phone>" — parts we don't have are dropped. */
-  const subLine = [
-    CHANNEL_LABELS[platform] ?? platform,
-    contact?.metadata?.display_phone_number,
-    contact?.phone,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  /**
+   * "<channel> · <phone>" — the customer's side of the thread. Which of *our*
+   * numbers they reached is deliberately not here: the list row and the Ticket
+   * Info panel both name it, and a third copy in the header only crowds the name.
+   */
+  const subLine = [CHANNEL_LABELS[platform] ?? platform, phone].filter(Boolean).join(" · ");
 
   if (!contact) return null;
   return (
