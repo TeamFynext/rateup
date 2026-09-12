@@ -1117,10 +1117,51 @@ describe("updateCustomerAccount", () => {
   test("scopes the write to the caller's program", async () => {
     await updateCustomerAccount("acct-other-org", { status: "closed" } as any, PROGRAM);
 
-    expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
-      where: { id: "acct-other-org", programId: PROGRAM },
-      data: { status: "closed" },
+    const call = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    // The programme in the where clause is the whole of the authorisation: an id from
+    // another org matches nothing and Prisma throws P2025, which the handler answers 404.
+    expect(call.where).toEqual({ id: "acct-other-org", programId: PROGRAM });
+    expect(call.data).toEqual({ status: "closed" });
+  });
+
+  test("writes name, birthday and gender through to the contact", async () => {
+    await updateCustomerAccount(
+      "acct-1",
+      { name: "Anjali R", dob: "1994-03-02", gender: "FEMALE" } as any,
+      PROGRAM,
+    );
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data.contact.update).toEqual({
+      name: "Anjali R",
+      dob: new Date("1994-03-02"),
+      gender: "FEMALE",
     });
+    // Nothing about the account itself changed, so it is not touched.
+    expect(data).not.toHaveProperty("status");
+  });
+
+  test("a birthday can be cleared, not only overwritten", async () => {
+    await updateCustomerAccount("acct-1", { dob: null } as any, PROGRAM);
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data.contact.update).toEqual({ dob: null });
+  });
+
+  test("a field left out is left alone", async () => {
+    await updateCustomerAccount("acct-1", { name: "Anjali" } as any, PROGRAM);
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data.contact.update).toEqual({ name: "Anjali" });
+    expect(data.contact.update).not.toHaveProperty("dob");
+    expect(data.contact.update).not.toHaveProperty("gender");
+  });
+
+  test("a status-only edit does not reach for the contact", async () => {
+    await updateCustomerAccount("acct-1", { status: "suspended" } as any, PROGRAM);
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data).not.toHaveProperty("contact");
   });
 });
 

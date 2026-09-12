@@ -157,6 +157,36 @@ describe("preset catalogue", () => {
     }
   });
 
+  // "Variables can't be at the start or end of the template." — Meta refuses the
+  // submission, so it is a hard requirement on `eventTemplates`, which become real
+  // templates. The numbering must also ascend in order of appearance, so a trailing slot
+  // cannot be fixed by swapping it with an earlier one. Command replies are held to the
+  // same shape as house style rather than by Meta: their text is stored as reply content,
+  // never submitted, but a reply that stops mid-value reads like it was cut off.
+  test("no preset message opens or closes on a variable", () => {
+    const opens = /^\s*\{\{\d+\}\}/;
+    const closes = /\{\{\d+\}\}\s*$/;
+
+    // The patterns against the bodies they were written for, so a pattern that stopped
+    // matching cannot quietly pass the catalogue.
+    expect(opens.test("{{1}}, {{2}} points expire on {{3}}.")).toBe(true);
+    expect(closes.test("Send a friend this link: {{2}}")).toBe(true);
+
+    for (const preset of Object.values(LOYALTY_PRESETS)) {
+      const bodies = [
+        ...preset.commands.map((c) => [`${preset.key}/${c.requestMessage}`, c.text] as const),
+        ...preset.eventTemplates.map((e) => [`${preset.key}/${e.templateName}`, e.body] as const),
+      ];
+      for (const [where, body] of bodies) {
+        expect(opens.test(body), `${where} opens on a variable`).toBe(false);
+        expect(closes.test(body), `${where} closes on a variable`).toBe(false);
+
+        const order = [...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
+        expect(order, `${where} numbering`).toEqual([...order].sort((a, b) => a - b));
+      }
+    }
+  });
+
   test("every preset reward carries a real reward value, not an empty object", () => {
     for (const preset of Object.values(LOYALTY_PRESETS)) {
       for (const reward of preset.rewards) {

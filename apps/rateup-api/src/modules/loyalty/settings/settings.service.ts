@@ -1,5 +1,6 @@
 import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
+import { LoyaltyEventType } from "../../../types/enums.js";
 import type { CustomerLoyaltyAccount } from "../../../../generated/prisma/client.js";
 import {
   LoyaltyTemplateInput,
@@ -471,5 +472,34 @@ export async function getAllEventTriggers(programId: string) {
 export async function deleteEventTrigger(id: string, programId: string) {
   return await prisma.loyaltyEventTrigger.delete({
     where: { id, programId },
+  });
+}
+
+/**
+ * When one scheduled reminder sends, and to whom.
+ *
+ * A single upsert on (programId, eventType). Every field is optional so the Reminders page
+ * can save one control at a time; `undefined` leaves a setting alone while `null` clears
+ * it, which is how "no gift" is expressed. The wording is not written here — it belongs to
+ * the message, and `saveEventMessage` owns it.
+ */
+export async function saveReminderSchedule(input: {
+  programId: string;
+  eventType: LoyaltyEventType;
+  enabled?: boolean;
+  triggerDays?: number | null;
+  leadDays?: number | null;
+  sendHour?: number | null;
+  rewardId?: string | null;
+}) {
+  const { programId, eventType, ...fields } = input;
+  const patch = Object.fromEntries(
+    Object.entries(fields).filter(([, value]) => value !== undefined),
+  );
+
+  return prisma.loyaltyEventTrigger.upsert({
+    where: { programId_eventType: { programId, eventType } },
+    update: patch,
+    create: { programId, eventType, ...patch },
   });
 }

@@ -42,7 +42,13 @@ export interface PresetReward {
 
 /**
  * An inbound keyword the customer texts, answered with plain text — no Meta template
- * approval needed, so these work the moment the programme is activated.
+ * approval needed, so these work the moment the programme is activated. (The template a
+ * never-messaged customer gets is a separate record, attached as `waTemplateId`.)
+ *
+ * The text still never ends on a `{{n}}`. Meta's "variables can't be at the start or end"
+ * rule does not reach this field, but a reply that stops mid-value reads like it was cut
+ * off, and holding both kinds of message to one shape is what keeps the rule easy to obey
+ * where it does bind — see `eventTemplates` below.
  *
  * Only the five types the inbound switch in `settings.service.ts` actually dispatches
  * are listed here; the remaining `LoyaltyTemplateTypes` members name outbound
@@ -117,7 +123,7 @@ function commonCommands(programNoun: string): PresetCommand[] {
     {
       type: LoyaltyTemplateTypes.PointInformation,
       requestMessage: "points",
-      text: "You have {{1}} points available.\nRedeemed so far: {{2}}\nEarned all time: {{3}}",
+      text: "You have {{1}} points available.\nRedeemed so far: {{2}}\nEarned all time: {{3}}\nReply REWARDS to see what you can claim.",
     },
     {
       type: LoyaltyTemplateTypes.RewardsIssued,
@@ -127,7 +133,7 @@ function commonCommands(programNoun: string): PresetCommand[] {
     {
       type: LoyaltyTemplateTypes.Referral,
       requestMessage: "refer",
-      text: "Share the love! Your referral code is {{1}}.\nSend a friend this link: {{2}}",
+      text: "Share the love! Your referral code is {{1}}.\nSend a friend this link:\n{{2}}\nThanks for spreading the word!",
     },
     {
       type: LoyaltyTemplateTypes.CustomerRemoval,

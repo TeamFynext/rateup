@@ -12,6 +12,13 @@ import type { AccessDenialReason } from "./auth.js";
  * Cache this on req.features — one DB round-trip per request.
  */
 export async function getUserFeatures(userId: string, orgId: string): Promise<Set<TeamFeature>> {
+  // No org on the session means there is no membership to read features from.
+  // checkSession recovers a missing orgId before we get here, so this is the
+  // last resort for a caller that genuinely belongs to no org — answer "no
+  // features" and let the gate refuse, rather than handing Prisma an undefined
+  // `orgId` and turning a 403 into a 500.
+  if (!orgId) return new Set();
+
   const orgMember = await prisma.orgMember.findUnique({
     where: { userId_orgId: { userId, orgId } },
     select: { role: true },

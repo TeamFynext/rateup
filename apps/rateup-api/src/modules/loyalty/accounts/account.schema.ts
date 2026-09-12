@@ -27,8 +27,24 @@ const customerLoyaltyAccountSchema = z.object({
   website: z.string().max(200).optional(),
 });
 
+/**
+ * Editing a member from the Customers page.
+ *
+ * `status` is the account's own; the rest live on the `Contact` behind it and are written
+ * through. A birthday matters beyond the profile: the birthday reminder matches on
+ * `Contact.dob`, so a member enrolled at the counter without one can never be greeted
+ * until it is filled in here.
+ *
+ * `null` clears a field, `undefined` leaves it alone — so a mistyped birthday can be
+ * removed rather than only overwritten.
+ */
 const customerLoyaltyAccountUpdateSchema = z.object({
   status: z.enum(["active", "suspended", "closed", "inactive"]).optional(),
+  name: z.string().trim().min(1).max(120).optional(),
+  /** A plain `YYYY-MM-DD` or the full timestamp older clients send. */
+  dob: z.iso.datetime().or(z.iso.date()).nullable().optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
+  email: z.string().trim().email().nullable().optional(),
 });
 
 const customerIdParamSchema = z.object({

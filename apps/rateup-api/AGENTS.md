@@ -110,7 +110,7 @@ out of things that already existed, and the seams matter:
 - **Feedback never owns the flow.** The business creates an ordinary `WaFlow`/`Survey` pair
   in WhatsApp → Flow with the RateUp-only `LOYALTY_FEEDBACK` category — stored on the row,
   swapped for `SURVEY` before Meta sees it (`flows/flowCategories.ts`) — and pre-filled from a
-  template in `flows/flowTemplates.ts`; Feedback then *selects* it (`feedback.eligibility.ts`
+  template in `flows/flowTemplates.ts`; Feedback then _selects_ it (`feedback.eligibility.ts`
   decides which flows qualify) and detaching leaves it alone. The only loyalty-specific fact
   on the flow is `googleReview.minRating` on the overall-rating element — the same gate
   `shouldShowGoogleReviewV2` applies to every flow. It is stripped before Meta sees the JSON,

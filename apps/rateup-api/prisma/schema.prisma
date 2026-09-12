@@ -2253,8 +2253,13 @@ model CustomerLoyaltyAccount {
   lastActivityAt DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  /// One send per occasion per member. Each scheduled reminder claims its own marker with a
+  /// conditional update before sending, so a re-run or a duplicated tick is a no-op.
   lastInactivityReminderAt DateTime?
   lastBirthdayGreetedAt    DateTime?
+  lastPointsExpiryAlertAt  DateTime?
+  lastTierAtRiskAlertAt    DateTime?
+  lastAnniversaryGreetedAt DateTime?
 
   // Relations
   transactions        LoyaltyTransaction[]
@@ -2267,6 +2272,8 @@ model CustomerLoyaltyAccount {
 
   @@unique([programId, contactId])
   @@index([programId])
+  /// The inactivity and anniversary sweeps scan a programme's members by activity date.
+  @@index([programId, lastActivityAt])
   @@index([programId, contactId])
   @@index([contactId])
   @@index([referralCode])
@@ -2442,6 +2449,9 @@ model LoyaltyRedemption {
   // Usage tracking
   expiresAt   DateTime?
   usedAt      DateTime?
+  /// Claim marker for the "your reward is about to expire" reminder — the occasion is per
+  /// redemption code, so it cannot be tracked on the account.
+  expiryNotifiedAt DateTime?
   /// [PLoyaltyUsedContext]
   usedContext Json?     @default("{}") // POS details when used
 
@@ -2459,6 +2469,8 @@ model LoyaltyRedemption {
   @@index([accountId])
   @@index([status])
   @@index([redemptionCode])
+  /// The reward-expiring reminder looks for codes lapsing inside its lead window.
+  @@index([expiresAt])
   @@map("loyalty_redemptions")
 }
 
@@ -2585,6 +2597,12 @@ enum LoyaltyEventType {
   INACTIVITY_REMINDER
   POINTS_EXPIRY_ALERT
   POINTS_EXPIRED
+  /// The rolling tier window is closing on a member who would drop out of their tier.
+  TIER_AT_RISK
+  /// An unused redemption code is about to lapse.
+  REWARD_EXPIRING
+  /// A year (or another) since the member joined.
+  SIGNUP_ANNIVERSARY
 }
 
 model LoyaltyEventTrigger {
@@ -2598,6 +2616,15 @@ model LoyaltyEventTrigger {
   // For inactivity reminders
   triggerDays Int?
 
+  /// How far ahead of a dated occasion to send — days before the points expire, before the
+  /// tier window closes, before a redemption lapses, before a birthday. Null takes the
+  /// occasion's own default.
+  leadDays Int?
+  /// Hour of the day to send at, 0-23, read in the programme's own `timezone`. Null takes
+  /// DEFAULT_SEND_HOUR. The reminder sweep wakes hourly and sends only to programmes whose
+  /// chosen hour has just struck locally.
+  sendHour Int?
+
   // WhatsApp Template
   waTemplateId String?     @db.Uuid
   waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: SetNull)
@@ -2609,6 +2636,9 @@ model LoyaltyEventTrigger {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// One trigger per occasion. Every call site already assumed this — `findFirst` then
+  /// update, or `updateMany` — so the constraint states what the code relied on.
+  @@unique([programId, eventType])
   @@index([programId])
   @@index([eventType])
 }

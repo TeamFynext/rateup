@@ -571,9 +571,29 @@ export async function updateCustomerAccount(
   data: CustomerLoyaltyAccountUpdateInput,
   programId: string,
 ) {
+  const { status, name, dob, gender, email } = data;
+
+  // The contact fields are written through the relation rather than by contactId, so the
+  // `programId` in the where clause is what scopes the edit: a customerId from another
+  // org matches nothing and the update throws P2025, which the handler answers as a 404.
+  const contactChanges = {
+    ...(name !== undefined ? { name } : {}),
+    ...(dob !== undefined ? { dob: dob === null ? null : new Date(dob) } : {}),
+    ...(gender !== undefined ? { gender } : {}),
+    ...(email !== undefined ? { email } : {}),
+  };
+
   return await prisma.customerLoyaltyAccount.update({
     where: { id: customerId, programId },
-    data,
+    data: {
+      ...(status !== undefined ? { status } : {}),
+      ...(Object.keys(contactChanges).length > 0 ? { contact: { update: contactChanges } } : {}),
+    },
+    include: {
+      contact: {
+        select: { id: true, name: true, phone: true, email: true, dob: true, gender: true },
+      },
+    },
   });
 }
 

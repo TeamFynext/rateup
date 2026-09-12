@@ -12,6 +12,7 @@ import {
   getAllEventTriggersHandler,
   deleteEventTriggerHandler,
   saveEventMessageHandler,
+  saveReminderHandler,
 } from "./settings.controller.js";
 import {
   loyaltyTemplateSchema,
@@ -22,6 +23,7 @@ import {
   programIdQuerySchema,
   eventMessageParamsSchema,
   eventMessageBodySchema,
+  reminderBodySchema,
 } from "./settings.schema.js";
 
 export async function LoyaltySettingsRoutes(server: FastifyInstance) {
@@ -131,5 +133,18 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
       },
     },
     saveEventMessageHandler,
+  );
+
+  // When a scheduled reminder sends (Reminders page). The words stay on the route above:
+  // one message, one place to write it, whichever page schedules it.
+  server.put(
+    "/reminder/:eventType",
+    {
+      schema: {
+        params: eventMessageParamsSchema,
+        body: reminderBodySchema,
+      },
+    },
+    saveReminderHandler,
   );
 }

@@ -50,6 +50,29 @@ const eventMessageBodySchema = z.object({
   enabled: z.boolean().optional(),
 });
 
+/**
+ * `PUT /reminder/:eventType` — when a scheduled reminder sends, and to whom.
+ *
+ * Every field is optional so the Reminders page can save one control at a time, the way
+ * the Messages page saves a body. The wording is not here: it stays with the message, on
+ * `PUT /event-message/:eventType`.
+ */
+const reminderBodySchema = z.object({
+  enabled: z.boolean().optional(),
+  /** Quiet days before the inactivity nudge. */
+  triggerDays: z.number().int().min(1).max(3650).nullable().optional(),
+  /** Days ahead of a dated occasion to send. */
+  leadDays: z.number().int().min(0).max(365).nullable().optional(),
+  /** Local hour to send at, in the programme's own timezone. */
+  sendHour: z.number().int().min(0).max(23).nullable().optional(),
+  /** A gift to issue alongside the greeting. */
+  rewardId: z.string().uuid().nullable().optional(),
+});
+
+export type ReminderBodyInput = z.infer<typeof reminderBodySchema>;
+
+export { reminderBodySchema };
+
 export type LoyaltyTemplateInput = z.infer<typeof loyaltyTemplateSchema>;
 export type UpdateLoyaltyTemplateInput = z.infer<typeof updateLoyaltyTemplateSchema>;
 export type ByTypeQueryInput = z.infer<typeof byTypeQuerySchema>;

@@ -24,12 +24,7 @@ import {
   sendSchedulesWaMessages,
 } from "../../../modules/whatsapp/wa_message_scheduler.js";
 import { runInboxAutomationCron } from "../../../modules/whatsapp/inbox/automation/inboxautomation.service.js";
-import {
-  checkBirthdayEventTriggers,
-  checkInactivityEventTriggers,
-  checkPointsExpiration,
-  checkPointsExpiryAlerts,
-} from "../../../modules/loyalty/settings/eventTriggerCron.service.js";
+import { runLoyaltyReminderSweep } from "../../../modules/loyalty/settings/reminderSweep.service.js";
 import { getWeeklyConversationReport } from "../../shared/bullmqCronJobs/sendMail/weeklyMail.js";
 import { downgradeExpiredSubscriptions } from "../../../modules/subscription/subscription.service.js";
 import { sweepMissedPayments } from "../../../modules/payment/payment.service.js";
@@ -93,29 +88,16 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     await safeRun("resetAnnualCounts", resetAnnualCounts);
   },
 
-  loyaltyBirthdayCheck: async () => {
-    log.info("Running Daily at 12:00 AM --> Loyalty Birthday Event Triggers");
-    await safeRun("checkBirthdayEventTriggers", checkBirthdayEventTriggers);
-  },
-
-  loyaltyPointsExpiration: async () => {
-    log.info("Running Daily at 1:00 AM --> Loyalty Points Expiration");
-    await safeRun("checkPointsExpiration", checkPointsExpiration);
-  },
-
-  loyaltyInactivityCheck: async () => {
-    log.info("Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers");
-    await safeRun("checkInactivityEventTriggers", checkInactivityEventTriggers);
+  loyaltyReminderSweep: async () => {
+    // Hourly. Every occasion inside decides whether its programme's chosen hour has
+    // struck in that programme's own timezone, so most ticks send nothing.
+    log.info("Running hourly JOB --> Loyalty reminder sweep");
+    await safeRun("runLoyaltyReminderSweep", runLoyaltyReminderSweep);
   },
 
   loyaltyTierReevaluation: async () => {
     log.info("Running Daily at 2:30 AM --> Loyalty rolling-window tier re-evaluation");
     await safeRun("reevaluateRollingTiers", reevaluateRollingTiers);
-  },
-
-  loyaltyPointsExpiryAlerts: async () => {
-    log.info("Running Daily at 3:00 AM --> Loyalty Points Expiry Alerts (14 days before expiry)");
-    await safeRun("checkPointsExpiryAlerts", checkPointsExpiryAlerts);
   },
 
   reconcileMissedPayments: async () => {

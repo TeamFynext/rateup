@@ -17,6 +17,9 @@ export const LOYALTY_EVENT_TEMPLATE_NAMES: Record<LoyaltyEventType, string> = {
   [LoyaltyEventType.INACTIVITY_REMINDER]: "loyalty_inactivity_reminder",
   [LoyaltyEventType.POINTS_EXPIRY_ALERT]: "loyalty_points_expiry_alert",
   [LoyaltyEventType.POINTS_EXPIRED]: "loyalty_points_expired",
+  [LoyaltyEventType.TIER_AT_RISK]: "loyalty_tier_at_risk",
+  [LoyaltyEventType.REWARD_EXPIRING]: "loyalty_reward_expiring",
+  [LoyaltyEventType.SIGNUP_ANNIVERSARY]: "loyalty_signup_anniversary",
 };
 
 /**
