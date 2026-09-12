@@ -86,14 +86,46 @@ export interface ResolvedChannel {
 const digitsOf = (value?: string | null) => (value ?? "").replace(/\D/g, "");
 
 /**
+ * The connected account a message's `sourceIdentifier` names, or undefined when
+ * none of the org's accounts match (disconnected since, or a legacy row that
+ * recorded no identifier).
+ *
+ * WhatsApp identifiers are matched on digits alone: the same number is written
+ * with a leading `+` by the webhook and without one by our own sends, so a plain
+ * `===` misses half of every thread. Matching a number to a channel with `===`
+ * is the bug this exists to stop anyone writing again.
+ */
+export function findChannelAccount(
+  waSettings: WaSettings | undefined,
+  platform: MessagePlatform | string | null | undefined,
+  identifier: string | null | undefined,
+): NonNullable<WaSettings>[number] | undefined {
+  if (!identifier || !platform || platform === MessagePlatform.WEBCHAT) return undefined;
+
+  return (waSettings ?? []).find((account) => {
+    if (platform === MessagePlatform.WHATSAPP) {
+      const phoneDigits = digitsOf(account.phone);
+      return (
+        (Boolean(phoneDigits) && phoneDigits === digitsOf(identifier)) ||
+        account.phoneId === identifier
+      );
+    }
+    if (platform === MessagePlatform.INSTAGRAM) {
+      return Boolean(account.ibaId) && account.ibaId === identifier;
+    }
+    if (platform === MessagePlatform.FACEBOOK) {
+      return Boolean(account.fbPageId) && account.fbPageId === identifier;
+    }
+    return false;
+  });
+}
+
+/**
  * Name the channel a message arrived on, given what the message recorded
  * (`sourcePlatform` + `sourceIdentifier`) and the org's connected accounts.
  *
- * WhatsApp identifiers are matched on digits alone: the same number is written
- * with a leading `+` by the webhook and without one by our own sends, so a string
- * compare misses half the thread's messages. A number that matches no connected
- * account is still named — the org may have disconnected it since, and the digits
- * are more use than an empty chip.
+ * A number that matches no connected account is still named — the org may have
+ * disconnected it since, and the digits are more use than an empty chip.
  *
  * Returns null when there is nothing to name: webchat, internal notes, and legacy
  * messages that predate the identifier.
@@ -105,22 +137,19 @@ export function resolveChannel(
 ): ResolvedChannel | null {
   if (!identifier || !platform || platform === MessagePlatform.WEBCHAT) return null;
 
-  for (const account of waSettings ?? []) {
+  const account = findChannelAccount(waSettings, platform, identifier);
+
+  if (account) {
     if (platform === MessagePlatform.WHATSAPP) {
-      const phoneDigits = digitsOf(account.phone);
-      const matches =
-        (phoneDigits && phoneDigits === digitsOf(identifier)) || account.phoneId === identifier;
-      if (matches) {
-        return {
-          platform: MessagePlatform.WHATSAPP,
-          label: account.phoneDisplayName || account.phone || identifier,
-          account: account.phoneDisplayName ? account.phone : undefined,
-          isConnected: true,
-        };
-      }
+      return {
+        platform: MessagePlatform.WHATSAPP,
+        label: account.phoneDisplayName || account.phone || identifier,
+        account: account.phoneDisplayName ? account.phone : undefined,
+        isConnected: true,
+      };
     }
 
-    if (platform === MessagePlatform.INSTAGRAM && account.ibaId && account.ibaId === identifier) {
+    if (platform === MessagePlatform.INSTAGRAM) {
       const handle = account.igUserName ? `@${account.igUserName}` : account.ibaId;
       return {
         platform: MessagePlatform.INSTAGRAM,
@@ -130,7 +159,7 @@ export function resolveChannel(
       };
     }
 
-    if (platform === MessagePlatform.FACEBOOK && account.fbPageId === identifier) {
+    if (platform === MessagePlatform.FACEBOOK) {
       return {
         platform: MessagePlatform.FACEBOOK,
         label: account.fbUserName || account.fbPageId,
