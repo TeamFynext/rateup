@@ -98,12 +98,6 @@ function Footer({ note, unsubscribeUrl }: { note?: ReactNode; unsubscribeUrl?: s
       <Row align="left">
         <Column className="w-full pt-8 align-top">
           <Text className="font-11 font-body text-fg-2 m-0">
-            {brand.address.map((line) => (
-              <span key={line}>
-                {line}
-                <br />
-              </span>
-            ))}
             &copy; {new Date().getFullYear()} {brand.name}. All rights reserved.
           </Text>
         </Column>

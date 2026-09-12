@@ -8,7 +8,6 @@ export const brand = {
     "RateUp helps teams collect feedback over web and WhatsApp, and turn it into reviews, loyalty, and repeat business.",
   website: "https://rateup.app",
   supportEmail: "hello@rateup.app",
-  address: ["Kasaragod, Kerala", "India"],
 } as const;
 
 /**

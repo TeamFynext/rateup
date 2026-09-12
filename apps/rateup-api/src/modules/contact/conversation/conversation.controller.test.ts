@@ -4,7 +4,11 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
+vi.mock("../../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
+
 vi.mock("./conversation.service.js", () => ({
+  deleteConversation: vi.fn(),
+  deleteConversations: vi.fn(),
   getAvargeResponseTimeofTodyaInEveryHour: vi.fn(),
   getConversationOnAccountDistribution: vi.fn(),
   getConversationOverview: vi.fn(),
@@ -18,7 +22,10 @@ vi.mock("./conversation.service.js", () => ({
   updateConversation: vi.fn(),
 }));
 
+import { recordAuditEvent } from "../../../utils/auditLog.js";
 import {
+  deleteConversation,
+  deleteConversations,
   getAvargeResponseTimeofTodyaInEveryHour,
   getConversationOnAccountDistribution,
   getConversationOverview,
@@ -32,6 +39,8 @@ import {
   updateConversation,
 } from "./conversation.service.js";
 import {
+  deleteConversationHandler,
+  deleteConversationsHandler,
   getAverageConversationResponseTimeHandler,
   getConversationOnAccountDistributionHandler,
   getConversationOverviewHandler,
@@ -84,6 +93,114 @@ describe("getConversationsByContactIdHandler", () => {
     await getConversationsByContactIdHandler(request({ params: { contactId: "c1" } }), rep);
 
     expect(rep.status).toHaveBeenCalledWith(500);
+  });
+});
+
+describe("deleteConversationHandler", () => {
+  const ticket = {
+    id: "conv-1",
+    number: 12,
+    contactId: "c1",
+    contactName: "Ada",
+    contactPhone: "+100",
+  };
+
+  test("records who the deleted conversation belonged to", async () => {
+    (deleteConversation as Mock).mockResolvedValue({
+      id: "conv-1",
+      contactId: "c1",
+      ticket,
+      deletedMessages: 4,
+      remainingConversations: false,
+    });
+    const rep = reply();
+    const req = request({ params: { conversationId: "conv-1" } });
+
+    await deleteConversationHandler(req, rep);
+
+    expect(recordAuditEvent).toHaveBeenCalledWith(req, "Conversation deleted", {
+      ticket: "#12",
+      contact: "Ada",
+      contactPhone: "+100",
+      contactId: "c1",
+      conversationId: "conv-1",
+      messagesDeleted: 4,
+    });
+  });
+
+  test("a ticket the org does not own is a 404, and nothing is logged", async () => {
+    (deleteConversation as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await deleteConversationHandler(request({ params: { conversationId: "conv-1" } }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(404);
+    expect(recordAuditEvent).not.toHaveBeenCalled();
+  });
+
+  test("reports a failure as a 500", async () => {
+    (deleteConversation as Mock).mockRejectedValue(new Error("boom"));
+    const rep = reply();
+
+    await deleteConversationHandler(request({ params: { conversationId: "conv-1" } }), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(500);
+  });
+});
+
+describe("deleteConversationsHandler", () => {
+  test("logs one entry naming every contact in the batch", async () => {
+    (deleteConversations as Mock).mockResolvedValue({
+      conversationIds: ["conv-1", "conv-2"],
+      contactIds: ["c1", "c2"],
+      tickets: [
+        { id: "conv-1", number: 1, contactId: "c1", contactName: "Ada", contactPhone: "+100" },
+        { id: "conv-2", number: 2, contactId: "c2", contactName: null, contactPhone: "+200" },
+      ],
+      deletedConversations: 2,
+      deletedMessages: 9,
+    });
+    const rep = reply();
+    const req = request({ body: { conversationIds: ["conv-1", "conv-2"] } });
+
+    await deleteConversationsHandler(req, rep);
+
+    expect(recordAuditEvent).toHaveBeenCalledWith(req, "2 conversations deleted", {
+      conversations: [
+        {
+          ticket: "#1",
+          contact: "Ada",
+          contactPhone: "+100",
+          contactId: "c1",
+          conversationId: "conv-1",
+        },
+        {
+          // No name on the contact, so the phone stands in for it.
+          ticket: "#2",
+          contact: "+200",
+          contactPhone: "+200",
+          contactId: "c2",
+          conversationId: "conv-2",
+        },
+      ],
+      messagesDeleted: 9,
+    });
+  });
+
+  test("a selection that deleted nothing writes no entry", async () => {
+    (deleteConversations as Mock).mockResolvedValue({
+      conversationIds: [],
+      contactIds: [],
+      tickets: [],
+      deletedConversations: 0,
+      deletedMessages: 0,
+    });
+    const rep = reply();
+
+    await deleteConversationsHandler(request({ body: { conversationIds: ["conv-1"] } }), rep);
+
+    expect(recordAuditEvent).not.toHaveBeenCalled();
+    expect(rep.send).toHaveBeenCalled();
   });
 });
 
