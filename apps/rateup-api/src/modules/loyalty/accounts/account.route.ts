@@ -8,6 +8,8 @@ import {
   getCustomerAccountByIdHandler,
   getCustomerAccountByContactHandler,
   getCustomerAccountByPhoneHandler,
+  getCustomerAccountByCardCodeHandler,
+  sendMemberCardHandler,
   getCustomerAccountsHandler,
   updateCustomerAccountHandler,
   assignRewardToCustomerHandler,
@@ -19,6 +21,7 @@ import {
   customerIdParamSchema,
   contactIdParamSchema,
   phoneNumberParamSchema,
+  cardCodeParamSchema,
   customerLoyaltyAccountUpdateSchema,
   awardPointsSchema,
   assignRewardSchema,
@@ -101,6 +104,28 @@ export async function customerAccountRoutes(server: FastifyInstance) {
       },
     },
     getCustomerAccountByPhoneHandler,
+  );
+
+  // The scanned member card. Same payload as "/phone/:phoneNumber", found by the code the
+  // QR carries instead of the number.
+  server.get(
+    "/card/:cardCode",
+    {
+      schema: {
+        params: cardCodeParamSchema,
+      },
+    },
+    getCustomerAccountByCardCodeHandler,
+  );
+
+  server.post(
+    "/:customerId/card/send",
+    {
+      schema: {
+        params: customerIdParamSchema,
+      },
+    },
+    sendMemberCardHandler,
   );
 
   server.put(

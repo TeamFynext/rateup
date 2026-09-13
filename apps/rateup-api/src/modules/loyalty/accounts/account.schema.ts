@@ -59,6 +59,11 @@ const phoneNumberParamSchema = z.object({
   phoneNumber: z.string().min(1),
 });
 
+/** A scanned or typed card code; the handler normalises it, so anything short is accepted. */
+const cardCodeParamSchema = z.object({
+  cardCode: z.string().min(1).max(64),
+});
+
 const awardPointsSchema = z.object({
   contactId: z.string().min(1),
   purchaseAmount: z.number().min(0),
@@ -116,6 +121,7 @@ export type CustomerLoyaltyAccountUpdateInput = z.infer<typeof customerLoyaltyAc
 export type CustomerIdParam = z.infer<typeof customerIdParamSchema>;
 export type ContactIdParam = z.infer<typeof contactIdParamSchema>;
 export type PhoneNumberParam = z.infer<typeof phoneNumberParamSchema>;
+export type CardCodeParam = z.infer<typeof cardCodeParamSchema>;
 export type AwardPointsInput = z.infer<typeof awardPointsSchema>;
 export type RedeemRewardInput = z.infer<typeof redeemRewardSchema>;
 export type VerifyRedemptionInput = z.infer<typeof verifyRedemptionSchema>;
@@ -131,6 +137,7 @@ export {
   customerIdParamSchema,
   contactIdParamSchema,
   phoneNumberParamSchema,
+  cardCodeParamSchema,
   awardPointsSchema,
   redeemRewardSchema,
   verifyRedemptionSchema,

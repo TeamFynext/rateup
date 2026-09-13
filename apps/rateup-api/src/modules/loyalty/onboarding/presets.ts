@@ -136,6 +136,11 @@ function commonCommands(programNoun: string): PresetCommand[] {
       text: "Share the love! Your referral code is {{1}}.\nSend a friend this link:\n{{2}}\nThanks for spreading the word!",
     },
     {
+      type: LoyaltyTemplateTypes.MemberCard,
+      requestMessage: "card",
+      text: "Hi {{1}}, here is your card. Show this QR at the counter to collect and use your points.\nYour card code is {{2}} if the camera can't read it.",
+    },
+    {
       type: LoyaltyTemplateTypes.CustomerRemoval,
       requestMessage: "stop",
       text: "You've been removed from our loyalty programme. Reply JOIN any time to come back.",

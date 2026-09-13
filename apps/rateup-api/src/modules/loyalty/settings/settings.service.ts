@@ -22,6 +22,11 @@ import {
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
 import { validateRedemption } from "../redemptionValidator.js";
 import { redeemReward } from "../redemptions/redemption.service.js";
+import {
+  ensureMemberCard,
+  renderCardReply,
+  sendMemberCard,
+} from "../accounts/memberCard.service.js";
 
 const REWARD_BUTTON_PREFIX = "loyalty_reward:";
 const REWARD_CONFIRM_PREFIX = "loyalty_reward_confirm:";
@@ -125,6 +130,43 @@ export async function handleLoyaltyWaCommand(
     case LoyaltyTemplateTypes.RewardsIssued:
       await handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand);
       break;
+    case LoyaltyTemplateTypes.MemberCard:
+      await handleMemberCardCommand(phone, orgId, loyaltyWaCommand);
+      break;
+  }
+}
+
+/**
+ * "card": the member asked for their QR card. The keyword arrived as a message, so the
+ * window is open and the image can go straight out; the merchant's reply text, when they
+ * wrote one, is the caption.
+ */
+async function handleMemberCardCommand(
+  phone: string,
+  orgId: string,
+  loyaltyWaCommand: LoyaltyWaCommand,
+) {
+  const customer = await getLCustomerByPhone(phone, orgId);
+  if (!customer || customer.status !== "active") {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "You are not an active member of our loyalty programme",
+    );
+    return;
+  }
+  const cardCode = await ensureMemberCard(customer.id);
+  const caption = renderCardReply(loyaltyWaCommand.content, {
+    name: customer.contact?.name,
+    cardCode,
+  });
+  const outcome = await sendMemberCard({ orgId, accountId: customer.id, caption });
+  if (!outcome.sent) {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "Sorry, we could not send your card just now. Please try again in a moment.",
+    );
   }
 }
 

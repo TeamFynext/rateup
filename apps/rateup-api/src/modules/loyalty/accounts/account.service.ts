@@ -23,6 +23,7 @@ import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js"
 import { renderReplyText } from "../richText.js";
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { log } from "../../../utils/logger.js";
+import { ensureMemberCard, sendMemberCard } from "./memberCard.service.js";
 
 export async function findAccountByReferralCode(programId: string, referralCode: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
@@ -136,6 +137,7 @@ export async function createCustomerAccount(
           `🎉 Welcome back ${account.contact?.name || ""}!`,
         );
       }
+      await sendCardAfterEnrolment(orgId, account.id);
       return account;
     } else {
       throw new Error("Customer account already exists");
@@ -208,6 +210,14 @@ export async function createCustomerAccount(
     await creditNewMember(prisma, account, snapshot, openingPoints, orgId);
   }
 
+  // Every new member has a card code from day one; it is what lets the first-message send
+  // tell them apart from members enrolled before cards existed.
+  try {
+    await ensureMemberCard(account.id);
+  } catch (e) {
+    log.error({ err: e, accountId: account.id }, "Could not mint a member card code");
+  }
+
   if (account && sourceIdentifier) {
     const joinLink = generateWhatsAppJoinLink({
       waNumber: sourceIdentifier,
@@ -241,7 +251,24 @@ You are now registered in our Loyalty Program.
     await sendTextMessage({ phone, orgId }, null, joinLink);
   }
 
+  // Outside the `sourceIdentifier` block on purpose: a member enrolled by staff may already
+  // have an open WhatsApp window, in which case the card can go now.
+  await sendCardAfterEnrolment(orgId, account.id);
+
   return account;
+}
+
+/**
+ * The card is a nicety at enrolment, never a condition of it: whatever goes wrong here is
+ * logged and the member is still enrolled. Skips (no open window, no public URL) are the
+ * expected case for a till registration and are not errors.
+ */
+async function sendCardAfterEnrolment(orgId: string, accountId: string) {
+  try {
+    await sendMemberCard({ orgId, accountId });
+  } catch (e) {
+    log.error({ err: e, accountId }, "Could not send the member card after enrolment");
+  }
 }
 
 /** The points the new member is owed: the joining bonus plus a points-type referee bonus. */
@@ -508,6 +535,40 @@ export async function getCustomerAccountByContact(programId: string, contactId: 
   });
 }
 
+/**
+ * Everything the counter needs about one member in a single read. Shared by the phone
+ * lookup and the card-code lookup so both hand the controller the same shape.
+ */
+export const CASHIER_ACCOUNT_INCLUDE = {
+  contact: {
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      email: true,
+    },
+  },
+  assignedRewards: {
+    include: {
+      reward: true,
+    },
+  },
+  currentTier: true,
+  transactions: {
+    take: 20,
+    orderBy: { createdAt: "desc" },
+  },
+  // Deep enough that an approved-but-unused redemption is still in view for the
+  // cashier's "waiting" strip after a run of newer ones.
+  redemptions: {
+    take: 25,
+    orderBy: { createdAt: "desc" },
+    include: {
+      reward: true,
+    },
+  },
+} satisfies Prisma.CustomerLoyaltyAccountInclude;
+
 export async function getCustomerAccountByPhone(
   programId: string,
   phoneNumber: string,
@@ -534,35 +595,18 @@ export async function getCustomerAccountByPhone(
         contactId: contact.id,
       },
     },
-    include: {
-      contact: {
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-          email: true,
-        },
-      },
-      assignedRewards: {
-        include: {
-          reward: true,
-        },
-      },
-      currentTier: true,
-      transactions: {
-        take: 20,
-        orderBy: { createdAt: "desc" },
-      },
-      // Deep enough that an approved-but-unused redemption is still in view for the
-      // cashier's "waiting" strip after a run of newer ones.
-      redemptions: {
-        take: 25,
-        orderBy: { createdAt: "desc" },
-        include: {
-          reward: true,
-        },
-      },
-    },
+    include: CASHIER_ACCOUNT_INCLUDE,
+  });
+}
+
+/**
+ * The member whose card was scanned. `cardCode` is globally unique, but the programme is
+ * in the `where` all the same so a card from another org is a plain 404 here.
+ */
+export async function getCustomerAccountByCardCode(programId: string, cardCode: string) {
+  return await prisma.customerLoyaltyAccount.findFirst({
+    where: { programId, cardCode },
+    include: CASHIER_ACCOUNT_INCLUDE,
   });
 }
 

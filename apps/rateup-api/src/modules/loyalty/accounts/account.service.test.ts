@@ -46,6 +46,16 @@ vi.mock("../loyaltyWaDispatcher.js", () => ({
     skippedReason: null,
   },
 }));
+// The card is sent by its own module; enrolment only needs it not to throw.
+vi.mock("./memberCard.service.js", () => ({
+  ensureMemberCard: vi.fn(async () => "ABCDEFGHJKLM"),
+  sendMemberCard: vi.fn(async () => ({
+    sent: false,
+    skippedReason: "session_closed",
+    cardCode: "ABCDEFGHJKLM",
+    cardSentAt: null,
+  })),
+}));
 // The scheduler opens a BullMQ queue at import time; awardPoints only needs its result.
 vi.mock("../feedback/feedback.scheduler.js", () => ({
   scheduleFeedbackRequest: vi.fn(async () => ({ scheduled: false, reason: "no_setting" })),

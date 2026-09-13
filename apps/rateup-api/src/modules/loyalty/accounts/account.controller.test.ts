@@ -10,6 +10,7 @@ vi.mock("./account.service.js", () => ({
   getCustomerAccountById: vi.fn(),
   getCustomerAccountByContact: vi.fn(),
   getCustomerAccountByPhone: vi.fn(),
+  getCustomerAccountByCardCode: vi.fn(),
   getCustomerAccounts: vi.fn(),
   getCustomerAccountsForExport: vi.fn(),
   updateCustomerAccount: vi.fn(),
@@ -21,6 +22,7 @@ vi.mock("./account.service.js", () => ({
 
 vi.mock("../program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
 vi.mock("../rewards/reward.service.js", () => ({ getActiveLoyaltyRewards: vi.fn() }));
+vi.mock("./memberCard.service.js", () => ({ sendMemberCard: vi.fn() }));
 
 import {
   assignRewardToCustomer,
@@ -28,6 +30,7 @@ import {
   createCustomerAccount,
   getCustomerAccountById,
   getCustomerAccountByPhone,
+  getCustomerAccountByCardCode,
   getCustomerAccounts,
   getCustomerAccountsForExport,
   getRewardByShortCode,
@@ -37,6 +40,7 @@ import {
 } from "./account.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
+import { sendMemberCard } from "./memberCard.service.js";
 import {
   assignRewardToCustomerHandler,
   awardPointsHandler,
@@ -45,6 +49,8 @@ import {
   exportCustomerAccountsHandler,
   getCustomerAccountByIdHandler,
   getCustomerAccountByPhoneHandler,
+  getCustomerAccountByCardCodeHandler,
+  sendMemberCardHandler,
   getCustomerAccountsHandler,
   getRewardByShortCodeHandler,
   redeemRewardByShortCodeHandler,
@@ -907,5 +913,110 @@ describe("exportCustomerAccountsHandler", () => {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     expect(rep.send.mock.calls[0][0]).toBeInstanceOf(Buffer);
+  });
+});
+
+describe("getCustomerAccountByCardCodeHandler", () => {
+  const account = {
+    id: "acct-1",
+    contactId: "contact-1",
+    currentPoints: 500,
+    lifetimePoints: 900,
+    referralCode: "ANN-AB12",
+    cardCode: "ABCDEFGHJKLM",
+    cardSentAt: new Date("2026-09-12T10:00:00Z"),
+    currentTier: null,
+    contact: { name: "Ann", phone: "919000000001", email: "a@b.c" },
+    status: "active",
+    assignedRewards: [],
+    redemptions: [],
+  };
+
+  test("normalises the scanned code and scopes the lookup to the caller's programme", async () => {
+    (getCustomerAccountByCardCode as Mock).mockResolvedValue(account);
+    const rep = reply();
+
+    await getCustomerAccountByCardCodeHandler(
+      request({ params: { cardCode: "abcd-efgh-jklm" } }),
+      rep,
+    );
+
+    expect(getCustomerAccountByCardCode).toHaveBeenCalledWith(PROGRAM, "ABCDEFGHJKLM");
+    expect(answer(rep).code).toBe(200);
+    expect(answer(rep).body.customer).toMatchObject({
+      id: "acct-1",
+      phone: "919000000001",
+      cardCode: "ABCDEFGHJKLM",
+      points: 500,
+    });
+  });
+
+  test("a code that does not parse is a 404 without touching the database", async () => {
+    const rep = reply();
+
+    await getCustomerAccountByCardCodeHandler(
+      request({ params: { cardCode: "https://wa.me/919000000000?text=join" } }),
+      rep,
+    );
+
+    expect(getCustomerAccountByCardCode).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Card not found" } });
+  });
+
+  test("a card from another programme is the same 404", async () => {
+    (getCustomerAccountByCardCode as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await getCustomerAccountByCardCodeHandler(
+      request({ params: { cardCode: "ABCDEFGHJKLM" } }),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Card not found" } });
+  });
+
+  test("the phone lookup carries the card fields too", async () => {
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(account);
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    expect(answer(rep).body.customer).toMatchObject({
+      cardCode: "ABCDEFGHJKLM",
+      cardSentAt: account.cardSentAt,
+    });
+  });
+});
+
+describe("sendMemberCardHandler", () => {
+  test("sends within the caller's programme and returns the outcome verbatim", async () => {
+    (getCustomerAccountById as Mock).mockResolvedValue({ id: "acct-1" });
+    const outcome = {
+      sent: false,
+      skippedReason: "session_closed",
+      cardCode: "ABCDEFGHJKLM",
+      cardSentAt: null,
+    };
+    (sendMemberCard as Mock).mockResolvedValue(outcome);
+    const rep = reply();
+
+    await sendMemberCardHandler(request({ params: { customerId: "acct-1" } }), rep);
+
+    expect(getCustomerAccountById).toHaveBeenCalledWith("acct-1", PROGRAM);
+    expect(sendMemberCard).toHaveBeenCalledWith({ orgId: ORG, accountId: "acct-1" });
+    expect(answer(rep)).toEqual({ code: 200, body: outcome });
+  });
+
+  test("another org's customer is a 404 and nothing is sent", async () => {
+    (getCustomerAccountById as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await sendMemberCardHandler(request({ params: { customerId: "acct-other" } }), rep);
+
+    expect(sendMemberCard).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Customer account not found" } });
   });
 });

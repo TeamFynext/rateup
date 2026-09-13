@@ -43,6 +43,16 @@ vi.mock("../accounts/account.service.js", () => ({
   getLCustomerByPhone: vi.fn(),
   updateCustomerAccount: vi.fn(),
 }));
+vi.mock("../accounts/memberCard.service.js", () => ({
+  ensureMemberCard: vi.fn(async () => "ABCDEFGHJKLM"),
+  renderCardReply: vi.fn(() => null),
+  sendMemberCard: vi.fn(async () => ({
+    sent: true,
+    skippedReason: null,
+    cardCode: "ABCDEFGHJKLM",
+    cardSentAt: new Date("2026-09-12T10:00:00Z"),
+  })),
+}));
 vi.mock("../rewards/reward.service.js", () => ({ getActiveLoyaltyRewards: vi.fn() }));
 vi.mock("../redemptionValidator.js", () => ({ validateRedemption: vi.fn() }));
 vi.mock("../redemptions/redemption.service.js", () => ({ redeemReward: vi.fn() }));
@@ -662,5 +672,87 @@ describe("the event-trigger CRUD", () => {
       programId: PROGRAM,
     });
     expect(db.loyaltyEventTrigger.findMany.mock.calls[0][0].include).toHaveProperty("program");
+  });
+});
+
+describe("handleLoyaltyWaCommand — MemberCard", () => {
+  test("an active member gets their card, captioned with the merchant's reply", async () => {
+    const { ensureMemberCard, renderCardReply, sendMemberCard } =
+      await import("../accounts/memberCard.service.js");
+    (getLCustomerByPhone as Mock).mockResolvedValue({
+      id: "acct-1",
+      status: "active",
+      contact: { name: "Ann" },
+    });
+    (renderCardReply as Mock).mockReturnValue("Hi Ann, your card: ABCD-EFGH-JKLM");
+
+    await handleLoyaltyWaCommand(
+      PHONE,
+      "Ann",
+      command({
+        type: LoyaltyTemplateTypes.MemberCard,
+        content: "Hi {{1}}, your card: {{2}}",
+      }) as any,
+      ORG,
+    );
+
+    expect(ensureMemberCard).toHaveBeenCalledWith("acct-1");
+    expect(renderCardReply).toHaveBeenCalledWith("Hi {{1}}, your card: {{2}}", {
+      name: "Ann",
+      cardCode: "ABCDEFGHJKLM",
+    });
+    expect(sendMemberCard).toHaveBeenCalledWith({
+      orgId: ORG,
+      accountId: "acct-1",
+      caption: "Hi Ann, your card: ABCD-EFGH-JKLM",
+    });
+    expect(sendTextMessage).not.toHaveBeenCalled();
+  });
+
+  test("a non-member is told so and no card is attempted", async () => {
+    const { sendMemberCard } = await import("../accounts/memberCard.service.js");
+    (getLCustomerByPhone as Mock).mockResolvedValue(null);
+
+    await handleLoyaltyWaCommand(
+      PHONE,
+      "Ann",
+      command({ type: LoyaltyTemplateTypes.MemberCard }) as any,
+      ORG,
+    );
+
+    expect(sendMemberCard).not.toHaveBeenCalled();
+    expect(sendTextMessage).toHaveBeenCalledWith(
+      { phone: PHONE, orgId: ORG },
+      null,
+      "You are not an active member of our loyalty programme",
+    );
+  });
+
+  test("a refused send is explained in text rather than silently dropped", async () => {
+    const { sendMemberCard } = await import("../accounts/memberCard.service.js");
+    (getLCustomerByPhone as Mock).mockResolvedValue({
+      id: "acct-1",
+      status: "active",
+      contact: { name: "Ann" },
+    });
+    (sendMemberCard as Mock).mockResolvedValueOnce({
+      sent: false,
+      skippedReason: "send_failed",
+      cardCode: "ABCDEFGHJKLM",
+      cardSentAt: null,
+    });
+
+    await handleLoyaltyWaCommand(
+      PHONE,
+      "Ann",
+      command({ type: LoyaltyTemplateTypes.MemberCard }) as any,
+      ORG,
+    );
+
+    expect(sendTextMessage).toHaveBeenCalledWith(
+      { phone: PHONE, orgId: ORG },
+      null,
+      expect.stringContaining("could not send your card"),
+    );
   });
 });

@@ -2248,6 +2248,14 @@ model CustomerLoyaltyAccount {
   /// [PLoyaltyPendingBonuses]
   pendingBonuses Json?
 
+  /// The member's QR card. `cardCode` is the code the QR encodes — twelve characters from
+  /// the till-code alphabet, minted at enrolment for new members and on first send for
+  /// older ones (null until then, which is also what keeps legacy members out of the
+  /// automatic first-message send). `cardSentAt` is the last WhatsApp delivery Meta
+  /// accepted; the image itself is rendered on demand, never stored.
+  cardCode   String?   @unique
+  cardSentAt DateTime?
+
   // Metadata
   createdAt      DateTime @default(now())
   lastActivityAt DateTime @default(now())

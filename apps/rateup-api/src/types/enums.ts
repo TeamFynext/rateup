@@ -441,6 +441,8 @@ export enum LoyaltyTemplateTypes {
   RewardIssued = "RewardIssued",
   RewardRedeemed = "RewardRedeemed",
   TierUpgraded = "TierUpgraded",
+  /** Keyword reply that sends the member their QR card as a WhatsApp image. */
+  MemberCard = "MemberCard",
 }
 
 /// The stored inbox status vocabulary, re-exported from the Prisma enum so the

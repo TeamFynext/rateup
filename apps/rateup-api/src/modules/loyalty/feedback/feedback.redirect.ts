@@ -43,7 +43,7 @@ export function verifyReviewRedirect(requestId: string, sig: string): boolean {
  * address a browser can reach — the same rule flow.controller.ts applies to the flow
  * endpoint URI it hands Meta.
  */
-function apiBaseUrl(): string {
+export function apiBaseUrl(): string {
   const raw = (process.env.API_URL ?? "").trim().replace(/\/+$/, "");
   if (!raw) {
     throw new Error("API_URL environment variable must be set to build review links");

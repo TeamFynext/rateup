@@ -206,6 +206,7 @@ describe("preset catalogue", () => {
       LoyaltyTemplateTypes.Referral,
       LoyaltyTemplateTypes.CustomerRemoval,
       LoyaltyTemplateTypes.RewardsIssued,
+      LoyaltyTemplateTypes.MemberCard,
     ]);
     for (const preset of Object.values(LOYALTY_PRESETS)) {
       for (const command of preset.commands) {
