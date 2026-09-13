@@ -24,6 +24,11 @@ describe("stepBack", () => {
     expect(stepBack("contacts")).toBe("search");
   });
 
+  // The scanner is reached from the search with nobody open, so back is the search too.
+  test("the scanner returns to the search", () => {
+    expect(stepBack("scan")).toBe("search");
+  });
+
   // The coupon flow is reachable with nobody open, so it goes back to the search rather
   // than to a customer that may not exist.
   test("the coupon form returns to the search", () => {
@@ -50,8 +55,8 @@ describe("stepIsReachable", () => {
     expect(stepIsReachable("purchase", "919876541207")).toBe(true);
   });
 
-  test("search, register, contacts and the coupon form stand alone", () => {
-    for (const step of ["search", "new", "contacts", "coupon"] as const) {
+  test("search, scan, register, contacts and the coupon form stand alone", () => {
+    for (const step of ["search", "scan", "new", "contacts", "coupon"] as const) {
       expect(stepIsReachable(step, null)).toBe(true);
     }
   });

@@ -119,7 +119,7 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
       return (
         <Text
           style={{
-            fontFamily: "Nunito_700Bold",
+            fontFamily: "InstrumentSans_700Bold",
             fontSize: 15,
             color: isDark ? "#fff" : Colors.light.textPrimary,
             marginBottom: 6,
@@ -156,7 +156,7 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
         >
           <Text
             style={{
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: isDark ? Colors.accent.cyan : Colors.brand.blue,
               textDecorationLine: "underline",
               fontSize: 13,
@@ -180,7 +180,7 @@ const WaInboxTemplateBody = ({ templateComponent }: Props) => {
   return (
     <Text
       style={{
-        fontFamily: "Nunito_400Regular",
+        fontFamily: "InstrumentSans_400Regular",
         fontSize: 14,
         color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
         lineHeight: 20,
@@ -197,7 +197,7 @@ const WaInboxTemplateFooter = (props: WaTemplateFetchBodyComponent) => {
   return (
     <Text
       style={{
-        fontFamily: "Nunito_400Regular",
+        fontFamily: "InstrumentSans_400Regular",
         fontSize: 12,
         color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
         marginTop: 6,
@@ -230,7 +230,7 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
             <ReplyIcon size={15} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
             <Text
               style={{
-                fontFamily: "Nunito_600SemiBold",
+                fontFamily: "InstrumentSans_600SemiBold",
                 fontSize: 13,
                 color: isDark ? Colors.accent.cyan : Colors.brand.blue,
                 marginLeft: 8,
@@ -283,7 +283,9 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
 
   if (isError)
     return (
-      <Text style={{ color: "red", fontFamily: "Nunito_600SemiBold" }}>Something went wrong!</Text>
+      <Text style={{ color: "red", fontFamily: "InstrumentSans_600SemiBold" }}>
+        Something went wrong!
+      </Text>
     );
 
   if (isPending) {
@@ -308,7 +310,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
     <View style={{ marginBottom: 14 }}>
       <Text
         style={{
-          fontFamily: "Nunito_600SemiBold",
+          fontFamily: "InstrumentSans_600SemiBold",
           color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
           fontSize: 14,
           marginBottom: 6,
@@ -333,7 +335,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
       >
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             fontSize: 14,
             color: selectedLabel
               ? isDark
@@ -398,7 +400,9 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                     >
                       <Text
                         style={{
-                          fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_600SemiBold",
+                          fontFamily: isSelected
+                            ? "InstrumentSans_700Bold"
+                            : "InstrumentSans_600SemiBold",
                           fontSize: 15,
                           color: isSelected
                             ? isDark
@@ -420,7 +424,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                 ListEmptyComponent={
                   <Text
                     style={{
-                      fontFamily: "Nunito_600SemiBold",
+                      fontFamily: "InstrumentSans_600SemiBold",
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                       color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,

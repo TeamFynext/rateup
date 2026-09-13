@@ -1,13 +1,16 @@
 import { Clock } from "lucide-react-native";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { hapticSelect } from "./haptics";
 import { formatNumber } from "./logic/format";
 import type { RecentCustomer } from "./logic/recentCustomers";
-import { Badge, Card, Divider, FONT, useTheme } from "./ui";
+import { Badge, Card, Divider, FONT, LABEL, NUM, PressableRow, useTheme } from "./ui";
 
-/** Most counter traffic is regulars, so the fastest path is a tap, not typing. */
+/**
+ * Most counter traffic is regulars, so the fastest path is a tap, not typing — which is
+ * why this is now the body of the search screen rather than a strip under it.
+ */
 export function RecentCustomers({
   recent,
   pointsName,
@@ -31,28 +34,20 @@ export function RecentCustomers({
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-        <Clock size={14} color={t.fg3} />
-        <Text style={{ fontFamily: FONT.semibold, fontSize: 12, color: t.fg3 }}>Recent</Text>
+        <Clock size={13} color={t.fg4} />
+        <Text style={{ ...LABEL, color: t.fg4 }}>Served recently</Text>
       </View>
 
       <Card padding={0}>
         {recent.map((customer, index) => (
           <React.Fragment key={customer.id}>
             {index > 0 ? <Divider /> : null}
-            <Pressable
+            <PressableRow
               onPress={() => {
                 hapticSelect();
                 onPick(customer);
               }}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 14,
-                backgroundColor: pressed ? t.surface2 : "transparent",
-              })}
+              accessibilityLabel={`Serve ${customer.name}, ${formatNumber(customer.points)} ${pointsName}`}
             >
               <View style={{ flex: 1 }}>
                 <Text
@@ -61,7 +56,7 @@ export function RecentCustomers({
                 >
                   {customer.name}
                 </Text>
-                <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
+                <Text style={{ ...NUM, fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
                   {customer.tierName ? `${customer.tierName} · ` : ""}
                   {formatNumber(customer.points)} {pointsName}
                   {(pendingFor?.(customer) ?? 0) > 0
@@ -72,14 +67,10 @@ export function RecentCustomers({
               {customer.pendingCount > 0 ? (
                 <Badge label={`${customer.pendingCount} waiting`} tone="warm" />
               ) : null}
-            </Pressable>
+            </PressableRow>
           </React.Fragment>
         ))}
       </Card>
-
-      <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
-        Tap a name to serve them again.
-      </Text>
     </View>
   );
 }

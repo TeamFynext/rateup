@@ -23,6 +23,15 @@ export type InboxRowTheme = {
   fg3: string;
   fg4: string;
   brand: string;
+  /**
+   * The fixed RateUp navy, for a surface that is filled with the brand rather than
+   * tinted by it — the cashier's balance panel is the only one so far.
+   *
+   * `brand` flips to a bright cyan in dark so it can be read *as text* on #121212;
+   * white on that cyan is ~2:1, so a filled panel cannot use it. This stays navy in
+   * both themes, where white sits at ~7.5:1 and the panel reads as brand either way.
+   */
+  brandInk: string;
   warm: string;
   success: string;
   danger: string;
@@ -48,6 +57,7 @@ const light: InboxRowTheme = {
   fg3: "#666864",
   fg4: "#8B8E8A",
   brand: "#1C518E",
+  brandInk: "#1C518E",
   warm: "#F8951D",
   success: "#16A34A",
   danger: "#DC2626",
@@ -81,6 +91,7 @@ const dark: InboxRowTheme = {
   fg3: "rgba(255,255,255,0.60)",
   fg4: "rgba(255,255,255,0.44)",
   brand: "#4FC3FF",
+  brandInk: "#1C518E",
   warm: "#F8951D",
   success: "#16A34A",
   danger: "#CF6679",
@@ -111,16 +122,14 @@ const dark: InboxRowTheme = {
   },
 };
 
-export const getInboxRowTheme = (isDark: boolean): InboxRowTheme =>
-  isDark ? dark : light;
+export const getInboxRowTheme = (isDark: boolean): InboxRowTheme => (isDark ? dark : light);
 
 /**
  * The design's header/segment bar sits on `--bg-surface`. Light takes that
  * verbatim; dark uses this app's raised navy rather than the design's #1E1E1E,
  * so the bar doesn't clash with the rest of the app's dark chrome.
  */
-export const getInboxHeaderBg = (isDark: boolean) =>
-  isDark ? "#0D1E32" : "#FFFFFF";
+export const getInboxHeaderBg = (isDark: boolean) => (isDark ? "#0D1E32" : "#FFFFFF");
 
 /** Solid avatar fills used by the design's sample conversations. */
 export const inboxAvatarColors = [

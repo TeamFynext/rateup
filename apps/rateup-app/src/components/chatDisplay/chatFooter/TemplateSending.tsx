@@ -116,7 +116,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         <ActivityIndicator size="large" color={Colors.brand.blue} />
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
             marginTop: 10,
           }}
@@ -133,7 +133,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
       <View style={{ marginBottom: 14 }}>
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
             fontSize: 14,
             marginBottom: 6,
@@ -158,7 +158,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         >
           <Text
             style={{
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               fontSize: 14,
               color: selectedTeamName
                 ? isDark
@@ -224,7 +224,9 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                       >
                         <Text
                           style={{
-                            fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_600SemiBold",
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_600SemiBold",
                             fontSize: 15,
                             color: isSelected
                               ? isDark
@@ -249,7 +251,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                   ListEmptyComponent={
                     <Text
                       style={{
-                        fontFamily: "Nunito_600SemiBold",
+                        fontFamily: "InstrumentSans_600SemiBold",
                         paddingHorizontal: 16,
                         paddingVertical: 12,
                         color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
@@ -274,7 +276,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         <View style={{ marginBottom: 14 }}>
           <Text
             style={{
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
               fontSize: 14,
               marginBottom: 6,
@@ -306,7 +308,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
               style={{
                 flex: 1,
                 fontSize: 14,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: isDark ? "#fff" : Colors.light.textPrimary,
                 padding: 0,
               }}
@@ -319,7 +321,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
       {teamId && (
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
             fontSize: 14,
             marginBottom: 8,
@@ -368,7 +370,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                 >
                   <Text
                     style={{
-                      fontFamily: "Nunito_700Bold",
+                      fontFamily: "InstrumentSans_700Bold",
                       fontSize: 14,
                       color: isDark ? "#fff" : Colors.light.textPrimary,
                     }}
@@ -381,7 +383,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                 </View>
                 <Text
                   style={{
-                    fontFamily: "Nunito_400Regular",
+                    fontFamily: "InstrumentSans_400Regular",
                     fontSize: 11,
                     color: isDark ? Colors.dark.textSubtle : Colors.light.textSubtle,
                     marginTop: 2,
@@ -397,7 +399,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         teamId && (
           <Text
             style={{
-              fontFamily: "Nunito_400Regular_Italic",
+              fontFamily: "InstrumentSans_400Regular_Italic",
               color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
               textAlign: "center",
               marginVertical: 12,
@@ -442,7 +444,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
           ) : (
             <Text
               style={{
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "InstrumentSans_700Bold",
                 fontSize: 15,
                 color: "#fff",
               }}

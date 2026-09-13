@@ -17,6 +17,7 @@ import {
   redeemRewardByShortCode,
   searchContactsForEnrolment,
   searchCustomers,
+  sendMemberCard,
   verifyRedemption,
 } from "./loyalty.api";
 import { cashierInvalidations, loyaltyKeys } from "./loyalty.keys";
@@ -159,6 +160,18 @@ export const useAssignRewardMutation = (phone?: string) => {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (payload: AssignRewardRequest) => assignRewardToCustomer(payload),
+    onSuccess: () => sweepCashier(client, phone),
+  });
+};
+
+/**
+ * Sends the open customer their QR card. Sweeps the customer so `cardSentAt` on screen
+ * follows the send; the outcome itself is shown inline by `CustomerView`.
+ */
+export const useSendMemberCard = (phone?: string) => {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (customerId: string) => sendMemberCard(customerId),
     onSuccess: () => sweepCashier(client, phone),
   });
 };

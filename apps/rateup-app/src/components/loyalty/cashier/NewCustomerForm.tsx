@@ -7,7 +7,16 @@ import { LOYALTY_GENDERS, type LoyaltyGender } from "@/api/loyalty/loyalty.type"
 
 import { dobToDisplay, formatDobInput, parseDob } from "./logic/dob";
 import { PhoneField } from "./PhoneField";
-import { CashierButton, CashierInput, Field, FONT, FormHeader, InlineError, useTheme } from "./ui";
+import {
+  CashierButton,
+  CashierInput,
+  Field,
+  FONT,
+  FormHeader,
+  InlineError,
+  StepScroll,
+  useTheme,
+} from "./ui";
 import { useDebounced } from "./useDebounced";
 
 export interface NewCustomerValues {
@@ -36,7 +45,6 @@ interface NewCustomerFormProps {
   isSaving: boolean;
   programActive: boolean;
   error: string | null;
-  onBack: () => void;
   onSubmit: (values: NewCustomerValues) => void;
   /** The number already belongs to a member — open them instead of registering twice. */
   onOpenExisting: (phone: string) => void;
@@ -57,7 +65,6 @@ export function NewCustomerForm({
   isSaving,
   programActive,
   error,
-  onBack,
   onSubmit,
   onOpenExisting,
 }: Readonly<NewCustomerFormProps>) {
@@ -106,8 +113,30 @@ export function NewCustomerForm({
   };
 
   return (
-    <View style={{ gap: 16 }}>
-      <FormHeader title="New customer" onBack={onBack} />
+    <StepScroll
+      footer={
+        alreadyMember ? (
+          <CashierButton
+            label={`Open ${lookup?.contact?.name || "this customer"}`}
+            onPress={() => onOpenExisting(phone)}
+          />
+        ) : (
+          <CashierButton
+            label={
+              isSaving
+                ? "Registering…"
+                : signupBonus > 0
+                  ? `Register and give ${signupBonus} ${pointsName}`
+                  : "Register"
+            }
+            disabled={isSaving || !programActive}
+            loading={isSaving}
+            onPress={submit}
+          />
+        )
+      }
+    >
+      <FormHeader title="New customer" />
 
       <Text style={{ fontFamily: FONT.regular, fontSize: 13, color: t.fg3, lineHeight: 19 }}>
         {signupBonus > 0
@@ -219,26 +248,6 @@ export function NewCustomerForm({
           dashboard.
         </Text>
       ) : null}
-
-      {alreadyMember ? (
-        <CashierButton
-          label={`Open ${lookup?.contact?.name || "this customer"}`}
-          onPress={() => onOpenExisting(phone)}
-        />
-      ) : (
-        <CashierButton
-          label={
-            isSaving
-              ? "Registering…"
-              : signupBonus > 0
-                ? `Register and give ${signupBonus} ${pointsName}`
-                : "Register"
-          }
-          disabled={isSaving || !programActive}
-          loading={isSaving}
-          onPress={submit}
-        />
-      )}
-    </View>
+    </StepScroll>
   );
 }

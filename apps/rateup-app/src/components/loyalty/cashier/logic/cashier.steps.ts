@@ -8,6 +8,7 @@
 
 export const CASHIER_STEPS = [
   "search",
+  "scan",
   "new",
   "contacts",
   "customer",
@@ -50,6 +51,7 @@ export function stepBack(step: CashierStep): CashierStep | null {
     case "customer":
     case "new":
     case "contacts":
+    case "scan":
       return "search";
     case "search":
       return null;

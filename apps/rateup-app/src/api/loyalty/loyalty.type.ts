@@ -205,6 +205,10 @@ export interface CustomerRewardsResponse {
     points: number;
     status: string;
     createdAt: string;
+    /** The code their QR card carries; null for a member who has never been sent one. */
+    cardCode: string | null;
+    /** When WhatsApp last accepted their card image; null if never. */
+    cardSentAt: string | null;
   };
   availableRewards: CustomerReward[];
   issuableRewards: CustomerReward[];
@@ -522,4 +526,12 @@ export interface CreateApprovalRequestInput {
   requestedByType?: "CUSTOMER" | "STAFF" | "SYSTEM";
   requestedByName?: string | null;
   transactionId?: string | null;
+}
+
+/** `POST /accounts/:customerId/card/send` — whether the card image went out, and if not why. */
+export interface MemberCardSendResult {
+  sent: boolean;
+  skippedReason: "not_active" | "session_closed" | "no_public_url" | "send_failed" | null;
+  cardCode: string | null;
+  cardSentAt: string | null;
 }

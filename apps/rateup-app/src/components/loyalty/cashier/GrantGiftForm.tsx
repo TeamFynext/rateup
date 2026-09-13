@@ -5,14 +5,22 @@ import { Pressable, Text, View } from "react-native";
 import type { CustomerReward } from "@/api/loyalty/loyalty.type";
 
 import { hapticSelect } from "./haptics";
-import { CashierButton, CashierInput, Field, FONT, FormHeader, InlineError, useTheme } from "./ui";
+import {
+  CashierButton,
+  CashierInput,
+  Field,
+  FONT,
+  FormHeader,
+  InlineError,
+  StepScroll,
+  useTheme,
+} from "./ui";
 
 interface GrantGiftFormProps {
   customerName: string;
   gifts: CustomerReward[];
   isSaving: boolean;
   error: string | null;
-  onBack: () => void;
   onGrant: (reward: CustomerReward, note: string) => void;
 }
 
@@ -22,7 +30,6 @@ export function GrantGiftForm({
   gifts,
   isSaving,
   error,
-  onBack,
   onGrant,
 }: Readonly<GrantGiftFormProps>) {
   const { t } = useTheme();
@@ -30,8 +37,17 @@ export function GrantGiftForm({
   const [note, setNote] = useState("");
 
   return (
-    <View style={{ gap: 16 }}>
-      <FormHeader title="Grant a gift" subtitle={customerName} onBack={onBack} />
+    <StepScroll
+      footer={
+        <CashierButton
+          label={isSaving ? "Granting…" : selected ? `Give ${selected.name}` : "Give a gift"}
+          disabled={!selected || isSaving}
+          loading={isSaving}
+          onPress={() => selected && onGrant(selected, note)}
+        />
+      }
+    >
+      <FormHeader title="Grant a gift" subtitle={customerName} />
 
       <InlineError message={error} />
 
@@ -92,13 +108,6 @@ export function GrantGiftForm({
           maxLength={200}
         />
       </Field>
-
-      <CashierButton
-        label={isSaving ? "Granting…" : selected ? `Give ${selected.name}` : "Give a gift"}
-        disabled={!selected || isSaving}
-        loading={isSaving}
-        onPress={() => selected && onGrant(selected, note)}
-      />
-    </View>
+    </StepScroll>
   );
 }

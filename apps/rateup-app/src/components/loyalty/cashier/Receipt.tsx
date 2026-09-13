@@ -1,11 +1,23 @@
-import { Check, MessageCircle } from "lucide-react-native";
+import { MessageCircle } from "lucide-react-native";
 import React from "react";
 import { Text, View } from "react-native";
 
 import { formatMoney, formatNumber } from "./logic/format";
 import type { Receipt as ReceiptData } from "./logic/cashier.types";
 import type { WhatsAppPreview } from "./logic/message-preview";
-import { CashierButton, Card, Divider, FONT, ReceiptRow, useTheme } from "./ui";
+import {
+  ActionRow,
+  CashierButton,
+  Divider,
+  FONT,
+  LABEL,
+  NUM,
+  Perforation,
+  ReceiptRow,
+  Slip,
+  StepScroll,
+  useTheme,
+} from "./ui";
 
 interface ReceiptProps {
   receipt: ReceiptData;
@@ -31,6 +43,14 @@ interface ReceiptProps {
  * happened, and a toast is gone before the answer is read out. On this app it is also the
  * fix for a second problem — `Notice.tsx` cannot render above a native `Modal`, and the
  * screen this replaces reported every outcome from inside one.
+ *
+ * It is the only step that is a record rather than a control, and the only one the
+ * customer watches, so it is the one place the design is allowed a voice: a slip, torn
+ * across, the figure set large and centred over the accounting that explains it. Every
+ * other step stays plain so this one lands.
+ *
+ * Green is reserved for what the server has confirmed. A provisional receipt keeps its
+ * figure in the neutral ink and says it is waiting — the same rule the numbers follow.
  */
 export function Receipt({
   receipt,
@@ -51,27 +71,32 @@ export function Receipt({
 
   const provisional = Boolean(receipt.provisional);
 
-  const title = (() => {
+  /** What was done, in one word or two. "About" where the server has not confirmed it. */
+  const eyebrow = (() => {
     switch (receipt.kind) {
       case "earned":
-        // "About", because these are the estimate's numbers and the server may disagree.
-        return provisional
-          ? `About ${formatNumber(receipt.delta)} ${pointsName} — waiting to send`
-          : `${formatNumber(receipt.delta)} ${pointsName} added`;
+        return provisional ? "About — waiting to send" : "Added";
       case "redeemed":
-        return receipt.pendingApproval
-          ? `${receipt.rewardName} requested`
-          : `${receipt.rewardName} redeemed`;
+        return receipt.pendingApproval ? "Requested" : "Redeemed";
       case "coupon_used":
-        return provisional
-          ? `${receipt.rewardName} used — waiting to send`
-          : `${receipt.rewardName} marked as used`;
+        return provisional ? "Used — waiting to send" : "Marked as used";
       case "gift":
-        return `${receipt.rewardName} given`;
+        return "Given";
       case "joined":
-        return `${receipt.customer.name} has joined`;
+        return "Joined";
     }
   })();
+
+  /** The one thing on the slip: the points that moved, or the reward that did. */
+  const pointsHeadline = receipt.kind === "earned" || receipt.kind === "joined";
+  const headline = pointsHeadline
+    ? `${receipt.delta >= 0 ? "+" : "−"}${formatNumber(Math.abs(receipt.delta))}`
+    : (receipt.rewardName ?? "Reward");
+  const headlineUnit = pointsHeadline
+    ? pointsName
+    : receipt.kind === "joined"
+      ? null
+      : receipt.customer.name;
 
   const subtitle = [
     receipt.kind === "joined" ? null : receipt.customer.name,
@@ -127,29 +152,89 @@ export function Receipt({
   })();
 
   return (
-    <View style={{ gap: 14 }}>
-      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 999,
-            backgroundColor: t.status.open.soft,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Check size={20} color={t.status.open.fg} />
-        </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ fontFamily: FONT.bold, fontSize: 18, color: t.fg1 }}>{title}</Text>
+    <StepScroll
+      footer={
+        <>
+          <CashierButton label="Next customer" onPress={onNext} />
+          <ActionRow>
+            <CashierButton label={`Stay with ${first}`} variant="ghost" compact onPress={onStay} />
+            {onUndo ? (
+              <CashierButton
+                label={undoing ? "Requesting…" : "Undo"}
+                variant="ghost"
+                compact
+                onPress={onUndo}
+                disabled={undoing || Boolean(undoNote)}
+                loading={undoing}
+              />
+            ) : null}
+          </ActionRow>
+        </>
+      }
+    >
+      <Slip>
+        {/* The head of the slip: what moved, centred, in the largest type the app has. */}
+        <View style={{ paddingHorizontal: 18, paddingTop: 22, paddingBottom: 18, gap: 6 }}>
+          <Text
+            style={{
+              ...LABEL,
+              textAlign: "center",
+              color: provisional ? t.status.pending.fg : t.fg4,
+            }}
+          >
+            {eyebrow}
+          </Text>
+
+          <Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+            style={{
+              ...(pointsHeadline ? NUM : null),
+              fontFamily: FONT.black,
+              fontSize: pointsHeadline ? 46 : 26,
+              lineHeight: pointsHeadline ? 52 : 32,
+              letterSpacing: pointsHeadline ? -1.5 : -0.2,
+              textAlign: "center",
+              // Green is what the server has confirmed. An estimate stays in the ink.
+              color: pointsHeadline && receipt.delta > 0 && !provisional ? t.success : t.fg1,
+            }}
+          >
+            {headline}
+          </Text>
+
+          {headlineUnit ? (
+            <Text
+              numberOfLines={1}
+              style={{
+                fontFamily: FONT.medium,
+                fontSize: 14,
+                textAlign: "center",
+                color: t.fg3,
+              }}
+            >
+              {headlineUnit}
+            </Text>
+          ) : null}
+
           {subtitle ? (
-            <Text style={{ fontFamily: FONT.regular, fontSize: 13, color: t.fg3 }}>{subtitle}</Text>
+            <Text
+              style={{
+                ...NUM,
+                fontFamily: FONT.regular,
+                fontSize: 13,
+                textAlign: "center",
+                color: t.fg3,
+                marginTop: 2,
+              }}
+            >
+              {subtitle}
+            </Text>
           ) : null}
         </View>
-      </View>
 
-      <Card padding={0}>
+        <Perforation />
+
         {/* `before` is itself a cached number on a provisional receipt. Two provisional
             figures stacked without saying so is where staff get burned, so it says when
             the balance was last actually known. */}
@@ -180,7 +265,7 @@ export function Receipt({
             <ReceiptRow label="Tier" value={tierValue} />
           </>
         ) : null}
-      </Card>
+      </Slip>
 
       {/* The arithmetic, so an estimate can be defended out loud rather than just asserted. */}
       {provisional && receipt.estimate ? (
@@ -194,6 +279,7 @@ export function Receipt({
       {divergedFrom !== null && divergedFrom !== undefined ? (
         <Text
           style={{
+            ...NUM,
             fontFamily: FONT.semibold,
             fontSize: 12,
             color: t.status.pending.fg,
@@ -205,14 +291,7 @@ export function Receipt({
       ) : null}
 
       {waLabel ? (
-        <View
-          style={{
-            backgroundColor: t.surface2,
-            borderRadius: 12,
-            padding: 12,
-            gap: 6,
-          }}
-        >
+        <View style={{ backgroundColor: t.surface2, borderRadius: 12, padding: 12, gap: 6 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <MessageCircle
               size={14}
@@ -251,26 +330,7 @@ export function Receipt({
           {undoNote}
         </Text>
       ) : null}
-
-      <View style={{ gap: 8, paddingTop: 2 }}>
-        <CashierButton label="Next customer" onPress={onNext} />
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <CashierButton label={`Stay with ${first}`} variant="ghost" onPress={onStay} />
-          </View>
-          {onUndo ? (
-            <CashierButton
-              label={undoing ? "Requesting…" : "Undo"}
-              variant="ghost"
-              onPress={onUndo}
-              disabled={undoing || Boolean(undoNote)}
-              loading={undoing}
-              compact
-            />
-          ) : null}
-        </View>
-      </View>
-    </View>
+    </StepScroll>
   );
 }
 

@@ -85,7 +85,7 @@ export default function InboxSearchView({
             style={{
               flex: 1,
               fontSize: 14,
-              fontFamily: "Nunito_400Regular",
+              fontFamily: "InstrumentSans_400Regular",
               color: t.fg1,
               padding: 0,
             }}
@@ -101,12 +101,11 @@ export default function InboxSearchView({
               paddingVertical: 24,
               paddingHorizontal: 20,
               fontSize: 13,
-              fontFamily: "Nunito_400Regular",
+              fontFamily: "InstrumentSans_400Regular",
               color: t.fg4,
             }}
           >
-            Start typing to search across every conversation, ticket code and
-            customer.
+            Start typing to search across every conversation, ticket code and customer.
           </Text>
         ) : (
           children
@@ -134,7 +133,7 @@ export function InboxSearchEmpty() {
         style={{
           marginTop: 8,
           fontSize: 13,
-          fontFamily: "Nunito_400Regular",
+          fontFamily: "InstrumentSans_400Regular",
           color: t.fg4,
         }}
       >

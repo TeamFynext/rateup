@@ -4,13 +4,14 @@ import { Text, View } from "react-native";
 
 import type { CouponLookup } from "./logic/cashier.coupon";
 import {
+  Card,
   CashierButton,
   CashierInput,
-  Card,
   Field,
   FONT,
   FormHeader,
   InlineError,
+  StepScroll,
   useTheme,
 } from "./ui";
 
@@ -20,7 +21,6 @@ interface CouponCodeFormProps {
   isApplying: boolean;
   lookup: CouponLookup | null;
   lookupError: string | null;
-  onBack: () => void;
   onLookup: (code: string) => void;
   onApply: (lookup: CouponLookup) => void;
 }
@@ -35,7 +35,6 @@ export function CouponCodeForm({
   isApplying,
   lookup,
   lookupError,
-  onBack,
   onLookup,
   onApply,
 }: Readonly<CouponCodeFormProps>) {
@@ -48,8 +47,8 @@ export function CouponCodeForm({
   };
 
   return (
-    <View style={{ gap: 16 }}>
-      <FormHeader title="Coupon code" subtitle={customerName} onBack={onBack} />
+    <StepScroll>
+      <FormHeader title="Coupon code" subtitle={customerName} />
 
       <Field label="Code" hint="The code on the customer's WhatsApp message.">
         <CashierInput
@@ -107,6 +106,6 @@ export function CouponCodeForm({
           />
         </Card>
       ) : null}
-    </View>
+    </StepScroll>
   );
 }

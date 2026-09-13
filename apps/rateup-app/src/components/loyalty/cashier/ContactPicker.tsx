@@ -1,17 +1,26 @@
 import { Search } from "lucide-react-native";
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Text, TextInput, View } from "react-native";
 
 import { useEnrolmentContacts } from "@/api/loyalty/loyalty.query";
 import type { EnrolmentContact } from "@/api/loyalty/loyalty.type";
 
 import { hapticSelect } from "./haptics";
 import { maskPhone } from "./logic/maskPhone";
-import { Badge, Card, Divider, EmptyState, FONT, FormHeader, useTheme } from "./ui";
+import {
+  Badge,
+  Card,
+  Divider,
+  EmptyState,
+  FONT,
+  FormHeader,
+  PressableRow,
+  StepScroll,
+  useTheme,
+} from "./ui";
 import { useDebounced } from "./useDebounced";
 
 interface ContactPickerProps {
-  onBack: () => void;
   /** A contact who is not a member yet — carry their details into the register form. */
   onPick: (contact: EnrolmentContact) => void;
   /** A contact who already is one — open them at the counter instead. */
@@ -22,15 +31,15 @@ interface ContactPickerProps {
  * Enrol someone the org already knows — from a WhatsApp chat, an import, a survey —
  * without retyping their number. Members are labelled and open instead of re-registering.
  */
-export function ContactPicker({ onBack, onPick, onOpenMember }: Readonly<ContactPickerProps>) {
+export function ContactPicker({ onPick, onOpenMember }: Readonly<ContactPickerProps>) {
   const { t } = useTheme();
   const [query, setQuery] = useState("");
   const debounced = useDebounced(query.trim(), 300);
   const { data: contacts, isLoading, isFetching } = useEnrolmentContacts(debounced);
 
   return (
-    <View style={{ gap: 16 }}>
-      <FormHeader title="Add from contacts" onBack={onBack} />
+    <StepScroll>
+      <FormHeader title="Add from contacts" />
 
       <Text style={{ fontFamily: FONT.regular, fontSize: 13, color: t.fg3, lineHeight: 19 }}>
         Pick someone you already have a number for. Members are marked.
@@ -86,21 +95,12 @@ export function ContactPicker({ onBack, onPick, onOpenMember }: Readonly<Contact
             return (
               <React.Fragment key={contact.id}>
                 {index > 0 ? <Divider /> : null}
-                <Pressable
+                <PressableRow
                   onPress={() => {
                     hapticSelect();
                     if (member) onOpenMember(contact.phone);
                     else onPick(contact);
                   }}
-                  style={({ pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    paddingVertical: 12,
-                    paddingHorizontal: 14,
-                    backgroundColor: pressed ? t.surface2 : "transparent",
-                  })}
                 >
                   <View style={{ flex: 1 }}>
                     <Text
@@ -124,12 +124,12 @@ export function ContactPicker({ onBack, onPick, onOpenMember }: Readonly<Contact
                       Add
                     </Text>
                   )}
-                </Pressable>
+                </PressableRow>
               </React.Fragment>
             );
           })}
         </Card>
       ) : null}
-    </View>
+    </StepScroll>
   );
 }

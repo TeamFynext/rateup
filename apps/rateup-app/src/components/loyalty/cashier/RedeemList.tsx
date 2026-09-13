@@ -5,7 +5,7 @@ import { Text, View } from "react-native";
 import type { CustomerReward, LoyaltyReward } from "@/api/loyalty/loyalty.type";
 
 import { formatNumber } from "./logic/format";
-import { CashierButton, FONT, FormHeader, InlineError, useTheme } from "./ui";
+import { CashierButton, FONT, FormHeader, InlineError, StepScroll, useTheme } from "./ui";
 
 export interface RedeemRow {
   reward: LoyaltyReward;
@@ -35,7 +35,6 @@ interface RedeemListProps {
    * the difference between a refusal and a surprise.
    */
   online: boolean;
-  onBack: () => void;
   onRedeem: (reward: LoyaltyReward) => void;
 }
 
@@ -54,7 +53,6 @@ export function RedeemList({
   redeemingId,
   error,
   online,
-  onBack,
   onRedeem,
 }: Readonly<RedeemListProps>) {
   const { t } = useTheme();
@@ -68,8 +66,8 @@ export function RedeemList({
   });
 
   return (
-    <View style={{ gap: 16 }}>
-      <FormHeader title="Redeem a reward" subtitle={customerName} onBack={onBack} />
+    <StepScroll>
+      <FormHeader title="Redeem a reward" subtitle={customerName} />
 
       <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: t.fg3 }}>
         {formatNumber(currentPoints)} {pointsName} available
@@ -152,7 +150,7 @@ export function RedeemList({
           </View>
         ))}
       </View>
-    </View>
+    </StepScroll>
   );
 }
 

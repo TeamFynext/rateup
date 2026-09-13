@@ -13,6 +13,8 @@ import {
   FONT,
   FormHeader,
   InlineError,
+  NUM,
+  StepScroll,
   useTheme,
 } from "./ui";
 
@@ -35,7 +37,6 @@ interface AddPurchaseFormProps {
   isSaving: boolean;
   /** A failure from the award, reported here rather than as a toast. */
   error: string | null;
-  onBack: () => void;
   onSubmit: (values: AddPurchaseValues) => void;
 }
 
@@ -60,7 +61,6 @@ export function AddPurchaseForm({
   rewardCosts,
   isSaving,
   error,
-  onBack,
   onSubmit,
 }: Readonly<AddPurchaseFormProps>) {
   const { t } = useTheme();
@@ -99,12 +99,30 @@ export function AddPurchaseForm({
   };
 
   return (
-    <View style={{ gap: 18 }}>
-      <FormHeader title="Add purchase" subtitle={customerName} onBack={onBack} />
+    <StepScroll
+      footer={
+        <CashierButton
+          label={
+            isSaving
+              ? "Giving…"
+              : estimate
+                ? `Give ${formatNumber(estimate.points)} ${pointsName}`
+                : `Give ${pointsName}`
+          }
+          onPress={submit}
+          disabled={isSaving || !estimate}
+          loading={isSaving}
+        />
+      }
+    >
+      <FormHeader title="Add purchase" subtitle={customerName} />
 
       <InlineError message={error} />
 
-      <Field label="What did they spend?" error={touched && !valid ? "What did they spend?" : null}>
+      <Field
+        label="What did they spend?"
+        error={touched && !valid ? "Enter an amount above zero." : null}
+      >
         <CashierInput
           value={raw}
           onChangeText={setRaw}
@@ -121,7 +139,7 @@ export function AddPurchaseForm({
       <Card>
         {estimate ? (
           <View style={{ gap: 3 }}>
-            <Text style={{ fontFamily: FONT.bold, fontSize: 26, color: t.success }}>
+            <Text style={{ ...NUM, fontFamily: FONT.black, fontSize: 32, color: t.success }}>
               +{formatNumber(estimate.points)}{" "}
               <Text style={{ fontFamily: FONT.regular, fontSize: 15, color: t.fg3 }}>
                 {pointsName}
@@ -132,7 +150,9 @@ export function AddPurchaseForm({
                 {mathLine}
               </Text>
             ) : null}
-            <Text style={{ fontFamily: FONT.medium, fontSize: 14, color: t.fg1, marginTop: 4 }}>
+            <Text
+              style={{ ...NUM, fontFamily: FONT.medium, fontSize: 14, color: t.fg1, marginTop: 4 }}
+            >
               Balance becomes {formatNumber(newBalance)} {pointsName}
               {affordable > 0
                 ? affordable === 1
@@ -164,28 +184,12 @@ export function AddPurchaseForm({
         />
       </Field>
 
-      <View style={{ gap: 8 }}>
-        <CashierButton
-          label={
-            isSaving
-              ? "Giving…"
-              : estimate
-                ? `Give ${formatNumber(estimate.points)} ${pointsName}`
-                : `Give ${pointsName}`
-          }
-          onPress={submit}
-          disabled={isSaving || !estimate}
-          loading={isSaving}
-        />
-        <CashierButton label="Cancel" variant="ghost" onPress={onBack} disabled={isSaving} />
-      </View>
-
       {/* An amount that earns nothing still deserves to be legible, so it is echoed back. */}
       {valid && !estimate ? (
-        <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
+        <Text style={{ ...NUM, fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
           {money(amount)}
         </Text>
       ) : null}
-    </View>
+    </StepScroll>
   );
 }

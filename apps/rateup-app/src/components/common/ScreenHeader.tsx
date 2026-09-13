@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useColorScheme } from "nativewind";
@@ -8,15 +9,21 @@ import { getInboxHeaderBg, getInboxRowTheme } from "@/constants/inboxDesign";
  * bar at `padding: 6px 16px 12px`, a 20px/800 wordmark, and 38x38 radius-11
  * actions. `below` takes anything that hangs off the same bar, like the inbox's
  * segment strip, which the design places 12px under the title row.
+ *
+ * `onBack` puts the way out in the bar itself rather than in the screen's content, so it
+ * is still there at the bottom of a long form — and so a screen with no form of its own
+ * has one at all.
  */
 export default function ScreenHeader({
   title,
   actions,
   below,
+  onBack,
 }: Readonly<{
   title: string;
   actions?: React.ReactNode;
   below?: React.ReactNode;
+  onBack?: () => void;
 }>) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -40,11 +47,30 @@ export default function ScreenHeader({
           paddingHorizontal: 16,
         }}
       >
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={{
+              width: 38,
+              height: 38,
+              marginLeft: -9,
+              borderRadius: 11,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ArrowLeft size={22} color={t.fg1} />
+          </Pressable>
+        ) : null}
+
         <Text
           numberOfLines={1}
           style={{
             flex: 1,
-            fontFamily: "Nunito_800ExtraBold",
+            fontFamily: "Figtree_800ExtraBold",
             fontSize: 20,
             color: t.fg1,
           }}
@@ -109,7 +135,7 @@ export function HeaderIconButton({
             style={{
               color: "#fff",
               fontSize: 8,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
             }}
           >
             {badge}

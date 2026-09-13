@@ -1,15 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useIsFocused } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  BackHandler,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { BackHandler, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { getCustomerRewardsByCardCode } from "@/api/loyalty/loyalty.api";
+import { loyaltyKeys } from "@/api/loyalty/loyalty.keys";
 import {
   useApplyRedemption,
   useAssignRewardMutation,
@@ -24,6 +20,7 @@ import {
   useLoyaltyTiers,
   useRedeemReward,
   useRedeemRewardByShortCode,
+  useSendMemberCard,
   useVerifyRedemption,
 } from "@/api/loyalty/loyalty.query";
 import {
@@ -48,9 +45,11 @@ import { CustomerSearch } from "./CustomerSearch";
 import { CustomerView } from "./CustomerView";
 import { GrantGiftForm } from "./GrantGiftForm";
 import { hapticError, hapticSuccess, hapticWarning } from "./haptics";
+import { cardSendMessage } from "./logic/cardCode";
 import { lookupFromVerify, type CouponLookup } from "./logic/cashier.coupon";
 import type { Receipt as ReceiptData } from "./logic/cashier.types";
 import { buildWhatsAppPreview } from "./logic/message-preview";
+import { isUnreachable, responseStatus } from "./logic/network";
 import { pendingDeltaFor, queueSummary, refusalFor, type OutboxItem } from "./logic/outbox";
 import { estimateEarn } from "./logic/points-estimate";
 import {
@@ -66,7 +65,8 @@ import {
 } from "./NewCustomerForm";
 import { Receipt } from "./Receipt";
 import { RedeemList } from "./RedeemList";
-import { Badge, CenteredSpinner, CashierButton, EmptyState, useTheme } from "./ui";
+import { ScanCard } from "./ScanCard";
+import { Badge, CenteredSpinner, CashierButton, EmptyState, StepScroll, useTheme } from "./ui";
 import { onSettle, useCashierOutbox } from "./useCashierOutbox";
 import { useRecentCustomers } from "./useRecentCustomers";
 
@@ -92,6 +92,7 @@ export default function CashierScreen() {
   const insets = useSafeAreaInsets();
   const { orgId, userId } = useAuth();
   const isFocused = useIsFocused();
+  const queryClient = useQueryClient();
 
   const phone = useCashierStore((state) => state.phone);
   const rawStep = useCashierStore((state) => state.step);
@@ -110,6 +111,9 @@ export default function CashierScreen() {
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
   const [outboxOpen, setOutboxOpen] = useState(false);
   const [divergedFrom, setDivergedFrom] = useState<number | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [cardNotice, setCardNotice] = useState<string | null>(null);
   /** The last server answer for this number, painted while the network is asked again. */
   const [cached, setCached] = useState<{ data: CustomerRewardsResponse; fetchedAt: number } | null>(
     null,
@@ -144,6 +148,7 @@ export default function CashierScreen() {
   const apply = useApplyRedemption(phone ?? undefined);
   const createCustomer = useCreateLoyaltyCustomer();
   const requestCorrection = useCreateApprovalRequest(phone ?? undefined);
+  const sendCard = useSendMemberCard(phone ?? undefined);
 
   const pointsName = program?.currencyName ?? "Points";
   const currencySymbol = program?.currencySymbol ?? "₹";
@@ -241,6 +246,8 @@ export default function CashierScreen() {
     setActionError(null);
     setCouponError(null);
     setUndoNote(null);
+    setScanError(null);
+    setCardNotice(null);
   }
 
   /* ── helpers ── */
@@ -718,6 +725,55 @@ export default function CashierScreen() {
     }
   };
 
+  /**
+   * A scanned (or typed) card. The lookup answers with the same payload as the phone
+   * lookup, so it is seeded into that query's cache under the phone the store will
+   * normalise to, and the ordinary `openCustomer` takes it from there — the customer view,
+   * every action, the outbox and the recents all keep working off the phone as before.
+   */
+  const resolveCard = async (code: string) => {
+    if (scanning) return;
+    setScanError(null);
+    setScanning(true);
+    try {
+      const data = await getCustomerRewardsByCardCode(code);
+      setOnline(true);
+      queryClient.setQueryData(
+        loyaltyKeys.cashierCustomer(data.customer.phone.replace(/\D/g, "")),
+        data,
+      );
+      hapticSuccess();
+      openCustomer(data.customer.phone);
+    } catch (error) {
+      hapticWarning();
+      if (isUnreachable(error)) {
+        setOnline(false);
+        setScanError("Scanning needs a connection — search by name or number instead.");
+      } else if (responseStatus(error) === 404) {
+        setScanError("Not a card from this programme.");
+      } else {
+        setScanError(apiErrorMessage(error, "Could not read this card"));
+      }
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const onSendCard = async () => {
+    const data = served;
+    if (!data) return;
+    setCardNotice(null);
+    try {
+      const outcome = await sendCard.mutateAsync(data.customer.id);
+      if (outcome.sent) hapticSuccess();
+      else hapticWarning();
+      setCardNotice(cardSendMessage(outcome));
+    } catch (error) {
+      hapticError();
+      setCardNotice(apiErrorMessage(error, "Could not send the card"));
+    }
+  };
+
   /* ── render ── */
 
   const preview =
@@ -737,13 +793,21 @@ export default function CashierScreen() {
       : null;
 
   const body = (() => {
-    if (programLoading) return <CenteredSpinner />;
+    if (programLoading) {
+      return (
+        <StepScroll>
+          <CenteredSpinner />
+        </StepScroll>
+      );
+    }
     if (!program) {
       return (
-        <EmptyState
-          title="No loyalty programme yet"
-          body="Set one up on the web dashboard, then the counter opens here."
-        />
+        <StepScroll>
+          <EmptyState
+            title="No loyalty programme yet"
+            body="Set one up on the web dashboard, then the counter opens here."
+          />
+        </StepScroll>
       );
     }
 
@@ -772,6 +836,21 @@ export default function CashierScreen() {
       );
     }
 
+    if (step === "scan") {
+      return (
+        <ScanCard
+          active={isFocused}
+          resolving={scanning}
+          error={scanError}
+          onCode={(code) => void resolveCard(code)}
+          onBack={() => {
+            clearErrors();
+            go("search", null);
+          }}
+        />
+      );
+    }
+
     if (step === "search") {
       return (
         <CustomerSearch
@@ -794,6 +873,11 @@ export default function CashierScreen() {
             setCouponLookup(null);
             go("coupon", null);
           }}
+          onScan={() => {
+            clearErrors();
+            go("scan", null);
+          }}
+          onCardCode={(code) => void resolveCard(code)}
         />
       );
     }
@@ -808,7 +892,6 @@ export default function CashierScreen() {
           isSaving={createCustomer.isPending}
           programActive={program.status === "active"}
           error={actionError}
-          onBack={() => go("search", null)}
           onSubmit={onRegister}
           onOpenExisting={openCustomer}
         />
@@ -818,7 +901,6 @@ export default function CashierScreen() {
     if (step === "contacts") {
       return (
         <ContactPicker
-          onBack={() => go("search", null)}
           onPick={(contact) => {
             setPrefill({
               phone: contact.phone,
@@ -842,7 +924,6 @@ export default function CashierScreen() {
           isApplying={apply.isPending || redeemShortCode.isPending}
           lookup={couponLookup}
           lookupError={couponError}
-          onBack={() => go("search", null)}
           onLookup={onCouponLookup}
           onApply={onCouponApply}
         />
@@ -918,7 +999,6 @@ export default function CashierScreen() {
               .map((reward) => reward.pointsCost)}
             isSaving={awardPoints.isPending}
             error={actionError}
-            onBack={() => go("customer")}
             onSubmit={onAddPurchase}
           />
         );
@@ -935,7 +1015,6 @@ export default function CashierScreen() {
             redeemingId={redeemingId}
             error={actionError}
             online={online}
-            onBack={() => go("customer")}
             onRedeem={onRedeem}
           />
         );
@@ -947,7 +1026,6 @@ export default function CashierScreen() {
             isApplying={apply.isPending || redeemShortCode.isPending}
             lookup={couponLookup}
             lookupError={couponError}
-            onBack={() => go("customer")}
             onLookup={onCouponLookup}
             onApply={onCouponApply}
           />
@@ -959,7 +1037,6 @@ export default function CashierScreen() {
             gifts={served.issuableRewards.filter((reward) => reward.rewardType === "assigned")}
             isSaving={assign.isPending}
             error={actionError}
-            onBack={() => go("customer")}
             onGrant={onGrant}
           />
         );
@@ -979,6 +1056,9 @@ export default function CashierScreen() {
             onMarkUsed={onMarkUsed}
             markingUsed={apply.isPending || redeemShortCode.isPending}
             error={actionError}
+            onSendCard={() => void onSendCard()}
+            sendingCard={sendCard.isPending}
+            cardNotice={cardNotice}
           />
         );
     }
@@ -990,6 +1070,15 @@ export default function CashierScreen() {
     <View style={{ flex: 1, backgroundColor: t.pageBg, paddingTop: insets.top }}>
       <ScreenHeader
         title={headerTitle(step, served)}
+        // Every step but the first has somewhere to go back to, and `back()` is the same
+        // graph Android's hardware button walks — iOS just had no way to reach it.
+        onBack={
+          step === "search"
+            ? undefined
+            : () => {
+                if (back()) clearErrors();
+              }
+        }
         actions={
           // Always visible while there is anything to say, on every step: a refusal must
           // never be the first time staff learn there is no network.
@@ -1003,24 +1092,10 @@ export default function CashierScreen() {
           ) : undefined
         }
       />
-      {/* None of these screens had keyboard avoidance before, and every form is a tall
-          column with the confirm button at the bottom. */}
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={{
-            padding: 16,
-            paddingBottom: 32 + insets.bottom,
-            gap: 16,
-          }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        >
-          {body}
-        </ScrollView>
-      </KeyboardAvoidingView>
+      {/* The scroll belongs to each step (`StepScroll`), not to the container: a step's
+          commitment is pinned in the thumb's reach below it, and the footer needs that
+          step's own state to label itself. */}
+      {body}
 
       <OutboxSheet
         visible={outboxOpen}
@@ -1038,31 +1113,10 @@ export default function CashierScreen() {
   );
 }
 
-/**
- * Whether the request never reached the server.
- *
- * This is the only test that decides between queueing and reporting a failure, so it is
- * deliberately narrow: **no response at all**. A 5xx is excluded because the request did
- * arrive and may well have committed — queueing that would risk a double award, which is
- * the outbox's job to prevent rather than to cause. (The drain treats a 5xx on an award as
- * unresolved for the same reason; see `classifyOutcome`.)
- */
-function isUnreachable(error: unknown): boolean {
-  if (typeof error !== "object" || error === null) return false;
-  const response = (error as { response?: unknown }).response;
-  if (response) return false;
-  const code = (error as { code?: unknown }).code;
-  return (
-    code === "ERR_NETWORK" ||
-    code === "ECONNABORTED" ||
-    code === "ETIMEDOUT" ||
-    Boolean((error as { request?: unknown }).request)
-  );
-}
-
 function headerTitle(step: string, customer: CustomerRewardsResponse | undefined): string {
   if (step === "receipt") return "Done";
   if (step === "search") return "Cashier";
+  if (step === "scan") return "Scan card";
   return customer?.customer.name ?? "Cashier";
 }
 

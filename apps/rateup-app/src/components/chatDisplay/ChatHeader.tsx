@@ -101,7 +101,7 @@ const MoreOptions = ({
               />
               <Text
                 style={{
-                  fontFamily: "Nunito_600SemiBold",
+                  fontFamily: "InstrumentSans_600SemiBold",
                   color: isDark ? "#fff" : Colors.light.textPrimary,
                   fontSize: 15,
                 }}
@@ -128,7 +128,7 @@ const MoreOptions = ({
                 />
                 <Text
                   style={{
-                    fontFamily: "Nunito_600SemiBold",
+                    fontFamily: "InstrumentSans_600SemiBold",
                     color: isDark ? "#fff" : Colors.light.textPrimary,
                     fontSize: 15,
                   }}
@@ -293,7 +293,7 @@ const ConfirmationModal = ({
               paddingTop: 8,
               paddingHorizontal: 20,
               paddingBottom: 4,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
               fontSize: 17,
               color: t.fg1,
             }}
@@ -305,7 +305,7 @@ const ConfirmationModal = ({
               paddingHorizontal: 20,
               paddingBottom: 8,
               fontSize: 12,
-              fontFamily: "Nunito_400Regular",
+              fontFamily: "InstrumentSans_400Regular",
               color: t.fg3,
             }}
           >
@@ -349,7 +349,7 @@ const ConfirmationModal = ({
                   style={{
                     flex: 1,
                     fontSize: 14,
-                    fontFamily: "Nunito_700Bold",
+                    fontFamily: "InstrumentSans_700Bold",
                     color: t.fg1,
                   }}
                 >
@@ -491,7 +491,7 @@ const ChatHeader = ({
               >
                 <Text
                   style={{
-                    fontFamily: "Nunito_800ExtraBold",
+                    fontFamily: "Figtree_800ExtraBold",
                     fontSize: 14,
                     color: "#fff",
                   }}
@@ -535,7 +535,7 @@ const ChatHeader = ({
                   numberOfLines={1}
                   style={{
                     fontSize: 15,
-                    fontFamily: "Nunito_800ExtraBold",
+                    fontFamily: "Figtree_800ExtraBold",
                     color: t.fg1,
                   }}
                 >
@@ -545,7 +545,7 @@ const ChatHeader = ({
                   numberOfLines={1}
                   style={{
                     fontSize: 11,
-                    fontFamily: "Nunito_400Regular",
+                    fontFamily: "InstrumentSans_400Regular",
                     color: t.fg4,
                     marginTop: 1,
                   }}
@@ -633,7 +633,7 @@ const ChatHeader = ({
           style={{
             flex: 1,
             fontSize: 12.5,
-            fontFamily: "Nunito_700Bold",
+            fontFamily: "InstrumentSans_700Bold",
             color: sessionColor,
           }}
         >

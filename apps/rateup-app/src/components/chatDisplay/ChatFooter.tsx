@@ -23,8 +23,7 @@ const ChatFooter = ({ id }: { id: string }) => {
   const t = getInboxRowTheme(isDark);
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
-  const { data: assignedUsers, isLoading: assignmentLoading } =
-    useGetAssignedUserForContact(id);
+  const { data: assignedUsers, isLoading: assignmentLoading } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
   let currentUserAssignment = assignedUsers?.find((entry: any) => entry.assignedUserId == userId);
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
@@ -123,7 +122,7 @@ const ChatFooter = ({ id }: { id: string }) => {
           <Text
             style={{
               flex: 1,
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: t.warmStrong,
               fontSize: 12,
             }}
@@ -156,7 +155,7 @@ const ChatFooter = ({ id }: { id: string }) => {
           <Text
             style={{
               flex: 1,
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: t.fg3,
               fontSize: 12,
             }}

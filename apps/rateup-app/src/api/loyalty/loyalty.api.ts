@@ -12,6 +12,7 @@ import type {
   CustomerRewardsResponse,
   CustomerSearchResult,
   EnrolmentContact,
+  MemberCardSendResult,
   EventTrigger,
   LoyaltyEarningRule,
   LoyaltyProgram,
@@ -45,6 +46,14 @@ const APPROVALS = "/api/loyalty/approvals";
 /** The customer with everything the counter needs about them, in one request. */
 export async function getCustomerRewardsByPhone(phone: string): Promise<CustomerRewardsResponse> {
   return (await axios.get(`${ACCOUNTS}/phone/${phone}`)).data;
+}
+
+/**
+ * The same payload, for the member whose card was just scanned. The server normalises the
+ * code, so what the camera read can be passed through as-is.
+ */
+export async function getCustomerRewardsByCardCode(code: string): Promise<CustomerRewardsResponse> {
+  return (await axios.get(`${ACCOUNTS}/card/${encodeURIComponent(code)}`)).data;
 }
 
 /** Members, by partial name or number. */
@@ -127,6 +136,11 @@ export async function assignRewardToCustomer(
   payload: AssignRewardRequest,
 ): Promise<AssignRewardResponse> {
   return (await axios.post(`${ACCOUNTS}/${payload.customerId}/assign-reward`, payload)).data;
+}
+
+/** Asks the server to WhatsApp the member their QR card. Skips are reported, not thrown. */
+export async function sendMemberCard(customerId: string): Promise<MemberCardSendResult> {
+  return (await axios.post(`${ACCOUNTS}/${customerId}/card/send`)).data;
 }
 
 /** Marks an issued gift used, by the short code staff read out. */

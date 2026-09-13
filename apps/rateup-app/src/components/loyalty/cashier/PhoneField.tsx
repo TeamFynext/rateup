@@ -4,7 +4,7 @@ import { FlatList, Modal, Pressable, Text, TextInput, View } from "react-native"
 
 import { countries } from "@/constants/countries";
 
-import { FONT, useTheme } from "./ui";
+import { FONT, PressableRow, useTheme } from "./ui";
 
 /**
  * A phone number, entered as a dial code plus the national part.
@@ -167,20 +167,13 @@ export function PhoneField({
             keyboardShouldPersistTaps="handled"
             style={{ marginTop: 12 }}
             renderItem={({ item }) => (
-              <Pressable
+              <PressableRow
                 onPress={() => {
                   onChange(dialDigits(item) + national);
                   setCountryQuery("");
                   setPicking(false);
                 }}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                  paddingVertical: 13,
-                  paddingHorizontal: 16,
-                  backgroundColor: pressed ? t.surface2 : "transparent",
-                })}
+                accessibilityLabel={`${item.name} ${item.dial_code}`}
               >
                 <Text style={{ fontSize: 18 }}>{item.flag}</Text>
                 <Text
@@ -192,7 +185,7 @@ export function PhoneField({
                 <Text style={{ fontFamily: FONT.medium, fontSize: 14, color: t.fg3 }}>
                   {item.dial_code}
                 </Text>
-              </Pressable>
+              </PressableRow>
             )}
           />
         </View>

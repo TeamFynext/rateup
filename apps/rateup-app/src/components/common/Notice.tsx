@@ -155,7 +155,7 @@ const NoticeCard = ({ item }: { item: NoticeItem }) => {
 
       <View style={{ flex: 1 }}>
         <Text
-          style={{ fontFamily: "Nunito_600SemiBold", fontSize: 13, color: style.title }}
+          style={{ fontFamily: "InstrumentSans_600SemiBold", fontSize: 13, color: style.title }}
           numberOfLines={2}
         >
           {item.text1}
@@ -163,7 +163,7 @@ const NoticeCard = ({ item }: { item: NoticeItem }) => {
         {item.text2 ? (
           <Text
             style={{
-              fontFamily: "Nunito_400Regular",
+              fontFamily: "InstrumentSans_400Regular",
               fontSize: 12,
               color: style.body,
               marginTop: 2,

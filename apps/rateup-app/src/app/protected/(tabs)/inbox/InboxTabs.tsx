@@ -73,7 +73,7 @@ function SegmentPill({
       <Text
         style={{
           fontSize: 13,
-          fontFamily: "Nunito_600SemiBold",
+          fontFamily: "InstrumentSans_600SemiBold",
           color: labelColor,
         }}
       >
@@ -94,7 +94,7 @@ function SegmentPill({
           <Text
             style={{
               fontSize: 11,
-              fontFamily: "Nunito_700Bold",
+              fontFamily: "InstrumentSans_700Bold",
               color: countFg,
             }}
           >
@@ -295,7 +295,7 @@ export default function InboxLayout() {
                         <Text
                           style={{
                             fontSize: 11,
-                            fontFamily: "Nunito_700Bold",
+                            fontFamily: "InstrumentSans_700Bold",
                             color: !isMine
                               ? isDark
                                 ? Colors.dark.textPrimary
@@ -332,7 +332,7 @@ export default function InboxLayout() {
                         <Text
                           style={{
                             fontSize: 11,
-                            fontFamily: "Nunito_700Bold",
+                            fontFamily: "InstrumentSans_700Bold",
                             color: isMine
                               ? isDark
                                 ? Colors.dark.textPrimary

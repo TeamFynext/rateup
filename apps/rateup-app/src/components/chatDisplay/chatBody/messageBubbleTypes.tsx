@@ -214,7 +214,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           />
           <Text
             style={{
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: isDark ? Colors.dark.textSecondary : Colors.light.textSubtle,
               marginTop: 8,
               fontSize: 13,

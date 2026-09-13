@@ -50,6 +50,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/withSimulatorCodeSigning.js",
       "expo-router",
       [
         "expo-build-properties",
@@ -116,7 +117,14 @@
       "expo-asset",
       "expo-status-bar",
       "expo-sqlite",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to scan customer loyalty cards.",
+          "recordAudioAndroid": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
