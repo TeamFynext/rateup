@@ -20,15 +20,25 @@ export function windowStart(windowMonths: number, now: Date = new Date()): Date 
   return dayjs(now).subtract(windowMonths, "month").toDate();
 }
 
-/** Only purchases earn towards a tier — signup, referral and manual adjustments do not. */
+/**
+ * Only purchases earn towards a tier — signup, referral and manual adjustments do not.
+ *
+ * The filter is "rows that carry a purchase amount" rather than "earn rows from a
+ * purchase", because a reversal (`reversePurchasePoints`) is an `adjust` row carrying a
+ * *negative* `purchaseAmount`. Matching on the typed column is what nets a cancelled order
+ * back off the window and lets the member move down; the old `transactionType: "earn"`
+ * filter made those rows invisible, so refunded money kept holding a tier up.
+ *
+ * `awardPoints` and the reversal are the only writers of that column, so this set is
+ * exactly purchases and their reversals.
+ */
 function purchaseRowsWhere(
   programId: string,
   windowMonths: number,
 ): Prisma.LoyaltyTransactionWhereInput {
   return {
     programId,
-    transactionType: "earn",
-    source: "purchase",
+    purchaseAmount: { not: null },
     createdAt: { gte: windowStart(windowMonths) },
   };
 }

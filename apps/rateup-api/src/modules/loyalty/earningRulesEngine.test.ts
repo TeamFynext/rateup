@@ -781,13 +781,14 @@ describe("checkAndUpgradeTier", () => {
     const res = await checkAndUpgradeTier(CUSTOMER, 500);
 
     expect(res).toMatchObject({ upgraded: true, direction: "up", newTier: { id: "vip" } });
+    // The window sums rows that carry a purchase amount, which is purchases and their
+    // reversals — not every "earn" row, so a signup bonus still does not buy a tier.
     expect(db.loyaltyTransaction.aggregate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           accountId: CUSTOMER,
           programId: PROGRAM,
-          transactionType: "earn",
-          source: "purchase",
+          purchaseAmount: { not: null },
         }),
       }),
     );

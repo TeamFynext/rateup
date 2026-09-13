@@ -13,6 +13,8 @@ import {
 import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { parsePhoneforWa } from "../util.js";
+import { LoyaltyError } from "../loyalty.errors.js";
+import { findProgramMember } from "./memberLookup.js";
 import {
   dispatchLoyaltyNotification,
   NOTIFICATION_NOT_SENT,
@@ -140,7 +142,7 @@ export async function createCustomerAccount(
       await sendCardAfterEnrolment(orgId, account.id);
       return account;
     } else {
-      throw new Error("Customer account already exists");
+      throw new LoyaltyError("MEMBER_EXISTS", "Customer account already exists");
     }
   }
 
@@ -641,6 +643,48 @@ export async function updateCustomerAccount(
   });
 }
 
+function isUniqueViolation(e: unknown): boolean {
+  return typeof e === "object" && e !== null && (e as { code?: string }).code === "P2002";
+}
+
+/**
+ * The answer to an award that had already been made under this idempotency key.
+ *
+ * Rebuilt from the stored ledger row and the account as it stands, rather than from a
+ * snapshot: the figures a caller needs (what was awarded, what the balance is now) are both
+ * still true. What is deliberately *not* replayed is anything describing an action — no
+ * WhatsApp message went out this time, and this call moved nobody between tiers — so those
+ * read as "nothing happened", which is exactly what happened.
+ */
+function replayOf(
+  transaction: { id: string; points: number; balanceAfter: number; metadata: unknown },
+  customer: { currentTier?: { name: string } | null },
+) {
+  const meta = (transaction.metadata ?? {}) as {
+    appliedRuleId?: string;
+    appliedRuleName?: string;
+  };
+  return {
+    replayed: true as const,
+    customer: null,
+    transaction,
+    pointsAwarded: transaction.points,
+    calculation: null,
+    rule: meta.appliedRuleId
+      ? { id: meta.appliedRuleId, name: meta.appliedRuleName ?? "", multiplier: 1, bonusPoints: 0 }
+      : null,
+    tier: {
+      current: null,
+      previous: customer.currentTier?.name ?? null,
+      upgraded: false,
+      next: null,
+      amountToNext: null,
+    },
+    notification: { ...NOTIFICATION_NOT_SENT, skippedReason: "replayed" },
+    tierNotification: null,
+  };
+}
+
 export async function awardPoints(
   programId: string,
   contactId: string,
@@ -653,10 +697,17 @@ export async function awardPoints(
     channel?: string;
     orderId?: string;
     notes?: string;
+    /**
+     * Collapses a retried call onto the award it already made. A caller that cannot tell
+     * whether its request landed — a POS that lost the reply, a webhook Shopify re-sent —
+     * passes the same key again and gets the original result back with `replayed: true`,
+     * rather than crediting the customer twice.
+     */
+    idempotencyKey?: string;
   },
 ) {
   // Get customer
-  let customer = await prisma.customerLoyaltyAccount.findUnique({
+  const customer = await prisma.customerLoyaltyAccount.findUnique({
     where: {
       programId_contactId: {
         programId,
@@ -676,82 +727,125 @@ export async function awardPoints(
   });
 
   if (!customer) {
-    throw new Error("Customer account not found. Create account first.");
+    throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found. Create account first.");
+  }
+
+  const member = customer;
+
+  if (context.idempotencyKey) {
+    const already = await prisma.loyaltyTransaction.findUnique({
+      where: {
+        programId_idempotencyKey: { programId, idempotencyKey: context.idempotencyKey },
+      },
+    });
+    if (already) return replayOf(already, customer);
   }
 
   // A purchase verifies a held web signup. Paid before the purchase is booked so the
   // purchase row's balance-after includes the joining bonus.
   await releasePendingSignupBonus(customer.id);
 
-  const { points, updatedCustomer, transaction, calculated } = await prisma.$transaction(
-    async (tx) => {
-      const calculated = await calculatePointsForPurchase(
-        programId,
-        customer.id,
-        purchaseAmount,
-        {
-          purchase_amount: purchaseAmount,
-          location_id: context.locationId,
-          categories: context.productCategories,
-          product_skus: context.productSkus,
-          payment_method: context.paymentMethod,
-          channel:
-            context.channel === "online" ||
-            context.channel === "in_store" ||
-            context.channel === "mobile_app"
-              ? context.channel
-              : undefined,
-          orderId: context.orderId,
-          notes: context.notes,
-        },
-        tx,
-      );
-
-      // Update customer points and total spend
-      const account = await tx.customerLoyaltyAccount.update({
-        where: { id: customer.id },
-        data: {
-          currentPoints: {
-            increment: calculated.points,
-          },
-          lifetimePoints: {
-            increment: calculated.points,
-          },
-          totalSpend: {
-            increment: purchaseAmount,
-          },
-        },
-      });
-
-      // Create transaction
-      const ledgerRow = await tx.loyaltyTransaction.create({
-        data: {
-          accountId: customer.id,
+  const awarded = await runAward();
+  if (!awarded) {
+    // Lost a race with an identical request. The unique violation aborted the whole
+    // transaction, so the balance increments rolled back with the ledger insert and the
+    // winner's row is the only award that exists.
+    const winner = await prisma.loyaltyTransaction.findUnique({
+      where: {
+        programId_idempotencyKey: {
           programId,
-          transactionType: "earn",
-          source: "purchase",
-          points: calculated.points,
-          balanceAfter: account.currentPoints,
-          // Typed as well as in metadata: trailing-window tier qualification sums it.
-          purchaseAmount,
-          metadata: {
-            purchaseAmount,
-            orderId: context.orderId,
-            appliedRuleId: calculated.rule?.id,
-            appliedRuleName: calculated.rule?.name,
-            ...context,
-          },
+          idempotencyKey: context.idempotencyKey as string,
         },
-      });
+      },
+    });
+    if (winner) return replayOf(winner, customer);
+    // The key collided but its row is not there to read back. Not a business outcome —
+    // untyped on purpose, so it surfaces as a 500 and gets looked at.
+    throw new Error(
+      `Idempotency key ${context.idempotencyKey} collided but no transaction was found`,
+    );
+  }
+  const { points, updatedCustomer, transaction, calculated } = awarded;
 
-      return {
-        points: calculated.points,
-        updatedCustomer: account,
-        transaction: ledgerRow,
-        calculated,
-      };
-    },
-  );
+  async function runAward() {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const calculated = await calculatePointsForPurchase(
+          programId,
+          member.id,
+          purchaseAmount,
+          {
+            purchase_amount: purchaseAmount,
+            location_id: context.locationId,
+            categories: context.productCategories,
+            product_skus: context.productSkus,
+            payment_method: context.paymentMethod,
+            channel:
+              context.channel === "online" ||
+              context.channel === "in_store" ||
+              context.channel === "mobile_app"
+                ? context.channel
+                : undefined,
+            orderId: context.orderId,
+            notes: context.notes,
+          },
+          tx,
+        );
+
+        // Update customer points and total spend
+        const account = await tx.customerLoyaltyAccount.update({
+          where: { id: member.id },
+          data: {
+            currentPoints: {
+              increment: calculated.points,
+            },
+            lifetimePoints: {
+              increment: calculated.points,
+            },
+            totalSpend: {
+              increment: purchaseAmount,
+            },
+          },
+        });
+
+        // Create transaction
+        const ledgerRow = await tx.loyaltyTransaction.create({
+          data: {
+            accountId: member.id,
+            programId,
+            transactionType: "earn",
+            source: "purchase",
+            points: calculated.points,
+            balanceAfter: account.currentPoints,
+            // Typed as well as in metadata: trailing-window tier qualification sums it.
+            purchaseAmount,
+            // Searchable (indexed) but NOT unique — several other writers share this column.
+            referenceId: context.orderId ?? null,
+            // The uniqueness guarantee lives here. Inside the transaction, so a violation
+            // rolls the balance increment back with it.
+            idempotencyKey: context.idempotencyKey ?? null,
+            metadata: {
+              purchaseAmount,
+              orderId: context.orderId,
+              appliedRuleId: calculated.rule?.id,
+              appliedRuleName: calculated.rule?.name,
+              ...context,
+            },
+          },
+        });
+
+        return {
+          points: calculated.points,
+          updatedCustomer: account,
+          transaction: ledgerRow,
+          calculated,
+        };
+      });
+    } catch (e) {
+      if (context.idempotencyKey && isUniqueViolation(e)) return null;
+      throw e;
+    }
+  }
 
   // Ask for feedback later, if the programme has it switched on. Off the request path: the
   // scheduler only opens a row and arms a delayed job, and a failure there is not the
@@ -799,6 +893,8 @@ export async function awardPoints(
   }
 
   return {
+    /** False here; true when this call only re-read an award an earlier one had made. */
+    replayed: false,
     customer: updatedCustomer,
     transaction,
     pointsAwarded: points,
@@ -936,24 +1032,79 @@ export async function searchContactsForEnrolment(
   }));
 }
 
+/**
+ * The member behind an inbound WhatsApp number.
+ *
+ * A thin wrapper over `resolveProgramMember` so the command handlers share one matcher with
+ * the Shopify bridge and the partner API — which is also how they inherited the fix for
+ * numbers that arrive spaced or in local format. Inactive accounts are returned rather than
+ * hidden: every caller checks `status` itself in order to say "your membership is not
+ * active" rather than "who are you?".
+ */
+/**
+ * A page of the programme's members.
+ *
+ * Distinct from `getCustomerAccounts`, which returns every account with its rewards and
+ * redemptions attached. That is fine behind a dashboard that asks for one programme at a
+ * time, but it was also what the partner API's "list customers" endpoint called — so a shop
+ * with fifty thousand members got all of them, with everything hanging off them, in one
+ * unbounded response.
+ */
+export async function getCustomerAccountsPaged(
+  programId: string,
+  opts: { page: number; limit: number; search?: string; status?: string },
+) {
+  const where: Prisma.CustomerLoyaltyAccountWhereInput = { programId };
+  if (opts.status) where.status = opts.status;
+  if (opts.search) {
+    const term = opts.search.trim();
+    where.contact = {
+      OR: [
+        { name: { contains: term, mode: "insensitive" } },
+        { phone: { contains: term.replace(/\D/g, "") || term } },
+        { email: { contains: term, mode: "insensitive" } },
+      ],
+    };
+  }
+
+  const [total, rows] = await Promise.all([
+    prisma.customerLoyaltyAccount.count({ where }),
+    prisma.customerLoyaltyAccount.findMany({
+      where,
+      include: {
+        currentTier: { select: { id: true, name: true, color: true } },
+        contact: { select: { id: true, name: true, phone: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (opts.page - 1) * opts.limit,
+      take: opts.limit,
+    }),
+  ]);
+
+  return {
+    rows,
+    pagination: {
+      page: opts.page,
+      limit: opts.limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / opts.limit)),
+    },
+  };
+}
+
 export async function getLCustomerByPhone(phone: string, orgId: string) {
-  return await prisma.customerLoyaltyAccount.findFirst({
-    where: {
-      contact: {
-        phone: parsePhoneforWa(phone),
-        orgId,
-      },
-    },
-    include: {
-      contact: {
-        select: {
-          name: true,
-          phone: true,
-          email: true,
-          dob: true,
-        },
-      },
-    },
+  const program = await prisma.loyaltyProgram.findFirst({
+    where: { orgId },
+    select: { id: true, defaultCountryCode: true },
+  });
+  if (!program) return null;
+
+  return await findProgramMember({
+    programId: program.id,
+    orgId,
+    defaultCountryCode: program.defaultCountryCode,
+    phone,
+    includeInactive: true,
   });
 }
 
@@ -969,7 +1120,7 @@ export async function assignRewardToCustomer(
   });
 
   if (!customer) {
-    throw new Error("Customer account not found");
+    throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found");
   }
 
   const reward = await prisma.loyaltyReward.findFirst({
@@ -977,7 +1128,7 @@ export async function assignRewardToCustomer(
   });
 
   if (!reward) {
-    throw new Error("Reward not found");
+    throw new LoyaltyError("REWARD_NOT_FOUND", "Reward not found");
   }
 
   // Check if reward is already assigned
@@ -991,7 +1142,10 @@ export async function assignRewardToCustomer(
   });
 
   if (existing) {
-    throw new Error("Reward is already assigned to this customer");
+    throw new LoyaltyError(
+      "REWARD_ALREADY_ASSIGNED",
+      "Reward is already assigned to this customer",
+    );
   }
 
   let shortCode = generateRewardShortCode();
@@ -1050,11 +1204,11 @@ export async function getRewardByShortCode(shortCode: string, orgId: string) {
   });
 
   if (!reward) {
-    throw new Error("Reward not found");
+    throw new LoyaltyError("REWARD_NOT_FOUND", "Reward not found");
   }
 
   if (reward.account.program.orgId !== orgId) {
-    throw new Error("Reward not found");
+    throw new LoyaltyError("REWARD_NOT_FOUND", "Reward not found");
   }
 
   return reward;
@@ -1064,7 +1218,7 @@ export async function markRewardAsRedeemed(shortCode: string, orgId: string) {
   const reward = await getRewardByShortCode(shortCode, orgId);
 
   if (reward.status === "REDEEMED") {
-    throw new Error("Reward is already redeemed");
+    throw new LoyaltyError("REWARD_ALREADY_REDEEMED", "Reward is already redeemed");
   }
 
   try {
@@ -1076,7 +1230,7 @@ export async function markRewardAsRedeemed(shortCode: string, orgId: string) {
     });
   } catch (error) {
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2025") {
-      throw new Error("Reward is already redeemed");
+      throw new LoyaltyError("REWARD_ALREADY_REDEEMED", "Reward is already redeemed");
     }
     throw error;
   }

@@ -7,6 +7,7 @@
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../../utils/logger.js";
+import { sweepExpiredIdempotencyRecords } from "../../../external/v1/idempotency.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { resetAnnualCounts, resetMonthlyCounts } from "../../../modules/stats/stats.service.js";
 import {
@@ -86,6 +87,14 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     log.info("Running Every Day 12.30 AM --> Stats Reset");
     await safeRun("resetMonthlyCounts", resetMonthlyCounts);
     await safeRun("resetAnnualCounts", resetAnnualCounts);
+  },
+
+  externalIdempotencySweep: async () => {
+    log.info("Running daily JOB --> External API idempotency record sweep");
+    await safeRun("sweepExpiredIdempotencyRecords", async () => {
+      const removed = await sweepExpiredIdempotencyRecords();
+      log.info({ removed }, "Swept expired external idempotency records");
+    });
   },
 
   loyaltyReminderSweep: async () => {

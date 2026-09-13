@@ -1,11 +1,50 @@
 import prisma from "../../../utils/prisma.js";
+import { LoyaltyError } from "../loyalty.errors.js";
 import { LoyaltyRewardType } from "../../../types/loyalty.js";
 import { LoyaltyRewardInput, LoyaltyRewardUpdateInput } from "./reward.schema.js";
+
+/**
+ * A stable handle for a reward, derived from its name.
+ *
+ * External systems configure a till against this, so it must not be a UUID and must not
+ * change when someone edits the reward's wording. Uniqueness is per programme, enforced by
+ * the database; collisions get a numeric suffix.
+ */
+export function slugifyRewardName(name: string): string {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/, "");
+  return slug || "reward";
+}
+
+async function uniqueRewardCode(programId: string, preferred: string): Promise<string> {
+  const base = slugifyRewardName(preferred);
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const candidate = attempt === 0 ? base : `${base}-${attempt + 1}`;
+    const clash = await prisma.loyaltyReward.findFirst({
+      where: { programId, code: candidate },
+      select: { id: true },
+    });
+    if (!clash) return candidate;
+  }
+  return `${base}-${Date.now()}`;
+}
+
+export async function getLoyaltyRewardByCode(programId: string, code: string) {
+  return await prisma.loyaltyReward.findFirst({
+    where: { programId, code },
+  });
+}
 
 export async function createLoyaltyReward(data: LoyaltyRewardInput, programId: string) {
   return await prisma.loyaltyReward.create({
     data: {
       programId,
+      code: await uniqueRewardCode(programId, data.code || data.name),
       name: data.name,
       description: data.description,
       status: data.status,
@@ -75,7 +114,10 @@ export async function deleteLoyaltyReward(rewardId: string) {
   });
 
   if (pendingRedemptions > 0) {
-    throw new Error("Cannot delete reward with pending redemptions. Complete them first.");
+    throw new LoyaltyError(
+      "REWARD_IN_USE",
+      "Cannot delete reward with pending redemptions. Complete them first.",
+    );
   }
 
   return await prisma.loyaltyReward.delete({

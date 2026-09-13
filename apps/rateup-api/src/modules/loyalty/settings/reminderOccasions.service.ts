@@ -79,7 +79,10 @@ export async function checkTierAtRiskAlerts(
     JOIN "LoyaltyTier" t ON t.id = a."currentTierId"
     LEFT JOIN "LoyaltyTransaction" x
            ON x."accountId" = a.id
-          AND x."transactionType" = 'earn'
+          -- Same predicate as computeQualifyingSpend: rows carrying a purchase amount, so
+          -- a reversal's negative row is subtracted. Filtering on earn rows would warn
+          -- members about a shortfall computed from money already refunded to them.
+          AND x."purchaseAmount" IS NOT NULL
           AND x."createdAt" >= ${windowStart}
     WHERE a."programId" = ${program.id}::uuid
       AND a.status = 'active'

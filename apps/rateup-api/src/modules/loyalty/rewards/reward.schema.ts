@@ -107,6 +107,14 @@ function reviewRewardCostsNothing(
 
 const loyaltyRewardBaseSchema = z.object({
   name: z.string().min(1, "Reward name is required"),
+  /**
+   * Stable handle external systems name this reward by. Generated from `name` when it is
+   * left out, which is the normal case — the dashboard does not ask for one.
+   */
+  code: z
+    .string()
+    .regex(/^[a-z0-9][a-z0-9_-]{1,39}$/, "Use lower-case letters, digits, hyphens or underscores")
+    .optional(),
   description: z.string().optional().nullable(),
   rewardType: z.enum(LoyaltyRewardType),
   pointsCost: z.number().min(0),

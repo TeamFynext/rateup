@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
@@ -12,11 +12,11 @@ vi.mock("../../../utils/prisma.js", () => ({
       updateMany: vi.fn(),
     },
     customerReward: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
-    loyaltyProgram: { findUnique: vi.fn() },
+    loyaltyProgram: { findUnique: vi.fn(), findFirst: vi.fn() },
     loyaltyWaCommand: { findFirst: vi.fn() },
     loyaltyTier: { findFirst: vi.fn() },
     loyaltyReward: { findUnique: vi.fn(), findFirst: vi.fn() },
-    loyaltyTransaction: { create: vi.fn() },
+    loyaltyTransaction: { create: vi.fn(), findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -892,6 +892,99 @@ describe("awardPoints", () => {
     });
   });
 
+  describe("idempotency", () => {
+    const KEY = "shopify:demo.myshopify.com:5551";
+
+    // These tests queue one-shot rejections on $transaction to stand in for the unique
+    // violation. `vi.clearAllMocks()` in the global beforeEach does not drain a `...Once`
+    // queue, so an unconsumed one would surface as a baffling failure in whichever test
+    // ran next. Reset both mocks here rather than relying on declaration order.
+    afterEach(() => {
+      db.$transaction.mockReset();
+      db.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(db));
+      db.loyaltyTransaction.findUnique.mockReset();
+    });
+
+    test("without a key, nothing is written to collapse on", async () => {
+      await awardPoints(PROGRAM, "contact-1", 500, { orderId: "ord-1" });
+
+      expect(db.loyaltyTransaction.findUnique).not.toHaveBeenCalled();
+      expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
+        idempotencyKey: null,
+        referenceId: "ord-1",
+      });
+    });
+
+    test("orderId is stored as a searchable reference, not as the uniqueness key", async () => {
+      // referenceId is shared with the approvals and expiry writers, so it cannot carry a
+      // unique index; the guarantee lives on idempotencyKey.
+      await awardPoints(PROGRAM, "contact-1", 500, { orderId: "ord-1", idempotencyKey: KEY });
+
+      expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
+        referenceId: "ord-1",
+        idempotencyKey: KEY,
+      });
+    });
+
+    test("a repeat under the same key returns the original award and writes nothing", async () => {
+      db.loyaltyTransaction.findUnique.mockResolvedValue({
+        id: "txn-first",
+        points: 100,
+        balanceAfter: 600,
+        metadata: { appliedRuleId: "rule-1", appliedRuleName: "Double points" },
+      });
+
+      const result = await awardPoints(PROGRAM, "contact-1", 500, { idempotencyKey: KEY });
+
+      expect(result.replayed).toBe(true);
+      expect(result.pointsAwarded).toBe(100);
+      expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+      expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+    });
+
+    test("a replay fires no side effects", async () => {
+      db.loyaltyTransaction.findUnique.mockResolvedValue({
+        id: "txn-first",
+        points: 100,
+        balanceAfter: 600,
+        metadata: {},
+      });
+
+      const result = await awardPoints(PROGRAM, "contact-1", 500, { idempotencyKey: KEY });
+
+      // The customer was told about the points the first time round; telling them again is
+      // the visible half of a double award even when the balance is right.
+      expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+      expect(scheduleFeedbackRequest).not.toHaveBeenCalled();
+      expect(checkAndUpgradeTier).not.toHaveBeenCalled();
+      expect(result.tier.upgraded).toBe(false);
+    });
+
+    test("losing the race to an identical request returns the winner's award", async () => {
+      // The unique violation aborts the whole transaction, so the balance increment rolls
+      // back with the insert and only the winner's row survives.
+      db.$transaction.mockRejectedValueOnce(Object.assign(new Error("unique"), { code: "P2002" }));
+      db.loyaltyTransaction.findUnique.mockResolvedValue({
+        id: "txn-winner",
+        points: 100,
+        balanceAfter: 600,
+        metadata: {},
+      });
+
+      const result = await awardPoints(PROGRAM, "contact-1", 500, { idempotencyKey: KEY });
+
+      expect(result.replayed).toBe(true);
+      expect(result.transaction).toMatchObject({ id: "txn-winner" });
+      expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    });
+
+    test("a unique violation with no key is a real error, not a replay", async () => {
+      db.$transaction.mockRejectedValueOnce(Object.assign(new Error("unique"), { code: "P2002" }));
+
+      await expect(awardPoints(PROGRAM, "contact-1", 500, {})).rejects.toThrow("unique");
+    });
+  });
+
   test("records the purchase amount as a typed column as well as in the metadata", async () => {
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
@@ -1114,12 +1207,48 @@ describe("getCustomerAccountByPhone", () => {
 });
 
 describe("getLCustomerByPhone", () => {
-  test("strips a leading plus and scopes through the contact's org", async () => {
+  beforeEach(() => {
+    db.loyaltyProgram.findFirst.mockResolvedValue({
+      id: PROGRAM,
+      defaultCountryCode: "IN",
+    });
+  });
+
+  test("scopes through the contact's org and the org's programme", async () => {
     await getLCustomerByPhone("+919000000001", ORG);
 
-    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toEqual({
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toMatchObject({
+      programId: PROGRAM,
       contact: { phone: "919000000001", orgId: ORG },
     });
+  });
+
+  test.each([
+    ["+91 90000 00001", "a number spaced the way Shopify sends it"],
+    ["09000000001", "a bare local number"],
+    ["+919000000001", "E.164"],
+  ])("%s resolves to the stored form (%s)", async (input) => {
+    await getLCustomerByPhone(input, ORG);
+
+    // All three reach the same contact. Before this went through `normalisePhone`, only
+    // the third did — the other two silently matched nobody.
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact.phone).toBe(
+      "919000000001",
+    );
+  });
+
+  test("an inactive member is still found, so the caller can say why", async () => {
+    await getLCustomerByPhone("919000000001", ORG);
+
+    // No status filter: the command handlers answer "your membership is not active",
+    // which they cannot do if the lookup hides the account.
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.status).toBeUndefined();
+  });
+
+  test("returns null when the org has no programme", async () => {
+    db.loyaltyProgram.findFirst.mockResolvedValue(null);
+
+    expect(await getLCustomerByPhone("919000000001", ORG)).toBeNull();
   });
 });
 

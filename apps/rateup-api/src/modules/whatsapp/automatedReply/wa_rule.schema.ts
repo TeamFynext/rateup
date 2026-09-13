@@ -11,9 +11,7 @@ import {
 
 const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents).filter(
   (value) =>
-    value !== ShopifyEvents.ORDERS_EDITED &&
-    value !== ShopifyEvents.APP_UNINSTALLED &&
-    value !== ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE,
+    value !== ShopifyEvents.APP_UNINSTALLED && value !== ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE,
 ) as [string, ...string[]];
 
 export const ruleConditionSchema = z.object({

@@ -210,7 +210,7 @@ export const getLoyaltyDashboardStats = async (
     prisma.$queryRaw<WindowRow[]>`
       /* loyalty-dashboard: windows */
       WITH w AS (
-        SELECT t."accountId", t.points, t.source, t.metadata,
+        SELECT t."accountId", t.points, t.source, t.metadata, t."purchaseAmount",
                LOWER(t."transactionType") AS type,
                (t."createdAt" >= ${curStart}::timestamptz) AS is_current
         FROM "LoyaltyTransaction" t
@@ -221,9 +221,13 @@ export const getLoyaltyDashboardStats = async (
       SELECT is_current,
         COALESCE(SUM(points)  FILTER (WHERE type = 'earn'), 0)                     AS issued,
         COALESCE(SUM(-points) FILTER (WHERE type = 'redeem' AND points < 0), 0)    AS redeemed,
-        COALESCE(SUM(CASE WHEN type = 'earn' AND source = 'purchase'
-                           AND jsonb_typeof(metadata->'purchaseAmount') = 'number'
-                          THEN (metadata->>'purchaseAmount')::numeric ELSE 0 END), 0) AS revenue,
+        /* Revenue follows the typed column, so a cancelled order's negative reversal row
+           nets itself off instead of being reported as money the shop took. The JSON
+           fallback keeps rows written before that column existed counting. */
+        COALESCE(SUM(COALESCE("purchaseAmount",
+                              CASE WHEN jsonb_typeof(metadata->'purchaseAmount') = 'number'
+                                   THEN (metadata->>'purchaseAmount')::numeric END,
+                              0)), 0) AS revenue,
         COUNT(DISTINCT "accountId")                                                AS active_members
       FROM w GROUP BY is_current
     `,

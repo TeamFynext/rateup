@@ -1,5 +1,6 @@
 import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { LoyaltyError } from "../loyalty.errors.js";
 import { validateRedemption, generateRedemptionCode } from "../redemptionValidator.js";
 import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { ApplyRedemptionInput, RedeemRewardInput } from "../accounts/account.schema.js";
@@ -27,7 +28,9 @@ async function moveBalance(tx: Tx, accountId: string, cost: number, delta: numbe
     });
   } catch (error) {
     if (isRecordNotFound(error)) {
-      throw new Error(`Insufficient points. Required: ${cost}`);
+      throw new LoyaltyError("INSUFFICIENT_POINTS", `Insufficient points. Required: ${cost}`, {
+        required: cost,
+      });
     }
     throw error;
   }
@@ -43,7 +46,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   });
 
   if (!customer) {
-    throw new Error("Customer account not found");
+    throw new LoyaltyError("MEMBER_NOT_FOUND", "Customer account not found");
   }
 
   const reward = await prisma.loyaltyReward.findFirst({
@@ -51,7 +54,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   });
 
   if (!reward) {
-    throw new Error("Reward not found");
+    throw new LoyaltyError("REWARD_NOT_FOUND", "Reward not found");
   }
 
   // Check if customer has enough points (skip for rewards that are issued, not bought)
@@ -59,8 +62,10 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     !ASSIGNMENT_ONLY_REWARD_TYPES.includes(reward.rewardType) &&
     customer.currentPoints < reward.pointsCost
   ) {
-    throw new Error(
+    throw new LoyaltyError(
+      "INSUFFICIENT_POINTS",
       `Insufficient points. Required: ${reward.pointsCost}, Available: ${customer.currentPoints}`,
+      { required: reward.pointsCost, available: customer.currentPoints },
     );
   }
 
@@ -70,7 +75,13 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   });
 
   if (!validation.valid) {
-    throw new Error(`Redemption validation failed: ${validation.violations.join(", ")}`);
+    // The violations go out as an array too: a caller should not have to split a sentence
+    // to find out which rule refused.
+    throw new LoyaltyError(
+      "REDEMPTION_RULES_VIOLATED",
+      `Redemption validation failed: ${validation.violations.join(", ")}`,
+      { violations: validation.violations },
+    );
   }
 
   // Handle different reward types
@@ -399,7 +410,7 @@ export async function verifyRedemption(redemptionCode: string, orgId: string) {
   });
 
   if (!redemption) {
-    throw new Error("Redemption not found");
+    throw new LoyaltyError("VOUCHER_NOT_FOUND", "Redemption not found");
   }
 
   return {
@@ -424,15 +435,15 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
   });
 
   if (!redemption) {
-    throw new Error("Redemption not found");
+    throw new LoyaltyError("VOUCHER_NOT_FOUND", "Redemption not found");
   }
 
   if (redemption.status !== "APPROVED") {
-    throw new Error("Redemption is not approved");
+    throw new LoyaltyError("VOUCHER_NOT_APPROVED", "Redemption is not approved");
   }
 
   if (redemption.usedAt) {
-    throw new Error("Redemption already applied");
+    throw new LoyaltyError("VOUCHER_ALREADY_USED", "Redemption already applied");
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -461,7 +472,7 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
       });
     } catch (error) {
       if (isRecordNotFound(error)) {
-        throw new Error("Redemption already applied");
+        throw new LoyaltyError("VOUCHER_ALREADY_USED", "Redemption already applied");
       }
       throw error;
     }
@@ -523,6 +534,13 @@ export async function getTransactions(
     customerId?: string;
     minPoints?: number;
     maxPoints?: number;
+    /** An order number, as stored on the row's `referenceId`. */
+    referenceId?: string;
+    /**
+     * The key a caller sent on a write. Searching by it is how a client that lost the
+     * reply finds out whether the write landed, without risking a second one.
+     */
+    idempotencyKey?: string;
     page?: number;
     limit?: number;
   },
@@ -549,6 +567,14 @@ export async function getTransactions(
 
   if (filters.customerId) {
     where.accountId = filters.customerId;
+  }
+
+  if (filters.referenceId) {
+    where.referenceId = filters.referenceId;
+  }
+
+  if (filters.idempotencyKey) {
+    where.idempotencyKey = filters.idempotencyKey;
   }
 
   if (filters.minPoints !== undefined || filters.maxPoints !== undefined) {

@@ -30,6 +30,9 @@ export const SCHEDULED_JOBS = [
   { id: "hourlyJobs", pattern: "0 * * * *" },
   { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },
+  // Expired partner-API replay records. They hold nothing but a stored response and are
+  // only useful for 24 hours; the durable idempotency guarantee is the ledger's own key.
+  { id: "externalIdempotencySweep", pattern: "15 3 * * *" },
   // One hourly sweep for every scheduled loyalty reminder, replacing four daily jobs that
   // pinned no timezone and so fired at this container's midnight. Each occasion asks
   // whether the hour its programme chose has struck in the programme's own zone, which a

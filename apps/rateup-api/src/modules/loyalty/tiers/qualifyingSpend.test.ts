@@ -33,21 +33,32 @@ describe("computeQualifyingSpend", () => {
     expect(db.loyaltyTransaction.aggregate).not.toHaveBeenCalled();
   });
 
-  test("sums only purchase earns inside the window", async () => {
+  test("sums the rows carrying a purchase amount inside the window", async () => {
     db.loyaltyTransaction.aggregate.mockResolvedValue({ _sum: { purchaseAmount: "800" } });
 
     expect(await computeQualifyingSpend("acct-1", "prog-1", 6)).toBe(800);
 
     const where = db.loyaltyTransaction.aggregate.mock.calls[0][0].where;
+    // Matched on the typed column rather than on `transactionType: "earn"`, so a
+    // reversal's negative row is netted off instead of being invisible. Only the award
+    // and the reversal write that column, so signup and referral rows still do not count.
     expect(where).toMatchObject({
       accountId: "acct-1",
       programId: "prog-1",
-      transactionType: "earn",
-      source: "purchase",
+      purchaseAmount: { not: null },
     });
+    expect(where.transactionType).toBeUndefined();
     // Six months back, give or take the second the test takes to run.
     const sixMonthsAgo = windowStart(6).getTime();
     expect(Math.abs(where.createdAt.gte.getTime() - sixMonthsAgo)).toBeLessThan(5_000);
+  });
+
+  test("a cancelled order nets its purchase back off the window", async () => {
+    // The award wrote +5000 and the reversal wrote -5000, so the sum Postgres returns is
+    // zero — which is the whole point of matching the reversal row.
+    db.loyaltyTransaction.aggregate.mockResolvedValue({ _sum: { purchaseAmount: "0" } });
+
+    expect(await computeQualifyingSpend("acct-1", "prog-1", 6)).toBe(0);
   });
 
   test("a member with no purchases in the window has spent nothing", async () => {

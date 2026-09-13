@@ -21,6 +21,12 @@ export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
    * say. `RATE_LIMIT_FAIL_CLOSED_DISABLED=true` overrides it in an emergency.
    */
   failClosed?: boolean;
+  /**
+   * Refuse by throwing instead of replying, so the caller's own error handler shapes the
+   * body. The partner API uses this to keep one error envelope across the whole surface —
+   * without it a 429 would arrive in a shape nothing else on that API uses.
+   */
+  throwOnLimit?: (kind: "rate_limited" | "unavailable") => Error;
 }
 
 /**
@@ -43,6 +49,7 @@ export function rateLimit<R extends FastifyRequest = FastifyRequest>({
   key,
   keyFrom,
   failClosed = false,
+  throwOnLimit,
 }: RateLimitOptions<R>) {
   return async function rateLimitPreHandler(request: R, reply: FastifyReply) {
     const discriminator = keyFrom ? keyFrom(request) : clientIp(request);
@@ -58,6 +65,7 @@ export function rateLimit<R extends FastifyRequest = FastifyRequest>({
     } catch (error) {
       if (failClosed && !failClosedDisabled()) {
         log.error({ err: error, bucket }, "Rate limit check failed; refusing the request");
+        if (throwOnLimit) throw throwOnLimit("unavailable");
         return reply.status(503).send({
           success: false,
           message: "Signup temporarily unavailable. Please try again in a few minutes.",
@@ -69,6 +77,7 @@ export function rateLimit<R extends FastifyRequest = FastifyRequest>({
 
     if (count > max) {
       log.warn({ bucket, count, max }, "Rate limit exceeded");
+      if (throwOnLimit) throw throwOnLimit("rate_limited");
       return reply.status(429).send({
         success: false,
         message: "Too many requests. Please try again later.",

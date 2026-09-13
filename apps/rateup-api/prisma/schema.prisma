@@ -183,6 +183,7 @@ model Org {
   contacts                Contact[]
   linktree                Linktree[]
   ApiAccessToken          ApiAccessToken?
+  externalIdempotency     ExternalIdempotencyRecord[]
   surveyThemes            WebSurveyTheme[]
   UsageStats              UsageStats?
   meteredConversations    MeteredConversation[]
@@ -951,6 +952,8 @@ model Contact {
   @@index([orgId, isSpam])
   @@index([orgId, lifecycleId])
   @@index([name])
+  // The Shopify bridge falls back to email when an order carries no phone.
+  @@index([orgId, email])
 }
 
 model ContactLabel {
@@ -1896,6 +1899,36 @@ model ApiAccessToken {
   createdAt   DateTime @default(now())
 }
 
+/// One partner-API write, remembered so a retry replays its answer instead of repeating the
+/// work. This is the generic layer: it covers writes that move no points and so leave no
+/// ledger row to collapse onto (applying a voucher, sending a card). Writes that DO book a
+/// transaction are additionally guarded by `LoyaltyTransaction.idempotencyKey`, which is the
+/// durable guarantee — this table expires.
+model ExternalIdempotencyRecord {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId String @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  /// Method + route, e.g. "POST /loyalty/points/award". Scoping by route stops one key
+  /// reused against a different endpoint from replaying the wrong answer.
+  scope String
+  key   String
+  /// sha256 of the canonicalised body. A second request under the same key with a different
+  /// body is a caller bug, answered with 409 rather than a misleading replay.
+  requestHash String
+
+  state          String    @default("IN_FLIGHT") // IN_FLIGHT | COMPLETED
+  responseStatus Int?
+  responseBody   Json?
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  expiresAt   DateTime
+
+  @@unique([orgId, scope, key])
+  @@index([expiresAt])
+}
+
 model Chatbot {
   id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orgId            String  @db.Uuid
@@ -2173,6 +2206,9 @@ model LoyaltyReward {
 
   // Reward Identity
   name        String
+  /// Stable, human-readable identifier for external callers. The partner API names
+  /// rewards by this, never by `id` — a UUID is not something a POS can be configured with.
+  code        String?
   description String?
   status      String  @default("active") // 'active', 'inactive', 'out_of_stock'
 
@@ -2208,6 +2244,7 @@ model LoyaltyReward {
   eventTriggers       LoyaltyEventTrigger[]
   feedbackSettings    LoyaltyFeedbackSetting[]
 
+  @@unique([programId, code])
   @@index([programId])
   @@index([status])
   @@index([pointsCost])
@@ -2396,7 +2433,11 @@ model LoyaltyTransaction {
 
   // Source/Context
   source      String // 'purchase', 'signup_bonus', 'referral', 'reward_redemption', 'manual'
-  referenceId String? // External reference (order_id, etc.)
+  referenceId String? // External reference (order_id, etc.) — NOT unique, see idempotencyKey
+  /// Collapses a retried write onto the row it already made. Deliberately separate from
+  /// `referenceId`, which several writers share (a redemption id, `APPROVAL-<id>`, and the
+  /// expiry sweep's partial allocations) and so cannot carry a unique index.
+  idempotencyKey String?
   description String?
   /// [LoyaltyTransactionMetadata]
   metadata    Json?   @default("{}")
@@ -2425,6 +2466,7 @@ model LoyaltyTransaction {
   approvalRequest    ApprovalRequest?
   feedbackRequest    LoyaltyFeedbackRequest?
 
+  @@unique([programId, idempotencyKey])
   @@index([accountId])
   @@index([accountId, createdAt(sort: Desc)])
   @@index([transactionType])
