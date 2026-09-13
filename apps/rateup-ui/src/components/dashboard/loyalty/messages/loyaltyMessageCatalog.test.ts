@@ -90,12 +90,13 @@ describe("the message catalog", () => {
     expect(byEvent.get(LoyaltyEventType.BIRTHDAY)).toBe("loyalty_birthday");
   });
 
-  test("the five keywords are the ones the inbound handler answers", () => {
+  test("the six keywords are the ones the inbound handler answers", () => {
     expect(loyaltyKeywordCatalog(t).map((k) => k.type)).toEqual([
       "CustomerRegistration",
       "PointInformation",
       "Referral",
       "RewardsIssued",
+      "MemberCard",
       "CustomerRemoval",
     ]);
   });

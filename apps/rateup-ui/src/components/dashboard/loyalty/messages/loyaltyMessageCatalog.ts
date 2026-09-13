@@ -211,7 +211,7 @@ export function loyaltyEventCatalog(t: TFunction): LoyaltyEventDefinition[] {
 }
 
 /**
- * The five keywords `handleLoyaltyWaCommand` on the API dispatches; a keyword of any other
+ * The six keywords `handleLoyaltyWaCommand` on the API dispatches; a keyword of any other
  * kind would be stored but never answered. Their `params` are the inbound handler's
  * substitutions, positionally — so the list is the order, not a menu.
  */
@@ -260,6 +260,17 @@ export function loyaltyKeywordCatalog(t: TFunction): LoyaltyKeywordDefinition[] 
       templateName: "loyalty_rewards_issued",
       body: "Here is what you can redeem right now. Reply with a reward to claim it.",
       example: [],
+    },
+    {
+      kind: "keyword",
+      type: "MemberCard",
+      label: t("Getting their card"),
+      description: t("Sends their QR card to show at the counter."),
+      keyword: "card",
+      params: [t("their name"), t("card code")],
+      templateName: "loyalty_member_card",
+      body: "Hi {{1}}, here is your card. Show this QR at the counter to collect and use your points. Your card code is {{2}} if the camera can't read it.",
+      example: ["Anjali", "ABCD-EFGH-JKLM"],
     },
     {
       kind: "keyword",

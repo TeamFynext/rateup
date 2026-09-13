@@ -129,6 +129,9 @@ export interface CustomerRewardsResponse {
     points: number;
     status: string;
     createdAt: string;
+    /** The code on their QR card (scanned by the mobile app); null until one is sent. */
+    cardCode: string | null;
+    cardSentAt: string | null;
   };
   availableRewards: CustomerReward[];
   issuableRewards: CustomerReward[];
