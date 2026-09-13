@@ -4267,6 +4267,7 @@
   },
   "*Note": {
     " The updated feature will be valid only till end of the current billing cycle": "*ملاحظة: الميزة المحدثة ستكون صالحة فقط حتى نهاية دورة الفوترة الحالية"
+  },
   "campaign.list": {
     "{count} campaigns_zero": "{count} الحملات_صفر",
     "{count} campaigns_one": "{count} الحملات_واحدة",

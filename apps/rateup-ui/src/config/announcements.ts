@@ -196,6 +196,8 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new", "improvement", "fix"],
     area: "Loyalty",
     link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
     id: "2026-09-11-facebook-page-picker",
     title: "Pick your Page for Messenger and Instagram",
     summary:

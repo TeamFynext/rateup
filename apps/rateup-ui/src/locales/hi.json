@@ -4039,6 +4039,7 @@
   },
   "*Note": {
     " The updated feature will be valid only till end of the current billing cycle": "*नोट: अद्यतन सुविधा केवल वर्तमान बिलिंग चक्र के अंत तक मान्य होगी"
+  },
   "campaign.list": {
     "{count} campaigns_one": "{count}अभियान_एक",
     "{count} campaigns_other": "{count}अभियान_अन्य",

@@ -4096,6 +4096,7 @@
   },
   "*Note": {
     " The updated feature will be valid only till end of the current billing cycle": "*Remarque : la fonctionnalité mise à jour ne sera valable que jusqu'à la fin du cycle de facturation en cours."
+  },
   "campaign.list": {
     "{count} campaigns_one": "{count} campagnes_one",
     "{count} campaigns_many": "{count} campagnes_many",

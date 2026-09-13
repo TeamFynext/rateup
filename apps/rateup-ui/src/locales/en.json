@@ -4486,6 +4486,7 @@
   },
   "*Note": {
     " The updated feature will be valid only till end of the current billing cycle": "*Note: The updated feature will be valid only till end of the current billing cycle"
+  },
   "campaign.list": {
     "{count} campaigns_one": "{count} campaigns",
     "{count} campaigns_other": "{count} campaigns",
