@@ -20,7 +20,8 @@ import {
   paletteIndex,
 } from "@/constants/inboxDesign";
 import { MessagePlatform } from "@/constants/enums";
-import { namePreview } from "@/utils/chatbox_utils";
+import { getContactChannelSource, namePreview } from "@/utils/chatbox_utils";
+import { useMessagesStore } from "@/store/inboxStore";
 import { useSelectedContactStore } from "@/utils/store";
 import { useContactById } from "@/api/inbox/contacts/contacts.query";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
@@ -160,14 +161,22 @@ const ContactInfo = () => {
 
   const name = contact?.name || contact?.whatsappUserName || contact?.phone || "";
   const phone = contact?.phone as string | undefined;
-  const platform = stored?.lastMessage?.sourcePlatform;
+  // Same resolution as the header — reading `lastMessage.sourcePlatform` directly
+  // turned a private note into an "INTERNAL" channel.
+  const threadMessages = useMessagesStore((s) => s.messagesByKey.get(`${id}_all`)?.messages);
+  const { platform } = getContactChannelSource({
+    lastMessage: stored?.lastMessage,
+    messages: threadMessages,
+    igsId: contact?.igsId,
+    psid: contact?.psid,
+  });
   const labels = contact?.ContactLabelMap?.map((m: any) => m.label?.name).filter(Boolean) ?? [];
 
   const avatarColor = useMemo(
     () => inboxAvatarColors[paletteIndex(id, inboxAvatarColors.length)],
     [id],
   );
-  const channelColor = platform ? inboxChannelColors[platform] : inboxChannelColors.whatsapp;
+  const channelColor = inboxChannelColors[platform] ?? inboxChannelColors.WHATSAPP;
 
   const copyPhone = async () => {
     if (!phone) return;

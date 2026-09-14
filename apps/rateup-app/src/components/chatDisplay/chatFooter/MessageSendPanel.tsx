@@ -296,7 +296,19 @@ const MessageSendPanel = ({
         false,
       );
 
-      sendnewWaMessage.mutate(values);
+      sendnewWaMessage.mutate(values, {
+        // Backstop for the placeholder. A text send is usually retired the
+        // moment its stored copy arrives (`mergeMessages` matches the text);
+        // media has no text to match, so it goes here, after the thread has
+        // refetched and the real bubble is already in place. Left up on
+        // failure: the server records a failed send, which replaces it, and a
+        // request that never reached the server should not vanish silently.
+        onSuccess: () => {
+          const { removeMessage } = useMessagesStore.getState();
+          removeMessage(`${contactId}_${whatsappSettingsPhoneId}`, id);
+          removeMessage(`${contactId}_all`, id);
+        },
+      });
     } else {
       sendnewWaMessage.mutate(values);
     }

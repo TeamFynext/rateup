@@ -6,6 +6,7 @@ import { Image as ImageIcon, MessageCircle, Star, UserPlus } from "lucide-react-
 import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
 import { MessagePlatform } from "@/constants/enums";
+import { WaMessageClosedStatus } from "@/constants/constants";
 import { useLifecycleContext } from "@/context/LifecycleContext";
 import {
   getInboxRowTheme,
@@ -20,16 +21,35 @@ import {
 
 const MONO = Platform.select({ ios: "Menlo", default: "monospace" });
 
-/** Maps the inbox's storage vocabulary onto the design's three pill tones. */
-const STATUS_TONE: Record<string, { tone: InboxStatusTone; label: string }> = {
-  [WaMessageAssignStatus.NEW]: { tone: "open", label: "New" },
-  [WaMessageAssignStatus.UNASSIGNED]: { tone: "pending", label: "Unassigned" },
-  [WaMessageAssignStatus.ASSIGNED]: { tone: "open", label: "Assigned" },
-  [WaMessageAssignStatus.CLOSED]: { tone: "closed", label: "Closed" },
-  [WaMessageAssignStatus.RESOLVED]: { tone: "open", label: "Resolved" },
-  [WaMessageAssignStatus.UNRESOLVED]: { tone: "pending", label: "Unresolved" },
-  [WaMessageAssignStatus.SPAM]: { tone: "spam", label: "Spam" },
+const STATUS_LABEL: Record<InboxStatusTone, string> = {
+  new: "New",
+  assigned: "Assigned",
+  closed: "Closed",
 };
+
+/**
+ * The lifecycle status shown on a row — derived, never read straight off the
+ * stored field, mirroring rateup-ui's `getDerivedStatus` and the design's `ST`:
+ *   closed   → the ticket is in any closed state (Closed/Spam/Resolved/Unresolved)
+ *   assigned → somebody owns it
+ *   new      → nobody owns it yet
+ *
+ * The ticket's own `conversationStatus` wins over the contact's
+ * `waMessageAssignStatus`: a contact can hold several tickets. Showing the stored
+ * value used to give one ticket four different colours — "Unassigned" beside
+ * "New", "Resolved" in the same green as "Assigned" — and a row could read
+ * "Assigned" with nobody on it.
+ */
+export function getDerivedStatus(contact: {
+  conversationStatus?: string | null;
+  waMessageAssignStatus?: string | null;
+  assignedUsers?: unknown[] | null;
+}): InboxStatusTone {
+  const status = (contact.conversationStatus ??
+    contact.waMessageAssignStatus) as WaMessageAssignStatus;
+  if (WaMessageClosedStatus.includes(status)) return "closed";
+  return contact.assignedUsers?.length ? "assigned" : "new";
+}
 
 function channelIcon(platform: string | undefined, color = "#fff", size = 11) {
   switch (platform) {
@@ -108,6 +128,8 @@ export type ChatBoxProps = ContactsWithLastMessage & {
   channelLabel?: string;
   /** False when that number is no longer connected; the chip then reads dashed. */
   channelConnected?: boolean;
+  /** Who sent the last message when it is an outgoing send — see `getLastMessageSender`. */
+  lastMessageSender?: string;
 };
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -116,9 +138,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   phone,
   platform,
   lastMessage,
+  lastMessageSender,
   lastMessageTimeStamp,
   unReadMessageCount,
   waMessageAssignStatus,
+  conversationStatus,
   lifecycleId,
   ticketNumber,
   isFavorite,
@@ -135,9 +159,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const isDark = colorScheme === "dark";
   const t = useMemo(() => getInboxRowTheme(isDark), [isDark]);
 
-  // Rows are transparent over the screen's `--bg-page` in the design; only the
-  // selected row paints, with brand-soft.
-  const rowBg = selected ? t.brandSoft : "transparent";
   const isUnread = unReadMessageCount > 0;
 
   const avatarColor = useMemo(
@@ -145,13 +166,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     [id],
   );
 
-  const status = waMessageAssignStatus
-    ? (STATUS_TONE[waMessageAssignStatus] ?? {
-        tone: "closed" as InboxStatusTone,
-        label: waMessageAssignStatus,
-      })
-    : null;
-  const statusTone = status ? t.status[status.tone] : null;
+  const status = useMemo(() => {
+    const tone = getDerivedStatus({ conversationStatus, waMessageAssignStatus, assignedUsers });
+    return { tone, label: STATUS_LABEL[tone] };
+  }, [conversationStatus, waMessageAssignStatus, assignedUsers]);
+  const statusTone = t.status[status.tone];
+
+  // Design `selBg` / `edgeColor`: the selected row paints brand-soft with a brand
+  // edge; otherwise a New (nobody-owns-it) ticket paints amber with a yellow
+  // edge, so unclaimed work stands out in the list; every other row stays
+  // transparent over the page.
+  const isNew = status.tone === "new";
+  const rowBg = selected ? t.brandSoft : isNew ? t.newRowBg : "transparent";
+  const edgeColor = selected ? t.brand : isNew ? statusTone.color : null;
 
   const lifeCycleLabels = useLifecycleContext();
   const lifecycleInfo = useMemo(
@@ -240,21 +267,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         borderBottomColor: isDark ? "#2A2A2A" : "#F4F4F5",
       }}
     >
-      {selected ? (
+      {/* The edge is a filled bar, not `borderLeftWidth`: Android drew a thick
+          single-side border as a hairline. 8px wide (the design draws 3px;
+          widened so it reads on a phone), sitting inside the 16px padding so the
+          content does not move. */}
+      {edgeColor ? (
         <View
           style={{
             position: "absolute",
             left: 0,
-            top: 16,
-            bottom: 16,
-            width: 3,
-            backgroundColor: statusTone?.color || t.brand,
-            borderTopRightRadius: 3,
-            borderBottomRightRadius: 3,
+            top: 0,
+            bottom: 0,
+            width: 4,
+            backgroundColor: edgeColor,
           }}
         />
       ) : null}
-
       {/* Left Column */}
       <View style={{ width: 46, alignItems: "center", marginRight: 12, paddingBottom: 4 }}>
         <View
@@ -320,6 +348,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 flex: 1,
               }}
             >
+              {/* An outgoing send names who sent it. Nested in the same
+                  one-line Text, so the name always shows in full (it is
+                  capped at 20 characters upstream) and the message after it
+                  takes the ellipsis. */}
+              {lastMessageSender ? (
+                <Text style={{ fontFamily: "Nunito_700Bold", color: t.fg2 }}>
+                  {lastMessageSender}:{" "}
+                </Text>
+              ) : null}
               {lastMessage || ""}
             </Text>
           </View>
@@ -343,14 +380,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 />
               ) : null}
 
-              {status && statusTone ? (
-                <Chip
-                  label={status.label}
-                  color={statusTone.fg}
-                  background={statusTone.soft}
-                  dot={statusTone.color}
-                />
-              ) : null}
+              <Chip
+                label={status.label}
+                color={statusTone.fg}
+                background={statusTone.soft}
+                dot={statusTone.color}
+              />
 
               {lifecycleInfo ? (
                 <Chip

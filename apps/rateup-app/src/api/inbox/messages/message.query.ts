@@ -38,9 +38,10 @@ export const useSendNewWaMessage = (
         platform,
         teamId,
       }),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
-    },
+    // Returned, so the mutation waits for the thread to refetch before the
+    // caller's own `mutate` callbacks run — `MessageSendPanel` retires its
+    // placeholder there, and by then the stored copy is on screen to replace it.
+    onSettled: () => qc.invalidateQueries({ queryKey: ["wa-messages", contactId] }),
     onError: (error) => {
       console.error("Error sending message", error);
     },

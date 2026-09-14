@@ -5,10 +5,31 @@ import { useAuth } from "./AuthContext";
 import { getMobileId } from "../util";
 import SuperTokens from "supertokens-react-native";
 import { isEqual } from "lodash";
-import { mergeStats, useContactsStore, useMessagesStore } from "../store/inboxStore";
+import { mergeStats, messageTime, useContactsStore, useMessagesStore } from "../store/inboxStore";
 import { useInboxCountStore } from "../store/inboxCountStore";
 import { useOpenChatStore } from "../utils/store";
 import { WaMessageAssignStatus } from "../api/inbox/types";
+import { queryClient } from "../config/queryClient";
+
+/**
+ * Refetch what a dropped socket may have left stale.
+ *
+ * The server sends each frame once, to whoever is connected at that moment; it
+ * keeps no backlog. Anything broadcast during the gap — a customer message, an
+ * agent's reply, a status change — never arrives, so the list and the open
+ * thread are re-read from the API instead.
+ *
+ * `cancelRefetch: false` joins a fetch already in flight rather than restarting
+ * it: coming back to the foreground both reconnects the socket and triggers the
+ * focus refetch (see `config/queryClient.ts`), and those should cost one request,
+ * not two.
+ */
+const refetchAfterReconnect = () => {
+  const options = { cancelRefetch: false };
+  queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] }, options);
+  queryClient.invalidateQueries({ queryKey: ["wa-messages"] }, options);
+  queryClient.invalidateQueries({ queryKey: ["contactCounts"] }, options);
+};
 
 interface UserContextProps {
   user: any;
@@ -86,10 +107,15 @@ const applyInboxUpdate = (inbox: orgWsMessage["inbox"] | undefined) => {
       contactId,
       (oldContact) => {
         if (!oldContact) return oldContact;
+        // Frames are not guaranteed to arrive in order (a send is recorded only
+        // after Meta answers, and a store retry can land later still), so an
+        // older message must not replace a newer preview.
+        const isLatest =
+          !oldContact.lastMessage || messageTime(message) >= messageTime(oldContact.lastMessage);
         return {
           ...oldContact,
           ...inbox?.contact,
-          lastMessage: message,
+          lastMessage: isLatest ? message : oldContact.lastMessage,
           lastReceivedMessageTimeStamp: inbox?.contact?.lastReceivedMessageTimeStamp,
           // `isOpenInThread` mirrors rateup-ui's realtime handler: a message
           // that lands while you are looking at that very chat is already
@@ -156,6 +182,9 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   const connectionRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryIntervalRef = useRef(1000); // 1s, exponential backoff
+  // Whether a socket has opened before. The first open follows the screens'
+  // own initial fetches, so only a later one — a reconnect — refetches.
+  const hasConnectedRef = useRef(false);
   // `connectWebSocket` closes over isAuthenticated/orgId/mobileId, and it gets
   // stored in socket.onclose and the AppState listener — both of which outlive
   // the render that created them. Deferred calls go through this ref so they
@@ -196,6 +225,8 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     socket.onopen = () => {
       console.log("📡 WebSocket connected");
       retryIntervalRef.current = 1000;
+      if (hasConnectedRef.current) refetchAfterReconnect();
+      hasConnectedRef.current = true;
     };
 
     socket.onmessage = (event) => {

@@ -10,7 +10,12 @@ import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
 } from "@/api/inbox/messages/utils";
-import { resolveChannel } from "@/utils/chatbox_utils";
+import {
+  getContactChannelSource,
+  getLastMessageSender,
+  resolveChannel,
+} from "@/utils/chatbox_utils";
+import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
@@ -62,6 +67,9 @@ export default function Inbox({
   const contactsById = useContactsStore((state) => state.contactsById);
   const addContactsForFilter = useContactsStore((state) => state.addContactsForFilter);
   const currentUser = useContactsStore((state) => state.currentUser);
+  // The signed-in user, for "You". `currentUser` above is only ever seeded with
+  // null by this screen, so it cannot be relied on for that.
+  const { userId } = useAuth();
   const { colorScheme } = useColorScheme();
   const screenBg = colorScheme === "dark" ? Colors.dark.bg : Colors.light.bg;
   const setFilter = useContactsStore((state) => state.setFilter);
@@ -88,20 +96,21 @@ export default function Inbox({
       if (!allContacts.length) return;
 
       const existingIds = new Set(contactsByFilter[filterKey] || []);
-      const newContacts = allContacts
-        .filter((c) => {
-          const existingContact = contactsById.has(c.id);
-          if (!existingContact) return true;
-          return !existingIds.has(c.id);
-        })
-        .map((c) => {
-          if (contactsById.has(c.id)) return c;
-          return { ...c, updatedAt: new Date().toISOString() };
-        });
+      const newContacts = allContacts.filter(
+        (c) => !contactsById.has(c.id) || !existingIds.has(c.id),
+      );
 
+      if (!isActive) return;
+      // Every row goes to the store, not just the ones this list lacked. Rows it
+      // already had used to be skipped, so once a chat was listed its preview,
+      // unread count and status only ever changed through the socket — and any
+      // frame missed while the phone was backgrounded left the row stale for good.
+      await addContactsForFilter(filterKey, allContacts);
+
+      // Threads are still seeded only for rows that were new here: merging a
+      // server page into a thread that is already cached would drop any
+      // optimistic bubble still waiting on its send (see `mergeMessages`).
       if (newContacts.length > 0 && isActive) {
-        await addContactsForFilter(filterKey, newContacts);
-
         newContacts.forEach((c: any) => {
           if (!c.messages) return;
           const messageMap = new Map();
@@ -153,16 +162,21 @@ export default function Inbox({
 
     const parsedMessage = parseWaMessage_(item.lastMessage);
 
+    const lastMessageSender = getLastMessageSender(item, userId);
     const messagePreview = returnMessageContentBasedOnParsedMessage(
       parsedMessage,
-      item?.lastMessage?.messageBody?.exchangeProcess,
+      // With the sender named up front, a reaction reads "Aisha: Reacted 👍",
+      // not "Aisha: You reacted 👍" — the receive wording is the neutral one.
+      lastMessageSender ? "receive" : item?.lastMessage?.messageBody?.exchangeProcess,
     );
     const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(24, "hour");
     const now = dayjs();
     const diffInMinutes = sessionExpiry.diff(now, "minute");
     const isSessionActive = diffInMinutes > 0;
-    const platform = item?.lastMessage?.sourcePlatform;
-    const channel = resolveChannel(waSettings, platform, item?.lastMessage?.sourceIdentifier);
+    // Not `item.lastMessage` directly: a private note there names the channel
+    // "internal". See `getContactChannelSource`.
+    const { platform, identifier } = getContactChannelSource(item);
+    const channel = resolveChannel(waSettings, platform, identifier);
     const name = item.name || item?.whatsappUserName || item.igsId || item.phone;
 
     return (
@@ -174,13 +188,15 @@ export default function Inbox({
         channelLabel={channel?.label}
         channelConnected={channel?.isConnected}
         lastMessage={messagePreview}
+        lastMessageSender={lastMessageSender}
         waMessageAssignStatus={item.waMessageAssignStatus}
+        conversationStatus={item.conversationStatus}
         assignedUsers={item.assignedUsers}
         lifecycleId={item.lifecycleId}
         ticketNumber={item.ticketNumber}
         isFavorite={item.isFavorite}
         contactLabels={item.contactLabels}
-        currentUserId={currentUser?.userId}
+        currentUserId={userId ?? currentUser?.userId}
         onPress={() => {
           setSelectedContact({
             ...item,

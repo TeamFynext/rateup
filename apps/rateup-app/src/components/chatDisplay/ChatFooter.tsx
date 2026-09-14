@@ -16,6 +16,7 @@ import { useMessagesStore } from "@/store/inboxStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Skeleton, SkeletonCircle } from "@/components/common/Skeleton";
 import { Colors } from "@/constants/colors";
+import { findChannelAccount, getContactChannelSource } from "@/utils/chatbox_utils";
 
 const ChatFooter = ({ id }: { id: string }) => {
   const { colorScheme } = useColorScheme();
@@ -23,8 +24,7 @@ const ChatFooter = ({ id }: { id: string }) => {
   const t = getInboxRowTheme(isDark);
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore((state) => state.waAssignStatus);
-  const { data: assignedUsers, isLoading: assignmentLoading } =
-    useGetAssignedUserForContact(id);
+  const { data: assignedUsers, isLoading: assignmentLoading } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
   let currentUserAssignment = assignedUsers?.find((entry: any) => entry.assignedUserId == userId);
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
@@ -35,28 +35,34 @@ const ChatFooter = ({ id }: { id: string }) => {
   const contact = selectedContact?.id === id ? selectedContact : undefined;
 
   // A chat opened by deep link has no `lastMessage`: `/api/contact/:id` returns
-  // the bare contact row. The newest loaded message carries the same
+  // the bare contact row. The loaded thread (newest first) carries the same
   // `sourcePlatform`/`sourceIdentifier`, so it stands in. Without it the reply is
   // sent with an empty phoneId — from the wrong number, or not at all.
-  const latestMessage = useMessagesStore((s) => s.messagesByKey.get(`${id}_all`)?.messages?.[0]);
-  const sourceMessage = contact?.lastMessage ?? latestMessage;
-
-  const platform = sourceMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const threadMessages = useMessagesStore((s) => s.messagesByKey.get(`${id}_all`)?.messages);
+  const { platform, identifier } = useMemo(
+    () =>
+      getContactChannelSource({
+        lastMessage: contact?.lastMessage,
+        messages: threadMessages,
+        igsId: contact?.igsId,
+        psid: contact?.psid,
+      }),
+    [contact?.lastMessage, contact?.igsId, contact?.psid, threadMessages],
+  );
   const { data: waSettings } = useWaSettings();
 
+  /**
+   * The account this conversation runs on. The WhatsApp match used to be
+   * `s.phone === sourceIdentifier`, which never holds (`+965…` against `965…`),
+   * so the reply went out with no phoneId — on the org's default number, which
+   * the customer may never have written to, and Meta answered 131047
+   * "Re-engagement message". Instagram, Messenger and webchat address the send by
+   * the identifier the thread already recorded.
+   */
   const whatsappSettingsPhoneId = useMemo(() => {
-    if (
-      platform === MessagePlatform.INSTAGRAM ||
-      platform === MessagePlatform.FACEBOOK ||
-      platform === MessagePlatform.WEBCHAT
-    ) {
-      return sourceMessage?.sourceIdentifier;
-    }
-    // WhatsApp default
-    return (
-      waSettings?.find((s: any) => s?.phone === sourceMessage?.sourceIdentifier)?.phoneId || ""
-    );
-  }, [waSettings, platform, sourceMessage]);
+    if (platform !== MessagePlatform.WHATSAPP) return identifier ?? "";
+    return findChannelAccount(waSettings, platform, identifier)?.phoneId ?? "";
+  }, [waSettings, platform, identifier]);
 
   // Until the assignment request answers, we do not know whether this chat is
   // unassigned — `assignedUsers` is undefined while loading, which the check
