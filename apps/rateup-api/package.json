@@ -24,7 +24,8 @@
     "test": "vitest --silent",
     "prepare": "husky",
     "postinstall": "prisma generate",
-    "backfill:identifiers": "tsx scripts/backfill-source-identifiers.ts"
+    "backfill:identifiers": "tsx scripts/backfill-source-identifiers.ts",
+    "recover:campaign-sends": "tsx scripts/recover-unrecorded-campaign-sends.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1123.0",

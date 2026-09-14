@@ -324,6 +324,10 @@ model WhatsappSettings {
   instagramPersistentMenu  Json?
   conversationalAutomation Json?
   phoneDisplayName         String?
+  /// Meta's per-second send ceiling for this number, when it differs from the
+  /// platform default (80/s). NULL means "use the default". Read by the campaign
+  /// dispatcher's per-phone rate limiter; see workers/shared/phoneRateLimit.ts.
+  messagesPerSecond        Int?
 
   fbUserName String?
 

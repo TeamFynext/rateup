@@ -8,6 +8,7 @@ const getWaSettings = vi.fn();
 const getWaSendingSettings = vi.fn();
 const getWaSettingsByIbaId = vi.fn();
 const getWaSettingsByPageId = vi.fn();
+const enqueueWaMessageRecord = vi.fn();
 
 vi.mock("../wa_axios.js", async () => {
   class GraphApiError extends Error {
@@ -23,6 +24,7 @@ vi.mock("../wa_axios.js", async () => {
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages }));
 vi.mock("../inbox/message/wamessage.service.js", () => ({ getWaMessageByMessageId }));
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({ assertWithinConversationLimit }));
+vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({ enqueueWaMessageRecord }));
 vi.mock("../settings/wa_settings.service.js", () => ({
   getWaSettings,
   getWaSendingSettings,
@@ -49,6 +51,7 @@ beforeEach(() => {
   getWaSettingsByPageId.mockResolvedValue({ pageAccessToken: "fb-token" });
   callMetaApi.mockResolvedValue({ data: { messages: [{ id: "wamid.1" }] } });
   getWaMessageByMessageId.mockResolvedValue(null);
+  enqueueWaMessageRecord.mockResolvedValue({ id: "record:wamid.1" });
 });
 
 afterEach(() => {
@@ -57,6 +60,7 @@ afterEach(() => {
   // the store would send the next test round the real-timer retry path.
   handleWaMessages.mockReset();
   getWaMessageByMessageId.mockReset();
+  enqueueWaMessageRecord.mockReset();
 });
 
 /** Run a send whose store retries wait on timers, without waiting for them. */
@@ -174,11 +178,32 @@ describe("sendMetaMessage", () => {
     expect(config).toEqual({ params: { access_token: "q-token" } });
   });
 
-  // Meta has the message either way. A record that fails is retried, because at
-  // campaign concurrency one in thousands does — and an unrecorded campaign
-  // message is a participant stuck in PENDING with its receipts dead-lettered.
-  it("stores on retry when the first attempt fails", async () => {
+  // Meta has the message either way. A record that fails is handed to the
+  // record queue, which retries with real backoff from another process — an
+  // unrecorded campaign message is a participant stuck in PENDING with its
+  // receipts dead-lettered, and in-process retries in the process whose pool
+  // just timed out fail the same way.
+  it("queues the message for recording when the store fails", async () => {
     handleWaMessages.mockRejectedValueOnce(new Error("db down"));
+
+    await expect(
+      send({ campaign: { participantId: "p-1", campaignSendId: "s-1" }, messageType: "CAMPAIGN" }),
+    ).resolves.toEqual({ ok: true, messageId: "wamid.1" });
+    expect(handleWaMessages).toHaveBeenCalledTimes(1);
+    expect(enqueueWaMessageRecord).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messageId: "wamid.1",
+        recipient: "+100",
+        orgId: ORG,
+        messageType: "CAMPAIGN",
+        campaign: { participantId: "p-1", campaignSendId: "s-1" },
+      }),
+    );
+  });
+
+  it("falls back to in-process retries when the record queue is unreachable", async () => {
+    handleWaMessages.mockRejectedValueOnce(new Error("db down"));
+    enqueueWaMessageRecord.mockRejectedValue(new Error("redis down"));
 
     await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
     expect(handleWaMessages).toHaveBeenCalledTimes(2);
@@ -186,6 +211,7 @@ describe("sendMetaMessage", () => {
 
   it("does not store twice when the first attempt wrote the row before failing", async () => {
     handleWaMessages.mockRejectedValueOnce(new Error("failed after insert"));
+    enqueueWaMessageRecord.mockRejectedValue(new Error("redis down"));
     getWaMessageByMessageId.mockResolvedValue({ id: "row-1" });
 
     await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
@@ -195,9 +221,10 @@ describe("sendMetaMessage", () => {
 
   it("still reports success when the message cannot be stored at all", async () => {
     handleWaMessages.mockRejectedValue(new Error("db down"));
+    enqueueWaMessageRecord.mockRejectedValue(new Error("redis down"));
 
     await expect(sendThroughRetries()).resolves.toEqual({ ok: true, messageId: "wamid.1" });
-    // The first attempt plus every retry, then it gives up rather than throw.
+    // The first attempt plus every fallback retry, then it gives up rather than throw.
     expect(handleWaMessages).toHaveBeenCalledTimes(4);
   });
 
@@ -211,6 +238,7 @@ describe("sendMetaMessage", () => {
     // No message id to check against, so a retry could file the rejection twice.
     expect(handleWaMessages).toHaveBeenCalledTimes(1);
     expect(getWaMessageByMessageId).not.toHaveBeenCalled();
+    expect(enqueueWaMessageRecord).not.toHaveBeenCalled();
   });
 
   it("carries campaign linkage through to the writer", async () => {
