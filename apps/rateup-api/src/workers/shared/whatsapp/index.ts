@@ -243,6 +243,9 @@ export async function enqueueCampaignMessages({
       data: participant.data,
       defaultValues: participant.defaultValues,
       sourceIdentifier: participant.sourceIdentifier,
+      // The number's send ceiling, for the dispatcher's per-phone limiter. Null
+      // means the platform default; resolved at send time, not here.
+      messagesPerSecond: participant.messagesPerSecond ?? null,
       dripCampaignParticipantId: participant?.dripCampaignParticipantId,
       dripStageId: participant?.dripStageId,
     },
@@ -327,6 +330,7 @@ export async function fetchCampaignParticipants(
     was."phoneId",
     was."phone" as "sourceIdentifier",
     was."accessToken_iv",
+    was."messagesPerSecond",
     cpds.id as "dripCampaignParticipantId",
     cpds."dripStageId",
     COALESCE(
@@ -397,7 +401,7 @@ export async function fetchCampaignParticipants(
     // across the drip cron's repeated re-enqueues of the same stage.
     query += `
   GROUP BY
-    cpds.id, cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv"
+    cpds.id, cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv", was."messagesPerSecond"
   ORDER BY cpds."createdAt", cpds.id
 `;
 
@@ -428,6 +432,7 @@ export async function fetchCampaignParticipants(
     was."phoneId",
     was."phone" as "sourceIdentifier",
     was."accessToken_iv",
+    was."messagesPerSecond",
     COALESCE(
       json_agg(
         json_build_object(
@@ -486,7 +491,7 @@ export async function fetchCampaignParticipants(
   }
   query += `
   GROUP BY
-    cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv"
+    cp.id, c.id, camp.id, wt.id, was."accessToken", was."phoneId", was."phone", was."accessToken_iv", was."messagesPerSecond"
   ORDER BY cp."createdAt", cp.id
 `;
   const participants = await prisma.$queryRawUnsafe<any[]>(query, ...params);
@@ -857,14 +862,25 @@ export function processStatusUpdates(
   if (redisData["delivered"] && !stats.delivered) stats.delivered = redisData["delivered"];
   if (redisData["read"] && !stats.read) stats.read = redisData["read"];
   if (redisData["failed"] && !stats.failed) stats.failed = redisData["failed"];
+  if (redisData["completed"] && !stats.completed) stats.completed = redisData["completed"];
 
-  // Determine the message status based on Redis counts
+  // The participant's status is derived from everything known about the
+  // message — the merged `stats` — not from the receipts in this batch alone.
+  //
+  // Receipts do not arrive in order. Meta posts `sent`, `delivered` and `read`
+  // as separate webhooks, the API handles those requests concurrently, and a
+  // skipped receipt is re-published later; any of these can put `sent` behind
+  // `read` on the topic. Deriving the status from the batch meant a late `sent`
+  // moved a participant already READ back to SENT, and a late `sent` after a
+  // `failed` hid the failure — in one local run of 8,483 recipients, 3,600
+  // participants ended on a status their own message had already passed. The
+  // counters were right throughout, because they only ever count the diff.
   let newStatus = "";
-  if (redisData["complete"]) newStatus = "COMPLETED";
-  else if (redisData["read"]) newStatus = "READ";
-  else if (redisData["delivered"]) newStatus = "DELIVERED";
-  else if (redisData["failed"]) newStatus = "FAILED";
-  else if (redisData["sent"]) newStatus = "SENT";
+  if (redisData["complete"] || stats.completed) newStatus = "COMPLETED";
+  else if (stats.read) newStatus = "READ";
+  else if (stats.delivered) newStatus = "DELIVERED";
+  else if (stats.failed) newStatus = "FAILED";
+  else if (stats.sent) newStatus = "SENT";
 
   return { stats, newStatus };
 }

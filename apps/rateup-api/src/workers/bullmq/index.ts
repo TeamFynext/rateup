@@ -19,6 +19,7 @@ import * as scheduledJobs from "./processors/scheduledJobs.processor.js";
 import * as sendMessage from "./processors/sendMessage.processor.js";
 import * as userAvailability from "./processors/userAvailability.processor.js";
 import * as waMessage from "./processors/waMessage.processor.js";
+import * as waMessageRecord from "./processors/waMessageRecord.processor.js";
 import * as webhook from "./processors/webhook.processor.js";
 import * as zapierTrigger from "./processors/zapierTrigger.processor.js";
 
@@ -50,6 +51,7 @@ const PROCESSOR_MODULES = [
   sendMessage,
   userAvailability,
   waMessage,
+  waMessageRecord,
   webhook,
   zapierTrigger,
 ];

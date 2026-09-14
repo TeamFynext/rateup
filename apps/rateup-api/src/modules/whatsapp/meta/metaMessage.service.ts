@@ -5,6 +5,7 @@ import { log } from "../../../utils/logger.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { getWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
+import { enqueueWaMessageRecord } from "../../../workers/bullmq/queues/whatsapp.queue.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
 import { getMetaChannel, type MetaChannelContext, type MetaCredentials } from "./metaChannels.js";
 
@@ -97,7 +98,10 @@ export function metaErrorMessage(detail: WaGraphApiErrorDetail | undefined): str
   );
 }
 
-/** Waits between attempts to store a message Meta has already accepted. */
+/**
+ * Waits between in-process attempts to store an accepted message — the
+ * fallback used only when the record queue itself cannot be reached.
+ */
 const RECORD_RETRY_DELAYS_MS = [500, 2000, 5000];
 
 export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendResult> {
@@ -171,22 +175,54 @@ export async function sendMetaMessage(input: MetaSendInput): Promise<MetaSendRes
     // The send already happened. Losing the record is bad — for a campaign it
     // is a participant stuck in PENDING and every delivery receipt for the
     // message dead-lettered — but reporting a delivered message as failed is
-    // worse, so this never throws. It does try again: at campaign concurrency
-    // one store in thousands fails on something transient, and the receipts are
-    // already on their way. A rejected send has no message id to check against,
-    // so it gets the one attempt — a retry could file the same rejection twice.
-    if (messageId) {
-      for (const delayMs of RECORD_RETRY_DELAYS_MS) {
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-        try {
-          // The first attempt may have written the row and failed afterwards.
-          if (await getWaMessageByMessageId(messageId)) return;
-          await store();
-          log.warn({ orgId, platform, messageId }, "Message stored on retry");
-          return;
-        } catch (err) {
-          lastError = err;
-        }
+    // worse, so this never throws. A rejected send has no message id to check
+    // against, so it gets the one attempt — a retry could file the same
+    // rejection twice.
+    if (!messageId) {
+      log.error({ err: lastError, orgId, platform }, "Rejected send could not be recorded");
+      return;
+    }
+
+    // An accepted message is handed to the record queue, which retries with real
+    // backoff from a different process. Retrying here, seconds apart, in the
+    // same process whose pool just timed out is what lost 2,800 rows on
+    // 2026-09-12: the queue exists so that cannot repeat.
+    try {
+      await enqueueWaMessageRecord({
+        payload,
+        recipient,
+        orgId,
+        platform,
+        sourceIdentifier: credentials.sourceIdentifier,
+        userName,
+        messageId,
+        userId,
+        teamId,
+        messageType,
+        isAutomated,
+        externalApi,
+        campaign,
+      });
+      log.warn(
+        { err: lastError, orgId, platform, messageId },
+        "Message store failed; queued for recording",
+      );
+      return;
+    } catch (queueErr) {
+      log.error({ err: queueErr, orgId, platform, messageId }, "Could not queue message record");
+    }
+
+    // Redis is down too. Last resort: the old in-process retries.
+    for (const delayMs of RECORD_RETRY_DELAYS_MS) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      try {
+        // The first attempt may have written the row and failed afterwards.
+        if (await getWaMessageByMessageId(messageId)) return;
+        await store();
+        log.warn({ orgId, platform, messageId }, "Message stored on retry");
+        return;
+      } catch (err) {
+        lastError = err;
       }
     }
 

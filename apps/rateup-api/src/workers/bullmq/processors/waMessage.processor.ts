@@ -9,7 +9,7 @@
 // `campaignSend:<sendId>:jobs`. When the last id is removed *that attempt* is
 // finished: the send is closed, the next retry is scheduled, and the owning team
 // gets notified.
-import { Job, Worker } from "bullmq";
+import { DelayedError, Job, Worker } from "bullmq";
 
 import { log } from "../../shared/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
@@ -22,6 +22,17 @@ import { notificationQueue } from "../queues/notification.queue.js";
 import { completeCampaignSend } from "../../../modules/campaign/campaignSend.service.js";
 import { scheduleNextRetry } from "../../../modules/campaign/campaignRetry.service.js";
 import { finishCampaignIfSettled } from "../../../modules/campaign/campaignSettle.service.js";
+import { acquirePhoneSendSlot, resolvePhoneRate } from "../../shared/phoneRateLimit.js";
+
+/**
+ * In-flight jobs per worker process. Not a throughput control — throughput is
+ * per phone number and lives in `phoneRateLimit` — just the number of Graph
+ * calls and post-send stores this process holds open at once. The stores are
+ * the expensive half (a dozen queries each, across a region boundary in
+ * production), so this multiplied by the store's latency is the connection
+ * demand that `DB_POOL_MAX` has to absorb.
+ */
+const WA_MESSAGE_CONCURRENCY = Number.parseInt(process.env.WA_MESSAGE_CONCURRENCY || "250", 10);
 
 const workerConnection = baseRedis.duplicate();
 
@@ -41,9 +52,27 @@ class TransientSendError extends Error {
 
 export const waMessageWorker = new Worker(
   "waMessageQueue",
-  async (job: Job) => {
+  async (job: Job, token?: string) => {
     if (!job?.data) {
       return;
+    }
+
+    // Meta's ceiling is per phone number, so the throttle is too. When this
+    // second on this number is spent the job is parked until the next one and
+    // the worker moves on to a job for a different number — every org keeps its
+    // own full rate however many campaigns are running. `moveToDelayed` does
+    // not consume an attempt, and DelayedError tells BullMQ this was a park,
+    // not a failure, so neither `completed` nor `failed` fires for it.
+    if (job.data.phoneId) {
+      const slot = await acquirePhoneSendSlot(
+        baseRedis,
+        job.data.phoneId,
+        resolvePhoneRate(job.data.messagesPerSecond),
+      );
+      if (!slot.granted) {
+        await job.moveToDelayed(Date.now() + slot.retryAfterMs, token);
+        throw new DelayedError();
+      }
     }
     // BullMQ only retries a job that *throws*. This processor used to swallow
     // every exception, so the queue's `attempts` would have been decorative.
@@ -68,7 +97,7 @@ export const waMessageWorker = new Worker(
 
       log.info("Queue processing completed successfully");
     } catch (error) {
-      if (error instanceof TransientSendError) throw error;
+      if (error instanceof TransientSendError || error instanceof DelayedError) throw error;
       log.error(
         { err: error, jobId: job?.id, campaignId: job?.data?.campaignId },
         "Error processing job",
@@ -80,7 +109,7 @@ export const waMessageWorker = new Worker(
     removeOnFail: {
       count: 1,
     },
-    concurrency: 250,
+    concurrency: WA_MESSAGE_CONCURRENCY,
   },
 );
 
