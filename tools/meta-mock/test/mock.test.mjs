@@ -432,6 +432,43 @@ test("a replayed inbound message can carry the text a test chose", async () => {
   });
 });
 
+/**
+ * Every sample payload carries one fixed `wamid`, so without this an inbound
+ * message is replayable exactly once against a given database — a correct app
+ * dedupes the second as the same message arriving twice.
+ */
+test("a replayed inbound message can carry a message id a test chose", async () => {
+  await withSink(async (sinkUrl, received) => {
+    await withMock(
+      async (mock) => {
+        await mock.replayWebhook({ name: "Received Text Message", messageId: "wamid.FIRST" });
+        await mock.replayWebhook({ name: "Received Text Message", messageId: "wamid.SECOND" });
+
+        const ids = received.map((body) => body.entry[0].changes[0].value.messages[0].id);
+        assert.deepEqual(ids, ["wamid.FIRST", "wamid.SECOND"]);
+      },
+      { webhookUrl: sinkUrl },
+    );
+  });
+});
+
+test("a replay that names no message id keeps the sample's own", async () => {
+  await withSink(async (sinkUrl, received) => {
+    await withMock(
+      async (mock) => {
+        await mock.replayWebhook({ name: "Received Text Message", from: "919876500001" });
+
+        const message = received[0].entry[0].changes[0].value.messages[0];
+        // Rewriting the customer must not disturb the message id, which is not
+        // an account identifier.
+        assert.match(message.id, /^wamid\./);
+        assert.notEqual(message.id, "919876500001");
+      },
+      { webhookUrl: sinkUrl },
+    );
+  });
+});
+
 test("marketing sends behave exactly like ordinary ones", async () => {
   await withSink(async (sinkUrl, received) => {
     await withMock(

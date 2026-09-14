@@ -62,6 +62,12 @@ export function createMetaMock(options = {}) {
   /** Chance a send fails after `sent`. Zero by default — a test cannot assert on dice. */
   const failureRate = Number(options.failureRate ?? process.env.META_MOCK_FAILURE_RATE ?? 0);
   const statusDelays = options.statusDelays;
+  /**
+   * Random spread (ms) on every status callback, so receipts interleave across
+   * contacts and can arrive out of order within a message — what real Graph
+   * traffic looks like. Zero keeps the lockstep order, which tests prefer.
+   */
+  const statusJitter = Number(options.statusJitter ?? process.env.META_MOCK_STATUS_JITTER ?? 0);
 
   /** Statuses in flight, so `close()` does not leave timers behind. */
   const pending = new Set();
@@ -101,6 +107,7 @@ export function createMetaMock(options = {}) {
         target: webhookTarget,
         identity: { ...identity, phoneNumberId: identity.phoneNumberId || phoneNumberId },
         delays: statusDelays,
+        jitter: statusJitter,
         failureRate,
         log: (line) => verbose && console.log(`[meta-mock] ${line}`),
       }).finally(() => pending.delete(run));
@@ -379,6 +386,7 @@ export function createMetaMock(options = {}) {
       statusProgression,
       webhookUrl: webhookTarget,
       failureRate,
+      statusJitter,
       wabaId: identity.wabaId,
       phoneNumberId: identity.phoneNumberId,
       displayPhoneNumber: identity.displayPhoneNumber,

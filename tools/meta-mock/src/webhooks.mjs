@@ -53,7 +53,7 @@ function findWebhook(name) {
  */
 export function retarget(
   payload,
-  { wabaId, phoneNumberId, displayPhoneNumber, from, text, profileName } = {},
+  { wabaId, phoneNumberId, displayPhoneNumber, from, text, profileName, messageId } = {},
 ) {
   const walk = (value, key, parentKey) => {
     if (Array.isArray(value)) return value.map((item) => walk(item, key, parentKey));
@@ -70,8 +70,16 @@ export function retarget(
 
     // `entry[].id` is the business account — the WABA on WhatsApp, the
     // Instagram user id on Instagram. An `id` anywhere else is a message or
-    // media id and must be left alone.
+    // media id and is left alone unless `messageId` asks for it.
     if (key === "id" && parentKey === "entry" && wabaId) return String(wabaId);
+
+    // Every payload carries one fixed `wamid`, so replaying the same
+    // notification twice looks to a receiving app like the same message
+    // arriving twice — and a correct one dedupes the second. That makes an
+    // inbound message replayable exactly once per database, which is no use for
+    // driving an inbox by hand. Only rewritten when asked, so a test asserting
+    // on the sample id still sees it.
+    if (key === "id" && parentKey === "messages" && messageId) return String(messageId);
     if (key === "phone_number_id" && phoneNumberId) return String(phoneNumberId);
     if (key === "display_phone_number" && displayPhoneNumber) return String(displayPhoneNumber);
     if (CUSTOMER_KEYS.has(key) && from) return String(from);

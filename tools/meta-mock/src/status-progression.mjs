@@ -95,6 +95,14 @@ export function statusPayload({
  * status goes out, which is the ordering a real integration sees. Errors are
  * swallowed and logged: a webhook endpoint that is down should not take the
  * mock with it.
+ *
+ * `jitter` (ms) adds a random `0..jitter` to every status's wait, and each
+ * status runs on its own timer rather than behind the one before it. With no
+ * jitter every message progresses in lockstep — the `sent` for contact A, then
+ * for B, then for C, then the `delivered`s — which is not what Meta does: real
+ * receipts interleave across contacts and, because each is its own webhook
+ * handled concurrently, the same message's `sent` can reach the app after its
+ * `read`. Set the jitter wider than the gaps between statuses to get that.
  */
 export function runStatusProgression({
   messageId,
@@ -102,6 +110,7 @@ export function runStatusProgression({
   target,
   identity,
   delays = {},
+  jitter = 0,
   failureRate = 0,
   random = Math.random,
   log = () => {},
@@ -131,23 +140,38 @@ export function runStatusProgression({
     }
   };
 
+  const plan = planStatuses({ schedule, jitter, failureRate, random });
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   return (async () => {
-    await wait(schedule.sent);
-    await deliver("sent");
-
-    if (failureRate > 0 && random() < failureRate) {
-      await wait(schedule.delivered);
-      await deliver("failed", [UNDELIVERABLE]);
-      return "failed";
-    }
-
-    await wait(schedule.delivered);
-    await deliver("delivered");
-
-    await wait(schedule.read);
-    await deliver("read");
-    return "read";
+    await Promise.all(
+      plan.map(async ({ status, at, errors }) => {
+        await wait(at);
+        await deliver(status, errors);
+      }),
+    );
+    return plan.some((step) => step.status === "failed") ? "failed" : "read";
   })();
+}
+
+/**
+ * The statuses a send owes and when each fires, as offsets from now.
+ *
+ * Pure, so the interleaving can be tested without timers: the base offsets are
+ * cumulative (`sent`, then `delivered` after it, then `read` after that) and
+ * each gets its own `0..jitter` on top.
+ */
+export function planStatuses({ schedule, jitter = 0, failureRate = 0, random = Math.random }) {
+  const spread = () => (jitter > 0 ? Math.floor(random() * jitter) : 0);
+  const sentAt = schedule.sent;
+  const secondAt = sentAt + schedule.delivered;
+
+  const plan = [{ status: "sent", at: sentAt + spread() }];
+  if (failureRate > 0 && random() < failureRate) {
+    plan.push({ status: "failed", at: secondAt + spread(), errors: [UNDELIVERABLE] });
+    return plan;
+  }
+  plan.push({ status: "delivered", at: secondAt + spread() });
+  plan.push({ status: "read", at: secondAt + schedule.read + spread() });
+  return plan;
 }

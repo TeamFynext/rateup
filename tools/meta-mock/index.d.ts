@@ -68,6 +68,12 @@ export interface MetaMockOptions {
   failureRate?: number;
   /** Delays between callbacks, in ms. */
   statusDelays?: { sent?: number; delivered?: number; read?: number };
+  /**
+   * Random 0..n ms added to each callback independently, so statuses
+   * interleave across contacts and can arrive out of order within a message.
+   * Zero (the default) keeps sent → delivered → read in lockstep.
+   */
+  statusJitter?: number;
 }
 
 export interface MetaMock {
@@ -81,6 +87,7 @@ export interface MetaMock {
     statusProgression: boolean;
     webhookUrl: string;
     failureRate: number;
+    statusJitter: number;
     wabaId: string;
     phoneNumberId: string;
     displayPhoneNumber: string;

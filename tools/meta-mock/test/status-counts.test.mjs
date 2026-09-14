@@ -181,3 +181,36 @@ test("the mock's own sends add up over a campaign", async () => {
     `failed=${observed} is not within ${spread.toFixed(1)} of ${PARTICIPANTS * FAILURE_RATE}`,
   );
 });
+
+test("jitter spreads statuses so they interleave across contacts and within a message", async () => {
+  const { planStatuses } = await import("../src/status-progression.mjs");
+  const schedule = { sent: 100, delivered: 100, read: 100 };
+
+  // No jitter: lockstep, strictly increasing offsets, no randomness consumed
+  // beyond the failure draw.
+  const fixed = planStatuses({ schedule, jitter: 0, random: () => 0.99 });
+  assert.deepEqual(
+    fixed.map((s) => [s.status, s.at]),
+    [
+      ["sent", 100],
+      ["delivered", 200],
+      ["read", 300],
+    ],
+  );
+
+  // Jitter wider than the gaps: a late `sent` can land after `read`, which is
+  // the arrival order a real integration has to survive.
+  const draws = [0.99, 0.99, 0.0, 0.0]; // sent spread, failure, delivered spread, read spread
+  let i = 0;
+  const shuffled = planStatuses({ schedule, jitter: 500, failureRate: 0.2, random: () => draws[i++] });
+  const at = Object.fromEntries(shuffled.map((s) => [s.status, s.at]));
+  assert.ok(at.sent > at.read, `sent (${at.sent}) should fire after read (${at.read})`);
+
+  // A failed send still owes exactly `sent` and `failed`.
+  const failed = planStatuses({ schedule, jitter: 500, failureRate: 1, random: () => 0.5 });
+  assert.deepEqual(
+    failed.map((s) => s.status),
+    ["sent", "failed"],
+  );
+  assert.ok(failed[1].errors?.[0]?.code === 131026);
+});

@@ -38,6 +38,8 @@ meta-mock — a local stand-in for Meta's Graph API
   --waba-id <id>             stamped onto those callbacks
   --phone-number-id <id>     the same — the receiving app resolves the tenant from it
   --failure-rate <0..1>      fraction of sends that fail after "sent"
+  --status-jitter <ms>       random spread on each callback, so statuses interleave
+                             across contacts and can arrive out of order
   --verbose                  log every request and which layer answered
   --help
 
@@ -55,6 +57,7 @@ const mock = createMetaMock({
   wabaId: flag("waba-id"),
   phoneNumberId: flag("phone-number-id"),
   failureRate: flag("failure-rate") ? Number(flag("failure-rate")) : undefined,
+  statusJitter: flag("status-jitter") ? Number(flag("status-jitter")) : undefined,
 });
 
 await mock.listen();
@@ -83,7 +86,8 @@ console.log("[meta-mock] point services at it with META_API_BASE_URL");
 if (config.statusProgression) {
   console.log(
     `[meta-mock] status callbacks: ON — sent → delivered → read to ${config.webhookUrl}` +
-      (config.failureRate > 0 ? ` (${config.failureRate * 100}% fail after "sent")` : ""),
+      (config.failureRate > 0 ? ` (${config.failureRate * 100}% fail after "sent")` : "") +
+      (config.statusJitter > 0 ? ` (±${config.statusJitter}ms jitter, out of order)` : ""),
   );
 
   if (!config.phoneNumberId) {

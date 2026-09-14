@@ -113,6 +113,7 @@ real, end to end, against a real database, with nothing leaving the machine.
 ```bash
 npx meta-mock                        # :8081 — no status callbacks
 npx meta-mock --status-progression   # ...and sent → delivered → read
+npx meta-mock --status-progression --status-jitter 3000   # ...arriving out of order
 npx meta-mock --help
 ```
 
@@ -204,6 +205,21 @@ await mock.replayWebhook({
 
 Names are qualified as `api:name` only where both collections use the same one;
 `listWebhooks()` returns what to pass.
+
+Each sample carries one fixed `wamid`, so replaying the same notification twice
+looks to the receiving app like one message arriving twice — and a correct app
+dedupes the second. Pass `messageId` to drive an inbox by hand:
+
+```js
+await mock.replayWebhook({
+  name: "Received Text Message",
+  messageId: `wamid.${Date.now()}`,
+  text: "and another one",
+});
+```
+
+It is the only id rewritten on request rather than by account key, and only when
+asked — a test asserting on the sample's own id still sees it.
 
 The ids must match the receiving app's stored settings for that account, or the
 app will correctly ignore the notification.
