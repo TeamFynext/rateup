@@ -23,7 +23,8 @@
     "fmt:check": "oxfmt --check",
     "test": "vitest --silent",
     "prepare": "husky",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "backfill:identifiers": "tsx scripts/backfill-source-identifiers.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1123.0",
