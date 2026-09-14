@@ -17,13 +17,13 @@ vi.mock("./campaignSend.service.js", async () => {
 });
 vi.mock("./campaignRetryCohort.js", () => ({
   getRetryCohort: vi.fn(),
-  countInFlightParticipants: vi.fn(),
+  countPendingParticipants: vi.fn(),
 }));
 
 import prisma from "../../utils/prisma.js";
 import { CampaignStatus } from "../../types/enums.js";
 import { cancelCampaignSends } from "./campaignSend.service.js";
-import { countInFlightParticipants, getRetryCohort } from "./campaignRetryCohort.js";
+import { countPendingParticipants, getRetryCohort } from "./campaignRetryCohort.js";
 import { finishCampaignIfSettled, settleSentCampaigns } from "./campaignSettle.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -34,7 +34,7 @@ const db = prisma as unknown as {
 };
 const cancel = cancelCampaignSends as unknown as Mock;
 const cohort = getRetryCohort as unknown as Mock;
-const inFlight = countInFlightParticipants as unknown as Mock;
+const pending = countPendingParticipants as unknown as Mock;
 
 const CAMPAIGN_ID = "11111111-1111-1111-1111-111111111111";
 
@@ -44,7 +44,7 @@ describe("finishCampaignIfSettled", () => {
     db.campaign.findUnique.mockResolvedValue({ id: CAMPAIGN_ID, type: "WHATSAPP" });
     db.campaignSend.findMany.mockResolvedValue([]);
     db.campaign.updateMany.mockResolvedValue({ count: 1 });
-    inFlight.mockResolvedValue(0);
+    pending.mockResolvedValue(0);
     cohort.mockResolvedValue([]);
   });
 
@@ -99,13 +99,24 @@ describe("finishCampaignIfSettled", () => {
     await expect(finishCampaignIfSettled(CAMPAIGN_ID)).resolves.toBe(CampaignStatus.COMPLETED);
   });
 
-  test("waits while delivery statuses are still arriving", async () => {
-    inFlight.mockResolvedValue(4);
+  test("waits while recipients are still waiting to be sent", async () => {
+    pending.mockResolvedValue(4);
 
     await expect(finishCampaignIfSettled(CAMPAIGN_ID)).resolves.toBeNull();
     expect(db.campaign.updateMany).not.toHaveBeenCalled();
-    // Concluding here is what announced a retry the campaign did not need.
     expect(cohort).not.toHaveBeenCalled();
+  });
+
+  // COMPLETED means the sending is done. Delivery and read receipts keep
+  // landing for days on a phone that was off, and they are applied to the
+  // message and the counters whatever the campaign's status is — so SENT does
+  // not hold a campaign open. It used to, and 87 unconfirmed messages out of
+  // 4,609 kept a campaign on ACTIVE indefinitely.
+  test("completes even while some messages are SENT without a delivery receipt", async () => {
+    pending.mockResolvedValue(0);
+
+    await expect(finishCampaignIfSettled(CAMPAIGN_ID)).resolves.toBe(CampaignStatus.COMPLETED);
+    expect(pending).toHaveBeenCalledWith(CAMPAIGN_ID);
   });
 
   test("leaves the campaign alone while another send is actively dispatching", async () => {
@@ -141,7 +152,7 @@ describe("settleSentCampaigns", () => {
     db.campaign.findUnique.mockResolvedValue({ id: CAMPAIGN_ID, type: "WHATSAPP" });
     db.campaignSend.findMany.mockResolvedValue([]);
     db.campaign.updateMany.mockResolvedValue({ count: 1 });
-    inFlight.mockResolvedValue(0);
+    pending.mockResolvedValue(0);
     cohort.mockResolvedValue([]);
   });
 
