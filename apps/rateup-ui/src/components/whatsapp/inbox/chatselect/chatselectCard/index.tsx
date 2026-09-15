@@ -40,6 +40,7 @@ import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTi
 import {
   getContactChannelSource,
   getContactDisplayPhone,
+  getVisibleUnreadCount,
   isInboxSessionExpired,
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
@@ -138,7 +139,7 @@ export default function WaInboxChatSelectCard({
   const status = getDerivedStatus(contact);
   const isClosed = status === "closed";
   const isUnassigned = !isClosed && !contact?.assignedUsers?.length;
-  const unreadCount = contact?.unReadMessageCount ?? 0;
+  const unreadCount = getVisibleUnreadCount(contact, user?.userId);
   const primaryAssignee = contact?.assignedUsers?.[0];
 
   const { mutate: toggleFavorite } = useToggleFavorite();
