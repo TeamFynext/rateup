@@ -97,6 +97,55 @@ const mock = await startMetaMock({
 });
 ```
 
+**Refusing sends outright** is a separate switch. `failureRate` fails a message
+*after* Meta accepted it, through a status callback. An account-level problem —
+a broken payment method, a locked account — never gets that far: Graph refuses
+the send synchronously with an error. `sendError` does that for every send:
+
+```bash
+META_MOCK_SEND_ERROR=131042 npx meta-mock     # or --send-error 131042
+```
+
+```js
+const mock = await startMetaMock({ sendError: 131042 });
+mock.setSendError(null);                        // "the payment method is fixed"
+```
+
+The response is Meta's own shape and wording, HTTP 400:
+
+```json
+{ "error": { "message": "(#131042) Business eligibility payment issue", "type": "OAuthException",
+  "code": 131042, "error_data": { "messaging_product": "whatsapp",
+  "details": "There was an error related to your payment method." }, "fbtrace_id": "mock-…" } }
+```
+
+It can be flipped while the mock runs, so the recovery path can be tested
+without a restart:
+
+```bash
+curl -X POST   localhost:8081/__stub/send-error -H 'content-type: application/json' -d '{"code":131042}'
+curl -X DELETE localhost:8081/__stub/send-error
+```
+
+**Random failures** refuse a fraction of sends, each with a code picked at
+random from Meta's error reference:
+
+```bash
+META_MOCK_SEND_ERROR_RATE=0.1 npx meta-mock          # or --send-error-rate 0.1
+META_MOCK_SEND_ERROR_CODES=131026,130429 ...          # narrow the pool
+```
+
+The pool is every code a send can return, **except 131042**. A payment failure
+pauses a campaign, so it only happens when `META_MOCK_SEND_ERROR` asks for it.
+Codes that belong to template management, phone migration, insights, contact
+sync and onboarding are not in the pool either, because a real send never
+returns them. A fixed `sendError` wins over the rate.
+
+Read receipts are never refused. `src/graph-errors.mjs` holds all 82 codes in
+Meta's Cloud API error reference, with Meta's `details` wording and a `send` flag
+for the ones a send can return. A code outside it still gets a correctly shaped
+error.
+
 ## Why
 
 Creating a WhatsApp flow or a message template is *Meta-first*: the API calls
@@ -254,7 +303,10 @@ caller and more surface to keep correct when Meta changes it.
 | `GET /__stub/routes` | the fixture route table |
 | `GET /__stub/webhooks` | notification payloads available to replay |
 | `POST /__stub/webhook` | replay one — `{ name, from, wabaId, … }` |
-| `POST /__stub/reset` | drop recorded calls and stored objects |
+| `POST /__stub/reset` | drop recorded calls and stored objects; `sendError` goes back to its start value |
+| `GET /__stub/send-error` | the fixed code, random rate and random pool in effect |
+| `POST /__stub/send-error` | `{ "code": 131042 }` refuses every send (`null` clears); `{ "rate": 0.1 }`; `{ "codes": [131026] }` |
+| `DELETE /__stub/send-error` | send normally again — clears the fixed code and the rate |
 
 ## Keeping up with Meta
 
@@ -287,6 +339,9 @@ segment. Matching only one spelling leaves every Instagram path with an extra
 | `META_MOCK_WABA_ID` | stamped onto status callbacks so the app resolves the tenant |
 | `META_MOCK_PHONE_NUMBER_ID` | the same |
 | `META_MOCK_FAILURE_RATE` | `0`; the fraction of sends that fail after `sent` |
+| `META_MOCK_SEND_ERROR` | unset; a Graph error code (e.g. `131042`) every send is refused with |
+| `META_MOCK_SEND_ERROR_RATE` | `0`; the fraction of sends refused with a random error (never 131042) |
+| `META_MOCK_SEND_ERROR_CODES` | unset; comma-separated codes the random errors draw from |
 | `META_MOCK_VERBOSE` | unset; `1` logs every request and which layer answered |
 
 ## Tests

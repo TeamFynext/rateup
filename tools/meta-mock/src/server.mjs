@@ -1,6 +1,14 @@
 import { createServer } from "node:http";
 
 import { fallbackResponse, fixtures, matchFixture, stripVersion } from "./fixtures.mjs";
+import {
+  HTTP_STATUS,
+  KNOWN_ERROR_CODES,
+  parseErrorCode,
+  parseErrorCodes,
+  parseRate,
+  RANDOM_SEND_ERROR_CODES,
+} from "./graph-errors.mjs";
 import { createGraphRoutes } from "./graph-routes.mjs";
 import { runStatusProgression, statusPayload } from "./status-progression.mjs";
 import { listWebhooks, replayWebhook } from "./webhooks.mjs";
@@ -76,7 +84,38 @@ export function createMetaMock(options = {}) {
 
   /** Every request this mock has answered, oldest first. */
   const calls = [];
-  const state = { flows: new Map(), templates: new Map() };
+  /**
+   * `sendError` is the Graph error code every send is refused with, or null to
+   * send normally. Starts from `META_MOCK_SEND_ERROR` and can be flipped at
+   * runtime through `/__stub/send-error` — which is how "the payment method is
+   * fixed now" is simulated without restarting the mock.
+   */
+  const initialSendError = parseErrorCode(options.sendError ?? process.env.META_MOCK_SEND_ERROR);
+  /**
+   * `sendErrorRate` is the fraction of sends refused with a random Graph error,
+   * drawn from `sendErrorCodes` — or, when that is unset, every code a send can
+   * return except 131042, which only `sendError` produces.
+   */
+  const initialSendErrorRate = parseRate(
+    options.sendErrorRate ?? process.env.META_MOCK_SEND_ERROR_RATE,
+  );
+  const initialSendErrorCodes = parseErrorCodes(
+    options.sendErrorCodes ?? process.env.META_MOCK_SEND_ERROR_CODES,
+  );
+  const state = {
+    flows: new Map(),
+    templates: new Map(),
+    sendError: initialSendError,
+    sendErrorRate: initialSendErrorRate,
+    sendErrorCodes: initialSendErrorCodes,
+    /** Injectable so a test can pin which error a random failure picks. */
+    random: options.random ?? Math.random,
+  };
+  const sendErrorState = () => ({
+    sendError: state.sendError,
+    sendErrorRate: state.sendErrorRate,
+    sendErrorCodes: state.sendErrorCodes ?? RANDOM_SEND_ERROR_CODES,
+  });
 
   let nextId = 1;
   /** Graph ids are numeric strings; keep that shape so nothing downstream trips. */
@@ -164,6 +203,7 @@ export function createMetaMock(options = {}) {
         routes: fixtures.routes.length,
         webhooks: fixtures.webhooks.length,
         statusProgression,
+        ...sendErrorState(),
         collections: fixtures.collections,
         uptimeMs: Date.now() - startedAt,
       });
@@ -247,6 +287,35 @@ export function createMetaMock(options = {}) {
       return true;
     }
 
+    /* Make every send fail with a Graph error, or stop doing so. */
+    if (url.pathname === "/__stub/send-error") {
+      if (req.method === "POST" || req.method === "PUT") {
+        const request = parseBody(rawBody, req.headers["content-type"] ?? "") ?? {};
+        if ("code" in request) {
+          const code = parseErrorCode(request.code);
+          if (request.code != null && code === null && String(request.code).trim() !== "") {
+            send(res, 400, {
+              error:
+                'POST /__stub/send-error takes { "code": 131042 } ({ "code": null } clears), ' +
+                '{ "rate": 0.1 } and { "codes": [131026, 130429] }',
+              known: KNOWN_ERROR_CODES,
+            });
+            return true;
+          }
+          state.sendError = code;
+        }
+        if ("rate" in request) state.sendErrorRate = parseRate(request.rate);
+        if ("codes" in request) state.sendErrorCodes = parseErrorCodes(request.codes);
+      } else if (req.method === "DELETE") {
+        // Everything off: the fixed error and the random ones.
+        state.sendError = null;
+        state.sendErrorRate = 0;
+      }
+      console.log(`[meta-mock] sends: ${describeSendErrors()}`);
+      send(res, 200, { ...sendErrorState(), known: KNOWN_ERROR_CODES });
+      return true;
+    }
+
     if (url.pathname === "/__stub/reset" && req.method === "POST") {
       reset();
       send(res, 200, { ok: true });
@@ -302,6 +371,7 @@ export function createMetaMock(options = {}) {
       if (rule) {
         const params = rule.match.exec(requestPath).groups ?? {};
         payload = rule.handle({ params, query, body, raw, method, path: requestPath });
+        if (payload?.[HTTP_STATUS]) status = payload[HTTP_STATUS];
         source = "handler";
       } else if (fixture) {
         payload = fixture.response;
@@ -343,6 +413,20 @@ export function createMetaMock(options = {}) {
     calls.length = 0;
     state.flows.clear();
     state.templates.clear();
+    // Back to how it was started, not to "off": a reset between tests should
+    // not undo the mode the mock was launched in.
+    state.sendError = initialSendError;
+    state.sendErrorRate = initialSendErrorRate;
+    state.sendErrorCodes = initialSendErrorCodes;
+  }
+
+  function describeSendErrors() {
+    if (state.sendError != null) return `every send fails with Graph error ${state.sendError}`;
+    if (state.sendErrorRate > 0) {
+      const pool = state.sendErrorCodes ? state.sendErrorCodes.join(", ") : "any send error except 131042";
+      return `${state.sendErrorRate * 100}% of sends fail with a random Graph error (${pool})`;
+    }
+    return "normal";
   }
 
   return {
@@ -387,6 +471,18 @@ export function createMetaMock(options = {}) {
       webhookUrl: webhookTarget,
       failureRate,
       statusJitter,
+      get sendError() {
+        return state.sendError;
+      },
+      get sendErrorRate() {
+        return state.sendErrorRate;
+      },
+      get sendErrorCodes() {
+        return state.sendErrorCodes ?? RANDOM_SEND_ERROR_CODES;
+      },
+      get sendErrors() {
+        return describeSendErrors();
+      },
       wabaId: identity.wabaId,
       phoneNumberId: identity.phoneNumberId,
       displayPhoneNumber: identity.displayPhoneNumber,
@@ -394,6 +490,15 @@ export function createMetaMock(options = {}) {
     },
 
     reset,
+    /** Fail every send with this Graph error code; null sends normally again. */
+    setSendError: (code) => {
+      state.sendError = parseErrorCode(code);
+    },
+    /** Refuse this fraction of sends with a random error; `codes` narrows the pool. */
+    setSendErrorRate: (rate, codes) => {
+      state.sendErrorRate = parseRate(rate);
+      if (codes !== undefined) state.sendErrorCodes = parseErrorCodes(codes);
+    },
     replayWebhook: (request) => replayWebhook({ target: webhookTarget, ...request }),
     webhooks: listWebhooks,
     fixtures,

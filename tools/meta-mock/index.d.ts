@@ -74,6 +74,23 @@ export interface MetaMockOptions {
    * Zero (the default) keeps sent → delivered → read in lockstep.
    */
   statusJitter?: number;
+  /**
+   * Refuse every send with this Graph error code, e.g. 131042 for a broken
+   * payment method. Also `META_MOCK_SEND_ERROR`. Unset sends normally.
+   */
+  sendError?: number | string | null;
+  /**
+   * Fraction of sends refused with a random Graph error. Also
+   * `META_MOCK_SEND_ERROR_RATE`. Zero by default.
+   */
+  sendErrorRate?: number | string;
+  /**
+   * Codes the random failures draw from. Also `META_MOCK_SEND_ERROR_CODES`.
+   * Default: every code a send can return except 131042.
+   */
+  sendErrorCodes?: Array<number | string> | string;
+  /** Source of randomness for `sendErrorRate`, for deterministic tests. */
+  random?: () => number;
 }
 
 export interface MetaMock {
@@ -88,12 +105,22 @@ export interface MetaMock {
     webhookUrl: string;
     failureRate: number;
     statusJitter: number;
+    /** The Graph error code every send is currently refused with, or null. */
+    readonly sendError: number | null;
+    readonly sendErrorRate: number;
+    readonly sendErrorCodes: number[];
+    /** One line describing the current send-error mode. */
+    readonly sendErrors: string;
     wabaId: string;
     phoneNumberId: string;
     displayPhoneNumber: string;
     defaultApi: "whatsapp" | "instagram";
   };
   reset(): void;
+  /** Fail every send with this Graph error code; null sends normally again. */
+  setSendError(code: number | string | null): void;
+  /** Refuse this fraction of sends with a random error; `codes` narrows the pool. */
+  setSendErrorRate(rate: number, codes?: Array<number | string> | string | null): void;
   replayWebhook(request: WebhookRequest): Promise<WebhookResult>;
   webhooks(): Array<{ name: string; folder: string }>;
   fixtures: {

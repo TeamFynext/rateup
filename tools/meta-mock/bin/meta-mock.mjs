@@ -40,6 +40,12 @@ meta-mock — a local stand-in for Meta's Graph API
   --failure-rate <0..1>      fraction of sends that fail after "sent"
   --status-jitter <ms>       random spread on each callback, so statuses interleave
                              across contacts and can arrive out of order
+  --send-error <code>        refuse every send with this Graph error, e.g. 131042
+                             (payment method). Flip it at runtime with
+                             POST/DELETE /__stub/send-error
+  --send-error-rate <0..1>   refuse this fraction of sends with a random Graph
+                             error — any code a send can return, never 131042
+  --send-error-codes <list>  narrow that random pool, e.g. 131026,130429
   --verbose                  log every request and which layer answered
   --help
 
@@ -58,6 +64,9 @@ const mock = createMetaMock({
   phoneNumberId: flag("phone-number-id"),
   failureRate: flag("failure-rate") ? Number(flag("failure-rate")) : undefined,
   statusJitter: flag("status-jitter") ? Number(flag("status-jitter")) : undefined,
+  sendError: flag("send-error"),
+  sendErrorRate: flag("send-error-rate"),
+  sendErrorCodes: flag("send-error-codes"),
 });
 
 await mock.listen();
@@ -103,6 +112,13 @@ if (config.statusProgression) {
     "[meta-mock] status callbacks: OFF — a send is answered and nothing follows.\n" +
       "[meta-mock]          Campaign and message statuses will never update. Turn them on\n" +
       "[meta-mock]          with --status-progression or META_MOCK_STATUS_PROGRESSION=1.",
+  );
+}
+
+if (config.sendError != null || config.sendErrorRate > 0) {
+  console.log(
+    `[meta-mock] sends: FAILING — ${config.sendErrors}.\n` +
+      `[meta-mock]          Clear it without restarting: curl -X DELETE ${mock.url}/__stub/send-error`,
   );
 }
 

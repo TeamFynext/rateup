@@ -15,6 +15,8 @@
 
 import { randomBytes } from "node:crypto";
 
+import { graphError, RANDOM_SEND_ERROR_CODES } from "./graph-errors.mjs";
+
 /**
  * A message id in the shape Meta hands back from a send.
  *
@@ -223,6 +225,20 @@ export function createGraphRoutes({ state, mintId, publicUrl, onMessageSent }) {
         // with a failure rate set, → failed) against an empty recipient — a
         // status storm the app then tries to match to a message it never sent.
         if (body?.status === "read") return { success: true };
+
+        // A simulated account-level failure: every send is refused, the way
+        // Graph refuses them for a broken payment method or a locked account.
+        // Nothing is minted and no status follows, because Meta accepted
+        // nothing.
+        if (state.sendError != null) return graphError(state.sendError);
+
+        // A random per-send failure, drawn from every code a send can return
+        // except the payment one (see RANDOM_SEND_ERROR_CODES). Refused before
+        // an id is minted, like the real thing.
+        if (state.sendErrorRate > 0 && state.random() < state.sendErrorRate) {
+          const pool = state.sendErrorCodes ?? RANDOM_SEND_ERROR_CODES;
+          return graphError(pool[Math.floor(state.random() * pool.length)]);
+        }
 
         const recipientId = body?.to ?? "";
         const messageId = mintMessageId(recipientId);

@@ -505,3 +505,139 @@ test("marketing sends behave exactly like ordinary ones", async () => {
     );
   });
 });
+
+const sendMessage = (mock) =>
+  fetch(`${mock.url}/v25.0/1234/messages`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", to: "919999999999", type: "template" }),
+  });
+
+test("sendError refuses every send with Meta's error shape", async () => {
+  await withMock(
+    async (mock) => {
+      const response = await sendMessage(mock);
+      const body = await response.json();
+
+      assert.equal(response.status, 400);
+      assert.equal(body.error.code, 131042);
+      assert.equal(body.error.message, "(#131042) Business eligibility payment issue");
+      assert.equal(body.error.error_data.details, "There was an error related to your payment method.");
+      assert.equal(body.messages, undefined);
+      assert.equal(mock.calls().at(-1).status, 400);
+    },
+    { sendError: 131042 },
+  );
+});
+
+test("sendError can be cleared at runtime, and sends go through again", async () => {
+  await withMock(
+    async (mock) => {
+      assert.equal((await sendMessage(mock)).status, 400);
+
+      const cleared = await fetch(`${mock.url}/__stub/send-error`, { method: "DELETE" });
+      assert.deepEqual((await cleared.json()).sendError, null);
+
+      const response = await sendMessage(mock);
+      const body = await response.json();
+      assert.equal(response.status, 200);
+      assert.ok(body.messages[0].id);
+
+      const set = await fetch(`${mock.url}/__stub/send-error`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code: 131042 }),
+      });
+      assert.equal((await set.json()).sendError, 131042);
+      assert.equal((await sendMessage(mock)).status, 400);
+    },
+    { sendError: "131042" },
+  );
+});
+
+test("sendError leaves read receipts alone and treats a blank value as off", async () => {
+  await withMock(
+    async (mock) => {
+      const receipt = await fetch(`${mock.url}/v25.0/1234/messages`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messaging_product: "whatsapp", status: "read", message_id: "x" }),
+      });
+      assert.equal(receipt.status, 200);
+    },
+    { sendError: 131042 },
+  );
+  await withMock(async (mock) => assert.equal((await sendMessage(mock)).status, 200), {
+    sendError: "",
+  });
+});
+
+test("sendErrorRate refuses sends with random errors from the spec, never 131042", async () => {
+  const { RANDOM_SEND_ERROR_CODES } = await import("../src/graph-errors.mjs");
+  assert.ok(!RANDOM_SEND_ERROR_CODES.includes(131042));
+  // Management-only codes are not something a send returns.
+  assert.ok(!RANDOM_SEND_ERROR_CODES.includes(2388103));
+  assert.ok(RANDOM_SEND_ERROR_CODES.includes(131026));
+
+  await withMock(
+    async (mock) => {
+      const seen = new Set();
+      for (let i = 0; i < 200; i++) {
+        const response = await sendMessage(mock);
+        assert.notEqual(response.status, 200);
+        const { error } = await response.json();
+        assert.ok(RANDOM_SEND_ERROR_CODES.includes(error.code));
+        assert.equal(error.error_data.messaging_product, "whatsapp");
+        assert.match(error.message, new RegExp(`^\\(#${error.code}\\) `));
+        seen.add(error.code);
+      }
+      assert.ok(!seen.has(131042));
+      assert.ok(seen.size > 20, `expected a spread of codes, saw ${seen.size}`);
+    },
+    { sendErrorRate: 1 },
+  );
+});
+
+test("sendErrorRate honours the rate and a narrowed code list", async () => {
+  // random() alternates: first call decides fail/pass, second picks the code.
+  const values = [0.05, 0.99, 0.5, 0.0];
+  let i = 0;
+  await withMock(
+    async (mock) => {
+      const first = await sendMessage(mock);
+      assert.equal(first.status, 400);
+      assert.equal((await first.json()).error.code, 130429);
+
+      const second = await sendMessage(mock);
+      assert.equal(second.status, 200);
+    },
+    {
+      sendErrorRate: 0.1,
+      sendErrorCodes: "131026,130429",
+      random: () => values[i++ % values.length],
+    },
+  );
+});
+
+test("DELETE /__stub/send-error turns off random errors too", async () => {
+  await withMock(
+    async (mock) => {
+      assert.notEqual((await sendMessage(mock)).status, 200);
+      const cleared = await fetch(`${mock.url}/__stub/send-error`, { method: "DELETE" });
+      assert.equal((await cleared.json()).sendErrorRate, 0);
+      assert.equal((await sendMessage(mock)).status, 200);
+    },
+    { sendErrorRate: 1 },
+  );
+});
+
+test("every catalogued code produces Meta's error shape", async () => {
+  const { KNOWN_ERROR_CODES, graphError } = await import("../src/graph-errors.mjs");
+  assert.equal(KNOWN_ERROR_CODES.length, 82);
+  for (const code of KNOWN_ERROR_CODES) {
+    const { error } = graphError(code);
+    assert.equal(error.code, code);
+    assert.ok(error.message.startsWith(`(#${code}) `));
+    assert.ok(error.error_data.details.length > 0);
+  }
+});
