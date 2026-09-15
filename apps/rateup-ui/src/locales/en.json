@@ -3168,12 +3168,17 @@
     "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",
     "Continue setup": "Continue setup",
     "Created {date}": "Created {date}",
+    "Delivered": "Delivered",
     "Draft": "Draft",
+    "Failed": "Failed",
     "Not sent yet": "Not sent yet",
-    "recipients": "recipients"
+    "Read": "Read",
+    "recipients": "recipients",
+    "Sent": "Sent"
   },
   "campaign.status": {
-    "Campaign stopped": "Campaign stopped"
+    "Campaign stopped": "Campaign stopped",
+    "Campaign paused": "Campaign paused"
   },
   "campaign.details": {
     "{count} recipients_one": "{count} recipients",
@@ -3326,7 +3331,18 @@
     "Type": "Type",
     "Unnamed contact": "Unnamed contact",
     "Wait for the campaign's current send to finish.": "Wait for the campaign's current send to finish.",
-    "We couldn't load this campaign.": "We couldn't load this campaign."
+    "We couldn't load this campaign.": "We couldn't load this campaign.",
+    "{count} recipients have not been messaged yet and will be sent when you resume._one": "{count} recipients have not been messaged yet and will be sent when you resume.",
+    "{count} recipients have not been messaged yet and will be sent when you resume._other": "{count} recipients have not been messaged yet and will be sent when you resume.",
+    "Campaign paused": "Campaign paused",
+    "Campaign paused: conversation limit reached": "Campaign paused: conversation limit reached",
+    "Campaign paused: WhatsApp payment issue": "Campaign paused: WhatsApp payment issue",
+    "Meta rejected the payment method on your WhatsApp Business account, so sending stopped. Add or fix the payment method in Meta's billing settings, then resume.": "Meta rejected the payment method on your WhatsApp Business account, so sending stopped. Add or fix the payment method in Meta's billing settings, then resume.",
+    "Open Meta billing": "Open Meta billing",
+    "Resume Drip": "Resume Drip",
+    "Sending stopped because the account cannot send right now.": "Sending stopped because the account cannot send right now.",
+    "Upgrade plan": "Upgrade plan",
+    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume."
   },
   "campaign.list": {
     "{count} campaigns_one": "{count} campaigns",

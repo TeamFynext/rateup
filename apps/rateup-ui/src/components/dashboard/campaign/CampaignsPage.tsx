@@ -11,7 +11,7 @@ import { useConversationLimit } from "@/backend/stats/stats.query";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError.tsx";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import CampaignCard from "@/components/Campaign/CampaignCard.tsx";
+import CampaignCard, { CampaignProgressLegend } from "@/components/Campaign/CampaignCard.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
 import {
   ListPage,
@@ -224,6 +224,8 @@ export function CampaignsPage({
             <h1 className="font-display text-2xl font-bold tracking-tight">{t("Campaigns")}</h1>
             <p className="text-muted-foreground text-[13px]">{summaryLine}</p>
           </div>
+          {/* One key for every card's progress bar, where the eye looks for it. */}
+          <CampaignProgressLegend className="justify-end pb-0.5" />
         </div>
 
         <ListPageHeader>

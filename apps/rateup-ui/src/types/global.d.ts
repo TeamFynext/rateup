@@ -7,6 +7,7 @@ import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessa
 
 import type { RequestPayload } from "./api.ts";
 import type {
+  CampaignPauseReason,
   CampaignRetryStrategy,
   CampaignSendStatus,
   CampaignSendTrigger,
@@ -973,8 +974,11 @@ export interface Campaign {
   timezone?: string;
   /** Set by the survey share flow when the campaign targets one survey/team pair. */
   surveyTeamMapId?: string;
-  /** Why a FAILED campaign stopped. Cleared when it is sent again. */
+  /** Why a FAILED or PAUSED campaign stopped. Cleared when it is sent again. */
   errorMessage?: string | null;
+  /** Why the platform paused it; only meaningful while `status` is PAUSED. */
+  pauseReason?: CampaignPauseReason | null;
+  pausedAt?: string | null;
 }
 
 /**
