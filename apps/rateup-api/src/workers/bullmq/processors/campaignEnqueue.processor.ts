@@ -76,19 +76,26 @@ export const campaignEnqueueWorker = new Worker(
       // booking this job and running it — long enough for someone to pause the
       // campaign. The cron's own `status = 'ACTIVE'` filter cannot cover that
       // window, so the check has to happen here too, at the point of sending.
-      if (dripStageId) {
-        const campaign = await prisma.campaign.findUnique({
-          where: { id: campaignId },
-          select: { status: true },
-        });
-        if (campaign?.status !== CampaignStatus.ACTIVE) {
+      //
+      // Any campaign the platform paused (allowance spent, billing rejected) is
+      // skipped the same way, drip or not: fanning it out would only queue
+      // messages that each get refused.
+      const campaign = await prisma.campaign.findUnique({
+        where: { id: campaignId },
+        select: { status: true },
+      });
+      const paused = campaign?.status === CampaignStatus.PAUSED;
+      if (paused || dripStageId) {
+        if (paused || campaign?.status !== CampaignStatus.ACTIVE) {
           log.info(
             { campaignId, dripStageId, status: campaign?.status },
             "Drip stage skipped — the campaign is no longer active",
           );
           await cancelCampaignSend(
             campaignSendId,
-            "The campaign was paused before this stage ran.",
+            paused
+              ? "The campaign was paused before this send ran."
+              : "The campaign was paused before this stage ran.",
           );
           return;
         }
@@ -150,10 +157,15 @@ export const campaignEnqueueWorker = new Worker(
         dailySendLimit,
       });
 
+      // Not over PAUSED: the first messages of a large fan-out can hit the
+      // allowance and pause the campaign before this line runs.
       await updateCampaignStatus(
         campaignId,
         scheduledAt ? CampaignStatus.SCHEDULED : CampaignStatus.ACTIVE,
         scheduledAt,
+        false,
+        undefined,
+        [CampaignStatus.PAUSED],
       );
     } catch (error) {
       // `{ err }`, not `%o`: pino's printf formatting JSON-stringifies its

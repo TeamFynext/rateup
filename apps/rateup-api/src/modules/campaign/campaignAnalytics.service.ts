@@ -230,8 +230,8 @@ export interface FailureReasonRow {
    * The individual codes behind the row, for support.
    *
    * `retryable` is per code, not per group: a group is a *cause*, and a cause
-   * can hold both outcomes — `INVALID_NUMBER` carries 131026, which is retried,
-   * alongside 133010, which is not.
+   * can hold both outcomes — `LIMITED_BY_META` carries 130429, which is retried,
+   * alongside 131031, which is not.
    */
   codes: { code: number | null; label: string; count: number; retryable: boolean }[];
 }

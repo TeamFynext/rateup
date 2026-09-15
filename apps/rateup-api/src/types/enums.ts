@@ -224,6 +224,22 @@ export enum CampaignStatus {
   /// Nothing is going out right now, so calling this ACTIVE described the
   /// campaign as sending through a retry window that is usually hours long.
   RETRYING = "RETRYING",
+  /// Stopped by the platform because the *account* cannot send — the
+  /// conversation allowance is spent, or Meta rejected the payment method.
+  /// Every remaining recipient is left PENDING, not FAILED, so sending again
+  /// once the cause is fixed picks up where it stopped. The cause is on
+  /// `pauseReason`; distinct from INACTIVE (owner paused) and FAILED (the
+  /// campaign itself fell over).
+  PAUSED = "PAUSED",
+}
+
+/// Why a campaign is PAUSED. Stored on `Campaign.pauseReason`.
+export enum CampaignPauseReason {
+  /// The org's conversation allowance for the cycle is used up.
+  CONVERSATION_LIMIT = "CONVERSATION_LIMIT",
+  /// Meta 131042: no payment method, credit line over limit, or a billing
+  /// setting missing on the WhatsApp Business account.
+  PAYMENT_METHOD = "PAYMENT_METHOD",
 }
 export enum CampaignType {
   WHATSAPP = "WHATSAPP",

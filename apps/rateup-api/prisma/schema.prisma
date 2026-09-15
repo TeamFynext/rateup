@@ -1086,6 +1086,11 @@ model Campaign {
   campaignSentAt       DateTime?
   scheduledStatuses    String[]              @default([])
   errorMessage         String?
+  /// Why the platform stopped this campaign on its own — enums.ts:
+  /// CampaignPauseReason. Only meaningful while `status` is PAUSED; the banner
+  /// on the campaign page is keyed on the pair, so a stale value is harmless.
+  pauseReason          String?
+  pausedAt             DateTime?
   dynamicTags          String[]              @default([])
   useUserConsent       Boolean               @default(true)
   /// IANA zone the schedule is expressed in. A campaign scheduled for "10:00" is

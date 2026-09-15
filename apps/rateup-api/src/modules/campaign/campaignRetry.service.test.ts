@@ -372,8 +372,10 @@ describe("getRetryCohort", () => {
     const [, ...values] = db.$queryRaw.mock.calls[0];
     const codes = values.find((v: unknown) => Array.isArray(v)) as number[];
     expect(codes).toContain(131049);
-    // Undeliverable-now: retried on a later attempt, never in place.
-    expect(codes).toContain(131026);
+    // Outside the 24h window: retried on a later attempt, never in place.
+    expect(codes).toContain(131047);
+    // Undeliverable numbers are permanent.
+    expect(codes).not.toContain(131026);
     expect(codes).not.toContain(133010);
     expect(codes).not.toContain(132001);
   });

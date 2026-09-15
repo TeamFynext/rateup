@@ -971,9 +971,17 @@ export async function updateCampaignStatus(
    * including as `null`, which is how a fresh send clears the last failure.
    */
   errorMessage?: string | null,
+  /**
+   * Leave the campaign alone if it is in one of these. How a fan-out finishing
+   * after a pause avoids writing ACTIVE over PAUSED.
+   */
+  unlessStatusIn?: string[],
 ) {
   return await prisma.campaign.updateMany({
-    where: { id: campaignId },
+    where: {
+      id: campaignId,
+      ...(unlessStatusIn?.length ? { status: { notIn: unlessStatusIn } } : {}),
+    },
     data: {
       status,
       // `includeScheduledAt` is how a failure clears the scheduled time: it asks
