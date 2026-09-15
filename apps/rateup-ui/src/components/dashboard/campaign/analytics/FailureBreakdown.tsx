@@ -14,7 +14,7 @@ import type { CampaignFailureReason } from "@/types/global";
  *
  * The outcome column is the one that decides what to do next, so it is read off
  * the code's own `retryable` flag rather than off the group: a group is a cause,
- * and "invalid number" holds both an undeliverable-for-now number the engine
+ * and "undeliverable" holds both an undeliverable-for-now number the engine
  * retries and a landline it never will.
  */
 const GROUP_STYLE: Record<
