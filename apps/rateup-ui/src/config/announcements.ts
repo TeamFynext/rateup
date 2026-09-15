@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-15-campaign-auto-pause",
+    title: "Campaigns pause when your account can't send",
+    summary:
+      "If your plan's conversation allowance runs out, or Meta rejects the payment method on your WhatsApp Business account, a campaign now pauses instead of marking every remaining recipient as failed. The campaign page shows a banner with the reason and a link to fix it: your plan for the allowance, Meta's billing settings for a payment problem. Recipients who were not messaged yet stay waiting, so Resume sends to exactly them once the cause is fixed.",
+    publishedAt: "2026-09-15",
+    kinds: ["improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
     id: "2026-09-12-inbox-channel-on-ticket",
     title: "See which number a ticket came in on",
     summary:
