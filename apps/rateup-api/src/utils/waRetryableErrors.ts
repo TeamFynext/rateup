@@ -364,7 +364,7 @@ export const FAILURE_REASON_GROUPS: ReadonlyArray<{
   },
   {
     group: WaFailureReasonGroup.INVALID_NUMBER,
-    label: "Invalid number",
+    label: "Undeliverable",
     description: "The number did not accept the message; some are worth another attempt.",
   },
   {

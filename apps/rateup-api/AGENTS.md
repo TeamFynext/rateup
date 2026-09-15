@@ -51,8 +51,8 @@ raw `pg` data layer plus the WhatsApp send/status helpers. It talks to Postgres 
 Rules to keep in mind when adding code:
 
 - **Never construct a `Worker` in a module the API imports.** Producers and consumers
-  belong in separate files — see `queues/backfill.queue.ts` vs
-  `processors/backfillConversation.processor.ts`. A `Worker` at module scope in a
+  belong in separate files — see `queues/webhook.queue.ts` vs
+  `processors/webhook.processor.ts`. A `Worker` at module scope in a
   route-reachable file turns every API replica into a consumer.
 - Anything that _enqueues_ imports from `src/workers/bullmq/queues/`. Nothing outside
   `src/workers/` may import from `processors/`.

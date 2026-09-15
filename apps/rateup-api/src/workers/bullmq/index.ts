@@ -7,7 +7,6 @@ import { connectKafkaProducer, producer } from "../../plugins/kafka.js";
 import { syncJobSchedulers } from "./queues/cron.queue.js";
 import { reconcileScheduledCampaignSends } from "../../modules/campaign/campaignRetry.service.js";
 
-import * as backfill from "./processors/normaliseSourceIdentifier.processor.js";
 import * as campaignDequeue from "./processors/campaignDequeue.processor.js";
 import * as campaignEnqueue from "./processors/campaignEnqueue.processor.js";
 import * as campaignRetryFire from "./processors/campaignRetryFire.processor.js";
@@ -39,7 +38,6 @@ import * as zapierTrigger from "./processors/zapierTrigger.processor.js";
 // the exported instances is what lets shutdown drain them instead of dropping
 // in-flight jobs on SIGTERM.
 const PROCESSOR_MODULES = [
-  backfill,
   campaignDequeue,
   campaignEnqueue,
   campaignRetryFire,
