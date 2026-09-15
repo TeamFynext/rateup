@@ -392,6 +392,24 @@ export function returnMessageContentBasedOnParsedMessage(
   }
 }
 
+/**
+ * Unread messages on an assigned chat are the assignees' business: anyone else
+ * sees no count. An unassigned chat shows everyone their own count, as before.
+ *
+ * Gated here rather than in the list query so the per-user count is still on
+ * the row — unassigning, or being assigned, shows the real figure straight away
+ * instead of a zero that waits for the next fetch.
+ */
+export function getVisibleUnreadCount(
+  contact: { unReadMessageCount?: number; assignedUsers?: { id: string }[] } | null | undefined,
+  userId: string | null | undefined,
+) {
+  const count = contact?.unReadMessageCount ?? 0;
+  const assignees = contact?.assignedUsers ?? [];
+  if (!count || assignees.length === 0) return count;
+  return assignees.some((assignee) => assignee.id === userId) ? count : 0;
+}
+
 export function isInboxSessionExpired(timeStamp?: string) {
   if (!timeStamp) return true;
   const currentTime = dayjs().utc();
