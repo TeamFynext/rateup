@@ -13,6 +13,7 @@ import {
 import {
   getContactChannelSource,
   getLastMessageSender,
+  getVisibleUnreadCount,
   resolveChannel,
 } from "@/utils/chatbox_utils";
 import { useAuth } from "@/context/AuthContext";
@@ -210,7 +211,7 @@ export default function Inbox({
         lastMessageTimeStamp={dayjs.utc(item.lastMessage?.waCreatedAt).fromNow()}
         lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
         isSessionActive={isSessionActive}
-        unReadMessageCount={item.unReadMessageCount}
+        unReadMessageCount={getVisibleUnreadCount(item, userId ?? currentUser?.userId)}
       />
     );
   };
