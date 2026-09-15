@@ -60,9 +60,9 @@ export function normalizeSourceIdentifier(
  * A list of literals rather than `regexp_replace(...) = digits`, because the
  * comparison has to stay on the existing `sourceIdentifier` btree indexes: an
  * expression match seq-scans a table of millions of rows, and the inbox list
- * query runs it per request. Normalising the stored rows is what removes the
- * need for this — see `prisma/backfills/2026-09-12-normalise-source-identifier.sql`,
- * after which every row is the `digits` entry and the rest are dead weight.
+ * query runs it per request. The stored rows have since been normalised (the
+ * backfill completed 2026-09-16), so every row is the `digits` entry and the
+ * rest are dead weight this can shed.
  *
  * The spellings are not guesses; each is one a real write path produced:
  * `WhatsappSettings.phone` verbatim (the campaign worker), that value with only
