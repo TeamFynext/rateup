@@ -738,9 +738,8 @@ export async function getConversationOverview(
         )::float / COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) * 100)
    END AS "resolutionRate"
   FROM "Conversation" c
-  JOIN "Contact" ct ON ct.id = c."contactId"
   LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
-  WHERE ct."orgId" = ${orgId}::uuid;`;
+  WHERE c."orgId" = ${orgId}::uuid;`;
   // The query has no GROUP BY, so it always returns exactly one aggregate row —
   // the length check guards the theoretical empty-result case defensively.
   return res.length
@@ -765,9 +764,7 @@ export async function getResolvedConversationWeeklyStats(orgId: string) {
       COUNT(*)::INTEGER AS "resolvedCount"
     FROM "Conversation"
     WHERE 
-      "contactId" IN (
-        SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
-      )
+      "orgId" = ${orgId}::uuid
       AND "status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     GROUP BY "weekStart"
     ORDER BY "weekStart" DESC
@@ -810,10 +807,8 @@ created_per_day AS (
     COUNT(*)::INTEGER AS createdCount
   FROM "Conversation"
   WHERE
-    "contactId" IN (
-      SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
-    )
-    AND "createdAt"::date >= ${startDate}
+    "orgId" = ${orgId}::uuid
+    AND "createdAt" >= ${startDate}::date
   GROUP BY DATE("createdAt")
 ),
 
@@ -823,12 +818,10 @@ resolved_per_day AS (
     COUNT(*)::INTEGER AS resolvedCount
   FROM "Conversation"
   WHERE
-    "contactId" IN (
-      SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
-    )
+    "orgId" = ${orgId}::uuid
     AND "status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     AND "closedAt" IS NOT NULL
-    AND "closedAt"::date >= ${startDate}
+    AND "closedAt" >= ${startDate}::date
   GROUP BY DATE("closedAt")
 ),
 
@@ -894,9 +887,7 @@ convo AS (
   FROM "Conversation" c
   LEFT JOIN first_agent_message fam
     ON fam."conversationId" = c.id
-  WHERE c."contactId" IN (
-      SELECT id FROM "Contact" WHERE "orgId" = $1::uuid
-    )
+  WHERE c."orgId" = $1::uuid
     AND COALESCE(
       c."firstRespondedByUserAt",
       fam."firstAgentMessageAt"
@@ -947,14 +938,12 @@ export async function getConversationOnAccountDistribution(orgId: string, dateRa
     ws."phone",
     wm."sourcePlatform"
 FROM "Conversation" c
-JOIN "Contact" ct
-    ON c."contactId" = ct.id
 LEFT JOIN "WaMessage" wm
     ON wm."conversationId" = c.id
 LEFT JOIN "WhatsappSettings" ws
     ON ltrim(wm."sourceIdentifier", '+') =
        ltrim(COALESCE(ws."phone", ws."ibaId"), '+')
-WHERE ct."orgId" = ${orgId}::uuid
+WHERE c."orgId" = ${orgId}::uuid
   AND (
         wm."sourceIdentifier" IS NOT NULL
         OR (
@@ -1011,8 +1000,7 @@ export async function getOverAllQuickStatsOfConversations(orgId: string) {
    AND u."active" = true
 ) AS "totalStaff"
 FROM "Conversation" c
-JOIN "Contact" ct ON c."contactId" = ct.id
-WHERE ct."orgId" = ${orgId}::uuid;
+WHERE c."orgId" = ${orgId}::uuid;
   `;
   const {
     resolvedLastWeek,
@@ -1068,8 +1056,7 @@ WITH valid_conversations AS (
     c."closedBy",
     c."closedAt"
   FROM "Conversation" c
-  JOIN "Contact" ct ON ct.id = c."contactId"
-  WHERE ct."orgId" = ${orgId}
+  WHERE c."orgId" = ${orgId}::uuid
 ),
 
 assignments AS (
@@ -1303,8 +1290,7 @@ export async function getStaffDetailedConversationAnalytics(
     c."closedBy",
     c."closedAt"
   FROM "Conversation" c
-  JOIN "Contact" ct ON ct.id = c."contactId"
-  WHERE ct."orgId" = ${orgId}
+  WHERE c."orgId" = ${orgId}::uuid
 ),
 assignments AS (
   SELECT 
@@ -1673,8 +1659,7 @@ export async function getTeamOverview(orgId: string, dateRange: string[]) {
     FROM "WaMessage" wm
     JOIN "Conversation" c ON c.id = wm."conversationId"
     JOIN "ConversationAssignedUserTeamMap" cau ON cau."conversationId" = c.id
-    JOIN "Contact" ct ON ct.id = c."contactId"
-    WHERE ct."orgId" = ${orgId}::uuid
+    WHERE c."orgId" = ${orgId}::uuid
       AND wm."sendBy" IS NOT NULL
       AND wm."waCreatedAt" >= COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
       AND wm."waCreatedAt" < COALESCE(${rangeEnd}, NOW())
@@ -1771,12 +1756,10 @@ export async function getTeamDetailedMetrics(
       c."status",
       c."closedAt"
     FROM "Conversation" c
-    JOIN "Contact" ct ON ct.id = c."contactId" AND ct."orgId" = ${orgId}::uuid
     JOIN "ConversationAssignedUserTeamMap" cau ON cau."conversationId" = c.id AND cau."teamId" = ${teamId}::uuid
     LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
-    WHERE (
-      c."createdAt" >= ${sinceDate}
-    )
+    WHERE c."orgId" = ${orgId}::uuid
+      AND c."createdAt" >= ${sinceDate}
   )
 
   SELECT
