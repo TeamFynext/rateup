@@ -948,10 +948,8 @@ model Contact {
   @@index([orgId, waMessageAssignStatus])
   @@index([lastReceivedMessageTimeStamp])
   @@index([orgId, waMessageAssignStatus, lastReceivedMessageTimeStamp(sort: Desc)])
-  @@index([orgId, blockedOnWhatsApp, lastReceivedMessageTimeStamp(sort: Desc)])
   @@index([orgId, isSpam])
   @@index([orgId, lifecycleId])
-  @@index([name])
 }
 
 model ContactLabel {
@@ -1060,7 +1058,9 @@ model ContactGroupMap {
   contactGroupId String       @db.Uuid
 
   @@id([contactId, contactGroupId])
-  @@index([contactId])
+  // The primary key already serves contactId lookups; group-scoped reads
+  // (campaign participants from groups, group membership) need their own.
+  @@index([contactGroupId])
 }
 
 model Campaign {
@@ -1798,7 +1798,6 @@ model WaMessage {
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
   @@index([sourceIdentifier, contactId])
-  @@index([contactId, sourceIdentifier])
   @@index([sendBy, waCreatedAt])
   @@index([conversationId])
   // Speeds the conversation backfill scan: EXISTS(WaMessage WHERE contactId = c.id
@@ -1807,8 +1806,9 @@ model WaMessage {
   // Status writes match on the Meta message id (`WHERE wm."messageId" = ANY(...)`)
   // in bulkUpdateStatuses; without this the batch degrades to a seq scan.
   @@index([messageId])
+  // Unused by reads, but deleting an org cascades to MeteredConversation, and each
+  // deleted row's foreign-key check would otherwise scan all of WaMessage.
   @@index([meteredConversationId])
-  @@index([errorCode])
 }
 
 model WaMessageCampaginParticipantMap {
@@ -2927,8 +2927,8 @@ model WaMessageOrgTeamMap {
 
   @@index([orgId])
   @@index([teamId])
-  @@index([type])
-  @@index([externalApi])
+  // Joins from WaMessage and the ON DELETE CASCADE check both look rows up by messageId.
+  @@index([messageId])
 }
 
 model Webhook {
