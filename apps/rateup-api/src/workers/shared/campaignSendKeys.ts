@@ -14,6 +14,17 @@ export const campaignSendJobsKey = (campaignSendId: string) =>
   `campaignSend:${campaignSendId}:jobs`;
 
 /**
+ * Set when a send session is stopped because the account cannot send.
+ *
+ * Checked by the dispatcher before every message, so a job that was already
+ * past the queue — or fanned out by an enqueue that raced the pause — does not
+ * go on to Meta. Keyed by send rather than by campaign so resuming needs no
+ * cleanup: sending again opens a new session with a new id.
+ */
+export const campaignSendPausedKey = (campaignSendId: string) =>
+  `campaignSend:${campaignSendId}:paused`;
+
+/**
  * The BullMQ job id for one participant's message in one send session.
  *
  * Underscore-separated, and that is load-bearing: BullMQ rejects a custom job id

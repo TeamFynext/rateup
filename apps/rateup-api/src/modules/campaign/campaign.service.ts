@@ -2,7 +2,13 @@ import prisma from "../../utils/prisma.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 export { CampaignNotFoundError };
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema.js";
-import { CampaignParticipantStatus, CampaignStatus, CampaignType } from "../../types/enums.js";
+import {
+  CampaignParticipantStatus,
+  CampaignPauseReason,
+  CampaignStatus,
+  CampaignType,
+} from "../../types/enums.js";
+import { pauseCampaignForAccountIssue } from "./campaignPause.service.js";
 import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
 import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
@@ -143,6 +149,7 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
     c."campaignSentAt",
     c."startedAt",
     c."errorMessage",
+    c."pauseReason",
     t."name" AS "teamName",
     wt."data"->>'name' AS "templateName",
     COALESCE(s."totalSend", 0) AS "totalSent",
@@ -449,10 +456,9 @@ export async function sendCampaign(
     throw new CampaignNotFoundError(`Campaign ${campaignId} not found`);
   }
   if (!(await checkConversationLimitAvailable(campaignOrgId))) {
-    await updateCampaign(campaignId, campaignOrgId, {
-      status: CampaignStatus.FAILED,
-      errorMessage: "Conversation limit reached. Upgrade your plan to send more messages.",
-    });
+    // PAUSED, not FAILED: nothing is wrong with the campaign, and every recipient
+    // is still PENDING for when the allowance comes back.
+    await pauseCampaignForAccountIssue(campaignId, CampaignPauseReason.CONVERSATION_LIMIT);
     log.warn({ campaignId, orgId: campaignOrgId }, "Campaign skipped — conversation limit reached");
     return;
   }

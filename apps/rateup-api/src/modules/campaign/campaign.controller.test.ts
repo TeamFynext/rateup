@@ -42,6 +42,13 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
+// A pause is exercised in campaignPause.service.test.ts; here only whether the
+// handler clears it, and whether a drip may resume.
+vi.mock("./campaignPause.service.js", () => ({ clearCampaignPause: vi.fn() }));
+vi.mock("../whatsapp/whatsappSurvey/wasurvey.auth.js", () => ({
+  checkConversationLimitAvailable: vi.fn(async () => true),
+}));
+
 import { sendCampaignInputSchema } from "./campaign.schema.js";
 import {
   CampaignNotFoundError,
@@ -62,6 +69,8 @@ import {
   getLiveCampaignSend,
 } from "./campaignSend.service.js";
 import { upsertCampaignRetryPolicy } from "./campaignRetry.service.js";
+import { clearCampaignPause } from "./campaignPause.service.js";
+import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
 import {
   getCampaignsByOrgId,
   getCampaignsByTeamId,
@@ -85,6 +94,8 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const m = {
+  clearPause: clearCampaignPause as unknown as Mock,
+  limitAvailable: checkConversationLimitAvailable as unknown as Mock,
   create: createCampaign as unknown as Mock,
   delete: deleteCampaign as unknown as Mock,
   dequeue: deleteCampaignParticipantsByCampaignId as unknown as Mock,
@@ -136,6 +147,7 @@ function sent(rep: any, index = 0) {
 }
 
 beforeEach(() => {
+  m.limitAvailable.mockResolvedValue(true);
   vi.clearAllMocks();
   m.create.mockResolvedValue({ id: CAMPAIGN_ID });
   m.update.mockResolvedValue({ id: CAMPAIGN_ID });
@@ -449,6 +461,68 @@ describe("sendCampaignHandler", () => {
 
     expect(m.update.mock.calls[0][2]).not.toHaveProperty("startedAt");
     expect(sent(rep).code).toBe("MSG_SCHEDULED");
+  });
+
+  test("resumes a paused drip without restarting its clock, and clears the pause", async () => {
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.PAUSED,
+      orgId: ORG_A,
+      type: CampaignType.DRIP,
+      dripStages: [{ id: "stage-1" }],
+    });
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ type: CampaignType.DRIP, status: CampaignStatus.ACTIVE }) }),
+      rep,
+    );
+
+    expect(m.update.mock.calls[0][2]).toMatchObject({ status: CampaignStatus.ACTIVE });
+    expect(m.update.mock.calls[0][2]).not.toHaveProperty("startedAt");
+    expect(m.clearPause).toHaveBeenCalledWith(CAMPAIGN_ID);
+    expect(sent(rep).code).toBe("MSG_SCHEDULED");
+  });
+
+  test("refuses to resume a paused drip while the allowance is still spent", async () => {
+    m.byId.mockResolvedValue({
+      id: CAMPAIGN_ID,
+      status: CampaignStatus.PAUSED,
+      orgId: ORG_A,
+      type: CampaignType.DRIP,
+      dripStages: [{ id: "stage-1" }],
+    });
+    m.limitAvailable.mockResolvedValue(false);
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ type: CampaignType.DRIP, status: CampaignStatus.ACTIVE }) }),
+      rep,
+    );
+
+    expect(rep.status).toHaveBeenCalledWith(403);
+    expect(sent(rep).code).toBe("CONVERSATION_LIMIT_REACHED");
+    expect(m.update).not.toHaveBeenCalled();
+  });
+
+  test("refuses a client asking for PAUSED directly", async () => {
+    const rep = reply();
+
+    await sendCampaignHandler(
+      request({ body: sendBody({ type: CampaignType.DRIP, status: CampaignStatus.PAUSED }) }),
+      rep,
+    );
+
+    expect(rep.status).toHaveBeenCalledWith(400);
+    expect(m.update).not.toHaveBeenCalled();
+  });
+
+  test("clears a pause when the campaign is sent again", async () => {
+    const rep = reply();
+
+    await sendCampaignHandler(request({ body: sendBody() }), rep);
+
+    expect(m.clearPause).toHaveBeenCalledWith(CAMPAIGN_ID);
   });
 
   test("asks for a dequeue when the campaign is being switched off", async () => {
