@@ -1,15 +1,11 @@
-import { Toast } from "toastify-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import { Toast } from "@/components/common/Notice";
+import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import { Mic, CircleStop } from "lucide-react-native";
 import { uploadFile, getFileUrlFromKey } from "@/utils/fileUpload";
 import { create } from "zustand";
-import {
-  useAudioRecorder,
-  RecordingPresets,
-  requestRecordingPermissionsAsync,
-  setAudioModeAsync,
-} from "expo-audio";
+import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync } from "expo-audio";
+import { configurePlaybackAudioMode, configureRecordingAudioMode } from "@/utils/audio";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -23,10 +19,7 @@ import { colors } from "@/constants/constants";
 const requestPermission = async () => {
   const { granted } = await requestRecordingPermissionsAsync();
   if (granted) {
-    await setAudioModeAsync({
-      playsInSilentMode: true,
-      allowsRecording: true,
-    });
+    await configureRecordingAudioMode();
   }
   return granted;
 };
@@ -46,7 +39,7 @@ const WaveBar = ({ delay, size = "default" }: { delay: number; size?: "default" 
         true,
       ),
     );
-  }, []);
+  }, [delay, size, height]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     height: height.value,
@@ -69,9 +62,7 @@ const WaveBar = ({ delay, size = "default" }: { delay: number; size?: "default" 
 
 const VoiceWave = () => {
   return (
-    <View
-      style={{ flexDirection: "row", alignItems: "flex-end", marginRight: 10 }}
-    >
+    <View style={{ flexDirection: "row", alignItems: "flex-end", marginRight: 10 }}>
       {[0, 100, 200, 300, 400].map((delay, index) => (
         <WaveBar key={index} delay={delay} />
       ))}
@@ -103,6 +94,10 @@ const VoiceRecorder = ({
 
   const stopRecording = async () => {
     await audioRecorder.stop();
+    // Hand the session back to playback before the upload, not after: stopping the
+    // recorder leaves iOS in `.playAndRecord`, which silences voice-note playback
+    // until an unrelated interruption re-activates the session.
+    await configurePlaybackAudioMode();
     const result = audioRecorder.uri;
     setIsRecording(false);
     const name = `voice-${Date.now()}.m4a`;

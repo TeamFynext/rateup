@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Modal, View, Image, Pressable, TouchableOpacity } from "react-native";
+import { Modal, View, Pressable, TouchableOpacity } from "react-native";
+import Image from "@/components/common/Image";
 import { X } from "lucide-react-native";
 
 type ImageResponseProps = {
@@ -19,15 +20,8 @@ const ImageResponse = ({ info, onClose }: ImageResponseProps) => {
 
   return (
     <>
-      <TouchableOpacity
-        onPress={() => setFullscreenVisible(true)}
-        className="flex"
-      >
-        <Image
-          source={{ uri: imageUrl }}
-          className="h-48 w-48 rounded-lg"
-          resizeMode="cover"
-        />
+      <TouchableOpacity onPress={() => setFullscreenVisible(true)} className="flex">
+        <Image source={{ uri: imageUrl }} className="h-48 w-48 rounded-lg" contentFit="cover" />
       </TouchableOpacity>
 
       <Modal
@@ -46,11 +40,7 @@ const ImageResponse = ({ info, onClose }: ImageResponseProps) => {
 
           {/* Centered Image */}
           <View className="flex-1 justify-center items-center">
-            <Image
-              source={{ uri: imageUrl }}
-              resizeMode="contain"
-              className="w-[90%] h-[90%]"
-            />
+            <Image source={{ uri: imageUrl }} contentFit="contain" className="w-[90%] h-[90%]" />
           </View>
         </View>
       </Modal>

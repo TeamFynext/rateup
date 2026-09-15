@@ -1,9 +1,4 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessagePlatform } from "@/constants/enums";
 import {
   assignInboxToUser,
@@ -32,7 +27,7 @@ export const useSendNewWaMessage = (
   contactId: string,
   teamId: string | null,
   whatsappSettingsPhoneId: string,
-  platform = MessagePlatform.WHATSAPP
+  platform = MessagePlatform.WHATSAPP,
 ) => {
   const qc = useQueryClient();
   return useMutation({
@@ -43,9 +38,10 @@ export const useSendNewWaMessage = (
         platform,
         teamId,
       }),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
-    },
+    // Returned, so the mutation waits for the thread to refetch before the
+    // caller's own `mutate` callbacks run — `MessageSendPanel` retires its
+    // placeholder there, and by then the stored copy is on screen to replace it.
+    onSettled: () => qc.invalidateQueries({ queryKey: ["wa-messages", contactId] }),
     onError: (error) => {
       console.error("Error sending message", error);
     },
@@ -55,11 +51,17 @@ export const useSendNewWaMessage = (
 export const useGetMediaFile = () => {
   return useMutation({
     mutationFn: getWaChatMediaFile,
+    // The response is the whole media file as an ArrayBuffer, which for a
+    // WhatsApp video runs to tens of MB. React Query would otherwise keep it
+    // in the mutation cache for the default 5 minutes after the bubble
+    // unmounts. Callers additionally reset() once the bytes are on disk.
+    gcTime: 0,
   });
 };
 
-
-export const useAssignInboxToUser = (contactId: any) => {
+// `_contactId` is kept in the signature for call-site symmetry with the other
+// inbox hooks; the mutation itself takes the id from its own payload.
+export const useAssignInboxToUser = (_contactId?: any) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,

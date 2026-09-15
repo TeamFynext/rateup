@@ -1,14 +1,19 @@
 import React, { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/config/queryClient";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Stack } from "expo-router";
 import { StatusBar, Text, TextInput } from "react-native";
 import { useColorScheme } from "nativewind";
 import { getThemePreference } from "@/utils/theme";
+// Imported for its module-scope `setNotificationHandler` as much as for the
+// channel helper: the handler has to be registered before the first notification
+// arrives, and this is the earliest module the app loads.
+import { setupAndroidNotificationChannel } from "@/utils/notification";
+import { configurePlaybackAudioMode } from "@/utils/audio";
 import { Colors } from "@/constants/colors";
-import ToastManager from "toastify-react-native";
-import { CheckCircle, XCircle, Info, AlertTriangle } from "lucide-react-native";
+import { NoticeHost } from "@/components/common/Notice";
 import {
   useFonts,
   Nunito_300Light,
@@ -48,7 +53,7 @@ if ((TextInput as any).defaultProps) {
   };
 }
 
-export const queryClient = new QueryClient();
+export { queryClient };
 
 function RootLayout() {
   const { colorScheme } = useColorScheme();
@@ -97,6 +102,16 @@ export default function LayoutWrapper() {
     initTheme();
   }, [setColorScheme]);
 
+  useEffect(() => {
+    setupAndroidNotificationChannel();
+  }, []);
+
+  // Without this the app runs on iOS's default `.soloAmbient` session, so voice
+  // notes and video are muted by the hardware Ring/Silent switch.
+  useEffect(() => {
+    configurePlaybackAudioMode();
+  }, []);
+
   if (!fontsLoaded) {
     return null;
   }
@@ -106,17 +121,9 @@ export default function LayoutWrapper() {
       <SafeAreaProvider>
         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
           <RootLayout />
-          <ToastManager
-            icons={{
-              success: <CheckCircle size={18} color="green" />,
-              error: <XCircle size={18} color="red" />,
-              info: <Info size={18} color="blue" />,
-              warn: <AlertTriangle size={18} color="orange" />,
-              default: <Info size={18} color="gray" />,
-            }}
-            closeIcon={<XCircle size={18} color="gray" />}
-            textStyle={{ fontSize: 11 }}
-          />
+          {/* Sibling of the navigator so notices sit above every screen, and
+              box-none inside so it never intercepts a touch. */}
+          <NoticeHost />
         </KeyboardProvider>
       </SafeAreaProvider>
     </QueryClientProvider>

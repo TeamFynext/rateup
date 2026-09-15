@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import {
   View,
   Text,
@@ -11,9 +11,9 @@ import {
 import React from "react";
 import SignInScreen from "@/components/signInScreen";
 import GoogleLogin from "@/components/googleSignInScreen";
-import { RateLogo } from "@/constants/imageExports";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppleLogin from "@/components/appleSignInScreen";
+import { StarMark } from "@/constants/imageExports";
 
 const SignIn = () => {
   const showError = (message: string) => {
@@ -45,7 +45,11 @@ const SignIn = () => {
           >
             <View className="space-y-8">
               <View className="flex flex-col items-center space-y-4 mb-8">
-                <RateLogo height={64} />
+                {/* The star mark on its own, not the full logo: the wordmark would
+                    repeat the "LOGIN TO RATEUP" heading directly below. Drawn
+                    from the source SVG so it stays crisp and allocates no
+                    bitmap, rather than decoding a 1024px PNG for a 64pt icon. */}
+                <StarMark width={64} height={64} />
 
                 <View>
                   <Text className="text-center font-bold text-2xl uppercase font-[Geist] text-black dark:text-white">

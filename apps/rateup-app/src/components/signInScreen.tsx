@@ -1,23 +1,14 @@
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
-import { View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Keyboard } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Keyboard } from "react-native";
 import { useRouter } from "expo-router";
 import { loggedUserDetails, signIn } from "@/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
 import { Eye, EyeClosed } from "lucide-react-native";
 import { useAuth } from "../context/AuthContext";
-import { registerForPushNotificationsAsync } from "../utils/notification";
-import { addToken } from "../api/notification";
+import { syncPushToken } from "../utils/notification";
 
-export default function SignInScreen({
-  setError,
-}: {
-  readonly setError: (msg: string) => void;
-}) {
+export default function SignInScreen({ setError }: { readonly setError: (msg: string) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -56,10 +47,11 @@ export default function SignInScreen({
       setOrgId(orgId);
 
       try {
-        const token = await registerForPushNotificationsAsync();
-        if (token) {
-          await addToken(token);
-        } else {
+        // Prompts here and only here: sign-in is the moment the user expects to
+        // be asked. The result is cached so sign-out can deregister without
+        // re-raising the permission dialog.
+        const token = await syncPushToken({ prompt: true });
+        if (!token) {
           setError("Notification setup failed. You may not receive alerts.");
         }
       } catch (tokenError) {
@@ -80,9 +72,7 @@ export default function SignInScreen({
     <View className="w-full px-2 relative">
       {/* Email */}
       {/* Email */}
-      <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-1 mt-8">
-        Email Address
-      </Text>
+      <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-1 mt-8">Email Address</Text>
 
       <TextInput
         className="w-full h-14 border border-[#E2E5ED] dark:border-[#2A2A2A] rounded-md px-4 mb-4 text-gray-900 dark:text-white bg-white dark:bg-[#111111]"
@@ -93,9 +83,7 @@ export default function SignInScreen({
       />
 
       {/* Password */}
-      <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-1">
-        Password
-      </Text>
+      <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-1">Password</Text>
 
       <View className="flex-row items-center h-14 border border-[#E2E5ED] dark:border-[#2A2A2A] rounded-md px-4 mb-2 bg-white dark:bg-[#111111]">
         <TextInput
@@ -149,9 +137,7 @@ export default function SignInScreen({
               borderRadius: 999,
             }}
           />
-          <Text className="ml-2 text-sm text-[#343A40] dark:text-white">
-            Remember Me
-          </Text>
+          <Text className="ml-2 text-sm text-[#343A40] dark:text-white">Remember Me</Text>
         </View>
         <TouchableOpacity onPress={() => router.push("/auth/ForgotPassword")}>
           <Text className="text-[#004F98] dark:text-blue-400 text-sm font-medium">
@@ -163,9 +149,7 @@ export default function SignInScreen({
       {/* Sign In Button */}
       <TouchableOpacity
         onPress={handleSignIn}
-        className={`py-3 rounded-md mb-4 items-center ${
-          loading ? "bg-[#7AA5C8]" : "bg-[#004F98]"
-        }`}
+        className={`py-3 rounded-md mb-4 items-center ${loading ? "bg-[#7AA5C8]" : "bg-[#004F98]"}`}
         disabled={loading}
       >
         <Text className="text-white font-semibold text-[16px]">

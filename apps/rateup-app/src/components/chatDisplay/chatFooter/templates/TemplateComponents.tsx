@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
-  Image,
-  ScrollView,
   TouchableOpacity,
   Linking,
   ActivityIndicator,
@@ -12,6 +10,7 @@ import {
   FlatList,
   useColorScheme,
 } from "react-native";
+import Image from "@/components/common/Image";
 import { ReplyIcon, ChevronDown, Check } from "lucide-react-native";
 import {
   WaTemplateComponent,
@@ -60,9 +59,7 @@ export function WaInboxTemplate({ templateBody, parameters }: Props_) {
       {templateBody?.components?.map((component, i) => (
         <WaInboxTemplateComponents
           key={i}
-          parameterData={parameters?.find(
-            (param) => param?.type === component?.type.toLowerCase()
-          )}
+          parameterData={parameters?.find((param) => param?.type === component?.type.toLowerCase())}
           templateComponent={component}
         />
       ))}
@@ -76,10 +73,7 @@ interface Props {
   parameterData: WaTemplateComponent | undefined;
 }
 
-export default function WaInboxTemplateComponents({
-  templateComponent,
-  parameterData,
-}: Props) {
+export default function WaInboxTemplateComponents({ templateComponent, parameterData }: Props) {
   switch (templateComponent?.type) {
     case "HEADER":
       return (
@@ -90,10 +84,7 @@ export default function WaInboxTemplateComponents({
       );
     case "BODY":
       return (
-        <WaInboxTemplateBody
-          parameterData={parameterData}
-          templateComponent={templateComponent}
-        />
+        <WaInboxTemplateBody parameterData={parameterData} templateComponent={templateComponent} />
       );
     case "FOOTER":
       return <WaInboxTemplateFooter {...templateComponent} />;
@@ -141,7 +132,13 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
       return (
         <Image
           source={{ uri: getUrlIfParameterIsPresent() }}
-          style={{ width: "100%", height: 160, borderRadius: 12, resizeMode: "cover", marginBottom: 10 }}
+          contentFit="cover"
+          style={{
+            width: "100%",
+            height: 160,
+            borderRadius: 12,
+            marginBottom: 10,
+          }}
         />
       );
     case "DOCUMENT":
@@ -175,7 +172,7 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
 };
 
 // ---------- Body ----------
-const WaInboxTemplateBody = ({ parameterData, templateComponent }: Props) => {
+const WaInboxTemplateBody = ({ templateComponent }: Props) => {
   const isDark = useColorScheme() === "dark";
   // Fallback text formatting helper placeholder
   const text = templateComponent?.text || "";
@@ -254,23 +251,25 @@ interface AccountSelectorProps {
   label?: string;
 }
 
-export function AccountSelector({
-  value,
-  onChange,
-  label = "Account",
-}: AccountSelectorProps) {
+export function AccountSelector({ value, onChange, label = "Account" }: AccountSelectorProps) {
   const { data, isPending, isError } = useWaSettings();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const accountOptions = data
-    ? data.map((account) => ({
-        label: account.phone,
-        value: account.phoneId,
-      }))
-    : [];
+  // Memoised so the effect below doesn't re-run on every render: the mapped array
+  // was a fresh identity each time, which made `[accountOptions, value]` useless.
+  const accountOptions = useMemo(
+    () =>
+      data
+        ? data.map((account) => ({
+            label: account.phone,
+            value: account.phoneId,
+          }))
+        : [],
+    [data],
+  );
 
   useEffect(() => {
     if (!value && accountOptions.length > 0) {
@@ -280,10 +279,12 @@ export function AccountSelector({
       const match = accountOptions.find((opt) => opt.value === value);
       if (match) setSelectedLabel(match.label);
     }
-  }, [accountOptions, value]);
+  }, [accountOptions, value, onChange]);
 
   if (isError)
-    return <Text style={{ color: "red", fontFamily: "Nunito_600SemiBold" }}>Something went wrong!</Text>;
+    return (
+      <Text style={{ color: "red", fontFamily: "Nunito_600SemiBold" }}>Something went wrong!</Text>
+    );
 
   if (isPending) {
     return (
@@ -339,8 +340,8 @@ export function AccountSelector({
                 ? "#fff"
                 : Colors.light.textPrimary
               : isDark
-              ? Colors.dark.textPlaceholder
-              : Colors.light.textPlaceholder,
+                ? Colors.dark.textPlaceholder
+                : Colors.light.textPlaceholder,
           }}
         >
           {selectedLabel || "Select Account"}
@@ -355,7 +356,14 @@ export function AccountSelector({
         onRequestClose={() => setModalVisible(false)}
       >
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={{ flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", paddingHorizontal: 20 }}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              backgroundColor: "rgba(0,0,0,0.4)",
+              paddingHorizontal: 20,
+            }}
+          >
             <View
               style={{
                 backgroundColor: isDark ? Colors.dark.surface : "#fff",
@@ -397,8 +405,8 @@ export function AccountSelector({
                               ? Colors.accent.cyan
                               : Colors.brand.blue
                             : isDark
-                            ? "#fff"
-                            : Colors.light.textPrimary,
+                              ? "#fff"
+                              : Colors.light.textPrimary,
                         }}
                       >
                         {item.label}

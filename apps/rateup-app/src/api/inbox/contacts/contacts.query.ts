@@ -1,10 +1,5 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { Toast } from "toastify-react-native";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Toast } from "@/components/common/Notice";
 import { setConversationFavorite } from "./contacts.api";
 import { useContactsStore } from "@/store/inboxStore";
 import { useSelectedContactStore } from "@/utils/store";
@@ -32,7 +27,7 @@ export const useFilteredContacts = (filterData: string) => {
     queryKey: ["contacts", "filtered", filterData],
     queryFn: ({ pageParam = 1 }) => getFilteredContacts(filterData, pageParam),
     initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => {
+    getNextPageParam: (lastPage) => {
       return lastPage?.nextOffset ?? null;
     },
   });
@@ -89,22 +84,15 @@ export const useEditContactMutation = () => {
 export const useToggleFavorite = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (vars: {
-      contactId: string;
-      conversationId: string;
-      isFavorite: boolean;
-    }) =>
+    mutationFn: (vars: { contactId: string; conversationId: string; isFavorite: boolean }) =>
       setConversationFavorite({
         conversationId: vars.conversationId,
         isFavorite: vars.isFavorite,
       }),
     onSuccess: (_res, vars) => {
-      useContactsStore
-        .getState()
-        .setContactFavorite(vars.contactId, vars.isFavorite);
+      useContactsStore.getState().setContactFavorite(vars.contactId, vars.isFavorite);
 
-      const { selectedContact, setSelectedContact } =
-        useSelectedContactStore.getState();
+      const { selectedContact, setSelectedContact } = useSelectedContactStore.getState();
       if (selectedContact?.id === vars.contactId) {
         setSelectedContact({ ...selectedContact, isFavorite: vars.isFavorite });
       }
@@ -116,10 +104,7 @@ export const useToggleFavorite = () => {
       Toast.show({
         type: "error",
         text1: "Could not update favourite",
-        text2:
-          error?.response?.data?.message ??
-          error?.message ??
-          "Please try again.",
+        text2: error?.response?.data?.message ?? error?.message ?? "Please try again.",
       });
     },
   });

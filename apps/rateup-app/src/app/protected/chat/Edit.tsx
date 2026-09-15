@@ -14,10 +14,7 @@ import ToggleSwitch from "toggle-switch-react-native";
 import { ArrowLeft, ChevronDown, ChevronUp, User } from "lucide-react-native";
 import { countries } from "@/constants/countries";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  editContactById,
-  getContactById,
-} from "@/api/inbox/contacts/contacts.api";
+import { editContactById, getContactById } from "@/api/inbox/contacts/contacts.api";
 import { convertFullPhoneNumToCoutryCodeAndNationalNum } from "@/utils/phoneNumConvert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
@@ -61,7 +58,7 @@ export default function EditContacts() {
       });
       setLoading(false);
       setMessage("Successfully Updated");
-    } catch (error) {
+    } catch {
       setError("Failed to update contact details. Please try again.");
       setMessage("");
     } finally {
@@ -75,9 +72,7 @@ export default function EditContacts() {
       const res = await getContactById(contactId);
       setIsAiChatActive(res.aiWaChat);
 
-      const numbers = convertFullPhoneNumToCoutryCodeAndNationalNum(
-        `+${res.phone}`,
-      );
+      const numbers = convertFullPhoneNumToCoutryCodeAndNationalNum(`+${res.phone}`);
       setPhone(numbers.national_number);
 
       const matchingCountry = countries.find(
@@ -91,7 +86,7 @@ export default function EditContacts() {
       setName(res.name);
 
       setError("");
-    } catch (err) {
+    } catch {
       setError("Failed to load contact details. Please try again.");
 
       setMessage("");
@@ -103,6 +98,9 @@ export default function EditContacts() {
   useEffect(() => {
     setLoading(true);
     getContactDetails();
+    // Reloads when the contact changes. `getContactDetails` is redeclared every
+    // render, so depending on it would refetch in a loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contactId]);
 
   const renderItem = ({ item }: { item: any }) => (
@@ -111,14 +109,23 @@ export default function EditContacts() {
       style={{ backgroundColor: isDark ? Colors.dark.surface : "white" }}
       className="flex-row items-center px-3 py-3"
     >
-      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">{item.flag}</Text>
-      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">{item.name}</Text>
-      <Text style={{ color: isDark ? Colors.dark.textMuted : "#7A8289" }} className="text-sm">{item.dial_code}</Text>
+      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">
+        {item.flag}
+      </Text>
+      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">
+        {item.name}
+      </Text>
+      <Text style={{ color: isDark ? Colors.dark.textMuted : "#7A8289" }} className="text-sm">
+        {item.dial_code}
+      </Text>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={{ backgroundColor: isDark ? Colors.dark.bg : "white" }} className="flex-grow">
+    <SafeAreaView
+      style={{ backgroundColor: isDark ? Colors.dark.bg : "white" }}
+      className="flex-grow"
+    >
       <View className="flex-1 p-4">
         {/* Top Part */}
         <View className="flex-1">
@@ -127,7 +134,12 @@ export default function EditContacts() {
             <Pressable onPress={() => router.back()}>
               <ArrowLeft color={isDark ? Colors.dark.textPrimary : "black"} />
             </Pressable>
-            <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="text-2xl font-bold">Edit</Text>
+            <Text
+              style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
+              className="text-2xl font-bold"
+            >
+              Edit
+            </Text>
           </View>
 
           {/* Error / Success Message */}
@@ -136,11 +148,7 @@ export default function EditContacts() {
               className="mb-4 p-3 rounded-lg"
               style={{ backgroundColor: error ? "#ffe5e5" : "#e5fff0" }}
             >
-              <Text
-                className={`text-sm ${
-                  error ? "text-[#cc0000]" : "text-[#007e33]"
-                }`}
-              >
+              <Text className={`text-sm ${error ? "text-[#cc0000]" : "text-[#007e33]"}`}>
                 {error || message}
               </Text>
             </View>
@@ -151,8 +159,11 @@ export default function EditContacts() {
             <Text className="text-[#7A8289] mb-2 text-base">
               Name <Text className="text-[#CC292C]">*</Text>
             </Text>
-            <View 
-              style={{ borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED", backgroundColor: isDark ? Colors.dark.inputBg : "transparent" }}
+            <View
+              style={{
+                borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
+                backgroundColor: isDark ? Colors.dark.inputBg : "transparent",
+              }}
               className="border rounded-lg px-4 py-4 flex-row gap-2 items-center"
             >
               <User size={16} color={isDark ? Colors.dark.textMuted : "#7A8289"} />
@@ -177,19 +188,37 @@ export default function EditContacts() {
               <View className="relative">
                 <Pressable
                   onPress={() => setShowDropdown(!showDropdown)}
-                  style={{ minWidth: width * 0.28, borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED", backgroundColor: isDark ? Colors.dark.inputBg : "white" }}
+                  style={{
+                    minWidth: width * 0.28,
+                    borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
+                    backgroundColor: isDark ? Colors.dark.inputBg : "white",
+                  }}
                   className="flex-row items-center border rounded-lg px-3 py-3"
                 >
-                  <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2 text-base">
+                  <Text
+                    style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
+                    className="mr-2 text-base"
+                  >
                     {selectedCountry.flag}
                   </Text>
-                  <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="text-base">
+                  <Text
+                    style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
+                    className="text-base"
+                  >
                     {selectedCountry.dial_code}
                   </Text>
                   {showDropdown ? (
-                    <ChevronUp size={18} color={isDark ? Colors.dark.textPrimary : "black"} className="ml-1" />
+                    <ChevronUp
+                      size={18}
+                      color={isDark ? Colors.dark.textPrimary : "black"}
+                      className="ml-1"
+                    />
                   ) : (
-                    <ChevronDown size={18} color={isDark ? Colors.dark.textPrimary : "black"} className="ml-1" />
+                    <ChevronDown
+                      size={18}
+                      color={isDark ? Colors.dark.textPrimary : "black"}
+                      className="ml-1"
+                    />
                   )}
                 </Pressable>
 
@@ -201,7 +230,7 @@ export default function EditContacts() {
                       maxHeight: height * 0.4,
                       zIndex: 10,
                       borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
-                      backgroundColor: isDark ? Colors.dark.surface : "white"
+                      backgroundColor: isDark ? Colors.dark.surface : "white",
                     }}
                     className="absolute top-14 border rounded-lg shadow-md"
                   >
@@ -217,7 +246,11 @@ export default function EditContacts() {
 
               {/* Phone Input */}
               <TextInput
-                style={{ color: isDark ? Colors.dark.textPrimary : "black", borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED", backgroundColor: isDark ? Colors.dark.inputBg : "transparent" }}
+                style={{
+                  color: isDark ? Colors.dark.textPrimary : "black",
+                  borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
+                  backgroundColor: isDark ? Colors.dark.inputBg : "transparent",
+                }}
                 className="flex-1 ml-2 border rounded-lg px-4 py-4 text-base"
                 placeholder="Enter contact phone number"
                 placeholderTextColor={isDark ? Colors.dark.textPlaceholder : "#E2E5ED"}
@@ -228,10 +261,23 @@ export default function EditContacts() {
             </View>
           </View>
           <View
-            style={{ backgroundColor: isAiChatActive ? (isDark ? "rgba(0,153,135,0.15)" : "#00998733") : (isDark ? Colors.dark.surface : "#F5F5F5") }}
+            style={{
+              backgroundColor: isAiChatActive
+                ? isDark
+                  ? "rgba(0,153,135,0.15)"
+                  : "#00998733"
+                : isDark
+                  ? Colors.dark.surface
+                  : "#F5F5F5",
+            }}
             className="flex-row items-center p-3 justify-between rounded-lg"
           >
-            <Text style={{ color: isDark ? Colors.dark.textPrimary : "#000" }} className="text-xl font-semibold">AI Chat</Text>
+            <Text
+              style={{ color: isDark ? Colors.dark.textPrimary : "#000" }}
+              className="text-xl font-semibold"
+            >
+              AI Chat
+            </Text>
             <ToggleSwitch
               isOn={isAiChatActive}
               onColor="#009987"

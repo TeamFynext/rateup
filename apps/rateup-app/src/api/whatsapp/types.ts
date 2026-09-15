@@ -210,6 +210,16 @@ export type WaSettings = {
   webhookPassword: string;
   appId: string;
   type: WaConfigType;
+  /* `/api/wa/settings` returns one row per connected channel, not just WhatsApp:
+     the Meta fields below carry the IG/FB account, and the display names are the
+     org's own label for a number where they set one. Optional because a row only
+     fills in the fields for the channel it is. */
+  phoneDisplayName?: string;
+  ibaId?: string;
+  igUserName?: string;
+  igDisplayName?: string;
+  fbPageId?: string;
+  fbUserName?: string;
 }[];
 
 export enum WaConfigType {

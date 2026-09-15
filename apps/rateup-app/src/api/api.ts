@@ -3,9 +3,9 @@ import { router } from "expo-router";
 import SuperTokens from "supertokens-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { registerForPushNotificationsAsync } from "../utils/notification";
-import { deleteToken } from "./notification";
-import { Toast } from "toastify-react-native";
+import { unregisterPushToken } from "../utils/notification";
+import { clearLocalUserData } from "../utils/clearLocalData";
+import { Toast } from "@/components/common/Notice";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -48,38 +48,44 @@ export const signIn = async (email: string, password: string) => {
   } catch (err: any) {
     return {
       success: false,
-      message:
-        err?.response?.data?.message || "Sign in failed. Please try again.",
+      message: err?.response?.data?.message || "Sign in failed. Please try again.",
     };
   }
 };
 
 export const signOut = async () => {
   try {
-    const token = await registerForPushNotificationsAsync();
-    if (token) {
-      await deleteToken(token);
+    // Best effort, and deliberately not awaited into the failure path below:
+    // the device should still be cleared even if the server cannot be told to
+    // stop pushing to it.
+    try {
+      await unregisterPushToken();
+    } catch (error) {
+      console.error("Failed to unregister the push token on sign-out:", error);
     }
-    await AsyncStorage.removeItem("accessToken");
+
     await SuperTokens.signOut();
-    router.replace("/auth/SignIn");
     return { success: true };
-  } catch (err: any) {
+  } catch {
     return {
       success: false,
       message: "Sign Out failed. Please try again",
     };
+  } finally {
+    // Runs on both paths on purpose. If the session teardown fails we are left
+    // signed in locally, and leaving the previous account's contacts and
+    // messages on disk is the outcome worth avoiding most: the schema has no
+    // per-account scoping, so the next sign-in would hydrate them.
+    await clearLocalUserData();
+    router.replace("/auth/SignIn");
   }
 };
 
 export const sendPasswordResetEmail = async (email: string) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/api/auth/user/password/reset/token`,
-      {
-        formFields: [{ id: "email", value: email }],
-      },
-    );
+    const response = await axios.post(`${API_URL}/api/auth/user/password/reset/token`, {
+      formFields: [{ id: "email", value: email }],
+    });
 
     const data = response.data;
 
@@ -89,8 +95,7 @@ export const sendPasswordResetEmail = async (email: string) => {
         message: "Reset link sent successfully",
       };
     } else if (data.status === "FIELD_ERROR") {
-      const errorMsg =
-        data.formFields?.[0]?.error || "Invalid email format or missing email";
+      const errorMsg = data.formFields?.[0]?.error || "Invalid email format or missing email";
       return {
         success: false,
         message: errorMsg,
@@ -101,7 +106,7 @@ export const sendPasswordResetEmail = async (email: string) => {
         message: "Something went wrong. Please try again.",
       };
     }
-  } catch (err) {
+  } catch {
     return {
       success: false,
       message: "Send failed. Check your network or try again later.",

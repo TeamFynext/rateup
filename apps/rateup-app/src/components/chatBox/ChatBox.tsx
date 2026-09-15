@@ -2,18 +2,11 @@ import { useColorScheme } from "nativewind";
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import {
-  Image as ImageIcon,
-  MessageCircle,
-  Star,
-  UserPlus,
-} from "lucide-react-native";
-import {
-  ContactsWithLastMessage,
-  WaMessageAssignStatus,
-} from "@/api/inbox/types";
+import { Image as ImageIcon, MessageCircle, Star, UserPlus } from "lucide-react-native";
+import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
 import { MessagePlatform } from "@/constants/enums";
+import { WaMessageClosedStatus } from "@/constants/constants";
 import { useLifecycleContext } from "@/context/LifecycleContext";
 import {
   getInboxRowTheme,
@@ -28,41 +21,66 @@ import {
 
 const MONO = Platform.select({ ios: "Menlo", default: "monospace" });
 
-/** Maps the inbox's storage vocabulary onto the design's three pill tones. */
-const STATUS_TONE: Record<string, { tone: InboxStatusTone; label: string }> = {
-  [WaMessageAssignStatus.NEW]: { tone: "open", label: "New" },
-  [WaMessageAssignStatus.UNASSIGNED]: { tone: "pending", label: "Unassigned" },
-  [WaMessageAssignStatus.ASSIGNED]: { tone: "open", label: "Assigned" },
-  [WaMessageAssignStatus.CLOSED]: { tone: "closed", label: "Closed" },
-  [WaMessageAssignStatus.RESOLVED]: { tone: "open", label: "Resolved" },
-  [WaMessageAssignStatus.UNRESOLVED]: { tone: "pending", label: "Unresolved" },
-  [WaMessageAssignStatus.SPAM]: { tone: "spam", label: "Spam" },
+const STATUS_LABEL: Record<InboxStatusTone, string> = {
+  new: "New",
+  assigned: "Assigned",
+  closed: "Closed",
 };
 
-function channelIcon(platform: string | undefined) {
+/**
+ * The lifecycle status shown on a row — derived, never read straight off the
+ * stored field, mirroring rateup-ui's `getDerivedStatus` and the design's `ST`:
+ *   closed   → the ticket is in any closed state (Closed/Spam/Resolved/Unresolved)
+ *   assigned → somebody owns it
+ *   new      → nobody owns it yet
+ *
+ * The ticket's own `conversationStatus` wins over the contact's
+ * `waMessageAssignStatus`: a contact can hold several tickets. Showing the stored
+ * value used to give one ticket four different colours — "Unassigned" beside
+ * "New", "Resolved" in the same green as "Assigned" — and a row could read
+ * "Assigned" with nobody on it.
+ */
+export function getDerivedStatus(contact: {
+  conversationStatus?: string | null;
+  waMessageAssignStatus?: string | null;
+  assignedUsers?: unknown[] | null;
+}): InboxStatusTone {
+  const status = (contact.conversationStatus ??
+    contact.waMessageAssignStatus) as WaMessageAssignStatus;
+  if (WaMessageClosedStatus.includes(status)) return "closed";
+  return contact.assignedUsers?.length ? "assigned" : "new";
+}
+
+function channelIcon(platform: string | undefined, color = "#fff", size = 11) {
   switch (platform) {
     case MessagePlatform.WHATSAPP:
-      return <FontAwesome name="whatsapp" color="#fff" size={11} />;
+      return <FontAwesome name="whatsapp" color={color} size={size} />;
     case MessagePlatform.INSTAGRAM:
-      return <FontAwesome name="instagram" color="#fff" size={11} />;
+      return <FontAwesome name="instagram" color={color} size={size} />;
     case MessagePlatform.FACEBOOK:
-      return <FontAwesome name="facebook" color="#fff" size={10} />;
+      return <FontAwesome name="facebook" color={color} size={size - 1} />;
     case MessagePlatform.WEBCHAT:
-      return <MessageCircle color="#fff" size={10} />;
+      return <MessageCircle color={color} size={size - 1} />;
     default:
       return null;
   }
 }
 
 type ChipProps = {
-  label: string;
+  label?: string;
   color: string;
   background: string;
   /** Status pills carry a 5px leading dot; label chips don't. */
   dot?: string;
+  /** Outlined chips (the channel) read as metadata next to the filled ones. */
+  border?: string;
+  /** A channel the org no longer has connected is dashed, so it tells apart at a glance. */
+  dashed?: boolean;
+  /** Leading glyph — the channel pill puts its platform icon here. */
+  icon?: React.ReactNode;
 };
 
-function Chip({ label, color, background, dot }: ChipProps) {
+function Chip({ label, color, background, dot, border, dashed, icon }: ChipProps) {
   return (
     <View
       style={{
@@ -73,6 +91,9 @@ function Chip({ label, color, background, dot }: ChipProps) {
         paddingHorizontal: 10,
         borderRadius: 9999,
         backgroundColor: background,
+        ...(border
+          ? { borderWidth: 1, borderColor: border, borderStyle: dashed ? "dashed" : "solid" }
+          : null),
       }}
     >
       {dot ? (
@@ -85,12 +106,12 @@ function Chip({ label, color, background, dot }: ChipProps) {
           }}
         />
       ) : null}
-      <Text
-        numberOfLines={1}
-        style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}
-      >
-        {label}
-      </Text>
+      {icon}
+      {label ? (
+        <Text numberOfLines={1} style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}>
+          {label}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -103,6 +124,12 @@ export type ChatBoxProps = ContactsWithLastMessage & {
   selected?: boolean;
   /** Used to pick the warm "you" capsule for the assignee chip. */
   currentUserId?: string;
+  /** Which of the org's numbers/accounts the ticket came in on — see `resolveChannel`. */
+  channelLabel?: string;
+  /** False when that number is no longer connected; the chip then reads dashed. */
+  channelConnected?: boolean;
+  /** Who sent the last message when it is an outgoing send — see `getLastMessageSender`. */
+  lastMessageSender?: string;
 };
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -111,12 +138,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   phone,
   platform,
   lastMessage,
+  lastMessageSender,
   lastMessageTimeStamp,
   unReadMessageCount,
   waMessageAssignStatus,
+  conversationStatus,
   lifecycleId,
   ticketNumber,
-  ticketSubject,
   isFavorite,
   contactLabels,
   assignedUsers,
@@ -124,14 +152,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onAssignPress,
   selected,
   currentUserId,
+  channelLabel,
+  channelConnected,
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const t = useMemo(() => getInboxRowTheme(isDark), [isDark]);
 
-  // Rows are transparent over the screen's `--bg-page` in the design; only the
-  // selected row paints, with brand-soft.
-  const rowBg = selected ? t.brandSoft : "transparent";
   const isUnread = unReadMessageCount > 0;
 
   const avatarColor = useMemo(
@@ -139,13 +166,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     [id],
   );
 
-  const status = waMessageAssignStatus
-    ? (STATUS_TONE[waMessageAssignStatus] ?? {
-      tone: "closed" as InboxStatusTone,
-      label: waMessageAssignStatus,
-    })
-    : null;
-  const statusTone = status ? t.status[status.tone] : null;
+  const status = useMemo(() => {
+    const tone = getDerivedStatus({ conversationStatus, waMessageAssignStatus, assignedUsers });
+    return { tone, label: STATUS_LABEL[tone] };
+  }, [conversationStatus, waMessageAssignStatus, assignedUsers]);
+  const statusTone = t.status[status.tone];
+
+  // Design `selBg` / `edgeColor`: the selected row paints brand-soft with a brand
+  // edge; otherwise a New (nobody-owns-it) ticket paints amber with a yellow
+  // edge, so unclaimed work stands out in the list; every other row stays
+  // transparent over the page.
+  const isNew = status.tone === "new";
+  const rowBg = selected ? t.brandSoft : isNew ? t.newRowBg : "transparent";
+  const edgeColor = selected ? t.brand : isNew ? statusTone.color : null;
 
   const lifeCycleLabels = useLifecycleContext();
   const lifecycleInfo = useMemo(
@@ -171,14 +204,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const isPhoto = useMemo(() => {
     const lowerMsg = (lastMessage || "").toLowerCase();
-    return (
-      lowerMsg.includes("image") ||
-      lowerMsg.includes("photo") ||
-      lowerMsg.includes("📷")
-    );
+    return lowerMsg.includes("image") || lowerMsg.includes("photo") || lowerMsg.includes("📷");
   }, [lastMessage]);
 
   const channelColor = platform ? inboxChannelColors[platform] : undefined;
+  /** The pill shows for any known platform; the source label fills in when we can name it. */
+  const channelPill = !!channelColor || !!channelLabel;
   const code = ticketNumber != null ? `${ticketNumber}` : null;
 
   const renderAssigneeBadge = () => {
@@ -236,21 +267,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         borderBottomColor: isDark ? "#2A2A2A" : "#F4F4F5",
       }}
     >
-      {selected ? (
+      {/* The edge is a filled bar, not `borderLeftWidth`: Android drew a thick
+          single-side border as a hairline. 8px wide (the design draws 3px;
+          widened so it reads on a phone), sitting inside the 16px padding so the
+          content does not move. */}
+      {edgeColor ? (
         <View
           style={{
             position: "absolute",
             left: 0,
-            top: 16,
-            bottom: 16,
-            width: 3,
-            backgroundColor: statusTone?.color || t.brand,
-            borderTopRightRadius: 3,
-            borderBottomRightRadius: 3,
+            top: 0,
+            bottom: 0,
+            width: 4,
+            backgroundColor: edgeColor,
           }}
         />
       ) : null}
-
       {/* Left Column */}
       <View style={{ width: 46, alignItems: "center", marginRight: 12, paddingBottom: 4 }}>
         <View
@@ -273,25 +305,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             {namePreview(name)}
           </Text>
         </View>
-
-        {/* Spacer to push channel icon down */}
-        <View style={{ flex: 1, minHeight: 12 }} />
-
-        {channelColor ? (
-          <View
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 11,
-              backgroundColor: channelColor,
-              alignItems: "center",
-              justifyContent: "center",
-              alignSelf: "flex-end", // Aligns it to the right to be inline with chips
-            }}
-          >
-            {channelIcon(platform)}
-          </View>
-        ) : null}
       </View>
 
       {/* Right Column Container */}
@@ -314,32 +327,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             </Text>
           </View>
 
-          {/* Ticket Info */}
-          {code || ticketSubject ? (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
-              {code ? (
-                <Text style={{ fontSize: 12, color: t.fg4, fontFamily: MONO }}>
-                  #{code}
-                </Text>
-              ) : null}
-              {ticketSubject ? (
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: 14,
-                    fontFamily: "Nunito_600SemiBold",
-                    color: t.fg2,
-                    flexShrink: 1,
-                  }}
-                >
-                  {ticketSubject}
-                </Text>
-              ) : null}
-            </View>
-          ) : null}
-
-          {/* Snippet */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
+          {/* Ticket code + latest message, on one line.
+              This used to be two lines: the ticket subject above, the message
+              snippet below. The subject is auto-derived from the message that
+              opened the ticket, so for the many chats that open with a bare
+              "hi" the row showed two message-shaped lines — an old greeting
+              stacked on the current message — and read as two messages. The
+              latest message is the useful one, so it takes the slot. */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
+            {code ? (
+              <Text style={{ fontSize: 12, color: t.fg4, fontFamily: MONO }}>#{code}</Text>
+            ) : null}
             {isPhoto ? <ImageIcon size={14} color={t.fg3} /> : null}
             <Text
               numberOfLines={1}
@@ -350,21 +348,44 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 flex: 1,
               }}
             >
+              {/* An outgoing send names who sent it. Nested in the same
+                  one-line Text, so the name always shows in full (it is
+                  capped at 20 characters upstream) and the message after it
+                  takes the ellipsis. */}
+              {lastMessageSender ? (
+                <Text style={{ fontFamily: "Nunito_700Bold", color: t.fg2 }}>
+                  {lastMessageSender}:{" "}
+                </Text>
+              ) : null}
               {lastMessage || ""}
             </Text>
           </View>
 
           {/* Chips */}
-          {status || lifecycleInfo || contactLabels?.length ? (
+          {status || lifecycleInfo || channelPill || contactLabels?.length ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
-              {status && statusTone ? (
+              {/* Platform + which of the org's numbers/accounts the ticket came in
+                  on, in one pill: the icon says WhatsApp/Instagram/Facebook, the
+                  label says which account within it. The label is dropped when
+                  the source can't be named (webchat, pre-identifier messages), so
+                  the pill still carries the platform on its own. */}
+              {channelPill ? (
                 <Chip
-                  label={status.label}
-                  color={statusTone.fg}
-                  background={statusTone.soft}
-                  dot={statusTone.color}
+                  label={channelLabel}
+                  color={t.fg3}
+                  background={tint(channelColor, 0.1, t.brandSoft)}
+                  border={channelConnected === false ? t.fg4 : t.border1}
+                  dashed={channelConnected === false}
+                  icon={channelIcon(platform, channelColor ?? t.fg3, 11)}
                 />
               ) : null}
+
+              <Chip
+                label={status.label}
+                color={statusTone.fg}
+                background={statusTone.soft}
+                dot={statusTone.color}
+              />
 
               {lifecycleInfo ? (
                 <Chip
@@ -418,11 +439,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               renderAssigneeBadge()
             )}
           </View>
-          {isUnread ? (
-            <View style={{ marginTop: 6 }}>
-              {renderAssigneeBadge()}
-            </View>
-          ) : null}
+          {isUnread ? <View style={{ marginTop: 6 }}>{renderAssigneeBadge()}</View> : null}
         </View>
       </View>
     </Pressable>

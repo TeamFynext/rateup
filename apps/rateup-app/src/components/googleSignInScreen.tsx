@@ -6,8 +6,7 @@ import { useRouter } from "expo-router";
 import { GoogleIcon } from "../constants/imageExports";
 import { loggedUserDetails } from "../api/api";
 import { useAuth } from "../context/AuthContext";
-import { registerForPushNotificationsAsync } from "../utils/notification";
-import { addToken } from "../api/notification";
+import { syncPushToken } from "../utils/notification";
 
 const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   const router = useRouter();
@@ -19,44 +18,44 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   }, []);
 
   const handleLogin = async () => {
-  setLoading(true);
-  try {
-    const res = await signInWithGoogle();
-
-    if (!res.success) {
-      setError(res.message);
-      setLoading(false);
-      return;
-    }
-
-    const userDetails = await loggedUserDetails();
-    const userData = userDetails.data;
-    const { userId, orgId } = userData;
-
-    setUserId(userId);
-    setOrgId(orgId);
-
+    setLoading(true);
     try {
-      const token = await registerForPushNotificationsAsync();
-      if (token) {
-        await addToken(token);
-      } else {
-        setError("Push notification setup failed. You may not recieve alerts");
+      const res = await signInWithGoogle();
+
+      if (!res.success) {
+        setError(res.message);
+        setLoading(false);
+        return;
       }
-    } catch (tokenError) {
-      console.error("Push token registration error:", tokenError);
-      setError("Failed to enable push notifications");
+
+      const userDetails = await loggedUserDetails();
+      const userData = userDetails.data;
+      const { userId, orgId } = userData;
+
+      setUserId(userId);
+      setOrgId(orgId);
+
+      try {
+        // Prompts here and only here: sign-in is the moment the user expects to
+        // be asked. The result is cached so sign-out can deregister without
+        // re-raising the permission dialog.
+        const token = await syncPushToken({ prompt: true });
+        if (!token) {
+          setError("Push notification setup failed. You may not recieve alerts");
+        }
+      } catch (tokenError) {
+        console.error("Push token registration error:", tokenError);
+        setError("Failed to enable push notifications");
+      }
+
+      router.replace("/protected/inbox");
+    } catch (error) {
+      console.error("Unexpected Google login error:", error);
+      setError("Something went wrong.");
+    } finally {
+      setLoading(false);
     }
-
-    router.replace("/protected/inbox");
-  } catch (error) {
-    console.error("Unexpected Google login error:", error);
-    setError("Something went wrong.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <View className="w-full flex items-center">

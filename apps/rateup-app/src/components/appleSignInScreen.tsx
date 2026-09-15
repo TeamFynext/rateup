@@ -6,8 +6,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { signInWithApple } from "../api/apple_auth";
 import { loggedUserDetails } from "../api/api";
 import { useAuth } from "../context/AuthContext";
-import { registerForPushNotificationsAsync } from "../utils/notification";
-import { addToken } from "../api/notification";
+import { syncPushToken } from "../utils/notification";
 import { FontAwesome } from "@expo/vector-icons";
 
 const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
@@ -39,13 +38,12 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       setOrgId(orgId);
 
       try {
-        const token = await registerForPushNotificationsAsync();
-        if (token) {
-          await addToken(token);
-        } else {
-          setError(
-            "Push notification setup failed. You may not receive alerts",
-          );
+        // Prompts here and only here: sign-in is the moment the user expects to
+        // be asked. The result is cached so sign-out can deregister without
+        // re-raising the permission dialog.
+        const token = await syncPushToken({ prompt: true });
+        if (!token) {
+          setError("Push notification setup failed. You may not receive alerts");
         }
       } catch (err) {
         console.error("Push token error:", err);

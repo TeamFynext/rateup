@@ -16,11 +16,11 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   loading: true,
-  setIsAuthenticated: () => { },
+  setIsAuthenticated: () => {},
   userId: null,
-  setUserId: () => { },
+  setUserId: () => {},
   orgId: null,
-  setOrgId: () => { },
+  setOrgId: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             try {
               await AsyncStorage.setItem("cachedUserId", userId);
               await AsyncStorage.setItem("cachedOrgId", orgId);
-            } catch (e) {
+            } catch {
               // Ignore cache write errors
             }
           } catch (apiError: any) {

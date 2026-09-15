@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "RateUp2026",
+    "name": "RateUp",
     "slug": "rateup",
-    "version": "1.1.5",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rateup",
@@ -47,7 +47,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -56,22 +56,45 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile\n\n# @expo/ui (transitive, via expo-router) ships a prebuilt AAR compiled against a\n# newer expo-modules-core than the 57.0.1 resolved here, and references\n# expo.modules.kotlin.types.ColorCompat, which that version does not define.\n# R8 aborts on the dangling reference. Nothing in src/ imports @expo/ui, so the\n# one call site (expo.modules.ui.UtilsKt.colorToComposeColorOrNull) is dead code.\n# Drop these once expo-modules-core is bumped to a version that has ColorCompat.\n-dontwarn expo.modules.kotlin.types.ColorCompat\n-dontwarn expo.modules.kotlin.types.ColorCompat$Companion"
+          }
+        }
+      ],
+      "./plugins/withR8Optimize.js",
+      [
+        "react-native-video",
+        {
+          "enableNotificationControls": false,
+          "enableADSExtension": false,
+          "androidExtensions": {
+            "useExoplayerRtsp": false,
+            "useExoplayerSmoothStreaming": true,
+            "useExoplayerDash": true,
+            "useExoplayerHls": true
           }
         }
       ],
       ["expo-apple-authentication"],
       "@react-native-google-signin/google-signin",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#F8951D",
+          "defaultChannel": "default"
+        }
+      ],
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo.png",
-          "backgroudColor": "#FFFFFF",
-          "resizeMode": "cover",
-          "splashScreenStyle": "single-screen",
-          "light": {
-            "backgroudColor": "#FFFFFF"
-          }
+          "image": "./assets/images/splash-logo.png",
+          "backgroundColor": "#FFFFFF",
+          "imageWidth": 200,
+          "resizeMode": "contain"
         }
       ],
       [
@@ -92,7 +115,8 @@
       ],
       "expo-asset",
       "expo-status-bar",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true

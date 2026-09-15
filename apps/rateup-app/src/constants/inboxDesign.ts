@@ -27,6 +27,12 @@ export type InboxRowTheme = {
   success: string;
   danger: string;
   status: Record<InboxStatusTone, Tone>;
+  /**
+   * Fill behind a New (unassigned) row. Deeper than `status.new.soft`: the
+   * design's `--warm-soft` is tuned for a pill and all but vanished as a full
+   * row on a phone.
+   */
+  newRowBg: string;
   /** `--bg-warm-soft` + `--warm-700`, used by the thread's unassigned banner. */
   warmSoft: string;
   warmStrong: string;
@@ -34,7 +40,11 @@ export type InboxRowTheme = {
   note: { bg: string; border: string; label: string; text: string };
 };
 
-export type InboxStatusTone = "open" | "pending" | "closed" | "spam";
+/**
+ * The row's lifecycle status, derived rather than stored — see `getDerivedStatus`.
+ * Same three states as the web inbox and the design's `ST` table.
+ */
+export type InboxStatusTone = "new" | "assigned" | "closed";
 
 const light: InboxRowTheme = {
   pageBg: "#FAFAF7",
@@ -51,12 +61,15 @@ const light: InboxRowTheme = {
   warm: "#F8951D",
   success: "#16A34A",
   danger: "#DC2626",
+  // `_ds2/tokens/themes.css` `:root` — New is `--warm-*`, Assigned `--accent*`,
+  // Closed `--success*`, exactly as the design's `ST` table maps them.
   status: {
-    open: { color: "#16A34A", soft: "rgba(22,163,74,0.14)", fg: "#15803D" },
-    pending: { color: "#F8951D", soft: "rgba(248,149,29,0.16)", fg: "#A85C07" },
-    closed: { color: "#8B8E8A", soft: "rgba(139,142,138,0.16)", fg: "#5A5C58" },
-    spam: { color: "#DC2626", soft: "rgba(220,38,38,0.12)", fg: "#B91C1C" },
+    new: { color: "#AE5D07", soft: "#FFF8EC", fg: "#AE5D07" },
+    assigned: { color: "#1C518E", soft: "#F1F6FC", fg: "#1C518E" },
+    closed: { color: "#17915A", soft: "#E9F7EF", fg: "#17915A" },
   },
+  // `--ru-amber-100`.
+  newRowBg: "#FEECCB",
   warmSoft: "#FFF8E1",
   warmStrong: "#A85C07",
   note: {
@@ -84,20 +97,14 @@ const dark: InboxRowTheme = {
   warm: "#F8951D",
   success: "#16A34A",
   danger: "#CF6679",
-  // The design file keeps one fixed status palette for both themes; those `fg`
-  // values sit at ~2:1 on #121212, so dark lifts the label to the tone's own
-  // hue and thickens the tint the same way `.theme-dark` does for its soft
-  // backgrounds (0.12 → 0.14).
+  // `_ds2/tokens/themes.css` `[data-theme="dark"]` — the same three tokens.
   status: {
-    open: { color: "#16A34A", soft: "rgba(22,163,74,0.18)", fg: "#4ADE80" },
-    pending: { color: "#F8951D", soft: "rgba(248,149,29,0.18)", fg: "#FBBF24" },
-    closed: {
-      color: "#8B8E8A",
-      soft: "rgba(255,255,255,0.10)",
-      fg: "rgba(255,255,255,0.60)",
-    },
-    spam: { color: "#CF6679", soft: "rgba(207,102,121,0.18)", fg: "#CF6679" },
+    new: { color: "#FBC05C", soft: "rgba(248,149,29,0.11)", fg: "#FBC05C" },
+    assigned: { color: "#5A8CC6", soft: "rgba(90,140,198,0.14)", fg: "#5A8CC6" },
+    closed: { color: "#4ECB8B", soft: "rgba(78,203,139,0.12)", fg: "#4ECB8B" },
   },
+  // The New edge's own yellow at a visible depth on the app's dark grey.
+  newRowBg: "rgba(251,192,92,0.16)",
   // The design hardcodes the warm banner and the note card's cream (#FFF6DC),
   // which would be a full-brightness panel in dark. Dark keeps the amber hue at
   // the same tint depth `.theme-dark` uses for `--bg-warm-soft`.
@@ -111,16 +118,14 @@ const dark: InboxRowTheme = {
   },
 };
 
-export const getInboxRowTheme = (isDark: boolean): InboxRowTheme =>
-  isDark ? dark : light;
+export const getInboxRowTheme = (isDark: boolean): InboxRowTheme => (isDark ? dark : light);
 
 /**
  * The design's header/segment bar sits on `--bg-surface`. Light takes that
  * verbatim; dark uses this app's raised navy rather than the design's #1E1E1E,
  * so the bar doesn't clash with the rest of the app's dark chrome.
  */
-export const getInboxHeaderBg = (isDark: boolean) =>
-  isDark ? "#0D1E32" : "#FFFFFF";
+export const getInboxHeaderBg = (isDark: boolean) => (isDark ? "#0D1E32" : "#FFFFFF");
 
 /** Solid avatar fills used by the design's sample conversations. */
 export const inboxAvatarColors = [

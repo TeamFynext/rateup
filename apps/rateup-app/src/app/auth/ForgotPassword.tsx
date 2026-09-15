@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import { sendPasswordResetEmail } from "@/api/api";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Mail } from "lucide-react-native";

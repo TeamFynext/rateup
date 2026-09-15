@@ -14,7 +14,7 @@ import AssignToUser from "./AssignToUser";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { useChatAssignStatusStore } from "@/utils/store";
 import { useContactsStore } from "@/store/inboxStore";
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 const NotAssigned = ({ contactId }: { contactId: string }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";

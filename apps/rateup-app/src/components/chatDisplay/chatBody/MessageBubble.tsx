@@ -10,13 +10,7 @@ import WaInboxText, {
 } from "./messageBubbleTypes";
 import { namePreview } from "@/utils/chatbox_utils";
 import { WaTemplateComponent } from "@/context/type";
-import {
-  Lock,
-  CheckCheck,
-  Check,
-  Clock,
-  AlertCircle,
-} from "lucide-react-native";
+import { Lock, CheckCheck, Check, Clock, AlertCircle, Bot } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { getClosedIcon } from "@/util";
 import LinearGradient from "react-native-linear-gradient";
@@ -30,6 +24,11 @@ type MessageBubbleProps = {
   exchangeProcess: string;
   messageType?: string;
   senderName?: string;
+  /**
+   * Sent by an automation (auto-reply, survey, campaign, chatbot) rather than a
+   * person, so there is no name to make initials from.
+   */
+  isAutomated?: boolean;
   template: any;
   templateComponentParams?: WaTemplateComponent[];
   assignStatus?: string;
@@ -42,119 +41,45 @@ const MessageBubble = ({
   exchangeProcess,
   messageType,
   senderName,
+  isAutomated,
   interactive,
   template,
   templateComponentParams,
   assignStatus,
   stats,
 }: MessageBubbleProps) => {
-  const getBgColor = () => {
-    if (exchangeProcess === "internal") {
-      switch (assignStatus) {
-        case WaMessageAssignStatus.RESOLVED:
-          return "bg-green-50";
-        case WaMessageAssignStatus.UNRESOLVED:
-          return "bg-orange-50";
-        case WaMessageAssignStatus.CLOSED:
-          return "bg-blue-50";
-        case WaMessageAssignStatus.SPAM:
-          return "bg-red-50";
-        default:
-          return "bg-indigo-50";
-      }
-    } else if (exchangeProcess === "privateNote") {
-      return "bg-amber-50";
-    } else if (exchangeProcess === "send") {
-      return "bg-chat-bubble-green";
-    } else {
-      return "bg-white";
-    }
-  };
-  const getTextColor = () => {
-    switch (assignStatus) {
-      case WaMessageAssignStatus.RESOLVED:
-        return "text-green-600";
-      case WaMessageAssignStatus.UNRESOLVED:
-        return "text-orange-600";
-      case WaMessageAssignStatus.CLOSED:
-        return "text-blue-600";
-      case WaMessageAssignStatus.SPAM:
-        return "text-red-600";
-      default:
-        return "text-indigo-600";
-    }
-  };
-
-  const getBorder = () => {
-    switch (exchangeProcess) {
-      case "send":
-      case "privateNote":
-        return "rounded-br-md rounded-3xl";
-      case "internal":
-        return "rounded-xl";
-      default:
-        return "rounded-bl-md rounded-3xl";
-    }
-  };
-
   const renderContent = useCallback(
     (textColor?: string) => {
       switch (messageType) {
         case "text":
-          return (
-            <WaInboxText
-              messageContent={messageContent}
-              textColor={textColor}
-            />
-          );
+          return <WaInboxText messageContent={messageContent} textColor={textColor} />;
         case "image":
           return <WaInboxImage messageContent={messageContent} />;
         case "audio":
-          return (
-            <WaInboxAudio
-              messageContent={messageContent}
-              timestamp={timestamp}
-            />
-          );
+          return <WaInboxAudio messageContent={messageContent} timestamp={timestamp} />;
         case "document":
           return <WaInboxDocument messageContent={messageContent} />;
         case "video":
           return <WaInboxVideo messageContent={messageContent} />;
         case "reaction":
-          return (
-            <Text style={{ fontSize: 20, color: textColor }}>
-              {messageContent}
-            </Text>
-          );
+          return <Text style={{ fontSize: 20, color: textColor }}>{messageContent}</Text>;
         case "button":
           return <Text style={{ color: textColor }}>buttons</Text>;
         case "template":
-          return (
-            <WaInboxTemplate
-              templateBody={template}
-              parameters={templateComponentParams}
-            />
-          );
+          return <WaInboxTemplate templateBody={template} parameters={templateComponentParams} />;
         case "interactive":
           return (
-            <WaInboxInteractive
-              interactiveBody={interactive}
-              messageContent={messageContent}
-            />
+            <WaInboxInteractive interactiveBody={interactive} messageContent={messageContent} />
           );
         default:
           let displayContent = messageContent;
           if (typeof messageContent === "object" && messageContent !== null) {
             displayContent = JSON.stringify(messageContent);
           }
-          return (
-            <Text style={{ color: textColor, fontSize: 14 }}>
-              {displayContent}
-            </Text>
-          );
+          return <Text style={{ color: textColor, fontSize: 14 }}>{displayContent}</Text>;
       }
     },
-    [messageContent, messageType, timestamp],
+    [messageContent, messageType, timestamp, template, templateComponentParams, interactive],
   );
 
   const colorScheme = useColorScheme();
@@ -242,9 +167,7 @@ const MessageBubble = ({
               {assignStatus}
             </Text>
           </View>
-          {renderContent(
-            isDark ? Colors.dark.textPrimary : Colors.light.textPrimary,
-          )}
+          {renderContent(isDark ? Colors.dark.textPrimary : Colors.light.textPrimary)}
           {timestamp ? (
             <Text
               style={{
@@ -281,7 +204,9 @@ const MessageBubble = ({
 
   const isSender = exchangeProcess === "send";
   const isPrivateNote = exchangeProcess === "privateNote";
-  const showAvatar = isSender;
+  // Automation has no person behind it, so it gets no avatar — matching the web
+  // inbox, which drops the avatar and moves the robot into the header instead.
+  const showAvatar = isSender && !isAutomated;
 
   // The design's internal note: a full-width cream card rather than a bubble.
   if (isPrivateNote) {
@@ -326,11 +251,21 @@ const MessageBubble = ({
     );
   }
 
-  const bubbleBgColor = isSender ? Colors.brand.blue : t.surface;
+  // An automated reply sits on the send side but keeps a muted fill rather than
+  // the agent's brand blue, so a bot reply stays distinguishable from one a
+  // person wrote. Same call the web inbox makes with its `muted` bubble variant.
+  const bubbleBgColor = isAutomated ? t.surface2 : isSender ? Colors.brand.blue : t.surface;
 
-  const bubbleTextColor = isSender ? "#fff" : t.fg1;
+  const bubbleTextColor = isSender && !isAutomated ? "#fff" : t.fg1;
 
   const timestampColor = t.fg4;
+
+  const authorLabelStyle = {
+    fontSize: 9,
+    fontFamily: "Nunito_800ExtraBold",
+    color: t.fg4,
+    textAlign: "right" as const,
+  };
 
   const borderStyle = isSender
     ? {
@@ -392,17 +327,13 @@ const MessageBubble = ({
       {isSender && (
         // Design: author label above at 9px/800, blue bubble, time below.
         <View style={{ maxWidth: "80%", alignItems: "flex-end", gap: 3 }}>
-          {senderName ? (
-            <Text
-              style={{
-                fontSize: 9,
-                fontFamily: "Nunito_800ExtraBold",
-                color: t.fg4,
-                textAlign: "right",
-              }}
-            >
-              {senderName}
-            </Text>
+          {isAutomated ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Bot size={11} color={t.fg4} />
+              <Text style={authorLabelStyle}>Automation</Text>
+            </View>
+          ) : senderName ? (
+            <Text style={authorLabelStyle}>{senderName}</Text>
           ) : null}
 
           <View
@@ -429,14 +360,11 @@ const MessageBubble = ({
             </Text>
             <View>
               {(() => {
-                if (stats?.read)
-                  return <CheckCheck size={12} color={t.brand} />;
-                if (stats?.delivered)
-                  return <CheckCheck size={12} color={timestampColor} />;
+                if (stats?.read) return <CheckCheck size={12} color={t.brand} />;
+                if (stats?.delivered) return <CheckCheck size={12} color={timestampColor} />;
                 if (stats?.failed || stats?.error)
                   return <AlertCircle size={12} color={t.danger} />;
-                if (stats?.sent)
-                  return <Check size={12} color={timestampColor} />;
+                if (stats?.sent) return <Check size={12} color={timestampColor} />;
                 return <Clock size={11} color={timestampColor} />;
               })()}
             </View>
@@ -444,7 +372,7 @@ const MessageBubble = ({
         </View>
       )}
 
-      {isSender && (
+      {showAvatar && (
         <LinearGradient
           colors={[Colors.brand.blue, Colors.brand.blueLight] as any}
           start={{ x: 0, y: 0 }}

@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import React, { useRef, useCallback, useMemo, useEffect } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import { parseWaMessage_ } from "@/api/inbox/messages/utils";
 import MessageBubble from "./chatBody/MessageBubble";
 import DateSeparator from "./chatBody/DateSeperator";
@@ -19,11 +19,21 @@ import { ViewToken } from "react-native";
 import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
 import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
-import { useQueryClient } from "@tanstack/react-query";
 import { Colors } from "@/constants/colors";
-import { useMessagesStore } from "@/store/inboxStore"; // NEW
+import { useMessagesStore } from "@/store/inboxStore";
+import { getMessagesFromIDB } from "@/utils/sqlite";
+import { Skeleton } from "@/components/common/Skeleton";
 
 const { height: screenHeight } = Dimensions.get("window");
+
+/** Static shape for the loading thread; deliberately uneven so it reads as chat. */
+const SKELETON_BUBBLES = [
+  { width: 180, height: 44, outgoing: false },
+  { width: 130, height: 32, outgoing: true },
+  { width: 220, height: 58, outgoing: false },
+  { width: 160, height: 32, outgoing: true },
+  { width: 140, height: 44, outgoing: false },
+];
 
 const viewabilityConfig = {
   itemVisiblePercentThreshold: 50,
@@ -34,15 +44,8 @@ const ChatBody = ({ id }: { id: string }) => {
   const isDark = colorScheme === "dark";
   // The design's thread sits on `--bg-page`, same as the list.
   const threadBg = isDark ? Colors.dark.bg : Colors.light.bg;
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isPending,
-    isError,
-    error,
-  } = useGetMessagesByContactId(id);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, error } =
+    useGetMessagesByContactId(id);
   const { userId } = useAuth();
   const { mutate: markRead } = useMarkMessageAsRead();
   const listRef = useRef<any>(null);
@@ -51,8 +54,36 @@ const ChatBody = ({ id }: { id: string }) => {
 
   // Zustand Store Integration
   const key = `${id}_all`;
-  const storeMessages = useMessagesStore(state => state.messagesByKey.get(key)?.messages) ?? [];
-  const mergeMessages = useMessagesStore(state => state.mergeMessages);
+  const storeMessages = useMessagesStore((state) => state.messagesByKey.get(key)?.messages) ?? [];
+  const mergeMessages = useMessagesStore((state) => state.mergeMessages);
+
+  // Paint the thread from disk while the first page is in flight.
+  //
+  // Every merge already writes messages to SQLite under this same key, so a
+  // chat the user has opened before is fully cached; nothing read it back,
+  // which is why a notification tap opened an empty thread and then filled in.
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    getMessagesFromIDB(key)
+      .then((cached) => {
+        if (cancelled || !cached?.length) return;
+        // `mergeMessages` lets the incoming object win field by field, and
+        // cached rows are older by definition, so they may only ever be applied
+        // to a thread the network has not populated yet.
+        if (useMessagesStore.getState().messagesByKey.get(key)?.messages?.length) return;
+        mergeMessages(key, cached, false);
+      })
+      .catch((error) => {
+        // A miss just means the thread paints when the request lands.
+        console.error("Failed to read cached messages:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, key, mergeMessages]);
 
   // Sync API data to Zustand
   useEffect(() => {
@@ -67,10 +98,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   // Sync WebSocket data to Zustand
   useEffect(() => {
-    if (
-      wsData?.type === "inbox" &&
-      wsData.inbox?.contact?.id == id
-    ) {
+    if (wsData?.type === "inbox" && wsData.inbox?.contact?.id == id) {
       const msg = wsData.inbox?.message;
       if (msg) {
         mergeMessages(key, [msg], false);
@@ -128,11 +156,8 @@ const ChatBody = ({ id }: { id: string }) => {
       const time = dayjs(item.createdAt).format("h:mm A");
 
       const currentDate = dayjs(item.createdAt).format("YYYY-MM-DD");
-      const nextItem =
-        index < messageList.length - 1 ? messageList[index + 1] : null;
-      const nextDate = nextItem
-        ? dayjs(nextItem.createdAt).format("YYYY-MM-DD")
-        : null;
+      const nextItem = index < messageList.length - 1 ? messageList[index + 1] : null;
+      const nextDate = nextItem ? dayjs(nextItem.createdAt).format("YYYY-MM-DD") : null;
 
       const shouldShowDate = currentDate !== nextDate;
       return (
@@ -142,11 +167,7 @@ const ChatBody = ({ id }: { id: string }) => {
             paddingHorizontal: 8,
           }}
         >
-          {shouldShowDate && (
-            <DateSeparator
-              label={dayjs(item.createdAt).format("DD MMM YYYY")}
-            />
-          )}
+          {shouldShowDate && <DateSeparator label={dayjs(item.createdAt).format("DD MMM YYYY")} />}
           <MessageBubble
             messageContent={parsed.messageContent}
             interactive={parsed.interactive}
@@ -154,6 +175,11 @@ const ChatBody = ({ id }: { id: string }) => {
             assignStatus={item.messageBody?.internal?.assignStatus || ""}
             exchangeProcess={item.messageBody.exchangeProcess}
             senderName={item.sender?.name || ""}
+            // Outgoing with no sender attached. The payload carries no
+            // `isAutomedMessage` (that lives on waMessageOrgTeamMap server-side
+            // and isn't returned), so an absent `sender` is the signal that no
+            // person pressed send — the same test the web inbox makes.
+            isAutomated={item.messageBody?.exchangeProcess === "send" && !item.sender}
             messageType={parsed.messageType}
             template={parsed.template}
             templateComponentParams={item.templateComponentParams}
@@ -162,7 +188,7 @@ const ChatBody = ({ id }: { id: string }) => {
         </View>
       );
     },
-    [messageList, isDark],
+    [messageList, threadBg],
   );
 
   const dynamicPaddingBottom = screenHeight > 800 ? 8 : 10;
@@ -172,12 +198,27 @@ const ChatBody = ({ id }: { id: string }) => {
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
+          justifyContent: "flex-end",
           backgroundColor: threadBg,
+          paddingHorizontal: 12,
+          paddingBottom: 12,
         }}
       >
-        <ActivityIndicator size="large" color={Colors.brand.blue} />
+        {/* Bubble-shaped rather than a centred spinner, to match the skeletons
+            in the header and footer and to suggest a thread rather than an
+            empty screen. Bottom-aligned because the list is inverted. */}
+        {SKELETON_BUBBLES.map((bubble, index) => (
+          <View
+            key={index}
+            style={{
+              alignSelf: bubble.outgoing ? "flex-end" : "flex-start",
+              marginTop: 10,
+              maxWidth: "78%",
+            }}
+          >
+            <Skeleton width={bubble.width} height={bubble.height} borderRadius={14} />
+          </View>
+        ))}
       </View>
     );
   }
@@ -192,9 +233,7 @@ const ChatBody = ({ id }: { id: string }) => {
           backgroundColor: threadBg,
         }}
       >
-        <Text className="text-red-500">
-          {error?.message || "Something went wrong"}
-        </Text>
+        <Text className="text-red-500">{error?.message || "Something went wrong"}</Text>
       </View>
     );
   }
@@ -221,7 +260,7 @@ const ChatBody = ({ id }: { id: string }) => {
           setShowScrollToBottom(!isAtBottom);
         }}
         //@ts-ignore
-        onScrollToIndexFailed={({ index }) => {
+        onScrollToIndexFailed={() => {
           setTimeout(() => {
             listRef.current?.scrollToOffset({
               offset: 0,

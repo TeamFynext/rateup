@@ -1,16 +1,10 @@
 import { useColorScheme } from "nativewind";
 import { View, Text } from "react-native";
 import React from "react";
-import {
-  FrownIcon,
-  SmileIcon,
-  LaughIcon,
-  MehIcon,
-  AngryIcon,
-} from "lucide-react-native";
+import { FrownIcon, SmileIcon, LaughIcon, MehIcon, AngryIcon } from "lucide-react-native";
 import { useHappyIndex } from "@/api/response/response.query";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
-import { ProgressBar } from "react-native-paper";
+import ProgressBar from "@/components/common/ProgressBar";
 
 const HappyIndex = ({ surveyId }: { surveyId: string }) => {
   const { colorScheme } = useColorScheme();
@@ -109,9 +103,7 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
 
   return (
     <View className="bg-white dark:bg-slate-950 p-4 lg:col-span-3 w-full flex-1 h-full">
-      <Text className="text-lg font-semibold mb-4 text-black dark:text-white">
-        Happiness Index
-      </Text>
+      <Text className="text-lg font-semibold mb-4 text-black dark:text-white">Happiness Index</Text>
 
       <View className="flex flex-col md:flex-row items-center gap-6 px-4">
         <AnimatedCircularProgress
@@ -129,17 +121,13 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
                 {(happinessValue / 10).toFixed(1)}
               </Text>
 
-              <Text className="text-xs text-[#7A8289] dark:text-slate-400">
-                Out of 10
-              </Text>
+              <Text className="text-xs text-[#7A8289] dark:text-slate-400">Out of 10</Text>
 
               <View
                 style={{ backgroundColor: happyIndexStatusBg }}
                 className="rounded px-2 py-1 mt-2"
               >
-                <Text className="text-white text-xs">
-                  {happinessIndexStatus}
-                </Text>
+                <Text className="text-white text-xs">{happinessIndexStatus}</Text>
               </View>
             </View>
           )}
@@ -164,9 +152,7 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
                     </Text>
 
                     <View className="bg-[#004F98] rounded-full px-2 py-0.5">
-                      <Text className="text-white text-xs">
-                        {Math.round(percentage)}%
-                      </Text>
+                      <Text className="text-white text-xs">{Math.round(percentage)}%</Text>
                     </View>
                   </View>
                 </View>

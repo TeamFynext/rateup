@@ -1,4 +1,4 @@
-import { Toast } from "toastify-react-native";
+import { Toast } from "@/components/common/Notice";
 import {
   useAssignInboxToUser,
   useGetAssignedUserForContact,
@@ -21,7 +21,6 @@ import { TeamMembersData } from "@/context/type";
 import { generateInternalMessageId, namePreview } from "@/utils/chatbox_utils";
 import { Check, UserCheck, Users } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { colors } from "@/constants/constants";
 import { useChatAssignStatusStore } from "@/utils/store";
 import { useContactsStore } from "@/store/inboxStore";
 import { Colors } from "@/constants/colors";
@@ -46,26 +45,16 @@ export default function AssignToUser({
 }) {
   const [visible, setVisible] = useState(false);
   const assignMut = useAssignInboxToUser(contactId);
-  const setWaAssignStatus = useChatAssignStatusStore(
-    (state) => state.setWaAssignStatus,
-  );
+  const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
   const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
-  const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
+  const { data: teamMembers } = useTeamsMembersOfOrg();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
     useGetAssignedUserForContact(contactId);
   const queryClient = useQueryClient();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const buttonBgColor = color
-    ? Colors.brand.blue
-    : isDark
-      ? Colors.dark.surface
-      : "white";
-  const textColor = color
-    ? "white"
-    : isDark
-      ? Colors.dark.textPrimary
-      : Colors.light.textPrimary;
+  const buttonBgColor = color ? Colors.brand.blue : isDark ? Colors.dark.surface : "white";
+  const textColor = color ? "white" : isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
 
   const membersByTeam = useMemo(() => {
     if (!teamMembers?.data) return {};
@@ -92,8 +81,7 @@ export default function AssignToUser({
     }));
   }, [assignedUsers]);
 
-  const [assignedStaff, setAssignedStaff] =
-    useState<Assignee[]>(initialAssignees);
+  const [assignedStaff, setAssignedStaff] = useState<Assignee[]>(initialAssignees);
 
   // Building the team/member tree is the expensive part, and RN's Modal mounts
   // its children only once `visible` flips — so doing it in the same frame as
@@ -116,9 +104,7 @@ export default function AssignToUser({
     // the sheet opened with nothing selected and assigning wiped the existing
     // assignees.
     setAssignedStaff(initialAssigneesRef.current);
-    const task = InteractionManager.runAfterInteractions(() =>
-      setContentReady(true),
-    );
+    const task = InteractionManager.runAfterInteractions(() => setContentReady(true));
     return () => task.cancel();
   }, [visible]);
 
@@ -153,17 +139,15 @@ export default function AssignToUser({
 
           // Same as "Assign to me": the list reads from the contacts store, so
           // it has to be told directly.
-          useContactsStore
-            .getState()
-            .updateContactById(contactId, (c: any) => ({
-              ...c,
-              waMessageAssignStatus: "ASSIGNED",
-              assignedUsers: assignedStaff.map((a: any) => ({
-                id: a.userId,
-                teamId: a.teamId,
-                name: a.name ?? "",
-              })),
-            }));
+          useContactsStore.getState().updateContactById(contactId, (c: any) => ({
+            ...c,
+            waMessageAssignStatus: "ASSIGNED",
+            assignedUsers: assignedStaff.map((a: any) => ({
+              id: a.userId,
+              teamId: a.teamId,
+              name: a.name ?? "",
+            })),
+          }));
 
           queryClient.invalidateQueries({
             queryKey: ["assigned-contact", contactId],
@@ -181,10 +165,7 @@ export default function AssignToUser({
           Toast.show({
             type: "error",
             text1: "Could not assign",
-            text2:
-              error?.response?.data?.message ??
-              error?.message ??
-              "Please try again.",
+            text2: error?.response?.data?.message ?? error?.message ?? "Please try again.",
           });
         },
       },
@@ -194,10 +175,7 @@ export default function AssignToUser({
   return (
     <>
       {iconOnly ? (
-        <TouchableOpacity
-          onPress={() => setVisible(true)}
-          style={{ padding: 4 }}
-        >
+        <TouchableOpacity onPress={() => setVisible(true)} style={{ padding: 4 }}>
           <UserCheck color={iconColor || textColor} size={iconSize} />
         </TouchableOpacity>
       ) : (
@@ -214,9 +192,7 @@ export default function AssignToUser({
                 }
               : {
                   backgroundColor: buttonBgColor,
-                  borderColor: isDark
-                    ? Colors.dark.borderLight
-                    : Colors.light.border,
+                  borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
                   borderWidth: color ? 0 : 1,
                   borderRadius: 12,
                   flexDirection: "row",
@@ -319,10 +295,7 @@ export default function AssignToUser({
                         paddingVertical: 20,
                       }}
                     >
-                      <ActivityIndicator
-                        size="small"
-                        color={Colors.brand.blue}
-                      />
+                      <ActivityIndicator size="small" color={Colors.brand.blue} />
                     </View>
                   );
                 }
@@ -338,19 +311,13 @@ export default function AssignToUser({
                     >
                       <Users
                         size={14}
-                        color={
-                          isDark
-                            ? Colors.dark.textSubtle
-                            : Colors.light.textSubtle
-                        }
+                        color={isDark ? Colors.dark.textSubtle : Colors.light.textSubtle}
                       />
                       <Text
                         style={{
                           fontFamily: "Nunito_700Bold",
                           fontSize: 14,
-                          color: isDark
-                            ? Colors.dark.textSecondary
-                            : Colors.light.textSecondary,
+                          color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
                         }}
                       >
                         {team.name}
@@ -492,12 +459,7 @@ const MemberRow = memo(function MemberRow({
         </View>
       </View>
 
-      {isSelected && (
-        <Check
-          size={16}
-          color={isDark ? Colors.accent.cyan : Colors.brand.blue}
-        />
-      )}
+      {isSelected && <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />}
     </Pressable>
   );
 });

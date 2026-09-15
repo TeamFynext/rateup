@@ -10,13 +10,19 @@ import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
 } from "@/api/inbox/messages/utils";
-import { useWsData } from "@/context/UserContext";
-import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  getContactChannelSource,
+  getLastMessageSender,
+  getVisibleUnreadCount,
+  resolveChannel,
+} from "@/utils/chatbox_utils";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
 import { useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inboxStore";
+import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 
 /** Gutter around the whole conversation list, on top of each row's own 16px. */
 const LIST_PADDING_X = 0;
@@ -39,7 +45,10 @@ export default function Inbox({
   const filter = useChatFilterStore((state) => state.filter);
   const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
   const router = useRouter();
-  const queryClient = useQueryClient();
+  // Which of the org's numbers/accounts each ticket came in on. Resolved here
+  // rather than in the row so the list shares one `waSettings` read instead of
+  // one hook per visible row, and `ChatBox` keeps only primitive props to memo on.
+  const { data: waSettings } = useWaSettings();
 
   const mergedFilter = {
     ...filter,
@@ -49,28 +58,23 @@ export default function Inbox({
     status: statusOverride !== undefined ? statusOverride : filter.status,
     favorite,
   };
-  const { wsData } = useWsData();
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-  } = useFilteredContacts(encodedFilter);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
+    useFilteredContacts(encodedFilter);
 
-  const contactsByFilter = useContactsStore(state => state.contactsByFilter);
-  const contactsById = useContactsStore(state => state.contactsById);
-  const addContactsForFilter = useContactsStore(state => state.addContactsForFilter);
-  const updateContactById = useContactsStore(state => state.updateContactById);
-  const currentUser = useContactsStore(state => state.currentUser);
+  const contactsByFilter = useContactsStore((state) => state.contactsByFilter);
+  const contactsById = useContactsStore((state) => state.contactsById);
+  const addContactsForFilter = useContactsStore((state) => state.addContactsForFilter);
+  const currentUser = useContactsStore((state) => state.currentUser);
+  // The signed-in user, for "You". `currentUser` above is only ever seeded with
+  // null by this screen, so it cannot be relied on for that.
+  const { userId } = useAuth();
   const { colorScheme } = useColorScheme();
   const screenBg = colorScheme === "dark" ? Colors.dark.bg : Colors.light.bg;
-  const setFilter = useContactsStore(state => state.setFilter);
-  const loadContactsFromDB = useContactsStore(state => state.loadContactsFromDB);
+  const setFilter = useContactsStore((state) => state.setFilter);
+  const loadContactsFromDB = useContactsStore((state) => state.loadContactsFromDB);
 
   const filterKey = makeFilterKey(mergedFilter);
 
@@ -78,6 +82,9 @@ export default function Inbox({
     setFilter(mergedFilter);
     // Assuming currentUser logic isn't strictly required for contacts load, passing null or basic info is fine.
     loadContactsFromDB(mergedFilter, null);
+    // `mergedFilter` is rebuilt every render, so depending on it would reload the
+    // list forever. `filterKey` is its stable serialised form and stands in for it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey, setFilter, loadContactsFromDB]);
 
   // Handle data load from react-query
@@ -90,20 +97,21 @@ export default function Inbox({
       if (!allContacts.length) return;
 
       const existingIds = new Set(contactsByFilter[filterKey] || []);
-      const newContacts = allContacts
-        .filter((c) => {
-          const existingContact = contactsById.has(c.id);
-          if (!existingContact) return true;
-          return !existingIds.has(c.id);
-        })
-        .map((c) => {
-          if (contactsById.has(c.id)) return c;
-          return { ...c, updatedAt: new Date().toISOString() };
-        });
+      const newContacts = allContacts.filter(
+        (c) => !contactsById.has(c.id) || !existingIds.has(c.id),
+      );
 
+      if (!isActive) return;
+      // Every row goes to the store, not just the ones this list lacked. Rows it
+      // already had used to be skipped, so once a chat was listed its preview,
+      // unread count and status only ever changed through the socket — and any
+      // frame missed while the phone was backgrounded left the row stale for good.
+      await addContactsForFilter(filterKey, allContacts);
+
+      // Threads are still seeded only for rows that were new here: merging a
+      // server page into a thread that is already cached would drop any
+      // optimistic bubble still waiting on its send (see `mergeMessages`).
       if (newContacts.length > 0 && isActive) {
-        await addContactsForFilter(filterKey, newContacts);
-
         newContacts.forEach((c: any) => {
           if (!c.messages) return;
           const messageMap = new Map();
@@ -127,42 +135,16 @@ export default function Inbox({
     return () => {
       isActive = false;
     };
+    // Reads `contactsById`/`contactsByFilter` only to diff against what just
+    // arrived. Depending on them would re-run this on every store write — including
+    // the writes it makes itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, filterKey]);
 
-  // Websocket hook
-  useEffect(() => {
-    if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
-      const contactId = wsData.inbox.contact.id;
-      const isUnread =
-        Array.isArray(wsData.inbox?.message.readUsers) &&
-        wsData.inbox.message.readUsers.length === 0 &&
-        wsData.inbox.message.sendBy === null;
-
-      updateContactById(
-        contactId,
-        (oldContact) => {
-          if (!oldContact) return oldContact;
-          return {
-            ...oldContact,
-            ...wsData.inbox?.contact,
-            lastMessage: wsData.inbox?.message,
-            lastReceivedMessageTimeStamp: wsData.inbox?.contact.lastReceivedMessageTimeStamp,
-            unReadMessageCount: isUnread
-              ? (oldContact.unReadMessageCount ?? 0) + 1
-              : oldContact.unReadMessageCount ?? 0,
-          };
-        },
-        isUnread
-      );
-
-      if (wsData.inbox.message) {
-        const msg = wsData.inbox.message as any;
-        const k = `${contactId}_${msg.sourceIdentifier || msg.id}`;
-        useMessagesStore.getState().mergeMessages(k, [msg], false);
-        useMessagesStore.getState().mergeMessages(`${contactId}_all`, [msg], false);
-      }
-    }
-  }, [wsData, queryClient, updateContactById]);
+  // NB: no websocket effect here. Inbound `inbox` frames are folded into the
+  // stores by `applyInboxUpdate` in UserContext, straight off the socket — an
+  // effect keyed on `wsData` dropped every frame but the last of a React batch,
+  // and never ran at all while this screen was unmounted.
 
   const contactIds = contactsByFilter[filterKey] || [];
   let displayedContacts = contactIds.map((id) => contactsById.get(id)).filter(Boolean);
@@ -170,8 +152,8 @@ export default function Inbox({
   const finalContacts =
     waMessageAssignStatus === "Addressed"
       ? displayedContacts.filter((c) =>
-        WaMessageClosedStatus.includes(c.waMessageAssignStatus as WaMessageAssignStatus)
-      )
+          WaMessageClosedStatus.includes(c.waMessageAssignStatus as WaMessageAssignStatus),
+        )
       : displayedContacts;
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
@@ -181,15 +163,21 @@ export default function Inbox({
 
     const parsedMessage = parseWaMessage_(item.lastMessage);
 
+    const lastMessageSender = getLastMessageSender(item, userId);
     const messagePreview = returnMessageContentBasedOnParsedMessage(
       parsedMessage,
-      item?.lastMessage?.messageBody?.exchangeProcess
+      // With the sender named up front, a reaction reads "Aisha: Reacted 👍",
+      // not "Aisha: You reacted 👍" — the receive wording is the neutral one.
+      lastMessageSender ? "receive" : item?.lastMessage?.messageBody?.exchangeProcess,
     );
     const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(24, "hour");
     const now = dayjs();
     const diffInMinutes = sessionExpiry.diff(now, "minute");
     const isSessionActive = diffInMinutes > 0;
-    const platform = item?.lastMessage?.sourcePlatform;
+    // Not `item.lastMessage` directly: a private note there names the channel
+    // "internal". See `getContactChannelSource`.
+    const { platform, identifier } = getContactChannelSource(item);
+    const channel = resolveChannel(waSettings, platform, identifier);
     const name = item.name || item?.whatsappUserName || item.igsId || item.phone;
 
     return (
@@ -198,15 +186,18 @@ export default function Inbox({
         phone={item.phone}
         name={name}
         platform={platform}
+        channelLabel={channel?.label}
+        channelConnected={channel?.isConnected}
         lastMessage={messagePreview}
+        lastMessageSender={lastMessageSender}
         waMessageAssignStatus={item.waMessageAssignStatus}
+        conversationStatus={item.conversationStatus}
         assignedUsers={item.assignedUsers}
         lifecycleId={item.lifecycleId}
         ticketNumber={item.ticketNumber}
-        ticketSubject={item.ticketSubject}
         isFavorite={item.isFavorite}
         contactLabels={item.contactLabels}
-        currentUserId={currentUser?.userId}
+        currentUserId={userId ?? currentUser?.userId}
         onPress={() => {
           setSelectedContact({
             ...item,
@@ -220,17 +211,14 @@ export default function Inbox({
         lastMessageTimeStamp={dayjs.utc(item.lastMessage?.waCreatedAt).fromNow()}
         lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
         isSessionActive={isSessionActive}
-        unReadMessageCount={item.unReadMessageCount}
+        unReadMessageCount={getVisibleUnreadCount(item, userId ?? currentUser?.userId)}
       />
     );
   };
 
   if (isLoading && !finalContacts.length) {
     return (
-      <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: screenBg }}
-      >
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: screenBg }}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -238,10 +226,7 @@ export default function Inbox({
 
   if (isError && !finalContacts.length) {
     return (
-      <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: screenBg }}
-      >
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: screenBg }}>
         <Text className="text-red-500 text-center">Failed to load contacts.</Text>
       </View>
     );

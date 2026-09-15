@@ -16,12 +16,18 @@ export type ContactsWithLastMessage = {
   unReadMessageCount: number;
   lastReceivedMessageTimeStamp: any;
   lastMessage: any;
+  /** The ticket's newest messages (up to ten), each with its `sender`. */
+  messages?: any[];
   lastMessageTimeStamp: any;
   waMessageAssignStatus: string;
+  /** The ticket's own status. Preferred over the contact-wide `waMessageAssignStatus`. */
+  conversationStatus?: string | null;
   assignedUsers: any;
   isSessionActive: boolean;
-  whatsappUserName?: string,
-  igsId?: string,
+  whatsappUserName?: string;
+  igsId?: string;
+  /** Messenger's page-scoped id — set only for contacts reached on Facebook. */
+  psid?: string;
   platform?: string;
   lifecycleId?: string;
   /** The ticket this row belongs to. Favouriting is keyed on it, not the contact. */
@@ -48,7 +54,6 @@ export type MultiGV = {
   group: string;
   value: string;
 };
-
 
 export interface ICreateContact {
   name: string;
@@ -98,7 +103,7 @@ export type WaReceiveMessageBody = {
         name: string;
       };
       wa_id: string;
-    }
+    },
   ];
   messages: [
     {
@@ -157,7 +162,7 @@ export type WaReceiveMessageBody = {
         emoji: string;
         message_id: string;
       };
-    }
+    },
   ];
   statuses: [
     {
@@ -168,7 +173,7 @@ export type WaReceiveMessageBody = {
       conversation: {
         id: string;
       };
-    }
+    },
   ];
 };
 export type WaSendMessageBody = {
@@ -176,29 +181,22 @@ export type WaSendMessageBody = {
   recipient_type: "individual";
   to: string; // PHONE_NUMBER type
   type:
-  | "text"
-  | "image"
-  | "interactive"
-  | "audio"
-  | "document"
-  | "contacts"
-  | "sticker"
-  | "location"
-  | "template"
-  | "reaction";
+    | "text"
+    | "image"
+    | "interactive"
+    | "audio"
+    | "document"
+    | "contacts"
+    | "sticker"
+    | "location"
+    | "template"
+    | "reaction";
   text?: {
     preview_url?: boolean;
     body: string;
   };
   interactive?: {
-    type:
-    | "button"
-    | "list"
-    | "cta_url"
-    | "flow"
-    | "catalog_message"
-    | "product"
-    | "product_list";
+    type: "button" | "list" | "cta_url" | "flow" | "catalog_message" | "product" | "product_list";
     action?: WaInteractiveMessageAction;
     body?: {
       text: string; // max 1024 chars

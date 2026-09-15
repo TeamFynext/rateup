@@ -1,6 +1,7 @@
 import { useColorScheme } from "nativewind";
-import { Toast } from "toastify-react-native";
-import { View,
+import { Toast } from "@/components/common/Notice";
+import {
+  View,
   Text,
   Pressable,
   useWindowDimensions,
@@ -9,7 +10,8 @@ import { View,
   TouchableOpacity,
   ScrollView,
   Modal,
-  RefreshControl } from "react-native";
+  RefreshControl,
+} from "react-native";
 import { useMemo, useState, useCallback } from "react";
 import { countries } from "@/constants/countries";
 import {
@@ -32,10 +34,7 @@ import {
   useRedeemReward,
   useRedeemRewardByShortCode,
 } from "@/api/loyalty/loyalty.query";
-import {
-  AvailableRewardsCard,
-  PendingRedemptionsCard,
-} from "./cashierPortal/components";
+import { AvailableRewardsCard, PendingRedemptionsCard } from "./cashierPortal/components";
 import { Colors } from "@/constants/colors";
 import ScreenHeader from "@/components/common/ScreenHeader";
 interface ActionCardProps {
@@ -62,8 +61,9 @@ const ActionCard = ({
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-xl p-4 w-[48%] mb-4 border ${isDark ? "bg-slate-900 border-slate-800" : ""
-        }`}
+      className={`rounded-xl p-4 w-[48%] mb-4 border ${
+        isDark ? "bg-slate-900 border-slate-800" : ""
+      }`}
       style={{
         backgroundColor: isDark ? undefined : lightBg,
         borderColor: border,
@@ -78,16 +78,10 @@ const ActionCard = ({
         </View>
 
         <View className="flex-1">
-          <Text
-            className="text-sm font-semibold"
-            style={{ color: isDark ? "#fff" : "#0f172a" }}
-          >
+          <Text className="text-sm font-semibold" style={{ color: isDark ? "#fff" : "#0f172a" }}>
             {title}
           </Text>
-          <Text
-            className="text-xs"
-            style={{ color: isDark ? "#9ca3af" : "#64748b" }}
-          >
+          <Text className="text-xs" style={{ color: isDark ? "#9ca3af" : "#64748b" }}>
             {subtitle}
           </Text>
         </View>
@@ -110,11 +104,15 @@ const CashierPortal = () => {
   const [redeemCouponOpen, setRedeemCouponOpen] = useState(false);
 
   const { data: tiers } = useLoyaltyTiers();
-  const { data: customerData, isLoading: isLoadingCustomer, isError: isCustomerError, refetch } =
-    useCustomerRewardsByPhone(fullPhoneNumber);
+  const {
+    data: customerData,
+    isLoading: isLoadingCustomer,
+    isError: isCustomerError,
+    refetch,
+  } = useCustomerRewardsByPhone(fullPhoneNumber);
   const awardPoints = useAwardPointsMutation();
   const redeemRewardMutation = useRedeemReward(fullPhoneNumber);
-  const assignReward = useAssignRewardMutation(() => { });
+  const assignReward = useAssignRewardMutation(() => {});
   const redeemRewardByShortCode = useRedeemRewardByShortCode();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -135,17 +133,17 @@ const CashierPortal = () => {
 
   const customer = customerData?.customer;
   const availableRewards = customerData?.availableRewards || [];
-  const redeemedRewards = customerData?.redeemedRewards || [];
   const issuableRewards = customerData?.issuableRewards || [];
 
+  // Depends on the raw field, not the `|| []` alias above — that fallback builds
+  // a fresh array every render, so the memo never actually held.
   const unusedRedemptions = useMemo(() => {
-    return redeemedRewards.filter(
+    return (customerData?.redeemedRewards ?? []).filter(
       (r) => r.status === "approved" || r.status === "pending",
     );
-  }, [redeemedRewards]);
+  }, [customerData?.redeemedRewards]);
 
-  const tierColor =
-    tiers?.find((t) => t.id === customer?.currentTier?.id)?.color || "#C0C0C0";
+  const tierColor = tiers?.find((t) => t.id === customer?.currentTier?.id)?.color || "#C0C0C0";
 
   const getStatusStyle = () => {
     switch (customer?.status) {
@@ -210,7 +208,7 @@ const CashierPortal = () => {
       setAssignRewardOpen(false);
       setSelectedRewardId("");
       setAssignRewardNotes("");
-    } catch (error) {
+    } catch {
       Toast.show({
         type: "error",
         text1: "Failed to assign reward",
@@ -262,9 +260,7 @@ const CashierPortal = () => {
     >
       <Text className="text-black dark:text-white mr-2">{item.flag}</Text>
       <Text className="text-black dark:text-white mr-2">{item.name}</Text>
-      <Text className="text-black dark:text-white text-sm">
-        {item.dial_code}
-      </Text>
+      <Text className="text-black dark:text-white text-sm">{item.dial_code}</Text>
     </TouchableOpacity>
   );
 
@@ -319,12 +315,8 @@ const CashierPortal = () => {
                 className="flex-row items-center border border-[#E2E5ED] rounded-xl px-3 py-3 bg-white dark:bg-slate-950"
                 style={{ minWidth: 100 }}
               >
-                <Text className="mr-2 text-base dark:text-white">
-                  {selectedCountry.flag}
-                </Text>
-                <Text className="dark:text-white text-base mr-1">
-                  {selectedCountry.dial_code}
-                </Text>
+                <Text className="mr-2 text-base dark:text-white">{selectedCountry.flag}</Text>
+                <Text className="dark:text-white text-base mr-1">{selectedCountry.dial_code}</Text>
                 {showDropdown ? (
                   <ChevronUp size={18} color={textColor} />
                 ) : (
@@ -366,10 +358,11 @@ const CashierPortal = () => {
           <Pressable
             onPress={handleSearch}
             disabled={phone.length < 6}
-            className={`mt-5 py-3 rounded-xl items-center ${phone.length < 6
-              ? "bg-gray-300 dark:bg-slate-700"
-              : "bg-primaryBlue active:opacity-80"
-              }`}
+            className={`mt-5 py-3 rounded-xl items-center ${
+              phone.length < 6
+                ? "bg-gray-300 dark:bg-slate-700"
+                : "bg-primaryBlue active:opacity-80"
+            }`}
           >
             <Text className="text-white font-semibold text-base">
               {isLoadingCustomer ? "Searching..." : "Search Customer"}
@@ -398,8 +391,8 @@ const CashierPortal = () => {
                 </Text>
 
                 <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
-                  Search for a customer using their phone number to view details and
-                  perform actions.
+                  Search for a customer using their phone number to view details and perform
+                  actions.
                 </Text>
               </>
             )}
@@ -475,13 +468,9 @@ const CashierPortal = () => {
 
                   {/* Status */}
                   <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4">
-                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      Status
-                    </Text>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</Text>
 
-                    <View
-                      className={`self-start px-3 py-1 rounded-full ${getStatusStyle()}`}
-                    >
+                    <View className={`self-start px-3 py-1 rounded-full ${getStatusStyle()}`}>
                       <Text className="text-xs font-semibold capitalize">
                         {customer?.status || "active"}
                       </Text>
@@ -551,10 +540,7 @@ const CashierPortal = () => {
               isDark={isDark}
               redeemRewardByShortCode={redeemRewardByShortCode}
             />
-            <PendingRedemptionsCard
-              isDark={isDark}
-              unusedRedemptions={unusedRedemptions}
-            />
+            <PendingRedemptionsCard isDark={isDark} unusedRedemptions={unusedRedemptions} />
           </View>
         )}
       </ScrollView>
@@ -622,9 +608,7 @@ const CashierPortal = () => {
                 onPress={() => setIssuePointsOpen(false)}
                 className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-700"
               >
-                <Text className="text-gray-800 dark:text-gray-200 font-medium">
-                  Cancel
-                </Text>
+                <Text className="text-gray-800 dark:text-gray-200 font-medium">Cancel</Text>
               </Pressable>
 
               <Pressable
@@ -677,10 +661,11 @@ const CashierPortal = () => {
                     <Pressable
                       key={reward.id}
                       onPress={() => setSelectedRewardId(reward.id)}
-                      className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${selected
-                        ? "border-primaryBlue bg-primaryBlue/5"
-                        : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                        }`}
+                      className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${
+                        selected
+                          ? "border-primaryBlue bg-primaryBlue/5"
+                          : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                      }`}
                     >
                       {/* Left */}
                       <View className="flex-1 mr-3">
@@ -711,27 +696,22 @@ const CashierPortal = () => {
                 }}
                 className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-700"
               >
-                <Text className="text-gray-800 dark:text-gray-200 font-medium">
-                  Cancel
-                </Text>
+                <Text className="text-gray-800 dark:text-gray-200 font-medium">Cancel</Text>
               </Pressable>
 
               <Pressable
                 onPress={handleClaimReward}
                 disabled={!selectedRewardId || redeemRewardMutation?.isPending}
-                className={`px-5 py-2 rounded-lg flex-row items-center ${!selectedRewardId
-                  ? "bg-gray-300 dark:bg-slate-700"
-                  : "bg-primaryBlue"
-                  }`}
+                className={`px-5 py-2 rounded-lg flex-row items-center ${
+                  !selectedRewardId ? "bg-gray-300 dark:bg-slate-700" : "bg-primaryBlue"
+                }`}
               >
                 {redeemRewardMutation?.isPending && (
                   <Loader2 size={16} color="white" style={{ marginRight: 6 }} />
                 )}
 
                 <Text className="text-white font-semibold">
-                  {redeemRewardMutation?.isPending
-                    ? "Claiming..."
-                    : "Claim Reward"}
+                  {redeemRewardMutation?.isPending ? "Claiming..." : "Claim Reward"}
                 </Text>
               </Pressable>
             </View>
@@ -761,10 +741,7 @@ const CashierPortal = () => {
               Select Reward
             </Text>
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              className="max-h-[250px] mb-4"
-            >
+            <ScrollView showsVerticalScrollIndicator={false} className="max-h-[250px] mb-4">
               {issuableRewards?.map((reward: any) => {
                 const selected = selectedRewardId === reward.id;
 
@@ -772,10 +749,11 @@ const CashierPortal = () => {
                   <Pressable
                     key={reward.id}
                     onPress={() => setSelectedRewardId(reward.id)}
-                    className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${selected
-                      ? "border-primaryBlue bg-primaryBlue/5"
-                      : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                      }`}
+                    className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${
+                      selected
+                        ? "border-primaryBlue bg-primaryBlue/5"
+                        : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                    }`}
                   >
                     <View className="flex-1">
                       <Text className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -816,18 +794,15 @@ const CashierPortal = () => {
                 }}
                 className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-700"
               >
-                <Text className="text-gray-800 dark:text-gray-200 font-medium">
-                  Cancel
-                </Text>
+                <Text className="text-gray-800 dark:text-gray-200 font-medium">Cancel</Text>
               </Pressable>
 
               <Pressable
                 onPress={handleAssignReward}
                 disabled={!selectedRewardId || assignReward?.isPending}
-                className={`px-5 py-2 rounded-lg flex-row items-center ${!selectedRewardId
-                  ? "bg-gray-300 dark:bg-slate-700"
-                  : "bg-primaryBlue"
-                  }`}
+                className={`px-5 py-2 rounded-lg flex-row items-center ${
+                  !selectedRewardId ? "bg-gray-300 dark:bg-slate-700" : "bg-primaryBlue"
+                }`}
               >
                 {assignReward?.isPending && (
                   <Loader2 size={16} color="white" style={{ marginRight: 6 }} />
@@ -886,18 +861,15 @@ const CashierPortal = () => {
                 }}
                 className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-700"
               >
-                <Text className="text-gray-800 dark:text-gray-200 font-medium">
-                  Cancel
-                </Text>
+                <Text className="text-gray-800 dark:text-gray-200 font-medium">Cancel</Text>
               </Pressable>
 
               <Pressable
                 onPress={handleRedeemCoupon}
                 disabled={!couponCode}
-                className={`px-5 py-2 rounded-lg ${!couponCode
-                  ? "bg-gray-300 dark:bg-slate-700"
-                  : "bg-primaryBlue active:opacity-80"
-                  }`}
+                className={`px-5 py-2 rounded-lg ${
+                  !couponCode ? "bg-gray-300 dark:bg-slate-700" : "bg-primaryBlue active:opacity-80"
+                }`}
               >
                 <Text className="text-white font-semibold">Redeem Coupon</Text>
               </Pressable>
