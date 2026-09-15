@@ -6,6 +6,10 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import {
+  campaignProgressSegments,
+  PROGRESS_SEGMENTS,
+} from "@/components/Campaign/campaignProgress.ts";
 import { CampaignStatusBadge } from "@/components/dashboard/campaign/campaignStatus.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -45,9 +49,11 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
  * A campaign that has been launched.
  *
  * The card answers the two questions someone scanning the list has: how big was
- * it, and how much of it landed. The bar is delivered-then-read stacked against
- * the recipient count, so a campaign that half-delivered reads as half a bar
- * rather than as a number they have to divide in their head.
+ * it, and how much of it landed. The bar stacks read, delivered, still-in-flight
+ * and failed against the recipient count, each in its own colour, so a campaign
+ * that half-delivered reads as half a bar and one that mostly failed reads as
+ * red — without dividing anything in your head. See `campaignProgress.ts` for
+ * how the overlapping counters become separate segments.
  */
 function LiveCampaignCard({
   campaign,
@@ -62,10 +68,13 @@ function LiveCampaignCard({
   const delivered = campaign.totalDelivered ?? 0;
   const read = campaign.totalRead ?? 0;
   const share = (value: number) => (recipients > 0 ? Math.min((value / recipients) * 100, 100) : 0);
-  // Read is a subset of delivered, so the segments are drawn as read plus the
-  // rest of delivered — not stacked totals, which would overflow the bar.
-  const readWidth = share(read);
-  const deliveredWidth = Math.max(share(delivered) - readWidth, 0);
+  const segments = campaignProgressSegments({
+    recipients,
+    sent: campaign.totalSent,
+    delivered,
+    read,
+    failed: campaign.totalFailed,
+  });
 
   const lastActivity = campaign.campaignSentAt ?? campaign.startedAt ?? campaign.createdAt;
 
@@ -101,14 +110,29 @@ function LiveCampaignCard({
             {recipients > 0
               ? t("{delivered}% delivered · {read}% read", {
                   delivered: share(delivered).toFixed(0),
-                  read: readWidth.toFixed(0),
+                  read: share(read).toFixed(0),
                 })
               : t("Not sent yet")}
           </span>
         </div>
-        <span className="bg-secondary flex h-1.5 overflow-hidden rounded-full">
-          <span className="bg-emerald-500 block h-full" style={{ width: `${readWidth}%` }} />
-          <span className="bg-green-600 block h-full" style={{ width: `${deliveredWidth}%` }} />
+        <span
+          className="bg-secondary flex h-1.5 overflow-hidden rounded-full"
+          role="img"
+          aria-label={segments
+            .map((segment) => `${t(segment.label)} ${segment.count.toLocaleString()}`)
+            .join(", ")}
+        >
+          {segments.map((segment) =>
+            segment.width > 0 ? (
+              <span
+                key={segment.key}
+                className={`block h-full ${segment.color}`}
+                // Width is data, so it is the one inline style here.
+                style={{ width: `${segment.width}%` }}
+                title={`${t(segment.label)}: ${segment.count.toLocaleString()}`}
+              />
+            ) : null,
+          )}
         </span>
       </div>
 
@@ -122,6 +146,30 @@ function LiveCampaignCard({
         {campaign.teamName ? <span className="truncate">{campaign.teamName}</span> : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * The key to the progress bar's colours.
+ *
+ * Shown once, above the grid, rather than on every card: the colours mean the
+ * same thing on all of them, and repeating the key with four counts per card
+ * turned a glanceable bar back into numbers to read. The counts are still on
+ * each segment's hover.
+ */
+export function CampaignProgressLegend({ className = "" }: Readonly<{ className?: string }>) {
+  const { t } = useTranslation("campaign.card");
+  return (
+    <span
+      className={`text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${className}`}
+    >
+      {PROGRESS_SEGMENTS.map((segment) => (
+        <span key={segment.key} className="inline-flex items-center gap-1.5">
+          <span className={`size-2 rounded-full ${segment.color}`} aria-hidden />
+          {t(segment.label)}
+        </span>
+      ))}
+    </span>
   );
 }
 
