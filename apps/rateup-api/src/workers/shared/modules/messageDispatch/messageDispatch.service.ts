@@ -18,6 +18,12 @@ import {
 import type { WaTemplateData, WaTemplateDefaultValues } from "../../types/dispatcher.types.js";
 import { classifyWaFailure, WaFailureClass } from "../../../../utils/waRetryableErrors.js";
 import dbPool from "../../../../utils/db.js";
+import {
+  isCampaignSendPaused,
+  pauseCampaignForAccountIssue,
+  pauseReasonForMetaError,
+} from "../../../../modules/campaign/campaignPause.service.js";
+import { CampaignPauseReason } from "../../../../types/enums.js";
 
 // Define proper interfaces
 interface Participant {
@@ -81,6 +87,12 @@ interface MessageOptions {
 export interface DispatchOutcome {
   ok: boolean;
   failureClass?: WaFailureClass;
+  /**
+   * The campaign is paused because the account cannot send. The recipient was
+   * left PENDING — nothing to retry in the queue, and nothing to book as a
+   * failure; resuming the campaign sends to them.
+   */
+  paused?: boolean;
 }
 
 export interface ProcessParticipantOptions {
@@ -272,15 +284,22 @@ async function sendTemplateMessage(
   dripCampaignParticipantId?: string,
   category?: WaTemplateCategory,
 ): Promise<DispatchOutcome> {
+  // A job already out of the queue when its campaign was paused, or fanned out by
+  // an enqueue that raced the pause. Skipped before Meta is called, and the
+  // recipient is left exactly as it was.
+  if (await isCampaignSendPaused(campaignSendId)) {
+    return { ok: false, paused: true };
+  }
+
   // Sends and records in one call — including recording a rejection, which is
   // what the failure bookkeeping below reacts to.
   //
   // sendMetaMessage enforces the org's conversation allowance and signals a breach by
-  // throwing. That is deliberately caught and folded into the normal failure result
-  // here rather than propagating: this runs inside a BullMQ job, and a quota breach is
-  // not transient — rethrowing would retry the job on a condition that cannot resolve
-  // until the org upgrades or the cycle resets. The participant is marked FAILED with
-  // the reason instead.
+  // throwing. That is deliberately caught rather than propagated: this runs inside a
+  // BullMQ job, and a quota breach is not transient — rethrowing would retry the job on
+  // a condition that cannot resolve until the org upgrades or the cycle resets. It is
+  // not booked as this recipient's failure either: every recipient after this one would
+  // be refused the same way, so the campaign is paused and they all stay PENDING.
   const data = await sendMetaMessage({
     platform: PlatformType.WHATSAPP,
     orgId,
@@ -306,15 +325,32 @@ async function sendTemplateMessage(
       templateData,
     },
   }).catch((error: unknown) => {
-    if (error instanceof ConversationLimitError) {
-      log.warn({ orgId, campaignId }, "Campaign send blocked — conversation limit reached");
-      // No `detail`: a quota breach is ours, not Meta's, and carries no Graph
-      // code — so it classifies as UNKNOWN and is never retried. That is the
-      // intended outcome; see the note above.
-      return { ok: false as const, error: error.message, detail: undefined };
-    }
+    if (error instanceof ConversationLimitError) return null;
     throw error;
   });
+
+  if (data === null) {
+    log.warn({ orgId, campaignId }, "Campaign send blocked — conversation limit reached");
+    // Meta was never called, so there is nothing to record — not even the usage
+    // counter below.
+    await pauseCampaignForAccountIssue(campaignId, CampaignPauseReason.CONVERSATION_LIMIT);
+    return { ok: false, paused: true };
+  }
+
+  // An account-wide rejection from Meta. Same reasoning as the limit above, except
+  // Meta *was* called, so the usage counter still ticks.
+  const pauseReason = data.ok ? null : pauseReasonForMetaError(data.detail?.code);
+  if (pauseReason) {
+    // One statement, so no transaction and no held connection: the pause walks
+    // the queue, and holding a pooled connection open across that is how P2028
+    // started.
+    await dbPool.query(
+      `UPDATE "UsageStats" SET "messagesCount" = "messagesCount" + 1 WHERE "orgId" = $1`,
+      [orgId],
+    );
+    await pauseCampaignForAccountIssue(campaignId, pauseReason);
+    return { ok: false, paused: true };
+  }
 
   // The send already happened; this records its outcome atomically. Raw `pg`
   // rather than `prisma.$transaction`: this runs at concurrency 250 and Prisma
