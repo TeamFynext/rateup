@@ -146,8 +146,7 @@ async function fetchWeeklyConversationStatsByOrg() {
 
       FROM "Org" o
       JOIN "User" u ON u.id = o."ownerId"
-      LEFT JOIN "Contact" ct ON ct."orgId" = o.id
-      LEFT JOIN "Conversation" c ON c."contactId" = ct.id
+      LEFT JOIN "Conversation" c ON c."orgId" = o.id
 
       WHERE u.active = TRUE
 
@@ -269,8 +268,7 @@ async function fetchTeamOverviewByOrg(orgId: string) {
       FROM "WaMessage" wm
       JOIN "Conversation" c ON c.id = wm."conversationId"
       JOIN "ConversationAssignedUserTeamMap" cau ON cau."conversationId" = c.id
-      JOIN "Contact" ct ON ct.id = c."contactId"
-      WHERE ct."orgId" = ${orgId}::uuid
+      WHERE c."orgId" = ${orgId}::uuid
         AND wm."sendBy" IS NOT NULL
         AND wm."waCreatedAt" >= NOW() - INTERVAL '7 days'
       GROUP BY cau."teamId"
