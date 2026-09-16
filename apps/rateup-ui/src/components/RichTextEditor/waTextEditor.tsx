@@ -44,9 +44,10 @@ import { cn } from "@/lib/utils";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
-import { getContactPlatform, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
+import { getContactChannelSource, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { AccountSelector } from "../input/AccountSelector.tsx";
+import { findChannelAccount } from "../input/channelOptions.ts";
 import VoiceRecorder from "../input/VoiceRecorder.tsx";
 import { Button } from "../ui/button.tsx";
 import CustomTooltip from "../ui/custom/CustomTooltip.tsx";
@@ -249,27 +250,44 @@ function WaTextEditor({
   const [isModalOpened, { close: onModalClose, open: openModal }] = useDisclosure(false);
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
 
-  const platform = selectedContact ? getContactPlatform(selectedContact) : null;
-  const phone_number_id = useMemo(
-    () =>
-      waSettings
-        ? waSettings?.find((s) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier)
-            ?.phoneId
-        : "",
-    [waSettings],
+  const { platform: contactPlatform, identifier: channelIdentifier } = useMemo(
+    () => getContactChannelSource(selectedContact),
+    [selectedContact],
   );
+  const platform = selectedContact ? contactPlatform : null;
 
+  /**
+   * The account this conversation actually runs on — read off the thread, not off
+   * whatever the agent last sent from.
+   *
+   * Two things made replies leave on the wrong number. The account was matched
+   * with `s.phone === sourceIdentifier`, which never holds for WhatsApp (`+965…`
+   * against `965…`), so nothing ever resolved; and the store was only seeded
+   * while it was still empty, so the first thread of a session fixed the number
+   * for every thread after it. A reply sent on a number the customer never wrote
+   * to has no 24h window open, which is what came back as 131047
+   * "Re-engagement message".
+   *
+   * Instagram and Messenger address the send by the account id the thread already
+   * recorded, so those pass the identifier straight through.
+   */
+  const conversationChannelId = useMemo(() => {
+    if (!platform || platform === MessagePlatform.WEBCHAT) return "";
+    if (platform !== MessagePlatform.WHATSAPP) return channelIdentifier ?? "";
+    return findChannelAccount(waSettings, platform, channelIdentifier)?.phoneId ?? "";
+  }, [waSettings, platform, channelIdentifier]);
+
+  /**
+   * Re-seeded per conversation, so switching threads switches the number back to
+   * that thread's own. An agent's manual pick in the selector survives — it moves
+   * the store, not `conversationChannelId`, so this does not fire again until the
+   * conversation itself changes. Left empty when the thread names no channel we
+   * still have connected: the agent picks, rather than the send silently going
+   * out on whichever number the org connected first.
+   */
   useEffect(() => {
-    if (!whatsappSettingsPhoneId && phone_number_id) {
-      updatePhoneId(phone_number_id);
-    }
-    if (
-      platform === MessagePlatform.INSTAGRAM &&
-      whatsappSettingsPhoneId !== selectedContact?.lastMessage?.sourceIdentifier
-    ) {
-      updatePhoneId(selectedContact?.lastMessage.sourceIdentifier ?? "");
-    }
-  }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
+    updatePhoneId(conversationChannelId);
+  }, [conversationChannelId, updatePhoneId]);
 
   const isSessionExpired = isInboxSessionExpired(selectedContact?.lastReceivedMessageTimeStamp);
 

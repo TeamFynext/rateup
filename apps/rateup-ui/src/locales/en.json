@@ -1,5 +1,7 @@
 {
   "translation": {
+    "no longer connected": "no longer connected",
+    "Received on": "Received on",
     "…": "…",
     "... not answered...": "... not answered...",
     "“{keyword}” is already in use elsewhere in your inbox.": "“{keyword}” is already in use elsewhere in your inbox.",
@@ -2110,6 +2112,7 @@
     "No lead stage has a rotting window set.": "No lead stage has a rotting window set.",
     "No leads match these filters.": "No leads match these filters.",
     "No logic jumps configured for this element": "No logic jumps configured for this element",
+    "no longer connected": "no longer connected",
     "No lost reasons are configured yet — add some in pipeline settings to track why deals slip.": "No lost reasons are configured yet — add some in pipeline settings to track why deals slip.",
     "No loyalty account for this customer.": "No loyalty account for this customer.",
     "No loyalty templates yet": "No loyalty templates yet",
@@ -2576,6 +2579,7 @@
     "Reason": "Reason",
     "Received from other agents": "Received from other agents",
     "Recent": "Recent",
+    "Received on": "Received on",
     "Recent actions performed by team members": "Recent actions performed by team members",
     "Recent activity": "Recent activity",
     "Recent Conversations": "Recent Conversations",
@@ -4232,9 +4236,13 @@
     "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",
     "Continue setup": "Continue setup",
     "Created {date}": "Created {date}",
+    "Delivered": "Delivered",
     "Draft": "Draft",
+    "Failed": "Failed",
     "Not sent yet": "Not sent yet",
-    "recipients": "recipients"
+    "Read": "Read",
+    "recipients": "recipients",
+    "Sent": "Sent"
   },
   "campaign.addParticipants": {
     "{count} items_one": "{count} items",
@@ -4330,7 +4338,8 @@
     "Try adjusting your filters or create a new campaign.": "Try adjusting your filters or create a new campaign."
   },
   "campaign.status": {
-    "Campaign stopped": "Campaign stopped"
+    "Campaign stopped": "Campaign stopped",
+    "Campaign paused": "Campaign paused"
   },
   "campaign.details": {
     "Are you sure you want to delete {count} selected participants? This action cannot be undone._one": "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
@@ -4492,7 +4501,18 @@
     "Type": "Type",
     "Unnamed contact": "Unnamed contact",
     "Wait for the campaign's current send to finish.": "Wait for the campaign's current send to finish.",
-    "We couldn't load this campaign.": "We couldn't load this campaign."
+    "We couldn't load this campaign.": "We couldn't load this campaign.",
+    "{count} recipients have not been messaged yet and will be sent when you resume._one": "{count} recipients have not been messaged yet and will be sent when you resume.",
+    "{count} recipients have not been messaged yet and will be sent when you resume._other": "{count} recipients have not been messaged yet and will be sent when you resume.",
+    "Campaign paused": "Campaign paused",
+    "Campaign paused: conversation limit reached": "Campaign paused: conversation limit reached",
+    "Campaign paused: WhatsApp payment issue": "Campaign paused: WhatsApp payment issue",
+    "Meta rejected the payment method on your WhatsApp Business account, so sending stopped. Add or fix the payment method in Meta's billing settings, then resume.": "Meta rejected the payment method on your WhatsApp Business account, so sending stopped. Add or fix the payment method in Meta's billing settings, then resume.",
+    "Open Meta billing": "Open Meta billing",
+    "Resume Drip": "Resume Drip",
+    "Sending stopped because the account cannot send right now.": "Sending stopped because the account cannot send right now.",
+    "Upgrade plan": "Upgrade plan",
+    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume."
   },
   "*Note": {
     " The updated feature will be valid only till end of the current billing cycle": "*Note: The updated feature will be valid only till end of the current billing cycle"

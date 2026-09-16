@@ -51,6 +51,8 @@ import {
   useEditConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import {
@@ -75,8 +77,9 @@ import {
   TeamFeature,
   WaMessageAssignStatus,
 } from "@/types/enums.ts";
-import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
+import { getContactChannelSource, getContactDisplayPhone } from "@/utils/whatsapp/inbox.ts";
 
+import { useDeleteTicket } from "../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../util.tsx";
 import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import AssignUser from "./chatdisplayHeader/AssignUser.tsx";
@@ -205,9 +208,11 @@ export default function TicketPanel({
   const { data: allTags = [] } = useConversationTags();
   const { data: teamRes } = useTeamsByUser();
   const teams = teamRes?.data ?? [];
+  const { data: waSettings } = useWaSettings();
 
   const editContactMutation = useEditContactMutation(undefined);
   const spamMutation = useSetContactSpam();
+  const { canDelete, deleteTicket, isPending: isDeletingTicket } = useDeleteTicket(contact);
   const assignLabels = useAssignContactLabelsToContactId();
   const assignTags = useAssignConversationTags();
   const editConversation = useEditConversation();
@@ -263,10 +268,15 @@ export default function TicketPanel({
   // trigger then reads as "not on the board" until the stage query catches up.
   const activeStage = board?.stages.find((stage) => stage.id === contactStage?.stageId) ?? null;
   const ActiveStageIcon = STAGE_STATUS_ICON[activeStage?.status ?? "OPEN"];
-  const platform = getContactPlatform(contact);
+  const { platform, identifier: channelIdentifier } = getContactChannelSource(contact);
   const channel = CHANNELS[platform] ?? CHANNELS[MessagePlatform.WHATSAPP];
   const ChannelIcon = channel.icon;
-  const account = contact?.metadata?.display_phone_number;
+  // The connected number/account this ticket ran through, read off the ticket's
+  // own messages. `contact.metadata` is the last webhook payload seen for the
+  // *contact*, so on a multi-channel org it names whichever number they wrote to
+  // last — not necessarily the one this ticket is on.
+  const connectedChannel = resolveChannel(waSettings, platform, channelIdentifier);
+  const displayPhone = getContactDisplayPhone(contact);
   const resolutionResult: ResolutionResult | null = contact?.resolutionResult ?? null;
 
   const copyTicketLink = async () => {
@@ -873,13 +883,13 @@ export default function TicketPanel({
             </div>
           )}
 
-          {contact?.phone && (
+          {displayPhone && (
             <div className="flex items-start gap-2.5">
               <IconPhone className="size-3.75 mt-px shrink-0 text-muted-foreground" />
               <div className="min-w-0">
                 <div className="text-[11px] text-muted-foreground">{t("Phone")}</div>
                 <div className="text-[13px] font-semibold truncate text-foreground">
-                  {contact.phone}
+                  {displayPhone}
                 </div>
               </div>
             </div>
@@ -912,7 +922,21 @@ export default function TicketPanel({
               </span>
             }
           />
-          {account && <InfoRow label={t("Account")} value={account} />}
+          {connectedChannel && (
+            <InfoRow
+              label={t("Account")}
+              value={
+                <span className="inline-flex items-center gap-1.5">
+                  {[connectedChannel.label, connectedChannel.account].filter(Boolean).join(" · ")}
+                  {!connectedChannel.isConnected && (
+                    <span className="text-[11px] text-muted-foreground">
+                      ({t("no longer connected")})
+                    </span>
+                  )}
+                </span>
+              }
+            />
+          )}
           {contact?.ticketCreatedAt && (
             <InfoRow
               label={t("Created")}
@@ -947,6 +971,22 @@ export default function TicketPanel({
           )}
           {contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
         </Button>
+
+        {/* Deleting is ticket-grained, unlike spam above it: it takes this one
+            ticket and its messages and leaves the contact alone. Admin-only,
+            matching the endpoint's own gate. */}
+        {canDelete && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => deleteTicket()}
+            disabled={isDeletingTicket}
+            className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <IconTrash className="size-3.75" />
+            {t("Delete conversation")}
+          </Button>
+        )}
       </div>
 
       {/* Removing a contact from the board deletes the lead, and with it every

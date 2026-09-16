@@ -219,6 +219,16 @@ export enum CampaignStatus {
   DEQUEUING = "DEQUEUING",
   DRAFT = "DRAFT",
   FAILED = "FAILED",
+  /// Stopped by the platform because the account cannot send — the
+  /// conversation allowance is spent, or Meta rejected the payment method. The
+  /// cause is on `Campaign.pauseReason`; unsent recipients stay PENDING.
+  PAUSED = "PAUSED",
+}
+
+/** Why a campaign is PAUSED. Mirrors `CampaignPauseReason` in the API. */
+export enum CampaignPauseReason {
+  CONVERSATION_LIMIT = "CONVERSATION_LIMIT",
+  PAYMENT_METHOD = "PAYMENT_METHOD",
 }
 /** Why a send session exists. Mirrors `CampaignSendTrigger` in the API schema. */
 export enum CampaignSendTrigger {

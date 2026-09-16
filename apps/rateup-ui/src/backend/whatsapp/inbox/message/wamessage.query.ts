@@ -25,6 +25,8 @@ import {
   blockWhatsAppUser,
   bulkAssignInboxToUser,
   createPrivateMessage,
+  deleteConversation,
+  deleteConversations,
   exportWaChats,
   exportWaMessageLogs,
   generateInboxResponse,
@@ -298,6 +300,77 @@ export const useToggleFavorite = () => {
       qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
     },
     onError: () => toast.error("Could not update favourite"),
+  });
+};
+
+/**
+ * Inbox Tickets v2 — delete one ticket for good.
+ *
+ * Ticket-grained like `useToggleFavorite`: only the deleted row leaves the list,
+ * even when the contact has others. The thread it was showing is dropped too —
+ * its messages went with the ticket — so a selection pointing at that row is
+ * cleared rather than left on a thread the server no longer has.
+ */
+export const useDeleteConversation = () => {
+  const { filterData } = useContactStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (variables: { conversationId: string; contactId: string }) =>
+      deleteConversation(variables.conversationId),
+    onSuccess: (_res, variables) => {
+      const { selectedContact, deleteContactsByIds } = useContactsStore.getState();
+      if (selectedContact && getRowKey(selectedContact) === variables.conversationId) {
+        useContactsStore.getState().setSelectedContact(null);
+      }
+      // The store is keyed by ticket, so the conversation id *is* the row key.
+      void deleteContactsByIds([variables.conversationId]);
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(variables.contactId) });
+      qc.invalidateQueries({ queryKey: ["conversations", "by-contact", variables.contactId] });
+      toast.success("Conversation deleted");
+    },
+    onError: (e) => {
+      toast.error(getApiErrorMessage(e, "Could not delete the conversation"));
+    },
+  });
+};
+
+/**
+ * Delete every selected ticket in one request.
+ *
+ * The list's selection is ticket-keyed, so these ids are row keys and the rows
+ * leave the list as they are. Only what the server reports as deleted is removed:
+ * a selection can hold a ticket somebody else already deleted, and the response —
+ * not the request — says what actually went.
+ */
+export const useDeleteConversations = () => {
+  const { filterData } = useContactStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (conversationIds: string[]) => deleteConversations(conversationIds),
+    onSuccess: (res) => {
+      const { selectedContact, deleteContactsByIds } = useContactsStore.getState();
+      const deleted = new Set(res.conversationIds);
+      if (selectedContact && deleted.has(getRowKey(selectedContact))) {
+        useContactsStore.getState().setSelectedContact(null);
+      }
+      void deleteContactsByIds(res.conversationIds);
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      for (const contactId of res.contactIds) {
+        qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
+        qc.invalidateQueries({ queryKey: ["conversations", "by-contact", contactId] });
+      }
+      toast.success(
+        res.deletedConversations === 1
+          ? "Conversation deleted"
+          : `${res.deletedConversations} conversations deleted`,
+      );
+    },
+    onError: (e) => {
+      toast.error(getApiErrorMessage(e, "Could not delete the conversations"));
+    },
   });
 };
 

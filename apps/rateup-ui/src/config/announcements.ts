@@ -196,6 +196,34 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new", "improvement", "fix"],
     area: "Loyalty",
     link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+    id: "2026-09-15-campaign-auto-pause",
+    title: "Campaigns pause when your account can't send",
+    summary:
+      "If your plan's conversation allowance runs out, or Meta rejects the payment method on your WhatsApp Business account, a campaign now pauses instead of marking every remaining recipient as failed. The campaign page shows a banner with the reason and a link to fix it: your plan for the allowance, Meta's billing settings for a payment problem. Recipients who were not messaged yet stay waiting, so Resume sends to exactly them once the cause is fixed.",
+    publishedAt: "2026-09-15",
+    kinds: ["improvement"],
+    area: "Campaigns",
+    link: { to: "/dashboard/campaign", label: "Open campaigns" },
+  },
+  {
+    id: "2026-09-12-inbox-channel-on-ticket",
+    title: "See which number a ticket came in on",
+    summary:
+      "Each inbox row now carries a chip naming the channel the ticket arrived on, and the thread's Ticket Info panel names it in full — your own label for the number where you have set one, otherwise the number itself. It reads the channel off the ticket's own messages rather than the contact's last activity, so a customer who writes to two of your numbers no longer makes both tickets claim the same one. A number you have since disconnected is still named, marked as no longer connected and outlined with a dashed border so it reads differently from a live channel. Webchat tickets now also show the number the visitor typed into the widget, which the inbox used to leave blank.",
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
+  },
+  {
+    id: "2026-09-12-inbox-delete-conversation",
+    title: "Delete a conversation",
+    summary:
+      "Admins can now delete a conversation outright, from the … menu in the thread header or the ticket details sidebar, and several at once by ticking chats in the list and using the bin in the selection bar. It removes that one ticket and every message in it — the contact and their other tickets stay exactly as they are. This is meant for threads that should not be kept at all, such as a test chat or something a customer asked you to erase, and it cannot be undone, so you are asked to confirm first. Anyone below admin will not see the option.",
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open inbox" },
   },
   {
     id: "2026-09-11-facebook-page-picker",

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export interface ParticipantAttempt {
@@ -19,11 +20,9 @@ const OUTCOME_STYLE: Record<ParticipantAttempt["outcome"], string> = {
 };
 
 /**
- * One small numbered chip per attempt this recipient was included in.
- *
- * The whole reason `CampaignSend` exists, at the row level: "#1 red, #2 green"
- * says in two glyphs that the initial send was refused and the retry landed —
- * which a single "SENT" status could never say.
+ * One chip per recipient: how many times we tried, tinted by how the latest
+ * try ended. "2, green" says the initial send was refused and the retry landed;
+ * the per-attempt history stays in the tooltip.
  */
 export function ParticipantAttemptChips({
   attempts,
@@ -34,23 +33,35 @@ export function ParticipantAttemptChips({
     return <span className="text-muted-foreground/70 text-xs">{t("Not attempted")}</span>;
   }
 
+  // The latest attempt decides the colour, whatever order the API listed them in.
+  const latest = attempts.reduce((a, b) => (b.attemptNo > a.attemptNo ? b : a));
+  // `attemptNo` is the campaign-wide send number, not this recipient's count:
+  // someone skipped by send #2 would read "Attempt 1 / Attempt 3" and look
+  // like three tries. Number by position in their own history instead.
+  const history = [...attempts]
+    .sort((a, b) => a.attemptNo - b.attemptNo)
+    .map((attempt, index) =>
+      t("Attempt {n} · {outcome}", { n: index + 1, outcome: attempt.outcome }),
+    );
+
   return (
-    <div className="flex items-center gap-1">
-      {attempts.map((attempt) => (
-        <span
-          key={`${attempt.attemptNo}-${attempt.at ?? ""}`}
-          title={t("Attempt {n} · {outcome}", {
-            n: attempt.attemptNo + 1,
-            outcome: attempt.outcome,
-          })}
-          className={cn(
-            "inline-flex size-5.5 items-center justify-center rounded-md font-mono text-[11px] font-semibold ring-1",
-            OUTCOME_STYLE[attempt.outcome],
-          )}
-        >
-          {attempt.attemptNo + 1}
-        </span>
-      ))}
-    </div>
+    <Tooltip>
+      <TooltipTrigger
+        render={<span />}
+        className={cn(
+          "inline-flex size-5.5 items-center justify-center rounded-md font-mono text-[11px] font-semibold ring-1",
+          OUTCOME_STYLE[latest.outcome],
+        )}
+      >
+        {attempts.length}
+      </TooltipTrigger>
+      <TooltipContent>
+        <ul>
+          {history.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </TooltipContent>
+    </Tooltip>
   );
 }

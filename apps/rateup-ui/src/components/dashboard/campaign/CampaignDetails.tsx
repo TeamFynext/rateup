@@ -30,6 +30,7 @@ import {
 } from "@/backend/campaign/campaign.query";
 import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { CampaignPausedBanner } from "@/components/dashboard/campaign/CampaignPausedBanner.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -130,7 +131,8 @@ export function CampaignDetails() {
   // offered again.
   const sendsQuery = useCampaignSends(campaignId);
   const pausedSchedule = useMemo(() => {
-    if (campaignQuery.data?.status !== CampaignStatus.INACTIVE) return null;
+    const status = campaignQuery.data?.status;
+    if (status !== CampaignStatus.INACTIVE && status !== CampaignStatus.PAUSED) return null;
     // `useCampaignSends` is ordered by `attemptNo`, which is the order they
     // happened in, so the last scheduled row is the most recent decision.
     const latest = (sendsQuery.data ?? []).findLast(
@@ -207,8 +209,9 @@ export function CampaignDetails() {
     type: campaignQuery.data.type,
     team: teamName,
     status: campaignQuery.data.status,
-    // Why a failed campaign stopped — the status badge is the only place it surfaces.
+    // Why a failed or paused campaign stopped — on the badge, and for PAUSED the banner too.
     errorMessage: campaignQuery.data.errorMessage ?? null,
+    pauseReason: campaignQuery.data.pauseReason ?? null,
     dailySendLimit: campaignQuery.data.dailySendLimit ?? null,
     // The single-campaign endpoint joins the whole WaTemplate row as
     // `templateData`; the list endpoint flattens just the name. Read both, and
@@ -241,24 +244,25 @@ export function CampaignDetails() {
     deliveryReportMutation.mutate({ campaignId, selectedDripStage, format });
   };
 
+  // A drip the platform paused starts again the same way one its owner paused does.
+  const dripStopped =
+    campaign.status === CampaignStatus.INACTIVE || campaign.status === CampaignStatus.PAUSED;
+  const canResume =
+    campaign.type !== CampaignType.DRIP &&
+    (campaign.status === CampaignStatus.INACTIVE || campaign.status === CampaignStatus.PAUSED) &&
+    pendingCount > 0;
+
   const handleToggleDrip = () => {
     sendCampaignMutation.mutate(
       {
         sentCampaignChoice: SentCampaignChoice.NOW,
-        status:
-          campaign.status === CampaignStatus.INACTIVE
-            ? CampaignStatus.ACTIVE
-            : CampaignStatus.INACTIVE,
+        status: dripStopped ? CampaignStatus.ACTIVE : CampaignStatus.INACTIVE,
         statuses: [],
         type: CampaignType.DRIP,
       },
       {
         onSuccess: () => {
-          toast.success(
-            campaign.status === CampaignStatus.INACTIVE
-              ? t("Drip campaign started")
-              : t("Drip campaign paused"),
-          );
+          toast.success(dripStopped ? t("Drip campaign started") : t("Drip campaign paused"));
         },
         onError: (error) => {
           toast.error(error?.message || t("Failed to update drip campaign status"));
@@ -448,6 +452,17 @@ export function CampaignDetails() {
             </Button>
           </div>
         </div>
+        <CampaignPausedBanner
+          status={campaign.status}
+          pauseReason={campaign.pauseReason}
+          errorMessage={campaign.errorMessage}
+          pendingCount={pendingCount}
+          canResume={canResume || (campaign.type === CampaignType.DRIP && dripStopped)}
+          isResuming={sendCampaignMutation.isPending}
+          onResume={
+            campaign.type === CampaignType.DRIP ? handleToggleDrip : () => setResumeOpen(true)
+          }
+        />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col">
@@ -484,7 +499,11 @@ export function CampaignDetails() {
               <div className="flex items-center gap-2 py-2.5">
                 {campaign.type !== CampaignType.DRIP &&
                   queueCount > 0 &&
-                  ![CampaignStatus.QUEUING, CampaignStatus.DEQUEUING].includes(campaign.status) && (
+                  ![
+                    CampaignStatus.QUEUING,
+                    CampaignStatus.DEQUEUING,
+                    CampaignStatus.PAUSED,
+                  ].includes(campaign.status) && (
                     <Button
                       variant="outline"
                       className="rounded-md gap-2"
@@ -499,24 +518,22 @@ export function CampaignDetails() {
                 {/* A paused campaign with nobody left to message is finished, not
                       resumable — offering Resume there would send to no one and
                       come back as "no participants with the specified statuses". */}
-                {campaign.type !== CampaignType.DRIP &&
-                  campaign.status === CampaignStatus.INACTIVE &&
-                  pendingCount > 0 && (
-                    <Button
-                      className="rounded-md gap-2"
-                      disabled={sendCampaignMutation.isPending}
-                      title={t("Sends to the {count} recipients not messaged yet", {
-                        count: pendingCount.toLocaleString(),
-                      })}
-                      onClick={() => setResumeOpen(true)}
-                    >
-                      <IconPlayerPlay className="w-4 h-4" />
-                      {t("Resume")}
-                      <span className="text-xs opacity-80 tabular-nums">
-                        {pendingCount.toLocaleString()}
-                      </span>
-                    </Button>
-                  )}
+                {canResume && (
+                  <Button
+                    className="rounded-md gap-2"
+                    disabled={sendCampaignMutation.isPending}
+                    title={t("Sends to the {count} recipients not messaged yet", {
+                      count: pendingCount.toLocaleString(),
+                    })}
+                    onClick={() => setResumeOpen(true)}
+                  >
+                    <IconPlayerPlay className="w-4 h-4" />
+                    {t("Resume")}
+                    <span className="text-xs opacity-80 tabular-nums">
+                      {pendingCount.toLocaleString()}
+                    </span>
+                  </Button>
+                )}
 
                 {/* Only on Recipients. The participants endpoint takes a stage;
                     the analytics one has no stage dimension at all, and the
@@ -549,9 +566,11 @@ export function CampaignDetails() {
                     onClick={handleToggleDrip}
                     className="rounded-full gap-2"
                   >
-                    {campaign.status === CampaignStatus.INACTIVE
-                      ? t("Start Drip")
-                      : t("Pause Drip")}
+                    {campaign.status === CampaignStatus.PAUSED
+                      ? t("Resume Drip")
+                      : campaign.status === CampaignStatus.INACTIVE
+                        ? t("Start Drip")
+                        : t("Pause Drip")}
                     <IconSend className="w-4 h-4" />
                   </Button>
                 )}

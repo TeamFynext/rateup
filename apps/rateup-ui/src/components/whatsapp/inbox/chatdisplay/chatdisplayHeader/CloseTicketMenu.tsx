@@ -5,6 +5,7 @@ import {
   IconRotate,
   IconShieldExclamation,
   IconShieldOff,
+  IconTrash,
 } from "@tabler/icons-react";
 
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
@@ -35,6 +36,7 @@ import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
+import { useDeleteTicket } from "../../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
 import { isTicketClosed, resolutionResultLabel } from "./ticket.ts";
@@ -81,6 +83,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   const spamMutation = useSetContactSpam();
   const { filterData } = useContactStore();
   const reopenMutation = useReopenConversation(filterData ?? undefined);
+  const { canDelete, deleteTicket, isPending: isDeleting } = useDeleteTicket(contact);
 
   const closed = isTicketClosed(contact);
   const isSpam = !!contact?.isSpam;
@@ -269,8 +272,25 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     </DropdownMenuGroup>
   );
 
+  /**
+   * Deleting is a *ticket* action, so it sits in its own group below the contact
+   * ones rather than among them — and only for admins, who are the only ones the
+   * endpoint accepts.
+   */
+  const deleteAction = canDelete ? (
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <DropdownMenuItem onClick={deleteTicket} disabled={isDeleting} className="text-destructive">
+          <IconTrash className="size-4 text-destructive" />
+          Delete conversation
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+    </>
+  ) : null;
+
   const overflow =
-    canBlock || !isSpam ? (
+    canBlock || !isSpam || canDelete ? (
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -279,7 +299,10 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
         >
           <IconDotsVertical className="size-4 text-muted-foreground" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">{contactActions}</DropdownMenuContent>
+        <DropdownMenuContent align="end">
+          {contactActions}
+          {deleteAction}
+        </DropdownMenuContent>
       </DropdownMenu>
     ) : null;
 
@@ -367,6 +390,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
 
           <DropdownMenuSeparator />
           {contactActions}
+          {deleteAction}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

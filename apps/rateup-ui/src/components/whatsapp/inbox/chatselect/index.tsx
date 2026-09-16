@@ -1,4 +1,10 @@
-import { IconCircleCheck, IconLoader, IconLoader2, IconUserCheck } from "@tabler/icons-react";
+import {
+  IconCircleCheck,
+  IconLoader,
+  IconLoader2,
+  IconTrash,
+  IconUserCheck,
+} from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -8,7 +14,10 @@ import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contact
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useDeleteConversations,
+  useFilteredContacts,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -25,6 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
@@ -38,6 +48,7 @@ import useContactStore, {
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage } from "@/types/global";
+import { UserRole } from "@/utils/enums/index.ts";
 
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
@@ -111,6 +122,10 @@ const WaInboxChatSelect = () => {
 
   const { mutate: bulkAssignStatusMutation, isPending: isBulkAssignStatusPending } =
     useBulkAssignStatusMutation("");
+  const bulkDeleteMutation = useDeleteConversations();
+  const confirm = useConfirm();
+  // Deleting is admin-only, matching the endpoint's own gate and the per-row action.
+  const canBulkDelete = user?.role === UserRole.SUPADM || user?.role === UserRole.ADM;
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
@@ -213,6 +228,23 @@ const WaInboxChatSelect = () => {
   const contactIds = useMemo(
     () => contactsByFilter[currentFilterKey ?? ""] || [],
     [contactsById, currentFilterKey, contactsByFilter],
+  );
+
+  /**
+   * The selection holds row keys (ticket ids). Assigning and closing are
+   * contact-grained endpoints, so they get the contacts behind those rows —
+   * deduped, since one contact can own several selected tickets. Bulk delete is
+   * ticket-grained and uses the row keys as they are.
+   */
+  const selectedContactIds = useMemo(
+    () => [
+      ...new Set(
+        selectedChats
+          .map((rowKey) => contactsById.get(rowKey)?.id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ],
+    [selectedChats, contactsById],
   );
 
   const rowCount = contactIds.length + (hasNextPageFilteredContacts ? 1 : 0);
@@ -415,10 +447,37 @@ const WaInboxChatSelect = () => {
     }
   };
 
+  /**
+   * Delete every selected ticket. Unlike the bulk close above it takes the rows'
+   * own ids: a ticket is what is being deleted, not the customer.
+   */
+  const handleBulkDelete = async () => {
+    const count = selectedChats.length;
+    const confirmed = await confirm({
+      title: count === 1 ? "Delete conversation" : `Delete ${count} conversations`,
+      description:
+        count === 1
+          ? "The selected conversation will be deleted."
+          : `The ${count} selected conversations will be deleted.`,
+      warning:
+        "Every message in them is permanently deleted for everyone, and the contacts keep their other conversations. This cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+    });
+    if (!confirmed) return;
+
+    bulkDeleteMutation.mutate(selectedChats, {
+      onSuccess: () => {
+        setSelectedChats([]);
+        setIsSelectionMode(false);
+      },
+    });
+  };
+
   const handleBulkClose = async () => {
     await bulkAssignStatusMutation(
       {
-        contactIds: selectedChats,
+        contactIds: selectedContactIds,
         waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
       },
       {
@@ -426,8 +485,8 @@ const WaInboxChatSelect = () => {
           setSelectedChats([]);
           setIsSelectionMode(false);
           setOpenConfirmHandleClose(false);
-          selectedChats.forEach((contactId) => {
-            updateContactById(contactId, (existing) => ({
+          selectedChats.forEach((rowKey) => {
+            updateContactById(rowKey, (existing) => ({
               ...existing,
               waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
               closedAt: new Date().toISOString(),
@@ -540,6 +599,34 @@ const WaInboxChatSelect = () => {
 
                         <TooltipContent>
                           <p>{translations("Close selected chats")}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
+                  {/* Delete is offered on every tab, spam included: unlike closing
+                      or assigning, removing a thread is never a dead end. */}
+                  {canBulkDelete && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={bulkDeleteMutation.isPending}
+                              className="h-8 w-8 p-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => {
+                                handleBulkDelete();
+                              }}
+                            />
+                          }
+                        >
+                          <IconTrash className="w-4 h-4" />
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          <p>{translations("Delete selected chats")}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -666,7 +753,7 @@ const WaInboxChatSelect = () => {
           </DialogHeader>
           <BulkAssignUser
             filterData={filterData ?? ""}
-            contactIds={selectedChats}
+            contactIds={selectedContactIds}
             onSuccess={() => {
               setSelectedChats([]);
               setIsSelectionMode(false);

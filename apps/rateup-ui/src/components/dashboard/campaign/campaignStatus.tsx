@@ -69,6 +69,14 @@ const CAMPAIGN_STATUS_META: Record<CampaignStatus, CampaignStatusMeta> = {
   // campaign is not yet stopped and the badge keeps its dot.
   [CampaignStatus.DEQUEUING]: { ...PAUSED, label: "Pausing", live: true },
   [CampaignStatus.INACTIVE]: PAUSED,
+  // Paused by the platform, not the owner: the account cannot send until
+  // someone fixes it, so it reads as a problem rather than a choice.
+  [CampaignStatus.PAUSED]: {
+    label: "Paused",
+    badge: "bg-destructive/10 text-destructive",
+    dot: "bg-destructive",
+    live: false,
+  },
   [CampaignStatus.COMPLETED]: {
     label: "Completed",
     badge: "bg-green-600/10 text-green-700 dark:text-green-500",
@@ -112,7 +120,7 @@ export const CAMPAIGN_STATUS_FILTERS: ReadonlyArray<{
   {
     value: "INACTIVE",
     label: "Paused",
-    statuses: [CampaignStatus.INACTIVE, CampaignStatus.DEQUEUING],
+    statuses: [CampaignStatus.INACTIVE, CampaignStatus.DEQUEUING, CampaignStatus.PAUSED],
   },
   { value: "COMPLETED", label: "Completed", statuses: [CampaignStatus.COMPLETED] },
   { value: "FAILED", label: "Failed", statuses: [CampaignStatus.FAILED] },
@@ -131,13 +139,14 @@ export function CampaignStatusBadge({
   className = "",
 }: Readonly<{
   status: CampaignStatus | string;
-  /** Why a failed campaign stopped, shown on hover. */
+  /** Why a failed or platform-paused campaign stopped, shown on hover. */
   errorMessage?: string | null;
   className?: string;
 }>) {
   const { t } = useTranslation("campaign.status");
   const meta = campaignStatusMeta(status);
-  const failure = status === CampaignStatus.FAILED && errorMessage ? errorMessage : null;
+  const stopped = status === CampaignStatus.FAILED || status === CampaignStatus.PAUSED;
+  const failure = stopped && errorMessage ? errorMessage : null;
 
   const badge = (
     <Badge
@@ -167,7 +176,9 @@ export function CampaignStatusBadge({
       <HoverCardContent className="w-64">
         <div className="mb-1 flex items-center gap-1">
           <IconAlertCircle className="text-destructive size-3" />
-          <span className="text-destructive text-xs font-semibold">{t("Campaign stopped")}</span>
+          <span className="text-destructive text-xs font-semibold">
+            {status === CampaignStatus.PAUSED ? t("Campaign paused") : t("Campaign stopped")}
+          </span>
         </div>
         <p className="text-muted-foreground text-xs leading-relaxed">{failure}</p>
       </HoverCardContent>
