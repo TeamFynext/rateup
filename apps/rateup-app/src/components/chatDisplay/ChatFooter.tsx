@@ -129,7 +129,7 @@ const ChatFooter = ({ id }: { id: string }) => {
           <Text
             style={{
               flex: 1,
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: t.warmStrong,
               fontSize: 12,
             }}
@@ -162,7 +162,7 @@ const ChatFooter = ({ id }: { id: string }) => {
           <Text
             style={{
               flex: 1,
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: t.fg3,
               fontSize: 12,
             }}

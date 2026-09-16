@@ -63,7 +63,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
       <Text
         style={{
           fontSize: 11,
-          fontFamily: "Nunito_700Bold",
+          fontFamily: "InstrumentSans_700Bold",
           color: t.fg4,
           letterSpacing: 0.8,
           marginBottom: 8,
@@ -116,13 +116,15 @@ function InfoRow({
     >
       {icon ? <View style={{ width: 18, alignItems: "center" }}>{icon}</View> : null}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={{ fontSize: 11, fontFamily: "Nunito_400Regular", color: t.fg4 }}>{label}</Text>
+        <Text style={{ fontSize: 11, fontFamily: "InstrumentSans_400Regular", color: t.fg4 }}>
+          {label}
+        </Text>
         {typeof value === "string" ? (
           <Text
             numberOfLines={1}
             style={{
               fontSize: 14,
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: t.fg1,
               marginTop: 2,
             }}
@@ -221,7 +223,7 @@ const ContactInfo = () => {
         >
           <ArrowLeft size={21} color={t.fg1} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 15, fontFamily: "Nunito_800ExtraBold", color: t.fg1 }}>
+        <Text style={{ fontSize: 15, fontFamily: "Figtree_800ExtraBold", color: t.fg1 }}>
           Contact info
         </Text>
       </View>
@@ -243,7 +245,7 @@ const ContactInfo = () => {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 34, color: "#fff" }}>
+              <Text style={{ fontFamily: "Figtree_800ExtraBold", fontSize: 34, color: "#fff" }}>
                 {namePreview(name)}
               </Text>
             </View>
@@ -266,7 +268,7 @@ const ContactInfo = () => {
             numberOfLines={2}
             style={{
               fontSize: 21,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
               color: t.fg1,
               marginTop: 14,
               textAlign: "center",
@@ -275,7 +277,12 @@ const ContactInfo = () => {
             {name}
           </Text>
           <Text
-            style={{ fontSize: 12, fontFamily: "Nunito_400Regular", color: t.fg4, marginTop: 3 }}
+            style={{
+              fontSize: 12,
+              fontFamily: "InstrumentSans_400Regular",
+              color: t.fg4,
+              marginTop: 3,
+            }}
           >
             {platformLabel(platform)}
           </Text>
@@ -363,7 +370,11 @@ const ContactInfo = () => {
                       }}
                     >
                       <Text
-                        style={{ fontSize: 12, fontFamily: "Nunito_600SemiBold", color: t.fg2 }}
+                        style={{
+                          fontSize: 12,
+                          fontFamily: "InstrumentSans_600SemiBold",
+                          color: t.fg2,
+                        }}
                       >
                         {label}
                       </Text>

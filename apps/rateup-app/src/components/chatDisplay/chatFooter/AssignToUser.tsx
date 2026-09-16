@@ -209,7 +209,7 @@ export default function AssignToUser({
             style={{
               color: textColor,
               fontSize: fontSize,
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
             }}
           >
             Assign
@@ -256,7 +256,7 @@ export default function AssignToUser({
 
           <Text
             style={{
-              fontFamily: "Nunito_700Bold",
+              fontFamily: "InstrumentSans_700Bold",
               fontSize: 18,
               color: isDark ? "#fff" : Colors.light.textPrimary,
               marginBottom: 16,
@@ -315,7 +315,7 @@ export default function AssignToUser({
                       />
                       <Text
                         style={{
-                          fontFamily: "Nunito_700Bold",
+                          fontFamily: "InstrumentSans_700Bold",
                           fontSize: 14,
                           color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
                         }}
@@ -368,7 +368,7 @@ export default function AssignToUser({
                 style={{
                   color: "#fff",
                   textAlign: "center",
-                  fontFamily: "Nunito_700Bold",
+                  fontFamily: "InstrumentSans_700Bold",
                   fontSize: 15,
                 }}
               >
@@ -430,7 +430,7 @@ const MemberRow = memo(function MemberRow({
               style={{
                 color: "#fff",
                 fontSize: 12,
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "InstrumentSans_700Bold",
               }}
             >
               {namePreview(member?.name)}
@@ -439,7 +439,7 @@ const MemberRow = memo(function MemberRow({
           <View>
             <Text
               style={{
-                fontFamily: "Nunito_600SemiBold",
+                fontFamily: "InstrumentSans_600SemiBold",
                 fontSize: 14,
                 color: isDark ? "#fff" : Colors.light.textPrimary,
               }}
@@ -448,7 +448,7 @@ const MemberRow = memo(function MemberRow({
             </Text>
             <Text
               style={{
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 fontSize: 11,
                 color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
               }}

@@ -4,8 +4,14 @@
  * `_ds/.../colors_and_type.css`).
  *
  * Light values are the design system's `:root` semantics; dark values are the
- * `.theme-dark` override the design file declares in its <helmet> block
- * (Material-style #121212 base + white elevation overlays).
+ * `.theme-dark` override the design file declares in its <helmet> block, except
+ * for the three surfaces. The design's dark base is Material's neutral #121212
+ * with white elevation overlays, which clashed with the navy the rest of the
+ * app's dark chrome is built from — the tab bar, `getInboxHeaderBg`, and every
+ * screen that backgrounds itself with `Colors.dark.bg`. A cashier on #121212
+ * under a #0D1E32 header read as two apps. Dark keeps the design's elevation
+ * *order* (base < raised < fill) and re-tints it into that navy; light is
+ * untouched, and already agreed with `Colors.light.bg`.
  */
 
 type Tone = { color: string; soft: string; fg: string };
@@ -23,6 +29,15 @@ export type InboxRowTheme = {
   fg3: string;
   fg4: string;
   brand: string;
+  /**
+   * The fixed RateUp navy, for a surface that is filled with the brand rather than
+   * tinted by it — the cashier's balance panel is the only one so far.
+   *
+   * `brand` flips to a bright cyan in dark so it can be read *as text* on the dark base;
+   * white on that cyan is ~2:1, so a filled panel cannot use it. This stays navy in
+   * both themes, where white sits at ~7.5:1 and the panel reads as brand either way.
+   */
+  brandInk: string;
   warm: string;
   success: string;
   danger: string;
@@ -58,6 +73,7 @@ const light: InboxRowTheme = {
   fg3: "#666864",
   fg4: "#8B8E8A",
   brand: "#1C518E",
+  brandInk: "#1C518E",
   warm: "#F8951D",
   success: "#16A34A",
   danger: "#DC2626",
@@ -81,12 +97,15 @@ const light: InboxRowTheme = {
 };
 
 const dark: InboxRowTheme = {
-  pageBg: "#121212",
-  surface: "#1E1E1E",
-  surface2: "#242424",
+  // `Colors.dark.bg`, the body every other tab paints itself with.
+  pageBg: "#091522",
+  // The raised navy `getInboxHeaderBg` already uses, so a card and the header
+  // bar over it are the same surface.
+  surface: "#0D1E32",
+  surface2: "#112742",
   border1: "rgba(255,255,255,0.12)",
   // The design file leaves the row divider on the literal `--ink-50`, which is a
-  // near-white rule on #121212; dark takes the `.theme-dark` border token instead.
+  // near-white rule in dark; dark takes the `.theme-dark` border token instead.
   rowDivider: "rgba(255,255,255,0.12)",
   brandSoft: "rgba(79,195,255,0.14)",
   fg1: "rgba(255,255,255,0.87)",
@@ -94,6 +113,7 @@ const dark: InboxRowTheme = {
   fg3: "rgba(255,255,255,0.60)",
   fg4: "rgba(255,255,255,0.44)",
   brand: "#4FC3FF",
+  brandInk: "#1C518E",
   warm: "#F8951D",
   success: "#16A34A",
   danger: "#CF6679",
@@ -121,11 +141,11 @@ const dark: InboxRowTheme = {
 export const getInboxRowTheme = (isDark: boolean): InboxRowTheme => (isDark ? dark : light);
 
 /**
- * The design's header/segment bar sits on `--bg-surface`. Light takes that
- * verbatim; dark uses this app's raised navy rather than the design's #1E1E1E,
- * so the bar doesn't clash with the rest of the app's dark chrome.
+ * The design's header/segment bar sits on `--bg-surface`, which is what both
+ * themes return here — dark's `surface` is now that same raised navy, so this
+ * is kept only for the call sites that name the header bar directly.
  */
-export const getInboxHeaderBg = (isDark: boolean) => (isDark ? "#0D1E32" : "#FFFFFF");
+export const getInboxHeaderBg = (isDark: boolean) => (isDark ? dark.surface : light.surface);
 
 /** Solid avatar fills used by the design's sample conversations. */
 export const inboxAvatarColors = [

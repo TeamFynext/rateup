@@ -1,21 +1,23 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/app/**/*.{js,jsx,ts,tsx}",
-    "./src/components/**/*.{js,jsx,ts,tsx}",
-  ],
+  content: ["./src/app/**/*.{js,jsx,ts,tsx}", "./src/components/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      // Design System V2, matching `rateup-ui/src/styles/foundation.css`: Instrument
+      // Sans for body and UI, Figtree for display. These classes set `fontFamily`, not
+      // `fontWeight` — `font-semibold` names a face, it does not embolden one.
       fontFamily: {
-        sans: ["Nunito_400Regular"],
-        nunito: ["Nunito_400Regular"],
-        light: ["Nunito_300Light"],
-        medium: ["Nunito_500Medium"],
-        semibold: ["Nunito_600SemiBold"],
-        bold: ["Nunito_700Bold"],
-        extrabold: ["Nunito_800ExtraBold"],
-        black: ["Nunito_900Black"],
+        sans: ["InstrumentSans_400Regular"],
+        // The web keeps `--font-nunito` as the historical alias for the *display* face.
+        // Unused in this app, aliased the same way so markup copied across matches.
+        nunito: ["Figtree_800ExtraBold"],
+        light: ["Figtree_300Light"],
+        medium: ["InstrumentSans_500Medium"],
+        semibold: ["InstrumentSans_600SemiBold"],
+        bold: ["InstrumentSans_700Bold"],
+        extrabold: ["Figtree_800ExtraBold"],
+        black: ["Figtree_900Black"],
       },
       colors: {
         rateUpGreen: "#009987",
@@ -27,7 +29,7 @@ module.exports = {
         primaryBlue: "#1873E8",
         lightBlue: "#E3F2FD",
         lightgray: "#E2E5ED",
-        "chat-bubble-green":"#d2f8d2",
+        "chat-bubble-green": "#d2f8d2",
         slate: {
           950: "#091522", // brand bg
           900: "#0D1E32", // brand surface

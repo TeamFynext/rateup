@@ -108,7 +108,10 @@ function Chip({ label, color, background, dot, border, dashed, icon }: ChipProps
       ) : null}
       {icon}
       {label ? (
-        <Text numberOfLines={1} style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}>
+        <Text
+          numberOfLines={1}
+          style={{ fontSize: 11, fontFamily: "InstrumentSans_700Bold", color }}
+        >
           {label}
         </Text>
       ) : null}
@@ -229,7 +232,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             style={{
               color: assignee.fg,
               fontSize: 11,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
             }}
           >
             {assignee.extra > 0 ? `+${assignee.extra + 1}` : assignee.initials}
@@ -299,7 +302,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             style={{
               color: "#fff",
               fontSize: 16,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
             }}
           >
             {namePreview(name)}
@@ -318,7 +321,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               numberOfLines={1}
               style={{
                 fontSize: 16,
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "InstrumentSans_700Bold",
                 color: t.fg1,
                 flexShrink: 1,
               }}
@@ -343,7 +346,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               numberOfLines={1}
               style={{
                 fontSize: 13,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: t.fg3,
                 flex: 1,
               }}
@@ -413,7 +416,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             <Text
               style={{
                 fontSize: 12,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: t.fg4,
               }}
             >
@@ -431,7 +434,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 11, fontFamily: "Nunito_800ExtraBold" }}>
+                <Text style={{ color: "#fff", fontSize: 11, fontFamily: "Figtree_800ExtraBold" }}>
                   {unReadMessageCount > 99 ? "99+" : unReadMessageCount}
                 </Text>
               </View>
