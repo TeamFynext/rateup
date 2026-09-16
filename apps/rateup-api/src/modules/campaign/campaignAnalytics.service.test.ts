@@ -8,7 +8,7 @@ vi.mock("../../utils/prisma.js", () => ({
 }));
 
 import prisma from "../../utils/prisma.js";
-import { getCampaignSends } from "./campaignAnalytics.service.js";
+import { buildFunnel, getCampaignSends } from "./campaignAnalytics.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -97,5 +97,58 @@ describe("send labels", () => {
     const sends = await getCampaignSends(CAMPAIGN_ID, ORG_ID);
 
     expect(sends.map((send) => send.label)).toEqual(["Drip stage", "Drip stage"]);
+  });
+});
+
+describe("buildFunnel", () => {
+  const at = (funnel: ReturnType<typeof buildFunnel>, key: string) =>
+    funnel.find((stage) => stage.key === key)!;
+
+  test("a recipient a retry recovered is dispatched once, not twice", () => {
+    // The reported campaign: 114 recipients, one of them rejected on the first
+    // attempt and re-sent, so `CampaignStats.totalSend` stood at 115. Counting
+    // messages there read as "115 dispatched — 101% of recipients".
+    const funnel = buildFunnel({
+      attempted: 114,
+      pending: 0,
+      delivered: 107,
+      read: 78,
+      replied: 0,
+    });
+
+    expect(at(funnel, "sent").count).toBe(114);
+    expect(at(funnel, "sent").rateOfPrevious).toBe(1);
+    expect(at(funnel, "delivered").rateOfPrevious).toBeCloseTo(107 / 114, 5);
+    expect(at(funnel, "read").rateOfPrevious).toBeCloseTo(78 / 107, 5);
+  });
+
+  test("recipients still awaiting a first attempt are not dispatched", () => {
+    const funnel = buildFunnel({
+      attempted: 100,
+      pending: 40,
+      delivered: 55,
+      read: 20,
+      replied: 3,
+    });
+
+    expect(at(funnel, "sent").count).toBe(60);
+    expect(at(funnel, "sent").rateOfPrevious).toBeCloseTo(0.6, 5);
+  });
+
+  test("no stage reports above 100%, whatever order the receipts land in", () => {
+    // A delivery receipt for the first attempt arriving after the retry went out.
+    const funnel = buildFunnel({ attempted: 10, pending: 0, delivered: 11, read: 12, replied: 13 });
+
+    for (const stage of funnel) {
+      expect(stage.rateOfPrevious ?? 0).toBeLessThanOrEqual(1);
+      expect(stage.rateOfAttempted ?? 0).toBeLessThanOrEqual(1);
+    }
+  });
+
+  test("an empty campaign reports no rates rather than dividing by zero", () => {
+    const funnel = buildFunnel({ attempted: 0, pending: 0, delivered: 0, read: 0, replied: 0 });
+
+    expect(funnel.every((stage) => stage.rateOfAttempted === null)).toBe(true);
+    expect(at(funnel, "sent").count).toBe(0);
   });
 });

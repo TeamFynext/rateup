@@ -213,9 +213,12 @@ export interface FunnelStage {
   key: "attempted" | "sent" | "delivered" | "read" | "replied";
   label: string;
   count: number;
-  /** Share of the stage above, so the drop-off is readable without arithmetic. */
+  /**
+   * Share of the stage above, so the drop-off is readable without arithmetic.
+   * Clamped to 1 — see `buildFunnel`.
+   */
   rateOfPrevious: number | null;
-  /** Share of `attempted`. */
+  /** Share of `attempted`, clamped to 1. */
   rateOfAttempted: number | null;
 }
 
@@ -250,6 +253,55 @@ export interface CampaignAnalytics {
   attemptCount: number;
 }
 
+export interface FunnelCounts {
+  /** Every recipient on the campaign. */
+  attempted: number;
+  /** Recipients not yet handed to Meta — never attempted, or skipped by the allowance. */
+  pending: number;
+  delivered: number;
+  read: number;
+  replied: number;
+}
+
+/**
+ * The funnel, counted in recipients rather than in messages.
+ *
+ * "Dispatched" used to read `CampaignStats.totalSend`, which counts *messages*:
+ * it is bumped once per attempt, and a send-time rejection bumps it alongside
+ * `totalFailed` (see `updateCampaignStats`). So one recipient who was rejected
+ * and then recovered by a retry was dispatched twice, and a 114-recipient
+ * campaign reported "115 dispatched — 101% of recipients" against a
+ * per-recipient denominator. Every other tile on Overview is per recipient, so
+ * this stage is too: a recipient has been dispatched once they are no longer
+ * PENDING, however many attempts that took.
+ *
+ * The rates are clamped at 100%. The counts below "Dispatched" are still
+ * message-grained totals, and a receipt that lands out of order — or a retry
+ * whose first message is delivered afterwards — can briefly put one of them a
+ * message above the stage it is divided by. Reporting that as "101%" reads as a
+ * bug in the numbers rather than as the rounding artefact it is.
+ */
+export function buildFunnel(counts: FunnelCounts): FunnelStage[] {
+  const attempted = Math.max(counts.attempted, 0);
+  const dispatched = Math.max(attempted - counts.pending, 0);
+
+  const stages: { key: FunnelStage["key"]; label: string; count: number }[] = [
+    { key: "attempted", label: "Attempted", count: attempted },
+    { key: "sent", label: "Dispatched", count: dispatched },
+    { key: "delivered", label: "Delivered", count: counts.delivered },
+    { key: "read", label: "Read", count: counts.read },
+    { key: "replied", label: "Replied", count: counts.replied },
+  ];
+
+  const rate = (count: number, of: number) => (of > 0 ? Math.min(count / of, 1) : null);
+
+  return stages.map((stage, index) => ({
+    ...stage,
+    rateOfPrevious: index === 0 ? null : rate(stage.count, stages[index - 1].count),
+    rateOfAttempted: rate(stage.count, attempted),
+  }));
+}
+
 export async function getCampaignAnalytics(
   campaignId: string,
   orgId: string,
@@ -278,28 +330,12 @@ export async function getCampaignAnalytics(
     byStatus.find((row) => row.status === status)?._count._all ?? 0;
   const attempted = byStatus.reduce((total, row) => total + row._count._all, 0);
 
-  const sent = stats?.totalSend ?? 0;
-  const delivered = stats?.totalDelivered ?? 0;
-  const read = stats?.totalRead ?? 0;
-  const replied = stats?.totalCompleted ?? 0;
-
-  const stages: { key: FunnelStage["key"]; label: string; count: number }[] = [
-    { key: "attempted", label: "Attempted", count: attempted },
-    // "Dispatched", not "Sent": `totalSend` is incremented for every message
-    // handed to Meta, rejections included, so the stage counts what went out.
-    { key: "sent", label: "Dispatched", count: sent },
-    { key: "delivered", label: "Delivered", count: delivered },
-    { key: "read", label: "Read", count: read },
-    { key: "replied", label: "Replied", count: replied },
-  ];
-
-  const funnel: FunnelStage[] = stages.map((stage, index) => {
-    const previous = index === 0 ? null : stages[index - 1].count;
-    return {
-      ...stage,
-      rateOfPrevious: previous ? stage.count / previous : null,
-      rateOfAttempted: attempted ? stage.count / attempted : null,
-    };
+  const funnel = buildFunnel({
+    attempted,
+    pending: countOf(CampaignParticipantStatus.PENDING),
+    delivered: stats?.totalDelivered ?? 0,
+    read: stats?.totalRead ?? 0,
+    replied: stats?.totalCompleted ?? 0,
   });
 
   return {
