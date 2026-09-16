@@ -39,11 +39,16 @@ export default function ScreenHeader({
         borderBottomColor: t.border1,
       }}
     >
+      {/* 38 is the height of a back button and of `HeaderIconButton`, and without it
+          the row is only as tall as the 20px title — so a screen carrying neither (the
+          cashier's first step) drew a shorter bar with its title a few pixels higher
+          than the tab beside it. Pinned, every screen's title lands on one line. */}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
           gap: 12,
+          minHeight: 38,
           paddingHorizontal: 16,
         }}
       >

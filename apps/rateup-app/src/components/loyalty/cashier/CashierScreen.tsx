@@ -2,7 +2,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useIsFocused } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { BackHandler, Pressable, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getCustomerRewardsByCardCode } from "@/api/loyalty/loyalty.api";
 import { loyaltyKeys } from "@/api/loyalty/loyalty.keys";
@@ -66,7 +65,15 @@ import {
 import { Receipt } from "./Receipt";
 import { RedeemList } from "./RedeemList";
 import { ScanCard } from "./ScanCard";
-import { Badge, CenteredSpinner, CashierButton, EmptyState, StepScroll, useTheme } from "./ui";
+import {
+  Badge,
+  CenteredSpinner,
+  CashierButton,
+  EmptyState,
+  StepBack,
+  StepScroll,
+  useTheme,
+} from "./ui";
 import { onSettle, useCashierOutbox } from "./useCashierOutbox";
 import { useRecentCustomers } from "./useRecentCustomers";
 
@@ -89,7 +96,6 @@ import { useRecentCustomers } from "./useRecentCustomers";
  */
 export default function CashierScreen() {
   const { t } = useTheme();
-  const insets = useSafeAreaInsets();
   const { orgId, userId } = useAuth();
   const isFocused = useIsFocused();
   const queryClient = useQueryClient();
@@ -631,10 +637,13 @@ export default function CashierScreen() {
   };
 
   const onRegister = async (values: NewCustomerValues) => {
-    if (!program) return;
+    // `orgId` is in the guard because the endpoint's body schema requires it: without one
+    // the enrolment comes back 400, which reads at the counter as the form simply refusing.
+    if (!program || !orgId) return;
     setActionError(null);
     try {
       const response = await createCustomer.mutateAsync({
+        orgId,
         name: values.name,
         phone: values.phone,
         // A calendar date, never `toISOString()`: local midnight east of Greenwich
@@ -1067,18 +1076,9 @@ export default function CashierScreen() {
   const summary = queueSummary(outbox, online);
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.pageBg, paddingTop: insets.top }}>
+    <View style={{ flex: 1, backgroundColor: t.pageBg }}>
       <ScreenHeader
         title={headerTitle(step, served)}
-        // Every step but the first has somewhere to go back to, and `back()` is the same
-        // graph Android's hardware button walks — iOS just had no way to reach it.
-        onBack={
-          step === "search"
-            ? undefined
-            : () => {
-                if (back()) clearErrors();
-              }
-        }
         actions={
           // Always visible while there is anything to say, on every step: a refusal must
           // never be the first time staff learn there is no network.
@@ -1092,6 +1092,18 @@ export default function CashierScreen() {
           ) : undefined
         }
       />
+      {/* Every step but the first has somewhere to go back to. It sits here, above the
+          step, rather than in the bar — same control on both platforms, and the bar keeps
+          the customer's name to itself. Android's hardware button walks the same `back()`
+          graph in the effect above, so the two never disagree. */}
+      {step !== "search" && (
+        <StepBack
+          onPress={() => {
+            if (back()) clearErrors();
+          }}
+        />
+      )}
+
       {/* The scroll belongs to each step (`StepScroll`), not to the container: a step's
           commitment is pinned in the thumb's reach below it, and the footer needs that
           step's own state to label itself. */}

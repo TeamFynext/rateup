@@ -277,6 +277,12 @@ export interface EnrolmentContact {
 export interface CreateLoyaltyCustomerInput {
   name: string;
   phone: string;
+  /**
+   * Required by the endpoint's body schema even though the handler ignores it and takes the
+   * org from the session — omit it and the request is refused at validation with a 400
+   * before any handler runs. It comes from `useAuth()`.
+   */
+  orgId: string;
   email?: string | null;
   /** A `YYYY-MM-DD` string is accepted as-is. */
   dob?: string | null;

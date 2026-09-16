@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ArrowLeft } from "lucide-react-native";
+
 import { getInboxRowTheme, type InboxRowTheme } from "@/constants/inboxDesign";
 
 /**
@@ -168,7 +170,7 @@ export function CashierButton({
     switch (variant) {
       case "primary":
         // `brandInk`, not `brand`: in dark `brand` is a bright cyan meant to be read *as
-        // text* on #121212, and the white label every call site pairs with it sits at
+        // text* on the dark page, and the white label every call site pairs with it sits at
         // ~2:1 on that fill. The fixed navy is white-on-brand in both themes, and matches
         // the balance panel it sits under.
         return { bg: t.brandInk, fg: "#FFFFFF", border: "transparent" };
@@ -563,6 +565,43 @@ export function StepScroll({
         </View>
       ) : null}
     </KeyboardAvoidingView>
+  );
+}
+
+/**
+ * The way out of a step, in the step rather than in the bar.
+ *
+ * The header carried this as an arrow, which made it chrome: it sat beside the customer's
+ * name at the top of the screen, the one place the eye goes to read *who* is at the
+ * counter, and on Android it was a second control for the move the system's own back
+ * gesture already makes. Here it belongs to the step it leaves — above that step's
+ * content, at the top of the thing it backs out of — and it reads the same on both
+ * platforms, which the platform-split arrow did not.
+ *
+ * Sized past the 44pt touch target: this is pressed with a card machine in the other hand.
+ */
+export function StepBack({ onPress }: Readonly<{ onPress: () => void }>) {
+  const { t } = useTheme();
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+      <Pressable
+        onPress={onPress}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Back"
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          alignSelf: "flex-start",
+          gap: 6,
+          minHeight: 44,
+          paddingRight: 12,
+        }}
+      >
+        <ArrowLeft size={20} color={t.fg2} />
+        <Text style={{ fontFamily: FONT.medium, fontSize: 15, color: t.fg2 }}>Back</Text>
+      </Pressable>
+    </View>
   );
 }
 

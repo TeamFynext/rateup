@@ -141,13 +141,11 @@ const AccountBar = ({
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950">
+    // No title of its own: the tab screen puts "Account Details" in the shared
+    // `ScreenHeader`, on the same bar and at the same weight as the other tabs, and the
+    // background is the tab's so the two are one surface.
+    <View className="flex-1">
       <ScrollView contentContainerStyle={{ padding: 20 }}>
-        {/* Header */}
-        <View className="flex-row justify-between items-center mb-6">
-          <Text className="text-lg font-semibold dark:text-white">Account Details</Text>
-        </View>
-
         {/* Profile */}
         <View className="items-center mb-6">
           <View className="w-24 h-24 rounded-full overflow-hidden bg-blue-400">
