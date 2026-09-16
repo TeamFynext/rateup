@@ -36,16 +36,25 @@ export function FeedbackStatusCard({
 
   const tone = feedbackTone(flow, template, setting.enabled);
   const isDraft = flow.status === WaFlowStatus.DRAFT;
-  const needsSubmit = isDraft || flow.pendingSave;
+  // A flow that was already published when it was picked never went through submit, and
+  // submit is the only thing that creates the template — so without this the card would
+  // sit on "Awaiting Meta" for a template that does not exist, with no button to make one.
+  const needsSubmit = isDraft || flow.pendingSave || !template;
+  /** The published-flow case above: the only thing outstanding is the template itself. */
+  const templateOnly = !isDraft && !flow.pendingSave && !template;
   const enableable = canEnableFeedback(flow, template);
 
   const onSubmit = async () => {
     const ok = await confirm({
-      title: t("Submit the flow to Meta?"),
-      description: t(
-        "The survey is published and a message template is sent to Meta for approval. Once published, the questions can no longer be edited — you would start over with a new draft.",
-      ),
-      confirmText: t("Submit"),
+      title: templateOnly ? t("Create the message template?") : t("Submit the flow to Meta?"),
+      description: templateOnly
+        ? t(
+            "The survey is already published. This creates the message template that carries it and sends it to Meta for approval; sending switches on once Meta approves.",
+          )
+        : t(
+            "The survey is published and a message template is sent to Meta for approval. Once published, the questions can no longer be edited — you would start over with a new draft.",
+          ),
+      confirmText: templateOnly ? t("Create") : t("Submit"),
     });
     if (ok) submit.mutate();
   };
@@ -96,15 +105,19 @@ export function FeedbackStatusCard({
           <p className="text-sm text-muted-foreground">
             {tone === "draft"
               ? t("Submit the flow to Meta to get started.")
-              : tone === "pending"
+              : templateOnly
                 ? t(
-                    "Meta is reviewing the message template — usually hours, sometimes a day. Sending switches on as soon as it is approved.",
+                    "The survey is published, but the message template that carries it has not been created yet. Create it here, and sending switches on once Meta approves it.",
                   )
-                : tone === "rejected"
+                : tone === "pending"
                   ? t(
-                      "Meta rejected the message template. Detach, then select the flow again to resubmit.",
+                      "Meta is reviewing the message template — usually hours, sometimes a day. Sending switches on as soon as it is approved.",
                     )
-                  : t("This flow can no longer be sent. Detach it and pick another.")}
+                  : tone === "rejected"
+                    ? t(
+                        "Meta rejected the message template. Detach, then select the flow again to resubmit.",
+                      )
+                    : t("This flow can no longer be sent. Detach it and pick another.")}
           </p>
         )}
         <div className="flex flex-wrap gap-2">
@@ -115,7 +128,7 @@ export function FeedbackStatusCard({
               ) : (
                 <IconSend size={16} />
               )}
-              {t("Submit to Meta")}
+              {templateOnly ? t("Create message template") : t("Submit to Meta")}
             </Button>
           )}
           {isDraft && (
