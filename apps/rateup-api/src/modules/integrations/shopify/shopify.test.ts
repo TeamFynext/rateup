@@ -88,12 +88,14 @@ vi.mock("../../whatsapp/messageTemplates/wa_templates.auth.js", () => ({
   verifyTemplateMessageLimit: vi.fn(),
 }));
 vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
-vi.mock("../../loyalty/accounts/account.service.js", () => ({
-  awardPoints: vi.fn(),
-  getLCustomerByPhone: vi.fn(),
-}));
-vi.mock("../../loyalty/program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
-vi.mock("../../loyalty/earningRulesEngine.js", () => ({ EarningRulesEngine: class {} }));
+// The loyalty bridge is its own module now (`shopifyLoyalty.service.ts`, tested there);
+// from here it is just an enqueue, so only the queue needs standing in for.
+vi.mock("./shopifyLoyalty.service.js", async () => {
+  const actual = await vi.importActual<typeof import("./shopifyLoyalty.service.js")>(
+    "./shopifyLoyalty.service.js",
+  );
+  return { ...actual, enqueueShopifyOrderLoyalty: vi.fn() };
+});
 
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma.js";
@@ -102,12 +104,15 @@ import { getIntegrationByName, deleteIntegrationByName } from "../integrations.s
 import {
   getAbandonedCheckouts,
   getShopifyIntegrationByShop,
+  handleShopifyOrderEvents,
   handleShopifyAppUnistalled,
   registerWebhookByTopic,
   resolveShopifyPathValue,
   updateShopifyIntegrationByShop,
 } from "./shopify.service.js";
 import { updateShopifyIntegrationByShopHandler } from "./shopify.controller.js";
+import { enqueueShopifyOrderLoyalty } from "./shopifyLoyalty.service.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import webhookHandlers, {
   customersDataRequestHandler,
   customersRedactHandler,
@@ -116,7 +121,7 @@ import webhookHandlers, {
   WEBHOOK_API_ROUTE,
 } from "./shopify.handler.js";
 import { getScheduledTime, ShopifyPlanMap } from "./shopify.util.js";
-import { ShopifySendAfter } from "../../../types/enums.js";
+import { ShopifyEvents, ShopifySendAfter } from "../../../types/enums.js";
 import { shopifyRoutes } from "./shopify.route.js";
 import type { Session } from "@shopify/shopify-api";
 
@@ -678,5 +683,67 @@ describe("shopifyRoutes", () => {
 
     const del = routes.find((r) => r.method === "DELETE" && r.url === "/:shop");
     expect(del.opts.schema.params).toBeDefined();
+  });
+});
+
+describe("handleShopifyOrderEvents — which paths a missing phone stops", () => {
+  const order = (over: Record<string, unknown> = {}) => ({
+    webhookId: "wh-1",
+    shop: SHOP,
+    topic: ShopifyEvents.ORDERS_PAID,
+    body: {
+      id: 5551,
+      total_price: "4000.00",
+      customer: { phone: "919000000001", email: "ann@example.com" },
+      line_items: [],
+      ...over,
+    },
+  });
+
+  beforeEach(() => {
+    (prisma.integration.findFirst as Mock).mockResolvedValue({
+      id: "int-1",
+      orgId: ORG,
+      name: "shopify",
+      credential: { session: { shop: SHOP, accessToken: "t" } },
+      org: { id: ORG },
+    });
+  });
+
+  test("an order with a phone drives every path", async () => {
+    await handleShopifyOrderEvents(order() as never);
+
+    expect(enqueueShopifyOrderLoyalty).toHaveBeenCalled();
+    expect(checkAndExecuteRuleByTriggerEvent).toHaveBeenCalled();
+  });
+
+  test("an order with only an email still earns points", async () => {
+    // The regression this guards: the handler used to return early when no phone was
+    // found, which killed the loyalty path too — even though it can match on email, and
+    // even though Shopify makes email mandatory at checkout and phone optional.
+    await handleShopifyOrderEvents(
+      order({ customer: { email: "ann@example.com" }, phone: null }) as never,
+    );
+
+    expect(enqueueShopifyOrderLoyalty).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: "5551", phone: null, email: "ann@example.com" }),
+    );
+    // The WhatsApp paths are still skipped: there is nowhere to send a message.
+    expect(checkAndExecuteRuleByTriggerEvent).not.toHaveBeenCalled();
+  });
+
+  test("the amount handed to loyalty is the shop's own money", async () => {
+    await handleShopifyOrderEvents(
+      order({
+        current_subtotal_price_set: {
+          shop_money: { amount: "3200.00" },
+          presentment_money: { amount: "38.00" },
+        },
+      }) as never,
+    );
+
+    expect(enqueueShopifyOrderLoyalty).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: 3200 }),
+    );
   });
 });

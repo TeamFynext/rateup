@@ -1,20 +1,22 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
-    contact: { findFirst: vi.fn(), create: vi.fn() },
+    contact: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
     customerLoyaltyAccount: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     customerReward: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
-    loyaltyProgram: { findUnique: vi.fn() },
+    loyaltyProgram: { findUnique: vi.fn(), findFirst: vi.fn() },
+    loyaltyWaCommand: { findFirst: vi.fn() },
     loyaltyTier: { findFirst: vi.fn() },
     loyaltyReward: { findUnique: vi.fn(), findFirst: vi.fn() },
-    loyaltyTransaction: { create: vi.fn() },
+    loyaltyTransaction: { create: vi.fn(), findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -33,20 +35,49 @@ vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendTextMe
 vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
   generateWhatsAppJoinLink: vi.fn(() => "https://wa.me/join"),
 }));
-vi.mock("../loyaltyWaDispatcher.js", () => ({ dispatchLoyaltyNotification: vi.fn() }));
+vi.mock("../loyaltyWaDispatcher.js", () => ({
+  dispatchLoyaltyNotification: vi.fn(),
+  NOTIFICATION_NOT_SENT: {
+    sent: false,
+    channel: null,
+    mode: null,
+    templateId: null,
+    text: null,
+    skippedReason: null,
+  },
+}));
+// The card is sent by its own module; enrolment only needs it not to throw.
+vi.mock("./memberCard.service.js", () => ({
+  ensureMemberCard: vi.fn(async () => "ABCDEFGHJKLM"),
+  sendMemberCard: vi.fn(async () => ({
+    sent: false,
+    skippedReason: "session_closed",
+    cardCode: "ABCDEFGHJKLM",
+    cardSentAt: null,
+  })),
+}));
+// The scheduler opens a BullMQ queue at import time; awardPoints only needs its result.
+vi.mock("../feedback/feedback.scheduler.js", () => ({
+  scheduleFeedbackRequest: vi.fn(async () => ({ scheduled: false, reason: "no_setting" })),
+}));
 
 import prisma from "../../../utils/prisma.js";
 import { calculatePointsForPurchase, checkAndUpgradeTier } from "../earningRulesEngine.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   assignRewardToCustomer,
   awardPoints,
   createCustomerAccount,
+  releasePendingSignupBonus,
+  releasePendingSignupBonusByPhone,
   getCustomerAccountByPhone,
   getCustomerAccounts,
   getLCustomerByPhone,
+  lookupContactByPhone,
+  searchContactsForEnrolment,
   getRewardByShortCode,
   markRewardAsRedeemed,
   updateCustomerAccount,
@@ -117,6 +148,8 @@ beforeEach(() => {
     contact: { id: "contact-1", name: "Ann", phone: "919000000001", orgId: ORG },
   });
   db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-1", currentPoints: 0 });
+  // Nothing is waiting to be released unless a test says so.
+  db.customerLoyaltyAccount.updateMany.mockResolvedValue({ count: 0 });
   db.customerReward.findUnique.mockResolvedValue(null);
   db.customerReward.create.mockResolvedValue({ id: "cr-1", shortCode: "SHORT1" });
   db.loyaltyProgram.findUnique.mockResolvedValue(program());
@@ -173,6 +206,147 @@ describe("createCustomerAccount — the contact behind the account", () => {
     expect(db.contact.create.mock.calls[0][0].data.dob).toEqual(
       new Date("1990-05-05T00:00:00.000Z"),
     );
+  });
+
+  test("stores a supplied gender on the new contact, and null when absent", async () => {
+    await createCustomerAccount({ ...signupInput, gender: "FEMALE" }, PROGRAM, ORG);
+    expect(db.contact.create.mock.calls[0][0].data.gender).toBe("FEMALE");
+
+    vi.clearAllMocks();
+    db.contact.findFirst.mockResolvedValue(null);
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue(null);
+    db.loyaltyProgram.findUnique.mockResolvedValue(program());
+    await createCustomerAccount(signupInput, PROGRAM, ORG);
+    expect(db.contact.create.mock.calls[0][0].data.gender).toBeNull();
+  });
+
+  test("fills a birthday and gender the existing contact lacks", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-existing",
+      orgId: ORG,
+      name: "Ann",
+      dob: null,
+      gender: null,
+    });
+    db.contact.update.mockResolvedValue({ id: "contact-existing", orgId: ORG });
+
+    await createCustomerAccount(
+      { ...signupInput, dob: "1990-05-05", gender: "MALE" },
+      PROGRAM,
+      ORG,
+    );
+
+    expect(db.contact.update).toHaveBeenCalledWith({
+      where: { id: "contact-existing" },
+      data: { dob: new Date("1990-05-05"), gender: "MALE" },
+    });
+    expect(db.contact.create).not.toHaveBeenCalled();
+  });
+
+  test("never overwrites what the existing contact already says about itself", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-existing",
+      orgId: ORG,
+      name: "Jin",
+      dob: new Date("1980-01-01"),
+      gender: "OTHER",
+    });
+
+    await createCustomerAccount(
+      { ...signupInput, dob: "1990-05-05", gender: "MALE" },
+      PROGRAM,
+      ORG,
+    );
+
+    expect(db.contact.update).not.toHaveBeenCalled();
+  });
+
+  test("names a contact that only ever had a phone, even from the public form", async () => {
+    db.contact.findFirst.mockResolvedValue({ id: "contact-existing", orgId: ORG, name: null });
+    db.contact.update.mockResolvedValue({ id: "contact-existing", orgId: ORG, name: "Ann" });
+
+    await createCustomerAccount(signupInput, PROGRAM, ORG);
+
+    expect(db.contact.update).toHaveBeenCalledWith({
+      where: { id: "contact-existing" },
+      data: { name: "Ann" },
+    });
+  });
+
+  test("staff at the counter can correct a contact's name, birthday and gender", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-existing",
+      orgId: ORG,
+      name: "Jin",
+      dob: new Date("1980-01-01"),
+      gender: "OTHER",
+    });
+    db.contact.update.mockResolvedValue({ id: "contact-existing", orgId: ORG, name: "JJ" });
+
+    await createCustomerAccount(
+      { ...signupInput, name: "JJ", dob: "1990-05-05", gender: "MALE" },
+      PROGRAM,
+      ORG,
+      undefined,
+      { trustedDetails: true },
+    );
+
+    expect(db.contact.update).toHaveBeenCalledWith({
+      where: { id: "contact-existing" },
+      data: { name: "JJ", dob: new Date("1990-05-05"), gender: "MALE" },
+    });
+  });
+
+  test("a trusted payload with the same name touches nothing", async () => {
+    db.contact.findFirst.mockResolvedValue({ id: "contact-existing", orgId: ORG, name: "Ann" });
+
+    await createCustomerAccount(signupInput, PROGRAM, ORG, undefined, { trustedDetails: true });
+
+    expect(db.contact.update).not.toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
+// searchContactsForEnrolment
+// ===========================================================================
+
+describe("searchContactsForEnrolment", () => {
+  test("lists the org's phone-bearing contacts with their membership", async () => {
+    db.contact.findMany.mockResolvedValue([
+      { id: "c1", name: "Ann", phone: "919000000001", loyaltyAccounts: [{ status: "active" }] },
+      { id: "c2", name: "Bob", phone: "919000000002", loyaltyAccounts: [] },
+    ]);
+
+    const rows = await searchContactsForEnrolment(ORG, { limit: 20 });
+
+    const where = db.contact.findMany.mock.calls[0][0].where;
+    expect(where).toMatchObject({ orgId: ORG, phone: { not: null }, isSpam: false });
+    expect(where.OR).toBeUndefined();
+    expect(db.contact.findMany.mock.calls[0][0].take).toBe(20);
+    expect(rows).toEqual([
+      { id: "c1", name: "Ann", phone: "919000000001", memberStatus: "active" },
+      { id: "c2", name: "Bob", phone: "919000000002", memberStatus: null },
+    ]);
+  });
+
+  test("matches a search on name, email, and the digits of a phone", async () => {
+    db.contact.findMany.mockResolvedValue([]);
+
+    await searchContactsForEnrolment(ORG, { search: "+91 90", limit: 5 });
+
+    expect(db.contact.findMany.mock.calls[0][0].where.OR).toEqual([
+      { name: { contains: "+91 90", mode: "insensitive" } },
+      { email: { contains: "+91 90", mode: "insensitive" } },
+      { phone: { contains: "9190" } },
+    ]);
+  });
+
+  test("does not match on phone when the search has no digits", async () => {
+    db.contact.findMany.mockResolvedValue([]);
+
+    await searchContactsForEnrolment(ORG, { search: "ann", limit: 5 });
+
+    expect(db.contact.findMany.mock.calls[0][0].where.OR).toHaveLength(2);
   });
 });
 
@@ -447,6 +621,179 @@ describe("createCustomerAccount — the opening tier", () => {
 // awardPoints
 // ===========================================================================
 
+function heldSnapshot(over: Record<string, unknown> = {}) {
+  return {
+    signupBonus: 0,
+    refereeBonus: 0,
+    refereeBonusType: "points",
+    refereeRewardId: null,
+    referralBonus: 0,
+    referralBonusType: "points",
+    referralRewardId: null,
+    referredById: null,
+    ...over,
+  };
+}
+
+describe("createCustomerAccount — holding the bonuses for a web signup", () => {
+  test("creates the account at zero with the promised bonuses frozen, and writes no ledger row", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(program({ signupBonus: 500 }));
+
+    await createCustomerAccount(signupInput, PROGRAM, ORG, undefined, { holdBonuses: true });
+
+    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).toMatchObject({
+      currentPoints: 0,
+      lifetimePoints: 0,
+      verifiedAt: null,
+      pendingBonuses: expect.objectContaining({ signupBonus: 500 }),
+    });
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+  });
+
+  test("does not pay the referrer until the new member is verified", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 200 }));
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue({
+      id: "acct-referrer",
+      currentPoints: 10,
+    });
+
+    await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG, undefined, {
+      holdBonuses: true,
+    });
+
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).toMatchObject({
+      referredById: "acct-referrer",
+      pendingBonuses: expect.objectContaining({
+        referralBonus: 200,
+        referredById: "acct-referrer",
+      }),
+    });
+  });
+
+  test("the staff and WhatsApp paths still credit immediately", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(program({ signupBonus: 500 }));
+
+    await createCustomerAccount(signupInput, PROGRAM, ORG);
+
+    const data = db.customerLoyaltyAccount.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({ currentPoints: 500 });
+    expect(data).not.toHaveProperty("verifiedAt");
+    expect(data).not.toHaveProperty("pendingBonuses");
+  });
+});
+
+describe("releasePendingSignupBonus", () => {
+  const held = {
+    id: "acct-1",
+    programId: PROGRAM,
+    contactId: "contact-1",
+    referralCode: "ANN-AB12",
+    contact: { phone: "919000000001", name: "Ann", orgId: ORG },
+  };
+
+  test("credits exactly once — a second call finds nothing to claim and is a no-op", async () => {
+    db.customerLoyaltyAccount.updateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({
+      ...held,
+      pendingBonuses: heldSnapshot({ signupBonus: 500 }),
+    });
+    db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-1", currentPoints: 500 });
+
+    expect(await releasePendingSignupBonus("acct-1")).toBe(true);
+    expect(await releasePendingSignupBonus("acct-1")).toBe(false);
+
+    expect(db.customerLoyaltyAccount.update).toHaveBeenCalledTimes(1);
+    expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data).toMatchObject({
+      currentPoints: { increment: 500 },
+      lifetimePoints: { increment: 500 },
+    });
+    expect(db.loyaltyTransaction.create).toHaveBeenCalledTimes(1);
+    expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
+      source: "signup_bonus",
+      points: 500,
+      balanceAfter: 500,
+    });
+    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
+      ORG,
+      LoyaltyEventType.POINTS_ISSUED,
+      expect.objectContaining({ points: 500, balanceAfter: 500, reason: "Signup Bonus" }),
+    );
+  });
+
+  test("pays the referrer from the snapshot, not from what the programme says now", async () => {
+    db.customerLoyaltyAccount.updateMany.mockResolvedValueOnce({ count: 1 });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({
+      ...held,
+      pendingBonuses: heldSnapshot({
+        referralBonus: 200,
+        refereeBonus: 50,
+        referredById: "acct-referrer",
+      }),
+    });
+    // The programme has since doubled its referral bonus; the promise was 200.
+    db.loyaltyProgram.findUnique.mockResolvedValue(program({ referralBonus: 400 }));
+    db.customerLoyaltyAccount.update
+      .mockResolvedValueOnce({ id: "acct-referrer", currentPoints: 210 })
+      .mockResolvedValueOnce({ id: "acct-1", currentPoints: 50 });
+
+    await releasePendingSignupBonus("acct-1");
+
+    expect(db.customerLoyaltyAccount.update.mock.calls[0][0]).toMatchObject({
+      where: { id: "acct-referrer" },
+      data: { currentPoints: { increment: 200 } },
+    });
+    expect(db.loyaltyTransaction.create.mock.calls.map((c) => c[0].data)).toEqual([
+      expect.objectContaining({
+        accountId: "acct-referrer",
+        source: "referral",
+        points: 200,
+        balanceAfter: 210,
+      }),
+      expect.objectContaining({
+        accountId: "acct-1",
+        source: "referral",
+        points: 50,
+        balanceAfter: 50,
+      }),
+    ]);
+  });
+
+  test("a verified account with nothing owed is left alone", async () => {
+    db.customerLoyaltyAccount.updateMany.mockResolvedValueOnce({ count: 1 });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ ...held, pendingBonuses: null });
+
+    expect(await releasePendingSignupBonus("acct-1")).toBe(false);
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+  });
+
+  test("by phone: finds the one pending account behind the number and releases it", async () => {
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue({ id: "acct-1" });
+    db.customerLoyaltyAccount.updateMany.mockResolvedValueOnce({ count: 1 });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({
+      ...held,
+      pendingBonuses: heldSnapshot(),
+    });
+    db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-1", currentPoints: 0 });
+
+    expect(await releasePendingSignupBonusByPhone("+919000000001", ORG)).toBe(true);
+
+    expect(db.customerLoyaltyAccount.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { verifiedAt: null, contact: { phone: "919000000001", orgId: ORG } },
+      }),
+    );
+  });
+
+  test("by phone: a number with no pending account is a no-op", async () => {
+    expect(await releasePendingSignupBonusByPhone("919000000001", ORG)).toBe(false);
+    expect(db.customerLoyaltyAccount.updateMany).not.toHaveBeenCalled();
+  });
+});
+
 describe("awardPoints", () => {
   const customer = {
     id: "acct-1",
@@ -525,6 +872,154 @@ describe("awardPoints", () => {
     expect(checkAndUpgradeTier).toHaveBeenCalledWith("acct-1", 1000);
   });
 
+  test("asks the feedback scheduler to follow up on the purchase", async () => {
+    db.loyaltyTransaction.create.mockResolvedValueOnce({ id: "txn-9" });
+
+    await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(scheduleFeedbackRequest).toHaveBeenCalledWith({
+      programId: PROGRAM,
+      accountId: "acct-1",
+      transactionId: "txn-9",
+    });
+  });
+
+  test("a scheduler failure never fails the award", async () => {
+    (scheduleFeedbackRequest as Mock).mockRejectedValueOnce(new Error("redis down"));
+
+    await expect(awardPoints(PROGRAM, "contact-1", 500, {})).resolves.toMatchObject({
+      pointsAwarded: 100,
+    });
+  });
+
+  describe("idempotency", () => {
+    const KEY = "shopify:demo.myshopify.com:5551";
+
+    // These tests queue one-shot rejections on $transaction to stand in for the unique
+    // violation. `vi.clearAllMocks()` in the global beforeEach does not drain a `...Once`
+    // queue, so an unconsumed one would surface as a baffling failure in whichever test
+    // ran next. Reset both mocks here rather than relying on declaration order.
+    afterEach(() => {
+      db.$transaction.mockReset();
+      db.$transaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(db));
+      db.loyaltyTransaction.findUnique.mockReset();
+    });
+
+    test("without a key, nothing is written to collapse on", async () => {
+      await awardPoints(PROGRAM, "contact-1", 500, { orderId: "ord-1" });
+
+      expect(db.loyaltyTransaction.findUnique).not.toHaveBeenCalled();
+      expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
+        idempotencyKey: null,
+        referenceId: "ord-1",
+      });
+    });
+
+    test("orderId is stored as a searchable reference, not as the uniqueness key", async () => {
+      // referenceId is shared with the approvals and expiry writers, so it cannot carry a
+      // unique index; the guarantee lives on idempotencyKey.
+      await awardPoints(PROGRAM, "contact-1", 500, { orderId: "ord-1", idempotencyKey: KEY });
+
+      expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
+        referenceId: "ord-1",
+        idempotencyKey: KEY,
+      });
+    });
+
+    test("a repeat under the same key returns the original award and writes nothing", async () => {
+      db.loyaltyTransaction.findUnique.mockResolvedValue({
+        id: "txn-first",
+        points: 100,
+        balanceAfter: 600,
+        metadata: { appliedRuleId: "rule-1", appliedRuleName: "Double points" },
+      });
+
+      const result = await awardPoints(PROGRAM, "contact-1", 500, { idempotencyKey: KEY });
+
+      expect(result.replayed).toBe(true);
+      expect(result.pointsAwarded).toBe(100);
+      expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+      expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+    });
+
+    test("a replay fires no side effects", async () => {
+      db.loyaltyTransaction.findUnique.mockResolvedValue({
+        id: "txn-first",
+        points: 100,
+        balanceAfter: 600,
+        metadata: {},
+      });
+
+      const result = await awardPoints(PROGRAM, "contact-1", 500, { idempotencyKey: KEY });
+
+      // The customer was told about the points the first time round; telling them again is
+      // the visible half of a double award even when the balance is right.
+      expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+      expect(scheduleFeedbackRequest).not.toHaveBeenCalled();
+      expect(checkAndUpgradeTier).not.toHaveBeenCalled();
+      expect(result.tier.upgraded).toBe(false);
+    });
+
+    test("losing the race to an identical request returns the winner's award", async () => {
+      // The unique violation aborts the whole transaction, so the balance increment rolls
+      // back with the insert and only the winner's row survives.
+      db.$transaction.mockRejectedValueOnce(Object.assign(new Error("unique"), { code: "P2002" }));
+      db.loyaltyTransaction.findUnique.mockResolvedValue({
+        id: "txn-winner",
+        points: 100,
+        balanceAfter: 600,
+        metadata: {},
+      });
+
+      const result = await awardPoints(PROGRAM, "contact-1", 500, { idempotencyKey: KEY });
+
+      expect(result.replayed).toBe(true);
+      expect(result.transaction).toMatchObject({ id: "txn-winner" });
+      expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    });
+
+    test("a unique violation with no key is a real error, not a replay", async () => {
+      db.$transaction.mockRejectedValueOnce(Object.assign(new Error("unique"), { code: "P2002" }));
+
+      await expect(awardPoints(PROGRAM, "contact-1", 500, {})).rejects.toThrow("unique");
+    });
+  });
+
+  test("records the purchase amount as a typed column as well as in the metadata", async () => {
+    await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(db.loyaltyTransaction.create.mock.calls[0][0].data).toMatchObject({
+      purchaseAmount: 500,
+      metadata: expect.objectContaining({ purchaseAmount: 500 }),
+    });
+  });
+
+  test("releases a held signup bonus before booking the purchase", async () => {
+    // The first update is the release's credit; the second is the purchase itself.
+    db.customerLoyaltyAccount.updateMany.mockResolvedValueOnce({ count: 1 });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValueOnce(customer).mockResolvedValueOnce({
+      ...customer,
+      contactId: "contact-1",
+      pendingBonuses: heldSnapshot({ signupBonus: 200 }),
+    });
+    db.customerLoyaltyAccount.update
+      .mockResolvedValueOnce({ id: "acct-1", currentPoints: 200 })
+      .mockResolvedValueOnce({
+        id: "acct-1",
+        currentPoints: 300,
+        lifetimePoints: 300,
+        totalSpend: 500,
+      });
+
+    await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(db.customerLoyaltyAccount.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "acct-1", verifiedAt: null } }),
+    );
+    const sources = db.loyaltyTransaction.create.mock.calls.map((c) => c[0].data.source);
+    expect(sources).toEqual(["signup_bonus", "purchase"]);
+  });
+
   test("tells the customer their points were issued", async () => {
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
@@ -564,6 +1059,90 @@ describe("awardPoints", () => {
     expect(db.customerLoyaltyAccount.update.mock.invocationCallOrder[0]).toBeLessThan(
       db.loyaltyTransaction.create.mock.invocationCallOrder[0],
     );
+  });
+
+  test("hands the receipt the rule that priced it, in plain numbers", async () => {
+    (calculatePointsForPurchase as Mock).mockResolvedValue({
+      points: 100,
+      rule: { id: "rule-1", name: "Happy hour", multiplier: "2.00", bonusPoints: 10 },
+    });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.rule).toEqual({
+      id: "rule-1",
+      name: "Happy hour",
+      multiplier: 2,
+      bonusPoints: 10,
+    });
+    expect(result.pointsAwarded).toBe(100);
+  });
+
+  test("hands the receipt where the customer sits and how far the next tier is", async () => {
+    (checkAndUpgradeTier as Mock).mockResolvedValue({
+      upgraded: false,
+      direction: "none",
+      currentTier: {
+        id: "tier-1",
+        name: "Bronze",
+        threshold: "0",
+        pointsMultiplier: "1.00",
+        color: "#a00",
+      },
+      nextTier: { id: "tier-2", name: "Silver", threshold: "5000", pointsMultiplier: "1.25" },
+      amountToNext: 4000,
+    });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.tier).toEqual({
+      current: { id: "tier-1", name: "Bronze", threshold: 0, pointsMultiplier: 1, color: "#a00" },
+      previous: "Bronze",
+      upgraded: false,
+      next: { id: "tier-2", name: "Silver", threshold: 5000, pointsMultiplier: 1.25, color: null },
+      amountToNext: 4000,
+    });
+  });
+
+  test("reports what the dispatcher did with the WhatsApp message", async () => {
+    (dispatchLoyaltyNotification as Mock).mockResolvedValue({
+      sent: true,
+      channel: "whatsapp",
+      templateId: "tmpl-1",
+      text: "Hi Ann, you earned 100 points.",
+      skippedReason: null,
+    });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.notification).toMatchObject({
+      sent: true,
+      text: "Hi Ann, you earned 100 points.",
+    });
+    expect(result.tierNotification).toBeNull();
+  });
+
+  test("treats a dispatcher that returns nothing as not sent", async () => {
+    (dispatchLoyaltyNotification as Mock).mockResolvedValue(undefined);
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.notification).toEqual({
+      sent: false,
+      channel: null,
+      mode: null,
+      templateId: null,
+      text: null,
+      skippedReason: null,
+    });
+  });
+
+  test("says why nothing was sent when the contact has no phone", async () => {
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ ...customer, contact: null });
+
+    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
+
+    expect(result.notification.skippedReason).toBe("no_phone");
   });
 });
 
@@ -628,12 +1207,48 @@ describe("getCustomerAccountByPhone", () => {
 });
 
 describe("getLCustomerByPhone", () => {
-  test("strips a leading plus and scopes through the contact's org", async () => {
+  beforeEach(() => {
+    db.loyaltyProgram.findFirst.mockResolvedValue({
+      id: PROGRAM,
+      defaultCountryCode: "IN",
+    });
+  });
+
+  test("scopes through the contact's org and the org's programme", async () => {
     await getLCustomerByPhone("+919000000001", ORG);
 
-    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toEqual({
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where).toMatchObject({
+      programId: PROGRAM,
       contact: { phone: "919000000001", orgId: ORG },
     });
+  });
+
+  test.each([
+    ["+91 90000 00001", "a number spaced the way Shopify sends it"],
+    ["09000000001", "a bare local number"],
+    ["+919000000001", "E.164"],
+  ])("%s resolves to the stored form (%s)", async (input) => {
+    await getLCustomerByPhone(input, ORG);
+
+    // All three reach the same contact. Before this went through `normalisePhone`, only
+    // the third did — the other two silently matched nobody.
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.contact.phone).toBe(
+      "919000000001",
+    );
+  });
+
+  test("an inactive member is still found, so the caller can say why", async () => {
+    await getLCustomerByPhone("919000000001", ORG);
+
+    // No status filter: the command handlers answer "your membership is not active",
+    // which they cannot do if the lookup hides the account.
+    expect(db.customerLoyaltyAccount.findFirst.mock.calls[0][0].where.status).toBeUndefined();
+  });
+
+  test("returns null when the org has no programme", async () => {
+    db.loyaltyProgram.findFirst.mockResolvedValue(null);
+
+    expect(await getLCustomerByPhone("919000000001", ORG)).toBeNull();
   });
 });
 
@@ -641,10 +1256,51 @@ describe("updateCustomerAccount", () => {
   test("scopes the write to the caller's program", async () => {
     await updateCustomerAccount("acct-other-org", { status: "closed" } as any, PROGRAM);
 
-    expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
-      where: { id: "acct-other-org", programId: PROGRAM },
-      data: { status: "closed" },
+    const call = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    // The programme in the where clause is the whole of the authorisation: an id from
+    // another org matches nothing and Prisma throws P2025, which the handler answers 404.
+    expect(call.where).toEqual({ id: "acct-other-org", programId: PROGRAM });
+    expect(call.data).toEqual({ status: "closed" });
+  });
+
+  test("writes name, birthday and gender through to the contact", async () => {
+    await updateCustomerAccount(
+      "acct-1",
+      { name: "Anjali R", dob: "1994-03-02", gender: "FEMALE" } as any,
+      PROGRAM,
+    );
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data.contact.update).toEqual({
+      name: "Anjali R",
+      dob: new Date("1994-03-02"),
+      gender: "FEMALE",
     });
+    // Nothing about the account itself changed, so it is not touched.
+    expect(data).not.toHaveProperty("status");
+  });
+
+  test("a birthday can be cleared, not only overwritten", async () => {
+    await updateCustomerAccount("acct-1", { dob: null } as any, PROGRAM);
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data.contact.update).toEqual({ dob: null });
+  });
+
+  test("a field left out is left alone", async () => {
+    await updateCustomerAccount("acct-1", { name: "Anjali" } as any, PROGRAM);
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data.contact.update).toEqual({ name: "Anjali" });
+    expect(data.contact.update).not.toHaveProperty("dob");
+    expect(data.contact.update).not.toHaveProperty("gender");
+  });
+
+  test("a status-only edit does not reach for the contact", async () => {
+    await updateCustomerAccount("acct-1", { status: "suspended" } as any, PROGRAM);
+
+    const { data } = db.customerLoyaltyAccount.update.mock.calls[0][0];
+    expect(data).not.toHaveProperty("contact");
   });
 });
 
@@ -830,5 +1486,87 @@ describe("markRewardAsRedeemed", () => {
     db.customerReward.update.mockResolvedValue({ id: "cr-1" });
 
     await expect(markRewardAsRedeemed("SHORT1", ORG)).rejects.toThrow("Reward not found");
+  });
+});
+
+describe("lookupContactByPhone", () => {
+  test("strips a leading + before matching, since contacts are stored without one", async () => {
+    db.contact.findFirst.mockResolvedValue(null);
+
+    await lookupContactByPhone("+919876543210", ORG);
+
+    expect(db.contact.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { phone: "919876543210", orgId: ORG } }),
+    );
+  });
+
+  test("returns nothing for a number the org has never seen", async () => {
+    db.contact.findFirst.mockResolvedValue(null);
+
+    const result = await lookupContactByPhone("919876543210", ORG);
+
+    expect(result).toEqual({ contact: null, alreadyMember: false });
+    // No point asking about a loyalty account for a contact that does not exist.
+    expect(db.customerLoyaltyAccount.findFirst).not.toHaveBeenCalled();
+  });
+
+  test("returns a known contact that has never joined the programme", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
+
+    const result = await lookupContactByPhone("919876543210", ORG);
+
+    expect(result.contact?.name).toBe("Asha");
+    expect(result.alreadyMember).toBe(false);
+  });
+
+  test("flags an active member so the form can stop a duplicate", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue({ id: "acc-1", status: "active" });
+
+    expect((await lookupContactByPhone("919876543210", ORG)).alreadyMember).toBe(true);
+  });
+
+  test("an inactive account is not 'already a member' — submitting reactivates it", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue({ id: "acc-1", status: "inactive" });
+
+    const result = await lookupContactByPhone("919876543210", ORG);
+
+    expect(result.contact?.name).toBe("Asha");
+    expect(result.alreadyMember).toBe(false);
+  });
+
+  test("scopes the loyalty account lookup to the caller's org", async () => {
+    db.contact.findFirst.mockResolvedValue({
+      id: "contact-1",
+      name: "Asha",
+      email: null,
+      dob: null,
+    });
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
+
+    await lookupContactByPhone("919876543210", ORG);
+
+    expect(db.customerLoyaltyAccount.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { contactId: "contact-1", program: { orgId: ORG } },
+      }),
+    );
   });
 });

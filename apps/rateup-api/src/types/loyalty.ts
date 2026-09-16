@@ -36,7 +36,19 @@ export enum LoyaltyRewardType {
   POINT = "point",
   COUPON = "coupon",
   ASSIGNED = "assigned",
+  /**
+   * Granted once per customer for tapping the Google review link that follows the
+   * loyalty feedback flow. Costs no points and cannot be bought — it is issued to the
+   * account and redeemed by short code like an assigned reward.
+   */
+  REVIEW = "review",
 }
+
+/** Reward types a customer cannot buy with points: they must be issued to the account first. */
+export const ASSIGNMENT_ONLY_REWARD_TYPES: readonly string[] = [
+  LoyaltyRewardType.ASSIGNED,
+  LoyaltyRewardType.REVIEW,
+];
 
 export enum LoyaltyTransactionType {
   EARN = "earn",
@@ -248,6 +260,23 @@ export interface LoyaltyTransactionMetadata {
   payment_method?: string;
   channel?: string;
   [key: string]: unknown;
+}
+
+/**
+ * The bonuses a web self-signup was promised, frozen at signup. Credited by
+ * `releasePendingSignupBonus` the first time the customer is seen on WhatsApp or at the
+ * till, so a merchant changing the programme's bonuses later does not change what a
+ * waiting customer gets.
+ */
+export interface LoyaltyPendingBonuses {
+  signupBonus: number;
+  refereeBonus: number;
+  refereeBonusType: string;
+  refereeRewardId: string | null;
+  referralBonus: number;
+  referralBonusType: string;
+  referralRewardId: string | null;
+  referredById: string | null;
 }
 
 export interface LoyaltyRedemptionContext {

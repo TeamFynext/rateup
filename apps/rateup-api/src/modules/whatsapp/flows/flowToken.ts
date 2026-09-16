@@ -41,6 +41,8 @@ export interface FlowTokenPayload {
   d?: string;
   /** Free-text tag carried onto the response. */
   t?: string;
+  /** Loyalty feedback request, when the flow was sent by the feedback scheduler. */
+  f?: string;
   /** Issued-at, epoch ms. */
   i: number;
 }
@@ -53,6 +55,7 @@ export interface FlowContext {
   campaignParticipantId?: string;
   campaignParticipantDripStageId?: string;
   tag?: string;
+  feedbackRequestId?: string;
   issuedAt: Date;
 }
 
@@ -76,6 +79,7 @@ export function signFlowToken(context: {
   campaignParticipantId?: string | null;
   campaignParticipantDripStageId?: string | null;
   tag?: string | null;
+  feedbackRequestId?: string | null;
   issuedAt?: Date;
 }): string {
   const payload: FlowTokenPayload = {
@@ -88,6 +92,7 @@ export function signFlowToken(context: {
   if (context.campaignParticipantId) payload.c = context.campaignParticipantId;
   if (context.campaignParticipantDripStageId) payload.d = context.campaignParticipantDripStageId;
   if (context.tag) payload.t = context.tag;
+  if (context.feedbackRequestId) payload.f = context.feedbackRequestId;
 
   const body = `${TOKEN_VERSION}.${Buffer.from(JSON.stringify(payload)).toString("base64url")}`;
   return `${body}.${sign(body)}`;
@@ -130,6 +135,7 @@ export function verifyFlowToken(token: string | undefined | null): FlowContext |
     campaignParticipantId: payload.c,
     campaignParticipantDripStageId: payload.d,
     tag: payload.t,
+    feedbackRequestId: payload.f,
     issuedAt: new Date(payload.i),
   };
 }

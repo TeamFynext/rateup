@@ -4,6 +4,7 @@ vi.mock("../../utils/prisma.js", () => ({
   default: {
     loyaltyProgram: { findUnique: vi.fn() },
     loyaltyEventTrigger: { findFirst: vi.fn() },
+    waTemplate: { findUnique: vi.fn() },
   },
 }));
 
@@ -12,11 +13,27 @@ vi.mock("../../utils/logger.js", () => ({
 }));
 
 vi.mock("./program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
-vi.mock("../contact/contact.utils.js", () => ({ handleSendTemplate: vi.fn() }));
+// Fully replaced, not spread over the original: loading the real module drags in the
+// WhatsApp send stack, which imports the dispatcher back before this mock is in place.
+// The renderer is small enough to restate; loyaltyMessaging.test.ts covers the real one.
+vi.mock("./loyaltyMessaging.js", () => ({
+  sendLoyaltyMessage: vi.fn(),
+  renderTemplateBody: (components: unknown, params: string[]) => {
+    if (!Array.isArray(components)) return null;
+    const body = components.find(
+      (c: { type?: string }) => String(c?.type ?? "").toUpperCase() === "BODY",
+    ) as { text?: string } | undefined;
+    if (!body?.text) return null;
+    return body.text.replace(
+      /\{\{(\d+)\}\}/g,
+      (_m: string, i: string) => params[Number(i) - 1] ?? "",
+    );
+  },
+}));
 
 import prisma from "../../utils/prisma.js";
 import { getLoyaltyProgramByOrg } from "./program/program.service.js";
-import { handleSendTemplate } from "../contact/contact.utils.js";
+import { sendLoyaltyMessage } from "./loyaltyMessaging.js";
 import { LoyaltyEventType } from "../../types/enums.js";
 import { dispatchLoyaltyNotification } from "./loyaltyWaDispatcher.js";
 import { isLReferralAction, isPurchaseAction, LoyaltyActionType, parsePhoneforWa } from "./util.js";
@@ -26,6 +43,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   loyaltyProgram: Record<string, Mock>;
   loyaltyEventTrigger: Record<string, Mock>;
+  waTemplate: Record<string, Mock>;
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
@@ -35,15 +53,31 @@ function activeProgram(over: Record<string, unknown> = {}) {
     status: "active",
     whatsappNotifications: true,
     pointsActivityAlerts: true,
+    sendTextInSession: true,
     ...over,
   };
 }
 
+/** What sendLoyaltyMessage was asked to send, for the first call. */
+function sendInput() {
+  return (sendLoyaltyMessage as Mock).mock.calls[0][0];
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  (sendLoyaltyMessage as Mock).mockImplementation(
+    async (input: { waTemplateId: string | null }) => ({
+      sent: true,
+      mode: "template",
+      templateId: input.waTemplateId,
+      text: null,
+      skippedReason: null,
+    }),
+  );
   (getLoyaltyProgramByOrg as Mock).mockResolvedValue({ id: "prog-1" });
   db.loyaltyProgram.findUnique.mockResolvedValue(activeProgram());
   db.loyaltyEventTrigger.findFirst.mockResolvedValue(null);
+  db.waTemplate.findUnique.mockResolvedValue(null);
 });
 
 // ===========================================================================
@@ -105,7 +139,7 @@ describe("dispatchLoyaltyNotification — the gates", () => {
 
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, payload);
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("says nothing while the program is inactive", async () => {
@@ -113,7 +147,7 @@ describe("dispatchLoyaltyNotification — the gates", () => {
 
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, payload);
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("says nothing when WhatsApp notifications are switched off", async () => {
@@ -121,7 +155,7 @@ describe("dispatchLoyaltyNotification — the gates", () => {
 
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, payload);
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("the points-alert switch only gates the two point events", async () => {
@@ -129,13 +163,14 @@ describe("dispatchLoyaltyNotification — the gates", () => {
 
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, payload);
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ADJUSTED, payload);
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
 
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
       ...payload,
       rewardName: "Free coffee",
     });
-    expect(handleSendTemplate).toHaveBeenCalledTimes(1);
+    expect(sendLoyaltyMessage).toHaveBeenCalledTimes(1);
   });
 
   test("says nothing when the payload has no phone number", async () => {
@@ -143,15 +178,32 @@ describe("dispatchLoyaltyNotification — the gates", () => {
       customerPhone: "",
     } as any);
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
-  test("swallows the failure rather than blocking the caller", async () => {
-    (handleSendTemplate as Mock).mockRejectedValue(new Error("meta rejected the template"));
+  test("swallows the failure rather than blocking the caller, and says so", async () => {
+    // clearAllMocks keeps implementations, so a sticky rejection would leak into later tests.
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
+    (sendLoyaltyMessage as Mock).mockRejectedValueOnce(new Error("meta rejected the template"));
 
     await expect(
       dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, payload),
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ sent: false, skippedReason: "send_failed" });
+  });
+
+  test("names the gate that stopped it", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(activeProgram({ status: "draft" }));
+
+    expect(await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, payload)).toEqual(
+      {
+        sent: false,
+        channel: null,
+        mode: null,
+        templateId: null,
+        text: null,
+        skippedReason: "program_inactive",
+      },
+    );
   });
 });
 
@@ -169,7 +221,7 @@ describe("dispatchLoyaltyNotification — resolving the template", () => {
       eventType: LoyaltyEventType.POINTS_ISSUED,
       enabled: true,
     });
-    expect((handleSendTemplate as Mock).mock.calls[0][0]).toBe("tmpl-trigger");
+    expect(sendInput().waTemplateId).toBe("tmpl-trigger");
   });
 
   test("falls back to the reward's own template when no trigger is configured", async () => {
@@ -178,23 +230,148 @@ describe("dispatchLoyaltyNotification — resolving the template", () => {
       rewardWaTemplateId: "tmpl-reward",
     });
 
-    expect((handleSendTemplate as Mock).mock.calls[0][0]).toBe("tmpl-reward");
+    expect(sendInput().waTemplateId).toBe("tmpl-reward");
   });
 
-  // handleSendTemplate returns early on a null id, so this is a silent no-send.
-  test("sends a null template id when neither is configured", async () => {
-    await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
+  test("sends nothing when neither is configured, and reports no template", async () => {
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
       customerPhone: "919000000001",
     });
 
-    expect((handleSendTemplate as Mock).mock.calls[0][0]).toBeNull();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({ sent: false, skippedReason: "no_template" });
+  });
+
+  test("hands the program's text-in-window switch to the sender", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(activeProgram({ sendTextInSession: false }));
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
+
+    await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: "919000000001",
+    });
+
+    expect(sendInput()).toMatchObject({
+      orgId: ORG,
+      phone: "919000000001",
+      waTemplateId: "tmpl-trigger",
+      preferTextInSession: false,
+    });
+  });
+
+  test("reports how the message went out — text inside an open window", async () => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
+    (sendLoyaltyMessage as Mock).mockResolvedValueOnce({
+      sent: true,
+      mode: "text",
+      templateId: "tmpl-trigger",
+      text: "Hi Ann",
+      skippedReason: null,
+    });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+    });
+
+    expect(outcome).toMatchObject({ sent: true, mode: "text", text: "Hi Ann" });
+  });
+
+  test("passes on a template that Meta has not approved yet", async () => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
+    (sendLoyaltyMessage as Mock).mockResolvedValueOnce({
+      sent: false,
+      mode: null,
+      templateId: "tmpl-trigger",
+      text: null,
+      skippedReason: "template_not_approved",
+    });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: "919000000001",
+    });
+
+    expect(outcome).toMatchObject({ sent: false, skippedReason: "template_not_approved" });
+  });
+
+  test("reports an accepted send with the words the customer received", async () => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({
+      waTemplateId: "tmpl-trigger",
+      waTemplate: {
+        data: {
+          components: [
+            { type: "HEADER", text: "Kettle & Co" },
+            { type: "BODY", text: "Hi {{1}}, you earned {{2}} Beans. Balance {{3}}." },
+          ],
+        },
+      },
+    });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+      points: 43,
+      balanceAfter: 1283,
+    });
+
+    expect(outcome).toEqual({
+      sent: true,
+      channel: "whatsapp",
+      mode: "template",
+      templateId: "tmpl-trigger",
+      text: "Hi Ann, you earned 43 Beans. Balance 1283.",
+      skippedReason: null,
+    });
+  });
+
+  test("a refused send is reported, text and all", async () => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
+    (sendLoyaltyMessage as Mock).mockResolvedValueOnce({
+      sent: false,
+      mode: "template",
+      templateId: "tmpl-trigger",
+      text: null,
+      skippedReason: "send_failed",
+    });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+      points: 43,
+      balanceAfter: 1283,
+    });
+
+    expect(outcome).toMatchObject({
+      sent: false,
+      templateId: "tmpl-trigger",
+      skippedReason: "send_failed",
+    });
+  });
+
+  test("looks the reward's own template up to render its text", async () => {
+    db.waTemplate.findUnique.mockResolvedValue({
+      data: { components: [{ type: "BODY", text: "{{1}}, show code {{3}} for your {{2}}." }] },
+    });
+
+    const outcome = await dispatchLoyaltyNotification(ORG, LoyaltyEventType.REWARD_ISSUED, {
+      customerPhone: "919000000001",
+      customerName: "Ann",
+      rewardName: "Free coffee",
+      redemptionCode: "KC-4471",
+      rewardWaTemplateId: "tmpl-reward",
+    });
+
+    expect(outcome.text).toBe("Ann, show code KC-4471 for your Free coffee.");
   });
 });
 
 describe("dispatchLoyaltyNotification — the template parameters", () => {
   function params() {
-    return (handleSendTemplate as Mock).mock.calls[0][3];
+    return sendInput().params;
   }
+
+  beforeEach(() => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplateId: "tmpl-trigger" });
+  });
 
   test("a points event carries the name, the points and the new balance", async () => {
     await dispatchLoyaltyNotification(ORG, LoyaltyEventType.POINTS_ISSUED, {

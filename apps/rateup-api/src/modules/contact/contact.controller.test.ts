@@ -42,16 +42,18 @@ vi.mock("./contact.service.js", () => ({
 vi.mock("./contact.utils.js", () => ({
   createLCustomer: vi.fn(),
   handlePostRegisterAction: vi.fn(),
-  handleSendTemplate: vi.fn(),
 }));
 
 vi.mock("../loyalty/settings/settings.service.js", () => ({
   getLoyaltyWaCommandByType: vi.fn(),
-  replacedContentByDynamicVariable: vi.fn((content: string) => `rendered:${content}`),
-  richTextToPlainText: vi.fn((content: unknown) => String(content)),
 }));
-
-vi.mock("../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendTextMessage: vi.fn() }));
+vi.mock("../loyalty/richText.js", () => ({
+  renderReplyText: vi.fn((content: unknown) => `rendered:${String(content)}`),
+}));
+vi.mock("../loyalty/loyaltyMessaging.js", () => ({
+  sendLoyaltyMessage: vi.fn(),
+  programPrefersTextInSession: vi.fn(async () => true),
+}));
 
 vi.mock("../../utils/prisma.js", () => ({
   default: { contact: { findMany: vi.fn() } },
@@ -80,9 +82,9 @@ import {
   updateCustomField,
   updateLifecycleStageofContacts,
 } from "./contact.service.js";
-import { createLCustomer, handleSendTemplate } from "./contact.utils.js";
+import { createLCustomer } from "./contact.utils.js";
+import { sendLoyaltyMessage } from "../loyalty/loyaltyMessaging.js";
 import { getLoyaltyWaCommandByType } from "../loyalty/settings/settings.service.js";
-import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { ContactNotFoundError } from "./contact.errors.js";
 import {
   addCustomFieldHandler,
@@ -197,20 +199,30 @@ describe("createContactHandler", () => {
     });
   });
 
-  test("sends the registration template when the org configured one", async () => {
+  // A contact created here has usually never messaged the business, so the reply goes
+  // through the session-aware sender: the template when the window is closed, the reply's
+  // own text when it happens to be open.
+  test("sends the registration reply through the session-aware sender", async () => {
     (createLCustomer as Mock).mockResolvedValue({ id: "c1", name: "Ann", phone: "919876543210" });
     (getLoyaltyWaCommandByType as Mock).mockResolvedValue({
       responseType: "Template",
       waTemplateId: "t1",
-      content: null,
+      content: "Hi {{1}}",
     });
 
     await createContactHandler(request({ body: { ...body, source: "LOYALTY" } }), reply());
 
-    expect(handleSendTemplate).toHaveBeenCalledWith("t1", ORG, "919876543210", ["Ann"]);
+    expect(sendLoyaltyMessage).toHaveBeenCalledWith({
+      orgId: ORG,
+      phone: "919876543210",
+      waTemplateId: "t1",
+      params: ["Ann"],
+      textFallback: "rendered:Hi {{1}}",
+      preferTextInSession: true,
+    });
   });
 
-  test("sends a plain text welcome when the org configured text instead", async () => {
+  test("a text-only reply is still offered, for an open window", async () => {
     (createLCustomer as Mock).mockResolvedValue({ id: "c1", name: "Ann", phone: "919876543210" });
     (getLoyaltyWaCommandByType as Mock).mockResolvedValue({
       responseType: "Text",
@@ -220,10 +232,8 @@ describe("createContactHandler", () => {
 
     await createContactHandler(request({ body: { ...body, source: "LOYALTY" } }), reply());
 
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: "919876543210", orgId: ORG },
-      null,
-      "rendered:Hi {{1}}",
+    expect(sendLoyaltyMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ waTemplateId: null, textFallback: "rendered:Hi {{1}}" }),
     );
   });
 

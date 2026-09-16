@@ -392,6 +392,12 @@ const publicTags = [
     name: "WhatsApp/Template",
     description: "WhatsApp Template related endpoints",
   },
+  {
+    name: "Loyalty",
+    description:
+      "Points, members, rewards and vouchers for a till or e-commerce integration. " +
+      "Members are named by phone number or card code; every write takes an Idempotency-Key.",
+  },
 ];
 
 // Swagger configuration

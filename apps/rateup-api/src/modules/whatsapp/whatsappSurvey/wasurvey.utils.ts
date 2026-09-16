@@ -1547,7 +1547,13 @@ export function generateWhatsAppJoinLink({
   waNumber,
   referralCode,
   source: _source = "REF",
-}: WaLinkOptions): string {
+}: WaLinkOptions): string | null {
+  // `wa.me` takes bare digits. `WhatsappSettings.phone` is stored as the merchant typed
+  // it ("+1555-132-3034"), and callers have passed non-numbers here, so anything that is
+  // not a number yields no link rather than a wa.me/loyalty that opens nothing.
+  const digits = waNumber?.replace(/\D/g, "") ?? "";
+  if (digits.length < 6) return null;
+
   let message = "Join the loyalty program";
 
   if (referralCode) {
@@ -1559,5 +1565,5 @@ export function generateWhatsAppJoinLink({
 
   const encodedMessage = encodeURIComponent(message);
 
-  return `https://wa.me/${waNumber}?text=${encodedMessage}`;
+  return `https://wa.me/${digits}?text=${encodedMessage}`;
 }

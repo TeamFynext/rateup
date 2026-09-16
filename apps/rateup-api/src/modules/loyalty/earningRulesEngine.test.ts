@@ -9,7 +9,7 @@ vi.mock("../../utils/prisma.js", () => ({
       updateMany: vi.fn(),
     },
     customerLoyaltyAccount: { findUnique: vi.fn(), update: vi.fn() },
-    loyaltyTransaction: { count: vi.fn() },
+    loyaltyTransaction: { count: vi.fn(), aggregate: vi.fn() },
   },
 }));
 
@@ -57,6 +57,7 @@ interface AccountFixture {
   id: string;
   currentTierId: string | null;
   currentTier: { pointsMultiplier: number } | null;
+  program: { tiersEnabled: boolean };
 }
 
 function rule(over: Record<string, unknown> = {}) {
@@ -84,7 +85,12 @@ function rule(over: Record<string, unknown> = {}) {
 }
 
 function account(over: Record<string, unknown> = {}) {
-  const base: AccountFixture = { id: CUSTOMER, currentTierId: null, currentTier: null };
+  const base: AccountFixture = {
+    id: CUSTOMER,
+    currentTierId: null,
+    currentTier: null,
+    program: { tiersEnabled: true },
+  };
   return { ...base, ...over };
 }
 
@@ -389,6 +395,25 @@ describe("calculatePointsForPurchase — the maths", () => {
     expect((await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any)).points).toBe(20);
   });
 
+  test("ignores the tier multiplier when the programme has tiers switched off", async () => {
+    // `currentTierId` survives the flag being turned off so standing is not lost if it is
+    // turned back on — which is exactly why the multiplier has to be gated on the flag and
+    // not on the customer still having a tier.
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue(
+      account({
+        currentTierId: "gold",
+        currentTier: { pointsMultiplier: 3 },
+        program: { tiersEnabled: false },
+      }),
+    );
+    db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ pointsPerUnit: 1 })]);
+
+    const res = await calculatePointsForPurchase(PROGRAM, CUSTOMER, 100, {} as any);
+
+    expect(res.points).toBe(100);
+    expect(res.calculation.tier_multiplier).toBe(1);
+  });
+
   test("an untiered customer is treated as a 1x multiplier", async () => {
     db.loyaltyEarningRule.findMany.mockResolvedValue([rule({ pointsPerUnit: 1 })]);
 
@@ -603,9 +628,23 @@ describe("checkAndUpgradeTier", () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({
       id: CUSTOMER,
       currentTierId: null,
-      program: { tiersEnabled: true, tiers },
+      program: { id: PROGRAM, tiersEnabled: true, tierQualificationWindowMonths: null, tiers },
       ...over,
     });
+  }
+
+  /** A programme that judges tiers on the trailing `months`, with `spent` inside them. */
+  function withWindow(
+    tiers: Array<Record<string, unknown>>,
+    months: number,
+    spent: number,
+    over: Record<string, unknown> = {},
+  ) {
+    withTiers(tiers, {
+      program: { id: PROGRAM, tiersEnabled: true, tierQualificationWindowMonths: months, tiers },
+      ...over,
+    });
+    db.loyaltyTransaction.aggregate.mockResolvedValue({ _sum: { purchaseAmount: spent } });
   }
 
   test("does nothing when the program has tiers switched off", async () => {
@@ -614,6 +653,9 @@ describe("checkAndUpgradeTier", () => {
     expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
       upgraded: false,
       direction: "none",
+      currentTier: null,
+      nextTier: null,
+      amountToNext: null,
     });
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
@@ -624,6 +666,9 @@ describe("checkAndUpgradeTier", () => {
     expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
       upgraded: false,
       direction: "none",
+      currentTier: null,
+      nextTier: null,
+      amountToNext: null,
     });
   });
 
@@ -649,23 +694,59 @@ describe("checkAndUpgradeTier", () => {
   test("does nothing when the customer is already in that tier", async () => {
     withTiers([{ id: "gold", threshold: 1000 }], { currentTierId: "gold" });
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toEqual({
+    expect(await checkAndUpgradeTier(CUSTOMER, 5000)).toMatchObject({
       upgraded: false,
       direction: "none",
+      nextTier: null,
+      amountToNext: null,
     });
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
-  test("does nothing when the spend qualifies for no tier", async () => {
+  test("does nothing when the spend qualifies for no tier, but says how far the first is", async () => {
     withTiers([{ id: "gold", threshold: 1000 }]);
 
-    expect(await checkAndUpgradeTier(CUSTOMER, 10)).toEqual({
+    expect(await checkAndUpgradeTier(CUSTOMER, 10)).toMatchObject({
       upgraded: false,
       direction: "none",
+      nextTier: { id: "gold" },
+      amountToNext: 990,
     });
   });
 
-  test("moves the customer DOWN a tier without calling it an upgrade", async () => {
+  test("reports the tier now held and the next one up, with the spend still needed", async () => {
+    withTiers([
+      { id: "platinum", threshold: 10000, name: "Platinum" },
+      { id: "gold", threshold: 1000, name: "Gold" },
+      { id: "bronze", threshold: 0, name: "Bronze" },
+    ]);
+
+    const res = await checkAndUpgradeTier(CUSTOMER, 5000);
+
+    expect(res.currentTier?.id).toBe("gold");
+    expect(res.nextTier?.id).toBe("platinum");
+    expect(res.amountToNext).toBe(5000);
+  });
+
+  test("at the top tier there is no next tier", async () => {
+    withTiers(
+      [
+        { id: "platinum", threshold: 10000 },
+        { id: "bronze", threshold: 0 },
+      ],
+      {
+        currentTierId: "platinum",
+        currentTier: { id: "platinum", threshold: 10000 },
+      },
+    );
+
+    expect(await checkAndUpgradeTier(CUSTOMER, 20000)).toMatchObject({
+      nextTier: null,
+      amountToNext: null,
+    });
+  });
+
+  test("never moves a customer down on a lifetime ladder", async () => {
     withTiers(
       [
         { id: "platinum", threshold: 10000, name: "Platinum" },
@@ -674,12 +755,61 @@ describe("checkAndUpgradeTier", () => {
       { currentTierId: "platinum", currentTier: { id: "platinum", threshold: 10000 } },
     );
 
+    // Lifetime spend only grows, so a "down" here could only be undoing a manual placement.
     const res = await checkAndUpgradeTier(CUSTOMER, 5);
+
+    expect(res).toMatchObject({
+      upgraded: false,
+      direction: "none",
+      currentTier: { id: "platinum" },
+    });
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+  });
+
+  test("uses trailing-window spend, not lifetime spend, when the programme sets a window", async () => {
+    withWindow(
+      [
+        { id: "vip", threshold: 10000, name: "VIP" },
+        { id: "member", threshold: 0, name: "Member" },
+      ],
+      6,
+      12000,
+      { currentTierId: "member", currentTier: { id: "member", threshold: 0 } },
+    );
+
+    // Lifetime spend says Member; the last six months say VIP.
+    const res = await checkAndUpgradeTier(CUSTOMER, 500);
+
+    expect(res).toMatchObject({ upgraded: true, direction: "up", newTier: { id: "vip" } });
+    // The window sums rows that carry a purchase amount, which is purchases and their
+    // reversals — not every "earn" row, so a signup bonus still does not buy a tier.
+    expect(db.loyaltyTransaction.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          accountId: CUSTOMER,
+          programId: PROGRAM,
+          purchaseAmount: { not: null },
+        }),
+      }),
+    );
+  });
+
+  test("moves the customer DOWN when a window is set and the spend inside it lapsed", async () => {
+    withWindow(
+      [
+        { id: "platinum", threshold: 10000, name: "Platinum" },
+        { id: "bronze", threshold: 0, name: "Bronze" },
+      ],
+      6,
+      5,
+      { currentTierId: "platinum", currentTier: { id: "platinum", threshold: 10000 } },
+    );
+
+    const res = await checkAndUpgradeTier(CUSTOMER, 50000);
 
     expect(res.upgraded).toBe(false);
     expect(res.direction).toBe("down");
     expect(res.newTier?.id).toBe("bronze");
-    // The move itself still happens — that is what a tier reset is for.
     expect(db.customerLoyaltyAccount.update.mock.calls[0][0].data.currentTierId).toBe("bronze");
   });
 

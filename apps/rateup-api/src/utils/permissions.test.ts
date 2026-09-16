@@ -59,6 +59,17 @@ beforeEach(() => {
 });
 
 describe("getUserFeatures", () => {
+  // A session issued before the user's org existed names no org. checkSession
+  // recovers it, but if anything still reaches here without one, the gate has to
+  // refuse rather than let Prisma reject an undefined `orgId` as a 500.
+  test("grants nothing, and queries nothing, without an org", async () => {
+    const features = await getUserFeatures("user-1", undefined as unknown as string);
+
+    expect(features).toEqual(new Set());
+    expect(db.orgMember.findUnique).not.toHaveBeenCalled();
+    expect(db.teamFeatureAccess.findMany).not.toHaveBeenCalled();
+  });
+
   test("gives a super admin every feature without consulting team grants", async () => {
     db.orgMember.findUnique.mockResolvedValue({ role: "SUPER_ADMIN" });
 

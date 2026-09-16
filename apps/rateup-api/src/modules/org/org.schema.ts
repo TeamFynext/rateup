@@ -52,6 +52,8 @@ const updateOrgDetailsSchema = z.object({
   showLifecycle: z.boolean().optional(),
   isConversionApiActive: z.boolean().optional(),
   onboardingChecklistCompleted: z.boolean().optional(),
+  // The platform setup checklist (`/login/setup`). Loyalty program setup is deliberately
+  // absent: it is tracked on `LoyaltyProgram.onboardingStep` by the guided wizard.
   onboardingChecklist: z
     .object({
       api: z.boolean().optional(),

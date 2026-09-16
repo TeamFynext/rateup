@@ -1,5 +1,6 @@
 import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
+import { LoyaltyEventType } from "../../../types/enums.js";
 import type { CustomerLoyaltyAccount } from "../../../../generated/prisma/client.js";
 import {
   LoyaltyTemplateInput,
@@ -9,9 +10,9 @@ import {
 } from "./settings.schema.js";
 import { sendMessage, sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
-import dayjs from "dayjs";
 import { getLCustomerByPhone, updateCustomerAccount } from "../accounts/account.service.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { renderReplyText } from "../richText.js";
 import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import {
   createListMessage,
@@ -21,6 +22,11 @@ import {
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
 import { validateRedemption } from "../redemptionValidator.js";
 import { redeemReward } from "../redemptions/redemption.service.js";
+import {
+  ensureMemberCard,
+  renderCardReply,
+  sendMemberCard,
+} from "../accounts/memberCard.service.js";
 
 const REWARD_BUTTON_PREFIX = "loyalty_reward:";
 const REWARD_CONFIRM_PREFIX = "loyalty_reward_confirm:";
@@ -101,6 +107,8 @@ export async function handleLoyaltyWaCommand(
   name: string,
   loyaltyWaCommand: LoyaltyWaCommand,
   orgId: string,
+  /** The number the customer messaged — what their welcome's referral link points at. */
+  channelNumber?: string,
 ) {
   switch (loyaltyWaCommand.type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
@@ -109,7 +117,9 @@ export async function handleLoyaltyWaCommand(
         from: phone,
         userName: name,
         joinPayload: {},
-        sourceIdentifier: "loyalty",
+        // Doubles as "they messaged us, so reply", which is why it falls back to a
+        // non-number: the welcome must still go out when the channel is unknown.
+        sourceIdentifier: channelNumber ?? "loyalty",
       });
       break;
     case LoyaltyTemplateTypes.PointInformation:
@@ -124,6 +134,43 @@ export async function handleLoyaltyWaCommand(
     case LoyaltyTemplateTypes.RewardsIssued:
       await handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand);
       break;
+    case LoyaltyTemplateTypes.MemberCard:
+      await handleMemberCardCommand(phone, orgId, loyaltyWaCommand);
+      break;
+  }
+}
+
+/**
+ * "card": the member asked for their QR card. The keyword arrived as a message, so the
+ * window is open and the image can go straight out; the merchant's reply text, when they
+ * wrote one, is the caption.
+ */
+async function handleMemberCardCommand(
+  phone: string,
+  orgId: string,
+  loyaltyWaCommand: LoyaltyWaCommand,
+) {
+  const customer = await getLCustomerByPhone(phone, orgId);
+  if (!customer || customer.status !== "active") {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "You are not an active member of our loyalty programme",
+    );
+    return;
+  }
+  const cardCode = await ensureMemberCard(customer.id);
+  const caption = renderCardReply(loyaltyWaCommand.content, {
+    name: customer.contact?.name,
+    cardCode,
+  });
+  const outcome = await sendMemberCard({ orgId, accountId: customer.id, caption });
+  if (!outcome.sent) {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "Sorry, we could not send your card just now. Please try again in a moment.",
+    );
   }
 }
 
@@ -213,13 +260,13 @@ async function handleReferralCommand(phone: string, loyaltyWaCommand: LoyaltyWaC
       })
     : null;
 
-  if (responseType === WaAutomatedReplyResponseType.Template) {
-    const dynamicVariables = [referralCode, joinLink ?? referralCode];
+  const dynamicVariables = [referralCode, joinLink ?? referralCode];
+  // Inbound keyword → open window → the reply's own text first; template only without one.
+  const text = renderReplyText(content, dynamicVariables);
+  if (text.trim().length > 0) {
+    await sendTextMessage({ phone, orgId }, null, text);
+  } else if (responseType === WaAutomatedReplyResponseType.Template && waTemplateId) {
     return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
-  } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    const dynamicVariables = [referralCode, joinLink ?? referralCode];
-    const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(message));
   } else {
     const linkText = joinLink ? `\n\nShare your referral link: ${joinLink}` : "";
     await sendTextMessage(
@@ -365,130 +412,20 @@ export async function handleLoyaltyPointsCommand(
     customer.lifetimePoints,
   ];
 
-  if (responseType === WaAutomatedReplyResponseType.Template)
+  // The customer just texted us, so the 24-hour window is open: the reply's own text is
+  // free and immediate. The template is for customers who have not messaged (see
+  // contact.controller's registration reply) and is only used here when there is no text.
+  const text = renderReplyText(content, dynamicVariables);
+  if (text.trim().length > 0) {
+    await sendTextMessage({ phone, orgId }, null, text);
+  } else if (responseType === WaAutomatedReplyResponseType.Template) {
     return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
-  else if (responseType === WaAutomatedReplyResponseType.Text) {
-    const message = replacedContentByDynamicVariable(content, dynamicVariables);
-    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(message));
   }
 }
-export async function handleLoyaltyFeedback(
-  phone: string,
-  action: {
-    waTemplateId: string;
-    orgId: string;
-    startDate: Date | string;
-    endDate: Date | string;
-    rewardId?: string | null;
-  },
-) {
-  const { waTemplateId, orgId } = action;
-  if (dayjs().isBefore(dayjs(action.startDate)) || dayjs().isAfter(dayjs(action.endDate))) {
-    return { success: false, message: "Action Not available on this date" };
-  }
-  const customer = await getLCustomerByPhone(phone, orgId);
 
-  if (!customer) {
-    const message = `You are not a member of loyalty program yet`;
-    await sendTextMessage({ phone, orgId }, null, message);
-    return;
-  }
-  // if (customer.status !== "active") await updateLCustomer(phone, orgId, { status: "active" });
-  // const existing = await prisma.loyaltyActionCustomerMap.findFirst({
-  //   where: {
-  //     customerId: customer.id,
-  //     actionId: action.id,
-  //   },
-  // });
-  // if (existing) {
-  //   const message = `You have already given feedback for this action`;
-  //   await sendTextMessage({ phone, orgId }, null, message);
-  //   return;
-  // }
-
-  //handling referrer/customer action having reward
-  if (action.rewardId) {
-    // const { redeem, message } = await createRedeem(
-    //   customer.id,
-    //   action.rewardId,
-    //   true
-    // );
-    // if (redeem.status === RedeemStatus.FAILED) {
-    //   return {
-    //     success: false,
-    //     message,
-    //   };
-    // }
-    // await createCustomerAction({
-    //   customerId: customer.id,
-    //   actionId: action.id,
-    //   refereePhone: "",
-    //   amount: action.points,
-    // });
-  } else {
-    //handling referrer/customer action having points
-    // await createCustomerAction({
-    //   customerId: customer.id,
-    //   actionId: action.id,
-    //   refereePhone: "",
-    //   amount: action.points,
-    // });
-    // await updateLCustomerPoint(customer.id, customerPoints);
-  }
-
-  await handleSendTemplate(waTemplateId, orgId, phone, []);
-}
-
-/**
- * `content` is the loyaltyWaCommand's raw `Json?` column: a rich-text document that is
- * either the document node itself (`{ content: [...] }`) or already the node array.
- */
-export function replacedContentByDynamicVariable(
-  content: string | RichTextNode | RichTextNode[] | null | undefined,
-  dynamicVariables: (string | number)[],
-): RichTextNode[] {
-  const contentArray: RichTextNode[] = Array.isArray(content)
-    ? content
-    : typeof content === "string"
-      ? []
-      : (content?.content ?? []);
-  const contentCopy = structuredClone(contentArray);
-  for (const para of contentCopy) {
-    const contents = para.content;
-    if (contents) {
-      for (const content of contents) {
-        if (content.text) {
-          content.text = content.text.replace(/\{\{(\d+)\}\}/g, (_: string, index: string) =>
-            String(dynamicVariables[Number(index) - 1] ?? `{{${index}}}`),
-          );
-        }
-      }
-    }
-  }
-  return contentCopy;
-}
-
-/**
- * WhatsApp text messages carry a plain string, but loyalty command bodies are stored as
- * rich-text documents. Flatten to text (one line per top-level block) before sending —
- * passing the node array straight through rendered as "[object Object]".
- */
-export function richTextToPlainText(
-  content: string | RichTextNode | RichTextNode[] | null | undefined,
-): string {
-  // Older rows store the body as a plain string rather than a rich-text document.
-  if (typeof content === "string") return content;
-  const nodes = Array.isArray(content) ? content : (content?.content ?? []);
-  return nodes
-    .map((node) => collectText(node))
-    .filter((line) => line.length > 0)
-    .join("\n");
-}
-
-function collectText(node: RichTextNode): string {
-  if (typeof node.text === "string") return node.text;
-  return (node.content ?? []).map((child) => collectText(child)).join("");
-}
+// The rich-text helpers live in ../richText.ts so the account service can use them too;
+// re-exported because the contact controller and the tests import them from here.
+export { replacedContentByDynamicVariable, richTextToPlainText } from "../richText.js";
 
 export async function deleteLoyaltyWaCommandById(id: string, orgId: string) {
   return await prisma.loyaltyWaCommand.delete({
@@ -511,10 +448,12 @@ export async function handleCustomerRemovalFromLoyalty(
     return;
   }
   await updateCustomerAccount(customer.id, { status: "inactive" }, customer.programId);
-  if (responseType === WaAutomatedReplyResponseType.Template) {
+  // Inbound keyword → open window → the reply's own text first; template only without one.
+  const text = renderReplyText(content, []);
+  if (text.trim().length > 0) {
+    await sendTextMessage({ phone, orgId }, null, text);
+  } else if (responseType === WaAutomatedReplyResponseType.Template) {
     await handleSendTemplate(waTemplateId, orgId, phone, []);
-  } else if (responseType === WaAutomatedReplyResponseType.Text) {
-    await sendTextMessage({ phone, orgId }, null, richTextToPlainText(content));
   }
 }
 
@@ -579,5 +518,34 @@ export async function getAllEventTriggers(programId: string) {
 export async function deleteEventTrigger(id: string, programId: string) {
   return await prisma.loyaltyEventTrigger.delete({
     where: { id, programId },
+  });
+}
+
+/**
+ * When one scheduled reminder sends, and to whom.
+ *
+ * A single upsert on (programId, eventType). Every field is optional so the Reminders page
+ * can save one control at a time; `undefined` leaves a setting alone while `null` clears
+ * it, which is how "no gift" is expressed. The wording is not written here — it belongs to
+ * the message, and `saveEventMessage` owns it.
+ */
+export async function saveReminderSchedule(input: {
+  programId: string;
+  eventType: LoyaltyEventType;
+  enabled?: boolean;
+  triggerDays?: number | null;
+  leadDays?: number | null;
+  sendHour?: number | null;
+  rewardId?: string | null;
+}) {
+  const { programId, eventType, ...fields } = input;
+  const patch = Object.fromEntries(
+    Object.entries(fields).filter(([, value]) => value !== undefined),
+  );
+
+  return prisma.loyaltyEventTrigger.upsert({
+    where: { programId_eventType: { programId, eventType } },
+    update: patch,
+    create: { programId, eventType, ...patch },
   });
 }

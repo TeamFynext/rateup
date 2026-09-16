@@ -2,13 +2,31 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import connection from "./redisConnection.js";
 import { log } from "./logger.js";
 
-export interface RateLimitOptions {
-  /** How many requests one IP may make inside the window. */
+export interface RateLimitOptions<R extends FastifyRequest = FastifyRequest> {
+  /** How many requests one bucket may make inside the window. */
   max: number;
   /** The window, in seconds. */
   windowSeconds: number;
   /** Distinguishes one limiter's counters from another's. */
   key: string;
+  /**
+   * What a bucket is keyed on. Defaults to the client IP. Return null/undefined to skip
+   * this limiter for the request (e.g. a body without the field). Fastify validates the
+   * body before preHandlers run, so `request.body` is safe to read here.
+   */
+  keyFrom?: (request: R) => string | null | undefined;
+  /**
+   * When Redis is unreachable, refuse (503) instead of letting the request through. Only
+   * for routes where an unlimited burst is worse than a short outage — a public signup,
+   * say. `RATE_LIMIT_FAIL_CLOSED_DISABLED=true` overrides it in an emergency.
+   */
+  failClosed?: boolean;
+  /**
+   * Refuse by throwing instead of replying, so the caller's own error handler shapes the
+   * body. The partner API uses this to keep one error envelope across the whole surface —
+   * without it a 429 would arrive in a shape nothing else on that API uses.
+   */
+  throwOnLimit?: (kind: "rate_limited" | "unavailable") => Error;
 }
 
 /**
@@ -20,9 +38,23 @@ function clientIp(request: FastifyRequest): string {
   return request.ip || "unknown";
 }
 
-export function rateLimit({ max, windowSeconds, key }: RateLimitOptions) {
-  return async function rateLimitPreHandler(request: FastifyRequest, reply: FastifyReply) {
-    const bucket = `ratelimit:${key}:${clientIp(request)}`;
+/** Read at call time, not import time, so a test or a hot env change is seen. */
+function failClosedDisabled(): boolean {
+  return process.env.RATE_LIMIT_FAIL_CLOSED_DISABLED === "true";
+}
+
+export function rateLimit<R extends FastifyRequest = FastifyRequest>({
+  max,
+  windowSeconds,
+  key,
+  keyFrom,
+  failClosed = false,
+  throwOnLimit,
+}: RateLimitOptions<R>) {
+  return async function rateLimitPreHandler(request: R, reply: FastifyReply) {
+    const discriminator = keyFrom ? keyFrom(request) : clientIp(request);
+    if (!discriminator) return;
+    const bucket = `ratelimit:${key}:${discriminator}`;
 
     let count: number;
     try {
@@ -31,12 +63,21 @@ export function rateLimit({ max, windowSeconds, key }: RateLimitOptions) {
       // when the window's first request arrives and is not extended by later ones.
       if (count === 1) await connection.expire(bucket, windowSeconds);
     } catch (error) {
+      if (failClosed && !failClosedDisabled()) {
+        log.error({ err: error, bucket }, "Rate limit check failed; refusing the request");
+        if (throwOnLimit) throw throwOnLimit("unavailable");
+        return reply.status(503).send({
+          success: false,
+          message: "Signup temporarily unavailable. Please try again in a few minutes.",
+        });
+      }
       log.error({ err: error, bucket }, "Rate limit check failed; allowing the request through");
       return;
     }
 
     if (count > max) {
       log.warn({ bucket, count, max }, "Rate limit exceeded");
+      if (throwOnLimit) throw throwOnLimit("rate_limited");
       return reply.status(429).send({
         success: false,
         message: "Too many requests. Please try again later.",

@@ -68,11 +68,19 @@ export async function applyRedemptionHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await applyRedemption(request.body, request.user.orgId);
+    // The server knows who is signed in; the counter should not have to say.
+    const appliedBy = request.body.appliedBy ?? request.user.email ?? request.user.id ?? "cashier";
+    const result = await applyRedemption({ ...request.body, appliedBy }, request.user.orgId);
     reply.code(200).send(result);
   } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    // Known refusals are the caller's to fix, not server faults.
+    if (message === "Redemption not found") return reply.code(404).send({ error: message });
+    if (message === "Redemption is not approved" || message === "Redemption already applied") {
+      return reply.code(409).send({ error: message });
+    }
     log.error(e);
-    reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });
+    reply.code(500).send({ error: message });
   }
 }
 

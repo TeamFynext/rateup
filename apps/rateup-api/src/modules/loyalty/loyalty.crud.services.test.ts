@@ -22,6 +22,7 @@ vi.mock("../../utils/prisma.js", () => ({
     loyaltyReward: {
       create: vi.fn(),
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -40,6 +41,7 @@ vi.mock("../../utils/prisma.js", () => ({
   },
 }));
 
+import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import {
   createLoyaltyProgram,
@@ -142,6 +144,8 @@ describe("getLoyaltyProgramByOrg", () => {
 
     expect(db.loyaltyProgram.findUnique.mock.calls[0][0].include.rewards.where).toEqual({
       status: "ACTIVE",
+      // Review rewards are earned by tapping the Google review link, never bought.
+      rewardType: { not: "review" },
     });
   });
 
@@ -210,6 +214,7 @@ describe("resetProgramPoints", () => {
         lifetimePoints: 0,
         totalSpend: 0,
         currentTierId: "tier-entry",
+        pendingBonuses: Prisma.DbNull,
       },
     });
   });
@@ -428,6 +433,7 @@ describe("rewards", () => {
     expect(db.loyaltyReward.findMany.mock.calls[0][0].where).toEqual({
       programId: PROGRAM,
       status: "ACTIVE",
+      rewardType: { not: "review" },
     });
   });
 

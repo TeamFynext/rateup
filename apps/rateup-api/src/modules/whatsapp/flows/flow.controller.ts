@@ -30,6 +30,8 @@ import {
   ByWaFlowIdParams,
   CloneFlowBody,
   CreateFlowInput,
+  FlowTemplatesQuery,
+  FlowTemplatesResponse,
   ImportFlowsBody,
   SendFlowBody,
   UpdateFlowInput,
@@ -37,8 +39,20 @@ import {
   WaFlowSourceQuery,
 } from "./flow.schema.js";
 import { createSurveyFromFlow } from "./flow.utils.js";
+import { metaCategoriesFor } from "./flowCategories.js";
+import {
+  buildFeedbackFlowJson,
+  buildFeedbackTemplateMessage,
+  DEFAULT_HAPPY_MIN_RATING,
+  feedbackDraftForApi,
+  FEEDBACK_DRAFTS,
+  getFeedbackDraft,
+  suggestFeedbackDraftKey,
+} from "./flowTemplates.js";
+import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import {
+  LOYALTY_FEEDBACK_FLOW_CATEGORY,
   QuestionType,
   SubscriptionFeaturePathName,
   SurveyType,
@@ -203,6 +217,7 @@ export async function importFlowsHandler(
       flowId: waFlowId,
       name: waFlow.name,
       status: waFlow.status,
+      categories: waFlow.categories ?? [],
       surveyId: survey.id,
       json,
       flowMap: flowMapWithQuestionId,
@@ -213,6 +228,31 @@ export async function importFlowsHandler(
   res.status(201).send();
 }
 
+/**
+ * The ready-made flows the create wizard offers for a category. Only loyalty feedback has
+ * any today; for it, the suggestion follows the org's loyalty preset (a café gets the
+ * restaurant survey).
+ */
+export async function getFlowTemplatesHandler(
+  req: FastifyRequest<{ Querystring: FlowTemplatesQuery }>,
+  res: FastifyReply,
+) {
+  const { category } = req.query;
+  if (category !== LOYALTY_FEEDBACK_FLOW_CATEGORY) {
+    return res
+      .status(200)
+      .send({ templates: [], suggestedKey: null } satisfies FlowTemplatesResponse);
+  }
+  const program = await prisma.loyaltyProgram.findUnique({
+    where: { orgId: req.user.orgId },
+    select: { onboardingPresetKey: true },
+  });
+  return res.status(200).send({
+    templates: FEEDBACK_DRAFTS.map((draft) => feedbackDraftForApi(draft)),
+    suggestedKey: suggestFeedbackDraftKey(program?.onboardingPresetKey),
+  } satisfies FlowTemplatesResponse);
+}
+
 export async function createFlowHandler(
   req: FastifyRequest<{
     Body: CreateFlowInput;
@@ -220,10 +260,29 @@ export async function createFlowHandler(
   res: FastifyReply,
 ) {
   const { orgId } = req.user;
-  const { name, categories, teamIds, whatsappSettingsPhoneId } = req.body;
+  const { name, categories, teamIds, whatsappSettingsPhoneId, templateKey } = req.body;
   let createdFlowId: string | undefined;
   let createdOnWhatsappSettingsId: string | undefined;
   try {
+    // A template supplies the questions (and the invitation message) so a flow created for
+    // loyalty feedback is usable as soon as it is published.
+    let templateJson: WaFlowJson | undefined;
+    let templateMessage: WaFlowTemplateMessage | undefined;
+    if (templateKey !== undefined) {
+      const template = categories.includes(LOYALTY_FEEDBACK_FLOW_CATEGORY)
+        ? getFeedbackDraft(templateKey)
+        : undefined;
+      if (!template) {
+        return res.status(400).send({ message: `Unknown flow template: ${templateKey}` });
+      }
+      templateJson = buildFeedbackFlowJson(template, { happyMinRating: DEFAULT_HAPPY_MIN_RATING });
+      const program = await prisma.loyaltyProgram.findUnique({
+        where: { orgId },
+        select: { businessName: true, name: true },
+      });
+      templateMessage = buildFeedbackTemplateMessage(program?.businessName ?? program?.name);
+    }
+
     let requestedWhatsappSettingsId: string | undefined;
     if (whatsappSettingsPhoneId) {
       const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
@@ -237,7 +296,8 @@ export async function createFlowHandler(
     log.trace("creating flow in wa %s", name);
     const { id: flowId, whatsappSettingsId } = await createFlowInWa(
       orgId,
-      { name, categories },
+      // Meta only knows its own categories; ours are mapped, the full list is stored.
+      { name, categories: metaCategoriesFor(categories) },
       requestedWhatsappSettingsId,
     );
     createdFlowId = flowId;
@@ -261,6 +321,7 @@ export async function createFlowHandler(
       orgId,
       flowId,
       json:
+        templateJson ??
         req.body.json ??
         ({
           version: "7.2",
@@ -270,6 +331,8 @@ export async function createFlowHandler(
       surveyId: survey.id,
       status: WaFlowStatus.DRAFT,
       name: name,
+      categories,
+      ...(templateMessage ? { templateMessage } : {}),
       whatsappSettingsId,
     });
     return res.status(200).send(dbFlow?.dbFlowId);

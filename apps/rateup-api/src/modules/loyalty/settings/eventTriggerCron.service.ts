@@ -1,22 +1,24 @@
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { sendLoyaltyMessage } from "../loyaltyMessaging.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { assignRewardToCustomer } from "../accounts/account.service.js";
+import {
+  inZone,
+  isDueThisHour,
+  leadDaysFor,
+  localDay,
+  POINTS_EXPIRY_LEDGER_HOUR,
+} from "./reminderSchedule.js";
 
 /**
  * Cron job to check for customer birthdays and send WhatsApp templates
  * Runs daily to check all active loyalty customers
  */
-export async function checkBirthdayEventTriggers() {
+export async function checkBirthdayEventTriggers(now: Date = new Date()) {
   try {
     log.info("Birthday Event Trigger Cron - Starting");
-
-    const today = dayjs();
-    const todayMonth = today.month() + 1; // dayjs months are 0-indexed
-    const todayDate = today.date();
-    const startOfToday = today.startOf("day").toDate();
 
     // Get all enabled birthday event triggers
     const birthdayTriggers = await prisma.loyaltyEventTrigger.findMany({
@@ -44,6 +46,16 @@ export async function checkBirthdayEventTriggers() {
     // Process each trigger's program
     for (const trigger of birthdayTriggers) {
       try {
+        if (!isDueThisHour(trigger.program, trigger, now)) continue;
+
+        // The programme's own calendar day. Read in UTC before, so a Dubai venue matched
+        // birthdays against a day that had not started there yet.
+        const {
+          month: todayMonth,
+          date: todayDate,
+          startOfDay: startOfToday,
+        } = localDay(trigger.program, now);
+
         const birthdayAccountIds = await prisma.$queryRaw<{ id: string }[]>`
           SELECT a.id
           FROM "CustomerLoyaltyAccount" a
@@ -107,13 +119,16 @@ export async function checkBirthdayEventTriggers() {
               trigger?.reward?.name || "a special reward",
             ];
 
-            // Send WhatsApp template
-            await handleSendTemplate(
-              trigger.waTemplateId,
-              customer.contact.orgId,
-              customer.contact.phone,
-              dynamicVariables,
-            );
+            // Send the notification — as text inside an open window, else the template
+            if (trigger.program.whatsappNotifications) {
+              await sendLoyaltyMessage({
+                orgId: customer.contact.orgId,
+                phone: customer.contact.phone,
+                waTemplateId: trigger.waTemplateId,
+                params: dynamicVariables,
+                preferTextInSession: trigger.program.sendTextInSession,
+              });
+            }
 
             // If a reward is configured, issue it automatically
             if (trigger.rewardId) {
@@ -148,7 +163,7 @@ export async function checkBirthdayEventTriggers() {
  * Cron job to check for inactive customers and send reminder templates
  * Runs daily to check customers based on configured trigger days
  */
-export async function checkInactivityEventTriggers() {
+export async function checkInactivityEventTriggers(now: Date = new Date()) {
   try {
     log.info("Inactivity Event Trigger Cron - Starting");
 
@@ -182,6 +197,7 @@ export async function checkInactivityEventTriggers() {
     for (const trigger of inactivityTriggers) {
       try {
         if (!trigger.triggerDays) continue;
+        if (!isDueThisHour(trigger.program, trigger, now)) continue;
 
         const inactivityDate = dayjs().subtract(trigger.triggerDays, "days").toDate();
 
@@ -223,12 +239,16 @@ export async function checkInactivityEventTriggers() {
               continue;
             }
 
+            // One nudge per lapse. The claim used to be `lte: inactivityDate`, which came
+            // true again every `triggerDays` — a customer who never returned was nudged
+            // every month forever. Requiring the last nudge to predate their last activity
+            // means they are only nudged again if they came back and went quiet again.
             const claimed = await prisma.customerLoyaltyAccount.updateMany({
               where: {
                 id: customer.id,
                 OR: [
                   { lastInactivityReminderAt: null },
-                  { lastInactivityReminderAt: { lte: inactivityDate } },
+                  { lastInactivityReminderAt: { lt: customer.lastActivityAt } },
                 ],
               },
               data: { lastInactivityReminderAt: new Date() },
@@ -250,13 +270,16 @@ export async function checkInactivityEventTriggers() {
               customer?.currentPoints?.toString() || "0",
             ];
 
-            // Send WhatsApp template
-            await handleSendTemplate(
-              trigger.waTemplateId,
-              customer.contact.orgId,
-              customer.contact.phone,
-              dynamicVariables,
-            );
+            // Send the notification — as text inside an open window, else the template
+            if (trigger.program.whatsappNotifications) {
+              await sendLoyaltyMessage({
+                orgId: customer.contact.orgId,
+                phone: customer.contact.phone,
+                waTemplateId: trigger.waTemplateId,
+                params: dynamicVariables,
+                preferTextInSession: trigger.program.sendTextInSession,
+              });
+            }
             // If a reward is configured to incentivize return, issue it
             if (trigger.rewardId) {
               await issueRewardToCustomer(customer.id, trigger.rewardId);
@@ -286,13 +309,20 @@ export async function checkInactivityEventTriggers() {
   }
 }
 
+/**
+ * The template one programme's occasion sends under.
+ *
+ * Scoped to the programme, not its org: matching on `orgId` meant an org with two
+ * programmes resolved whichever trigger came back first, so programme A's members could
+ * be sent programme B's words.
+ */
 async function resolveEventTriggerTemplateId(
-  orgId: string,
+  programId: string,
   eventType: LoyaltyEventType,
 ): Promise<string | null> {
   const trigger = await prisma.loyaltyEventTrigger.findFirst({
     where: {
-      program: { orgId },
+      programId,
       eventType,
       enabled: true,
       waTemplateId: { not: null },
@@ -300,6 +330,36 @@ async function resolveEventTriggerTemplateId(
     select: { waTemplateId: true },
   });
   return trigger?.waTemplateId ?? null;
+}
+
+/**
+ * The points on `accountId` old enough to lapse by `cutoff` — earned before it, and not
+ * already written off by an `expire` row that references them.
+ *
+ * The same anti-join `checkPointsExpiration` uses to decide what to expire, so the warning
+ * and the act agree. Clamped to the live balance, because points earned and then spent are
+ * gone whatever their age.
+ */
+async function pointsExpiringFor(accountId: string, cutoff: Date): Promise<number> {
+  const rows = await prisma.$queryRaw<{ total: bigint | null }[]>`
+    SELECT COALESCE(SUM(t.points), 0) AS total
+    FROM "LoyaltyTransaction" t
+    WHERE t."accountId" = ${accountId}::uuid
+      AND t."transactionType" = 'earn'
+      AND t.points > 0
+      AND t."createdAt" <= ${cutoff}
+      AND NOT EXISTS (
+        SELECT 1 FROM "LoyaltyTransaction" e
+        WHERE e."transactionType" = 'expire'
+          AND e."referenceId" = t.id::text
+      )
+  `;
+  const earned = Number(rows[0]?.total ?? 0);
+  const account = await prisma.customerLoyaltyAccount.findUnique({
+    where: { id: accountId },
+    select: { currentPoints: true },
+  });
+  return Math.max(0, Math.min(earned, account?.currentPoints ?? 0));
 }
 
 async function issueRewardToCustomer(accountId: string, rewardId: string) {
@@ -317,7 +377,7 @@ async function issueRewardToCustomer(accountId: string, rewardId: string) {
  * Cron job to send expiry alert 14 days before points expire
  * Targets customers whose lastActivityAt is (expirationMonths - 14 days) ago and still have points
  */
-export async function checkPointsExpiryAlerts() {
+export async function checkPointsExpiryAlerts(now: Date = new Date()) {
   try {
     log.info("Points Expiry Alert Cron - Starting");
 
@@ -331,6 +391,11 @@ export async function checkPointsExpiryAlerts() {
         name: true,
         orgId: true,
         pointsExpirationMonths: true,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        // The reminder sweep reads this to decide whether the programme's chosen hour
+        // has struck where the venue actually is.
+        timezone: true,
       },
     });
 
@@ -341,10 +406,12 @@ export async function checkPointsExpiryAlerts() {
 
     for (const program of programsWithExpiration) {
       try {
-        // Find the enabled POINTS_EXPIRY_ALERT trigger for this program
+        // This programme's trigger, not the org's. It used to match on
+        // `program: { orgId }` from inside this very loop, so an org running two
+        // programmes could send one programme's template to the other's members.
         const trigger = await prisma.loyaltyEventTrigger.findFirst({
           where: {
-            program: { orgId: program.orgId },
+            programId: program.id,
             eventType: LoyaltyEventType.POINTS_EXPIRY_ALERT,
             enabled: true,
             waTemplateId: { not: null },
@@ -352,15 +419,19 @@ export async function checkPointsExpiryAlerts() {
         });
 
         if (!trigger) continue;
+        if (!isDueThisHour(program, trigger, now)) continue;
+
+        // How far ahead to warn. Was hardcoded at 14 days in three places.
+        const leadDays = leadDaysFor(LoyaltyEventType.POINTS_EXPIRY_ALERT, trigger.leadDays);
 
         const alertFrom = dayjs()
           .subtract(program.pointsExpirationMonths, "months")
-          .add(14, "days")
+          .add(leadDays, "days")
           .startOf("day")
           .toDate();
         const alertTo = dayjs()
           .subtract(program.pointsExpirationMonths, "months")
-          .add(14, "days")
+          .add(leadDays, "days")
           .endOf("day")
           .toDate();
 
@@ -388,22 +459,46 @@ export async function checkPointsExpiryAlerts() {
           `Points Expiry Alert - Program ${program.name}: ${customersNearExpiry.length} customers near expiry`,
         );
 
-        const expiryDate = dayjs().add(14, "days").toDate();
+        const expiryDate = dayjs().add(leadDays, "days").toDate();
+        const startOfToday = dayjs().startOf("day").toDate();
 
         for (const account of customersNearExpiry) {
           try {
             if (!account.contact.phone) continue;
 
-            await handleSendTemplate(
-              trigger.waTemplateId,
-              account.contact.orgId,
-              account.contact.phone,
-              [
+            if (!program.whatsappNotifications) continue;
+
+            // Claim the send. This alert had no marker at all, so a second run of the
+            // job — a retried tick, a catch-up occurrence — told the same customer twice.
+            const claimed = await prisma.customerLoyaltyAccount.updateMany({
+              where: {
+                id: account.id,
+                OR: [
+                  { lastPointsExpiryAlertAt: null },
+                  { lastPointsExpiryAlertAt: { lt: startOfToday } },
+                ],
+              },
+              data: { lastPointsExpiryAlertAt: new Date() },
+            });
+            if (claimed.count === 0) continue;
+
+            // What will actually expire, not the whole balance. The message used to
+            // announce `currentPoints`, which is every point the member holds — a customer
+            // with 500 points of which 40 are old enough to lapse was told 500 were going.
+            const expiringPoints = await pointsExpiringFor(account.id, alertTo);
+            if (expiringPoints <= 0) continue;
+
+            await sendLoyaltyMessage({
+              orgId: account.contact.orgId,
+              phone: account.contact.phone,
+              waTemplateId: trigger.waTemplateId,
+              params: [
                 account.contact.name || "Valued Customer",
-                account.currentPoints.toString(),
+                expiringPoints.toString(),
                 dayjs(expiryDate).format("DD MMM YYYY"),
               ],
-            );
+              preferTextInSession: program.sendTextInSession,
+            });
 
             log.info(
               `Points Expiry Alert - Sent to customer ${account.id} (expires ${dayjs(expiryDate).format("DD MMM YYYY")})`,
@@ -430,7 +525,15 @@ export async function checkPointsExpiryAlerts() {
  * Cron job to expire old points based on program configuration
  * Runs daily to check all programs with points expiration enabled
  */
-export async function checkPointsExpiration() {
+/**
+ * Expire points that have aged out, and tell the members whose points went.
+ *
+ * Unlike the other reminders this one writes the ledger, so it is gated on the programme's
+ * local hour rather than a trigger's chosen one — the message is a consequence of the
+ * write, not a thing scheduled on its own. The `expire` row that references each expired
+ * `earn` row is what makes a re-run a no-op, so a late or duplicated tick is harmless.
+ */
+export async function checkPointsExpiration(now: Date = new Date()) {
   try {
     log.info("Points Expiration Cron - Starting");
 
@@ -445,6 +548,9 @@ export async function checkPointsExpiration() {
         name: true,
         orgId: true,
         pointsExpirationMonths: true,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: true,
       },
     });
 
@@ -463,6 +569,10 @@ export async function checkPointsExpiration() {
     // Process each program
     for (const program of programsWithExpiration) {
       try {
+        // Expire on the programme's own early morning, so the day a member's points
+        // "last until" is the day they saw on the reminder.
+        if (inZone(now, program.timezone).hour() !== POINTS_EXPIRY_LEDGER_HOUR) continue;
+
         // Calculate expiration cutoff date
         const expirationDate = dayjs().subtract(program.pointsExpirationMonths, "months").toDate();
 
@@ -575,13 +685,17 @@ export async function checkPointsExpiration() {
             );
 
             // Send WA notification for points expiry
-            if (account.contact.phone) {
-              await handleSendTemplate(
-                await resolveEventTriggerTemplateId(program.orgId, LoyaltyEventType.POINTS_EXPIRED),
-                program.orgId,
-                account.contact.phone,
-                [account.contact.name || "Valued Customer", pointsToExpire.toString()],
-              );
+            if (account.contact.phone && program.whatsappNotifications) {
+              await sendLoyaltyMessage({
+                orgId: program.orgId,
+                phone: account.contact.phone,
+                waTemplateId: await resolveEventTriggerTemplateId(
+                  program.id,
+                  LoyaltyEventType.POINTS_EXPIRED,
+                ),
+                params: [account.contact.name || "Valued Customer", pointsToExpire.toString()],
+                preferTextInSession: program.sendTextInSession,
+              });
             }
           } catch (error) {
             log.error(

@@ -7,6 +7,7 @@
 import { Job, Worker } from "bullmq";
 
 import { log } from "../../../utils/logger.js";
+import { sweepExpiredIdempotencyRecords } from "../../../external/v1/idempotency.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { resetAnnualCounts, resetMonthlyCounts } from "../../../modules/stats/stats.service.js";
 import {
@@ -24,17 +25,13 @@ import {
   sendSchedulesWaMessages,
 } from "../../../modules/whatsapp/wa_message_scheduler.js";
 import { runInboxAutomationCron } from "../../../modules/whatsapp/inbox/automation/inboxautomation.service.js";
-import {
-  checkBirthdayEventTriggers,
-  checkInactivityEventTriggers,
-  checkPointsExpiration,
-  checkPointsExpiryAlerts,
-} from "../../../modules/loyalty/settings/eventTriggerCron.service.js";
+import { runLoyaltyReminderSweep } from "../../../modules/loyalty/settings/reminderSweep.service.js";
 import { getWeeklyConversationReport } from "../../shared/bullmqCronJobs/sendMail/weeklyMail.js";
 import { downgradeExpiredSubscriptions } from "../../../modules/subscription/subscription.service.js";
 import { sweepMissedPayments } from "../../../modules/payment/payment.service.js";
 import { subscriptionExpiryAlert } from "../../../utils/email/payments/subscriptionExpiryAlert.js";
 import type { ScheduledJobId } from "../queues/cron.queue.js";
+import { reevaluateRollingTiers } from "../../../modules/loyalty/tiers/tierReevaluation.service.js";
 import { settleSentCampaigns } from "../../../modules/campaign/campaignSettle.service.js";
 
 const workerConnection = baseRedis.duplicate();
@@ -92,24 +89,24 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     await safeRun("resetAnnualCounts", resetAnnualCounts);
   },
 
-  loyaltyBirthdayCheck: async () => {
-    log.info("Running Daily at 12:00 AM --> Loyalty Birthday Event Triggers");
-    await safeRun("checkBirthdayEventTriggers", checkBirthdayEventTriggers);
+  externalIdempotencySweep: async () => {
+    log.info("Running daily JOB --> External API idempotency record sweep");
+    await safeRun("sweepExpiredIdempotencyRecords", async () => {
+      const removed = await sweepExpiredIdempotencyRecords();
+      log.info({ removed }, "Swept expired external idempotency records");
+    });
   },
 
-  loyaltyPointsExpiration: async () => {
-    log.info("Running Daily at 1:00 AM --> Loyalty Points Expiration");
-    await safeRun("checkPointsExpiration", checkPointsExpiration);
+  loyaltyReminderSweep: async () => {
+    // Hourly. Every occasion inside decides whether its programme's chosen hour has
+    // struck in that programme's own timezone, so most ticks send nothing.
+    log.info("Running hourly JOB --> Loyalty reminder sweep");
+    await safeRun("runLoyaltyReminderSweep", runLoyaltyReminderSweep);
   },
 
-  loyaltyInactivityCheck: async () => {
-    log.info("Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers");
-    await safeRun("checkInactivityEventTriggers", checkInactivityEventTriggers);
-  },
-
-  loyaltyPointsExpiryAlerts: async () => {
-    log.info("Running Daily at 3:00 AM --> Loyalty Points Expiry Alerts (14 days before expiry)");
-    await safeRun("checkPointsExpiryAlerts", checkPointsExpiryAlerts);
+  loyaltyTierReevaluation: async () => {
+    log.info("Running Daily at 2:30 AM --> Loyalty rolling-window tier re-evaluation");
+    await safeRun("reevaluateRollingTiers", reevaluateRollingTiers);
   },
 
   reconcileMissedPayments: async () => {

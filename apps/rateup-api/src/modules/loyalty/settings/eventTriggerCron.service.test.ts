@@ -22,11 +22,11 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../contact/contact.utils.js", () => ({ handleSendTemplate: vi.fn() }));
+vi.mock("../loyaltyMessaging.js", () => ({ sendLoyaltyMessage: vi.fn() }));
 vi.mock("../accounts/account.service.js", () => ({ assignRewardToCustomer: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { sendLoyaltyMessage } from "../loyaltyMessaging.js";
 import { assignRewardToCustomer } from "../accounts/account.service.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
@@ -35,6 +35,7 @@ import {
   checkPointsExpiration,
   checkPointsExpiryAlerts,
 } from "./eventTriggerCron.service.js";
+import { DEFAULT_SEND_HOUR, POINTS_EXPIRY_LEDGER_HOUR } from "./reminderSchedule.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -58,14 +59,49 @@ function localDate(year: number, month: number, day: number) {
   return new Date(year, month, day, 12);
 }
 
+/// A UTC instant on the given date at the hour a reminder goes out.
+///
+/// The sweep runs hourly and each occasion only acts when its programme's chosen hour has
+/// struck locally, so a fixture clock at any other hour sends nothing. Programme fixtures
+/// carry `timezone: "Etc/UTC"`, so the local hour is the UTC hour.
+function atSendHour(year: number, month: number, day: number) {
+  return new Date(Date.UTC(year, month, day, DEFAULT_SEND_HOUR));
+}
+
+/// The same, for the hour points are actually written off at.
+function atLedgerHour(year: number, month: number, day: number) {
+  return new Date(Date.UTC(year, month, day, POINTS_EXPIRY_LEDGER_HOUR));
+}
+
 interface TriggerFixture {
   id: string;
   programId: string;
   waTemplateId: string | null;
   rewardId: string | null;
   triggerDays: number | null;
-  program: { id: string; name: string; orgId: string };
+  leadDays: number | null;
+  sendHour: number | null;
+  program: {
+    id: string;
+    name: string;
+    orgId: string;
+    whatsappNotifications: boolean;
+    sendTextInSession: boolean;
+    /// The reminder sweep reads this to decide whether the programme's hour has struck.
+    timezone: string | null;
+  };
   reward: { id: string; name: string; pointsCost: number } | null;
+}
+
+/** The send the crons hand to the session-aware sender, as toHaveBeenCalledWith wants it. */
+function sentTo(phone: string, params: string[], templateId = "tmpl-1") {
+  return {
+    orgId: ORG,
+    phone,
+    waTemplateId: templateId,
+    params,
+    preferTextInSession: true,
+  };
 }
 
 function trigger(over: Record<string, unknown> = {}) {
@@ -75,7 +111,16 @@ function trigger(over: Record<string, unknown> = {}) {
     waTemplateId: "tmpl-1",
     rewardId: null,
     triggerDays: null,
-    program: { id: PROGRAM, name: "Rewards", orgId: ORG },
+    leadDays: null,
+    sendHour: null,
+    program: {
+      id: PROGRAM,
+      name: "Rewards",
+      orgId: ORG,
+      whatsappNotifications: true,
+      sendTextInSession: true,
+      timezone: "Etc/UTC",
+    },
     reward: null,
   };
   return { ...base, ...over };
@@ -137,7 +182,7 @@ describe("checkBirthdayEventTriggers", () => {
 
   test("greets a customer whose birthday is today", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
@@ -146,26 +191,25 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, "919000000001", [
-      "Ann",
-      "a special reward",
-    ]);
+    expect(sendLoyaltyMessage).toHaveBeenCalledWith(
+      sentTo("919000000001", ["Ann", "a special reward"]),
+    );
   });
 
   test("ignores a customer whose birthday is another day", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([]);
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("names the configured reward in the message when there is one", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([
       trigger({ rewardId: "rwd-1", reward: { name: "Free cake" } }),
     ]);
@@ -176,13 +220,13 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect((handleSendTemplate as Mock).mock.calls[0][3]).toEqual(["Ann", "Free cake"]);
+    expect((sendLoyaltyMessage as Mock).mock.calls[0][0].params).toEqual(["Ann", "Free cake"]);
     expect(assignRewardToCustomer).toHaveBeenCalledWith("acct-1", "rwd-1");
   });
 
   test("skips a customer with no phone number", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
@@ -191,28 +235,28 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("keeps going when one customer's send fails", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([{ id: "a1" }, { id: "a2" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       account({ id: "a1", contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
       account({ id: "a2", contact: { ...account().contact, dob: localDate(1991, 4, 15) } }),
     ]);
-    (handleSendTemplate as Mock).mockRejectedValueOnce(new Error("meta down"));
+    (sendLoyaltyMessage as Mock).mockRejectedValueOnce(new Error("meta down"));
 
     await checkBirthdayEventTriggers();
 
-    expect((handleSendTemplate as Mock).mock.calls).toHaveLength(2);
+    expect((sendLoyaltyMessage as Mock).mock.calls).toHaveLength(2);
   });
 
   test("claims each customer before sending, so a second run greets nobody twice", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
@@ -229,7 +273,7 @@ describe("checkBirthdayEventTriggers", () => {
 
   test("skips a customer another run already greeted today", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([{ id: "acct-1" }]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
@@ -239,12 +283,12 @@ describe("checkBirthdayEventTriggers", () => {
 
     await checkBirthdayEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("matches the month and day in SQL rather than in memory", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger()]);
     db.$queryRaw.mockResolvedValue([]);
 
@@ -252,7 +296,7 @@ describe("checkBirthdayEventTriggers", () => {
 
     expect(db.$queryRaw).toHaveBeenCalled();
     // Nothing came back, so nothing is greeted.
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("survives a trigger whose program query fails", async () => {
@@ -268,6 +312,15 @@ describe("checkBirthdayEventTriggers", () => {
 // ===========================================================================
 
 describe("checkInactivityEventTriggers", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(atSendHour(2026, 2, 1));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test("only considers enabled triggers with both a day count and a template", async () => {
     await checkInactivityEventTriggers();
 
@@ -281,7 +334,7 @@ describe("checkInactivityEventTriggers", () => {
 
   test("looks for customers whose last activity predates the window", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-03-01T00:00:00.000Z"));
+    vi.setSystemTime(new Date("2026-03-01T10:00:00.000Z"));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger({ triggerDays: 30 })]);
 
     await checkInactivityEventTriggers();
@@ -289,26 +342,29 @@ describe("checkInactivityEventTriggers", () => {
     expect(db.customerLoyaltyAccount.findMany.mock.calls[0][0].where).toEqual({
       programId: PROGRAM,
       status: "active",
-      lastActivityAt: { lte: new Date("2026-01-30T00:00:00.000Z") },
+      lastActivityAt: { lte: new Date("2026-01-30T10:00:00.000Z") },
     });
   });
 
   test("claims each customer before sending so two runs cannot double-send", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-03-01T00:00:00.000Z"));
+    vi.setSystemTime(new Date("2026-03-01T10:00:00.000Z"));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger({ triggerDays: 30 })]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
 
     await checkInactivityEventTriggers();
 
+    // The claim turns on the member's own last activity, not the window edge: a nudge
+    // that predates their last visit means they came back and lapsed again, which earns a
+    // second nudge. A nudge after it means they never returned, and one was enough.
     expect(db.customerLoyaltyAccount.updateMany.mock.calls[0][0].where).toEqual({
       id: "acct-1",
       OR: [
         { lastInactivityReminderAt: null },
-        { lastInactivityReminderAt: { lte: new Date("2026-01-30T00:00:00.000Z") } },
+        { lastInactivityReminderAt: { lt: account().lastActivityAt } },
       ],
     });
-    expect(handleSendTemplate).toHaveBeenCalled();
+    expect(sendLoyaltyMessage).toHaveBeenCalled();
   });
 
   test("skips a customer another process already claimed", async () => {
@@ -318,7 +374,7 @@ describe("checkInactivityEventTriggers", () => {
 
     await checkInactivityEventTriggers();
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
   });
 
   test("sends the customer's name and current points", async () => {
@@ -327,7 +383,7 @@ describe("checkInactivityEventTriggers", () => {
 
     await checkInactivityEventTriggers();
 
-    expect((handleSendTemplate as Mock).mock.calls[0][3]).toEqual(["Ann", "500"]);
+    expect((sendLoyaltyMessage as Mock).mock.calls[0][0].params).toEqual(["Ann", "500"]);
   });
 
   test("issues the win-back reward when one is configured", async () => {
@@ -360,7 +416,7 @@ describe("checkInactivityEventTriggers", () => {
 describe("issuing a reward from a trigger", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(localDate(2026, 4, 15));
+    vi.setSystemTime(atSendHour(2026, 4, 15));
     db.loyaltyEventTrigger.findMany.mockResolvedValue([trigger({ rewardId: "rwd-1" })]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([
       account({ contact: { ...account().contact, dob: localDate(1990, 4, 15) } }),
@@ -380,7 +436,7 @@ describe("issuing a reward from a trigger", () => {
     (assignRewardToCustomer as Mock).mockRejectedValue(new Error("Reward not found"));
 
     await expect(checkBirthdayEventTriggers()).resolves.toBeUndefined();
-    expect(handleSendTemplate).toHaveBeenCalled();
+    expect(sendLoyaltyMessage).toHaveBeenCalled();
   });
 });
 
@@ -389,6 +445,17 @@ describe("issuing a reward from a trigger", () => {
 // ===========================================================================
 
 describe("checkPointsExpiryAlerts", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(atSendHour(2026, 4, 15));
+    // What will actually lapse, which the alert now reports instead of the whole balance.
+    db.$queryRaw.mockResolvedValue([{ total: 120n }]);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test("does nothing when no program has expiration enabled", async () => {
     await checkPointsExpiryAlerts();
 
@@ -406,7 +473,15 @@ describe("checkPointsExpiryAlerts", () => {
 
   test("skips a program with no expiry-alert trigger", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: "Etc/UTC",
+      },
     ]);
 
     await checkPointsExpiryAlerts();
@@ -416,7 +491,15 @@ describe("checkPointsExpiryAlerts", () => {
 
   test("targets customers holding an earning that expires in fourteen days", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: "Etc/UTC",
+      },
     ]);
     db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
 
@@ -432,24 +515,120 @@ describe("checkPointsExpiryAlerts", () => {
     expect(where.transactions.some.createdAt.lte).toBeInstanceOf(Date);
   });
 
-  test("tells the customer their balance and the expiry date", async () => {
+  // The figure is what will actually lapse, not the balance. A member holding 500 points of
+  // which 120 are old enough to expire used to be told all 500 were going.
+  test("tells the customer what will actually expire, and when", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: "Etc/UTC",
+      },
     ]);
     db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
 
     await checkPointsExpiryAlerts();
 
-    const params = (handleSendTemplate as Mock).mock.calls[0][3];
+    const params = (sendLoyaltyMessage as Mock).mock.calls[0][0].params;
     expect(params[0]).toBe("Ann");
-    expect(params[1]).toBe("500");
+    // 120 is what the anti-join reports as expiring; the account holds 500.
+    expect(params[1]).toBe("120");
     expect(params[2]).toMatch(/^\d{2} \w{3} \d{4}$/);
+  });
+
+  test("says nothing when nothing is actually due to lapse", async () => {
+    db.loyaltyProgram.findMany.mockResolvedValue([
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: "Etc/UTC",
+      },
+    ]);
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
+    db.$queryRaw.mockResolvedValue([{ total: 0n }]);
+
+    await checkPointsExpiryAlerts();
+
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
+  });
+
+  test("claims the alert so a second run cannot repeat it", async () => {
+    db.loyaltyProgram.findMany.mockResolvedValue([
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: "Etc/UTC",
+      },
+    ]);
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
+    db.customerLoyaltyAccount.updateMany.mockResolvedValue({ count: 0 });
+
+    await checkPointsExpiryAlerts();
+
+    // This alert had no claim marker at all before, so a retried tick re-sent it.
+    expect(db.customerLoyaltyAccount.updateMany).toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
+  });
+
+  test("honours a configured lead time instead of a fixed fortnight", async () => {
+    db.loyaltyProgram.findMany.mockResolvedValue([
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: "Etc/UTC",
+      },
+    ]);
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger({ leadDays: 30 }));
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
+
+    await checkPointsExpiryAlerts();
+    const withLead = db.customerLoyaltyAccount.findMany.mock.calls[0][0].where.transactions.some
+      .createdAt.gte as Date;
+
+    // The same programme with no lead configured falls back to the old fortnight, so the
+    // configured window sits exactly the extra sixteen days later. Asserted as a
+    // relationship rather than an instant: `startOf("day")` is machine-local.
+    db.customerLoyaltyAccount.findMany.mockClear();
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger({ leadDays: null }));
+
+    await checkPointsExpiryAlerts();
+    const withDefault = db.customerLoyaltyAccount.findMany.mock.calls[0][0].where.transactions.some
+      .createdAt.gte as Date;
+
+    const days = (withLead.getTime() - withDefault.getTime()) / (24 * 60 * 60 * 1000);
+    expect(days).toBe(16);
   });
 
   test("selects on the same clock the expiry itself uses", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([
-      { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 },
+      {
+        id: PROGRAM,
+        name: "Rewards",
+        orgId: ORG,
+        pointsExpirationMonths: 12,
+        whatsappNotifications: true,
+        sendTextInSession: true,
+        timezone: "Etc/UTC",
+      },
     ]);
     db.loyaltyEventTrigger.findFirst.mockResolvedValue(trigger());
 
@@ -469,7 +648,27 @@ describe("checkPointsExpiryAlerts", () => {
 // ===========================================================================
 
 describe("checkPointsExpiration", () => {
-  const program = { id: PROGRAM, name: "Rewards", orgId: ORG, pointsExpirationMonths: 12 };
+  const program = {
+    id: PROGRAM,
+    name: "Rewards",
+    orgId: ORG,
+    pointsExpirationMonths: 12,
+    whatsappNotifications: true,
+    sendTextInSession: true,
+    timezone: "Etc/UTC",
+  };
+
+  // Expiry writes the ledger, so it runs on the programme's own early morning rather than
+  // an hour the merchant picks — the date a member was warned about has to be the date
+  // their points actually go.
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(atLedgerHour(2026, 4, 15));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   test("does nothing when no program has expiration enabled", async () => {
     await checkPointsExpiration();
@@ -622,6 +821,19 @@ describe("checkPointsExpiration", () => {
     expect(db.loyaltyTransaction.createMany).toHaveBeenCalled();
   });
 
+  // The crons used to bypass the program's WhatsApp switch that Settings promises is
+  // the master one; the points still expire, only the message is held.
+  test("expires the points but says nothing when WhatsApp notifications are off", async () => {
+    db.loyaltyProgram.findMany.mockResolvedValue([{ ...program, whatsappNotifications: false }]);
+    db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
+    db.$queryRaw.mockResolvedValue([{ id: "txn-a", points: 10 }]);
+
+    await checkPointsExpiration();
+
+    expect(db.loyaltyTransaction.createMany).toHaveBeenCalled();
+    expect(sendLoyaltyMessage).not.toHaveBeenCalled();
+  });
+
   test("notifies the customer once per account, not once per transaction", async () => {
     db.loyaltyProgram.findMany.mockResolvedValue([program]);
     db.customerLoyaltyAccount.findMany.mockResolvedValue([account()]);
@@ -632,6 +844,6 @@ describe("checkPointsExpiration", () => {
 
     await checkPointsExpiration();
 
-    expect((handleSendTemplate as Mock).mock.calls).toHaveLength(1);
+    expect((sendLoyaltyMessage as Mock).mock.calls).toHaveLength(1);
   });
 });

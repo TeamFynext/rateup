@@ -11,6 +11,8 @@ import {
   getEventTriggerHandler,
   getAllEventTriggersHandler,
   deleteEventTriggerHandler,
+  saveEventMessageHandler,
+  saveReminderHandler,
 } from "./settings.controller.js";
 import {
   loyaltyTemplateSchema,
@@ -19,6 +21,9 @@ import {
   eventTriggerSchema,
   updateEventTriggerSchema,
   programIdQuerySchema,
+  eventMessageParamsSchema,
+  eventMessageBodySchema,
+  reminderBodySchema,
 } from "./settings.schema.js";
 
 export async function LoyaltySettingsRoutes(server: FastifyInstance) {
@@ -116,5 +121,30 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
       },
     },
     deleteEventTriggerHandler,
+  );
+
+  // The notification's text for one event, submitted to Meta in one step (Messages page).
+  server.put(
+    "/event-message/:eventType",
+    {
+      schema: {
+        params: eventMessageParamsSchema,
+        body: eventMessageBodySchema,
+      },
+    },
+    saveEventMessageHandler,
+  );
+
+  // When a scheduled reminder sends (Reminders page). The words stay on the route above:
+  // one message, one place to write it, whichever page schedules it.
+  server.put(
+    "/reminder/:eventType",
+    {
+      schema: {
+        params: eventMessageParamsSchema,
+        body: reminderBodySchema,
+      },
+    },
+    saveReminderHandler,
   );
 }

@@ -183,6 +183,7 @@ model Org {
   contacts                Contact[]
   linktree                Linktree[]
   ApiAccessToken          ApiAccessToken?
+  externalIdempotency     ExternalIdempotencyRecord[]
   surveyThemes            WebSurveyTheme[]
   UsageStats              UsageStats?
   meteredConversations    MeteredConversation[]
@@ -680,18 +681,19 @@ model Team {
   invitations   Invitation[]
   contactGroups ContactGroup[]
 
-  campaigns              Campaign[]
-  reviewSuggestions      ReviewSuggestion[]
-  Review                 Review[]
-  RM_Topic               RM_Topic[]
-  testimonialCollections TestimonialCollection[]
-  waInboxAssign          WaInboxAssign[]
-  assignedConversations  ConversationAssignedUserTeamMap[]
-  waMessageOrgTeamMaps   WaMessageOrgTeamMap[]
-  waMessageSchedule      WaMessageSchedule[]
-  featureAccess          TeamFeatureAccess[]
-  pipelines              PipelineTeam[]
-  leads                  Lead[]
+  campaigns               Campaign[]
+  reviewSuggestions       ReviewSuggestion[]
+  Review                  Review[]
+  RM_Topic                RM_Topic[]
+  testimonialCollections  TestimonialCollection[]
+  waInboxAssign           WaInboxAssign[]
+  assignedConversations   ConversationAssignedUserTeamMap[]
+  waMessageOrgTeamMaps    WaMessageOrgTeamMap[]
+  waMessageSchedule       WaMessageSchedule[]
+  featureAccess           TeamFeatureAccess[]
+  pipelines               PipelineTeam[]
+  leads                   Lead[]
+  loyaltyFeedbackSettings LoyaltyFeedbackSetting[]
 
   /// Board this team's contacts land on. Several teams may share one pipeline.
   defaultPipeline   Pipeline? @relation("TeamDefaultPipeline", fields: [defaultPipelineId], references: [id], onDelete: SetNull)
@@ -848,21 +850,22 @@ model SurveyResponse {
   platform           ResponsePlatform @default(WEB)
   tag                String?          @default("")
 
-  ip                   String?
+  ip                      String?
   /// [PResponseLocation]
-  location             Json?
-  deviceData           Json?
-  Contact              Contact?              @relation(fields: [contactId], references: [id])
-  contactId            String?               @db.Uuid
-  CampaignParticipants CampaignParticipant[]
-  Testimonial          Testimonial[]
+  location                Json?
+  deviceData              Json?
+  Contact                 Contact?                 @relation(fields: [contactId], references: [id])
+  contactId               String?                  @db.Uuid
+  CampaignParticipants    CampaignParticipant[]
+  Testimonial             Testimonial[]
   /// Caller-supplied key that makes a submission idempotent. WhatsApp Flow runs
   /// pass their flow token: Meta retries a `data_exchange` request that 500s,
   /// and the answers may already have been filed by the attempt that failed.
   /// Null for every path that has no natural key (web responses, legacy
   /// phone-token flow runs) — Postgres treats nulls as distinct, so any number
   /// of rows may leave it unset.
-  idempotencyKey       String?               @unique
+  idempotencyKey          String?                  @unique
+  loyaltyFeedbackRequests LoyaltyFeedbackRequest[]
 }
 
 model SurveyStats {
@@ -895,6 +898,7 @@ model Contact {
   consent                      Boolean                   @default(true)
   email                        String?
   dob                          DateTime?
+  gender                       Gender?
   external_id                  String?
   aiWaChat                     Boolean                   @default(false)
   isAiBotActive                Boolean                   @default(false)
@@ -1315,19 +1319,19 @@ model ContactForm {
 }
 
 model WaTemplate {
-  id                      String                @id @default(uuid()) @db.Uuid
-  createdAt               DateTime              @default(now())
+  id                      String                   @id @default(uuid()) @db.Uuid
+  createdAt               DateTime                 @default(now())
   /// [PWaTemplateWithTypesData]
   data                    Json
   acceptButton            String? // QuickReplyButton text which on clicking will send the survey to the user
   /// [PWaTemplateDefaultValues]
   defaultValues           Json? // default values for images and other fields
-  templateType            TemplateType          @default(GENERAL_NOTIFICATION)
+  templateType            TemplateType             @default(GENERAL_NOTIFICATION)
   /// [PWaTemplateConfig]
   config                  Json?
-  org                     Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                   String                @db.Uuid
-  WhatsappSettings        WhatsappSettings?     @relation(fields: [whatsappSettingsPhoneId], references: [phoneId], onDelete: SetNull)
+  org                     Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                   String                   @db.Uuid
+  WhatsappSettings        WhatsappSettings?        @relation(fields: [whatsappSettingsPhoneId], references: [phoneId], onDelete: SetNull)
   whatsappSettingsPhoneId String?
   Campaign                Campaign[]
   waMessageSchedule       WaMessageSchedule[]
@@ -1335,6 +1339,7 @@ model WaTemplate {
   CampaignDripStage       CampaignDripStage[]
   loyaltyRewards          LoyaltyReward[]
   eventTriggers           LoyaltyEventTrigger[]
+  loyaltyFeedbackSettings LoyaltyFeedbackSetting[]
 }
 
 model ReviewSuggestion {
@@ -1595,6 +1600,10 @@ model WaFlow {
   flowId      String?
   name        String
   status      String
+  // The categories chosen at creation. Mostly Meta's list (SURVEY, SIGN_UP, …), but
+  // LOYALTY_FEEDBACK is ours — it never reaches Meta (see metaCategoriesFor) and is what
+  // Loyalty → Feedback selects flows by.
+  categories  String[] @default([])
   /// [PWaFlowJson]
   json        Json
   /// [PWaFlowPreview]
@@ -1612,14 +1621,15 @@ model WaFlow {
   /// [PWaFlowStartMessageConfig]
   startMessageConfig Json @default("{}")
 
-  org          Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId        String  @db.Uuid
-  survey       Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId     String  @unique @db.Uuid
-  anonymous    Boolean @default(false)
-  version      Int     @default(1)
+  org                     Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                   String                   @db.Uuid
+  survey                  Survey                   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId                String                   @unique @db.Uuid
+  anonymous               Boolean                  @default(false)
+  version                 Int                      @default(1)
   ///[FlowTicket[]]
-  ticketIssued Json[]
+  ticketIssued            Json[]
+  loyaltyFeedbackSettings LoyaltyFeedbackSetting[]
 
   // The WhatsApp channel this flow lives on. Meta scopes `flowId` to a WABA, so a
   // flow can only be referenced (sent, or attached to a template's FLOW button) from
@@ -1896,6 +1906,36 @@ model ApiAccessToken {
   createdAt   DateTime @default(now())
 }
 
+/// One partner-API write, remembered so a retry replays its answer instead of repeating the
+/// work. This is the generic layer: it covers writes that move no points and so leave no
+/// ledger row to collapse onto (applying a voucher, sending a card). Writes that DO book a
+/// transaction are additionally guarded by `LoyaltyTransaction.idempotencyKey`, which is the
+/// durable guarantee — this table expires.
+model ExternalIdempotencyRecord {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId String @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  /// Method + route, e.g. "POST /loyalty/points/award". Scoping by route stops one key
+  /// reused against a different endpoint from replaying the wrong answer.
+  scope String
+  key   String
+  /// sha256 of the canonicalised body. A second request under the same key with a different
+  /// body is a caller bug, answered with 409 rather than a misleading replay.
+  requestHash String
+
+  state          String    @default("IN_FLIGHT") // IN_FLIGHT | COMPLETED
+  responseStatus Int?
+  responseBody   Json?
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  expiresAt   DateTime
+
+  @@unique([orgId, scope, key])
+  @@index([expiresAt])
+}
+
 model Chatbot {
   id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orgId            String  @db.Uuid
@@ -1993,14 +2033,23 @@ model LoyaltyProgram {
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   // Program Identity
-  name   String
-  status String @default("draft") // 'draft', 'active', 'paused'
+  name         String
+  /// The business behind the programme ("Kettle & Co"), distinct from the programme's own
+  /// name ("Kettle Rewards"). Null on programmes created before the two were separated.
+  businessName String?
+  status       String  @default("draft") // 'draft', 'active', 'paused'
 
   // Currency Configuration
   currencyName       String @default("Points") // Points, Stars, Beans, etc.
   currencyCode       String @default("INR") // AED, USD, EUR, GBP, SAR, INR
   currencySymbol     String @default("₹") // د.إ, $, €, £, ﷼, ₹
   defaultCountryCode String @default("IN")
+
+  // Self-reported typical order value, used to estimate what the program gives back as a
+  // percentage of revenue (see src/modules/loyalty/giveback.ts). Nullable on purpose:
+  // null means the merchant never told us, which the UI shows as a prompt. A 0 default
+  // would read as a real answer and silently produce a giveback of 0%.
+  averageOrderValue Decimal? @db.Decimal(12, 2)
 
   // Fixed Bonuses
   signupBonus       Int     @default(0)
@@ -2012,8 +2061,23 @@ model LoyaltyProgram {
   refereeRewardId   String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
 
   // Tier Configuration
-  tiersEnabled    Boolean @default(true)
-  tierResetPeriod String? // 'never', 'yearly', 'monthly'
+  tiersEnabled                  Boolean @default(true)
+  tierResetPeriod               String? // 'never', 'yearly', 'monthly'
+  // Rolling window for tier qualification: a member's tier is judged on purchase spend in
+  // the trailing N months, and can move down when it lapses. Null = lifetime spend (legacy).
+  tierQualificationWindowMonths Int?
+
+  // Venue & branding profile (onboarding "profile" step). Hero image and brand colour are
+  // stored now for digital wallet passes / web widgets later.
+  timezone     String?
+  logoUrl      String?
+  brandColor   String?
+  heroImageUrl String?
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  // Print materials — QR card and brochure copy/settings. Owned and versioned by the UI.
+  materials    Json?
 
   // WhatsApp Business Account / Number
   whatsappSettingsId String?
@@ -2026,20 +2090,31 @@ model LoyaltyProgram {
   enableShopifyOrderPoints Boolean @default(false)
   enablePointsExpiration   Boolean @default(false)
   pointsExpirationMonths   Int     @default(12)
+  // Inside an open 24-hour customer-service window, send a notification's text as a
+  // plain message instead of the Meta template (free, and works before approval).
+  sendTextInSession        Boolean @default(true)
   referralMessageTemplate  Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
+
+  // Guided setup wizard (/dashboard/loyalty/onboarding) progress. The wizard commits each
+  // step for real while the program stays status "draft", so these track where to resume.
+  onboardingPresetKey   String? // which preset pack the user picked
+  onboardingStep        String? // last completed step id
+  onboardingCompletedAt DateTime?
 
   // Metadata
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  tiers         LoyaltyTier[]
-  earningRules  LoyaltyEarningRule[]
-  rewards       LoyaltyReward[]
-  customers     CustomerLoyaltyAccount[]
-  transactions  LoyaltyTransaction[]
-  referrals     LoyaltyReferral[]
-  eventTriggers LoyaltyEventTrigger[]
+  tiers            LoyaltyTier[]
+  earningRules     LoyaltyEarningRule[]
+  rewards          LoyaltyReward[]
+  customers        CustomerLoyaltyAccount[]
+  transactions     LoyaltyTransaction[]
+  referrals        LoyaltyReferral[]
+  eventTriggers    LoyaltyEventTrigger[]
+  feedbackSetting  LoyaltyFeedbackSetting?
+  feedbackRequests LoyaltyFeedbackRequest[]
 
   @@index([orgId])
   @@index([status])
@@ -2086,7 +2161,9 @@ model LoyaltyEarningRule {
   priority    Int     @default(0) // Higher priority = applied first
 
   // Earning Rate
-  pointsPerUnit Decimal @default(1.00) @db.Decimal(10, 2) // Points per currency unit spent
+  // Six places: "₹150 = 1 point" is 0.006667, which two places would round to 0.01 (a 50% error)
+  // and "₹250 = 1 point" to 0.00 — nothing earned. Editors enter a spend/points pair.
+  pointsPerUnit Decimal @default(1.00) @db.Decimal(12, 6) // Points per currency unit spent
   multiplier    Decimal @default(1.00) @db.Decimal(4, 2) // Additional multiplier (e.g., 2.0 for double points)
   bonusPoints   Int?    @default(0) // Flat bonus points per transaction
 
@@ -2136,6 +2213,9 @@ model LoyaltyReward {
 
   // Reward Identity
   name        String
+  /// Stable, human-readable identifier for external callers. The partner API names
+  /// rewards by this, never by `id` — a UUID is not something a POS can be configured with.
+  code        String?
   description String?
   status      String  @default("active") // 'active', 'inactive', 'out_of_stock'
 
@@ -2169,7 +2249,9 @@ model LoyaltyReward {
   loyaltyTransactions LoyaltyTransaction[]
   assignedRewards     CustomerReward[]
   eventTriggers       LoyaltyEventTrigger[]
+  feedbackSettings    LoyaltyFeedbackSetting[]
 
+  @@unique([programId, code])
   @@index([programId])
   @@index([status])
   @@index([pointsCost])
@@ -2203,24 +2285,47 @@ model CustomerLoyaltyAccount {
   // Status
   status String @default("active") // 'active', 'suspended', 'closed'
 
+  // Null while a web self-signup waits for its first WhatsApp message or purchase; the
+  // bonuses promised at signup sit in `pendingBonuses` until then. Every other signup path
+  // credits immediately, so the default marks the account verified on creation.
+  verifiedAt     DateTime? @default(now())
+  /// [PLoyaltyPendingBonuses]
+  pendingBonuses Json?
+
+  /// The member's QR card. `cardCode` is the code the QR encodes — twelve characters from
+  /// the till-code alphabet, minted at enrolment for new members and on first send for
+  /// older ones (null until then, which is also what keeps legacy members out of the
+  /// automatic first-message send). `cardSentAt` is the last WhatsApp delivery Meta
+  /// accepted; the image itself is rendered on demand, never stored.
+  cardCode   String?   @unique
+  cardSentAt DateTime?
+
   // Metadata
   createdAt      DateTime @default(now())
   lastActivityAt DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  /// One send per occasion per member. Each scheduled reminder claims its own marker with a
+  /// conditional update before sending, so a re-run or a duplicated tick is a no-op.
   lastInactivityReminderAt DateTime?
   lastBirthdayGreetedAt    DateTime?
+  lastPointsExpiryAlertAt  DateTime?
+  lastTierAtRiskAlertAt    DateTime?
+  lastAnniversaryGreetedAt DateTime?
 
   // Relations
   transactions        LoyaltyTransaction[]
   redemptions         LoyaltyRedemption[]
   assignedRewards     CustomerReward[]
-  referralsAsReferrer LoyaltyReferral[]    @relation("ReferrerAccount")
-  referralsAsReferee  LoyaltyReferral[]    @relation("RefereeAccount")
+  referralsAsReferrer LoyaltyReferral[]        @relation("ReferrerAccount")
+  referralsAsReferee  LoyaltyReferral[]        @relation("RefereeAccount")
   approvalRequests    ApprovalRequest[]
+  feedbackRequests    LoyaltyFeedbackRequest[]
 
   @@unique([programId, contactId])
   @@index([programId])
+  /// The inactivity and anniversary sweeps scan a programme's members by activity date.
+  @@index([programId, lastActivityAt])
   @@index([programId, contactId])
   @@index([contactId])
   @@index([referralCode])
@@ -2229,17 +2334,97 @@ model CustomerLoyaltyAccount {
 }
 
 model CustomerReward {
-  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  shortCode  String                 @unique
-  status     CustomerRewardStatus   @default(ISSUED)
-  rewardId   String                 @db.Uuid
-  reward     LoyaltyReward          @relation(fields: [rewardId], references: [id], onDelete: Cascade)
-  accountId  String                 @db.Uuid
-  account    CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  assignedAt DateTime               @default(now())
+  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shortCode        String                   @unique
+  status           CustomerRewardStatus     @default(ISSUED)
+  rewardId         String                   @db.Uuid
+  reward           LoyaltyReward            @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  accountId        String                   @db.Uuid
+  account          CustomerLoyaltyAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  assignedAt       DateTime                 @default(now())
+  feedbackRequests LoyaltyFeedbackRequest[]
 
   @@unique([rewardId, accountId])
   @@index([accountId])
+}
+
+enum LoyaltyFeedbackRequestStatus {
+  SCHEDULED
+  SENT
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+/// Post-visit feedback for one programme: which draft became the WhatsApp Flow, the team
+/// whose Google review link happy customers are sent to, the timing, and the reward for
+/// reviewing. The flow itself is an ordinary WaFlow/Survey pair, so its answers land in
+/// SurveyResponse like any other flow's.
+model LoyaltyFeedbackSetting {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId String         @unique @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  teamId String @db.Uuid
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  dbFlowId     String?     @db.Uuid
+  flow         WaFlow?     @relation(fields: [dbFlowId], references: [dbFlowId], onDelete: SetNull)
+  // The UTILITY template carrying a FLOW button, used when the customer's 24-hour
+  // service window is closed — an interactive flow message can only be sent inside one.
+  waTemplateId String?     @db.Uuid
+  waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: SetNull)
+
+  enabled          Boolean        @default(false)
+  sendDelayMinutes Int            @default(120)
+  cooldownDays     Int            @default(30)
+  // Granted once per customer, on the first tap of the review link.
+  rewardId         String?        @db.Uuid
+  reward           LoyaltyReward? @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+  // Mirrors googleReview.minRating on the flow's overall-rating element.
+  happyMinRating   Int            @default(4)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// One feedback ask to one customer. Created when points are earned, fired by a delayed
+/// BullMQ job, completed by the flow's data-exchange / nfm_reply path, and clicked and
+/// rewarded by the public review redirect.
+model LoyaltyFeedbackRequest {
+  id            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId     String                 @db.Uuid
+  program       LoyaltyProgram         @relation(fields: [programId], references: [id], onDelete: Cascade)
+  accountId     String                 @db.Uuid
+  account       CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  // Unique so one purchase can never schedule two asks, whatever races.
+  transactionId String?                @unique @db.Uuid
+  transaction   LoyaltyTransaction?    @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  status        LoyaltyFeedbackRequestStatus @default(SCHEDULED)
+  happy         Boolean?
+  overallRating Int?
+  // 'interactive' inside the service window, 'template' otherwise.
+  channel       String?
+  failReason    String?
+
+  scheduledFor    DateTime
+  sentAt          DateTime?
+  completedAt     DateTime?
+  reviewClickedAt DateTime?
+  rewardGrantedAt DateTime?
+
+  customerRewardId String?         @db.Uuid
+  customerReward   CustomerReward? @relation(fields: [customerRewardId], references: [id], onDelete: SetNull)
+  surveyResponseId String?         @db.Uuid
+  surveyResponse   SurveyResponse? @relation(fields: [surveyResponseId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([programId, status])
+  @@index([programId, createdAt(sort: Desc)])
+  @@index([accountId, createdAt(sort: Desc)])
 }
 
 // Complete ledger of all point movements
@@ -2255,7 +2440,11 @@ model LoyaltyTransaction {
 
   // Source/Context
   source      String // 'purchase', 'signup_bonus', 'referral', 'reward_redemption', 'manual'
-  referenceId String? // External reference (order_id, etc.)
+  referenceId String? // External reference (order_id, etc.) — NOT unique, see idempotencyKey
+  /// Collapses a retried write onto the row it already made. Deliberately separate from
+  /// `referenceId`, which several writers share (a redemption id, `APPROVAL-<id>`, and the
+  /// expiry sweep's partial allocations) and so cannot carry a unique index.
+  idempotencyKey String?
   description String?
   /// [LoyaltyTransactionMetadata]
   metadata    Json?   @default("{}")
@@ -2265,6 +2454,9 @@ model LoyaltyTransaction {
   earningRule           LoyaltyEarningRule? @relation(fields: [earningRuleId], references: [id])
   earningRuleMultiplier Decimal?            @db.Decimal(4, 2)
   basePoints            Int?
+  // Purchase amount behind an 'earn'/'purchase' row, as a typed column so trailing-window
+  // tier qualification can be summed with an index (metadata.purchaseAmount is kept too).
+  purchaseAmount        Decimal?            @db.Decimal(12, 2)
 
   // Related Records
   rewardId String?        @db.Uuid
@@ -2275,11 +2467,13 @@ model LoyaltyTransaction {
   program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
 
   // Metadata
-  createdAt          DateTime            @default(now())
-  createdBy          String?             @db.Uuid
+  createdAt          DateTime                @default(now())
+  createdBy          String?                 @db.Uuid
   loyaltyRedemptions LoyaltyRedemption[]
   approvalRequest    ApprovalRequest?
+  feedbackRequest    LoyaltyFeedbackRequest?
 
+  @@unique([programId, idempotencyKey])
   @@index([accountId])
   @@index([accountId, createdAt(sort: Desc)])
   @@index([transactionType])
@@ -2287,6 +2481,8 @@ model LoyaltyTransaction {
   @@index([createdAt(sort: Desc)])
   @@index([earningRuleId])
   @@index([programId])
+  // The loyalty Overview scans one programme over a date window.
+  @@index([programId, createdAt(sort: Desc)])
 }
 
 // Tracks reward redemption lifecycle
@@ -2310,6 +2506,9 @@ model LoyaltyRedemption {
   // Usage tracking
   expiresAt   DateTime?
   usedAt      DateTime?
+  /// Claim marker for the "your reward is about to expire" reminder — the occasion is per
+  /// redemption code, so it cannot be tracked on the account.
+  expiryNotifiedAt DateTime?
   /// [PLoyaltyUsedContext]
   usedContext Json?     @default("{}") // POS details when used
 
@@ -2327,6 +2526,8 @@ model LoyaltyRedemption {
   @@index([accountId])
   @@index([status])
   @@index([redemptionCode])
+  /// The reward-expiring reminder looks for codes lapsing inside its lead window.
+  @@index([expiresAt])
   @@map("loyalty_redemptions")
 }
 
@@ -2453,6 +2654,12 @@ enum LoyaltyEventType {
   INACTIVITY_REMINDER
   POINTS_EXPIRY_ALERT
   POINTS_EXPIRED
+  /// The rolling tier window is closing on a member who would drop out of their tier.
+  TIER_AT_RISK
+  /// An unused redemption code is about to lapse.
+  REWARD_EXPIRING
+  /// A year (or another) since the member joined.
+  SIGNUP_ANNIVERSARY
 }
 
 model LoyaltyEventTrigger {
@@ -2466,6 +2673,15 @@ model LoyaltyEventTrigger {
   // For inactivity reminders
   triggerDays Int?
 
+  /// How far ahead of a dated occasion to send — days before the points expire, before the
+  /// tier window closes, before a redemption lapses, before a birthday. Null takes the
+  /// occasion's own default.
+  leadDays Int?
+  /// Hour of the day to send at, 0-23, read in the programme's own `timezone`. Null takes
+  /// DEFAULT_SEND_HOUR. The reminder sweep wakes hourly and sends only to programmes whose
+  /// chosen hour has just struck locally.
+  sendHour Int?
+
   // WhatsApp Template
   waTemplateId String?     @db.Uuid
   waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: SetNull)
@@ -2477,6 +2693,9 @@ model LoyaltyEventTrigger {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// One trigger per occasion. Every call site already assumed this — `findFirst` then
+  /// update, or `updateMany` — so the constraint states what the code relied on.
+  @@unique([programId, eventType])
   @@index([programId])
   @@index([eventType])
 }

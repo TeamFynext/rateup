@@ -11,6 +11,7 @@ import {
   getFlowMetricsHandler,
   getFlowPreviewHandler,
   getFlowsHandler,
+  getFlowTemplatesHandler,
   getUnsyncedFlowsHandler,
   importFlowsHandler,
   publishFlowHandler,
@@ -31,7 +32,9 @@ import {
   cloneFlowSchema,
   type CreateFlowInput,
   createFlowInput,
+  flowTemplatesResponse,
   importFlowsBody,
+  templatesQuery,
   type SendFlowBody,
   sendFlowBodySchema,
   sourceQuery,
@@ -59,6 +62,17 @@ export async function flowRoutes(server: FastifyInstance) {
       },
     },
     getFlowsHandler,
+  );
+  // Ready-made flows for a category — what the create-flow wizard offers.
+  server.get(
+    "/templates",
+    {
+      schema: {
+        querystring: templatesQuery,
+        response: { 200: flowTemplatesResponse },
+      },
+    },
+    getFlowTemplatesHandler,
   );
   server.get(
     "/:waFlowId",

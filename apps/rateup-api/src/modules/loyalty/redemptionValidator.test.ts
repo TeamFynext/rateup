@@ -169,6 +169,25 @@ describe("validateRedemption — points balance", () => {
     );
   });
 
+  // A review reward is earned by tapping the Google review link, so it behaves like an
+  // assigned one at redemption: on the account or not redeemable, and never priced.
+  test("a review reward on the account costs no points", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(reward({ rewardType: "review", pointsCost: 0 }));
+    db.customerReward.findUnique.mockResolvedValue({ id: "assignment-1" });
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue(customer({ currentPoints: 0 }));
+
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).valid).toBe(true);
+  });
+
+  test("a review reward the customer never earned is refused", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(reward({ rewardType: "review", pointsCost: 0 }));
+    db.customerReward.findUnique.mockResolvedValue(null);
+
+    expect((await validateRedemption(CUSTOMER, REWARD, {} as any)).violations).toEqual([
+      "Reward is not assigned to the customer",
+    ]);
+  });
+
   test("the assignment lookup keys on the reward and account together", async () => {
     db.loyaltyReward.findFirst.mockResolvedValue(reward({ rewardType: "assigned" }));
 

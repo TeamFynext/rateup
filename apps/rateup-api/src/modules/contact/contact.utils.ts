@@ -141,7 +141,9 @@ export async function handleSendTemplate(
       text: data,
     })),
   });
-  await sendTemplateToUserCore(
+  // Returned so callers that report an outcome (the loyalty dispatcher) can tell a
+  // refused send from an accepted one.
+  return await sendTemplateToUserCore(
     orgId,
     waTemplateId,
     phone,

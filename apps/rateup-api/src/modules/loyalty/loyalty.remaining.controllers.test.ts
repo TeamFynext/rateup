@@ -236,6 +236,33 @@ describe("the redemption controller", () => {
     expect(getRedemptionsByCustomer).toHaveBeenCalledWith("acct-1", ORG);
   });
 
+  test("fills in who applied a redemption from the session when the counter does not say", async () => {
+    await applyRedemptionHandler(
+      request({
+        user: { orgId: ORG, email: "deepa@kettle.co", id: "user-9" },
+        body: { redemptionCode: "RU-ABC123" },
+      }),
+      reply(),
+    );
+
+    expect(applyRedemption).toHaveBeenCalledWith(
+      { redemptionCode: "RU-ABC123", appliedBy: "deepa@kettle.co" },
+      ORG,
+    );
+  });
+
+  test("a redemption that cannot be applied is the caller's problem, not a 500", async () => {
+    (applyRedemption as Mock).mockRejectedValueOnce(new Error("Redemption not found"));
+    const notFound = reply();
+    await applyRedemptionHandler(request({ body: { redemptionCode: "X" } }), notFound);
+    expect(answer(notFound)).toEqual({ code: 404, body: { error: "Redemption not found" } });
+
+    (applyRedemption as Mock).mockRejectedValueOnce(new Error("Redemption already applied"));
+    const used = reply();
+    await applyRedemptionHandler(request({ body: { redemptionCode: "X" } }), used);
+    expect(answer(used)).toEqual({ code: 409, body: { error: "Redemption already applied" } });
+  });
+
   test("lists transactions for the caller's program with the query's filters", async () => {
     const rep = reply();
 
