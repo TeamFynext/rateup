@@ -6,11 +6,13 @@ import { log } from "../../utils/logger.js";
 import { connectKafkaProducer, producer } from "../../plugins/kafka.js";
 import { syncJobSchedulers } from "./queues/cron.queue.js";
 import { reconcileScheduledCampaignSends } from "../../modules/campaign/campaignRetry.service.js";
+import { reconcileScheduledFeedbackRequests } from "../../modules/loyalty/feedback/feedback.scheduler.js";
 
 import * as campaignDequeue from "./processors/campaignDequeue.processor.js";
 import * as campaignEnqueue from "./processors/campaignEnqueue.processor.js";
 import * as campaignRetryFire from "./processors/campaignRetryFire.processor.js";
 import * as integration from "./processors/integration.processor.js";
+import * as loyaltyFeedback from "./processors/loyaltyFeedback.processor.js";
 import * as notification from "./processors/notification.processor.js";
 import * as outgoingWebhook from "./processors/outgoingWebhook.processor.js";
 import * as pausedAutomation from "./processors/pausedAutomation.processor.js";
@@ -42,6 +44,7 @@ const PROCESSOR_MODULES = [
   campaignEnqueue,
   campaignRetryFire,
   integration,
+  loyaltyFeedback,
   notification,
   outgoingWebhook,
   pausedAutomation,
@@ -80,6 +83,10 @@ async function start() {
   // have just happened, and re-arming is idempotent.
   const { checked, armed } = await reconcileScheduledCampaignSends();
   log.info(`Checked ${checked} scheduled campaign sends (re-armed ${armed})`);
+
+  // Same story for loyalty feedback asks: one delayed job per SCHEDULED row.
+  const feedback = await reconcileScheduledFeedbackRequests();
+  log.info(`Checked ${feedback.checked} scheduled feedback requests (re-armed ${feedback.armed})`);
 
   process.on("unhandledRejection", (reason) => {
     log.error(reason, "Unhandled promise rejection");

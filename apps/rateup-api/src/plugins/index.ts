@@ -57,8 +57,7 @@ export async function registerPlugins(server: FastifyInstance) {
   // the separate worker service (src/worker.ts) so the API can be scaled to N
   // replicas without every replica firing the same cron tick N times.
 
-  // Swagger (only if enabled)
-  if (process.env.SWAGGER === "1") {
-    await registerSwagger(server);
-  }
+  // The OpenAPI spec is always generated and served as JSON; the browsable UI is what
+  // SWAGGER=1 gates. See `plugins/swagger.ts`.
+  await registerSwagger(server);
 }

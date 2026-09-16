@@ -109,4 +109,34 @@ describe("loyaltyProgramSchema", () => {
   test("requires the fields that have no default", () => {
     expect(loyaltyProgramSchema.safeParse({ currencyCode: "INR" }).success).toBe(false);
   });
+
+  test("brandColor must be a six-digit hex, and may be cleared", () => {
+    expect(loyaltyProgramUpdateSchema.safeParse({ brandColor: "#1C518E" }).success).toBe(true);
+    expect(loyaltyProgramUpdateSchema.safeParse({ brandColor: null }).success).toBe(true);
+    expect(loyaltyProgramUpdateSchema.safeParse({ brandColor: "blue" }).success).toBe(false);
+  });
+
+  test("tierQualificationWindowMonths is bounded 1–24 and nullable", () => {
+    expect(
+      loyaltyProgramUpdateSchema.safeParse({ tierQualificationWindowMonths: 12 }).success,
+    ).toBe(true);
+    expect(
+      loyaltyProgramUpdateSchema.safeParse({ tierQualificationWindowMonths: null }).success,
+    ).toBe(true);
+    expect(loyaltyProgramUpdateSchema.safeParse({ tierQualificationWindowMonths: 0 }).success).toBe(
+      false,
+    );
+    expect(
+      loyaltyProgramUpdateSchema.safeParse({ tierQualificationWindowMonths: 25 }).success,
+    ).toBe(false);
+  });
+
+  test("materials is an opaque object the UI owns, and may be cleared", () => {
+    expect(
+      loyaltyProgramUpdateSchema.safeParse({ materials: { version: 1, brochure: { title: "x" } } })
+        .success,
+    ).toBe(true);
+    expect(loyaltyProgramUpdateSchema.safeParse({ materials: null }).success).toBe(true);
+    expect(loyaltyProgramUpdateSchema.safeParse({ materials: "brochure" }).success).toBe(false);
+  });
 });

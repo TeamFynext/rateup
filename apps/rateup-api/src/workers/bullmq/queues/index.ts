@@ -5,6 +5,7 @@ export * from "./campaign.queue.js";
 export * from "./campaignRetry.queue.js";
 export * from "./cron.queue.js";
 export * from "./integration.queue.js";
+export * from "./loyaltyFeedback.queue.js";
 export * from "./notification.queue.js";
 export * from "./user.queue.js";
 export * from "./webhook.queue.js";

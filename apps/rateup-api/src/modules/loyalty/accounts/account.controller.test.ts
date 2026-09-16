@@ -10,16 +10,19 @@ vi.mock("./account.service.js", () => ({
   getCustomerAccountById: vi.fn(),
   getCustomerAccountByContact: vi.fn(),
   getCustomerAccountByPhone: vi.fn(),
+  getCustomerAccountByCardCode: vi.fn(),
   getCustomerAccounts: vi.fn(),
   getCustomerAccountsForExport: vi.fn(),
   updateCustomerAccount: vi.fn(),
   assignRewardToCustomer: vi.fn(),
   getRewardByShortCode: vi.fn(),
   markRewardAsRedeemed: vi.fn(),
+  searchContactsForEnrolment: vi.fn(),
 }));
 
 vi.mock("../program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
 vi.mock("../rewards/reward.service.js", () => ({ getActiveLoyaltyRewards: vi.fn() }));
+vi.mock("./memberCard.service.js", () => ({ sendMemberCard: vi.fn() }));
 
 import {
   assignRewardToCustomer,
@@ -27,14 +30,17 @@ import {
   createCustomerAccount,
   getCustomerAccountById,
   getCustomerAccountByPhone,
+  getCustomerAccountByCardCode,
   getCustomerAccounts,
   getCustomerAccountsForExport,
   getRewardByShortCode,
   markRewardAsRedeemed,
+  searchContactsForEnrolment,
   updateCustomerAccount,
 } from "./account.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
+import { sendMemberCard } from "./memberCard.service.js";
 import {
   assignRewardToCustomerHandler,
   awardPointsHandler,
@@ -43,9 +49,12 @@ import {
   exportCustomerAccountsHandler,
   getCustomerAccountByIdHandler,
   getCustomerAccountByPhoneHandler,
+  getCustomerAccountByCardCodeHandler,
+  sendMemberCardHandler,
   getCustomerAccountsHandler,
   getRewardByShortCodeHandler,
   redeemRewardByShortCodeHandler,
+  searchContactsForEnrolmentHandler,
   updateCustomerAccountHandler,
 } from "./account.controller.js";
 
@@ -69,7 +78,11 @@ function answer(rep: any) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (getLoyaltyProgramByOrg as Mock).mockResolvedValue({ id: PROGRAM, status: "active" });
+  (getLoyaltyProgramByOrg as Mock).mockResolvedValue({
+    id: PROGRAM,
+    status: "active",
+    defaultCountryCode: "IN",
+  });
   (getActiveLoyaltyRewards as Mock).mockResolvedValue([]);
   (getCustomerAccountsForExport as Mock).mockResolvedValue([]);
 });
@@ -87,7 +100,10 @@ describe("createCustomerAccountHandler", () => {
 
     await createCustomerAccountHandler(request({ body }), rep);
 
-    expect(createCustomerAccount).toHaveBeenCalledWith(body, PROGRAM, ORG);
+    // Staff typed these details with the stored ones in front of them, so they overwrite.
+    expect(createCustomerAccount).toHaveBeenCalledWith(body, PROGRAM, ORG, undefined, {
+      trustedDetails: true,
+    });
     expect(answer(rep)).toEqual({ code: 201, body: { id: "acct-1" } });
   });
 
@@ -157,6 +173,60 @@ describe("createCustomerAccountHandler", () => {
     expect((createCustomerAccount as Mock).mock.calls[0][2]).toBe("org-target");
   });
 
+  test("the public handler holds the bonuses and hands over a normalised phone; the staff handler does neither", async () => {
+    (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, phone: "90000 00001" }, params: {} } as any,
+      reply(),
+    );
+    await createCustomerAccountHandler(request({ body }), reply());
+
+    const [publicCall, staffCall] = (createCustomerAccount as Mock).mock.calls;
+    expect(publicCall[0]).toMatchObject({ phone: "919000000001" });
+    expect(publicCall[4]).toEqual({ holdBonuses: true });
+    expect(staffCall[3]).toBeUndefined();
+    expect(staffCall[4]).toEqual({ trustedDetails: true });
+  });
+
+  test("the public handler refuses a number that is not real for the programme's country", async () => {
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, phone: "12345" }, params: {} } as any,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "Enter a valid mobile number" } });
+    expect(createCustomerAccount).not.toHaveBeenCalled();
+  });
+
+  test("a filled honeypot is answered as a success that created nothing, before any read", async () => {
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, website: "https://spam.example" }, params: {}, ip: "203.0.113.9" } as any,
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 201, body: { success: true } });
+    expect(getLoyaltyProgramByOrg).not.toHaveBeenCalled();
+    expect(createCustomerAccount).not.toHaveBeenCalled();
+  });
+
+  test("an empty honeypot is clean", async () => {
+    (createCustomerAccount as Mock).mockResolvedValue({ id: "acct-1" });
+    const rep = reply();
+
+    await createPublicCustomerAccountHandler(
+      { body: { ...body, website: "" }, params: {} } as any,
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(201);
+    expect(createCustomerAccount).toHaveBeenCalled();
+  });
+
   test("the public handler refuses a body with no org", async () => {
     const rep = reply();
 
@@ -173,7 +243,8 @@ describe("createCustomerAccountHandler", () => {
 
     await createCustomerAccountHandler(request({ body }), reply());
 
-    expect((createCustomerAccount as Mock).mock.calls[0]).toHaveLength(3);
+    // The fourth argument is the sending number; the staff handler leaves it out.
+    expect((createCustomerAccount as Mock).mock.calls[0][3]).toBeUndefined();
   });
 
   test("leaks the service's raw error text in the 500", async () => {
@@ -208,6 +279,27 @@ describe("getCustomerAccountsHandler", () => {
     await getCustomerAccountsHandler(request(), rep);
 
     expect(answer(rep)).toEqual({ code: 200, body: [] });
+  });
+});
+
+describe("searchContactsForEnrolmentHandler", () => {
+  test("searches the session's org with the parsed query", async () => {
+    (searchContactsForEnrolment as Mock).mockResolvedValue([{ id: "c1" }]);
+    const rep = reply();
+
+    await searchContactsForEnrolmentHandler(request({ query: { search: "ann", limit: 5 } }), rep);
+
+    expect(searchContactsForEnrolment).toHaveBeenCalledWith(ORG, { search: "ann", limit: 5 });
+    expect(answer(rep)).toEqual({ code: 200, body: [{ id: "c1" }] });
+  });
+
+  test("answers 500 with the message when the search fails", async () => {
+    (searchContactsForEnrolment as Mock).mockRejectedValue(new Error("boom"));
+    const rep = reply();
+
+    await searchContactsForEnrolmentHandler(request({ query: { limit: 20 } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "boom" } });
   });
 });
 
@@ -396,6 +488,186 @@ describe("getCustomerAccountByPhoneHandler", () => {
     );
 
     expect(answer(rep).body.activeCoupons.map((c: any) => c.id)).toEqual(["r1"]);
+  });
+
+  test("lists everything still waiting to be handed over, of either kind", async () => {
+    const reward = { id: "rwd-1", name: "Free coffee", pointsCost: 500, rewardType: "point" };
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(
+      account({
+        redemptions: [
+          {
+            id: "r1",
+            redemptionCode: "KC-4471",
+            reward,
+            status: "APPROVED",
+            usedAt: null,
+            createdAt: new Date("2026-09-01"),
+            expiresAt: null,
+          },
+          {
+            id: "r2",
+            redemptionCode: "KC-1",
+            reward,
+            status: "USED",
+            usedAt: new Date(),
+            createdAt: new Date(),
+          },
+          {
+            id: "r3",
+            redemptionCode: "KC-2",
+            reward,
+            status: "PENDING",
+            usedAt: null,
+            createdAt: new Date(),
+          },
+        ],
+        assignedRewards: [
+          {
+            id: "a1",
+            rewardId: "rwd-2",
+            shortCode: "GIFT1",
+            status: "ISSUED",
+            assignedAt: new Date("2026-09-02"),
+            reward: { ...reward, id: "rwd-2", name: "Birthday brownie", rewardType: "assigned" },
+          },
+          {
+            id: "a2",
+            rewardId: "rwd-3",
+            shortCode: "GIFT2",
+            status: "REDEEMED",
+            assignedAt: new Date(),
+            reward,
+          },
+        ],
+      }),
+    );
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    const body = answer(rep).body;
+    expect(body.pendingRedemptions).toEqual([
+      expect.objectContaining({
+        kind: "redemption",
+        id: "r1",
+        code: "KC-4471",
+        reward: expect.objectContaining({ name: "Free coffee" }),
+      }),
+      expect.objectContaining({
+        kind: "assigned",
+        id: "a1",
+        code: "GIFT1",
+        reward: expect.objectContaining({ name: "Birthday brownie" }),
+      }),
+    ]);
+    expect(body.awaitingApproval.map((r: any) => r.id)).toEqual(["r3"]);
+  });
+
+  test("shows the last five visits with what was spent", async () => {
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(
+      account({
+        transactions: Array.from({ length: 7 }, (_, i) => ({
+          id: `t${i}`,
+          transactionType: "earn",
+          source: "purchase",
+          points: 10 + i,
+          balanceAfter: 100,
+          description: null,
+          createdAt: new Date(2026, 8, 7 - i),
+          metadata: i === 0 ? { purchaseAmount: 340 } : { purchaseAmount: "oops" },
+        })),
+      }),
+    );
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    const visits = answer(rep).body.recentTransactions;
+    expect(visits).toHaveLength(5);
+    expect(visits[0]).toMatchObject({ id: "t0", points: 10, purchaseAmount: 340 });
+    expect(visits[1].purchaseAmount).toBeNull();
+  });
+
+  test("works out the next tier from the programme's ladder and the customer's spend", async () => {
+    (getLoyaltyProgramByOrg as Mock).mockResolvedValue({
+      id: PROGRAM,
+      status: "active",
+      tiersEnabled: true,
+      currencySymbol: "₹",
+      currencyName: "Beans",
+      signupBonus: 50,
+      tiers: [
+        { id: "tier-2", name: "Gold", threshold: "15000", pointsMultiplier: "1.5", color: "#fc0" },
+        {
+          id: "tier-1",
+          name: "Silver",
+          threshold: "5000",
+          pointsMultiplier: "1.25",
+          color: "#ccc",
+        },
+        { id: "tier-0", name: "Bronze", threshold: "0", pointsMultiplier: "1", color: "#a00" },
+      ],
+    });
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(
+      account({
+        totalSpend: "13820.00",
+        currentTier: {
+          id: "tier-1",
+          name: "Silver",
+          threshold: "5000",
+          pointsMultiplier: "1.25",
+          color: "#ccc",
+        },
+      }),
+    );
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    const body = answer(rep).body;
+    expect(body.tier).toEqual({
+      current: {
+        id: "tier-1",
+        name: "Silver",
+        threshold: 5000,
+        pointsMultiplier: 1.25,
+        color: "#ccc",
+      },
+      next: { id: "tier-2", name: "Gold", threshold: 15000 },
+      amountToNext: 1180,
+      // A lifetime ladder: the spend that counts is the lifetime figure.
+      qualifyingSpend: 13820,
+      qualificationWindowMonths: null,
+    });
+    expect(body.customer.totalSpend).toBe(13820);
+    expect(body.program).toEqual({ currencySymbol: "₹", pointsName: "Beans", signupBonus: 50 });
+  });
+
+  test("has no next tier when tiers are switched off", async () => {
+    (getLoyaltyProgramByOrg as Mock).mockResolvedValue({
+      id: PROGRAM,
+      status: "active",
+      tiersEnabled: false,
+      tiers: [{ id: "tier-2", name: "Gold", threshold: "15000", pointsMultiplier: "1.5" }],
+    });
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(account({ totalSpend: "10" }));
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    expect(answer(rep).body.tier.next).toBeNull();
   });
 });
 
@@ -641,5 +913,110 @@ describe("exportCustomerAccountsHandler", () => {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     expect(rep.send.mock.calls[0][0]).toBeInstanceOf(Buffer);
+  });
+});
+
+describe("getCustomerAccountByCardCodeHandler", () => {
+  const account = {
+    id: "acct-1",
+    contactId: "contact-1",
+    currentPoints: 500,
+    lifetimePoints: 900,
+    referralCode: "ANN-AB12",
+    cardCode: "ABCDEFGHJKLM",
+    cardSentAt: new Date("2026-09-12T10:00:00Z"),
+    currentTier: null,
+    contact: { name: "Ann", phone: "919000000001", email: "a@b.c" },
+    status: "active",
+    assignedRewards: [],
+    redemptions: [],
+  };
+
+  test("normalises the scanned code and scopes the lookup to the caller's programme", async () => {
+    (getCustomerAccountByCardCode as Mock).mockResolvedValue(account);
+    const rep = reply();
+
+    await getCustomerAccountByCardCodeHandler(
+      request({ params: { cardCode: "abcd-efgh-jklm" } }),
+      rep,
+    );
+
+    expect(getCustomerAccountByCardCode).toHaveBeenCalledWith(PROGRAM, "ABCDEFGHJKLM");
+    expect(answer(rep).code).toBe(200);
+    expect(answer(rep).body.customer).toMatchObject({
+      id: "acct-1",
+      phone: "919000000001",
+      cardCode: "ABCDEFGHJKLM",
+      points: 500,
+    });
+  });
+
+  test("a code that does not parse is a 404 without touching the database", async () => {
+    const rep = reply();
+
+    await getCustomerAccountByCardCodeHandler(
+      request({ params: { cardCode: "https://wa.me/919000000000?text=join" } }),
+      rep,
+    );
+
+    expect(getCustomerAccountByCardCode).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Card not found" } });
+  });
+
+  test("a card from another programme is the same 404", async () => {
+    (getCustomerAccountByCardCode as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await getCustomerAccountByCardCodeHandler(
+      request({ params: { cardCode: "ABCDEFGHJKLM" } }),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Card not found" } });
+  });
+
+  test("the phone lookup carries the card fields too", async () => {
+    (getCustomerAccountByPhone as Mock).mockResolvedValue(account);
+    const rep = reply();
+
+    await getCustomerAccountByPhoneHandler(
+      request({ params: { phoneNumber: "919000000001" } }),
+      rep,
+    );
+
+    expect(answer(rep).body.customer).toMatchObject({
+      cardCode: "ABCDEFGHJKLM",
+      cardSentAt: account.cardSentAt,
+    });
+  });
+});
+
+describe("sendMemberCardHandler", () => {
+  test("sends within the caller's programme and returns the outcome verbatim", async () => {
+    (getCustomerAccountById as Mock).mockResolvedValue({ id: "acct-1" });
+    const outcome = {
+      sent: false,
+      skippedReason: "session_closed",
+      cardCode: "ABCDEFGHJKLM",
+      cardSentAt: null,
+    };
+    (sendMemberCard as Mock).mockResolvedValue(outcome);
+    const rep = reply();
+
+    await sendMemberCardHandler(request({ params: { customerId: "acct-1" } }), rep);
+
+    expect(getCustomerAccountById).toHaveBeenCalledWith("acct-1", PROGRAM);
+    expect(sendMemberCard).toHaveBeenCalledWith({ orgId: ORG, accountId: "acct-1" });
+    expect(answer(rep)).toEqual({ code: 200, body: outcome });
+  });
+
+  test("another org's customer is a 404 and nothing is sent", async () => {
+    (getCustomerAccountById as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await sendMemberCardHandler(request({ params: { customerId: "acct-other" } }), rep);
+
+    expect(sendMemberCard).not.toHaveBeenCalled();
+    expect(answer(rep)).toEqual({ code: 404, body: { error: "Customer account not found" } });
   });
 });

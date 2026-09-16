@@ -8,7 +8,12 @@ import {
   EventTriggerInput,
   UpdateEventTriggerInput,
   ProgramIdQueryInput,
+  EventMessageParamsInput,
+  EventMessageBodyInput,
+  type ReminderBodyInput,
 } from "./settings.schema.js";
+import { saveEventMessage } from "./eventMessage.service.js";
+import { isScheduledEventType } from "./reminderSchedule.js";
 import {
   createLoyaltyWaCommand,
   deleteLoyaltyWaCommandById,
@@ -20,6 +25,7 @@ import {
   getEventTrigger,
   getAllEventTriggers,
   deleteEventTrigger,
+  saveReminderSchedule,
 } from "./settings.service.js";
 import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
@@ -200,5 +206,66 @@ export async function deleteEventTriggerHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+/**
+ * Messages › Automatic: the merchant's words for one event, turned into the Meta template
+ * that event sends (created, edited in place, or versioned — see eventMessage.service).
+ */
+/**
+ * Reminders: when one scheduled occasion sends, and to whom.
+ *
+ * Upserts by (programId, eventType), which the unique index added with this feature makes
+ * safe — the old `findFirst`-then-update dance could race two rows for one occasion.
+ */
+export async function saveReminderHandler(
+  request: FastifyRequest<{ Params: EventMessageParamsInput; Body: ReminderBodyInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const programId = await requireProgramId(request, reply);
+    if (!programId) return;
+
+    if (!isScheduledEventType(request.params.eventType)) {
+      return reply.code(400).send({
+        error: `${request.params.eventType} is not a scheduled reminder — it fires on a transaction, so it has no schedule to set.`,
+      });
+    }
+
+    const trigger = await saveReminderSchedule({
+      programId,
+      eventType: request.params.eventType,
+      enabled: request.body.enabled,
+      triggerDays: request.body.triggerDays,
+      leadDays: request.body.leadDays,
+      sendHour: request.body.sendHour,
+      rewardId: request.body.rewardId,
+    });
+    reply.code(200).send(trigger);
+  } catch (e) {
+    log.error({ err: e }, "Error saving loyalty reminder schedule");
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Could not save the reminder" });
+  }
+}
+
+export async function saveEventMessageHandler(
+  request: FastifyRequest<{ Params: EventMessageParamsInput; Body: EventMessageBodyInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const programId = await requireProgramId(request, reply);
+    if (!programId) return;
+    const result = await saveEventMessage({
+      orgId: request.user.orgId,
+      programId,
+      eventType: request.params.eventType,
+      body: request.body.body,
+      enabled: request.body.enabled,
+    });
+    reply.code(200).send(result);
+  } catch (e) {
+    log.error({ err: e }, "Error saving loyalty event message");
+    reply.code(500).send({ error: e instanceof Error ? e.message : "Could not save the message" });
   }
 }

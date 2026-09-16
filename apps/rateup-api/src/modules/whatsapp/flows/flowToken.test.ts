@@ -27,6 +27,7 @@ describe("signFlowToken / verifyFlowToken", () => {
       campaignParticipantId: "cp-1",
       campaignParticipantDripStageId: "drip-1",
       tag: "vip",
+      feedbackRequestId: "fb-1",
     });
 
     expect(verifyFlowToken(token)).toMatchObject({
@@ -37,7 +38,15 @@ describe("signFlowToken / verifyFlowToken", () => {
       campaignParticipantId: "cp-1",
       campaignParticipantDripStageId: "drip-1",
       tag: "vip",
+      feedbackRequestId: "fb-1",
     });
+  });
+
+  test("leaves the feedback request out of the payload when there is none", () => {
+    const token = signFlowToken(CONTEXT);
+    const payload = JSON.parse(Buffer.from(token.split(".")[1]!, "base64url").toString("utf8"));
+    expect(payload).not.toHaveProperty("f");
+    expect(verifyFlowToken(token)?.feedbackRequestId).toBeUndefined();
   });
 
   test("defaults an absent language to the empty string the response carries", () => {

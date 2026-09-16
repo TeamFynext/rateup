@@ -1,11 +1,15 @@
 import { FastifyInstance } from "fastify";
 import {
+  lookupContactByPhoneHandler,
+  searchContactsForEnrolmentHandler,
   awardPointsHandler,
   createCustomerAccountHandler,
   exportCustomerAccountsHandler,
   getCustomerAccountByIdHandler,
   getCustomerAccountByContactHandler,
   getCustomerAccountByPhoneHandler,
+  getCustomerAccountByCardCodeHandler,
+  sendMemberCardHandler,
   getCustomerAccountsHandler,
   updateCustomerAccountHandler,
   assignRewardToCustomerHandler,
@@ -17,11 +21,13 @@ import {
   customerIdParamSchema,
   contactIdParamSchema,
   phoneNumberParamSchema,
+  cardCodeParamSchema,
   customerLoyaltyAccountUpdateSchema,
   awardPointsSchema,
   assignRewardSchema,
   shortCodeParamSchema,
   searchQuerySchema,
+  contactSearchQuerySchema,
 } from "./account.schema.js";
 
 export async function customerAccountRoutes(server: FastifyInstance) {
@@ -65,6 +71,31 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     getCustomerAccountByContactHandler,
   );
 
+  // Distinct from "/phone/:phoneNumber" below, which looks for an existing *member*.
+  // This answers "does the org already have a contact for this number", which is what
+  // the add-customer form needs before it knows whether to ask for a name.
+  server.get(
+    "/lookup/:phoneNumber",
+    {
+      schema: {
+        params: phoneNumberParamSchema,
+      },
+    },
+    lookupContactByPhoneHandler,
+  );
+
+  // The org's contacts — members flagged — so the cashier can enrol someone who already
+  // exists from a WhatsApp chat or an import without retyping their number.
+  server.get(
+    "/contacts",
+    {
+      schema: {
+        querystring: contactSearchQuerySchema,
+      },
+    },
+    searchContactsForEnrolmentHandler,
+  );
+
   server.get(
     "/phone/:phoneNumber",
     {
@@ -73,6 +104,28 @@ export async function customerAccountRoutes(server: FastifyInstance) {
       },
     },
     getCustomerAccountByPhoneHandler,
+  );
+
+  // The scanned member card. Same payload as "/phone/:phoneNumber", found by the code the
+  // QR carries instead of the number.
+  server.get(
+    "/card/:cardCode",
+    {
+      schema: {
+        params: cardCodeParamSchema,
+      },
+    },
+    getCustomerAccountByCardCodeHandler,
+  );
+
+  server.post(
+    "/:customerId/card/send",
+    {
+      schema: {
+        params: customerIdParamSchema,
+      },
+    },
+    sendMemberCardHandler,
   );
 
   server.put(

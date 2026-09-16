@@ -61,6 +61,9 @@ vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
   createCTAButtonMessage: vi.fn(() => ({ type: "cta" })),
   parseMessage: vi.fn(),
 }));
+vi.mock("../../loyalty/feedback/feedback.completion.js", () => ({
+  onFeedbackFlowCompleted: vi.fn(),
+}));
 vi.mock("../../../utils/commonUtils.js", () => ({
   getShortUrlId: vi.fn(() => "short-1"),
   shortIdUniqueConstraintErrHandler: vi.fn((fn) => fn()),

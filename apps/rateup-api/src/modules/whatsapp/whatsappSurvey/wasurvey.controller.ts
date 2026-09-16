@@ -124,8 +124,13 @@ import {
 } from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
-import { createCustomerAccount } from "../../loyalty/accounts/account.service.js";
+import {
+  createCustomerAccount,
+  releasePendingSignupBonusByPhone,
+} from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
+import { sendMemberCardIfDue } from "../../loyalty/accounts/memberCard.service.js";
+import { LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { notificationQueue, pausedAutomationQueue } from "../../../workers/bullmq/queues/index.js";
 import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
@@ -598,7 +603,27 @@ async function whatsappMessageHandler(
   log.trace("message => %s", message);
   const messageLowerCase =
     type === "text" || type === "interactive" ? message?.trim()?.toLocaleLowerCase() : "";
+  // A web self-signup is verified by the customer's first message. Released before the
+  // command lookup so a pending customer texting POINTS sees the bonus in the reply.
+  try {
+    await releasePendingSignupBonusByPhone(from, orgId);
+  } catch (e) {
+    log.error({ err: e }, "Error releasing a pending loyalty signup bonus");
+  }
   const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(orgId, message);
+  // A new member's first message opens the window their card can be sent in. The join and
+  // "card" paths send it themselves, so they are left alone here.
+  const sendsCardItself =
+    loyaltyWaCommand?.type === LoyaltyTemplateTypes.MemberCard ||
+    loyaltyWaCommand?.type === LoyaltyTemplateTypes.CustomerRegistration ||
+    parseWaJoinMessage(message)?.isJoin === true;
+  if (!sendsCardItself) {
+    try {
+      await sendMemberCardIfDue(from, orgId);
+    } catch (e) {
+      log.error({ err: e }, "Error sending a member card on first message");
+    }
+  }
   if (parsedMessage?.buttonId) {
     const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(from, parsedMessage, orgId);
     if (handledLoyaltyRedeem) {
@@ -678,7 +703,7 @@ async function whatsappMessageHandler(
   }
 
   if (loyaltyWaCommand) {
-    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId);
+    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId, sourceIdentifier);
   } else if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {

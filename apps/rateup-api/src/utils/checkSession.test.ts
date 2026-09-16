@@ -7,10 +7,12 @@ vi.mock("./logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 vi.mock("./auditLog.js", () => ({ auditLogHook: vi.fn() }));
+vi.mock("../modules/user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
 
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "./logger.js";
 import { auditLogHook } from "./auditLog.js";
+import { getOrgIdAndRole } from "../modules/user/user.service.js";
 import { checkSession } from "./checkSession.js";
 import { checkRoleHandler } from "./checkRoleHandler.js";
 
@@ -18,6 +20,7 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const getSessionMock = Session.getSession as unknown as Mock;
 const auditLogHookMock = auditLogHook as unknown as Mock;
+const getOrgIdAndRoleMock = getOrgIdAndRole as unknown as Mock;
 
 const TOKEN_PAYLOAD = { role: "SUPER_ADMIN", orgId: "org-1", email: "owner@acme.com" };
 
@@ -25,6 +28,7 @@ function makeSession(overrides: Record<string, unknown> = {}) {
   return {
     getUserId: () => "user-1",
     getAccessTokenPayload: () => TOKEN_PAYLOAD,
+    mergeIntoAccessTokenPayload: vi.fn(),
     ...overrides,
   };
 }
@@ -56,6 +60,7 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   getSessionMock.mockResolvedValue(makeSession());
+  getOrgIdAndRoleMock.mockResolvedValue(null);
 });
 
 describe("checkSession - a valid session", () => {
@@ -98,7 +103,7 @@ describe("checkSession - a valid session", () => {
     expect(auditLogHookMock).toHaveBeenCalledWith(request, reply);
   });
 
-  test("carries an incomplete token payload through as undefined fields", async () => {
+  test("leaves the identity fields undefined when the user belongs to no org", async () => {
     getSessionMock.mockResolvedValue(
       makeSession({ getAccessTokenPayload: () => ({ email: "owner@acme.com" }) }),
     );
@@ -112,6 +117,69 @@ describe("checkSession - a valid session", () => {
       orgId: undefined,
       email: "owner@acme.com",
     });
+  });
+
+  test("does not go looking for an org when the token already names one", async () => {
+    await checkSession(makeRequest(), makeReply());
+
+    expect(getOrgIdAndRoleMock).not.toHaveBeenCalled();
+  });
+});
+
+// A first sign-up creates the session before it creates the org, so the token it
+// issues names no org. Every request after that has to be able to recover it.
+describe("checkSession - a session issued before the org existed", () => {
+  const noOrgSession = () =>
+    makeSession({ getAccessTokenPayload: () => ({ email: "owner@acme.com" }) });
+
+  test("recovers the org from the user's membership", async () => {
+    getSessionMock.mockResolvedValue(noOrgSession());
+    getOrgIdAndRoleMock.mockResolvedValue({ orgId: "org-9", role: "SUPER_ADMIN" });
+    const request = makeRequest();
+
+    await checkSession(request, makeReply());
+
+    expect(request.user).toEqual({
+      userId: "user-1",
+      role: "SUPER_ADMIN",
+      orgId: "org-9",
+      email: "owner@acme.com",
+    });
+  });
+
+  test("writes it back to the token so the next request needs no lookup", async () => {
+    const session = noOrgSession();
+    getSessionMock.mockResolvedValue(session);
+    getOrgIdAndRoleMock.mockResolvedValue({ orgId: "org-9", role: "SUPER_ADMIN" });
+
+    await checkSession(makeRequest(), makeReply());
+
+    expect(session.mergeIntoAccessTokenPayload).toHaveBeenCalledWith({
+      orgId: "org-9",
+      role: "SUPER_ADMIN",
+    });
+  });
+
+  test("looks the membership up for the session's own user", async () => {
+    getSessionMock.mockResolvedValue(noOrgSession());
+    getOrgIdAndRoleMock.mockResolvedValue({ orgId: "org-9", role: "SUPER_ADMIN" });
+
+    await checkSession(makeRequest(), makeReply());
+
+    expect(getOrgIdAndRoleMock).toHaveBeenCalledWith({ id: "user-1" });
+  });
+
+  test("leaves the token alone when there is no membership to recover", async () => {
+    const session = noOrgSession();
+    getSessionMock.mockResolvedValue(session);
+    const reply = makeReply();
+
+    await checkSession(makeRequest(), reply);
+
+    expect(session.mergeIntoAccessTokenPayload).not.toHaveBeenCalled();
+    // Still a valid session - the feature gate, not this hook, decides what an
+    // org-less caller may reach.
+    expect(reply.code).not.toHaveBeenCalled();
   });
 });
 

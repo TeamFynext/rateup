@@ -8,6 +8,7 @@ import utc from "dayjs/plugin/utc.js";
 import prisma from "../../utils/prisma.js";
 import { randomCode } from "../../utils/misc/random.utils.js";
 import type { LoyaltyTier, Prisma } from "../../../generated/prisma/client.js";
+import { computeQualifyingSpend, pickQualifiedTier } from "./tiers/qualifyingSpend.js";
 import {
   EarningContext,
   PointsCalculationResult,
@@ -46,6 +47,7 @@ export class EarningRulesEngine {
       where: { id: customerId },
       include: {
         currentTier: true,
+        program: { select: { tiersEnabled: true } },
       },
     });
 
@@ -53,7 +55,14 @@ export class EarningRulesEngine {
       throw new Error("Customer not found");
     }
 
-    const tierMultiplier = customer.currentTier?.pointsMultiplier || 1.0;
+    // Turning tiers off has to stop tier earning, not just tier *promotion*. `currentTierId`
+    // is left in place when the flag flips (customers keep their standing if it is turned
+    // back on), so reading the multiplier unconditionally kept every existing tier member
+    // earning at their old rate forever — and made the giveback estimate, which assumes a
+    // flat rate when tiers are off, disagree with what was actually awarded.
+    const tierMultiplier = customer.program.tiersEnabled
+      ? customer.currentTier?.pointsMultiplier || 1.0
+      : 1.0;
 
     // 3. Find the first matching rule
     let matchedRule = null;
@@ -260,12 +269,19 @@ export class EarningRulesEngine {
   }
 
   /**
-   * Check if customer's tier should be upgraded based on total spend
+   * Check if customer's tier should change.
+   *
+   * `totalSpend` is the lifetime figure the caller already holds. When the programme judges
+   * tiers on a trailing window (`tierQualificationWindowMonths`), the spend inside that
+   * window is read from the ledger instead, and a member whose window has lapsed moves
+   * down. A lifetime ladder never moves anyone down: lifetime spend only grows, so a
+   * "down" there could only come from a manual placement, which this must not undo.
+   *
+   * Besides performing the move, reports where the customer now sits and how far the
+   * next tier is — the cashier receipt reads "Silver · ₹1,180 to Gold" from this, so no
+   * caller has to reload the tier table.
    */
-  async checkAndUpgradeTier(
-    customerId: string,
-    totalSpend: number,
-  ): Promise<{ upgraded: boolean; direction: TierMoveDirection; newTier?: LoyaltyTier }> {
+  async checkAndUpgradeTier(customerId: string, totalSpend: number): Promise<TierCheckResult> {
     const customer = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: customerId },
       include: {
@@ -283,21 +299,48 @@ export class EarningRulesEngine {
     });
 
     if (!customer?.program.tiersEnabled) {
-      return { upgraded: false, direction: "none" };
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer?.currentTier ?? null,
+        nextTier: null,
+        amountToNext: null,
+      };
     }
 
-    // Find the highest tier that the customer qualifies for
-    const qualifiedTier = customer.program.tiers.find(
-      (tier) => totalSpend >= Number(tier.threshold),
-    );
+    const tiers = customer.program.tiers;
+    const windowMonths = customer.program.tierQualificationWindowMonths;
+    const spend =
+      windowMonths === null
+        ? totalSpend
+        : await computeQualifyingSpend(customerId, customer.program.id, windowMonths);
+
+    // Tiers arrive highest threshold first; the next tier is the lowest one still above
+    // the customer's spend.
+    const nextTier = [...tiers].reverse().find((tier) => Number(tier.threshold) > spend) ?? null;
+    const amountToNext = nextTier ? Number(nextTier.threshold) - spend : null;
+
+    const qualifiedTier = pickQualifiedTier(tiers, spend);
 
     if (!qualifiedTier) {
-      return { upgraded: false, direction: "none" };
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer.currentTier,
+        nextTier,
+        amountToNext,
+      };
     }
 
     // Check if it's a different tier
     if (customer.currentTierId === qualifiedTier.id) {
-      return { upgraded: false, direction: "none" };
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer.currentTier,
+        nextTier,
+        amountToNext,
+      };
     }
 
     const direction: TierMoveDirection = !customer.currentTier
@@ -306,6 +349,16 @@ export class EarningRulesEngine {
         ? "up"
         : "down";
 
+    if (direction === "down" && windowMonths === null) {
+      return {
+        upgraded: false,
+        direction: "none",
+        currentTier: customer.currentTier,
+        nextTier,
+        amountToNext,
+      };
+    }
+
     await prisma.customerLoyaltyAccount.update({
       where: { id: customerId },
       data: {
@@ -313,7 +366,14 @@ export class EarningRulesEngine {
       },
     });
 
-    return { upgraded: direction === "up", direction, newTier: qualifiedTier };
+    return {
+      upgraded: direction === "up",
+      direction,
+      newTier: qualifiedTier,
+      currentTier: qualifiedTier,
+      nextTier,
+      amountToNext,
+    };
   }
 
   async generateReferralCode(customerName: string, _customerPhone: string): Promise<string> {
@@ -335,6 +395,19 @@ export class EarningRulesEngine {
 }
 
 export type TierMoveDirection = "up" | "down" | "none";
+
+export interface TierCheckResult {
+  upgraded: boolean;
+  direction: TierMoveDirection;
+  /** Set only when the customer actually moved. */
+  newTier?: LoyaltyTier;
+  /** Where the customer sits after the check. */
+  currentTier: LoyaltyTier | null;
+  /** The lowest tier still above the customer's spend; null at the top or with tiers off. */
+  nextTier: LoyaltyTier | null;
+  /** Spend still needed to reach `nextTier`. */
+  amountToNext: number | null;
+}
 
 /** How many times to redraw a referral code before giving up. */
 const CODE_ATTEMPTS = 5;

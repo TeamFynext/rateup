@@ -30,10 +30,18 @@ export const SCHEDULED_JOBS = [
   { id: "hourlyJobs", pattern: "0 * * * *" },
   { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },
-  { id: "loyaltyBirthdayCheck", pattern: "0 0 * * *" }, // Every day at 12:00 AM
-  { id: "loyaltyPointsExpiration", pattern: "0 1 * * *" }, // Every day at 1:00 AM
-  { id: "loyaltyInactivityCheck", pattern: "0 2 * * *" }, // Every day at 2:00 AM
-  { id: "loyaltyPointsExpiryAlerts", pattern: "0 3 * * *" }, // Every day at 3:00 AM
+  // Expired partner-API replay records. They hold nothing but a stored response and are
+  // only useful for 24 hours; the durable idempotency guarantee is the ledger's own key.
+  { id: "externalIdempotencySweep", pattern: "15 3 * * *" },
+  // One hourly sweep for every scheduled loyalty reminder, replacing four daily jobs that
+  // pinned no timezone and so fired at this container's midnight. Each occasion asks
+  // whether the hour its programme chose has struck in the programme's own zone, which a
+  // daily job could not express at all. Pinned to UTC so the wake-up times are the same on
+  // every deployment; the per-programme zone is applied inside.
+  { id: "loyaltyReminderSweep", pattern: "0 * * * *", tz: "Etc/UTC" },
+  // Programmes that judge tiers on a trailing window: a member whose spend has lapsed is
+  // only ever re-checked when they buy, so this sweep is what moves the quiet ones.
+  { id: "loyaltyTierReevaluation", pattern: "30 2 * * *" }, // Every day at 2:30 AM
   { id: "inboxAutomation", pattern: "0 * * * *" }, // Every hour
   // Hourly, at :20. A dropped payment webhook leaves a paying customer's expiresAt in
   // the past, which the 4:00 AM downgrade below would then act on — so this has to get

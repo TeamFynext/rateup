@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("./redisConnection.js", () => ({
   default: { incr: vi.fn(), expire: vi.fn() },
@@ -102,5 +102,57 @@ describe("rateLimit", () => {
     await limiter({ ip: undefined } as any, reply());
 
     expect(redis.incr).toHaveBeenCalledWith("ratelimit:demo:unknown");
+  });
+});
+
+describe("rateLimit — keyed on something other than the address", () => {
+  const byOrg = rateLimit<any>({
+    max: 3,
+    windowSeconds: 60,
+    key: "signupOrg",
+    keyFrom: (req) => req.body?.orgId,
+  });
+
+  test("buckets on the derived key", async () => {
+    await byOrg({ ip: "198.51.100.7", body: { orgId: "org-1" } }, reply());
+
+    expect(redis.incr).toHaveBeenCalledWith("ratelimit:signupOrg:org-1");
+  });
+
+  test("skips the limiter entirely when the key cannot be derived", async () => {
+    const rep = reply();
+
+    await byOrg({ ip: "198.51.100.7", body: {} }, rep);
+
+    expect(redis.incr).not.toHaveBeenCalled();
+    expect(rep.status).not.toHaveBeenCalled();
+  });
+});
+
+describe("rateLimit — when Redis is down", () => {
+  const closed = rateLimit({ max: 3, windowSeconds: 60, key: "signup", failClosed: true });
+
+  afterEach(() => {
+    delete process.env.RATE_LIMIT_FAIL_CLOSED_DISABLED;
+  });
+
+  test("a fail-closed limiter refuses with a 503 instead of letting the burst through", async () => {
+    redis.incr.mockRejectedValue(new Error("redis is down"));
+    const rep = reply();
+
+    await closed(request(), rep);
+
+    expect(rep.status).toHaveBeenCalledWith(503);
+    expect(rep.send.mock.calls[0][0]).toMatchObject({ success: false });
+  });
+
+  test("the emergency override turns a fail-closed limiter back into fail-open", async () => {
+    process.env.RATE_LIMIT_FAIL_CLOSED_DISABLED = "true";
+    redis.incr.mockRejectedValue(new Error("redis is down"));
+    const rep = reply();
+
+    await closed(request(), rep);
+
+    expect(rep.status).not.toHaveBeenCalled();
   });
 });

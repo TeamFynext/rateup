@@ -36,14 +36,11 @@ import {
 import { ContactGroupType, Prisma } from "../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import { createLCustomer, handlePostRegisterAction, handleSendTemplate } from "./contact.utils.js";
-import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../types/enums.js";
-import {
-  getLoyaltyWaCommandByType,
-  replacedContentByDynamicVariable,
-  richTextToPlainText,
-} from "../loyalty/settings/settings.service.js";
-import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { createLCustomer, handlePostRegisterAction } from "./contact.utils.js";
+import { LoyaltyTemplateTypes } from "../../types/enums.js";
+import { programPrefersTextInSession, sendLoyaltyMessage } from "../loyalty/loyaltyMessaging.js";
+import { getLoyaltyWaCommandByType } from "../loyalty/settings/settings.service.js";
+import { renderReplyText } from "../loyalty/richText.js";
 import prisma from "../../utils/prisma.js";
 import {
   getSpreadsheetContentType,
@@ -93,23 +90,21 @@ export async function createContactHandler(
         if (!contact.phone) {
           throw new Error(`Newly created contact ${contact.id} has no phone number`);
         }
-        const { responseType, waTemplateId, content } = loyaltyWaCommand;
+        const { waTemplateId, content } = loyaltyWaCommand;
         // `name` is nullable on Contact; it is passed through as-is, exactly as
         // it always has been.
         const dynamicVariables = [contact.name!];
-        if (responseType === WaAutomatedReplyResponseType.Template)
-          await handleSendTemplate(waTemplateId, orgId, contact.phone, dynamicVariables);
-        else if (responseType === WaAutomatedReplyResponseType.Text) {
-          const message = replacedContentByDynamicVariable(content, dynamicVariables);
-          await sendTextMessage(
-            {
-              phone: contact.phone,
-              orgId,
-            },
-            null,
-            richTextToPlainText(message),
-          );
-        }
+        // A customer registered here (till, dashboard, Zapier) has usually never
+        // messaged us, so only the template reaches them; the reply's text is used
+        // when a window happens to be open.
+        await sendLoyaltyMessage({
+          orgId,
+          phone: contact.phone,
+          waTemplateId,
+          params: dynamicVariables,
+          textFallback: renderReplyText(content, dynamicVariables),
+          preferTextInSession: await programPrefersTextInSession(orgId),
+        });
       }
       await handlePostRegisterAction(orgId, contact.id);
     } else {

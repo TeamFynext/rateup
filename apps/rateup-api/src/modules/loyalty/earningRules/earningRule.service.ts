@@ -10,7 +10,8 @@ export async function createLoyaltyEarningRule(data: LoyaltyEarningRuleInput, pr
       status: data.status,
       priority: data.priority,
       pointsPerUnit: data.pointsPerUnit,
-      multiplier: data.multiplier,
+      // The default rule is the base rate itself; a multiplier on it is the rate in disguise.
+      multiplier: data.isDefault ? 1 : data.multiplier,
       bonusPoints: data.bonusPoints,
       minPurchaseAmount: data.minPurchaseAmount,
       maxPurchaseAmount: data.maxPurchaseAmount,
@@ -62,7 +63,8 @@ export async function updateLoyaltyEarningRule(
 ) {
   return await prisma.loyaltyEarningRule.update({
     where: { id: ruleId },
-    data,
+    // The default rule is the base rate itself; a multiplier on it is the rate in disguise.
+    data: data.isDefault ? { ...data, multiplier: 1 } : data,
   });
 }
 

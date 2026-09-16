@@ -1,314 +1,494 @@
 import prisma from "../../../utils/prisma.js";
+import { calculateGiveback, toFiniteNumber } from "../giveback.js";
+import { buildGivebackInput } from "../giveback/giveback.service.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
+import {
+  bucketIndexForDay,
+  periodKeyFromDays,
+  resolvePeriod,
+  type DashboardPeriodKey,
+  type ResolvedPeriod,
+} from "./dashboard.period.js";
+import type { DashboardQuery, LoyaltyDashboardResponse } from "./dashboard.schema.js";
 
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+/**
+ * The loyalty Overview. Every metric is measured over a selectable window and compared
+ * with the window of the same length just before it.
+ *
+ * Raw SQL is used where Prisma cannot express a FILTER or a JSON cast. Each statement
+ * starts with a `loyalty-dashboard:` comment so the tests can dispatch their `$queryRaw`
+ * mocks on it and so it is recognisable in `pg_stat_statements`. Counts and sums come
+ * back as bigint / Decimal / string; everything is read through `n()` before it reaches
+ * the response schema, which would 500 on a bigint.
+ */
 
-function calcChangePercent(current: number, previous: number): number | null {
+export interface DashboardOptions extends DashboardQuery {
+  /** Injectable clock for tests. */
+  now?: Date;
+}
+
+type Metric = LoyaltyDashboardResponse["metrics"]["newMembers"];
+type Rate = LoyaltyDashboardResponse["metrics"]["redemptionRate"];
+
+/** Percentage change to one decimal place; null when there is nothing to compare against. */
+export function calcChangePercent(current: number, previous: number): number | null {
   if (previous === 0) return null;
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
-function monthLabel(value: string | Date): string {
-  const date = new Date(value);
-  return `${MONTH_LABELS[date.getMonth()]} ${date.getFullYear()}`;
+function metric(current: number, previous: number): Metric {
+  return { current, previous, changePct: calcChangePercent(current, previous) };
 }
 
-export const getLoyaltyDashboardStats = async (orgId: string) => {
+/** A 0–100 ratio, null when the denominator is zero. */
+function ratio(numerator: number, denominator: number): number | null {
+  if (denominator === 0) return null;
+  return Math.round((numerator / denominator) * 1000) / 10;
+}
+
+function rate(current: number | null, previous: number | null): Rate {
+  return {
+    current,
+    previous,
+    changePct: current === null || previous === null ? null : calcChangePercent(current, previous),
+  };
+}
+
+/** Raw SQL hands back bigint for COUNT/SUM(int), Decimal or string for numeric. */
+function n(value: unknown): number {
+  if (value === null || value === undefined) return 0;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/* ── raw row shapes ─────────────────────────────────────────────────────────── */
+
+interface WindowRow {
+  is_current: boolean;
+  issued: unknown;
+  redeemed: unknown;
+  revenue: unknown;
+  active_members: unknown;
+}
+interface RepeatRow {
+  is_current: boolean;
+  buyers: unknown;
+  repeaters: unknown;
+}
+interface RedemptionsRow {
+  is_current: boolean;
+  n: unknown;
+}
+interface MembersRow {
+  total: unknown;
+  new_current: unknown;
+  new_previous: unknown;
+  total_at_period_start: unknown;
+}
+interface DayRow {
+  day: string;
+  issued?: unknown;
+  redeemed?: unknown;
+  joined?: unknown;
+}
+
+function byWindow<T extends { is_current: boolean }>(rows: T[]) {
+  return {
+    current: rows.find((r) => r.is_current === true),
+    previous: rows.find((r) => r.is_current === false),
+  };
+}
+
+const ACTION_LABEL: Record<string, string> = {
+  earn: "earned",
+  redeem: "redeemed",
+  adjust: "adjusted",
+  expire: "expired",
+  refund: "refunded",
+};
+
+/* ── the empty shape ────────────────────────────────────────────────────────── */
+
+function emptyResponse(period: ResolvedPeriod): LoyaltyDashboardResponse {
+  const zero = metric(0, 0);
+  const none = rate(null, null);
+  return {
+    programExists: false,
+    programId: null,
+    currencySymbol: null,
+    pointsName: null,
+    period: serialisePeriod(period),
+    metrics: {
+      totalMembers: 0,
+      newMembers: zero,
+      activeMembers: zero,
+      pointsIssued: zero,
+      pointsRedeemed: zero,
+      rewardsRedeemed: zero,
+      revenue: zero,
+      redemptionRate: none,
+      repeatVisitRate: { ...none, buyers: 0, repeaters: 0 },
+      actualGivebackPct: none,
+    },
+    revenue: { lifetimeTotalSpend: 0 },
+    giveback: { modelledPct: null, band: "unknown", pointValue: null },
+    liability: {
+      outstandingPoints: 0,
+      monetaryValue: null,
+      enablePointsExpiration: false,
+      pointsExpirationMonths: 0,
+    },
+    rewardsAffordability: {
+      cheapestRewardCost: null,
+      cheapestRewardName: null,
+      membersBelowCheapestReward: null,
+    },
+    timeline: [],
+    tierDistribution: [],
+    popularRewards: [],
+    recentActivity: [],
+  };
+}
+
+function serialisePeriod(period: ResolvedPeriod): LoyaltyDashboardResponse["period"] {
+  return {
+    key: period.key,
+    days: period.days,
+    granularity: period.granularity,
+    tz: period.tz,
+    current: {
+      start: period.current.start.toISOString(),
+      end: period.current.end.toISOString(),
+    },
+    previous: {
+      start: period.previous.start.toISOString(),
+      end: period.previous.end.toISOString(),
+    },
+    label: period.label,
+    comparisonLabel: period.comparisonLabel,
+  };
+}
+
+/* ── the stats ──────────────────────────────────────────────────────────────── */
+
+export const getLoyaltyDashboardStats = async (
+  orgId: string,
+  opts: DashboardOptions = {},
+): Promise<LoyaltyDashboardResponse> => {
+  const key: DashboardPeriodKey = opts.period ?? periodKeyFromDays(opts.days) ?? "30d";
+  const period = resolvePeriod(key, opts.now ?? new Date(), opts.tz ?? "UTC");
+
   const program = await getLoyaltyProgramByOrg(orgId);
+  if (!program) return emptyResponse(period);
 
-  if (!program) {
-    return {
-      programExists: false,
-      programId: null,
-      currencySymbol: null,
-      summary: {
-        totalMembers: 0,
-        totalMembersChange: null,
-        activeThisMonth: 0,
-        activeThisMonthChange: null,
-        pointsIssued: 0,
-        pointsIssuedChange: null,
-        rewardsRedeemed: 0,
-        rewardsRedeemedChange: null,
-      },
-      memberGrowth: [],
-      pointsActivity: [],
-      tierDistribution: [],
-      popularRewards: [],
-      recentActivity: [],
-    };
-  }
+  const programId = program.id;
+  const { tz } = period;
+  const curStart = period.current.start;
+  const curEnd = period.current.end;
+  const prevStart = period.previous.start;
 
-  const now = new Date();
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  // Cheapest priced reward, from the ACTIVE rewards the program query already loaded.
+  // Coupons and gifts sit at pointsCost 0 and are not bought with points.
+  const pricedRewards = program.rewards.filter((r) => r.pointsCost > 0);
+  const cheapest = pricedRewards.length
+    ? pricedRewards.reduce((a, b) => (b.pointsCost < a.pointsCost ? b : a))
+    : null;
 
   const [
-    totalMembers,
-    totalMembersLastMonth,
-    activeThisMonthRaw,
-    activeLastMonthRaw,
-    pointsIssuedThisMonth,
-    pointsIssuedLastMonth,
-    rewardsRedeemedThisMonth,
-    rewardsRedeemedLastMonth,
+    windowRows,
+    repeatRows,
+    redemptionRows,
+    memberRows,
+    txDayRows,
+    memberDayRows,
+    balances,
     tierBreakdown,
-    popularRewards,
-    rawMemberGrowth,
-    rawPointsActivity,
+    popularRaw,
     recentTransactions,
+    belowCheapest,
   ] = await Promise.all([
-    // 1. Total members
-    prisma.customerLoyaltyAccount.count({
-      where: { programId: program.id },
+    prisma.$queryRaw<WindowRow[]>`
+      /* loyalty-dashboard: windows */
+      WITH w AS (
+        SELECT t."accountId", t.points, t.source, t.metadata, t."purchaseAmount",
+               LOWER(t."transactionType") AS type,
+               (t."createdAt" >= ${curStart}::timestamptz) AS is_current
+        FROM "LoyaltyTransaction" t
+        WHERE t."programId" = ${programId}::uuid
+          AND t."createdAt" >= ${prevStart}::timestamptz
+          AND t."createdAt" <  ${curEnd}::timestamptz
+      )
+      SELECT is_current,
+        COALESCE(SUM(points)  FILTER (WHERE type = 'earn'), 0)                     AS issued,
+        COALESCE(SUM(-points) FILTER (WHERE type = 'redeem' AND points < 0), 0)    AS redeemed,
+        /* Revenue follows the typed column, so a cancelled order's negative reversal row
+           nets itself off instead of being reported as money the shop took. The JSON
+           fallback keeps rows written before that column existed counting. */
+        COALESCE(SUM(COALESCE("purchaseAmount",
+                              CASE WHEN jsonb_typeof(metadata->'purchaseAmount') = 'number'
+                                   THEN (metadata->>'purchaseAmount')::numeric END,
+                              0)), 0) AS revenue,
+        COUNT(DISTINCT "accountId")                                                AS active_members
+      FROM w GROUP BY is_current
+    `,
+
+    prisma.$queryRaw<RepeatRow[]>`
+      /* loyalty-dashboard: repeat */
+      WITH per_account AS (
+        SELECT (t."createdAt" >= ${curStart}::timestamptz) AS is_current, t."accountId", COUNT(*) AS visits
+        FROM "LoyaltyTransaction" t
+        WHERE t."programId" = ${programId}::uuid
+          AND LOWER(t."transactionType") = 'earn' AND t.source = 'purchase'
+          AND t."createdAt" >= ${prevStart}::timestamptz AND t."createdAt" < ${curEnd}::timestamptz
+        GROUP BY 1, 2
+      )
+      SELECT is_current, COUNT(*) AS buyers, COUNT(*) FILTER (WHERE visits >= 2) AS repeaters
+      FROM per_account GROUP BY is_current
+    `,
+
+    prisma.$queryRaw<RedemptionsRow[]>`
+      /* loyalty-dashboard: redemptions */
+      SELECT (r."createdAt" >= ${curStart}::timestamptz) AS is_current, COUNT(*) AS n
+      FROM "loyalty_redemptions" r
+      JOIN "CustomerLoyaltyAccount" a ON a.id = r."accountId"
+      WHERE a."programId" = ${programId}::uuid
+        AND r.status IN ('APPROVED', 'USED')
+        AND r."createdAt" >= ${prevStart}::timestamptz AND r."createdAt" < ${curEnd}::timestamptz
+      GROUP BY 1
+    `,
+
+    prisma.$queryRaw<MembersRow[]>`
+      /* loyalty-dashboard: members */
+      SELECT COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE "createdAt" >= ${curStart}::timestamptz)                                                AS new_current,
+        COUNT(*) FILTER (WHERE "createdAt" >= ${prevStart}::timestamptz AND "createdAt" < ${curStart}::timestamptz)    AS new_previous,
+        COUNT(*) FILTER (WHERE "createdAt" < ${curStart}::timestamptz)                                                 AS total_at_period_start
+      FROM "CustomerLoyaltyAccount" WHERE "programId" = ${programId}::uuid
+    `,
+
+    // Per local calendar day; bucketed into weeks or months in JS so the SQL stays
+    // portable (no date_bin) and the day boundary follows the caller's zone.
+    prisma.$queryRaw<DayRow[]>`
+      /* loyalty-dashboard: tx-days */
+      SELECT to_char(t."createdAt" AT TIME ZONE ${tz}, 'YYYY-MM-DD') AS day,
+        COALESCE(SUM(t.points)  FILTER (WHERE LOWER(t."transactionType") = 'earn'), 0)                  AS issued,
+        COALESCE(SUM(-t.points) FILTER (WHERE LOWER(t."transactionType") = 'redeem' AND t.points < 0), 0) AS redeemed
+      FROM "LoyaltyTransaction" t
+      WHERE t."programId" = ${programId}::uuid
+        AND t."createdAt" >= ${curStart}::timestamptz AND t."createdAt" < ${curEnd}::timestamptz
+      GROUP BY 1 ORDER BY 1
+    `,
+
+    prisma.$queryRaw<DayRow[]>`
+      /* loyalty-dashboard: member-days */
+      SELECT to_char("createdAt" AT TIME ZONE ${tz}, 'YYYY-MM-DD') AS day, COUNT(*) AS joined
+      FROM "CustomerLoyaltyAccount"
+      WHERE "programId" = ${programId}::uuid
+        AND "createdAt" >= ${curStart}::timestamptz AND "createdAt" < ${curEnd}::timestamptz
+      GROUP BY 1 ORDER BY 1
+    `,
+
+    prisma.customerLoyaltyAccount.aggregate({
+      _sum: { currentPoints: true, totalSpend: true },
+      where: { programId },
     }),
 
-    // 2. Total members as of end of last month (for change %)
-    prisma.customerLoyaltyAccount.count({
-      where: { programId: program.id, createdAt: { lt: thisMonthStart } },
-    }),
-
-    // 3. Active this month: distinct accounts with transactions this month
-    prisma.loyaltyTransaction.groupBy({
-      by: ["accountId"],
-      where: { programId: program.id, createdAt: { gte: thisMonthStart } },
-    }),
-
-    // 4. Active last month
-    prisma.loyaltyTransaction.groupBy({
-      by: ["accountId"],
-      where: {
-        programId: program.id,
-        createdAt: { gte: lastMonthStart, lt: thisMonthStart },
-      },
-    }),
-
-    // 5. Points issued this month
-    prisma.loyaltyTransaction.aggregate({
-      _sum: { points: true },
-      where: {
-        programId: program.id,
-        transactionType: "earn",
-        createdAt: { gte: thisMonthStart },
-      },
-    }),
-
-    // 6. Points issued last month
-    prisma.loyaltyTransaction.aggregate({
-      _sum: { points: true },
-      where: {
-        programId: program.id,
-        transactionType: "earn",
-        createdAt: { gte: lastMonthStart, lt: thisMonthStart },
-      },
-    }),
-
-    // 7. Rewards redeemed this month
-    prisma.loyaltyRedemption.count({
-      where: {
-        account: { programId: program.id },
-        createdAt: { gte: thisMonthStart },
-      },
-    }),
-
-    // 8. Rewards redeemed last month
-    prisma.loyaltyRedemption.count({
-      where: {
-        account: { programId: program.id },
-        createdAt: { gte: lastMonthStart, lt: thisMonthStart },
-      },
-    }),
-
-    // 9. Tier distribution
     prisma.customerLoyaltyAccount.groupBy({
       by: ["currentTierId"],
       _count: true,
-      where: { programId: program.id },
+      where: { programId },
     }),
 
-    // 10. Top 5 redeemed rewards
+    // Completed redemptions in the window. PENDING / REJECTED / CANCELLED are not
+    // "popular", they are noise.
     prisma.loyaltyRedemption.groupBy({
       by: ["rewardId"],
       _count: { rewardId: true },
-      where: { reward: { programId: program.id } },
+      where: {
+        reward: { programId },
+        status: { in: ["APPROVED", "USED"] },
+        createdAt: { gte: curStart, lt: curEnd },
+      },
       orderBy: { _count: { rewardId: "desc" } },
       take: 5,
     }),
 
-    // 11. Monthly member growth (last 6 months, cumulative total + active per month)
-    prisma.$queryRaw`
-      WITH months AS (
-        SELECT generate_series(
-          DATE_TRUNC('month', ${sixMonthsAgo}::timestamptz),
-          DATE_TRUNC('month', ${now}::timestamptz),
-          '1 month'::interval
-        ) AS month
-      ),
-      active_by_month AS (
-        SELECT
-          DATE_TRUNC('month', "createdAt") AS tx_month,
-          COUNT(DISTINCT "accountId") AS active_count
-        FROM "LoyaltyTransaction"
-        WHERE "programId" = ${program.id}::uuid
-          AND "createdAt" >= ${sixMonthsAgo}::timestamptz
-        GROUP BY 1
-      )
-      SELECT
-        m.month,
-        (
-          SELECT COUNT(*) FROM "CustomerLoyaltyAccount"
-          WHERE "programId" = ${program.id}::uuid
-            AND "createdAt" < m.month + '1 month'::interval
-        ) AS total_members,
-        COALESCE(a.active_count, 0) AS active_members
-      FROM months m
-      LEFT JOIN active_by_month a ON a.tx_month = m.month
-      ORDER BY m.month ASC
-    `,
-
-    // 12. Monthly points activity (last 6 months)
-    prisma.$queryRaw`
-      WITH months AS (
-        SELECT generate_series(
-          DATE_TRUNC('month', ${sixMonthsAgo}::timestamptz),
-          DATE_TRUNC('month', ${now}::timestamptz),
-          '1 month'::interval
-        ) AS month
-      )
-      SELECT
-        m.month,
-        COALESCE(SUM(CASE WHEN LOWER(t."transactionType") = 'earn' THEN t.points ELSE 0 END), 0) AS issued,
-        COALESCE(SUM(CASE WHEN LOWER(t."transactionType") = 'redeem' THEN ABS(t.points) ELSE 0 END), 0) AS redeemed
-      FROM months m
-      LEFT JOIN "LoyaltyTransaction" t
-        ON t."programId" = ${program.id}::uuid
-        AND t."createdAt" >= m.month
-        AND t."createdAt" < m.month + '1 month'::interval
-      GROUP BY m.month
-      ORDER BY m.month ASC
-    `,
-
-    // 13. Recent activity (last 5 transactions with contact name)
     prisma.loyaltyTransaction.findMany({
-      where: { programId: program.id },
+      where: { programId },
       orderBy: { createdAt: "desc" },
       take: 5,
       include: {
-        account: {
-          include: {
-            contact: { select: { name: true } },
-          },
-        },
+        account: { include: { contact: { select: { name: true } } } },
         reward: { select: { name: true } },
       },
     }),
+
+    cheapest
+      ? prisma.customerLoyaltyAccount.count({
+          where: { programId, currentPoints: { lt: cheapest.pointsCost } },
+        })
+      : Promise.resolve(null),
   ]);
 
-  // Process tier distribution
-  const tierDistribution = tierBreakdown.map((t) => {
-    const tier = program.tiers.find((pt) => pt.id === t.currentTierId);
-    return {
-      name: tier?.name || "No Tier",
-      value: t._count,
-    };
-  });
+  /* ── giveback (no query: the program row already carries rules, rewards, tiers) ── */
+  const defaultRule = program.earningRules.find((r) => r.isDefault) ?? null;
+  const giveback = calculateGiveback(
+    buildGivebackInput(program, defaultRule, program.rewards, program.tiers),
+  );
+  const pointValue = giveback.pointValue;
 
-  // Process popular rewards – fetch name + pointsCost
-  const rewardIds = popularRewards.map((r) => r.rewardId);
-  const rewardsDetails = await prisma.loyaltyReward.findMany({
-    where: { id: { in: rewardIds } },
-    select: { id: true, name: true, pointsCost: true },
-  });
+  /* ── windows ── */
+  const windows = byWindow(windowRows);
+  const issued = metric(n(windows.current?.issued), n(windows.previous?.issued));
+  const redeemed = metric(n(windows.current?.redeemed), n(windows.previous?.redeemed));
+  const revenue = metric(n(windows.current?.revenue), n(windows.previous?.revenue));
+  const active = metric(n(windows.current?.active_members), n(windows.previous?.active_members));
 
-  const popularRewardsWithDetails = popularRewards.map((r) => {
-    const details = rewardsDetails.find((d) => d.id === r.rewardId);
+  const repeat = byWindow(repeatRows);
+  const buyersNow = n(repeat.current?.buyers);
+  const repeatersNow = n(repeat.current?.repeaters);
+  const repeatVisitRate = {
+    ...rate(
+      ratio(repeatersNow, buyersNow),
+      ratio(n(repeat.previous?.repeaters), n(repeat.previous?.buyers)),
+    ),
+    buyers: buyersNow,
+    repeaters: repeatersNow,
+  };
+
+  const redemptions = byWindow(redemptionRows);
+  const rewardsRedeemed = metric(n(redemptions.current?.n), n(redemptions.previous?.n));
+
+  const members = memberRows[0];
+  const totalMembers = n(members?.total);
+  const newMembers = metric(n(members?.new_current), n(members?.new_previous));
+
+  const givebackValue = (points: number, rev: number) =>
+    pointValue ? ratio(points * pointValue.best, rev) : null;
+  const actualGivebackPct = rate(
+    givebackValue(redeemed.current, revenue.current),
+    givebackValue(redeemed.previous, revenue.previous),
+  );
+
+  /* ── timeline ── */
+  const timeline = period.buckets.map((bucket) => ({
+    start: bucket.start.toISOString(),
+    label: bucket.label,
+    issued: 0,
+    redeemed: 0,
+    members: 0,
+    newMembers: 0,
+  }));
+  for (const row of txDayRows) {
+    const i = bucketIndexForDay(period, row.day);
+    if (i < 0) continue;
+    timeline[i].issued += n(row.issued);
+    timeline[i].redeemed += n(row.redeemed);
+  }
+  for (const row of memberDayRows) {
+    const i = bucketIndexForDay(period, row.day);
+    if (i < 0) continue;
+    timeline[i].newMembers += n(row.joined);
+  }
+  let running = n(members?.total_at_period_start);
+  for (const bucket of timeline) {
+    running += bucket.newMembers;
+    bucket.members = running;
+  }
+
+  /* ── tiers: every configured tier, including empty ones, then the untiered bucket ── */
+  const countByTier = new Map(tierBreakdown.map((t) => [t.currentTierId, t._count]));
+  const tierDistribution: LoyaltyDashboardResponse["tierDistribution"] = program.tiers.map(
+    (tier) => ({
+      id: tier.id,
+      name: tier.name,
+      value: countByTier.get(tier.id) ?? 0,
+      threshold: toFiniteNumber(tier.threshold),
+      pointsMultiplier: toFiniteNumber(tier.pointsMultiplier, 1),
+      color: tier.color,
+    }),
+  );
+  const untiered = countByTier.get(null);
+  if (untiered) {
+    tierDistribution.push({
+      id: null,
+      name: "No Tier",
+      value: untiered,
+      threshold: null,
+      pointsMultiplier: null,
+      color: null,
+    });
+  }
+
+  /* ── popular rewards: names from the loaded catalogue, one lookup only for retired rows ── */
+  const knownRewards = new Map(program.rewards.map((r) => [r.id, r]));
+  const missingIds = popularRaw.map((r) => r.rewardId).filter((id) => !knownRewards.has(id));
+  const retired = missingIds.length
+    ? await prisma.loyaltyReward.findMany({
+        where: { id: { in: missingIds } },
+        select: { id: true, name: true, pointsCost: true },
+      })
+    : [];
+  for (const reward of retired) knownRewards.set(reward.id, { ...reward } as never);
+  const popularRewards = popularRaw.map((r) => {
+    const details = knownRewards.get(r.rewardId);
     return {
       id: r.rewardId,
-      name: details?.name || "Unknown Reward",
-      pointsCost: details?.pointsCost || 0,
+      name: details?.name ?? "Unknown Reward",
+      pointsCost: details?.pointsCost ?? 0,
       redeemed: r._count.rewardId,
     };
   });
 
-  // Rows of the two monthly-rollup queries; counts come back as bigint/string from
-  // Postgres, so both are read through Number().
-  interface MemberGrowthRow {
-    month: string | Date;
-    total_members?: number | bigint | string | null;
-    active_members?: number | bigint | string | null;
-  }
-  interface PointsActivityRow {
-    month: string | Date;
-    issued?: number | bigint | string | null;
-    redeemed?: number | bigint | string | null;
-  }
-
-  const memberGrowth = (rawMemberGrowth as MemberGrowthRow[]).map((row) => ({
-    month: monthLabel(row.month),
-    members: Number(row.total_members || 0),
-    active: Number(row.active_members || 0),
-  }));
-
-  // Process monthly points activity
-  const pointsActivity = (rawPointsActivity as PointsActivityRow[]).map((row) => ({
-    month: monthLabel(row.month),
-    issued: Number(row.issued || 0),
-    redeemed: Number(row.redeemed || 0),
-  }));
-
-  // Process recent activity
-  const actionMap: Record<string, string> = {
-    earn: "earned",
-    redeem: "redeemed",
-    adjust: "adjusted",
-    expire: "expired",
-    refund: "refunded",
-  };
   const recentActivity = recentTransactions.map((t) => ({
     user: t.account.contact.name || "Unknown",
-    action: actionMap[t.transactionType?.toLowerCase()] ?? t.transactionType,
+    action: ACTION_LABEL[t.transactionType?.toLowerCase()] ?? t.transactionType,
     item: t.reward?.name ?? t.description ?? t.source,
     points: t.points,
-    createdAt: t.createdAt,
+    createdAt: t.createdAt.toISOString(),
   }));
 
-  const activeThisMonth = activeThisMonthRaw.length;
-  const activeLastMonth = activeLastMonthRaw.length;
-  const pointsIssuedCurrent = pointsIssuedThisMonth._sum.points ?? 0;
-  const pointsIssuedPrev = pointsIssuedLastMonth._sum.points ?? 0;
+  const outstandingPoints = balances._sum.currentPoints ?? 0;
 
   return {
     programExists: true,
-    programId: program.id,
+    programId,
     currencySymbol: program.currencySymbol,
-    summary: {
+    pointsName: program.currencyName,
+    period: serialisePeriod(period),
+    metrics: {
       totalMembers,
-      totalMembersChange: calcChangePercent(totalMembers, totalMembersLastMonth),
-      activeThisMonth,
-      activeThisMonthChange: calcChangePercent(activeThisMonth, activeLastMonth),
-      pointsIssued: pointsIssuedCurrent,
-      pointsIssuedChange: calcChangePercent(pointsIssuedCurrent, pointsIssuedPrev),
-      rewardsRedeemed: rewardsRedeemedThisMonth,
-      rewardsRedeemedChange: calcChangePercent(rewardsRedeemedThisMonth, rewardsRedeemedLastMonth),
+      newMembers,
+      activeMembers: active,
+      pointsIssued: issued,
+      pointsRedeemed: redeemed,
+      rewardsRedeemed,
+      revenue,
+      redemptionRate: rate(
+        ratio(redeemed.current, issued.current),
+        ratio(redeemed.previous, issued.previous),
+      ),
+      repeatVisitRate,
+      actualGivebackPct,
     },
-    memberGrowth,
-    pointsActivity,
+    revenue: { lifetimeTotalSpend: toFiniteNumber(balances._sum.totalSpend) },
+    giveback: { modelledPct: giveback.givebackPct, band: giveback.band, pointValue },
+    liability: {
+      outstandingPoints,
+      monetaryValue: pointValue
+        ? Math.round(outstandingPoints * pointValue.best * 100) / 100
+        : null,
+      enablePointsExpiration: program.enablePointsExpiration,
+      pointsExpirationMonths: program.pointsExpirationMonths,
+    },
+    rewardsAffordability: {
+      cheapestRewardCost: cheapest?.pointsCost ?? null,
+      cheapestRewardName: cheapest?.name ?? null,
+      membersBelowCheapestReward: belowCheapest,
+    },
+    timeline,
     tierDistribution,
-    popularRewards: popularRewardsWithDetails,
+    popularRewards,
     recentActivity,
   };
 };
