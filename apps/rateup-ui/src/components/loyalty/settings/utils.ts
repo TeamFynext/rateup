@@ -6,6 +6,7 @@ export enum LoyaltyTemplateTypes {
   Referral = "Referral",
   CustomerRemoval = "CustomerRemoval",
   RewardsIssued = "RewardsIssued",
+  MemberCard = "MemberCard",
   PointsIssued = "PointsIssued",
   PointsAdjusted = "PointsAdjusted",
   RewardIssued = "RewardIssued",

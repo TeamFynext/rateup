@@ -113,13 +113,19 @@ export interface LoyaltyRewardValue {
   rewardType?: string;
 }
 
+/**
+ * "review": granted once per customer who taps the Google review link after the loyalty
+ * feedback flow. Costs no points and is never bought — managed under Loyalty › Feedback.
+ */
+export type LoyaltyRewardType = "point" | "coupon" | "assigned" | "review";
+
 // Main reward interface matching backend response
 export interface LoyaltyReward {
   id: string;
   programId: string;
   name: string;
   description?: string | null;
-  rewardType: "point" | "coupon" | "assigned";
+  rewardType: LoyaltyRewardType;
   pointsCost: number;
   rewardValue: LoyaltyRewardValue;
   status: LoyaltyRewardStatus;
@@ -135,7 +141,7 @@ export interface LoyaltyReward {
 export interface LoyaltyRewardInput {
   name: string;
   description?: string | null;
-  rewardType: "point" | "coupon" | "assigned";
+  rewardType: LoyaltyRewardType;
   pointsCost: number;
   rewardValue: LoyaltyRewardValue;
   status?: LoyaltyRewardStatus;

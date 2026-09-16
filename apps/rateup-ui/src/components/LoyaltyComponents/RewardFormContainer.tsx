@@ -132,7 +132,7 @@ export function RewardFormContainer({
             {category === "point-rewards" && (
               <Button
                 type="submit"
-                className="flex-1 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                className="flex-1"
                 onClick={pointRewardForm.handleSubmit(onSubmitPointReward)}
                 disabled={isPending}
               >
@@ -144,7 +144,7 @@ export function RewardFormContainer({
             {category === "coupons" && (
               <Button
                 type="submit"
-                className="flex-1 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                className="flex-1"
                 onClick={couponForm.handleSubmit(onSubmitCoupon)}
                 disabled={isPending}
               >
@@ -156,7 +156,7 @@ export function RewardFormContainer({
             {category === "free-gifts" && (
               <Button
                 type="submit"
-                className="flex-1 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                className="flex-1"
                 onClick={giftForm.handleSubmit(onSubmitGift)}
                 disabled={isPending}
               >

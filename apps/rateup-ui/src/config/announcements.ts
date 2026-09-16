@@ -38,6 +38,164 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-12-loyalty-keyword-menu-chatbot",
+    title: "Turn your keyword replies into a tappable menu",
+    summary:
+      'Messages has a fourth tab, Chatbot. It builds a WhatsApp chatbot out of the keywords you already answer on Replies \u2014 one tappable row per keyword, with the description you gave it \u2014 and a rule so that texting one word ("menu" by default) brings the list up. Customers no longer have to know that POINTS or REFER are the magic words. The answers do not move: tapping a row sends that keyword, so the reply that comes back is the same live one they get by typing it, balance and referral code and current rewards included. The bot itself lands under WhatsApp \u203a Chatbot and is yours to edit in the flow editor afterwards \u2014 add a greeting before the menu, branch off it, whatever you like. Add or rename a keyword later and the tab says which rows are out of date, with a button that rewrites just the list and leaves your edits alone. A keyword longer than 24 characters cannot be a row and is called out rather than quietly shortened, because the row title is what triggers the reply.',
+    publishedAt: "2026-09-12",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/messages",
+      search: { tab: "chatbot" },
+      label: "Open Messages",
+    },
+  },
+  {
+    id: "2026-09-11-loyalty-message-opens-editor",
+    title: "Loyalty messages open straight in the template editor",
+    summary:
+      'On Messages \u203a Automatic, a message you have not written yet used to offer to design it: you picked a WhatsApp account in a dialog, a draft was written for you, and only then did the editor open. It now says "Open in WhatsApp template editor" and does exactly that \u2014 the editor opens on that message\'s suggested words, with the account picker it has always had, and nothing is saved until you press Save as draft or Save & Submit yourself. Two things follow. A message whose template you saved as a draft and never submitted now shows that draft on its card, with its words and its Draft badge, and the button opens the draft rather than starting again. And opening a message twice can no longer leave two templates in the library, which is what creating the draft up front did every time the editor was opened and closed.',
+    publishedAt: "2026-09-11",
+    kinds: ["improvement", "fix"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/messages",
+      search: { tab: "automatic" },
+      label: "Open Messages",
+    },
+  },
+  {
+    id: "2026-09-11-brochure-background-colour",
+    title: "Brochure: your photo in the header, any background",
+    summary:
+      "Two changes to the rewards brochure under Materials. On the menu card, your hero photo is now the background of the top section rather than a separate strip beneath it \u2014 the business name, the programme name and the tagline sit on the photo over a scrim built to keep them readable whatever the picture is, and a card with no photo still gets the flat brand band it always had. And the background is no longer one of eleven named papers: it is a colour picker. The eleven remain as swatches to start from, next to a colour wheel and a hex box, so a card can be any shade you like. What the card cannot do is become unreadable \u2014 the text and the accent colour are worked out from the background you choose rather than picked separately, so a dark card prints light type and gives up the brand accent that would disappear into it, and a pale one keeps dark type. A small sample under the picker shows the body text and the accent in the colour they will actually print. Brochures saved before today keep the exact paper they were designed with.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/materials",
+      search: { tab: "brochure" },
+      label: "Open Materials",
+    },
+  },
+  {
+    id: "2026-09-11-activity-customer-links",
+    title: "Open a customer from the Activity ledger",
+    summary:
+      "Every line on Loyalty \u2192 Activity names the customer it belongs to, and until now that name was a dead end \u2014 finding the person behind a redemption meant going to Customers and searching for them by hand. The name is now a link: it opens that member on the Customers page, the same view their own row there opens, with their points, tier, rewards and full history. A line with no phone number behind it stays plain text, since that view is found by number. The customer you have open is also part of the address now, so the page can be bookmarked, reloaded without dropping back to the list, and shared with a colleague, and the browser's back button returns you to where you came from instead of leaving the screen.",
+    publishedAt: "2026-09-11",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/activity", label: "Open Activity" },
+  },
+  {
+    id: "2026-09-10-loyalty-reminders",
+    title: "Reminders: choose when each one sends",
+    summary:
+      "The messages your programme sends on a schedule — a birthday, a customer who has gone quiet, points about to expire — have a page of their own under Loyalty \u2192 Reminders. Until now two of those settings were buried on the Messages page and the rest could not be changed at all. Each reminder is a card: switch it on, say how far ahead it should go, and pick the hour it sends at. That hour is read in your own time zone, which is new — reminders used to go out at midnight on our servers, so a venue several hours ahead had its birthday greetings arriving in the small hours. The warning before points expire was fixed at fourteen days and is now yours to set. A customer who has gone quiet is nudged once, and nudged again only if they come back and go quiet a second time; before, they were nudged again every month forever. Three occasions are new: a heads-up before a member loses their VIP tier while they can still keep it, a reminder before a reward they already claimed runs out of time, and a note on the anniversary of the day they joined. What each message says is still written in one place, on Messages \u2192 Automatic, and every card links straight to it.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "fix"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/reminders", label: "Open Reminders" },
+  },
+  {
+    id: "2026-09-10-flow-purpose-grid",
+    title: "Creating a Flow starts with what it is for",
+    summary:
+      "The Create Flow wizard used to open on a choice between Loyalty feedback and everything else, which gave one use case the same weight as all of Meta's categories put together. It now opens on the purposes themselves — sign up, sign in, appointment booking, lead generation, contact us, customer support, survey, loyalty feedback and other — as one grid, each with a line saying what it is for, and the purpose you pick is the flow's category. That means one fewer thing to fill in later: the Categories field is gone from the details step, since the tile already answered it. A flow now carries the single purpose you chose rather than a set of them, and the steps along the top show only the ones your purpose actually visits. Loyalty feedback is one tile among nine and still the only one that comes with ready-made questions for your kind of business, and Loyalty → Feedback opens the wizard with it already chosen. Flow cards now name the purpose the flow was created for instead of labelling everything \"Customer Engagement\". Looking at the loyalty surveys and then changing your mind no longer carries one of them into a flow that is not a survey, which the create step used to refuse.",
+    publishedAt: "2026-09-10",
+    kinds: ["improvement", "fix"],
+    area: "WhatsApp",
+    link: {
+      to: "/dashboard/whatsapp/flows",
+      search: { action: "create" },
+      label: "Create a Flow",
+    },
+  },
+  {
+    id: "2026-09-10-loyalty-feedback",
+    title: "Feedback: a WhatsApp survey after every visit",
+    summary:
+      "Creating a WhatsApp Flow now starts by asking what it is for. Choose Loyalty feedback and you get a ready-made survey for your kind of business — a restaurant asks about the overall experience, the food and the service; the retail, salon and gym templates ask what matters there — previewed screen by screen on a phone before you name it. Publish it from the editor, then open the new Feedback page under Loyalty and select it, along with the team whose Google review link to use. Submit to Meta, switch it on, and a set time after a customer earns points they get the survey; anyone who rates you well is asked to leave a Google review. A new Review reward, granted once to each customer who taps that link, can be created right there in Feedback and shows up read-only under Rewards. Results show how many were asked and answered, how many were happy, review-link taps and rewards granted, the average for each question, and every request with its rating and status.",
+    publishedAt: "2026-09-10",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/feedback", label: "Set up Feedback" },
+  },
+  {
+    id: "2026-09-10-rewards-per-tier-brochure-redesign",
+    title: "Rewards per tier, and a new brochure",
+    summary:
+      "With more than one tier above Member, the Rewards step in setup now shows a band for each — Rewards for everyone, then Silver and above, then Gold-only perks — each with its own Add button; a reward added into a band can be redeemed by that tier and every tier above it. The rewards brochure under Materials has been redrawn as a menu card: a slim band in your brand colour with your logo, business and programme names, a paper-white body, your earn rate as a stamped pill, and every reward as a menu line with a dotted leader to its points. Rewards a tier unlocks print under a labelled rule in that tier's colour, and the editor marks them with the tier's name beside the points.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: {
+      to: "/dashboard/loyalty/materials",
+      search: { tab: "brochure" },
+      label: "Open the brochure",
+    },
+  },
+  {
+    id: "2026-09-10-loyalty-three-tiers",
+    title: "Loyalty tiers: up to three, with members re-placed on save",
+    summary:
+      "The Tiers step — in setup and under Program — now takes up to two tiers above Member, three in all. Add a tier above sets a sensible spend for the new rung; each tier has its own name, colour, spend, multiplier and perks, and any tier can be removed with the bin icon. The moment you save, every member is re-checked against the new ladder and moved to the tier their spend now earns: a raised threshold moves people down, a lowered one or a new rung in the middle moves them up, and the save message says how many went each way. Anyone promoted gets the usual WhatsApp tier message; demotions are quiet. One spend window still applies to the whole ladder.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", search: { section: "tiers" }, label: "Open Tiers" },
+  },
+  {
+    id: "2026-09-10-program-sections-full-editors",
+    title: "Program: every section opens its full editor",
+    summary:
+      "Opening a section on the Loyalty Program page now shows the whole editor for it, full width, with a single Back to Program button at the top — the breadcrumb and the side list of other sections are gone. Earning and Rewards open the complete editors directly, with time windows and tier restrictions on rules, and coupons, free gifts, limits and validity on rewards, instead of a short form with an open the full editor link at the bottom. Profile, VIP tier and Messages are unchanged apart from the new header.",
+    publishedAt: "2026-09-10",
+    kinds: ["improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
+  },
+  {
+    id: "2026-09-10-cashier-add-from-contacts",
+    title: "Cashier: add from contacts, birthday and gender",
+    summary:
+      "The cashier can now enrol someone you already have a number for. Add from contacts lists your contacts — from WhatsApp chats, imports and surveys — with a search over name, phone and email; anyone already in the programme is marked Member and opens at the counter instead of being registered twice. Picking a contact carries their name, number and any birthday you hold into the register form. That form also has two new optional fields, date of birth and gender, so a birthday reward has a date to fire on and you learn a little more about who joins. Neither field is required, and nothing already on the contact is overwritten.",
+    publishedAt: "2026-09-10",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/cashier", label: "Open the cashier" },
+  },
+  {
+    id: "2026-09-09-loyalty-materials",
+    title: "Loyalty Materials: QR card and rewards brochure",
+    summary:
+      "A new Materials page in Loyalty holds the print-ready pieces for your venue. The QR card is the counter card from setup — edit its headline, the promise in the coloured pill and the line under the code, and switch the hero photo on or off; the code itself opens WhatsApp with your join keyword ready to send. The brochure is new: a tall card in your brand colour with your photo and logo, the programme name, a tagline, your earn rate in plain words (₹1 spent = 1 point), and every point reward as a line — the points on the left, what the customer gets on the right — with a Terms & Conditions box at the foot. Tick which rewards go on it, rewrite any line, and download or print. Logo, colour and photo come from Program › Profile.",
+    publishedAt: "2026-09-09",
+    kinds: ["new"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/materials", label: "Open Materials" },
+  },
+  {
+    id: "2026-09-09-loyalty-onboarding-profile-launch",
+    title: "Loyalty setup: profile, VIP tier and a QR poster",
+    summary:
+      "The loyalty setup guide has been rebuilt around what a venue actually needs on day one. It opens with a two-minute Venue & Branding profile — pick your kind of business and every later step is seeded to suit it, then your business and programme names, a contact, currency and time zone, plus your logo, brand colour and a hero image, with a live preview of the card customers will see. Earning is now one rule: spend this, earn that, with the typical spend that drives every estimate edited right beside it. Tiers are a single VIP tier above Member: set the spend that unlocks it and the window it must happen in — spend ₹5,000 in 6 months, say — and list the perks; both tiers earn at the same rate, so VIP is about treatment, not a faster ladder. Rewards are split into two bands, for everyone and VIP-only, so a reward only VIPs can reach is one click. Messages are unchanged. Activation now ends with a printable QR poster — your hero, logo and colour, the join code, and powered by rateup.app at the foot — with Download, Print and Copy link; the same poster is one click from Settings. The public join page wears your branding too, and a web signup's joining points are held until the customer's first WhatsApp message or purchase, so bots gain nothing.",
+    publishedAt: "2026-09-09",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/onboarding", label: "Open setup" },
+  },
+  {
+    id: "2026-09-08-loyalty-onboarding-simplified",
+    title: "Simplified loyalty onboarding flow",
+    summary:
+      "Setting up a loyalty program used to mean piecing it together across eleven menu entries with no idea what good numbers look like. It is now a guided setup in six steps: pick your kind of business and it fills in points, tiers, rewards and WhatsApp messages tuned for it, saving as you go, with nothing reaching customers until you activate. Everything that defines what your program promises — basics, earning, tiers, rewards, messages — then lives on one Program page as five cards, each opening the same form the setup guide uses. Earning rules are written the way you would say them: spend ₹100, earn 10 points, with the rate underneath showing what that works out to per unit and what a typical purchase earns. Rewards get a picker with worked examples for all three kinds — something free, a percentage off, a flat amount off — priced against your earn rate, so a ₹150 coffee costs about 500 points rather than 5,000, and a Re-price from my earn rate button brings rewards you saved earlier back into line whenever you change the rate. Beside it a live cost estimate says what share of revenue your program gives back, tiers included, and warns when that is more than a typical margin can carry. Everything your program says on WhatsApp is one Messages page with three tabs — Automatic, Replies and Templates — where you write the words, press Save and it is submitted to Meta for you; the welcome reply can be written from the program you just built, each message says what WhatsApp fills into {{1}} and {{2}}, and inside a 24-hour chat the text goes out as a normal message rather than a template. The Loyalty menu is down from eleven entries to seven: the cashier opens on your recent customers and ends every action with a receipt showing the new balance, Transactions and Approvals are one Activity page with inline approve and reject, and a new Overview leads with what your program gives back, compares every number with the previous period and names the figure behind each thing it suggests you do next. Old links redirect.",
+    publishedAt: "2026-09-08",
+    kinds: ["new", "improvement", "fix"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/program", label: "Open Program" },
     id: "2026-09-15-campaign-auto-pause",
     title: "Campaigns pause when your account can't send",
     summary:

@@ -1,11 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { ApprovalsPage } from "@/components/dashboard/loyalty/approvals/ApprovalsPage.tsx";
+import { LOYALTY_PATHS } from "@/components/dashboard/loyalty/paths.ts";
 
+// Approvals became Activity › Pending. Kept so bookmarks and old links still land.
 export const Route = createFileRoute("/dashboard/loyalty/approvals/")({
-  component: RouteComponent,
+  beforeLoad: () => {
+    throw redirect({
+      to: LOYALTY_PATHS.activity,
+      search: { filter: "pending", page: 1 },
+      replace: true,
+    });
+  },
 });
-
-function RouteComponent() {
-  return <ApprovalsPage />;
-}

@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import type { FormElement } from "@/components/whatsapp/flow-v2/utils/store.ts";
+import type { FormElement, Screen } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import {
   FlowSheetShell,
   WhatsAppChatHeader,
@@ -27,12 +27,18 @@ import useFlowStoreV3 from "../utils/store.ts";
 
 /** Renders just the flow-sheet bottom-sheet content (header/elements/footer) for a screen, with no outer phone chrome. Reused by both the embedded mockup and the global phone simulator. */
 export function FlowScreenSheet() {
-  const { t: translations } = useTranslation();
   const { getCurrentScreen } = useFlowStoreV3();
+  return <FlowScreenSheetView screen={getCurrentScreen()} />;
+}
+
+/**
+ * The same sheet for a screen handed in directly — pure in `screen`, so a flow JSON that is
+ * not open in the editor (a ready-made draft, say) previews without the store.
+ */
+export function FlowScreenSheetView({ screen }: Readonly<{ screen: Screen | undefined }>) {
+  const { t: translations } = useTranslation();
   // Preview-only answers: a text value, a multi-select list, or a picked date.
   const [formData, setFormData] = useState<Record<string, string | string[] | Date | null>>({});
-
-  const screen = getCurrentScreen();
 
   useEffect(() => {
     // Reset form data when screen changes

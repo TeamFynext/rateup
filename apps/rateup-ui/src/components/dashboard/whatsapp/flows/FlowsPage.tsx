@@ -22,7 +22,8 @@ import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import CreateFlowModal from "@/components/whatsapp/flows/CreateFlowModal/CreateFlowModal.tsx";
+import { isFlowType } from "@/components/whatsapp/flows/CreateFlowWizard/createFlowWizard.steps.ts";
+import { CreateFlowWizard } from "@/components/whatsapp/flows/CreateFlowWizard/CreateFlowWizard.tsx";
 import FlowCardsList from "@/components/whatsapp/flows/FlowCardsList/index.tsx";
 import { SyncFlowsButton } from "@/components/whatsapp/flows/SyncFlows.tsx";
 
@@ -38,6 +39,9 @@ export function FlowsPage() {
   const [isCreateFlowModalOpened, setIsCreateFlowModalOpened] = useState(
     searchParams.action === "create",
   );
+  // `?for=` names a purpose to open the wizard on; ignored unless it is one we know, so a
+  // stale or hand-edited link falls back to the ordinary grid rather than breaking the step.
+  const initialFlowType = isFlowType(searchParams.for) ? searchParams.for : undefined;
 
   const { data: flows, isPending, isError, refetch } = useWaFlowsFromDb();
   const { data: waSettings, isPending: waSettingsPending } = useWaSettings();
@@ -73,18 +77,13 @@ export function FlowsPage() {
       <ListPage>
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
-            <Button onClick={handleCreateFlowModalOpen} disabled={!hasWaSettings || isLoading}>
+            {/* Not gated on a connected channel: the wizard is reachable before one
+                exists. The flow itself is still created on a WABA at Meta, so the
+                create call is what reports a missing channel. */}
+            <Button onClick={handleCreateFlowModalOpen} disabled={isLoading}>
               {translations("Create Flow")}
               <IconPlus size={16} className="ml-2" />
             </Button>
-            {!hasWaSettings && (
-              <Tooltip>
-                <TooltipTrigger render={<div />}></TooltipTrigger>
-                <TooltipContent>
-                  <p>{translations("Connect a WhatsApp number in settings to create a Flow")}</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
             <RefreshButton queryKeys={["flow", "db"]} />
           </ListPageHeaderSection>
 
@@ -136,7 +135,11 @@ export function FlowsPage() {
           </div>
         </ListPageContent>
       </ListPage>
-      <CreateFlowModal opened={isCreateFlowModalOpened} onClose={handleCreateFlowModalClose} />
+      <CreateFlowWizard
+        open={isCreateFlowModalOpened}
+        onClose={handleCreateFlowModalClose}
+        initialType={initialFlowType}
+      />
     </>
   );
 }

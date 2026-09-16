@@ -15,6 +15,7 @@ import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
+import type { LoyaltyNavInput } from "@/components/dashboard/loyalty/loyalty.nav.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -53,6 +54,7 @@ import {
 } from "@/components/ui/sidebar.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -60,7 +62,6 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import DocsButton from "./docs-button.tsx";
 import { useNavMain } from "./hooks.tsx";
 import { NavUser } from "./user-nav.tsx";
-import { WhatsAppSettingsModal } from "./utils.tsx";
 import WhatsNewButton from "./whats-new/WhatsNewButton.tsx";
 
 const sidebarIconProps = { className: "size-5!", strokeWidth: 1.75 };
@@ -298,6 +299,19 @@ function NavItemContent({
         {item.count != null && item.count > 0 && (
           <Badge variant="secondary" className="ml-auto tabular-nums" title={String(item.count)}>
             {countFormatter.format(item.count)}
+          </Badge>
+        )}
+        {item.badge && (
+          <Badge
+            variant="secondary"
+            className={cn(
+              "ml-auto",
+              item.badgeTone === "success" && "bg-green-600/10 text-green-700 dark:text-green-500",
+              item.badgeTone === "warning" &&
+                "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
+            )}
+          >
+            {item.badge}
           </Badge>
         )}
         {chevron}
@@ -587,6 +601,7 @@ export default function AppSidebar({
   teams,
   pipelineNav,
   setupNav,
+  loyaltyNav,
 }: Readonly<{
   subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
@@ -598,6 +613,7 @@ export default function AppSidebar({
   teams: Array<{ id: string; name?: string; color?: string }>;
   pipelineNav: PipelineNavInput;
   setupNav: SetupNavInput;
+  loyaltyNav?: LoyaltyNavInput;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
@@ -616,35 +632,25 @@ export default function AppSidebar({
   // null = bypass (SUPER_ADMIN), Set = restrict (MEMBER).
   const { allowedFeatures } = useTeamFeatures();
 
-  const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
-  const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
-
   const isSubscriptionExpired = Boolean(
     subscription?.expiresAt && checkExpiry(subscription.expiresAt),
   );
 
-  const handleRouteGuard = useCallback(
-    (route?: string): boolean => {
-      if (
-        userData?.data?.status === UserAvailabilityStatus.offline &&
-        userData?.data?.presenceMode !== "automatic"
-      ) {
-        toast.warning("You are currently offline. Please switch to online.");
-      }
+  // The WhatsApp section used to be gated here on `hasWhatsAppSettings`, blocking
+  // the click and putting a "WhatsApp Account Required" dialog in its place. The
+  // pages behind it already read as unconnected on their own — Flows disables
+  // Create and shows its empty state — so the section is reachable before a
+  // channel is connected and this only reports presence.
+  const handleRouteGuard = useCallback<RouteGuard>(() => {
+    if (
+      userData?.data?.status === UserAvailabilityStatus.offline &&
+      userData?.data?.presenceMode !== "automatic"
+    ) {
+      toast.warning("You are currently offline. Please switch to online.");
+    }
 
-      if (route?.startsWith("/dashboard/whatsapp")) {
-        if (userData?.message !== "Success") return false;
-        if (!userData?.data?.hasWhatsAppSettings) {
-          setWhatsAppModalOpened(true);
-          setIntendedRoute(route);
-          return false;
-        }
-      }
-
-      return true;
-    },
-    [userData],
-  );
+    return true;
+  }, [userData]);
 
   const navMain = useNavMain({
     subscription,
@@ -662,6 +668,7 @@ export default function AppSidebar({
     sectionCounts: useChatContactCountStore().sectionCounts,
     pipelineNav,
     setupNav,
+    loyaltyNav,
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);
@@ -744,11 +751,6 @@ export default function AppSidebar({
 
   return (
     <>
-      <WhatsAppSettingsModal
-        opened={whatsAppModalOpened}
-        onClose={() => setWhatsAppModalOpened(false)}
-        intendedRoute={intendedRoute}
-      />
       {/* Icon rail */}
       {/* The rail sits on brand navy, so it carries its own copy of the sidebar
           palette rather than the panel's: icons rest at 55% white and the active

@@ -37,6 +37,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
     paddingExclusion,
     pathname,
     pipelineNav,
+    loyaltyNav,
     resolvedUserInfo,
     setupNav,
     staff,
@@ -75,6 +76,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
                 conversationTags={conversationTags}
                 lifecycles={lifecycles}
                 pipelineNav={pipelineNav}
+                loyaltyNav={loyaltyNav}
                 setupNav={setupNav}
                 userData={resolvedUserInfo ?? undefined}
                 staff={staff}

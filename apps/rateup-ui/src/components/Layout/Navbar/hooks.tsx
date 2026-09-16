@@ -10,16 +10,16 @@ import {
   IconBrowser,
   IconBuildingStore,
   IconChartBar,
+  IconChartBarPopular,
   IconChartLine,
   IconCircleCheck,
   IconCirclePlus,
-  IconClock,
   IconCreditCard,
   IconCrown,
   IconDashboard,
-  IconFileDescription,
   IconFileSpreadsheet,
   IconFileText,
+  IconFilterBolt,
   IconFolder,
   IconGift,
   IconBook,
@@ -32,7 +32,6 @@ import {
   IconPlayerPlay,
   IconPlug,
   IconQrcode,
-  IconReportAnalytics,
   IconRobotFace,
   IconRocket,
   IconSend,
@@ -41,14 +40,13 @@ import {
   IconShield,
   IconShieldExclamation,
   IconShoppingCart,
+  IconShoppingCartBolt,
   IconSitemap,
   IconSparkles,
   IconStack2,
   IconStar,
   IconTag,
   IconTemplate,
-  IconTerminal2,
-  IconGitBranch,
   IconUser,
   IconUserCheck,
   IconUserCog,
@@ -62,6 +60,11 @@ import { useTranslation } from "react-i18next";
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
 import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
+import {
+  buildLoyaltyNavItems,
+  type LoyaltyNavInput,
+} from "@/components/dashboard/loyalty/loyalty.nav.ts";
+import { LOYALTY_PATHS } from "@/components/dashboard/loyalty/paths.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import {
   buildSetupNavItems,
@@ -133,6 +136,12 @@ export interface NavEntry {
   hint?: React.ReactNode;
   count?: number;
   /**
+   * A short text chip at the row's end ("Live", "Draft"). Data, not markup, for the same
+   * reason as `done` below.
+   */
+  badge?: string;
+  badgeTone?: "neutral" | "success" | "warning";
+  /**
    * Draws a done/not-done marker at the row's inline end. A plain flag rather than
    * a rendered node: `AppSidebar` diffs entries with `JSON.stringify`, which a React
    * element does not survive.
@@ -181,6 +190,7 @@ interface NavMainInput {
   sectionCounts: ChatContactCountStore["sectionCounts"];
   pipelineNav: PipelineNavInput;
   setupNav: SetupNavInput;
+  loyaltyNav?: LoyaltyNavInput;
 }
 
 export function useNavMain({
@@ -199,6 +209,7 @@ export function useNavMain({
   sectionCounts,
   pipelineNav,
   setupNav,
+  loyaltyNav,
 }: NavMainInput) {
   const { t } = useTranslation();
 
@@ -470,7 +481,7 @@ export function useNavMain({
             {
               title: t("Analytics"),
               url: "/dashboard/analytics?tab=overview",
-              icon: IconReportAnalytics,
+              icon: IconChartBarPopular,
               items: [
                 {
                   title: t("Overview"),
@@ -622,7 +633,7 @@ export function useNavMain({
             {
               title: t("Commerce"),
               url: "/dashboard/commerce/overview",
-              icon: IconBuildingStore,
+              icon: IconShoppingCartBolt,
               items: [
                 {
                   title: t("Overview"),
@@ -663,60 +674,10 @@ export function useNavMain({
         ? [
             {
               title: t("Loyalty"),
-              url: "/dashboard/loyalty/dashboard",
+              url: LOYALTY_PATHS.overview,
               icon: IconGift,
-              items: [
-                {
-                  title: t("Overview"),
-                  url: "/dashboard/loyalty/dashboard",
-                  icon: IconDashboard,
-                },
-                {
-                  title: t("Cashier Portal"),
-                  url: "/dashboard/loyalty/cashier",
-                  icon: IconShoppingCart,
-                },
-                {
-                  title: t("Customers"),
-                  url: "/dashboard/loyalty/customers",
-                  icon: IconUsers,
-                },
-                {
-                  title: t("Earning Rules"),
-                  url: "/dashboard/loyalty/earning-rules",
-                  icon: IconActivity,
-                },
-                {
-                  title: t("Rewards"),
-                  url: "/dashboard/loyalty/rewards",
-                  icon: IconAward,
-                },
-                {
-                  title: t("Transactions"),
-                  url: "/dashboard/loyalty/transactions",
-                  icon: IconClock,
-                },
-                {
-                  title: t("Approvals"),
-                  url: "/dashboard/loyalty/approvals",
-                  icon: IconUserCheck,
-                },
-                {
-                  title: t("Commands"),
-                  url: "/dashboard/loyalty/command",
-                  icon: IconTerminal2,
-                },
-                {
-                  title: t("WhatsApp Templates"),
-                  url: "/dashboard/loyalty/templates",
-                  icon: IconFileDescription,
-                },
-                {
-                  title: t("Settings"),
-                  url: "/dashboard/loyalty/settings",
-                  icon: IconSettings,
-                },
-              ],
+              // Ten rows: one defines the programme, the rest run it. See loyalty.nav.ts.
+              items: buildLoyaltyNavItems(loyaltyNav ?? { t, programState: null }),
             },
           ]
         : []),
@@ -734,7 +695,7 @@ export function useNavMain({
             {
               title: t("Pipeline"),
               url: "/dashboard/pipeline",
-              icon: IconGitBranch,
+              icon: IconFilterBolt,
               // Views and facets are built next to the pipeline's own
               // derivations so the sidebar counts and the board agree.
               items: buildPipelineNavItems(pipelineNav),
@@ -940,5 +901,6 @@ export function useNavMain({
     t,
     teams.length,
     user?.role,
+    loyaltyNav,
   ]);
 }

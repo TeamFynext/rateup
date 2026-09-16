@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { loyaltyKeys } from "@/backend/loyalty/loyalty.keys";
 import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 
 import type { AssignRewardRequest } from "./assignReward.api";
@@ -16,8 +17,11 @@ import {
   getAllCustomers,
   getLoyaltyCustomerByContactId,
   getLoyaltyCustomerById,
+  lookupContactByPhone,
+  searchContactsForEnrolment,
   importCustomers,
   updateLoyaltyCustomer,
+  type UpdateLoyaltyCustomerInput,
 } from "./customer.api";
 
 export const useCreateLoyaltyCustomerMutation = () => {
@@ -27,10 +31,44 @@ export const useCreateLoyaltyCustomerMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       qc.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
+      // The new member's row in the cashier's "from contacts" list now needs its badge.
+      qc.invalidateQueries({ queryKey: loyaltyKeys.enrolmentContacts() });
     },
     onError: (error) => {
       toast.error(error?.message || "Error creating customer");
     },
+  });
+};
+
+/**
+ * Looks a phone number up against the org's contacts so the add-customer form can fill
+ * in a name it already has.
+ *
+ * `enabled` is the security boundary as much as an optimisation: the endpoint is
+ * authenticated, so the public registration page must pass `enabled: false` rather than
+ * relying on the request simply failing.
+ */
+export const useContactLookupByPhone = (phone: string, enabled: boolean) => {
+  return useQuery({
+    queryKey: loyaltyKeys.contactLookup(phone),
+    queryFn: () => lookupContactByPhone(phone),
+    enabled: enabled && phone.length > 0,
+    // A contact's name does not change between keystrokes; don't refetch on every focus.
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+};
+
+/**
+ * The org's contacts for the cashier's "from contacts" picker. An empty search lists the
+ * most recently active ones, so the list is useful before anything is typed.
+ */
+export const useEnrolmentContacts = (search: string) => {
+  return useQuery({
+    queryKey: loyaltyKeys.enrolmentContacts(search),
+    queryFn: () => searchContactsForEnrolment(search),
+    staleTime: 60 * 1000,
+    placeholderData: (previous) => previous,
   });
 };
 
@@ -139,23 +177,22 @@ export const useExportCustomersMutation = () => {
 export const useUpdateLoyaltyCustomerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      customerId,
-      data,
-    }: {
-      customerId: string;
-      data: { status?: "active" | "suspended" | "closed" };
-    }) => updateLoyaltyCustomer(customerId, data),
+    mutationFn: ({ customerId, data }: { customerId: string; data: UpdateLoyaltyCustomerInput }) =>
+      updateLoyaltyCustomer(customerId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       queryClient.invalidateQueries({
         queryKey: loyaltyKeys.customer(variables.customerId),
       });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
+      // The panel on the Customers page reads the customer through the cashier's
+      // by-phone lookup, not the list — an edited name would otherwise stay stale there
+      // until the query went cold.
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer() });
       toast.success("Customer updated successfully");
     },
-    onError: (error) => {
-      toast.error(error?.message || `Error updating customer`);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, "Could not save the customer"));
     },
   });
 };
@@ -186,7 +223,7 @@ export const useAwardPointsMutation = () => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.dashboard() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.cashierCustomer() });
-      toast.success("Points awarded successfully");
+      // No success toast: the cashier shows a receipt, which says more and stays put.
     },
     onError: (error) => {
       toast.error(error?.message || `Error awarding points`);
