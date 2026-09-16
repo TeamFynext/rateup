@@ -56,9 +56,9 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
   // Detached from the batch on purpose: `await`ing the delay inside eachBatch
   // would stall the partition behind one missing row, which is the very thing
   // the manual retry scheme exists to prevent.
-  const heldRetries = new Map<NodeJS.Timeout, { value: string }[]>();
+  const heldRetries = new Map<NodeJS.Timeout, { key: string; value: string }[]>();
 
-  const publishRetries = async (messages: { value: string }[]) => {
+  const publishRetries = async (messages: { key: string; value: string }[]) => {
     try {
       await producer.send({ topic: TOPIC, messages });
     } catch (err) {
@@ -70,7 +70,7 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
     }
   };
 
-  const holdRetries = (messages: { value: string }[], retryCount: number) => {
+  const holdRetries = (messages: { key: string; value: string }[], retryCount: number) => {
     const timer = setTimeout(() => {
       heldRetries.delete(timer);
       void publishRetries(messages);
@@ -91,7 +91,7 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
     eachBatch: async ({ batch, resolveOffset, commitOffsetsIfNecessary, heartbeat }) => {
       // Grouped by how many times they have been round already, since that is
       // what sets the delay before they go round again.
-      const retryMessages = new Map<number, { value: string }[]>();
+      const retryMessages = new Map<number, { key: string; value: string }[]>();
       const dlqMessages: { value: string }[] = [];
       let retryCount = 0;
       const messages = batch.messages.map((m) => ({
@@ -122,6 +122,11 @@ export async function startStatusConsumer(kafka: Kafka): Promise<StatusConsumer>
           } else {
             const group = retryMessages.get(currentRetries) ?? [];
             group.push({
+              // Keyed like the original publish, so a re-published receipt
+              // lands on the same partition as the rest of its message's
+              // statuses. Without the key it round-robined, and `sent` could
+              // be consumed on one partition after `read` on another.
+              key: String(element.messageId ?? ""),
               value: JSON.stringify({
                 ...element,
                 error: "skipped in bulkUpdateStatuses",

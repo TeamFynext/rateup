@@ -23,6 +23,7 @@ import {
   deleteCustomField,
   deleteManyContacts,
   getContactById,
+  getContactFullDetailsById,
   getContactsByOrgId,
   getCustomFields,
   getExistingContactCountByPhno,
@@ -168,6 +169,19 @@ export async function getContactByIdHandler(
     return reply.code(200).send(contact);
   } catch (error) {
     return replyForError(reply, error, "Error reading a contact");
+  }
+}
+
+export async function getContactFullDetailsByIdHandler(
+  request: FastifyRequest<{ Params: ByContactIdParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const contact = await getContactFullDetailsById(request.params.contactId, request.user.orgId);
+    if (!contact) return reply.code(404).send({ error: "Contact not found" });
+    return reply.code(200).send(contact);
+  } catch (error) {
+    return replyForError(reply, error, "Error reading contact details");
   }
 }
 

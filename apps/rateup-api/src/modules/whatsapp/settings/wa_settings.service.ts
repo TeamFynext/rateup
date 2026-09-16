@@ -14,6 +14,7 @@ import {
 import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
 import { getChannelScope } from "./wa_channel_access.js";
+import { channelDigits } from "../../../utils/channelIdentifier.js";
 
 /**
  * Reads the AES key used to encrypt WhatsApp access tokens at rest from the environment.
@@ -99,6 +100,31 @@ export async function getWaSettings(orgId: string, whatsappSettingsPhoneId?: str
   }
 
   return getWaSettingsWithAccessTokenDecrypted(res);
+}
+
+/**
+ * Settings for the channel a WhatsApp *send* goes out on.
+ *
+ * The same lookup as {@link getWaSettings}, minus the silent org default: with no
+ * phone id, an org that has connected more than one number gets null rather than
+ * its oldest one. A reply that leaves on a number the customer never wrote to has
+ * no 24h window open on that pair, so Meta rejects it as 131047 "Re-engagement
+ * message" — and the agent sees a failed send with nothing on it to explain why,
+ * because the message itself looks right. A missing channel is a caller bug, and
+ * the only safe guess is none.
+ *
+ * Single-channel orgs keep the fallback: there is exactly one answer, and it is
+ * the one the org default would have picked anyway.
+ */
+export async function getWaSendingSettings(orgId: string, whatsappSettingsPhoneId?: string) {
+  if (!whatsappSettingsPhoneId) {
+    const connected = await prisma.whatsappSettings.count({
+      where: { orgId, phoneId: { not: null } },
+    });
+    if (connected > 1) return null;
+  }
+
+  return getWaSettings(orgId, whatsappSettingsPhoneId);
 }
 
 export async function getWaSettingsById(whatsappSettingsId: string, orgId: string) {
@@ -363,23 +389,38 @@ export async function upsertWaSettings(
 
   if (existingSettings) {
     if (data.fbPageId?.length) {
-      if (!data.pageAccessToken) {
+      const { accessToken, pageAccessToken: storedPageToken } =
+        getWaSettingsWithAccessTokenDecrypted(existingSettings);
+      // The dashboard no longer receives pageAccessToken in the channel list (13.2), so a
+      // save that keeps the connected page can't send it back — fall back to the stored
+      // one. Switching to a different page still needs that page's own token.
+      const pageAccessToken =
+        data.pageAccessToken ??
+        (data.fbPageId === existingSettings.fbPageId ? storedPageToken : null);
+      if (!pageAccessToken) {
         throw new Error("pageAccessToken is required to connect a Facebook page");
       }
-      await subscribePageToApp(data.fbPageId, data.pageAccessToken, [
+      await subscribePageToApp(data.fbPageId, pageAccessToken, [
         "messages",
         "message_reads",
         "message_reactions",
       ]);
-      const { accessToken } = getWaSettingsWithAccessTokenDecrypted(existingSettings);
       if (data.ibaId) {
         const igData = await callMetaApi(`/${data.ibaId}?fields=username`, "GET", accessToken);
         data.igUserName = igData.data.username;
+      } else if ((data.ibaId === null || data.ibaId === "") && existingSettings.ibaId) {
+        // Disconnecting Instagram alone: the Page (and Messenger on it) stays connected.
+        data.ibaId = null;
+        data.igUserName = null;
+        data.igDisplayName = null;
       }
       const fbData = await callMetaApi(`/${data.fbPageId}?fields=name`, "GET", accessToken);
       data.fbUserName = fbData.data.name;
     }
-    if (!data.fbPageId?.length && existingSettings.fbPageId?.length) {
+    // Only an explicit empty fbPageId disconnects the Page. Leaving the field out of a
+    // partial update must not silently drop the Messenger and Instagram connections.
+    // Instagram hangs off the Page, so it goes with it.
+    if ((data.fbPageId === null || data.fbPageId === "") && existingSettings.fbPageId?.length) {
       data.fbPageId = null;
       data.ibaId = null;
       data.pageAccessToken = null;
@@ -446,7 +487,19 @@ export interface MetaGraphPage {
   id: string;
   name: string;
   access_token: string;
-  instagram_business_account?: { id: string };
+  /** Page profile picture. A signed CDN URL that expires, so it's refreshed on every sync. */
+  pictureUrl?: string;
+  instagram_business_account?: {
+    id: string;
+    username?: string;
+    /** Same caveat as `pictureUrl` — signed and short-lived. */
+    profile_picture_url?: string;
+  };
+}
+
+/** `/me/accounts` as Meta returns it, before `picture` is flattened to `pictureUrl`. */
+interface MetaGraphAccount extends Omit<MetaGraphPage, "pictureUrl"> {
+  picture?: { data?: { url?: string } };
 }
 export interface MetaGraphAd {
   id: string;
@@ -471,13 +524,45 @@ export async function getFbPagesFromWa(
     throw new Error("accesstoken not found");
   }
   const { accessToken } = settings;
-  const url = `/me/accounts?fields=id,name,access_token,instagram_business_account`;
+  const url = `/me/accounts?fields=id,name,access_token,picture.type(large){url},instagram_business_account`;
   const res = await callMetaApi(url, "GET", accessToken);
-  log.trace(
-    { pages: (res?.data?.data as MetaGraphPage[] | undefined)?.map((page) => page.id) },
-    "Pages fetched from meta",
+  const accounts = res.data?.data as MetaGraphAccount[] | undefined;
+  log.trace({ pages: accounts?.map((page) => page.id) }, "Pages fetched from meta");
+  if (!accounts) return [];
+
+  return Promise.all(
+    accounts.map(async ({ picture, ...page }) => ({
+      ...page,
+      pictureUrl: picture?.data?.url,
+      instagram_business_account: page.instagram_business_account
+        ? await getInstagramProfile(page.instagram_business_account.id, accessToken)
+        : undefined,
+    })),
   );
-  return res.data?.data;
+}
+
+// Fetched per account rather than expanded inside `/me/accounts`: if the token lacks
+// instagram_basic, an expansion would fail the whole page list, while this only costs
+// the picture. Pages without the picture still sync.
+async function getInstagramProfile(
+  ibaId: string,
+  accessToken: string,
+): Promise<NonNullable<MetaGraphPage["instagram_business_account"]>> {
+  try {
+    const res = await callMetaApi(
+      `/${ibaId}?fields=username,profile_picture_url`,
+      "GET",
+      accessToken,
+    );
+    return {
+      id: ibaId,
+      username: res.data?.username,
+      profile_picture_url: res.data?.profile_picture_url,
+    };
+  } catch (err) {
+    log.warn({ err, ibaId }, "Could not read Instagram profile for page sync");
+    return { id: ibaId };
+  }
 }
 
 export async function getAdsFromWa(
@@ -642,8 +727,11 @@ export interface MetaAsset {
     id: string;
     name: string;
     access_token: string;
+    pictureUrl?: string;
     instagram_business_account: {
       id: string;
+      username?: string;
+      profile_picture_url?: string;
     };
     subscribedFields: string[];
     pageAccessTokenByUser?: string;
@@ -985,12 +1073,29 @@ export async function reRegisterPhoneNumber(orgId: string, phoneId: string) {
   return await registerPhoneNumber(phoneId, settings.accessToken);
 }
 
+/**
+ * The channel whose number this is, matched on digits.
+ *
+ * `phone` is a display string — Meta formats it, so the column holds
+ * `+9655-033-4145` and `+965 5033 4145` as readily as `+96550334145` — while the
+ * callers pass a message's `sourceIdentifier`, which is stored as bare digits. An
+ * `=` between the two matches only by luck, and the failure is silent: the read
+ * receipt that this backs simply stops being sent, and the customer's ticks never
+ * turn blue.
+ *
+ * An org has a handful of channels, so this compares in memory rather than
+ * reaching for a functional index on a table that small.
+ */
 export async function getWaSettingsByPhone(phone: string) {
-  return await prisma.whatsappSettings.findFirst({
-    where: {
-      phone,
-    },
+  const digits = channelDigits(phone);
+  if (!digits) return null;
+
+  const channels = await prisma.whatsappSettings.findMany({
+    where: { phone: { not: null } },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
+
+  return channels.find((channel) => channelDigits(channel.phone) === digits) ?? null;
 }
 
 export async function updateWaSettingsStatus(phoneId: string, status: WhatsappSettingsStatus) {

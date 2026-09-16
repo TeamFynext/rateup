@@ -12,6 +12,20 @@ import { log } from "./logger.js";
 export const DB_POOL_MAX = Number.parseInt(process.env.DB_POOL_MAX || "10", 10);
 
 /**
+ * Prisma interactive-transaction limits, applied in `prisma.ts`. `maxWait` is
+ * the time a transaction may spend waiting for a pooled connection; `timeout`
+ * is how long it may then run. Both in milliseconds.
+ */
+export const DB_TRANSACTION_MAX_WAIT_MS = Number.parseInt(
+  process.env.DB_TRANSACTION_MAX_WAIT_MS || "15000",
+  10,
+);
+export const DB_TRANSACTION_TIMEOUT_MS = Number.parseInt(
+  process.env.DB_TRANSACTION_TIMEOUT_MS || "30000",
+  10,
+);
+
+/**
  * Raw `pg` pool, used by the campaign dispatch path only.
  *
  * That path runs at concurrency 250 (see `waMessage.processor.ts`) and each job
@@ -23,7 +37,7 @@ export const DB_POOL_MAX = Number.parseInt(process.env.DB_POOL_MAX || "10", 10);
  */
 const dbPool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // max: DB_POOL_MAX,
+  max: DB_POOL_MAX,
 });
 
 dbPool.on("error", (err) => {

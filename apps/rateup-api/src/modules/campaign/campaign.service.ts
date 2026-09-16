@@ -2,7 +2,13 @@ import prisma from "../../utils/prisma.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 export { CampaignNotFoundError };
 import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema.js";
-import { CampaignParticipantStatus, CampaignStatus, CampaignType } from "../../types/enums.js";
+import {
+  CampaignParticipantStatus,
+  CampaignPauseReason,
+  CampaignStatus,
+  CampaignType,
+} from "../../types/enums.js";
+import { pauseCampaignForAccountIssue } from "./campaignPause.service.js";
 import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
 import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
@@ -125,7 +131,13 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
   // back with the list. Joined rather than fetched per card: a page of 20 cards
   // would otherwise be 40 extra round trips to draw one progress bar each.
   //
-  // The participant count is a correlated subquery, not a join. Joining
+  // The bar is drawn in recipients, so the per-status counts come from
+  // CampaignParticipant rather than from CampaignStats. The `CampaignStats`
+  // counters are per *message* — a recipient rejected once and recovered by a
+  // retry is in `totalSend` twice and stays in `totalFailed` forever — which
+  // drew a bar wider than the audience and kept a recovered recipient red.
+  //
+  // The participant counts are one correlated subquery, not a join. Joining
   // CampaignParticipant and grouping produced one row per participant across
   // every campaign in the org before aggregating them back down — an org with
   // a few hundred campaigns of a few thousand recipients each materialised
@@ -143,21 +155,28 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
     c."campaignSentAt",
     c."startedAt",
     c."errorMessage",
+    c."pauseReason",
     t."name" AS "teamName",
     wt."data"->>'name' AS "templateName",
     COALESCE(s."totalSend", 0) AS "totalSent",
     COALESCE(s."totalDelivered", 0) AS "totalDelivered",
     COALESCE(s."totalRead", 0) AS "totalRead",
     COALESCE(s."totalFailed", 0) AS "totalFailed",
-    (
-      SELECT COUNT(*)::INTEGER
-      FROM "CampaignParticipant" cp
-      WHERE cp."campaignId" = c.id
-    ) AS "campaignParticipantsCount"
+    p."total" AS "campaignParticipantsCount",
+    p."failed" AS "activeFailed",
+    p."pending" AS "activePending"
   FROM "Campaign" c
   LEFT JOIN "Team" t ON c."teamId" = t.id
   LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId"
   LEFT JOIN "CampaignStats" s ON s."campaignId" = c.id
+  LEFT JOIN LATERAL (
+    SELECT
+      COUNT(*)::INTEGER AS total,
+      COUNT(*) FILTER (WHERE cp.status = 'FAILED')::INTEGER AS failed,
+      COUNT(*) FILTER (WHERE cp.status = 'PENDING')::INTEGER AS pending
+    FROM "CampaignParticipant" cp
+    WHERE cp."campaignId" = c.id
+  ) p ON TRUE
   WHERE t."orgId" = ${orgId}::uuid
   ${type ? Prisma.sql`AND c.type = ${type}` : Prisma.empty}
   ORDER BY c."createdAt" DESC;`;
@@ -449,10 +468,9 @@ export async function sendCampaign(
     throw new CampaignNotFoundError(`Campaign ${campaignId} not found`);
   }
   if (!(await checkConversationLimitAvailable(campaignOrgId))) {
-    await updateCampaign(campaignId, campaignOrgId, {
-      status: CampaignStatus.FAILED,
-      errorMessage: "Conversation limit reached. Upgrade your plan to send more messages.",
-    });
+    // PAUSED, not FAILED: nothing is wrong with the campaign, and every recipient
+    // is still PENDING for when the allowance comes back.
+    await pauseCampaignForAccountIssue(campaignId, CampaignPauseReason.CONVERSATION_LIMIT);
     log.warn({ campaignId, orgId: campaignOrgId }, "Campaign skipped — conversation limit reached");
     return;
   }

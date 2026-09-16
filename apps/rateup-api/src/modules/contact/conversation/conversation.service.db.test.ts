@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
-    contact: { findUnique: vi.fn(), update: vi.fn() },
+    contact: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     conversation: {
       create: vi.fn(),
       findFirst: vi.fn(),
@@ -14,9 +14,10 @@ vi.mock("../../../utils/prisma.js", () => ({
       findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
     conversationAssignedUserTeamMap: { findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
-    waMessage: { findMany: vi.fn() },
+    waMessage: { findMany: vi.fn(), deleteMany: vi.fn() },
     $queryRaw: vi.fn(),
     $queryRawUnsafe: vi.fn(),
     $transaction: vi.fn(),
@@ -39,6 +40,7 @@ import {
   checkIfFirstUserSendMessageInConversation,
   createConversation,
   deleteConversation,
+  deleteConversations,
   getActiveConversationForContact,
   getAvargeResponseTimeofTodyaInEveryHour,
   getConversationById,
@@ -91,6 +93,7 @@ beforeEach(() => {
   db.$queryRaw.mockResolvedValue([]);
   db.$queryRawUnsafe.mockResolvedValue([]);
   db.contact.findUnique.mockResolvedValue(null);
+  db.contact.findMany.mockResolvedValue([]);
   db.contact.update.mockResolvedValue({});
   db.conversation.create.mockResolvedValue({ id: "conv-1" });
   db.conversation.findFirst.mockResolvedValue(null);
@@ -98,6 +101,8 @@ beforeEach(() => {
   db.conversation.findMany.mockResolvedValue([]);
   db.conversation.update.mockResolvedValue({ id: "conv-1" });
   db.waMessage.findMany.mockResolvedValue([]);
+  db.waMessage.deleteMany.mockResolvedValue({ count: 0 });
+  db.conversation.deleteMany.mockResolvedValue({ count: 0 });
   db.conversationAssignedUserTeamMap.findMany.mockResolvedValue([]);
 });
 
@@ -239,6 +244,7 @@ describe("setInboxStatus", () => {
 
   test("refuses a contact that does not exist", async () => {
     db.contact.findUnique.mockResolvedValue(null);
+    db.contact.findMany.mockResolvedValue([]);
 
     await expect(setInboxStatus("nope", WaMessageAssignStatus.CLOSED, USER_ACTOR)).rejects.toThrow(
       "Contact nope not found",
@@ -409,6 +415,17 @@ describe("setConversationSubjectIfBlank", () => {
 });
 
 describe("getConversationById / deleteConversation", () => {
+  /** The contact whose mirror the delete re-derives. */
+  function contactBefore(status: string) {
+    return {
+      id: "c1",
+      orgId: ORG,
+      waMessageAssignStatus: status,
+      blockedOnWhatsApp: false,
+      lastReceivedMessageTimeStamp: new Date(),
+    };
+  }
+
   test("a read is scoped through the contact's org", async () => {
     await getConversationById("conv-1", ORG);
 
@@ -417,12 +434,143 @@ describe("getConversationById / deleteConversation", () => {
     });
   });
 
-  test("a delete is scoped through the contact's org", async () => {
-    await deleteConversation("conv-1", ORG);
-
-    expect(db.conversation.delete).toHaveBeenCalledWith({
-      where: { id: "conv-1", contact: { orgId: ORG } },
+  test("a delete takes the ticket's messages with it", async () => {
+    db.conversation.findMany.mockResolvedValue([
+      { id: "conv-1", contactId: "c1", number: 12, contact: { name: "Ada", phone: "+100" } },
+    ]);
+    db.contact.findMany.mockResolvedValue([contactBefore(WaMessageAssignStatus.CLOSED)]);
+    db.waMessage.deleteMany.mockResolvedValue({ count: 3 });
+    // The contact has an older ticket left, so the mirror falls back to it.
+    db.conversation.findFirst.mockResolvedValue({
+      status: WaMessageAssignStatus.ASSIGNED,
+      closedAt: null,
+      closedBy: null,
     });
+    db.contact.update.mockResolvedValue({
+      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+    });
+
+    const result = await deleteConversation("conv-1", ORG);
+
+    // Scoped through the contact's org on the way in, so the delete itself can
+    // address the rows by id.
+    expect(db.conversation.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ["conv-1"] }, contact: { orgId: ORG } },
+      // The contact and ticket number come back so the audit entry can name what
+      // was deleted once the rows are gone.
+      select: {
+        id: true,
+        contactId: true,
+        number: true,
+        contact: { select: { name: true, phone: true } },
+      },
+    });
+    expect(db.waMessage.deleteMany).toHaveBeenCalledWith({
+      where: { conversationId: { in: ["conv-1"] } },
+    });
+    expect(db.conversation.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["conv-1"] } } });
+    expect(db.contact.update.mock.calls[0][0].data).toMatchObject({
+      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+    });
+    expect(transitionInboxStat).toHaveBeenCalled();
+    expect(result).toMatchObject({
+      id: "conv-1",
+      contactId: "c1",
+      deletedMessages: 3,
+      remainingConversations: true,
+    });
+  });
+
+  test("resets the contact's mirror when its last ticket is deleted", async () => {
+    db.conversation.findMany.mockResolvedValue([
+      { id: "conv-1", contactId: "c1", number: 12, contact: { name: "Ada", phone: "+100" } },
+    ]);
+    db.contact.findMany.mockResolvedValue([contactBefore(WaMessageAssignStatus.ASSIGNED)]);
+    db.conversation.findFirst.mockResolvedValue(null);
+    db.contact.update.mockResolvedValue({
+      waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+    });
+
+    const result = await deleteConversation("conv-1", ORG);
+
+    expect(db.contact.update.mock.calls[0][0].data).toMatchObject({
+      waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+      closedAt: null,
+      closedBy: null,
+    });
+    expect(result).toMatchObject({ remainingConversations: false });
+  });
+
+  test("a ticket from another org is not deleted", async () => {
+    db.conversation.findMany.mockResolvedValue([]);
+
+    expect(await deleteConversation("conv-1", ORG)).toBeNull();
+    expect(db.waMessage.deleteMany).not.toHaveBeenCalled();
+    expect(db.conversation.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteConversations", () => {
+  test("deletes every ticket the org owns and reconciles each contact once", async () => {
+    // Two of the three ids are this org's, and two of them share a contact — so
+    // the mirror is re-derived per contact, not per ticket.
+    db.conversation.findMany.mockResolvedValue([
+      { id: "conv-1", contactId: "c1", number: 1, contact: { name: "Ada", phone: "+100" } },
+      { id: "conv-2", contactId: "c1", number: 2, contact: { name: "Ada", phone: "+100" } },
+      { id: "conv-3", contactId: "c2", number: 3, contact: { name: null, phone: "+200" } },
+    ]);
+    db.contact.findMany.mockResolvedValue([]);
+    db.waMessage.deleteMany.mockResolvedValue({ count: 7 });
+    db.conversation.findFirst.mockResolvedValue(null);
+    db.contact.update.mockResolvedValue({
+      waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+    });
+
+    const result = await deleteConversations(["conv-1", "conv-2", "conv-3", "conv-4"], ORG);
+
+    expect(db.conversation.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["conv-1", "conv-2", "conv-3"] } },
+    });
+    expect(db.contact.update).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({
+      conversationIds: ["conv-1", "conv-2", "conv-3"],
+      contactIds: ["c1", "c2"],
+      deletedConversations: 3,
+      deletedMessages: 7,
+    });
+    // Every deleted ticket is described for the audit entry, contact and all.
+    expect(result.tickets).toEqual([
+      {
+        id: "conv-1",
+        number: 1,
+        contactId: "c1",
+        contactName: "Ada",
+        contactPhone: "+100",
+      },
+      {
+        id: "conv-2",
+        number: 2,
+        contactId: "c1",
+        contactName: "Ada",
+        contactPhone: "+100",
+      },
+      {
+        id: "conv-3",
+        number: 3,
+        contactId: "c2",
+        contactName: null,
+        contactPhone: "+200",
+      },
+    ]);
+  });
+
+  test("a selection with nothing the org owns deletes nothing", async () => {
+    db.conversation.findMany.mockResolvedValue([]);
+
+    const result = await deleteConversations(["conv-1"], ORG);
+
+    expect(db.waMessage.deleteMany).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ deletedConversations: 0, deletedMessages: 0 });
   });
 });
 

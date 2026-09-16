@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma.js";
+import { channelIdentifierSpellings } from "../../../utils/channelIdentifier.js";
 
 /**
  * Team-scoped channel visibility.
@@ -84,14 +85,17 @@ export async function getScopedSourceIdentifiers(
     select: { phone: true, ibaId: true, fbPageId: true },
   });
 
+  // Every spelling of the number, not just the two this used to list. `phone` is a
+  // display string (`+9655-033-4145`) while messages hold several spellings of
+  // that same number, and the missing ones were not matched — so an agent scoped
+  // to a channel silently lost whole stretches of their own inbox. Instagram and
+  // Facebook ids are opaque and contribute only themselves.
   const identifiers = new Set<string>();
   for (const channel of channels) {
-    for (const value of [
-      channel.phone,
-      channel.phone?.replace("+", ""),
-      channel.ibaId,
-      channel.fbPageId,
-    ]) {
+    for (const spelling of channelIdentifierSpellings(channel.phone)) {
+      identifiers.add(spelling);
+    }
+    for (const value of [channel.ibaId, channel.fbPageId]) {
       if (value) identifiers.add(value);
     }
   }

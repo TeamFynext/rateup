@@ -60,6 +60,7 @@ import {
 } from "./wamessage.utils.js";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service.js";
 import { log } from "../../../../utils/logger.js";
+import { normalizeSourceIdentifier } from "../../../../utils/channelIdentifier.js";
 import {
   getContactById,
   getOrCreateContactByIgsId,
@@ -128,6 +129,18 @@ export async function handleWaMessages(
   },
 ) {
   try {
+    /**
+     * One spelling for the channel, for every path that reaches here.
+     *
+     * Callers arrive with whatever their source handed them — Meta's formatted
+     * `display_phone_number`, a `WhatsappSettings.phone` with its `+` and
+     * separators, or digits — and both columns written below are matched with
+     * `=` elsewhere. Normalising at the single point every message is stored
+     * through is what stops a new caller quietly adding a fifth spelling.
+     * Instagram and Facebook account ids pass through untouched.
+     */
+    sourceIdentifier = normalizeSourceIdentifier(sourceIdentifier, sourcePlatform);
+
     // Prepare message body
     let waMessageBody: WaInboxMessageBody = {
       exchangeProcess: type,

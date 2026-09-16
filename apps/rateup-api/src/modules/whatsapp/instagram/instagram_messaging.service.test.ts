@@ -15,6 +15,10 @@ vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
 }));
 // Every send files itself in the inbox; the real one talks to the database.
 vi.mock("../inbox/message/wamessage.controller.js", () => ({ handleWaMessages: vi.fn() }));
+// The record queue would otherwise open a real Redis connection at import.
+vi.mock("../../../workers/bullmq/queues/whatsapp.queue.js", () => ({
+  enqueueWaMessageRecord: vi.fn().mockResolvedValue({ id: "record" }),
+}));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));

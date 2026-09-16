@@ -1,10 +1,11 @@
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { WaTemplateCategory } from "../../../types/enums.js";
 import {
-  getWaSettings,
+  getWaSendingSettings,
   getWaSettingsByIbaId,
   getWaSettingsByPageId,
 } from "../settings/wa_settings.service.js";
+import { channelDigits } from "../../../utils/channelIdentifier.js";
 
 /**
  * What every Meta surface differs on, and nothing else.
@@ -54,15 +55,17 @@ export interface MetaChannel {
 const whatsapp: MetaChannel = {
   platform: PlatformType.WHATSAPP,
   async resolveCredentials({ orgId, sourceIdentifier }) {
-    const settings = await getWaSettings(orgId, sourceIdentifier);
+    // Deliberately not `getWaSettings`: a send that names no number must not fall
+    // back to the org's oldest one. See `getWaSendingSettings`.
+    const settings = await getWaSendingSettings(orgId, sourceIdentifier);
     if (!settings?.accessToken || !settings.phoneId) return null;
     return {
       accessToken: settings.accessToken,
       auth: "header",
       phoneId: settings.phoneId,
-      // The business number the message goes out on, without the leading `+`,
-      // which is the form every stored message uses.
-      sourceIdentifier: settings.phone?.replace("+", "") ?? settings.phoneId,
+      // The business number the message goes out on, digits only — the one
+      // spelling every stored identifier is compared on (see `channelDigits`).
+      sourceIdentifier: channelDigits(settings.phone) || settings.phoneId,
     };
   },
   buildPath(creds, { category }) {

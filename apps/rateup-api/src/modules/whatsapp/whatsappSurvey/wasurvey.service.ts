@@ -41,6 +41,7 @@ import {
 import { updateCompletedSurvey } from "../../survey/survey.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
+  getWaSendingSettings,
   getWaSettings,
   getWaSettingsByIbaId,
   getWaSettingsByPageId,
@@ -65,6 +66,7 @@ import {
 import { producer } from "../../../plugins/kafka.js";
 import { assertWithinConversationLimit } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
+import { channelDigits } from "../../../utils/channelIdentifier.js";
 
 export async function sendMessage(
   orgId: string,
@@ -124,14 +126,26 @@ export async function sendMessage(
     accessToken = waSettings.pageAccessToken ?? undefined;
     sourceIdentifier = waSettings.fbPageId ?? undefined;
   } else if (platform !== PlatformType.WEBCHAT) {
-    waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+    // Not `getWaSettings`: an unnamed number must not fall back to the org's
+    // oldest channel. Replying on a number the customer never wrote to has no
+    // 24h window open on that pair, and Meta rejects it as 131047
+    // "Re-engagement message". See `getWaSendingSettings`.
+    waSettings = await getWaSendingSettings(orgId, whatsappSettingsPhoneId);
     if (!waSettings) {
-      throw new Error(`WhatsApp settings not found for org: ${orgId}`);
+      throw new Error(
+        whatsappSettingsPhoneId
+          ? `WhatsApp settings not found for org: ${orgId}`
+          : `No WhatsApp channel named for a send from org ${orgId}, which has several connected`,
+      );
     }
     to = (messageData as WaSendMessageBody).to;
     configId = waSettings.phoneId ?? undefined;
     accessToken = waSettings.accessToken;
-    sourceIdentifier = waSettings.phone ?? undefined;
+    // Digits only. `WhatsappSettings.phone` is a display string and carries the
+    // `+` and separators Meta formats it with, so storing it raw — or stripping
+    // only the `+` — gave one thread several spellings of one channel and
+    // nothing could match a message back to the number it ran on.
+    sourceIdentifier = channelDigits(waSettings.phone) || undefined;
   } else {
     to = (messageData as WaSendMessageBody).to;
   }

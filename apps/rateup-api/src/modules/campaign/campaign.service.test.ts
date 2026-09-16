@@ -48,6 +48,7 @@ vi.mock("../whatsapp/flows/flow.service.js", () => ({ getFlowBySurveyId: vi.fn()
 vi.mock("hucre", () => ({ write: vi.fn(async () => Buffer.from("workbook")) }));
 
 import { write } from "hucre";
+import { pauseCampaignForAccountIssue } from "./campaignPause.service.js";
 vi.mock("../../workers/bullmq/queues/index.js", () => ({
   getCampaignCount: vi.fn(),
   waCampaignDequeue: { add: vi.fn() },
@@ -65,6 +66,10 @@ vi.mock("./campaignSend.service.js", async () => {
     failCampaignSend: vi.fn(),
   };
 });
+// Reaches Redis and the queue; its own suite covers what a pause does.
+vi.mock("./campaignPause.service.js", () => ({
+  pauseCampaignForAccountIssue: vi.fn(async () => true),
+}));
 // Reaches Redis and the message queue, which this suite has neither of.
 vi.mock("./campaignCancel.service.js", () => ({
   cancelPendingCampaignJobs: vi.fn(async () => ({ removed: 0, locked: 0, sends: 0 })),
@@ -83,7 +88,11 @@ import {
   waCampaignEnqueue,
   waMessageQueue,
 } from "../../workers/bullmq/queues/index.js";
-import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums.js";
+import {
+  CampaignParticipantStatus,
+  CampaignPauseReason,
+  CampaignStatus,
+} from "../../types/enums.js";
 import {
   backfillDripStageParticipants,
   CampaignNotFoundError,
@@ -614,15 +623,16 @@ describe("sendCampaign", () => {
     });
   });
 
-  test("refuses and records why when the org is over its conversation limit", async () => {
+  test("pauses, rather than fails, when the org is over its conversation limit", async () => {
     limitExceededMock.mockResolvedValue(false);
 
     await sendCampaign(CAMPAIGN_ID, [CampaignParticipantStatus.PENDING]);
 
-    expect(db.campaign.update.mock.calls[0][0].data).toMatchObject({
-      status: CampaignStatus.FAILED,
-      errorMessage: "Conversation limit reached. Upgrade your plan to send more messages.",
-    });
+    expect(pauseCampaignForAccountIssue).toHaveBeenCalledWith(
+      CAMPAIGN_ID,
+      CampaignPauseReason.CONVERSATION_LIMIT,
+    );
+    expect(db.campaign.update).not.toHaveBeenCalled();
     expect(enqueueAdd).not.toHaveBeenCalled();
   });
 

@@ -30,3 +30,61 @@ export const waMessageQueue = new Queue("waMessageQueue", {
 
 /** Ad-hoc single message sends and seeded inbox traffic. */
 export const sendMessageQueue = new Queue("sendMessageQueue", { connection });
+
+/**
+ * Arguments to `handleWaMessages` for a message Meta has already accepted. The
+ * positional signature is captured as a named object so it survives a trip
+ * through Redis.
+ */
+export interface WaMessageRecordJob {
+  payload: Record<string, unknown>;
+  recipient: string;
+  orgId: string;
+  platform: string;
+  sourceIdentifier: string | undefined;
+  userName?: string;
+  /** Always set: only accepted messages are queued here. */
+  messageId: string;
+  userId?: string;
+  teamId: string | null;
+  messageType: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW";
+  isAutomated: boolean;
+  externalApi: boolean;
+  campaign?: {
+    participantId: string;
+    dripStageId?: string | null;
+    templateData?: unknown;
+    campaignSendId?: string | null;
+  };
+}
+
+/**
+ * The safety net under `sendMetaMessage`'s record step.
+ *
+ * A message that Meta accepted but whose row could not be written is the worst
+ * outcome the send path can produce: the customer has it, the receipts are on
+ * their way, and nothing in the database knows. On 2026-09-12 that was 2,800
+ * campaign recipients stuck in PENDING, because the store failed on a starved
+ * connection pool and its three in-process retries — seconds apart, in the same
+ * starved process — failed the same way.
+ *
+ * So the retry now lives here, with real backoff and outside the process that
+ * failed. Ten attempts from two seconds doubling reaches about half an hour,
+ * long enough for a pool or a region blip to clear. The job id is the wamid so
+ * a message is queued for recording at most once, and the processor checks for
+ * an existing row before writing so a late first attempt cannot double-store.
+ */
+export const waMessageRecordQueue = new Queue<WaMessageRecordJob>("waMessageRecord", {
+  connection,
+  defaultJobOptions: {
+    attempts: 10,
+    backoff: { type: "exponential", delay: 2_000 },
+    removeOnComplete: true,
+    removeOnFail: { count: 1000 },
+  },
+});
+
+/** Queue a record job for an accepted message. Deduplicated on the wamid. */
+export function enqueueWaMessageRecord(job: WaMessageRecordJob) {
+  return waMessageRecordQueue.add("record", job, { jobId: `record:${job.messageId}` });
+}

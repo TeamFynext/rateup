@@ -85,6 +85,9 @@ export enum CampaignStatus {
   /// Nothing is going out right now, so calling this ACTIVE described the
   /// campaign as sending through a retry window that is usually hours long.
   RETRYING = "RETRYING",
+  /// Stopped by the platform because the account cannot send. See the API's
+  /// `src/types/enums.ts`.
+  PAUSED = "PAUSED",
 }
 
 export enum PlatformType {

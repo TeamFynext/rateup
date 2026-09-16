@@ -134,6 +134,7 @@ import { LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { notificationQueue, pausedAutomationQueue } from "../../../workers/bullmq/queues/index.js";
 import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
+import { channelDigits } from "../../../utils/channelIdentifier.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -295,6 +296,14 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
         continue;
       }
 
+      // The business number the echo came in on, written the same way the inbound
+      // handler writes it (digits, no `+`) so both halves of a thread agree on
+      // which channel they ran through. `message.to` is the *customer* — storing
+      // that as the channel made the inbox name the customer's own number as the
+      // channel, and left replies with no channel to resolve back to.
+      const channelIdentifier =
+        channelDigits(value?.metadata?.display_phone_number) || channelDigits(waSettings.phone);
+
       if (value.message_echoes) {
         for (const message of value.message_echoes) {
           try {
@@ -310,7 +319,7 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
               message.to,
               waSettings.orgId,
               PlatformType.WHATSAPP,
-              message.to,
+              channelIdentifier,
               undefined,
               message.id,
             );

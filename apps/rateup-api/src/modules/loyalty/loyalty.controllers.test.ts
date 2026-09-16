@@ -117,7 +117,7 @@ function reply() {
 }
 
 function request(over: Record<string, unknown> = {}): any {
-  return { user: { orgId: ORG, id: USER }, params: {}, query: {}, body: {}, ...over };
+  return { user: { orgId: ORG, userId: USER }, params: {}, query: {}, body: {}, ...over };
 }
 
 function answer(rep: any) {

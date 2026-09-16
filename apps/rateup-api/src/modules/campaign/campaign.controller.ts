@@ -40,6 +40,8 @@ import {
 } from "./campaignSend.service.js";
 import { CampaignSendTrigger } from "../../../generated/prisma/enums.js";
 import { upsertCampaignRetryPolicy } from "./campaignRetry.service.js";
+import { clearCampaignPause } from "./campaignPause.service.js";
+import { checkConversationLimitAvailable } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { log } from "../../utils/logger.js";
 import {
   getSpreadsheetContentType,
@@ -94,7 +96,7 @@ export async function getCampaignsHandler(
     if (request.query.teamId) {
       return reply.code(200).send(await getCampaignsByTeamId(request.query.teamId, orgId));
     }
-    return reply.code(200).send(await getCampaignsByOrgId(orgId, request.query?.type));
+    return reply.code(200).send(await getCampaignsByOrgId(orgId, request.query.type));
   } catch (error) {
     return replyForError(reply, error, "Error while listing campaigns");
   }
@@ -313,6 +315,14 @@ export async function sendCampaignHandler(
       await cancelCampaignSends(campaignId, { note: "Abandoned — the send never completed." });
     }
 
+    // Only the platform pauses a campaign this way, and only with a reason.
+    if (status === CampaignStatus.PAUSED) {
+      return reply.status(400).send({
+        message: "A campaign cannot be set to PAUSED directly. Stop it instead.",
+        code: "INVALID_CAMPAIGN_STATUS",
+      });
+    }
+
     if (type === CampaignType.DRIP) {
       if (!status) {
         return reply.status(400).send({
@@ -339,8 +349,28 @@ export async function sendCampaignHandler(
       // max(participantCreatedAt, startedAt) + delay. Stamping it on each call
       // restarted the whole sequence, so only an actual start may set it — a
       // pause must leave the campaign's place in the schedule alone.
+      //
+      // Resuming from PAUSED is not a start either: the platform stopped it
+      // mid-sequence, and restarting the clock would re-time every stage.
       const isStarting =
-        status === CampaignStatus.ACTIVE && campaign.status !== CampaignStatus.ACTIVE;
+        status === CampaignStatus.ACTIVE &&
+        campaign.status !== CampaignStatus.ACTIVE &&
+        campaign.status !== CampaignStatus.PAUSED;
+
+      // A drip resumes without a preflight, so an allowance that is still spent
+      // has to be caught here — otherwise the cron's next tick pauses it again
+      // and the resume looks like it did nothing.
+      if (
+        status === CampaignStatus.ACTIVE &&
+        campaign.status === CampaignStatus.PAUSED &&
+        !(await checkConversationLimitAvailable(orgId))
+      ) {
+        return reply.status(403).send({
+          message:
+            "Your plan's conversation allowance is still used up, so this campaign cannot resume yet.",
+          code: "CONVERSATION_LIMIT_REACHED",
+        });
+      }
 
       await updateCampaign(campaignId, orgId, {
         status,
@@ -348,6 +378,7 @@ export async function sendCampaignHandler(
         scheduledStatuses: [],
         ...(isStarting ? { startedAt: new Date() } : {}),
       });
+      await clearCampaignPause(campaignId);
       return reply.status(200).send({
         message: `Campaign status updated to ${status}`,
         code: "MSG_SCHEDULED",
@@ -359,6 +390,7 @@ export async function sendCampaignHandler(
         campaignSentAt: null,
         scheduledStatuses: [],
       });
+      await clearCampaignPause(campaignId);
       const dequeue = await deleteCampaignParticipantsByCampaignId(campaignId);
       if (!dequeue.status) {
         return reply.status(502).send({
@@ -410,6 +442,9 @@ export async function sendCampaignHandler(
         code: "CONVERSATION_LIMIT_REACHED",
       });
     }
+
+    // Sending again is the resume: whatever paused it is no longer what it is doing.
+    await clearCampaignPause(campaignId);
 
     // A per-day cap spreads participants over consecutive days. The dispatcher
     // applies it when it fans the campaign out into per-participant jobs. A

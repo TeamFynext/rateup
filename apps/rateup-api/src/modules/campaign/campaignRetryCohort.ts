@@ -32,20 +32,65 @@ export async function getRetryCohort(campaignId: string): Promise<string[]> {
 }
 
 /**
+ * How long a SENT participant counts as "outcome not in yet".
+ *
+ * A message Meta accepted but never confirmed delivered is a phone that was
+ * off, a number that never came back online, or a receipt that was lost. Meta
+ * can still post `delivered` days later, but a campaign cannot stay open that
+ * long: with no cutoff, 87 undelivered messages out of 4,609 held a campaign on
+ * ACTIVE indefinitely, and its retry policy never got to conclude. After a day
+ * the message's fate is as settled as it is going to get; a late receipt is
+ * still applied to the message and the counters, it just no longer holds the
+ * campaign.
+ */
+export const SENT_SETTLES_AFTER_HOURS = 24;
+
+/**
+ * Participants no attempt has reached yet.
+ *
+ * This is what decides whether a campaign's *sending* is finished, which is all
+ * COMPLETED means: the queue has drained and every recipient has either been
+ * handed to Meta or rejected. Delivery and read receipts keep landing on a
+ * completed campaign for as long as Meta sends them — days, for a phone that
+ * was off — and are applied to the message and the counters regardless of the
+ * campaign's status. Holding the campaign on ACTIVE for them (as this used to,
+ * by counting SENT as in flight) kept a campaign open indefinitely for the few
+ * percent of recipients Meta never confirms.
+ */
+export async function countPendingParticipants(campaignId: string): Promise<number> {
+  return prisma.campaignParticipant.count({
+    where: { campaignId, status: CampaignParticipantStatus.PENDING },
+  });
+}
+
+/**
  * Participants whose outcome is not known yet.
  *
  * A message is PENDING before it is handed to Meta and SENT until a delivery
  * webhook lands, so while this is above zero the campaign's failures are still
  * arriving and no conclusion about retries can be drawn. Once it reaches zero,
  * what `getRetryCohort` returns is the whole truth.
+ *
+ * SENT ages out after `SENT_SETTLES_AFTER_HOURS`; PENDING never does, because
+ * a participant no attempt has reached is still owed one.
  */
-export async function countInFlightParticipants(campaignId: string): Promise<number> {
+export async function countInFlightParticipants(
+  campaignId: string,
+  now: Date = new Date(),
+): Promise<number> {
+  const sentCutoff = new Date(now.getTime() - SENT_SETTLES_AFTER_HOURS * 60 * 60 * 1000);
   return prisma.campaignParticipant.count({
     where: {
       campaignId,
-      status: {
-        in: [CampaignParticipantStatus.PENDING, CampaignParticipantStatus.SENT],
-      },
+      OR: [
+        { status: CampaignParticipantStatus.PENDING },
+        {
+          status: CampaignParticipantStatus.SENT,
+          // A SENT row with no sentAt is one the send path never stamped; treat
+          // it as fresh rather than silently settled.
+          OR: [{ sentAt: null }, { sentAt: { gt: sentCutoff } }],
+        },
+      ],
     },
   });
 }

@@ -4,7 +4,7 @@ import { CampaignStatus, CampaignType } from "../../types/enums.js";
 import { CampaignSendStatus } from "../../../generated/prisma/enums.js";
 
 import { LIVE_SEND_STATUSES } from "./campaignSend.service.js";
-import { countInFlightParticipants } from "./campaignRetryCohort.js";
+import { countPendingParticipants } from "./campaignRetryCohort.js";
 
 /** Statuses a settle pass is allowed to move a campaign out of. */
 const SETTLEABLE = [CampaignStatus.ACTIVE, CampaignStatus.QUEUING, CampaignStatus.RETRYING];
@@ -19,11 +19,12 @@ const SETTLEABLE = [CampaignStatus.ACTIVE, CampaignStatus.QUEUING, CampaignStatu
  *
  * 1. A QUEUING or RUNNING send means messages are going out right now — a manual
  *    resend alongside this one, say — so the campaign is left alone.
- * 2. Participants still PENDING or SENT mean the outcome is not in yet. A queue
- *    drains when Meta has *accepted* the last message, not when it has been
- *    delivered, so at that moment almost everything is still SENT. Concluding
- *    anything here is what made a clean campaign announce a retry it did not
- *    need. The sweep comes back for it.
+ * 2. Participants still PENDING mean the sending is not finished — a fan-out
+ *    that has not drained, or a job that never ran. SENT is *not* held for:
+ *    COMPLETED means the sending is done, and delivery and read receipts keep
+ *    landing on a completed campaign for as long as Meta sends them. Whether a
+ *    retry is warranted is the retry engine's question, and it has its own
+ *    in-flight rule (`countInFlightParticipants`) that does wait for receipts.
  * 3. With nothing in flight, a booked attempt is what decides the status: the
  *    campaign is RETRYING while one is still scheduled, and COMPLETED only once
  *    none is left.
@@ -56,7 +57,7 @@ export async function finishCampaignIfSettled(campaignId: string): Promise<Campa
   });
   if (live.some((send) => send.status !== CampaignSendStatus.SCHEDULED)) return null;
 
-  if ((await countInFlightParticipants(campaignId)) > 0) return null;
+  if ((await countPendingParticipants(campaignId)) > 0) return null;
 
   // No live send left means the retry policy is done with this campaign —
   // exhausted, disabled, out of window, or never booked because nothing failed.

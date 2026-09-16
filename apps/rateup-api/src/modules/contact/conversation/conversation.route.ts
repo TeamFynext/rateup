@@ -3,11 +3,15 @@ import {
   updateConversationSchema,
   conversationParamsSchema,
   contactConversationsParamsSchema,
+  deleteConversationsSchema,
   statsQuerySchema,
   staffIdParamsSchema,
   teamIdParamsSchema,
 } from "./conversation.schema.js";
+import type { ConversationParamsSchema, DeleteConversationsSchema } from "./conversation.schema.js";
 import {
+  deleteConversationHandler,
+  deleteConversationsHandler,
   getAverageConversationResponseTimeHandler,
   getConversationOnAccountDistributionHandler,
   getConversationOverviewHandler,
@@ -20,6 +24,7 @@ import {
   getTeamOverviewHandler,
   updateConversationHandler,
 } from "./conversation.controller.js";
+import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
 
 export async function conversationRoutes(server: FastifyInstance) {
   server.put(
@@ -31,6 +36,32 @@ export async function conversationRoutes(server: FastifyInstance) {
       },
     },
     updateConversationHandler,
+  );
+
+  // Deleting a ticket destroys its messages with it and cannot be undone, so it
+  // is kept to org admins rather than to everyone who can work the inbox.
+  server.delete<{ Params: ConversationParamsSchema }>(
+    "/:conversationId",
+    {
+      preHandler: checkRoleHandler(["SUPER_ADMIN", "ADMIN"]),
+      schema: {
+        params: conversationParamsSchema,
+      },
+    },
+    deleteConversationHandler,
+  );
+
+  // The list's bulk delete. A body-carrying DELETE, matching how `/contact`
+  // deletes many contacts; the ids are a selection, not a path.
+  server.delete<{ Body: DeleteConversationsSchema }>(
+    "/",
+    {
+      preHandler: checkRoleHandler(["SUPER_ADMIN", "ADMIN"]),
+      schema: {
+        body: deleteConversationsSchema,
+      },
+    },
+    deleteConversationsHandler,
   );
 
   // Inbox Tickets v2 — a contact's ticket history (the thread's pinned strip).

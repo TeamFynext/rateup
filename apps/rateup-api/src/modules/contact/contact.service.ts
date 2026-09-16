@@ -392,6 +392,84 @@ export async function getContactById(contactId: string, orgId: string) {
   });
   return user;
 }
+/**
+ * Everything the contacts table's detail dialog shows about one contact.
+ *
+ * Deliberately separate from `getContactById`: that one is also on the Zapier and
+ * inbox paths, where these joins would be dead weight. `include` (not `select`) so
+ * every scalar column — consent, dob, spam/block flags, the last-message stamps —
+ * comes through without having to be listed and kept in sync by hand.
+ */
+export async function getContactFullDetailsById(contactId: string, orgId: string) {
+  return await prisma.contact.findFirst({
+    where: { id: contactId, orgId },
+    include: {
+      ContactLabelMap: {
+        select: { label: { select: { id: true, name: true, color: true, description: true } } },
+      },
+      contactGroups: {
+        select: { contactGroup: { select: { id: true, name: true, createdAt: true } } },
+      },
+      Lifecycle: { select: { id: true, name: true } },
+      customFields: {
+        select: {
+          id: true,
+          fieldId: true,
+          value: true,
+          createdAt: true,
+          field: { select: { id: true, name: true, type: true, visibility: true } },
+        },
+      },
+      // The inbox's contact-level assignment. The list endpoint takes only the id
+      // here; the dialog names the person, so it joins the user and their team.
+      waInboxAssign: {
+        select: {
+          assignedUser: { select: { id: true, name: true, email: true, profilePhoto: true } },
+          Team: { select: { id: true, name: true } },
+        },
+      },
+      closedByUser: { select: { id: true, name: true, email: true } },
+      leads: {
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          source: true,
+          channel: true,
+          stageEnteredAt: true,
+          expectedCloseAt: true,
+          closedAt: true,
+          createdAt: true,
+          stage: { select: { id: true, name: true, color: true, status: true } },
+          pipeline: { select: { id: true, name: true } },
+          owner: { select: { id: true, name: true } },
+          assignees: { select: { assignee: { select: { id: true, name: true } } } },
+        },
+        orderBy: { createdAt: "asc" as const },
+      },
+      campaignParticipants: {
+        select: {
+          id: true,
+          campaignId: true,
+          campaign: { select: { id: true, name: true } },
+        },
+        take: 20,
+      },
+      loyaltyAccounts: {
+        select: {
+          id: true,
+          currentPoints: true,
+          lifetimePoints: true,
+          totalSpend: true,
+          referralCode: true,
+          currentTier: { select: { id: true, name: true } },
+          program: { select: { id: true, name: true } },
+        },
+      },
+    },
+  });
+}
+
 export async function getContactByIdForWebhook(contactId: string) {
   return await prisma.contact.findUnique({ where: { id: contactId } });
 }

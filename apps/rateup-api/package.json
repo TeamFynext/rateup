@@ -23,7 +23,8 @@
     "fmt:check": "oxfmt --check",
     "test": "vitest --silent",
     "prepare": "husky",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "recover:campaign-sends": "tsx scripts/recover-unrecorded-campaign-sends.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1123.0",
