@@ -9,6 +9,7 @@ import {
   IconLink,
   IconLoader2,
   IconMessageCircle,
+  IconMessageStar,
   IconPlus,
   IconShoppingBag,
   IconSparkles,
@@ -16,6 +17,7 @@ import {
   IconUserPlus,
   IconUsers,
 } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,6 +42,16 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import InfoButton from "@/components/Button/InfoButton.tsx";
+import { calculateGiveback } from "@/components/dashboard/loyalty/giveback/calculateGiveback.ts";
+import { GivebackPanel } from "@/components/dashboard/loyalty/giveback/GivebackPanel.tsx";
+import {
+  RewardExamplePicker,
+  type RewardExamplePick,
+} from "@/components/dashboard/loyalty/giveback/RewardExamplePicker.tsx";
+import { useProgrammeGiveback } from "@/components/dashboard/loyalty/giveback/useProgrammeGiveback.ts";
+import { useRewardEconomicsContext } from "@/components/dashboard/loyalty/giveback/useRewardEconomicsContext.ts";
+import { asPresetKey } from "@/components/dashboard/loyalty/onboarding/rewardExamples.ts";
+import { ReviewRewardsTab } from "@/components/dashboard/loyalty/rewards/ReviewRewardsTab.tsx";
 import {
   couponSchema,
   giftSchema,
@@ -71,6 +83,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { LoyaltyRewardStatus, TemplateType } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
+
+import { giftFromExample, pointRewardFromExample } from "./fromExample.ts";
 
 /**
  * Shown instead of a bare gap when a reward category has nothing in it yet. The create action is
@@ -200,8 +214,11 @@ export function RewardsPage() {
   });
 
   const [rewardsViewMode, setRewardsViewMode] = useState("list");
+  /** Which tab's Create button opened the example picker, or null when it is closed. */
+  const [pickingFor, setPickingFor] = useState<"point-rewards" | "free-gifts" | null>(null);
   const [selectedRewardCategory, setSelectedRewardCategory] = useState("point-rewards");
   const confirm = useConfirm();
+  const navigate = useNavigate();
 
   // Form states
   const [rewardFormCategory, setRewardFormCategory] = useState("point-rewards");
@@ -340,8 +357,8 @@ export function RewardsPage() {
           giftQuantity: editingReward.stockQuantity || 1,
           waTemplateId: editingReward.waTemplateId || undefined,
           tierIds: editingReward.availableForTiers || [],
+          estimatedValue: editingReward.rewardValue?.estimatedValue || 0,
           // Default others
-          estimatedValue: 0,
           restrictions: "",
         });
       }
@@ -359,6 +376,26 @@ export function RewardsPage() {
     setRewardTierRestriction(false);
     setMinimumSpendEnabled(false);
     setTimeRestrictionsEnabled(false);
+  };
+
+  /**
+   * A picked example prefills the normal create form rather than saving straight away: the
+   * tier limits, terms and minimum spend all live there, and this reward goes live to
+   * customers the moment it is saved.
+   */
+  const handlePickExample = (pick: RewardExamplePick) => {
+    const category = pickingFor ?? "point-rewards";
+    setPickingFor(null);
+    resetForm();
+
+    if (category === "free-gifts") {
+      giftForm.reset(giftFromExample(pick, defaultGiftValues));
+    } else {
+      pointRewardForm.reset(pointRewardFromExample(pick, defaultPointRewardValues));
+    }
+
+    setRewardFormCategory(category);
+    setRewardsViewMode("create");
   };
 
   const handleSaveReferralSettings = () => {
@@ -494,6 +531,10 @@ export function RewardsPage() {
       pointsCost: 0,
       rewardValue: {
         description: data.description || "",
+        // Kept so the gift can be costed. `rewardType` names the dialect the giveback
+        // normaliser reads (`giveback/calculateGiveback.ts`).
+        rewardType: "free-item" as const,
+        estimatedValue: data.estimatedValue || undefined,
       },
       stockQuantity: data.giftQuantity,
       waTemplateId: data.waTemplateId || undefined,
@@ -526,6 +567,10 @@ export function RewardsPage() {
     }
   };
 
+  // What a point is worth, from the programme and its default earning rule.
+  const economics = useRewardEconomicsContext();
+  const programmeGiveback = useProgrammeGiveback();
+
   const loyaltyTemplates = templates?.filter((t) => t.templateType === TemplateType.LOYALTY);
 
   // Filter rewards by category
@@ -534,6 +579,9 @@ export function RewardsPage() {
   const couponsList = rewards?.filter((r) => r.rewardType === "coupon") || [];
 
   const freeGiftsList = rewards?.filter((r) => r.rewardType === "assigned") || [];
+
+  // Earned by tapping the Google review link after the feedback flow; managed there.
+  const reviewRewardsList = rewards?.filter((r) => r.rewardType === "review") || [];
 
   if (isRewardsLoading || isSubscriptionLoading || isTiersLoading) {
     return <RateupLoader />;
@@ -604,6 +652,15 @@ export function RewardsPage() {
                   </Badge>
                 </div>
               </TabsTrigger>
+              <TabsTrigger value="review">
+                <div className="flex items-center gap-2">
+                  <IconMessageStar className="w-4 h-4" />
+                  <span>{translations("Review Rewards")}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {reviewRewardsList.length}
+                  </Badge>
+                </div>
+              </TabsTrigger>
             </TabsList>
 
             {/* Point Rewards */}
@@ -612,18 +669,24 @@ export function RewardsPage() {
                 <p className="text-sm text-muted-foreground">
                   Traditional rewards where customers spend points to get benefits
                 </p>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setRewardFormCategory("point-rewards");
-                    setRewardsViewMode("create");
-                    resetForm();
-                  }}
-                >
+                <Button size="sm" onClick={() => setPickingFor("point-rewards")}>
                   <IconPlus className="w-4 h-4 mr-1.5" />
                   Create Reward
                 </Button>
               </div>
+
+              {/* The catalog decides what a point is worth, so this is where a change to
+                  the programme's cost actually happens — on a live programme, with real
+                  customers, which is a sharper edge than the setup wizard. */}
+              {rewardsList.length > 0 && (
+                <GivebackPanel
+                  result={calculateGiveback(programmeGiveback)}
+                  currencySymbol={programmeGiveback.currencySymbol}
+                  currencyCode={programmeGiveback.currencyCode}
+                  pointsName={programmeGiveback.pointsName}
+                  averageOrderValue={programmeGiveback.averageOrderValue}
+                />
+              )}
 
               {rewardsList.length === 0 && (
                 <RewardsEmptyState
@@ -631,11 +694,7 @@ export function RewardsPage() {
                   title="No point rewards yet"
                   description="Point rewards let customers spend the points they earn on discounts, free items or services."
                   actionLabel="Create Reward"
-                  onAction={() => {
-                    setRewardFormCategory("point-rewards");
-                    setRewardsViewMode("create");
-                    resetForm();
-                  }}
+                  onAction={() => setPickingFor("point-rewards")}
                 />
               )}
 
@@ -751,14 +810,7 @@ export function RewardsPage() {
                   Personalized gifts that can be assigned to customers - Individual codes generated
                   automatically
                 </p>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setRewardFormCategory("free-gifts");
-                    setRewardsViewMode("create");
-                    resetForm();
-                  }}
-                >
+                <Button size="sm" onClick={() => setPickingFor("free-gifts")}>
                   <IconPlus className="w-4 h-4 mr-1.5" />
                   Create Gift
                 </Button>
@@ -770,11 +822,7 @@ export function RewardsPage() {
                   title="No free gifts yet"
                   description="Free gifts are assigned to specific customers, each with its own generated code. They are also what the referral program hands out."
                   actionLabel="Create Gift"
-                  onAction={() => {
-                    setRewardFormCategory("free-gifts");
-                    setRewardsViewMode("create");
-                    resetForm();
-                  }}
+                  onAction={() => setPickingFor("free-gifts")}
                 />
               )}
 
@@ -1093,9 +1141,31 @@ export function RewardsPage() {
                 </div>
               </div>
             </TabsContent>
+
+            {/* Review rewards — read-only here; created and attached under Feedback */}
+            <TabsContent value="review" className="space-y-3 mt-0">
+              <ReviewRewardsTab rewards={reviewRewardsList} />
+            </TabsContent>
           </Tabs>
         </>
       )}
+      <RewardExamplePicker
+        open={pickingFor !== null}
+        onOpenChange={(open) => setPickingFor(open ? pickingFor : null)}
+        presetKey={asPresetKey(loyaltyProgram?.onboardingPresetKey)}
+        earnRate={economics.earnRate}
+        averageOrderValue={economics.averageOrderValue}
+        currencyCode={economics.currencyCode}
+        currencySymbol={economics.currencySymbol}
+        pointsName={economics.pointsName}
+        existingNames={(rewards ?? []).map((reward) => reward.name.trim().toLowerCase())}
+        // A gift is handed out, not bought with points, so only the free-item examples fit.
+        kinds={pickingFor === "free-gifts" ? ["free_item"] : undefined}
+        pricedInPoints={pickingFor !== "free-gifts"}
+        onPick={handlePickExample}
+        onEditAverageOrderValue={() => navigate({ to: "/dashboard/loyalty/settings" })}
+      />
+
       {rewardsViewMode === "create" && (
         <RewardFormContainer
           category={rewardFormCategory}

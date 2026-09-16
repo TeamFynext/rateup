@@ -21,6 +21,7 @@ function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsDa
             createdAt={flow.createdAt}
             teamsData={teamsData}
             version={flow.version}
+            categories={flow.categories}
             responseCount={responseCount}
           />
         );

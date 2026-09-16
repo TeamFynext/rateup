@@ -93,11 +93,15 @@ export function TierCard({
                 </p>
               </div>
 
-              <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5">
-                <p className="text-xs text-muted-foreground">{t("Earning Rate")}</p>
-                <p className="text-sm font-semibold text-[#1873E8]">
-                  {Number(tier.pointsMultiplier)} pts/
-                  {tier.program?.currencyCode}
+              {/* `pointsMultiplier` multiplies the base rule's points — the engine computes
+                  floor((base x ruleMultiplier + bonus) x tierMultiplier). It is not a
+                  points-per-currency rate, so it reads as "x2", never as "2 pts/INR". */}
+              <div className="rounded-lg border border-border bg-muted px-3 py-1.5">
+                <p className="text-xs text-muted-foreground">{t("Earns at")}</p>
+                <p className="text-sm font-semibold text-primary">
+                  {t("{multiplier}x the base rate", {
+                    multiplier: Number(tier.pointsMultiplier),
+                  })}
                 </p>
               </div>
             </div>
@@ -106,7 +110,7 @@ export function TierCard({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 text-[#1873E8] hover:bg-blue-50"
+                className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
                 onClick={onStartEdit}
               >
                 <IconPencil className="h-3.5 w-3.5" />
@@ -146,7 +150,7 @@ export function TierCard({
               <Button
                 type="submit"
                 size="sm"
-                className="h-8 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                className="h-8"
                 disabled={updateTierMutation.isPending}
               >
                 {updateTierMutation.isPending ? (
@@ -205,19 +209,21 @@ export function TierCard({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor={field.name} className="text-xs">
-                    {t("Earning Rate")}
+                    {t("Earns at")}
                   </FieldLabel>
                   <div className="mt-1 flex items-center gap-1">
                     <Input
                       {...field}
                       id={field.name}
+                      type="number"
                       aria-invalid={fieldState.invalid}
                       value={field.value as number}
                       className="h-9 font-semibold"
                       min="0"
+                      step="0.25"
                     />
                     <span className="whitespace-nowrap text-xs text-muted-foreground">
-                      pts/{tier?.program?.currencyCode || "currency"}
+                      {t("x the base rate")}
                     </span>
                   </div>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -246,20 +252,6 @@ export function TierCard({
                 </Field>
               )}
             />
-            <div className="px-2 py-1.5 bg-blue-50 rounded border border-blue-200">
-              <p className="text-xs text-muted-foreground">Value per point:</p>
-              <p className="font-semibold text-sm text-[#1873E8]">
-                1 pt ={" "}
-                {(() => {
-                  // Use the current form value for pointsMultiplier
-                  const points = Number(tierForm.watch("pointsMultiplier"));
-                  if (!points || points <= 0) return "-";
-                  const currency = 1;
-                  return (currency / points).toFixed(3);
-                })()}{" "}
-                {tier?.program?.currencyCode || "currency"}
-              </p>
-            </div>
           </div>
 
           <div className="flex items-center justify-between border-t pt-3">
@@ -281,7 +273,7 @@ export function TierCard({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 text-red-600 hover:bg-red-50"
+                className="h-8 text-destructive hover:bg-destructive/10"
                 onClick={() => onDelete(tier.id, tierForm.getValues("name"))}
               >
                 <IconTrash className="mr-1 h-3.5 w-3.5" />

@@ -1,5 +1,6 @@
 import { IconCheck } from "@tabler/icons-react";
 
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,6 +17,10 @@ export interface StepperStep {
   complete?: boolean;
   /** False for a step that cannot be reached yet. Defaults to true. */
   enabled?: boolean;
+  /** Replaces the step number inside the circle. A finished step still shows the tick. */
+  icon?: React.ReactNode;
+  /** A short chip after the label — an estimated time, a count. */
+  meta?: string;
 }
 
 interface StepperProps {
@@ -61,7 +66,8 @@ export function Stepper({ steps, currentStep, onStepChange, className }: Readonl
               aria-current={isCurrent ? "step" : undefined}
               onClick={() => onStepChange?.(step.id)}
               className={cn(
-                "flex min-w-0 items-center gap-2 rounded-md outline-none",
+                // Natural width, never squeezed: the connector beside it is what gives way.
+                "flex shrink-0 items-center gap-2 rounded-md outline-none",
                 "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2",
                 enabled ? "cursor-pointer" : "cursor-default",
               )}
@@ -74,11 +80,14 @@ export function Stepper({ steps, currentStep, onStepChange, className }: Readonl
                   !isDone && !isCurrent && "border-input text-muted-foreground/70",
                 )}
               >
-                {isDone ? <IconCheck className="size-3.5" aria-hidden /> : index + 1}
+                {isDone ? <IconCheck className="size-3.5" aria-hidden /> : (step.icon ?? index + 1)}
               </span>
+              {/* Names are never truncated — a step called "P.." tells nobody anything. Below
+                  `md` only the current step is named and the rest are their circles. */}
               <span
                 className={cn(
-                  "truncate text-[13px] whitespace-nowrap",
+                  "text-[13px] whitespace-nowrap",
+                  !isCurrent && "hidden md:inline",
                   isCurrent && "text-foreground font-semibold",
                   !isCurrent && isDone && "text-secondary-foreground font-medium",
                   !isCurrent && !isDone && "text-muted-foreground/70 font-medium",
@@ -86,6 +95,16 @@ export function Stepper({ steps, currentStep, onStepChange, className }: Readonl
               >
                 {step.label}
               </span>
+              {/* Only the current step carries its chip: six chips do not fit beside six
+                  names at the wizard's width, and it is the step in hand that is timed. */}
+              {step.meta && isCurrent && (
+                <Badge
+                  variant="outline"
+                  className="hidden h-5 shrink-0 px-1.5 text-[10px] sm:inline-flex"
+                >
+                  {step.meta}
+                </Badge>
+              )}
             </button>
 
             {isLast ? null : (
@@ -94,7 +113,7 @@ export function Stepper({ steps, currentStep, onStepChange, className }: Readonl
               // It fills behind a finished step, so the rail reads as progress.
               <span
                 className={cn(
-                  "mr-3.5 ml-1.5 h-px min-w-5 flex-1",
+                  "mr-2 ml-1 h-px min-w-2 flex-1 md:mr-3 md:ml-1.5 md:min-w-3",
                   isDone ? "bg-primary" : "bg-border",
                 )}
               />

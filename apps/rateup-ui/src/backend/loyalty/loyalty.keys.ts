@@ -17,7 +17,12 @@
 type KeyPart = unknown;
 
 export const loyaltyKeys = {
-  dashboard: () => ["loyaltyDashboardData"] as const,
+  /** Without a period this is the prefix that sweeps every Overview window. */
+  dashboard: (period?: KeyPart, tz?: KeyPart) =>
+    (period === undefined
+      ? ["loyaltyDashboardData"]
+      : ["loyaltyDashboardData", period, tz]) as readonly unknown[],
+  giveback: () => ["loyalty-giveback"] as const,
 
   /**
    * NOTE — behaviour change. Two invalidations in `customer.query.ts` (the assign-reward
@@ -37,6 +42,12 @@ export const loyaltyKeys = {
       ? ["loyaltyCustomer"]
       : ["loyaltyCustomer", customerId]) as readonly unknown[],
   customerByContact: (contactId: KeyPart) => ["loyaltyCustomerByContact", contactId] as const,
+  contactLookup: (phone: KeyPart) => ["loyaltyContactLookup", phone] as const,
+  /** The cashier's "from contacts" list. Without a search this is the prefix that sweeps every one. */
+  enrolmentContacts: (search?: KeyPart) =>
+    (search === undefined
+      ? ["loyaltyEnrolmentContacts"]
+      : ["loyaltyEnrolmentContacts", search]) as readonly unknown[],
 
   tiers: () => ["loyalty-tiers"] as const,
   tier: (tierId: KeyPart) => ["loyalty-tier", tierId] as const,
@@ -48,6 +59,9 @@ export const loyaltyKeys = {
   earningRule: (ruleId: KeyPart) => ["loyalty-earning-rule", ruleId] as const,
 
   program: () => ["loyalty-program"] as const,
+
+  onboardingPresets: () => ["loyalty-onboarding-presets"] as const,
+  onboardingState: () => ["loyalty-onboarding-state"] as const,
 
   redeems: () => ["loyaltyRedeems"] as const,
   redemptions: () => ["loyaltyRedemptions"] as const,
@@ -63,6 +77,19 @@ export const loyaltyKeys = {
 
   templates: () => ["LoyaltyTemplate"] as const,
 
+  feedback: () => ["loyalty-feedback"] as const,
+  feedbackFlows: () => ["loyalty-feedback-flows"] as const,
+  /** Without a period this is the prefix that sweeps every results window. */
+  feedbackResults: (period?: KeyPart, tz?: KeyPart) =>
+    (period === undefined
+      ? ["loyalty-feedback-results"]
+      : ["loyalty-feedback-results", period, tz]) as readonly unknown[],
+  /** Without a query this is the prefix that sweeps every requests page. */
+  feedbackRequests: (query?: KeyPart) =>
+    (query === undefined
+      ? ["loyalty-feedback-requests"]
+      : ["loyalty-feedback-requests", query]) as readonly unknown[],
+
   cashierSearch: (search: KeyPart) => ["loyalty-cashier-search", search] as const,
   /** Without a phone this is the prefix that sweeps every cashier lookup. */
   cashierCustomer: (phone?: KeyPart) =>
@@ -73,9 +100,11 @@ export const loyaltyKeys = {
 
 export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
   loyaltyKeys.dashboard(),
+  loyaltyKeys.giveback(),
   loyaltyKeys.customers(),
   loyaltyKeys.customer(),
   ["loyaltyCustomerByContact"],
+  ["loyaltyContactLookup"],
   loyaltyKeys.tiers(),
   ["loyalty-tier"],
   loyaltyKeys.rewards(),
@@ -83,11 +112,16 @@ export const loyaltyKeyRoots: readonly (readonly unknown[])[] = [
   loyaltyKeys.earningRules(),
   ["loyalty-earning-rule"],
   loyaltyKeys.program(),
+  loyaltyKeys.onboardingState(),
   loyaltyKeys.redeems(),
   loyaltyKeys.redemptions(),
   loyaltyKeys.transactions(),
   loyaltyKeys.approvals(),
   loyaltyKeys.templates(),
+  loyaltyKeys.feedback(),
+  loyaltyKeys.feedbackFlows(),
+  loyaltyKeys.feedbackResults(),
+  loyaltyKeys.feedbackRequests(),
   ["loyalty-cashier-search"],
   loyaltyKeys.cashierCustomer(),
 ];

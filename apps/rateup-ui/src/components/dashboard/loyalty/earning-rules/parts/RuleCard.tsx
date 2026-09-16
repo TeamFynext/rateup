@@ -28,11 +28,18 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
+import { EarnRateField } from "./EarnRateField.tsx";
 import { earningRuleSchema, formatStatusLabel, getRuleIcon, toDateInputValue } from "./shared.tsx";
 import type { EarningRuleFormValues } from "./shared.tsx";
 
@@ -43,6 +50,9 @@ export function RuleCard({
   onCancelEdit,
   onDelete,
   isDeleting,
+  isDefaultRule = false,
+  currencySymbol = "₹",
+  pointsName = "Points",
 }: Readonly<{
   rule: LoyaltyEarningRule;
   isEditing: boolean;
@@ -50,6 +60,14 @@ export function RuleCard({
   onCancelEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
+  /**
+   * The programme's base rule. It applies to every purchase, so it cannot be deleted or
+   * switched off — an inactive default rule means customers earn nothing, and the API
+   * refuses to activate a programme without one.
+   */
+  isDefaultRule?: boolean;
+  currencySymbol?: string;
+  pointsName?: string;
 }>) {
   const uid = useId();
   const { t } = useTranslation();
@@ -97,6 +115,9 @@ export function RuleCard({
     const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } = values;
     const payload = {
       ...rest,
+      // The default rule is the base rate itself; its multiplier is never offered, so a
+      // stale stored value must not ride along.
+      multiplier: isDefaultRule ? 1 : rest.multiplier,
       allowedDays: scheduleEnabled ? (allowedDays ?? []) : [],
       allowedTimeRanges:
         scheduleEnabled && (timeFrom || timeTo)
@@ -136,41 +157,62 @@ export function RuleCard({
 
             {/* Compact Stats */}
             <div className="flex shrink-0 items-center gap-2">
-              {rule.multiplier && rule.multiplier !== 1.0 && (
-                <div className="rounded border border-purple-200 bg-purple-50 px-2 py-1">
-                  <p className="text-xs font-medium text-purple-700">{rule.multiplier}x</p>
+              {/* The base rate is the number the whole programme hangs on, so on the default
+                  rule it is shown outright rather than left to the edit form. */}
+              {isDefaultRule && (
+                <div className="rounded border border-border bg-muted px-2 py-1">
+                  <p className="text-xs font-medium text-primary">
+                    {t("{points} per {symbol}1", {
+                      points: `${Number(rule.pointsPerUnit ?? 0)} ${pointsName}`,
+                      symbol: currencySymbol,
+                    })}
+                  </p>
                 </div>
               )}
-              {rule.bonusPoints && rule.bonusPoints !== 0 && (
-                <div className="rounded border border-blue-200 bg-blue-50 px-2 py-1">
-                  <p className="text-xs font-medium text-[#1873E8]">+{rule.bonusPoints}</p>
+              {/* Prisma `Decimal` columns arrive over the wire as strings, so these have to be
+                  coerced before comparing — `"1.00" !== 1.0` is true, which rendered a "1x"
+                  chip on every rule that had no multiplier at all, and a "+0" beside it. */}
+              {Number(rule.multiplier ?? 1) !== 1 && (
+                <div className="rounded border border-border bg-muted px-2 py-1">
+                  <p className="text-xs font-medium text-foreground">{Number(rule.multiplier)}x</p>
                 </div>
               )}
-              <Badge
-                className={`text-xs h-5 ${
-                  rule.status === "active"
-                    ? "bg-green-100 text-green-700 border border-green-200"
-                    : rule.status === "scheduled"
-                      ? "bg-blue-100 text-blue-700 border border-blue-200"
-                      : "bg-gray-100 text-gray-700 border border-gray-200"
-                }`}
-              >
-                {formatStatusLabel(rule.status)}
-              </Badge>
+              {Number(rule.bonusPoints ?? 0) !== 0 && (
+                <div className="rounded border border-border bg-muted px-2 py-1">
+                  <p className="text-xs font-medium text-primary">+{Number(rule.bonusPoints)}</p>
+                </div>
+              )}
+              {isDefaultRule ? (
+                <Badge variant="secondary" className="h-5 text-xs">
+                  {t("Default")}
+                </Badge>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className={`h-5 text-xs ${
+                    rule.status === "active"
+                      ? "bg-green-600/10 text-green-700 dark:text-green-500"
+                      : ""
+                  }`}
+                >
+                  {formatStatusLabel(rule.status)}
+                </Badge>
+              )}
             </div>
 
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-1.5">
-              <Switch
-                checked={isEnabled}
-                onCheckedChange={onToggle}
-                className="data-[state=checked]:bg-[#1873E8]"
-                disabled={toggleStatusMutation.isPending}
-              />
+              {!isDefaultRule && (
+                <Switch
+                  checked={isEnabled}
+                  onCheckedChange={onToggle}
+                  disabled={toggleStatusMutation.isPending}
+                />
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 text-[#1873E8] hover:bg-blue-50"
+                className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
                 onClick={onStartEdit}
               >
                 <IconPencil className="h-3.5 w-3.5" />
@@ -208,7 +250,9 @@ export function RuleCard({
       <CardContent>
         <form onSubmit={ruleForm.handleSubmit(onSave)} className="space-y-4">
           <div className="mb-3 flex items-center justify-between">
-            <h4 className="text-sm font-semibold">Edit Rule</h4>
+            <h4 className="text-sm font-semibold">
+              {isDefaultRule ? t("Edit base earning rule") : t("Edit Rule")}
+            </h4>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -226,7 +270,7 @@ export function RuleCard({
               <Button
                 type="submit"
                 size="sm"
-                className="h-8 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                className="h-8"
                 disabled={updateRuleMutation.isPending}
               >
                 {updateRuleMutation.isPending ? (
@@ -268,7 +312,7 @@ export function RuleCard({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name} className="text-xs">
-                      {t("Define how customers earn points through purchases and activities")}
+                      {t("Description")}
                     </FieldLabel>
                     <Textarea
                       {...field}
@@ -283,26 +327,61 @@ export function RuleCard({
               />
             </div>
 
+            {/* The engine picks ONE winning rule by priority and stops, so this rate is not
+                a modifier on the default rule — it REPLACES it whenever this rule matches.
+                Hiding it left every extra rule silently earning at the 1.0 default. */}
             <Controller
               control={ruleForm.control}
-              name="multiplier"
+              name="pointsPerUnit"
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name} className="text-xs">
-                    {t("Multiplier")}
-                  </FieldLabel>
-                  <Input
-                    {...field}
-                    id={field.name}
-                    aria-invalid={fieldState.invalid}
-                    value={field.value as number}
-                    step="0.1"
-                    className="mt-1 h-9"
-                  />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
+                <EarnRateField
+                  id={`${uid}-rate`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  currencySymbol={currencySymbol}
+                  pointsName={pointsName}
+                  label={
+                    isDefaultRule ? t("How customers earn") : t("Earn rate while this rule applies")
+                  }
+                  description={
+                    isDefaultRule
+                      ? undefined
+                      : t("Replaces the default rate, it does not add to it.")
+                  }
+                  invalid={fieldState.invalid}
+                  error={fieldState.error}
+                />
               )}
             />
+
+            {/* The default rule IS the base rate, so a multiplier on it would only be the
+                rate in disguise; it stays at 1 and the field is not offered. */}
+            {!isDefaultRule && (
+              <Controller
+                control={ruleForm.control}
+                name="multiplier"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name} className="text-xs">
+                      {t("Multiplier")}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      value={field.value as number}
+                      step="0.1"
+                      className="mt-1 h-9"
+                    />
+                    <FieldDescription className="text-xs">
+                      {t("On top of the rate above — 2 doubles it.")}
+                    </FieldDescription>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+            )}
 
             <Controller
               control={ruleForm.control}
@@ -384,7 +463,6 @@ export function RuleCard({
                       ruleForm.setValue("timeTo", "");
                     }
                   }}
-                  className="data-[state=checked]:bg-[#1873E8]"
                 />
               </div>
               {scheduleEnabled && (
@@ -489,7 +567,6 @@ export function RuleCard({
                     setTierRestrictionEnabled(checked);
                     if (!checked) ruleForm.setValue("applicableToTiers", []);
                   }}
-                  className="data-[state=checked]:bg-[#1873E8]"
                 />
               </div>
               {tierRestrictionEnabled && (
@@ -549,7 +626,6 @@ export function RuleCard({
                       ruleForm.setValue("validUntil", null);
                     }
                   }}
-                  className="data-[state=checked]:bg-[#1873E8]"
                 />
               </div>
               {limitedPeriodEnabled && (
@@ -599,36 +675,43 @@ export function RuleCard({
             </div>
           </div>
 
-          <div className="flex items-center justify-between border-t pt-3">
-            <div className="flex items-center gap-2">
-              <FieldLabel htmlFor={`${uid}-enable-rule`} className="text-xs">
-                Enable Rule
-              </FieldLabel>
-              <Switch
-                id={`${uid}-enable-rule`}
-                checked={isEnabled}
-                onCheckedChange={onToggle}
-                className="data-[state=checked]:bg-[#1873E8]"
-                disabled={toggleStatusMutation.isPending}
-              />
+          {/* Neither control exists for the default rule: it applies to every purchase, and
+              disabling or deleting it stops the programme earning altogether. */}
+          {isDefaultRule ? (
+            <div className="border-t pt-3 text-xs text-muted-foreground">
+              {t("This rule applies to every purchase, so it cannot be switched off.")}
             </div>
+          ) : (
+            <div className="flex items-center justify-between border-t pt-3">
+              <div className="flex items-center gap-2">
+                <FieldLabel htmlFor={`${uid}-enable-rule`} className="text-xs">
+                  {t("Enable Rule")}
+                </FieldLabel>
+                <Switch
+                  id={`${uid}-enable-rule`}
+                  checked={isEnabled}
+                  onCheckedChange={onToggle}
+                  disabled={toggleStatusMutation.isPending}
+                />
+              </div>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 text-red-600 hover:bg-red-50"
-              onClick={onDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <IconTrash className="mr-1 h-3.5 w-3.5" />
-              )}
-              Delete Rule
-            </Button>
-          </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-destructive hover:bg-destructive/10"
+                onClick={onDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <IconTrash className="mr-1 h-3.5 w-3.5" />
+                )}
+                {t("Delete Rule")}
+              </Button>
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>

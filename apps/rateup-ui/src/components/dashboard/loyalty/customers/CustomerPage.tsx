@@ -1,9 +1,9 @@
-// Extracted verbatim from the `/dashboard/loyalty/customers/` route so the route file carries routing
-// config only. Behaviour is unchanged.
+// Extracted from the `/dashboard/loyalty/customers/` route so the route file carries routing
+// config only. The opened member lives in the URL as `?phone=`, not in component state, so
+// other screens — the Activity ledger — can link straight to a customer.
 
 import {
   IconArrowLeft,
-  IconChevronRight,
   IconCopy,
   IconDownload,
   IconFileSpreadsheet,
@@ -11,9 +11,11 @@ import {
   IconFilter,
   IconLink,
   IconLoader2,
+  IconPencil,
   IconPhone,
   IconSearch,
 } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,11 +23,11 @@ import { toast } from "sonner";
 
 import {
   useExportCustomersMutation,
-  useGetLoyaltyCustomerById,
   useLoyaltyCustomers,
+  useUpdateLoyaltyCustomerMutation,
 } from "@/backend/loyalty/customer/customer.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import { CustomerDetailPanel } from "@/components/loyalty/CustomerDetailPanel.tsx";
+import { CustomerSummaryPanel } from "@/components/loyalty/cashier/CustomerSummaryPanel.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -40,6 +42,10 @@ import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import type { WaInboxMessage } from "@/types/global";
 import { docsPath } from "@/utils/constants.ts";
+
+import { LOYALTY_PATHS } from "../paths.ts";
+import type { CustomersSearch } from "./customers.search.ts";
+import { EditCustomerDialog } from "./EditCustomerDialog.tsx";
 
 interface CustomerDetails {
   id: string;
@@ -108,12 +114,13 @@ interface CustomerDetails {
   }[];
 }
 
-export function CustomerPage() {
+export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) {
   const { t } = useTranslation();
-  const [viewMode, setViewMode] = useState<"list" | "details">("list");
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
+  const navigate = useNavigate();
+  const openedPhone = search.phone;
+  const [editing, setEditing] = useState(false);
+  const updateCustomer = useUpdateLoyaltyCustomerMutation();
 
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination] = useState({
     pageIndex: 0,
@@ -125,17 +132,30 @@ export function CustomerPage() {
   });
 
   // API Hooks
+  //
+  // An opened member narrows the list to them, so the row behind the details view is one
+  // the list already holds and `?phone=` is the whole of that view's state. That is what
+  // lets the Activity ledger link straight to a customer, and it keeps the row derived
+  // from the query rather than copied into state, so an edit shows up on refetch.
   const { data: customersData, isLoading } = useLoyaltyCustomers(
     pagination,
-    searchTerm,
+    openedPhone ?? searchTerm,
     sorting,
     [],
   );
-  const { data: customerDetails } = useGetLoyaltyCustomerById(selectedCustomerId ?? "");
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
 
-  const panelTier = customerDetails?.currentTier ?? selectedCustomer?.currentTier ?? null;
+  const customers: CustomerDetails[] = customersData ?? [];
+  const selectedCustomer = openedPhone
+    ? (customers.find((row) => onlyDigits(row.contact?.phone) === onlyDigits(openedPhone)) ?? null)
+    : null;
+
+  // The details view is found by number, so a row without one has nothing to open. The API
+  // only enrols contacts that have a phone, so this is a guard rather than a case to design for.
+  const openCustomer = (phone: string | undefined) => {
+    if (phone) navigate({ to: LOYALTY_PATHS.customers, search: { phone } });
+  };
 
   const getTierBadgeClassName = (tierColor: string) => {
     if (tierColor === "purple") {
@@ -155,17 +175,25 @@ export function CustomerPage() {
       accessorKey: "contact.name",
       id: "customerName",
       header: "Customer",
+      // The name opens the member, which is what an Actions column with a single "View"
+      // button was there to do. A row with one action does not need a column for it.
       cell: ({ row }) => (
-        <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => openCustomer(row.original.contact?.phone)}
+          className="-mx-1 flex items-center gap-3 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           <PremiumAvatar name={row.getValue("customerName") ?? ""} size="sm" />
           <div>
-            <p className="font-semibold text-sm">{row.getValue("customerName")}</p>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <p className="text-sm font-semibold text-primary underline-offset-2 group-hover:underline">
+              {row.getValue("customerName")}
+            </p>
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <IconPhone className="w-3 h-3" />
               {row.original.contact?.phone}
             </p>
           </div>
-        </div>
+        </button>
       ),
     },
     {
@@ -260,35 +288,12 @@ export function CustomerPage() {
         </div>
       ),
     },
-    {
-      id: "actions",
-      header: t("Actions"),
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-primary hover:text-primary hover:bg-primary/10"
-          onClick={() => {
-            handleViewCustomer(row.original);
-          }}
-        >
-          {t("View")}
-          <IconChevronRight className="w-4 h-4 ml-1" />
-        </Button>
-      ),
-    },
   ];
-
-  const handleViewCustomer = (customer: CustomerDetails) => {
-    setSelectedCustomer(customer);
-    setSelectedCustomerId(customer.id);
-    setViewMode("details");
-  };
 
   if (isLoading) return <div className="flex items-center justify-center py-8">loading</div>;
   return (
     <>
-      {viewMode === "list" ? (
+      {!openedPhone ? (
         <div className="space-y-5">
           {/* Header */}
           <div className="flex items-start justify-between">
@@ -341,47 +346,59 @@ export function CustomerPage() {
           </div>
 
           {/* Customers Table */}
-          <DataTable columns={columns} data={customersData || []} />
+          <DataTable columns={columns} data={customers} />
         </div>
       ) : (
-        selectedCustomer && (
-          <div className="space-y-5">
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Button
               variant="ghost"
-              onClick={() => {
-                setViewMode("list");
-                setSelectedCustomerId(null);
-              }}
+              onClick={() => navigate({ to: LOYALTY_PATHS.customers, search: {} })}
             >
               <IconArrowLeft className="w-4 h-4 mr-2" />
               {t("Back to Customers")}
             </Button>
-            <CustomerDetailPanel
-              customer={{
-                id: selectedCustomer.id,
-                contactId: selectedCustomer.contactId,
-                name: selectedCustomer.contact.name,
-                phone: selectedCustomer.contact.phone,
-                email: selectedCustomer.contact.email,
-                currentPoints: customerDetails?.currentPoints ?? selectedCustomer.currentPoints,
-                lifetimePoints: customerDetails?.lifetimePoints ?? selectedCustomer.lifetimePoints,
-                currentTier: panelTier
-                  ? {
-                      id: panelTier.id,
-                      name: panelTier.name,
-                      color: panelTier.color,
-                    }
-                  : null,
-                status: customerDetails?.status ?? selectedCustomer.status,
-                referralCode: customerDetails?.referralCode ?? selectedCustomer.referralCode,
-                createdAt: selectedCustomer.createdAt,
-              }}
-              transactions={customerDetails?.transactions}
-              orgId={user?.user?.orgId || ""}
-            />
+            {/* Their own details — name, birthday — as opposed to their points and tier,
+                which the panel below owns and the counter changes. Only offered once the
+                account is known: a link can name a number the programme has no member for. */}
+            {selectedCustomer && (
+              <Button variant="outline" onClick={() => setEditing(true)}>
+                <IconPencil className="mr-2 h-4 w-4" />
+                {t("Edit details")}
+              </Button>
+            )}
           </div>
-        )
+          {/* The same panel staff see at the counter; actions open the cashier. It carries
+              its own loader and its own "no loyalty account" empty state. */}
+          <CustomerSummaryPanel phone={openedPhone} />
+
+          {selectedCustomer && (
+            <EditCustomerDialog
+              // Keyed so each member opens the dialog with their own values, rather than
+              // whoever was edited first.
+              key={selectedCustomer.id}
+              open={editing}
+              customer={selectedCustomer.contact}
+              isSaving={updateCustomer.isPending}
+              onClose={() => setEditing(false)}
+              onSave={(patch) =>
+                updateCustomer.mutate(
+                  { customerId: selectedCustomer.id, data: patch },
+                  { onSuccess: () => setEditing(false) },
+                )
+              }
+            />
+          )}
+        </div>
       )}
     </>
   );
+}
+
+/**
+ * Phone numbers are compared as digits: the ledger, the cashier and the URL each spell the
+ * same number differently, and the router may have round-tripped it through a number.
+ */
+function onlyDigits(value: string | null | undefined) {
+  return (value ?? "").replace(/\D/g, "");
 }

@@ -8,7 +8,10 @@ export type ReferralMessageTemplate = string | unknown[] | JSONContent;
 export interface LoyaltyProgram {
   id: string;
   orgId: string;
+  /** The programme's own name, e.g. "Kettle Rewards". */
   name: string;
+  /** The business behind it, e.g. "Kettle & Co". Null on programmes set up before it was asked. */
+  businessName?: string | null;
   status: "draft" | "active" | "paused";
   currencyName: string;
   currencyCode: string;
@@ -24,6 +27,14 @@ export interface LoyaltyProgram {
   tiersEnabled: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
   defaultCountryCode?: string;
+  /** Typical spend in one visit; null when the merchant never set it. */
+  averageOrderValue?: number | null;
+  /** Which starter pack the setup wizard used, if it ran. Picks example vocabulary. */
+  onboardingPresetKey?: string | null;
+  /** The last wizard step saved; what "Continue setup" resumes from. */
+  onboardingStep?: string | null;
+  /** When the programme was first activated — the "live since" date. */
+  onboardingCompletedAt?: string | null;
   referralMessageTemplate?: ReferralMessageTemplate;
   enablePointsExpiration?: boolean;
   pointsExpirationMonths?: number;
@@ -31,7 +42,21 @@ export interface LoyaltyProgram {
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
+  /** Inside an open 24-hour chat, send a notification's text as a plain message. */
+  sendTextInSession?: boolean;
   enableShopifyOrderPoints?: boolean;
+  /** Months of trailing spend that count towards a tier; null = lifetime. */
+  tierQualificationWindowMonths?: number | null;
+  /* ── Venue & branding profile ── */
+  timezone?: string | null;
+  logoUrl?: string | null;
+  brandColor?: string | null;
+  heroImageUrl?: string | null;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  /** Print materials (QR card, brochure) — narrowed with `parseMaterials` on the UI. */
+  materials?: unknown;
   createdAt: Date;
   updatedAt: Date;
   whatsappSettingsId?: string;
@@ -54,16 +79,23 @@ export interface LoyaltyProgramInput {
   tiersEnabled?: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
   defaultCountryCode?: string;
+  /** Typical spend in one visit; null when the merchant never set it. */
+  averageOrderValue?: number | null;
+  /** Which starter pack the setup wizard used, if it ran. Picks example vocabulary. */
+  onboardingPresetKey?: string | null;
   referralMessageTemplate?: ReferralMessageTemplate;
   pointsExpirationMonths?: number;
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
+  sendTextInSession?: boolean;
   enableShopifyOrderPoints?: boolean;
   programActive?: boolean;
   pointsActivityAlerts?: boolean;
   enablePointsExpiration?: boolean;
   whatsappSettingsId?: string;
+  /** The Materials page's document; null clears it. */
+  materials?: Record<string, unknown> | null;
 }
 
 export interface LoyaltyProgramUpdateInput extends Partial<LoyaltyProgramInput> {}

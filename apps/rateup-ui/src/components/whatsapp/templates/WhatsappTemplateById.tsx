@@ -84,9 +84,27 @@ import { toSelectOptions } from "@/utils/select-options.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
 
+/** Where saving a new template lands — the list the template belongs to. */
+type BackTarget =
+  | { to: "/dashboard/whatsapp/templates" }
+  | { to: "/dashboard/loyalty/messages"; search: { tab: "templates" } };
+
+const DEFAULT_BACK: BackTarget = { to: "/dashboard/whatsapp/templates" };
+
 export function WhatsappTemplateById({
   forceTemplateType,
-}: Readonly<{ forceTemplateType?: TemplateType }>) {
+  backTo = DEFAULT_BACK,
+  initialValues,
+}: Readonly<{
+  forceTemplateType?: TemplateType;
+  backTo?: BackTarget;
+  /**
+   * Opening state for a template that does not exist yet, over the blank defaults below —
+   * how the loyalty Messages page hands a starter message to the editor. Read once, as
+   * RHF reads `defaultValues`, so it has to be resolvable on the first render.
+   */
+  initialValues?: Partial<TemplateFormValues>;
+}>) {
   const uid = useId();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
@@ -134,6 +152,7 @@ export function WhatsappTemplateById({
         },
         whatsappSettingsPhoneId: "",
       },
+      ...initialValues,
     },
   });
   const configForm = useForm<z.infer<typeof configSchema>>({
@@ -303,9 +322,7 @@ export function WhatsappTemplateById({
     () => {
       form.reset();
       setIsSubmitting(false);
-      navigate({
-        to: "/dashboard/whatsapp/templates",
-      });
+      navigate(backTo);
     },
     () => {
       setIsSubmitting(false);
@@ -356,9 +373,7 @@ export function WhatsappTemplateById({
     () => {
       setIsSubmittingDraft(false);
       if (templateId?.length === 0) {
-        navigate({
-          to: "/dashboard/whatsapp/templates",
-        });
+        navigate(backTo);
       }
     },
     () => {

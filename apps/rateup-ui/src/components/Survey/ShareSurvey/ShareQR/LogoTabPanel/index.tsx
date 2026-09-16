@@ -164,7 +164,6 @@ function LogoTabpanel({
               <RadioGroupItem
                 id="transparent"
                 value="transparent"
-
                 className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <FieldLabel
