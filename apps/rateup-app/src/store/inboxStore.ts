@@ -7,6 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { WaMessageAssignStatus } from "../api/inbox/types";
 import { isInboxSessionExpired } from "../utils/chatbox_utils";
+import { useOpenChatStore } from "../utils/store";
 
 import {
   deleteMessageFromIDB,
@@ -40,6 +41,98 @@ export function mergeStats(existing: any, incoming: any) {
   }
   return merged;
 }
+
+/** When a message was created, as epoch ms; 0 for no message or an unparseable date. */
+export function messageTime(message: any): number {
+  const time = new Date(message?.waCreatedAt ?? message?.createdAt ?? 0).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+/**
+ * The list endpoint is ticket-grained — one row per conversation — but this
+ * store is keyed by contact. A contact with several tickets on the page used to
+ * collapse into whichever row came last, often an old closed ticket quoting an
+ * old message. Keep the row whose last message is newest.
+ */
+function latestRowPerContact(rows: any[]): any[] {
+  const byId = new Map<string, any>();
+  for (const row of rows) {
+    const seen = byId.get(row.id);
+    if (!seen || messageTime(row.lastMessage) > messageTime(seen.lastMessage)) {
+      byId.set(row.id, row);
+    }
+  }
+  return Array.from(byId.values());
+}
+
+/**
+ * Fold a server row onto the cached contact.
+ *
+ * The server is the source of truth, so its row wins — this used to be gated on
+ * `updatedAt`, but every local patch stamps that with the device clock, so a
+ * cached row almost always looked newer and the fresh one was thrown away,
+ * leaving the preview stuck on whatever the socket last delivered. The one
+ * exception is a socket frame that landed while the request was in flight: the
+ * cache then knows a newer message than the response, and keeps it along with
+ * the unread count that came with it.
+ */
+function mergeServerRow(existing: any, incoming: any, isOpen: boolean) {
+  const keepLocalMessage =
+    !!existing && messageTime(existing.lastMessage) > messageTime(incoming.lastMessage);
+  const merged = { ...existing, ...incoming };
+  if (keepLocalMessage) {
+    merged.lastMessage = existing.lastMessage;
+    merged.unReadMessageCount = existing.unReadMessageCount;
+    if (
+      messageTime({ waCreatedAt: existing.lastReceivedMessageTimeStamp }) >
+      messageTime({ waCreatedAt: incoming.lastReceivedMessageTimeStamp })
+    ) {
+      merged.lastReceivedMessageTimeStamp = existing.lastReceivedMessageTimeStamp;
+    }
+  }
+  if (isOpen) merged.unReadMessageCount = 0;
+  merged.updatedAt = new Date().toISOString();
+  return merged;
+}
+
+/**
+ * Placeholder bubbles for a send in flight are keyed by `Date.now()` — all
+ * digits. Real ids never are: `wamid.…`, Messenger/Instagram mids, `wcmid.…`.
+ */
+export function isOptimisticId(id: unknown): boolean {
+  return typeof id === "string" && /^\d{10,}$/.test(id);
+}
+
+/** The text an outgoing message carries — WhatsApp `send.text.body`, IG/FB `send.message.text`. */
+function outgoingText(message: any): string | undefined {
+  const send = message?.messageBody?.send;
+  const text = send?.text?.body ?? send?.message?.text;
+  return typeof text === "string" ? text : undefined;
+}
+
+/**
+ * The placeholder a just-arrived outgoing message replaces, matched on its text.
+ * The send request carries no client id the server could echo back, so the text
+ * is the only link. Media and other text-less sends match nothing here and are
+ * retired by the send itself (`MessageSendPanel`) once it succeeds.
+ */
+function findPlaceholderFor(thread: Map<string, any>, incoming: any): string | undefined {
+  if (incoming?.messageBody?.exchangeProcess !== "send") return undefined;
+  const text = outgoingText(incoming);
+  if (!text) return undefined;
+  const sentAt = messageTime(incoming);
+  for (const [id, message] of thread) {
+    if (!isOptimisticId(id) || outgoingText(message) !== text) continue;
+    // A refetch also brings back older sends; an earlier "ok" must not retire
+    // the placeholder for the "ok" typed just now. The stored copy is written
+    // after the placeholder, so only a message no older than it — less a minute
+    // for the phone's clock disagreeing with the server's — can be its copy.
+    if (sentAt >= messageTime(message) - PLACEHOLDER_CLOCK_SKEW_MS) return id;
+  }
+  return undefined;
+}
+
+const PLACEHOLDER_CLOCK_SKEW_MS = 60_000;
 
 type ContactsByFilter = Record<string, string[]>;
 
@@ -132,22 +225,22 @@ export const useContactsStore = create<ContactsStoreState>()(
         const { currentFilterKey } = get();
         if (!filterKey || currentFilterKey !== filterKey) return;
         let sortedList: string[] = [];
+        // Merged outside `produce` so the rows can be written to SQLite afterwards
+        // without touching revoked drafts. `openChatId`, not `selectedContact`:
+        // the chat screen never sets this store's selection.
+        const { contactsById } = get();
+        const openChatId = useOpenChatStore.getState().openChatId;
+        const mergedContacts = latestRowPerContact(contacts).map((c) =>
+          mergeServerRow(contactsById.get(c.id), c, openChatId === c.id),
+        );
         set(
           produce((state: ContactsStoreState) => {
             state.isLoading = true;
             const existingIds = state.contactsByFilter[filterKey] || [];
             const contactIdsSet = new Set(existingIds);
             const contactsByIdMap = new Map(state.contactsById);
-            contacts.forEach((c) => {
-              const { ...rest } = c;
-              const existing = contactsByIdMap.get(c.id);
-              if (!existing || new Date(c.updatedAt) > new Date(existing.updatedAt)) {
-                contactsByIdMap.set(c.id, {
-                  ...rest,
-                  unReadMessageCount: state.selectedContact?.id === c.id ? 0 : c.unReadMessageCount,
-                });
-              }
-              const updatedContact = contactsByIdMap.get(c.id);
+            mergedContacts.forEach((updatedContact) => {
+              contactsByIdMap.set(updatedContact.id, updatedContact);
 
               const isAssigned =
                 updatedContact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED;
@@ -156,7 +249,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                 return false;
               if (!isAssigned && currentFilterKey?.includes("waMessageAssignStatus:mine"))
                 return false;
-              contactIdsSet.add(c.id);
+              contactIdsSet.add(updatedContact.id);
             });
             state.contactsById = contactsByIdMap;
 
@@ -186,7 +279,10 @@ export const useContactsStore = create<ContactsStoreState>()(
             state.isLoading = false;
           }),
         );
-        Promise.all([saveContactsToDB(contacts), saveContactIdsForFilter(filterKey, sortedList)]);
+        Promise.all([
+          saveContactsToDB(mergedContacts),
+          saveContactIdsForFilter(filterKey, sortedList),
+        ]);
         const state = get();
         if (updateOtherTabs && contacts.length === 1) {
           const contactId = contacts[0].id;
@@ -583,8 +679,11 @@ export const useContactsStore = create<ContactsStoreState>()(
       resetUnreadForContact(contactId, contact) {
         if (!contact) contact = get().contactsById.get(contactId);
         if (contact && contact.unReadMessageCount !== 0) {
-          get().updateContactById(contactId, (_c: any) => ({
-            ...contact,
+          // Patch the live row, not the `contact` snapshot a caller handed in: a
+          // snapshot taken before a newer message arrived would put the old
+          // preview back.
+          get().updateContactById(contactId, (c: any) => ({
+            ...c,
             unReadMessageCount: 0,
           }));
         }
@@ -700,15 +799,18 @@ export const useMessagesStore = create<MessagesStore>()(
         const existing = new Map(entry.messages.map((x) => [x.messageId ?? x.id, x]));
 
         const changedOrNew: any[] = [];
-        let hasNewOutgoing = false;
 
         for (const msg of messages) {
           const id = msg.messageId ?? msg.id;
-          if (
-            msg.messageBody?.exchangeProcess === "send" ||
-            msg.messageBody?.exchangeProcess === "privateNote"
-          ) {
-            if (!/^\d{10,}$/.test(id)) hasNewOutgoing = true;
+          // The stored copy of a message this device sent: retire the
+          // placeholder it stands in for — that one only. This used to drop
+          // *every* placeholder whenever any outgoing message arrived, so another
+          // agent's reply, or a thread refetch, erased a send still in flight.
+          const placeholderId =
+            isOptimisticId(id) || existing.has(id) ? undefined : findPlaceholderFor(existing, msg);
+          if (placeholderId) {
+            existing.delete(placeholderId);
+            deleteMessageFromIDB(key, placeholderId);
           }
           const existingMsg = existing.get(id);
 
@@ -733,15 +835,6 @@ export const useMessagesStore = create<MessagesStore>()(
           } else {
             existing.set(id, msg);
             changedOrNew.push(msg);
-          }
-        }
-
-        if (hasNewOutgoing) {
-          for (const id of Array.from(existing.keys())) {
-            if (/^\d{10,}$/.test(id)) {
-              existing.delete(id);
-              deleteMessageFromIDB(key, id);
-            }
           }
         }
 

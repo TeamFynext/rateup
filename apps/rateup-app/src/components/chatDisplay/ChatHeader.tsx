@@ -10,12 +10,16 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import { generateInternalMessageId, namePreview } from "../../utils/chatbox_utils";
+import {
+  generateInternalMessageId,
+  getContactChannelSource,
+  namePreview,
+} from "../../utils/chatbox_utils";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
 import AssignToUser from "./chatFooter/AssignToUser";
-import { useContactsStore } from "@/store/inboxStore";
+import { useContactsStore, useMessagesStore } from "@/store/inboxStore";
 import {
   getInboxHeaderBg,
   getInboxRowTheme,
@@ -403,7 +407,16 @@ const ChatHeader = ({
   const conversationId = storedContact?.conversationId ?? contact?.conversationId;
   const isFavorite = storedContact?.isFavorite ?? contact?.isFavorite;
   const toggleFavorite = useToggleFavorite();
-  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  // A private note as the last message has `sourcePlatform: "INTERNAL"`, which
+  // painted an Instagram thread as WhatsApp. The loaded thread stands in for a
+  // deep-linked contact, which arrives without `lastMessage`.
+  const threadMessages = useMessagesStore((s) => s.messagesByKey.get(`${id}_all`)?.messages);
+  const { platform } = getContactChannelSource({
+    lastMessage: storedContact?.lastMessage ?? contact?.lastMessage,
+    messages: threadMessages,
+    igsId: contact?.igsId ?? storedContact?.igsId,
+    psid: contact?.psid ?? storedContact?.psid,
+  });
 
   // Design: 8px white glyph inside the 15px channel dot.
   const renderPlatformIcon = () => {
