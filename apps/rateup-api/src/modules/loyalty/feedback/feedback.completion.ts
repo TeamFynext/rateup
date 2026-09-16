@@ -2,6 +2,7 @@ import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { LoyaltyFeedbackRequestStatus } from "../../../../generated/prisma/client.js";
 import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { getWaSettingsById } from "../../whatsapp/settings/wa_settings.service.js";
 import { createCTAButtonMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { buildReviewRedirectUrl } from "./feedback.redirect.js";
 import { extractOverallRating, type FlowAnswer } from "./feedback.evaluate.js";
@@ -33,7 +34,14 @@ export async function onFeedbackFlowCompleted(input: FeedbackFlowCompletion): Pr
       program: {
         select: {
           orgId: true,
-          feedbackSetting: { include: { team: true, reward: true } },
+          feedbackSetting: {
+            include: {
+              team: true,
+              reward: true,
+              // The channel the survey itself went out on — see the send below.
+              flow: { select: { whatsappSettingsId: true } },
+            },
+          },
         },
       },
     },
@@ -94,6 +102,12 @@ export async function onFeedbackFlowCompleted(input: FeedbackFlowCompletion): Pr
     ? `Thank you for your feedback! Leave us a Google review and we'll send you: ${reward.name}.`
     : "Thank you for your feedback! Would you mind sharing it as a Google review?";
 
+  // Sent from the number the survey went out on, not from the org default. `sendFlow`
+  // picks the flow's own channel, so on a multi-number org the default is a *different*
+  // number, with no open 24-hour window for this customer — the CTA would be refused and
+  // the customer would see nothing after answering.
+  const channel = await flowChannelPhoneId(input.orgId, setting?.flow?.whatsappSettingsId);
+
   await sendMessage(
     input.orgId,
     createCTAButtonMessage({
@@ -102,5 +116,21 @@ export async function onFeedbackFlowCompleted(input: FeedbackFlowCompletion): Pr
       buttonText: "Review us on Google",
       url: buildReviewRedirectUrl(request.id),
     }),
+    undefined,
+    undefined,
+    channel,
   );
+}
+
+/**
+ * The `phoneId` of the channel a flow belongs to. Undefined leaves `sendMessage` on the
+ * org default, which is the right answer when the flow names no channel of its own.
+ */
+async function flowChannelPhoneId(
+  orgId: string,
+  whatsappSettingsId: string | null | undefined,
+): Promise<string | undefined> {
+  if (!whatsappSettingsId) return undefined;
+  const settings = await getWaSettingsById(whatsappSettingsId, orgId);
+  return settings?.phoneId ?? undefined;
 }

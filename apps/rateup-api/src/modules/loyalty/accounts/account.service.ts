@@ -250,7 +250,10 @@ You are now registered in our Loyalty Program.
  Share & earn rewards:
         `,
     );
-    await sendTextMessage({ phone, orgId }, null, joinLink);
+    // A second message carrying the referral link, when the caller told us which number
+    // to build it from. `sourceIdentifier` is also used as a plain "they messaged us"
+    // flag by callers that have no number, so there is not always a link to send.
+    if (joinLink) await sendTextMessage({ phone, orgId }, null, joinLink);
   }
 
   // Outside the `sourceIdentifier` block on purpose: a member enrolled by staff may already

@@ -307,6 +307,34 @@ describe("redeemReward — point rewards", () => {
       expect.objectContaining({ points: 300, balanceAfter: 700 }),
     );
   });
+
+  // Every reward the setup wizard writes is `rewardType: "point"` with no points in its
+  // value — it is bought with points, it does not pay any out. Announcing one as
+  // "you just earned 0 points" was the only message the customer got for it.
+  test("a reward that pays nothing out is announced as a redemption, not as points earned", async () => {
+    db.loyaltyReward.findFirst.mockResolvedValue(
+      reward({ rewardType: "point", rewardValue: { type: "free_item", item_name: "Latte" } }),
+    );
+    db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-1", currentPoints: 700 });
+
+    await redeemReward(PROGRAM, input);
+
+    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
+      ORG,
+      LoyaltyEventType.REWARD_REDEEMED,
+      expect.objectContaining({
+        rewardName: "Free coffee",
+        redemptionCode: "RU-ABC123",
+        points: -100,
+        balanceAfter: 700,
+      }),
+    );
+    expect(dispatchLoyaltyNotification).not.toHaveBeenCalledWith(
+      ORG,
+      LoyaltyEventType.POINTS_ISSUED,
+      expect.anything(),
+    );
+  });
 });
 
 // ===========================================================================

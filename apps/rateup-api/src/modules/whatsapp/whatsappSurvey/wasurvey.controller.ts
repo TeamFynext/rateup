@@ -694,7 +694,7 @@ async function whatsappMessageHandler(
   }
 
   if (loyaltyWaCommand) {
-    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId);
+    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId, sourceIdentifier);
   } else if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {

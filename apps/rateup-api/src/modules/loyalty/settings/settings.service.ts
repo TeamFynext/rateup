@@ -107,6 +107,8 @@ export async function handleLoyaltyWaCommand(
   name: string,
   loyaltyWaCommand: LoyaltyWaCommand,
   orgId: string,
+  /** The number the customer messaged — what their welcome's referral link points at. */
+  channelNumber?: string,
 ) {
   switch (loyaltyWaCommand.type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
@@ -115,7 +117,9 @@ export async function handleLoyaltyWaCommand(
         from: phone,
         userName: name,
         joinPayload: {},
-        sourceIdentifier: "loyalty",
+        // Doubles as "they messaged us, so reply", which is why it falls back to a
+        // non-number: the welcome must still go out when the channel is unknown.
+        sourceIdentifier: channelNumber ?? "loyalty",
       });
       break;
     case LoyaltyTemplateTypes.PointInformation:

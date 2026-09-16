@@ -12,12 +12,16 @@ vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendMessag
 vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
   createCTAButtonMessage: vi.fn((params: unknown) => ({ type: "cta", params })),
 }));
+vi.mock("../../whatsapp/settings/wa_settings.service.js", () => ({
+  getWaSettingsById: vi.fn(async () => ({ phoneId: "phone-2" })),
+}));
 
 process.env.FLOW_TOKEN_SECRET = "test-secret";
 process.env.API_URL = "https://api.example.test";
 
 import prisma from "../../../utils/prisma.js";
 import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { getWaSettingsById } from "../../whatsapp/settings/wa_settings.service.js";
 import { createCTAButtonMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { buildFeedbackFlowJson, getFeedbackDraft } from "../../whatsapp/flows/flowTemplates.js";
 import { onFeedbackFlowCompleted } from "./feedback.completion.js";
@@ -108,6 +112,36 @@ describe("onFeedbackFlowCompleted", () => {
       /^https:\/\/api\.example\.test\/api\/public\/loyalty\/feedback\/review\/req-1\/[A-Za-z0-9_-]{43}$/,
     );
     expect(params.body).toContain("Free coffee");
+  });
+
+  // The survey leaves on the flow's own channel (sendFlow). Sending the CTA from the org
+  // default instead means a different number on a multi-number org, where this customer
+  // has no open 24-hour window and Meta refuses the message.
+  test("sends the CTA from the channel the survey went out on", async () => {
+    db.loyaltyFeedbackRequest.findUnique.mockResolvedValue(
+      request({
+        program: {
+          orgId: "org-1",
+          feedbackSetting: {
+            team: { googleLink: "https://g.page/r/kettle/review", reviewPageLinks: null },
+            reward: null,
+            flow: { whatsappSettingsId: "wa-settings-2" },
+          },
+        },
+      }),
+    );
+
+    await onFeedbackFlowCompleted(completion(true));
+
+    expect(getWaSettingsById).toHaveBeenCalledWith("wa-settings-2", "org-1");
+    expect(vi.mocked(sendMessage).mock.calls[0]![4]).toBe("phone-2");
+  });
+
+  test("a flow with no channel of its own leaves the send on the org default", async () => {
+    await onFeedbackFlowCompleted(completion(true));
+
+    expect(getWaSettingsById).not.toHaveBeenCalled();
+    expect(vi.mocked(sendMessage).mock.calls[0]![4]).toBeUndefined();
   });
 
   test("does not promise a reward that is inactive", async () => {

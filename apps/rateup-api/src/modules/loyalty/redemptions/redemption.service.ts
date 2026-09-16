@@ -142,13 +142,28 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     });
 
     if (customer.contact?.phone && customer.contact?.orgId) {
-      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
-        customerPhone: customer.contact.phone,
-        customerName: customer.contact.name || "Customer",
-        points: pointsToAdd,
-        balanceAfter,
-        reason: `Redeemed point reward: ${reward.name}`,
-      });
+      // Only a reward that actually pays points out is news about points. Everything the
+      // setup wizard writes is `rewardType: "point"` — a reward *bought* with points —
+      // and carries no `points` in its value, so announcing it as "you just earned 0
+      // points" is both wrong and the only message the customer would get for it.
+      await (pointsToAdd > 0
+        ? dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
+            customerPhone: customer.contact.phone,
+            customerName: customer.contact.name || "Customer",
+            points: pointsToAdd,
+            balanceAfter,
+            reason: `Redeemed point reward: ${reward.name}`,
+          })
+        : dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_REDEEMED, {
+            customerPhone: customer.contact.phone,
+            customerName: customer.contact.name || "Customer",
+            rewardName: reward.name,
+            redemptionCode: instantRedemptionCode,
+            points: -reward.pointsCost,
+            balanceAfter,
+            rewardId: reward.id,
+            rewardWaTemplateId: reward.waTemplateId,
+          }));
     }
 
     return {

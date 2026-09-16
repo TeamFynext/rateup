@@ -32,6 +32,8 @@ export type ScheduleFeedbackResult =
         | "duplicate_transaction";
     };
 
+type SkipReason = Extract<ScheduleFeedbackResult, { scheduled: false }>["reason"];
+
 function isUniqueViolation(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
@@ -41,11 +43,33 @@ function templateIsApproved(template: { data: unknown } | null | undefined): boo
   return status === "APPROVED";
 }
 
+/**
+ * Reasons that mean "the merchant thinks feedback is on, and it is not going out". The
+ * caller discards this result — points must not fail over a survey — so a skip that is
+ * really a misconfiguration would otherwise leave no trace anywhere: no request row is
+ * written, so the Feedback page's table has nothing to show either.
+ */
+const MISCONFIGURED_REASONS: ReadonlySet<SkipReason> = new Set([
+  "flow_not_published",
+  "template_not_approved",
+  "no_phone",
+]);
+
 export async function scheduleFeedbackRequest(input: {
   programId: string;
   accountId: string;
   transactionId?: string | null;
 }): Promise<ScheduleFeedbackResult> {
+  const skip = (reason: SkipReason): ScheduleFeedbackResult => {
+    const where = { programId: input.programId, accountId: input.accountId, reason };
+    if (MISCONFIGURED_REASONS.has(reason)) {
+      log.warn(where, "No feedback request scheduled");
+    } else {
+      log.info(where, "No feedback request scheduled");
+    }
+    return { scheduled: false, reason };
+  };
+
   const setting = await prisma.loyaltyFeedbackSetting.findUnique({
     where: { programId: input.programId },
     include: {
@@ -54,21 +78,21 @@ export async function scheduleFeedbackRequest(input: {
       program: { select: { status: true } },
     },
   });
-  if (!setting) return { scheduled: false, reason: "no_setting" };
-  if (!setting.enabled) return { scheduled: false, reason: "disabled" };
-  if (setting.program.status !== "active") return { scheduled: false, reason: "program_inactive" };
+  if (!setting) return skip("no_setting");
+  if (!setting.enabled) return skip("disabled");
+  if (setting.program.status !== "active") return skip("program_inactive");
   if (setting.flow?.status !== WaFlowStatus.PUBLISHED) {
-    return { scheduled: false, reason: "flow_not_published" };
+    return skip("flow_not_published");
   }
   if (!templateIsApproved(setting.waTemplate)) {
-    return { scheduled: false, reason: "template_not_approved" };
+    return skip("template_not_approved");
   }
 
   const account = await prisma.customerLoyaltyAccount.findUnique({
     where: { id: input.accountId },
     select: { contact: { select: { phone: true } } },
   });
-  if (!account?.contact?.phone) return { scheduled: false, reason: "no_phone" };
+  if (!account?.contact?.phone) return skip("no_phone");
 
   // One ask per customer per cooldown window. COMPLETED counts: it was sent too.
   if (setting.cooldownDays > 0) {
@@ -87,7 +111,7 @@ export async function scheduleFeedbackRequest(input: {
       },
       select: { id: true },
     });
-    if (recent) return { scheduled: false, reason: "cooldown" };
+    if (recent) return skip("cooldown");
   }
 
   const scheduledFor = new Date(Date.now() + setting.sendDelayMinutes * 60 * 1000);
@@ -104,7 +128,7 @@ export async function scheduleFeedbackRequest(input: {
     });
     requestId = created.id;
   } catch (error) {
-    if (isUniqueViolation(error)) return { scheduled: false, reason: "duplicate_transaction" };
+    if (isUniqueViolation(error)) return skip("duplicate_transaction");
     throw error;
   }
 
