@@ -9,7 +9,13 @@ describe("campaignProgressSegments", () => {
   test("splits cumulative counters into non-overlapping segments", () => {
     // 100 recipients: 80 sent (incl. 10 refused), 60 delivered, 40 read, 10 failed.
     const segments = byKey(
-      campaignProgressSegments({ recipients: 100, sent: 80, delivered: 60, read: 40, failed: 10 }),
+      campaignProgressSegments({
+        recipients: 100,
+        dispatched: 80,
+        delivered: 60,
+        read: 40,
+        failed: 10,
+      }),
     );
 
     expect(segments.read).toEqual({ count: 40, width: 40 });
@@ -19,15 +25,36 @@ describe("campaignProgressSegments", () => {
   });
 
   test("leaves the rest of the track empty for recipients not sent yet", () => {
-    const segments = campaignProgressSegments({ recipients: 200, sent: 50, delivered: 50 });
+    const segments = campaignProgressSegments({ recipients: 200, dispatched: 50, delivered: 50 });
     const drawn = segments.reduce((sum, s) => sum + s.width, 0);
     expect(drawn).toBe(25);
+  });
+
+  test("draws the reported campaign against its own audience", () => {
+    // 114 recipients, one of them rejected and then recovered by a retry. Drawn
+    // from the message counters (sent 115, failed 8) the bar overflowed its
+    // audience; from recipient counts it fits, with the recovered one delivered.
+    const segments = byKey(
+      campaignProgressSegments({
+        recipients: 114,
+        dispatched: 114,
+        delivered: 107,
+        read: 78,
+        failed: 7,
+      }),
+    );
+
+    expect(segments.read.count + segments.delivered.count).toBe(107);
+    expect(segments.failed.count).toBe(7);
+    expect(segments.sent.count).toBe(0);
+    const drawn = Object.values(segments).reduce((sum, s) => sum + s.width, 0);
+    expect(drawn).toBeCloseTo(100);
   });
 
   test("scales to fit instead of overflowing when retries double-count", () => {
     const segments = campaignProgressSegments({
       recipients: 10,
-      sent: 20,
+      dispatched: 20,
       delivered: 10,
       read: 0,
       failed: 10,
@@ -38,8 +65,8 @@ describe("campaignProgressSegments", () => {
 
   test("never draws read ahead of delivered, and handles an empty campaign", () => {
     expect(
-      byKey(campaignProgressSegments({ recipients: 5, sent: 3, delivered: 1, read: 3 })).delivered
-        .count,
+      byKey(campaignProgressSegments({ recipients: 5, dispatched: 3, delivered: 1, read: 3 }))
+        .delivered.count,
     ).toBe(0);
     expect(campaignProgressSegments({}).every((s) => s.width === 0)).toBe(true);
   });

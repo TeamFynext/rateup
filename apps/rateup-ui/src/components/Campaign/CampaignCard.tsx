@@ -70,10 +70,12 @@ function LiveCampaignCard({
   const share = (value: number) => (recipients > 0 ? Math.min((value / recipients) * 100, 100) : 0);
   const segments = campaignProgressSegments({
     recipients,
-    sent: campaign.totalSent,
+    // Recipients dispatched, i.e. everyone no longer waiting on a first attempt.
+    // `totalSent` counts messages and double-counts anyone a retry recovered.
+    dispatched: recipients - (campaign.activePending ?? 0),
     delivered,
     read,
-    failed: campaign.totalFailed,
+    failed: campaign.activeFailed ?? campaign.totalFailed,
   });
 
   const lastActivity = campaign.campaignSentAt ?? campaign.startedAt ?? campaign.createdAt;

@@ -9,13 +9,19 @@
  *
  * - read — `totalRead`
  * - delivered — delivered but not (yet) read
- * - sent — accepted by Meta, with no delivery or failure back yet
- * - failed — `totalFailed`
+ * - sent — dispatched, with no delivery or failure back yet
+ * - failed — recipients that stand FAILED now
  *
  * Widths are shares of the recipient count, so the empty track is who has not
- * been sent to. Retries make that imperfect — a recipient who failed once and
- * was delivered on a retry is in both totals — so when the segments add up to
- * more than the audience the bar is scaled to fit instead of overflowing.
+ * been sent to.
+ *
+ * `dispatched` and `failed` are counted in *recipients*, not in messages. The
+ * `CampaignStats` totals are per attempt: a recipient Meta rejected is booked
+ * to `totalSend` and `totalFailed` together, and a retry that recovers them
+ * bumps `totalSend` again without ever taking them out of `totalFailed`. Drawn
+ * from those, a 114-recipient campaign with one retry filled a 115-wide bar and
+ * left the recovered recipient red forever. The scale still takes the larger of
+ * the two, since a receipt can land out of order.
  */
 
 export type ProgressSegmentKey = "read" | "delivered" | "sent" | "failed";
@@ -32,9 +38,11 @@ export interface ProgressSegment {
 
 export interface CampaignProgressCounts {
   recipients?: number | null;
-  sent?: number | null;
+  /** Recipients handed to Meta at least once — not `totalSend`. */
+  dispatched?: number | null;
   delivered?: number | null;
   read?: number | null;
+  /** Recipients that stand FAILED now — not `totalFailed`. */
   failed?: number | null;
 }
 
@@ -64,8 +72,8 @@ export function campaignProgressSegments(counts: CampaignProgressCounts): Progre
   // be counted read before its delivery is.
   const delivered = Math.max(whole(counts.delivered), read);
   const failed = whole(counts.failed);
-  // What is left of sent once delivery and failure have claimed their share.
-  const sent = Math.max(whole(counts.sent) - delivered - failed, 0);
+  // What is left of dispatched once delivery and failure have claimed their share.
+  const sent = Math.max(whole(counts.dispatched) - delivered - failed, 0);
 
   const buckets: Record<ProgressSegmentKey, number> = {
     read,
