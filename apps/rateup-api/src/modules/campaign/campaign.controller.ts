@@ -96,7 +96,7 @@ export async function getCampaignsHandler(
     if (request.query.teamId) {
       return reply.code(200).send(await getCampaignsByTeamId(request.query.teamId, orgId));
     }
-    return reply.code(200).send(await getCampaignsByOrgId(orgId, request.query?.type));
+    return reply.code(200).send(await getCampaignsByOrgId(orgId, request.query.type));
   } catch (error) {
     return replyForError(reply, error, "Error while listing campaigns");
   }
