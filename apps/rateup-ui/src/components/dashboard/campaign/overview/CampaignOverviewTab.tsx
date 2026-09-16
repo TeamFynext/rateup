@@ -92,9 +92,9 @@ export function CampaignOverviewTab({ campaign }: Readonly<{ campaign: Campaign 
 
     return [
       {
-        // Not "Sent": the counter behind it is bumped for every message handed to
-        // Meta, a rejected one included, so it is what went out rather than what
-        // landed. "Delivered" below is the one that means success.
+        // Not "Sent": the stage counts recipients who were handed to Meta at
+        // least once, a rejected one included, so it is what went out rather
+        // than what landed. "Delivered" below is the one that means success.
         label: t("Dispatched"),
         value: sent?.count ?? 0,
         rate: sent?.rateOfPrevious ?? null,

@@ -957,11 +957,20 @@ export interface Campaign {
   templateName?: string | null;
   /** The whole joined WaTemplate row, as the single-campaign endpoint returns it. */
   templateData?: WaTemplate | null;
-  /** Lifetime counters, joined by the list endpoint for the card's bar. */
+  /**
+   * Lifetime counters, joined by the list endpoint for the card's bar. These
+   * count *messages*, so a recipient a retry recovered is in `totalSent` twice
+   * and never leaves `totalFailed`; use `activeFailed`/`activePending` below
+   * wherever the number is about recipients.
+   */
   totalSent?: number;
   totalDelivered?: number;
   totalRead?: number;
   totalFailed?: number;
+  /** Recipients whose status is FAILED right now, joined by the list endpoint. */
+  activeFailed?: number;
+  /** Recipients not yet handed to Meta, joined by the list endpoint. */
+  activePending?: number;
   /** Drip campaigns only: the ordered stages and their templates. */
   dripStages?: CampaignDripStage[];
   /** The flow a flow campaign sends, when its template carries a flow button. */
