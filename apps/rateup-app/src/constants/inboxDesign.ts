@@ -53,9 +53,12 @@ export type InboxRowTheme = {
    */
   dangerTone: Tone;
   /**
-   * Fill behind a New (unassigned) row. Deeper than `status.new.soft`: the
-   * design's `--warm-soft` is tuned for a pill and all but vanished as a full
-   * row on a phone.
+   * Fill behind a New (unassigned) row whose newest message is under 24h old —
+   * the design's `isFreshNew`, see `isWithinLastDay` in `ChatBox`. An older New
+   * row loses the fill *and* the warm left edge, and reads as New from its chip.
+   *
+   * Deeper than `status.new.soft`: the design's `--warm-soft` is tuned for a
+   * pill and all but vanished as a full row on a phone.
    */
   newRowBg: string;
   /** `--bg-warm-soft` + `--warm-700`, used by the thread's unassigned banner. */

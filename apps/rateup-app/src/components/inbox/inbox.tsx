@@ -212,6 +212,7 @@ export default function Inbox({
           });
         }}
         lastMessageTimeStamp={dayjs.utc(item.lastMessage?.waCreatedAt).fromNow()}
+        lastMessageAt={item.lastMessage?.waCreatedAt ?? item.conversationLastMessageAt}
         lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
         isSessionActive={isSessionActive}
         unReadMessageCount={getVisibleUnreadCount(item, userId ?? currentUser?.userId)}

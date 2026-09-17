@@ -51,6 +51,28 @@ export function getDerivedStatus(contact: {
   return contact.assignedUsers?.length ? "assigned" : "new";
 }
 
+/** How long a New row keeps the cream highlight. */
+export const NEW_ROW_HIGHLIGHT_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * True when `iso` is within the last {@link NEW_ROW_HIGHLIGHT_MS}.
+ *
+ * The API hands back UTC timestamps, but not always with a zone suffix
+ * (`2026-09-17T09:12:44.000` as often as `...Z`). `Date.parse` reads a bare one
+ * as *local* time, which on an IST phone shifted every row 5.5h into the past
+ * and dropped the highlight half a day early — so a missing zone is spelled out
+ * as UTC before parsing, the same assumption `dayjs.utc` makes in `inbox.tsx`.
+ */
+export function isWithinLastDay(iso: string | null | undefined, now = Date.now()): boolean {
+  if (!iso) return false;
+  const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(iso);
+  const ms = Date.parse(hasZone ? iso : `${iso}Z`);
+  if (Number.isNaN(ms)) return false;
+  // A future timestamp is clock skew between the server and the phone, not an
+  // old message — it stays fresh rather than falling out of the window.
+  return now - ms <= NEW_ROW_HIGHLIGHT_MS;
+}
+
 function channelIcon(platform: string | undefined, color = "#fff", size = 11) {
   switch (platform) {
     case MessagePlatform.WHATSAPP:
@@ -133,6 +155,13 @@ export type ChatBoxProps = ContactsWithLastMessage & {
   channelConnected?: boolean;
   /** Who sent the last message when it is an outgoing send — see `getLastMessageSender`. */
   lastMessageSender?: string;
+  /**
+   * The raw timestamp of the row's newest message, for the 24h cream highlight.
+   *
+   * Separate from `lastMessageTimeStamp`, which the list hands down already
+   * formatted ("2 hours ago") and so cannot be compared against.
+   */
+  lastMessageAt?: string | null;
 };
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -157,6 +186,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   currentUserId,
   channelLabel,
   channelConnected,
+  lastMessageAt,
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -176,12 +206,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const statusTone = t.status[status.tone];
 
   // Design `selBg` / `edgeColor`: the selected row paints brand-soft with a brand
-  // edge; otherwise a New (nobody-owns-it) ticket paints amber with a yellow
-  // edge, so unclaimed work stands out in the list; every other row stays
-  // transparent over the page.
+  // edge; otherwise a *freshly* New ticket — nobody owns it and its newest
+  // message landed in the last 24h — paints cream with the warm edge, so
+  // unclaimed work that is still actionable stands out in the list. Every other
+  // row, an older New one included, stays transparent over the page and says
+  // what it is through the status chip alone.
+  //
+  // The design's `isFreshNew` gates the fill and the edge together on that same
+  // 24h window, and both go here for the same reason: a queue where every
+  // unclaimed ticket is cream is a queue with no highlight at all.
   const isNew = status.tone === "new";
-  const rowBg = selected ? t.brandSoft : isNew ? t.newRowBg : "transparent";
-  const edgeColor = selected ? t.brand : isNew ? statusTone.color : null;
+  const isFreshlyNew = isNew && isWithinLastDay(lastMessageAt);
+  const rowBg = selected ? t.brandSoft : isFreshlyNew ? t.newRowBg : "transparent";
+  const edgeColor = selected ? t.brand : isFreshlyNew ? statusTone.color : null;
 
   const lifeCycleLabels = useLifecycleContext();
   const lifecycleInfo = useMemo(
