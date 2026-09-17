@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, RefreshControl, ScrollView } from "react-native";
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
 import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
@@ -17,12 +17,14 @@ import {
   resolveChannel,
 } from "@/utils/chatbox_utils";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
 import { useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inboxStore";
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
+import { useQueryClient } from "@tanstack/react-query";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
 
 /** Gutter around the whole conversation list, on top of each row's own 16px. */
 const LIST_PADDING_X = 0;
@@ -61,7 +63,7 @@ export default function Inbox({
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } =
     useFilteredContacts(encodedFilter);
 
   const contactsByFilter = useContactsStore((state) => state.contactsByFilter);
@@ -72,7 +74,9 @@ export default function Inbox({
   // null by this screen, so it cannot be relied on for that.
   const { userId } = useAuth();
   const { colorScheme } = useColorScheme();
-  const screenBg = colorScheme === "dark" ? Colors.dark.bg : Colors.light.bg;
+  const isDark = colorScheme === "dark";
+  const t = getInboxRowTheme(isDark);
+  const screenBg = isDark ? Colors.dark.bg : Colors.light.bg;
   const setFilter = useContactsStore((state) => state.setFilter);
   const loadContactsFromDB = useContactsStore((state) => state.loadContactsFromDB);
 
@@ -159,6 +163,37 @@ export default function Inbox({
         )
       : displayedContacts;
 
+  const queryClient = useQueryClient();
+  // Pull-to-refresh spins on its own flag rather than the query's `isRefetching`:
+  // that one is also true for background refetches (a remount, a return to
+  // focus), which would drop the spinner in unasked-for.
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  /**
+   * `refetch` rather than an invalidate-and-drop: the list renders out of the
+   * contacts store, not the query cache, so clearing the cache would only blank
+   * the query while the store kept showing the old rows. Refetching lets the
+   * sync effect above reconcile the store — including dropping ids the server no
+   * longer lists, which is how a ticket closed on the web disappears here.
+   *
+   * It refetches every page loaded so far, so a pull after a deep scroll costs
+   * one request per page. That is the price of not throwing away the user's
+   * scroll position, and react-query has no first-page-only refetch since v5.
+   */
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refetch(),
+        // The segment badges are a separate query. Leaving them stale would show
+        // a count that disagrees with the list right under it.
+        queryClient.invalidateQueries({ queryKey: ["contactCounts"] }),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch, queryClient]);
+
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent = ChatBox;
 
@@ -229,10 +264,27 @@ export default function Inbox({
   }
 
   if (isError && !finalContacts.length) {
+    // Pullable too. A failed load is the state someone is most likely to pull on,
+    // and without a scroll view under it the only way back was to leave the tab.
     return (
-      <View className="flex-1 justify-center items-center" style={{ backgroundColor: screenBg }}>
-        <Text className="text-red-500 text-center">Failed to load contacts.</Text>
-      </View>
+      <ScrollView
+        style={{ backgroundColor: screenBg }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center" }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={t.fg3}
+            colors={[t.brand]}
+            progressBackgroundColor={t.surface}
+          />
+        }
+      >
+        <Text style={{ color: t.danger, textAlign: "center" }}>Failed to load contacts.</Text>
+        <Text style={{ color: t.fg3, textAlign: "center", marginTop: 6, fontSize: 13 }}>
+          Pull down to try again.
+        </Text>
+      </ScrollView>
     );
   }
 
@@ -242,6 +294,17 @@ export default function Inbox({
       keyExtractor={(item) => item.id}
       renderItem={renderItem as any}
       contentContainerStyle={{ paddingHorizontal: LIST_PADDING_X }}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={onRefresh}
+          // iOS colours the spinner itself; Android colours the arc and the disc
+          // behind it, which needs a surface or it is a white puck on the dark base.
+          tintColor={t.fg3}
+          colors={[t.brand]}
+          progressBackgroundColor={t.surface}
+        />
+      }
       ListEmptyComponent={
         <View className="h-full flex items-center justify-center">
           <Text className="text-gray-500">No contacts found.</Text>
