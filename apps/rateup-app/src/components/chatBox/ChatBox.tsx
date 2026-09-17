@@ -471,7 +471,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 11, fontFamily: "Figtree_800ExtraBold" }}>
+                <Text
+                  style={{ color: t.onAccent, fontSize: 11, fontFamily: "Figtree_800ExtraBold" }}
+                >
                   {unReadMessageCount > 99 ? "99+" : unReadMessageCount}
                 </Text>
               </View>

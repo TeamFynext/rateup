@@ -32,7 +32,9 @@ export default function InboxSearchView({
     <View
       style={{
         flex: 1,
-        backgroundColor: isDark ? "#091522" : "#FAFAF7",
+        // The page base, from the theme rather than a copy of it — this pair
+        // was the old hardcoded dark navy / warm off-white.
+        backgroundColor: t.pageBg,
       }}
     >
       {/* Search bar */}

@@ -1,3 +1,17 @@
+/**
+ * The app-wide palette. The surfaces and the ink ramp are the design system's
+ * semantic tokens (`_ds2/tokens/themes.css` in the "RateUp Mobile Inbox" Claude
+ * Design project) — `:root` for light, `[data-theme="dark"]` for dark — so that
+ * a screen painted from here and a row painted from `inboxDesign` sit on the
+ * same base.
+ *
+ * Dark used to be a navy (#091522 / #0D1E32) invented for the app; it made every
+ * dark screen read warmer and more saturated than the design. The design's dark
+ * is a cool near-black, and that is what these are now.
+ *
+ * The `rgba(255,255,255,…)` entries below are overlays rather than colours —
+ * they compose against whatever base they land on, so they did not move.
+ */
 export const Colors = {
   brand: {
     blue: "#1C518E",
@@ -12,14 +26,17 @@ export const Colors = {
     whatsapp: "#25D366",
   },
   dark: {
-    bg: "#091522",
-    surface: "#0D1E32",
+    // `--canvas` / `--surface`.
+    bg: "#0B0F14",
+    surface: "#111720",
     border: "rgba(255,255,255,0.06)",
     borderLight: "rgba(255,255,255,0.08)",
-    textPrimary: "#FFFFFF",
-    textSecondary: "rgba(255,255,255,0.88)",
-    textMuted: "rgba(255,255,255,0.38)",
-    textSubtle: "rgba(255,255,255,0.52)",
+    // `--fg` … `--fg-4`. Pure white was never in the ramp; #EDF0F4 is the
+    // design's brightest ink and stops dark text from glaring.
+    textPrimary: "#EDF0F4",
+    textSecondary: "#B7C0CC",
+    textMuted: "#5F6979",
+    textSubtle: "#8B95A3",
     textPlaceholder: "rgba(255,255,255,0.26)",
     inactive: "rgba(255,255,255,0.32)",
     pillBorder: "rgba(255,255,255,0.14)",
@@ -37,25 +54,28 @@ export const Colors = {
     msgToggleActiveBg: "rgba(28,81,142,0.38)",
   },
   light: {
-    bg: "#FAFAF7",
-    surface: "#F4F5F2",
+    // `--canvas` / `--surface-2` / `--surface` / `--border`, then `--fg` … `--fg-4`.
+    // The old light base was a warm off-white (#FAFAF7) with a near-black ink;
+    // the design's is cool, and its ink stops at #1B2027 rather than black.
+    bg: "#FCFCFD",
+    surface: "#F7F8FA",
     card: "#FFFFFF",
-    border: "#ECECEA",
-    textPrimary: "#0A0B0A",
-    textSecondary: "#1A1B1A",
-    textMuted: "#8B8E8A",
-    textSubtle: "#666864",
-    textPlaceholder: "#B7B9B5",
-    inactive: "#B7B9B5",
-    pillText: "#4A4C49",
+    border: "#E4E7EC",
+    textPrimary: "#1B2027",
+    textSecondary: "#434A55",
+    textMuted: "#9BA3AF",
+    textSubtle: "#6B7480",
+    textPlaceholder: "#9BA3AF",
+    inactive: "#9BA3AF",
+    pillText: "#434A55",
     unreadBg: "rgba(28,81,142,0.05)",
-    statusBg: "#F4F5F2",
-    statusText: "#666864",
-    activeBg: "#EEF4FB",
-    activeBorder: "#A9C3E3",
-    botBg: "#EEF4FB",
-    botBorder: "#D6E4F3",
-    inputBg: "#F4F5F2",
+    statusBg: "#F7F8FA",
+    statusText: "#6B7480",
+    activeBg: "#F1F6FC",
+    activeBorder: "#BDD2EC",
+    botBg: "#F1F6FC",
+    botBorder: "#BDD2EC",
+    inputBg: "#F7F8FA",
     systemBg: "rgba(0,0,0,0.07)",
     msgShadow: "rgba(28,81,142,0.2)",
   },
