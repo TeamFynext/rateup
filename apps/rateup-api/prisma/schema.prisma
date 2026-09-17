@@ -116,7 +116,9 @@ model User {
   recipeName     UserRecipes?
   isPaused       Boolean?         @default(false)
   pausedBy       String?
-  prefLanguage   String?          @default("English")
+  /// The UI language this account prefers, as an ISO code ("en", "ar", …). Older rows
+  /// held names like "English"; the 20260917120000 migration normalised them.
+  prefLanguage   String?          @default("en")
   deletedAt      DateTime?
   lastLoggedInAt DateTime?
   presenceMode   UserPresenceMode @default(automatic)
@@ -758,6 +760,14 @@ model Invitation {
   invitedBy String
   createdAt DateTime     @default(now())
   status    InviteStatus @default(PENDING)
+  /// The role the invitee gets when they accept. NULL on invitations created before
+  /// the role was picked at invite time, which still fall back to ADMIN on accept.
+  role      Role?
+  /// Every team the invitee joins on accept, teamId included. An invitation can name
+  /// more than one team, but teamId stays the one it is filed under — the unique
+  /// constraint and Team.invitations are both keyed on it. Empty on invitations
+  /// created before this existed; accept then falls back to teamId alone.
+  teamIds   String[]     @default([]) @db.Uuid
 
   @@unique([email, teamId], name: "team_id_email_unique")
 }

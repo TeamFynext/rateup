@@ -166,19 +166,25 @@ export async function inviteTeamMember(input: InviteMemberInput) {
     throw new Error("Invalid email. Please enter a valid email address.");
   }
   try {
-    const { email, name, orgId, teamId, invitedBy, type } = input;
+    const { email, name, orgId, teamId, invitedBy, type, role } = input;
+
+    // Every team this invitation grants. `teamId` is the one it is filed under — the
+    // unique constraint and Team.invitations are keyed on it — and is always included.
+    const inviteTeamIds = [...new Set([...(input.teamIds ?? []), ...(teamId ? [teamId] : [])])];
 
     // Check if team member with the input email already exists
-    const existingTeamMember = await prisma.teamMember.findFirst({
-      where: {
-        user: {
-          email,
-        },
-        team: {
-          id: teamId,
-        },
-      },
-    });
+    const existingTeamMember = inviteTeamIds.length
+      ? await prisma.teamMember.findFirst({
+          where: {
+            user: {
+              email,
+            },
+            teamId: {
+              in: inviteTeamIds,
+            },
+          },
+        })
+      : null;
 
     if (existingTeamMember) {
       throw new Error("Team member with the provided email already exists in the team.");
@@ -196,19 +202,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
     if (existingMemberships.length) {
       const memberOfGroup = existingMemberships.find((o) => o.orgId === orgId);
       if (memberOfGroup) {
-        const teamMember = await prisma.teamMember.create({
-          data: {
-            teamId: input.teamId,
-            userId: memberOfGroup.userId,
-          },
-          include: {
-            team: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        });
+        const joinedTeams = await addUserToTeams(inviteTeamIds, memberOfGroup.userId);
         const invitedPerson = await prisma.orgMember.findFirst({
           where: {
             userId: invitedBy,
@@ -230,13 +224,22 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         if (!invitedPerson) {
           throw new Error("Inviting org member not found.");
         }
+        // One team or five, the mail names what they were actually added to. With no
+        // team at all they were added to the org itself, which the copy has to say
+        // rather than pointing at a team that does not exist.
+        const teamNames = joinedTeams.map((team) => team.name).join(", ");
+        const addedTo = teamNames || invitedPerson.org.name;
         const msg = {
           to: email,
-          subject: `${invitedPerson.user.name} add you to the Team ${teamMember.team.name} - RateUp.app`,
-          text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
+          subject: teamNames
+            ? `${invitedPerson.user.name} added you to ${teamNames} - RateUp.app`
+            : `${invitedPerson.user.name} added you to ${invitedPerson.org.name} - RateUp.app`,
+          text: `You have been added to ${addedTo} in RateUp by ${invitedPerson.org.name}`,
           html: await getEmailBodyTemplate("GeneralTemplate", {
-            title: `You've been added to ${teamMember.team.name}`,
-            body: `Explore the features of your new team by visiting RateUp. You can switch between teams to view each team's details.`,
+            title: `You've been added to ${addedTo}`,
+            body: teamNames
+              ? `Explore the features of your new team by visiting RateUp. You can switch between teams to view each team's details.`
+              : `Explore RateUp by visiting your dashboard.`,
             buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
           }),
         };
@@ -259,11 +262,15 @@ export async function inviteTeamMember(input: InviteMemberInput) {
       }
     }
 
-    // Check if the email already exists in the invitation table
+    // Check if the email already exists in the invitation table. An invitation now grants
+    // several teams, so an overlap with any of them is the same collision as before.
     const existingInvitation = await prisma.invitation.findFirst({
       where: {
         email,
-        teamId,
+        OR: [
+          { teamId },
+          ...(inviteTeamIds.length ? [{ teamIds: { hasSome: inviteTeamIds } }] : []),
+        ],
       },
     });
 
@@ -296,6 +303,8 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         teamId,
         type,
         invitedBy,
+        role,
+        teamIds: inviteTeamIds,
       },
     });
 
@@ -448,13 +457,15 @@ export async function completeInvite(token: string) {
         data: {
           orgId: updatedInvitation.orgId,
           userId: signUpResult.user.id,
-          role: Role.ADMIN,
+          // The role the inviter picked. Invitations created before that was possible
+          // have none, and keep the ADMIN this branch always gave them.
+          role: updatedInvitation.role ?? Role.ADMIN,
         },
       });
 
       //Create Team member
-      if (orgMember && updatedInvitation.teamId) {
-        await createTeamMemberIfNotExists(updatedInvitation.teamId, signUpResult.user.id);
+      if (orgMember) {
+        await addUserToTeams(invitedTeamIds(updatedInvitation), signUpResult.user.id);
       }
 
       const linkResponse = await EmailPassword.createResetPasswordLink(
@@ -507,20 +518,17 @@ export async function completeInvite(token: string) {
         data: {
           orgId: updatedInvitation.orgId,
           userId: user.id,
-          role: Role.ADMIN,
+          // Same fallback as the branch above: the inviter's pick, or ADMIN for an
+          // invitation created before there was one.
+          role: updatedInvitation.role ?? Role.ADMIN,
         },
       });
       //Create Team member
-      if (orgMember && updatedInvitation.teamId) {
-        await prisma.teamMember.create({
-          data: {
-            teamId: updatedInvitation.teamId,
-            userId: user.id,
-          },
-        });
+      if (orgMember) {
+        await addUserToTeams(invitedTeamIds(updatedInvitation), user.id);
       }
-    } else if (orgMember && updatedInvitation.teamId) {
-      await createTeamMemberIfNotExists(updatedInvitation.teamId, user.id);
+    } else if (orgMember) {
+      await addUserToTeams(invitedTeamIds(updatedInvitation), user.id);
     }
 
     redirectLink = `${process.env.FRONTEND_URL}/login`;
@@ -529,27 +537,39 @@ export async function completeInvite(token: string) {
   return { ...updatedInvitation, isUser: isUser, redirectLink };
 }
 
-async function createTeamMemberIfNotExists(teamId: string, userId: string) {
-  // Fetch the record with the same teamId and userId
-  const existingTeamMember = await prisma.teamMember.findFirst({
-    where: {
-      teamId: teamId,
-      userId: userId,
-    },
+/**
+ * Puts a user in every team named, skipping the ones they are already in.
+ *
+ * A membership the user already has is skipped rather than treated as an error: with
+ * several teams in play, one team they are already in must not abandon the rest.
+ * Returns the teams, for the "you were added" email.
+ */
+/**
+ * The teams an invitation grants. `teamIds` holds the full set; invitations created
+ * before it existed have it empty and are still described by `teamId` alone.
+ */
+function invitedTeamIds(invitation: { teamId: string | null; teamIds: string[] }) {
+  if (invitation.teamIds.length) return invitation.teamIds;
+  return invitation.teamId ? [invitation.teamId] : [];
+}
+
+async function addUserToTeams(teamIds: string[], userId: string) {
+  const teams = await prisma.team.findMany({
+    where: { id: { in: teamIds } },
+    select: { id: true, name: true },
   });
 
-  // If the record doesn't exist, create a new one
-  if (!existingTeamMember) {
-    const teamMember = await prisma.teamMember.create({
-      data: {
-        teamId: teamId,
-        userId: userId,
-      },
+  for (const team of teams) {
+    const existing = await prisma.teamMember.findFirst({
+      where: { teamId: team.id, userId },
     });
-    return teamMember;
-  } else {
-    throw new Error("Team member Record already exists");
+
+    if (!existing) {
+      await prisma.teamMember.create({ data: { teamId: team.id, userId } });
+    }
   }
+
+  return teams;
 }
 
 export function getTeamMembers(input: GetTeamMembersInput) {
@@ -613,6 +633,8 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
       googleLink: true,
       code: true,
       tags: true,
+      // Invitations filed under this team. One naming several teams is filed under just
+      // one of them, so the rest are picked up by the query below.
       invitations: {
         where: {
           status: {
@@ -658,6 +680,18 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
     throw new Error("Team not found");
   }
 
+  // Invitations that grant this team without being filed under it. Without these, a
+  // person invited into several teams would only appear on one team's page.
+  const alsoInvited = await prisma.invitation.findMany({
+    where: {
+      status: { not: "ACCEPTED" },
+      teamId: { not: input.teamId },
+      teamIds: { has: input.teamId },
+    },
+  });
+
+  const invitations = [...team.invitations, ...alsoInvited];
+
   return {
     teamId: team.id,
     teamName: team.name,
@@ -677,11 +711,12 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
         createdAt: member.user.createdAt,
       };
     }),
-    invitations: team.invitations.map((invite) => {
+    invitations: invitations.map((invite) => {
       return {
         id: invite.id,
         email: invite.email,
         name: invite.name,
+        role: invite.role,
         status: invite.status,
         type: invite.type,
         invitedBy: invite.invitedBy,

@@ -17,6 +17,7 @@ import {
 } from "./user.service.js";
 import {
   ChangeUserPasswordSchema,
+  DeleteUserSchema,
   CreateUserGoogleSchema,
   PauseUserInput,
   UpdateProfilePhotoSchema,
@@ -62,7 +63,15 @@ export async function getLoggedUserProfileHandler(request: FastifyRequest, reply
     if (!userData) {
       reply.code(200).send({ message: "No user profile found" });
     } else {
-      reply.code(200).send({ message: "Success", data: userData });
+      // Whether this account can be re-authenticated with a password. A Google-only
+      // signup has no emailpassword login method, so the clients must not ask for one.
+      const session = await Session.getSession(request, reply);
+      const supertokensUser = await supertokens.getUser(session!.getUserId());
+      const hasPassword = Boolean(
+        supertokensUser?.loginMethods.some((method) => method.recipeId === "emailpassword"),
+      );
+
+      reply.code(200).send({ message: "Success", data: { ...userData, hasPassword } });
     }
   } catch (e) {
     reply.code(500).send({ message: `Internal server error :  ${e}` });
@@ -381,6 +390,7 @@ export async function updateProfilePhotoHandler(
 export async function updateUserActiveStatusHandler(
   request: FastifyRequest<{
     Params: { userId: string };
+    Body: DeleteUserSchema;
   }>,
   reply: FastifyReply,
 ) {
@@ -401,6 +411,43 @@ export async function updateUserActiveStatusHandler(
       return reply.code(403).send({
         error: "You are not allowed to delete this user",
       });
+    }
+
+    // Deleting your own account is re-authenticated with your password, so a walked-away
+    // session cannot destroy the account. A super-admin removing someone else is not:
+    // they cannot know that person's password, and the role check above is the gate there.
+    if (isSelfDelete) {
+      const session = await Session.getSession(request, reply);
+      const userInfo = await supertokens.getUser(session!.getUserId());
+      const emailPasswordLogin = userInfo?.loginMethods.find(
+        (method) => method.recipeId === "emailpassword",
+      );
+
+      // A Google-only account has no password to verify; the typed confirmation in the
+      // UI is the whole check for those users.
+      if (emailPasswordLogin) {
+        const password = request.body?.password;
+
+        if (!password) {
+          return reply.code(400).send({
+            success: false,
+            message: "Password is required to delete your account",
+          });
+        }
+
+        const isPasswordValid = await EmailPassword.verifyCredentials(
+          session!.getTenantId(),
+          emailPasswordLogin.email!,
+          password,
+        );
+
+        if (isPasswordValid.status !== "OK") {
+          return reply.code(401).send({
+            success: false,
+            message: "Incorrect password",
+          });
+        }
+      }
     }
 
     await updateUserActiveStatus(request.params.userId);

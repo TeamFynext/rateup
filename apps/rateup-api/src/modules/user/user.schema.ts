@@ -61,14 +61,26 @@ const changeUserPasswordSchema = z.object({
   newPassword: z.string().min(4),
 });
 
+// Self-deletion is re-authenticated with the account password. It stays optional in
+// the schema because the same route also serves a super-admin removing someone else,
+// and because a Google-only account has no password to verify — the handler decides
+// which of those applies.
+const deleteUserSchema = z.object({
+  password: z.string().optional(),
+});
+
 const updateProfileSchema = z.object({
   title: z.string(),
   name: z.string(),
   phone: z.string(),
 });
 
+/** The locales the clients ship translations for. Anything else is a language we cannot
+ * render, so it is rejected rather than stored and silently ignored on read. */
+const SUPPORTED_LOCALES = ["en", "ar", "de", "fr", "hi"] as const;
+
 const updateUserLanguageSchema = z.object({
-  prefLanguage: z.string().optional(),
+  prefLanguage: z.enum(SUPPORTED_LOCALES).optional(),
 });
 
 const updateProfilePhotoSchema = z.object({
@@ -100,6 +112,7 @@ export type userInfoParams = z.infer<typeof userInfoSchema>;
 export type CreateUserSignupSchema = z.infer<typeof createUserSignupSchema>;
 export type CreateUserGoogleSchema = z.infer<typeof createUserGoogleSchema>;
 export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
+export type DeleteUserSchema = z.infer<typeof deleteUserSchema>;
 export type updateUserLanguageSchema = z.infer<typeof updateUserLanguageSchema>;
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
@@ -112,6 +125,7 @@ export {
   createUserSignupSchema,
   createUserGoogleSchema,
   changeUserPasswordSchema,
+  deleteUserSchema,
   updateProfileSchema,
   updateProfilePhotoSchema,
   updateUserLanguageSchema,
