@@ -117,6 +117,13 @@ const applyInboxUpdate = (inbox: orgWsMessage["inbox"] | undefined) => {
           ...inbox?.contact,
           lastMessage: isLatest ? message : oldContact.lastMessage,
           lastReceivedMessageTimeStamp: inbox?.contact?.lastReceivedMessageTimeStamp,
+          // The frame carries a bare `Contact`, so it has no ticket clock of its
+          // own — but that clock is what the list sorts by. Advance it with the
+          // message, or a chat that goes live while the app is open keeps the
+          // stamp from the last fetch and never moves to the top.
+          conversationLastMessageAt: isLatest
+            ? (message?.waCreatedAt ?? oldContact.conversationLastMessageAt)
+            : oldContact.conversationLastMessageAt,
           // `isOpenInThread` mirrors rateup-ui's realtime handler: a message
           // that lands while you are looking at that very chat is already
           // read, so counting it would put a badge on the row you are
@@ -144,6 +151,7 @@ const applyInboxUpdate = (inbox: orgWsMessage["inbox"] | undefined) => {
           lastMessage: message,
           lastReceivedMessageTimeStamp:
             inbox?.contact?.lastReceivedMessageTimeStamp ?? message?.waCreatedAt,
+          conversationLastMessageAt: message?.waCreatedAt,
           unReadMessageCount: isOpenInThread ? 0 : isUnread ? 1 : 0,
           updatedAt: new Date().toISOString(),
         },

@@ -106,7 +106,10 @@ export default function Inbox({
       // already had used to be skipped, so once a chat was listed its preview,
       // unread count and status only ever changed through the socket — and any
       // frame missed while the phone was backgrounded left the row stale for good.
-      await addContactsForFilter(filterKey, allContacts);
+      // `allContacts` is every page fetched so far, i.e. the complete set the
+      // server has for this filter — so the fourth argument lets the store drop
+      // cached ids the server no longer lists (see `retainedStaleIds`).
+      await addContactsForFilter(filterKey, allContacts, false, true);
 
       // Threads are still seeded only for rows that were new here: merging a
       // server page into a thread that is already cached would drop any
