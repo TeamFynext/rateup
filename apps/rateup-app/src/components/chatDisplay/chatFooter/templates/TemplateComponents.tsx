@@ -254,7 +254,6 @@ interface AccountSelectorProps {
 export function AccountSelector({ value, onChange, label = "Account" }: AccountSelectorProps) {
   const { data, isPending, isError } = useWaSettings();
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedLabel, setSelectedLabel] = useState("");
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -271,14 +270,13 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
     [data],
   );
 
+  // Just the selected option's text — derived, so it can never disagree with `value`.
+  const selectedLabel = accountOptions.find((opt) => opt.value === value)?.label ?? "";
+
+  // Defaulting to the first account stays an effect: it is a real side effect, telling the
+  // parent what was picked rather than describing what is on screen.
   useEffect(() => {
-    if (!value && accountOptions.length > 0) {
-      onChange?.(accountOptions[0].value);
-      setSelectedLabel(accountOptions[0].label);
-    } else {
-      const match = accountOptions.find((opt) => opt.value === value);
-      if (match) setSelectedLabel(match.label);
-    }
+    if (!value && accountOptions.length > 0) onChange?.(accountOptions[0].value);
   }, [accountOptions, value, onChange]);
 
   if (isError)
@@ -384,8 +382,8 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                   return (
                     <TouchableOpacity
                       onPress={() => {
+                        // No label to set — it follows from `value`.
                         onChange?.(item.value);
-                        setSelectedLabel(item.label);
                         setModalVisible(false);
                       }}
                       style={{

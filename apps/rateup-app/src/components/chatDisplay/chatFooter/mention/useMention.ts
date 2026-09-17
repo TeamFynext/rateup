@@ -37,7 +37,6 @@ export function useMention({
   // Caret position to apply once the inserted text has been committed.
   const pendingCaretRef = useRef<number | null>(null);
 
-
   const pickedRef = useRef<MentionUser[]>([]);
 
   useLayoutEffect(() => {
@@ -56,9 +55,7 @@ export function useMention({
   const suggestions = useMemo(() => {
     if (query === null) return [];
     const q = query.trim().toLowerCase();
-    return users
-      .filter((u) => !q || u.name.toLowerCase().includes(q))
-      .slice(0, MAX_SUGGESTIONS);
+    return users.filter((u) => !q || u.name.toLowerCase().includes(q)).slice(0, MAX_SUGGESTIONS);
   }, [query, users]);
 
   const handleChangeText = useCallback(
@@ -99,7 +96,6 @@ export function useMention({
     },
     [caret, text, setText],
   );
-
 
   const getMentionedUserIds = useCallback((body: string) => {
     const ids = new Set<string>();

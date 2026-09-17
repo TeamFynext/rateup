@@ -12,9 +12,7 @@ export const useLifecycleContext = (): LifecycleLabel[] => {
   const context = useContext(LifecycleContext);
 
   if (!context) {
-    throw new Error(
-      "useLifecycleContext must be used within a LifecycleContext.Provider"
-    );
+    throw new Error("useLifecycleContext must be used within a LifecycleContext.Provider");
   }
 
   return context;

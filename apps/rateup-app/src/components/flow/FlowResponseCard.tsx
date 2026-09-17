@@ -11,18 +11,10 @@ export const ContactCard = ({ item }: { item: any }) => {
 
   const isToday = created.isSame(dayjs(), "day");
 
-  const time = isToday
-    ? created.format("h:mm A")
-    : created.format("DD/MM/YYYY");
+  const time = isToday ? created.format("h:mm A") : created.format("DD/MM/YYYY");
 
   // Allowed response types
-  const allowedTypes = [
-    "Yes or No",
-    "Like or Dislike",
-    "Smiley",
-    "Rating",
-    "Opinion Scale",
-  ];
+  const allowedTypes = ["Yes or No", "Like or Dislike", "Smiley", "Rating", "Opinion Scale"];
 
   // Format response for display
   const formatResponse = (responseObj: any) => {
@@ -31,9 +23,7 @@ export const ContactCard = ({ item }: { item: any }) => {
     const values = Object.values(responseObj);
 
     return values
-      .map((val) =>
-        typeof val === "object" ? JSON.stringify(val) : String(val),
-      )
+      .map((val) => (typeof val === "object" ? JSON.stringify(val) : String(val)))
       .join(", ");
   };
 
@@ -74,9 +64,7 @@ export const ContactCard = ({ item }: { item: any }) => {
     >
       {/* Avatar */}
       <View className="w-14 h-14 rounded-full bg-rateUpGreen20 items-center justify-center">
-        <Text className="text-rateUpGreen font-bold text-2xl">
-          {item.phone ? "0" : "R"}
-        </Text>
+        <Text className="text-rateUpGreen font-bold text-2xl">{item.phone ? "0" : "R"}</Text>
       </View>
 
       {/* Info */}
@@ -89,9 +77,7 @@ export const ContactCard = ({ item }: { item: any }) => {
             {item.phone || "Respondent"}
           </Text>
 
-          <Text className="text-xs text-gray-500 dark:text-slate-400">
-            {time}
-          </Text>
+          <Text className="text-xs text-gray-500 dark:text-slate-400">{time}</Text>
         </View>
 
         {/* Tags */}

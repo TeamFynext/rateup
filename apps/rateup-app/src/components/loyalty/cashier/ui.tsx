@@ -289,13 +289,13 @@ export function InlineError({ message }: Readonly<{ message: string | null }>) {
   return (
     <View
       style={{
-        backgroundColor: t.status.spam.soft,
+        backgroundColor: t.dangerTone.soft,
         borderRadius: 10,
         paddingVertical: 10,
         paddingHorizontal: 12,
       }}
     >
-      <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: t.status.spam.fg }}>
+      <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: t.dangerTone.fg }}>
         {message}
       </Text>
     </View>
@@ -310,9 +310,9 @@ export function Badge({
   const { t } = useTheme();
   const palette =
     tone === "warm"
-      ? { bg: t.status.pending.soft, fg: t.status.pending.fg }
+      ? { bg: t.status.new.soft, fg: t.status.new.fg }
       : tone === "good"
-        ? { bg: t.status.open.soft, fg: t.status.open.fg }
+        ? { bg: t.status.closed.soft, fg: t.status.closed.fg }
         : { bg: t.surface2, fg: t.fg3 };
 
   return (
@@ -708,7 +708,7 @@ export function BalanceSlab({
         <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: ON_INK_SOFT }}>
           {unit}
           {pending ? (
-            <Text style={{ ...NUM, fontFamily: FONT.semibold, color: t.status.pending.fg }}>
+            <Text style={{ ...NUM, fontFamily: FONT.semibold, color: t.status.new.fg }}>
               {"  ·  "}
               {pending}
             </Text>

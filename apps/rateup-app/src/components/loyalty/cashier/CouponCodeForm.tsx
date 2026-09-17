@@ -89,7 +89,7 @@ export function CouponCodeForm({
                   style={{
                     fontFamily: FONT.medium,
                     fontSize: 12,
-                    color: t.status.pending.fg,
+                    color: t.status.new.fg,
                     marginTop: 2,
                   }}
                 >

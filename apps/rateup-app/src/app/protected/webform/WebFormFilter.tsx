@@ -37,11 +37,7 @@ const Button = ({
   >
     <Text
       className={`text-center ${
-        active
-          ? "text-rateUpGreen font-semibold"
-          : isDark
-            ? "text-white"
-            : "text-gray-700"
+        active ? "text-rateUpGreen font-semibold" : isDark ? "text-white" : "text-gray-700"
       }`}
     >
       {label}
@@ -76,8 +72,7 @@ const WebFormFilter = () => {
     return [{ id: "all", name: "All Teams" }, ...teamData.data];
   }, [teamData]);
 
-  const selectedTeamName =
-    teamList.find((t) => t.id === teamId)?.name ?? "All Teams";
+  const selectedTeamName = teamList.find((t) => t.id === teamId)?.name ?? "All Teams";
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-950 p-4">
@@ -88,33 +83,25 @@ const WebFormFilter = () => {
             <ArrowLeft color={isDark ? "white" : "black"} />
           </Pressable>
 
-          <Text className="text-black dark:text-white text-2xl font-bold">
-            Filter
-          </Text>
+          <Text className="text-black dark:text-white text-2xl font-bold">Filter</Text>
         </View>
 
         <TouchableOpacity
           onPress={resetFilters}
           className="rounded-full px-4 py-2 items-center justify-center bg-gray-200 dark:bg-slate-800"
         >
-          <Text className="text-black dark:text-white font-semibold">
-            Reset
-          </Text>
+          <Text className="text-black dark:text-white font-semibold">Reset</Text>
         </TouchableOpacity>
       </View>
 
       {/* Team Selector */}
-      <Text className="mb-2 text-sm text-gray-700 dark:text-gray-300">
-        Teams
-      </Text>
+      <Text className="mb-2 text-sm text-gray-700 dark:text-gray-300">Teams</Text>
 
       <TouchableOpacity
         className="border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-4 bg-white dark:bg-slate-900 mb-5"
         onPress={() => setModalVisible(true)}
       >
-        <Text className="text-gray-800 dark:text-white">
-          {selectedTeamName}
-        </Text>
+        <Text className="text-gray-800 dark:text-white">{selectedTeamName}</Text>
       </TouchableOpacity>
 
       {/* Status Filter */}
@@ -213,9 +200,7 @@ const WebFormFilter = () => {
               className="mt-4 py-4 bg-gray-100 dark:bg-slate-800 rounded-2xl items-center"
               onPress={() => setModalVisible(false)}
             >
-              <Text className="text-gray-600 dark:text-gray-300 font-medium">
-                Cancel
-              </Text>
+              <Text className="text-gray-600 dark:text-gray-300 font-medium">Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>

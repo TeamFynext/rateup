@@ -3,14 +3,7 @@ import { sendPasswordResetEmail } from "@/api/api";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Mail } from "lucide-react-native";
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Dimensions,
-  useColorScheme,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Dimensions, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("window");
@@ -59,16 +52,11 @@ export default function ResetPasswordScreen() {
       >
         <ArrowLeft color={isDark ? "white" : "black"} />
 
-        <Text className="text-xl font-bold ml-2 text-black dark:text-white">
-          Reset Password
-        </Text>
+        <Text className="text-xl font-bold ml-2 text-black dark:text-white">Reset Password</Text>
       </TouchableOpacity>
 
       {/* Icon Section */}
-      <View
-        className="items-center justify-center"
-        style={{ height: height * 0.2 }}
-      >
+      <View className="items-center justify-center" style={{ height: height * 0.2 }}>
         <View className="bg-[#C4D7F5] dark:bg-[#1E3A5F] p-4 rounded-lg h-[80px] w-[80px] flex items-center justify-center">
           <Mail color={isDark ? "white" : "black"} />
         </View>
@@ -81,9 +69,7 @@ export default function ResetPasswordScreen() {
       {/* Email Input & Button */}
       <View>
         <View className="mb-4">
-          <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-2">
-            Email Id
-          </Text>
+          <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-2">Email Id</Text>
 
           <TextInput
             value={email}
@@ -95,9 +81,7 @@ export default function ResetPasswordScreen() {
         </View>
 
         <TouchableOpacity
-          className={`py-3 rounded-md ${
-            loading ? "bg-[#7AA5C8]" : "bg-[#004F98]"
-          }`}
+          className={`py-3 rounded-md ${loading ? "bg-[#7AA5C8]" : "bg-[#004F98]"}`}
           onPress={handleResetPassword}
           disabled={loading}
         >

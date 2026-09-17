@@ -32,7 +32,6 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [selectedTeamName, setSelectedTeamName] = useState<string>("");
   const [loadingContact, setLoadingContact] = useState(true);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [sending, setSending] = useState(false);
   const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] = useState<string>("");
 
@@ -62,11 +61,19 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
     getContactDetails();
   }, [contact]);
 
+  // A 300ms spinner while the list re-filters, so the results don't jump under the thumb
+  // mid-type. Expressed as "the settled inputs are behind the current ones" rather than a
+  // flag raised from the effect: the flag needed a synchronous set on every keystroke,
+  // which is a second render per character on a screen already filtering a long list.
+  const templatesKey = `${teamId}|${searchTerm}`;
+  const [settledKey, setSettledKey] = useState(templatesKey);
+  const loadingTemplates = settledKey !== templatesKey;
+
   useEffect(() => {
-    setLoadingTemplates(true);
-    const timeout = setTimeout(() => setLoadingTemplates(false), 300);
+    if (settledKey === templatesKey) return;
+    const timeout = setTimeout(() => setSettledKey(templatesKey), 300);
     return () => clearTimeout(timeout);
-  }, [teamId, searchTerm]);
+  }, [templatesKey, settledKey]);
 
   const approvedTemplates = templatesAvailableForTeam?.filter(
     (template) => template?.data?.status === "APPROVED",

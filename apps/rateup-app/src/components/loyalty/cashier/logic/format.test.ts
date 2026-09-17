@@ -5,8 +5,15 @@ import { formatMoney, formatNumber, formatPoints, singularPoints } from "./forma
 describe("formatNumber", () => {
   test("groups thousands", () => {
     expect(formatNumber(1283)).toBe("1,283");
-    expect(formatNumber(1283456)).toBe("1,283,456");
     expect(formatNumber(43)).toBe("43");
+    // `formatNumber` passes `undefined` as the locale on purpose, so the *grouping scheme*
+    // is the device's: an en-IN phone renders 1283456 as "12,83,456" (lakhs), which is the
+    // right answer for the merchants this is built for. Assert that it grouped and kept its
+    // digits, not that it grouped in threes — the `formatMoney` tests below do the same.
+    const big = formatNumber(1283456);
+    expect(big).toMatch(/^[\d,]+$/);
+    expect(big).toContain(",");
+    expect(big.replace(/,/g, "")).toBe("1283456");
   });
 
   test("a non-number renders as zero rather than NaN", () => {

@@ -246,9 +246,11 @@ export function returnMessageContentBasedOnParsedMessage(
         ? "Liked a message"
         : `Reacted ${parsedMessage.messageContent}`;
   } else if (parsedMessage.messageType === "attachments") {
-    return parsedMessage.messageContent?.attachments?.[
-      parsedMessage.messageContent.attachments.length - 1
-    ]?.type || "Attachment";
+    return (
+      parsedMessage.messageContent?.attachments?.[
+        parsedMessage.messageContent.attachments.length - 1
+      ]?.type || "Attachment"
+    );
   } else if (parsedMessage.messageType === "ig_comment") {
     return parsedMessage.messageContent?.text || "Comment";
   } else {

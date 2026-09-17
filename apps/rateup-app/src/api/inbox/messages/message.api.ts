@@ -1,12 +1,7 @@
 import axios from "@/config/axios";
 
-export async function getMessagesByContactId(
-  contactId: string,
-  cursor: string
-) {
-  const res = await axios.get(
-    `/api/wa/inbox/message/${contactId}?cursor=${cursor}`
-  );
+export async function getMessagesByContactId(contactId: string, cursor: string) {
+  const res = await axios.get(`/api/wa/inbox/message/${contactId}?cursor=${cursor}`);
   return res.data;
 }
 
@@ -15,12 +10,9 @@ export async function sendNewWaMessage(contactId: string, message: any) {
 }
 
 export async function getWaChatMediaFile(mediaId: string) {
-  const response = await axios.get(
-    `/api/wa/inbox/message/mediafile/${mediaId}`,
-    {
-      responseType: "arraybuffer",
-    }
-  );
+  const response = await axios.get(`/api/wa/inbox/message/mediafile/${mediaId}`, {
+    responseType: "arraybuffer",
+  });
   return response.data;
 }
 
@@ -37,6 +29,5 @@ export async function getAssignedUserForContact(contactId: any) {
 }
 
 export async function createPrivateMessage(contactId: string, data: any) {
-  return (await axios.post(`/api/wa/inbox/message/privatemessage/${contactId}`, data))
-    .data;
+  return (await axios.post(`/api/wa/inbox/message/privatemessage/${contactId}`, data)).data;
 }

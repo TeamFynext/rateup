@@ -1,11 +1,5 @@
 import React, { memo, useMemo, useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  TouchableOpacity,
-  RefreshControl,
-} from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useWaFlowsFromDb } from "@/api/whatsapp/flow/flow.query";
 import FlowSearchBar from "@/components/flow/FlowSearchBar";
@@ -13,9 +7,7 @@ import { useRouter } from "expo-router";
 import { useFlowFilterStore, useSearchFlowStore } from "@/utils/store";
 import { MoveRight, SlidersHorizontal } from "lucide-react-native";
 import { colors } from "@/constants/constants";
-import ScreenHeader, {
-  HeaderIconButton,
-} from "@/components/common/ScreenHeader";
+import ScreenHeader, { HeaderIconButton } from "@/components/common/ScreenHeader";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
@@ -71,9 +63,7 @@ const Flow = () => {
     }
 
     if (search.trim()) {
-      flows = flows.filter((flow) =>
-        flow.name.toLowerCase().includes(search.toLowerCase()),
-      );
+      flows = flows.filter((flow) => flow.name.toLowerCase().includes(search.toLowerCase()));
     }
 
     // Alphabetical sort
@@ -86,13 +76,11 @@ const Flow = () => {
     // Sort by createdAt
     if (sortByDate === "latest") {
       flows = flows.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     } else if (sortByDate === "oldest") {
       flows = flows.sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
     }
 
@@ -119,10 +107,9 @@ const Flow = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-    const formattedDate = `${createdAt
-      .getDate()
-      .toString()
-      .padStart(2, "0")}/${(createdAt.getMonth() + 1)
+    const formattedDate = `${createdAt.getDate().toString().padStart(2, "0")}/${(
+      createdAt.getMonth() + 1
+    )
       .toString()
       .padStart(2, "0")}/${createdAt.getFullYear()}`;
 
@@ -138,26 +125,16 @@ const Flow = () => {
         }
       >
         <View className="flex-row justify-between items-center mb-1">
-          <Text className="text-base font-semibold dark:text-white">
-            {item.name}
-          </Text>
-          <Text className="text-xs text-gray-500">
-            {isToday ? formattedTime : formattedDate}
-          </Text>
+          <Text className="text-base font-semibold dark:text-white">{item.name}</Text>
+          <Text className="text-xs text-gray-500">{isToday ? formattedTime : formattedDate}</Text>
         </View>
 
         <View className="flex-row justify-between items-center mt-1">
           {getStatusBadge(item.status)}
           <View className="bg-primaryBlue/20 px-2 py-0.5 rounded-full">
             <View className="flex-row items-center justify-center gap-1">
-              <Text className="text-xs font-semibold text-primaryBlue">
-                Response
-              </Text>
-              <MoveRight
-                width={15}
-                height={15}
-                color={colors["primary-blue"]}
-              />
+              <Text className="text-xs font-semibold text-primaryBlue">Response</Text>
+              <MoveRight width={15} height={15} color={colors["primary-blue"]} />
             </View>
           </View>
         </View>

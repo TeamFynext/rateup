@@ -179,7 +179,7 @@ export function Receipt({
             style={{
               ...LABEL,
               textAlign: "center",
-              color: provisional ? t.status.pending.fg : t.fg4,
+              color: provisional ? t.status.new.fg : t.fg4,
             }}
           >
             {eyebrow}
@@ -282,7 +282,7 @@ export function Receipt({
             ...NUM,
             fontFamily: FONT.semibold,
             fontSize: 12,
-            color: t.status.pending.fg,
+            color: t.status.new.fg,
             lineHeight: 18,
           }}
         >
@@ -295,13 +295,13 @@ export function Receipt({
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <MessageCircle
               size={14}
-              color={preview.status === "sent" ? t.status.open.fg : t.status.pending.fg}
+              color={preview.status === "sent" ? t.status.closed.fg : t.status.new.fg}
             />
             <Text
               style={{
                 fontFamily: FONT.semibold,
                 fontSize: 12,
-                color: preview.status === "sent" ? t.status.open.fg : t.status.pending.fg,
+                color: preview.status === "sent" ? t.status.closed.fg : t.status.new.fg,
                 flex: 1,
               }}
             >
@@ -320,13 +320,13 @@ export function Receipt({
       ) : null}
 
       {receipt.pendingApproval ? (
-        <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.status.pending.fg }}>
+        <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.status.new.fg }}>
           This reward needs approval before it can be handed over.
         </Text>
       ) : null}
 
       {undoNote ? (
-        <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.status.pending.fg }}>
+        <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.status.new.fg }}>
           {undoNote}
         </Text>
       ) : null}

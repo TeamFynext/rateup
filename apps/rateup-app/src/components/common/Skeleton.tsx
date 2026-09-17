@@ -23,7 +23,12 @@ type SkeletonProps = {
  * Preferred over a spinner wherever the final layout is known, because it
  * reserves the same space and so the screen does not jump when the data lands.
  */
-export const Skeleton = ({ width = "100%", height = 12, borderRadius = 6, style }: SkeletonProps) => {
+export const Skeleton = ({
+  width = "100%",
+  height = 12,
+  borderRadius = 6,
+  style,
+}: SkeletonProps) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const pulse = useSharedValue(0.4);
@@ -68,7 +73,10 @@ export const SkeletonRow = ({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) => (
-  <View style={[{ flexDirection: "row", alignItems: "center" }, style]} accessibilityRole="progressbar">
+  <View
+    style={[{ flexDirection: "row", alignItems: "center" }, style]}
+    accessibilityRole="progressbar"
+  >
     {children}
   </View>
 );

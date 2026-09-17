@@ -1,27 +1,15 @@
 import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
-import { View,
-  Text,
-  Pressable,
-  Dimensions,
-  ScrollView } from "react-native";
+import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { useAllResponseNPSForGraph } from "@/api/response/response.query";
-import {
-  AngryIcon,
-  LaughIcon,
-  MehIcon,
-  StarIcon,
-  TargetIcon,
-} from "lucide-react-native";
+import { AngryIcon, LaughIcon, MehIcon, StarIcon, TargetIcon } from "lucide-react-native";
 
 const HappinessJourney = ({ surveyId }: { surveyId: string }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const [timePeriod, setTimePeriod] = useState<"hourly" | "daily" | "weekly">(
-    "daily",
-  );
+  const [timePeriod, setTimePeriod] = useState<"hourly" | "daily" | "weekly">("daily");
 
   const [selectedPoint, setSelectedPoint] = useState<any>(null);
 
@@ -71,9 +59,7 @@ const HappinessJourney = ({ surveyId }: { surveyId: string }) => {
     return [monthNames[now.getMonth()]];
   };
 
-  const firstNonZeroIndex = totalResponses.findIndex(
-    (item: any) => item.value > 0,
-  );
+  const firstNonZeroIndex = totalResponses.findIndex((item: any) => item.value > 0);
 
   const periods = ["hourly", "daily", "weekly"] as const;
 
@@ -90,16 +76,12 @@ const HappinessJourney = ({ surveyId }: { surveyId: string }) => {
             key={period}
             onPress={() => setTimePeriod(period)}
             className={`px-4 py-1.5 rounded-full ${
-              timePeriod === period
-                ? "bg-black dark:bg-white"
-                : "bg-[#F5F5F5] dark:bg-slate-800"
+              timePeriod === period ? "bg-black dark:bg-white" : "bg-[#F5F5F5] dark:bg-slate-800"
             }`}
           >
             <Text
               className={`text-md px-2 py-1 font-semibold ${
-                timePeriod === period
-                  ? "text-white dark:text-black"
-                  : "text-black dark:text-white"
+                timePeriod === period ? "text-white dark:text-black" : "text-black dark:text-white"
               }`}
             >
               {period.charAt(0).toUpperCase() + period.slice(1)}

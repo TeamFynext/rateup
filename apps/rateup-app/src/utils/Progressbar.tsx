@@ -10,7 +10,7 @@ type Props = {
 const ProgressBar = ({
   progress,
   barColor = "#22c55e", // default green
-  bgColor = "#e5e7eb",   // default gray-200
+  bgColor = "#e5e7eb", // default gray-200
 }: Props) => {
   return (
     <View className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: bgColor }}>

@@ -40,3 +40,5 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+# JetBrains IDEs — project-local settings, committed by accident once already
+.idea/

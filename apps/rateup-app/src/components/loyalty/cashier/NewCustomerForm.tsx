@@ -84,12 +84,21 @@ export function NewCustomerForm({
 
   // The org may already know these from a WhatsApp conversation or an import — save the
   // typing, but only into fields the cashier has not filled in themselves.
+  //
+  // This one stays an effect, and the rule is silenced rather than satisfied. These are
+  // editable fields, so they cannot be derived from `lookup`: the cashier must be able to
+  // clear or overwrite a prefilled name, and a derived value would reinstate itself on the
+  // next render. The functional updaters are what keep it safe — each writes only into a
+  // field that is still empty, so a late-arriving lookup can never overwrite typing that is
+  // already in progress, and the effect is idempotent once the fields are filled.
   useEffect(() => {
     const contact = lookup?.contact;
     if (!contact) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (contact.name) setName((current) => current || contact.name || "");
     if (contact.dob) setDob((current) => current || dobToDisplay(contact.dob));
     if (contact.gender) setGender((current) => current ?? contact.gender ?? undefined);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [lookup]);
 
   const nameValid = name.trim().length > 0;
@@ -243,7 +252,7 @@ export function NewCustomerForm({
       </Field>
 
       {!programActive ? (
-        <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.status.pending.fg }}>
+        <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.status.new.fg }}>
           The program is not live, so nobody can join yet. Activate or resume it on the web
           dashboard.
         </Text>

@@ -129,7 +129,7 @@ export function RedeemList({
                 style={{
                   fontFamily: FONT.regular,
                   fontSize: 12,
-                  color: eligible ? t.fg3 : t.status.pending.fg,
+                  color: eligible ? t.fg3 : t.status.new.fg,
                 }}
               >
                 {note}

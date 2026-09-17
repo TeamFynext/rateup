@@ -57,7 +57,7 @@ const SignIn = () => {
                   </Text>
 
                   <Text className="text-md mt-1 text-center font-[Geist] text-[#7A8289] dark:text-gray-400">
-                    It's great to see you again!
+                    It&apos;s great to see you again!
                   </Text>
                 </View>
               </View>

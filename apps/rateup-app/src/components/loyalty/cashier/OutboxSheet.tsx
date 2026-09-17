@@ -107,18 +107,18 @@ export function OutboxSheet({
                 flexDirection: "row",
                 alignItems: "flex-start",
                 gap: 8,
-                backgroundColor: t.status.spam.soft,
+                backgroundColor: t.dangerTone.soft,
                 borderRadius: 12,
                 padding: 12,
               }}
             >
-              <AlertCircle size={16} color={t.status.spam.fg} />
+              <AlertCircle size={16} color={t.dangerTone.fg} />
               <Text
                 style={{
                   flex: 1,
                   fontFamily: FONT.medium,
                   fontSize: 12,
-                  color: t.status.spam.fg,
+                  color: t.dangerTone.fg,
                   lineHeight: 18,
                 }}
               >
@@ -168,7 +168,7 @@ export function OutboxSheet({
                         style={{
                           fontFamily: FONT.regular,
                           fontSize: 12,
-                          color: t.status.pending.fg,
+                          color: t.status.new.fg,
                           lineHeight: 18,
                         }}
                       >

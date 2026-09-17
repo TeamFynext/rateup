@@ -36,6 +36,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCashierOutboxStore } from "@/store/cashierOutboxStore";
 import { useCashierStore } from "@/store/cashierStore";
 import { cacheCustomer, readCachedCustomer } from "@/utils/cashierOutbox/db";
+import { accessDenialReason } from "@/utils/subscription";
 
 import { AddPurchaseForm, type AddPurchaseValues } from "./AddPurchaseForm";
 import { ContactPicker } from "./ContactPicker";
@@ -121,9 +122,10 @@ export default function CashierScreen() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [cardNotice, setCardNotice] = useState<string | null>(null);
   /** The last server answer for this number, painted while the network is asked again. */
-  const [cached, setCached] = useState<{ data: CustomerRewardsResponse; fetchedAt: number } | null>(
-    null,
-  );
+  const [cachedRow, setCached] = useState<{
+    data: CustomerRewardsResponse;
+    fetchedAt: number;
+  } | null>(null);
 
   const { data: program, isLoading: programLoading } = useLoyaltyProgram();
   const {
@@ -182,15 +184,19 @@ export default function CashierScreen() {
    * meets the cache — a pending award's estimate is *added at read time* rather than
    * written into the cache, so provisional never gets persisted as truth.
    */
+  // Whether a cached row is usable is a function of the current number, so it is derived
+  // rather than blanked from the effect below — clearing state in an effect renders the
+  // stale row once before the reset lands, which on this screen is another customer's
+  // balance flashing up under the number just typed.
+  const cacheable = Boolean(orgId) && (phone?.length ?? 0) >= 10;
+  const cached = cacheable ? cachedRow : null;
+
   const served = lookup ?? cached?.data;
   const pendingDelta = served ? pendingDeltaFor(outbox, served.customer.id) : 0;
   const balanceAsOf = new Date(lookup ? Date.now() : (cached?.fetchedAt ?? Date.now()));
 
   useEffect(() => {
-    if (!orgId || !phone || phone.length < 10) {
-      setCached(null);
-      return;
-    }
+    if (!orgId || !phone || !cacheable) return;
     let cancelled = false;
     void readCachedCustomer<CustomerRewardsResponse>(orgId, phone).then((row) => {
       if (!cancelled && row) setCached(row);
@@ -198,7 +204,7 @@ export default function CashierScreen() {
     return () => {
       cancelled = true;
     };
-  }, [orgId, phone]);
+  }, [orgId, phone, cacheable]);
 
   // Every completed request is evidence the API is reachable, and a failure with no
   // response is evidence it is not. That is the only definition of "offline" the queue
@@ -1142,6 +1148,18 @@ function headerTitle(step: string, customer: CustomerRewardsResponse | undefined
  */
 function apiErrorMessage(error: unknown, fallback: string): string {
   if (typeof error !== "object" || error === null) return fallback;
+
+  // A plan refusal mid-shift, most often a subscription that lapsed while the tab was
+  // open. The server's own wording here is "No active subscription" / "Subscription
+  // missing features", which tells a cashier nothing about what to do next.
+  const denial = accessDenialReason(error);
+  if (denial === "subscription_expired") {
+    return "This subscription has ended.";
+  }
+  if (denial === "subscription") {
+    return "No subscription for Loyalty.";
+  }
+
   const response = (error as { response?: { data?: unknown } }).response;
   const data = response?.data;
   if (typeof data === "string" && data.trim()) return data;

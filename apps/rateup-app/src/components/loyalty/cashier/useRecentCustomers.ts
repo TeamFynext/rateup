@@ -18,15 +18,15 @@ import {
  * Device-local by design: it is a convenience for the counter, never a record. The ledger
  * is on the server.
  */
+/** A stable identity, so a keyless render does not hand out a fresh array every time. */
+const EMPTY: RecentCustomer[] = [];
+
 export function useRecentCustomers(orgId: string | null | undefined) {
   const key = orgId ? storageKeyFor(orgId) : null;
   const [recent, setRecent] = useState<RecentCustomer[]>([]);
 
   useEffect(() => {
-    if (!key) {
-      setRecent([]);
-      return;
-    }
+    if (!key) return;
     let cancelled = false;
     AsyncStorage.getItem(key)
       .then((raw) => {
@@ -53,5 +53,8 @@ export function useRecentCustomers(orgId: string | null | undefined) {
     [key],
   );
 
-  return { recent, record };
+  // No key means no org to scope the list to — signed out, or the org not resolved yet.
+  // Derived rather than emptied from the effect: the reset would land a render late, so
+  // the previous org's customers would paint once after a switch.
+  return { recent: key ? recent : EMPTY, record };
 }

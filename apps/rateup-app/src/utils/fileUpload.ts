@@ -1,15 +1,9 @@
 import axios from "../config/axios";
 
-export const getFileUrlFromKey = (
-  key: string,
-  s3Upload = true,
-  unsplashImage = false
-) => {
+export const getFileUrlFromKey = (key: string, s3Upload = true, unsplashImage = false) => {
   if (!key) return;
   if (unsplashImage)
-    return key?.startsWith("https")
-      ? key
-      : `${process.env.EXPO_PUBLIC_UNSPLASH_URL}${key}`;
+    return key?.startsWith("https") ? key : `${process.env.EXPO_PUBLIC_UNSPLASH_URL}${key}`;
 
   const imgUrl = s3Upload
     ? `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`
@@ -33,7 +27,7 @@ export const deleteUploadedFiles = async (data: any) => {
 export const uploadFile = async (
   file: File,
   withThumbnails = false,
-  data = { allowAll: false }
+  data = { allowAll: false },
 ): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -47,7 +41,7 @@ export const uploadFile = async (
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response?.data?.data?.key as string;
   } catch (error: any) {

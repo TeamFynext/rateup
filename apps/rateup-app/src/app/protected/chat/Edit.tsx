@@ -25,9 +25,12 @@ export default function EditContacts() {
   const isDark = colorScheme === "dark";
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [fullPhoneNumber, setFullPhoneNumber] = useState("");
   const [isAiChatActive, setIsAiChatActive] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // Starts true: the fetch below is kicked off on mount, so the very first paint is already
+  // a load. Raising the flag from the effect instead meant one render of an empty form
+  // before the spinner, and a synchronous setState in an effect body besides. `contactId`
+  // comes from the route, so a different contact remounts this screen and re-initialises.
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
@@ -36,12 +39,13 @@ export default function EditContacts() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
 
-  useEffect(() => {
-    if (phone && selectedCountry) {
-      const formatted = selectedCountry.dial_code + phone.replace(/^0+/, "");
-      setFullPhoneNumber(formatted.replace("+", ""));
-    }
-  }, [phone, selectedCountry]);
+  // Computed, not stored: it is a pure function of the country and what has been typed, and
+  // holding it in state meant the save below could read the *previous* number for one
+  // render after either changed.
+  const fullPhoneNumber =
+    phone && selectedCountry
+      ? (selectedCountry.dial_code + phone.replace(/^0+/, "")).replace("+", "")
+      : "";
 
   const handleSelectCountry = (country: any) => {
     setSelectedCountry(country);
@@ -67,7 +71,6 @@ export default function EditContacts() {
   };
 
   const getContactDetails = async () => {
-    setLoading(true);
     try {
       const res = await getContactById(contactId);
       setIsAiChatActive(res.aiWaChat);
@@ -96,7 +99,11 @@ export default function EditContacts() {
   };
 
   useEffect(() => {
-    setLoading(true);
+    // Silenced, not satisfied: the rule follows the call into `getContactDetails` and sees
+    // the setters inside it. Every one of them runs after `await getContactById`, so none
+    // is the synchronous set-during-commit the rule exists to catch — there is nothing
+    // left in this function that runs in the same tick as the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     getContactDetails();
     // Reloads when the contact changes. `getContactDetails` is redeclared every
     // render, so depending on it would refetch in a loop.

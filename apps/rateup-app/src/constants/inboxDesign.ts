@@ -43,6 +43,16 @@ export type InboxRowTheme = {
   danger: string;
   status: Record<InboxStatusTone, Tone>;
   /**
+   * Error surfaces — the cashier's inline errors and the outbox's failure banner.
+   *
+   * Deliberately not a fourth `status` tone: `InboxStatusTone` is the row's *lifecycle*
+   * (`getDerivedStatus`), a nothing-went-wrong axis, and `STATUS_LABEL` in `ChatBox`
+   * maps it exhaustively. A failure is not a lifecycle state, so it sits beside them.
+   * `danger` above is the flat colour for a glyph or a line of text; this is the pair a
+   * tinted panel needs.
+   */
+  dangerTone: Tone;
+  /**
    * Fill behind a New (unassigned) row. Deeper than `status.new.soft`: the
    * design's `--warm-soft` is tuned for a pill and all but vanished as a full
    * row on a phone.
@@ -84,6 +94,9 @@ const light: InboxRowTheme = {
     assigned: { color: "#1C518E", soft: "#F1F6FC", fg: "#1C518E" },
     closed: { color: "#17915A", soft: "#E9F7EF", fg: "#17915A" },
   },
+  // `danger` (#DC2626) darkened the way the tones above darken their base — the red is
+  // read as text on its own tint, where the raw alert red sits under 4.5:1.
+  dangerTone: { color: "#B42318", soft: "#FDECEC", fg: "#B42318" },
   // `--ru-amber-100`.
   newRowBg: "#FEECCB",
   warmSoft: "#FFF8E1",
@@ -123,6 +136,8 @@ const dark: InboxRowTheme = {
     assigned: { color: "#5A8CC6", soft: "rgba(90,140,198,0.14)", fg: "#5A8CC6" },
     closed: { color: "#4ECB8B", soft: "rgba(78,203,139,0.12)", fg: "#4ECB8B" },
   },
+  // Dark's own `danger`, tinted at the depth the three tones above use.
+  dangerTone: { color: "#CF6679", soft: "rgba(207,102,121,0.14)", fg: "#CF6679" },
   // The New edge's own yellow at a visible depth on the app's dark grey.
   newRowBg: "rgba(251,192,92,0.16)",
   // The design hardcodes the warm banner and the note card's cream (#FFF6DC),

@@ -18,7 +18,7 @@ export const useSurvey = (surveyId: string) => {
   });
 };
 
-export const useGetSurveyStats = (surveyId:string) => {
+export const useGetSurveyStats = (surveyId: string) => {
   return useQuery({
     queryFn: () => getSurveyStats(surveyId),
     queryKey: ["SurveyStats", surveyId],
