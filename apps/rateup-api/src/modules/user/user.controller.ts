@@ -413,9 +413,8 @@ export async function updateUserActiveStatusHandler(
       });
     }
 
-    // Deleting your own account is re-authenticated with your password, so a walked-away
-    // session cannot destroy the account. A super-admin removing someone else is not:
-    // they cannot know that person's password, and the role check above is the gate there.
+    // Self-deletion is re-authenticated with the password, so a walked-away session cannot
+    // destroy the account; for a super-admin removing someone else the role check is the gate.
     if (isSelfDelete) {
       const session = await Session.getSession(request, reply);
       const userInfo = await supertokens.getUser(session!.getUserId());
@@ -423,8 +422,7 @@ export async function updateUserActiveStatusHandler(
         (method) => method.recipeId === "emailpassword",
       );
 
-      // A Google-only account has no password to verify; the typed confirmation in the
-      // UI is the whole check for those users.
+      // A Google-only account has no password to verify; the typed confirmation is the check.
       if (emailPasswordLogin) {
         const password = request.body?.password;
 

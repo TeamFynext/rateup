@@ -217,10 +217,8 @@ export async function getSubscription(orgId: string) {
           name: true,
           paymentPlan: {
             select: {
-              // `planId` is what the client matches an order against to know which cadence
-              // and currency the org is actually billed on. Without it the only way to tell
-              // a monthly plan from a yearly one is to compare amounts, which collides
-              // whenever a tier prices two cadences the same.
+              // `planId` is how the client tells which cadence and currency an order was
+              // billed on; amounts collide when a tier prices two cadences the same.
               planId: true,
               period: true,
               amount: true,
@@ -232,10 +230,6 @@ export async function getSubscription(orgId: string) {
           // that one renders no price or billing cycle for anyone on Starter or Pro.
           monthlyPaymentPlan: {
             select: {
-              // `planId` is what the client matches an order against to know which cadence
-              // and currency the org is actually billed on. Without it the only way to tell
-              // a monthly plan from a yearly one is to compare amounts, which collides
-              // whenever a tier prices two cadences the same.
               planId: true,
               period: true,
               amount: true,
@@ -244,10 +238,6 @@ export async function getSubscription(orgId: string) {
           },
           yearlyPaymentPlan: {
             select: {
-              // `planId` is what the client matches an order against to know which cadence
-              // and currency the org is actually billed on. Without it the only way to tell
-              // a monthly plan from a yearly one is to compare amounts, which collides
-              // whenever a tier prices two cadences the same.
               planId: true,
               period: true,
               amount: true,
@@ -260,10 +250,6 @@ export async function getSubscription(orgId: string) {
           // subscriber was shown ₹48,000/year.
           usdMonthlyPaymentPlan: {
             select: {
-              // `planId` is what the client matches an order against to know which cadence
-              // and currency the org is actually billed on. Without it the only way to tell
-              // a monthly plan from a yearly one is to compare amounts, which collides
-              // whenever a tier prices two cadences the same.
               planId: true,
               period: true,
               amount: true,
@@ -272,10 +258,6 @@ export async function getSubscription(orgId: string) {
           },
           usdYearlyPaymentPlan: {
             select: {
-              // `planId` is what the client matches an order against to know which cadence
-              // and currency the org is actually billed on. Without it the only way to tell
-              // a monthly plan from a yearly one is to compare amounts, which collides
-              // whenever a tier prices two cadences the same.
               planId: true,
               period: true,
               amount: true,

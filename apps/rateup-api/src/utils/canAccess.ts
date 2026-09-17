@@ -35,11 +35,8 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
 };
 
 /**
- * Every TeamFeature a team can actually be granted — the enum minus the retired values.
- *
- * `tickets` only exists in the enum because production rows still carry it; granting it to a
- * new team would write a row for a product that no longer exists. Use this, not
- * `Object.values(TeamFeature)`, wherever features are handed out.
+ * Every TeamFeature a team can actually be granted — the enum minus retired values like
+ * `tickets`, which survives only because production rows carry it. Use this when granting.
  */
 export const GRANTABLE_TEAM_FEATURES: readonly TeamFeature[] = (
   Object.values(TeamFeature) as TeamFeature[]

@@ -168,8 +168,8 @@ export async function inviteTeamMember(input: InviteMemberInput) {
   try {
     const { email, name, orgId, teamId, invitedBy, type, role } = input;
 
-    // Every team this invitation grants. `teamId` is the one it is filed under — the
-    // unique constraint and Team.invitations are keyed on it — and is always included.
+    // Every team this invitation grants; `teamId` is the one it is filed under and is
+    // always included.
     const inviteTeamIds = [...new Set([...(input.teamIds ?? []), ...(teamId ? [teamId] : [])])];
 
     // Check if team member with the input email already exists
@@ -224,9 +224,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         if (!invitedPerson) {
           throw new Error("Inviting org member not found.");
         }
-        // One team or five, the mail names what they were actually added to. With no
-        // team at all they were added to the org itself, which the copy has to say
-        // rather than pointing at a team that does not exist.
+        // The mail names what they were added to — the org itself when no team was picked.
         const teamNames = joinedTeams.map((team) => team.name).join(", ");
         const addedTo = teamNames || invitedPerson.org.name;
         const msg = {
@@ -262,8 +260,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
       }
     }
 
-    // Check if the email already exists in the invitation table. An invitation now grants
-    // several teams, so an overlap with any of them is the same collision as before.
+    // An invitation grants several teams, so an overlap with any of them is a collision.
     const existingInvitation = await prisma.invitation.findFirst({
       where: {
         email,
@@ -457,8 +454,7 @@ export async function completeInvite(token: string) {
         data: {
           orgId: updatedInvitation.orgId,
           userId: signUpResult.user.id,
-          // The role the inviter picked. Invitations created before that was possible
-          // have none, and keep the ADMIN this branch always gave them.
+          // The inviter's pick; ADMIN for an invitation created without one.
           role: updatedInvitation.role ?? Role.ADMIN,
         },
       });
@@ -518,8 +514,7 @@ export async function completeInvite(token: string) {
         data: {
           orgId: updatedInvitation.orgId,
           userId: user.id,
-          // Same fallback as the branch above: the inviter's pick, or ADMIN for an
-          // invitation created before there was one.
+          // Same fallback as the branch above.
           role: updatedInvitation.role ?? Role.ADMIN,
         },
       });
@@ -538,16 +533,10 @@ export async function completeInvite(token: string) {
 }
 
 /**
- * Puts a user in every team named, skipping the ones they are already in.
- *
- * A membership the user already has is skipped rather than treated as an error: with
- * several teams in play, one team they are already in must not abandon the rest.
- * Returns the teams, for the "you were added" email.
+ * Puts a user in every team named. An existing membership is skipped rather than thrown on,
+ * so one team they are already in cannot abandon the rest. Returns the teams, for the email.
  */
-/**
- * The teams an invitation grants. `teamIds` holds the full set; invitations created
- * before it existed have it empty and are still described by `teamId` alone.
- */
+/** The teams an invitation grants. Empty `teamIds` means `teamId` alone. */
 function invitedTeamIds(invitation: { teamId: string | null; teamIds: string[] }) {
   if (invitation.teamIds.length) return invitation.teamIds;
   return invitation.teamId ? [invitation.teamId] : [];
@@ -633,8 +622,7 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
       googleLink: true,
       code: true,
       tags: true,
-      // Invitations filed under this team. One naming several teams is filed under just
-      // one of them, so the rest are picked up by the query below.
+      // Invitations filed under this team; the query below picks up the rest.
       invitations: {
         where: {
           status: {
@@ -680,8 +668,7 @@ export async function getTeamMembersAndFromInvitation(orgId: string, input: GetT
     throw new Error("Team not found");
   }
 
-  // Invitations that grant this team without being filed under it. Without these, a
-  // person invited into several teams would only appear on one team's page.
+  // Invitations that grant this team without being filed under it.
   const alsoInvited = await prisma.invitation.findMany({
     where: {
       status: { not: "ACCEPTED" },

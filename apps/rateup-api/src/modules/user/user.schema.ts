@@ -61,10 +61,8 @@ const changeUserPasswordSchema = z.object({
   newPassword: z.string().min(4),
 });
 
-// Self-deletion is re-authenticated with the account password. It stays optional in
-// the schema because the same route also serves a super-admin removing someone else,
-// and because a Google-only account has no password to verify — the handler decides
-// which of those applies.
+// Optional because the same route serves self-deletion (re-authenticated), a super-admin
+// removing someone else, and Google-only accounts with no password to verify.
 const deleteUserSchema = z.object({
   password: z.string().optional(),
 });
@@ -75,8 +73,7 @@ const updateProfileSchema = z.object({
   phone: z.string(),
 });
 
-/** The locales the clients ship translations for. Anything else is a language we cannot
- * render, so it is rejected rather than stored and silently ignored on read. */
+/** The locales the clients ship translations for; anything else is rejected. */
 const SUPPORTED_LOCALES = ["en", "ar", "de", "fr", "hi"] as const;
 
 const updateUserLanguageSchema = z.object({
