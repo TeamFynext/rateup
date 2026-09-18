@@ -40,13 +40,18 @@ import {
   addMembersToTeamsMail,
   completeInvite,
   getTeamById,
+  inviteTeamMember,
 } from "./team.service.js";
 import { log } from "../../utils/logger.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../integrations/external/zapier/zapier.service.js";
-import { addMembertoTeamsHandler, completeInviteHandler } from "./team.controller.js";
+import {
+  addMembertoTeamsHandler,
+  completeInviteHandler,
+  inviteMemberHandler,
+} from "./team.controller.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -187,5 +192,53 @@ describe("addMembertoTeamsHandler", () => {
     expect(reply.code).toHaveBeenCalledWith(401);
     expect(reply.payload).toEqual({ message: "Missing user" });
     expect(addMemberToTeams).not.toHaveBeenCalled();
+  });
+});
+
+describe("inviteMemberHandler", () => {
+  function inviteRequest(callerRole: string, invitedRole?: string) {
+    return {
+      body: {
+        name: "Invitee",
+        email: "invitee@acme.com",
+        orgId: "org-1",
+        teamId: "team-1",
+        invitedBy: "user-1",
+        type: "TEAM",
+        role: invitedRole,
+      },
+      user: { userId: "user-1", orgId: "org-1", role: callerRole },
+    } as any;
+  }
+
+  beforeEach(() => {
+    (inviteTeamMember as unknown as Mock).mockResolvedValue({ id: "invite-1" });
+  });
+
+  test("lets an admin invite a staff member", async () => {
+    const reply = makeReply();
+
+    await inviteMemberHandler(inviteRequest("ADMIN", "MEMBER"), reply);
+
+    expect(inviteTeamMember).toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(201);
+  });
+
+  test("refuses an admin trying to invite a super admin", async () => {
+    const reply = makeReply();
+
+    await inviteMemberHandler(inviteRequest("ADMIN", "SUPER_ADMIN"), reply);
+
+    expect(inviteTeamMember).not.toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(403);
+  });
+
+  test("lets a super admin invite another super admin", async () => {
+    const reply = makeReply();
+
+    await inviteMemberHandler(inviteRequest("SUPER_ADMIN", "SUPER_ADMIN"), reply);
+
+    expect(inviteTeamMember).toHaveBeenCalled();
+    expect(reply.code).toHaveBeenCalledWith(201);
   });
 });

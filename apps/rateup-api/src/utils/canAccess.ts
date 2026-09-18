@@ -35,6 +35,14 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
 };
 
 /**
+ * Every TeamFeature a team can actually be granted — the enum minus retired values like
+ * `tickets`, which survives only because production rows carry it. Use this when granting.
+ */
+export const GRANTABLE_TEAM_FEATURES: readonly TeamFeature[] = (
+  Object.values(TeamFeature) as TeamFeature[]
+).filter((feature) => feature !== TeamFeature.tickets);
+
+/**
  * Returns true when BOTH the subscription gate (if any) AND the team feature
  * permission are satisfied.
  *

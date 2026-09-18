@@ -25,6 +25,7 @@ import { createHubSpotCompany, createHubSpotContact } from "../../utils/hubspot.
 import prisma from "../../utils/prisma.js";
 import { UserPresenceMode } from "../../../generated/prisma/enums.js";
 import { Org, Team, TeamMember, User } from "../../../generated/prisma/client.js";
+import { GRANTABLE_TEAM_FEATURES } from "../../utils/canAccess.js";
 
 async function createUser({ id, email, recipeName, prefLanguage }: CreateUserParams) {
   const user = await prisma.user.create({
@@ -110,6 +111,11 @@ export async function createUserSignup({
           name: "Main",
           code: "MAIN",
           orgId: org.id,
+          // A team with no TeamFeatureAccess rows grants nothing, so the default team gets
+          // every feature. Subscription gates still apply on top.
+          featureAccess: {
+            create: GRANTABLE_TEAM_FEATURES.map((feature) => ({ feature })),
+          },
         },
       });
 

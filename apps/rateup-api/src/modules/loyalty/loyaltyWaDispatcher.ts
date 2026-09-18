@@ -2,6 +2,7 @@ import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 
 import { LoyaltyEventType } from "../../types/enums.js";
+import { LOYALTY_JOIN_PAYLOAD } from "./loyaltyEventTemplates.js";
 import { renderTemplateBody, sendLoyaltyMessage } from "./loyaltyMessaging.js";
 
 // The body renderer moved to loyaltyMessaging.ts with the rest of the send logic; it is
@@ -182,6 +183,8 @@ export async function dispatchLoyaltyNotification(
       waTemplateId: templateId,
       params,
       preferTextInSession: program.sendTextInSession,
+      quickReplyPayload:
+        commandKey === LoyaltyEventType.NEW_CUSTOMER_WELCOME ? [LOYALTY_JOIN_PAYLOAD] : undefined,
     });
 
     return {

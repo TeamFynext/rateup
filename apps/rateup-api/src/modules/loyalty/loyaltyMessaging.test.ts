@@ -238,7 +238,7 @@ describe("sendLoyaltyMessage", () => {
     });
 
     expect(sendMessage).not.toHaveBeenCalled();
-    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, PHONE, ["Ann", "43"]);
+    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, PHONE, ["Ann", "43"], undefined);
     expect(result).toMatchObject({ sent: true, mode: "template" });
   });
 
@@ -269,7 +269,7 @@ describe("sendLoyaltyMessage", () => {
       preferTextInSession: true,
     });
 
-    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, PHONE, ["Ann", "43"]);
+    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, PHONE, ["Ann", "43"], undefined);
     expect(result).toEqual({
       sent: true,
       mode: "template",

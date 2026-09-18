@@ -129,6 +129,8 @@ import {
   releasePendingSignupBonusByPhone,
 } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
+import { LOYALTY_JOIN_PAYLOAD } from "../../loyalty/loyaltyEventTemplates.js";
+import { sendNewCustomerWelcomeIfDue } from "../../loyalty/newCustomerWelcome.js";
 import { sendMemberCardIfDue } from "../../loyalty/accounts/memberCard.service.js";
 import { LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { notificationQueue, pausedAutomationQueue } from "../../../workers/bullmq/queues/index.js";
@@ -611,9 +613,11 @@ async function whatsappMessageHandler(
     log.error({ err: e }, "Error releasing a pending loyalty signup bonus");
   }
   const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(orgId, message);
+  const joinTapped = parsedMessage.buttonPayload === LOYALTY_JOIN_PAYLOAD;
   // A new member's first message opens the window their card can be sent in. The join and
   // "card" paths send it themselves, so they are left alone here.
   const sendsCardItself =
+    joinTapped ||
     loyaltyWaCommand?.type === LoyaltyTemplateTypes.MemberCard ||
     loyaltyWaCommand?.type === LoyaltyTemplateTypes.CustomerRegistration ||
     parseWaJoinMessage(message)?.isJoin === true;
@@ -638,12 +642,12 @@ async function whatsappMessageHandler(
 
   const joinPayload = parseWaJoinMessage(message);
 
-  if (joinPayload?.isJoin) {
+  if (joinPayload?.isJoin || joinTapped) {
     await handleWaJoinRegistration({
       orgId,
       from,
       userName,
-      joinPayload,
+      joinPayload: joinPayload ?? {},
       sourceIdentifier,
     });
     return;
@@ -736,6 +740,16 @@ async function whatsappMessageHandler(
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
   } else {
+    try {
+      await sendNewCustomerWelcomeIfDue({
+        orgId,
+        contactId: messageObj?.contactId,
+        phone: from,
+        name: userName,
+      });
+    } catch (e) {
+      log.error({ err: e }, "Error sending the loyalty welcome to a new contact");
+    }
     await handleAutomatedReply(orgId, waMessage, parsedMessage, from, message);
   }
 }

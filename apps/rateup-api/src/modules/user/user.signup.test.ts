@@ -50,6 +50,7 @@ import { Role } from "../../utils/enums/index.js";
 import { UserRecipes } from "../../types/enums.js";
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
 import { createUserSignup } from "./user.service.js";
+import { GRANTABLE_TEAM_FEATURES } from "../../utils/canAccess.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -189,11 +190,23 @@ describe("createUserSignup - records created in the transaction", () => {
     await createUserSignup(signupInput());
 
     expect(tx.team.create).toHaveBeenCalledWith({
-      data: { name: "Main", code: "MAIN", orgId: "org-1" },
+      data: expect.objectContaining({ name: "Main", code: "MAIN", orgId: "org-1" }),
     });
     expect(tx.teamMember.create).toHaveBeenCalledWith({
       data: { teamId: "team-1", userId: "user-1" },
     });
+  });
+
+  test("grants the Main team every grantable feature", async () => {
+    await createUserSignup(signupInput());
+
+    const created = tx.team.create.mock.calls[0][0].data.featureAccess.create;
+    expect(created.map((row: { feature: string }) => row.feature).sort()).toEqual(
+      [...GRANTABLE_TEAM_FEATURES].sort(),
+    );
+    // A team with no rows grants nothing, so an empty list here would be the bug this covers.
+    expect(created.length).toBeGreaterThan(0);
+    expect(created).not.toContainEqual({ feature: "tickets" });
   });
 
   test("provisions the free-plan subscription inside the same transaction", async () => {

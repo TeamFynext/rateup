@@ -128,6 +128,8 @@ export async function handleSendTemplate(
   orgId: string,
   phone: string,
   dynamicVariables: unknown[],
+  /** One payload per quick-reply button, in order. */
+  quickReplyPayload?: string[],
 ) {
   if (!waTemplateId) {
     log.trace("No template Id found");
@@ -153,5 +155,7 @@ export async function handleSendTemplate(
     undefined,
     undefined,
     undefined,
+    undefined,
+    quickReplyPayload,
   );
 }

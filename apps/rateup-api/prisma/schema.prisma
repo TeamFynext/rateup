@@ -116,7 +116,8 @@ model User {
   recipeName     UserRecipes?
   isPaused       Boolean?         @default(false)
   pausedBy       String?
-  prefLanguage   String?          @default("English")
+  /// The UI language this account prefers, as an ISO code ("en", "ar", …).
+  prefLanguage   String?          @default("en")
   deletedAt      DateTime?
   lastLoggedInAt DateTime?
   presenceMode   UserPresenceMode @default(automatic)
@@ -758,6 +759,11 @@ model Invitation {
   invitedBy String
   createdAt DateTime     @default(now())
   status    InviteStatus @default(PENDING)
+  /// The role the invitee gets on accept. NULL falls back to ADMIN.
+  role      Role?
+  /// Every team the invitee joins on accept, teamId included. teamId stays the team the
+  /// invitation is filed under; empty here means teamId alone.
+  teamIds   String[]     @default([]) @db.Uuid
 
   @@unique([email, teamId], name: "team_id_email_unique")
 }
@@ -954,6 +960,7 @@ model Contact {
   @@index([orgId, waMessageAssignStatus, lastReceivedMessageTimeStamp(sort: Desc)])
   @@index([orgId, isSpam])
   @@index([orgId, lifecycleId])
+  @@index([orgId, email])
 }
 
 model ContactLabel {
@@ -2660,6 +2667,8 @@ enum LoyaltyEventType {
   REWARD_EXPIRING
   /// A year (or another) since the member joined.
   SIGNUP_ANNIVERSARY
+  /// A contact's first message to the business, before they are a member; carries a Join button.
+  NEW_CUSTOMER_WELCOME
 }
 
 model LoyaltyEventTrigger {
