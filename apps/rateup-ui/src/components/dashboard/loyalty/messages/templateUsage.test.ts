@@ -11,6 +11,7 @@ import {
   findStarterTemplate,
   starterTemplateVersion,
   templateBodyOf,
+  quickReplyLabelOf,
   templateHasRichParts,
   usageOf,
   usedTemplateIds,
@@ -96,6 +97,36 @@ describe("templateHasRichParts", () => {
         ]),
       ),
     ).toBe(true);
+  });
+
+  test("the welcome's own Join quick reply keeps it editable inline, anything more does not", () => {
+    const join = { type: "QUICK_REPLY", text: "Join" };
+    const body = { type: "BODY", text: "y" };
+    expect(
+      templateHasRichParts(entry([body, { type: "BUTTONS", buttons: [join] }]), {
+        ownButton: true,
+      }),
+    ).toBe(false);
+    expect(
+      templateHasRichParts(entry([body, { type: "BUTTONS", buttons: [join, join] }]), {
+        ownButton: true,
+      }),
+    ).toBe(true);
+    expect(templateHasRichParts(entry([body, { type: "BUTTONS", buttons: [join] }]))).toBe(true);
+  });
+});
+
+describe("quickReplyLabelOf", () => {
+  test("reads the first quick reply's label", () => {
+    expect(
+      quickReplyLabelOf(
+        entry([
+          { type: "BODY", text: "y" },
+          { type: "BUTTONS", buttons: [{ type: "QUICK_REPLY", text: "Member" }] },
+        ]),
+      ),
+    ).toBe("Member");
+    expect(quickReplyLabelOf(entry([{ type: "BODY", text: "y" }]))).toBeUndefined();
   });
 });
 

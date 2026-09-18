@@ -17,15 +17,31 @@ export function templateBodyOf(
 /**
  * A stored template's components, if it carries anything text cannot: buttons, or a media
  * header. Such a template is edited in the template editor, never rewritten inline.
+ * `ownButton` is the one quick reply the API itself puts back on save (the welcome's Join).
  */
 export function templateHasRichParts(
   entry: Pick<WaTemplateListEntry, "data"> | undefined,
+  { ownButton = false }: { ownButton?: boolean } = {},
 ): boolean {
   return (entry?.data?.components ?? []).some((component) => {
     const type = String(component.type).toUpperCase();
-    if (type === "BUTTONS") return true;
+    if (type === "BUTTONS") {
+      if (!ownButton) return true;
+      const buttons = component.buttons ?? [];
+      return buttons.length !== 1 || buttons[0]?.type !== "QUICK_REPLY";
+    }
     return type === "HEADER" && String(component.format ?? "TEXT").toUpperCase() !== "TEXT";
   });
+}
+
+/** The label of a template's first quick-reply button, if it has one. */
+export function quickReplyLabelOf(
+  entry: Pick<WaTemplateListEntry, "data"> | undefined,
+): string | undefined {
+  const buttons = entry?.data?.components?.find(
+    (component) => String(component.type).toUpperCase() === "BUTTONS",
+  )?.buttons;
+  return buttons?.find((button) => button.type === "QUICK_REPLY")?.text;
 }
 
 /**
