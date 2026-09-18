@@ -1,15 +1,18 @@
 import { TemplateType } from "../../../../generated/prisma/client.js";
 import {
   LoyaltyEventType,
+  LoyaltyTemplateTypes,
   WaAutomatedReplyResponseType,
   WaTemplateCategory,
   WaTemplateComponentTypeUpperCase,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import type { WaTemplateButton } from "../../../types/whatsapp.types.js";
 import { LoyaltyRewardType } from "../../../types/loyalty.js";
 import { calculateGiveback, givebackBand } from "../giveback.js";
 import { buildGivebackInput, loadProgramGivebackSources } from "../giveback/giveback.service.js";
+import { joinButtonLabel } from "../loyaltyEventTemplates.js";
 import { toRichText } from "../richText.js";
 import {
   reevaluateProgramTiers,
@@ -745,7 +748,11 @@ export async function submitEventTemplate(
 
   const submitted = await createTemplate(
     orgId,
-    buildLoyaltyBodyTemplate(template.templateName, template.body),
+    buildLoyaltyBodyTemplate(
+      template.templateName,
+      template.body,
+      await loyaltyEventButtons(orgId, template.eventType),
+    ),
   );
   const saved = await saveTemplate(submitted, orgId, {}, TemplateType.LOYALTY);
 
@@ -764,7 +771,11 @@ export async function submitEventTemplate(
  * Shared by the wizard and by Messages › Automatic, so a notification written in either
  * place is the same kind of template.
  */
-export function buildLoyaltyBodyTemplate(templateName: string, body: string): WaMetaTemplate {
+export function buildLoyaltyBodyTemplate(
+  templateName: string,
+  body: string,
+  buttons: WaTemplateButton[] = [],
+): WaMetaTemplate {
   const placeholderCount = countPlaceholders(body);
   return {
     name: templateName,
@@ -783,8 +794,25 @@ export function buildLoyaltyBodyTemplate(templateName: string, body: string): Wa
             }
           : {}),
       },
+      ...(buttons.length > 0 ? [{ type: WaTemplateComponentTypeUpperCase.BUTTONS, buttons }] : []),
     ],
   };
+}
+
+/**
+ * The buttons an event's template carries beyond its body. Only the new-customer welcome
+ * has one: a Join quick reply labelled with the org's join keyword.
+ */
+export async function loyaltyEventButtons(
+  orgId: string,
+  eventType: LoyaltyEventType,
+): Promise<WaTemplateButton[]> {
+  if (eventType !== LoyaltyEventType.NEW_CUSTOMER_WELCOME) return [];
+  const joinCommand = await prisma.loyaltyWaCommand.findFirst({
+    where: { orgId, type: LoyaltyTemplateTypes.CustomerRegistration },
+    select: { requestMessage: true },
+  });
+  return [{ type: "QUICK_REPLY", text: joinButtonLabel(joinCommand?.requestMessage) }];
 }
 
 /**

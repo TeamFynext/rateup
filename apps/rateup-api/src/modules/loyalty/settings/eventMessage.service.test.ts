@@ -8,6 +8,7 @@ vi.mock("../../../utils/prisma.js", () => ({
       create: vi.fn(),
       updateMany: vi.fn(),
     },
+    loyaltyWaCommand: { findFirst: vi.fn() },
   },
 }));
 vi.mock("../../../utils/logger.js", () => ({
@@ -47,7 +48,10 @@ import { saveEventMessage } from "./eventMessage.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
-const db = prisma as unknown as { loyaltyEventTrigger: Record<string, Mock> };
+const db = prisma as unknown as {
+  loyaltyEventTrigger: Record<string, Mock>;
+  loyaltyWaCommand: Record<string, Mock>;
+};
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 const PROGRAM = "prog-1";
@@ -277,5 +281,53 @@ describe("saveEventMessage — changing an existing template", () => {
 
     expect(createTemplate).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject({ templateName: "loyalty_points_issued_v2", versioned: true });
+  });
+});
+
+describe("saveEventMessage — the new-customer welcome", () => {
+  const welcome = (body: string) =>
+    saveEventMessage({
+      orgId: ORG,
+      programId: PROGRAM,
+      eventType: LoyaltyEventType.NEW_CUSTOMER_WELCOME,
+      body,
+    });
+
+  test("carries a Join quick reply labelled with the org's join keyword", async () => {
+    db.loyaltyWaCommand.findFirst.mockResolvedValue({ requestMessage: "member" });
+
+    await welcome("Hi {{1}}, tap below to join our loyalty program.");
+
+    const [, template] = (createTemplate as Mock).mock.calls[0];
+    expect(template.name).toBe("loyalty_new_customer_welcome");
+    expect(template.components).toContainEqual({
+      type: "BUTTONS",
+      buttons: [{ type: "QUICK_REPLY", text: "Member" }],
+    });
+  });
+
+  test("falls back to Join when the org has no join keyword", async () => {
+    db.loyaltyWaCommand.findFirst.mockResolvedValue(null);
+
+    await welcome("Hi {{1}}, tap below to join our loyalty program.");
+
+    const [, template] = (createTemplate as Mock).mock.calls[0];
+    expect(template.components.at(-1)).toEqual({
+      type: "BUTTONS",
+      buttons: [{ type: "QUICK_REPLY", text: "Join" }],
+    });
+  });
+
+  test("an in-place edit keeps the button", async () => {
+    db.loyaltyEventTrigger.findFirst.mockResolvedValue({ waTemplate: waTemplate() });
+    db.loyaltyWaCommand.findFirst.mockResolvedValue({ requestMessage: "join" });
+
+    await welcome("Hello {{1}}, want points on every visit? Tap Join.");
+
+    const [, , components] = (editTemplate as Mock).mock.calls[0];
+    expect(components).toContainEqual({
+      type: "BUTTONS",
+      buttons: [{ type: "QUICK_REPLY", text: "Join" }],
+    });
   });
 });

@@ -185,6 +185,7 @@ export async function sendLoyaltyMessage(input: {
   textFallback?: string | null;
   /** The program's switch. Off means "always the template". */
   preferTextInSession: boolean;
+  quickReplyPayload?: string[];
 }): Promise<LoyaltySendResult> {
   const { orgId, phone, params } = input;
   const templateId = input.waTemplateId ?? null;
@@ -253,7 +254,13 @@ export async function sendLoyaltyMessage(input: {
   }
 
   log.trace(`[LoyaltyMessaging] Sending template ${templateId} to ${phone}`);
-  const result = await handleSendTemplate(templateId, orgId, phone, params);
+  const result = await handleSendTemplate(
+    templateId,
+    orgId,
+    phone,
+    params,
+    input.quickReplyPayload,
+  );
   const sent = acceptedBy(result);
   return {
     sent,

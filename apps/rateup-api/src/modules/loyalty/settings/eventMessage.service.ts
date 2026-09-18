@@ -14,6 +14,7 @@ import { LOYALTY_EVENT_TEMPLATE_NAMES, versionedTemplateName } from "../loyaltyE
 import type { EventTemplateResult } from "../onboarding/onboarding.schema.js";
 import {
   buildLoyaltyBodyTemplate,
+  loyaltyEventButtons,
   metaStatusToStep,
   upsertTrigger,
 } from "../onboarding/onboarding.service.js";
@@ -140,11 +141,16 @@ export async function saveEventMessage(input: {
   }
 
   const phoneId = current?.whatsappSettingsPhoneId ?? undefined;
+  const buttons = await loyaltyEventButtons(orgId, eventType);
 
   /* 3. A draft never reached Meta: submit it under its own row. */
   if (current && (current.data.status === WaTemplateStatus.DRAFT || !current.data.id)) {
     const name = await firstFreeName(orgId, baseName, current.id);
-    const submitted = await createTemplate(orgId, buildLoyaltyBodyTemplate(name, body), phoneId);
+    const submitted = await createTemplate(
+      orgId,
+      buildLoyaltyBodyTemplate(name, body, buttons),
+      phoneId,
+    );
     await updateTemplateInDb(
       current.id,
       orgId,
@@ -164,7 +170,7 @@ export async function saveEventMessage(input: {
     const edited = await editTemplate(
       orgId,
       current.data.id,
-      buildLoyaltyBodyTemplate(name, body).components ?? [],
+      buildLoyaltyBodyTemplate(name, body, buttons).components ?? [],
       current.data.category ?? "UTILITY",
       phoneId,
     );
@@ -175,7 +181,7 @@ export async function saveEventMessage(input: {
         | (WaMetaTemplate & { status?: string })
         | undefined;
       const next: WaMetaTemplate = refreshed ?? {
-        ...buildLoyaltyBodyTemplate(name, body),
+        ...buildLoyaltyBodyTemplate(name, body, buttons),
         id: current.data.id,
         status: WaTemplateStatus.PENDING,
       };
@@ -205,7 +211,11 @@ export async function saveEventMessage(input: {
 
   /* 5. In review, or the edit was refused: the text becomes the next version. */
   const name = await firstFreeName(orgId, baseName);
-  const submitted = await createTemplate(orgId, buildLoyaltyBodyTemplate(name, body), phoneId);
+  const submitted = await createTemplate(
+    orgId,
+    buildLoyaltyBodyTemplate(name, body, buttons),
+    phoneId,
+  );
   const saved = await saveTemplate(submitted, orgId, {}, TemplateType.LOYALTY, undefined, phoneId);
   await upsertTrigger(programId, eventType, saved.id);
   return finish({

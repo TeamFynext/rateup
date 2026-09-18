@@ -20,7 +20,23 @@ export const LOYALTY_EVENT_TEMPLATE_NAMES: Record<LoyaltyEventType, string> = {
   [LoyaltyEventType.TIER_AT_RISK]: "loyalty_tier_at_risk",
   [LoyaltyEventType.REWARD_EXPIRING]: "loyalty_reward_expiring",
   [LoyaltyEventType.SIGNUP_ANNIVERSARY]: "loyalty_signup_anniversary",
+  [LoyaltyEventType.NEW_CUSTOMER_WELCOME]: "loyalty_new_customer_welcome",
 };
+
+/**
+ * The quick-reply payload the welcome's Join button is sent with. A tap registers the
+ * customer whatever the button says, so renaming the join keyword cannot strand it.
+ */
+export const LOYALTY_JOIN_PAYLOAD = "LOYALTY_JOIN";
+
+/** Meta's limit on a quick-reply button's label. */
+const QUICK_REPLY_MAX_LENGTH = 25;
+
+/** "join" → "Join": the org's join keyword as a button label. */
+export function joinButtonLabel(joinKeyword: string | null | undefined): string {
+  const word = joinKeyword?.trim() || "join";
+  return (word.charAt(0).toUpperCase() + word.slice(1)).slice(0, QUICK_REPLY_MAX_LENGTH);
+}
 
 /**
  * `loyalty_points_issued` → `loyalty_points_issued_v2`, `_v3`, … An edit Meta will not

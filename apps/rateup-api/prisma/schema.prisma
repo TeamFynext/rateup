@@ -2666,6 +2666,8 @@ enum LoyaltyEventType {
   REWARD_EXPIRING
   /// A year (or another) since the member joined.
   SIGNUP_ANNIVERSARY
+  /// A contact's first message to the business, before they are a member; carries a Join button.
+  NEW_CUSTOMER_WELCOME
 }
 
 model LoyaltyEventTrigger {
