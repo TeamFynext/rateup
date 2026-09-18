@@ -13,9 +13,65 @@ const liftDelay = (index: number) => ({
   animationDelay: `${Math.round(index * LIFT_STRIDE_MS)}ms`,
 });
 
+/** The integration tiles on their own, for pages that frame them with their own heading. */
+export function IntegrationTiles() {
+  return (
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+      {INTEGRATIONS.map((intg, i) => {
+        /* Full colour: the comp greyed these tiles out only because it was showing
+           monogram placeholders, not the partners' real marks. */
+        const body = (
+          <>
+            <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50">
+              {intg.logo ? (
+                <img src={intg.logo} alt="" loading="lazy" className="size-7.5 object-contain" />
+              ) : (
+                <span className="font-mono text-sm font-bold text-ru-n-500">{"{ }"}</span>
+              )}
+            </span>
+            <div className="min-w-0">
+              <div className="truncate text-base font-semibold text-ru-n-700">{intg.name}</div>
+              <div className="truncate text-[13.5px] text-ru-n-400">{intg.role}</div>
+            </div>
+          </>
+        );
+
+        const shell =
+          "flex h-24 min-w-0 animate-ru-card-lift items-center gap-3.5 rounded-2xl border border-ru-n-200 bg-white px-4.5 transition-colors motion-reduce:animate-none";
+
+        /* Only the integrations that have a landing page become links — the rest have
+           nowhere to go yet. */
+        return intg.page ? (
+          <Link
+            key={intg.name}
+            to={integrationPath(intg.slug)}
+            style={liftDelay(i)}
+            className={`${shell} hover:border-ru-blue-300`}
+          >
+            {body}
+          </Link>
+        ) : (
+          <div key={intg.name} style={liftDelay(i)} className={`${shell} hover:border-ru-n-300`}>
+            {body}
+          </div>
+        );
+      })}
+
+      <Link
+        to="/integrations"
+        style={liftDelay(INTEGRATIONS.length)}
+        className="flex h-24 min-w-0 animate-ru-card-lift flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ru-n-300 px-4.5 text-center transition-colors hover:border-ru-blue-600 motion-reduce:animate-none"
+      >
+        <span className="text-[15.5px] font-semibold text-ru-n-600">30+ more via webhooks</span>
+        <span className="text-[13.5px] text-ru-n-400">See all integrations</span>
+      </Link>
+    </div>
+  );
+}
+
 export default function Integrations() {
   return (
-    <section id="integrations" className="border-b border-ru-n-100 bg-ru-n-50">
+    <section id="integrations" className="bg-ru-n-50">
       <div className="mx-auto max-w-280 px-5 py-12 sm:py-22">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-5 sm:mb-8">
           <div className="max-w-140">
@@ -50,65 +106,7 @@ export default function Integrations() {
           </p>
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
-          {INTEGRATIONS.map((intg, i) => {
-            /* Full colour: the comp greyed these tiles out only because it was showing
-               monogram placeholders, not the partners' real marks. */
-            const body = (
-              <>
-                <span className="flex size-11 flex-none items-center justify-center rounded-xl border border-ru-n-200 bg-ru-n-50">
-                  {intg.logo ? (
-                    <img
-                      src={intg.logo}
-                      alt=""
-                      loading="lazy"
-                      className="size-7.5 object-contain"
-                    />
-                  ) : (
-                    <span className="font-mono text-sm font-bold text-ru-n-500">{"{ }"}</span>
-                  )}
-                </span>
-                <div className="min-w-0">
-                  <div className="truncate text-base font-semibold text-ru-n-700">{intg.name}</div>
-                  <div className="truncate text-[13.5px] text-ru-n-400">{intg.role}</div>
-                </div>
-              </>
-            );
-
-            const shell =
-              "flex h-24 min-w-0 animate-ru-card-lift items-center gap-3.5 rounded-2xl border border-ru-n-200 bg-white px-4.5 transition-colors motion-reduce:animate-none";
-
-            /* Only the integrations that have a landing page become links — the rest have
-               nowhere to go yet. */
-            return intg.page ? (
-              <Link
-                key={intg.name}
-                to={integrationPath(intg.slug)}
-                style={liftDelay(i)}
-                className={`${shell} hover:border-ru-blue-300`}
-              >
-                {body}
-              </Link>
-            ) : (
-              <div
-                key={intg.name}
-                style={liftDelay(i)}
-                className={`${shell} hover:border-ru-n-300`}
-              >
-                {body}
-              </div>
-            );
-          })}
-
-          <Link
-            to="/integrations"
-            style={liftDelay(INTEGRATIONS.length)}
-            className="flex h-24 min-w-0 animate-ru-card-lift flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-ru-n-300 px-4.5 text-center transition-colors hover:border-ru-blue-600 motion-reduce:animate-none"
-          >
-            <span className="text-[15.5px] font-semibold text-ru-n-600">30+ more via webhooks</span>
-            <span className="text-[13.5px] text-ru-n-400">See all integrations</span>
-          </Link>
-        </div>
+        <IntegrationTiles />
       </div>
     </section>
   );

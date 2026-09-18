@@ -2,26 +2,21 @@
 // config only. Behaviour is unchanged.
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  IconChevronRight,
-  IconLock,
-  IconPlus,
-  IconRefresh,
-  IconUser,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconChevronRight, IconPlus, IconRefresh, IconUsers } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useId, useEffect, useState } from "react";
+import { useId, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
 
+import { useAllTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useCreateTeamMutation, useTeamsByUser } from "@/backend/team/team.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
+import { ColorField } from "@/components/common/color-field.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
-import { colorArray } from "@/components/settings/team.tsx";
+import { DEFAULT_TEAM_COLOR } from "@/components/settings/team.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -34,10 +29,9 @@ import {
 import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
-import { formatDate } from "@/utils/dateTime.ts";
+import { HEX_COLOR } from "@/utils/color.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
@@ -106,36 +100,17 @@ const FEATURES_WITH_SUBSCRIPTION: {
   { feature: TeamFeature.Settings, label: "Settings" },
 ];
 
-/**
- * Wraps a team card in an explanation for people who can only look at it. Without this a member
- * clicked a card that looked interactive and nothing happened, with no hint as to why.
- */
-function TeamCardShell({
-  canManage,
-  children,
-}: Readonly<{ canManage: boolean; children: React.ReactNode }>) {
-  const { t: translations } = useTranslation();
-
-  if (canManage) return children;
-
-  return (
-    <Tooltip>
-      {/* `render` on a plain div: the trigger has to be an element that wraps the card, and the
-          card itself is not a button. */}
-      <TooltipTrigger render={<div />}>{children}</TooltipTrigger>
-      <TooltipContent>{translations("Members cannot make changes to the team")}</TooltipContent>
-    </Tooltip>
-  );
-}
-
 export function TeamPage() {
   const uid = useId();
+  const { data: orgMembers } = useAllTeamsMembersOfOrg();
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
   const action = searchParams?.action;
   const { user } = useUser();
-  // Creating a team, opening one and everything inside it are all super-admin only.
+  // Creating a team is the owner's: the dialog also sets the new team's feature access, which
+  // is not an admin's to decide. Opening a team to look at who is in it is nobody's privilege —
+  // a member needs to know who they can hand a chat to.
   const canManageTeams = user?.role === UserRole.SUPADM;
   const { data: subscription } = useSubscription();
   const [isCreating, setIsCreating] = useState(false);
@@ -170,14 +145,6 @@ export function TeamPage() {
     data: teamsData,
     refetch: refetchTeams,
   } = useTeamsByUser();
-  const getDefaultColor = () => {
-    if (!teamsData?.data) {
-      // fallback random color
-      return colorArray[Math.floor(Math.random() * colorArray.length)].from;
-    }
-    const index = teamsData.data.length;
-    return colorArray[index % colorArray.length].from;
-  };
   const createTeamSchema = z.object({
     name: z.string().min(3, translations("Team Name should be at least 3 characters long")),
     code: z.string().superRefine((value, ctx) => {
@@ -205,7 +172,9 @@ export function TeamPage() {
         });
       }
     }),
-    color: z.string(),
+    // The picker takes typed input, so an unparseable hex can reach here and would render
+    // the team's card transparent.
+    color: z.string().regex(HEX_COLOR, translations("Use a hex colour like #5A8CC6")),
   });
 
   type CreateTeamFormValues = z.infer<typeof createTeamSchema>;
@@ -215,11 +184,11 @@ export function TeamPage() {
     defaultValues: {
       name: "",
       code: "",
-      color: "",
+      // `?action=create` opens the dialog without running the button's reset, so the colour
+      // needs a default here.
+      color: DEFAULT_TEAM_COLOR,
     },
   });
-
-  const colorValue = createTeamForm.watch("color");
 
   const createTeamMutation = useCreateTeamMutation(
     setIsCreateTeamDialogOpen,
@@ -246,8 +215,29 @@ export function TeamPage() {
     }
   }, [action]);
 
+  /**
+   * team id -> its members, inverted from the org members list. The teams endpoint returns
+   * only `_count.members`, so this is where names come from without a request per team.
+   */
+  const membersByTeam = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }[]>();
+    for (const member of orgMembers?.data?.members ?? []) {
+      for (const team of member.teams ?? []) {
+        const teamId = team.id ?? team.team_id ?? team.teamId;
+        if (!teamId) continue;
+        map.set(teamId, [
+          ...(map.get(teamId) ?? []),
+          { id: member.id ?? "", name: member.name ?? "" },
+        ]);
+      }
+    }
+    return map;
+  }, [orgMembers]);
+
+  const membersOfTeam = (teamId: string) => membersByTeam.get(teamId) ?? [];
+
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1">
@@ -267,14 +257,14 @@ export function TeamPage() {
           </p>
         </div>
 
-        {user?.role === UserRole.SUPADM && (
+        {canManageTeams && (
           <Button
             className="bg-primary hover:shadow-lg transition-all"
             onClick={() => {
               createTeamForm.reset({
                 name: "",
                 code: "",
-                color: getDefaultColor(),
+                color: DEFAULT_TEAM_COLOR,
               });
 
               setIsCreateTeamDialogOpen(true);
@@ -290,84 +280,74 @@ export function TeamPage() {
         items={teamsData?.data ?? []}
         getKey={(team) => team.id}
         renderItem={(team) => (
-          <TeamCardShell canManage={canManageTeams}>
-            <ActionCard
-              // A member's click went nowhere while the card still looked clickable. Only wire
-              // the navigation for those who can act on it, and drop the pointer cursor and
-              // hover lift for everyone else — the tooltip above says why.
-              onClick={
-                canManageTeams
-                  ? () => {
-                      navigate({
-                        to: `/dashboard/settings/team/${team.id}`,
-                      });
-                    }
-                  : undefined
-              }
-              className={canManageTeams ? undefined : "cursor-default hover:translate-y-0"}
-              title={
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="w-[38px] h-[38px] rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: team.color || "#7F77DD" }}
-                  >
-                    <IconUsers className="w-[17px] h-[17px] text-white" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-medium text-sm truncate">{team.name}</span>
-                      <span className="text-[11px] font-medium border rounded-full px-1.5 py-0.5 text-muted-foreground bg-muted">
-                        {team.code}
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted-foreground/60 mt-0.5">
-                      {translations("created")} {formatDate(team.createdAt)}
+          <ActionCard
+            onClick={() => {
+              navigate({
+                to: `/dashboard/settings/team/${team.id}`,
+              });
+            }}
+            title={
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-[38px] h-[38px] rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: team.color || "#7F77DD" }}
+                >
+                  <IconUsers className="w-[17px] h-[17px] text-white" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-medium text-sm truncate">{team.name}</span>
+                    <span className="text-[11px] font-medium border rounded-full px-1.5 py-0.5 text-muted-foreground bg-muted">
+                      {team.code}
                     </span>
                   </div>
                 </div>
-              }
-              footerLeft={
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center">
-                    <div className="flex">
-                      {Array.from({
-                        length: Math.min(team._count.members, 3),
-                      }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-[26px] h-[26px] rounded-full border-2 border-background flex items-center justify-center -ml-1.5 first:ml-0"
-                          style={{ backgroundColor: team.color || "#7F77DD" }}
+              </div>
+            }
+            footerLeft={
+              <div className="flex w-full items-center justify-between">
+                <div className="flex items-center">
+                  {/* Real initials. This stack used to be `Array.from({ length: count })`
+                        of identical generic icons — it looked like it was telling you who
+                        was in the team while telling you nothing. */}
+                  <div className="flex">
+                    {membersOfTeam(team.id)
+                      .slice(0, 3)
+                      .map((member) => (
+                        <span
+                          key={member.id}
+                          title={member.name}
+                          className="-ml-1.5 flex size-[26px] items-center justify-center rounded-full border-2 border-background bg-muted text-[9px] font-medium text-foreground first:ml-0"
                         >
-                          <IconUser className="h-3 w-3 text-white" />
-                        </div>
+                          {member.name?.toUpperCase().slice(0, 2)}
+                        </span>
                       ))}
-                      {team._count.members > 3 && (
-                        <div className="w-[26px] h-[26px] rounded-full bg-muted border-2 border-background flex items-center justify-center -ml-1.5">
-                          <span className="text-[9px] font-medium text-muted-foreground">
-                            +{team._count.members - 3}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      {team._count.members}{" "}
-                      {team._count.members === 1 ? translations("member") : translations("members")}
-                    </span>
+                    {team._count.members > 3 && (
+                      <span className="-ml-1.5 flex size-[26px] items-center justify-center rounded-full border-2 border-background bg-muted">
+                        <span className="text-[9px] font-medium text-muted-foreground">
+                          +{team._count.members - 3}
+                        </span>
+                      </span>
+                    )}
                   </div>
-                  {/* The chevron promises a destination only a manager has. */}
-                  {canManageTeams ? (
-                    <IconChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                  ) : (
-                    <IconLock className="w-3.5 h-3.5 text-muted-foreground/40" />
-                  )}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {team._count.members === 0
+                      ? translations("No one yet")
+                      : `${team._count.members} ${
+                          team._count.members === 1
+                            ? translations("member")
+                            : translations("members")
+                        }`}
+                  </span>
                 </div>
-              }
-            />
-          </TeamCardShell>
+                <IconChevronRight className="w-4 h-4 text-muted-foreground/40" />
+              </div>
+            }
+          />
         )}
       />
       {/* create team */}
-      {user?.role === UserRole.SUPADM && (
+      {canManageTeams && (
         <Dialog
           open={isCreateTeamDialogOpen}
           onOpenChange={(open) => {
@@ -377,7 +357,7 @@ export function TeamPage() {
             }
           }}
         >
-          <DialogContent>
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Team</DialogTitle>
               <DialogDescription>
@@ -422,27 +402,19 @@ export function TeamPage() {
                   )}
                 />
 
-                <div className="flex flex-col gap-2">
-                  <FieldTitle>{translations("Team Color")}</FieldTitle>
-                  <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                    {colorArray.map((color, index) => {
-                      const isSelected = colorValue === color.from;
-                      return (
-                        <button
-                          key={index}
-                          type="button"
-                          className={`w-full aspect-square rounded-lg border-2 ${
-                            isSelected ? "border-black scale-105" : "border-transparent"
-                          } transition-all hover:scale-105`}
-                          style={{
-                            background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
-                          }}
-                          onClick={() => createTeamForm.setValue("color", color.from)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+                <Controller
+                  name="color"
+                  control={createTeamForm.control}
+                  render={({ field }) => (
+                    <ColorField
+                      id={`${uid}-team-color`}
+                      label={translations("Team Color")}
+                      value={String(field.value ?? "")}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
 
                 {/* Feature Access */}
                 <div className="flex flex-col gap-2">
@@ -456,7 +428,7 @@ export function TeamPage() {
                       {allEnabled ? translations("Disable All") : translations("Enable All")}
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
                     {availableFeatures.map(({ feature, label }) => (
                       <Field
                         key={feature}

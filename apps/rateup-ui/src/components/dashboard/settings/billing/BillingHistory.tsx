@@ -1,9 +1,8 @@
-import { IconDownload, IconFileInvoice, IconRefresh } from "@tabler/icons-react";
+import { IconDownload, IconFileInvoice } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { OrgInvoice } from "@/backend/payment/payment.api";
-import type { PaymentOrder } from "@/components/settings/billing-parts/shared.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -16,6 +15,8 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
+
+import type { PaymentOrder } from "./types.ts";
 
 /**
  * One line of billing history.
@@ -69,15 +70,11 @@ export function BillingHistory({
   invoices,
   orders,
   isPending,
-  refresh,
-  isRefetching,
-}: {
+}: Readonly<{
   invoices: OrgInvoice[] | undefined;
   orders: PaymentOrder[] | undefined;
   isPending: boolean;
-  refresh: () => void;
-  isRefetching: boolean;
-}) {
+}>) {
   const { t: translations } = useTranslation();
   const [selected, setSelected] = useState<HistoryRow | null>(null);
   const selectedUrl = selected?.url;
@@ -160,21 +157,14 @@ export function BillingHistory({
   return (
     <>
       <Card id="billing-history" className="p-6">
-        <div className="flex items-center justify-between">
+        <div>
           <h3 className="flex items-center gap-2">
             <IconFileInvoice className="h-4 w-4" />
             {translations("Billing History")}
           </h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refresh}
-            disabled={isRefetching}
-            className="flex items-center gap-2"
-          >
-            <IconRefresh className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`} />
-            {translations("Refresh")}
-          </Button>
+          <p className="text-sm text-muted-foreground">
+            {translations("Every charge on this organisation, newest first.")}
+          </p>
         </div>
 
         {isPending ? (

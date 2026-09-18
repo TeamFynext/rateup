@@ -1,19 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import Comparison from "@/components/products/OmnichannelInbox/Comparison";
-import CTABand from "@/components/products/OmnichannelInbox/CTABand";
-import Features from "@/components/products/OmnichannelInbox/Features";
-import Hero from "@/components/products/OmnichannelInbox/Hero";
-import HowItWorks from "@/components/products/OmnichannelInbox/HowItWorks";
-import Integrations from "@/components/products/OmnichannelInbox/Integrations";
-import Problem from "@/components/products/OmnichannelInbox/Problem";
-import ProductIntro from "@/components/products/OmnichannelInbox/ProductIntro";
-import SocialProof from "@/components/products/OmnichannelInbox/SocialProof";
-import UseCases from "@/components/products/OmnichannelInbox/UseCases";
+import InboxPage from "@/components/products/landing/inbox";
+import { INBOX_FAQS } from "@/components/products/landing/inbox/content";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import { faqPage } from "@/lib/jsonLd.ts";
 import { buildPageHead } from "@/lib/metadata.ts";
-
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -25,7 +16,7 @@ const jsonLd = {
       alternateName: "RateUp",
       url: "https://rateup.app/products/omnichannel-inbox",
       description:
-        "RateUp is an omnichannel chat inbox that unifies WhatsApp, Instagram, and Messenger conversations in one workspace, helping teams automate support, track customer satisfaction, and improve response times.",
+        "RateUp is an omnichannel chat inbox that unifies WhatsApp, Instagram, and Messenger conversations in one workspace. Teams assign conversations to agents and teams, add private notes, and close each one with a result.",
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "Customer Service Software",
       operatingSystem: "Web, Android, iOS",
@@ -34,11 +25,13 @@ const jsonLd = {
       releaseNotes: "https://rateup.app/products/omnichannel-inbox",
       featureList: [
         "Unified inbox for WhatsApp, Instagram, and Messenger",
-        "Team roles and permissions routing",
+        "Assignment to agents and teams",
+        "Private notes and @mentions",
         "Inbox automations and quick replies",
+        "WhatsApp 24-hour session countdown",
         "Customer lifecycle stages tracking",
-        "Real-time analytics and reporting",
-        "CRM and helpdesk integrations",
+        "Agent and team performance analytics",
+        "Shopify, WooCommerce, Zapier and REST API integrations",
       ],
       // aggregateRating removed: Google's review-snippet policy requires the reviews to be
       // visible on the page itself. Re-add it only alongside real, rendered reviews.
@@ -70,6 +63,9 @@ const jsonLd = {
         "@id": "https://rateup.app/products/omnichannel-inbox#software",
       },
     },
+
+    /* Built from the same array the page's accordion renders. */
+    faqPage(INBOX_FAQS),
   ],
 };
 
@@ -80,17 +76,8 @@ export const Route = createFileRoute("/(marketing)/products/omnichannel-inbox/")
 
 function RouteComponent() {
   return (
-    <Layout contentClassName={styles.themeOmnichannel}>
-      <Hero />
-      <SocialProof />
-      <Problem />
-      <ProductIntro />
-      <Features />
-      <Integrations />
-      <HowItWorks />
-      <UseCases />
-      <Comparison />
-      <CTABand />
+    <Layout>
+      <InboxPage />
     </Layout>
   );
 }

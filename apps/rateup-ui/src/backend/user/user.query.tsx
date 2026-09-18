@@ -192,7 +192,8 @@ export function useUpdateProfilePhotoMutation(setIsLoadingUpload: (uploading: bo
 export function useUpdateActiveStatusMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userId: string) => updateActiveStatus(userId),
+    mutationFn: ({ userId, password }: { userId: string; password?: string }) =>
+      updateActiveStatus(userId, password),
     onSuccess: () => {
       toast.success("Member Deleted Successfully!", {
         id: "load-data",

@@ -1,5 +1,3 @@
-// Extracted verbatim from `Zoho.tsx`. Behaviour is unchanged.
-
 import { IconPlugConnected, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import { useDeleteIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { useUnsubscribeZoho } from "@/backend/appsIntegration/zoho/zoho.query";
+import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useUser } from "@/context/UserContext";
 import { IntegratedApps } from "@/types/enums";
@@ -71,73 +69,61 @@ export const ZohoAuthentication = ({ integration }: { integration: AppIntegratio
   }
 
   return (
-    <Card className="w-full rounded-2xl border shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle>{t("Zoho Connection")}</CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <Field>
-          <FieldLabel htmlFor="zoho-org-id">{t("Organization ID")}</FieldLabel>
-          <InputGroup>
-            <InputGroupInput id="zoho-org-id" value={user.user?.orgId} readOnly />
-            <InputGroupAddon align="inline-end">
-              <ApiCopyButton value={user.user?.orgId ?? ""} />
-            </InputGroupAddon>
-          </InputGroup>
-        </Field>
-
-        {!integration && (
-          <div className="space-y-2 rounded-xl border bg-muted/30 p-4">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">{t("Connection Mode")}</p>
-
-              <p className="text-xs text-muted-foreground">
-                {t("Choose which Zoho products to connect")}
-              </p>
-            </div>
-
-            <Select
-              value={connectionMode || ""}
-              onValueChange={(value) => setConnectionMode(value as "crm" | "bigin" | "both" | null)}
-              items={[
-                { value: "crm", label: "Zoho CRM Only" },
-                { value: "bigin", label: "Zoho Bigin Only" },
-                { value: "both", label: "Zoho CRM + Bigin" },
-              ]}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("Select integration")} />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="crm">Zoho CRM Only</SelectItem>
-
-                <SelectItem value="bigin">Zoho Bigin Only</SelectItem>
-
-                <SelectItem value="both">Zoho CRM + Bigin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {integration ? (
-          <Button variant="destructive" onClick={handleDelete} className="w-full gap-2 rounded-xl">
-            <IconTrash className="h-4 w-4" />
-
-            {t("Disconnect Zoho")}
+    <IntegrationFormCard
+      title={t("Connection")}
+      description={t("The Zoho products RateUp may read and write, and the org they belong to.")}
+      actions={
+        integration ? (
+          <Button variant="outline" onClick={handleDelete}>
+            <IconTrash data-icon="inline-start" />
+            {t("Disconnect")}
           </Button>
         ) : (
-          <Button
-            onClick={handleConnect}
-            className="w-full gap-2 rounded-xl"
-            disabled={!connectionMode}
-          >
-            <IconPlugConnected className="h-4 w-4" />
-
+          <Button onClick={handleConnect} disabled={!connectionMode}>
+            <IconPlugConnected data-icon="inline-start" />
             {t("Connect Zoho")}
           </Button>
-        )}
-      </CardContent>
-    </Card>
+        )
+      }
+    >
+      <Field>
+        <FieldLabel htmlFor="zoho-org-id">{t("Organization ID")}</FieldLabel>
+        <InputGroup>
+          <InputGroupInput id="zoho-org-id" value={user.user?.orgId} readOnly />
+          <InputGroupAddon align="inline-end">
+            <ApiCopyButton value={user.user?.orgId ?? ""} />
+          </InputGroupAddon>
+        </InputGroup>
+      </Field>
+
+      {!integration && (
+        <Field>
+          <FieldLabel htmlFor="zoho-connection-mode">{t("Products")}</FieldLabel>
+          <Select
+            value={connectionMode || ""}
+            onValueChange={(value) => setConnectionMode(value as "crm" | "bigin" | "both" | null)}
+            items={[
+              { value: "crm", label: t("Zoho CRM only") },
+              { value: "bigin", label: t("Zoho Bigin only") },
+              { value: "both", label: t("Zoho CRM and Bigin") },
+            ]}
+          >
+            <SelectTrigger id="zoho-connection-mode" className="w-full">
+              <SelectValue placeholder={t("Choose what to connect")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="crm">{t("Zoho CRM only")}</SelectItem>
+              <SelectItem value="bigin">{t("Zoho Bigin only")}</SelectItem>
+              <SelectItem value="both">{t("Zoho CRM and Bigin")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <FieldDescription>
+            {t(
+              "This decides the permissions RateUp asks Zoho for, so it cannot be changed later without reconnecting.",
+            )}
+          </FieldDescription>
+        </Field>
+      )}
+    </IntegrationFormCard>
   );
 };

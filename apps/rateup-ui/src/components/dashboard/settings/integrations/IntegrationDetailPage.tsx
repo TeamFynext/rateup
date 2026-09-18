@@ -1,14 +1,16 @@
-// Extracted verbatim from the `/dashboard/settings/integrations/$id/` route so the route file carries routing
-// config only. Behaviour is unchanged.
+// Routing and code-splitting only. Each integration renders its own `IntegrationShell`,
+// because the status line needs facts that only that integration's query has.
 
-import { IconChevronLeft } from "@tabler/icons-react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { IconPlugOff } from "@tabler/icons-react";
+import { useParams } from "@tanstack/react-router";
 // Lazy load integration pages
 import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+
+import { IntegrationEmptyState } from "./IntegrationEmptyState.tsx";
+import { IntegrationShell } from "./IntegrationShell.tsx";
 
 const ShopifyPage = lazy(() =>
   import("@/components/app&services/Shopify.tsx").then((m) => ({
@@ -80,68 +82,52 @@ const INTEGRATION_PAGES: Record<string, React.ComponentType> = {
   webhook: WebhookPage,
 };
 
-const INTEGRATION_NAMES: Record<string, string> = {
-  shopify: "Shopify",
-  googlesheet: "Google Sheets",
-  amelia: "Amelia",
-  waPayment: "WhatsApp Payment",
-  petpooja: "Petpooja",
-  zapier: "Zapier",
-  zoho: "Zoho",
-  getlead: "GetLead CRM",
-  apiservice: "API Service",
-  widget: "Widget",
-  webhook: "Webhook",
-};
-
-const INTERNAL_SERVICE_IDS = new Set(["apiservice", "widget", "webhook"]);
+/** The header and one card's worth of height, so the page does not jump when the chunk lands. */
+function IntegrationFallback() {
+  return (
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-6 pb-2">
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-5 w-28" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-10 rounded-lg" />
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-7 w-40" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+        </div>
+      </div>
+      <Skeleton className="h-64 rounded-xl" />
+    </div>
+  );
+}
 
 export function IntegrationDetailPage() {
   const params = useParams({
     strict: false,
   });
-  const navigate = useNavigate();
   const { t } = useTranslation();
 
   const id = params.id as string;
   const Component = INTEGRATION_PAGES[id];
-  const integrationName = INTEGRATION_NAMES[id];
-  const isInternalService = INTERNAL_SERVICE_IDS.has(id);
-  const backToIntegrations = () => navigate({ to: "/dashboard/settings/integrations" });
 
   if (!Component) {
     return (
-      <div className="space-y-4">
-        <Button variant="ghost" size="sm" onClick={backToIntegrations}>
-          <IconChevronLeft className="h-4 w-4 mr-2" />
-          {t("Back")}
-        </Button>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-red-600">{t("Integration not found")}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+      <IntegrationShell icon={IconPlugOff} name={t("Integration not found")} own>
+        <IntegrationEmptyState
+          icon={IconPlugOff}
+          title={t("This integration does not exist")}
+          description={t(
+            "The link may be out of date. Pick one from the integrations list instead.",
+          )}
+          action={null}
+        />
+      </IntegrationShell>
     );
   }
 
   return (
-    <div className="space-y-4 pb-2">
-      <Button variant="ghost" size="sm" onClick={backToIntegrations}>
-        <IconChevronLeft className="h-4 w-4 mr-2" />
-        {t("Back")} {t("to")} {integrationName}
-      </Button>
-      <div>
-        <h2 className="text-2xl mb-1">{integrationName}</h2>
-        <p className="text-sm text-muted-foreground">
-          {isInternalService
-            ? `${t("Configure your")} ${integrationName} ${t("settings")}`
-            : `${t("Configure your")} ${integrationName} ${t("integration")}`}
-        </p>
-      </div>
-      <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
-        <Component />
-      </Suspense>
-    </div>
+    <Suspense fallback={<IntegrationFallback />}>
+      <Component />
+    </Suspense>
   );
 }

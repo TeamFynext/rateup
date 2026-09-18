@@ -1,4 +1,4 @@
-import { IconChevronDown, IconPencil, IconPhoto } from "@tabler/icons-react";
+import { IconArrowBackUp, IconChevronDown, IconPencil, IconPhoto } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,7 +29,7 @@ import {
 } from "./loyaltyMessageCatalog.ts";
 import { LoyaltyTemplateStatusBadge } from "./LoyaltyTemplateStatusBadge.tsx";
 import { MessageBubble } from "./MessageBubble.tsx";
-import { templateBodyOf, templateHasRichParts } from "./templateUsage.ts";
+import { quickReplyLabelOf, templateBodyOf, templateHasRichParts } from "./templateUsage.ts";
 
 interface EventMessageCardProps {
   definition: LoyaltyEventDefinition;
@@ -81,7 +81,7 @@ export function EventMessageCard({
   // matched back to this message by name, and it can be switched on before anything has
   // written that link onto the trigger.
   const hasTemplate = Boolean(template);
-  const richParts = templateHasRichParts(template);
+  const richParts = templateHasRichParts(template, { ownButton: definition.joinButton });
   const editorId = `event-message-${definition.eventType}`;
 
   const startEditing = () => {
@@ -138,6 +138,13 @@ export function EventMessageCard({
               invalid={Boolean(problem)}
               error={problem ? { message: problem } : undefined}
             />
+            {definition.joinButton && (
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "The Join button is added for you, named after your join keyword. Tapping it signs the customer up.",
+                )}
+              </p>
+            )}
             <div className="flex justify-end gap-2">
               <Button
                 variant="ghost"
@@ -157,7 +164,12 @@ export function EventMessageCard({
             </div>
           </div>
         ) : body ? (
-          <MessageBubble text={body} className="line-clamp-3" />
+          <div className="flex flex-col gap-1">
+            <MessageBubble text={body} className="line-clamp-3" />
+            {definition.joinButton && (
+              <JoinButtonPreview label={quickReplyLabelOf(template) ?? t("Join")} />
+            )}
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground">
             {t("Nothing written yet — customers get no message for this.")}
@@ -255,5 +267,15 @@ export function EventMessageCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** The quick reply as WhatsApp draws it under the message bubble. */
+function JoinButtonPreview({ label }: Readonly<{ label: string }>) {
+  return (
+    <span className="flex items-center justify-center gap-1.5 rounded-lg bg-muted/60 px-3 py-1.5 text-sm font-medium text-primary">
+      <IconArrowBackUp size={14} />
+      {label}
+    </span>
   );
 }

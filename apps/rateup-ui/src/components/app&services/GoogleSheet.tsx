@@ -8,12 +8,14 @@ import {
   useGetGoogleSheetAuthorizationUrl,
   useIntegrationByType,
 } from "@/backend/appsIntegration/integration.query";
+import { IntegrationEmptyState } from "@/components/dashboard/settings/integrations/IntegrationEmptyState.tsx";
+import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
-import { imagesPath } from "@/utils/constants.ts";
 
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
 import { Field, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 
@@ -56,51 +58,54 @@ export function GoogleSheet() {
     });
     deleteAccount.mutate();
   };
+  const config = INTEGRATIONS_CONFIG.googlesheet;
+  const syncedEmail = googleAccessToken?.credential?.userEmail;
+
+  const connect = () => {
+    persistCallbackRoute("/dashboard/apps&services/googlesheet");
+    window.open(authUrl);
+  };
+
   if (!googleAccessToken)
     return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <img
-            src={`${imagesPath}/googlesheeticon.png`}
-            alt="Google Sheets"
-            className="h-25 w-20"
-          />
-          <Button
-            onClick={() => {
-              persistCallbackRoute("/dashboard/apps&services/googlesheet");
-              window.open(authUrl);
-            }}
-            size="lg"
-          >
-            <IconBrandGoogleDrive />
-            {translations("Sync Google Account")}
-          </Button>
-        </div>
-      </div>
-    );
-  return (
-    <Field className="p-8">
-      <h3 className="text-xl font-semibold">{translations("Google Sheet Config")}</h3>
-      <Card>
-        <CardContent className="flex justify-between">
-          {googleAccessToken?.credential?.userEmail && (
-            <Field className="w-2/5">
-              <h4 className="text-lg font-semibold">{translations("Synced account info")}</h4>
-              <Field>
-                <FieldLabel htmlFor={`${uid}-field`}>{translations("Email Address")}</FieldLabel>
-                <Input
-                  id={`${uid}-field`}
-                  value={googleAccessToken?.credential?.userEmail}
-                  disabled
-                />
-              </Field>
-            </Field>
+      <IntegrationShell icon={config.icon} name={config.name}>
+        <IntegrationEmptyState
+          icon={config.icon}
+          title={translations("Connect a Google account")}
+          description={translations(
+            "RateUp writes responses and contacts straight into your spreadsheets, so your team can work where it already works.",
           )}
-          <Button onClick={handleSignOutGoogleSync} variant="destructive">
-            {translations("Sign out of google synced account")}
-          </Button>
-        </CardContent>
-      </Card>
-    </Field>
+          action={
+            <Button onClick={connect} size="lg">
+              <IconBrandGoogleDrive data-icon="inline-start" />
+              {translations("Connect Google account")}
+            </Button>
+          }
+        />
+      </IntegrationShell>
+    );
+
+  return (
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      connected
+      detail={syncedEmail}
+      action={
+        <Button onClick={handleSignOutGoogleSync} variant="outline">
+          {translations("Disconnect")}
+        </Button>
+      }
+    >
+      <IntegrationFormCard
+        title={translations("Synced account")}
+        description={translations("The Google account RateUp writes your sheets with.")}
+      >
+        <Field>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Email address")}</FieldLabel>
+          <Input id={`${uid}-field`} value={syncedEmail ?? ""} disabled />
+        </Field>
+      </IntegrationFormCard>
+    </IntegrationShell>
   );
 }

@@ -1,13 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Image } from "@unpic/react";
 import { useEffect, useState } from "react";
 
 import { useCheckSession } from "@/hooks/checkSession.tsx";
-import { rateupLogo } from "@/utils/constants.ts";
 
 import { BOOK_DEMO_ROUTE } from "../helper/BookDemoLink.tsx";
 import DropDownNavItems from "../helpers/DropDownNavItems.tsx";
 import { ArrowRight } from "./home-ui.tsx";
+import RateupLockup from "./RateupLockup.tsx";
 
 /**
  * The floating pill nav from the design.
@@ -64,20 +63,19 @@ export default function RateupNavbar() {
         }`}
       >
         <div
-          className={`flex items-center gap-2 rounded-full border border-ru-n-200 bg-ink-25/82 px-3 py-2 backdrop-blur-md backdrop-saturate-150 transition-shadow duration-200 sm:gap-4.5 sm:px-5 sm:py-2.5 ${
+          className={`flex items-center gap-2 rounded-full border border-ru-n-200 bg-white px-3 py-2 transition-shadow duration-200 sm:gap-4.5 sm:px-5 sm:py-2.5 ${
             scrolled
               ? "shadow-[0_16px_40px_rgba(16,24,40,0.16)]"
               : "shadow-[0_2px_10px_rgba(16,24,40,0.05)]"
           }`}
         >
-          <Link to="/" aria-label="RateUp home" className="flex-none">
-            <Image
-              src={rateupLogo}
-              alt="RateUp"
-              width={126}
-              height={50}
-              className="h-8 w-auto sm:h-12"
-            />
+          {/* The link keeps the 48px box the hero's under-nav pull is measured against. */}
+          <Link
+            to="/"
+            aria-label="RateUp home"
+            className="flex h-8 flex-none items-center pl-1 sm:h-12 sm:pl-1.5"
+          >
+            <RateupLockup eager className="h-6.5 sm:h-9" />
           </Link>
 
           {/* Wider than the comp's `clamp(12px, 1.6vw, 26px)`. There is room for it: at the

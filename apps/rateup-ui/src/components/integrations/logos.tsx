@@ -107,27 +107,10 @@ export function BiginLogo({ className }: LogoProps) {
   );
 }
 
-export function ZohoCombinedLogo({ className }: Readonly<{ className?: string }>) {
-  return (
-    <div className={cn("relative h-16 w-20", className)}>
-      <div className="absolute left-0 top-1 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border bg-background shadow-sm">
-        <ZohoLogo className="h-7 w-7" />
-      </div>
-
-      <div className="absolute left-8 top-4 flex h-12 w-12 items-center justify-center rounded-2xl border bg-background shadow-sm">
-        <BiginLogo className="h-7 w-7" />
-      </div>
-    </div>
-  );
-}
-
 /**
- * Meta's company lockup, used as-is from their brand pack.
- *
- * `onDark` picks the mono-white cut: the colour lockup's wordmark is #1c2b33 and vanishes
- * against the navy footer. The mark is decorative wherever a "Business Partner" label sits
- * beside it — the label already names Meta — so it takes an empty alt and is hidden from
- * assistive tech rather than read out twice.
+ * Meta's lockup files carry their clear space inside the canvas: the mark covers x 1000–5962,
+ * y 1000–2000 of a 6962×3000 viewBox. The frame takes the mark's own ratio and the image is
+ * scaled and offset to fill it, so `className` sizes the visible mark, not the padded canvas.
  */
 export function MetaLockup({
   className,
@@ -135,13 +118,20 @@ export function MetaLockup({
   priority,
 }: LogoProps & Readonly<{ onDark?: boolean }>) {
   return (
-    <img
-      src={onDark ? metaLockupWhite : metaLockup}
-      alt=""
+    <span
       aria-hidden="true"
-      loading={loadingFor(priority)}
-      decoding="async"
-      className={cn("w-auto object-contain", className)}
-    />
+      className={cn(
+        "relative inline-block aspect-[4962/1000] flex-none overflow-hidden",
+        className,
+      )}
+    >
+      <img
+        src={onDark ? metaLockupWhite : metaLockup}
+        alt=""
+        loading={loadingFor(priority)}
+        decoding="async"
+        className="absolute top-[-100%] left-[-20.15%] h-[300%] w-auto max-w-none"
+      />
+    </span>
   );
 }

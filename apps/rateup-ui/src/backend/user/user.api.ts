@@ -121,11 +121,13 @@ export const changeUserPassword = (data: IChangePassword) =>
     data: data,
   });
 
-// function for soft deleting the user account
-export const updateActiveStatus = (userId: string) =>
+// Soft-deletes the account. `password` is sent only for self-deletion, which the API
+// re-verifies; a super-admin removing someone else is gated by the role check instead.
+export const updateActiveStatus = (userId: string, password?: string) =>
   axiosClient({
     url: `/user/update-active-status/${userId}`,
     method: "PUT",
+    data: password ? { password } : {},
   });
 
 export const checkEmailExist = async (data: { email: string }) => {

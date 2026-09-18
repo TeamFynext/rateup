@@ -191,13 +191,15 @@ export function ReminderCard({
                 <SelectTrigger id={`${uid}-gift`} className="w-full" disabled={isSaving}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                {/* Gift names run long; the popup grows past the trigger, and past its cap
+                    a name is cut short rather than running under the check mark. */}
+                <SelectContent className="w-auto max-w-[min(22rem,var(--available-width))] min-w-(--anchor-width)">
                   <SelectItem value={NO_GIFT}>{t("No gift")}</SelectItem>
                   {gifts.map((gift) => (
-                    <SelectItem key={gift.id} value={gift.id}>
-                      <span className="flex items-center gap-1.5">
+                    <SelectItem key={gift.id} value={gift.id} title={gift.name}>
+                      <span className="flex min-w-0 items-center gap-1.5">
                         <IconGift size={14} />
-                        {gift.name}
+                        <span className="max-w-72 truncate">{gift.name}</span>
                       </span>
                     </SelectItem>
                   ))}

@@ -28,9 +28,11 @@ import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
+import i18n from "@/i18n.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
 import { usePipelineStore } from "@/store/pipeline.store.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
+import { normalizeLocale } from "@/utils/locale.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import {
@@ -267,6 +269,17 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   useEffect(() => {
     setUser(resolvedUserData);
   }, [resolvedUserData, setUser]);
+
+  // The saved language wins on a browser with no cookie of its own — a new browser, or one
+  // whose cookies were cleared.
+  useEffect(() => {
+    const preferred = normalizeLocale(resolvedUserData?.prefLanguage);
+    if (!preferred || preferred === i18n.language) return;
+    if (document.cookie.includes("i18next=")) return;
+
+    document.cookie = `i18next=${preferred}; path=/; max-age=31536000`;
+    void i18n.changeLanguage(preferred);
+  }, [resolvedUserData?.prefLanguage]);
 
   useEffect(() => {
     if (resolvedUserData?.isOrgPaused) {

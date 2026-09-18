@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconCircleCheck, IconLoader2, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconLoader2, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -12,11 +12,14 @@ import {
   useGetLeadWebhook,
 } from "@/backend/appsIntegration/getlead/getlead.query";
 import { useDeleteIntegrationMutation } from "@/backend/appsIntegration/integration.query";
+import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button.tsx";
-import { Card } from "@/components/ui/card";
-import { Field, FieldError, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
@@ -70,136 +73,127 @@ export function GetLead() {
     setEditing(false);
   };
 
+  const config = INTEGRATIONS_CONFIG.getlead;
+
   return (
-    <div className="flex flex-col gap-4 p-8">
-      <div className="flex items-center gap-3">
-        <h3 className="text-xl font-semibold">{t("GetLead CRM")}</h3>
-        {connected && (
-          <Badge variant="secondary" className="gap-1">
-            <IconCircleCheck className="h-3.5 w-3.5" />
-            {t("Connected")}
-          </Badge>
-        )}
-      </div>
-
-      <p className="text-sm text-muted-foreground max-w-125">
-        {t(
-          "Leads on your pipeline board are pushed to GetLead. Generate an API key in GetLead under Integrations → API Keys, then paste it here.",
-        )}
-      </p>
-
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      connected={connected}
+      detail={status?.keyPreview}
+    >
       {/* Stated before connecting, not discovered afterwards: GetLead requires a
           phone number on every lead, and Instagram/Messenger contacts are created
           from a DM id with no phone at all. An org whose leads arrive by DM would
           otherwise connect this and see nothing sync. */}
-      <div className="text-sm text-muted-foreground max-w-125 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/30">
-        <p className="font-medium text-foreground mb-1">{t("Leads need a phone number")}</p>
-        <p>
+      <Alert>
+        <IconAlertTriangle />
+        <AlertTitle>{t("Leads need a phone number")}</AlertTitle>
+        <AlertDescription>
           {t(
             "GetLead requires a valid phone number on every lead. Leads that reach you as Instagram or Messenger DMs have no phone number, so they are skipped. WhatsApp leads always sync.",
           )}
-        </p>
-      </div>
+        </AlertDescription>
+      </Alert>
 
-      <Card className="p-4">
+      <IntegrationFormCard
+        title={t("API key")}
+        description={t(
+          "Leads on your pipeline board are pushed to GetLead. Generate a key in GetLead under Integrations → API Keys, then paste it here.",
+        )}
+        onSubmit={onSubmit}
+        actions={
+          <>
+            {showForm && (
+              <Button type="submit" disabled={connectMutation.isPending}>
+                {connectMutation.isPending
+                  ? t("Checking key...")
+                  : connected
+                    ? t("Update key")
+                    : t("Connect")}
+              </Button>
+            )}
+
+            {connected && (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate()}
+              >
+                <IconTrash data-icon="inline-start" />
+                {t("Disconnect")}
+              </Button>
+            )}
+          </>
+        }
+      >
         {isPending ? (
-          <Skeleton className="h-8 w-125" />
+          <Skeleton className="h-9 w-full" />
         ) : (
           /* One layout for both modes rather than a read view and an edit view.
              Swapping whole blocks moved the buttons and resized the card on every
              click of the pencil; here only the contents of two fixed rows change,
              so nothing below the card shifts. Both rows are h-9, and the mask and
              the input occupy the same slot. */
-          <form onSubmit={onSubmit}>
-            <FieldGroup className="w-125 gap-4">
-              <Controller
-                name="apiKey"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={editing && fieldState.invalid}>
-                    {showForm ? (
-                      <FieldLabel htmlFor={field.name}>
-                        {connected ? t("Replace API key") : t("API key")}
-                      </FieldLabel>
-                    ) : (
-                      /* FieldTitle, not FieldLabel: the mask is not a form control,
+          <Controller
+            name="apiKey"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={editing && fieldState.invalid}>
+                {showForm ? (
+                  <FieldLabel htmlFor={field.name}>
+                    {connected ? t("Replace API key") : t("API key")}
+                  </FieldLabel>
+                ) : (
+                  /* FieldTitle, not FieldLabel: the mask is not a form control,
                          and a label with a dangling `for` is worse for a screen
                          reader than a plain heading. */
-                      <FieldTitle id="getlead-api-key-label">{t("API key")}</FieldTitle>
-                    )}
+                  <FieldTitle id="getlead-api-key-label">{t("API key")}</FieldTitle>
+                )}
 
-                    <div className="flex items-center gap-2">
-                      {showForm ? (
-                        <Input
-                          {...field}
-                          id={field.name}
-                          type="password"
-                          autoComplete="off"
-                          aria-invalid={fieldState.invalid}
-                          placeholder="ik_..."
-                          autoFocus={editing}
-                        />
-                      ) : (
-                        /* Text, not a disabled input: there is nothing here to type
+                <div className="flex items-center gap-2">
+                  {showForm ? (
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type="password"
+                      autoComplete="off"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="ik_..."
+                      autoFocus={editing}
+                    />
+                  ) : (
+                    /* Text, not a disabled input: there is nothing here to type
                            into, and a greyed-out box invites a click that does nothing. */
-                        <code
-                          aria-labelledby="getlead-api-key-label"
-                          className="flex h-9 flex-1 items-center truncate rounded-md border bg-muted/40 px-2.5 font-mono text-sm text-foreground"
-                        >
-                          {status?.keyPreview ?? "ik_••••••••"}
-                        </code>
-                      )}
+                    <code
+                      aria-labelledby="getlead-api-key-label"
+                      className="flex h-9 flex-1 items-center truncate rounded-md border bg-muted/40 px-2.5 font-mono text-sm text-foreground"
+                    >
+                      {status?.keyPreview ?? "ik_••••••••"}
+                    </code>
+                  )}
 
-                      {/* Reserved in both modes so the row keeps its width: the
+                  {/* Reserved in both modes so the row keeps its width: the
                           pencil opens the field, the cross closes it again. */}
-                      {connected && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          disabled={connectMutation.isPending}
-                          aria-label={editing ? t("Cancel") : t("Replace API key")}
-                          onClick={() => (editing ? cancelEdit() : setEditing(true))}
-                        >
-                          {editing ? (
-                            <IconX className="h-4 w-4" />
-                          ) : (
-                            <IconPencil className="h-4 w-4" />
-                          )}
-                        </Button>
-                      )}
-                    </div>
+                  {connected && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      disabled={connectMutation.isPending}
+                      aria-label={editing ? t("Cancel") : t("Replace API key")}
+                      onClick={() => (editing ? cancelEdit() : setEditing(true))}
+                    >
+                      {editing ? <IconX className="h-4 w-4" /> : <IconPencil className="h-4 w-4" />}
+                    </Button>
+                  )}
+                </div>
 
-                    {editing && fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-
-              <div className="flex items-center gap-2">
-                {showForm && (
-                  <Button type="submit" disabled={connectMutation.isPending}>
-                    {connectMutation.isPending
-                      ? t("Checking key...")
-                      : connected
-                        ? t("Update key")
-                        : t("Connect")}
-                  </Button>
-                )}
-
-                {connected && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={deleteMutation.isPending}
-                    onClick={() => deleteMutation.mutate()}
-                  >
-                    <IconTrash className="h-4 w-4 mr-2" />
-                    {t("Disconnect")}
-                  </Button>
-                )}
-              </div>
-            </FieldGroup>
-          </form>
+                {editing && fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
         )}
 
         {/* Right below the key, because saving one is what creates this and the
@@ -215,7 +209,7 @@ export function GetLead() {
                 </span>
               </div>
             ) : webhook?.url ? (
-              <div className="w-125">
+              <div className="max-w-lg">
                 <LinkCopyElement link={webhook.url} label={t("Your webhook URL")} />
                 <p className="text-muted-foreground mt-1.5 text-xs">
                   {t(
@@ -226,7 +220,7 @@ export function GetLead() {
             ) : null}
           </div>
         )}
-      </Card>
+      </IntegrationFormCard>
 
       {/* Only once connected: the mapping needs GetLead's statuses, which arrive
           with the key. */}
@@ -237,20 +231,24 @@ export function GetLead() {
       {connected && <GetLeadWebhook />}
 
       {connected && meta && (
-        <Card className="p-4">
-          <h4 className="text-sm font-medium mb-2">{t("Available in GetLead")}</h4>
-          {/* Confirms the key reached the right business, which is the only
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("Available in GetLead")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Confirms the key reached the right business, which is the only
               signal available — GetLead exposes no business name. */}
-          <dl className="text-sm text-muted-foreground grid grid-cols-2 gap-y-1 max-w-125">
-            <dt>{t("Statuses")}</dt>
-            <dd>{meta.statuses.map((s) => s.name).join(", ") || "—"}</dd>
-            <dt>{t("Sources")}</dt>
-            <dd>{meta.sources.length}</dd>
-            <dt>{t("Purposes")}</dt>
-            <dd>{meta.purposes.length}</dd>
-          </dl>
+            <dl className="grid max-w-lg grid-cols-2 gap-y-1 text-sm text-muted-foreground">
+              <dt>{t("Statuses")}</dt>
+              <dd>{meta.statuses.map((s) => s.name).join(", ") || "—"}</dd>
+              <dt>{t("Sources")}</dt>
+              <dd>{meta.sources.length}</dd>
+              <dt>{t("Purposes")}</dt>
+              <dd>{meta.purposes.length}</dd>
+            </dl>
+          </CardContent>
         </Card>
       )}
-    </div>
+    </IntegrationShell>
   );
 }

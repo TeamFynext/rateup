@@ -12,9 +12,11 @@ import {
 } from "@/backend/appsIntegration/integration.query";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Tooltip,
@@ -26,10 +28,9 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
 import type { ZapierIntegration } from "@/types/global";
-import { imagesPath } from "@/utils/constants.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
-import { Card, CardContent } from "../ui/card";
+import { Card } from "../ui/card";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
@@ -44,22 +45,18 @@ export function Zapier() {
   } = useIntegrationByType(IntegratedApps.zapier);
 
   if (isLoading) return <RateupLoader />;
+
+  const config = INTEGRATIONS_CONFIG.zapier;
+
   return (
-    <div className="flex flex-col gap-4 p-3">
-      <div className="flex items-center gap-2">
-        <Avatar>
-          <AvatarImage src={`${imagesPath}/zapier.png`} alt="Zapier" />
-          <AvatarFallback>Z</AvatarFallback>
-        </Avatar>
-        <h1 className="text-2xl font-bold">Zapier</h1>
-      </div>
-      <div className="flex flex-col items-start gap-3">
-        <APIKeyGenerate integration={integration} />
-        <div className="flex flex-col justify-center items-center w-full">
-          <ZapierTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
-        </div>
-      </div>
-    </div>
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      connected={Boolean(integration?.credential?.accessToken)}
+    >
+      <APIKeyGenerate integration={integration} />
+      <ZapierTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
+    </IntegrationShell>
   );
 }
 
@@ -103,100 +100,104 @@ function APIKeyGenerate({ integration }: { integration: AppIntegration }) {
     );
   }
   return (
-    <Card className={"w=[50%]"}>
-      <CardContent className="flex flex-col gap-4">
-        <Field>
-          <FieldLabel htmlFor="zapier-org-id">Organization ID</FieldLabel>
-          <InputGroup>
-            <InputGroupInput id="zapier-org-id" value={user.user?.orgId ?? ""} readOnly />
-            <InputGroupAddon align="inline-end">
-              <ApiCopyButton value={user.user?.orgId ?? ""} />
-            </InputGroupAddon>
-          </InputGroup>
-        </Field>
-        {integration && integration?.credential?.accessToken ? (
-          <TooltipProvider delay={150}>
-            <Tooltip>
-              <TooltipTrigger render={<div className="w-full" />}>
-                <Field>
-                  <FieldLabel htmlFor="zapier-api-key">{translations("Api Key")}</FieldLabel>
-                  <FieldDescription>
-                    {translations("Use this key to set up your Zapier connection")}
-                  </FieldDescription>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="zapier-api-key"
-                      value={apiKey || "*".repeat(128)}
-                      disabled={!apiKey}
-                      readOnly
-                    />
-                    <InputGroupAddon align="inline-end">
-                      {apiKey ? (
-                        <ApiCopyButton value={apiKey} />
-                      ) : (
-                        <Tooltip>
-                          <TooltipTrigger
-                            render={
-                              <Button
-                                onClick={handleRegenerate}
-                                disabled={updateKey.isPending}
-                                aria-label={translations("Regenerate")}
-                                variant="ghost"
-                                size="icon"
-                              />
-                            }
-                          >
-                            {updateKey.isPending ? <Spinner /> : <IconReload />}
-                          </TooltipTrigger>
-                          <TooltipContent>{translations("Regenerate")}</TooltipContent>
-                        </Tooltip>
-                      )}
+    <IntegrationFormCard
+      title={translations("Credentials")}
+      description={translations("Paste both into Zapier when it asks RateUp to sign you in.")}
+    >
+      <Field>
+        <FieldLabel htmlFor="zapier-org-id">{translations("Organization ID")}</FieldLabel>
+        <InputGroup>
+          <InputGroupInput id="zapier-org-id" value={user.user?.orgId ?? ""} readOnly />
+          <InputGroupAddon align="inline-end">
+            <ApiCopyButton value={user.user?.orgId ?? ""} />
+          </InputGroupAddon>
+        </InputGroup>
+      </Field>
+      {integration && integration?.credential?.accessToken ? (
+        <TooltipProvider delay={150}>
+          <Tooltip>
+            <TooltipTrigger render={<div className="w-full" />}>
+              <Field>
+                <FieldLabel htmlFor="zapier-api-key">{translations("Api Key")}</FieldLabel>
+                <FieldDescription>
+                  {translations("Use this key to set up your Zapier connection")}
+                </FieldDescription>
+                <InputGroup>
+                  <InputGroupInput
+                    id="zapier-api-key"
+                    value={apiKey || "*".repeat(128)}
+                    disabled={!apiKey}
+                    readOnly
+                  />
+                  <InputGroupAddon align="inline-end">
+                    {apiKey ? (
+                      <ApiCopyButton value={apiKey} />
+                    ) : (
                       <Tooltip>
                         <TooltipTrigger
                           render={
                             <Button
-                              onClick={handleDelete}
-                              disabled={deleteMut.isPending}
-                              aria-label={translations("Delete")}
+                              onClick={handleRegenerate}
+                              disabled={updateKey.isPending}
+                              aria-label={translations("Regenerate")}
                               variant="ghost"
                               size="icon"
-                              className="text-red-500"
                             />
                           }
                         >
-                          {deleteMut.isPending ? <Spinner /> : <IconTrash />}
+                          {updateKey.isPending ? <Spinner /> : <IconReload />}
                         </TooltipTrigger>
-                        <TooltipContent>{translations("Delete")}</TooltipContent>
+                        <TooltipContent>{translations("Regenerate")}</TooltipContent>
                       </Tooltip>
-                    </InputGroupAddon>
-                  </InputGroup>
-                </Field>
-              </TooltipTrigger>
-              <TooltipContent>
-                {apiKey
-                  ? translations("Api Access Key")
-                  : translations(
-                      "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
                     )}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <div className="flex flex-col gap-0.5">
-            <p className="text-sm">Api Key</p>
-            <p className="mb-2 text-sm text-muted-foreground">
-              Use this key to set up your Zapier connection
-            </p>
-            <Button onClick={handleCreate} disabled={createMut.isPending}>
-              {createMut.isPending ? <Spinner /> : <IconKey />}
-              {createMut.isPending
-                ? translations("Generating...")
-                : translations("Generate Api Key")}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            onClick={handleDelete}
+                            disabled={deleteMut.isPending}
+                            aria-label={translations("Delete")}
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                          />
+                        }
+                      >
+                        {deleteMut.isPending ? <Spinner /> : <IconTrash />}
+                      </TooltipTrigger>
+                      <TooltipContent>{translations("Delete")}</TooltipContent>
+                    </Tooltip>
+                  </InputGroupAddon>
+                </InputGroup>
+              </Field>
+            </TooltipTrigger>
+            <TooltipContent>
+              {apiKey
+                ? translations("Api Access Key")
+                : translations(
+                    "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
+                  )}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <Field>
+          <FieldLabel htmlFor="zapier-generate-key">{translations("API key")}</FieldLabel>
+          <FieldDescription>
+            {translations("Use this key to set up your Zapier connection")}
+          </FieldDescription>
+          <Button
+            id="zapier-generate-key"
+            className="w-fit"
+            onClick={handleCreate}
+            disabled={createMut.isPending}
+          >
+            {createMut.isPending ? <Spinner /> : <IconKey data-icon="inline-start" />}
+            {createMut.isPending ? translations("Generating...") : translations("Generate API key")}
+          </Button>
+        </Field>
+      )}
+    </IntegrationFormCard>
   );
 }
 
@@ -234,9 +235,9 @@ function ZapierTriggerList({
   }
   if (!integration) return null;
   return (
-    <Card className="w-[70%] p-4">
+    <Card className="p-(--card-spacing)">
       <div className="flex items-center gap-2">
-        <h4 className="text-lg font-semibold">Trigger Subscriptions</h4>
+        <h4 className="font-heading text-base font-medium">Trigger subscriptions</h4>
         <RefreshButton onClick={refetch} isLoading={isLoading} />
       </div>
       <div className="flex flex-col gap-4 py-6">
@@ -255,7 +256,7 @@ function ZapierTriggerList({
                             disabled={deleteMut.isPending}
                             variant="ghost"
                             size="icon"
-                            className="text-red-500"
+                            className="text-destructive"
                             onClick={() => handleDeleteClick(tr)}
                           />
                         }

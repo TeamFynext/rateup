@@ -127,6 +127,15 @@ describe("loyaltyStarterValues", () => {
     });
   });
 
+  test("the new-customer welcome opens with its Join quick reply", () => {
+    const welcome = loyaltyEventCatalog(t).find(
+      (d) => d.eventType === LoyaltyEventType.NEW_CUSTOMER_WELCOME,
+    );
+    expect(welcome && loyaltyStarterValues(welcome).buttons).toEqual([
+      { type: "QUICK_REPLY", text: "Join" },
+    ]);
+  });
+
   test("carries no account — the editor picks that, so nothing is written by opening it", () => {
     const values = loyaltyStarterValues(loyaltyEventCatalog(t)[0]);
     expect(values).not.toHaveProperty("whatsappSettingsPhoneId");

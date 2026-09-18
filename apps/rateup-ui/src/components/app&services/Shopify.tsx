@@ -1,5 +1,4 @@
-import { IconPlus } from "@tabler/icons-react";
-import { Image } from "@unpic/react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -9,6 +8,9 @@ import type { ShopifyProduct } from "@/backend/appsIntegration/shopify/shopify.a
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import { IntegrationEmptyState } from "@/components/dashboard/settings/integrations/IntegrationEmptyState.tsx";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules.tsx";
 import ShopifySettings from "@/components/shopify/ShopifySettings.tsx";
@@ -18,7 +20,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { cn } from "@/lib/utils.ts";
 import { IntegratedApps } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";
-import { imagesPath } from "@/utils/constants.ts";
 
 interface ActiveBadgeProps extends React.ComponentProps<typeof Badge> {
   active?: boolean;
@@ -71,50 +72,62 @@ export function Shopify() {
 
   if (isLoading) return <RateupLoader />;
 
+  const config = INTEGRATIONS_CONFIG.shopify;
+  const shopDomain = shopifyInfo?.credential?.session?.shop;
+
   if (!shopifyInfo || !shopifyInfo?.active || !shopifyInfo.credential.session)
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Image
-            src={`${imagesPath}/shopifystore.jpeg`}
-            alt="Shopify Store"
-            width={320}
-            height={240}
-            className="max-w-xs"
-          />
-          <Button
-            style={{ backgroundColor: "#5e8e3e" }}
-            onClick={() => window.open("https://apps.shopify.com/rateup", "_blank")}
-          >
-            <IconPlus data-icon="inline-start" />
-            {translations("Connect with shopify store")}
-          </Button>
-        </div>
-      </div>
+      <IntegrationShell icon={config.icon} name={config.name}>
+        <IntegrationEmptyState
+          icon={config.icon}
+          title={translations("Connect your Shopify store")}
+          description={translations(
+            "Orders and customers flow into RateUp, so you can follow up on WhatsApp after someone buys.",
+          )}
+          benefits={[
+            translations("Send order updates and delivery notices automatically"),
+            translations("Bring product details into your campaigns"),
+            translations("Win back abandoned carts"),
+          ]}
+          action={
+            <Button onClick={() => window.open("https://apps.shopify.com/rateup", "_blank")}>
+              {translations("Install on Shopify")}
+              <IconExternalLink data-icon="inline-end" />
+            </Button>
+          }
+        />
+      </IntegrationShell>
     );
 
   return (
-    <Tabs defaultValue="schedules" className="w-full h-full">
-      <div className="mb-4 flex items-center justify-between">
-        <TabsList>
-          <TabsTrigger value="schedules">{translations("Schedules")}</TabsTrigger>
-          <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
-        </TabsList>
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      connected
+      detail={shopDomain}
+      action={
         <Button variant="outline" onClick={handleLoadProducts}>
           {translations("Sync products")}
         </Button>
-      </div>
-      <TabsContent value="schedules">
-        <ShopifySchedules
-          shopifyProducts={shopifyProducts}
-          shopifyInfo={shopifyInfo}
-          waTemplates={templates ?? []}
-          teams={teams?.data ?? []}
-        />
-      </TabsContent>
-      <TabsContent value="settings">
-        <ShopifySettings shopifyInfo={shopifyInfo} />
-      </TabsContent>
-    </Tabs>
+      }
+    >
+      <Tabs defaultValue="schedules" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="schedules">{translations("Schedules")}</TabsTrigger>
+          <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="schedules">
+          <ShopifySchedules
+            shopifyProducts={shopifyProducts}
+            shopifyInfo={shopifyInfo}
+            waTemplates={templates ?? []}
+            teams={teams?.data ?? []}
+          />
+        </TabsContent>
+        <TabsContent value="settings">
+          <ShopifySettings shopifyInfo={shopifyInfo} />
+        </TabsContent>
+      </Tabs>
+    </IntegrationShell>
   );
 }

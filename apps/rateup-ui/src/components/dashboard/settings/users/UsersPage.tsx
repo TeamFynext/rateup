@@ -3,20 +3,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  IconCheck,
   IconCircleCheck,
-  IconCopy,
   IconMail,
   IconMessageCircle,
-  IconPencil,
   IconPlus,
   IconSearch,
   IconShield,
-  IconTrash,
-  IconUpload,
-  IconUser,
   IconUserCog,
-  IconUsers,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -33,7 +26,6 @@ import {
   userResendInviteTeamMutation,
   useTeamsByUser,
 } from "@/backend/team/team.query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -49,7 +41,7 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { PhoneInput } from "@/components/ui/phone-input.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import {
   Select,
   SelectContent,
@@ -57,18 +49,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { cn } from "@/lib/utils.ts";
 import { UserRole } from "@/utils/enums/index.ts";
-import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
 
 import { EditMember } from "./parts/EditMember.tsx";
+import { PeopleList } from "./parts/PeopleList.tsx";
 import type { SelectedUser, PendingInvitation, TeamOption } from "./parts/shared.tsx";
 
 export function UsersPage() {
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  // Keyed by invite: one shared boolean made every card show "Copied" at once.
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "unassigned" | "invited">("all");
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
   const { t: translations } = useTranslation();
@@ -77,8 +70,6 @@ export function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
   const [currentUserId, setCurrentUserId] = useState<string>("");
-  const [newUserProfileImage, setNewUserProfileImage] = useState<string | null>(null);
-  const [newUserPhone, setNewUserPhone] = useState("");
 
   // Fetch Teams
   const { isLoading: isLoadingTeamsUser, data: teamsDataUser } = useTeamsByUser();
@@ -95,7 +86,8 @@ export function UsersPage() {
       .trim()
       .min(1, translations("Email is required"))
       .regex(/^\S+@\S+$/, translations("Please enter a valid email address")),
-    team: z.string(),
+    teams: z.array(z.string()),
+    role: z.string(),
   });
 
   const userForm = useForm<z.infer<typeof userFormSchema>>({
@@ -103,7 +95,8 @@ export function UsersPage() {
     defaultValues: {
       name: "",
       email: "",
-      team: "none",
+      teams: [],
+      role: UserRole.MEMBER,
     },
   });
 
@@ -160,12 +153,11 @@ export function UsersPage() {
     loadViewerInfo();
   }, []);
 
+  // Preselect the first team, but only while nothing is chosen.
   useEffect(() => {
     const teams = teamsDataUser?.data;
-    if (teams && teams.length > 0) {
-      userForm.setValue("team", teams[0].id);
-    } else {
-      userForm.setValue("team", "none");
+    if (teams?.length && userForm.getValues("teams").length === 0) {
+      userForm.setValue("teams", [teams[0].id]);
     }
   }, [teamsDataUser]);
 
@@ -178,8 +170,12 @@ export function UsersPage() {
       email: values.email,
       orgId,
       invitedBy: userId,
-      teamId: values.team === "none" ? null : values.team,
+      // Filed under one team; teamIds carries every team picked. None invites them into
+      // the org alone, to be placed later.
+      teamId: values.teams[0] ?? null,
+      teamIds: values.teams,
       type: "TEAM",
+      role: values.role,
     };
     return (await inviteTeamMember(inviteData)).data;
   };
@@ -203,46 +199,110 @@ export function UsersPage() {
     },
   });
 
-  const filteredMembers: SelectedUser[] | undefined = data?.data?.members?.filter(
-    (member: SelectedUser) => {
-      const q = searchQuery.toLowerCase();
-      return member.name?.toLowerCase().includes(q) || member.email?.toLowerCase().includes(q);
-    },
-  );
+  const teamOptions = (teamsDataUser?.data ?? []).map((team: TeamOption) => ({
+    value: team.id,
+    label: team.name,
+  }));
 
-  const filteredInvitations: PendingInvitation[] | undefined = data?.data?.invitations?.filter(
-    (invite: PendingInvitation) => {
-      const q = searchQuery.toLowerCase();
-      return invite.name?.toLowerCase().includes(q) || invite.email?.toLowerCase().includes(q);
-    },
-  );
+  const allMembers: SelectedUser[] = data?.data?.members ?? [];
+  const allInvitations: PendingInvitation[] = data?.data?.invitations ?? [];
+
+  const matchesSearch = (person: { name?: string; email?: string }) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (person.name?.toLowerCase().includes(q) ?? false) ||
+      (person.email?.toLowerCase().includes(q) ?? false)
+    );
+  };
+
+  /** Access is granted through teams, so someone in none can sign in and reach nothing. */
+  const unassignedCount = allMembers.filter((member) => (member.teams?.length ?? 0) === 0).length;
+
+  const filteredMembers = allMembers
+    .filter(matchesSearch)
+    .filter((member) =>
+      filter === "unassigned"
+        ? (member.teams?.length ?? 0) === 0
+        : filter === "invited"
+          ? false
+          : true,
+    );
+
+  const filteredInvitations = allInvitations
+    .filter(matchesSearch)
+    .filter(() => filter !== "unassigned");
 
   const handleCopy = async (id: string) => {
     const link = `${import.meta.env.VITE_FRONTEND_URL}/invite?type=team&token=${id}`;
     await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500);
   };
 
   return (
-    <div className="flex flex-col items-start w-full gap-4">
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-4">
       <div>
-        <h2 className="text-2xl mb-1">{translations("User Management")}</h2>
+        <h2 className="mb-1 text-2xl">{translations("Users")}</h2>
         <p className="text-sm text-muted-foreground">
-          {translations("Add and manage users with different access levels")}
+          {translations("Who can sign in, and which teams they work in.")}
         </p>
       </div>
-      <Card className="p-4 w-full">
-        <div className="flex items-center gap-3">
+
+      {/* One sentence rather than a row of stat tiles. Each fragment is a filter,
+          because the counts are only useful if you can act on them. */}
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
+        <button
+          type="button"
+          onClick={() => setFilter("all")}
+          className={cn(
+            "rounded-sm underline-offset-2 hover:underline",
+            filter === "all" && "font-medium text-foreground",
+          )}
+        >
+          {translations("{count} people", { count: allMembers.length })}
+        </button>
+
+        {unassignedCount > 0 && (
+          <>
+            <span aria-hidden="true">·</span>
+            <button
+              type="button"
+              onClick={() => setFilter(filter === "unassigned" ? "all" : "unassigned")}
+              className={cn(
+                "rounded-sm underline-offset-2 hover:underline",
+                filter === "unassigned" && "font-medium text-foreground",
+              )}
+            >
+              {translations("{count} in no team", { count: unassignedCount })}
+            </button>
+          </>
+        )}
+
+        {allInvitations.length > 0 && (
+          <>
+            <span aria-hidden="true">·</span>
+            <button
+              type="button"
+              onClick={() => setFilter(filter === "invited" ? "all" : "invited")}
+              className={cn(
+                "rounded-sm underline-offset-2 hover:underline",
+                filter === "invited" && "font-medium text-foreground",
+              )}
+            >
+              {translations("{count} invited", { count: allInvitations.length })}
+            </button>
+          </>
+        )}
+      </div>
+
+      <Card className="w-full p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Dialog
             open={isAddUserDialogOpen}
             onOpenChange={(open) => {
               setIsAddUserDialogOpen(open);
-              if (!open) {
-                userForm.reset();
-                setNewUserPhone("");
-                setNewUserProfileImage(null);
-              }
+              if (!open) userForm.reset();
             }}
           >
             <DialogTrigger render={<Button className="h-10 shrink-0" />}>
@@ -250,7 +310,7 @@ export function UsersPage() {
               {translations("Add New User")}
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-175">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center">
@@ -267,228 +327,139 @@ export function UsersPage() {
                 onSubmit={userForm.handleSubmit(() => addResourceMutation.mutate())}
                 className="flex flex-col gap-4 py-3"
               >
-                <div className="grid grid-cols-[180px_1fr] gap-6">
-                  {/* Left: Profile Picture */}
-                  <div className="flex flex-col items-center gap-2">
-                    <Avatar className="w-32 h-32 ring-2 ring-gray-200">
-                      {newUserProfileImage ? (
-                        <AvatarImage src={newUserProfileImage} />
+                <FieldGroup className="gap-3">
+                  <Controller
+                    name="name"
+                    control={userForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="new-name" className="text-xs">
+                          {translations("Full Name")} <span className="text-destructive">*</span>
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="new-name"
+                          placeholder="John Doe"
+                          className="h-9"
+                          aria-invalid={fieldState.invalid}
+                        />
+                        <FieldError errors={[fieldState.error]} className="text-xs" />
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="email"
+                    control={userForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="new-email" className="text-xs">
+                          {translations("Email Address")}{" "}
+                          <span className="text-destructive">*</span>
+                        </FieldLabel>
+                        <InputGroup className="h-9">
+                          <InputGroupAddon>
+                            <IconMail />
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            {...field}
+                            id="new-email"
+                            type="email"
+                            placeholder="john@company.com"
+                            aria-invalid={fieldState.invalid}
+                          />
+                        </InputGroup>
+                        <FieldError errors={[fieldState.error]} className="text-xs" />
+                      </Field>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field className="gap-1.5">
+                      <FieldLabel htmlFor="new-role" className="text-xs">
+                        {translations("User Role")} <span className="text-destructive">*</span>
+                      </FieldLabel>
+                      <Select
+                        value={userForm.watch("role")}
+                        onValueChange={(value) => userForm.setValue("role", value ?? "")}
+                        items={[
+                          { value: UserRole.SUPADM, label: translations("Super Admin") },
+                          { value: UserRole.ADM, label: translations("Admin") },
+                          { value: UserRole.MEMBER, label: translations("Staff") },
+                        ]}
+                      >
+                        <SelectTrigger id="new-role" className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={UserRole.SUPADM}>
+                            <div className="flex items-center gap-2">
+                              <IconShield className="w-3.5 h-3.5 text-primary" />
+                              <span>{translations("Super Admin")}</span>
+                              <Badge className="bg-primary text-[10px] h-4 px-1.5">
+                                {translations("Full Access")}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value={UserRole.ADM}>
+                            <div className="flex items-center gap-2">
+                              <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
+                              <span>{translations("Admin")}</span>
+                              <Badge className="bg-rateup-orange text-[10px] h-4 px-1.5">
+                                {translations("Team Lead")}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value={UserRole.MEMBER}>
+                            <div className="flex items-center gap-2">
+                              <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
+                              <span>{translations("Staff")}</span>
+                              <Badge className="bg-green-600 text-[10px] h-4 px-1.5">
+                                {translations("Support")}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+
+                    <Field className="gap-1.5">
+                      <FieldLabel htmlFor="new-teams" className="text-xs">
+                        {translations("Team Assignment")}
+                      </FieldLabel>
+                      {isLoadingTeamsUser ? (
+                        <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
                       ) : (
-                        <AvatarFallback className="bg-primary text-white">
-                          <IconUser className="w-12 h-12" />
-                        </AvatarFallback>
+                        // Access is per team and people work across more than one.
+                        <MultiSelect
+                          options={teamOptions}
+                          value={userForm.watch("teams")}
+                          onValueChange={(value) => userForm.setValue("teams", value)}
+                          className="w-full"
+                          placeholder={translations("Select teams")}
+                          emptyIndicator={translations("No teams found")}
+                        />
                       )}
-                    </Avatar>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => {
-                        const input = document.createElement("input");
-                        input.type = "file";
-                        input.accept = "image/*";
-                        input.onchange = (event: Event) => {
-                          const target = event.target as HTMLInputElement;
-                          const file = target.files?.[0];
-                          if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = (loadEvent) => {
-                            setNewUserProfileImage(loadEvent.target?.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        };
-                        input.click();
-                      }}
-                    >
-                      <IconUpload className="w-3 h-3 mr-1.5" />
-                      {translations("Upload")}
-                    </Button>
+                    </Field>
                   </div>
 
-                  {/* Right: Form Fields */}
-                  <FieldGroup className="gap-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Controller
-                        name="name"
-                        control={userForm.control}
-                        render={({ field, fieldState }) => (
-                          <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="new-name" className="text-xs">
-                              {translations("Full Name")}{" "}
-                              <span className="text-destructive">*</span>
-                            </FieldLabel>
-                            <Input
-                              {...field}
-                              id="new-name"
-                              placeholder="John Doe"
-                              className="h-9"
-                              aria-invalid={fieldState.invalid}
-                            />
-                            <FieldError errors={[fieldState.error]} className="text-xs" />
-                          </Field>
-                        )}
-                      />
+                  {/* What happens on submit, stated rather than offered as a choice. The
+                        invite *is* an email — there is no invite without it — and the invitee
+                        sets their own password when they follow the link, so neither was ever
+                        something an admin could switch off. */}
+                  <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <IconMail className="mt-0.5 size-3.5 shrink-0" />
+                    {translations("We'll email an invite link so they can set their own password.")}
+                  </p>
+                </FieldGroup>
 
-                      <Field className="gap-1.5">
-                        <FieldLabel htmlFor="new-phone" className="text-xs">
-                          {translations("Phone Number")}
-                        </FieldLabel>
-                        <PhoneInput
-                          id="new-phone"
-                          placeholder={translations("Enter phone number")}
-                          className="h-9"
-                          defaultCountry="IN"
-                          value={newUserPhone}
-                          onChange={(value) => setNewUserPhone(value || "")}
-                        />
-                      </Field>
-                    </div>
-
-                    <Controller
-                      name="email"
-                      control={userForm.control}
-                      render={({ field, fieldState }) => (
-                        <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="new-email" className="text-xs">
-                            {translations("Email Address")}{" "}
-                            <span className="text-destructive">*</span>
-                          </FieldLabel>
-                          <InputGroup className="h-9">
-                            <InputGroupAddon>
-                              <IconMail />
-                            </InputGroupAddon>
-                            <InputGroupInput
-                              {...field}
-                              id="new-email"
-                              type="email"
-                              placeholder="john@company.com"
-                              aria-invalid={fieldState.invalid}
-                            />
-                          </InputGroup>
-                          <FieldError errors={[fieldState.error]} className="text-xs" />
-                        </Field>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field className="gap-1.5">
-                        <FieldLabel htmlFor="new-role" className="text-xs">
-                          {translations("User Role")} <span className="text-destructive">*</span>
-                        </FieldLabel>
-                        <Select
-                          defaultValue={UserRole.MEMBER}
-                          items={[
-                            { value: UserRole.SUPADM, label: translations("Super Admin") },
-                            { value: UserRole.ADM, label: translations("Admin") },
-                            { value: UserRole.MEMBER, label: translations("Staff") },
-                          ]}
-                        >
-                          <SelectTrigger id="new-role" className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={UserRole.SUPADM}>
-                              <div className="flex items-center gap-2">
-                                <IconShield className="w-3.5 h-3.5 text-primary" />
-                                <span>{translations("Super Admin")}</span>
-                                <Badge className="bg-primary text-[10px] h-4 px-1.5">
-                                  {translations("Full Access")}
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value={UserRole.ADM}>
-                              <div className="flex items-center gap-2">
-                                <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
-                                <span>{translations("Admin")}</span>
-                                <Badge className="bg-rateup-orange text-[10px] h-4 px-1.5">
-                                  {translations("Team Lead")}
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value={UserRole.MEMBER}>
-                              <div className="flex items-center gap-2">
-                                <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
-                                <span>{translations("Staff")}</span>
-                                <Badge className="bg-green-600 text-[10px] h-4 px-1.5">
-                                  {translations("Support")}
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </Field>
-
-                      <Field className="gap-1.5">
-                        <FieldLabel htmlFor="new-team" className="text-xs">
-                          {translations("Team Assignment")}
-                        </FieldLabel>
-                        {isLoadingTeamsUser ? (
-                          <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
-                        ) : (
-                          <Select
-                            value={userForm.watch("team")}
-                            onValueChange={(value) => userForm.setValue("team", value ?? "")}
-                            items={[
-                              { value: "none", label: translations("No Team") },
-                              ...(teamsDataUser?.data?.map((team: TeamOption) => ({
-                                value: team.id,
-                                label: team.name,
-                              })) ?? []),
-                            ]}
-                          >
-                            <SelectTrigger id="new-team" className="h-9 w-full">
-                              <SelectValue placeholder={translations("Select team")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">
-                                <span className="text-muted-foreground">
-                                  {translations("No Team")}
-                                </span>
-                              </SelectItem>
-                              {teamsDataUser?.data?.map((team: TeamOption) => (
-                                <SelectItem key={team.id} value={team.id}>
-                                  <div className="flex items-center gap-2">
-                                    <div
-                                      className="w-2 h-2 rounded-full"
-                                      style={{ backgroundColor: team.color }}
-                                    />
-                                    {team.name}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </Field>
-                    </div>
-
-                    <FieldGroup className="gap-2 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-900">
-                      <Field orientation="horizontal" data-disabled>
-                        <FieldLabel htmlFor="new-welcome-email" className="text-xs">
-                          {translations("Send welcome email")}
-                        </FieldLabel>
-                        <Switch id="new-welcome-email" defaultChecked disabled />
-                      </Field>
-                      <Field orientation="horizontal" data-disabled>
-                        <FieldLabel htmlFor="new-require-password-change" className="text-xs">
-                          {translations("Require password change")}
-                        </FieldLabel>
-                        <Switch id="new-require-password-change" defaultChecked disabled />
-                      </Field>
-                    </FieldGroup>
-                  </FieldGroup>
-                </div>
-
-                <DialogFooter className="gap-2 sm:gap-0">
+                <DialogFooter>
                   <Button
                     variant="outline"
                     type="button"
                     onClick={() => {
                       setIsAddUserDialogOpen(false);
                       userForm.reset();
-                      setNewUserPhone("");
-                      setNewUserProfileImage(null);
                     }}
                   >
                     {translations("Cancel")}
@@ -505,186 +476,35 @@ export function UsersPage() {
           </Dialog>
 
           <div className="relative flex-1">
-            <IconSearch className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <IconSearch className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder={translations("Search users by name or email")}
-              className="pl-10 h-10"
+              placeholder={translations("Search by name or email")}
+              className="h-10 pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
       </Card>
-      <div className="flex flex-col w-full">
-        {data?.data?.members?.length > 0 && (
-          <>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
-              {translations("Active Members")}
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
-              {filteredMembers?.map((member) => (
-                <Card key={member.id} className="p-3 group relative">
-                  <div className="flex flex-col items-center text-center justify-center gap-1">
-                    <div className="relative mb-2">
-                      <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
-                        <AvatarImage src={getFileUrlFromKey(member.profilePhoto ?? "")} />
-                        <AvatarFallback className="bg-primary text-white">
-                          {member.name?.toUpperCase().slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      {member.status === "online" && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
-                      )}
-                    </div>
-
-                    <h4 className="text-sm mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                      {member.name}
-                    </h4>
-
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-1 w-full">
-                      {member.email}
-                    </p>
-
-                    <Badge className="text-[10px] h-5 px-2 mb-2">{member.role}</Badge>
-
-                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
-                      <IconUsers className="w-3 h-3" />
-
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={<div className="flex items-center gap-1 cursor-default" />}
-                        >
-                          <span className="line-clamp-1">
-                            {member.teams?.length === 0
-                              ? "Not in any team"
-                              : member.teams
-                                  ?.slice(0, 2)
-                                  .map((t) => t.team_name)
-                                  .join(", ")}
-                            {(member.teams?.length ?? 0) > 2 ? "..." : ""}
-                          </span>
-                        </TooltipTrigger>
-
-                        <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-52">
-                          <div className="flex flex-col gap-1">
-                            {member.teams?.map((t) => (
-                              <div key={t.id} className="flex items-center gap-2">
-                                <span
-                                  className="w-2 h-2 rounded-full"
-                                  style={{
-                                    backgroundColor: t.team_color || "#ccc",
-                                  }}
-                                />
-                                <span>{t.team_name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full h-7 text-xs mt-1"
-                      disabled={currentUserRole !== UserRole.SUPADM && member?.id !== currentUserId}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedUser(member);
-                        setIsEditUserDialogOpen(true);
-                      }}
-                    >
-                      <IconPencil className="w-3 h-3 mr-1" />
-                      {translations("Edit Profile")}
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </>
-        )}
-
-        {data?.data?.invitations?.length > 0 && (
-          <>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
-              {translations("Pending Invitations")}
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full">
-              {filteredInvitations?.map((invite) => (
-                <Card
-                  key={invite.id}
-                  className="p-3 border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"
-                >
-                  <button
-                    type="button"
-                    className="absolute top-2 right-2 border rounded-sm p-1 hover:text-primary cursor-pointer"
-                    onClick={() => handleCopy(invite?.id ?? "")}
-                    aria-label={translations("Copy")}
-                    title={copied ? translations("Copied") : translations("Copy")}
-                  >
-                    {copied ? (
-                      <IconCheck className="w-4 h-4" />
-                    ) : (
-                      <IconCopy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-
-                  <div className="flex flex-col items-center text-center justify-center gap-1">
-                    <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
-                      <AvatarFallback className="bg-yellow-500 text-white">
-                        {invite?.name?.toUpperCase().slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <h4 className="text-sm mb-1 text-rateup-orange line-clamp-1">{invite.name}</h4>
-
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-1 w-full">
-                      {invite.email}
-                    </p>
-
-                    <Badge className="text-[10px] h-5 px-2 mb-2 bg-yellow-100 text-yellow-800 border border-yellow-200">
-                      {invite.status}
-                    </Badge>
-                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
-                      <IconUsers className="w-3 h-3" />
-                      <span className="line-clamp-1">
-                        {invite.teams.map((t) => t.team_name).join(", ")}
-                      </span>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full h-7 text-xs mt-1 border-yellow-300 text-yellow-700 hover:bg-yellow-50"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleResendInvite(invite?.id ?? "");
-                      }}
-                      disabled={resendInviteMutation.isPending}
-                    >
-                      <IconMail className="w-3 h-3 mr-1" />
-                      {translations("Resend Invite")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full h-7 text-xs mt-1 border-red-300 text-red-700 hover:bg-red-50"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteInvite(invite?.id ?? "");
-                      }}
-                      disabled={deleteInviteMutation.isPending}
-                    >
-                      <IconTrash className="w-3 h-3 mr-1" />
-                      {translations("Delete Invite")}
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      <Card className="w-full p-4">
+        <PeopleList
+          members={filteredMembers}
+          invitations={filteredInvitations}
+          currentUserRole={currentUserRole}
+          currentUserId={currentUserId}
+          canManageAll={currentUserRole === UserRole.SUPADM}
+          copiedId={copiedId}
+          onCopyInvite={handleCopy}
+          onResendInvite={handleResendInvite}
+          onDeleteInvite={handleDeleteInvite}
+          onEditMember={(member) => {
+            setSelectedUser(member);
+            setIsEditUserDialogOpen(true);
+          }}
+          isResending={resendInviteMutation.isPending}
+          isDeleting={deleteInviteMutation.isPending}
+        />
+      </Card>
       <EditMember
         isEditUserDialogOpen={isEditUserDialogOpen}
         setIsEditUserDialogOpen={setIsEditUserDialogOpen}

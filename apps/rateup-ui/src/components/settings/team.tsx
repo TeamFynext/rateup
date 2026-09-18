@@ -1,29 +1,33 @@
 import {
-  IconCalendar,
-  IconClock,
+  IconCheck,
   IconCrown,
+  IconLoader2,
   IconMail,
-  IconPhone,
   IconPlus,
+  IconMessageCircle,
   IconShield,
   IconTrash,
+  IconUserCog,
   IconUser,
   IconUserPlus,
   IconUsers,
+  IconMailPlus,
   IconUserX,
 } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { teamKeys } from "@/backend/org/org.keys";
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import { inviteTeamMember } from "@/backend/team/team.api";
 import {
   useAddUsertoTeams,
+  useDeleteInviteMutation,
   useDeleteTeamMutation,
   useEditTeamMutation,
   useNotTeamMembers,
@@ -36,9 +40,11 @@ import {
 } from "@/backend/team/team.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { ColorField } from "@/components/common/color-field.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
   Dialog,
   DialogContent,
@@ -47,28 +53,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
+import { HEX_COLOR } from "@/utils/color.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
+import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
 
 import { Card, CardContent } from "../ui/card.tsx";
 
-export const colorArray = [
-  { from: "#3B82F6", to: "#2563EB" }, // Blue
-  { from: "#F97316", to: "#EA580C" }, // Orange
-  { from: "#22C55E", to: "#16A34A" }, // Green
-  { from: "#A855F7", to: "#9333EA" }, // Purple
-  { from: "#EC4899", to: "#DB2777" }, // Pink
-  { from: "#EAB308", to: "#CA8A04" }, // Yellow
-  { from: "#6366F1", to: "#4F46E5" }, // Indigo
-];
+/** What a team is coloured when nobody chooses. */
+export const DEFAULT_TEAM_COLOR = "#5a8cc6";
 
 /** The team row the settings panels operate on. */
 interface SelectedTeam {
@@ -85,33 +96,42 @@ export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const id = selectedTeam.id;
   const [isLoading, setIsLoading] = useState(false);
   const editTeam = useEditTeamMutation(id, setIsLoading);
+  // The Google review link is on the team row, but only the members endpoint returns it.
+  const { data: teamsMembersData } = useTeamMembersFromInvitation(id);
 
   const form = useForm({
     defaultValues: {
       name: "",
       code: "",
       color: "",
+      googleLink: "",
     },
   });
 
-  // set initial values
   useEffect(() => {
     if (selectedTeam) {
       form.reset({
         name: selectedTeam.name || "",
         code: selectedTeam.code || "",
-        color: selectedTeam.color || "blue",
+        color: selectedTeam.color || DEFAULT_TEAM_COLOR,
+        googleLink: teamsMembersData?.googleLink || "",
       });
     }
-  }, [selectedTeam]);
+  }, [selectedTeam, teamsMembersData?.googleLink]);
 
-  const onSubmit = (values: { name: string; code?: string; color?: string }) => {
+  const onSubmit = (values: {
+    name: string;
+    code?: string;
+    color?: string;
+    googleLink?: string;
+  }) => {
     setIsLoading(true);
 
     const data = {
       name: values.name?.trim(),
       code: values.code?.trim(),
       color: values.color?.trim(),
+      googleLink: values.googleLink?.trim(),
     };
 
     editTeam.mutate(data, {
@@ -120,14 +140,15 @@ export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
       },
     });
   };
-  const editedColor = form.watch("color");
   return (
     <Card className="p-4">
-      <h2 className="text-xl">{translations("Team Settings")}</h2>
-      <p className="text-sm text-muted-foreground">
-        {translations("Configure team details and preferences")}
-      </p>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <div>
+        <h2 className="text-xl">{translations("Team Settings")}</h2>
+        <p className="text-sm text-muted-foreground">
+          {translations("Configure team details and preferences")}
+        </p>
+      </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {/* Team Name */}
         <Controller
           name="name"
@@ -189,45 +210,54 @@ export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
         />
 
         {/* Team Color */}
-        <Field>
-          <FieldTitle>{translations("Team Color")}</FieldTitle>
-          <div className="flex gap-3 flex-wrap">
-            {colorArray.map((color, index) => {
-              const isSelected = editedColor === color.from;
+        <Controller
+          name="color"
+          control={form.control}
+          rules={{
+            // An unparseable colour renders the team's card transparent, not an error.
+            validate: (value) =>
+              HEX_COLOR.test(String(value ?? "")) || translations("Use a hex colour like #5A8CC6"),
+          }}
+          render={({ field, fieldState }) => (
+            <ColorField
+              id="team-color"
+              label={translations("Team Color")}
+              value={String(field.value ?? "")}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              hint={translations("Shown on the team's card and next to its name.")}
+              invalid={fieldState.invalid}
+              error={fieldState.error}
+            />
+          )}
+        />
 
-              return (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    form.setValue("color", color.from);
-                  }}
-                  className={`w-12 h-12 rounded-lg transition-all ${
-                    isSelected ? "ring-4 ring-offset-2 ring-ring scale-105" : ""
-                  } hover:scale-110`}
-                  style={{
-                    background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
-                  }}
-                />
-              );
-            })}
-          </div>
-        </Field>
-
-        {/* Created Date */}
-        {selectedTeam?.createdAt && (
-          <div className="pt-4 border-t border-border">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <IconCalendar className="w-4 h-4" />
-              <span>
-                {translations("Created on")} {dayjs(selectedTeam.createdAt).format("MMM D, YYYY")}
-              </span>
-            </div>
-          </div>
-        )}
+        <Controller
+          name="googleLink"
+          control={form.control}
+          rules={{
+            validate: (value) =>
+              !value ||
+              value.startsWith("https://") ||
+              translations("Please enter a valid url (https://...)"),
+          }}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="google-link">{translations("Google review link")}</FieldLabel>
+              <Input
+                {...field}
+                id="google-link"
+                placeholder={translations("Enter google link")}
+                aria-invalid={fieldState.invalid}
+                className="h-10"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
         {/* Submit */}
-        <div className="flex items-end justify-end pt-4">
+        <div className="flex items-end justify-end pt-2">
           <Button type="submit" disabled={isLoading} className="bg-primary">
             {isLoading ? translations("Saving") : translations("Save Changes")}
           </Button>
@@ -237,15 +267,70 @@ export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   );
 }
 
-// This panel is given the team id, not the row the other panels receive.
-export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
-  const [memberToDelete, setMemberToDelete] = useState<{ id: string; name?: string } | null>(null);
+/**
+ * `canManage` false is the read-only roster a plain member gets. The add/remove endpoints are
+ * owner/admin-only, so the "not in this team yet" query is skipped rather than left to 403.
+ */
+export function AddMembers({
+  selectedTeam,
+  canManage = true,
+}: {
+  selectedTeam: string;
+  canManage?: boolean;
+}) {
+  const [memberToDelete, setMemberToDelete] = useState<{
+    id: string;
+    name?: string;
+    isInvitation?: boolean;
+  } | null>(null);
   const { t: translations } = useTranslation();
+  const { user } = useUser();
+  // Granting SUPER_ADMIN is the owner's alone; the API refuses it for an ADMIN inviter.
+  const canInviteSuperAdmin = user?.role === UserRole.SUPADM;
   const teamID = selectedTeam;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const { isLoading: isLoadingNotTeamsUser, data: notTeamMembersData } = useNotTeamMembers(teamID);
+  const { isLoading: isLoadingNotTeamsUser, data: notTeamMembersData } = useNotTeamMembers(
+    canManage ? teamID : "",
+  );
   const queryClient = useQueryClient();
   const removeteam = useRemoveUserFromTeam(selectedTeam);
+  const deleteInvite = useDeleteInviteMutation(selectedTeam);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+
+  // "Add existing user" moves an existing account into the team; "Invite new user" emails
+  // someone without one a link to create it.
+  const inviteForm = useForm<{ name: string; email: string; role: string }>({
+    defaultValues: { name: "", email: "", role: UserRole.MEMBER },
+  });
+
+  const inviteNewUser = useMutation({
+    mutationFn: async (values: { name: string; email: string; role: string }) => {
+      const [{ orgId }, { userId }] = await Promise.all([getOrgIdRole(), getUserID()]);
+
+      return (
+        await inviteTeamMember({
+          name: values.name.trim(),
+          email: values.email.trim(),
+          orgId,
+          invitedBy: userId,
+          teamId: selectedTeam,
+          type: "TEAM",
+          role: values.role,
+        })
+      ).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: teamKeys.invitedByTeam(selectedTeam) });
+      queryClient.invalidateQueries({ queryKey: teamKeys.notMembers() });
+      queryClient.invalidateQueries({ queryKey: teamKeys.details() });
+      toast.success(translations("Invite sent successfully."));
+      inviteForm.reset();
+      setIsInviteOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || translations("An error occurred"));
+    },
+  });
 
   const getRoleStyles = (role: string) => {
     switch (role) {
@@ -287,8 +372,24 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
     useTeamMembersFromInvitation(teamID);
   const addTeams = useAddUsertoTeams();
 
-  const teamMembersObjArr = [
-    ...(teamsMembersData?.invitations || []),
+  /**
+   * Members and unaccepted invitations in one list. The flag keeps them apart in the row: an
+   * invitation has no role, photo or join date, and removing it deletes the invite.
+   */
+  const teamMembersObjArr: {
+    id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    profilePhoto?: string;
+    createdAt?: string;
+    isInvitation?: boolean;
+  }[] = [
+    ...(teamsMembersData?.invitations || []).map((invite: { id?: string }) => ({
+      ...invite,
+      isInvitation: true,
+    })),
     ...(teamsMembersData?.members || []),
   ];
 
@@ -361,102 +462,157 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
     );
   }
 
+  // The same table the workspace-wide People list uses (`users/parts/PeopleList.tsx`).
   let membersGridContent: React.ReactNode;
   if (isLoadingMembers) {
-    membersGridContent = Array.from({ length: 6 }).map((_, index) => (
-      <Card key={index} className="p-5">
-        <Skeleton className="h-20 w-full" />
-      </Card>
-    ));
+    membersGridContent = (
+      <div className="flex flex-col divide-y divide-border">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="flex items-center gap-4 py-3">
+            <Skeleton className="size-9 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3.5 w-32" />
+              <Skeleton className="h-3 w-44" />
+            </div>
+            <Skeleton className="h-5 w-24 rounded-full" />
+            <Skeleton className="hidden h-3 w-28 sm:block" />
+          </div>
+        ))}
+      </div>
+    );
   } else if (teamMembersObjArr?.length) {
-    membersGridContent = teamMembersObjArr.map((member, _i) => {
-      const isMemberActive = Boolean(member?.active);
-      let memberStatusClassName = "text-muted-foreground";
-      let memberStatusLabel = translations("Inactive");
+    membersGridContent = (
+      <div className="flex flex-col">
+        <div className="hidden gap-4 border-b border-border pb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:flex">
+          <span className="flex-1">{translations("Person")}</span>
+          <span className="w-32">{translations("Role")}</span>
+          <span className="w-40">{translations("Joined")}</span>
+          <span className="w-20 text-right">{translations("Actions")}</span>
+        </div>
 
-      if (isMemberActive) {
-        memberStatusClassName = "text-primary";
-        memberStatusLabel = translations("Active");
-      }
+        <div className="flex flex-col divide-y divide-border">
+          {teamMembersObjArr.map((member) => {
+            const isInvitation = Boolean(member?.isInvitation);
+            const roleData = member?.role ? getRoleStyles(member.role) : null;
+            const RoleIcon = roleData?.icon;
+            const joinedAt = member?.createdAt ? dayjs(member.createdAt).format("MMM D, YYYY") : "";
 
-      return (
-        <Card key={member?.id} className="p-4 flex flex-col justify-between">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 shrink-0">
-                <AvatarImage src={getFileUrlFromKey(member?.profilePhoto)} />
-                <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
-                  {member.name?.toUpperCase().slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
+            return (
+              <div
+                key={member?.id}
+                className={cn(
+                  "flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:gap-4",
+                  isInvitation && "opacity-90",
+                )}
+              >
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  {isInvitation ? (
+                    // A dashed ring says "not here yet".
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-xs text-muted-foreground">
+                      {member.name?.toUpperCase().slice(0, 2)}
+                    </span>
+                  ) : (
+                    <Avatar className="size-9 shrink-0">
+                      <AvatarImage src={getFileUrlFromKey(member?.profilePhoto ?? "")} />
+                      <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+                        {member.name?.toUpperCase().slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
 
-              <div>
-                <h3 className="font-semibold text-sm">{member.name}</h3>
+                  <div className="flex min-w-0 flex-col">
+                    <span
+                      className={cn(
+                        "truncate text-sm font-medium",
+                        isInvitation && "text-muted-foreground",
+                      )}
+                    >
+                      {member.name}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {member.phone ? `${member.email} · ${member.phone}` : member.email}
+                    </span>
+                  </div>
+                </div>
 
-                {/* Role only if exists */}
-                {member?.role &&
-                  (() => {
-                    const roleData = getRoleStyles(member.role);
-                    const RoleIcon = roleData.icon;
+                <div className="sm:w-32">
+                  {(() => {
+                    if (isInvitation) {
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="text-xs font-normal text-muted-foreground"
+                        >
+                          {translations("Invited")}
+                        </Badge>
+                      );
+                    }
 
-                    return (
-                      <Badge
-                        className={`text-xs capitalize flex items-center gap-1 px-2 py-0.5 border ${roleData.className}`}
-                      >
-                        <RoleIcon className="w-3 h-3" />
-                        {member.role}
-                      </Badge>
-                    );
+                    if (roleData && RoleIcon) {
+                      return (
+                        <Badge
+                          variant="outline"
+                          className={`capitalize inline-flex items-center gap-1 text-xs font-normal ${roleData.className}`}
+                        >
+                          <RoleIcon className="size-3" />
+                          {member.role}
+                        </Badge>
+                      );
+                    }
+
+                    return null;
                   })()}
+                </div>
+
+                <div className="text-xs text-muted-foreground sm:w-40">
+                  {(() => {
+                    if (!joinedAt) return "—";
+                    return isInvitation ? `${translations("Invited")} ${joinedAt}` : joinedAt;
+                  })()}
+                </div>
+
+                <div className="flex sm:w-20 sm:justify-end">
+                  {canManage && member?.role !== UserRole.SUPADM && (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={
+                              isInvitation
+                                ? translations("Delete invite")
+                                : translations("Remove Member")
+                            }
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => setMemberToDelete(member as { id: string })}
+                          />
+                        }
+                      >
+                        {isInvitation ? (
+                          <IconTrash className="size-4" />
+                        ) : (
+                          <IconUserX className="size-4" />
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {isInvitation
+                          ? translations("Delete invite")
+                          : translations("Remove Member")}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-            </div>
-            {member?.role !== UserRole.SUPADM && (
-              <Button variant="destructive" onClick={() => setMemberToDelete(member)}>
-                <IconUserX />
-              </Button>
-            )}
-          </div>
-
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <IconMail className="w-4 h-4" />
-              <span className="truncate">{member.email}</span>
-            </div>
-
-            {/* Phone only if exists */}
-            {member?.phone && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <IconPhone className="w-4 h-4" />
-                <span>{member.phone}</span>
-              </div>
-            )}
-
-            {/* Joined date formatted with dayjs */}
-            {member?.createdAt && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <IconCalendar className="w-4 h-4" />
-                <span>
-                  {translations("Joined")} {dayjs(member.createdAt).format("MMM D, YYYY")}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">{translations("Status")}</span>
-
-              {/* Active boolean handling */}
-              <span className={memberStatusClassName}>{memberStatusLabel}</span>
-            </div>
-          </div>
-        </Card>
-      );
-    });
+            );
+          })}
+        </div>
+      </div>
+    );
   } else {
     membersGridContent = (
-      <div className="col-span-full text-center py-12 text-muted-foreground">
-        <IconUsers className="w-12 h-12 mx-auto opacity-30" />
+      <div className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
+        <IconUsers className="w-12 h-12 opacity-30" />
         <p>{translations("No members in this team yet")}</p>
       </div>
     );
@@ -469,40 +625,180 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
         <div>
           <h2 className="text-xl mb-1">{translations("Team Members")}</h2>
           <p className="text-sm text-muted-foreground">
-            {translations("Manage who has access to this team")}
+            {canManage
+              ? translations("Manage who has access to this team")
+              : translations("People who have access to this team")}
           </p>
         </div>
 
-        <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
-          <DialogTrigger render={<Button />}>
-            <IconUserPlus className="w-4 h-4 mr-2" />
-            {translations("Add Member")}
-          </DialogTrigger>
+        {canManage && (
+          <div className="flex items-center gap-2">
+            <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+              <DialogTrigger render={<Button variant="outline" />}>
+                <IconUserPlus className="w-4 h-4 mr-2" />
+                {translations("Add existing user")}
+              </DialogTrigger>
 
-          {/* Dialog content unchanged */}
-          <DialogContent className="p-4">
-            <div className="space-y-3">
-              <DialogHeader>
-                <DialogTitle>{translations("Add Team Members")}</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                  {translations("Select members to add")}
-                </DialogDescription>
-              </DialogHeader>
+              <DialogContent className="p-4">
+                <div className="space-y-3">
+                  <DialogHeader>
+                    <DialogTitle>{translations("Add existing user")}</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
+                      {translations("People who already have an account but are not in this team.")}
+                    </DialogDescription>
+                  </DialogHeader>
 
-              <Separator />
+                  <Separator />
 
-              <ScrollArea className="h-60">{addTeamMembersContent}</ScrollArea>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-      {/* Members Grid */}
-      <ScrollArea className="h-[calc(100vh-275px)] min-h-64 p-1">
-        <div className="p-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {membersGridContent}
+                  <ScrollArea className="h-60">{addTeamMembersContent}</ScrollArea>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog
+              open={isInviteOpen}
+              onOpenChange={(open) => {
+                setIsInviteOpen(open);
+                if (!open) inviteForm.reset();
+              }}
+            >
+              <DialogTrigger render={<Button />}>
+                <IconMailPlus className="w-4 h-4 mr-2" />
+                {translations("Invite new user")}
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{translations("Invite new user")}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    {translations("They will join this team as soon as they accept.")}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <form
+                  className="flex flex-col gap-4"
+                  onSubmit={inviteForm.handleSubmit((values) => inviteNewUser.mutate(values))}
+                >
+                  <Controller
+                    control={inviteForm.control}
+                    name="name"
+                    rules={{
+                      required: translations("Name is required"),
+                      minLength: { value: 2, message: translations("Invalid name.") },
+                    }}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor="invite-name">{translations("Name")}</FieldLabel>
+                        <Input
+                          id="invite-name"
+                          autoComplete="off"
+                          placeholder={translations("Name")}
+                          {...field}
+                        />
+                        {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    control={inviteForm.control}
+                    name="email"
+                    rules={{
+                      required: translations("Email is required"),
+                      pattern: {
+                        value: /^\S+@\S+\.\S+$/,
+                        message: translations("Please enter a valid email address"),
+                      },
+                    }}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor="invite-email">{translations("Email")}</FieldLabel>
+                        <Input
+                          id="invite-email"
+                          type="email"
+                          autoComplete="off"
+                          placeholder="name@company.com"
+                          {...field}
+                        />
+                        {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
+                      </Field>
+                    )}
+                  />
+
+                  <Field>
+                    <FieldLabel htmlFor="invite-role">{translations("User Role")}</FieldLabel>
+                    <Select
+                      value={inviteForm.watch("role")}
+                      onValueChange={(value) => inviteForm.setValue("role", value ?? "")}
+                      items={[
+                        ...(canInviteSuperAdmin
+                          ? [{ value: UserRole.SUPADM, label: translations("Super Admin") }]
+                          : []),
+                        { value: UserRole.ADM, label: translations("Admin") },
+                        { value: UserRole.MEMBER, label: translations("Staff") },
+                      ]}
+                    >
+                      <SelectTrigger id="invite-role" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {canInviteSuperAdmin && (
+                          <SelectItem value={UserRole.SUPADM}>
+                            <div className="flex items-center gap-2">
+                              <IconShield className="w-3.5 h-3.5 text-primary" />
+                              <span>{translations("Super Admin")}</span>
+                            </div>
+                          </SelectItem>
+                        )}
+                        <SelectItem value={UserRole.ADM}>
+                          <div className="flex items-center gap-2">
+                            <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
+                            <span>{translations("Admin")}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value={UserRole.MEMBER}>
+                          <div className="flex items-center gap-2">
+                            <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
+                            <span>{translations("Staff")}</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+
+                  <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <IconMail className="mt-0.5 size-3.5 shrink-0" />
+                    {translations("We'll email an invite link so they can set their own password.")}
+                  </p>
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsInviteOpen(false)}
+                      disabled={inviteNewUser.isPending}
+                    >
+                      {translations("Cancel")}
+                    </Button>
+
+                    <Button type="submit" disabled={inviteNewUser.isPending}>
+                      {inviteNewUser.isPending && (
+                        <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
+                      )}
+                      {inviteNewUser.isPending
+                        ? translations("Inviting")
+                        : translations("Send invite")}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-        </div>
+        )}
+      </div>
+      {/* Members list */}
+      <ScrollArea className="h-[calc(100vh-275px)] min-h-64">
+        <div className="px-1">{membersGridContent}</div>
       </ScrollArea>
       <Dialog
         open={!!memberToDelete}
@@ -512,11 +808,19 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{translations("Remove Member")}</DialogTitle>
+            <DialogTitle>
+              {memberToDelete?.isInvitation
+                ? translations("Delete invite")
+                : translations("Remove Member")}
+            </DialogTitle>
             <DialogDescription>
-              {translations("Are you sure you want to remove")}{" "}
+              {memberToDelete?.isInvitation
+                ? translations(
+                    "This invitation will stop working. You can always invite them again.",
+                  )
+                : translations("Are you sure you want to remove")}{" "}
               <span className="font-semibold">{memberToDelete?.name}</span>{" "}
-              {translations("from this team?")}
+              {!memberToDelete?.isInvitation && translations("from this team?")}
             </DialogDescription>
           </DialogHeader>
 
@@ -528,11 +832,16 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
             <Button
               variant="destructive"
               onClick={() => {
-                removeTeam(memberToDelete?.id ?? "");
+                // An invitation names no user yet, so remove-from-team has nothing to act on.
+                if (memberToDelete?.isInvitation) {
+                  deleteInvite.mutate(memberToDelete.id);
+                } else {
+                  removeTeam(memberToDelete?.id ?? "");
+                }
                 setMemberToDelete(null);
               }}
             >
-              {translations("Remove")}
+              {memberToDelete?.isInvitation ? translations("Delete") : translations("Remove")}
             </Button>
           </div>
         </DialogContent>
@@ -550,29 +859,6 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const deleteTeamMutation = useDeleteTeamMutation();
-  const { data: teamsMembersData } = useTeamMembersFromInvitation(teamId);
-  const editTeamMutation = useEditTeamMutation(teamId, () => {});
-
-  const form = useForm({
-    defaultValues: {
-      googleLink: "",
-    },
-  });
-
-  // set default value from API
-  useEffect(() => {
-    if (teamsMembersData?.googleLink) {
-      form.setValue("googleLink", teamsMembersData.googleLink);
-    }
-  }, [form, teamsMembersData.googleLink]);
-  const onSubmit = (data: { googleLink?: string }) => {
-    // simple validation
-    if (data.googleLink && !data.googleLink.startsWith("https://")) {
-      return;
-    }
-
-    editTeamMutation.mutate(data);
-  };
 
   const handleDeleteTeam = async (deleteTeamId: string) => {
     setIsDeleting(true);
@@ -593,64 +879,27 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
 
   return (
     <>
-      {/* FORM */}
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Controller
-          name="googleLink"
-          control={form.control}
-          rules={{
-            validate: (value) =>
-              value.startsWith("https://") ||
-              value === "" ||
-              translations("Please enter a valid url (https://...)"),
-          }}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="google-link">{translations("Google review link")}</FieldLabel>
-              <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
-                <Input
-                  {...field}
-                  id="google-link"
-                  placeholder={translations("Enter google link")}
-                  aria-invalid={fieldState.invalid}
-                />
-                <Button
-                  size="sm"
-                  type="submit"
-                  className="bg-primary min-w-full sm:min-w-18"
-                  disabled={editTeamMutation.isPending}
-                >
-                  {editTeamMutation.isPending ? <IconClock /> : translations("Save")}
-                </Button>
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-      </form>
-
       {/* DELETE SECTION */}
-      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-        <div className="flex items-start gap-3">
-          <IconTrash className="h-5 w-5 shrink-0 text-destructive" />
-          <div className="flex flex-col gap-2 items-start">
-            <div>
-              <h4 className="text-sm font-medium text-destructive">
-                {translations("Delete Team")}
-              </h4>
-              <p className="text-xs text-muted-foreground">
-                {translations(
-                  "Permanently delete this team? Team members will remain in your organization",
-                )}
-                .
-              </p>
-            </div>
-
-            <Button variant="destructive" size="sm" onClick={() => setIsDialogOpen(true)}>
-              {translations("Delete Team")}
-            </Button>
-          </div>
+      <div className="flex items-start justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-destructive">{translations("Delete Team")}</p>
+          <p className="text-xs text-muted-foreground">
+            {translations(
+              "Permanently delete this team? Team members will remain in your organization",
+            )}
+            .
+          </p>
         </div>
+
+        <Button
+          variant="destructive"
+          size="sm"
+          className="shrink-0"
+          onClick={() => setIsDialogOpen(true)}
+        >
+          <IconTrash className="w-3.5 h-3.5 mr-1.5" />
+          {translations("Delete Team")}
+        </Button>
       </div>
 
       {/* DIALOG */}
@@ -751,6 +1000,68 @@ const FEATURES_WITH_SUBSCRIPTION: {
   { feature: TeamFeature.Settings, label: "Settings" },
 ];
 
+/** How long after the last switch flip the section saves itself. */
+const AUTOSAVE_DELAY_MS = 700;
+/** How long "Saved" stays up before the section goes quiet again. */
+const SAVED_LABEL_MS = 2000;
+
+type AutosaveStatus = "idle" | "saving" | "saved";
+
+/**
+ * Debounced autosave for a section with no Save button. `draft` is `null` until the user
+ * touches something; every new draft restarts the timer, so four flipped switches are one
+ * request and none can land out of order. `save` reports back through `done(ok)`.
+ */
+function useAutosave<T>(draft: T | null, save: (draft: T, done: (ok: boolean) => void) => void) {
+  const [status, setStatus] = useState<AutosaveStatus>("idle");
+  // `save` is a new function every render; in the deps it would reschedule the timer forever.
+  const saveRef = useRef(save);
+  saveRef.current = save;
+
+  useEffect(() => {
+    if (draft === null) return;
+    setStatus("saving");
+    const timer = setTimeout(() => {
+      saveRef.current(draft, (ok) => setStatus(ok ? "saved" : "idle"));
+    }, AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [draft]);
+
+  useEffect(() => {
+    if (status !== "saved") return;
+    const timer = setTimeout(() => setStatus("idle"), SAVED_LABEL_MS);
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  return status;
+}
+
+/** Stands in for the Save button: what the section is doing with your changes. */
+function AutosaveStatusLabel({ status }: Readonly<{ status: AutosaveStatus }>) {
+  const { t: translations } = useTranslation();
+
+  if (status === "idle") return null;
+
+  return (
+    <span
+      aria-live="polite"
+      className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground"
+    >
+      {status === "saving" ? (
+        <>
+          <IconLoader2 className="size-3.5 animate-spin" />
+          {translations("Saving")}
+        </>
+      ) : (
+        <>
+          <IconCheck className="size-3.5" />
+          {translations("Saved")}
+        </>
+      )}
+    </span>
+  );
+}
+
 export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
   const teamId = selectedTeam?.id as string;
@@ -768,31 +1079,31 @@ export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam
     () => new Set((data?.features || []).map((f) => f.feature)),
     [data],
   );
-  const [pendingToggles, setPendingToggles] = useState<Record<string, boolean>>({});
-  const checked = useMemo(() => {
-    const next = new Set(serverChecked);
+  // `null` means "untouched" — the server's set is what the switches show until then.
+  const [draft, setDraft] = useState<Set<string> | null>(null);
+  const checked = draft ?? serverChecked;
 
-    Object.entries(pendingToggles).forEach(([feature, isEnabled]) => {
-      if (isEnabled) next.add(feature);
-      else next.delete(feature);
-    });
-
-    return next;
-  }, [pendingToggles, serverChecked]);
-
-  const handleToggle = (feature: string) => {
-    setPendingToggles((prev) => ({
-      ...prev,
-      [feature]: !(prev[feature] ?? serverChecked.has(feature)),
-    }));
-  };
-
-  const handleSave = () => {
-    updateMutation.mutate(Array.from(checked), {
+  const status = useAutosave(draft, (value, done) => {
+    updateMutation.mutate(Array.from(value), {
       onSuccess: () => {
-        setPendingToggles({});
+        // Only drop the draft while it is still the one that was sent; a switch flipped
+        // mid-request has replaced it and is queued to save in its turn.
+        setDraft((current) => (current === value ? null : current));
+        done(true);
+      },
+      onError: () => {
+        // The mutation has toasted why; fall back to what the server actually holds.
+        setDraft(null);
+        done(false);
       },
     });
+  });
+
+  const handleToggle = (feature: string) => {
+    const next = new Set(checked);
+    if (next.has(feature)) next.delete(feature);
+    else next.add(feature);
+    setDraft(next);
   };
 
   if (isLoading) {
@@ -807,18 +1118,16 @@ export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam
 
   return (
     <div className="space-y-4 pt-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl mb-1">{translations("Feature Access")}</h2>
           <p className="text-sm text-muted-foreground">
             {translations(
-              "Select which features this team can access. Org owners always have full access.",
+              "Select which features this team can access. Changes save on their own. Org owners always have full access.",
             )}
           </p>
         </div>
-        <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
-          {updateMutation.isPending ? translations("Saving") : translations("Save Changes")}
-        </Button>
+        <AutosaveStatusLabel status={status} />
       </div>
 
       <Card>
@@ -868,7 +1177,7 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
   const { data: allChannelsList, isLoading: isLoadingChannels } = useWaSettings();
   const updateMutation = useUpdateTeamChannels(teamId);
 
-  // `null` means "no local edits yet" — the server value is shown until the user touches something.
+  // `null` means "untouched" — the server's value is shown until then.
   const [draft, setDraft] = useState<{ allChannels: boolean; ids: Set<string> } | null>(null);
 
   const serverState = useMemo(
@@ -880,7 +1189,6 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
   );
 
   const current = draft ?? serverState;
-  const isDirty = draft !== null;
 
   const toggleChannel = (channelId: string) => {
     const ids = new Set(current.ids);
@@ -889,12 +1197,22 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
     setDraft({ allChannels: false, ids });
   };
 
-  const handleSave = () => {
+  const status = useAutosave(draft, (value, done) => {
     updateMutation.mutate(
-      { allChannels: current.allChannels, channelIds: Array.from(current.ids) },
-      { onSuccess: () => setDraft(null) },
+      { allChannels: value.allChannels, channelIds: Array.from(value.ids) },
+      {
+        onSuccess: () => {
+          // See TeamFeatureAccess: clear the draft only while it is still the saved one.
+          setDraft((previous) => (previous === value ? null : previous));
+          done(true);
+        },
+        onError: () => {
+          setDraft(null);
+          done(false);
+        },
+      },
     );
-  };
+  });
 
   if (isLoading || isLoadingChannels) {
     return (
@@ -911,77 +1229,77 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
 
   return (
     <div className="space-y-4 pt-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl mb-1">{translations("Channel Access")}</h2>
           <p className="text-sm text-muted-foreground">
             {translations(
-              "Choose which channels this team can see. Org owners always see every channel.",
+              "Choose which channels this team can see. Changes save on their own. Org owners always see every channel.",
             )}
           </p>
         </div>
-        <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending || !isDirty}>
-          {updateMutation.isPending ? translations("Saving") : translations("Save Changes")}
-        </Button>
+        <AutosaveStatusLabel status={status} />
       </div>
 
-      <Card>
-        <CardContent className="pt-4 space-y-3">
-          <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
+      {/* "All channels" is the mode control; the list below it stays visible while it is on,
+          checked and dimmed, so what "all" covers can still be read. */}
+      <Card size="sm" className="py-0">
+        <CardContent className="divide-y divide-border px-0">
+          <label
+            htmlFor="team-all-channels"
+            className="flex cursor-pointer items-center justify-between gap-4 px-4 py-3"
+          >
             <div>
-              <span>{translations("All channels")}</span>
+              <p className="text-sm font-medium">{translations("All channels")}</p>
               <p className="text-xs text-muted-foreground">
                 {translations("Includes any channel connected in the future.")}
               </p>
             </div>
             <Switch
+              id="team-all-channels"
               checked={current.allChannels}
               onCheckedChange={(checked) =>
                 setDraft({ allChannels: checked, ids: checked ? new Set() : current.ids })
               }
             />
-          </div>
+          </label>
 
-          {!current.allChannels && (
-            <>
-              <Separator />
-              {channels.length === 0 ? (
-                <p className="text-sm text-muted-foreground px-1 py-2">
-                  {translations("No channels are connected to this organisation yet.")}
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {channels.map((channel) => {
-                    const { label, platform } = describeChannel(channel);
-                    return (
-                      <div
-                        key={channel.id}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-                      >
-                        <div className="min-w-0">
-                          <span className="block truncate">{label}</span>
-                          <Badge variant="secondary" className="mt-1 text-[10px]">
-                            {platform}
-                          </Badge>
-                        </div>
-                        <Switch
-                          checked={current.ids.has(channel.id)}
-                          onCheckedChange={() => toggleChannel(channel.id)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+          {channels.length === 0 ? (
+            <p className="px-4 py-3 text-sm text-muted-foreground">
+              {translations("No channels are connected to this organisation yet.")}
+            </p>
+          ) : (
+            channels.map((channel) => {
+              const { label, platform } = describeChannel(channel);
 
-              {hasNoGrant && (
-                <p className="text-sm text-destructive px-1">
-                  {translations(
-                    "No channels selected — members of this team will not see any channel.",
+              return (
+                <label
+                  key={channel.id}
+                  htmlFor={`team-channel-${channel.id}`}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-2.5 text-sm",
+                    current.allChannels ? "opacity-60" : "cursor-pointer",
                   )}
-                </p>
+                >
+                  <Checkbox
+                    id={`team-channel-${channel.id}`}
+                    checked={current.allChannels || current.ids.has(channel.id)}
+                    disabled={current.allChannels}
+                    onCheckedChange={() => toggleChannel(channel.id)}
+                  />
+                  <span className="min-w-0 flex-1 truncate">{label}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{platform}</span>
+                </label>
+              );
+            })
+          )}
+
+          {hasNoGrant && (
+            <p className="px-4 py-3 text-sm text-destructive">
+              {translations(
+                "No channels selected — members of this team will not see any channel.",
               )}
-            </>
+            </p>
           )}
         </CardContent>
       </Card>

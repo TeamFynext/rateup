@@ -163,6 +163,13 @@ User-visible changes are announced in-app from the megaphone button in the icon 
   token/styling parity work, tests, internal types, pure bug fixes with no behaviour shift), don't.
 - **Add an entry to `src/config/announcements.ts`** — that file is the only source. Order does not
   matter; the list is sorted by `publishedAt`, newest first.
+- **Keep `summary` to one or two sentences.** These are read by customers, not by us: they want to
+  know what changed and roughly what it means for them, not how it was built. Name the change and
+  its one consequence, then stop. Leave out the reasoning, the edge cases, the before-and-after,
+  the internal component and file names, and the list of everything else that moved with it — all
+  of that belongs in the PR description. If a change really is too big for two sentences, it is
+  usually two announcements. Same for `title`: under ~50 characters, since the card clamps to two
+  lines.
 - **Never reuse or renumber an `id`.** Read state is a list of ids in the reader's `localStorage`
   (`rateup:whats-new:read`), so a changed id resurfaces as unread for everyone, and an entry
   inheriting a retired id is never seen. Convention: `YYYY-MM-DD-short-slug`.

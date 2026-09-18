@@ -61,7 +61,7 @@ export function ZohoContactsTable({ integration }: { integration: AppIntegration
   if (!integration) return null;
 
   return (
-    <Card className="w-full rounded-2xl border shadow-sm">
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
           <ZohoLogo className="h-8 w-8" />
@@ -181,7 +181,7 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
 
   return (
     <>
-      <Card className="w-full rounded-2xl border shadow-sm">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
             <ZohoLogo className="h-8 w-8" />
@@ -339,7 +339,7 @@ export function BiginContactsTable({ integration }: { integration: AppIntegratio
   }
 
   return (
-    <Card className="w-full rounded-2xl border shadow-sm">
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
           <BiginLogo className="h-8 w-8" />
