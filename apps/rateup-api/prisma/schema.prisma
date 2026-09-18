@@ -954,6 +954,7 @@ model Contact {
   @@index([orgId, waMessageAssignStatus, lastReceivedMessageTimeStamp(sort: Desc)])
   @@index([orgId, isSpam])
   @@index([orgId, lifecycleId])
+  @@index([orgId, email])
 }
 
 model ContactLabel {
