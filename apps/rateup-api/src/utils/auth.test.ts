@@ -171,7 +171,14 @@ describe("hasAccessOfTeamAdmin", () => {
     await expect(hasAccessOfTeamAdmin("team-1", "user-1")).resolves.toBe(true);
   });
 
-  test("denies a team member who is not a super admin", async () => {
+  test("grants access to an org admin of the team's org", async () => {
+    db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
+    db.orgMember.findFirst.mockResolvedValue({ id: "om-1", role: "ADMIN" });
+
+    await expect(hasAccessOfTeamAdmin("team-1", "user-1")).resolves.toBe(true);
+  });
+
+  test("denies a team member who is neither an owner nor an admin", async () => {
     db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
 
     await expect(hasAccessOfTeamAdmin("team-1", "user-1")).resolves.toBe(false);
@@ -184,14 +191,14 @@ describe("hasAccessOfTeamAdmin", () => {
     expect(db.orgMember.findFirst).not.toHaveBeenCalled();
   });
 
-  test("looks for the admin role within the org owning that team", async () => {
+  test("looks for a managing role within the org owning that team", async () => {
     db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
 
     await hasAccessOfTeamAdmin("team-1", "user-1");
 
     expect(db.orgMember.findFirst.mock.calls[0][0].where).toMatchObject({
       userId: "user-1",
-      role: "SUPER_ADMIN",
+      role: { in: ["SUPER_ADMIN", "ADMIN"] },
       org: { teams: { some: { id: "team-1" } } },
     });
   });
