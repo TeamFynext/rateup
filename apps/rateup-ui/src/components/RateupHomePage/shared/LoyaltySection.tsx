@@ -1,3 +1,4 @@
+import HeroBackground from "./hero-bg/HeroBackground";
 import { ClosingCta } from "./home-ui";
 
 /**
@@ -11,6 +12,7 @@ export default function LoyaltySection() {
   return (
     <ClosingCta
       id="demo"
+      decoration={<HeroBackground className="opacity-45" />}
       eyebrow="Set up on your own WhatsApp number in 20 minutes"
       title="Ready to turn one sale into a lifetime?"
     >

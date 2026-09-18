@@ -12,8 +12,8 @@ import HeroSectionNew from "@/components/RateupHomePage/shared/HeroSectionNew";
 import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
 import Integrations from "@/components/RateupHomePage/shared/Integrations";
 import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
+import Overview from "@/components/RateupHomePage/shared/Overview";
 import Problem from "@/components/RateupHomePage/shared/Problem";
-import ProductVideo from "@/components/RateupHomePage/shared/ProductVideo";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
 import { buildPageHead } from "@/lib/metadata";
 import { rateupLogoOg } from "@/utils/constants.ts";
@@ -101,7 +101,7 @@ function RouteComponent() {
   return (
     <Layout>
       <HeroSectionNew />
-      <ProductVideo />
+      <Overview />
       <TrustedBy />
       <Problem />
       <HowItWorks />

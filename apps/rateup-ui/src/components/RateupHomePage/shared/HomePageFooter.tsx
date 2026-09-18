@@ -12,7 +12,9 @@ import { Image } from "@unpic/react";
 import type { ReactNode } from "react";
 
 import { MetaLockup } from "@/components/integrations/logos";
-import { imagesPath, rateupLogoWhite } from "@/utils/constants";
+import { imagesPath } from "@/utils/constants";
+
+import RateupLockup from "./RateupLockup";
 
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
@@ -104,7 +106,7 @@ export default function HomePageFooter() {
             <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/5 px-3 py-1.75">
               {/* Mono-white cut: the colour lockup's #1c2b33 wordmark is invisible on navy.
                   The label drops "Meta" — the lockup carries the wordmark already. */}
-              <MetaLockup onDark className="h-6" />
+              <MetaLockup onDark className="h-2.5" />
               <span className="text-[13.5px] font-medium text-white/78">Business Partner</span>
             </div>
 
@@ -205,19 +207,9 @@ export default function HomePageFooter() {
           </FooterCol>
         </div>
 
-        {/* The comp signs off with the lockup set the full width of the footer. Its own asset
-            is 2.61:1 and ours is 2.52:1, so this lands at the same ~385px the comp draws. */}
-        <div className="py-2.5 sm:pt-4.5 sm:pb-1.5">
-          <Link to="/" aria-label="RateUp home" className="block">
-            <Image
-              src={rateupLogoWhite}
-              alt="RateUp"
-              width={1000}
-              height={397}
-              loading="lazy"
-              decoding="async"
-              className="mx-auto block h-auto w-full max-w-250 opacity-90"
-            />
+        <div className="py-5 sm:py-7">
+          <Link to="/" aria-label="RateUp home" className="mx-auto block max-w-192.5">
+            <RateupLockup onDark className="opacity-90" />
           </Link>
         </div>
 
