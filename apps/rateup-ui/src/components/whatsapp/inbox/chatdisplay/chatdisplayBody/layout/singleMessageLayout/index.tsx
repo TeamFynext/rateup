@@ -10,6 +10,7 @@ import {
   IconLock,
   IconRobot,
   IconShieldOff,
+  IconSpeakerphone,
   IconUserCog,
 } from "@tabler/icons-react";
 import type { EmojiClickData } from "emoji-picker-react";
@@ -156,6 +157,13 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const shouldShowSenderAvatar = exchangeProcess === "send" && Boolean(messageObject?.sender);
   const senderName = messageObject?.sender?.name ?? "Automation";
   const assignStatus = messageObject?.messageBody?.internal?.assignStatus;
+  // TEMP: surfaces the raw `sourceMessage` beside each message while the
+  // campaign/automation labelling is being verified.
+  const sourceTag = messageObject?.sourceMessage ? (
+    <span className="rounded border px-1 font-mono text-[10px] uppercase opacity-70">
+      {messageObject.sourceMessage}
+    </span>
+  ) : null;
   const sendnewWaMessage = useSendNewWaMessage(
     selectedContact?.id,
     currentUser?.teamId,
@@ -294,17 +302,29 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   // `muted` bubble rather than the agent's `default` fill, so an automated reply
   // is still distinguishable from one a person wrote.
   if (isAutomatedSend) {
+    // Campaign sends have no sender either, so they land here too; the API's
+    // `sourceMessage` tells them apart. Compared loosely — older rows were
+    // written in lowercase (see isCampaignMessage in the API worker).
+    {
+      JSON.stringify(messageObject?.sourceMessage);
+    }
+    const isCampaign = messageObject?.sourceMessage?.toLowerCase() === "campaign";
     return (
       <Message align="end">
         <MessageContent>
-          <MessageHeader>
-            <IconRobot className="size-3 shrink-0" />
-            Automation
+          <MessageHeader className="gap-1">
+            {isCampaign ? (
+              <IconSpeakerphone className="size-3 shrink-0" />
+            ) : (
+              <IconRobot className="size-3 shrink-0" />
+            )}
+            {isCampaign ? "Campaign" : "Automation"}
           </MessageHeader>
           <Bubble variant="muted" align="end">
             <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>
           </Bubble>
           <MessageFooter>
+            {sourceTag}
             {copyAction}
             {timestampNode}
             {messageObject.stats && getLatestStatusIcon(messageObject?.stats)}
@@ -334,6 +354,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
             <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>
           </Bubble>
           <MessageFooter>
+            {sourceTag}
             {copyAction}
             {timestampWithStats}
             {messageObject.stats && getLatestStatusIcon(messageObject?.stats)}
@@ -381,6 +402,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
           {timestampNode}
           {!isDeleted && <PopoverEmojiPicker onEmojiClick={sendReaction} />}
           {copyAction}
+          {sourceTag}
         </MessageFooter>
       </MessageContent>
     </Message>
