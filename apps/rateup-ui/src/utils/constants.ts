@@ -391,6 +391,8 @@ export const rateupLogoOg = `${imagesPath}/rateup-og.png`;
 /* The 90-second product film behind the homepage's click-to-play facade. Self-hosted
    rather than embedded so the band carries no third-party player or cookies. */
 export const rateupProductVideo = `${videosPath}/homepage/rateup_product.mp4`;
+/* The film's 16:9 cover — the facade's backdrop before the click and the `<video>` poster after. */
+export const rateupProductVideoCover = `${imagesPath}/homepage/homepage_video_cover.jpeg`;
 
 /* Square star marks, for slots the 2.52:1 lockup does not fit — avatars, org-logo
    fallbacks, integration tiles. Same bucket as the lockups. */

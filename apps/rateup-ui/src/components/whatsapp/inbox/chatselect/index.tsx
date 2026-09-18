@@ -40,6 +40,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
 import type { ChatFilter } from "@/store/chat-filter.store.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useInboxViewStore } from "@/store/inbox-view.store.ts";
 import useContactStore, {
   makeFilterKey,
   useContactsStore,
@@ -248,11 +249,13 @@ const WaInboxChatSelect = () => {
   );
 
   const rowCount = contactIds.length + (hasNextPageFilteredContacts ? 1 : 0);
+  const compactList = useInboxViewStore((s) => s.compact);
 
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 90,
+    // Rows are measured once drawn; this only sizes the ones not yet rendered.
+    estimateSize: () => (compactList ? 66 : 90),
     overscan: 5,
   });
 
