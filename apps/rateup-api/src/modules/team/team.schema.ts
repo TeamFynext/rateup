@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TeamFeature } from "../../../generated/prisma/client.js";
+import { Role, TeamFeature } from "../../../generated/prisma/client.js";
 
 const teamFeatureEnum = z.enum(TeamFeature);
 
@@ -53,11 +53,16 @@ export enum InviteType {
 
 const inviteMemberRequestSchema = z.object({
   orgId: z.string(),
-  teamId: z.string(),
+  /** The team the invitation is filed under. Null invites into the org with no team. */
+  teamId: z.string().nullable(),
   invitedBy: z.string(),
   type: z.enum(InviteType),
   email: z.string(),
   name: z.string(),
+  /** The role the invitee is created with on accept. Omitted means ADMIN. */
+  role: z.enum(Role).optional(),
+  /** Every team the invitee should join; omitted means `teamId` alone. */
+  teamIds: z.array(z.string()).optional(),
 });
 
 const inviteMemberRequestResponse = z.object({

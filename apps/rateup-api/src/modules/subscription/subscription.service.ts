@@ -217,6 +217,9 @@ export async function getSubscription(orgId: string) {
           name: true,
           paymentPlan: {
             select: {
+              // `planId` is how the client tells which cadence and currency an order was
+              // billed on; amounts collide when a tier prices two cadences the same.
+              planId: true,
               period: true,
               amount: true,
               currency: true,
@@ -227,6 +230,7 @@ export async function getSubscription(orgId: string) {
           // that one renders no price or billing cycle for anyone on Starter or Pro.
           monthlyPaymentPlan: {
             select: {
+              planId: true,
               period: true,
               amount: true,
               currency: true,
@@ -234,6 +238,7 @@ export async function getSubscription(orgId: string) {
           },
           yearlyPaymentPlan: {
             select: {
+              planId: true,
               period: true,
               amount: true,
               currency: true,
@@ -245,6 +250,7 @@ export async function getSubscription(orgId: string) {
           // subscriber was shown ₹48,000/year.
           usdMonthlyPaymentPlan: {
             select: {
+              planId: true,
               period: true,
               amount: true,
               currency: true,
@@ -252,6 +258,7 @@ export async function getSubscription(orgId: string) {
           },
           usdYearlyPaymentPlan: {
             select: {
+              planId: true,
               period: true,
               amount: true,
               currency: true,

@@ -22,6 +22,8 @@ import {
   updateUserLanguageSchema,
   updateProfilePhotoSchema,
   changeUserPasswordSchema,
+  deleteUserSchema,
+  DeleteUserSchema,
   createUserGoogleSchema,
   pauseUserSchema,
   userStatusSchema,
@@ -95,10 +97,13 @@ export async function userRoutes(server: FastifyInstance) {
   );
 
   //this route is dedicated for updating the account-active status of user. Currently used for soft deleting the user.
-  server.put<{ Params: { userId: string } }>(
+  server.put<{ Params: { userId: string }; Body: DeleteUserSchema }>(
     "/update-active-status/:userId",
     {
       preHandler: [checkSession],
+      schema: {
+        body: deleteUserSchema,
+      },
     },
     updateUserActiveStatusHandler,
   );

@@ -61,14 +61,23 @@ const changeUserPasswordSchema = z.object({
   newPassword: z.string().min(4),
 });
 
+// Optional because the same route serves self-deletion (re-authenticated), a super-admin
+// removing someone else, and Google-only accounts with no password to verify.
+const deleteUserSchema = z.object({
+  password: z.string().optional(),
+});
+
 const updateProfileSchema = z.object({
   title: z.string(),
   name: z.string(),
   phone: z.string(),
 });
 
+/** The locales the clients ship translations for; anything else is rejected. */
+const SUPPORTED_LOCALES = ["en", "ar", "de", "fr", "hi"] as const;
+
 const updateUserLanguageSchema = z.object({
-  prefLanguage: z.string().optional(),
+  prefLanguage: z.enum(SUPPORTED_LOCALES).optional(),
 });
 
 const updateProfilePhotoSchema = z.object({
@@ -100,6 +109,7 @@ export type userInfoParams = z.infer<typeof userInfoSchema>;
 export type CreateUserSignupSchema = z.infer<typeof createUserSignupSchema>;
 export type CreateUserGoogleSchema = z.infer<typeof createUserGoogleSchema>;
 export type ChangeUserPasswordSchema = z.infer<typeof changeUserPasswordSchema>;
+export type DeleteUserSchema = z.infer<typeof deleteUserSchema>;
 export type updateUserLanguageSchema = z.infer<typeof updateUserLanguageSchema>;
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
@@ -112,6 +122,7 @@ export {
   createUserSignupSchema,
   createUserGoogleSchema,
   changeUserPasswordSchema,
+  deleteUserSchema,
   updateProfileSchema,
   updateProfilePhotoSchema,
   updateUserLanguageSchema,
