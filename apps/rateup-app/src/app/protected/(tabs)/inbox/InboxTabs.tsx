@@ -16,8 +16,9 @@ import RefreshButton from "@/components/inbox/RefreshButton";
 import InboxSearchView from "@/components/inbox/InboxSearchView";
 import ScreenHeader, { HeaderIconButton } from "@/components/common/ScreenHeader";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
-import { Search } from "lucide-react-native";
+import { ChevronsDownUp, ChevronsUpDown, Search } from "lucide-react-native";
 import { useInboxCountStore } from "@/store/inboxCountStore";
+import { useInboxViewStore } from "@/store/inboxViewStore";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
 
@@ -205,6 +206,8 @@ export default function InboxLayout() {
   const isDark = colorScheme === "dark";
   const listBgColor = isDark ? Colors.dark.bg : Colors.light.bg;
   const t = getInboxRowTheme(isDark);
+  const compactList = useInboxViewStore((s) => s.compact);
+  const toggleCompact = useInboxViewStore((s) => s.toggleCompact);
 
   return (
     <View
@@ -239,6 +242,14 @@ export default function InboxLayout() {
               title="Inbox"
               actions={
                 <>
+                  {/* The design's compact-list toggle, first in the action row. */}
+                  <HeaderIconButton onPress={toggleCompact} active={compactList}>
+                    {compactList ? (
+                      <ChevronsUpDown size={20} color={t.brand} />
+                    ) : (
+                      <ChevronsDownUp size={20} color={t.fg2} />
+                    )}
+                  </HeaderIconButton>
                   <HeaderIconButton onPress={() => setSearchOpen(true)}>
                     <Search size={20} color={t.fg2} />
                   </HeaderIconButton>

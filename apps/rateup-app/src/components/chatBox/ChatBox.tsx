@@ -8,6 +8,7 @@ import { namePreview } from "../../utils/chatbox_utils";
 import { MessagePlatform } from "@/constants/enums";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { useLifecycleContext } from "@/context/LifecycleContext";
+import { useInboxViewStore } from "@/store/inboxViewStore";
 import {
   getInboxRowTheme,
   inboxAssigneeColors,
@@ -191,6 +192,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const t = useMemo(() => getInboxRowTheme(isDark), [isDark]);
+  const compact = useInboxViewStore((s) => s.compact);
 
   const isUnread = unReadMessageCount > 0;
 
@@ -344,6 +346,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           >
             {namePreview(name)}
           </Text>
+          {/* Compact drops the chip row and the channel pill with it, so the
+              platform moves onto the avatar — the design's 18px badge with a 2px
+              surface ring, as the web inbox draws it on every row. */}
+          {compact && channelColor ? (
+            <View
+              style={{
+                position: "absolute",
+                right: -2,
+                bottom: -2,
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                backgroundColor: channelColor,
+                borderWidth: 2,
+                borderColor: t.surface,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {channelIcon(platform, "#fff", 10)}
+            </View>
+          ) : null}
         </View>
       </View>
 
@@ -401,8 +425,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             </Text>
           </View>
 
-          {/* Chips */}
-          {status || lifecycleInfo || channelPill || contactLabels?.length ? (
+          {/* Chips — dropped by the compact list, which keeps name, time,
+              code + message line and the trailing column. */}
+          {!compact && (status || lifecycleInfo || channelPill || contactLabels?.length) ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
               {/* Platform + which of the org's numbers/accounts the ticket came in
                   on, in one pill: the icon says WhatsApp/Instagram/Facebook, the

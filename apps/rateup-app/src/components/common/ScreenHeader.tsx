@@ -97,10 +97,13 @@ export default function ScreenHeader({
 export function HeaderIconButton({
   onPress,
   badge,
+  active,
   children,
 }: Readonly<{
   onPress: () => void;
   badge?: number;
+  /** A toggle that is on — the design's `--accent-soft` fill behind the glyph. */
+  active?: boolean;
   children: React.ReactNode;
 }>) {
   const { colorScheme } = useColorScheme();
@@ -116,6 +119,7 @@ export function HeaderIconButton({
         borderRadius: 11,
         alignItems: "center",
         justifyContent: "center",
+        backgroundColor: active ? t.brandSoft : "transparent",
       }}
     >
       {children}
