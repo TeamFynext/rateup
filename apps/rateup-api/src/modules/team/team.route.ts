@@ -61,6 +61,15 @@ import {
   SetTeamChannelsInput,
 } from "./team.schema.js";
 
+/**
+ * Inviting and removing people, and editing a team, is open to org admins as well as the
+ * owner. Granting SUPER_ADMIN is still refused for an ADMIN inviter, in inviteMemberHandler.
+ *
+ * Creating and deleting a team, and the feature/channel toggles, stay SUPER_ADMIN-only:
+ * those decide what a whole team can reach, and only the owner sets that.
+ */
+const TEAM_MANAGER_ROLES: Array<"ADMIN" | "SUPER_ADMIN" | "MEMBER"> = ["SUPER_ADMIN", "ADMIN"];
+
 // TODO: add checkSession as server.addHook instead of defining it in every route
 // move routes which doesn't need checkSession to another route (invitation)
 export async function teamRoutes(server: FastifyInstance) {
@@ -89,7 +98,7 @@ export async function teamRoutes(server: FastifyInstance) {
       preHandler: [
         checkSession,
         getVerifySubscriptionHandler([sf.Team]),
-        checkRoleHandler(["SUPER_ADMIN"]),
+        checkRoleHandler(TEAM_MANAGER_ROLES),
       ],
       schema: {
         params: getTeamsByOrgRequestSchema,
@@ -144,7 +153,7 @@ export async function teamRoutes(server: FastifyInstance) {
       preHandler: [
         checkSession,
         getVerifySubscriptionHandler([sf.Team]),
-        checkRoleHandler(["SUPER_ADMIN"]),
+        checkRoleHandler(TEAM_MANAGER_ROLES),
         verifyTeamMemberMaxCountRestriction,
       ],
       schema: {
@@ -162,7 +171,7 @@ export async function teamRoutes(server: FastifyInstance) {
       preHandler: [
         checkSession,
         getVerifySubscriptionHandler([sf.Team]),
-        checkRoleHandler(["SUPER_ADMIN"]),
+        checkRoleHandler(TEAM_MANAGER_ROLES),
       ],
       schema: {
         params: idParamRequestSchema,
@@ -187,7 +196,7 @@ export async function teamRoutes(server: FastifyInstance) {
       preHandler: [
         checkSession,
         getVerifySubscriptionHandler([sf.Team]),
-        checkRoleHandler(["SUPER_ADMIN"]),
+        checkRoleHandler(TEAM_MANAGER_ROLES),
       ],
       schema: {
         params: deleteTeamByIdRequestSchema,
@@ -202,7 +211,7 @@ export async function teamRoutes(server: FastifyInstance) {
       preHandler: [
         checkSession,
         getVerifySubscriptionHandler([sf.Team]),
-        checkRoleHandler(["SUPER_ADMIN"]),
+        checkRoleHandler(TEAM_MANAGER_ROLES),
       ],
       schema: {
         params: getTeamMembersRequestSchema,
@@ -217,7 +226,7 @@ export async function teamRoutes(server: FastifyInstance) {
       preHandler: [
         checkSession,
         getVerifySubscriptionHandler([sf.Team]),
-        checkRoleHandler(["SUPER_ADMIN"]),
+        checkRoleHandler(TEAM_MANAGER_ROLES),
       ],
       schema: {
         params: getTeamMembersRequestSchema,
@@ -256,7 +265,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.delete<{ Querystring: { teamId: string; userId: string } }>(
     "/member",
     {
-      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [checkSession, checkRoleHandler(TEAM_MANAGER_ROLES)],
       schema: {
         querystring: deleteTeamMemberSchema,
       },
@@ -267,7 +276,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.post<{ Params: { id: string }; Body: { teamIds: string[]; userEmail: string } }>(
     "/members/:id",
     {
-      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+      preHandler: [checkSession, checkRoleHandler(TEAM_MANAGER_ROLES)],
       schema: {
         params: idParamRequestSchema,
         body: addTeamMemberSchema,

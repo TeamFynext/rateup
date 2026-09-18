@@ -127,6 +127,14 @@ export async function inviteMemberHandler(
 ) {
   const body = request.body;
 
+  // Team management is open to ADMIN, so without this an admin could invite a SUPER_ADMIN
+  // and hand themselves an owner-level account.
+  if (request.user.role !== "SUPER_ADMIN" && body.role === "SUPER_ADMIN") {
+    return reply
+      .code(403)
+      .send({ success: false, message: "Only a Super Admin can invite a Super Admin." });
+  }
+
   try {
     const invite = await inviteTeamMember(body);
     //reply.code(201).send({ success: true, data: team });

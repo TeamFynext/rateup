@@ -58,7 +58,8 @@ export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
   const teamMember = await hasAccessToTeam(teamId, userId);
 
   if (teamMember) {
-    const superAdmin = await prisma.orgMember.findFirst({
+    // ADMIN manages teams alongside the owner; mirrors TEAM_MANAGER_ROLES on the team routes.
+    const orgAdmin = await prisma.orgMember.findFirst({
       where: {
         userId: userId,
         org: {
@@ -68,11 +69,11 @@ export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
             },
           },
         },
-        role: "SUPER_ADMIN",
+        role: { in: ["SUPER_ADMIN", "ADMIN"] },
       },
     });
 
-    if (superAdmin) {
+    if (orgAdmin) {
       return true;
     } else {
       return false;
