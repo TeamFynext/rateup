@@ -21,7 +21,6 @@ export interface SelectedUser {
   status?: string;
   profilePhoto?: string;
   isPaused?: boolean;
-  lastActive?: string;
 }
 
 /** A team invitation that has not been accepted yet. */

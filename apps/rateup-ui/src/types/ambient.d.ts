@@ -535,6 +535,8 @@ declare global {
     isPaused?: boolean;
     pausedBy?: string;
     isOrgPaused?: boolean;
+    /** The language saved on the account; read it through `normalizeLocale`. */
+    prefLanguage?: string;
     waAssignedChatPermission: WaAssignedChatPermission;
     status: UserAvailabilityStatus;
     hasWhatsAppSettings: boolean;
@@ -978,6 +980,9 @@ declare global {
     };
   }
   interface SPlanGatewayPlan {
+    /** The gateway's own plan id. An order records this, so it identifies the exact
+     *  cadence + currency the org is billed on without guessing from the amount. */
+    planId?: string;
     period: string;
     /** A number for real plans; the enterprise tiers use "Lets Talk!". */
     amount: number | string;

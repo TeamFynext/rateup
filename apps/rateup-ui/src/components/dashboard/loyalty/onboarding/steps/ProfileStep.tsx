@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyPreset, LoyaltyPresetKey } from "@/backend/loyalty/onboarding.api";
+import { ColorField } from "@/components/common/color-field.tsx";
 import TimeZoneSelector from "@/components/common/time-zone-selector.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
@@ -12,7 +13,6 @@ import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { cn } from "@/lib/utils.ts";
 
-import { BrandColorField } from "../parts/BrandColorField.tsx";
 import { BrandPreviewCard } from "../parts/BrandPreviewCard.tsx";
 import { ImageUploadTile } from "../parts/ImageUploadTile.tsx";
 import { profileFormSchema, type ProfileFormInput, type ProfileFormValues } from "../schemas.ts";
@@ -358,7 +358,7 @@ export function ProfileStep({
                   control={form.control}
                   name="brandColor"
                   render={({ field, fieldState }) => (
-                    <BrandColorField
+                    <ColorField
                       id={field.name}
                       label={t("Brand colour")}
                       value={String(field.value ?? "")}

@@ -12,13 +12,14 @@ import {
   useIntegrationByType,
   useUpdateIntegrationMutation,
 } from "@/backend/appsIntegration/integration.query";
+import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
-
-import { Card } from "../ui/card";
 
 export function WpAmelia() {
   const { data, isPending } = useIntegrationByType(IntegratedApps.amelia);
@@ -65,22 +66,62 @@ export function WpAmelia() {
       });
     }
   };
+  const config = INTEGRATIONS_CONFIG.amelia;
+  const isConnected = Boolean(data?.credential?.apiKey);
+  const isSaving = createIntegrationMutation?.isPending || updateIntegrationMutation?.isPending;
+
   return (
-    <div className="flex flex-col gap-4 p-8">
-      <h3 className="text-xl font-semibold">{translations("Amelia Config")}</h3>
-      <Card className="p-4">
-        {isPending ||
-        createIntegrationMutation?.isPending ||
-        updateIntegrationMutation?.isPending ? (
-          <Skeleton className="h-8 w-125" />
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      connected={isConnected}
+      detail={data?.credential?.baseUrl}
+    >
+      <IntegrationFormCard
+        title={translations("Connection")}
+        description={translations(
+          "The API key and site address RateUp uses to read your bookings.",
+        )}
+        onSubmit={form.handleSubmit(handleSave)}
+        actions={
+          <>
+            <Button type="submit" disabled={!form.formState.isDirty}>
+              {translations("Save changes")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={
+                deleteIntegrationMutation?.isPending ||
+                (!data?.credential?.apiKey && !data?.credential?.base)
+              }
+              onClick={() => {
+                toast.loading(translations("Disconnecting Amelia"), {
+                  id: "integration-delete",
+                });
+                deleteIntegrationMutation.mutate();
+              }}
+            >
+              <IconTrash data-icon="inline-start" />
+              {translations("Disconnect")}
+            </Button>
+          </>
+        }
+      >
+        {isPending || isSaving ? (
+          <>
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+          </>
         ) : (
-          <FieldGroup className="w-125 gap-4">
+          <>
             <Controller
               name="apiKey"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>{translations("Amelia")}</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>{translations("API key")}</FieldLabel>
                   <Input
                     {...field}
                     id={field.name}
@@ -97,24 +138,25 @@ export function WpAmelia() {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>{translations("Amelia base url")}</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>{translations("Site address")}</FieldLabel>
                   <Input
                     {...field}
                     id={field.name}
                     type="url"
                     aria-invalid={fieldState.invalid}
-                    placeholder={translations("Enter your base url")}
+                    placeholder="https://example.com"
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
+
             <Controller
               name="serviceId"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>{translations("serviceId")}</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>{translations("Service ID")}</FieldLabel>
                   <Input
                     {...field}
                     id={field.name}
@@ -128,30 +170,9 @@ export function WpAmelia() {
                 </Field>
               )}
             />
-            <div className="flex items-center justify-between">
-              <Button onClick={form.handleSubmit(handleSave)} disabled={!form.formState.isDirty}>
-                {translations("save")}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={
-                  deleteIntegrationMutation?.isPending ||
-                  (!data?.credential?.apiKey && !data?.credential?.base)
-                }
-                onClick={() => {
-                  toast.loading(translations("Deleting.."), {
-                    id: "integration-delete",
-                  });
-                  deleteIntegrationMutation.mutate();
-                }}
-              >
-                <IconTrash />
-              </Button>
-            </div>
-          </FieldGroup>
+          </>
         )}
-      </Card>
-    </div>
+      </IntegrationFormCard>
+    </IntegrationShell>
   );
 }

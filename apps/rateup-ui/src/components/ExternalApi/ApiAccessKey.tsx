@@ -4,7 +4,6 @@ import {
   IconCopy,
   IconKey,
   IconReload,
-  IconServer,
   IconTrash,
 } from "@tabler/icons-react";
 import { useState } from "react";
@@ -16,16 +15,13 @@ import {
   useLoyaltyApiKey,
   useRegenerateLoyaltyApiKey,
 } from "@/backend/loyalty/apiKey/loyaltyApiKey.query";
+import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 
@@ -48,114 +44,91 @@ export default function ApiAccessKeyPage() {
 
   if (!data) return null;
 
-  return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="grid gap-6">
-        {/* API Access Key Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-50 rounded-lg dark:bg-blue-900/20">
-                <IconKey size={20} className="text-blue-600 dark:text-blue-400" />
-              </div>
-              <CardTitle>API Access Key</CardTitle>
-            </div>
-            <CardDescription>{translations("Api Access Key")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {data.createdAt ? (
-              <div className="space-y-4">
-                <div className="relative">
-                  <Input
-                    readOnly
-                    aria-label={translations("Api Access Key")}
-                    value={apiKey || "•".repeat(48)}
-                    className="font-mono pr-24"
-                  />
-                  <div className="absolute right-1 top-0 h-full flex items-center gap-1 p-1">
-                    {apiKey ? (
-                      <ApiCopyButton value={apiKey} />
-                    ) : (
-                      <ApiRegenerateButton onRegenerate={setApiKey} />
-                    )}
-                    <ApiDeleteButton onDelete={() => setApiKey("")} />
-                  </div>
-                </div>
-                {!apiKey && (
-                  <Alert
-                    variant="default"
-                    className="bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/50"
-                  >
-                    <IconAlertCircle className="h-4 w-4 !text-amber-600 dark:!text-amber-400" />
-                    <AlertDescription>
-                      {translations(
-                        "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-6 text-center space-y-4 bg-muted/50 rounded-lg border border-dashed">
-                <div className="p-3 bg-background rounded-full shadow-sm">
-                  <IconKey size={24} className="text-muted-foreground" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">No API Key Found</p>
-                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                    {translations(
-                      "You have not generated an API Access Key yet. API Access Key is required to access the all API endpoints.",
-                    )}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleGenerateApiKey}
-                  disabled={generateMutation.isPending}
-                  aria-busy={generateMutation.isPending}
-                >
-                  {generateMutation.isPending ? (
-                    <IconReload className="mr-2 h-4 w-4 animate-spin" data-icon="inline-start" />
-                  ) : (
-                    <IconKey className="mr-2 h-4 w-4" data-icon="inline-start" />
-                  )}
-                  {translations("Generate Api Key")}
-                </Button>
-                <span role="status" aria-live="polite" className="sr-only">
-                  {generateMutation.isPending ? translations("Generating API key…") : ""}
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+  const config = INTEGRATIONS_CONFIG.apiservice;
 
-        {/* API Base URL Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-purple-50 rounded-lg dark:bg-purple-900/20">
-                <IconServer size={20} className="text-purple-600 dark:text-purple-400" />
-              </div>
-              <CardTitle>{translations("API Base URL")}</CardTitle>
-            </div>
-            <CardDescription>Use this base URL for all your API requests.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Input
-                readOnly
-                aria-label={translations("API Base URL")}
-                value={apiEndpoint}
-                className="font-mono pr-12 bg-muted/50"
-              />
-              <div className="absolute right-1 top-0 h-full flex items-center p-1">
-                <ApiCopyButton value={apiEndpoint} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+  return (
+    <IntegrationShell icon={config.icon} name={config.name} own>
+      <IntegrationFormCard
+        title={translations("Access key")}
+        description={translations("The key your server sends with every RateUp API request.")}
+      >
+        {data.createdAt ? (
+          <>
+            <Field>
+              <FieldLabel htmlFor="api-access-key">{translations("Key")}</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="api-access-key"
+                  readOnly
+                  value={apiKey || "•".repeat(48)}
+                  className="font-mono"
+                />
+                <InputGroupAddon align="inline-end">
+                  {apiKey ? (
+                    <ApiCopyButton value={apiKey} />
+                  ) : (
+                    <ApiRegenerateButton onRegenerate={setApiKey} />
+                  )}
+                  <ApiDeleteButton onDelete={() => setApiKey("")} />
+                </InputGroupAddon>
+              </InputGroup>
+            </Field>
+            {!apiKey && (
+              <Alert>
+                <IconAlertCircle />
+                <AlertDescription>
+                  {translations(
+                    "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
+        ) : (
+          <Field>
+            <FieldLabel htmlFor="api-generate-key">{translations("Key")}</FieldLabel>
+            <FieldDescription>
+              {translations(
+                "You have not generated an API Access Key yet. API Access Key is required to access the all API endpoints.",
+              )}
+            </FieldDescription>
+            <Button
+              id="api-generate-key"
+              type="button"
+              className="w-fit"
+              onClick={handleGenerateApiKey}
+              disabled={generateMutation.isPending}
+              aria-busy={generateMutation.isPending}
+            >
+              {generateMutation.isPending ? (
+                <IconReload className="animate-spin" data-icon="inline-start" />
+              ) : (
+                <IconKey data-icon="inline-start" />
+              )}
+              {translations("Generate API key")}
+            </Button>
+            <span role="status" aria-live="polite" className="sr-only">
+              {generateMutation.isPending ? translations("Generating API key…") : ""}
+            </span>
+          </Field>
+        )}
+      </IntegrationFormCard>
+
+      <IntegrationFormCard
+        title={translations("Base URL")}
+        description={translations("Use this base URL for all your API requests.")}
+      >
+        <Field>
+          <FieldLabel htmlFor="api-base-url">{translations("Endpoint")}</FieldLabel>
+          <InputGroup>
+            <InputGroupInput id="api-base-url" readOnly value={apiEndpoint} className="font-mono" />
+            <InputGroupAddon align="inline-end">
+              <ApiCopyButton value={apiEndpoint} />
+            </InputGroupAddon>
+          </InputGroup>
+        </Field>
+      </IntegrationFormCard>
+    </IntegrationShell>
   );
 }
 
@@ -262,7 +235,7 @@ function ApiDeleteButton({ onDelete }: Readonly<ApiDeleteButtonProps>) {
     <Button
       variant="ghost"
       size="icon"
-      className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+      className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
       onClick={handleDelete}
       title={translations("Delete")}
     >

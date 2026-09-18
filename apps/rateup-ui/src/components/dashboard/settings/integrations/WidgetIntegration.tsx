@@ -1,5 +1,17 @@
+import { useTranslation } from "react-i18next";
+
 import SupportWidget from "@/components/app&services/support-widget.tsx";
 import TerminalBlock from "@/components/TerminalBlock.tsx";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
+
+import { INTEGRATIONS_CONFIG } from "./integrations.config.ts";
+import { IntegrationShell } from "./IntegrationShell.tsx";
 
 /** Shown in the snippet and in the live demo below it, so the two agree. */
 const EXAMPLE_ICEBREAKERS = [
@@ -8,7 +20,20 @@ const EXAMPLE_ICEBREAKERS = [
   "Can someone call me back?",
 ];
 
+const PROPS: readonly { name: string; type: string; required: boolean }[] = [
+  { name: "orgId", type: "string", required: true },
+  { name: "token", type: "string", required: true },
+  { name: "whatsappNumber", type: "string", required: false },
+  { name: "companyName", type: "string", required: false },
+  { name: "backendUrl", type: "string", required: false },
+  { name: "webhookUrl", type: "string", required: false },
+  { name: "icebreakers", type: "string[]", required: false },
+];
+
 export default function WidgetIntegration() {
+  const { t } = useTranslation();
+  const config = INTEGRATIONS_CONFIG.widget;
+
   const codeExample = `
 import SupportWidget from "@rateup/support-widget";
 
@@ -24,138 +49,99 @@ import SupportWidget from "@rateup/support-widget";
   const npmCommand = "npm install @rateup/support-widget";
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <section className="relative bg-linear-to-br from-primary/10 to-background py-12 mb-0 flex items-center justify-center">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="w-72 h-72 bg-primary/20 rounded-full blur-2xl opacity-20 absolute left-1/2 top-0 -translate-x-1/2"></div>
-        </div>
-        <div className="container mx-auto px-4 flex flex-col items-center relative z-10">
-          <h1 className="text-3xl font-extrabold mb-3 text-center text-primary drop-shadow-lg">
-            SupportWidget Integration
-          </h1>
-          <p className="text-base text-muted-foreground mb-6 max-w-2xl text-center">
-            Add a modern, customizable support widget to your app or website in minutes.
-            <br className="hidden md:block" />
-            Follow the steps below to get started and delight your users with instant support.
-          </p>
-          <div className="flex justify-center gap-3 mt-1">
-            <span className="inline-block bg-primary text-white px-4 py-1.5 rounded-full font-semibold shadow-lg text-sm">
-              Easy Integration
-            </span>
-            <span className="inline-block bg-background border px-4 py-1.5 rounded-full font-semibold text-primary shadow text-sm">
-              Customizable
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto">
-          <ol className="space-y-8">
-            <li className="flex gap-4 items-start">
-              <span className="text-2xl font-bold text-primary">1</span>
-              <div>
-                <div className="font-semibold mb-2">Install the package</div>
-                <div className="relative mt-2">
-                  <TerminalBlock code={npmCommand} />
-                </div>
+    <IntegrationShell icon={config.icon} name={config.name} own>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("Install")}</CardTitle>
+          <CardDescription>
+            {t("Four steps, in order — the snippet needs the two values from the middle two.")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Numbered because installing genuinely is a sequence: the snippet in step 4 cannot
+              be pasted until steps 2 and 3 have produced the orgId and the token. */}
+          <ol className="flex flex-col gap-6">
+            <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
+              <span className="font-mono text-sm text-muted-foreground tabular-nums">1</span>
+              <div className="flex min-w-0 flex-col gap-2">
+                <p className="font-medium">{t("Install the package")}</p>
+                <TerminalBlock code={npmCommand} />
               </div>
             </li>
-            <li className="flex gap-4 items-start">
-              <span className="text-2xl font-bold text-primary">2</span>
-              <div>
-                <div className="font-semibold mb-2">
-                  Get your <span className="text-primary">orgId</span>
-                </div>
-                <div className="text-muted-foreground">Copy it from Settings → Integrations.</div>
+            <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
+              <span className="font-mono text-sm text-muted-foreground tabular-nums">2</span>
+              <div className="flex min-w-0 flex-col gap-1">
+                <p className="font-medium">
+                  {t("Copy your")} <code className="font-mono">orgId</code>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("It is on Settings › Integrations › Zapier.")}
+                </p>
               </div>
             </li>
-            <li className="flex gap-4 items-start">
-              <span className="text-2xl font-bold text-primary">3</span>
-              <div>
-                <div className="font-semibold mb-2">Create an API token</div>
-                <div className="text-muted-foreground">
-                  Generate it in Settings → Integrations → API Service.
-                </div>
+            <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
+              <span className="font-mono text-sm text-muted-foreground tabular-nums">3</span>
+              <div className="flex min-w-0 flex-col gap-1">
+                <p className="font-medium">{t("Create an API token")}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("Generate one on Settings › Integrations › API Service.")}
+                </p>
               </div>
             </li>
-            <li className="flex gap-4 items-start">
-              <span className="text-2xl font-bold text-primary">4</span>
-              <div>
-                <div className="font-semibold mb-2">Import and use the widget</div>
-                <div className="relative mt-4">
-                  <TerminalBlock code={codeExample} />
-                </div>
+            <li className="grid grid-cols-[1.5rem_1fr] gap-x-3">
+              <span className="font-mono text-sm text-muted-foreground tabular-nums">4</span>
+              <div className="flex min-w-0 flex-col gap-2">
+                <p className="font-medium">{t("Render the widget")}</p>
+                <TerminalBlock code={codeExample} />
               </div>
             </li>
           </ol>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="container mx-auto px-4 pb-12">
-        <div className="max-w-2xl mx-auto bg-muted p-6 rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Widget Props</h3>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("Props")}</CardTitle>
+        </CardHeader>
+        <CardContent>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-muted-foreground">
-                <th className="pb-2">Prop</th>
-                <th className="pb-2">Type</th>
-                <th className="pb-2">Required</th>
+              <tr className="border-b border-border text-left text-muted-foreground">
+                <th className="pb-2 font-medium">{t("Prop")}</th>
+                <th className="pb-2 font-medium">{t("Type")}</th>
+                <th className="pb-2 font-medium">{t("Required")}</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="font-mono font-bold">orgId</td>
-                <td>string</td>
-                <td>Yes</td>
-              </tr>
-              <tr>
-                <td className="font-mono font-bold">token</td>
-                <td>string</td>
-                <td>Yes</td>
-              </tr>
-              <tr>
-                <td className="font-mono font-bold">whatsappNumber</td>
-                <td>string</td>
-                <td>No</td>
-              </tr>
-              <tr>
-                <td className="font-mono font-bold">companyName</td>
-                <td>string</td>
-                <td>No</td>
-              </tr>
-              <tr>
-                <td className="font-mono font-bold">backendUrl</td>
-                <td>string</td>
-                <td>No</td>
-              </tr>
-              <tr>
-                <td className="font-mono font-bold">webhookUrl</td>
-                <td>string</td>
-                <td>No</td>
-              </tr>
-              <tr>
-                <td className="font-mono font-bold">icebreakers</td>
-                <td>string[]</td>
-                <td>No</td>
-              </tr>
+              {PROPS.map((prop) => (
+                <tr key={prop.name} className="border-b border-border last:border-0">
+                  <td className="py-2 font-mono">{prop.name}</td>
+                  <td className="py-2 text-muted-foreground">{prop.type}</td>
+                  <td className="py-2 text-muted-foreground">
+                    {prop.required ? t("Yes") : t("No")}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="container mx-auto px-4 pb-20">
-        <div className="max-w-2xl mx-auto text-center">
-          <h3 className="text-lg font-semibold mb-4">Live Widget Demo</h3>
-          <div className="flex justify-center">
-            <SupportWidget
-              orgId={import.meta.env.VITE_ROOT_ORG}
-              token={import.meta.env.VITE_ROOT_TOKEN}
-              icebreakers={EXAMPLE_ICEBREAKERS}
-            />
-          </div>
-        </div>
-      </section>
-    </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("Preview")}</CardTitle>
+          <CardDescription>
+            {t("The widget as your customers see it, running against this account.")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center">
+          <SupportWidget
+            orgId={import.meta.env.VITE_ROOT_ORG}
+            token={import.meta.env.VITE_ROOT_TOKEN}
+            icebreakers={EXAMPLE_ICEBREAKERS}
+          />
+        </CardContent>
+      </Card>
+    </IntegrationShell>
   );
 }

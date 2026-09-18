@@ -248,7 +248,6 @@ export function useUpdateTeamFeatures(teamId: string) {
     mutationFn: (features: string[]) => updateTeamFeatures(teamId, features),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teamKeys.features(teamId) });
-      toast.success("Feature access updated successfully.");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to update feature access.");
@@ -273,7 +272,6 @@ export function useUpdateTeamChannels(teamId: string) {
       // The caller's own channel list is derived from their teams, so it can change here too.
       // `waSettings` is cached with staleTime: Infinity and would otherwise stay stale until reload.
       queryClient.invalidateQueries({ queryKey: whatsappKeys.settings() });
-      toast.success("Channel access updated successfully.");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to update channel access.");

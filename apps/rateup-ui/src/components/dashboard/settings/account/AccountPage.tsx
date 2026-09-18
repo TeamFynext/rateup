@@ -5,14 +5,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IconBuilding,
   IconCamera,
-  IconEdit,
   IconGlobe,
   IconHome,
   IconMail,
   IconMapPin,
+  IconMessageCircle,
+  IconPencil,
   IconPhone,
+  IconShield,
   IconUpload,
+  IconUserCog,
 } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
 
 import "react-phone-number-input/style.css";
@@ -32,7 +36,6 @@ import {
   useUpdateProfilePhotoMutation,
 } from "@/backend/user/user.query";
 import { BusinessHoursSection } from "@/components/account/business-hours/BusinessHoursSection.tsx";
-import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -59,8 +62,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { useDisclosure } from "@/hooks/useDisclosure";
 import { UserRole } from "@/utils/enums/index.ts";
+import { cropImageToSquare } from "@/utils/file-upload/autoCropSquare.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 export function AccountPage() {
@@ -78,7 +81,7 @@ export function AccountPage() {
     location: z.string(),
     industry: z.string(),
     website: z.string(),
-    businessmail: z.email(translations("Invalid email address")),
+    businessmail: z.literal("").or(z.email(translations("Invalid email address"))),
   });
 
   const profileFormSchema = z.object({
@@ -126,10 +129,7 @@ export function AccountPage() {
     `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
   );
   const [orgAvatarSrc, setOrgAvatarSrc] = useState("");
-  const [selectedImage, setSelectedImage] = useState({ url: "", name: "" });
   const resetRef = useRef<HTMLInputElement>(null);
-  const [openedCropDialog, { toggle: toggleCropDialog, close: closeCropDialog }] =
-    useDisclosure(false);
   const [, setIsLoadingUpload] = useState(false);
   const updateProfile = useUpdateProfileMutation();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
@@ -143,7 +143,10 @@ export function AccountPage() {
       phone: values.phone ?? "",
     };
 
-    updateProfile.mutate(data);
+    // Close on success only, so a rejected save keeps the entered values on screen.
+    updateProfile.mutate(data, {
+      onSuccess: () => setIsEditProfileDialogOpen(false),
+    });
   };
 
   useEffect(() => {
@@ -212,22 +215,14 @@ export function AccountPage() {
     }
   }, [file]);
 
-  const handleImagePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    toggleCropDialog();
-    setSelectedImage({
-      name: file.name,
-      url: URL.createObjectURL(file),
-    });
+  // Picking a file is the whole interaction: centre-cropped to a square and uploaded at
+  // once, since avatars and logos are always shown in a circle at one size.
+  const handleImagePicker = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files?.[0];
     if (resetRef?.current) e.target.value = "";
-  };
+    if (!picked) return;
 
-  const handleCropImageSave = (croppedImage: File | string) => {
-    // The avatar is always cropped from a local blob, so the modal hands back a
-    // File here; it only returns a string for Unsplash-sourced images.
-    setFile(croppedImage as File);
-    closeCropDialog();
+    setFile(await cropImageToSquare(picked));
   };
 
   const onOrgSubmit = (values: OrgFormValues) => {
@@ -243,7 +238,10 @@ export function AccountPage() {
     toast.loading(translations("Hold on, Organization info is getting updated.."), {
       id: "load-data",
     });
-    orgDetailsUpdate.mutate(data);
+    // Close on success only, so a rejected save keeps the entered values on screen.
+    orgDetailsUpdate.mutate(data, {
+      onSuccess: () => setIsBusinessDialogOpen(false),
+    });
   };
 
   const industries = [
@@ -276,7 +274,7 @@ export function AccountPage() {
   }, [updateLogo.isPending, updateProfilePhoto.isPending]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-2">
       <div>
         <h2 className="text-2xl mb-1">{translations("Account Settings")}</h2>
         <p className="text-sm text-muted-foreground">
@@ -337,42 +335,72 @@ export function AccountPage() {
                   <p className="text-xs sm:text-sm text-gray-600">
                     {profileData?.data?.data?.email} • {translations("Member since")}{" "}
                     {profileData?.data?.data?.createdAt
-                      ? new Date(profileData.data.data.createdAt).getFullYear()
+                      ? dayjs(profileData.data.data.createdAt).format("MMM D, YYYY")
                       : "—"}
                   </p>
 
-                  {/* Status Badges */}
+                  {/* Outline badge with the role's own icon and colour, as everywhere else. */}
                   <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
-                    <Badge
-                      className={`${
-                        profileData?.data?.data?.active ? "bg-green-600" : "bg-gray-400"
-                      } text-white text-xs sm:text-sm`}
-                    >
-                      {profileData?.data?.data?.active ? "Active Account" : "Inactive Account"}
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="border-purple-500 text-purple-600 text-xs sm:text-sm"
-                    >
-                      {profileData?.data?.data?.role}
-                    </Badge>
+                    {(() => {
+                      const role = profileData?.data?.data?.role;
+                      if (!role) return null;
+
+                      const roleStyles = {
+                        [UserRole.SUPADM]: {
+                          icon: IconShield,
+                          label: translations("Super Admin"),
+                          className: "text-primary",
+                        },
+                        [UserRole.ADM]: {
+                          icon: IconUserCog,
+                          label: translations("Admin"),
+                          className: "text-rateup-orange",
+                        },
+                        [UserRole.MEMBER]: {
+                          icon: IconMessageCircle,
+                          label: translations("Staff"),
+                          className: "text-green-600",
+                        },
+                      }[role as string];
+
+                      if (!roleStyles) return null;
+                      const RoleIcon = roleStyles.icon;
+
+                      return (
+                        <Badge variant="outline" className="gap-1.5 text-xs font-normal sm:text-sm">
+                          <RoleIcon className={`size-3.5 ${roleStyles.className}`} />
+                          {roleStyles.label}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                 </div>
 
-                {/* Edit Button */}
                 <div className="flex justify-center sm:justify-end">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-2 w-full sm:w-auto mt-2 sm:mt-0"
                     onClick={() => setIsEditProfileDialogOpen(true)}
                   >
-                    <IconEdit className="w-4 h-4" />
+                    <IconPencil className="size-4" />
                     {translations("Edit")}
                   </Button>
                 </div>
               </div>
             </div>
+          </div>
+          {/* Saved to `User.prefLanguage` as well as the i18next cookie. */}
+          <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <IconGlobe className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">{translations("Language")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {translations("Saved to your account and used wherever you sign in")}
+                </p>
+              </div>
+            </div>
+            <LocaleSwitcher />
           </div>
         </Card>
       )}
@@ -391,13 +419,8 @@ export function AccountPage() {
             </div>
           </div>
           {user?.role === UserRole.SUPADM && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => setIsBusinessDialogOpen(true)}
-            >
-              <IconEdit className="w-4 h-4" />
+            <Button variant="outline" size="sm" onClick={() => setIsBusinessDialogOpen(true)}>
+              <IconPencil className="size-4" />
               {translations("Edit")}
             </Button>
           )}
@@ -502,17 +525,13 @@ export function AccountPage() {
                         type="file"
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
                         className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            toggleCropDialog();
-                            setSelectedImage({
-                              name: file.name,
-                              url: URL.createObjectURL(file),
-                            });
-                            e.target.value = "";
-                            setIsLogoUpload(true);
-                          }
+                        onChange={async (e) => {
+                          const picked = e.target.files?.[0];
+                          e.target.value = "";
+                          if (!picked) return;
+
+                          setIsLogoUpload(true);
+                          setFile(await cropImageToSquare(picked));
                         }}
                       />
                     </FieldLabel>
@@ -626,7 +645,10 @@ export function AccountPage() {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor="businessEmail">
-                          {translations("Business Email")}
+                          {translations("Business Email")}{" "}
+                          <span className="text-muted-foreground">
+                            ({translations("optional")})
+                          </span>
                         </FieldLabel>
                         <Input
                           {...field}
@@ -697,27 +719,6 @@ export function AccountPage() {
           </DialogContent>
         </Dialog>
       )}
-      <Card className="p-5 shadow-sm border-gray-200">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <IconGlobe className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h4 className="mb-0">{translations("Regional Settings")}</h4>
-            <p className="text-xs text-muted-foreground">{translations("Language Preferences")}</p>
-          </div>
-        </div>
-        <LocaleSwitcher />
-      </Card>
-      {/* Image Crop Modal */}
-      <ImageCropModal
-        opened={openedCropDialog}
-        onclose={closeCropDialog}
-        imageName={selectedImage.name}
-        handleCropImageSave={handleCropImageSave}
-        image={selectedImage.url}
-        aspect={1}
-      />
       {/* Edit Profile Dialog */}
       <Dialog open={isEditProfileDialogOpen} onOpenChange={setIsEditProfileDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">

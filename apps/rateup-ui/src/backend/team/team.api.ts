@@ -15,6 +15,10 @@ export interface IInviteMember {
   teamId: string | null;
   email: string;
   type?: string;
+  /** The role the invitee is created with on accept. Omitted means ADMIN. */
+  role?: string;
+  /** Every team the invitee joins on accept. Omitted means `teamId` alone. */
+  teamIds?: string[];
 }
 
 export interface IEditTeam {

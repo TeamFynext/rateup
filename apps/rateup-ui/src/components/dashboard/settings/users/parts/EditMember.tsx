@@ -1,19 +1,13 @@
 // Extracted verbatim from `UsersPage.tsx`. Behaviour is unchanged.
 
 import {
-  IconBolt,
-  IconClock,
-  IconDatabase,
   IconDeviceFloppy,
-  IconLock,
   IconMail,
-  IconMessage,
   IconMessageCircle,
   IconPencil,
   IconShield,
   IconShieldLock,
   IconTrash,
-  IconUpload,
   IconUser,
   IconUserCog,
 } from "@tabler/icons-react";
@@ -49,9 +43,7 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
   FieldSeparator,
-  FieldSet,
   FieldTitle,
 } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
@@ -65,7 +57,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -189,19 +180,22 @@ export function EditMember({
       id: "delete-user",
     });
 
-    updateActiveStatus.mutate(selectedUser.id, {
-      onSuccess: () => {
-        toast.success(translations("User deleted successfully"), {
-          id: "delete-user",
-        });
-        closeDialog();
+    updateActiveStatus.mutate(
+      { userId: selectedUser.id },
+      {
+        onSuccess: () => {
+          toast.success(translations("User deleted successfully"), {
+            id: "delete-user",
+          });
+          closeDialog();
+        },
+        onError: (error) => {
+          toast.error(error?.message || translations("Failed to delete user"), {
+            id: "delete-user",
+          });
+        },
       },
-      onError: (error) => {
-        toast.error(error?.message || translations("Failed to delete user"), {
-          id: "delete-user",
-        });
-      },
-    });
+    );
   };
 
   const handleSaveProfile = () => {
@@ -353,10 +347,10 @@ export function EditMember({
         }
       }}
     >
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#2E5BFF] flex items-center justify-center">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
               <IconPencil className="w-4 h-4 text-white" />
             </div>
             {translations("Edit User")}
@@ -366,91 +360,83 @@ export function EditMember({
           </DialogDescription>
         </DialogHeader>
 
+        {/*
+         * Two tabs, split by who the change is about: Details is the person's own profile
+         * (what Save Changes writes), Settings is what the org grants them — role, teams,
+         * whether the account is live at all, and deleting it.
+         *
+         * The old third tab and its neighbours are gone for good: switches for inbox
+         * access, automations, analytics, email notifications, 2FA, mobile access and a
+         * password-reset button, all permanently disabled and wired to nothing. So is the
+         * photo upload, which changed a local preview `handleSaveProfile` never sent, and
+         * "Last Active", which the members endpoint does not return.
+         */}
         {selectedUser && (
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="w-full">
-              <TabsTrigger value="details">{translations("User Details")}</TabsTrigger>
-              <TabsTrigger value="permissions">{translations("Permissions")}</TabsTrigger>
-              <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
-            </TabsList>
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <Avatar className="size-12 shrink-0">
+                {profileImage ? (
+                  <AvatarImage src={profileImage} />
+                ) : (
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    <IconUser className="size-6" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
 
-            <TabsContent value="details" className="space-y-4">
-              <div className="grid grid-cols-[180px_1fr] gap-6">
-                <div className="flex flex-col items-center gap-2">
-                  <Avatar className="w-32 h-32 ring-2 ring-gray-200">
-                    {profileImage ? (
-                      <AvatarImage src={profileImage} />
-                    ) : (
-                      <AvatarFallback className="bg-[#2E5BFF] text-white">
-                        <IconUser className="w-12 h-12" />
-                      </AvatarFallback>
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-sm font-medium">{selectedUser.name}</span>
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "size-2 shrink-0 rounded-full",
+                      selectedUser.status === "online"
+                        ? "bg-green-600"
+                        : "border border-muted-foreground/50",
                     )}
-                  </Avatar>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      const input = document.createElement("input");
-                      input.type = "file";
-                      input.accept = "image/*";
-                      input.onchange = (event: Event) => {
-                        const target = event.target as HTMLInputElement;
-                        const file = target.files?.[0];
-                        if (!file) return;
+                  />
+                  <span className="capitalize">
+                    {selectedUser.status || translations("Offline")}
+                  </span>
+                </span>
+              </div>
+            </div>
 
-                        const reader = new FileReader();
-                        reader.onload = (loadEvent) => {
-                          setProfileImage(loadEvent.target?.result as string);
-                        };
-                        reader.readAsDataURL(file);
-                      };
-                      input.click();
-                    }}
-                  >
-                    <IconUpload className="w-3 h-3 mr-1.5" />
-                    {translations("Change Photo")}
-                  </Button>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        selectedUser.status === "online" ? "bg-green-500" : "bg-gray-400"
-                      }`}
-                    />
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {selectedUser.status || translations("Unknown")}
-                    </span>
-                  </div>
-                </div>
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="w-full">
+                <TabsTrigger value="details">{translations("User Details")}</TabsTrigger>
+                <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
+              </TabsList>
 
+              <TabsContent value="details">
                 <FieldGroup className="gap-3">
-                  <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
-                    <FieldLabel htmlFor="edit-gender" className="text-xs">
-                      {translations("Title")} <span className="text-destructive">*</span>
-                    </FieldLabel>
-                    <Select
-                      value={editableGender}
-                      onValueChange={(value) => setEditableGender(value ?? "")}
-                      disabled={!canEditNameAndPhone}
-                      items={[
-                        { value: "MALE", label: "Mr" },
-                        { value: "FEMALE", label: "Mrs" },
-                        { value: "OTHER", label: "Mx" },
-                      ]}
-                    >
-                      <SelectTrigger id="edit-gender" className="h-9">
-                        <SelectValue placeholder={translations("Select title")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="MALE">Mr</SelectItem>
-                        <SelectItem value="FEMALE">Mrs</SelectItem>
-                        <SelectItem value="OTHER">Mx</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
+                  <div className="grid grid-cols-[110px_1fr] gap-3">
+                    <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
+                      <FieldLabel htmlFor="edit-gender" className="text-xs">
+                        {translations("Title")} <span className="text-destructive">*</span>
+                      </FieldLabel>
+                      <Select
+                        value={editableGender}
+                        onValueChange={(value) => setEditableGender(value ?? "")}
+                        disabled={!canEditNameAndPhone}
+                        items={[
+                          { value: "MALE", label: "Mr" },
+                          { value: "FEMALE", label: "Mrs" },
+                          { value: "OTHER", label: "Mx" },
+                        ]}
+                      >
+                        <SelectTrigger id="edit-gender" className="h-9">
+                          <SelectValue placeholder={translations("Select title")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="MALE">Mr</SelectItem>
+                          <SelectItem value="FEMALE">Mrs</SelectItem>
+                          <SelectItem value="OTHER">Mx</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
 
-                  <div className="grid grid-cols-2 gap-3">
                     <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
                       <FieldLabel htmlFor="edit-name" className="text-xs">
                         {translations("Full Name")} <span className="text-destructive">*</span>
@@ -463,26 +449,11 @@ export function EditMember({
                         disabled={!canEditNameAndPhone}
                       />
                     </Field>
-
-                    <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
-                      <FieldLabel htmlFor="edit-phone" className="text-xs">
-                        {translations("Phone Number")}
-                      </FieldLabel>
-                      <PhoneInput
-                        id="edit-phone"
-                        placeholder={translations("Enter phone number")}
-                        className="h-9"
-                        defaultCountry="IN"
-                        value={editablePhone}
-                        onChange={(value) => setEditablePhone(value || "")}
-                        disabled={!canEditNameAndPhone}
-                      />
-                    </Field>
                   </div>
 
                   <Field className="gap-1.5" data-disabled>
                     <FieldLabel htmlFor="edit-email" className="text-xs">
-                      {translations("Email Address")} <span className="text-destructive">*</span>
+                      {translations("Email Address")}
                     </FieldLabel>
                     <InputGroup className="h-9">
                       <InputGroupAddon>
@@ -497,267 +468,162 @@ export function EditMember({
                     </InputGroup>
                   </Field>
 
-                  <Field className="gap-1.5">
-                    <FieldTitle className="text-xs">{translations("Last Active")}</FieldTitle>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
-                      <IconClock className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {selectedUser.lastActive || translations("Not available")}
-                      </span>
-                    </div>
-                  </Field>
-
-                  <Field className="gap-1.5">
-                    <FieldLabel htmlFor="edit-account-status" className="text-xs">
-                      {translations("Account Status")}
+                  <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
+                    <FieldLabel htmlFor="edit-phone" className="text-xs">
+                      {translations("Phone Number")}
                     </FieldLabel>
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={cn(
-                            "size-2 rounded-full",
-                            selectedUser.isPaused ? "bg-gray-400" : "bg-green-500",
-                          )}
-                        />
-                        <span className="text-sm">
-                          {selectedUser.isPaused
-                            ? translations("Inactive Account")
-                            : translations("Active Account")}
-                        </span>
-                      </div>
-                      <Switch
-                        id="edit-account-status"
-                        checked={!selectedUser.isPaused}
-                        onCheckedChange={handleUserStatus}
-                      />
-                    </div>
+                    <PhoneInput
+                      id="edit-phone"
+                      placeholder={translations("Enter phone number")}
+                      className="h-9"
+                      defaultCountry="IN"
+                      value={editablePhone}
+                      onChange={(value) => setEditablePhone(value || "")}
+                      disabled={!canEditNameAndPhone}
+                    />
                   </Field>
                 </FieldGroup>
-              </div>
-            </TabsContent>
+              </TabsContent>
 
-            <TabsContent value="permissions" className="space-y-4">
-              <FieldGroup className="gap-3">
-                <Field className="gap-1.5" data-disabled={!canEditAll}>
-                  <FieldLabel htmlFor="edit-role" className="text-xs">
-                    {translations("User Role")} <span className="text-destructive">*</span>
-                  </FieldLabel>
-                  <Select
-                    value={role}
-                    disabled={!canEditAll}
-                    items={[
-                      { value: UserRole.SUPADM, label: translations("Super Admin") },
-                      { value: UserRole.ADM, label: translations("Admin") },
-                      { value: UserRole.MEMBER, label: translations("Staff") },
-                    ]}
-                    onValueChange={(nextRole) => {
-                      if (!canEditAll) return;
-                      if (!selectedUser?.id) return;
-                      setRole(nextRole ?? "");
-                      onChangeRole(selectedUser.id, nextRole ?? "");
-                    }}
-                  >
-                    <SelectTrigger id="edit-role" className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={UserRole.SUPADM}>
-                        <div className="flex items-center gap-2">
-                          <IconShield className="w-3.5 h-3.5 text-primary" />
-                          <span>{translations("Super Admin")}</span>
-                          <Badge className="bg-primary text-[10px] h-4 px-1.5">
-                            {translations("Full Access")}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value={UserRole.ADM}>
-                        <div className="flex items-center gap-2">
-                          <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
-                          <span>{translations("Admin")}</span>
-                          <Badge className="bg-rateup-orange text-[10px] h-4 px-1.5">
-                            {translations("Team Lead")}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value={UserRole.MEMBER}>
-                        <div className="flex items-center gap-2">
-                          <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
-                          <span>{translations("Staff")}</span>
-                          <Badge className="bg-green-600 text-[10px] h-4 px-1.5">
-                            {translations("Support")}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+              <TabsContent value="settings" className="flex flex-col gap-5">
+                <FieldGroup className="gap-3">
+                  <Field className="gap-1.5" data-disabled={!canEditAll}>
+                    <FieldLabel htmlFor="edit-role" className="text-xs">
+                      {translations("User Role")} <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <Select
+                      value={role}
+                      disabled={!canEditAll}
+                      items={[
+                        { value: UserRole.SUPADM, label: translations("Super Admin") },
+                        { value: UserRole.ADM, label: translations("Admin") },
+                        { value: UserRole.MEMBER, label: translations("Staff") },
+                      ]}
+                      onValueChange={(nextRole) => {
+                        if (!canEditAll) return;
+                        if (!selectedUser?.id) return;
+                        setRole(nextRole ?? "");
+                        onChangeRole(selectedUser.id, nextRole ?? "");
+                      }}
+                    >
+                      <SelectTrigger id="edit-role" className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={UserRole.SUPADM}>
+                          <div className="flex items-center gap-2">
+                            <IconShield className="w-3.5 h-3.5 text-primary" />
+                            <span>{translations("Super Admin")}</span>
+                            <Badge className="bg-primary text-[10px] h-4 px-1.5">
+                              {translations("Full Access")}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value={UserRole.ADM}>
+                          <div className="flex items-center gap-2">
+                            <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
+                            <span>{translations("Admin")}</span>
+                            <Badge className="bg-rateup-orange text-[10px] h-4 px-1.5">
+                              {translations("Team Lead")}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value={UserRole.MEMBER}>
+                          <div className="flex items-center gap-2">
+                            <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
+                            <span>{translations("Staff")}</span>
+                            <Badge className="bg-green-600 text-[10px] h-4 px-1.5">
+                              {translations("Support")}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
 
-                <Field className="gap-1.5" data-disabled={!canEditAll || isUpdatingTeams}>
-                  <FieldTitle className="text-xs">{translations("Team Assignment")}</FieldTitle>
-                  <MultiSelect
-                    options={teamOptions}
-                    value={selectedTeamIds}
-                    onValueChange={handleTeamAssignmentChange}
-                    disabled={!canEditAll || isUpdatingTeams}
-                    className="w-full"
-                    placeholder={translations("Select teams")}
-                    emptyIndicator={translations("No teams found")}
+                  <Field className="gap-1.5" data-disabled={!canEditAll || isUpdatingTeams}>
+                    <FieldTitle className="text-xs">{translations("Team Assignment")}</FieldTitle>
+                    <MultiSelect
+                      options={teamOptions}
+                      value={selectedTeamIds}
+                      onValueChange={handleTeamAssignmentChange}
+                      disabled={!canEditAll || isUpdatingTeams}
+                      className="w-full"
+                      placeholder={translations("Select teams")}
+                      emptyIndicator={translations("No teams found")}
+                    />
+                    {/* Role and teams save on change, unlike the fields Save Changes writes. */}
+                    <FieldDescription className="text-xs">
+                      {translations("Role and team changes are saved immediately.")}
+                    </FieldDescription>
+                  </Field>
+                </FieldGroup>
+
+                <FieldSeparator />
+
+                <Field orientation="horizontal">
+                  <FieldContent>
+                    <FieldLabel htmlFor="edit-account-status" className="text-xs font-normal">
+                      {selectedUser.isPaused
+                        ? translations("Inactive Account")
+                        : translations("Active Account")}
+                    </FieldLabel>
+                    <FieldDescription>
+                      {translations("A paused account cannot sign in until it is re-enabled.")}
+                    </FieldDescription>
+                  </FieldContent>
+                  <Switch
+                    id="edit-account-status"
+                    checked={!selectedUser.isPaused}
+                    onCheckedChange={handleUserStatus}
                   />
                 </Field>
 
-                <FieldSeparator className="my-4" />
-
-                <FieldSet>
-                  <FieldLegend variant="label" className="text-xs">
-                    {translations("Additional Permissions")}
-                  </FieldLegend>
-                  <FieldGroup className="gap-2 p-3 bg-muted rounded-lg border">
-                    <Field orientation="horizontal" data-disabled>
-                      <IconMessage className="w-4 h-4 shrink-0 text-primary" />
-                      <FieldContent>
-                        <FieldLabel htmlFor="perm-inbox" className="font-normal">
-                          {translations("Access to Inbox")}
-                        </FieldLabel>
-                        <FieldDescription>
-                          {translations("View and respond to customer messages")}
-                        </FieldDescription>
-                      </FieldContent>
-                      <Switch id="perm-inbox" defaultChecked disabled />
-                    </Field>
-                    <Separator />
-                    <Field orientation="horizontal" data-disabled>
-                      <IconBolt className="w-4 h-4 shrink-0 text-rateup-orange" />
-                      <FieldContent>
-                        <FieldLabel htmlFor="perm-automations" className="font-normal">
-                          {translations("Manage Automations")}
-                        </FieldLabel>
-                        <FieldDescription>
-                          {translations("Create and edit workflow automation")}
-                        </FieldDescription>
-                      </FieldContent>
-                      <Switch id="perm-automations" disabled />
-                    </Field>
-                    <Separator />
-                    <Field orientation="horizontal" data-disabled>
-                      <IconDatabase className="w-4 h-4 shrink-0 text-green-600" />
-                      <FieldContent>
-                        <FieldLabel htmlFor="perm-analytics" className="font-normal">
-                          {translations("View Analytics")}
-                        </FieldLabel>
-                        <FieldDescription>
-                          {translations("Access reports and data insights")}
-                        </FieldDescription>
-                      </FieldContent>
-                      <Switch id="perm-analytics" defaultChecked disabled />
-                    </Field>
-                  </FieldGroup>
-                </FieldSet>
-              </FieldGroup>
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-4">
-              <FieldGroup className="gap-3 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-900">
-                <Field orientation="horizontal" data-disabled>
-                  <FieldLabel htmlFor="setting-email-notifications" className="text-xs">
-                    {translations("Email notifications enabled")}
-                  </FieldLabel>
-                  <Switch id="setting-email-notifications" defaultChecked disabled />
-                </Field>
-                <Separator />
-                <Field orientation="horizontal" data-disabled>
-                  <FieldLabel htmlFor="setting-two-factor" className="text-xs">
-                    {translations("Two-factor authentication")}
-                  </FieldLabel>
-                  <Switch id="setting-two-factor" disabled />
-                </Field>
-                <Separator />
-                <Field orientation="horizontal" data-disabled>
-                  <FieldLabel htmlFor="setting-mobile-access" className="text-xs">
-                    {translations("Allow mobile app access")}
-                  </FieldLabel>
-                  <Switch id="setting-mobile-access" defaultChecked disabled />
-                </Field>
-              </FieldGroup>
-
-              <Separator className="my-4" />
-
-              <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <IconLock className="w-5 h-5 text-orange-600 mt-0.5 shrink-0" />
-                  <div className="flex-1">
-                    <h4 className="text-sm text-orange-700 mb-1">
-                      {translations("Password Reset")}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      {translations("Send a password reset email to the user")}
+                {isSuperAdminUser ? (
+                  <div className="flex items-start gap-3 rounded-lg border bg-muted/50 p-3">
+                    <IconShieldLock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">
+                      {translations(
+                        "A super admin cannot be deleted. Change their role first if this account should be removed.",
+                      )}
                     </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-orange-300 hover:bg-orange-100"
-                      disabled
-                    >
-                      <IconMail className="w-3.5 h-3.5 mr-1.5" />
-                      {translations("Send Reset Link")}
-                    </Button>
                   </div>
-                </div>
-              </div>
-
-              <Separator className="my-4" />
-
-              {isSuperAdminUser ? (
-                <div className="p-4 bg-muted/50 border rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <IconShieldLock className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="text-sm mb-1">{translations("Super admin account")}</h4>
-                      <p className="text-xs text-muted-foreground">
-                        {translations(
-                          "A super admin cannot be deleted. Change their role first if this account should be removed.",
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <IconTrash className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="text-sm text-red-700 mb-1">
+                ) : (
+                  <div className="flex items-start justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-destructive">
                         {translations("Delete User Account")}
-                      </h4>
-                      <p className="text-xs text-muted-foreground mb-3">
+                      </p>
+                      <p className="text-xs text-muted-foreground">
                         {translations(
                           "Permanently remove this user and all associated data. This action cannot be undone.",
                         )}
                       </p>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={updateActiveStatus.isPending}
-                        onClick={handleDeleteUser}
-                      >
-                        <IconTrash className="w-3.5 h-3.5 mr-1.5" />
-                        {updateActiveStatus.isPending
-                          ? translations("Deleting")
-                          : translations("Delete User")}
-                      </Button>
                     </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="shrink-0"
+                      disabled={updateActiveStatus.isPending}
+                      onClick={handleDeleteUser}
+                    >
+                      <IconTrash className="w-3.5 h-3.5 mr-1.5" />
+                      {updateActiveStatus.isPending
+                        ? translations("Deleting")
+                        : translations("Delete User")}
+                    </Button>
                   </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         )}
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter>
           <Button variant="outline" onClick={closeDialog}>
             {translations("Cancel")}
           </Button>
           <Button
-            className="bg-[#2E5BFF] hover:bg-[#2549d8]"
             onClick={handleSaveProfile}
             disabled={updateProfile.isPending || updateMemberProfile.isPending}
           >

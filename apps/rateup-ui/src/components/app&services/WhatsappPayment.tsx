@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconRefresh } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import clsx from "clsx";
 import dayjs from "dayjs";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -13,6 +12,8 @@ import {
   useIntegrationByType,
   useRegenerateWaPaymentConfigurationOauthMutation,
 } from "@/backend/appsIntegration/integration.query";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { MCC, PROVIDER_NAMES } from "@/components/integrations/utils.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
@@ -118,19 +119,33 @@ export function WhatsappPayment() {
     close();
   };
 
+  const config = INTEGRATIONS_CONFIG.waPayment;
+  const configurationCount = data?.credential?.length ?? 0;
+
   return (
-    <div className="flex h-full flex-col gap-4">
-      <div className="flex items-center gap-2">
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      connected={configurationCount > 0}
+      detail={
+        configurationCount > 0
+          ? `${configurationCount} ${configurationCount === 1 ? "configuration" : "configurations"}`
+          : undefined
+      }
+      action={
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             open();
             // refetch().then(() => integrationListRefetch());
           }}
         >
-          Get Configuration From Whatsapp
-          <IconRefresh data-icon="inline-end" />
+          <IconRefresh data-icon="inline-start" />
+          Fetch from WhatsApp
         </Button>
+      }
+    >
+      <>
         <Dialog
           open={opened}
           onOpenChange={(nextOpen) => {
@@ -308,7 +323,7 @@ export function WhatsappPayment() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </>
       <WhatsappPaymentList
         data={data}
         deleteMutation={deleteMutation}
@@ -316,7 +331,7 @@ export function WhatsappPayment() {
           regenerateWaPaymentConfigurationOauthMutation
         }
       />
-    </div>
+    </IntegrationShell>
   );
 }
 
@@ -343,13 +358,11 @@ function WhatsappPaymentList({
 }) {
   if (!data?.credential || data?.credential?.length === 0) return <NothingFound text="" />;
   return (
-    <div className={clsx("cards-grid-global-class")}>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {data?.credential?.map((credential) => (
         <Card key={credential?.configuration_name}>
           <CardHeader className="flex items-center justify-between">
-            <CardTitle className="mr-3 truncate text-lg">
-              {credential?.configuration_name}
-            </CardTitle>
+            <CardTitle className="mr-3 truncate">{credential?.configuration_name}</CardTitle>
             {/* <WhatsappPaymentCardMenu
               name={credential?.configuration_name}
               deleteMutation={deleteMutation}
@@ -401,12 +414,8 @@ function WhatsappPaymentList({
                 ))}
             </div>
             <div className="flex items-center justify-between">
-              <Badge className="border-transparent bg-orange-100 text-orange-700">
-                {credential?.provider_name ?? "RazorPay"}
-              </Badge>
-              <Badge className="border-transparent bg-green-100 text-green-700">
-                {credential?.status}
-              </Badge>
+              <Badge variant="secondary">{credential?.provider_name ?? "RazorPay"}</Badge>
+              <Badge variant="outline">{credential?.status}</Badge>
             </div>
           </CardContent>
         </Card>

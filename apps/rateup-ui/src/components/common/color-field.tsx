@@ -4,15 +4,13 @@ import { useTranslation } from "react-i18next";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { cn } from "@/lib/utils.ts";
-
-import { readableTextOn } from "../brand.ts";
-import { HEX_COLOUR } from "../schemas.ts";
+import { HEX_COLOR, readableTextOn } from "@/utils/color.ts";
 
 /**
  * Colours that sit well with the RateUp chrome: the blue ramp, the two star ambers, two
- * WhatsApp greens and a neutral. A merchant can still type any hex.
+ * WhatsApp greens and a neutral. Any hex can still be typed or picked.
  */
-export const BRAND_SWATCHES: readonly string[] = [
+export const COLOR_SWATCHES: readonly string[] = [
   "#1c518e",
   "#2e68a8",
   "#5a8cc6",
@@ -24,22 +22,25 @@ export const BRAND_SWATCHES: readonly string[] = [
   "#434a55",
 ];
 
-interface BrandColorFieldProps {
+interface ColorFieldProps {
   id: string;
   label: string;
   value: string;
   onChange: (hex: string) => void;
   onBlur?: () => void;
   hint?: string;
-  /** Swatches only — the VIP card, where a hex input would be one field too many. */
+  /** Swatches only — for a spot like the VIP card, where a hex input is one field too many. */
   compact?: boolean;
   swatches?: readonly string[];
   invalid?: boolean;
   error?: { message?: string };
 }
 
-/** Swatch row, native picker and a hex box, all writing the same six-digit value. */
-export function BrandColorField({
+/**
+ * Swatch row, native picker and a hex box, all writing the same six-digit value. Shared by the
+ * loyalty wizard's brand colour and the team colour in settings.
+ */
+export function ColorField({
   id,
   label,
   value,
@@ -47,13 +48,13 @@ export function BrandColorField({
   onBlur,
   hint,
   compact = false,
-  swatches = BRAND_SWATCHES,
+  swatches = COLOR_SWATCHES,
   invalid,
   error,
-}: Readonly<BrandColorFieldProps>) {
+}: Readonly<ColorFieldProps>) {
   const { t } = useTranslation();
   const current = value.toLowerCase();
-  const valid = HEX_COLOUR.test(current);
+  const valid = HEX_COLOR.test(current);
 
   return (
     <Field data-invalid={invalid}>

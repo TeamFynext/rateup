@@ -9,6 +9,7 @@ import { z } from "zod";
 import type { SavedOnboardingData } from "@/backend/loyalty/onboarding.api";
 import type { LoyaltyProgram } from "@/backend/loyalty/program.api";
 import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
+import { ColorField } from "@/components/common/color-field.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -21,7 +22,6 @@ import { cn } from "@/lib/utils.ts";
 
 import { formatPoints } from "../giveback/format.ts";
 import { whatsappJoinUrl } from "../joinLink.ts";
-import { BrandColorField } from "../onboarding/parts/BrandColorField.tsx";
 import { DEFAULT_BRAND_COLOR } from "../onboarding/programDefaults.ts";
 import { rewardGroupOf } from "../onboarding/rewardGroups.ts";
 import { HEX_COLOUR } from "../onboarding/schemas.ts";
@@ -471,7 +471,7 @@ function DesignGallery({
             const tones = brochureTones(String(field.value ?? ""), brandColor);
             return (
               <div className="flex flex-col gap-2.5">
-                <BrandColorField
+                <ColorField
                   id={field.name}
                   label={t("Background")}
                   value={String(field.value ?? "")}

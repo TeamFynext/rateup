@@ -1,4 +1,4 @@
-// Shared types for the billing modules in `./` and in `dashboard/settings/billing/`.
+// Shared types for the billing modules in this directory.
 
 /** A payment order row, as the orders endpoint returns it. */
 export interface PaymentOrder {

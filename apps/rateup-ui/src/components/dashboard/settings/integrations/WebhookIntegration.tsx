@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconInfoCircle, IconLoader2, IconTrash, IconWebhook } from "@tabler/icons-react";
+import { IconInfoCircle, IconLoader2, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -38,6 +38,9 @@ import {
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+
+import { INTEGRATIONS_CONFIG } from "./integrations.config.ts";
+import { IntegrationShell } from "./IntegrationShell.tsx";
 
 const EVENT_OPTIONS: Readonly<{ value: WebhookEvent; label: string; description: string }[]> = [
   {
@@ -174,21 +177,20 @@ export default function WebhookIntegration() {
     });
   };
 
+  const config = INTEGRATIONS_CONFIG.webhook;
+
   return (
-    <>
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      own
+      connected={Boolean(webhook?.url)}
+      detail={webhook?.url}
+    >
       <Card id="webhook-settings">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <IconWebhook className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle>{t("Webhook")}</CardTitle>
-              <CardDescription>
-                {t("Send event data to your endpoint in real time.")}
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle>{t("Endpoint")}</CardTitle>
+          <CardDescription>{t("Send event data to your endpoint in real time.")}</CardDescription>
         </CardHeader>
 
         {isLoading ? (
@@ -197,10 +199,10 @@ export default function WebhookIntegration() {
           </CardContent>
         ) : (
           <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-            <CardContent className="space-y-2">
-              <Alert>
-                <IconInfoCircle className="h-4 w-4" />
-                <AlertTitle>{t("URL Verification")}</AlertTitle>
+            <CardContent className="flex flex-col gap-4">
+              <Alert className="max-w-lg">
+                <IconInfoCircle />
+                <AlertTitle>{t("URL verification")}</AlertTitle>
                 <AlertDescription className="text-muted-foreground">
                   {t(
                     "Your server must respond to a GET request at the webhook URL with the challenge query parameter value as plain text.",
@@ -212,94 +214,65 @@ export default function WebhookIntegration() {
                 </AlertDescription>
               </Alert>
 
-              <Controller
-                name="url"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>{t("Endpoint URL")}</FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      placeholder={t("https://example.com/webhook")}
-                      aria-invalid={fieldState.invalid}
-                      autoComplete="off"
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
+              <div className="flex max-w-lg flex-col gap-4">
+                <Controller
+                  name="url"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>{t("Endpoint URL")}</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        placeholder={t("https://example.com/webhook")}
+                        aria-invalid={fieldState.invalid}
+                        autoComplete="off"
+                      />
+                      {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                    </Field>
+                  )}
+                />
 
-              <Controller
-                name="verifyToken"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>{t("Verify Token")}</FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      type={tokenMasked ? "password" : "text"}
-                      value={tokenMasked ? "••••••••" : field.value}
-                      placeholder={tokenMasked ? "" : t("secret token")}
-                      aria-invalid={fieldState.invalid}
-                      autoComplete="off"
-                      onFocus={() => {
-                        if (tokenMasked) {
+                <Controller
+                  name="verifyToken"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>{t("Verify Token")}</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type={tokenMasked ? "password" : "text"}
+                        value={tokenMasked ? "••••••••" : field.value}
+                        placeholder={tokenMasked ? "" : t("secret token")}
+                        aria-invalid={fieldState.invalid}
+                        autoComplete="off"
+                        onFocus={() => {
+                          if (tokenMasked) {
+                            setTokenRevealed(true);
+                            field.onChange("");
+                          }
+                        }}
+                        onChange={(e) => {
                           setTokenRevealed(true);
-                          field.onChange("");
-                        }
-                      }}
-                      onChange={(e) => {
-                        setTokenRevealed(true);
-                        field.onChange(e);
-                      }}
-                    />
-                    {tokenMasked ? (
-                      <FieldDescription>
-                        {t("A verify token is saved. Click the field to replace it.")}
-                      </FieldDescription>
-                    ) : (
-                      <FieldDescription>
-                        {t(
-                          "If provided, the server will send this token as a verify_token query parameter during the challenge. Your endpoint can use it to confirm the request is from RateUp.",
-                        )}
-                      </FieldDescription>
-                    )}
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-
-              <div className="flex w-full gap-2 justify-end">
-                {webhook ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30"
-                    onClick={() => setConfirmDeleteOpen(true)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    {deleteMutation.isPending ? (
-                      <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <IconTrash className="mr-2 h-4 w-4" />
-                    )}
-                    {t("Remove Webhook")}
-                  </Button>
-                ) : (
-                  <span />
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={saveMutation.isPending || (!!webhook && !form.formState.isDirty)}
-                >
-                  {saveMutation.isPending ? (
-                    <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  {saveMutation.isPending ? t("Verifying URL...") : t("Verify and Save")}
-                </Button>
+                          field.onChange(e);
+                        }}
+                      />
+                      {tokenMasked ? (
+                        <FieldDescription>
+                          {t("A verify token is saved. Click the field to replace it.")}
+                        </FieldDescription>
+                      ) : (
+                        <FieldDescription>
+                          {t(
+                            "If provided, the server will send this token as a verify_token query parameter during the challenge. Your endpoint can use it to confirm the request is from RateUp.",
+                          )}
+                        </FieldDescription>
+                      )}
+                      {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                    </Field>
+                  )}
+                />
               </div>
 
               <Controller
@@ -318,6 +291,33 @@ export default function WebhookIntegration() {
                   />
                 )}
               />
+              <div className="flex items-center gap-2">
+                <Button
+                  type="submit"
+                  disabled={saveMutation.isPending || (!!webhook && !form.formState.isDirty)}
+                >
+                  {saveMutation.isPending ? (
+                    <IconLoader2 className="animate-spin" data-icon="inline-start" />
+                  ) : null}
+                  {saveMutation.isPending ? t("Verifying URL…") : t("Verify and save")}
+                </Button>
+
+                {webhook && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setConfirmDeleteOpen(true)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {deleteMutation.isPending ? (
+                      <IconLoader2 className="animate-spin" data-icon="inline-start" />
+                    ) : (
+                      <IconTrash data-icon="inline-start" />
+                    )}
+                    {t("Remove webhook")}
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </form>
         )}
@@ -362,6 +362,6 @@ export default function WebhookIntegration() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </IntegrationShell>
   );
 }

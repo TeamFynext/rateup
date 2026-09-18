@@ -9,16 +9,22 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import i18n from "@/i18n.ts";
-
-type Locale = "en" | "ar" | "de" | "fr" | "hi";
+import type { Locale } from "@/utils/locale.ts";
 
 interface Props {
   defaultValue: string;
   items: Array<{ value: string; label: string }>;
   label: string;
+  /** Called with the new locale after the cookie and i18n are updated. */
+  onLocaleChange?: (locale: Locale) => void;
 }
 
-export default function LocaleSwitcherSelect({ defaultValue, items, label }: Readonly<Props>) {
+export default function LocaleSwitcherSelect({
+  defaultValue,
+  items,
+  label,
+  onLocaleChange,
+}: Readonly<Props>) {
   const [isPending, startTransition] = useTransition();
   const [value, setValue] = useState(defaultValue);
 
@@ -29,6 +35,7 @@ export default function LocaleSwitcherSelect({ defaultValue, items, label }: Rea
     startTransition(() => {
       document.cookie = `i18next=${locale}; path=/; max-age=31536000`;
       void i18n.changeLanguage(locale);
+      onLocaleChange?.(locale);
     });
   }
 

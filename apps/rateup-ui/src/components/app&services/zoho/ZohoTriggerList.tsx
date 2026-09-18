@@ -24,8 +24,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
+import { Field, FieldDescription, FieldLabel } from "../../ui/field";
 import { Input } from "../../ui/input";
-import { Label } from "../../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { ZohoTriggers, getTriggerLabel, getTriggerDescription } from "./shared.tsx";
 
@@ -273,7 +273,7 @@ export const ZohoTriggerList = ({
             return (
               <div
                 key={triggerKey}
-                className="flex items-start justify-between rounded-2xl border bg-muted/40 p-4 transition-all hover:bg-muted/60"
+                className="flex items-start justify-between rounded-lg border bg-muted/30 p-4 transition-colors hover:bg-muted/50"
               >
                 <div className="flex items-start gap-3 pr-4">
                   <div className="rounded-xl border bg-background p-2 shadow-sm">
@@ -311,7 +311,7 @@ export const ZohoTriggerList = ({
         <Card className="overflow-hidden rounded-3xl border shadow-sm">
           <CardHeader className="border-b bg-muted/30">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl border bg-background p-2 shadow-sm">
+              <div className="rounded-lg border bg-background p-2">
                 <BiginLogo className="h-5 w-5" />
               </div>
 
@@ -328,8 +328,8 @@ export const ZohoTriggerList = ({
           </CardHeader>
 
           <CardContent className="space-y-6 p-6">
-            <div className="space-y-2">
-              <Label>{t("Bigin Owner")}</Label>
+            <Field>
+              <FieldLabel>{t("Bigin owner")}</FieldLabel>
               <Select
                 value={selectedBiginOwnerId}
                 onValueChange={(value) => setSelectedBiginOwnerId(String(value))}
@@ -339,7 +339,7 @@ export const ZohoTriggerList = ({
                   label: `${owner.name} ${owner.email ? `(${owner.email})` : ""}`,
                 }))}
               >
-                <SelectTrigger className="h-11 rounded-xl w-full">
+                <SelectTrigger className="w-full">
                   <SelectValue
                     placeholder={zohoUsersLoading ? t("Loading users...") : t("Select a Zoho user")}
                   />
@@ -354,12 +354,12 @@ export const ZohoTriggerList = ({
                 </SelectContent>
               </Select>
 
-              <p className="text-sm text-muted-foreground">
+              <FieldDescription>
                 {t(
                   "The selected user id will be saved as the Bigin owner in your Zoho credential.",
                 )}
-              </p>
-            </div>
+              </FieldDescription>
+            </Field>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Button
@@ -394,7 +394,7 @@ export const ZohoTriggerList = ({
         <Card className="overflow-hidden rounded-3xl border bg-gradient-to-br from-background to-muted/30 shadow-sm">
           <CardHeader className="border-b bg-muted/30">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl border bg-background p-2 shadow-sm">
+              <div className="rounded-lg border bg-background p-2">
                 <BiginLogo className="h-5 w-5" />
               </div>
 
@@ -411,8 +411,8 @@ export const ZohoTriggerList = ({
           <CardContent className="space-y-6 p-6">
             <div className="grid gap-6 md:grid-cols-2">
               {/* Pipeline */}
-              <div className="space-y-2">
-                <Label>{t("Pipeline")}</Label>
+              <Field>
+                <FieldLabel>{t("Pipeline")}</FieldLabel>
                 <Select
                   value={selectedPipelineId}
                   onValueChange={(value) => {
@@ -423,7 +423,7 @@ export const ZohoTriggerList = ({
                     label: pipeline.name,
                   }))}
                 >
-                  <SelectTrigger className="h-11 rounded-xl w-full">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select pipeline" />
                   </SelectTrigger>
 
@@ -435,14 +435,14 @@ export const ZohoTriggerList = ({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
 
               {/* Sub Pipeline */}
-              <div className="space-y-2">
+              <Field>
                 <div className="flex items-center gap-1">
-                  <Label>{t("Sub Pipeline")}</Label>
+                  <FieldLabel>{t("Sub pipeline")}</FieldLabel>
 
-                  <p className="text-xs text-red-500 font-medium">
+                  <p className="text-xs text-muted-foreground">
                     ({t("Select a sub pipeline that belongs to the selected pipeline")})
                   </p>
                 </div>
@@ -456,7 +456,7 @@ export const ZohoTriggerList = ({
                     label: pipeline.name,
                   }))}
                 >
-                  <SelectTrigger className="h-11 rounded-xl w-full">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select sub pipeline" />
                   </SelectTrigger>
 
@@ -468,14 +468,14 @@ export const ZohoTriggerList = ({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
             </div>
 
             {/* REQUIRED FIELDS */}
             {(selectedPipeline?.requiredFields?.length ?? 0) > 0 && (
-              <div className="space-y-4 rounded-2xl border bg-muted/20 p-5">
+              <div className="flex flex-col gap-4 rounded-lg border bg-muted/30 p-4">
                 <div>
-                  <h3 className="font-semibold">{t("Required Fields")}</h3>
+                  <h3 className="font-heading text-base font-medium">{t("Required fields")}</h3>
 
                   <p className="text-sm text-muted-foreground">
                     {t("Configure mandatory fields for this pipeline")}.
@@ -486,8 +486,8 @@ export const ZohoTriggerList = ({
                   {(selectedPipeline?.requiredFields ?? [])
                     .filter((field) => !autoManagedFields.includes(field.apiName))
                     .map((field) => (
-                      <div key={field.apiName} className="space-y-2">
-                        <Label>{field.label}</Label>
+                      <Field key={field.apiName}>
+                        <FieldLabel>{field.label}</FieldLabel>
 
                         {field.dataType === "date" && (
                           <Input
@@ -534,7 +534,7 @@ export const ZohoTriggerList = ({
                             }
                           />
                         )}
-                      </div>
+                      </Field>
                     ))}
                 </div>
               </div>
@@ -576,7 +576,7 @@ export const ZohoTriggerList = ({
               {t(
                 "Map the columns of your pipeline to Bigin stages. Moving a lead on the board updates the matching Bigin deal, and a Bigin stage change moves the lead back.",
               )}
-              <p className="text-sm text-red-500 font-medium mt-2">
+              <p className="mt-2 text-sm font-medium text-foreground">
                 {t(
                   "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration.",
                 )}
@@ -603,7 +603,7 @@ export const ZohoTriggerList = ({
             {stageMappings.map((mapping, index) => (
               <div key={mapping.stageId} className="flex items-center gap-4 rounded-xl border p-4">
                 <div className="flex-1">
-                  <Label>{mapping.stageName}</Label>
+                  <FieldLabel>{mapping.stageName}</FieldLabel>
                 </div>
 
                 <Select

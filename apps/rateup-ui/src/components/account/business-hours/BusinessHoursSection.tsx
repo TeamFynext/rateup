@@ -1,4 +1,4 @@
-import { IconClock, IconEdit } from "@tabler/icons-react";
+import { IconClock, IconPlus } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -8,207 +8,159 @@ import {
   useGetAllBusinessHours,
   useUpdateBusinessHour,
 } from "@/backend/org/business-hours/business-hours.query";
+import { useRules } from "@/backend/whatsapp/rule/rule.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 
-import { BusinessHoursEditorDialog } from "./BusinessHoursEditorDialog.tsx";
-import { BusinessHoursListDialog } from "./BusinessHoursListDialog.tsx";
+import type { DependentRule } from "./ScheduleCard.tsx";
+import { ScheduleCard } from "./ScheduleCard.tsx";
 import type { BusinessHoursFormValues } from "./schema.ts";
-import { buildDefaultSchedule, formatDaySchedule } from "./schema.ts";
+import { buildDefaultSchedule } from "./schema.ts";
 
 interface Props {
   canManage: boolean;
 }
 
+const DEFAULT_TIMEZONE = "Asia/Kolkata";
+
 export function BusinessHoursSection({ canManage }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const { data: businessHours, isLoading } = useGetAllBusinessHours();
+  // Rules are read only to attribute each schedule. A failure here must not take the
+  // section down, so an error simply means no attribution is shown.
+  const { data: rules } = useRules();
+
   const createMutation = useCreateBusinessHour();
   const updateMutation = useUpdateBusinessHour();
   const deleteMutation = useDeleteBusinessHour();
 
-  const [listOpen, setListOpen] = useState(false);
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftOpen, setDraftOpen] = useState(false);
 
-  const list = businessHours || [];
+  const list = useMemo(() => businessHours ?? [], [businessHours]);
 
-  const editingItem = useMemo(
-    () => (editingId ? list.find((x) => x.id === editingId) : undefined),
-    [editingId, list],
-  );
+  /** schedule id -> the rules that gate themselves on it. */
+  const rulesBySchedule = useMemo(() => {
+    const map = new Map<string, DependentRule[]>();
+    for (const rule of rules ?? []) {
+      const options = rule.options;
+      if (!options?.businessHours?.enabled) continue;
 
-  const initialValues: BusinessHoursFormValues = useMemo(
-    () =>
-      editingItem
-        ? {
-            name: editingItem.name,
-            timezone: editingItem.timezone,
-            channels: editingItem.channels,
-            description: editingItem.description,
-            schedule: editingItem.schedule as BusinessHoursFormValues["schedule"],
-          }
-        : {
-            name: "",
-            timezone: "Asia/Kolkata",
-            channels: [],
-            description: "",
-            schedule: buildDefaultSchedule(),
-          },
-    [editingItem],
-  );
+      const scheduleId = options.businessHours.businessHoursId;
+      if (!scheduleId) continue;
 
-  const getDayName = (day: string) =>
-    ({
-      sunday: t("Sunday"),
-      monday: t("Monday"),
-      tuesday: t("Tuesday"),
-      wednesday: t("Wednesday"),
-      thursday: t("Thursday"),
-      friday: t("Friday"),
-      saturday: t("Saturday"),
-    })[day] || day;
-
-  const openAdd = () => {
-    setEditingId(null);
-    setListOpen(false);
-    setEditorOpen(true);
-  };
-
-  const openEdit = (id: string) => {
-    setEditingId(id);
-    setListOpen(false);
-    setEditorOpen(true);
-  };
-
-  const onSave = async (values: BusinessHoursFormValues) => {
-    if (editingId) {
-      await updateMutation.mutateAsync({ id: editingId, data: values });
-    } else {
-      await createMutation.mutateAsync(values);
+      map.set(scheduleId, [...(map.get(scheduleId) ?? []), { id: rule.id, name: rule.name }]);
     }
-    setEditorOpen(false);
+    return map;
+  }, [rules]);
+
+  const newSchedule: BusinessHoursFormValues = {
+    // Named up front so a first schedule is not blocked behind a required field.
+    name: list.length === 0 ? t("Main hours") : t("New schedule"),
+    timezone: list[0]?.timezone ?? DEFAULT_TIMEZONE,
+    channels: [],
+    description: "",
+    schedule: buildDefaultSchedule(),
   };
 
-  const onDelete = async (id: string) => {
-    await deleteMutation.mutateAsync(id);
+  const handleCreate = async (values: BusinessHoursFormValues) => {
+    await createMutation.mutateAsync(values);
+    setDraftOpen(false);
   };
 
   if (isLoading) {
     return (
-      <Card className="p-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Skeleton className="w-10 h-10 rounded-lg" />
-            <div>
-              <Skeleton className="h-5 w-40 mb-2" />
-              <Skeleton className="h-3 w-64" />
-            </div>
+      <Card id="business-hours" className="p-5">
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-9 rounded-lg" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-56" />
           </div>
-          <Skeleton className="h-9 w-24" />
         </div>
-        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-44 w-full" />
       </Card>
     );
   }
 
   return (
-    <>
-      {/* Anchored: the setup guide's business-hours step deep-links to this section,
-          which sits at the foot of a long settings page. */}
-      <Card id="business-hours" className="p-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">
-              <IconClock className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="">{t("Business Hours")}</h3>
-              <p className="text-xs text-muted-foreground">
-                {t("Manage multiple business hours for different channels and timezones")}
-              </p>
-            </div>
+    // Anchored: the setup guide's business-hours step deep-links to this section.
+    <div id="business-hours" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <IconClock className="size-4 text-muted-foreground" />
           </div>
+          <div>
+            <h3 className="font-display text-base font-medium">{t("Business hours")}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t("When a person answers. Outside these hours, your auto-replies take over.")}
+            </p>
+          </div>
+        </div>
+
+        {canManage && list.length > 0 && !draftOpen && (
+          <Button variant="outline" size="sm" onClick={() => setDraftOpen(true)}>
+            <IconPlus className="size-4" />
+            {t("Add schedule")}
+          </Button>
+        )}
+      </div>
+
+      {list.map((businessHour) => (
+        <ScheduleCard
+          key={businessHour.id}
+          value={{
+            name: businessHour.name,
+            timezone: businessHour.timezone,
+            // Both are nullable on the wire; the form works in "" and [].
+            channels: businessHour.channels ?? [],
+            description: businessHour.description ?? "",
+            schedule: businessHour.schedule as BusinessHoursFormValues["schedule"],
+          }}
+          canManage={canManage}
+          // The last schedule stays put: rules point at it by id, and there is no
+          // way to re-point them from here.
+          canDelete={canManage && list.length > 1}
+          dependentRules={rulesBySchedule.get(businessHour.id) ?? []}
+          isSaving={updateMutation.isPending || deleteMutation.isPending}
+          onSave={async (values) => {
+            await updateMutation.mutateAsync({ id: businessHour.id, data: values });
+          }}
+          onDelete={() => deleteMutation.mutate(businessHour.id)}
+        />
+      ))}
+
+      {draftOpen && (
+        <ScheduleCard
+          value={newSchedule}
+          canManage={canManage}
+          canDelete={false}
+          dependentRules={[]}
+          isSaving={createMutation.isPending}
+          onSave={handleCreate}
+          isDraft
+          onDiscardDraft={() => setDraftOpen(false)}
+        />
+      )}
+
+      {list.length === 0 && !draftOpen && (
+        <Card className="items-center p-8 text-center">
+          <IconClock className="size-8 text-muted-foreground" />
+          <p className="text-sm font-medium">{t("Mon-Fri, 9:00-17:30. Looks right?")}</p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            {t(
+              "Start from a standard week and change what does not fit. Automation rules can then hold replies until someone is around.",
+            )}
+          </p>
           {canManage && (
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setListOpen(true)}>
-              <IconEdit className="w-4 h-4" />
-              {t("Manage")}
+            <Button className="mt-1" onClick={() => setDraftOpen(true)}>
+              {t("Set up business hours")}
             </Button>
           )}
-        </div>
-
-        <div className="space-y-4">
-          {list.map((bh) => (
-            <div key={bh.id} className="border rounded-lg p-4 bg-background">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h4 className="font-medium">{bh.name}</h4>
-                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    <span>⏰ {bh.timezone}</span>
-                    {/* <span>📱 {bh.channels?.join(", ")}</span> */}
-                  </div>
-                  {bh.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                      {bh.description}
-                    </p>
-                  )}
-                </div>
-                {canManage && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEdit(bh.id)}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    <IconEdit className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                {Object.entries(bh.schedule).map(([day, schedule]) => (
-                  <div key={day} className="flex items-center justify-between py-1">
-                    <span className="font-medium text-gray-700 dark:text-gray-400 capitalize min-w-[80px]">
-                      {getDayName(day)}
-                    </span>
-                    <span
-                      className={`text-sm ${schedule.isOpen ? "text-green-600" : "text-gray-500"}`}
-                    >
-                      {formatDaySchedule(schedule)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {list.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <IconClock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>{t("No business hours set up yet")}</p>
-              <p className="text-xs">{t("Click 'Manage' to add your first business hours")}</p>
-            </div>
-          )}
-        </div>
-      </Card>
-      <BusinessHoursListDialog
-        open={listOpen}
-        onOpenChange={setListOpen}
-        list={list}
-        onAdd={openAdd}
-        onEdit={openEdit}
-        onDelete={onDelete}
-        canDelete={list.length > 1 && canManage}
-      />
-      <BusinessHoursEditorDialog
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        initialValues={initialValues}
-        onSave={onSave}
-        editing={!!editingId}
-      />
-    </>
+        </Card>
+      )}
+    </div>
   );
 }

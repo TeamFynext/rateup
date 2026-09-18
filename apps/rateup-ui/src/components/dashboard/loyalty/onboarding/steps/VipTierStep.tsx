@@ -4,6 +4,7 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import type { SavedOnboardingData } from "@/backend/loyalty/onboarding.api";
+import { ColorField } from "@/components/common/color-field.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -16,7 +17,6 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { numberInputValue } from "@/utils/form.ts";
 
 import { readableTextOn } from "../brand.ts";
-import { BrandColorField } from "../parts/BrandColorField.tsx";
 import { VipLadderPreview } from "../parts/VipLadderPreview.tsx";
 import { newUpperTier } from "../programDefaults.ts";
 import {
@@ -242,7 +242,7 @@ export function VipTierStep({
                 control={form.control}
                 name="base.color"
                 render={({ field }) => (
-                  <BrandColorField
+                  <ColorField
                     id={field.name}
                     label={t("Colour")}
                     compact
@@ -328,7 +328,7 @@ export function VipTierStep({
                         control={form.control}
                         name={`upper.${index}.color`}
                         render={({ field, fieldState }) => (
-                          <BrandColorField
+                          <ColorField
                             id={field.name}
                             label={t("Colour")}
                             compact

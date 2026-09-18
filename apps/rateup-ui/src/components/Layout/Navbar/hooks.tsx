@@ -789,7 +789,6 @@ export function useNavMain({
                 title: t("Account"),
                 url: "/dashboard/settings/account",
                 icon: IconUser,
-                description: t("Business profile & preferences"),
               },
               ...(user?.role === UserRole.SUPADM
                 ? [
@@ -797,15 +796,13 @@ export function useNavMain({
                       title: t("Users"),
                       url: "/dashboard/settings/users",
                       icon: IconUserCog,
-                      description: t("User accounts & access"),
                     },
                   ]
                 : []),
               {
-                title: t("Team"),
+                title: t("Teams"),
                 url: "/dashboard/settings/team",
                 icon: IconUsers,
-                description: t("Team members & roles"),
               },
             ],
           },
@@ -824,7 +821,6 @@ export function useNavMain({
                             title: t("Channels"),
                             url: "/dashboard/settings/channels",
                             icon: IconMessage,
-                            description: t("Communication channels"),
                           },
                         ]
                       : []),
@@ -834,7 +830,6 @@ export function useNavMain({
                             title: "Integrations",
                             url: "/dashboard/settings/integrations",
                             icon: IconWebhook,
-                            description: "Webhooks & external services",
                           },
                         ]
                       : []),
@@ -849,7 +844,6 @@ export function useNavMain({
                 title: t("Security"),
                 url: "/dashboard/settings/security",
                 icon: IconShield,
-                description: t("Password & security"),
               },
               ...(user?.role === UserRole.SUPADM
                 ? [
@@ -857,7 +851,6 @@ export function useNavMain({
                       title: t("Billing"),
                       url: "/dashboard/settings/billing",
                       icon: IconCreditCard,
-                      description: t("Subscription & payments"),
                     },
                   ]
                 : []),
@@ -873,7 +866,6 @@ export function useNavMain({
                       title: t("Admin"),
                       url: "/admin",
                       icon: IconCrown,
-                      description: t("Admin settings"),
                     },
                   ],
                 },

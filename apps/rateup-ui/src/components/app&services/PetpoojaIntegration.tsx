@@ -16,20 +16,24 @@ import {
   useIntegrationByType,
   useUpdateIntegrationMutation,
 } from "@/backend/appsIntegration/integration.query";
+import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
+import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
+import {
+  IntegrationSection,
+  IntegrationShell,
+} from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
-import { ActionIconCommon } from "@/components/menu/ActionIcon/ActionIconCommon.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Field, FieldLabel } from "../ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
 
 const PETPOOJA_WEBHOOK_ENDPOINT = `${import.meta.env.VITE_API_URL}/api/public/integrations/petpooja`;
 
@@ -37,15 +41,26 @@ export function PetpoojaIntegration() {
   const { data: integration } = useIntegrationByType(IntegratedApps.petpooja);
   const updateIntegration = useUpdateIntegrationMutation(IntegratedApps.petpooja);
 
+  const config = INTEGRATIONS_CONFIG.petpooja;
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
-        <PetpoojaConfig integration={integration} updateIntegration={updateIntegration} />
-        <WaTemplateSendSettings integration={integration} updateIntegration={updateIntegration} />
-      </div>
-      <Separator className="mt-4" />
-      <WaTemplateSentHistory integration={integration} />
-    </div>
+    <IntegrationShell
+      icon={config.icon}
+      name={config.name}
+      connected={Boolean(integration?.credential?.restaurantId)}
+      detail={integration?.credential?.restaurantId}
+    >
+      <IntegrationSection label="Setup">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <PetpoojaConfig integration={integration} updateIntegration={updateIntegration} />
+          <WaTemplateSendSettings integration={integration} updateIntegration={updateIntegration} />
+        </div>
+      </IntegrationSection>
+
+      <IntegrationSection label="Activity">
+        <WaTemplateSentHistory integration={integration} />
+      </IntegrationSection>
+    </IntegrationShell>
   );
 }
 
@@ -98,43 +113,50 @@ function PetpoojaConfig({
   }, [integration]);
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-4">
-        <h4 className="text-lg font-semibold">Petpooja Config</h4>
-        <Field>
-          <FieldLabel htmlFor={`${uid}-restaurant-id`}>Restaurant ID</FieldLabel>
-          <Input
-            id={`${uid}-restaurant-id`}
-            value={restaurantId}
-            onChange={(e) => {
-              if (error) setError(null);
-              setRestaurantId(e.currentTarget.value);
-            }}
-            placeholder="Enter your petpooja Restaurant id"
-            required
-          />
-          {error && <p className="text-sm text-red-500">{error}</p>}
-        </Field>
-        <div className="flex items-center justify-between">
-          <Button onClick={handleConfig}>
-            {createIntegration.isPending ? "Saving..." : "Save"}
+    <IntegrationFormCard
+      title="Configuration"
+      description="Your Petpooja restaurant, and the address Petpooja should send orders to."
+      actions={
+        <>
+          <Button onClick={handleConfig} disabled={createIntegration.isPending}>
+            {createIntegration.isPending ? "Saving..." : "Save changes"}
           </Button>
-          <ActionIconCommon
-            handleClick={handleDeleteConfig}
-            label="Delete integration"
-            disabled={!integration}
-          >
-            <IconTrash />
-          </ActionIconCommon>
-        </div>
-        {integration && (
-          <div className="flex flex-col gap-2">
-            <Input readOnly value={PETPOOJA_WEBHOOK_ENDPOINT} />
-            <ApiCopyButton value={PETPOOJA_WEBHOOK_ENDPOINT} />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          <Button variant="ghost" onClick={handleDeleteConfig} disabled={!integration}>
+            <IconTrash data-icon="inline-start" />
+            Disconnect
+          </Button>
+        </>
+      }
+    >
+      <Field data-invalid={Boolean(error)}>
+        <FieldLabel htmlFor={`${uid}-restaurant-id`}>Restaurant ID</FieldLabel>
+        <Input
+          id={`${uid}-restaurant-id`}
+          value={restaurantId}
+          aria-invalid={Boolean(error)}
+          onChange={(e) => {
+            if (error) setError(null);
+            setRestaurantId(e.currentTarget.value);
+          }}
+          placeholder="Enter your Petpooja restaurant ID"
+          required
+        />
+        {error && <FieldError>{error}</FieldError>}
+      </Field>
+
+      {integration && (
+        <Field>
+          <FieldLabel htmlFor={`${uid}-webhook`}>Webhook URL</FieldLabel>
+          <InputGroup>
+            <InputGroupInput id={`${uid}-webhook`} readOnly value={PETPOOJA_WEBHOOK_ENDPOINT} />
+            <InputGroupAddon align="inline-end">
+              <ApiCopyButton value={PETPOOJA_WEBHOOK_ENDPOINT} />
+            </InputGroupAddon>
+          </InputGroup>
+          <FieldDescription>Paste this into Petpooja to start receiving orders.</FieldDescription>
+        </Field>
+      )}
+    </IntegrationFormCard>
   );
 }
 
@@ -202,65 +224,67 @@ function WaTemplateSendSettings({
   };
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-4">
-        <h4 className="text-lg font-semibold">WhatsApp Template Config to Send on Order</h4>
-        <Controller
-          name="teamId"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <TeamSelector
-              placeholder={translations("Select Team")}
-              withAsterisk
-              {...field}
-              error={fieldState.error?.message}
-              searchable
-              label={translations("Team")}
-              enableDefaultValue={false}
-            />
-          )}
-        />
-        <Controller
-          name="waTemplateId"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <WaTemplateSelector
-              withAsterisk
-              {...field}
-              error={fieldState.error?.message}
-              teamId={form.watch("teamId")}
-            />
-          )}
-        />
-        <Controller
-          name="timeDelay"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field>
-              <FieldLabel htmlFor={`${uid}-field`}>
-                {translations("Time Delay (in minutes)")}
-              </FieldLabel>
-              <Input id={`${uid}-field`} {...field} type="number" />
-              {fieldState.error?.message && (
-                <p className="text-sm text-red-500">{fieldState.error?.message}</p>
-              )}
-            </Field>
-          )}
-        />
-        <div className="flex items-center justify-between">
+    <IntegrationFormCard
+      title="Order message"
+      description="What RateUp sends a customer after an order lands, and how long it waits."
+      actions={
+        <>
           <Button onClick={handleSave} disabled={!integration}>
-            save
+            Save changes
           </Button>
-          <ActionIconCommon
-            handleClick={handleDelete}
-            label="Delete Settings"
-            disabled={!integration}
-          >
-            <IconTrash />
-          </ActionIconCommon>
-        </div>
-      </CardContent>
-    </Card>
+          <Button variant="ghost" onClick={handleDelete} disabled={!integration}>
+            <IconTrash data-icon="inline-start" />
+            Clear
+          </Button>
+        </>
+      }
+    >
+      <Controller
+        name="teamId"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <TeamSelector
+            placeholder={translations("Select Team")}
+            withAsterisk
+            {...field}
+            error={fieldState.error?.message}
+            searchable
+            label={translations("Team")}
+            enableDefaultValue={false}
+          />
+        )}
+      />
+      <Controller
+        name="waTemplateId"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <WaTemplateSelector
+            withAsterisk
+            {...field}
+            error={fieldState.error?.message}
+            teamId={form.watch("teamId")}
+          />
+        )}
+      />
+      <Controller
+        name="timeDelay"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field`}>
+              {translations("Time Delay (in minutes)")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field`}
+              {...field}
+              type="number"
+              aria-invalid={Boolean(fieldState.error)}
+            />
+            {fieldState.error?.message && <FieldError>{fieldState.error.message}</FieldError>}
+          </Field>
+        )}
+      />
+    </IntegrationFormCard>
   );
 }
 

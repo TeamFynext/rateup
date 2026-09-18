@@ -73,7 +73,7 @@ export function InlineMultiSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-md border border-input bg-transparent px-2.5 py-1.5 text-left text-sm shadow-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 max-[480px]:min-h-11 max-[480px]:py-2 dark:bg-input/30"
+        className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-md border border-input bg-transparent px-2.5 py-1.5 text-left text-sm shadow-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 max-[480px]:min-h-11 max-[480px]:py-2 dark:bg-input/30"
       >
         {value.length > 0 ? (
           value.map((v) => (
