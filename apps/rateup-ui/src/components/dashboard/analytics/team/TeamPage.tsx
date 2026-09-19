@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
 import { teamKeys } from "@/backend/org/org.keys";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -55,6 +56,7 @@ export function TeamPage() {
   };
 
   const refresh = () => {
+    requestFreshAnalytics();
     queryClient.invalidateQueries({
       queryKey: teamKeys.detailedMetrics(teamid, { days: day }),
     });

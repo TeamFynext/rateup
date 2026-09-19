@@ -10,11 +10,12 @@ import {
 } from "@tabler/icons-react";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
+import { analyticsKeys } from "@/backend/org/org.keys";
 import { AuditLogs } from "@/components/dashboard/analytics/audit-log/AuditLogs.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
@@ -22,6 +23,7 @@ import { PageHeaderCard } from "./AnalyticsStaticCard.tsx";
 import ApiAnalytics from "./ApiAnalytics.tsx";
 import ConversationStatsAgentPerformance from "./ConversationStatsAgentPerformance.tsx";
 import ConversationStatsOverview from "./ConversationStatsOverview.tsx";
+import { presetRange } from "./dateRangePresets.ts";
 import DateRangeSelector from "./DateRangeSelector.tsx";
 import MessageLogs from "./MessageLogs.tsx";
 import TeamPerformance from "./TeamPerformance.tsx";
@@ -30,10 +32,10 @@ const Analytics = () => {
   const searchParams = useSearch({ strict: false });
   const tab = typeof searchParams.tab === "string" ? searchParams.tab : "overview";
   const { t } = useTranslation();
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState(() => ({
     key: "last7days",
-    range: [dayjs().subtract(7, "day").toDate(), new Date()],
-  });
+    range: presetRange("last7days"),
+  }));
   const overviewRef = useRef<HTMLDivElement>(null);
   const agentRef = useRef<HTMLDivElement>(null);
   const teamRef = useRef<HTMLDivElement>(null);
@@ -65,29 +67,19 @@ const Analytics = () => {
     }
   };
 
+  const isAnalyticsQuery = (query: { queryKey: readonly unknown[] }) =>
+    (analyticsKeys.roots() as readonly unknown[]).includes(query.queryKey[0]);
+
   function refresh() {
-    queries.forEach((key) => {
-      queryClient.invalidateQueries({ queryKey: key });
-    });
+    // The server caches these numbers for a minute or so. Someone pressing Refresh
+    // wants the database's answer, so the refetches this triggers ask for it.
+    requestFreshAnalytics();
+    queryClient.invalidateQueries({ predicate: isAnalyticsQuery });
   }
 
-  const queries = [
-    ["conversationOverview"],
-    ["conversationAverageResponseTime"],
-    ["ConversationAccountDistribution"],
-    ["ConversationQuickStats"],
-    ["StaffPerformanceonConversation"],
-    ["StaffDetailedConversationAnalytics"],
-    ["analyticsapiOverview"],
-    ["deliveredfailedtrend"],
-    ["templateapioverview"],
-    ["teamapioverview"],
-    ["wa-message-logs"],
-  ];
-
-  const fetchCounts = queries.map((key) => useIsFetching({ queryKey: key }));
-
-  const isFetching = fetchCounts.some((count) => count > 0);
+  // One subscription with a predicate. This was a hook called inside `.map`, which
+  // only worked because the list never changed length.
+  const isFetching = useIsFetching({ predicate: isAnalyticsQuery }) > 0;
   const headerConfigMap = {
     overview: {
       title: t("Overview"),

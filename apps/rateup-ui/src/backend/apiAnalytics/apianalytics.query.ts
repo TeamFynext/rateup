@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { analyticsQueryOptions, toAnalyticsParams } from "@/backend/analytics/analyticsFilter";
 import { teamKeys } from "@/backend/org/org.keys";
 import type { QueryFilter } from "@/types/api.ts";
 
@@ -13,27 +14,31 @@ import {
 export const useGetApiAnlayticsOverview = (filter: QueryFilter) => {
   return useQuery({
     queryFn: () => getApiAnalyticsOverview(filter),
-    queryKey: ["analyticsapiOverview", filter],
+    queryKey: ["analyticsapiOverview", toAnalyticsParams(filter)],
+    ...analyticsQueryOptions,
   });
 };
 
 export const useGetDeliveredFailedTrend = (filter: QueryFilter) => {
   return useQuery({
     queryFn: () => getDeliveredFailedTrend(filter),
-    queryKey: ["deliveredfailedtrend", filter],
+    queryKey: ["deliveredfailedtrend", toAnalyticsParams(filter)],
+    ...analyticsQueryOptions,
   });
 };
 
 export const useGetTemplateOverview = (filter: QueryFilter) => {
   return useQuery({
     queryFn: () => getTemplateOverview(filter),
-    queryKey: ["templateapioverview", filter],
+    queryKey: ["templateapioverview", toAnalyticsParams(filter)],
+    ...analyticsQueryOptions,
   });
 };
 
 export const useGetTeamApiOverview = (filter: QueryFilter) => {
   return useQuery({
     queryFn: () => getTeamOverview(filter),
-    queryKey: teamKeys.apiOverview(filter),
+    queryKey: teamKeys.apiOverview(toAnalyticsParams(filter)),
+    ...analyticsQueryOptions,
   });
 };

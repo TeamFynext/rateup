@@ -1,30 +1,28 @@
 import type { QueryFilter } from "@/types/api.ts";
 
+import { ANALYTICS_TIMEOUT_MS, analyticsRequestParams } from "../analytics/analyticsFilter";
 import { axiosClient } from "../apiClient";
 
 const API_BASE_URL = "/apianalytics";
 
+/** Encoded, normalised params and the analytics timeout — see analyticsFilter.ts. */
+const analyticsRequest = (filter: QueryFilter) => ({
+  params: analyticsRequestParams(filter),
+  timeout: ANALYTICS_TIMEOUT_MS,
+});
+
 export async function getApiAnalyticsOverview(filter: QueryFilter) {
-  const query = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const res = await axiosClient.get(`${API_BASE_URL}?${query}`);
+  const res = await axiosClient.get(`${API_BASE_URL}`, analyticsRequest(filter));
   return res.data;
 }
 
 export async function getDeliveredFailedTrend(filter: QueryFilter) {
-  const query = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const res = await axiosClient.get(`${API_BASE_URL}/trend?${query}`);
+  const res = await axiosClient.get(`${API_BASE_URL}/trend`, analyticsRequest(filter));
   return res.data;
 }
 
 export async function getTemplateOverview(filter: QueryFilter) {
-  const query = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const res = await axiosClient.get(`${API_BASE_URL}/template-overview?${query}`);
+  const res = await axiosClient.get(`${API_BASE_URL}/template-overview`, analyticsRequest(filter));
   return res.data;
 }
 
@@ -38,9 +36,9 @@ export interface TeamApiOverviewRow {
 }
 
 export async function getTeamOverview(filter: QueryFilter) {
-  const query = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const res = await axiosClient.get<TeamApiOverviewRow[]>(`${API_BASE_URL}/team-overview?${query}`);
+  const res = await axiosClient.get<TeamApiOverviewRow[]>(
+    `${API_BASE_URL}/team-overview`,
+    analyticsRequest(filter),
+  );
   return res.data;
 }

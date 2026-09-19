@@ -18,6 +18,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation/conversation.query";
 import { staffKeys } from "@/backend/org/org.keys";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -63,6 +64,7 @@ export function AnalyticsPage() {
   );
 
   const refresh = () => {
+    requestFreshAnalytics();
     queryClient.invalidateQueries({
       queryKey: staffKeys.detailedConversationAnalytics(staffid, { days: day }),
     });

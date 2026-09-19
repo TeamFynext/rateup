@@ -21,6 +21,7 @@ import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { cn } from "@/lib/utils";
 import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
@@ -30,10 +31,11 @@ import ConversationTrendsGraph from "./ConversationTrendsGraph.tsx";
 
 const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
-  const { data, isLoading, error, refetch, isRefetching } = useGetConversationOverView({
-    dateKey: dateRange.key,
-    dateRange: dateRange.range,
-  });
+  const { data, isLoading, error, refetch, isRefetching, isPlaceholderData } =
+    useGetConversationOverView({
+      dateKey: dateRange.key,
+      dateRange: dateRange.range,
+    });
   const { data: quickStats } = useGetConversationQuickStats();
   const overviewStats = useMemo(() => {
     return [
@@ -82,144 +84,159 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
     ];
   }, [data, t]);
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-3 gap-4">
-        {overviewStats.map((stat) => (
-          <Skeleton className="h-[80px]" key={stat.key} />
-        ))}
-      </div>
-    );
-  }
   if (error) {
     return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
   }
+  // Only the cards wait for the overview. The three graphs below have queries of
+  // their own; rendering them from the first paint starts those alongside this one
+  // instead of after it. They keep the same place in the tree in both states, so
+  // they are not remounted when the cards arrive.
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <IconTarget className="w-4 h-4 text-primary" />
-            {t("Performance Metrics")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {overviewStats.map((metric, index) => {
-              return (
-                <div
-                  key={index}
-                  className="p-3 sm:p-4 flex flex-col gap-2 rounded-lg border  transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                        <metric.icon className="w-3.5 h-3.5 text-primary" />
+      {isLoading ? (
+        <div className="grid grid-cols-3 gap-4">
+          {overviewStats.map((stat) => (
+            <Skeleton className="h-[80px]" key={stat.key} />
+          ))}
+        </div>
+      ) : (
+        // Dimmed while the numbers shown are still the previous filter's — the app-wide
+        // `placeholderData` keeps them on screen until the new ones arrive.
+        <div
+          className={cn(
+            "flex flex-col gap-6 transition-opacity",
+            isPlaceholderData && "opacity-60",
+          )}
+          aria-busy={isPlaceholderData}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <IconTarget className="w-4 h-4 text-primary" />
+                {t("Performance Metrics")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {overviewStats.map((metric, index) => {
+                  return (
+                    <div
+                      key={index}
+                      className="p-3 sm:p-4 flex flex-col gap-2 rounded-lg border  transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                            <metric.icon className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <p className="text-xs text-muted-foreground">{metric.label}</p>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">{metric.label}</p>
+
+                      <div className="flex items-baseline gap-1">
+                        <p className="text-xl sm:text-2xl font-bold text-primary">{metric.value}</p>
+                        {metric.suffix && (
+                          <span className="text-xs text-muted-foreground">{metric.suffix}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <IconBolt className="w-4 h-4 text-primary" />
+                {t("Quick Stats")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 pb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="flex items-center justify-between p-3 rounded-lg border ">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                      <IconEye className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t("New Conversations")}</p>
+                      <p className="text-lg font-semibold">
+                        {quickStats?.newConversations ?? "NA"}
+                      </p>
                     </div>
                   </div>
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 text-primary border-blue-200 dark:bg-transparent text-[10px]"
+                  >
+                    {t("LIVE")}
+                  </Badge>
+                </div>
 
-                  <div className="flex items-baseline gap-1">
-                    <p className="text-xl sm:text-2xl font-bold text-primary">{metric.value}</p>
-                    {metric.suffix && (
-                      <span className="text-xs text-muted-foreground">{metric.suffix}</span>
-                    )}
+                <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-green-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                      <IconCircleCheck className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t("Resolved")}</p>
+                      <p className="text-lg font-semibold">{quickStats?.resolved ?? "NA"}</p>
+                    </div>
+                  </div>
+                  {quickStats?.resolvedRateDifference ? (
+                    <div className="flex items-center gap-1 text-xs">
+                      {quickStats?.resolvedRateDifference < 0 ? (
+                        <IconTrendingDown className="w-3 h-3 text-red-600" />
+                      ) : (
+                        <IconTrendingUp className="w-3 h-3 text-green-600" />
+                      )}
+                      <span
+                        className={`${quickStats?.resolvedRateDifference < 0 ? "text-red-600" : "text-green-600"}`}
+                      >
+                        {quickStats?.resolvedRateDifference ?? "NA"}%
+                      </span>
+                    </div>
+                  ) : (
+                    ""
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-orange-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                      <IconMessage className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t("In Progress")}</p>
+                      <p className="text-lg font-semibold">
+                        {quickStats?.conversationInProgress ?? "NA"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <IconBolt className="w-4 h-4 text-primary" />
-            {t("Quick Stats")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0 pb-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="flex items-center justify-between p-3 rounded-lg border ">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <IconEye className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{t("New Conversations")}</p>
-                  <p className="text-lg font-semibold">{quickStats?.newConversations ?? "NA"}</p>
-                </div>
-              </div>
-              <Badge
-                variant="outline"
-                className="bg-blue-50 text-primary border-blue-200 dark:bg-transparent text-[10px]"
-              >
-                {t("LIVE")}
-              </Badge>
-            </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-green-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <IconCircleCheck className="w-4 h-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{t("Resolved")}</p>
-                  <p className="text-lg font-semibold">{quickStats?.resolved ?? "NA"}</p>
-                </div>
-              </div>
-              {quickStats?.resolvedRateDifference ? (
-                <div className="flex items-center gap-1 text-xs">
-                  {quickStats?.resolvedRateDifference < 0 ? (
-                    <IconTrendingDown className="w-3 h-3 text-red-600" />
-                  ) : (
-                    <IconTrendingUp className="w-3 h-3 text-green-600" />
-                  )}
-                  <span
-                    className={`${quickStats?.resolvedRateDifference < 0 ? "text-red-600" : "text-green-600"}`}
-                  >
-                    {quickStats?.resolvedRateDifference ?? "NA"}%
-                  </span>
-                </div>
-              ) : (
-                ""
-              )}
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-orange-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <IconMessage className="w-4 h-4 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{t("In Progress")}</p>
-                  <p className="text-lg font-semibold">
-                    {quickStats?.conversationInProgress ?? "NA"}
-                  </p>
+                <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                      <IconUsers className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t("Agents Online")}</p>
+                      <p className="text-lg font-semibold">
+                        {quickStats?.totalStaff
+                          ? `${quickStats?.staffOnline}/${quickStats?.totalStaff}`
+                          : "NA"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 </div>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
-                  <IconUsers className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{t("Agents Online")}</p>
-                  <p className="text-lg font-semibold">
-                    {quickStats?.totalStaff
-                      ? `${quickStats?.staffOnline}/${quickStats?.totalStaff}`
-                      : "NA"}
-                  </p>
-                </div>
-              </div>
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       <div className="flex flex-col gap-4">
         <ConversationTrendsGraph dateRange={dateRange} />
         <ConversationResponseTimePatternGraph dateRange={dateRange} />

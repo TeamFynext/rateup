@@ -7,7 +7,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -24,12 +24,16 @@ import TemplateOverview from "@/components/apiAnalytics/TemplateOverview.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { cn } from "@/lib/utils";
 import type { AnalyticsDateRange } from "@/types/api.ts";
 
 dayjs.extend(isToday);
 
-const formatTime = (time: string | number | Date) => {
+const formatTime = (time: string | number | Date, granularity?: string) => {
   const d = dayjs(time);
+
+  // A point that stands for a whole day has no time of day worth showing.
+  if (granularity === "day") return d.format("DD MMM");
 
   if (d.isToday()) {
     return d.format("hh:mm A");
@@ -41,47 +45,87 @@ const formatTime = (time: string | number | Date) => {
 function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const { t } = useTranslation("apianalytics");
   const targetRef = useRef<HTMLDivElement | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [granularity] = useState("hour");
+  // Starts at "all" rather than null. TeamSelector sets an empty value to "all" in an
+  // effect after mount, which changed every query key one render in and sent the
+  // overview, trend and template requests twice.
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>("all");
   const [apiType, setApiType] = useState("all");
-  const { data: teamData, isLoading: isTeamDataLoading } = useGetTeamApiOverview({
+  const {
+    data: teamData,
+    isLoading: isTeamDataLoading,
+    isPlaceholderData: isTeamDataStale,
+  } = useGetTeamApiOverview({
     dateKey: dateRange.key,
     dateRange: dateRange.range,
     apiType: apiType,
   });
-  const { data, isLoading } = useGetApiAnlayticsOverview({
-    dateKey: dateRange.key,
-    dateRange: dateRange.range,
-    teamId: selectedTeamId,
-    apiType: apiType,
-  });
-  const { data: trend, isLoading: isTrendLoading } = useGetDeliveredFailedTrend({
-    dateKey: dateRange.key,
-    dateRange: dateRange.range,
-    teamId: selectedTeamId,
-    granularity: granularity,
-    apiType: apiType,
-  });
-
-  const { data: templates, isLoading: isTemplateLoading } = useGetTemplateOverview({
+  const {
+    data,
+    isLoading,
+    isPlaceholderData: isOverviewStale,
+  } = useGetApiAnlayticsOverview({
     dateKey: dateRange.key,
     dateRange: dateRange.range,
     teamId: selectedTeamId,
     apiType: apiType,
   });
+  const {
+    data: trend,
+    isLoading: isTrendLoading,
+    isPlaceholderData: isTrendStale,
+  } = useGetDeliveredFailedTrend({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+    teamId: selectedTeamId,
+    apiType: apiType,
+  });
 
-  const localTrend = trend?.trend.map((item: { time: string; [key: string]: unknown }) => ({
-    ...item,
-    time: formatTime(item.time),
-  }));
+  const {
+    data: templates,
+    isLoading: isTemplateLoading,
+    isPlaceholderData: isTemplatesStale,
+  } = useGetTemplateOverview({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+    teamId: selectedTeamId,
+    apiType: apiType,
+  });
 
-  const localWeekTrend = trend?.weekTrend.map((item: { time: string; [key: string]: unknown }) => ({
-    ...item,
-    day: dayjs(item.time).format("ddd, DD MMM"),
-  }));
+  // The server picks the bucket size (hours for a short range, days for a long one)
+  // and says which it used, so the labels can match.
+  const localTrend = useMemo(
+    () =>
+      trend?.trend.map((item: { time: string; [key: string]: unknown }) => ({
+        ...item,
+        time: formatTime(item.time, trend?.granularity),
+      })),
+    [trend],
+  );
+
+  const localWeekTrend = useMemo(
+    () =>
+      trend?.weekTrend.map((item: { time: string; [key: string]: unknown }) => ({
+        ...item,
+        day: dayjs(item.time).format("ddd, DD MMM"),
+      })),
+    [trend],
+  );
+
+  // Every query keeps showing its previous result while a new filter loads (the
+  // app-wide `placeholderData`), which left no sign that the numbers on screen were
+  // for the old filter. Dimming them says so without a layout-shifting skeleton.
+  const isShowingPreviousFilter =
+    isOverviewStale || isTrendStale || isTemplatesStale || isTeamDataStale;
 
   return (
-    <div className="flex flex-col gap-4" ref={targetRef}>
+    <div
+      className={cn(
+        "flex flex-col gap-4 transition-opacity",
+        isShowingPreviousFilter && "opacity-60",
+      )}
+      ref={targetRef}
+      aria-busy={isShowingPreviousFilter}
+    >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl">{t("WhatsApp Messages Analytics")}</h2>

@@ -1,6 +1,7 @@
 import { IconCalendar, IconChevronDown, IconFilter } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { Activity } from "react";
+import { Activity, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -16,6 +17,8 @@ import {
 import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
+import { presetRange } from "./dateRangePresets.ts";
+
 const DateRangeSelector = ({
   value,
   onChange,
@@ -30,29 +33,27 @@ const DateRangeSelector = ({
     { label: "Last 30 days", key: "last30days" },
     { label: "Custom Range", key: "custom-range" },
   ];
+  // What is being picked in the calendar. It is held here until both ends exist:
+  // handing a one-ended range up would fire a request for it on every first click.
+  const [draft, setDraft] = useState<DateRange | undefined>();
+
   function handleChange(key: string) {
-    let range: Date[] = [];
-    switch (key) {
-      case "today":
-        range = [dayjs().startOf("day").toDate(), new Date()];
-        break;
-      case "yesterday":
-        range = [
-          dayjs().subtract(1, "day").startOf("day").toDate(),
-          dayjs().subtract(1, "day").endOf("day").toDate(),
-        ];
-        break;
-      case "last7days":
-        range = [dayjs().subtract(7, "day").toDate(), new Date()];
-        break;
-      case "last30days":
-        range = [dayjs().subtract(30, "day").toDate(), new Date()];
-        break;
-      case "custom-range":
-        range = [dayjs().subtract(60, "day").toDate(), new Date()];
-        break;
+    setDraft(undefined);
+    onChange({ key, range: presetRange(key) });
+  }
+
+  function handleCalendarSelect(range: DateRange | undefined) {
+    if (!range?.from || !range.to) {
+      setDraft(range);
+      return;
     }
-    onChange({ key, range });
+    setDraft(undefined);
+    onChange({
+      key: "custom-range",
+      // Whole days: the calendar gives midnight for both ends, which would leave the
+      // last day picked out of the range entirely.
+      range: [dayjs(range.from).startOf("day").toDate(), dayjs(range.to).endOf("day").toDate()],
+    });
   }
   return (
     <div className="flex gap-1 items-center">
@@ -85,17 +86,8 @@ const DateRangeSelector = ({
             <Calendar
               mode="range"
               defaultMonth={value.range[0]}
-              selected={{
-                from: value.range[0],
-                to: value.range[1],
-              }}
-              onSelect={(range) =>
-                onChange({
-                  key: "custom-range",
-                  // Either end can be unset mid-selection; the range keeps only what is picked.
-                  range: [range?.from, range?.to].filter((d) => d !== undefined),
-                })
-              }
+              selected={draft ?? { from: value.range[0], to: value.range[1] }}
+              onSelect={handleCalendarSelect}
               numberOfMonths={2}
               className="rounded-lg border shadow-sm"
             />
