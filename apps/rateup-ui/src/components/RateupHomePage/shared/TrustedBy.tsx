@@ -2,7 +2,7 @@ import { Image } from "@unpic/react";
 
 import { imagesPath } from "@/utils/constants";
 
-import { CountUp } from "./home-ui";
+import { CountUp, useReveal } from "./home-ui";
 
 const logos = Array.from({ length: 14 }, (_, i) => `${imagesPath}/homepage/CLIENTS/${i + 1}.png`);
 
@@ -18,8 +18,10 @@ const METRICS = [
 ];
 
 export default function TrustedBy() {
+  const [metricsRef, shown] = useReveal<HTMLDivElement>();
+
   return (
-    <section id="trusted" className="border-y border-ru-n-100 bg-white">
+    <section id="trusted" className="bg-white">
       <div className="mx-auto max-w-280 px-5 py-9 sm:py-14">
         <p className="mx-auto mb-6 text-center font-display text-[clamp(1.25rem,2.4vw,1.6875rem)]/[1.35] font-medium tracking-[-0.02em] text-balance text-ru-n-600 sm:mb-8.5">
           Trusted by <strong className="font-bold text-ru-n-700">100+ ecommerce brands</strong>{" "}
@@ -53,17 +55,25 @@ export default function TrustedBy() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(148px,1fr))] gap-px overflow-hidden rounded-2xl border border-ru-n-200 bg-ru-n-200">
-          {METRICS.map((m) => (
+        <div
+          ref={metricsRef}
+          className="grid grid-cols-[repeat(auto-fit,minmax(148px,1fr))] gap-px overflow-hidden rounded-2xl border border-ru-n-200 bg-ru-n-200"
+        >
+          {METRICS.map((m, i) => (
             <div key={m.label} className="bg-white p-4.5 sm:p-6.5">
               <div
-                className={`font-display text-[clamp(1.875rem,4.2vw,2.75rem)]/none font-bold tracking-[-0.035em] ${
-                  m.warm ? "text-ru-amber-700" : "text-ru-n-700"
-                }`}
+                style={{ animationDelay: `${i * 90}ms` }}
+                className={`motion-reduce:animate-none ${shown ? "animate-ru-rise" : "opacity-0"}`}
               >
-                <CountUp value={m.value} />
+                <div
+                  className={`font-display text-[clamp(1.875rem,4.2vw,2.75rem)]/none font-bold tracking-[-0.035em] ${
+                    m.warm ? "text-ru-amber-700" : "text-ru-n-700"
+                  }`}
+                >
+                  <CountUp value={m.value} />
+                </div>
+                <div className="mt-2 text-[14.5px] text-ru-n-500">{m.label}</div>
               </div>
-              <div className="mt-2 text-[14.5px] text-ru-n-500">{m.label}</div>
             </div>
           ))}
         </div>

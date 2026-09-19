@@ -63,6 +63,26 @@ export function formatToRelativeTime(date: DateInput, isUtc = false) {
   if (isUtc) return dayjs.utc(date).fromNow();
   return dayjs(date).fromNow();
 }
+/** How long an inbox row stays "fresh" (highlighted) after its newest message. */
+export const INBOX_FRESH_ROW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * True when `iso` is within the last {@link INBOX_FRESH_ROW_MS}.
+ *
+ * The API hands back UTC timestamps, but not always with a zone suffix, and a
+ * bare one parses as local time — so a missing zone is read as UTC, the same
+ * assumption `formatToRelativeTime(…, true)` makes. A future timestamp is clock
+ * skew, not an old message, so it counts as fresh. Mirrors the app's
+ * `isWithinLastDay`.
+ */
+export function isWithinLastDay(iso: string | null | undefined, now = Date.now()): boolean {
+  if (!iso) return false;
+  const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(iso);
+  const ms = Date.parse(hasZone ? iso : `${iso}Z`);
+  if (Number.isNaN(ms)) return false;
+  return now - ms <= INBOX_FRESH_ROW_MS;
+}
+
 const currentTime = dayjs().format("HH:mm");
 export const isCategoryActive = (item: ScheduledCategory) => {
   if (!item.startTime || !item.endTime || !item.scheduleEnabled) {

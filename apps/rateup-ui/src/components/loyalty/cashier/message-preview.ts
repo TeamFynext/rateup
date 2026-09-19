@@ -24,6 +24,7 @@ export type PreviewStatus =
   | "program_inactive"
   | "notifications_off"
   | "no_trigger"
+  | "no_open_chat"
   | "template_not_approved"
   | "send_failed"
   | "no_event";
@@ -32,7 +33,7 @@ export interface WhatsAppPreview {
   status: PreviewStatus;
   body: string | null;
   /** How a sent message went out, when the server said. */
-  mode?: "template" | "text" | null;
+  mode?: LoyaltyNotificationOutcome["mode"];
 }
 
 export interface PreviewInput {
@@ -48,7 +49,7 @@ export interface PreviewInput {
   };
 }
 
-/** Parameters in the order `loyaltyWaDispatcher` sends them, per event. */
+/** Parameters in the order the API sends them, per event (`messaging/catalog.ts`). */
 export function templateParams(receipt: Receipt): string[] {
   const first = receipt.customer.name.split(" ")[0] || receipt.customer.name;
   switch (receipt.event) {
@@ -84,8 +85,13 @@ function fromServer(outcome: LoyaltyNotificationOutcome): WhatsAppPreview {
     case "whatsapp_disabled":
     case "points_alerts_disabled":
       return { status: "notifications_off", body: outcome.text };
+    // With words but no template, only an open chat could have carried it.
     case "no_template":
-      return { status: "no_trigger", body: null };
+      return outcome.text
+        ? { status: "no_open_chat", body: outcome.text }
+        : { status: "no_trigger", body: null };
+    case "session_closed":
+      return { status: "no_open_chat", body: outcome.text };
     case "send_failed":
       return { status: "send_failed", body: outcome.text };
     default:

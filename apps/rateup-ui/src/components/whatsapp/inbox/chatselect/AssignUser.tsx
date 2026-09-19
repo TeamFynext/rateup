@@ -1,4 +1,5 @@
 import { IconLoader2 } from "@tabler/icons-react";
+import { chunk } from "lodash";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -8,6 +9,7 @@ import { useBulkAssignInboxToUser } from "@/backend/whatsapp/inbox/message/wames
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
+import { Progress, ProgressLabel } from "@/components/ui/progress.tsx";
 import {
   Select,
   SelectContent,
@@ -19,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
+import { INBOX_BULK_CHUNK_SIZE } from "@/utils/constants.ts";
 
 const BulkAssignUser = ({
   contactIds,
@@ -34,6 +37,7 @@ const BulkAssignUser = ({
   const { data: teamsRes, isLoading: teamsLoading } = useTeamsByUser();
   const { updateContactById } = useContactsStore();
   const [actionType, setActionType] = useState<"assign" | "self" | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const { t } = useTranslation();
 
   const teams = teamsRes?.data ?? [];
@@ -50,75 +54,64 @@ const BulkAssignUser = ({
     return staffMembers.filter((member) => member.teams.some((t) => t.team_id === selectedTeam));
   }, [selectedTeam, staffMembers]);
 
+  /**
+   * Assign in chunks, marking each chunk's rows assigned as it lands. The
+   * server assigns one contact at a time, so a large selection in one request
+   * could outlive the client's timeout even though the server finishes it —
+   * chunking keeps every request short and gives the progress bar real steps.
+   *
+   * `conversationStatus` is set alongside the contact-level status: the store
+   * judges a row by its ticket's status, so without it the badge and the
+   * Mine/New tab membership would not change until a reload.
+   */
+  const runAssign = async (
+    action: "assign" | "self",
+    assignee: { userId: string; teamId: string; name: string },
+  ) => {
+    setActionType(action);
+    let done = 0;
+    setProgress({ done, total: contactIds.length });
+    try {
+      for (const ids of chunk(contactIds, INBOX_BULK_CHUNK_SIZE)) {
+        await bulkAssignMutation.mutateAsync({
+          contactIds: ids,
+          assignee: { userId: assignee.userId, teamId: assignee.teamId },
+        });
+        ids.forEach((contactId) => {
+          updateContactById(contactId, (contact) => ({
+            ...contact,
+            waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+            conversationStatus: WaMessageAssignStatus.ASSIGNED,
+            assignedUsers: [{ id: assignee.userId, name: assignee.name, teamId: assignee.teamId }],
+          }));
+        });
+        done += ids.length;
+        setProgress({ done, total: contactIds.length });
+      }
+      onSuccess?.();
+    } catch {
+      // The mutation toasts the failure; the dialog stays open to retry.
+    } finally {
+      setActionType(null);
+      setProgress(null);
+    }
+  };
+
   const handleAssign = () => {
     if (!selectedTeam || !selectedUser) return;
-    setActionType("assign");
-    bulkAssignMutation.mutate(
-      {
-        contactIds,
-        assignee: {
-          userId: selectedUser,
-          teamId: selectedTeam,
-        },
-      },
-      {
-        onSuccess: () => {
-          const user = staffMembers.find((m) => m.id === selectedUser);
-          contactIds.forEach((contactId) => {
-            updateContactById(contactId, (contact) => ({
-              ...contact,
-              waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-              assignedUsers: [
-                {
-                  id: user?.id ?? "",
-                  name: user?.name ?? "",
-                  teamId: selectedTeam,
-                },
-              ],
-            }));
-          });
-          onSuccess?.();
-          setActionType(null);
-        },
-        onError: () => {
-          setActionType(null);
-        },
-      },
-    );
+    const member = staffMembers.find((m) => m.id === selectedUser);
+    void runAssign("assign", {
+      userId: selectedUser,
+      teamId: selectedTeam,
+      name: member?.name ?? "",
+    });
   };
   const handleAssignToMe = () => {
-    setActionType("self");
-    bulkAssignMutation.mutate(
-      {
-        contactIds,
-        assignee: {
-          userId: user?.userId ?? "",
-          teamId: user?.teams?.[0] ?? "",
-        },
-      },
-      {
-        onSuccess: () => {
-          contactIds.forEach((contactId) => {
-            updateContactById(contactId, (contact) => ({
-              ...contact,
-              waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-              assignedUsers: [
-                {
-                  id: user?.userId ?? "",
-                  name: user?.userName ?? "",
-                  teamId: user?.teams?.[0] ?? "",
-                },
-              ],
-            }));
-          });
-          onSuccess?.();
-          setActionType(null);
-        },
-        onError: () => {
-          setActionType(null);
-        },
-      },
-    );
+    void runAssign("self", {
+      userId: user?.userId ?? "",
+      teamId: user?.teams?.[0] ?? "",
+      name: user?.userName ?? "",
+    });
   };
 
   return (
@@ -190,17 +183,26 @@ const BulkAssignUser = ({
           </Select>
         )}
       </div>
+      {progress && (
+        <Progress
+          value={progress.total ? (progress.done / progress.total) * 100 : 0}
+          className="gap-x-3 gap-y-1.5"
+        >
+          <ProgressLabel className="text-xs">{t("Assigning chats")}…</ProgressLabel>
+          <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+            {progress.done} / {progress.total}
+          </span>
+        </Progress>
+      )}
       {/* ASSIGN BUTTON */}
       <div className="flex flex-col gap-3 w-full">
         {/* PRIMARY ACTION */}
         <Button
           onClick={handleAssign}
-          disabled={!selectedTeam || !selectedUser || bulkAssignMutation.isPending}
+          disabled={!selectedTeam || !selectedUser || actionType !== null}
           className="w-full h-10 flex items-center justify-center gap-2"
         >
-          {bulkAssignMutation.isPending && actionType === "assign" && (
-            <IconLoader2 className="w-4 h-4 animate-spin" />
-          )}
+          {actionType === "assign" && <IconLoader2 className="w-4 h-4 animate-spin" />}
           {t("Assign Chats")}
         </Button>
 
@@ -214,13 +216,11 @@ const BulkAssignUser = ({
         {/* SECONDARY ACTION */}
         <Button
           onClick={handleAssignToMe}
-          disabled={bulkAssignMutation.isPending}
+          disabled={actionType !== null}
           variant="outline"
           className="w-full h-10 flex items-center justify-center gap-2"
         >
-          {bulkAssignMutation.isPending && actionType === "self" && (
-            <IconLoader2 className="w-4 h-4 animate-spin" />
-          )}
+          {actionType === "self" && <IconLoader2 className="w-4 h-4 animate-spin" />}
           {t("Assign To Me")}
         </Button>
       </div>

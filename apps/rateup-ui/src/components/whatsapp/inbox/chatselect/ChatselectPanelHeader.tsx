@@ -4,9 +4,11 @@ import {
   IconCircleCheck,
   IconClock,
   IconDownload,
-  IconPlus,
+  IconFold,
   IconRefresh,
   IconSearch,
+  IconSelector,
+  IconUserPlus,
   IconX,
 } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
@@ -31,6 +33,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { ChatFilter } from "@/store/chat-filter.store.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useInboxViewStore } from "@/store/inbox-view.store.ts";
 import { useChatContactCountStore, useContactsStore } from "@/store/inbox.store.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
@@ -87,6 +90,8 @@ const ChatselectPanelHeader = ({
   ];
   const { filter, setFilter } = useChatFilterStore();
   const { t: translations } = useTranslation();
+  const compactList = useInboxViewStore((s) => s.compact);
+  const toggleCompactList = useInboxViewStore((s) => s.toggleCompact);
 
   // The header count has to agree with the sidebar rail's count for the same tab,
   // so it reads the same backend totals. The store's row list only holds the pages
@@ -155,6 +160,33 @@ const ChatselectPanelHeader = ({
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-3 text-muted-foreground">
+            <CustomTooltip
+              trigger={
+                <button
+                  className={cn(
+                    "flex size-6 items-center justify-center rounded-md border-0 bg-transparent p-0 outline-none",
+                    compactList && "bg-primary/10 text-primary",
+                  )}
+                  onClick={toggleCompactList}
+                  aria-pressed={compactList}
+                >
+                  {compactList ? (
+                    <IconSelector className="size-4 cursor-pointer" />
+                  ) : (
+                    <IconFold className="size-4 cursor-pointer" />
+                  )}
+                </button>
+              }
+              content={
+                <p>
+                  {compactList
+                    ? translations("Switch to detailed list")
+                    : translations("Switch to compact list")}
+                </p>
+              }
+              side="bottom"
+            />
+
             <CustomTooltip
               trigger={
                 <button
@@ -227,11 +259,15 @@ const ChatselectPanelHeader = ({
                 trigger={
                   <DialogTrigger
                     render={
-                      <button className="flex h-7.5 cursor-pointer items-center gap-1.25 rounded-lg border-0 px-2.75 text-xs font-bold text-white outline-none bg-primary" />
+                      // The design's icon-only "New conversation" button: 30×30,
+                      // radius 8, brand fill, 16px user-plus glyph.
+                      <button
+                        aria-label="New Contact"
+                        className="flex size-7.5 cursor-pointer items-center justify-center rounded-lg border-0 p-0 text-white outline-none bg-primary"
+                      />
                     }
                   >
-                    <IconPlus className="size-3.5" />
-                    {translations("New")}
+                    <IconUserPlus className="size-4" />
                   </DialogTrigger>
                 }
                 content={<p>New Contact</p>}

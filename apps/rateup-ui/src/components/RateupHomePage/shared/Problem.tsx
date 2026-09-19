@@ -100,7 +100,7 @@ export default function Problem() {
             <div
               key={pain.title}
               style={{ animationDelay: `${i * 110}ms` }}
-              className={`flex flex-[1_1_250px] flex-col gap-3 rounded-2xl border border-ru-n-200 bg-white p-6.5 transition-all hover:-translate-y-0.5 hover:border-ru-n-300 hover:shadow-md motion-reduce:animate-none ${
+              className={`relative flex flex-[1_1_250px] flex-col gap-3 overflow-hidden rounded-2xl border border-ru-n-200 bg-white p-6.5 transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.75 before:origin-left before:scale-x-0 before:bg-ru-star before:transition-transform before:duration-500 hover:before:scale-x-100 motion-reduce:before:transition-none hover:-translate-y-0.5 hover:border-ru-n-300 hover:shadow-md motion-reduce:animate-none ${
                 shown ? "animate-ru-rise" : "opacity-0"
               }`}
             >

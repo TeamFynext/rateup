@@ -78,7 +78,7 @@ export function Receipt({
   const waLabel = (() => {
     switch (preview.status) {
       case "sent":
-        return preview.mode === "text"
+        return preview.mode && preview.mode !== "template"
           ? t("Sent to {name} on WhatsApp as a message", { name: first })
           : t("Sent to {name} on WhatsApp", { name: first });
       case "not_connected":
@@ -89,6 +89,8 @@ export function Receipt({
         return t("Not sent — notifications are switched off");
       case "no_trigger":
         return t("Not sent — no message is set up for this");
+      case "no_open_chat":
+        return t("Not sent — no approved template, and they have not messaged you today");
       case "template_not_approved":
         return t("Not sent — the template is still awaiting Meta");
       case "send_failed":

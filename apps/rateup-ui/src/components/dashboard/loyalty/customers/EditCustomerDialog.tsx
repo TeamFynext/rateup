@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import z from "zod";
 
 import type { UpdateLoyaltyCustomerInput } from "@/backend/loyalty/customer/customer.api";
+import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -31,6 +32,8 @@ import {
 } from "@/components/ui/select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
+import { channelLabel } from "../channels/channels.ts";
+
 /** "No answer" is a real choice for gender, distinct from never having been asked. */
 const UNSET = "__unset__";
 
@@ -56,12 +59,17 @@ interface EditableCustomer {
 export function EditCustomerDialog({
   open,
   customer,
+  channels = [],
+  preferredChannel = null,
   isSaving,
   onClose,
   onSave,
 }: Readonly<{
   open: boolean;
   customer: EditableCustomer | undefined;
+  /** The programme's channels; the member can pick one only when there is a choice. */
+  channels?: readonly LoyaltyChannel[];
+  preferredChannel?: LoyaltyChannel | null;
   isSaving: boolean;
   onClose: () => void;
   onSave: (patch: UpdateLoyaltyCustomerInput) => void;
@@ -79,6 +87,7 @@ export function EditCustomerDialog({
         t("A birthday cannot be in the future"),
       ),
     gender: z.string(),
+    preferredChannel: z.string(),
     email: z
       .string()
       .refine((value) => value === "" || z.string().email().safeParse(value).success, {
@@ -95,6 +104,7 @@ export function EditCustomerDialog({
       name: customer?.name ?? "",
       dob: asDateInput(customer?.dob),
       gender: customer?.gender ?? UNSET,
+      preferredChannel: preferredChannel ?? UNSET,
       email: customer?.email ?? "",
     },
   });
@@ -107,8 +117,22 @@ export function EditCustomerDialog({
       dob: values.dob === "" ? null : values.dob,
       gender: values.gender === UNSET ? null : (values.gender as "MALE" | "FEMALE" | "OTHER"),
       email: values.email.trim() === "" ? null : values.email.trim(),
+      ...(choosesChannel
+        ? {
+            preferredChannel:
+              values.preferredChannel === UNSET
+                ? null
+                : (values.preferredChannel as LoyaltyChannel),
+          }
+        : {}),
     });
   };
+
+  const choosesChannel = channels.length > 1;
+  const channelOptions = [
+    { value: UNSET, label: t("The programme's order") },
+    ...channels.map((channel) => ({ value: channel, label: channelLabel(channel, t) })),
+  ];
 
   const genders = [
     { value: UNSET, label: t("Not given") },
@@ -193,6 +217,41 @@ export function EditCustomerDialog({
                 </Field>
               )}
             />
+
+            {choosesChannel && (
+              <Controller
+                name="preferredChannel"
+                control={form.control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor="edit-customer-channel">
+                      {t("Preferred channel")}
+                    </FieldLabel>
+                    <Select
+                      value={field.value}
+                      items={channelOptions}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger id="edit-customer-channel" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {channelOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldDescription>
+                      {t(
+                        "Where they hear from you. The programme falls back to its other channels if this one cannot reach them.",
+                      )}
+                    </FieldDescription>
+                  </Field>
+                )}
+              />
+            )}
 
             <Controller
               name="email"

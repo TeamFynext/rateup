@@ -22,7 +22,8 @@ export const WHATSAPP_HREF = `https://wa.me/${import.meta.env.VITE_SUPPORT_WHATS
 /* The zero state has to be written before the browser paints, or the final figure flashes
    on screen and then snaps back to 0 to count up. `useLayoutEffect` is a no-op on the
    server, and React warns if a component reaches for it during SSR, so swap it out there. */
-const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+export const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 interface ParsedMetric {
   prefix: string;
@@ -238,15 +239,22 @@ export function BookDemoCta({
   children = "Book a Demo",
   className = "",
   showArrow = true,
+  onDark = false,
 }: Readonly<{
   children?: ReactNode;
   className?: string;
   showArrow?: boolean;
+  /** On navy the brand blue sinks into the ground, so the fill steps up a stop and gains an edge. */
+  onDark?: boolean;
 }>) {
+  const tone = onDark
+    ? "border border-white/18 bg-ru-blue-500 shadow-[0_8px_22px_rgba(4,12,24,0.35)] hover:bg-ru-blue-400"
+    : "bg-ru-blue-600 shadow-[0_8px_22px_rgba(28,81,142,0.2)] hover:bg-ru-blue-700";
+
   return (
     <Link
       to={BOOK_DEMO_ROUTE}
-      className={`inline-flex h-13.5 items-center gap-2.5 rounded-lg bg-ru-blue-600 px-7 text-[17px] font-semibold tracking-[-0.005em] text-white shadow-[0_8px_22px_rgba(28,81,142,0.2)] transition-colors hover:bg-ru-blue-700 ${className}`}
+      className={`inline-flex h-13.5 items-center gap-2.5 rounded-lg px-7 text-[17px] font-semibold tracking-[-0.005em] text-white transition-colors ${tone} ${className}`}
     >
       {children}
       {showArrow && <ArrowRight />}
@@ -258,13 +266,18 @@ export function BookDemoCta({
 export function WhatsAppCta({
   children = "Chat with us on WhatsApp",
   className = "",
-}: Readonly<{ children?: ReactNode; className?: string }>) {
+  onDark = false,
+}: Readonly<{ children?: ReactNode; className?: string; onDark?: boolean }>) {
+  const tone = onDark
+    ? "border-white/22 bg-white/6 text-white hover:bg-white/12"
+    : "border-ru-n-200 bg-white text-ru-n-700 shadow-xs hover:border-ru-n-300";
+
   return (
     <a
       href={WHATSAPP_HREF}
       target="_blank"
       rel="noreferrer"
-      className={`inline-flex h-13.5 items-center gap-2.5 rounded-lg border border-ru-n-200 bg-white px-5.5 text-[17px] font-semibold text-ru-n-700 shadow-xs transition-colors hover:border-ru-n-300 ${className}`}
+      className={`inline-flex h-13.5 items-center gap-2.5 rounded-lg border px-5.5 text-[17px] font-semibold transition-colors ${tone} ${className}`}
     >
       <WhatsAppTile />
       {children}
@@ -283,7 +296,7 @@ export const HERO_WASH =
 
 /**
  * Pulls a hero band up under the sticky header so the wash runs to the top of the page and
- * reads behind the nav's translucent pill; the padding adds that height back.
+ * reads around the nav's floating pill; the padding adds that height back.
  *
  * The pull equals `RateupNavbar`'s full height — wrapper `py-2`/`sm:py-4` + pill
  * `py-2`/`sm:py-2.5` + the tallest child (the `h-11.5` CTA at 46px, then the `sm:h-12` logo
@@ -305,6 +318,7 @@ export function ClosingCta({
   children,
   note = "No credit card required · Cancel anytime",
   id,
+  decoration,
 }: Readonly<{
   /** The small dotted pill above the headline. Omitted when a page has nothing to add. */
   eyebrow?: ReactNode;
@@ -312,9 +326,12 @@ export function ClosingCta({
   children: ReactNode;
   note?: ReactNode;
   id?: string;
+  /** Drawn behind the copy, above the navy. The homepage passes the hero's line field. */
+  decoration?: ReactNode;
 }>) {
   return (
     <section id={id} className="relative overflow-hidden bg-ru-blue-950">
+      {decoration}
       <div className="absolute top-[-14%] left-1/2 aspect-2/1 w-[min(1000px,120%)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(90,140,198,0.2)_0%,transparent_62%)]" />
 
       <div className="relative mx-auto max-w-280 px-5 py-14 sm:py-26">

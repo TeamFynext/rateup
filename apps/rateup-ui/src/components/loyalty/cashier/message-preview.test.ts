@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import type { LoyaltyNotificationOutcome } from "@/backend/loyalty/customer/customer.api";
 import { LoyaltyEventType, type EventTrigger } from "@/backend/loyalty/eventTriggers.api";
 
 import type { Receipt } from "./cashier.types";
@@ -136,6 +137,30 @@ describe("buildWhatsAppPreview", () => {
       }),
     });
     expect(pending).toEqual({ status: "template_not_approved", body: "Hi Anjali" });
+  });
+
+  // An event with words but no template can only go into an open chat; saying "no
+  // message is set up" there would send the merchant looking for a problem that is not one.
+  test("words with no template and no open chat read as a closed chat, not a missing message", () => {
+    const outcome = (over: Partial<LoyaltyNotificationOutcome>) =>
+      buildWhatsAppPreview({
+        ...base,
+        receipt: receipt({
+          notification: {
+            sent: false,
+            channel: "whatsapp",
+            mode: null,
+            templateId: null,
+            text: null,
+            skippedReason: "no_template",
+            ...over,
+          },
+        }),
+      });
+
+    expect(outcome({ text: "Hi Anjali" })).toEqual({ status: "no_open_chat", body: "Hi Anjali" });
+    expect(outcome({ skippedReason: "session_closed", text: "Card" }).status).toBe("no_open_chat");
+    expect(outcome({})).toEqual({ status: "no_trigger", body: null });
   });
 
   test("renders the approved template with the receipt's numbers", () => {

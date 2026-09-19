@@ -31,12 +31,17 @@ import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import type { OptimisticMessage } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
+import { useInboxViewStore } from "@/store/inbox-view.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
-import { WaMessageClosedStatus } from "@/utils/constants.ts";
-import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTime.ts";
+import { INBOX_BULK_SELECTION_LIMIT, WaMessageClosedStatus } from "@/utils/constants.ts";
+import {
+  formatDateWithRelativeTime,
+  formatToRelativeTime,
+  isWithinLastDay,
+} from "@/utils/dateTime.ts";
 import {
   getContactChannelSource,
   getContactDisplayPhone,
@@ -136,9 +141,23 @@ export default function WaInboxChatSelectCard({
     contact?.psid ||
     "Unknown";
 
+  const compact = useInboxViewStore((s) => s.compact);
+
   const status = getDerivedStatus(contact);
   const isClosed = status === "closed";
   const isUnassigned = !isClosed && !contact?.assignedUsers?.length;
+  // The design's `fresh`: an open ticket whose newest message landed in the last
+  // 24h. Only fresh rows are highlighted — an unassigned one gets the cream fill,
+  // warm edge and a filled "Unassigned" badge, an assigned one an outlined "New"
+  // badge. Older rows, unassigned or not, say what they are through the status
+  // chip alone; a queue where every unclaimed ticket is cream has no highlight.
+  // Same 24h rule as the app's `isFreshlyNew` in `ChatBox`.
+  const isFresh =
+    !isClosed &&
+    !contact?.isSpam &&
+    isWithinLastDay(lastMessage?.waCreatedAt || contact?.conversationLastMessageAt);
+  const isFreshUnassigned = isFresh && isUnassigned;
+  const isFreshAssigned = isFresh && !isUnassigned;
   const unreadCount = getVisibleUnreadCount(contact, user?.userId);
   const primaryAssignee = contact?.assignedUsers?.[0];
 
@@ -158,6 +177,12 @@ export default function WaInboxChatSelectCard({
    * many of them run.
    */
   function setRowSelected(next: boolean) {
+    if (next && !isChecked && selectedChats.length >= INBOX_BULK_SELECTION_LIMIT) {
+      toast.error(`You can select up to ${INBOX_BULK_SELECTION_LIMIT} chats at a time`, {
+        id: "bulk-selection-limit",
+      });
+      return;
+    }
     setSelectedChats((prev) => {
       const without = prev.filter((id) => id !== rowKey);
       return next ? [...without, rowKey] : without;
@@ -248,7 +273,11 @@ export default function WaInboxChatSelectCard({
         "group box-border flex max-w-full cursor-pointer gap-2.75 border-b border-l-[3px] border-b-border px-4 py-3.25 transition-colors",
         isSelected
           ? "border-l-primary bg-primary/10 hover:bg-primary/10"
-          : cn(isUnassigned ? "border-l-amber-500" : "border-l-transparent", "hover:bg-muted"),
+          : isFreshUnassigned
+            ? // `--bg-warm-soft` + `--warm-700` — the same values as the app's
+              // `newRowBg` and New edge, light and dark.
+              "border-l-ru-amber-700 bg-ru-amber-50 hover:bg-ru-amber-100/60 dark:border-l-ru-amber-300 dark:bg-ru-amber-500/11 dark:hover:bg-ru-amber-500/16"
+            : "border-l-transparent hover:bg-muted",
       )}
     >
       {isSelectionMode && (
@@ -307,9 +336,29 @@ export default function WaInboxChatSelectCard({
                 fill={contact?.isFavorite ? "currentColor" : "none"}
               />
             </button>
-            <span className="truncate text-sm font-bold">{displayName}</span>
+            <span
+              className={cn(
+                "truncate text-sm",
+                isFresh ? "font-extrabold text-foreground" : "font-semibold text-foreground/85",
+              )}
+            >
+              {displayName}
+            </span>
             {contact?.isIgVerifiedUser && (
               <IconRosetteDiscountCheck className="size-3 shrink-0 text-primary" />
+            )}
+            {(isFreshUnassigned || isFreshAssigned) && (
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-0.75 rounded-full border px-1.5 py-px text-[9px] font-extrabold tracking-[0.04em] uppercase",
+                  isFreshUnassigned
+                    ? "border-ru-amber-700 bg-ru-amber-700 text-white dark:border-ru-amber-300 dark:bg-ru-amber-300 dark:text-black"
+                    : "border-primary/30 bg-transparent text-primary",
+                )}
+              >
+                {isFreshUnassigned && <span className="size-1 rounded-full bg-current" />}
+                {translations(isFreshUnassigned ? "Unassigned" : "New")}
+              </span>
             )}
           </span>
           <span className="shrink-0 text-[11px] text-muted-foreground">
@@ -336,11 +385,13 @@ export default function WaInboxChatSelectCard({
           </div>
         )}
 
-        {/* Last message snippet */}
+        {/* Last message snippet — like the chip row, dropped by the compact list,
+            which keeps name, time, code + subject and the right rail only. */}
         <div
           className={cn(
             "mt-0.5 truncate pr-2 text-xs",
             unreadCount > 0 ? "text-foreground" : "text-muted-foreground",
+            compact && "hidden",
           )}
         >
           {lastMessage &&
@@ -355,7 +406,7 @@ export default function WaInboxChatSelectCard({
         </div>
 
         {/* Chip row */}
-        <div className="mt-1.75 flex flex-wrap items-center gap-1.5">
+        <div className={cn("mt-1.75 flex flex-wrap items-center gap-1.5", compact && "hidden")}>
           {/* Spam is a contact flag, so it outranks the ticket's own status pill —
               in the Spam tab the row IS the contact, not one of their tickets. */}
           {contact?.isSpam && (

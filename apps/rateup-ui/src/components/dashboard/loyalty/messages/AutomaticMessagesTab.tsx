@@ -206,6 +206,14 @@ export function AutomaticMessagesTab() {
 
       <section className="flex flex-col gap-3">
         <SectionHeading
+          title={t("New customers")}
+          hint={t("The first reply someone gets when they message you and are not a member yet.")}
+        />
+        {catalog.filter((d) => d.group === "welcome").map((d) => card(d))}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <SectionHeading
           title={t("Sent by a transaction")}
           hint={t("Points, rewards and gifts — the moment they happen.")}
         />

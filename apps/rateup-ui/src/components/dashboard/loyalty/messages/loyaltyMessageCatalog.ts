@@ -3,14 +3,15 @@ import type { TFunction } from "i18next";
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import type { TemplateFormValues } from "@/components/whatsapp/templates/Details/template-form.ts";
 import { TemplateType, WaTemplateStatus } from "@/types/enums.ts";
+import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 
 /**
  * Every message the loyalty programme can say on WhatsApp, in one list.
  *
  * Two kinds. An **event** message is a Meta template a transaction or a schedule sends —
- * `key` is the `LoyaltyEventType`, and `params` names what the dispatcher puts into
- * `{{1}}`, `{{2}}` … in that order (the contract with `loyaltyWaDispatcher` and the crons
- * on the API). A **keyword** message answers something the customer texts — `key` is the
+ * `key` is the `LoyaltyEventType`, and `params` names what the API puts into
+ * `{{1}}`, `{{2}}` … in that order (the contract with `messaging/catalog.ts` there).
+ * A **keyword** message answers something the customer texts — `key` is the
  * `LoyaltyWaCommand.type`, `keyword` the word to listen for, and `params` what the inbound
  * handler substitutes; the reply itself is plain text, with a template only for customers
  * who have never messaged the business.
@@ -31,7 +32,7 @@ import { TemplateType, WaTemplateStatus } from "@/types/enums.ts";
 
 export type LoyaltyMessageKind = "event" | "keyword";
 
-export type LoyaltyEventGroup = "notification" | "reminder";
+export type LoyaltyEventGroup = "welcome" | "notification" | "reminder";
 
 export interface LoyaltyMessageVariable {
   /** Written into the message verbatim, e.g. `{{1}}`. */
@@ -55,6 +56,11 @@ export interface LoyaltyEventDefinition extends LoyaltyMessageBase {
   kind: "event";
   eventType: LoyaltyEventType;
   group: LoyaltyEventGroup;
+  /**
+   * The template carries a Join quick reply the API adds on save (labelled with the join
+   * keyword) and registers whoever taps it — so the body stays editable inline.
+   */
+  joinButton?: boolean;
 }
 
 export interface LoyaltyKeywordDefinition extends LoyaltyMessageBase {
@@ -207,6 +213,20 @@ export function loyaltyEventCatalog(t: TFunction): LoyaltyEventDefinition[] {
       body: "Hi {{1}}, it is {{2}} years since you joined us. You have {{3}} points to spend.",
       example: ["Anjali", "1", "1283"],
     },
+    {
+      kind: "event",
+      eventType: LoyaltyEventType.NEW_CUSTOMER_WELCOME,
+      group: "welcome",
+      label: t("Welcome a new customer"),
+      description: t(
+        "Sent the first time someone messages you. The Join button signs them up to your program.",
+      ),
+      params: [name],
+      templateName: "loyalty_new_customer_welcome",
+      body: "Hi {{1}}, thanks for getting in touch! Join our loyalty program to earn points on every visit. Tap the button below to join.",
+      example: ["Anjali"],
+      joinButton: true,
+    },
   ];
 }
 
@@ -270,7 +290,7 @@ export function loyaltyKeywordCatalog(t: TFunction): LoyaltyKeywordDefinition[] 
       params: [t("their name"), t("card code")],
       templateName: "loyalty_member_card",
       body: "Hi {{1}}, here is your card. Show this QR at the counter to collect and use your points. Your card code is {{2}} if the camera can't read it.",
-      example: ["Anjali", "ABCD-EFGH-JKLM"],
+      example: ["Anjali", "ABC-DEF-GHJ"],
     },
     {
       kind: "keyword",
@@ -345,7 +365,9 @@ export function variableHint(params: readonly string[]): string {
  * it, and left a second one behind every time the message was opened again.
  */
 export function loyaltyStarterValues(
-  starter: Pick<LoyaltyMessageDefinition, "templateName" | "body" | "example">,
+  starter: Pick<LoyaltyMessageDefinition, "templateName" | "body" | "example"> & {
+    joinButton?: boolean;
+  },
 ): Partial<TemplateFormValues> {
   return {
     name: starter.templateName,
@@ -357,7 +379,7 @@ export function loyaltyStarterValues(
     // the customer did, and Meta prices and reviews the two differently.
     category: "UTILITY",
     format: "NONE",
-    buttons: [],
+    buttons: starter.joinButton ? [{ type: WHATSAPP_BUTTON_TYPE.QUICK_REPLY, text: "Join" }] : [],
     status: WaTemplateStatus.DRAFT,
     example: [...starter.example],
     templateType: TemplateType.LOYALTY,

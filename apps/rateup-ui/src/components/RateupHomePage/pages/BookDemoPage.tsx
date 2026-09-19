@@ -159,7 +159,7 @@ export default function BookDemoPage() {
           <div className="mb-7 flex flex-wrap gap-2.5">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-[13px] py-[7px]">
               {/* The lockup already carries the "Meta" wordmark, so the label drops it. */}
-              <MetaLockup className="h-6" />
+              <MetaLockup className="h-2.5" />
               <span className="text-[13.5px] font-medium text-secondary-foreground">
                 Business Partner
               </span>

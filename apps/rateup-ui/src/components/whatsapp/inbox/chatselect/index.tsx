@@ -1,14 +1,10 @@
-import {
-  IconCircleCheck,
-  IconLoader,
-  IconLoader2,
-  IconTrash,
-  IconUserCheck,
-} from "@tabler/icons-react";
+import { IconCircleCheck, IconLoader, IconTrash, IconUserCheck } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { chunk } from "lodash";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -28,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Progress, ProgressLabel } from "@/components/ui/progress.tsx";
 import {
   Tooltip,
   TooltipContent,
@@ -40,6 +37,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
 import type { ChatFilter } from "@/store/chat-filter.store.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useInboxViewStore } from "@/store/inbox-view.store.ts";
 import useContactStore, {
   makeFilterKey,
   useContactsStore,
@@ -48,6 +46,7 @@ import useContactStore, {
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage } from "@/types/global";
+import { INBOX_BULK_CHUNK_SIZE, INBOX_BULK_SELECTION_LIMIT } from "@/utils/constants.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
 import WhatsAppInboxLoader from "../loader/index.tsx";
@@ -120,9 +119,15 @@ const WaInboxChatSelect = () => {
 
   const { setFilterData, filterData } = useContactStore();
 
-  const { mutate: bulkAssignStatusMutation, isPending: isBulkAssignStatusPending } =
-    useBulkAssignStatusMutation("");
+  const { mutateAsync: bulkAssignStatusMutation } = useBulkAssignStatusMutation("");
   const bulkDeleteMutation = useDeleteConversations();
+  // The bulk action in flight, if any. Close and delete go out in chunks, and
+  // this is what the toolbar's progress bar reads between chunks.
+  const [bulkProgress, setBulkProgress] = useState<{
+    action: "close" | "delete";
+    done: number;
+    total: number;
+  } | null>(null);
   const confirm = useConfirm();
   // Deleting is admin-only, matching the endpoint's own gate and the per-row action.
   const canBulkDelete = user?.role === UserRole.SUPADM || user?.role === UserRole.ADM;
@@ -248,11 +253,13 @@ const WaInboxChatSelect = () => {
   );
 
   const rowCount = contactIds.length + (hasNextPageFilteredContacts ? 1 : 0);
+  const compactList = useInboxViewStore((s) => s.compact);
 
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 90,
+    // Rows are measured once drawn; this only sizes the ones not yet rendered.
+    estimateSize: () => (compactList ? 66 : 90),
     overscan: 5,
   });
 
@@ -439,17 +446,32 @@ const WaInboxChatSelect = () => {
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
+  // "Select all" stops at the cap; the header checkbox reads as checked once the
+  // selection holds everything it is allowed to.
+  const selectAllCount = Math.min(contactIds.length, INBOX_BULK_SELECTION_LIMIT);
   const toggleSelectAll = () => {
-    if (selectedChats.length === contactIds.length) {
+    if (selectedChats.length >= selectAllCount) {
       setSelectedChats([]);
-    } else {
-      setSelectedChats(contactIds);
+      return;
+    }
+    setSelectedChats(contactIds.slice(0, INBOX_BULK_SELECTION_LIMIT));
+    if (contactIds.length > INBOX_BULK_SELECTION_LIMIT) {
+      toast.info(
+        `Selected the first ${INBOX_BULK_SELECTION_LIMIT} chats — that is the most at a time`,
+        {
+          id: "bulk-selection-limit",
+        },
+      );
     }
   };
 
   /**
-   * Delete every selected ticket. Unlike the bulk close above it takes the rows'
+   * Delete every selected ticket. Unlike the bulk close below it takes the rows'
    * own ids: a ticket is what is being deleted, not the customer.
+   *
+   * Sent in chunks so the list empties as the server confirms each one. A chunk
+   * that fails stops the run; the mutation already toasts the error, and the
+   * rows it did not reach stay selected so the action can be retried on them.
    */
   const handleBulkDelete = async () => {
     const count = selectedChats.length;
@@ -466,41 +488,81 @@ const WaInboxChatSelect = () => {
     });
     if (!confirmed) return;
 
-    bulkDeleteMutation.mutate(selectedChats, {
-      onSuccess: () => {
-        setSelectedChats([]);
-        setIsSelectionMode(false);
-      },
-    });
+    const rowKeys = selectedChats;
+    let done = 0;
+    setBulkProgress({ action: "delete", done, total: rowKeys.length });
+    try {
+      for (const ids of chunk(rowKeys, INBOX_BULK_CHUNK_SIZE)) {
+        // The mutation's own onSuccess drops the rows from the store.
+        await bulkDeleteMutation.mutateAsync(ids);
+        done += ids.length;
+        setBulkProgress({ action: "delete", done, total: rowKeys.length });
+      }
+      setSelectedChats([]);
+      setIsSelectionMode(false);
+    } catch {
+      setSelectedChats(rowKeys.slice(done));
+    } finally {
+      setBulkProgress(null);
+    }
   };
 
+  /**
+   * Close every selected ticket. The endpoint is contact-grained, so the rows
+   * are grouped by contact and each chunk is a set of contacts; once a chunk
+   * lands, every selected row of those contacts is marked closed locally.
+   *
+   * The optimistic row sets `conversationStatus` as well as the contact-level
+   * status: the store judges list membership by the *ticket's* status
+   * (`rowStatus`), so a row whose `conversationStatus` stayed open never left
+   * the Open tab — and the refetch afterwards only merges rows in, it never
+   * removes them, so the stale row lived on in IndexedDB as well.
+   */
   const handleBulkClose = async () => {
-    await bulkAssignStatusMutation(
-      {
-        contactIds: selectedContactIds,
-        waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
-      },
-      {
-        onSuccess: () => {
-          setSelectedChats([]);
-          setIsSelectionMode(false);
-          setOpenConfirmHandleClose(false);
-          selectedChats.forEach((rowKey) => {
-            updateContactById(rowKey, (existing) => ({
-              ...existing,
-              waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
-              closedAt: new Date().toISOString(),
-              closedUser: {
-                name: user?.userName ?? "",
-                id: user?.userId ?? "",
-              },
-              assignedUsers: [],
-            }));
-          });
-          refetchFilteredContacts();
-        },
-      },
-    );
+    setOpenConfirmHandleClose(false);
+    const rowsByContact = new Map<string, string[]>();
+    for (const rowKey of selectedChats) {
+      const contactId = contactsById.get(rowKey)?.id;
+      if (contactId)
+        rowsByContact.set(contactId, [...(rowsByContact.get(contactId) ?? []), rowKey]);
+    }
+    const contactIdList = [...rowsByContact.keys()];
+    const closedAt = new Date().toISOString();
+    let done = 0;
+    setBulkProgress({ action: "close", done, total: contactIdList.length });
+    try {
+      for (const ids of chunk(contactIdList, INBOX_BULK_CHUNK_SIZE)) {
+        await bulkAssignStatusMutation({
+          contactIds: ids,
+          waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+        });
+        for (const rowKey of ids.flatMap((id) => rowsByContact.get(id) ?? [])) {
+          updateContactById(rowKey, (existing) => ({
+            ...existing,
+            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+            conversationStatus: WaMessageAssignStatus.CLOSED,
+            closedAt,
+            closedUser: {
+              name: user?.userName ?? "",
+              id: user?.userId ?? "",
+            },
+            assignedUsers: [],
+          }));
+        }
+        done += ids.length;
+        setBulkProgress({ action: "close", done, total: contactIdList.length });
+      }
+      setSelectedChats([]);
+      setIsSelectionMode(false);
+    } catch {
+      const remaining = new Set(
+        contactIdList.slice(done).flatMap((id) => rowsByContact.get(id) ?? []),
+      );
+      setSelectedChats(selectedChats.filter((rowKey) => remaining.has(rowKey)));
+    } finally {
+      setBulkProgress(null);
+      refetchFilteredContacts();
+    }
   };
 
   return (
@@ -530,13 +592,31 @@ const WaInboxChatSelect = () => {
         ) : (
           <div ref={parentRef} className="List min-h-0 w-full flex-1 overflow-auto">
             <div className="border-t border-border" />
-            {isSelectionMode && selectedChats.length > 0 && (
+            {isSelectionMode && bulkProgress && (
+              <div className="h-12 px-3 border-b flex items-center">
+                <Progress
+                  value={bulkProgress.total ? (bulkProgress.done / bulkProgress.total) * 100 : 0}
+                  className="w-full gap-x-3 gap-y-1.5"
+                >
+                  <ProgressLabel className="text-xs">
+                    {bulkProgress.action === "close"
+                      ? translations("Closing chats")
+                      : translations("Deleting chats")}
+                    …
+                  </ProgressLabel>
+                  <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                    {bulkProgress.done} / {bulkProgress.total}
+                  </span>
+                </Progress>
+              </div>
+            )}
+            {isSelectionMode && !bulkProgress && selectedChats.length > 0 && (
               <div className="h-12 px-3 border-b flex items-center justify-between transition-all">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={selectedChats.length === contactIds.length}
+                      checked={selectedChats.length >= selectAllCount}
                       onChange={toggleSelectAll}
                       className="w-4 h-4 rounded text-foreground focus:ring-primary"
                     />
@@ -727,12 +807,10 @@ const WaInboxChatSelect = () => {
             </Button>
 
             <Button
-              disabled={isBulkAssignStatusPending}
               onClick={() => {
                 handleBulkClose();
               }}
             >
-              {isBulkAssignStatusPending && <IconLoader2 className="w-4 h-4 animate-spin" />}
               {translations("Confirm")}
             </Button>
           </DialogFooter>

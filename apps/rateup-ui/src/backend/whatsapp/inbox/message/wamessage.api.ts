@@ -57,6 +57,9 @@ export interface WaGetMessagesBody {
   // Set when the sender deleted the message on WhatsApp. The body is still here,
   // but the thread shows it as deleted instead of rendering it.
   deletedAt?: string | null;
+  // What produced the message: INBOX, TEMPLATE, CAMPAIGN, AUTOMATED, FLOW, …
+  // Free text on the API side; older rows may be lowercase or null.
+  sourceMessage?: string | null;
 }
 
 interface WaMessagePage {

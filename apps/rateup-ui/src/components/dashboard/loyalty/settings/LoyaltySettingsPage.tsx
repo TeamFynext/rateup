@@ -43,6 +43,7 @@ import { pickJoinKeyword, pickWhatsappNumber } from "../joinLink.ts";
 import { LOYALTY_PATHS } from "../paths.ts";
 import { programStateOf } from "../program/programState.ts";
 import { ProgramStatusBadge } from "../program/ProgramStatusBadge.tsx";
+import { ChannelsField } from "./ChannelsField.tsx";
 import { JoiningCard } from "./JoiningCard.tsx";
 
 /**
@@ -273,7 +274,7 @@ export function LoyaltySettingsPage() {
               </FieldLabel>
               <FieldDescription className="text-xs">
                 {t(
-                  "When a customer has messaged you in the last 24 hours, the text of the template is sent as a normal message — free, and it works before Meta approves the template. Templates with buttons are always sent as templates.",
+                  "When a customer has messaged you in the last 24 hours, the message is sent as a normal chat message — free, and it works before Meta approves the template, or with no template at all. Templates with buttons are always sent as templates.",
                 )}
               </FieldDescription>
             </FieldContent>
@@ -284,6 +285,13 @@ export function LoyaltySettingsPage() {
               disabled={update.isPending}
             />
           </Field>
+
+          <ChannelsField
+            available={program.availableChannels ?? []}
+            enabled={program.enabledChannels ?? ["WHATSAPP"]}
+            disabled={update.isPending}
+            onChange={(enabledChannels) => toggle({ enabledChannels })}
+          />
 
           <Field orientation="horizontal" className="rounded-lg border border-border p-3">
             <FieldContent>

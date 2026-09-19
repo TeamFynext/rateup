@@ -2,6 +2,9 @@ import type { JSONContent } from "@tiptap/react";
 
 import { axiosClient } from "../apiClient";
 
+/** A medium loyalty messages go out on. Mirrors the `LoyaltyChannel` enum in rateup-api. */
+export type LoyaltyChannel = "WHATSAPP" | "RCS" | "SMS" | "EMAIL";
+
 /** The join message: plain text, or the editor's document nodes. */
 export type ReferralMessageTemplate = string | unknown[] | JSONContent;
 
@@ -44,6 +47,10 @@ export interface LoyaltyProgram {
   whatsappNotifications?: boolean;
   /** Inside an open 24-hour chat, send a notification's text as a plain message. */
   sendTextInSession?: boolean;
+  /** Channels members are messaged on, in fallback order. */
+  enabledChannels?: LoyaltyChannel[];
+  /** Channels this server can send on — only these can be switched on. */
+  availableChannels?: LoyaltyChannel[];
   enableShopifyOrderPoints?: boolean;
   /** Months of trailing spend that count towards a tier; null = lifetime. */
   tierQualificationWindowMonths?: number | null;
@@ -89,6 +96,7 @@ export interface LoyaltyProgramInput {
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
   sendTextInSession?: boolean;
+  enabledChannels?: LoyaltyChannel[];
   enableShopifyOrderPoints?: boolean;
   programActive?: boolean;
   pointsActivityAlerts?: boolean;

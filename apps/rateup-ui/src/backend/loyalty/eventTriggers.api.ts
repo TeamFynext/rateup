@@ -13,6 +13,7 @@ export enum LoyaltyEventType {
   TIER_AT_RISK = "TIER_AT_RISK",
   REWARD_EXPIRING = "REWARD_EXPIRING",
   SIGNUP_ANNIVERSARY = "SIGNUP_ANNIVERSARY",
+  NEW_CUSTOMER_WELCOME = "NEW_CUSTOMER_WELCOME",
 }
 
 export interface EventTrigger {
@@ -25,6 +26,8 @@ export interface EventTrigger {
   leadDays?: number | null;
   /** Local hour to send at, in the programme's own timezone. */
   sendHour?: number | null;
+  /** The message in words, for any channel; null takes the API catalog's default. */
+  body?: string | null;
   waTemplateId?: string;
   whatsappSettingsId?: string;
   rewardId?: string;

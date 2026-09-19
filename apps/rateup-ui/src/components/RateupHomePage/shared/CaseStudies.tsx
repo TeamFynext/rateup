@@ -289,7 +289,7 @@ export default function CaseStudies() {
           aria-labelledby={`case-tab-${active}`}
           className="grid grid-cols-1 items-center gap-7 rounded-3xl border border-ru-n-200 bg-ru-n-50 p-6 sm:gap-12 sm:p-11 md:grid-cols-2"
         >
-          <div className="min-w-0">
+          <div key={active} className="min-w-0 animate-ru-rise motion-reduce:animate-none">
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <img
                 src={c.logo}
@@ -356,7 +356,11 @@ export default function CaseStudies() {
           </div>
 
           {/* The message the campaign actually sends, in a phone frame. */}
-          <div className="flex min-w-0 justify-center">
+          <div
+            key={`visual-${active}`}
+            style={{ animationDelay: "90ms" }}
+            className="flex min-w-0 animate-ru-rise justify-center motion-reduce:animate-none"
+          >
             <div className="w-[min(100%,288px)] rounded-4xl bg-ru-blue-900 p-2.25 shadow-[0_24px_64px_rgba(16,24,40,0.1)]">
               <div className="overflow-hidden rounded-[28px] bg-white">
                 <div className="flex items-center gap-2.5 border-b border-ru-n-200 bg-ru-n-50 px-4 py-3.5">
