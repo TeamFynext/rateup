@@ -16,10 +16,10 @@ import { ExternalApiError } from "../errors.js";
  * actually be called by the systems it was built for. A POS has exactly two things: the
  * number the customer gives, and the code on the card it just scanned.
  *
- * **Two named fields rather than one polymorphic path segment.** A card code is twelve
+ * **Two named fields rather than one polymorphic path segment.** A card code is nine
  * characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, and that alphabet includes the digits
- * 2-9 — so a twelve-digit phone number made only of those digits parses as a perfectly
- * valid card code. On an endpoint that moves points, an identifier that can be read two
+ * 2-9 — so a card code can be all digits, and a short local number made only of those
+ * digits parses as a perfectly valid card code. On an endpoint that moves points, an identifier that can be read two
  * ways is not acceptable, so the caller says which one it means.
  */
 
@@ -27,7 +27,7 @@ export const memberRefSchema = z
   .object({
     /** Any format: E.164, spaced, or local to the programme's country. */
     phone: z.string().trim().min(4).max(32).optional(),
-    /** Bare, grouped (`ABCD-EFGH-JKLM`), lower case, or the card URL. */
+    /** Bare, grouped (`ABC-DEF-GHJ`), lower case, or the card URL. */
     cardCode: z.string().trim().min(1).max(64).optional(),
   })
   .refine((r) => Boolean(r.phone) !== Boolean(r.cardCode), {

@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { isAvailableChannel, LoyaltyChannel } from "../messaging/channelIds.js";
+
 const loyaltyProgramFields = {
   name: z.string().min(1, "Program name is required"),
   status: z.enum(["draft", "active", "paused"]),
@@ -39,6 +41,17 @@ const loyaltyProgramFields = {
   emailNotifications: z.boolean(),
   whatsappNotifications: z.boolean(),
   sendTextInSession: z.boolean(),
+  /** Fallback order for member messages. Only channels with an adapter can be switched on. */
+  enabledChannels: z
+    .array(z.enum(LoyaltyChannel))
+    .min(1, "Keep at least one channel on")
+    .refine((channels) => channels.every(isAvailableChannel), {
+      message: "That channel is not available yet",
+    })
+    .refine((channels) => new Set(channels).size === channels.length, {
+      message: "Each channel can be listed once",
+    })
+    .optional(),
   enableShopifyOrderPoints: z.boolean(),
   enablePointsExpiration: z.boolean(),
   pointsExpirationMonths: z.number(),

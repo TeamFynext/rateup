@@ -1,24 +1,24 @@
 import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
-import type { CustomerLoyaltyAccount } from "../../../../generated/prisma/client.js";
 import {
   LoyaltyTemplateInput,
   UpdateLoyaltyTemplateInput,
   EventTriggerInput,
   UpdateEventTriggerInput,
 } from "./settings.schema.js";
-import { sendMessage, sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
 import { getLCustomerByPhone, updateCustomerAccount } from "../accounts/account.service.js";
-import { handleSendTemplate } from "../../contact/contact.utils.js";
 import { renderReplyText } from "../richText.js";
 import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
+import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { buildKeywordReply, SYSTEM_TEXTS } from "../messaging/content.js";
 import {
-  createListMessage,
-  createReplyButtonsMessage,
-  generateWhatsAppJoinLink,
-} from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+  replyLoyalty,
+  replySystem,
+  replyText,
+  type InboundReplyContext,
+} from "../messaging/reply.js";
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
 import { validateRedemption } from "../redemptionValidator.js";
 import { redeemReward } from "../redemptions/redemption.service.js";
@@ -103,75 +103,75 @@ export async function getLoyaltyWaCommandByRequestMessage(orgId: string, request
 }
 
 export async function handleLoyaltyWaCommand(
-  phone: string,
-  name: string,
+  reply: InboundReplyContext,
   loyaltyWaCommand: LoyaltyWaCommand,
-  orgId: string,
   /** The number the customer messaged — what their welcome's referral link points at. */
   channelNumber?: string,
 ) {
   switch (loyaltyWaCommand.type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
       await handleWaJoinRegistration({
-        orgId,
-        from: phone,
-        userName: name,
+        orgId: reply.orgId,
+        from: reply.from,
+        userName: reply.name ?? undefined,
         joinPayload: {},
         // Doubles as "they messaged us, so reply", which is why it falls back to a
         // non-number: the welcome must still go out when the channel is unknown.
         sourceIdentifier: channelNumber ?? "loyalty",
+        reply,
       });
       break;
     case LoyaltyTemplateTypes.PointInformation:
-      await handleLoyaltyPointsCommand(phone, loyaltyWaCommand);
+      await handleLoyaltyPointsCommand(reply, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.Referral:
-      await handleReferralCommand(phone, loyaltyWaCommand);
+      await handleReferralCommand(reply, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.CustomerRemoval:
-      await handleCustomerRemovalFromLoyalty(phone, loyaltyWaCommand);
+      await handleCustomerRemovalFromLoyalty(reply, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.RewardsIssued:
-      await handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand);
+      await handleIssuedRewardsCommand(reply);
       break;
     case LoyaltyTemplateTypes.MemberCard:
-      await handleMemberCardCommand(phone, orgId, loyaltyWaCommand);
+      await handleMemberCardCommand(reply, loyaltyWaCommand);
       break;
   }
 }
 
+/** The member who wrote in, or null after telling them they are not one. */
+async function activeMemberOrSay(reply: InboundReplyContext) {
+  const customer = await getLCustomerByPhone(reply.from, reply.orgId);
+  if (!customer || customer.status !== "active") {
+    await replySystem(reply, "notMember");
+    return null;
+  }
+  return customer;
+}
+
 /**
  * "card": the member asked for their QR card. The keyword arrived as a message, so the
- * window is open and the image can go straight out; the merchant's reply text, when they
- * wrote one, is the caption.
+ * conversation is open and the image can go straight out; the merchant's reply text, when
+ * they wrote one, is the caption.
  */
 async function handleMemberCardCommand(
-  phone: string,
-  orgId: string,
+  reply: InboundReplyContext,
   loyaltyWaCommand: LoyaltyWaCommand,
 ) {
-  const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer || customer.status !== "active") {
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "You are not an active member of our loyalty programme",
-    );
-    return;
-  }
+  const customer = await activeMemberOrSay(reply);
+  if (!customer) return;
   const cardCode = await ensureMemberCard(customer.id);
   const caption = renderCardReply(loyaltyWaCommand.content, {
     name: customer.contact?.name,
     cardCode,
   });
-  const outcome = await sendMemberCard({ orgId, accountId: customer.id, caption });
-  if (!outcome.sent) {
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "Sorry, we could not send your card just now. Please try again in a moment.",
-    );
-  }
+  const outcome = await sendMemberCard({
+    orgId: reply.orgId,
+    accountId: customer.id,
+    caption,
+    reply,
+  });
+  if (!outcome.sent) await replySystem(reply, "cardFailed");
 }
 
 export async function getAllLoyaltyWaCommands(orgId: string) {
@@ -181,21 +181,10 @@ export async function getAllLoyaltyWaCommands(orgId: string) {
     },
   });
 }
-async function handleIssuedRewardsCommand(
-  phone: string,
-  orgId: string,
-  _loyaltyWaCommand: LoyaltyWaCommand,
-) {
-  const customer = await getLCustomerByPhone(phone, orgId);
 
-  if (!customer || customer.status !== "active") {
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "You are not an active member of our loyalty programme",
-    );
-    return;
-  }
+async function handleIssuedRewardsCommand(reply: InboundReplyContext) {
+  const customer = await activeMemberOrSay(reply);
+  if (!customer) return;
 
   const rewards = await getActiveLoyaltyRewards(customer.programId);
   const eligibleRewards = rewards
@@ -208,42 +197,51 @@ async function handleIssuedRewardsCommand(
     .slice(0, 10);
 
   if (!eligibleRewards.length) {
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "No rewards are available for your current points right now.",
-    );
+    await replySystem(reply, "noRewards");
     return;
   }
 
-  const choices = eligibleRewards.map((reward) => ({
-    id: `${REWARD_BUTTON_PREFIX}${reward.id}`,
-    value: `${reward.name}`.slice(0, 24),
-  }));
-
-  const listMessage = createListMessage(
-    phone,
-    "Rewards",
-    `You have ${customer.currentPoints} points. Select a reward to continue.`,
-    "View rewards",
-    choices,
-  );
-
-  await sendMessage(orgId, listMessage);
+  await replyLoyalty(reply, {
+    key: "keyword:rewards",
+    text: `You have ${customer.currentPoints} points. Select a reward to continue.`,
+    parts: {
+      title: "Rewards",
+      list: {
+        button: "View rewards",
+        rows: eligibleRewards.map((reward) => ({
+          id: `${REWARD_BUTTON_PREFIX}${reward.id}`,
+          title: `${reward.name}`.slice(0, 24),
+        })),
+      },
+    },
+  });
 }
 
-async function handleReferralCommand(phone: string, loyaltyWaCommand: LoyaltyWaCommand) {
-  const { orgId, responseType, waTemplateId, content, whatsappSettingsPhoneId } = loyaltyWaCommand;
+/** A keyword's own text first; its template only when the merchant wrote none. */
+async function replyWithKeyword(
+  reply: InboundReplyContext,
+  loyaltyWaCommand: LoyaltyWaCommand,
+  params: string[],
+) {
+  const { responseType, waTemplateId, content } = loyaltyWaCommand;
+  const message = buildKeywordReply({
+    key: `keyword:${loyaltyWaCommand.type}`,
+    text: renderReplyText(content, params),
+    waTemplateId: responseType === WaAutomatedReplyResponseType.Template ? waTemplateId : null,
+    params,
+  });
+  if (message.text === null && !message.artefacts) return;
+  await replyLoyalty(reply, message);
+}
 
-  const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer || customer.status !== "active") {
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "You are not an active member of our loyalty programme",
-    );
-    return;
-  }
+async function handleReferralCommand(
+  reply: InboundReplyContext,
+  loyaltyWaCommand: LoyaltyWaCommand,
+) {
+  const { responseType, waTemplateId, content, whatsappSettingsPhoneId } = loyaltyWaCommand;
+
+  const customer = await activeMemberOrSay(reply);
+  if (!customer) return;
 
   const waSettings = whatsappSettingsPhoneId
     ? await prisma.whatsappSettings.findFirst({
@@ -260,70 +258,44 @@ async function handleReferralCommand(phone: string, loyaltyWaCommand: LoyaltyWaC
       })
     : null;
 
-  const dynamicVariables = [referralCode, joinLink ?? referralCode];
-  // Inbound keyword → open window → the reply's own text first; template only without one.
-  const text = renderReplyText(content, dynamicVariables);
-  if (text.trim().length > 0) {
-    await sendTextMessage({ phone, orgId }, null, text);
-  } else if (responseType === WaAutomatedReplyResponseType.Template && waTemplateId) {
-    return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
-  } else {
-    const linkText = joinLink ? `\n\nShare your referral link: ${joinLink}` : "";
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      `Your referral code is: ${referralCode}${linkText}`,
-    );
+  const params = [referralCode, joinLink ?? referralCode];
+  const hasOwnWords = renderReplyText(content, params).trim().length > 0;
+  if (hasOwnWords || (responseType === WaAutomatedReplyResponseType.Template && waTemplateId)) {
+    await replyWithKeyword(reply, loyaltyWaCommand, params);
+    return;
   }
+  const linkText = joinLink ? `\n\nShare your referral link: ${joinLink}` : "";
+  await replyText(reply, `Your referral code is: ${referralCode}${linkText}`);
 }
 
 export async function handleLoyaltyRedeemInteraction(
-  phone: string,
+  reply: InboundReplyContext,
   parsedMessage: { buttonId?: string; message?: string },
-  orgId: string,
 ) {
-  const sendLoyaltyText = async (text: string) => {
-    await sendTextMessage({ phone, orgId }, null, text);
-  };
-
-  const getActiveCustomer = async () => {
-    const customer = await getLCustomerByPhone(phone, orgId);
-    if (!customer || customer.status !== "active") {
-      await sendLoyaltyText("You are not an active member of our loyalty programme");
-      return null;
-    }
-    return customer;
-  };
-
   const buttonId = parsedMessage?.buttonId;
   if (!buttonId) return false;
 
   if (buttonId.startsWith(REWARD_BUTTON_PREFIX)) {
-    await handleRewardSelection(buttonId, getActiveCustomer, orgId, phone);
+    await handleRewardSelection(reply, buttonId);
     return true;
   }
 
   if (buttonId.startsWith(REWARD_CANCEL_PREFIX)) {
-    await sendLoyaltyText("Reward redemption cancelled.");
+    await replySystem(reply, "redemptionCancelled");
     return true;
   }
 
   if (buttonId.startsWith(REWARD_CONFIRM_PREFIX)) {
-    await handleRewardConfirmation(buttonId, getActiveCustomer, sendLoyaltyText);
+    await handleRewardConfirmation(reply, buttonId);
     return true;
   }
 
   return false;
 }
 
-async function handleRewardSelection(
-  buttonId: string,
-  getActiveCustomer: () => Promise<CustomerLoyaltyAccount | null>,
-  orgId: string,
-  phone: string,
-): Promise<void> {
+async function handleRewardSelection(reply: InboundReplyContext, buttonId: string): Promise<void> {
   const rewardId = buttonId.slice(REWARD_BUTTON_PREFIX.length);
-  const customer = await getActiveCustomer();
+  const customer = await activeMemberOrSay(reply);
   if (!customer) return;
 
   const reward = await prisma.loyaltyReward.findUnique({
@@ -331,7 +303,7 @@ async function handleRewardSelection(
   });
 
   if (!reward || reward.programId !== customer.programId) {
-    await sendTextMessage({ phone, orgId }, null, "Selected reward is invalid.");
+    await replySystem(reply, "rewardInvalid");
     return;
   }
 
@@ -339,34 +311,29 @@ async function handleRewardSelection(
   const hasPoints = reward.rewardType === "assigned" || customer.currentPoints >= reward.pointsCost;
 
   if (!inStock || !hasPoints) {
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "This reward is no longer available or you do not have enough points.",
-    );
+    await replySystem(reply, "rewardUnavailable");
     return;
   }
 
-  const confirmationMessage = createReplyButtonsMessage(
-    phone,
-    "Confirm redemption",
-    `Redeem ${reward.name} for ${reward.pointsCost} points?`,
-    [
-      { id: `${REWARD_CONFIRM_PREFIX}${reward.id}`, value: "Confirm" },
-      { id: `${REWARD_CANCEL_PREFIX}${reward.id}`, value: "Cancel" },
-    ],
-  );
-
-  await sendMessage(orgId, confirmationMessage);
+  await replyLoyalty(reply, {
+    key: "reply:redeem_confirm",
+    text: `Redeem ${reward.name} for ${reward.pointsCost} points?`,
+    parts: {
+      title: "Confirm redemption",
+      buttons: [
+        { id: `${REWARD_CONFIRM_PREFIX}${reward.id}`, title: "Confirm" },
+        { id: `${REWARD_CANCEL_PREFIX}${reward.id}`, title: "Cancel" },
+      ],
+    },
+  });
 }
 
 async function handleRewardConfirmation(
+  reply: InboundReplyContext,
   buttonId: string,
-  getActiveCustomer: () => Promise<CustomerLoyaltyAccount | null>,
-  sendLoyaltyText: (text: string) => Promise<void>,
 ): Promise<void> {
   const rewardId = buttonId.slice(REWARD_CONFIRM_PREFIX.length);
-  const customer = await getActiveCustomer();
+  const customer = await activeMemberOrSay(reply);
   if (!customer) return;
 
   try {
@@ -374,9 +341,7 @@ async function handleRewardConfirmation(
     // refused them; redeemReward validates again for itself.
     const validation = await validateRedemption(customer.id, rewardId, {});
     if (!validation.valid) {
-      await sendLoyaltyText(
-        validation.violations.join(", ") || "Unable to redeem reward right now.",
-      );
+      await replyText(reply, validation.violations.join(", ") || SYSTEM_TEXTS.redeemFailed);
       return;
     }
 
@@ -388,39 +353,25 @@ async function handleRewardConfirmation(
 
     const codeText = result?.shortCode ? `\nRedemption code: ${result.shortCode}` : "";
 
-    await sendLoyaltyText(`${"Reward redeemed successfully."}${codeText}`);
+    await replyText(reply, `Reward redeemed successfully.${codeText}`);
   } catch (error) {
-    await sendLoyaltyText(
-      error instanceof Error ? error.message : "Unable to redeem reward right now.",
-    );
+    await replyText(reply, error instanceof Error ? error.message : SYSTEM_TEXTS.redeemFailed);
   }
 }
+
 export async function handleLoyaltyPointsCommand(
-  phone: string,
+  reply: InboundReplyContext,
   loyaltyWaCommand: LoyaltyWaCommand,
 ) {
-  const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
-  const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer || customer.status !== "active") {
-    const message = `You are not an active member of our loyalty programme`;
-    await sendTextMessage({ phone, orgId }, null, message);
-    return;
-  }
-  const dynamicVariables = [
+  const customer = await activeMemberOrSay(reply);
+  if (!customer) return;
+  const params = [
     customer.currentPoints,
     customer.lifetimePoints - customer.currentPoints,
     customer.lifetimePoints,
-  ];
+  ].map(String);
 
-  // The customer just texted us, so the 24-hour window is open: the reply's own text is
-  // free and immediate. The template is for customers who have not messaged (see
-  // contact.controller's registration reply) and is only used here when there is no text.
-  const text = renderReplyText(content, dynamicVariables);
-  if (text.trim().length > 0) {
-    await sendTextMessage({ phone, orgId }, null, text);
-  } else if (responseType === WaAutomatedReplyResponseType.Template) {
-    return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
-  }
+  await replyWithKeyword(reply, loyaltyWaCommand, params);
 }
 
 // The rich-text helpers live in ../richText.ts so the account service can use them too;
@@ -437,24 +388,13 @@ export async function deleteLoyaltyWaCommandById(id: string, orgId: string) {
 }
 
 export async function handleCustomerRemovalFromLoyalty(
-  phone: string,
+  reply: InboundReplyContext,
   loyaltyWaCommand: LoyaltyWaCommand,
 ) {
-  const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
-  const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer || customer.status !== "active") {
-    const message = `You are not an active member of our loyalty programme`;
-    await sendTextMessage({ phone, orgId }, null, message);
-    return;
-  }
+  const customer = await activeMemberOrSay(reply);
+  if (!customer) return;
   await updateCustomerAccount(customer.id, { status: "inactive" }, customer.programId);
-  // Inbound keyword → open window → the reply's own text first; template only without one.
-  const text = renderReplyText(content, []);
-  if (text.trim().length > 0) {
-    await sendTextMessage({ phone, orgId }, null, text);
-  } else if (responseType === WaAutomatedReplyResponseType.Template) {
-    await handleSendTemplate(waTemplateId, orgId, phone, []);
-  }
+  await replyWithKeyword(reply, loyaltyWaCommand, []);
 }
 
 // Event Trigger CRUD Services

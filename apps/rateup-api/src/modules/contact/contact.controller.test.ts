@@ -50,9 +50,8 @@ vi.mock("../loyalty/settings/settings.service.js", () => ({
 vi.mock("../loyalty/richText.js", () => ({
   renderReplyText: vi.fn((content: unknown) => `rendered:${String(content)}`),
 }));
-vi.mock("../loyalty/loyaltyMessaging.js", () => ({
-  sendLoyaltyMessage: vi.fn(),
-  programPrefersTextInSession: vi.fn(async () => true),
+vi.mock("../loyalty/messaging/send.js", () => ({
+  sendLoyalty: vi.fn(),
 }));
 
 vi.mock("../../utils/prisma.js", () => ({
@@ -83,7 +82,7 @@ import {
   updateLifecycleStageofContacts,
 } from "./contact.service.js";
 import { createLCustomer } from "./contact.utils.js";
-import { sendLoyaltyMessage } from "../loyalty/loyaltyMessaging.js";
+import { sendLoyalty } from "../loyalty/messaging/send.js";
 import { getLoyaltyWaCommandByType } from "../loyalty/settings/settings.service.js";
 import { ContactNotFoundError } from "./contact.errors.js";
 import {
@@ -212,13 +211,15 @@ describe("createContactHandler", () => {
 
     await createContactHandler(request({ body: { ...body, source: "LOYALTY" } }), reply());
 
-    expect(sendLoyaltyMessage).toHaveBeenCalledWith({
+    expect(sendLoyalty).toHaveBeenCalledWith({
       orgId: ORG,
-      phone: "919876543210",
-      waTemplateId: "t1",
-      params: ["Ann"],
-      textFallback: "rendered:Hi {{1}}",
-      preferTextInSession: true,
+      to: { contactId: expect.any(String) },
+      intent: { kind: "notify" },
+      message: {
+        key: "keyword:registration",
+        text: "rendered:Hi {{1}}",
+        artefacts: { WHATSAPP: { waTemplateId: "t1", params: ["Ann"] } },
+      },
     });
   });
 
@@ -232,9 +233,10 @@ describe("createContactHandler", () => {
 
     await createContactHandler(request({ body: { ...body, source: "LOYALTY" } }), reply());
 
-    expect(sendLoyaltyMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ waTemplateId: null, textFallback: "rendered:Hi {{1}}" }),
-    );
+    expect((sendLoyalty as Mock).mock.calls[0][0].message).toEqual({
+      key: "keyword:registration",
+      text: "rendered:Hi {{1}}",
+    });
   });
 
   test("reports a duplicate contact as a 400", async () => {

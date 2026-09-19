@@ -3,6 +3,7 @@ import { LoyaltyPointRewardSubType, LoyaltyRewardType } from "../../../types/loy
 import type { TierConfiguration } from "../../../types/loyalty.js";
 import { LoyaltyRewardStatus } from "../rewards/reward.schema.js";
 import { LOYALTY_EVENT_TEMPLATE_NAMES } from "../loyaltyEventTemplates.js";
+import { LOYALTY_EVENT_CATALOG } from "../messaging/catalog.js";
 
 /**
  * Business-type starter packs for the guided setup wizard. Each pack is a complete,
@@ -69,8 +70,8 @@ export interface PresetCommand {
  * An outbound notification. These become real Meta templates and must be approved
  * before they can send, so the wizard submits them and moves on.
  *
- * `params` documents the positional variables `loyaltyWaDispatcher.ts` supplies for
- * that event — the body text must use exactly that many `{{n}}` placeholders.
+ * `params` documents the positional variables the event carries, in the order
+ * `messaging/catalog.ts` defines for it.
  */
 export interface PresetEventTemplate {
   eventType: LoyaltyEventType;
@@ -105,8 +106,6 @@ export interface LoyaltyPreset {
   commands: PresetCommand[];
   eventTemplates: PresetEventTemplate[];
 }
-
-const WEEKEND = ["saturday", "sunday"];
 
 /**
  * Shared across every pack: the variable contracts are fixed by the dispatcher and the
@@ -153,25 +152,25 @@ function commonEventTemplates(): PresetEventTemplate[] {
     {
       eventType: LoyaltyEventType.POINTS_ISSUED,
       templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.POINTS_ISSUED],
-      body: "Hi {{1}}, you just earned {{2}} points. Your balance is now {{3}}.",
+      body: LOYALTY_EVENT_CATALOG[LoyaltyEventType.POINTS_ISSUED].defaultBody,
       params: ["customer name", "points earned", "balance after"],
     },
     {
       eventType: LoyaltyEventType.REWARD_REDEEMED,
       templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.REWARD_REDEEMED],
-      body: "Hi {{1}}, your reward {{2}} is confirmed. Show code {{3}} to redeem it. ({{4}} points used)",
+      body: LOYALTY_EVENT_CATALOG[LoyaltyEventType.REWARD_REDEEMED].defaultBody,
       params: ["customer name", "reward name", "redemption code", "points spent"],
     },
     {
       eventType: LoyaltyEventType.TIER_UPGRADED,
       templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.TIER_UPGRADED],
-      body: "Congratulations {{1}} — you've reached {{2}}! Enjoy your new benefits.",
+      body: LOYALTY_EVENT_CATALOG[LoyaltyEventType.TIER_UPGRADED].defaultBody,
       params: ["customer name", "new tier"],
     },
     {
       eventType: LoyaltyEventType.BIRTHDAY,
       templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.BIRTHDAY],
-      body: "Happy birthday, {{1}}! Here's a little something from us — drop in and enjoy.",
+      body: LOYALTY_EVENT_CATALOG[LoyaltyEventType.BIRTHDAY].defaultBody,
       params: ["customer name"],
     },
   ];
@@ -186,8 +185,7 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
   cafe: {
     key: "cafe",
     label: "Cafe & Restaurant",
-    description:
-      "Frequent small purchases. Rewards land quickly to keep people coming back, with a weekend bonus to fill quieter shifts.",
+    description: "Frequent small purchases. Rewards land quickly to keep people coming back.",
     matchIndustries: ["cafe", "restaurant", "food", "food & beverage", "bakery", "coffee"],
     basics: {
       currencyName: "Beans",
@@ -203,15 +201,6 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
         pointsPerUnit: 1,
         isDefault: true,
         priority: 0,
-      },
-      {
-        name: "Weekend Double Beans",
-        description: "Double beans on Saturdays and Sundays.",
-        pointsPerUnit: 1,
-        multiplier: 2,
-        allowedDays: WEEKEND,
-        isDefault: false,
-        priority: 10,
       },
     ],
     tiersEnabled: true,
@@ -388,15 +377,6 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
         isDefault: true,
         priority: 0,
       },
-      {
-        name: "Midweek Bonus",
-        description: "Double points on quieter midweek appointments.",
-        pointsPerUnit: 1,
-        multiplier: 2,
-        allowedDays: ["tuesday", "wednesday"],
-        isDefault: false,
-        priority: 10,
-      },
     ],
     tiersEnabled: true,
     tiers: [
@@ -483,14 +463,6 @@ export const LOYALTY_PRESETS: Record<LoyaltyPresetKey, LoyaltyPreset> = {
         pointsPerUnit: 1,
         isDefault: true,
         priority: 0,
-      },
-      {
-        name: "Check-In Bonus",
-        description: "A flat bonus every time a visit is recorded.",
-        pointsPerUnit: 0,
-        bonusPoints: 10,
-        isDefault: false,
-        priority: 10,
       },
     ],
     tiersEnabled: true,

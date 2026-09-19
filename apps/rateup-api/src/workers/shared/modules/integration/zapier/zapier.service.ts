@@ -36,11 +36,11 @@ export async function notifyZapier(triggerKey: ZapierTriggers, data: any, orgId:
       let attempt = 0;
       while (attempt <= 3) {
         try {
-          log.info("payload to be sent to zapier => %o", payload);
+          log.debug("payload to be sent to zapier => %o", payload);
           const res = await axios.post(hookUrl, payload);
           if (res.status === 200) break;
         } catch (e) {
-          log.error(`error notifiying zapier => %o`, e);
+          log.error({ err: e }, "Error notifying Zapier");
           if ((e as any).response?.status === 410) {
             update = true;
             triggerSubscriptions[index] = {
@@ -75,7 +75,7 @@ export async function notifyZapier(triggerKey: ZapierTriggers, data: any, orgId:
       }
     }
   } catch (e) {
-    log.error(`error handling zapier trigger => %o`, e);
+    log.error({ err: e }, "Error handling Zapier trigger");
   }
 }
 

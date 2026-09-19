@@ -1,13 +1,11 @@
 import QRCode from "qrcode";
 
-import { PlatformType } from "../../../../generated/prisma/client.js";
 import { log } from "../../../utils/logger.js";
 import { randomCode } from "../../../utils/misc/random.utils.js";
 import prisma from "../../../utils/prisma.js";
-import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
-import { createReplyImageMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { apiBaseUrl } from "../feedback/feedback.redirect.js";
-import { isCustomerSessionOpen } from "../loyaltyMessaging.js";
+import { replyLoyalty, type InboundReplyContext } from "../messaging/reply.js";
+import { sendLoyalty } from "../messaging/send.js";
 import { renderReplyText } from "../richText.js";
 import { parsePhoneforWa } from "../util.js";
 import { CARD_CODE_LENGTH, formatCardCode } from "./cardCode.js";
@@ -50,7 +48,7 @@ function isUniqueViolation(error: unknown): boolean {
  *
  * The conditional update means two concurrent callers cannot both win: the loser sees no
  * row updated and reads back what the winner wrote. A collision on the unique index is
- * vanishingly rare at 32^12 but costs nothing to retry.
+ * vanishingly rare at 32^9 but costs nothing to retry.
  */
 export async function ensureMemberCard(accountId: string): Promise<string> {
   const current = await prisma.customerLoyaltyAccount.findUnique({
@@ -128,17 +126,6 @@ function clampCaption(caption: string): string {
     : `${trimmed.slice(0, CAPTION_MAX_CHARS - 1)}…`;
 }
 
-/** Whether `sendMessage` accepted the send — it reports a Graph failure, it does not throw. */
-function acceptedBy(result: unknown): boolean {
-  return !(
-    result !== undefined &&
-    result !== null &&
-    typeof result === "object" &&
-    "status" in result &&
-    (result as { status?: unknown }).status === false
-  );
-}
-
 /**
  * Sends the member their card, when WhatsApp will take it.
  *
@@ -150,6 +137,8 @@ export async function sendMemberCard(input: {
   orgId: string;
   accountId: string;
   caption?: string | null;
+  /** The customer just wrote in: answer on the channel and number they used. */
+  reply?: InboundReplyContext;
 }): Promise<MemberCardSendResult> {
   const account = await prisma.customerLoyaltyAccount.findFirst({
     where: { id: input.accountId, program: { orgId: input.orgId } },
@@ -171,12 +160,7 @@ export async function sendMemberCard(input: {
   if (!account || account.status !== "active" || account.program.status !== "active") {
     return skipped("not_active");
   }
-  const phone = account.contact.phone;
-  if (!phone) return skipped("not_active");
-
-  if (!(await isCustomerSessionOpen({ orgId: input.orgId, phone }))) {
-    return skipped("session_closed");
-  }
+  if (!account.contact.phone) return skipped("not_active");
 
   const cardCode = await ensureMemberCard(account.id);
   const url = cardImageUrl(cardCode);
@@ -195,23 +179,24 @@ export async function sendMemberCard(input: {
       }),
   );
 
-  // Same argument shape as `sendTextMessage`: an automated send, conversation limit kept on.
-  const result = await sendMessage(
-    input.orgId,
-    createReplyImageMessage(phone, url, PlatformType.WHATSAPP, caption),
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    "AUTOMATED",
-    true,
-    false,
-    false,
-  );
-  if (!acceptedBy(result)) {
-    log.warn({ accountId: account.id }, "[MemberCard] WhatsApp did not accept the card image");
+  // The card has no template to stand in for it, so it only goes into an open conversation.
+  const message = {
+    key: "member_card",
+    text: caption,
+    parts: { image: { url } },
+    sessionOnly: true,
+  };
+  const outcome = input.reply
+    ? await replyLoyalty(input.reply, message)
+    : await sendLoyalty({
+        orgId: input.orgId,
+        to: { accountId: account.id },
+        intent: { kind: "notify" },
+        message,
+      });
+  if (!outcome.sent) {
+    if (outcome.skippedReason === "session_closed") return skipped("session_closed", cardCode);
+    log.warn({ accountId: account.id, outcome }, "[MemberCard] the card image was not sent");
     return skipped("send_failed", cardCode);
   }
 

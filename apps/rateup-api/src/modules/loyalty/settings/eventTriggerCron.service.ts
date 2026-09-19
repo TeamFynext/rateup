@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { sendLoyaltyMessage } from "../loyaltyMessaging.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { assignRewardToCustomer } from "../accounts/account.service.js";
 import {
@@ -25,13 +25,9 @@ export async function checkBirthdayEventTriggers(now: Date = new Date()) {
       where: {
         eventType: LoyaltyEventType.BIRTHDAY,
         enabled: true,
-        waTemplateId: {
-          not: null,
-        },
       },
       include: {
         program: true,
-        waTemplate: true,
         reward: true,
       },
     });
@@ -113,21 +109,20 @@ export async function checkBirthdayEventTriggers(now: Date = new Date()) {
               continue;
             }
 
-            // Prepare dynamic variables for template
-            const dynamicVariables = [
-              customer.contact.name || "Valued Customer",
-              trigger?.reward?.name || "a special reward",
-            ];
-
-            // Send the notification — as text inside an open window, else the template
-            if (trigger.program.whatsappNotifications) {
-              await sendLoyaltyMessage({
-                orgId: customer.contact.orgId,
-                phone: customer.contact.phone,
-                waTemplateId: trigger.waTemplateId,
-                params: dynamicVariables,
-                preferTextInSession: trigger.program.sendTextInSession,
-              });
+            // The gift below is issued whatever happens to the greeting, so a failed send
+            // keeps the day's marker: retrying it would offer the gift a second time.
+            const outcome = await sendLoyaltyEvent(
+              customer.contact.orgId,
+              LoyaltyEventType.BIRTHDAY,
+              { accountId: customer.id },
+              {
+                name: customer.contact.name || "Valued Customer",
+                rewardName: trigger?.reward?.name || "a special reward",
+              },
+              { program: trigger.program },
+            );
+            if (outcome.skippedReason === "send_failed") {
+              log.warn({ accountId: customer.id }, "Birthday greeting failed; not retried today");
             }
 
             // If a reward is configured, issue it automatically
@@ -175,13 +170,9 @@ export async function checkInactivityEventTriggers(now: Date = new Date()) {
         triggerDays: {
           not: null,
         },
-        waTemplateId: {
-          not: null,
-        },
       },
       include: {
         program: true,
-        waTemplate: true,
         reward: true,
       },
     });
@@ -243,6 +234,7 @@ export async function checkInactivityEventTriggers(now: Date = new Date()) {
             // true again every `triggerDays` — a customer who never returned was nudged
             // every month forever. Requiring the last nudge to predate their last activity
             // means they are only nudged again if they came back and went quiet again.
+            const claimedAt = new Date();
             const claimed = await prisma.customerLoyaltyAccount.updateMany({
               where: {
                 id: customer.id,
@@ -251,7 +243,7 @@ export async function checkInactivityEventTriggers(now: Date = new Date()) {
                   { lastInactivityReminderAt: { lt: customer.lastActivityAt } },
                 ],
               },
-              data: { lastInactivityReminderAt: new Date() },
+              data: { lastInactivityReminderAt: claimedAt },
             });
 
             if (claimed.count === 0) {
@@ -264,21 +256,26 @@ export async function checkInactivityEventTriggers(now: Date = new Date()) {
             // Calculate days since last activity
             const daysSinceActivity = dayjs().diff(dayjs(customer.lastActivityAt), "days");
 
-            // Prepare dynamic variables for template
-            const dynamicVariables = [
-              customer.contact.name || "Valued Customer",
-              customer?.currentPoints?.toString() || "0",
-            ];
-
-            // Send the notification — as text inside an open window, else the template
-            if (trigger.program.whatsappNotifications) {
-              await sendLoyaltyMessage({
-                orgId: customer.contact.orgId,
-                phone: customer.contact.phone,
-                waTemplateId: trigger.waTemplateId,
-                params: dynamicVariables,
-                preferTextInSession: trigger.program.sendTextInSession,
-              });
+            const outcome = await sendLoyaltyEvent(
+              customer.contact.orgId,
+              LoyaltyEventType.INACTIVITY_REMINDER,
+              { accountId: customer.id },
+              {
+                name: customer.contact.name || "Valued Customer",
+                balance: customer?.currentPoints?.toString() || "0",
+              },
+              { program: trigger.program },
+            );
+            // A nudge that only failed to send is tried again next sweep; one that also
+            // carries a reward is not, since the reward is issued regardless.
+            if (outcome.skippedReason === "send_failed" && !trigger.rewardId) {
+              await releaseClaim(() =>
+                prisma.customerLoyaltyAccount.updateMany({
+                  where: { id: customer.id, lastInactivityReminderAt: claimedAt },
+                  data: { lastInactivityReminderAt: customer.lastInactivityReminderAt },
+                }),
+              );
+              continue;
             }
             // If a reward is configured to incentivize return, issue it
             if (trigger.rewardId) {
@@ -309,27 +306,13 @@ export async function checkInactivityEventTriggers(now: Date = new Date()) {
   }
 }
 
-/**
- * The template one programme's occasion sends under.
- *
- * Scoped to the programme, not its org: matching on `orgId` meant an org with two
- * programmes resolved whichever trigger came back first, so programme A's members could
- * be sent programme B's words.
- */
-async function resolveEventTriggerTemplateId(
-  programId: string,
-  eventType: LoyaltyEventType,
-): Promise<string | null> {
-  const trigger = await prisma.loyaltyEventTrigger.findFirst({
-    where: {
-      programId,
-      eventType,
-      enabled: true,
-      waTemplateId: { not: null },
-    },
-    select: { waTemplateId: true },
-  });
-  return trigger?.waTemplateId ?? null;
+/** Undoes a claim whose send failed, so the next sweep tries the member again. */
+async function releaseClaim(release: () => Promise<unknown>): Promise<void> {
+  try {
+    await release();
+  } catch (error) {
+    log.error({ err: error }, "Could not release a reminder claim after a failed send");
+  }
 }
 
 /**
@@ -391,8 +374,11 @@ export async function checkPointsExpiryAlerts(now: Date = new Date()) {
         name: true,
         orgId: true,
         pointsExpirationMonths: true,
+        status: true,
         whatsappNotifications: true,
+        pointsActivityAlerts: true,
         sendTextInSession: true,
+        enabledChannels: true,
         // The reminder sweep reads this to decide whether the programme's chosen hour
         // has struck where the venue actually is.
         timezone: true,
@@ -414,7 +400,6 @@ export async function checkPointsExpiryAlerts(now: Date = new Date()) {
             programId: program.id,
             eventType: LoyaltyEventType.POINTS_EXPIRY_ALERT,
             enabled: true,
-            waTemplateId: { not: null },
           },
         });
 
@@ -470,6 +455,7 @@ export async function checkPointsExpiryAlerts(now: Date = new Date()) {
 
             // Claim the send. This alert had no marker at all, so a second run of the
             // job — a retried tick, a catch-up occurrence — told the same customer twice.
+            const claimedAt = new Date();
             const claimed = await prisma.customerLoyaltyAccount.updateMany({
               where: {
                 id: account.id,
@@ -478,7 +464,7 @@ export async function checkPointsExpiryAlerts(now: Date = new Date()) {
                   { lastPointsExpiryAlertAt: { lt: startOfToday } },
                 ],
               },
-              data: { lastPointsExpiryAlertAt: new Date() },
+              data: { lastPointsExpiryAlertAt: claimedAt },
             });
             if (claimed.count === 0) continue;
 
@@ -488,17 +474,26 @@ export async function checkPointsExpiryAlerts(now: Date = new Date()) {
             const expiringPoints = await pointsExpiringFor(account.id, alertTo);
             if (expiringPoints <= 0) continue;
 
-            await sendLoyaltyMessage({
-              orgId: account.contact.orgId,
-              phone: account.contact.phone,
-              waTemplateId: trigger.waTemplateId,
-              params: [
-                account.contact.name || "Valued Customer",
-                expiringPoints.toString(),
-                dayjs(expiryDate).format("DD MMM YYYY"),
-              ],
-              preferTextInSession: program.sendTextInSession,
-            });
+            const outcome = await sendLoyaltyEvent(
+              account.contact.orgId,
+              LoyaltyEventType.POINTS_EXPIRY_ALERT,
+              { accountId: account.id },
+              {
+                name: account.contact.name || "Valued Customer",
+                points: expiringPoints.toString(),
+                date: dayjs(expiryDate).format("DD MMM YYYY"),
+              },
+              { program },
+            );
+            if (outcome.skippedReason === "send_failed") {
+              await releaseClaim(() =>
+                prisma.customerLoyaltyAccount.updateMany({
+                  where: { id: account.id, lastPointsExpiryAlertAt: claimedAt },
+                  data: { lastPointsExpiryAlertAt: account.lastPointsExpiryAlertAt },
+                }),
+              );
+              continue;
+            }
 
             log.info(
               `Points Expiry Alert - Sent to customer ${account.id} (expires ${dayjs(expiryDate).format("DD MMM YYYY")})`,
@@ -548,8 +543,11 @@ export async function checkPointsExpiration(now: Date = new Date()) {
         name: true,
         orgId: true,
         pointsExpirationMonths: true,
+        status: true,
         whatsappNotifications: true,
+        pointsActivityAlerts: true,
         sendTextInSession: true,
+        enabledChannels: true,
         timezone: true,
       },
     });
@@ -684,18 +682,18 @@ export async function checkPointsExpiration(now: Date = new Date()) {
               `Points Expiration - Expired ${pointsToExpire} points for customer ${account.contact.name || account.contact.phone} (account ${account.id})`,
             );
 
-            // Send WA notification for points expiry
-            if (account.contact.phone && program.whatsappNotifications) {
-              await sendLoyaltyMessage({
-                orgId: program.orgId,
-                phone: account.contact.phone,
-                waTemplateId: await resolveEventTriggerTemplateId(
-                  program.id,
-                  LoyaltyEventType.POINTS_EXPIRED,
-                ),
-                params: [account.contact.name || "Valued Customer", pointsToExpire.toString()],
-                preferTextInSession: program.sendTextInSession,
-              });
+            // The ledger is already written, so a failed notice is not retried.
+            if (account.contact.phone) {
+              await sendLoyaltyEvent(
+                program.orgId,
+                LoyaltyEventType.POINTS_EXPIRED,
+                { accountId: account.id },
+                {
+                  name: account.contact.name || "Valued Customer",
+                  points: pointsToExpire.toString(),
+                },
+                { program },
+              );
             }
           } catch (error) {
             log.error(

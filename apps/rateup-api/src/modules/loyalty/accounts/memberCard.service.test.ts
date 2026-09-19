@@ -14,26 +14,16 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../../../utils/misc/random.utils.js", () => ({ randomCode: vi.fn() }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
-  createReplyImageMessage: vi.fn((to: string, link: string, _p: unknown, caption: string) => ({
-    to,
-    link,
-    caption,
-  })),
-}));
-vi.mock("../loyaltyMessaging.js", () => ({ isCustomerSessionOpen: vi.fn() }));
-vi.mock("../../../../generated/prisma/client.js", () => ({
-  PlatformType: { WHATSAPP: "WHATSAPP" },
-}));
+vi.mock("../messaging/send.js", () => ({ sendLoyalty: vi.fn() }));
+vi.mock("../messaging/reply.js", () => ({ replyLoyalty: vi.fn() }));
 vi.mock("qrcode", () => ({
   default: { toBuffer: vi.fn(async (text: string) => Buffer.from(`png:${text}`)) },
 }));
 
 import prisma from "../../../utils/prisma.js";
 import { randomCode } from "../../../utils/misc/random.utils.js";
-import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
-import { isCustomerSessionOpen } from "../loyaltyMessaging.js";
+import { replyLoyalty } from "../messaging/reply.js";
+import { sendLoyalty } from "../messaging/send.js";
 import {
   cardImageUrl,
   defaultCardCaption,
@@ -48,7 +38,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as { customerLoyaltyAccount: Record<string, Mock> };
 
 const ORG = "org-1";
-const CODE = "ABCDEFGHJKLM";
+const CODE = "ABCDEFGHJ";
 
 const activeAccount = (over: Record<string, unknown> = {}) => ({
   id: "acct-1",
@@ -65,8 +55,8 @@ const envBefore = process.env.API_URL;
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.API_URL = "https://api.rateup.test";
-  (isCustomerSessionOpen as Mock).mockResolvedValue(true);
-  (sendMessage as Mock).mockResolvedValue({ status: true, message: "wamid.1" });
+  (sendLoyalty as Mock).mockResolvedValue({ sent: true, skippedReason: null });
+  (replyLoyalty as Mock).mockResolvedValue({ sent: true, skippedReason: null });
   db.customerLoyaltyAccount.update.mockResolvedValue({});
 });
 
@@ -82,13 +72,13 @@ describe("ensureMemberCard", () => {
     expect(randomCode).not.toHaveBeenCalled();
   });
 
-  test("mints twelve characters and claims them with a conditional update", async () => {
+  test("mints nine characters and claims them with a conditional update", async () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({ cardCode: null });
     (randomCode as Mock).mockReturnValue(CODE);
     db.customerLoyaltyAccount.updateMany.mockResolvedValue({ count: 1 });
 
     expect(await ensureMemberCard("acct-1")).toBe(CODE);
-    expect(randomCode).toHaveBeenCalledWith(12);
+    expect(randomCode).toHaveBeenCalledWith(9);
     expect(db.customerLoyaltyAccount.updateMany).toHaveBeenCalledWith({
       where: { id: "acct-1", cardCode: null },
       data: { cardCode: CODE },
@@ -97,7 +87,7 @@ describe("ensureMemberCard", () => {
 
   test("retries a collision on the unique index", async () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({ cardCode: null });
-    (randomCode as Mock).mockReturnValueOnce("TAKENTAKENTA").mockReturnValueOnce(CODE);
+    (randomCode as Mock).mockReturnValueOnce("TAKENTAKE").mockReturnValueOnce(CODE);
     db.customerLoyaltyAccount.updateMany
       .mockRejectedValueOnce({ code: "P2002" })
       .mockResolvedValueOnce({ count: 1 });
@@ -144,17 +134,20 @@ describe("captions", () => {
     });
     expect(caption).toContain("Hi Ann, here is your Cafe Rio Rewards card.");
     expect(caption).toContain("Beans");
-    expect(caption).toContain("ABCD-EFGH-JKLM");
+    expect(caption).toContain("ABC-DEF-GHJ");
   });
 
   test("the merchant's reply fills name and code; an empty reply is null", () => {
     expect(renderCardReply("Hi {{1}}, code {{2}}", { name: "Ann", cardCode: CODE })).toBe(
-      "Hi Ann, code ABCD-EFGH-JKLM",
+      "Hi Ann, code ABC-DEF-GHJ",
     );
     expect(renderCardReply("   ", { name: "Ann", cardCode: CODE })).toBeNull();
     expect(renderCardReply(null, { name: "Ann", cardCode: CODE })).toBeNull();
   });
 });
+
+/** The message `sendMemberCard` handed to the sending layer. */
+const sentCard = () => (sendLoyalty as Mock).mock.calls[0][0];
 
 describe("sendMemberCard", () => {
   test("sends the image with the stock caption and records the delivery", async () => {
@@ -166,30 +159,47 @@ describe("sendMemberCard", () => {
     expect(outcome.sent).toBe(true);
     expect(outcome.cardCode).toBe(CODE);
     expect(outcome.cardSentAt).toBeInstanceOf(Date);
-    const [orgId, body, , , , , , , messageType, isAutomated] = (sendMessage as Mock).mock.calls[0];
-    expect(orgId).toBe(ORG);
-    expect(body).toMatchObject({
-      to: "919000000001",
-      link: `https://api.rateup.test/api/public/loyalty/cards/${CODE}.png`,
+    const call = sentCard();
+    expect(call).toMatchObject({
+      orgId: ORG,
+      to: { accountId: "acct-1" },
+      intent: { kind: "notify" },
+      message: {
+        key: "member_card",
+        parts: { image: { url: `https://api.rateup.test/api/public/loyalty/cards/${CODE}.png` } },
+        sessionOnly: true,
+      },
     });
-    expect(body.caption).toContain("Cafe Rio Rewards");
-    expect(body.caption).toContain("ABCD-EFGH-JKLM");
-    expect(messageType).toBe("AUTOMATED");
-    expect(isAutomated).toBe(true);
+    expect(call.message.text).toContain("Cafe Rio Rewards");
+    expect(call.message.text).toContain("ABC-DEF-GHJ");
     expect(db.customerLoyaltyAccount.update).toHaveBeenCalledWith({
       where: { id: "acct-1" },
       data: { cardSentAt: expect.any(Date) },
     });
   });
 
+  test("a customer who just wrote in is answered where they wrote", async () => {
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(activeAccount());
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ cardCode: CODE });
+    const reply = { orgId: ORG, channel: "WHATSAPP" as const, from: "919000000001", phoneId: "p1" };
+
+    await sendMemberCard({ orgId: ORG, accountId: "acct-1", reply });
+
+    expect(replyLoyalty).toHaveBeenCalledWith(
+      reply,
+      expect.objectContaining({ key: "member_card" }),
+    );
+    expect(sendLoyalty).not.toHaveBeenCalled();
+  });
+
   test("a closed window is reported, not forced", async () => {
     db.customerLoyaltyAccount.findFirst.mockResolvedValue(activeAccount());
-    (isCustomerSessionOpen as Mock).mockResolvedValue(false);
+    db.customerLoyaltyAccount.findUnique.mockResolvedValue({ cardCode: CODE });
+    (sendLoyalty as Mock).mockResolvedValue({ sent: false, skippedReason: "session_closed" });
 
     const outcome = await sendMemberCard({ orgId: ORG, accountId: "acct-1" });
 
     expect(outcome).toMatchObject({ sent: false, skippedReason: "session_closed", cardCode: CODE });
-    expect(sendMessage).not.toHaveBeenCalled();
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
   });
 
@@ -205,13 +215,13 @@ describe("sendMemberCard", () => {
     expect((await sendMemberCard({ orgId: ORG, accountId: "acct-1" })).skippedReason).toBe(
       "not_active",
     );
-    expect(isCustomerSessionOpen).not.toHaveBeenCalled();
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 
-  test("a refused Graph send leaves cardSentAt alone", async () => {
+  test("a refused send leaves cardSentAt alone", async () => {
     db.customerLoyaltyAccount.findFirst.mockResolvedValue(activeAccount());
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({ cardCode: CODE });
-    (sendMessage as Mock).mockResolvedValue({ status: false, error: "nope" });
+    (sendLoyalty as Mock).mockResolvedValue({ sent: false, skippedReason: "send_failed" });
 
     const outcome = await sendMemberCard({ orgId: ORG, accountId: "acct-1" });
 
@@ -227,7 +237,7 @@ describe("sendMemberCard", () => {
     const outcome = await sendMemberCard({ orgId: ORG, accountId: "acct-1" });
 
     expect(outcome.skippedReason).toBe("no_public_url");
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 
   test("a merchant caption replaces the stock one and is capped at WhatsApp's limit", async () => {
@@ -236,9 +246,9 @@ describe("sendMemberCard", () => {
 
     await sendMemberCard({ orgId: ORG, accountId: "acct-1", caption: "x".repeat(2000) });
 
-    const body = (sendMessage as Mock).mock.calls[0][1];
-    expect(body.caption).toHaveLength(1024);
-    expect(body.caption.endsWith("…")).toBe(true);
+    const caption = sentCard().message.text;
+    expect(caption).toHaveLength(1024);
+    expect(caption.endsWith("…")).toBe(true);
   });
 });
 
@@ -256,7 +266,7 @@ describe("sendMemberCardIfDue", () => {
         }),
       }),
     );
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 
   test("a due member gets the card", async () => {
@@ -266,6 +276,6 @@ describe("sendMemberCardIfDue", () => {
     db.customerLoyaltyAccount.findUnique.mockResolvedValue({ cardCode: CODE });
 
     expect(await sendMemberCardIfDue("919000000001", ORG)).toBe(true);
-    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(sendLoyalty).toHaveBeenCalledTimes(1);
   });
 });

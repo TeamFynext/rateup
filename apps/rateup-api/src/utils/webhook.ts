@@ -23,11 +23,19 @@ export async function sendWebhook(endpoint: string, payload: unknown, orgId: str
           "X-Webhook-Id": webhookId,
         },
       });
-      if (res.status >= 200 && res.status <= 300) log.info("Webhook delivered successfully");
+      if (res.status >= 200 && res.status <= 300) log.debug("Webhook delivered successfully");
       else log.trace("something went wrong in sending webhook");
       break;
     } catch (e) {
-      log.error(e);
+      log.warn(
+        {
+          endpoint,
+          attempt,
+          status: axios.isAxiosError(e) ? e.response?.status : undefined,
+          error: e instanceof Error ? e.message : String(e),
+        },
+        "Webhook delivery failed",
+      );
       if (axios.isAxiosError(e) && e.response && e.response.status >= 500)
         log.trace("error sending webhook");
       else break;

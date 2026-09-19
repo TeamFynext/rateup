@@ -1,48 +1,44 @@
-import { FastifyReply, FastifyRequest } from "fastify";
+import { isAxiosError } from "axios";
 import pino from "pino";
-const { NO_LOG } = process.env;
-const devLog = {
-  transport: {
-    target: "pino-pretty",
-    options: {
-      translateTime: "HH:MM:ss Z",
-      ignore: "pid,hostname",
-    },
-  },
-  serializers: {
-    req: function (req: FastifyRequest) {
-      return `${req.headers.origin}: ${req.method} ${req.url} FROM ${req.ip}`;
-    },
-    res: function (res: FastifyReply) {
-      return `${res.statusCode}`;
-    },
-  },
-};
-console.log("set NO_LOG to true to disable logging");
-const isDevelopment = process.env.NODE_ENV === "development";
 
-// if NO_LOG is set to true, disable logging
-// if NODE_ENV is set to development, use pretty logging
-// else use default logging
-/** Fastify's `logger` option: `false` to disable, `true` for defaults, or a pino config. */
-type FastifyLoggerOption = boolean | typeof devLog;
+const { NO_LOG, NODE_ENV, LOG_PRETTY } = process.env;
 
-let logOptionsValue: FastifyLoggerOption;
-if (NO_LOG === "true") {
-  logOptionsValue = false;
-} else if (isDevelopment) {
-  logOptionsValue = devLog;
-} else {
-  logOptionsValue = true;
+// Railway counts every stdout line against its 500 lines/sec cap, and
+// pino-pretty spreads one entry over many (each field, each stack frame). So
+// production writes one JSON line per entry — with `level` as a label and the
+// text under `message`, which is what Railway parses as structured logs.
+const pretty = LOG_PRETTY ? LOG_PRETTY === "true" : NODE_ENV === "development";
+
+// pino's default copies every enumerable field, which for an AxiosError is the
+// whole request/response pair — kilobytes per entry, bearer token included.
+function serializeErr(err: unknown) {
+  if (!isAxiosError(err)) return pino.stdSerializers.err(err as Error);
+  return {
+    type: "AxiosError",
+    message: err.message,
+    code: err.code,
+    status: err.response?.status,
+    method: err.config?.method,
+    url: err.config?.url,
+    data: err.response?.data,
+  };
 }
-export const logOptions: FastifyLoggerOption = logOptionsValue;
+
 export const log = pino({
   enabled: NO_LOG !== "true",
   // available levels: fatal, error, warn, info, debug, trace
   level: process.env.LOG_LEVEL || "info",
-  transport: {
-    target: "pino-pretty",
-  },
+  serializers: { err: serializeErr },
+  ...(pretty
+    ? {
+        transport: {
+          target: "pino-pretty",
+          options: { translateTime: "HH:MM:ss Z", ignore: "pid,hostname" },
+        },
+      }
+    : {
+        messageKey: "message",
+        base: undefined,
+        formatters: { level: (label: string) => ({ level: label }) },
+      }),
 });
-
-console.log(`LOG_LEVEL => ${process.env.LOG_LEVEL || "info"}`);

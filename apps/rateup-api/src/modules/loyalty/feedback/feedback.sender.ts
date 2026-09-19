@@ -2,9 +2,7 @@ import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { LoyaltyFeedbackRequestStatus } from "../../../../generated/prisma/client.js";
 import { WaFlowStatus } from "../../../types/enums.js";
-import { sendFlow } from "../../whatsapp/flows/flow.service.js";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { isCustomerSessionOpen } from "../loyaltyMessaging.js";
+import { sendLoyalty } from "../messaging/send.js";
 import { ensureSurveyTeamMap } from "./feedback.teamMap.js";
 
 /**
@@ -22,11 +20,6 @@ export type FireFeedbackResult = "sent" | "cancelled" | "failed" | "skipped";
 
 export const FEEDBACK_TEMPLATE_CHANNEL = "template";
 export const FEEDBACK_INTERACTIVE_CHANNEL = "interactive";
-
-function templateIsApproved(template: { data: unknown } | null | undefined): boolean {
-  const status = (template?.data as { status?: unknown } | null)?.status;
-  return status === "APPROVED";
-}
 
 export async function fireFeedbackRequest(requestId: string): Promise<FireFeedbackResult> {
   // The claim: only a SCHEDULED row may fire, and flipping it here is what makes a
@@ -111,61 +104,50 @@ export async function fireFeedbackRequest(requestId: string): Promise<FireFeedba
 
   const orgId = request.program.orgId;
   const surveyTeamMapId = await ensureSurveyTeamMap(flow.surveyId, setting.teamId);
+  const customerName = request.account.contact?.name?.trim() || "there";
+  const businessName = request.program.businessName?.trim() || request.program.name;
 
   try {
-    if (await isCustomerSessionOpen({ orgId, phone })) {
-      const ok = await sendFlow({
-        orgId,
-        dbFlowId: flow.dbFlowId,
-        phone,
-        context: { surveyTeamMapId, language: "en", feedbackRequestId: requestId },
-      });
-      if (!ok) return fail("WhatsApp send failed");
-      await prisma.loyaltyFeedbackRequest.update({
-        where: { id: requestId },
-        data: { channel: FEEDBACK_INTERACTIVE_CHANNEL },
-      });
-      return "sent";
-    }
-
-    const template = setting.waTemplate;
-    if (!template || !templateIsApproved(template)) {
-      return cancel("Template is not approved by Meta");
-    }
-    const customerName = request.account.contact?.name?.trim() || "there";
-    const businessName = request.program.businessName?.trim() || request.program.name;
-    const result = await sendTemplateToUserCore(
+    const outcome = await sendLoyalty({
       orgId,
-      template.id,
-      phone,
-      [
-        {
-          type: "body",
-          parameters: [
-            { type: "text", text: customerName },
-            { type: "text", text: businessName },
-          ],
+      to: { accountId: request.accountId },
+      intent: { kind: "notify" },
+      message: {
+        key: "feedback_request",
+        text: null,
+        parts: {
+          flow: {
+            dbFlowId: flow.dbFlowId,
+            context: { surveyTeamMapId, language: "en", feedbackRequestId: requestId },
+          },
         },
-      ],
-      setting.teamId,
-      undefined,
-      undefined,
-      false,
-      undefined,
-      undefined,
-      undefined,
-      false,
-      { feedbackRequestId: requestId },
-    );
-    const accepted = "status" in result && typeof result.status === "boolean" && result.status;
-    if (!accepted) {
-      const message =
-        "message" in result && typeof result.message === "string" ? result.message : "";
-      return fail(message || "WhatsApp send failed");
+        ...(setting.waTemplate
+          ? {
+              artefacts: {
+                WHATSAPP: {
+                  waTemplateId: setting.waTemplate.id,
+                  params: [customerName, businessName],
+                  teamId: setting.teamId,
+                  flowContext: { feedbackRequestId: requestId },
+                },
+              },
+            }
+          : {}),
+      },
+    });
+
+    if (!outcome.sent) {
+      if (outcome.skippedReason === "send_failed") {
+        return fail(outcome.error || "WhatsApp send failed");
+      }
+      return cancel("Template is not approved by Meta");
     }
     await prisma.loyaltyFeedbackRequest.update({
       where: { id: requestId },
-      data: { channel: FEEDBACK_TEMPLATE_CHANNEL },
+      data: {
+        channel:
+          outcome.mode === "template" ? FEEDBACK_TEMPLATE_CHANNEL : FEEDBACK_INTERACTIVE_CHANNEL,
+      },
     });
     return "sent";
   } catch (error) {

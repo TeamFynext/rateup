@@ -7,12 +7,20 @@ vi.mock("../../utils/prisma.js", () => ({
     customerLoyaltyAccount: { findFirst: vi.fn() },
   },
 }));
-vi.mock("./loyaltyWaDispatcher.js", () => ({ dispatchLoyaltyNotification: vi.fn() }));
+vi.mock("./messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
 import { LoyaltyEventType } from "../../types/enums.js";
-import { dispatchLoyaltyNotification } from "./loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "./messaging/send.js";
 import { sendNewCustomerWelcomeIfDue } from "./newCustomerWelcome.js";
+
+/** The `sendLoyaltyEvent` call made for `event`: org, recipient, data and options. */
+function sentEvent(event: string) {
+  const call = (sendLoyaltyEvent as unknown as { mock: { calls: unknown[][] } }).mock.calls.find(
+    (args) => args[1] === event,
+  );
+  return call && { orgId: call[0], to: call[2], data: call[3], options: call[4] };
+}
 
 type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as Record<string, Record<string, Mock>>;
@@ -24,34 +32,35 @@ beforeEach(() => {
   db.loyaltyEventTrigger.findFirst.mockResolvedValue({ id: "trigger-1" });
   db.waMessage.findMany.mockResolvedValue([{ id: "m1" }]);
   db.customerLoyaltyAccount.findFirst.mockResolvedValue(null);
-  (dispatchLoyaltyNotification as Mock).mockResolvedValue({ sent: true });
+  (sendLoyaltyEvent as Mock).mockResolvedValue({ sent: true });
 });
 
 describe("sendNewCustomerWelcomeIfDue", () => {
   test("welcomes a non-member on their first message", async () => {
     await expect(sendNewCustomerWelcomeIfDue(input)).resolves.toBe(true);
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
+    expect(sendLoyaltyEvent).toHaveBeenCalledWith(
       "org-1",
       LoyaltyEventType.NEW_CUSTOMER_WELCOME,
-      { customerPhone: "919000000000", customerName: "Anjali" },
+      { contactId: "contact-1", name: "Anjali" },
+      { name: "Anjali" },
     );
   });
 
   test("greets a contact with no profile name as 'there'", async () => {
     await sendNewCustomerWelcomeIfDue({ ...input, name: "  " });
-    expect((dispatchLoyaltyNotification as Mock).mock.calls[0][2].customerName).toBe("there");
+    expect(sentEvent(LoyaltyEventType.NEW_CUSTOMER_WELCOME)?.data).toEqual({ name: "there" });
   });
 
   test("stays quiet once the contact has written before", async () => {
     db.waMessage.findMany.mockResolvedValue([{ id: "m1" }, { id: "m2" }]);
     await expect(sendNewCustomerWelcomeIfDue(input)).resolves.toBe(false);
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
   });
 
   test("skips a contact who already has a loyalty account", async () => {
     db.customerLoyaltyAccount.findFirst.mockResolvedValue({ id: "acct-1" });
     await expect(sendNewCustomerWelcomeIfDue(input)).resolves.toBe(false);
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
   });
 
   test("does nothing when the welcome is not switched on", async () => {

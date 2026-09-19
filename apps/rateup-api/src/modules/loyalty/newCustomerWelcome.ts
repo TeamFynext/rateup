@@ -1,9 +1,9 @@
 import { LoyaltyEventType } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
-import { dispatchLoyaltyNotification } from "./loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "./messaging/send.js";
 
 /**
- * Answers a contact's first-ever message with the welcome template and its Join button.
+ * Answers a contact's first-ever message with the welcome and its Join button.
  * "First" is counted from stored inbound messages, so the welcome goes out at most once
  * without a column to remember it; anyone already holding a loyalty account is skipped.
  */
@@ -13,7 +13,7 @@ export async function sendNewCustomerWelcomeIfDue(input: {
   phone: string;
   name?: string;
 }): Promise<boolean> {
-  const { orgId, contactId, phone } = input;
+  const { orgId, contactId } = input;
   if (!contactId) return false;
 
   // Cheapest check first: most orgs have no welcome switched on.
@@ -21,7 +21,6 @@ export async function sendNewCustomerWelcomeIfDue(input: {
     where: {
       eventType: LoyaltyEventType.NEW_CUSTOMER_WELCOME,
       enabled: true,
-      waTemplateId: { not: null },
       program: { orgId, status: "active" },
     },
     select: { id: true },
@@ -41,9 +40,11 @@ export async function sendNewCustomerWelcomeIfDue(input: {
   });
   if (member) return false;
 
-  const outcome = await dispatchLoyaltyNotification(orgId, LoyaltyEventType.NEW_CUSTOMER_WELCOME, {
-    customerPhone: phone,
-    customerName: input.name?.trim() || "there",
-  });
+  const outcome = await sendLoyaltyEvent(
+    orgId,
+    LoyaltyEventType.NEW_CUSTOMER_WELCOME,
+    { contactId, name: input.name },
+    { name: input.name?.trim() || "there" },
+  );
   return outcome.sent;
 }

@@ -4,7 +4,7 @@ import { LoyaltyError } from "../loyalty.errors.js";
 import { validateRedemption, generateRedemptionCode } from "../redemptionValidator.js";
 import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { ApplyRedemptionInput, RedeemRewardInput } from "../accounts/account.schema.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { ASSIGNMENT_ONLY_REWARD_TYPES } from "../../../types/loyalty.js";
 
@@ -146,24 +146,26 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       // setup wizard writes is `rewardType: "point"` — a reward *bought* with points —
       // and carries no `points` in its value, so announcing it as "you just earned 0
       // points" is both wrong and the only message the customer would get for it.
+      const name = customer.contact.name || "Customer";
       await (pointsToAdd > 0
-        ? dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
-            customerPhone: customer.contact.phone,
-            customerName: customer.contact.name || "Customer",
-            points: pointsToAdd,
-            balanceAfter,
-            reason: `Redeemed point reward: ${reward.name}`,
-          })
-        : dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_REDEEMED, {
-            customerPhone: customer.contact.phone,
-            customerName: customer.contact.name || "Customer",
-            rewardName: reward.name,
-            redemptionCode: instantRedemptionCode,
-            points: -reward.pointsCost,
-            balanceAfter,
-            rewardId: reward.id,
-            rewardWaTemplateId: reward.waTemplateId,
-          }));
+        ? sendLoyaltyEvent(
+            customer.contact.orgId,
+            LoyaltyEventType.POINTS_ISSUED,
+            { accountId: customer.id },
+            { name, points: pointsToAdd, balance: balanceAfter },
+          )
+        : sendLoyaltyEvent(
+            customer.contact.orgId,
+            LoyaltyEventType.REWARD_REDEEMED,
+            { accountId: customer.id },
+            {
+              name,
+              rewardName: reward.name,
+              code: instantRedemptionCode,
+              cost: reward.pointsCost,
+            },
+            { rewardWaTemplateId: reward.waTemplateId },
+          ));
     }
 
     return {
@@ -181,7 +183,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
     const status = requiresApproval ? "PENDING" : "APPROVED";
 
-    const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
+    const { redemption } = await prisma.$transaction(async (tx) => {
       let transaction = null;
       let balance = customer.currentPoints;
 
@@ -235,16 +237,18 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     });
 
     if (!requiresApproval && customer.contact?.phone && customer.contact?.orgId) {
-      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_REDEEMED, {
-        customerPhone: customer.contact.phone,
-        customerName: customer.contact.name || "Customer",
-        rewardName: reward.name,
-        redemptionCode: redemptionCode,
-        points: -reward.pointsCost,
-        balanceAfter,
-        rewardId: reward.id,
-        rewardWaTemplateId: reward.waTemplateId,
-      });
+      await sendLoyaltyEvent(
+        customer.contact.orgId,
+        LoyaltyEventType.REWARD_REDEEMED,
+        { accountId: customer.id },
+        {
+          name: customer.contact.name || "Customer",
+          rewardName: reward.name,
+          code: redemptionCode,
+          cost: reward.pointsCost,
+        },
+        { rewardWaTemplateId: reward.waTemplateId },
+      );
     }
 
     return {
@@ -277,7 +281,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
 
   const status = requiresApproval ? "PENDING" : "APPROVED";
 
-  const { redemption, balanceAfter } = await prisma.$transaction(async (tx) => {
+  const { redemption } = await prisma.$transaction(async (tx) => {
     await tx.customerReward.upsert({
       where: {
         rewardId_accountId: {
@@ -372,16 +376,18 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   });
 
   if (!requiresApproval && customer.contact?.phone && customer.contact?.orgId) {
-    await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_ISSUED, {
-      customerPhone: customer.contact.phone,
-      customerName: customer.contact.name || "Customer",
-      rewardName: reward.name,
-      redemptionCode: shortCode,
-      points: -reward.pointsCost,
-      balanceAfter,
-      rewardId: reward.id,
-      rewardWaTemplateId: reward.waTemplateId,
-    });
+    await sendLoyaltyEvent(
+      customer.contact.orgId,
+      LoyaltyEventType.REWARD_ISSUED,
+      { accountId: customer.id },
+      {
+        name: customer.contact.name || "Customer",
+        rewardName: reward.name,
+        code: shortCode,
+        cost: reward.pointsCost,
+      },
+      { rewardWaTemplateId: reward.waTemplateId },
+    );
   }
 
   return {
@@ -511,17 +517,16 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
 
   // Send notification
   if (updated.account.contact?.phone && updated.account.contact?.orgId) {
-    await dispatchLoyaltyNotification(
+    await sendLoyaltyEvent(
       updated.account.contact.orgId,
       LoyaltyEventType.REWARD_REDEEMED,
+      { accountId: updated.accountId },
       {
-        customerPhone: updated.account.contact.phone,
-        customerName: updated.account.contact.name || "Customer",
+        name: updated.account.contact.name || "Customer",
         rewardName: updated.reward.name,
-        redemptionCode: data.redemptionCode,
-        rewardId: updated.reward.id,
-        rewardWaTemplateId: updated.reward.waTemplateId,
+        code: data.redemptionCode,
       },
+      { rewardWaTemplateId: updated.reward.waTemplateId },
     );
   }
 

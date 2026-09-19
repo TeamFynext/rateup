@@ -46,6 +46,7 @@ vi.mock("../../../utils/prisma.js", () => {
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      upsert: vi.fn(),
       count: vi.fn(),
     },
     whatsappSettings: { count: vi.fn() },
@@ -148,12 +149,12 @@ describe("preset catalogue", () => {
     }
   });
 
-  test("every preset has exactly one default earning rule, so activate cannot refuse it", () => {
+  // Bonus rules (weekends, midweek, check-ins) are the merchant's to add afterwards; a
+  // preset that shipped one would switch it on for everyone who accepts the defaults.
+  test("every preset has only its default earning rule, so activate cannot refuse it", () => {
     for (const preset of Object.values(LOYALTY_PRESETS)) {
-      expect(
-        preset.earningRules.filter((r) => r.isDefault),
-        preset.key,
-      ).toHaveLength(1);
+      expect(preset.earningRules, preset.key).toHaveLength(1);
+      expect(preset.earningRules[0].isDefault, preset.key).toBe(true);
     }
   });
 
@@ -909,6 +910,10 @@ describe("messages", () => {
         error: "Error creating template in whatsapp",
       },
     ]);
+    // The words outlive the refusal: inside an open window they are all a send needs.
+    expect(db.loyaltyEventTrigger.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ update: { body: "Hi {{1}}" } }),
+    );
   });
 
   test("an existing trigger is updated rather than duplicated", async () => {

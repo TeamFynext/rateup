@@ -146,9 +146,9 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
           !getNestedProperty<subscriptionActiveField>(subscription.features, feature)?.active,
       );
       if (missingFeatures.length > 0) {
-        log.error(
-          { missingFeatures, user: request.user },
-          "Subscription missing features\n%o\nrequest.user => %o",
+        log.debug(
+          { missingFeatures, orgId: request.user?.orgId },
+          "Request blocked: subscription missing features",
         );
         reply.code(403).send({
           message: "This feature is not included in your subscription",
@@ -160,11 +160,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
       }
       request.subscription = subscription;
     } catch (err) {
-      console.log(err); // TODO: find out why error is not getting printed in log.fatal
-      log.fatal(
-        { err, user: request.user },
-        "Error verifying subscription\nerr => %o\nrequest.user => %o",
-      );
+      log.error({ err, orgId: request.user?.orgId }, "Error verifying subscription");
       reply.code(403).send({ message: "Error while verifying subscription" });
     }
   };

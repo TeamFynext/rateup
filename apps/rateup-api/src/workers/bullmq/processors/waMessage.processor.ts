@@ -95,7 +95,7 @@ export const waMessageWorker = new Worker(
         throw new TransientSendError(job.id ?? "unknown");
       }
 
-      log.info("Queue processing completed successfully");
+      log.debug("Queue processing completed successfully");
     } catch (error) {
       if (error instanceof TransientSendError || error instanceof DelayedError) throw error;
       log.error(

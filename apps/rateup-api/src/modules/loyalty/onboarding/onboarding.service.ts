@@ -45,7 +45,7 @@ import {
  * The guided loyalty setup wizard.
  *
  * Each step commits to the real tables straight away while the programme stays at
- * status "draft" — both `loyaltyWaDispatcher` and the inbound command handler gate on
+ * status "draft" — both `sendLoyaltyEvent` and the inbound command handler gate on
  * status === "active", so a half-built programme is silent to customers. That is what
  * makes the wizard resumable without a staging area.
  *
@@ -696,6 +696,7 @@ export async function applyMessagesStep(orgId: string, input: MessagesStepInput)
 
   for (const template of input.eventTemplates) {
     try {
+      await saveTriggerBody(program.id, template.eventType, template.body);
       const created = await submitEventTemplate(orgId, program.id, template);
       eventTemplates.push(created);
     } catch (error) {
@@ -815,29 +816,39 @@ export async function loyaltyEventButtons(
   return [{ type: "QUICK_REPLY", text: joinButtonLabel(joinCommand?.requestMessage) }];
 }
 
-/**
- * `LoyaltyEventTrigger` has no @@unique([programId, eventType]), so a re-run would
- * otherwise leave two enabled triggers racing for the same event.
- */
+/** Points the event at its template and switches it on; `body` is stored when given. */
 export async function upsertTrigger(
   programId: string,
   eventType: LoyaltyEventType,
   waTemplateId: string,
+  body?: string,
 ) {
+  const data = { waTemplateId, enabled: true, ...(body === undefined ? {} : { body }) };
   const existingTrigger = await prisma.loyaltyEventTrigger.findFirst({
     where: { programId, eventType },
   });
 
   if (existingTrigger) {
-    await prisma.loyaltyEventTrigger.update({
-      where: { id: existingTrigger.id },
-      data: { waTemplateId, enabled: true },
-    });
+    await prisma.loyaltyEventTrigger.update({ where: { id: existingTrigger.id }, data });
   } else {
-    await prisma.loyaltyEventTrigger.create({
-      data: { programId, eventType, enabled: true, waTemplateId },
-    });
+    await prisma.loyaltyEventTrigger.create({ data: { programId, eventType, ...data } });
   }
+}
+
+/**
+ * Stores the event's words before anything goes to Meta. A submission that fails or is
+ * still in review must not cost the message: inside an open window the words are enough.
+ */
+export async function saveTriggerBody(
+  programId: string,
+  eventType: LoyaltyEventType,
+  body: string,
+) {
+  await prisma.loyaltyEventTrigger.upsert({
+    where: { programId_eventType: { programId, eventType } },
+    update: { body },
+    create: { programId, eventType, enabled: true, body },
+  });
 }
 
 export function metaStatusToStep(status: unknown): EventTemplateResult["status"] {
