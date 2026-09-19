@@ -20,7 +20,7 @@ export const pausedAutomationWorker = new Worker(
   async (job: Job<PausedAutomationJobData>) => {
     const { automationMessageId, phone, orgId, currentNode } = job.data;
 
-    log.info(`Processing paused automation resume: ${automationMessageId} for phone ${phone}`);
+    log.debug(`Processing paused automation resume: ${automationMessageId} for phone ${phone}`);
 
     try {
       // Fetch the automation message to verify it still exists and is paused
@@ -94,7 +94,7 @@ export const pausedAutomationWorker = new Worker(
 
 // Log worker events
 pausedAutomationWorker.on("completed", (job) => {
-  log.info(`Paused automation job ${job.id} completed successfully`);
+  log.debug(`Paused automation job ${job.id} completed successfully`);
 });
 
 pausedAutomationWorker.on("failed", (job, err) => {

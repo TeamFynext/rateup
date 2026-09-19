@@ -20,7 +20,7 @@ export const waMessageRecordWorker = new Worker<WaMessageRecordJob>(
     // The first attempt may have written the row and failed afterwards, or the
     // status consumer's own path may have caught up — either way, done.
     if (await getWaMessageByMessageId(data.messageId)) {
-      log.info({ messageId: data.messageId }, "Message already recorded; nothing to do");
+      log.debug({ messageId: data.messageId }, "Message already recorded; nothing to do");
       return;
     }
 

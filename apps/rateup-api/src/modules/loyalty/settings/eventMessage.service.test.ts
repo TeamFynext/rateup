@@ -27,10 +27,11 @@ vi.mock("../../whatsapp/messageTemplates/wa_templates.service.js", () => ({
 }));
 // The tiers step's re-placement pulls in the WhatsApp dispatcher; nothing here needs it.
 vi.mock("../tiers/tierReevaluation.service.js", () => ({ reevaluateProgramTiers: vi.fn() }));
-// The wizard's helpers are real; only the trigger upsert is watched.
+// The wizard's helpers are real; only the trigger writes are watched.
 vi.mock("../onboarding/onboarding.service.js", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../onboarding/onboarding.service.js")>()),
   upsertTrigger: vi.fn(),
+  saveTriggerBody: vi.fn(),
 }));
 
 import prisma from "../../../utils/prisma.js";
@@ -43,7 +44,7 @@ import {
   saveTemplate,
   updateTemplateInDb,
 } from "../../whatsapp/messageTemplates/wa_templates.service.js";
-import { upsertTrigger } from "../onboarding/onboarding.service.js";
+import { saveTriggerBody, upsertTrigger } from "../onboarding/onboarding.service.js";
 import { saveEventMessage } from "./eventMessage.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -92,6 +93,16 @@ beforeEach(() => {
   (updateTemplateInDb as Mock).mockResolvedValue({});
   (editTemplate as Mock).mockResolvedValue(true);
   (fetchTemplate as Mock).mockResolvedValue(undefined);
+});
+
+describe("saveEventMessage — the words", () => {
+  test("are stored on the event before Meta is asked, so a refused submission keeps them", async () => {
+    (createTemplate as Mock).mockRejectedValue(new Error("Error creating template in whatsapp"));
+
+    await expect(save(`  ${NEW} `)).rejects.toThrow();
+
+    expect(saveTriggerBody).toHaveBeenCalledWith(PROGRAM, EVENT, NEW);
+  });
 });
 
 describe("saveEventMessage — nothing to change", () => {

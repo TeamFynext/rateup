@@ -16,6 +16,7 @@ import {
   buildLoyaltyBodyTemplate,
   loyaltyEventButtons,
   metaStatusToStep,
+  saveTriggerBody,
   upsertTrigger,
 } from "../onboarding/onboarding.service.js";
 
@@ -100,6 +101,8 @@ export async function saveEventMessage(input: {
   const { orgId, programId, eventType } = input;
   const body = input.body.trim();
   const baseName = LOYALTY_EVENT_TEMPLATE_NAMES[eventType];
+
+  await saveTriggerBody(programId, eventType, body);
 
   const trigger = await prisma.loyaltyEventTrigger.findFirst({
     where: { programId, eventType },

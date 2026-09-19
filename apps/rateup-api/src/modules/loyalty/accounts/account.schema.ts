@@ -1,5 +1,11 @@
 import z from "zod";
 
+import { isAvailableChannel, LoyaltyChannel } from "../messaging/channelIds.js";
+
+const preferredChannelSchema = z
+  .enum(LoyaltyChannel)
+  .refine(isAvailableChannel, { message: "That channel is not available yet" });
+
 export enum CustomerAccountStatus {
   ACTIVE = "ACTIVE",
   SUSPENDED = "SUSPENDED",
@@ -19,6 +25,8 @@ const customerLoyaltyAccountSchema = z.object({
    */
   dob: z.iso.datetime().or(z.iso.date()).optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  /** Where the member wants loyalty messages; unset follows the programme's order. */
+  preferredChannel: preferredChannelSchema.optional(),
   /**
    * Honeypot. The public join form renders this off-screen and no person fills it in; a
    * bot that autofills every field does. The public handler answers a filled one with a
@@ -45,6 +53,7 @@ const customerLoyaltyAccountUpdateSchema = z.object({
   dob: z.iso.datetime().or(z.iso.date()).nullable().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
   email: z.string().trim().email().nullable().optional(),
+  preferredChannel: preferredChannelSchema.nullable().optional(),
 });
 
 const customerIdParamSchema = z.object({

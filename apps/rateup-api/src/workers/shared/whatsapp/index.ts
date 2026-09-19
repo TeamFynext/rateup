@@ -798,7 +798,7 @@ export async function executeBulkUpdates(
     // A failed ROLLBACK (the connection itself died) must not mask the original
     // error, which is the one that explains the failure.
     await client.query("ROLLBACK").catch(() => {});
-    log.error("Error performing bulk updates: %o", error);
+    log.error({ err: error }, "Error performing bulk updates");
     throw error;
   } finally {
     client.release();
@@ -1025,7 +1025,7 @@ export async function bulkUpdateStatuses(
     };
   }[],
 ): Promise<string[]> {
-  console.log("Received batch of size:", batch.length);
+  log.debug("Received status batch of size %d", batch.length);
   // Parse and group by messageId
   interface Entry {
     id: string;
@@ -1290,7 +1290,7 @@ export async function bulkUpdateStatuses(
           typeof detail?.code === "number" ? detail.code : null,
         ]);
       } catch (e) {
-        log.error("Failed to record message logs: %o", e);
+        log.error({ err: e }, "Failed to record message logs");
       }
     }
 

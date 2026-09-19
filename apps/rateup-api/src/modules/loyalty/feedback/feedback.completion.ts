@@ -1,9 +1,9 @@
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { LoyaltyFeedbackRequestStatus } from "../../../../generated/prisma/client.js";
-import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { getWaSettingsById } from "../../whatsapp/settings/wa_settings.service.js";
-import { createCTAButtonMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { LoyaltyChannel } from "../messaging/channelIds.js";
+import { replyLoyalty } from "../messaging/reply.js";
 import { buildReviewRedirectUrl } from "./feedback.redirect.js";
 import { extractOverallRating, type FlowAnswer } from "./feedback.evaluate.js";
 import { resolveTeamGoogleLink } from "./feedback.googleLink.js";
@@ -108,22 +108,18 @@ export async function onFeedbackFlowCompleted(input: FeedbackFlowCompletion): Pr
   // the customer would see nothing after answering.
   const channel = await flowChannelPhoneId(input.orgId, setting?.flow?.whatsappSettingsId);
 
-  await sendMessage(
-    input.orgId,
-    createCTAButtonMessage({
-      to: input.phone,
-      body,
-      buttonText: "Review us on Google",
-      url: buildReviewRedirectUrl(request.id),
-    }),
-    undefined,
-    undefined,
-    channel,
+  await replyLoyalty(
+    { orgId: input.orgId, channel: LoyaltyChannel.WHATSAPP, from: input.phone, phoneId: channel },
+    {
+      key: "feedback_cta",
+      text: body,
+      parts: { cta: { label: "Review us on Google", url: buildReviewRedirectUrl(request.id) } },
+    },
   );
 }
 
 /**
- * The `phoneId` of the channel a flow belongs to. Undefined leaves `sendMessage` on the
+ * The `phoneId` of the channel a flow belongs to. Undefined leaves the reply on the
  * org default, which is the right answer when the flow names no channel of its own.
  */
 async function flowChannelPhoneId(

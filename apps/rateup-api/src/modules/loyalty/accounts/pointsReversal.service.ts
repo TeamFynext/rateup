@@ -3,7 +3,7 @@ import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { checkAndUpgradeTier } from "../earningRulesEngine.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 
 /**
  * Taking back the points an order earned, when that order stops being a sale.
@@ -202,13 +202,16 @@ export async function reversePurchasePoints(input: ReversePurchaseInput): Promis
       select: { contact: { select: { name: true, phone: true } } },
     });
     if (account?.contact?.phone) {
-      await dispatchLoyaltyNotification(input.orgId, LoyaltyEventType.POINTS_ADJUSTED, {
-        customerPhone: account.contact.phone,
-        customerName: account.contact.name || "Customer",
-        points: -outcome.pointsRevoked,
-        balanceAfter: outcome.balanceAfter,
-        reason: input.reason,
-      });
+      await sendLoyaltyEvent(
+        input.orgId,
+        LoyaltyEventType.POINTS_ADJUSTED,
+        { accountId: input.accountId },
+        {
+          name: account.contact.name || "Customer",
+          points: -outcome.pointsRevoked,
+          balance: outcome.balanceAfter,
+        },
+      );
     }
   }
 

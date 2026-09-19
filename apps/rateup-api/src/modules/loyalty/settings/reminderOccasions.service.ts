@@ -4,7 +4,8 @@ import { LoyaltyEventType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { assignRewardToCustomer } from "../accounts/account.service.js";
-import { sendLoyaltyMessage } from "../loyaltyMessaging.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
+import type { ProgramForSend } from "../messaging/types.js";
 import { isDueThisHour, leadDaysFor, localDay, targetDay } from "./reminderSchedule.js";
 
 /**
@@ -12,28 +13,32 @@ import { isDueThisHour, leadDaysFor, localDay, targetDay } from "./reminderSched
  * code about to lapse, and the anniversary of joining.
  *
  * All three follow the shape the birthday and inactivity sweeps already use — find the
- * audience for one programme, claim each member with a conditional UPDATE, then send
- * through `sendLoyaltyMessage` so an open 24-hour window gets free text instead of a
- * template. Each takes the sweep's clock so one tick reads one instant.
+ * audience for one programme, claim each member with a conditional UPDATE, then send. A
+ * send that fails hands its claim back so the next hourly sweep tries again, unless the
+ * occasion also issued a reward. Each takes the sweep's clock so one tick reads one instant.
  */
 
 /** A programme as the sweep loads it. */
-export interface ReminderProgram {
-  id: string;
+export interface ReminderProgram extends ProgramForSend {
   name: string;
   orgId: string;
   timezone: string | null;
-  whatsappNotifications: boolean;
-  sendTextInSession: boolean;
   tierQualificationWindowMonths: number | null;
 }
 
 /** A trigger as the sweep loads it. */
 export interface ReminderTrigger {
-  waTemplateId: string | null;
   rewardId: string | null;
   leadDays: number | null;
   sendHour: number | null;
+}
+
+async function releaseClaim(release: () => Promise<unknown>): Promise<void> {
+  try {
+    await release();
+  } catch (error) {
+    log.error({ err: error }, "Could not release a reminder claim after a failed send");
+  }
 }
 
 async function issueRewardQuietly(accountId: string, rewardId: string): Promise<void> {
@@ -61,7 +66,6 @@ export async function checkTierAtRiskAlerts(
 ): Promise<number> {
   if (!isDueThisHour(program, trigger, now)) return 0;
   if (!program.tierQualificationWindowMonths) return 0;
-  if (!trigger.waTemplateId) return 0;
 
   const leadDays = leadDaysFor(LoyaltyEventType.TIER_AT_RISK, trigger.leadDays);
   const windowStart = dayjs(now).subtract(program.tierQualificationWindowMonths, "month").toDate();
@@ -70,11 +74,12 @@ export async function checkTierAtRiskAlerts(
   // Spend inside the window, per member, against the tier they currently hold. Members on
   // the base tier (threshold 0) have nothing to lose, so they are excluded by the join.
   const atRisk = await prisma.$queryRaw<
-    { accountId: string; shortfall: string; tierName: string }[]
+    { accountId: string; shortfall: string; tierName: string; previousAlertAt: Date | null }[]
   >`
     SELECT a.id                                  AS "accountId",
            (t.threshold - COALESCE(SUM(x."purchaseAmount"), 0))::text AS shortfall,
-           t.name                                AS "tierName"
+           t.name                                AS "tierName",
+           a."lastTierAtRiskAlertAt"             AS "previousAlertAt"
     FROM "CustomerLoyaltyAccount" a
     JOIN "LoyaltyTier" t ON t.id = a."currentTierId"
     LEFT JOIN "LoyaltyTransaction" x
@@ -88,19 +93,20 @@ export async function checkTierAtRiskAlerts(
       AND a.status = 'active'
       AND t.threshold > 0
       AND (a."lastTierAtRiskAlertAt" IS NULL OR a."lastTierAtRiskAlertAt" < ${startOfDay})
-    GROUP BY a.id, t.threshold, t.name
+    GROUP BY a.id, t.threshold, t.name, a."lastTierAtRiskAlertAt"
     HAVING COALESCE(SUM(x."purchaseAmount"), 0) < t.threshold
   `;
 
   let sent = 0;
   for (const row of atRisk) {
     try {
+      const claimedAt = new Date();
       const claimed = await prisma.customerLoyaltyAccount.updateMany({
         where: {
           id: row.accountId,
           OR: [{ lastTierAtRiskAlertAt: null }, { lastTierAtRiskAlertAt: { lt: startOfDay } }],
         },
-        data: { lastTierAtRiskAlertAt: new Date() },
+        data: { lastTierAtRiskAlertAt: claimedAt },
       });
       if (claimed.count === 0) continue;
 
@@ -111,19 +117,27 @@ export async function checkTierAtRiskAlerts(
       if (!account?.contact.phone) continue;
       if (!program.whatsappNotifications) continue;
 
-      await sendLoyaltyMessage({
-        orgId: account.contact.orgId,
-        phone: account.contact.phone,
-        waTemplateId: trigger.waTemplateId,
-        params: [
-          account.contact.name || "Valued Customer",
-          row.tierName,
-          String(leadDays),
-          Number(row.shortfall).toFixed(0),
-        ],
-        preferTextInSession: program.sendTextInSession,
-      });
-      sent++;
+      const outcome = await sendLoyaltyEvent(
+        account.contact.orgId,
+        LoyaltyEventType.TIER_AT_RISK,
+        { accountId: row.accountId },
+        {
+          name: account.contact.name || "Valued Customer",
+          tier: row.tierName,
+          days: String(leadDays),
+          amount: Number(row.shortfall).toFixed(0),
+        },
+        { program },
+      );
+      if (outcome.skippedReason === "send_failed") {
+        await releaseClaim(() =>
+          prisma.customerLoyaltyAccount.updateMany({
+            where: { id: row.accountId, lastTierAtRiskAlertAt: claimedAt },
+            data: { lastTierAtRiskAlertAt: row.previousAlertAt },
+          }),
+        );
+      }
+      if (outcome.sent) sent++;
     } catch (error) {
       log.error({ err: error, accountId: row.accountId }, "Tier-at-risk reminder failed");
     }
@@ -146,7 +160,6 @@ export async function checkRewardExpiringAlerts(
   now: Date = new Date(),
 ): Promise<number> {
   if (!isDueThisHour(program, trigger, now)) return 0;
-  if (!trigger.waTemplateId) return 0;
 
   const leadDays = leadDaysFor(LoyaltyEventType.REWARD_EXPIRING, trigger.leadDays);
   const day = targetDay(program, now, leadDays);
@@ -184,19 +197,27 @@ export async function checkRewardExpiringAlerts(
       if (!redemption.account.contact.phone) continue;
       if (!program.whatsappNotifications) continue;
 
-      await sendLoyaltyMessage({
-        orgId: redemption.account.contact.orgId,
-        phone: redemption.account.contact.phone,
-        waTemplateId: trigger.waTemplateId,
-        params: [
-          redemption.account.contact.name || "Valued Customer",
-          redemption.reward.name,
-          dayjs(redemption.expiresAt).format("DD MMM YYYY"),
-          redemption.redemptionCode,
-        ],
-        preferTextInSession: program.sendTextInSession,
-      });
-      sent++;
+      const outcome = await sendLoyaltyEvent(
+        redemption.account.contact.orgId,
+        LoyaltyEventType.REWARD_EXPIRING,
+        { accountId: redemption.account.id },
+        {
+          name: redemption.account.contact.name || "Valued Customer",
+          rewardName: redemption.reward.name,
+          date: dayjs(redemption.expiresAt).format("DD MMM YYYY"),
+          code: redemption.redemptionCode,
+        },
+        { program },
+      );
+      if (outcome.skippedReason === "send_failed") {
+        await releaseClaim(() =>
+          prisma.loyaltyRedemption.updateMany({
+            where: { id: redemption.id },
+            data: { expiryNotifiedAt: null },
+          }),
+        );
+      }
+      if (outcome.sent) sent++;
     } catch (error) {
       log.error({ err: error, redemptionId: redemption.id }, "Reward-expiring reminder failed");
     }
@@ -219,12 +240,14 @@ export async function checkSignupAnniversaries(
   now: Date = new Date(),
 ): Promise<number> {
   if (!isDueThisHour(program, trigger, now)) return 0;
-  if (!trigger.waTemplateId) return 0;
 
   const { month, date, year, startOfDay } = localDay(program, now);
 
-  const anniversaries = await prisma.$queryRaw<{ id: string; years: number }[]>`
-    SELECT a.id, (${year}::int - EXTRACT(YEAR FROM a."createdAt")::int) AS years
+  const anniversaries = await prisma.$queryRaw<
+    { id: string; years: number; previousGreetedAt: Date | null }[]
+  >`
+    SELECT a.id, (${year}::int - EXTRACT(YEAR FROM a."createdAt")::int) AS years,
+           a."lastAnniversaryGreetedAt" AS "previousGreetedAt"
     FROM "CustomerLoyaltyAccount" a
     WHERE a."programId" = ${program.id}::uuid
       AND a.status = 'active'
@@ -237,6 +260,7 @@ export async function checkSignupAnniversaries(
   let sent = 0;
   for (const row of anniversaries) {
     try {
+      const claimedAt = new Date();
       const claimed = await prisma.customerLoyaltyAccount.updateMany({
         where: {
           id: row.id,
@@ -245,7 +269,7 @@ export async function checkSignupAnniversaries(
             { lastAnniversaryGreetedAt: { lt: startOfDay } },
           ],
         },
-        data: { lastAnniversaryGreetedAt: new Date() },
+        data: { lastAnniversaryGreetedAt: claimedAt },
       });
       if (claimed.count === 0) continue;
 
@@ -259,20 +283,29 @@ export async function checkSignupAnniversaries(
       if (!account?.contact.phone) continue;
       if (!program.whatsappNotifications) continue;
 
-      await sendLoyaltyMessage({
-        orgId: account.contact.orgId,
-        phone: account.contact.phone,
-        waTemplateId: trigger.waTemplateId,
-        params: [
-          account.contact.name || "Valued Customer",
-          String(row.years),
-          account.currentPoints.toString(),
-        ],
-        preferTextInSession: program.sendTextInSession,
-      });
+      const outcome = await sendLoyaltyEvent(
+        account.contact.orgId,
+        LoyaltyEventType.SIGNUP_ANNIVERSARY,
+        { accountId: row.id },
+        {
+          name: account.contact.name || "Valued Customer",
+          years: String(row.years),
+          balance: account.currentPoints.toString(),
+        },
+        { program },
+      );
+      if (outcome.skippedReason === "send_failed" && !trigger.rewardId) {
+        await releaseClaim(() =>
+          prisma.customerLoyaltyAccount.updateMany({
+            where: { id: row.id, lastAnniversaryGreetedAt: claimedAt },
+            data: { lastAnniversaryGreetedAt: row.previousGreetedAt },
+          }),
+        );
+        continue;
+      }
 
       if (trigger.rewardId) await issueRewardQuietly(row.id, trigger.rewardId);
-      sent++;
+      if (outcome.sent) sent++;
     } catch (error) {
       log.error({ err: error, accountId: row.id }, "Anniversary reminder failed");
     }

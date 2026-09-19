@@ -1,4 +1,4 @@
-import { Prisma } from "../../../../generated/prisma/client.js";
+import { LoyaltyChannel, Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import type { LoyaltyPendingBonuses } from "../../../types/loyalty.js";
 import {
@@ -11,15 +11,12 @@ import {
   generateReferralCode,
 } from "../earningRulesEngine.js";
 import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
-import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { parsePhoneforWa } from "../util.js";
 import { LoyaltyError } from "../loyalty.errors.js";
 import { findProgramMember } from "./memberLookup.js";
-import {
-  dispatchLoyaltyNotification,
-  NOTIFICATION_NOT_SENT,
-  type LoyaltyNotificationOutcome,
-} from "../loyaltyWaDispatcher.js";
+import { replyText, type InboundReplyContext } from "../messaging/reply.js";
+import { NOT_SENT, sendLoyaltyEvent } from "../messaging/send.js";
+import type { LoyaltySendOutcome } from "../messaging/types.js";
 import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { LoyaltyEventType, LoyaltyTemplateTypes } from "../../../types/enums.js";
 import { renderReplyText } from "../richText.js";
@@ -47,6 +44,8 @@ export interface CreateCustomerAccountOptions {
    * messages the business or buys something.
    */
   holdBonuses?: boolean;
+  /** The customer is enrolling by writing in: the welcome answers them where they wrote. */
+  reply?: InboundReplyContext;
   /**
    * The name, birthday and gender in the payload were typed by staff who could see what
    * the contact already said, so they overwrite it. Off for the public join form and the
@@ -66,6 +65,12 @@ export async function createCustomerAccount(
   let contactId;
   let contact;
   const phone = data?.phone?.replaceAll("+", "");
+  // `sourceIdentifier` doubles as "they messaged us", so it alone is reason to reply.
+  const reply: InboundReplyContext | undefined =
+    options.reply ??
+    (sourceIdentifier && phone
+      ? { orgId, channel: LoyaltyChannel.WHATSAPP, from: phone, name: data.name }
+      : undefined);
   // Check if contact with this phone already exists
   const existingContact = await prisma.contact.findFirst({
     where: {
@@ -132,14 +137,10 @@ export async function createCustomerAccount(
           contact: true,
         },
       });
-      if (account && sourceIdentifier) {
-        await sendTextMessage(
-          { phone, orgId },
-          null,
-          `🎉 Welcome back ${account.contact?.name || ""}!`,
-        );
+      if (account && reply) {
+        await replyText(reply, `🎉 Welcome back ${account.contact?.name || ""}!`);
       }
-      await sendCardAfterEnrolment(orgId, account.id);
+      await sendCardAfterEnrolment(orgId, account.id, reply);
       return account;
     } else {
       throw new LoyaltyError("MEMBER_EXISTS", "Customer account already exists");
@@ -201,6 +202,9 @@ export async function createCustomerAccount(
       lifetimePoints: openingPoints,
       referredById: snapshot.referredById,
       currentTierId,
+      // Joining over WhatsApp is itself the choice of channel.
+      preferredChannel:
+        data.preferredChannel ?? (sourceIdentifier ? LoyaltyChannel.WHATSAPP : null),
       ...(hold ? { verifiedAt: null, pendingBonuses: snapshot } : {}),
     },
     include: {
@@ -220,7 +224,7 @@ export async function createCustomerAccount(
     log.error({ err: e, accountId: account.id }, "Could not mint a member card code");
   }
 
-  if (account && sourceIdentifier) {
+  if (account && sourceIdentifier && reply) {
     const joinLink = generateWhatsAppJoinLink({
       waNumber: sourceIdentifier,
       referralCode: account.referralCode,
@@ -236,9 +240,8 @@ export async function createCustomerAccount(
     const customText = joinReply
       ? renderReplyText(joinReply.content, [account.contact?.name || ""])
       : "";
-    await sendTextMessage(
-      { phone, orgId },
-      null,
+    await replyText(
+      reply,
       customText.trim().length > 0
         ? customText
         : `🎉 Welcome ${account.contact?.name || ""}!
@@ -253,12 +256,12 @@ You are now registered in our Loyalty Program.
     // A second message carrying the referral link, when the caller told us which number
     // to build it from. `sourceIdentifier` is also used as a plain "they messaged us"
     // flag by callers that have no number, so there is not always a link to send.
-    if (joinLink) await sendTextMessage({ phone, orgId }, null, joinLink);
+    if (joinLink) await replyText(reply, joinLink);
   }
 
   // Outside the `sourceIdentifier` block on purpose: a member enrolled by staff may already
   // have an open WhatsApp window, in which case the card can go now.
-  await sendCardAfterEnrolment(orgId, account.id);
+  await sendCardAfterEnrolment(orgId, account.id, reply);
 
   return account;
 }
@@ -268,9 +271,13 @@ You are now registered in our Loyalty Program.
  * logged and the member is still enrolled. Skips (no open window, no public URL) are the
  * expected case for a till registration and are not errors.
  */
-async function sendCardAfterEnrolment(orgId: string, accountId: string) {
+async function sendCardAfterEnrolment(
+  orgId: string,
+  accountId: string,
+  reply?: InboundReplyContext,
+) {
   try {
-    await sendMemberCard({ orgId, accountId });
+    await sendMemberCard({ orgId, accountId, reply });
   } catch (e) {
     log.error({ err: e, accountId }, "Could not send the member card after enrolment");
   }
@@ -369,14 +376,16 @@ async function creditNewMember(
     });
     // Only meaningful when there were points to announce.
     if (account.contact?.phone) {
-      await dispatchLoyaltyNotification(orgId, LoyaltyEventType.POINTS_ISSUED, {
-        customerPhone: account.contact.phone,
-        customerName: account.contact.name || "Customer",
-        points: snapshot.signupBonus,
-        balanceAfter,
-        reason: "Signup Bonus",
-        referralCode: account.referralCode, // passing just in case
-      });
+      await sendLoyaltyEvent(
+        orgId,
+        LoyaltyEventType.POINTS_ISSUED,
+        { accountId: account.id },
+        {
+          name: account.contact.name || "Customer",
+          points: snapshot.signupBonus,
+          balance: balanceAfter,
+        },
+      );
     }
   }
 }
@@ -620,7 +629,7 @@ export async function updateCustomerAccount(
   data: CustomerLoyaltyAccountUpdateInput,
   programId: string,
 ) {
-  const { status, name, dob, gender, email } = data;
+  const { status, name, dob, gender, email, preferredChannel } = data;
 
   // The contact fields are written through the relation rather than by contactId, so the
   // `programId` in the where clause is what scopes the edit: a customerId from another
@@ -636,6 +645,7 @@ export async function updateCustomerAccount(
     where: { id: customerId, programId },
     data: {
       ...(status !== undefined ? { status } : {}),
+      ...(preferredChannel !== undefined ? { preferredChannel } : {}),
       ...(Object.keys(contactChanges).length > 0 ? { contact: { update: contactChanges } } : {}),
     },
     include: {
@@ -683,7 +693,7 @@ function replayOf(
       next: null,
       amountToNext: null,
     },
-    notification: { ...NOTIFICATION_NOT_SENT, skippedReason: "replayed" },
+    notification: { ...NOT_SENT, skippedReason: "replayed" },
     tierNotification: null,
   };
 }
@@ -866,33 +876,28 @@ export async function awardPoints(
 
   // Dispatch Notifications. The outcomes come back so the cashier receipt can show the
   // message that went out — or say why nothing did.
-  let notification: LoyaltyNotificationOutcome = NOTIFICATION_NOT_SENT;
-  let tierNotification: LoyaltyNotificationOutcome | null = null;
+  let notification: LoyaltySendOutcome = NOT_SENT;
+  let tierNotification: LoyaltySendOutcome | null = null;
 
   if (customer.contact?.phone && customer.contact?.orgId) {
-    // Points Issued
-    notification =
-      (await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
-        customerPhone: customer.contact.phone,
-        customerName: customer.contact.name || "Customer",
-        points,
-        balanceAfter: updatedCustomer.currentPoints,
-        reason: "Purchase",
-      })) ?? NOTIFICATION_NOT_SENT;
+    const name = customer.contact.name || "Customer";
+    notification = await sendLoyaltyEvent(
+      customer.contact.orgId,
+      LoyaltyEventType.POINTS_ISSUED,
+      { accountId: customer.id },
+      { name, points, balance: updatedCustomer.currentPoints },
+    );
 
-    // Tier Upgraded
     if (upgradeResult?.upgraded) {
-      tierNotification =
-        (await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.TIER_UPGRADED, {
-          customerPhone: customer.contact.phone,
-          customerName: customer.contact.name || "Customer",
-          newTier: upgradeResult.newTier?.name || "New Tier",
-          oldTier: customer.currentTier?.name || undefined, // We only have ID here, ideal would be name
-          lifetimePoints: updatedCustomer.lifetimePoints,
-        })) ?? NOTIFICATION_NOT_SENT;
+      tierNotification = await sendLoyaltyEvent(
+        customer.contact.orgId,
+        LoyaltyEventType.TIER_UPGRADED,
+        { accountId: customer.id },
+        { name, tier: upgradeResult.newTier?.name || "New Tier" },
+      );
     }
   } else {
-    notification = { ...NOTIFICATION_NOT_SENT, skippedReason: "no_phone" };
+    notification = { ...NOT_SENT, skippedReason: "no_phone" };
   }
 
   return {
@@ -1179,14 +1184,13 @@ export async function assignRewardToCustomer(
 
   // Dispatch Notification
   if (customer.contact?.phone && customer.contact?.orgId) {
-    await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_ISSUED, {
-      customerPhone: customer.contact.phone,
-      customerName: customer.contact.name || "Customer",
-      rewardName: reward.name,
-      redemptionCode: shortCode,
-      rewardId: reward.id,
-      rewardWaTemplateId: reward.waTemplateId,
-    });
+    await sendLoyaltyEvent(
+      customer.contact.orgId,
+      LoyaltyEventType.REWARD_ISSUED,
+      { accountId: customerId },
+      { name: customer.contact.name || "Customer", rewardName: reward.name, code: shortCode },
+      { rewardWaTemplateId: reward.waTemplateId },
+    );
   }
 
   return assignment;

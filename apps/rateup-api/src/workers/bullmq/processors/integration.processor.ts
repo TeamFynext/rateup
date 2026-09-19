@@ -20,7 +20,7 @@ export const integrationWorker = new Worker(
     // one attempt, as before; the only change for them is that a failure is now
     // recorded as a failed job instead of being lost to a log line.
     await processIntegration(job);
-    log.info("Integration queue processing completed successfully");
+    log.debug("Integration queue processing completed successfully");
   },
   {
     connection: workerConnection,

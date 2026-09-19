@@ -82,12 +82,15 @@ export async function callMetaApi(
   if (res.status.toString().startsWith("2")) {
     return res;
   } else {
-    log.error("Error calling Meta API: %o", res);
-    log.error("\nError Response => %o", res.data);
+    // Callers log the thrown error with their own context; this line only adds
+    // what they can't see. Never log `res` itself — its config carries the token.
+    log.warn(
+      { status: res.status, method: config.method, url: config.url, graphError: res.data?.error },
+      "Meta API returned an error",
+    );
     if (res.data?.error) {
       throw new GraphApiError(res);
     } else {
-      log.fatal("FIXME: Couldn't identify error response");
       throw new Error("Error calling Meta API");
     }
   }

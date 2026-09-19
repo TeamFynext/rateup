@@ -8,9 +8,9 @@ import { cardCodeIsServable, renderCardPng } from "./memberCard.service.js";
  * `GET /api/public/loyalty/cards/:file` — the card PNG, rendered on request.
  *
  * Unauthenticated by design: Meta fetches it when the image message is sent, and the inbox
- * thumbnail loads it later. The code is the secret (the same one the QR carries), the
- * image contains nothing but that code, and only a code that belongs to an active member
- * is rendered at all. The response is immutable because the image is a pure function of
+ * thumbnail loads it later. The image contains nothing but the code, so a guessed code
+ * learns only that it exists, and only a code that belongs to an active member is
+ * rendered at all. The response is immutable because the image is a pure function of
  * the code.
  */
 export async function getMemberCardImageHandler(

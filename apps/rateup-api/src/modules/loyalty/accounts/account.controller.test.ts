@@ -923,7 +923,7 @@ describe("getCustomerAccountByCardCodeHandler", () => {
     currentPoints: 500,
     lifetimePoints: 900,
     referralCode: "ANN-AB12",
-    cardCode: "ABCDEFGHJKLM",
+    cardCode: "ABCDEFGHJ",
     cardSentAt: new Date("2026-09-12T10:00:00Z"),
     currentTier: null,
     contact: { name: "Ann", phone: "919000000001", email: "a@b.c" },
@@ -937,16 +937,16 @@ describe("getCustomerAccountByCardCodeHandler", () => {
     const rep = reply();
 
     await getCustomerAccountByCardCodeHandler(
-      request({ params: { cardCode: "abcd-efgh-jklm" } }),
+      request({ params: { cardCode: "abc-def-ghj" } }),
       rep,
     );
 
-    expect(getCustomerAccountByCardCode).toHaveBeenCalledWith(PROGRAM, "ABCDEFGHJKLM");
+    expect(getCustomerAccountByCardCode).toHaveBeenCalledWith(PROGRAM, "ABCDEFGHJ");
     expect(answer(rep).code).toBe(200);
     expect(answer(rep).body.customer).toMatchObject({
       id: "acct-1",
       phone: "919000000001",
-      cardCode: "ABCDEFGHJKLM",
+      cardCode: "ABCDEFGHJ",
       points: 500,
     });
   });
@@ -967,10 +967,7 @@ describe("getCustomerAccountByCardCodeHandler", () => {
     (getCustomerAccountByCardCode as Mock).mockResolvedValue(null);
     const rep = reply();
 
-    await getCustomerAccountByCardCodeHandler(
-      request({ params: { cardCode: "ABCDEFGHJKLM" } }),
-      rep,
-    );
+    await getCustomerAccountByCardCodeHandler(request({ params: { cardCode: "ABCDEFGHJ" } }), rep);
 
     expect(answer(rep)).toEqual({ code: 404, body: { error: "Card not found" } });
   });
@@ -985,7 +982,7 @@ describe("getCustomerAccountByCardCodeHandler", () => {
     );
 
     expect(answer(rep).body.customer).toMatchObject({
-      cardCode: "ABCDEFGHJKLM",
+      cardCode: "ABCDEFGHJ",
       cardSentAt: account.cardSentAt,
     });
   });
@@ -997,7 +994,7 @@ describe("sendMemberCardHandler", () => {
     const outcome = {
       sent: false,
       skippedReason: "session_closed",
-      cardCode: "ABCDEFGHJKLM",
+      cardCode: "ABCDEFGHJ",
       cardSentAt: null,
     };
     (sendMemberCard as Mock).mockResolvedValue(outcome);

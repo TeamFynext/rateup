@@ -84,18 +84,19 @@ export async function runLoyaltyReminderSweep(now: Date = new Date()): Promise<v
       name: true,
       orgId: true,
       timezone: true,
+      status: true,
       whatsappNotifications: true,
+      pointsActivityAlerts: true,
       sendTextInSession: true,
+      enabledChannels: true,
       tierQualificationWindowMonths: true,
       eventTriggers: {
         where: {
           enabled: true,
-          waTemplateId: { not: null },
           eventType: { in: Object.keys(PER_PROGRAM_OCCASIONS) as PerProgramOccasion[] },
         },
         select: {
           eventType: true,
-          waTemplateId: true,
           rewardId: true,
           leadDays: true,
           sendHour: true,
@@ -116,14 +117,8 @@ export async function runLoyaltyReminderSweep(now: Date = new Date()): Promise<v
       continue;
     }
 
-    const context: ReminderProgram = {
-      id: program.id,
-      name: program.name,
-      orgId: program.orgId,
-      timezone: program.timezone,
-      whatsappNotifications: program.whatsappNotifications,
-      sendTextInSession: program.sendTextInSession,
-      tierQualificationWindowMonths: program.tierQualificationWindowMonths,
+    const { eventTriggers: _triggers, ...context } = program satisfies ReminderProgram & {
+      eventTriggers: unknown;
     };
 
     for (const trigger of program.eventTriggers) {

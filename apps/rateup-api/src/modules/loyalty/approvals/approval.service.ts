@@ -28,7 +28,7 @@ type ApprovalWithAccount = Prisma.ApprovalRequestGetPayload<{
 }>;
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 
 /**
@@ -434,19 +434,17 @@ async function approveRedemption(approval: ApprovalWithAccount, data: ApproveReq
     log.info(`Approved redemption ${redemption.id}`);
 
     if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
-      await dispatchLoyaltyNotification(
+      await sendLoyaltyEvent(
         approval.account.contact.orgId,
         LoyaltyEventType.REWARD_REDEEMED,
+        { accountId: approval.accountId },
         {
-          customerPhone: approval.account.contact.phone,
-          customerName: approval.account.contact.name || "Customer",
+          name: approval.account.contact.name || "Customer",
           rewardName: redemption.reward.name,
-          redemptionCode: redemption.redemptionCode,
-          points: -redemption.reward.pointsCost,
-          balanceAfter: customer.currentPoints - redemption.reward.pointsCost,
-          rewardId: redemption.reward.id,
-          rewardWaTemplateId: redemption.reward.waTemplateId,
+          code: redemption.redemptionCode,
+          cost: redemption.reward.pointsCost,
         },
+        { rewardWaTemplateId: redemption.reward.waTemplateId },
       );
     }
 
@@ -544,15 +542,14 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
     log.info(`Approved points adjustment for account ${approval.accountId}: ${points} points`);
 
     if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
-      await dispatchLoyaltyNotification(
+      await sendLoyaltyEvent(
         approval.account.contact.orgId,
         LoyaltyEventType.POINTS_ADJUSTED,
+        { accountId: approval.accountId },
         {
-          customerPhone: approval.account.contact.phone,
-          customerName: approval.account.contact.name || "Customer",
-          points: points,
-          balanceAfter: customer.currentPoints + points,
-          reason: approval.reason,
+          name: approval.account.contact.name || "Customer",
+          points,
+          balance: customer.currentPoints + points,
         },
       );
     }
@@ -565,10 +562,6 @@ async function approvePointsAdjustment(approval: ApprovalWithAccount, data: Appr
  * Approve a tier override
  */
 async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveRequestInput) {
-  // Read before the write: after the update, `customer.currentTier` is the NEW
-  // tier, so the old one has to be captured here.
-  const oldTierName = approval.account?.currentTier?.name || undefined;
-
   return await prisma.$transaction(async (tx) => {
     const requestData = approval.requestData;
 
@@ -612,15 +605,13 @@ async function approveTierOverride(approval: ApprovalWithAccount, data: ApproveR
     );
 
     if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
-      await dispatchLoyaltyNotification(
+      await sendLoyaltyEvent(
         approval.account.contact.orgId,
         LoyaltyEventType.TIER_UPGRADED,
+        { accountId: approval.accountId },
         {
-          customerPhone: approval.account.contact.phone,
-          customerName: approval.account.contact.name || "Customer",
-          newTier: customer.currentTier?.name || "New Tier",
-          oldTier: oldTierName,
-          lifetimePoints: customer.lifetimePoints,
+          name: approval.account.contact.name || "Customer",
+          tier: customer.currentTier?.name || "New Tier",
         },
       );
     }

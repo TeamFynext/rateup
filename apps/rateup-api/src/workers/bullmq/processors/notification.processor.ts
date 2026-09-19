@@ -15,7 +15,7 @@ export const notificationWorker = new Worker(
     // Errors propagate so BullMQ retries per the queue's `attempts`. This used to be caught
     // and logged, which marked a failed send as a completed job.
     await processNotification(job);
-    log.info("Notification queue processing completed successfully");
+    log.debug("Notification queue processing completed successfully");
   },
   {
     connection: workerConnection,
@@ -50,7 +50,7 @@ export const transactionalEmailWorker = new Worker(
       return;
     }
     await processNotification(job);
-    log.info({ jobId: job.id }, "Transactional email sent");
+    log.debug({ jobId: job.id }, "Transactional email sent");
   },
   {
     connection: transactionalConnection,
