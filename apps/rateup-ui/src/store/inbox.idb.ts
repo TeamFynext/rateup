@@ -15,12 +15,17 @@ async function getDB() {
   // v5: Inbox Tickets v2 re-keyed the cached rows from contact id to ticket
   // (conversation) id. Entries written by v4 are keyed by contact and would
   // collapse a contact's tickets into one row, so that store is dropped on upgrade.
-  return openDB(DB_NAME, 5, {
+  // v6: the list's bulk close and bulk assign updated only the contact-level
+  // status, never `conversationStatus`, so the rows they touched stayed cached
+  // under the Open tab after the server had closed them — and a refetch only
+  // merges rows in, so nothing ever removed them. Rows and lists are dropped
+  // once to clear those; messages are left alone, they were never affected.
+  return openDB(DB_NAME, 6, {
     upgrade(db, oldVersion) {
-      if (oldVersion < 5 && db.objectStoreNames.contains(STORE_GLOBAL)) {
+      if (oldVersion < 6 && db.objectStoreNames.contains(STORE_GLOBAL)) {
         db.deleteObjectStore(STORE_GLOBAL);
       }
-      if (oldVersion < 5 && db.objectStoreNames.contains(STORE_FILTERS)) {
+      if (oldVersion < 6 && db.objectStoreNames.contains(STORE_FILTERS)) {
         db.deleteObjectStore(STORE_FILTERS);
       }
       if (!db.objectStoreNames.contains(STORE_GLOBAL)) {
@@ -33,6 +38,13 @@ async function getDB() {
         const store = db.createObjectStore(STORE_MESSAGES, { keyPath: "id" });
         if (!store.indexNames.contains("key")) store.createIndex("key", "key", { unique: false });
       }
+    },
+    // A tab running newer code needs this connection gone before its upgrade
+    // can run; without this it waits until this tab is closed or reloaded.
+    // Closing is safe — every call here opens its own connection. Only tabs
+    // running this code or later can honour it, so it helps the *next* bump.
+    blocking(_currentVersion, _blockedVersion, event) {
+      (event.target as IDBDatabase | null)?.close();
     },
   });
 }

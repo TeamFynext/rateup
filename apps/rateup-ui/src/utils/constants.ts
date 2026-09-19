@@ -439,6 +439,15 @@ export const WaMessageClosedStatus = [
 ];
 
 /**
+ * The inbox list's bulk actions (close, assign, delete). The selection is capped
+ * so one click cannot hand the API an unbounded batch, and each batch goes out
+ * in chunks: a chunk finishes well inside the client's 8s request timeout, and
+ * the rows it covered leave the list as it lands, which the progress bar reports.
+ */
+export const INBOX_BULK_SELECTION_LIMIT = 100;
+export const INBOX_BULK_CHUNK_SIZE = 20;
+
+/**
  * Default sort for contact-style listings (contacts, contact groups, loyalty customers).
  * Lives here rather than beside the contacts table so the query layer can use it as a
  * fallback without importing from `@/components`.

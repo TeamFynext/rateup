@@ -36,7 +36,7 @@ import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
-import { WaMessageClosedStatus } from "@/utils/constants.ts";
+import { INBOX_BULK_SELECTION_LIMIT, WaMessageClosedStatus } from "@/utils/constants.ts";
 import {
   formatDateWithRelativeTime,
   formatToRelativeTime,
@@ -177,6 +177,12 @@ export default function WaInboxChatSelectCard({
    * many of them run.
    */
   function setRowSelected(next: boolean) {
+    if (next && !isChecked && selectedChats.length >= INBOX_BULK_SELECTION_LIMIT) {
+      toast.error(`You can select up to ${INBOX_BULK_SELECTION_LIMIT} chats at a time`, {
+        id: "bulk-selection-limit",
+      });
+      return;
+    }
     setSelectedChats((prev) => {
       const without = prev.filter((id) => id !== rowKey);
       return next ? [...without, rowKey] : without;
