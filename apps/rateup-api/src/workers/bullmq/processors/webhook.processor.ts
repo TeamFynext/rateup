@@ -19,7 +19,7 @@ export const shopifyWebhookWorker = new Worker(
   "webhookQueue",
   async (job: Job<ShopifyWebhookJobData>) => {
     const webhook = job.data;
-    log.info(`Processing webhook job ${job.id} for topic: ${webhook.topic}`);
+    log.debug(`Processing webhook job ${job.id} for topic: ${webhook.topic}`);
 
     try {
       await handleWebhook(webhook);
@@ -42,7 +42,7 @@ export const shopifyWebhookWorker = new Worker(
 );
 
 shopifyWebhookWorker.on("completed", (job) => {
-  log.info(`Webhook job ${job.id} completed successfully`);
+  log.debug(`Webhook job ${job.id} completed successfully`);
 });
 
 shopifyWebhookWorker.on("failed", (job, err) => {
@@ -68,7 +68,7 @@ export const shopifySurveyWorker = new Worker(
   "shopifySurveyQueue",
   async (job: Job<SurveyJobData>) => {
     const surveyData = job.data;
-    log.info(`Processing survey job ${job.id} for event: ${surveyData.event}`);
+    log.debug(`Processing survey job ${job.id} for event: ${surveyData.event}`);
 
     try {
       await processShopifySurveySchedule(surveyData);
@@ -87,7 +87,7 @@ export const shopifySurveyWorker = new Worker(
 );
 
 shopifySurveyWorker.on("completed", (job) => {
-  log.info(`Survey job ${job.id} completed successfully`);
+  log.debug(`Survey job ${job.id} completed successfully`);
 });
 
 shopifySurveyWorker.on("failed", (job, err) => {

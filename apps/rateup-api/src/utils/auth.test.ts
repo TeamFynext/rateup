@@ -11,7 +11,14 @@ vi.mock("./prisma.js", () => ({
 }));
 
 vi.mock("./logger.js", () => ({
-  log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
+  log: {
+    debug: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+    info: vi.fn(),
+    trace: vi.fn(),
+    warn: vi.fn(),
+  },
 }));
 
 vi.mock("../modules/subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));

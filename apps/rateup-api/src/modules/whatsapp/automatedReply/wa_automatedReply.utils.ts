@@ -1636,7 +1636,7 @@ async function executeExternalApiAction(
     try {
       await axios.post(parsedUrl.toString(), payload, config);
 
-      log.info(`External API call successful for ${parsedUrl.toString()}`);
+      log.debug(`External API call successful for ${parsedUrl.toString()}`);
 
       return true;
     } catch (error) {

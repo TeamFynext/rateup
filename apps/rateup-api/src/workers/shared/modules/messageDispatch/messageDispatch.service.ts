@@ -159,7 +159,7 @@ export async function processParticipant(
       dripCampaignParticipantId,
     });
   } catch (error) {
-    log.error(`Error processing participant: %o`, error);
+    log.error({ err: error }, "Error processing participant");
     throw error;
   }
 }
@@ -186,7 +186,7 @@ export async function updateWaMonthlyStat(orgId: string, client: PoolClient) {
       [orgId],
     );
   } catch (error) {
-    log.error(`Error in updateWaMonthlyStat: %o`, error);
+    log.error({ err: error }, "Error in updateWaMonthlyStat");
     throw error;
   }
 }
@@ -420,7 +420,7 @@ async function sendTemplateMessage(
     return { ok: false, failureClass };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
-    log.error(`Error in sendTemplateMessage: %o`, error);
+    log.error({ err: error }, "Error in sendTemplateMessage");
     throw error;
   } finally {
     client.release();
