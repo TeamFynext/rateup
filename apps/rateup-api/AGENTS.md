@@ -133,6 +133,35 @@ out of things that already existed, and the seams matter:
   `LoyaltyRewardType.REVIEW` rewards cost no points and are excluded from every catalogue a
   customer can buy from (`getActiveLoyaltyRewards`, the public programme, the wizard).
 
+## Loyalty messaging
+
+Every message the loyalty programme sends goes through `src/modules/loyalty/messaging/`.
+Nothing under `modules/loyalty` calls `sendMessage`, `sendTextMessage` or a template sender
+directly. The layer sits between "what to say" and "which medium carries it":
+
+- **Entry points.** `sendLoyaltyEvent(orgId, event, to, data)` for the catalog's automatic
+  messages. It runs the programme's switches, uses the event's own `body` (or
+  `catalog.ts`'s default) and its WhatsApp template. `sendLoyalty` is for anything else.
+  `replyLoyalty` / `replyText` / `replySystem` answer an inbound message on the channel and
+  number it arrived on.
+- **Parameter order lives in `catalog.ts`.** `eventVars` is the only thing that turns named
+  data into `{{n}}` values. The UI's `loyaltyMessageCatalog.ts` labels the same order.
+- **Routing.** A notification goes to the member's `preferredChannel` when the programme's
+  `enabledChannels` include it, then down that list. The router falls back only when a
+  channel _plans_ a refusal (`no_template`, `session_closed`, …). It never falls back
+  after `send_failed`, because the first send may have been delivered.
+- **Adding a medium** (RCS, SMS, email) means an adapter implementing `LoyaltyChannel`
+  (`types.ts`), plus a line in `registry.ts` and in `AVAILABLE_LOYALTY_CHANNELS`
+  (`channelIds.ts`, which request schemas validate against). Callers do not change.
+  `fitToChannel` turns lists, buttons and links into text for a channel that cannot show
+  them. Reading those replies back is that channel's inbound handler's job.
+- **WhatsApp specifics stay in its adapter.** The adapter owns the 24-hour window
+  (`findOpenSession`), template approval, and `sendTextInSession`. It sends a message's
+  words inside an open window even when it has no template.
+- **Reminder sweeps check the outcome.** A `send_failed` hands the member's claim marker
+  back so the next hourly sweep retries. The exception is an occasion that also issued a
+  reward or wrote the ledger, where a retry would repeat that side effect.
+
 ## Email
 
 Bulk and background email leaves from the `bullmq` service: callers enqueue and the worker calls

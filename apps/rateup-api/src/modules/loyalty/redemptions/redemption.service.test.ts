@@ -25,11 +25,11 @@ vi.mock("../redemptionValidator.js", () => ({
   generateRedemptionCode: vi.fn(() => "RU-ABC123"),
 }));
 
-vi.mock("../loyaltyWaDispatcher.js", () => ({ dispatchLoyaltyNotification: vi.fn() }));
+vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { validateRedemption } from "../redemptionValidator.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   applyRedemption,
@@ -39,6 +39,14 @@ import {
   redeemReward,
   verifyRedemption,
 } from "./redemption.service.js";
+
+/** The `sendLoyaltyEvent` call made for `event`: org, recipient, data and options. */
+function sentEvent(event: string) {
+  const call = (sendLoyaltyEvent as unknown as { mock: { calls: unknown[][] } }).mock.calls.find(
+    (args) => args[1] === event,
+  );
+  return call && { orgId: call[0], to: call[2], data: call[3], options: call[4] };
+}
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -301,11 +309,10 @@ describe("redeemReward — point rewards", () => {
 
     await redeemReward(PROGRAM, input);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.POINTS_ISSUED,
-      expect.objectContaining({ points: 300, balanceAfter: 700 }),
-    );
+    expect(sentEvent(LoyaltyEventType.POINTS_ISSUED)).toMatchObject({
+      orgId: ORG,
+      data: { points: 300, balance: 700 },
+    });
   });
 
   // Every reward the setup wizard writes is `rewardType: "point"` with no points in its
@@ -319,21 +326,11 @@ describe("redeemReward — point rewards", () => {
 
     await redeemReward(PROGRAM, input);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.REWARD_REDEEMED,
-      expect.objectContaining({
-        rewardName: "Free coffee",
-        redemptionCode: "RU-ABC123",
-        points: -100,
-        balanceAfter: 700,
-      }),
-    );
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.POINTS_ISSUED,
-      expect.anything(),
-    );
+    expect(sentEvent(LoyaltyEventType.REWARD_REDEEMED)).toMatchObject({
+      orgId: ORG,
+      data: { rewardName: "Free coffee", code: "RU-ABC123", cost: 100 },
+    });
+    expect(sentEvent(LoyaltyEventType.POINTS_ISSUED)).toBeUndefined();
   });
 });
 
@@ -387,7 +384,7 @@ describe("redeemReward — coupon rewards", () => {
     await redeemReward(PROGRAM, input);
 
     expect(db.loyaltyReward.update).not.toHaveBeenCalled();
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
   });
 
   test("does not touch the balance at all when approval is pending", async () => {
@@ -404,11 +401,10 @@ describe("redeemReward — coupon rewards", () => {
     const res: any = await redeemReward(PROGRAM, input);
 
     expect(res.redemptionCode).toBe("RU-ABC123");
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.REWARD_REDEEMED,
-      expect.objectContaining({ redemptionCode: "RU-ABC123", points: -100 }),
-    );
+    expect(sentEvent(LoyaltyEventType.REWARD_REDEEMED)).toMatchObject({
+      orgId: ORG,
+      data: { code: "RU-ABC123", cost: 100 },
+    });
   });
 });
 
@@ -524,11 +520,10 @@ describe("redeemReward — regular rewards", () => {
   test("tells the customer their reward is ready", async () => {
     await redeemReward(PROGRAM, input);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.REWARD_ISSUED,
-      expect.objectContaining({ rewardName: "Free coffee", balanceAfter: 400 }),
-    );
+    expect(sentEvent(LoyaltyEventType.REWARD_ISSUED)).toMatchObject({
+      orgId: ORG,
+      data: { rewardName: "Free coffee", cost: 100 },
+    });
   });
 });
 
@@ -678,11 +673,10 @@ describe("applyRedemption", () => {
   test("tells the customer the reward was used", async () => {
     await applyRedemption(applyInput, ORG);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.REWARD_REDEEMED,
-      expect.objectContaining({ redemptionCode: "RU-ABC123" }),
-    );
+    expect(sentEvent(LoyaltyEventType.REWARD_REDEEMED)).toMatchObject({
+      orgId: ORG,
+      data: { code: "RU-ABC123" },
+    });
   });
 
   test("applies a code only within the caller's org", async () => {

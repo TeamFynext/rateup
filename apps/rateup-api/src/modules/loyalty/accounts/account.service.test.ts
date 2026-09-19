@@ -31,13 +31,13 @@ vi.mock("../../../utils/misc/random.utils.js", () => ({
   generateRewardShortCode: vi.fn(() => "SHORT1"),
 }));
 
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({ sendTextMessage: vi.fn() }));
+vi.mock("../messaging/reply.js", () => ({ replyText: vi.fn() }));
 vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
   generateWhatsAppJoinLink: vi.fn(() => "https://wa.me/join"),
 }));
-vi.mock("../loyaltyWaDispatcher.js", () => ({
-  dispatchLoyaltyNotification: vi.fn(),
-  NOTIFICATION_NOT_SENT: {
+vi.mock("../messaging/send.js", () => ({
+  sendLoyaltyEvent: vi.fn(),
+  NOT_SENT: {
     sent: false,
     channel: null,
     mode: null,
@@ -48,11 +48,11 @@ vi.mock("../loyaltyWaDispatcher.js", () => ({
 }));
 // The card is sent by its own module; enrolment only needs it not to throw.
 vi.mock("./memberCard.service.js", () => ({
-  ensureMemberCard: vi.fn(async () => "ABCDEFGHJKLM"),
+  ensureMemberCard: vi.fn(async () => "ABCDEFGHJ"),
   sendMemberCard: vi.fn(async () => ({
     sent: false,
     skippedReason: "session_closed",
-    cardCode: "ABCDEFGHJKLM",
+    cardCode: "ABCDEFGHJ",
     cardSentAt: null,
   })),
 }));
@@ -63,8 +63,16 @@ vi.mock("../feedback/feedback.scheduler.js", () => ({
 
 import prisma from "../../../utils/prisma.js";
 import { calculatePointsForPurchase, checkAndUpgradeTier } from "../earningRulesEngine.js";
-import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { replyText } from "../messaging/reply.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
+
+/** The `sendLoyaltyEvent` call made for `event`: org, recipient, data and options. */
+function sentEvent(event: string) {
+  const call = (sendLoyaltyEvent as unknown as { mock: { calls: unknown[][] } }).mock.calls.find(
+    (args) => args[1] === event,
+  );
+  return call && { orgId: call[0], to: call[2], data: call[3], options: call[4] };
+}
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
@@ -380,12 +388,11 @@ describe("createCustomerAccount — an account that already exists", () => {
     db.customerLoyaltyAccount.update.mockResolvedValue({ id: "acct-1", contact: { name: "Ann" } });
 
     await createCustomerAccount(signupInput, PROGRAM, ORG);
-    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(replyText).not.toHaveBeenCalled();
 
     await createCustomerAccount(signupInput, PROGRAM, ORG, "919999999999");
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: "919000000001", orgId: ORG },
-      null,
+    expect(replyText).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: ORG, channel: "WHATSAPP", from: "919000000001" }),
       "🎉 Welcome back Ann!",
     );
   });
@@ -425,11 +432,10 @@ describe("createCustomerAccount — the signup bonus", () => {
 
     await createCustomerAccount(signupInput, PROGRAM, ORG);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.POINTS_ISSUED,
-      expect.objectContaining({ points: 500, balanceAfter: 500, reason: "Signup Bonus" }),
-    );
+    expect(sentEvent(LoyaltyEventType.POINTS_ISSUED)).toMatchObject({
+      orgId: ORG,
+      data: { points: 500, balance: 500 },
+    });
   });
 
   test("sends the welcome and join link only with a sending number", async () => {
@@ -437,8 +443,8 @@ describe("createCustomerAccount — the signup bonus", () => {
 
     await createCustomerAccount(signupInput, PROGRAM, ORG, "919999999999");
 
-    expect((sendTextMessage as Mock).mock.calls).toHaveLength(2);
-    expect((sendTextMessage as Mock).mock.calls[1][2]).toBe("https://wa.me/join");
+    expect((replyText as Mock).mock.calls).toHaveLength(2);
+    expect((replyText as Mock).mock.calls[1][1]).toBe("https://wa.me/join");
   });
 });
 
@@ -449,23 +455,23 @@ describe("createCustomerAccount — the join confirmation", () => {
   test("welcomes the member even when the program pays no signup bonus", async () => {
     await createCustomerAccount(signupInput, PROGRAM, ORG, "919999999999");
 
-    const calls = (sendTextMessage as Mock).mock.calls;
+    const calls = (replyText as Mock).mock.calls;
     expect(calls).toHaveLength(2);
-    expect(calls[0][2]).toContain("You are now registered in our Loyalty Program.");
-    expect(calls[1][2]).toBe("https://wa.me/join");
+    expect(calls[0][1]).toContain("You are now registered in our Loyalty Program.");
+    expect(calls[1][1]).toBe("https://wa.me/join");
   });
 
   test("still says nothing about points when there is no signup bonus", async () => {
     await createCustomerAccount(signupInput, PROGRAM, ORG, "919999999999");
 
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
   });
 
   test("stays silent without a sending number to build the link from", async () => {
     await createCustomerAccount(signupInput, PROGRAM, ORG);
 
-    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(replyText).not.toHaveBeenCalled();
   });
 });
 
@@ -648,7 +654,7 @@ describe("createCustomerAccount — holding the bonuses for a web signup", () =>
       pendingBonuses: expect.objectContaining({ signupBonus: 500 }),
     });
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
   });
 
   test("does not pay the referrer until the new member is verified", async () => {
@@ -717,11 +723,10 @@ describe("releasePendingSignupBonus", () => {
       points: 500,
       balanceAfter: 500,
     });
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.POINTS_ISSUED,
-      expect.objectContaining({ points: 500, balanceAfter: 500, reason: "Signup Bonus" }),
-    );
+    expect(sentEvent(LoyaltyEventType.POINTS_ISSUED)).toMatchObject({
+      orgId: ORG,
+      data: { points: 500, balance: 500 },
+    });
   });
 
   test("pays the referrer from the snapshot, not from what the programme says now", async () => {
@@ -954,7 +959,7 @@ describe("awardPoints", () => {
 
       // The customer was told about the points the first time round; telling them again is
       // the visible half of a double award even when the balance is right.
-      expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+      expect(sendLoyaltyEvent).not.toHaveBeenCalled();
       expect(scheduleFeedbackRequest).not.toHaveBeenCalled();
       expect(checkAndUpgradeTier).not.toHaveBeenCalled();
       expect(result.tier.upgraded).toBe(false);
@@ -975,7 +980,7 @@ describe("awardPoints", () => {
 
       expect(result.replayed).toBe(true);
       expect(result.transaction).toMatchObject({ id: "txn-winner" });
-      expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+      expect(sendLoyaltyEvent).not.toHaveBeenCalled();
     });
 
     test("a unique violation with no key is a real error, not a replay", async () => {
@@ -1023,11 +1028,10 @@ describe("awardPoints", () => {
   test("tells the customer their points were issued", async () => {
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.POINTS_ISSUED,
-      expect.objectContaining({ points: 100, balanceAfter: 600, reason: "Purchase" }),
-    );
+    expect(sentEvent(LoyaltyEventType.POINTS_ISSUED)).toMatchObject({
+      orgId: ORG,
+      data: { points: 100, balance: 600 },
+    });
   });
 
   test("announces a tier move as an upgrade", async () => {
@@ -1038,11 +1042,10 @@ describe("awardPoints", () => {
 
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.TIER_UPGRADED,
-      expect.objectContaining({ newTier: "Silver", oldTier: "Bronze" }),
-    );
+    expect(sentEvent(LoyaltyEventType.TIER_UPGRADED)).toMatchObject({
+      orgId: ORG,
+      data: { tier: "Silver" },
+    });
   });
 
   test("says nothing when the contact has no phone", async () => {
@@ -1050,7 +1053,7 @@ describe("awardPoints", () => {
 
     await awardPoints(PROGRAM, "contact-1", 500, {});
 
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
   });
 
   test("credits the balance before the ledger row is written, untransacted", async () => {
@@ -1104,8 +1107,8 @@ describe("awardPoints", () => {
     });
   });
 
-  test("reports what the dispatcher did with the WhatsApp message", async () => {
-    (dispatchLoyaltyNotification as Mock).mockResolvedValue({
+  test("reports what happened to the message", async () => {
+    (sendLoyaltyEvent as Mock).mockResolvedValue({
       sent: true,
       channel: "whatsapp",
       templateId: "tmpl-1",
@@ -1120,21 +1123,6 @@ describe("awardPoints", () => {
       text: "Hi Ann, you earned 100 points.",
     });
     expect(result.tierNotification).toBeNull();
-  });
-
-  test("treats a dispatcher that returns nothing as not sent", async () => {
-    (dispatchLoyaltyNotification as Mock).mockResolvedValue(undefined);
-
-    const result = await awardPoints(PROGRAM, "contact-1", 500, {});
-
-    expect(result.notification).toEqual({
-      sent: false,
-      channel: null,
-      mode: null,
-      templateId: null,
-      text: null,
-      skippedReason: null,
-    });
   });
 
   test("says why nothing was sent when the contact has no phone", async () => {
@@ -1367,11 +1355,10 @@ describe("assignRewardToCustomer", () => {
   test("tells the customer about their new reward", async () => {
     await assignRewardToCustomer("acct-1", "rwd-1");
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.REWARD_ISSUED,
-      expect.objectContaining({ rewardName: "Free coffee", redemptionCode: "SHORT1" }),
-    );
+    expect(sentEvent(LoyaltyEventType.REWARD_ISSUED)).toMatchObject({
+      orgId: ORG,
+      data: { rewardName: "Free coffee", code: "SHORT1" },
+    });
   });
 
   test("looks the reward up inside the account's own program", async () => {

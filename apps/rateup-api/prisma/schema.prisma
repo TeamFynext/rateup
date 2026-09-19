@@ -1616,7 +1616,7 @@ model WaFlow {
   /// [PWaFlowPreview]
   preview     Json?
   // whether the flow has changes present in our db that are not saved in whatsapp
-  pendingSave Boolean @default(true)
+  pendingSave Boolean  @default(true)
 
   /// [PWaFlowMap]
   map        Json
@@ -1925,13 +1925,13 @@ model ExternalIdempotencyRecord {
 
   /// Method + route, e.g. "POST /loyalty/points/award". Scoping by route stops one key
   /// reused against a different endpoint from replaying the wrong answer.
-  scope String
-  key   String
+  scope       String
+  key         String
   /// sha256 of the canonicalised body. A second request under the same key with a different
   /// body is a caller bug, answered with 409 rather than a misleading replay.
   requestHash String
 
-  state          String    @default("IN_FLIGHT") // IN_FLIGHT | COMPLETED
+  state          String @default("IN_FLIGHT") // IN_FLIGHT | COMPLETED
   responseStatus Int?
   responseBody   Json?
 
@@ -2090,17 +2090,20 @@ model LoyaltyProgram {
   whatsappSettingsId String?
 
   // Settings
-  pointsActivityAlerts     Boolean @default(true)
-  autoApproveAdjustments   Boolean @default(false)
-  emailNotifications       Boolean @default(true)
-  whatsappNotifications    Boolean @default(true)
-  enableShopifyOrderPoints Boolean @default(false)
-  enablePointsExpiration   Boolean @default(false)
-  pointsExpirationMonths   Int     @default(12)
+  pointsActivityAlerts     Boolean          @default(true)
+  autoApproveAdjustments   Boolean          @default(false)
+  emailNotifications       Boolean          @default(true)
+  whatsappNotifications    Boolean          @default(true)
+  enableShopifyOrderPoints Boolean          @default(false)
+  enablePointsExpiration   Boolean          @default(false)
+  pointsExpirationMonths   Int              @default(12)
   // Inside an open 24-hour customer-service window, send a notification's text as a
   // plain message instead of the Meta template (free, and works before approval).
-  sendTextInSession        Boolean @default(true)
-  referralMessageTemplate  Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
+  sendTextInSession        Boolean          @default(true)
+  /// The channels this programme messages members on, in fallback order. A member's own
+  /// `preferredChannel` goes first when it is one of these.
+  enabledChannels          LoyaltyChannel[] @default([WHATSAPP])
+  referralMessageTemplate  Json             @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
 
   // Guided setup wizard (/dashboard/loyalty/onboarding) progress. The wizard commits each
   // step for real while the program stays status "draft", so these track where to resume.
@@ -2292,6 +2295,9 @@ model CustomerLoyaltyAccount {
   // Status
   status String @default("active") // 'active', 'suspended', 'closed'
 
+  /// Where this member wants loyalty messages. Null follows the programme's order.
+  preferredChannel LoyaltyChannel?
+
   // Null while a web self-signup waits for its first WhatsApp message or purchase; the
   // bonuses promised at signup sit in `pendingBonuses` until then. Every other signup path
   // credits immediately, so the default marks the account verified on creation.
@@ -2299,7 +2305,7 @@ model CustomerLoyaltyAccount {
   /// [PLoyaltyPendingBonuses]
   pendingBonuses Json?
 
-  /// The member's QR card. `cardCode` is the code the QR encodes — twelve characters from
+  /// The member's QR card. `cardCode` is the code the QR encodes — nine characters from
   /// the till-code alphabet, minted at enrolment for new members and on first send for
   /// older ones (null until then, which is also what keeps legacy members out of the
   /// automatic first-message send). `cardSentAt` is the last WhatsApp delivery Meta
@@ -2446,15 +2452,15 @@ model LoyaltyTransaction {
   balanceAfter    Int // Balance after this transaction
 
   // Source/Context
-  source      String // 'purchase', 'signup_bonus', 'referral', 'reward_redemption', 'manual'
-  referenceId String? // External reference (order_id, etc.) — NOT unique, see idempotencyKey
+  source         String // 'purchase', 'signup_bonus', 'referral', 'reward_redemption', 'manual'
+  referenceId    String? // External reference (order_id, etc.) — NOT unique, see idempotencyKey
   /// Collapses a retried write onto the row it already made. Deliberately separate from
   /// `referenceId`, which several writers share (a redemption id, `APPROVAL-<id>`, and the
   /// expiry sweep's partial allocations) and so cannot carry a unique index.
   idempotencyKey String?
-  description String?
+  description    String?
   /// [LoyaltyTransactionMetadata]
-  metadata    Json?   @default("{}")
+  metadata       Json?   @default("{}")
 
   // Earning Rule Applied (for 'earn' transactions)
   earningRuleId         String?             @db.Uuid
@@ -2511,13 +2517,13 @@ model LoyaltyRedemption {
   status RedemptionStatus @default(PENDING)
 
   // Usage tracking
-  expiresAt   DateTime?
-  usedAt      DateTime?
+  expiresAt        DateTime?
+  usedAt           DateTime?
   /// Claim marker for the "your reward is about to expire" reminder — the occasion is per
   /// redemption code, so it cannot be tracked on the account.
   expiryNotifiedAt DateTime?
   /// [PLoyaltyUsedContext]
-  usedContext Json?     @default("{}") // POS details when used
+  usedContext      Json?     @default("{}") // POS details when used
 
   // Rule validation snapshot (at creation time)
   rulesValidatedAt      DateTime @default(now())
@@ -2651,6 +2657,15 @@ model LoyaltyReferral {
   @@index([status])
 }
 
+/// A medium loyalty messages can go out on. Only channels with an adapter in
+/// src/modules/loyalty/messaging/registry.ts can be enabled.
+enum LoyaltyChannel {
+  WHATSAPP
+  RCS
+  SMS
+  EMAIL
+}
+
 enum LoyaltyEventType {
   POINTS_ISSUED
   POINTS_ADJUSTED
@@ -2690,6 +2705,10 @@ model LoyaltyEventTrigger {
   /// DEFAULT_SEND_HOUR. The reminder sweep wakes hourly and sends only to programmes whose
   /// chosen hour has just struck locally.
   sendHour Int?
+
+  /// The message in words, `{{n}}` in catalog order, for any channel. A linked WhatsApp
+  /// template still wins on WhatsApp; null falls back to the catalog's default.
+  body String?
 
   // WhatsApp Template
   waTemplateId String?     @db.Uuid

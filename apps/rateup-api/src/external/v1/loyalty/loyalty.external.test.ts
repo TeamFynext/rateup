@@ -108,7 +108,7 @@ describe("the response schemas are a boundary, not documentation", () => {
           lifetimePoints: 300,
           totalSpend: "1500.00",
           status: "active",
-          cardCode: "ABCDEFGHJKLM",
+          cardCode: "ABCDEFGHJ",
           createdAt: new Date("2026-01-01T00:00:00.000Z"),
           pendingBonuses: { joining: 50 },
           verifiedAt: null,
@@ -153,7 +153,7 @@ describe("the response schemas are a boundary, not documentation", () => {
     expect(body.data[0]).toMatchObject({
       name: "Ann",
       phone: "919000000001",
-      cardCode: "ABCDEFGHJKLM",
+      cardCode: "ABCDEFGHJ",
       points: { current: 120, lifetime: 300 },
       totalSpend: 1500,
     });
@@ -211,7 +211,7 @@ describe("errors reach the caller as the envelope", () => {
     const app = await buildApp();
     const res = await app.inject({
       method: "GET",
-      url: "/members/lookup?phone=919000000001&cardCode=ABCDEFGHJKLM",
+      url: "/members/lookup?phone=919000000001&cardCode=ABCDEFGHJ",
     });
 
     expect(res.statusCode).toBe(400);

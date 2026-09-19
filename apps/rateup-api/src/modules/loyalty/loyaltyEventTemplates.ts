@@ -29,6 +29,14 @@ export const LOYALTY_EVENT_TEMPLATE_NAMES: Record<LoyaltyEventType, string> = {
  */
 export const LOYALTY_JOIN_PAYLOAD = "LOYALTY_JOIN";
 
+/**
+ * Whether a message is a tap on the Join button. A template's quick reply arrives as
+ * `buttonPayload`; the interactive button sent inside an open window, as `buttonId`.
+ */
+export function isJoinTap(parsed: { buttonPayload?: string; buttonId?: string }): boolean {
+  return parsed.buttonPayload === LOYALTY_JOIN_PAYLOAD || parsed.buttonId === LOYALTY_JOIN_PAYLOAD;
+}
+
 /** Meta's limit on a quick-reply button's label. */
 const QUICK_REPLY_MAX_LENGTH = 25;
 

@@ -38,7 +38,8 @@ import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { createLCustomer, handlePostRegisterAction } from "./contact.utils.js";
 import { LoyaltyTemplateTypes } from "../../types/enums.js";
-import { programPrefersTextInSession, sendLoyaltyMessage } from "../loyalty/loyaltyMessaging.js";
+import { buildKeywordReply } from "../loyalty/messaging/content.js";
+import { sendLoyalty } from "../loyalty/messaging/send.js";
 import { getLoyaltyWaCommandByType } from "../loyalty/settings/settings.service.js";
 import { renderReplyText } from "../loyalty/richText.js";
 import prisma from "../../utils/prisma.js";
@@ -97,13 +98,16 @@ export async function createContactHandler(
         // A customer registered here (till, dashboard, Zapier) has usually never
         // messaged us, so only the template reaches them; the reply's text is used
         // when a window happens to be open.
-        await sendLoyaltyMessage({
+        await sendLoyalty({
           orgId,
-          phone: contact.phone,
-          waTemplateId,
-          params: dynamicVariables,
-          textFallback: renderReplyText(content, dynamicVariables),
-          preferTextInSession: await programPrefersTextInSession(orgId),
+          to: { contactId: contact.id },
+          intent: { kind: "notify" },
+          message: buildKeywordReply({
+            key: "keyword:registration",
+            text: renderReplyText(content, dynamicVariables),
+            waTemplateId,
+            params: dynamicVariables,
+          }),
         });
       }
       await handlePostRegisterAction(orgId, contact.id);

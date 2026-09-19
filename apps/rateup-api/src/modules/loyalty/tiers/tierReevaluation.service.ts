@@ -1,7 +1,7 @@
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { computeQualifyingSpendBatch, pickQualifiedTier } from "./qualifyingSpend.js";
 
 /** Members are read in pages this size so a large programme never loads all at once. */
@@ -130,12 +130,12 @@ export async function reevaluateProgramTiers(program: ProgramLadder): Promise<Pr
         // An untiered member landing on the base rung is a placement, not news.
         if (Number(target.threshold) > 0 && member.contact?.phone) {
           try {
-            await dispatchLoyaltyNotification(program.orgId, LoyaltyEventType.TIER_UPGRADED, {
-              customerPhone: member.contact.phone,
-              customerName: member.contact.name || "Customer",
-              newTier: target.name,
-              oldTier: from?.name,
-            });
+            await sendLoyaltyEvent(
+              program.orgId,
+              LoyaltyEventType.TIER_UPGRADED,
+              { accountId: member.id },
+              { name: member.contact.name || "Customer", tier: target.name },
+            );
           } catch (error) {
             // One member's message must not stop the sweep for everyone after them.
             log.error(

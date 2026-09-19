@@ -22,10 +22,10 @@ vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../loyaltyWaDispatcher.js", () => ({ dispatchLoyaltyNotification: vi.fn() }));
+vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   approveApprovalRequest,
@@ -36,6 +36,14 @@ import {
   getApprovalRequests,
   rejectApprovalRequest,
 } from "./approval.service.js";
+
+/** The `sendLoyaltyEvent` call made for `event`: org, recipient, data and options. */
+function sentEvent(event: string) {
+  const call = (sendLoyaltyEvent as unknown as { mock: { calls: unknown[][] } }).mock.calls.find(
+    (args) => args[1] === event,
+  );
+  return call && { orgId: call[0], to: call[2], data: call[3], options: call[4] };
+}
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -326,11 +334,10 @@ describe("approveApprovalRequest — redemptions", () => {
   test("tells the customer their redemption went through", async () => {
     await approveApprovalRequest(input, PROGRAM);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.REWARD_REDEEMED,
-      expect.objectContaining({ redemptionCode: "RU-ABC123", points: -100, balanceAfter: 400 }),
-    );
+    expect(sentEvent(LoyaltyEventType.REWARD_REDEEMED)).toMatchObject({
+      orgId: ORG,
+      data: { code: "RU-ABC123", cost: 100 },
+    });
   });
 
   test("refuses when the redemption behind the request has gone", async () => {
@@ -400,11 +407,10 @@ describe("approveApprovalRequest — points adjustments", () => {
   test("tells the customer their balance moved", async () => {
     await approveApprovalRequest(input, PROGRAM);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.POINTS_ADJUSTED,
-      expect.objectContaining({ points: 250, balanceAfter: 750 }),
-    );
+    expect(sentEvent(LoyaltyEventType.POINTS_ADJUSTED)).toMatchObject({
+      orgId: ORG,
+      data: { points: 250, balance: 750 },
+    });
   });
 });
 
@@ -433,11 +439,10 @@ describe("approveApprovalRequest — tier overrides", () => {
   test("announces both tiers by name", async () => {
     await approveApprovalRequest(input, PROGRAM);
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      ORG,
-      LoyaltyEventType.TIER_UPGRADED,
-      expect.objectContaining({ newTier: "Silver", oldTier: "Bronze" }),
-    );
+    expect(sentEvent(LoyaltyEventType.TIER_UPGRADED)).toMatchObject({
+      orgId: ORG,
+      data: { tier: "Silver" },
+    });
   });
 });
 

@@ -10,12 +10,20 @@ vi.mock("../../../utils/prisma.js", () => ({
 }));
 
 vi.mock("../earningRulesEngine.js", () => ({ checkAndUpgradeTier: vi.fn() }));
-vi.mock("../loyaltyWaDispatcher.js", () => ({ dispatchLoyaltyNotification: vi.fn() }));
+vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { checkAndUpgradeTier } from "../earningRulesEngine.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { reversePurchasePoints } from "./pointsReversal.service.js";
+
+/** The `sendLoyaltyEvent` call made for `event`: org, recipient, data and options. */
+function sentEvent(event: string) {
+  const call = (sendLoyaltyEvent as unknown as { mock: { calls: unknown[][] } }).mock.calls.find(
+    (args) => args[1] === event,
+  );
+  return call && { orgId: call[0], to: call[2], data: call[3], options: call[4] };
+}
 
 type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as Record<string, any>;
@@ -98,11 +106,10 @@ describe("reversePurchasePoints", () => {
   test("tells the customer their balance changed", async () => {
     await reversePurchasePoints(input({ orgId: "org-1" }));
 
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      "org-1",
-      "POINTS_ADJUSTED",
-      expect.objectContaining({ points: -100, balanceAfter: 150 }),
-    );
+    expect(sentEvent("POINTS_ADJUSTED")).toMatchObject({
+      orgId: "org-1",
+      data: { points: -100, balance: 150 },
+    });
   });
 
   test("locks the account row before doing the arithmetic", async () => {

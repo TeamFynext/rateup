@@ -7,6 +7,7 @@ import {
   resetProgramPoints,
 } from "./program.service.js";
 import { log } from "../../../utils/logger.js";
+import { AVAILABLE_LOYALTY_CHANNELS } from "../messaging/channelIds.js";
 import {
   LoyaltyProgramInput,
   LoyaltyProgramUpdateInput,
@@ -33,7 +34,7 @@ export async function getLoyaltyProgramHandler(request: FastifyRequest, reply: F
     if (!result) {
       return reply.code(404).send({ error: "Loyalty program not found" });
     }
-    reply.code(200).send(result);
+    reply.code(200).send({ ...result, availableChannels: AVAILABLE_LOYALTY_CHANNELS });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: e instanceof Error ? e.message : "Unknown error" });

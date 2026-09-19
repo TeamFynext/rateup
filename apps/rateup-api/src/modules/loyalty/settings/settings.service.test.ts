@@ -25,31 +25,26 @@ vi.mock("../../../utils/prisma.js", () => ({
   },
 }));
 
-vi.mock("../../whatsapp/whatsappSurvey/wasurvey.service.js", () => ({
-  sendMessage: vi.fn(),
-  sendTextMessage: vi.fn(),
-}));
+// The reply helpers are real; everything they say lands on the one sender.
+vi.mock("../messaging/send.js", () => ({ sendLoyalty: vi.fn() }));
 vi.mock("../../whatsapp/whatsappSurvey/wasurvey.utils.js", () => ({
-  createListMessage: vi.fn((...args: unknown[]) => ({ kind: "list", args })),
-  createReplyButtonsMessage: vi.fn((...args: unknown[]) => ({ kind: "buttons", args })),
   generateWhatsAppJoinLink: vi.fn(() => "https://wa.me/join"),
 }));
 vi.mock("../../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
   handleWaJoinRegistration: vi.fn(),
 }));
-vi.mock("../../contact/contact.utils.js", () => ({ handleSendTemplate: vi.fn() }));
 vi.mock("../accounts/account.service.js", () => ({
   assignRewardToCustomer: vi.fn(),
   getLCustomerByPhone: vi.fn(),
   updateCustomerAccount: vi.fn(),
 }));
 vi.mock("../accounts/memberCard.service.js", () => ({
-  ensureMemberCard: vi.fn(async () => "ABCDEFGHJKLM"),
+  ensureMemberCard: vi.fn(async () => "ABCDEFGHJ"),
   renderCardReply: vi.fn(() => null),
   sendMemberCard: vi.fn(async () => ({
     sent: true,
     skippedReason: null,
-    cardCode: "ABCDEFGHJKLM",
+    cardCode: "ABCDEFGHJ",
     cardSentAt: new Date("2026-09-12T10:00:00Z"),
   })),
 }));
@@ -59,9 +54,9 @@ vi.mock("../redemptions/redemption.service.js", () => ({ redeemReward: vi.fn() }
 vi.mock("../../../../generated/prisma/client.js", () => ({}));
 
 import prisma from "../../../utils/prisma.js";
-import { sendMessage, sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
-import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { sendLoyalty } from "../messaging/send.js";
+import type { LoyaltyMessage } from "../messaging/types.js";
 import {
   assignRewardToCustomer,
   getLCustomerByPhone,
@@ -105,6 +100,14 @@ const db = prisma as unknown as {
 const ORG = "11111111-1111-4111-8111-111111111111";
 const PROGRAM = "prog-1";
 const PHONE = "919000000001";
+const REPLY = { orgId: ORG, channel: "WHATSAPP" as const, from: PHONE, name: "Ann" };
+
+/** Every message the handlers replied with, in order. */
+const replies = (): LoyaltyMessage[] =>
+  (sendLoyalty as Mock).mock.calls.map(([input]) => input.message);
+const repliedTexts = () => replies().map((message) => message.text);
+/** Replies that stand on a template alone: no words of their own. */
+const templateReplies = () => replies().filter((message) => !message.text && message.artefacts);
 
 function customer(over: Record<string, unknown> = {}) {
   return {
@@ -259,10 +262,8 @@ describe("the WhatsApp command CRUD", () => {
 describe("handleLoyaltyWaCommand", () => {
   test("a registration command goes to the join flow", async () => {
     await handleLoyaltyWaCommand(
-      PHONE,
-      "Ann",
+      REPLY,
       command({ type: LoyaltyTemplateTypes.CustomerRegistration }) as any,
-      ORG,
     );
 
     expect(handleWaJoinRegistration).toHaveBeenCalledWith({
@@ -271,36 +272,85 @@ describe("handleLoyaltyWaCommand", () => {
       userName: "Ann",
       joinPayload: {},
       sourceIdentifier: "loyalty",
+      reply: REPLY,
     });
   });
 
   test("a points command answers with the customer's balance", async () => {
     await handleLoyaltyWaCommand(
-      PHONE,
-      "Ann",
+      REPLY,
       command({ responseType: WaAutomatedReplyResponseType.Template }) as any,
-      ORG,
     );
 
-    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, PHONE, [500, 400, 900]);
+    expect(templateReplies()[0]?.artefacts?.WHATSAPP).toEqual({
+      waTemplateId: "tmpl-1",
+      params: ["500", "400", "900"],
+    });
   });
 
   test("a removal command deactivates the account", async () => {
     await handleLoyaltyWaCommand(
-      PHONE,
-      "Ann",
+      REPLY,
       command({ type: LoyaltyTemplateTypes.CustomerRemoval }) as any,
-      ORG,
     );
 
     expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "inactive" }, PROGRAM);
   });
 
   test("an unrecognised command type does nothing at all", async () => {
-    await handleLoyaltyWaCommand(PHONE, "Ann", command({ type: "SomethingElse" }) as any, ORG);
+    await handleLoyaltyWaCommand(REPLY, command({ type: "SomethingElse" }) as any);
 
-    expect(sendTextMessage).not.toHaveBeenCalled();
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(sendLoyalty).not.toHaveBeenCalled();
+    expect(templateReplies()).toHaveLength(0);
+  });
+});
+
+describe("handleLoyaltyWaCommand — RewardsIssued", () => {
+  test("lists the rewards the member can afford, as choices that start the redeem flow", async () => {
+    (getActiveLoyaltyRewards as Mock).mockResolvedValue([
+      {
+        id: "r1",
+        name: "Free coffee and a very long pastry name",
+        pointsCost: 100,
+        rewardType: "point",
+        stockQuantity: null,
+        stockRedeemed: 0,
+      },
+      {
+        id: "r2",
+        name: "Hamper",
+        pointsCost: 5000,
+        rewardType: "point",
+        stockQuantity: null,
+        stockRedeemed: 0,
+      },
+    ]);
+
+    await handleLoyaltyWaCommand(
+      REPLY,
+      command({ type: LoyaltyTemplateTypes.RewardsIssued }) as any,
+    );
+
+    expect(replies()[0]).toEqual({
+      key: "keyword:rewards",
+      text: "You have 500 points. Select a reward to continue.",
+      parts: {
+        title: "Rewards",
+        list: {
+          button: "View rewards",
+          rows: [{ id: "loyalty_reward:r1", title: "Free coffee and a very l" }],
+        },
+      },
+    });
+  });
+
+  test("says so when nothing is within reach", async () => {
+    await handleLoyaltyWaCommand(
+      REPLY,
+      command({ type: LoyaltyTemplateTypes.RewardsIssued }) as any,
+    );
+
+    expect(repliedTexts()).toEqual(["No rewards are available for your current points right now."]);
   });
 });
 
@@ -308,31 +358,27 @@ describe("handleLoyaltyPointsCommand", () => {
   test("turns away a non-member", async () => {
     (getLCustomerByPhone as Mock).mockResolvedValue(null);
 
-    await handleLoyaltyPointsCommand(PHONE, command());
+    await handleLoyaltyPointsCommand(REPLY, command());
 
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: PHONE, orgId: ORG },
-      null,
-      "You are not an active member of our loyalty programme",
-    );
+    expect(repliedTexts()).toContain("You are not an active member of our loyalty programme");
   });
 
   test("turns away a member whose account is inactive", async () => {
     (getLCustomerByPhone as Mock).mockResolvedValue(customer({ status: "inactive" }));
 
-    await handleLoyaltyPointsCommand(PHONE, command());
+    await handleLoyaltyPointsCommand(REPLY, command());
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
+    expect(templateReplies()).toHaveLength(0);
   });
 
   // The middle variable is "points spent", derived as lifetime minus current.
   test("reports current, spent and lifetime points in that order", async () => {
     await handleLoyaltyPointsCommand(
-      PHONE,
+      REPLY,
       command({ responseType: WaAutomatedReplyResponseType.Template }),
     );
 
-    expect((handleSendTemplate as Mock).mock.calls[0][3]).toEqual([500, 400, 900]);
+    expect(templateReplies()[0]?.artefacts?.WHATSAPP?.params).toEqual(["500", "400", "900"]);
   });
 
   test("reports negative spend when the balance exceeds the lifetime total", async () => {
@@ -341,18 +387,18 @@ describe("handleLoyaltyPointsCommand", () => {
     );
 
     await handleLoyaltyPointsCommand(
-      PHONE,
+      REPLY,
       command({ responseType: WaAutomatedReplyResponseType.Template }),
     );
 
-    expect((handleSendTemplate as Mock).mock.calls[0][3]).toEqual([900, -400, 500]);
+    expect(templateReplies()[0]?.artefacts?.WHATSAPP?.params).toEqual(["900", "-400", "500"]);
   });
 
   test("a response type of neither kind answers nothing", async () => {
-    await handleLoyaltyPointsCommand(PHONE, command({ responseType: "Nothing" }));
+    await handleLoyaltyPointsCommand(REPLY, command({ responseType: "Nothing" }));
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
-    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(templateReplies()).toHaveLength(0);
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 });
 
@@ -362,29 +408,25 @@ describe("keyword replies inside the open window", () => {
   // never messaged (see the registration reply in contact.controller).
   test("a points reply with text sends the text even when a template is attached", async () => {
     await handleLoyaltyPointsCommand(
-      PHONE,
+      REPLY,
       command({
         responseType: WaAutomatedReplyResponseType.Template,
         content: "You have {{1}} points ({{3}} lifetime).",
       }),
     );
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: PHONE, orgId: ORG },
-      null,
-      "You have 500 points (900 lifetime).",
-    );
+    expect(templateReplies()).toHaveLength(0);
+    expect(repliedTexts()).toContain("You have 500 points (900 lifetime).");
   });
 
   test("a removal reply with text sends the text even when a template is attached", async () => {
     await handleCustomerRemovalFromLoyalty(
-      PHONE,
+      REPLY,
       command({ responseType: WaAutomatedReplyResponseType.Template, content: "Bye" }) as any,
     );
 
-    expect(handleSendTemplate).not.toHaveBeenCalled();
-    expect(sendTextMessage).toHaveBeenCalledWith({ phone: PHONE, orgId: ORG }, null, "Bye");
+    expect(templateReplies()).toHaveLength(0);
+    expect(repliedTexts()).toContain("Bye");
   });
 });
 
@@ -392,33 +434,36 @@ describe("handleCustomerRemovalFromLoyalty", () => {
   test("turns away a non-member without changing anything", async () => {
     (getLCustomerByPhone as Mock).mockResolvedValue(null);
 
-    await handleCustomerRemovalFromLoyalty(PHONE, command() as any);
+    await handleCustomerRemovalFromLoyalty(REPLY, command() as any);
 
     expect(updateCustomerAccount).not.toHaveBeenCalled();
   });
 
   test("deactivates with the lower-case status the schema uses", async () => {
-    await handleCustomerRemovalFromLoyalty(PHONE, command() as any);
+    await handleCustomerRemovalFromLoyalty(REPLY, command() as any);
 
     expect(updateCustomerAccount).toHaveBeenCalledWith("acct-1", { status: "inactive" }, PROGRAM);
   });
 
   test("confirms the removal by template when configured that way", async () => {
     await handleCustomerRemovalFromLoyalty(
-      PHONE,
+      REPLY,
       command({ responseType: WaAutomatedReplyResponseType.Template }) as any,
     );
 
-    expect(handleSendTemplate).toHaveBeenCalledWith("tmpl-1", ORG, PHONE, []);
+    expect(templateReplies()[0]?.artefacts?.WHATSAPP).toEqual({
+      waTemplateId: "tmpl-1",
+      params: [],
+    });
   });
 
   test("confirms the removal by text when configured that way", async () => {
     await handleCustomerRemovalFromLoyalty(
-      PHONE,
+      REPLY,
       command({ responseType: WaAutomatedReplyResponseType.Text, content: "Goodbye" }) as any,
     );
 
-    expect(sendTextMessage).toHaveBeenCalledWith({ phone: PHONE, orgId: ORG }, null, "Goodbye");
+    expect(repliedTexts()).toContain("Goodbye");
   });
 });
 
@@ -428,52 +473,45 @@ describe("handleCustomerRemovalFromLoyalty", () => {
 
 describe("handleLoyaltyRedeemInteraction", () => {
   test("ignores a message that carries no button", async () => {
-    expect(await handleLoyaltyRedeemInteraction(PHONE, {}, ORG)).toBe(false);
-    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(await handleLoyaltyRedeemInteraction(REPLY, {})).toBe(false);
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 
   test("ignores a button that is not a loyalty one", async () => {
-    expect(await handleLoyaltyRedeemInteraction(PHONE, { buttonId: "survey:1" }, ORG)).toBe(false);
+    expect(await handleLoyaltyRedeemInteraction(REPLY, { buttonId: "survey:1" })).toBe(false);
   });
 
   test("a cancel button just acknowledges", async () => {
     expect(
-      await handleLoyaltyRedeemInteraction(PHONE, { buttonId: "loyalty_reward_cancel:rwd-1" }, ORG),
+      await handleLoyaltyRedeemInteraction(REPLY, { buttonId: "loyalty_reward_cancel:rwd-1" }),
     ).toBe(true);
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: PHONE, orgId: ORG },
-      null,
-      "Reward redemption cancelled.",
-    );
+    expect(repliedTexts()).toContain("Reward redemption cancelled.");
   });
 
   test("selecting a reward asks the customer to confirm", async () => {
-    await handleLoyaltyRedeemInteraction(PHONE, { buttonId: "loyalty_reward:rwd-1" }, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, { buttonId: "loyalty_reward:rwd-1" });
 
-    expect(sendMessage).toHaveBeenCalledWith(ORG, expect.objectContaining({ kind: "buttons" }));
+    expect(replies()[0]?.parts?.buttons).toEqual([
+      { id: "loyalty_reward_confirm:rwd-1", title: "Confirm" },
+      { id: "loyalty_reward_cancel:rwd-1", title: "Cancel" },
+    ]);
   });
 
   test("refuses a reward that belongs to a different program", async () => {
     db.loyaltyReward.findUnique.mockResolvedValue({ id: "rwd-1", programId: "prog-other" });
 
-    await handleLoyaltyRedeemInteraction(PHONE, { buttonId: "loyalty_reward:rwd-1" }, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, { buttonId: "loyalty_reward:rwd-1" });
 
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: PHONE, orgId: ORG },
-      null,
-      "Selected reward is invalid.",
-    );
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(repliedTexts()).toContain("Selected reward is invalid.");
+    expect(replies().some((message) => message.parts)).toBe(false);
   });
 
   test("refuses a reward the customer cannot afford", async () => {
     (getLCustomerByPhone as Mock).mockResolvedValue(customer({ currentPoints: 10 }));
 
-    await handleLoyaltyRedeemInteraction(PHONE, { buttonId: "loyalty_reward:rwd-1" }, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, { buttonId: "loyalty_reward:rwd-1" });
 
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: PHONE, orgId: ORG },
-      null,
+    expect(repliedTexts()).toContain(
       "This reward is no longer available or you do not have enough points.",
     );
   });
@@ -488,15 +526,15 @@ describe("handleLoyaltyRedeemInteraction", () => {
       stockRedeemed: 5,
     });
 
-    await handleLoyaltyRedeemInteraction(PHONE, { buttonId: "loyalty_reward:rwd-1" }, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, { buttonId: "loyalty_reward:rwd-1" });
 
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(replies().some((message) => message.parts)).toBe(false);
   });
 
   test("turns away a customer who is not an active member", async () => {
     (getLCustomerByPhone as Mock).mockResolvedValue(null);
 
-    await handleLoyaltyRedeemInteraction(PHONE, { buttonId: "loyalty_reward:rwd-1" }, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, { buttonId: "loyalty_reward:rwd-1" });
 
     expect(db.loyaltyReward.findUnique).not.toHaveBeenCalled();
   });
@@ -506,18 +544,18 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
   const confirm = { buttonId: "loyalty_reward_confirm:rwd-1" };
 
   test("redeems through redeemReward and reports the short code", async () => {
-    await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, confirm);
 
     expect(redeemReward).toHaveBeenCalledWith(PROGRAM, {
       customerId: "acct-1",
       rewardId: "rwd-1",
       notes: "WhatsApp redeem flow",
     });
-    expect((sendTextMessage as Mock).mock.calls.at(-1)![2]).toContain("SHORT123");
+    expect(repliedTexts().at(-1)).toContain("SHORT123");
   });
 
   test("does not deduct anything itself", async () => {
-    await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, confirm);
 
     expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
@@ -526,11 +564,9 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
   test("passes the redemption's error text back to the customer", async () => {
     (redeemReward as Mock).mockRejectedValue(new Error("Insufficient points. Required: 100"));
 
-    await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, confirm);
 
-    expect((sendTextMessage as Mock).mock.calls.at(-1)![2]).toBe(
-      "Insufficient points. Required: 100",
-    );
+    expect(repliedTexts().at(-1)).toBe("Insufficient points. Required: 100");
   });
 
   test("tells the customer which rule refused the redemption", async () => {
@@ -539,14 +575,14 @@ describe("handleLoyaltyRedeemInteraction — confirming", () => {
       violations: ["Daily redemption limit reached"],
     });
 
-    await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, confirm);
 
-    expect((sendTextMessage as Mock).mock.calls.at(-1)![2]).toBe("Daily redemption limit reached");
+    expect(repliedTexts().at(-1)).toBe("Daily redemption limit reached");
     expect(assignRewardToCustomer).not.toHaveBeenCalled();
   });
 
   test("goes through the one redemption path, so the rules can count it", async () => {
-    await handleLoyaltyRedeemInteraction(PHONE, confirm, ORG);
+    await handleLoyaltyRedeemInteraction(REPLY, confirm);
 
     expect(redeemReward).toHaveBeenCalledTimes(1);
     // Nothing written here directly — no ledger row, no balance move, no
@@ -684,48 +720,38 @@ describe("handleLoyaltyWaCommand — MemberCard", () => {
       status: "active",
       contact: { name: "Ann" },
     });
-    (renderCardReply as Mock).mockReturnValue("Hi Ann, your card: ABCD-EFGH-JKLM");
+    (renderCardReply as Mock).mockReturnValue("Hi Ann, your card: ABC-DEF-GHJ");
 
     await handleLoyaltyWaCommand(
-      PHONE,
-      "Ann",
+      REPLY,
       command({
         type: LoyaltyTemplateTypes.MemberCard,
         content: "Hi {{1}}, your card: {{2}}",
       }) as any,
-      ORG,
     );
 
     expect(ensureMemberCard).toHaveBeenCalledWith("acct-1");
     expect(renderCardReply).toHaveBeenCalledWith("Hi {{1}}, your card: {{2}}", {
       name: "Ann",
-      cardCode: "ABCDEFGHJKLM",
+      cardCode: "ABCDEFGHJ",
     });
     expect(sendMemberCard).toHaveBeenCalledWith({
       orgId: ORG,
       accountId: "acct-1",
-      caption: "Hi Ann, your card: ABCD-EFGH-JKLM",
+      caption: "Hi Ann, your card: ABC-DEF-GHJ",
+      reply: REPLY,
     });
-    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 
   test("a non-member is told so and no card is attempted", async () => {
     const { sendMemberCard } = await import("../accounts/memberCard.service.js");
     (getLCustomerByPhone as Mock).mockResolvedValue(null);
 
-    await handleLoyaltyWaCommand(
-      PHONE,
-      "Ann",
-      command({ type: LoyaltyTemplateTypes.MemberCard }) as any,
-      ORG,
-    );
+    await handleLoyaltyWaCommand(REPLY, command({ type: LoyaltyTemplateTypes.MemberCard }) as any);
 
     expect(sendMemberCard).not.toHaveBeenCalled();
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: PHONE, orgId: ORG },
-      null,
-      "You are not an active member of our loyalty programme",
-    );
+    expect(repliedTexts()).toContain("You are not an active member of our loyalty programme");
   });
 
   test("a refused send is explained in text rather than silently dropped", async () => {
@@ -738,21 +764,12 @@ describe("handleLoyaltyWaCommand — MemberCard", () => {
     (sendMemberCard as Mock).mockResolvedValueOnce({
       sent: false,
       skippedReason: "send_failed",
-      cardCode: "ABCDEFGHJKLM",
+      cardCode: "ABCDEFGHJ",
       cardSentAt: null,
     });
 
-    await handleLoyaltyWaCommand(
-      PHONE,
-      "Ann",
-      command({ type: LoyaltyTemplateTypes.MemberCard }) as any,
-      ORG,
-    );
+    await handleLoyaltyWaCommand(REPLY, command({ type: LoyaltyTemplateTypes.MemberCard }) as any);
 
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      { phone: PHONE, orgId: ORG },
-      null,
-      expect.stringContaining("could not send your card"),
-    );
+    expect(repliedTexts()).toContainEqual(expect.stringContaining("could not send your card"));
   });
 });

@@ -13,17 +13,11 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
-vi.mock("../../whatsapp/flows/flow.service.js", () => ({ sendFlow: vi.fn() }));
-vi.mock("../../whatsapp/messageTemplates/wa_templates.controller.js", () => ({
-  sendTemplateToUserCore: vi.fn(),
-}));
-vi.mock("../loyaltyMessaging.js", () => ({ isCustomerSessionOpen: vi.fn() }));
+vi.mock("../messaging/send.js", () => ({ sendLoyalty: vi.fn() }));
 vi.mock("./feedback.teamMap.js", () => ({ ensureSurveyTeamMap: vi.fn(async () => "stm-1") }));
 
 import prisma from "../../../utils/prisma.js";
-import { sendFlow } from "../../whatsapp/flows/flow.service.js";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { isCustomerSessionOpen } from "../loyaltyMessaging.js";
+import { sendLoyalty } from "../messaging/send.js";
 import { fireFeedbackRequest } from "./feedback.sender.js";
 
 const db = prisma as unknown as {
@@ -77,9 +71,14 @@ beforeEach(() => {
   db.loyaltyFeedbackRequest.findUnique.mockResolvedValue(loaded());
   db.loyaltyFeedbackRequest.findFirst.mockResolvedValue(null);
   db.loyaltyFeedbackRequest.update.mockResolvedValue({});
-  vi.mocked(isCustomerSessionOpen).mockResolvedValue(false);
-  vi.mocked(sendFlow).mockResolvedValue(true);
-  vi.mocked(sendTemplateToUserCore).mockResolvedValue({ status: true, message: "ok" });
+  vi.mocked(sendLoyalty).mockResolvedValue({
+    sent: true,
+    channel: "whatsapp",
+    mode: "template",
+    templateId: "tpl-1",
+    text: null,
+    skippedReason: null,
+  });
 });
 
 const lastUpdate = () => db.loyaltyFeedbackRequest.update.mock.calls.at(-1)![0].data;
@@ -89,8 +88,7 @@ describe("fireFeedbackRequest — the claim", () => {
     db.loyaltyFeedbackRequest.updateMany.mockResolvedValue({ count: 0 });
     await expect(fireFeedbackRequest("req-1")).resolves.toBe("skipped");
     expect(db.loyaltyFeedbackRequest.findUnique).not.toHaveBeenCalled();
-    expect(sendFlow).not.toHaveBeenCalled();
-    expect(sendTemplateToUserCore).not.toHaveBeenCalled();
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 
   test("claims with a conditional update to SENT", async () => {
@@ -126,8 +124,7 @@ describe("fireFeedbackRequest — re-checks after the delay", () => {
     db.loyaltyFeedbackRequest.findUnique.mockResolvedValue(row);
     await expect(fireFeedbackRequest("req-1")).resolves.toBe("cancelled");
     expect(lastUpdate()).toEqual({ status: "CANCELLED", failReason: reason });
-    expect(sendFlow).not.toHaveBeenCalled();
-    expect(sendTemplateToUserCore).not.toHaveBeenCalled();
+    expect(sendLoyalty).not.toHaveBeenCalled();
   });
 
   test("a sibling request sent inside the cooldown stands this one down", async () => {
@@ -140,69 +137,83 @@ describe("fireFeedbackRequest — re-checks after the delay", () => {
   });
 });
 
+// Which of the two goes out — the flow inside the window, the FLOW-button template
+// outside it — is the channel's decision; see the WhatsApp adapter's tests.
 describe("fireFeedbackRequest — delivery", () => {
-  test("inside the service window sends the interactive flow with the request in its token", async () => {
-    vi.mocked(isCustomerSessionOpen).mockResolvedValue(true);
-
-    await expect(fireFeedbackRequest("req-1")).resolves.toBe("sent");
-    expect(sendFlow).toHaveBeenCalledWith({
-      orgId: "org-1",
-      dbFlowId: "flow-1",
-      phone: "15550001",
-      context: { surveyTeamMapId: "stm-1", language: "en", feedbackRequestId: "req-1" },
+  const outcome = (over: Record<string, unknown>) =>
+    vi.mocked(sendLoyalty).mockResolvedValue({
+      sent: false,
+      channel: "whatsapp",
+      mode: null,
+      templateId: null,
+      text: null,
+      skippedReason: null,
+      ...over,
     });
-    expect(sendTemplateToUserCore).not.toHaveBeenCalled();
+
+  test("offers the flow and its template, both carrying the request id", async () => {
+    await expect(fireFeedbackRequest("req-1")).resolves.toBe("sent");
+
+    expect(sendLoyalty).toHaveBeenCalledWith({
+      orgId: "org-1",
+      to: { accountId: "acct-1" },
+      intent: { kind: "notify" },
+      message: {
+        key: "feedback_request",
+        text: null,
+        parts: {
+          flow: {
+            dbFlowId: "flow-1",
+            context: { surveyTeamMapId: "stm-1", language: "en", feedbackRequestId: "req-1" },
+          },
+        },
+        artefacts: {
+          WHATSAPP: {
+            waTemplateId: "tpl-1",
+            params: ["Priya", "Kettle & Co"],
+            teamId: "team-1",
+            flowContext: { feedbackRequestId: "req-1" },
+          },
+        },
+      },
+    });
+  });
+
+  test("records which way it went", async () => {
+    await fireFeedbackRequest("req-1");
+    expect(lastUpdate()).toEqual({ channel: "template" });
+
+    outcome({ sent: true, mode: "interactive" });
+    await fireFeedbackRequest("req-1");
     expect(lastUpdate()).toEqual({ channel: "interactive" });
   });
 
-  test("outside the window sends the FLOW-button template, threading the request id", async () => {
-    await expect(fireFeedbackRequest("req-1")).resolves.toBe("sent");
-    expect(sendFlow).not.toHaveBeenCalled();
+  test("with no template to fall back on, only the flow is offered", async () => {
+    db.loyaltyFeedbackRequest.findUnique.mockResolvedValue(withSetting({ waTemplate: null }));
 
-    const args = vi.mocked(sendTemplateToUserCore).mock.calls[0]!;
-    expect(args[0]).toBe("org-1");
-    expect(args[1]).toBe("tpl-1");
-    expect(args[2]).toBe("15550001");
-    expect(args[3]).toEqual([
-      {
-        type: "body",
-        parameters: [
-          { type: "text", text: "Priya" },
-          { type: "text", text: "Kettle & Co" },
-        ],
-      },
-    ]);
-    expect(args[4]).toBe("team-1");
-    expect(args[12]).toEqual({ feedbackRequestId: "req-1" });
-    expect(lastUpdate()).toEqual({ channel: "template" });
+    await fireFeedbackRequest("req-1");
+
+    expect(vi.mocked(sendLoyalty).mock.calls[0]![0].message).not.toHaveProperty("artefacts");
   });
 
-  test("outside the window with no approved template cancels rather than failing loudly", async () => {
-    db.loyaltyFeedbackRequest.findUnique.mockResolvedValue(
-      withSetting({ waTemplate: { id: "tpl-1", data: { status: "PENDING" } } }),
-    );
+  test("a message that could not go cancels rather than failing loudly", async () => {
+    outcome({ skippedReason: "template_not_approved" });
     await expect(fireFeedbackRequest("req-1")).resolves.toBe("cancelled");
     expect(lastUpdate().failReason).toMatch(/not approved/);
   });
 
-  test("a refused interactive send is FAILED", async () => {
-    vi.mocked(isCustomerSessionOpen).mockResolvedValue(true);
-    vi.mocked(sendFlow).mockResolvedValue(false);
+  test("a refused send is FAILED with the channel's reason", async () => {
+    outcome({ skippedReason: "send_failed", error: "Template paused" });
     await expect(fireFeedbackRequest("req-1")).resolves.toBe("failed");
+    expect(lastUpdate()).toEqual({ status: "FAILED", failReason: "Template paused" });
+
+    outcome({ skippedReason: "send_failed" });
+    await fireFeedbackRequest("req-1");
     expect(lastUpdate()).toEqual({ status: "FAILED", failReason: "WhatsApp send failed" });
   });
 
-  test("a refused template send keeps Meta's message as the reason", async () => {
-    vi.mocked(sendTemplateToUserCore).mockResolvedValue({
-      status: false,
-      message: "Template paused",
-    });
-    await expect(fireFeedbackRequest("req-1")).resolves.toBe("failed");
-    expect(lastUpdate()).toEqual({ status: "FAILED", failReason: "Template paused" });
-  });
-
   test("a thrown send is FAILED with the error's message", async () => {
-    vi.mocked(sendTemplateToUserCore).mockRejectedValue(new Error("conversation limit reached"));
+    vi.mocked(sendLoyalty).mockRejectedValue(new Error("conversation limit reached"));
     await expect(fireFeedbackRequest("req-1")).resolves.toBe("failed");
     expect(lastUpdate().failReason).toBe("conversation limit reached");
   });

@@ -10,13 +10,21 @@ vi.mock("../../../utils/prisma.js", () => ({
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
-vi.mock("../loyaltyWaDispatcher.js", () => ({ dispatchLoyaltyNotification: vi.fn() }));
+vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
-import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { sendLoyaltyEvent } from "../messaging/send.js";
 import { reevaluateRollingTiers } from "./tierReevaluation.service.js";
+
+/** The `sendLoyaltyEvent` call made for `event`: org, recipient, data and options. */
+function sentEvent(event: string) {
+  const call = (sendLoyaltyEvent as unknown as { mock: { calls: unknown[][] } }).mock.calls.find(
+    (args) => args[1] === event,
+  );
+  return call && { orgId: call[0], to: call[2], data: call[3], options: call[4] };
+}
 
 type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
@@ -78,11 +86,11 @@ describe("reevaluateRollingTiers", () => {
       where: { id: "a" },
       data: { currentTierId: "vip" },
     });
-    expect(dispatchLoyaltyNotification).toHaveBeenCalledWith(
-      "org-1",
-      LoyaltyEventType.TIER_UPGRADED,
-      expect.objectContaining({ customerPhone: "9a", newTier: "VIP", oldTier: "Member" }),
-    );
+    expect(sentEvent(LoyaltyEventType.TIER_UPGRADED)).toMatchObject({
+      orgId: "org-1",
+      to: { accountId: "a" },
+      data: { tier: "VIP" },
+    });
     expect(summary).toMatchObject({ programs: 1, evaluated: 1, promoted: 1, demoted: 0 });
   });
 
@@ -96,7 +104,7 @@ describe("reevaluateRollingTiers", () => {
       where: { id: "a" },
       data: { currentTierId: "member" },
     });
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
     expect(log.info).toHaveBeenCalledWith(
       expect.objectContaining({ accountId: "a", from: "VIP", to: "Member" }),
       expect.stringContaining("demoted"),
@@ -125,7 +133,7 @@ describe("reevaluateRollingTiers", () => {
       where: { id: "a" },
       data: { currentTierId: "member" },
     });
-    expect(dispatchLoyaltyNotification).not.toHaveBeenCalled();
+    expect(sendLoyaltyEvent).not.toHaveBeenCalled();
   });
 
   test("one member's failed message does not stop the sweep", async () => {
@@ -134,7 +142,7 @@ describe("reevaluateRollingTiers", () => {
       member("b", "member"),
     ]);
     spent({ a: 6000, b: 7000 });
-    (dispatchLoyaltyNotification as Mock).mockRejectedValueOnce(new Error("Meta is down"));
+    (sendLoyaltyEvent as Mock).mockRejectedValueOnce(new Error("Meta is down"));
 
     const summary = await reevaluateRollingTiers();
 

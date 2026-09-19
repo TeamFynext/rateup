@@ -129,7 +129,9 @@ import {
   releasePendingSignupBonusByPhone,
 } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
-import { LOYALTY_JOIN_PAYLOAD } from "../../loyalty/loyaltyEventTemplates.js";
+import { isJoinTap } from "../../loyalty/loyaltyEventTemplates.js";
+import { LoyaltyChannel } from "../../loyalty/messaging/channelIds.js";
+import { replySystem, type InboundReplyContext } from "../../loyalty/messaging/reply.js";
 import { sendNewCustomerWelcomeIfDue } from "../../loyalty/newCustomerWelcome.js";
 import { sendMemberCardIfDue } from "../../loyalty/accounts/memberCard.service.js";
 import { LoyaltyTemplateTypes } from "../../../types/enums.js";
@@ -613,7 +615,14 @@ async function whatsappMessageHandler(
     log.error({ err: e }, "Error releasing a pending loyalty signup bonus");
   }
   const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(orgId, message);
-  const joinTapped = parsedMessage.buttonPayload === LOYALTY_JOIN_PAYLOAD;
+  const joinTapped = isJoinTap(parsedMessage);
+  const loyaltyReply: InboundReplyContext = {
+    orgId,
+    channel: LoyaltyChannel.WHATSAPP,
+    from,
+    phoneId: waSettings.phoneId,
+    name: userName,
+  };
   // A new member's first message opens the window their card can be sent in. The join and
   // "card" paths send it themselves, so they are left alone here.
   const sendsCardItself =
@@ -628,14 +637,14 @@ async function whatsappMessageHandler(
       log.error({ err: e }, "Error sending a member card on first message");
     }
   }
-  if (parsedMessage?.buttonId) {
-    const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(from, parsedMessage, orgId);
+  if (parsedMessage?.buttonId && !joinTapped) {
+    const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(loyaltyReply, parsedMessage);
     if (handledLoyaltyRedeem) {
       return;
     }
   }
   // Handle button click interactions first
-  if (parsedMessage?.buttonId && !loyaltyWaCommand) {
+  if (parsedMessage?.buttonId && !loyaltyWaCommand && !joinTapped) {
     await handleButtonClickInteraction(from, parsedMessage, orgId);
     return;
   }
@@ -649,6 +658,7 @@ async function whatsappMessageHandler(
       userName,
       joinPayload: joinPayload ?? {},
       sourceIdentifier,
+      reply: loyaltyReply,
     });
     return;
   }
@@ -707,7 +717,7 @@ async function whatsappMessageHandler(
   }
 
   if (loyaltyWaCommand) {
-    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId, sourceIdentifier);
+    await handleLoyaltyWaCommand(loyaltyReply, loyaltyWaCommand, sourceIdentifier);
   } else if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
@@ -760,12 +770,14 @@ export async function handleWaJoinRegistration({
   userName,
   joinPayload,
   sourceIdentifier,
+  reply = { orgId, channel: LoyaltyChannel.WHATSAPP, from, name: userName },
 }: {
   orgId: string;
   from: string;
   userName?: string;
   joinPayload: { source?: string; referralCode?: string };
   sourceIdentifier: string | undefined;
+  reply?: InboundReplyContext;
 }) {
   const program = await getLoyaltyProgramByOrg(orgId);
   if (program?.status !== "active") {
@@ -774,11 +786,7 @@ export async function handleWaJoinRegistration({
       orgId,
       program?.status,
     );
-    await sendTextMessage(
-      { phone: from, orgId },
-      null,
-      "Sorry, our loyalty program is currently unavailable.",
-    );
+    await replySystem(reply, "programUnavailable");
     return;
   }
   // 1. Check if already registered
@@ -794,11 +802,7 @@ export async function handleWaJoinRegistration({
   });
 
   if (existingCustomer) {
-    await sendTextMessage(
-      { phone: from, orgId },
-      null,
-      "✅ You are already registered in our loyalty program.",
-    );
+    await replySystem(reply, "alreadyRegistered");
     return;
   }
   // 2. Create or update customer
@@ -813,6 +817,7 @@ export async function handleWaJoinRegistration({
     program.id,
     orgId,
     sourceIdentifier,
+    { reply },
   );
 }
 
