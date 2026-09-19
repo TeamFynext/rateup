@@ -194,7 +194,7 @@ const ConversationStatsOverview = ({ dateRange }: { dateRange: AnalyticsDateRang
                       <span
                         className={`${quickStats?.resolvedRateDifference < 0 ? "text-red-600" : "text-green-600"}`}
                       >
-                        {quickStats?.resolvedRateDifference ?? "NA"}%
+                        {Number(quickStats.resolvedRateDifference.toFixed(2))}%
                       </span>
                     </div>
                   ) : (
