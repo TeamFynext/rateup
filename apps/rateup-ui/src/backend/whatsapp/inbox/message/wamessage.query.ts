@@ -362,10 +362,13 @@ export const useDeleteConversations = () => {
         qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
         qc.invalidateQueries({ queryKey: ["conversations", "by-contact", contactId] });
       }
+      // One id: the list sends a large selection in chunks, and each chunk lands
+      // here — the toasts replace each other instead of stacking.
       toast.success(
         res.deletedConversations === 1
           ? "Conversation deleted"
           : `${res.deletedConversations} conversations deleted`,
+        { id: "conversations-deleted" },
       );
     },
     onError: (e) => {
