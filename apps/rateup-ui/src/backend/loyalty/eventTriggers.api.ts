@@ -26,6 +26,8 @@ export interface EventTrigger {
   leadDays?: number | null;
   /** Local hour to send at, in the programme's own timezone. */
   sendHour?: number | null;
+  /** The message in words, for any channel; null takes the API catalog's default. */
+  body?: string | null;
   waTemplateId?: string;
   whatsappSettingsId?: string;
   rewardId?: string;

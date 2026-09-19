@@ -1911,6 +1911,7 @@
     "JPG, PNG or GIF": "JPG, PNG or GIF",
     "JUMP TO": "JUMP TO",
     "Just send “{keyword}”": "Just send “{keyword}”",
+    "Keep at least one channel on.": "Keep at least one channel on.",
     "Keep Editing": "Keep Editing",
     "Keep me signed in": "Keep me signed in",
     "Keep my plan": "Keep my plan",
@@ -2100,6 +2101,7 @@
     "Members buying twice or more · {previous} before": "Members buying twice or more · {previous} before",
     "Members buying twice or more in the period": "Members buying twice or more in the period",
     "Members by tier": "Members by tier",
+    "Members hear from you on the channel they chose. If it cannot reach them, the next one on this list is tried.": "Members hear from you on the channel they chose. If it cannot reach them, the next one on this list is tried.",
     "Members join fastest from a card next to the till. The QR is ready before the program is.": "Members join fastest from a card next to the till. The QR is ready before the program is.",
     "Mention": "Mention",
     "Menu card": "Menu card",
@@ -2393,6 +2395,7 @@
     "Not saved yet": "Not saved yet",
     "Not scheduled yet": "Not scheduled yet",
     "Not sending": "Not sending",
+    "Not sent — no approved template, and they have not messaged you today": "Not sent — no approved template, and they have not messaged you today",
     "Not sent — no message is set up for this": "Not sent — no message is set up for this",
     "Not sent — notifications are switched off": "Not sent — notifications are switched off",
     "Not sent — the program is not live": "Not sent — the program is not live",
@@ -2732,6 +2735,7 @@
     "powered by": "powered by",
     "Powered By": "Powered By",
     "Prefer not to say": "Prefer not to say",
+    "Preferred channel": "Preferred channel",
     "Preparing…": "Preparing…",
     "Preview": "Preview",
     "Previous": "Previous",
@@ -2821,6 +2825,7 @@
     "Rating": "Rating",
     "Rating Style": "Rating Style",
     "Razorpay failed to load. Check your connection and try again.": "Razorpay failed to load. Check your connection and try again.",
+    "RCS": "RCS",
     "Re-price from my earn rate": "Re-price from my earn rate",
     "Re-register number": "Re-register number",
     "Read": "Read",
@@ -3322,6 +3327,7 @@
     "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.",
     "slower vs last week": "slower vs last week",
     "Slug is required": "Slug is required",
+    "SMS": "SMS",
     "Some keywords are already in use: {keywords}": "Some keywords are already in use: {keywords}",
     "Some keywords were already taken": "Some keywords were already taken",
     "Someone": "Someone",
@@ -3543,6 +3549,7 @@
     "The photo and details customers see when they open your business in WhatsApp.": "The photo and details customers see when they open your business in WhatsApp.",
     "The photo leads. For a wall or a counter easel, read from a distance.": "The photo leads. For a wall or a counter easel, read from a distance.",
     "The program is not live, so nobody can join yet. Activate or resume it in Settings.": "The program is not live, so nobody can join yet. Activate or resume it in Settings.",
+    "The programme's order": "The programme's order",
     "The QR opens a WhatsApp chat with “{keyword}” ready to send. It can only be made once a number is connected.": "The QR opens a WhatsApp chat with “{keyword}” ready to send. It can only be made once a number is connected.",
     "The QR opens WhatsApp with “{keyword}” ready to send. Put it on the counter, on receipts, anywhere.": "The QR opens WhatsApp with “{keyword}” ready to send. Put it on the counter, on receipts, anywhere.",
     "The same {amount} order, tier by tier": "The same {amount} order, tier by tier",
@@ -3949,7 +3956,7 @@
     "WhatsApp Template :": "WhatsApp Template :",
     "Wheel Size": "Wheel Size",
     "When": "When",
-    "When a customer has messaged you in the last 24 hours, the text of the template is sent as a normal message — free, and it works before Meta approves the template. Templates with buttons are always sent as templates.": "When a customer has messaged you in the last 24 hours, the text of the template is sent as a normal message — free, and it works before Meta approves the template. Templates with buttons are always sent as templates.",
+    "When a customer has messaged you in the last 24 hours, the message is sent as a normal chat message — free, and it works before Meta approves the template, or with no template at all. Templates with buttons are always sent as templates.": "When a customer has messaged you in the last 24 hours, the message is sent as a normal chat message — free, and it works before Meta approves the template, or with no template at all. Templates with buttons are always sent as templates.",
     "When a customer texts you": "When a customer texts you",
     "When a gift is given": "When a gift is given",
     "When a person answers. Outside these hours, your auto-replies take over.": "When a person answers. Outside these hours, your auto-replies take over.",
@@ -3962,6 +3969,7 @@
     "Where it sits is up to the design you picked.": "Where it sits is up to the design you picked.",
     "Where leads stall": "Where leads stall",
     "Where the review goes": "Where the review goes",
+    "Where they hear from you. The programme falls back to its other channels if this one cannot reach them.": "Where they hear from you. The programme falls back to its other channels if this one cannot reach them.",
     "Where you trade, and who to reach about the program.": "Where you trade, and who to reach about the program.",
     "Which Facebook Page do you want to connect?": "Which Facebook Page do you want to connect?",
     "Which Instagram Business account do you want to connect?": "Which Instagram Business account do you want to connect?",
@@ -4395,9 +4403,6 @@
   "Referral": {
     " {a} / {b}": "Referral: {a} / {b}"
   },
-  "Reward": {
-    " {reward}": "Reward: {reward}"
-  },
   "loyalty.earningRules": {
     "{count} rules_one": "{count} rules",
     "{count} rules_other": "{count} rules",
@@ -4458,6 +4463,9 @@
     "Turn this off to run a single flat earning rate for everyone.": "Turn this off to run a single flat earning rate for everyone.",
     "Use tiers": "Use tiers",
     "What every customer earns on every purchase.": "What every customer earns on every purchase."
+  },
+  "Reward": {
+    " {reward}": "Reward: {reward}"
   },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "Add Lifecycle Stage",

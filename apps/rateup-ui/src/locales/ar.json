@@ -2111,6 +2111,7 @@
     "JPG, PNG or GIF": "JPG أو PNG أو GIF",
     "JUMP TO": "القفز إلى",
     "Just send “{keyword}”": "فقط أرسل \"{keyword}\"",
+    "Keep at least one channel on.": "",
     "Keep Editing": "استمر في التحرير",
     "Keep me signed in": "ابقني مسجل الدخول",
     "Keep my plan": "احتفظ بخطتي",
@@ -2300,6 +2301,7 @@
     "Members buying twice or more · {previous} before": "الأعضاء يشترون مرتين أو أكثر · {previous} من قبل",
     "Members buying twice or more in the period": "شراء الأعضاء مرتين أو أكثر في هذه الفترة",
     "Members by tier": "الأعضاء حسب الطبقة",
+    "Members hear from you on the channel they chose. If it cannot reach them, the next one on this list is tried.": "",
     "Members join fastest from a card next to the till. The QR is ready before the program is.": "ينضم الأعضاء بشكل أسرع من البطاقة الموجودة بجوار الصندوق. QR جاهز قبل أن يكون البرنامج.",
     "Mention": "يذكر",
     "Menu card": "بطاقة القائمة",
@@ -2593,6 +2595,7 @@
     "Not saved yet": "لم يتم حفظها بعد",
     "Not scheduled yet": "لم يتم تحديد موعد بعد",
     "Not sending": "لا يرسل",
+    "Not sent — no approved template, and they have not messaged you today": "",
     "Not sent — no message is set up for this": "لم يتم الإرسال - لم يتم إعداد أي رسالة لهذا الغرض",
     "Not sent — notifications are switched off": "لم يتم الإرسال — تم إيقاف الإشعارات",
     "Not sent — the program is not live": "لم يتم الإرسال — البرنامج غير مباشر",
@@ -2936,6 +2939,7 @@
     "powered by": "مدعوم من",
     "Powered By": "مدعوم من",
     "Prefer not to say": "يفضل عدم القول",
+    "Preferred channel": "",
     "Preparing…": "جارٍ التحضير…",
     "Preview": "معاينة",
     "Previous": "سابق",
@@ -3025,6 +3029,7 @@
     "Rating": "تصنيف",
     "Rating Style": "نمط التقييم",
     "Razorpay failed to load. Check your connection and try again.": "فشل تحميل Razorpay. تحقق من اتصالك وحاول مرة أخرى.",
+    "RCS": "",
     "Re-price from my earn rate": "إعادة السعر من معدل الربح الخاص بي",
     "Re-register number": "إعادة تسجيل الرقم",
     "Read": "يقرأ",
@@ -3531,6 +3536,7 @@
     "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "يمكن للمستخدمين الوصول إلى أوامر الشرطة المائلة عن طريق كتابة \"/\" في الدردشة. الحد الأقصى 30 أمرًا. الاسم يصل إلى 32 حرفًا، والوصف يصل إلى 256 حرفًا.",
     "slower vs last week": "أبطأ مقارنة بالأسبوع الماضي",
     "Slug is required": "مطلوب سبيكة",
+    "SMS": "",
     "Some keywords are already in use: {keywords}": "بعض الكلمات الرئيسية قيد الاستخدام بالفعل: {keywords}",
     "Some keywords were already taken": "تم أخذ بعض الكلمات الرئيسية بالفعل",
     "Someone": "شخص ما",
@@ -3752,6 +3758,7 @@
     "The photo and details customers see when they open your business in WhatsApp.": "الصورة والتفاصيل التي يراها العملاء عندما يفتحون نشاطك التجاري في واتساب.",
     "The photo leads. For a wall or a counter easel, read from a distance.": "الصورة تؤدي. بالنسبة للحائط أو حامل الطاولة، اقرأ من مسافة بعيدة.",
     "The program is not live, so nobody can join yet. Activate or resume it in Settings.": "البرنامج غير مباشر، لذلك لا يمكن لأحد الانضمام بعد. قم بتنشيطه أو استئنافه في الإعدادات.",
+    "The programme's order": "",
     "The QR opens a WhatsApp chat with “{keyword}” ready to send. It can only be made once a number is connected.": "يفتح QR محادثة WhatsApp مع \"{keyword}\" جاهزة للإرسال. لا يمكن إجراؤه إلا بعد توصيل الرقم.",
     "The QR opens WhatsApp with “{keyword}” ready to send. Put it on the counter, on receipts, anywhere.": "يفتح QR WhatsApp مع \"{keyword}\" جاهز للإرسال. ضعه على المنضدة، على الإيصالات، في أي مكان.",
     "The same {amount} order, tier by tier": "نفس ترتيب {amount}، طبقة تلو الأخرى",
@@ -4158,7 +4165,7 @@
     "WhatsApp Template :": "قالب الواتس اب :",
     "Wheel Size": "حجم العجلة",
     "When": "متى",
-    "When a customer has messaged you in the last 24 hours, the text of the template is sent as a normal message — free, and it works before Meta approves the template. Templates with buttons are always sent as templates.": "عندما يقوم أحد العملاء بمراسلتك خلال الـ 24 ساعة الماضية، يتم إرسال نص القالب كرسالة عادية - مجانًا، ويعمل قبل موافقة Meta على القالب. يتم دائمًا إرسال القوالب ذات الأزرار كقوالب.",
+    "When a customer has messaged you in the last 24 hours, the message is sent as a normal chat message — free, and it works before Meta approves the template, or with no template at all. Templates with buttons are always sent as templates.": "",
     "When a customer texts you": "عندما يرسل لك العميل رسالة نصية",
     "When a gift is given": "عندما يتم تقديم هدية",
     "When a person answers. Outside these hours, your auto-replies take over.": "عندما يجيب الإنسان. خارج هذه الساعات، تتولى ردودك التلقائية المهمة.",
@@ -4171,6 +4178,7 @@
     "Where it sits is up to the design you picked.": "مكانه متروك للتصميم الذي اخترته.",
     "Where leads stall": "حيث يؤدي المماطلة",
     "Where the review goes": "أين تذهب المراجعة",
+    "Where they hear from you. The programme falls back to its other channels if this one cannot reach them.": "",
     "Where you trade, and who to reach about the program.": "أين تتداول، ومن يمكنك الوصول إليه بخصوص البرنامج.",
     "Which Facebook Page do you want to connect?": "ما هي صفحة الفيسبوك التي تريد ربطها؟",
     "Which Instagram Business account do you want to connect?": "ما هو حساب Instagram Business الذي تريد ربطه؟",
@@ -4712,9 +4720,6 @@
   "Referral": {
     " {a} / {b}": "{a} / {b}"
   },
-  "Reward": {
-    " {reward}": "{reward}"
-  },
   "loyalty.earningRules": {
     "{count} rules_zero": "{count} القواعد_صفر",
     "{count} rules_one": "{count} القواعد_واحد",
@@ -4783,6 +4788,9 @@
     "Turn this off to run a single flat earning rate for everyone.": "قم بإيقاف تشغيل هذا لتشغيل معدل ربح ثابت واحد للجميع.",
     "Use tiers": "استخدم الطبقات",
     "What every customer earns on every purchase.": "ما يكسبه كل عميل على كل عملية شراء."
+  },
+  "Reward": {
+    " {reward}": "{reward}"
   },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "إضافة مرحلة دورة الحياة",

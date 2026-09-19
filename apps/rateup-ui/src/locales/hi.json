@@ -1927,6 +1927,7 @@
     "JPG, PNG or GIF": "जेपीजी, पीएनजी या जीआईएफ",
     "JUMP TO": "करने के लिए कूद",
     "Just send “{keyword}”": "बस \"{keyword}\" भेजें",
+    "Keep at least one channel on.": "",
     "Keep Editing": "संपादन करते रहें",
     "Keep me signed in": "मुझे साइन इन बनाए रखें",
     "Keep my plan": "मेरी योजना रखो",
@@ -2116,6 +2117,7 @@
     "Members buying twice or more · {previous} before": "सदस्य पहले दो या अधिक बार खरीद रहे हैं · {previous}",
     "Members buying twice or more in the period": "सदस्य इस अवधि में दो या अधिक बार खरीदारी करते हैं",
     "Members by tier": "सदस्य स्तर के अनुसार",
+    "Members hear from you on the channel they chose. If it cannot reach them, the next one on this list is tried.": "",
     "Members join fastest from a card next to the till. The QR is ready before the program is.": "सदस्य टिल के आगे वाले कार्ड से सबसे तेजी से जुड़ते हैं। कार्यक्रम शुरू होने से पहले क्यूआर तैयार है।",
     "Mention": "उल्लेख",
     "Menu card": "मेनू कार्ड",
@@ -2409,6 +2411,7 @@
     "Not saved yet": "अभी तक सहेजा नहीं गया",
     "Not scheduled yet": "अभी तक शेड्यूल नहीं किया गया है",
     "Not sending": "नहीं भेज रहा हूँ",
+    "Not sent — no approved template, and they have not messaged you today": "",
     "Not sent — no message is set up for this": "नहीं भेजा गया - इसके लिए कोई संदेश सेट नहीं किया गया है",
     "Not sent — notifications are switched off": "नहीं भेजा गया - सूचनाएं बंद हैं",
     "Not sent — the program is not live": "नहीं भेजा गया - कार्यक्रम लाइव नहीं है",
@@ -2748,6 +2751,7 @@
     "powered by": "द्वारा संचालित",
     "Powered By": "द्वारा संचालित",
     "Prefer not to say": "नहीं कहना पसंद करते हैं",
+    "Preferred channel": "",
     "Preparing…": "तैयारी हो रही है...",
     "Preview": "पूर्व दर्शन",
     "Previous": "पहले का",
@@ -2837,6 +2841,7 @@
     "Rating": "रेटिंग",
     "Rating Style": "रेटिंग शैली",
     "Razorpay failed to load. Check your connection and try again.": "रेज़रपे लोड करने में विफल रहा। अपना कनेक्शन जांचें और पुनः प्रयास करें।",
+    "RCS": "",
     "Re-price from my earn rate": "मेरी कमाई दर से पुनः मूल्य निर्धारण करें",
     "Re-register number": "नंबर दोबारा रजिस्टर करें",
     "Read": "पढ़ना",
@@ -3339,6 +3344,7 @@
     "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "स्लैश कमांड को उपयोगकर्ता चैट में '/' टाइप करके एक्सेस कर सकते हैं। अधिकतम 30 आदेश. 32 वर्णों तक नाम, 256 वर्णों तक विवरण।",
     "slower vs last week": "पिछले सप्ताह की तुलना में धीमा",
     "Slug is required": "स्लग आवश्यक है",
+    "SMS": "",
     "Some keywords are already in use: {keywords}": "कुछ कीवर्ड पहले से ही उपयोग में हैं: {keywords}",
     "Some keywords were already taken": "कुछ कीवर्ड पहले ही ले लिए गए थे",
     "Someone": "कोई",
@@ -3560,6 +3566,7 @@
     "The photo and details customers see when they open your business in WhatsApp.": "जब ग्राहक व्हाट्सएप में आपका व्यवसाय खोलते हैं तो उन्हें फोटो और विवरण दिखाई देते हैं।",
     "The photo leads. For a wall or a counter easel, read from a distance.": "फोटो लीड है. दीवार या काउंटर चित्रफलक के लिए, दूर से पढ़ें।",
     "The program is not live, so nobody can join yet. Activate or resume it in Settings.": "कार्यक्रम लाइव नहीं है, इसलिए अभी कोई शामिल नहीं हो सकता. सेटिंग्स में इसे सक्रिय करें या फिर से शुरू करें।",
+    "The programme's order": "",
     "The QR opens a WhatsApp chat with “{keyword}” ready to send. It can only be made once a number is connected.": "क्यूआर भेजने के लिए तैयार \"{keyword}\" के साथ एक व्हाट्सएप चैट खोलता है। इसे केवल एक बार नंबर कनेक्ट होने के बाद ही बनाया जा सकता है।",
     "The QR opens WhatsApp with “{keyword}” ready to send. Put it on the counter, on receipts, anywhere.": "क्यूआर भेजने के लिए तैयार \"{keyword}\" के साथ व्हाट्सएप खोलता है। इसे काउंटर पर, रसीदों पर, कहीं भी रखें।",
     "The same {amount} order, tier by tier": "वही {amount} क्रम, स्तर दर स्तर",
@@ -3966,7 +3973,7 @@
     "WhatsApp Template :": "व्हाट्सएप टेम्पलेट:",
     "Wheel Size": "पहिये का आकार",
     "When": "कब",
-    "When a customer has messaged you in the last 24 hours, the text of the template is sent as a normal message — free, and it works before Meta approves the template. Templates with buttons are always sent as templates.": "जब किसी ग्राहक ने आपको पिछले 24 घंटों में संदेश भेजा है, तो टेम्पलेट का पाठ एक सामान्य संदेश के रूप में भेजा जाता है - निःशुल्क, और यह मेटा द्वारा टेम्पलेट को मंजूरी देने से पहले काम करता है। बटन वाले टेम्प्लेट हमेशा टेम्प्लेट के रूप में भेजे जाते हैं।",
+    "When a customer has messaged you in the last 24 hours, the message is sent as a normal chat message — free, and it works before Meta approves the template, or with no template at all. Templates with buttons are always sent as templates.": "",
     "When a customer texts you": "जब कोई ग्राहक आपको टेक्स्ट करता है",
     "When a gift is given": "जब कोई उपहार दिया जाता है",
     "When a person answers. Outside these hours, your auto-replies take over.": "जब कोई व्यक्ति उत्तर देता है. इन घंटों के बाहर, आपके ऑटो-उत्तर कार्यभार संभाल लेते हैं।",
@@ -3979,6 +3986,7 @@
     "Where it sits is up to the design you picked.": "यह कहां बैठता है यह आपके द्वारा चुने गए डिज़ाइन पर निर्भर करता है।",
     "Where leads stall": "स्टॉल कहां जाता है",
     "Where the review goes": "समीक्षा कहां जाती है",
+    "Where they hear from you. The programme falls back to its other channels if this one cannot reach them.": "",
     "Where you trade, and who to reach about the program.": "आप कहां व्यापार करते हैं, और कार्यक्रम के बारे में किससे संपर्क करना है।",
     "Which Facebook Page do you want to connect?": "आप किस फेसबुक पेज से जुड़ना चाहते हैं?",
     "Which Instagram Business account do you want to connect?": "आप किस इंस्टाग्राम बिजनेस अकाउंट से जुड़ना चाहते हैं?",
@@ -4420,9 +4428,6 @@
   "Referral": {
     " {a} / {b}": "{a} / {b}"
   },
-  "Reward": {
-    " {reward}": "{reward}"
-  },
   "loyalty.earningRules": {
     "{count} rules_one": "{count} नियम_एक",
     "{count} rules_other": "{count} नियम_अन्य",
@@ -4483,6 +4488,9 @@
     "Turn this off to run a single flat earning rate for everyone.": "सभी के लिए समान आय दर चलाने के लिए इसे बंद करें।",
     "Use tiers": "स्तरों का प्रयोग करें",
     "What every customer earns on every purchase.": "प्रत्येक ग्राहक प्रत्येक खरीद पर कितना कमाता है।"
+  },
+  "Reward": {
+    " {reward}": "{reward}"
   },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "जीवनचक्र चरण जोड़ें",

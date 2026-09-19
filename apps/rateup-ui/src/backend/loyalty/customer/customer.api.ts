@@ -1,3 +1,4 @@
+import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
 import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 
 /** A referral this customer made, as the detail endpoint returns it. */
@@ -221,18 +222,23 @@ export interface UpdateLoyaltyCustomerInput {
   dob?: string | null;
   gender?: "MALE" | "FEMALE" | "OTHER" | null;
   email?: string | null;
+  /** Where they want loyalty messages; null follows the programme's order. */
+  preferredChannel?: LoyaltyChannel | null;
 }
 
 export async function updateLoyaltyCustomer(customerId: string, data: UpdateLoyaltyCustomerInput) {
   return (await axiosClient.put(`${base}/${customerId}`, data)).data;
 }
 
-/** What the dispatcher did with the WhatsApp message, so a receipt can show it. */
+/** What happened to a loyalty message, so a receipt can show it. Mirrors `LoyaltySendOutcome`. */
 export interface LoyaltyNotificationOutcome {
   sent: boolean;
-  channel: "whatsapp" | null;
-  /** The Meta template, or — inside an open 24-hour chat — the same words as a plain message. */
-  mode: "template" | "text" | null;
+  channel: Lowercase<LoyaltyChannel> | null;
+  /**
+   * A pre-approved template, or — inside an open conversation — the same words as a plain,
+   * interactive or media message.
+   */
+  mode: "template" | "text" | "interactive" | "media" | null;
   templateId: string | null;
   text: string | null;
   skippedReason:
@@ -244,6 +250,10 @@ export interface LoyaltyNotificationOutcome {
     | "no_template"
     | "template_not_approved"
     | "send_failed"
+    | "no_channel"
+    | "session_closed"
+    | "unsupported"
+    | "replayed"
     | null;
 }
 
