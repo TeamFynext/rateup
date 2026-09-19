@@ -9,9 +9,9 @@ import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
  * Every message the loyalty programme can say on WhatsApp, in one list.
  *
  * Two kinds. An **event** message is a Meta template a transaction or a schedule sends —
- * `key` is the `LoyaltyEventType`, and `params` names what the dispatcher puts into
- * `{{1}}`, `{{2}}` … in that order (the contract with `loyaltyWaDispatcher` and the crons
- * on the API). A **keyword** message answers something the customer texts — `key` is the
+ * `key` is the `LoyaltyEventType`, and `params` names what the API puts into
+ * `{{1}}`, `{{2}}` … in that order (the contract with `messaging/catalog.ts` there).
+ * A **keyword** message answers something the customer texts — `key` is the
  * `LoyaltyWaCommand.type`, `keyword` the word to listen for, and `params` what the inbound
  * handler substitutes; the reply itself is plain text, with a template only for customers
  * who have never messaged the business.
@@ -290,7 +290,7 @@ export function loyaltyKeywordCatalog(t: TFunction): LoyaltyKeywordDefinition[] 
       params: [t("their name"), t("card code")],
       templateName: "loyalty_member_card",
       body: "Hi {{1}}, here is your card. Show this QR at the counter to collect and use your points. Your card code is {{2}} if the camera can't read it.",
-      example: ["Anjali", "ABCD-EFGH-JKLM"],
+      example: ["Anjali", "ABC-DEF-GHJ"],
     },
     {
       kind: "keyword",

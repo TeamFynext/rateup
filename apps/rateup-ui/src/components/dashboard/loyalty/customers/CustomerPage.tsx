@@ -26,6 +26,8 @@ import {
   useLoyaltyCustomers,
   useUpdateLoyaltyCustomerMutation,
 } from "@/backend/loyalty/customer/customer.query";
+import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
+import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import { CustomerSummaryPanel } from "@/components/loyalty/cashier/CustomerSummaryPanel.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
@@ -57,6 +59,7 @@ interface CustomerDetails {
   referralCode: string;
   referredById: string | null;
   status: string;
+  preferredChannel?: LoyaltyChannel | null;
   createdAt: string;
   lastActivityAt: string;
   updatedAt: string;
@@ -120,6 +123,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
   const openedPhone = search.phone;
   const [editing, setEditing] = useState(false);
   const updateCustomer = useUpdateLoyaltyCustomerMutation();
+  const { data: program } = useLoyaltyProgram();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination] = useState({
@@ -379,6 +383,8 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
               key={selectedCustomer.id}
               open={editing}
               customer={selectedCustomer.contact}
+              channels={program?.enabledChannels}
+              preferredChannel={selectedCustomer.preferredChannel}
               isSaving={updateCustomer.isPending}
               onClose={() => setEditing(false)}
               onSave={(patch) =>

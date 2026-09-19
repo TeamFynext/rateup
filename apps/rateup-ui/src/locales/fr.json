@@ -1973,6 +1973,7 @@
     "JPG, PNG or GIF": "JPG, PNG ou GIF",
     "JUMP TO": "ALLER À",
     "Just send “{keyword}”": "Envoyez simplement « {keyword} »",
+    "Keep at least one channel on.": "",
     "Keep Editing": "Continuer à modifier",
     "Keep me signed in": "Gardez-moi connecté",
     "Keep my plan": "Garder mon plan",
@@ -2162,6 +2163,7 @@
     "Members buying twice or more · {previous} before": "Membres achetant deux fois ou plus · {previous} avant",
     "Members buying twice or more in the period": "Membres achetant deux fois ou plus au cours de la période",
     "Members by tier": "Membres par niveau",
+    "Members hear from you on the channel they chose. If it cannot reach them, the next one on this list is tried.": "",
     "Members join fastest from a card next to the till. The QR is ready before the program is.": "Les membres rejoignent le plus rapidement depuis une carte à côté de la caisse. Le QR est prêt avant le programme.",
     "Mention": "Mentionner",
     "Menu card": "Carte de menu",
@@ -2455,6 +2457,7 @@
     "Not saved yet": "Pas encore enregistré",
     "Not scheduled yet": "Pas encore programmé",
     "Not sending": "Ne pas envoyer",
+    "Not sent — no approved template, and they have not messaged you today": "",
     "Not sent — no message is set up for this": "Non envoyé — aucun message n'est configuré pour cela",
     "Not sent — notifications are switched off": "Non envoyé : les notifications sont désactivées",
     "Not sent — the program is not live": "Non envoyé — le programme n'est pas en ligne",
@@ -2795,6 +2798,7 @@
     "powered by": "alimenté par",
     "Powered By": "Propulsé par",
     "Prefer not to say": "Je préfère ne pas dire",
+    "Preferred channel": "",
     "Preparing…": "Préparation…",
     "Preview": "Aperçu",
     "Previous": "Précédent",
@@ -2884,6 +2888,7 @@
     "Rating": "Note",
     "Rating Style": "Style de notation",
     "Razorpay failed to load. Check your connection and try again.": "Razorpay n'a pas pu se charger. Vérifiez votre connexion et réessayez.",
+    "RCS": "",
     "Re-price from my earn rate": "Re-tarif à partir de mon taux de gain",
     "Re-register number": "Numéro de réenregistrement",
     "Read": "Lire",
@@ -3387,6 +3392,7 @@
     "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "Les commandes Slash auxquelles les utilisateurs peuvent accéder en tapant « / » dans le chat. Maximum 30 commandes. Nom jusqu'à 32 caractères, description jusqu'à 256 caractères.",
     "slower vs last week": "plus lent que la semaine dernière",
     "Slug is required": "La limace est obligatoire",
+    "SMS": "",
     "Some keywords are already in use: {keywords}": "Certains mots-clés sont déjà utilisés : {keywords}",
     "Some keywords were already taken": "Certains mots-clés ont déjà été pris",
     "Someone": "Quelqu'un",
@@ -3608,6 +3614,7 @@
     "The photo and details customers see when they open your business in WhatsApp.": "La photo et les détails que les clients voient lorsqu'ils ouvrent votre entreprise dans WhatsApp.",
     "The photo leads. For a wall or a counter easel, read from a distance.": "La photo mène. Pour un mur ou un chevalet de comptoir, lisez à distance.",
     "The program is not live, so nobody can join yet. Activate or resume it in Settings.": "Le programme n'est pas en ligne, donc personne ne peut encore le rejoindre. Activez-le ou reprenez-le dans Paramètres.",
+    "The programme's order": "",
     "The QR opens a WhatsApp chat with “{keyword}” ready to send. It can only be made once a number is connected.": "Le QR ouvre une discussion WhatsApp avec « {keyword} » prêt à envoyer. Cela ne peut être effectué qu’une fois qu’un numéro est connecté.",
     "The QR opens WhatsApp with “{keyword}” ready to send. Put it on the counter, on receipts, anywhere.": "Le QR ouvre WhatsApp avec « {keyword} » prêt à envoyer. Mettez-le sur le comptoir, sur les reçus, n'importe où.",
     "The same {amount} order, tier by tier": "Le même ordre {amount}, niveau par niveau",
@@ -4014,7 +4021,7 @@
     "WhatsApp Template :": "Modèle WhatsApp :",
     "Wheel Size": "Taille des roues",
     "When": "Quand",
-    "When a customer has messaged you in the last 24 hours, the text of the template is sent as a normal message — free, and it works before Meta approves the template. Templates with buttons are always sent as templates.": "Lorsqu'un client vous a envoyé un message au cours des dernières 24 heures, le texte du modèle est envoyé comme un message normal, gratuitement, et il fonctionne avant que Meta n'approuve le modèle. Les modèles avec des boutons sont toujours envoyés comme modèles.",
+    "When a customer has messaged you in the last 24 hours, the message is sent as a normal chat message — free, and it works before Meta approves the template, or with no template at all. Templates with buttons are always sent as templates.": "",
     "When a customer texts you": "Lorsqu'un client vous envoie un SMS",
     "When a gift is given": "Quand un cadeau est offert",
     "When a person answers. Outside these hours, your auto-replies take over.": "Quand une personne répond. En dehors de ces horaires, vos réponses automatiques prennent le relais.",
@@ -4027,6 +4034,7 @@
     "Where it sits is up to the design you picked.": "L’endroit où il se trouve dépend du design que vous avez choisi.",
     "Where leads stall": "Où les pistes calent",
     "Where the review goes": "Où va la critique",
+    "Where they hear from you. The programme falls back to its other channels if this one cannot reach them.": "",
     "Where you trade, and who to reach about the program.": "Où vous négociez et qui contacter à propos du programme.",
     "Which Facebook Page do you want to connect?": "À quelle page Facebook souhaitez-vous vous connecter ?",
     "Which Instagram Business account do you want to connect?": "À quel compte Instagram Business souhaitez-vous vous connecter ?",
@@ -4493,9 +4501,6 @@
   "Referral": {
     " {a} / {b}": " {a} / {b}"
   },
-  "Reward": {
-    " {reward}": " {reward}"
-  },
   "loyalty.earningRules": {
     "{count} rules_one": "{count} règles_one",
     "{count} rules_many": "{count} règles_many",
@@ -4558,6 +4563,9 @@
     "Turn this off to run a single flat earning rate for everyone.": "Désactivez cette option pour appliquer un taux de rémunération unique et forfaitaire pour tout le monde.",
     "Use tiers": "Utiliser des niveaux",
     "What every customer earns on every purchase.": "Ce que chaque client gagne sur chaque achat."
+  },
+  "Reward": {
+    " {reward}": " {reward}"
   },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "Ajouter une étape du cycle de vie",
