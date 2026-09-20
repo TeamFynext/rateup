@@ -24,9 +24,10 @@ export const getConversationOverView = async (
 
 export interface ConversationOverviewStats {
   totalConversations: number;
-  averageResponseTime: number;
+  /** Seconds; null when no conversation in the range has had a reply. */
+  averageResponseTime: number | null;
   resolutionRate: number;
-  averageResponseTimeByAgent: number;
+  averageResponseTimeByAgent: number | null;
 }
 export interface ConversationResponseStats {
   period: string;
@@ -100,11 +101,13 @@ export interface StaffPerformanceonConversation {
     name: string;
     status: string;
     email: string;
+    profilePhoto: string | null;
   };
   totalAssignedConversations: number;
   totalClosedConversations: number;
   totalMessagesHandled: number;
-  averageResponseTime: number;
+  /** Seconds; null when the agent has no first responses in the range. */
+  averageResponseTime: number | null;
   responseTimeRateByLastWeek: number;
   messagesHandledRateByLastWeek: number;
 }
@@ -166,8 +169,23 @@ export const getStaffDetailedConversationAnalytics = async (
   return response.data;
 };
 
+/** One team's conversation workload for a range. */
+export interface TeamOverviewRow {
+  teamId: string;
+  teamName: string;
+  teamColor?: string | null;
+  teamMembers?: number;
+  teamMembersOnline?: number;
+  messagesSent?: number;
+  assignedConversations?: number;
+  averageResponseTime?: number | null;
+}
+
 export const getTeamOverview = async (filter: QueryFilter | null) => {
-  const response = await axiosClient.get(`${baseUrl}/team-overview`, analyticsRequest(filter));
+  const response = await axiosClient.get<TeamOverviewRow[]>(
+    `${baseUrl}/team-overview`,
+    analyticsRequest(filter),
+  );
   return response.data;
 };
 

@@ -32,3 +32,12 @@ export const outcomeConfig: ChartConfig = {
 export function outcomeColor(status: string) {
   return status === "FAILED" ? "var(--destructive)" : "var(--chart-2)";
 }
+
+/**
+ * Delivered against failed. Failure takes `destructive`, not a second ramp step, so the
+ * pair stays distinguishable and the red reads as the outcome it is.
+ */
+export const deliveryConfig = (labels: { delivered: string; failed: string }): ChartConfig => ({
+  deliveredMessages: { label: labels.delivered, color: "var(--chart-2)" },
+  failedMessages: { label: labels.failed, color: "var(--destructive)" },
+});

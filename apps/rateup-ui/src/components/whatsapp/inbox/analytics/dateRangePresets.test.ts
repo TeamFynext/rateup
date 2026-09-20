@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { describe, expect, it } from "vitest";
 
-import { presetRange } from "./dateRangePresets";
+import { presetRange, previousRange } from "./dateRangePresets";
 
 /** A Wednesday afternoon, in whatever zone the tests run in. */
 const NOW = dayjs("2026-09-16T15:42:10.500");
@@ -69,5 +69,25 @@ describe("presetRange", () => {
 
   it("gives nothing for a preset it does not know", () => {
     expect(presetRange("last-quarter", NOW)).toEqual([]);
+  });
+});
+
+describe("previousRange", () => {
+  it("is the same number of days, ending just before the range starts", () => {
+    expect(previousRange(presetRange("last7days", NOW)).map(local)).toEqual([
+      "2026-09-03 00:00:00.000",
+      "2026-09-09 23:59:59.999",
+    ]);
+  });
+
+  it("compares today with yesterday", () => {
+    expect(previousRange(presetRange("today", NOW)).map(local)).toEqual([
+      "2026-09-15 00:00:00.000",
+      "2026-09-15 23:59:59.999",
+    ]);
+  });
+
+  it("has nothing to compare a half-picked range with", () => {
+    expect(previousRange([NOW.toDate()])).toEqual([]);
   });
 });

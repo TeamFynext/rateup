@@ -32,3 +32,15 @@ export function presetRange(key: string, now: dayjs.Dayjs = dayjs()): Date[] {
       return [];
   }
 }
+
+/**
+ * The period a range is compared against: the same number of whole days, ending the
+ * moment before it starts. Counted in days, not milliseconds, so a DST change inside
+ * the range does not leave the two periods an hour apart.
+ */
+export function previousRange(range: Date[]): Date[] {
+  if (range.length !== 2) return [];
+  const start = dayjs(range[0]).startOf("day");
+  const days = dayjs(range[1]).startOf("day").diff(start, "day") + 1;
+  return [start.subtract(days, "day").toDate(), start.subtract(1, "millisecond").toDate()];
+}

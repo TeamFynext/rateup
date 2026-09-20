@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import { Activity, useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
@@ -7,7 +7,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable.tsx";
-import Analytics from "@/components/whatsapp/inbox/analytics/analaytics.tsx";
 import WaInboxChatDisplay from "@/components/whatsapp/inbox/chatdisplay/index.tsx";
 import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx";
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
@@ -104,7 +103,7 @@ function WhatsAppInbox() {
   return (
     <div className="h-full min-h-0">
       {tab === "analytics" ? (
-        <Analytics />
+        <Navigate to="/dashboard/analytics" replace />
       ) : tab === "settings" ? (
         <InboxSettings />
       ) : (

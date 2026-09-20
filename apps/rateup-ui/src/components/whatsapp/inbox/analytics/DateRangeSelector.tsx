@@ -1,4 +1,4 @@
-import { IconCalendar, IconChevronDown, IconFilter } from "@tabler/icons-react";
+import { IconCalendar, IconChevronDown } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Activity, useState } from "react";
 import type { DateRange } from "react-day-picker";
@@ -26,12 +26,13 @@ const DateRangeSelector = ({
   value: AnalyticsDateRange;
   onChange: (range: AnalyticsDateRange) => void;
 }) => {
+  const { t } = useTranslation();
   const data = [
-    { label: "Today", key: "today" },
-    { label: "Yesterday", key: "yesterday" },
-    { label: "Last 7 Days", key: "last7days" },
-    { label: "Last 30 days", key: "last30days" },
-    { label: "Custom Range", key: "custom-range" },
+    { label: t("Today"), key: "today" },
+    { label: t("Yesterday"), key: "yesterday" },
+    { label: t("Last 7 Days"), key: "last7days" },
+    { label: t("Last 30 Days"), key: "last30days" },
+    { label: t("Custom Range"), key: "custom-range" },
   ];
   // What is being picked in the calendar. It is held here until both ends exist:
   // handing a one-ended range up would fire a request for it on every first click.
@@ -100,37 +101,28 @@ const DateRangeSelector = ({
 
 export default DateRangeSelector;
 
+/** The drill-down pages' range: a number of days back from today. */
 export function DateSelector({ days, setDays }: { days: number; setDays: (days: number) => void }) {
   const { t } = useTranslation();
+  const options = [
+    { value: "1", label: t("Today") },
+    { value: "7", label: t("Last 7 Days") },
+    { value: "14", label: t("Last 14 Days") },
+    { value: "30", label: t("Last 30 Days") },
+    { value: "60", label: t("Last 60 Days") },
+  ];
   return (
-    <div className="flex items-center gap-1 flex-col sm:flex-row">
-      <div className="flex items-center gap-1 ">
-        <IconFilter className="w-4 h-4" />
-        <span>{t("Filter by")}:</span>
-      </div>
-      <Select
-        value={String(days)}
-        onValueChange={(value) => setDays(Number(value))}
-        items={[
-          { value: "1", label: t("Today") },
-          { value: "7", label: t("Last 7 Days") },
-          { value: "14", label: t("Last 14 Days") },
-          { value: "30", label: t("Last 30 Days") },
-          { value: "60", label: t("Last 60 Days") },
-        ]}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select range" />
-        </SelectTrigger>
-
-        <SelectContent>
-          <SelectItem value="1">{t("Today")}</SelectItem>
-          <SelectItem value="7">{t("Last 7 Days")}</SelectItem>
-          <SelectItem value="14">{t("Last 14 Days")}</SelectItem>
-          <SelectItem value="30">{t("Last 30 Days")}</SelectItem>
-          <SelectItem value="60">{t("Last 60 Days")}</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={String(days)} onValueChange={(value) => setDays(Number(value))} items={options}>
+      <SelectTrigger aria-label={t("Date range")}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

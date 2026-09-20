@@ -72,6 +72,7 @@ export const analyticsKeys = {
       "templateapioverview",
       "teamapioverview",
       "wa-message-logs",
+      "user-audit-logs",
     ] as const,
 } as const;
 

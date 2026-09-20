@@ -40,6 +40,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-19-analytics-redesign",
+    title: "Analytics, now loads faster with a clean UI",
+    summary:
+      "Analytics is now Overview, Conversations, Messages and Logs, with one set of filters that applies everywhere, including by team. The Overview puts conversation and WhatsApp delivery health side by side, with changes against the previous period.",
+    publishedAt: "2026-09-19",
+    kinds: ["improvement"],
+    area: "Analytics",
+    link: { to: "/dashboard/analytics", label: "Open Analytics" },
+  },
+  {
     id: "2026-09-18-integrations-redesign",
     title: "Integrations, redesigned",
     summary:
