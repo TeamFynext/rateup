@@ -183,13 +183,18 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
     }
     if (messageBody?.exchangeProcess === "internal") {
       const { internal } = messageBody;
-      const isClosedType = WaMessageClosedStatus.includes(
-        internal?.assignStatus as WaMessageAssignStatus,
-      );
-      if (isClosedType) {
-        messageContent = `${internal?.triggeredByUser?.name} ${internal?.text?.body} `;
+      if (internal?.summary) {
+        messageContent = internal.summary;
       } else {
-        messageContent = `${internal?.text?.body} by ${internal?.triggeredByUser?.name}`;
+        // Rows written before the server composed the sentence: the actor is still glued on
+        // here, and where it goes depends on how the fragment was phrased. Mirrors
+        // rateup-ui/src/utils/whatsapp/inbox.ts.
+        const isClosedType = WaMessageClosedStatus.includes(
+          internal?.assignStatus as WaMessageAssignStatus,
+        );
+        messageContent = isClosedType
+          ? `${internal?.triggeredByUser?.name} ${internal?.text?.body}`
+          : `${internal?.text?.body} by ${internal?.triggeredByUser?.name}`;
       }
     }
     if (messageBody?.exchangeProcess === "privateNote") {
