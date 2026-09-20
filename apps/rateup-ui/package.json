@@ -85,6 +85,8 @@
     "immer": "^11.1.15",
     "input-otp": "^1.4.2",
     "intl-messageformat": "^11.2.13",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "keen-slider": "^6.8.6",
     "libphonenumber-js": "^1.13.10",
     "libsodium-wrappers": "^0.8.4",

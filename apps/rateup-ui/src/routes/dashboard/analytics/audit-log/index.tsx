@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { AuditLogs } from "@/components/dashboard/analytics/audit-log/AuditLogs.tsx";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/analytics/audit-log/")({
-  component: AuditLogs,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/analytics", search: { tab: "logs", log: "activity" } });
+  },
 });

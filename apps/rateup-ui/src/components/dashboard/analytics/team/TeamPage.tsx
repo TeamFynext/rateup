@@ -1,291 +1,272 @@
-// Extracted verbatim from the `/dashboard/analytics/team/$teamid/` route so the route file carries routing
-// config only. Behaviour is unchanged.
-
 import {
-  IconArrowRight,
+  IconArrowLeft,
+  IconChevronRight,
   IconClock,
-  IconFileText,
+  IconFileTypePdf,
+  IconLoader2,
   IconMessageCircle,
   IconRefresh,
   IconTarget,
   IconUsers,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
+import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
 import { teamKeys } from "@/backend/org/org.keys";
-import { Badge } from "@/components/ui/badge.tsx";
+import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { StaffStatusBadge } from "@/components/whatsapp/inbox/analytics/ConversationStatsAgentPerformance.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
 import { MessagePlatform } from "@/types/enums.ts";
-import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
+import { AnalyticsCard } from "../kit/AnalyticsCard.tsx";
+import { AnalyticsHeader, AnalyticsToolbar, BACK_LINK } from "../kit/AnalyticsHeader.tsx";
+import { formatCount, formatDuration, formatPercent, toNumber } from "../kit/format.ts";
+import { StaffStatusBadge } from "../kit/StatusBadges.tsx";
+import { CLICKABLE_ROWS, NAME_LINK } from "../kit/tableStyles.ts";
+import { TileGroup } from "../kit/TileGroup.tsx";
+import { exportTeamReport } from "../report/exportReport.ts";
+
+const ICON = "size-4 text-muted-foreground";
+
+interface MemberRow {
+  id: string;
+  name: string;
+  status: string | undefined;
+  messages: number;
+  responseSeconds: number | undefined;
+  active: number;
+}
+
+/** One team's numbers: `/dashboard/analytics/team/$teamid`. */
 export function TeamPage() {
   const { t } = useTranslation();
   const [day, setDay] = useState(7);
   const queryClient = useQueryClient();
-  const { teamid } = useParams({
-    strict: false,
-  });
+  const { teamid } = useParams({ strict: false });
   const navigate = useNavigate();
-  const targetRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const handleDownloadPDF = async () => {
-    const generatePDF = (await import("react-to-pdf")).default;
-    if (targetRef.current) {
-      generatePDF(() => targetRef.current, {
-        filename: `analytics-team-${teamid}-${day}d.pdf`,
-      });
+  const query = useGetTeamDetailedMetrics(teamid ?? "", { days: day });
+  const data = query.data;
+
+  function refresh() {
+    requestFreshAnalytics();
+    queryClient
+      .invalidateQueries({
+        queryKey: teamKeys.detailedMetrics(teamid, { days: day }),
+        refetchType: "all",
+      })
+      .finally(endFreshAnalytics);
+  }
+
+  async function exportPdf() {
+    if (!data) return;
+    setIsExporting(true);
+    try {
+      await exportTeamReport(queryClient, data, day);
+    } catch (error) {
+      console.error(error);
+      toast.error(t("The report could not be created. Try again in a moment."));
+    } finally {
+      setIsExporting(false);
     }
-  };
-  const { data, isLoading } = useGetTeamDetailedMetrics(teamid ?? "", {
-    days: day,
-  });
-  const averageResponsesTime = formatTimeToNearestUnitFromSeconds(data?.averageResponseTime);
-  const textColor = (value: number) => {
-    if (value > 0) return "text-green-500";
-    return "text-red-500";
-  };
+  }
 
-  const refresh = () => {
-    queryClient.invalidateQueries({
-      queryKey: teamKeys.detailedMetrics(teamid, { days: day }),
-    });
-  };
-  return (
-    <div ref={targetRef} className="space-y-6">
-      <Card className=" p-0">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  navigate({
-                    to: "/dashboard/analytics",
-                    search: { tab: "team-performance" },
-                  });
-                }}
-                className="gap-2"
-              >
-                <IconArrowRight className="w-4 h-4 rotate-180" />
-                {t("Back to Teams")}
-              </Button>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shadow-md"
-                  style={{
-                    backgroundColor: data?.teamColor === "null" ? "blue" : data?.teamColor,
-                  }}
-                >
-                  <IconUsers className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{data?.teamName}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {data?.teamMembers} {t("members")} · {data?.teamMembersOnline} {t("online")}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2">
-              <Button
-                variant="ghost"
-                onClick={refresh}
-                className="flex items-center justify-center gap-1"
-              >
-                <IconRefresh />
-                <span>{t("Refresh")}</span>
-              </Button>
-              <DateSelector days={day} setDays={setDay} />
-              <Button
-                variant="outline"
-                onClick={handleDownloadPDF}
-                className="flex items-center justify-center gap-1"
-              >
-                <IconFileText />
-                <span>{t("Export")}</span>
-              </Button>
-            </div>
+  // Week-on-week, whatever range is picked. Response time comes back as an
+  // improvement (positive = faster); the tile shows the change in the time itself.
+  const vsLastWeek = t("vs last week");
+  const responseImprovement = toNumber(data?.averageResponseTimeComparedToLastWeek);
+  const resolutionChange = toNumber(data?.resolutionRateComparedToLastWeek);
+  const responseChange: StatChange | undefined =
+    responseImprovement === null
+      ? undefined
+      : { value: -responseImprovement, goodWhen: "down", label: vsLastWeek };
+
+  const rows = useMemo<MemberRow[]>(
+    () =>
+      (data?.members ?? []).map((member) => ({
+        id: member.userId,
+        name: member.name,
+        status: member.onlineStatus,
+        messages: toNumber(member.messagesHandled) ?? 0,
+        responseSeconds: toNumber(member.averageResponseTime) ?? undefined,
+        active: toNumber(member.staffActiveChats) ?? 0,
+      })),
+    [data],
+  );
+
+  const columns = useMemo<ColumnDef<MemberRow>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: createSortableHeader(t("Agent")),
+        cell: ({ row }) => (
+          <div className="flex min-w-44 items-center gap-3">
+            <CreativeAvatar name={row.original.name} platform={MessagePlatform.WEBCHAT} size="sm" />
+            <Link
+              to="/dashboard/analytics/$staffid"
+              params={{ staffid: row.original.id }}
+              onClick={(event) => event.stopPropagation()}
+              className={NAME_LINK}
+            >
+              {row.original.name}
+            </Link>
           </div>
-        </CardContent>
-      </Card>
-      {/* Team Statistics */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Skeleton className="w-5 h-5 rounded" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-                <Skeleton className="h-8 w-32 mb-3" />
-                <Skeleton className="h-4 w-40" />
-              </CardContent>
-            </Card>
-          ))}
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: t("Status"),
+        cell: ({ row }) => <StaffStatusBadge status={row.original.status} />,
+      },
+      {
+        accessorKey: "messages",
+        header: createSortableHeader(t("Messages")),
+        cell: ({ row }) => (
+          <span className="tabular-nums">{formatCount(row.original.messages)}</span>
+        ),
+      },
+      {
+        accessorKey: "responseSeconds",
+        header: createSortableHeader(t("Avg first response")),
+        sortUndefined: "last",
+        cell: ({ row }) =>
+          formatDuration(row.original.responseSeconds) ?? (
+            <span className="text-muted-foreground">{t("No replies yet")}</span>
+          ),
+      },
+      {
+        accessorKey: "active",
+        header: createSortableHeader(t("Active chats")),
+        cell: ({ row }) => <span className="tabular-nums">{formatCount(row.original.active)}</span>,
+      },
+      {
+        id: "open",
+        header: "",
+        cell: () => <IconChevronRight className="size-4 text-muted-foreground rtl:rotate-180" />,
+      },
+    ],
+    [t],
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      {query.isPending ? (
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-10 rounded-lg" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-3.5 w-32" />
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <IconClock className="w-5 h-5 text-primary" />
-                <p className="text-sm text-muted-foreground">{t("Avg Response Time")}</p>
-              </div>
-              <p className="text-2xl font-semibold">
-                {averageResponsesTime
-                  ? `${averageResponsesTime.value} ${averageResponsesTime.suffix}`
-                  : "NA"}
-              </p>
-              <p
-                className={`text-xs mt-1 ${textColor(data?.averageResponseTimeComparedToLastWeek ?? 0)}`}
-              >
-                {Math.floor(data?.averageResponseTimeComparedToLastWeek ?? 0) ?? 0}%{" "}
-                {t("vs last week")}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <IconMessageCircle className="w-5 h-5 text-primary" />
-                <p className="text-sm text-muted-foreground">{t("Active Chats")}</p>
-              </div>
-              <p className="text-2xl font-semibold">{data?.activeChats}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t("Currently handling")}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <IconTarget className="w-5 h-5 text-primary" />
-                <p className="text-sm text-muted-foreground">{t("Resolution Rate")}</p>
-              </div>
-              <p className="text-2xl font-semibold">{Math.floor(data?.resolutionRate ?? 0)}%</p>
-              <p
-                className={`text-xs text-green-600 mt-1 ${textColor(data?.resolutionRateComparedToLastWeek ?? 0)}`}
-              >
-                {Math.floor(data?.resolutionRateComparedToLastWeek ?? 0)}% {t("vs last week")}
-              </p>
-            </CardContent>
-          </Card>
+        <AnalyticsHeader
+          back={
+            <Link
+              to="/dashboard/analytics"
+              search={{ tab: "conversations", view: "teams" }}
+              className={BACK_LINK}
+              aria-label={t("Teams")}
+            >
+              <IconArrowLeft className="size-4 rtl:rotate-180" />
+            </Link>
+          }
+          leading={
+            <div
+              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary"
+              // Some teams were saved with the string "null" as their colour.
+              style={
+                data?.teamColor && data.teamColor !== "null"
+                  ? { backgroundColor: data.teamColor }
+                  : undefined
+              }
+            >
+              <IconUsers className="size-5 text-white" />
+            </div>
+          }
+          title={data?.teamName}
+          description={t("{members} members · {online} online", {
+            members: data?.teamMembers ?? 0,
+            online: data?.teamMembersOnline ?? 0,
+          })}
+        />
+      )}
+      <AnalyticsToolbar>
+        <DateSelector days={day} setDays={setDay} />
+        <div className="ms-auto flex items-center gap-2">
+          <Button variant="ghost" onClick={refresh} disabled={query.isFetching}>
+            <IconRefresh className={query.isFetching ? "animate-spin" : undefined} />
+            {t("Refresh")}
+          </Button>
+          <Button variant="outline" onClick={exportPdf} disabled={!data || isExporting}>
+            {isExporting ? <IconLoader2 className="animate-spin" /> : <IconFileTypePdf />}
+            {isExporting ? t("Preparing report…") : t("PDF report")}
+          </Button>
         </div>
-      )}
-      {/* Team Members Grid */}
-      {isLoading ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("Team Members")}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t("Performance of individual team members")}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="p-5 rounded-xl border">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Skeleton className="w-10 h-10 rounded-full" />
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-4 w-12" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-4 w-28" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-5 w-12" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("Team Members")}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t("Performance of individual team members")}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data?.members?.map((agent) => {
-                const averageResponseTime = formatTimeToNearestUnitFromSeconds(
-                  agent.averageResponseTime,
-                );
-                return (
-                  <div
-                    key={agent.userId}
-                    className="p-5 rounded-xl border hover:scale-[1.02] cursor-pointer transition-all duration-300"
-                    onClick={() =>
-                      navigate({
-                        to: `/dashboard/analytics/${agent.userId}`,
-                      })
-                    }
-                  >
-                    <div className="flex items-center gap-3 mb-4">
-                      <CreativeAvatar
-                        name={agent.name}
-                        platform={MessagePlatform.WEBCHAT}
-                        size="sm"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium">{agent.name}</h4>
+      </AnalyticsToolbar>
 
-                        <div className={`w-1.5 h-1.5 rounded-full mr-1.5`} />
-                        <StaffStatusBadge status={agent?.onlineStatus} />
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{t("Messages")}</span>
-                        <span className="font-semibold">{agent.messagesHandled}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{t("Response Time")}</span>
-                        <span className="font-semibold">
-                          {averageResponseTime
-                            ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
-                            : "NA"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{t("Active Chats")}</span>
-                        <Badge variant="outline" className="text-primary">
-                          {agent.staffActiveChats}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="flex flex-col gap-6 pt-1">
+        <TileGroup query={query} count={4}>
+          <StatTile
+            label={t("Members")}
+            value={formatCount(data?.teamMembers)}
+            note={t("{count} online", { count: formatCount(data?.teamMembersOnline) })}
+            icon={<IconUsers className={ICON} />}
+          />
+          <StatTile
+            label={t("Active chats")}
+            value={formatCount(data?.activeChats)}
+            note={t("Being handled now")}
+            icon={<IconMessageCircle className={ICON} />}
+          />
+          <StatTile
+            label={t("Avg first response")}
+            value={formatDuration(data?.averageResponseTime)}
+            emptyValue={t("No replies yet")}
+            icon={<IconClock className={ICON} />}
+            change={responseChange}
+          />
+          <StatTile
+            label={t("Resolution rate")}
+            value={formatPercent(data?.resolutionRate) ?? "0%"}
+            icon={<IconTarget className={ICON} />}
+            change={
+              resolutionChange === null
+                ? undefined
+                : { value: resolutionChange, goodWhen: "up", label: vsLastWeek, unit: " pts" }
+            }
+          />
+        </TileGroup>
+
+        <AnalyticsCard
+          title={t("Members")}
+          description={t("What each member of this team handled in this range")}
+          query={query}
+          isEmpty={rows.length === 0}
+          emptyTitle={t("No members yet")}
+          emptyDescription={t("Add people to this team in Settings to see them here.")}
+          skeleton={<Skeleton className="h-72 w-full" />}
+        >
+          <div className={CLICKABLE_ROWS}>
+            <DataTable
+              columns={columns}
+              data={rows}
+              onRowClick={(row) =>
+                navigate({ to: "/dashboard/analytics/$staffid", params: { staffid: row.id } })
+              }
+            />
+          </div>
+        </AnalyticsCard>
+      </div>
     </div>
   );
 }

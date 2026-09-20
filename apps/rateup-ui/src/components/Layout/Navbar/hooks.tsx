@@ -2,7 +2,6 @@ import {
   IconActivity,
   IconAddressBook,
   IconAt,
-  IconAward,
   IconBolt,
   IconBrandFacebook,
   IconBrandInstagram,
@@ -10,15 +9,13 @@ import {
   IconBrowser,
   IconBuildingStore,
   IconChartBar,
-  IconChartBarPopular,
-  IconChartLine,
+  IconChartInfographic,
   IconCircleCheck,
   IconCirclePlus,
   IconCreditCard,
   IconCrown,
   IconDashboard,
   IconFileSpreadsheet,
-  IconFileText,
   IconFilterBolt,
   IconFolder,
   IconGift,
@@ -29,6 +26,7 @@ import {
   IconLinkPlus,
   IconLogs,
   IconMessage,
+  IconMessages,
   IconPlayerPlay,
   IconPlug,
   IconQrcode,
@@ -155,6 +153,12 @@ export interface NavEntry {
    * router's `scrollRestoration`, which resets to the top.
    */
   resetScroll?: boolean;
+  /**
+   * Path prefixes this sub-item also stands for, when they sit under a sibling's
+   * path: the analytics drill-downs live under `/dashboard/analytics/…` but belong
+   * to Conversations, not to the first sibling that prefix-matches.
+   */
+  ownsPaths?: string[];
   isActive?: boolean;
   hasSepeartorOnTop?: boolean;
   hasSeperatorOnBottom?: boolean;
@@ -481,7 +485,7 @@ export function useNavMain({
             {
               title: t("Analytics"),
               url: "/dashboard/analytics?tab=overview",
-              icon: IconChartBarPopular,
+              icon: IconChartInfographic,
               items: [
                 {
                   title: t("Overview"),
@@ -489,29 +493,21 @@ export function useNavMain({
                   icon: IconChartBar,
                 },
                 {
-                  title: t("Agent Performance"),
-                  url: "/dashboard/analytics?tab=agent-performance",
-                  icon: IconAward,
+                  title: t("Conversations"),
+                  url: "/dashboard/analytics?tab=conversations",
+                  icon: IconMessages,
+                  // The agent and team drill-downs: /dashboard/analytics/<id> and /team/<id>.
+                  ownsPaths: ["/dashboard/analytics/"],
                 },
                 {
-                  title: t("Team Performance"),
-                  url: "/dashboard/analytics?tab=team-performance",
-                  icon: IconActivity,
+                  title: t("Messages"),
+                  url: "/dashboard/analytics?tab=messages",
+                  icon: IconSend,
                 },
                 {
-                  title: t("Message Analytics"),
-                  url: "/dashboard/analytics?tab=api-analytics",
-                  icon: IconChartLine,
-                },
-                {
-                  title: t("Message Logs"),
-                  url: "/dashboard/analytics?tab=message-logs",
+                  title: t("Logs"),
+                  url: "/dashboard/analytics?tab=logs",
                   icon: IconLogs,
-                },
-                {
-                  title: t("Team Activity"),
-                  url: "/dashboard/analytics?tab=team-activity",
-                  icon: IconFileText,
                 },
               ],
             },

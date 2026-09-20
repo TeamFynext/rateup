@@ -238,11 +238,24 @@ function getRouteMatchScore(currentRoute: string, targetRoute?: string): number 
   return -1;
 }
 
+/**
+ * Between a query match and a plain prefix match: a child that claims a path under
+ * its siblings' shared prefix beats them there, but never an exact or query match.
+ */
+function getOwnedPathScore(currentRoute: string, ownsPaths?: string[]): number {
+  const { path } = parseRoute(currentRoute);
+  const owned = ownsPaths?.filter((prefix) => path.startsWith(prefix)) ?? [];
+  return owned.length ? 150000 + Math.max(...owned.map((prefix) => prefix.length)) : -1;
+}
+
 function getMostSpecificChildRoute(children: NavEntry[], currentRoute: string) {
   const bestMatch = children.reduce(
     (best: { routeKey: string | null; score: number }, child) => {
       const routeKey = getRouteKey(child?.url);
-      const score = getRouteMatchScore(currentRoute, child?.url);
+      const score = Math.max(
+        getRouteMatchScore(currentRoute, child?.url),
+        getOwnedPathScore(currentRoute, child?.ownsPaths),
+      );
 
       if (!routeKey || score < 0 || score <= best.score) return best;
       return { routeKey, score };

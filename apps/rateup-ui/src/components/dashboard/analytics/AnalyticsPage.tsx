@@ -1,400 +1,275 @@
-// Extracted verbatim from the `/dashboard/analytics/$staffid/` route so the route file carries routing
-// config only. Behaviour is unchanged.
-
 import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
   IconArrowLeft,
-  IconArrowRight,
   IconClock,
   IconClock2,
-  IconFileText,
+  IconFileTypePdf,
+  IconLoader2,
   IconMessageCircle,
   IconRefresh,
-  IconThumbUp,
+  IconTarget,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import dayjs from "dayjs";
-import { useRef, useState } from "react";
+import { Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { toast } from "sonner";
 
+import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation/conversation.query";
 import { staffKeys } from "@/backend/org/org.keys";
-import { Badge } from "@/components/ui/badge.tsx";
+import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { AnalyticsStatCard } from "@/components/whatsapp/inbox/analytics/AnalyticsStaticCard.tsx";
-import { StaffStatusBadge } from "@/components/whatsapp/inbox/analytics/ConversationStatsAgentPerformance.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
-import { formatTimeToNearestUnitFromSeconds, formatToRelativeTime } from "@/utils/dateTime.ts";
+import { MessagePlatform } from "@/types/enums.ts";
+import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
+import { AnalyticsCard } from "./kit/AnalyticsCard.tsx";
+import { AnalyticsHeader, AnalyticsToolbar, BACK_LINK } from "./kit/AnalyticsHeader.tsx";
+import { TrendBars } from "./kit/charts.tsx";
+import {
+  formatBucket,
+  formatCount,
+  formatDuration,
+  formatPercent,
+  type Numeric,
+  toNumber,
+} from "./kit/format.ts";
+import { ConversationStatusBadge, StaffStatusBadge } from "./kit/StatusBadges.tsx";
+import { TileGroup } from "./kit/TileGroup.tsx";
+import { exportAgentReport } from "./report/exportReport.ts";
+
+const ICON = "size-4 text-muted-foreground";
+
+/** One agent's numbers: `/dashboard/analytics/$staffid`. */
 export function AnalyticsPage() {
-  const { staffid } = useParams({
-    strict: false,
-  });
+  const { staffid } = useParams({ strict: false });
   const [day, setDay] = useState(7);
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const targetRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const handleDownloadPDF = async () => {
-    const generatePDF = (await import("react-to-pdf")).default;
-    if (targetRef.current) {
-      generatePDF(() => targetRef.current, {
-        filename: `analytics-staff-${staffid}-${day}d.pdf`,
-      });
+  const query = useGetStaffDetailedConversationAnalytics(staffid ?? "", { days: day });
+  const analytics = query.data;
+  const agent = analytics?.userPerformance;
+
+  function refresh() {
+    requestFreshAnalytics();
+    queryClient
+      .invalidateQueries({
+        queryKey: staffKeys.detailedConversationAnalytics(staffid, { days: day }),
+        refetchType: "all",
+      })
+      .finally(endFreshAnalytics);
+  }
+
+  async function exportPdf() {
+    if (!analytics) return;
+    setIsExporting(true);
+    try {
+      await exportAgentReport(queryClient, analytics, day);
+    } catch (error) {
+      console.error(error);
+      toast.error(t("The report could not be created. Try again in a moment."));
+    } finally {
+      setIsExporting(false);
     }
-  };
-  const { data: analytics, isLoading } = useGetStaffDetailedConversationAnalytics(staffid ?? "", {
-    days: day,
-  });
-  const graphdata = analytics
-    ? analytics.weeklyMessageStats?.map((a) => ({
-        ...a,
-        date: dayjs(a.date).format("ddd"),
-      }))
-    : [];
-  const averageResponseTime = formatTimeToNearestUnitFromSeconds(
-    analytics?.userPerformance?.averageResponseTime,
-  );
+  }
 
-  const refresh = () => {
-    queryClient.invalidateQueries({
-      queryKey: staffKeys.detailedConversationAnalytics(staffid, { days: day }),
-    });
+  // The week-on-week figures always compare the last 7 days with the 7 before,
+  // whatever range is picked, so they say "last week" rather than "previous period".
+  const vsLastWeek = t("vs last week");
+  const weekChange = (
+    value: Numeric,
+    goodWhen: StatChange["goodWhen"],
+    unit?: string,
+  ): StatChange | undefined => {
+    const number = toNumber(value);
+    return number === null ? undefined : { value: number, goodWhen, label: vsLastWeek, unit };
   };
+  // The API reports response time as an improvement (positive = faster); the tile
+  // shows the change in the time itself.
+  const responseImprovement = toNumber(agent?.responseTimeRateByLastWeek);
+
+  const days = analytics?.weeklyMessageStats ?? [];
+  const recent = analytics?.recentConversations ?? [];
 
   return (
-    <div ref={targetRef} className="flex flex-col gap-4">
-      {isLoading ? (
-        <Card className="border shadow-sm p-0">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-4 flex-wrap">
-                {/* Back Button Skeleton */}
-                <Skeleton className="h-9 w-28 rounded-md" />
-
-                {/* Divider */}
-                <div className="hidden md:block h-8 w-px bg-gray-200" />
-
-                {/* Avatar Skeleton */}
-                <Skeleton className="h-12 w-12 rounded-full" />
-
-                {/* Text Skeleton */}
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3 w-56" />
-                </div>
-
-                {/* Status Badge Skeleton */}
-                <Skeleton className="h-6 w-20 rounded-full" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="flex flex-col gap-3">
+      {query.isPending ? (
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-10 rounded-full" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-3.5 w-56" />
+          </div>
+        </div>
       ) : (
-        <Card className="  p-0">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              {/* Left Section */}
-              <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                {/* Back Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    navigate({
-                      to: "/dashboard/analytics",
-                      search: { tab: "agent-performance" },
-                    })
-                  }
-                  className="shrink-0"
-                >
-                  <IconArrowLeft className="w-4 h-4 md:mr-2" />
-                  <span className="hidden md:inline">{t("Back to Agents")}</span>
-                </Button>
-
-                {/* Divider */}
-                <div className="hidden md:block h-8 w-px bg-gray-200" />
-
-                {/* Avatar */}
-                <CreativeAvatar
-                  name={analytics?.userPerformance?.name}
-                  platform={MessagePlatform.WEBCHAT}
-                  size="lg"
-                />
-
-                {/* Name + Email */}
-                <div className="min-w-0">
-                  <h2 className="text-base md:text-lg font-medium truncate">
-                    {analytics?.userPerformance?.name}
-                  </h2>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {analytics?.userPerformance?.email}
-                  </p>
-                </div>
-
-                {/* Status */}
-                <StaffStatusBadge status={analytics?.userPerformance?.status} />
-              </div>
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={refresh}
-                  className="flex items-center justify-center gap-1"
-                >
-                  <IconRefresh />
-                  <span>{t("Refresh")}</span>
-                </Button>
-                <DateSelector days={day} setDays={setDay} />
-                <Button
-                  variant="outline"
-                  onClick={handleDownloadPDF}
-                  className="flex items-center justify-center gap-1"
-                >
-                  <IconFileText />
-                  <span>{t("Export")}</span>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <AnalyticsHeader
+          back={
+            <Link
+              to="/dashboard/analytics"
+              search={{ tab: "conversations", view: "agents" }}
+              className={BACK_LINK}
+              aria-label={t("Agents")}
+            >
+              <IconArrowLeft className="size-4 rtl:rotate-180" />
+            </Link>
+          }
+          leading={
+            <CreativeAvatar name={agent?.name} platform={MessagePlatform.WEBCHAT} size="md" />
+          }
+          title={agent?.name}
+          badge={<StaffStatusBadge status={agent?.status} />}
+          description={agent?.email}
+        />
       )}
-      <div>
-        {isLoading ? (
-          <div className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Skeleton className="h-[50px]" />
-              <Skeleton className="h-[50px]" />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Skeleton className="h-[50px]" />
-              <Skeleton className="h-[50px]" />
-              <Skeleton className="h-[50px]" />
-              <Skeleton className="h-[50px]" />
-            </div>
-            <Skeleton className="h-[120px] w-full" />
-            <Skeleton className="h-[120px] w-full" />
+      <AnalyticsToolbar>
+        <DateSelector days={day} setDays={setDay} />
+        <div className="ms-auto flex items-center gap-2">
+          <Button variant="ghost" onClick={refresh} disabled={query.isFetching}>
+            <IconRefresh className={query.isFetching ? "animate-spin" : undefined} />
+            {t("Refresh")}
+          </Button>
+          <Button variant="outline" onClick={exportPdf} disabled={!analytics || isExporting}>
+            {isExporting ? <IconLoader2 className="animate-spin" /> : <IconFileTypePdf />}
+            {isExporting ? t("Preparing report…") : t("PDF report")}
+          </Button>
+        </div>
+      </AnalyticsToolbar>
+
+      <div className="flex flex-col gap-6 pt-1">
+        <TileGroup query={query} count={6} columns={3}>
+          <StatTile
+            label={t("Messages handled")}
+            value={formatCount(agent?.totalMessagesHandled)}
+            icon={<IconMessageCircle className={ICON} />}
+            change={weekChange(agent?.messagesHandledRateByLastWeek, "up")}
+          />
+          <StatTile
+            label={t("Avg response time")}
+            value={formatDuration(agent?.averageResponseTime)}
+            emptyValue={t("No replies yet")}
+            icon={<IconClock className={ICON} />}
+            change={
+              responseImprovement === null
+                ? undefined
+                : { value: -responseImprovement, goodWhen: "down", label: vsLastWeek }
+            }
+          />
+          <StatTile
+            label={t("Resolution rate")}
+            value={formatPercent(analytics?.metrics?.resolutionRate) ?? "0%"}
+            icon={<IconTarget className={ICON} />}
+            change={weekChange(agent?.resolutionRateByLastWeek, "up", " pts")}
+          />
+          <StatTile
+            label={t("First response")}
+            value={formatDuration(analytics?.metrics?.firstResponseTime)}
+            emptyValue={t("No replies yet")}
+            note={t("Average time to first reply")}
+            icon={<IconClock2 className={ICON} />}
+          />
+          <StatTile
+            label={t("Chats transferred")}
+            value={formatCount(agent?.conversationsTransferred)}
+            note={t("Handed to other agents")}
+            icon={<IconArrowForwardUp className={ICON} />}
+          />
+          <StatTile
+            label={t("Chats received")}
+            value={formatCount(agent?.conversationsRecieved)}
+            note={t("Handed over by other agents")}
+            icon={<IconArrowBackUp className={ICON} />}
+          />
+        </TileGroup>
+
+        <AnalyticsCard
+          title={t("Messages handled per day")}
+          description={t("Replies this agent sent each day")}
+          query={query}
+          isEmpty={!days.some((d) => toNumber(d.messageCount))}
+          emptyTitle={t("No messages in this range")}
+          emptyDescription={t("Try a longer date range.")}
+        >
+          <TrendBars
+            data={days}
+            xKey="date"
+            yKey="messageCount"
+            label={t("Messages")}
+            formatX={(value) => formatBucket(value, "day")}
+          />
+        </AnalyticsCard>
+
+        <AnalyticsCard
+          title={t("Recent conversations")}
+          description={t("The last conversations this agent worked on")}
+          query={query}
+          isEmpty={recent.length === 0}
+          emptyTitle={t("No conversations yet")}
+          emptyDescription={t("Conversations this agent works on will show up here.")}
+          skeleton={<Skeleton className="h-48 w-full" />}
+        >
+          <div className="overflow-x-auto rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("Customer")}</TableHead>
+                  <TableHead>{t("Duration")}</TableHead>
+                  <TableHead>{t("Last response")}</TableHead>
+                  <TableHead>{t("Status")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recent.map((conversation) => (
+                  <TableRow key={conversation.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <CreativeAvatar
+                          name={conversation.customer?.name}
+                          size="sm"
+                          platform={MessagePlatform.WEBCHAT}
+                        />
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate font-medium">
+                            {conversation.customer?.name || conversation.customer?.phone}
+                          </span>
+                          {conversation.customer?.name && (
+                            <span className="truncate text-xs text-muted-foreground">
+                              {conversation.customer.phone}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatDuration(conversation.duration) ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {conversation.lastRespondedAt
+                        ? formatToRelativeTime(conversation.lastRespondedAt, true)
+                        : t("Not responded yet")}
+                    </TableCell>
+                    <TableCell>
+                      <ConversationStatusBadge status={conversation.status} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        ) : (
-          <div className="space-y-6 w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <AnalyticsStatCard
-                icon={<IconMessageCircle className="w-6 h-6 text-primary" />}
-                label={t("Messages Handled")}
-                value={analytics?.userPerformance?.totalMessagesHandled ?? 0}
-                trendValue={
-                  analytics?.userPerformance?.messagesHandledRateByLastWeek != null
-                    ? Math.floor(analytics?.userPerformance?.messagesHandledRateByLastWeek)
-                    : 0
-                }
-                trendSuffix={t("vs last week")}
-              />
-
-              <AnalyticsStatCard
-                icon={<IconClock className="w-6 h-6 text-primary" />}
-                label={t("Avg Response Time")}
-                value={
-                  averageResponseTime
-                    ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
-                    : "NA"
-                }
-                trendValue={
-                  analytics?.userPerformance?.responseTimeRateByLastWeek != null
-                    ? Math.floor(analytics?.userPerformance?.responseTimeRateByLastWeek)
-                    : 0
-                }
-                trendPositiveWhen="decrease"
-                trendSuffix={
-                  (analytics?.userPerformance?.responseTimeRateByLastWeek ?? 0) <= 0
-                    ? t("faster vs last week")
-                    : t("slower vs last week")
-                }
-              />
-
-              <AnalyticsStatCard
-                icon={<IconThumbUp className="w-6 h-6 text-primary" />}
-                label={t("Resolution Rate")}
-                value={
-                  analytics?.metrics?.resolutionRate != null
-                    ? `${analytics.metrics.resolutionRate.toFixed(1)}%`
-                    : "0%"
-                }
-                trendValue={
-                  analytics?.userPerformance?.resolutionRateByLastWeek != null
-                    ? Math.floor(analytics?.userPerformance?.resolutionRateByLastWeek)
-                    : 0
-                }
-                trendSuffix={t("vs last week")}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className=" p-0">
-                <CardContent className="p-4 flex flex-col gap-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
-                      <IconClock2 className="w-6 h-6 text-primary" />
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("First Response")}
-                  </p>
-
-                  <p className="text-2xl font-bold leading-none">
-                    {analytics?.metrics?.firstResponseTime
-                      ? `${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.value} ${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.suffix}`
-                      : "NA"}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("Average time to first reply")}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="  p-0">
-                <CardContent className="p-4 flex flex-col gap-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="p-2 rounded-lg bg-orange-100 dark:bg-transparent">
-                      <IconArrowLeft className="w-6 h-6 text-orange-500" />
-                    </div>
-                    <div className="px-2 py-1 text-xs rounded-lg bg-orange-100 dark:bg-transparent text-orange-500 border border-orange-300">
-                      OUT
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("Chats Transferred")}
-                  </p>
-
-                  <p className="text-2xl font-bold leading-none text-orange-500">
-                    {analytics?.userPerformance?.conversationsTransferred}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("Transferred to other agents")}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="  p-0">
-                <CardContent className="p-4 flex flex-col gap-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="p-2 rounded-lg bg-green-100 dark:bg-transparent">
-                      <IconArrowRight className="w-6 h-6 text-green-500" />
-                    </div>
-                    <div className="px-2 py-1 text-xs border border-green-300 rounded-lg bg-green-100 dark:bg-transparent text-green-500">
-                      IN
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("Chats Received")}
-                  </p>
-
-                  <p className="text-2xl font-bold leading-none text-green-500">
-                    {analytics?.userPerformance?.conversationsRecieved}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("Received from other agents")}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  <span className="text-base">{t("Weekly Performance Trend")}</span>
-                  <p className="text-xs text-muted-foreground">{t("Messages handled per day")}</p>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={graphdata} margin={{ top: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="messageCount" fill="#1873E8" radius={[8, 8, 0, 0]} barSize={60} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  <span className="text-base">{t("Recent Conversations")}</span>
-                  <p className="text-xs text-muted-foreground">
-                    {t("Last 4 customer interactions")}
-                  </p>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-muted/50 border-b">
-                      <tr>
-                        <th className="p-3 text-left text-[11px] font-medium">{t("Customer")}</th>
-                        <th className="p-3 text-left text-[11px] font-medium">{t("Duration")}</th>
-                        <th className="p-3 text-left text-[11px] font-medium">{t("Time")}</th>
-                        <th className="p-3 text-left text-[11px] font-medium">{t("Status")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {!analytics?.recentConversations?.length && (
-                        <tr>
-                          <td colSpan={4} className="text-center py-3">
-                            {t("No conversation found")}
-                          </td>
-                        </tr>
-                      )}
-                      {analytics?.recentConversations?.map((conv) => (
-                        <tr key={conv.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                          <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              <CreativeAvatar
-                                name={conv.customer.name}
-                                size="sm"
-                                platform={MessagePlatform.WEBCHAT}
-                              />
-                              <span className="text-xs font-medium">{conv.customer.name}</span>
-                            </div>
-                          </td>
-                          <td className="p-3 text-xs text-muted-foreground">
-                            {conv.duration !== null
-                              ? `${formatTimeToNearestUnitFromSeconds(conv.duration)?.value} ${formatTimeToNearestUnitFromSeconds(conv.duration)?.suffix}`
-                              : "NA"}
-                          </td>
-                          <td className="p-3 text-xs text-muted-foreground">
-                            {conv.lastRespondedAt
-                              ? formatToRelativeTime(conv.lastRespondedAt, true)
-                              : t("Not responded yet")}
-                          </td>
-                          <td className="p-3">
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${
-                                conv.status === WaMessageAssignStatus.CLOSED ||
-                                conv.status === WaMessageAssignStatus.RESOLVED
-                                  ? "bg-green-50 text-green-700 border-green-200"
-                                  : "bg-orange-50 text-orange-700 border-orange-200"
-                              }`}
-                            >
-                              {conv.status}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        </AnalyticsCard>
       </div>
     </div>
   );

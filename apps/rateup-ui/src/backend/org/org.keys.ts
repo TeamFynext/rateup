@@ -49,6 +49,33 @@ export const teamKeys = {
     ["teamdetailedmetrics", teamId, filter] as const,
 } as const;
 
+/**
+ * The root of every query the /dashboard/analytics page runs — the first element of
+ * each key, which is all a partial-match invalidation needs. The page's Refresh
+ * button and its "is anything loading" spinner both walk this list, so a query that
+ * is not on it is one Refresh silently skips (as the team overview and the
+ * resolved-conversations trend were, until they were added here).
+ */
+export const analyticsKeys = {
+  roots: () =>
+    [
+      "conversationOverview",
+      "conversationResolvedStats",
+      "conversationAverageResponseTime",
+      "ConversationAccountDistribution",
+      "ConversationQuickStats",
+      "StaffPerformanceonConversation",
+      "StaffDetailedConversationAnalytics",
+      "teamoverview",
+      "analyticsapiOverview",
+      "deliveredfailedtrend",
+      "templateapioverview",
+      "teamapioverview",
+      "wa-message-logs",
+      "user-audit-logs",
+    ] as const,
+} as const;
+
 export const staffKeys = {
   conversationPerformance: (filter: KeyPart) => ["StaffPerformanceonConversation", filter] as const,
   detailedConversationAnalytics: (staffId: KeyPart, filter: KeyPart) =>
