@@ -11,8 +11,10 @@ import {
   loyaltyRewardUpdateSchema,
   rewardIdParamSchema,
 } from "./reward.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function loyaltyRewardRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.manage" });
   server.post(
     "/",
     {

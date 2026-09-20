@@ -22,8 +22,10 @@ import {
   byTeamIdParamsSchema,
   ByTeamIdParams,
 } from "../team/team.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function reviewSuggestionRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   server.setErrorHandler(errorHandler);
   server.get<{ Params: ByTeamIdParams }>(
     "/:teamId",
@@ -41,6 +43,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
   }>(
     "/public/:surveyTeamMapId",
     {
+      config: { access: "public" },
       preHandler: rateLimit({ max: 120, windowSeconds: 3600, key: "reviewSuggestionPublic" }),
       schema: {
         params: bySurveyTeamMapIdParamsSchema,

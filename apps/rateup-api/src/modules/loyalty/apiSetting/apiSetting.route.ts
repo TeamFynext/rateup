@@ -10,13 +10,16 @@ import {
   createLoyaltyApiSettingHandler,
   updateLoyaltyApiSettingHandler,
 } from "./apiSetting.controller.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function loyaltyApiSettingRoutes(server: FastifyInstance) {
-  server.get("/", getLoyaltyApiSettingsHandler);
+  declareAccess(server, { write: "loyalty.api_settings" });
+  server.get("/", { config: { permission: "loyalty.api_settings" } }, getLoyaltyApiSettingsHandler);
 
   server.get(
     "/:id",
     {
+      config: { permission: "loyalty.api_settings" },
       schema: {
         params: byLApiSettingIdParamSchema,
       },

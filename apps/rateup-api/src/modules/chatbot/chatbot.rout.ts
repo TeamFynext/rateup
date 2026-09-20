@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   chatbotMessageHandler,
   createChatbotHanlder,
@@ -16,7 +15,6 @@ import {
   uploadSourceForEmbedHandler,
 } from "./chatbot.controller.js";
 import FastifyMultipart from "@fastify/multipart";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   chatbotMessageSchema,
   createChatbotSchema,
@@ -31,11 +29,10 @@ import {
   updateChatbotInput,
 } from "./chatbot.schema.js";
 
-import { requireFeature, TeamFeature } from "../../utils/permissions.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function chatbotRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", requireFeature(TeamFeature.ai_chatbot));
+  declareAccess(server, { read: "chatbots.read" });
   server.register(FastifyMultipart, {
     limits: {
       fileSize: 1048576 * 50,
@@ -45,7 +42,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.post<{ Body: dataSourceUploadInput }>(
     "/embed-doc",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
       schema: {
         body: dataLoadSchema,
       },
@@ -56,7 +53,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.post(
     "/embed-doc/file",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
       schema: {
         consumes: ["multipart/form-data"],
       },
@@ -67,6 +64,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
+      config: { permission: "chatbots.read" },
       schema: {
         body: chatbotMessageSchema,
       },
@@ -79,7 +77,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.delete<{ Body: deleteContentInput }>(
     "/delete-source",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
       schema: {
         body: deleteContentSchema,
       },
@@ -90,7 +88,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.delete<{ Body: deleteManyContentInput }>(
     "/delete-many-sources",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
       schema: {
         body: deleteManyContentSchema,
       },
@@ -98,12 +96,18 @@ export async function chatbotRoutes(server: FastifyInstance) {
     deleteManyEmbeddedSourcesHandler,
   );
 
-  server.delete("/delete-chat-history", {}, deleteChatHistoryHandler);
+  server.delete(
+    "/delete-chat-history",
+    {
+      config: { permission: "chatbots.read" },
+    },
+    deleteChatHistoryHandler,
+  );
 
   server.post<{ Body: createChatbotInput }>(
     "/chatbot",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
       schema: {
         body: createChatbotSchema,
       },
@@ -114,7 +118,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.put<{ Params: { chatbotId: string }; Body: updateChatbotInput }>(
     "/chatbot/:chatbotId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
       schema: {
         body: updateChatbotSchema,
       },
@@ -124,14 +128,14 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.get<{ Params: { chatbotId: string } }>(
     "/chatbot/:chatbotId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
     },
     getChatbotDetailsHandler,
   );
   server.get<{ Params: { chatbotId: string } }>(
     "/chathistory/:chatbotId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
     },
     getChatHitoryByOrgHandler,
   );
@@ -139,7 +143,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.get(
     "/chatbots",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
     },
     getAllChatbotsByOrgHandler,
   );
@@ -147,7 +151,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   server.delete<{ Params: { chatbotId: string } }>(
     "/chatbot/:chatbotId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "chatbots.manage" },
     },
     deleteSelectedChatbotHandler,
   );

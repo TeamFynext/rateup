@@ -11,8 +11,10 @@ import {
   ruleIdParamSchema,
   loyaltyEarningRuleUpdateSchema,
 } from "./earningRule.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function loyaltyEarningRuleRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.manage" });
   server.post(
     "/",
     {

@@ -1,3 +1,4 @@
+import { ForbiddenError } from "../../authz/errors.js";
 import { FastifyRequest, FastifyReply } from "fastify";
 import {
   ByCampaignIdParams,
@@ -51,6 +52,9 @@ import {
 } from "../../utils/spreadsheet.js";
 
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
+  if (error instanceof ForbiddenError) {
+    return reply.status(error.statusCode).send(error.toBody());
+  }
   if (error instanceof CampaignNotFoundError) {
     return reply.status(404).send({ message: error.message, code: "CAMPAIGN_NOT_FOUND" });
   }
@@ -71,7 +75,7 @@ export async function createCampaignHandler(
   reply: FastifyReply,
 ) {
   try {
-    const campaign = await createCampaign({ ...request.body }, request.user.orgId);
+    const campaign = await createCampaign({ ...request.body }, request.user.orgId, request.actor!);
     return reply.status(201).send(campaign);
   } catch (error) {
     return replyForError(reply, error, "Error while creating a campaign");

@@ -9,12 +9,19 @@ import {
   IdParamInput,
   InviteMemberInput,
   SetTeamChannelsInput,
-  SetTeamFeaturesInput,
 } from "./team.schema.js";
 import { invalidateChannelAccessCache } from "../whatsapp/settings/wa_channel_access.js";
+import { bustActor, bustActorsForOrg, bustActorsForUser } from "../../authz/actor.js";
+import { ForbiddenError } from "../../authz/errors.js";
+import {
+  DEFAULT_INVITED_ROLE,
+  legacyRoleToKey,
+  roleKeyToLegacy,
+  type LegacyRole,
+} from "../../authz/roles.js";
 import EmailVerification from "supertokens-node/recipe/emailverification/index.js";
 import { createEmailBody } from "../../utils/email/supertoken/inviteEmail.js";
-import { Role } from "../../utils/enums/index.js";
+import { Role } from "../../../generated/prisma/client.js";
 
 import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 
@@ -146,12 +153,16 @@ export async function deleteTeamById(id: string) {
       where: { orgId: team.orgId },
       data: { teamsCount: { decrement: 1 } },
     });
+    await bustActorsForOrg(team.orgId);
   }
   return team;
 }
 
 //used in zapier controller also
-export async function inviteTeamMember(input: InviteMemberInput) {
+/** An invitation with the fields the route handler resolves from the session. */
+export type ResolvedInviteInput = InviteMemberInput & { orgId: string; invitedBy: string };
+
+export async function inviteTeamMember(input: ResolvedInviteInput) {
   if (input.name.length < 2) {
     throw new Error("Invalid name.");
   }
@@ -454,8 +465,7 @@ export async function completeInvite(token: string) {
         data: {
           orgId: updatedInvitation.orgId,
           userId: signUpResult.user.id,
-          // The inviter's pick; ADMIN for an invitation created without one.
-          role: updatedInvitation.role ?? Role.ADMIN,
+          ...invitedRole(updatedInvitation.role),
         },
       });
 
@@ -514,8 +524,7 @@ export async function completeInvite(token: string) {
         data: {
           orgId: updatedInvitation.orgId,
           userId: user.id,
-          // Same fallback as the branch above.
-          role: updatedInvitation.role ?? Role.ADMIN,
+          ...invitedRole(updatedInvitation.role),
         },
       });
       //Create Team member
@@ -536,6 +545,12 @@ export async function completeInvite(token: string) {
  * Puts a user in every team named. An existing membership is skipped rather than thrown on,
  * so one team they are already in cannot abandon the rest. Returns the teams, for the email.
  */
+/** Both spellings of the role an invitation grants; one without a role grants the default. */
+function invitedRole(role: Role | null | undefined) {
+  const legacy = role ?? roleKeyToLegacy(DEFAULT_INVITED_ROLE);
+  return { role: legacy, roleKey: legacyRoleToKey(legacy as LegacyRole, false) };
+}
+
 /** The teams an invitation grants. Empty `teamIds` means `teamId` alone. */
 function invitedTeamIds(invitation: { teamId: string | null; teamIds: string[] }) {
   if (invitation.teamIds.length) return invitation.teamIds;
@@ -557,6 +572,7 @@ async function addUserToTeams(teamIds: string[], userId: string) {
       await prisma.teamMember.create({ data: { teamId: team.id, userId } });
     }
   }
+  await bustActorsForUser(userId);
 
   return teams;
 }
@@ -867,15 +883,37 @@ export async function deleteTeamMember(teamId: string, userId: string, orgId: st
   if (org.ownerId === userId) {
     throw Error("You can't remove Owner from team");
   }
+  await assertTeamsBelongToOrg([teamId], orgId);
   await prisma.teamMember.deleteMany({
     where: {
       teamId,
       userId,
     },
   });
+  await bustActor(userId, orgId);
 }
 
-export async function addMemberToTeams(teamIds: string[], userId: string) {
+/** The caller's org must own every team named, or the request could reach another tenant. */
+async function assertTeamsBelongToOrg(teamIds: string[], orgId: string) {
+  const owned = await prisma.team.count({ where: { id: { in: teamIds }, orgId } });
+  if (owned !== new Set(teamIds).size) {
+    throw new ForbiddenError("One of these teams is not in your organisation.", {
+      reason: "scope",
+    });
+  }
+}
+
+export async function addMemberToTeams(teamIds: string[], userId: string, orgId: string) {
+  const member = await prisma.orgMember.findUnique({
+    where: { userId_orgId: { userId, orgId } },
+    select: { userId: true },
+  });
+  if (!member) {
+    throw new ForbiddenError("That user is not a member of your organisation.", {
+      reason: "scope",
+    });
+  }
+  await assertTeamsBelongToOrg(teamIds, orgId);
   await prisma.teamMember.createMany({
     data: teamIds.map((teamId) => ({
       teamId,
@@ -883,6 +921,7 @@ export async function addMemberToTeams(teamIds: string[], userId: string) {
     })),
     skipDuplicates: true,
   });
+  await bustActorsForUser(userId);
 }
 
 export async function addMembersToTeamsMail(
@@ -932,54 +971,6 @@ export async function addMembersToTeamsMail(
 }
 
 // ── Team Feature Access ───────────────────────────────────────────────────────
-
-/**
- * Returns the list of TeamFeatureAccess rows for a team.
- */
-export async function getTeamFeatures(teamId: string) {
-  return prisma.teamFeatureAccess.findMany({
-    where: { teamId },
-    select: { id: true, feature: true, createdAt: true },
-    orderBy: { feature: "asc" },
-  });
-}
-
-/**
- * Replaces the full set of features for a team (upsert + delete orphans).
- * Returns the resulting feature rows.
- */
-export async function setTeamFeatures(teamId: string, input: SetTeamFeaturesInput) {
-  const desired = new Set(input.features);
-  const existing = await prisma.teamFeatureAccess.findMany({
-    where: { teamId },
-    select: { id: true, feature: true },
-  });
-
-  const toDelete = existing.filter((r) => !desired.has(r.feature)).map((r) => r.id);
-
-  const existingFeatures = new Set(existing.map((r) => r.feature));
-  const toCreate = input.features.filter((f) => !existingFeatures.has(f));
-
-  await prisma.$transaction([
-    ...(toDelete.length > 0
-      ? [
-          prisma.teamFeatureAccess.deleteMany({
-            where: { id: { in: toDelete } },
-          }),
-        ]
-      : []),
-    ...(toCreate.length > 0
-      ? [
-          prisma.teamFeatureAccess.createMany({
-            data: toCreate.map((feature) => ({ teamId, feature })),
-            skipDuplicates: true,
-          }),
-        ]
-      : []),
-  ]);
-
-  return getTeamFeatures(teamId);
-}
 
 // ── Team Channel Access ───────────────────────────────────────────────────────
 

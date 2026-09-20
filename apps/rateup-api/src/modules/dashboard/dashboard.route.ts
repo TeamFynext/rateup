@@ -4,11 +4,11 @@ import {
   getOverallStatsHandler,
   getTeamMemberStatsHandler,
 } from "./dashboard.controller.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { byTeamIdParamsSchema } from "../team/team.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function dashboardRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.get("/stats", getOverallStatsHandler);
   server.get("/surveys", getActiveSurveyStatsHandler);
   server.get(

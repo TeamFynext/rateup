@@ -25,8 +25,10 @@ import {
   eventMessageBodySchema,
   reminderBodySchema,
 } from "./settings.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function LoyaltySettingsRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.manage" });
   server.post(
     "/template",
     {

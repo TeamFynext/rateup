@@ -24,7 +24,6 @@ import {
   exportWaMessageLogsHandler,
 } from "./wamessage.controller.js";
 import { byContactIdSchema } from "../../../contact/contact.schema.js";
-import { TeamFeature } from "../../../../utils/permissions.js";
 import {
   blockUserSchema,
   bulkWaMessageAssignBody,
@@ -108,6 +107,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.post(
     "/exportmessages",
     {
+      config: { permission: "inbox.export" },
       schema: { querystring: waChatExportQuerySchema },
     },
     exportWhatsappChatsHandler,
@@ -117,6 +117,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.post(
     "/assign",
     {
+      config: { permission: "inbox.assign" },
       schema: {
         body: waMessageAssignBody,
       },
@@ -127,6 +128,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.post(
     "/assign-bulk",
     {
+      config: { permission: "inbox.assign" },
       schema: {
         body: bulkWaMessageAssignBody,
       },
@@ -170,6 +172,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.post(
     "/spam",
     {
+      config: { permission: "inbox.manage" },
       schema: {
         body: spamContactSchema,
       },
@@ -180,6 +183,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.post(
     "/block-user",
     {
+      config: { permission: "inbox.manage" },
       schema: {
         body: blockUserSchema,
       },
@@ -190,6 +194,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.post(
     "/unblock-user",
     {
+      config: { permission: "inbox.manage" },
       schema: {
         body: blockUserSchema,
       },
@@ -197,7 +202,11 @@ export async function waMessageRoutes(server: FastifyInstance) {
     unblockWhatsappUserHandler,
   );
 
-  server.get("/analytics", generateChatAnalyticsHandler);
+  server.get(
+    "/analytics",
+    { config: { permission: "analytics.read" } },
+    generateChatAnalyticsHandler,
+  );
   server.post(
     "/generate-response",
     {
@@ -210,18 +219,14 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.get(
     "/message-logs",
     {
-      config: {
-        feature: TeamFeature.analytics,
-      },
+      config: { permission: "analytics.read" },
     },
     getWaMessageLogsHandler,
   );
   server.get(
     "/export-message-logs",
     {
-      config: {
-        feature: TeamFeature.analytics,
-      },
+      config: { permission: "inbox.export" },
     },
     exportWaMessageLogsHandler,
   );

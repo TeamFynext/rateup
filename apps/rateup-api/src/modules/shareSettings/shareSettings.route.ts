@@ -4,6 +4,7 @@ import { MAX_LOGO_BYTES, onFile } from "./utils.js";
 import multipart from "@fastify/multipart";
 import { bodySchema, paramsSchema, responseSchema } from "./shareSettings.schema.js";
 import { FastifyInstance } from "fastify";
+import { declareAccess } from "../../authz/registry.js";
 
 async function routes(fastify: FastifyInstance) {
   fastify.register(multipart, {
@@ -11,6 +12,7 @@ async function routes(fastify: FastifyInstance) {
     onFile,
     limits: { fileSize: MAX_LOGO_BYTES, files: 1, fields: 16, fieldSize: 4096 },
   });
+  declareAccess(fastify, { access: "session" });
   fastify.addHook("preHandler", preHandlerHook);
 
   fastify.get(

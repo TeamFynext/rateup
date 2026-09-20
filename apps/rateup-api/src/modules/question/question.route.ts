@@ -10,7 +10,6 @@ import {
   updateQuestionHandler,
 } from "./question.controller.js";
 import { verifySurveyAccess } from "./question.auth.js";
-import { checkSession } from "../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
 import {
   createQuestionRequestSchema,
@@ -23,10 +22,11 @@ import {
   type ReplaceQuestionsInput,
   type QuestionsRouteParams,
 } from "./question.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 // Base route: /api/question/:surveyId
 export async function questionRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.addHook("preHandler", verifySurveyAccess);
   server.register(fastifyMultipart, {
     limits: {

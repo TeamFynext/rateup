@@ -1,7 +1,5 @@
 import { z } from "zod";
-import { Role, TeamFeature } from "../../../generated/prisma/client.js";
-
-const teamFeatureEnum = z.enum(TeamFeature);
+import { Role } from "../../../generated/prisma/client.js";
 
 const teamCore = {
   name: z.string(),
@@ -15,7 +13,6 @@ const teamCore = {
   orgId: z.string(),
   userId: z.string(),
   color: z.string().optional(),
-  features: z.array(teamFeatureEnum).optional(),
 };
 
 const createTeamRequestSchema = z.object({
@@ -52,14 +49,15 @@ export enum InviteType {
 }
 
 const inviteMemberRequestSchema = z.object({
-  orgId: z.string(),
+  /** Ignored when present: the handler overwrites both from the session. Older clients still send them. */
+  orgId: z.string().optional(),
   /** The team the invitation is filed under. Null invites into the org with no team. */
   teamId: z.string().nullable(),
-  invitedBy: z.string(),
+  invitedBy: z.string().optional(),
   type: z.enum(InviteType),
   email: z.string(),
   name: z.string(),
-  /** The role the invitee is created with on accept. Omitted means ADMIN. */
+  /** The role the invitee is created with on accept. Omitted means the default invited role (STAFF). */
   role: z.enum(Role).optional(),
   /** Every team the invitee should join; omitted means `teamId` alone. */
   teamIds: z.array(z.string()).optional(),
@@ -115,20 +113,6 @@ const tagQuerySchema = z.object({
   onlytag: z.boolean(),
 });
 
-const setTeamFeaturesSchema = z.object({
-  features: z.array(teamFeatureEnum),
-});
-
-const teamFeatureAccessItemSchema = z.object({
-  id: z.string(),
-  feature: teamFeatureEnum,
-  createdAt: z.string().or(z.date()),
-});
-
-const getTeamFeaturesResponseSchema = z.object({
-  features: z.array(teamFeatureAccessItemSchema),
-});
-
 // `allChannels: true` means every channel in the org, including ones connected later, so
 // `channelIds` is ignored in that case rather than being frozen to today's channel list.
 const setTeamChannelsSchema = z.object({
@@ -162,7 +146,6 @@ export type IdParamInput = z.infer<typeof idParamRequestSchema>;
 export type ByTeamIdParams = z.infer<typeof byTeamIdParamsSchema>;
 export type tagQuerySchema = z.infer<typeof tagQuerySchema>;
 export type BySurveyTeamMapIdParams = z.infer<typeof bySurveyTeamMapIdParamsSchema>;
-export type SetTeamFeaturesInput = z.infer<typeof setTeamFeaturesSchema>;
 export type SetTeamChannelsInput = z.infer<typeof setTeamChannelsSchema>;
 
 // Auto-exported after fastify-zod migration
@@ -181,8 +164,6 @@ export {
   bySurveyTeamMapIdParamsSchema,
   deleteTeamMemberSchema,
   addTeamMemberSchema,
-  setTeamFeaturesSchema,
-  getTeamFeaturesResponseSchema,
   setTeamChannelsSchema,
   getTeamChannelsResponseSchema,
 };

@@ -14,6 +14,7 @@ import {
 import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
 import { getChannelScope } from "./wa_channel_access.js";
+import type { Actor } from "../../../authz/actor.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
 
 /**
@@ -169,10 +170,11 @@ export async function getAllWaSettings(orgId: string) {
  * channel pickers — so narrowing here narrows every `AccountSelector` in the UI, and also every
  * `waSettings[0]` default, without any frontend change.
  */
-export async function getAccessibleWaSettings(orgId: string, userId: string, role: string) {
-  if (role === "SUPER_ADMIN") return await getAllWaSettings(orgId);
+export async function getAccessibleWaSettings(actor: Actor) {
+  const orgId = actor.orgId;
+  if (actor.scope.all) return await getAllWaSettings(orgId);
 
-  const scope = await getChannelScope(orgId, userId);
+  const scope = await getChannelScope(actor);
   if (scope.all === true) return await getAllWaSettings(orgId);
 
   const res = await prisma.whatsappSettings.findMany({

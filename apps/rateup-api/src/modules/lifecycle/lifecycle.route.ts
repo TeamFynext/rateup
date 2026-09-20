@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   createLifecycleHandler,
   deleteLifecycleByIdHandler,
@@ -13,9 +12,10 @@ import {
   lifecycleReorderSchema,
   lifecycleIdParamSchema,
 } from "./lifecycle.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function lifecycleRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.get("/", getLifecyclesHandler);
   server.get("/contacts", getLifecyclesWithContatsCountHandler);
   server.post(

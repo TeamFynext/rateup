@@ -25,7 +25,6 @@ vi.mock("../../utils/logger.js", () => ({
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   addToken,
   deleteTokenByUserId,
@@ -624,7 +623,10 @@ describe("mobileNotificationRoutes", () => {
   test("requires a session for the whole tree", async () => {
     const { hooks } = await collect();
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const probe: any = { method: "GET", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "session" });
   });
 
   test("registers three routes on the collection path", async () => {

@@ -9,8 +9,10 @@ import {
   type validateOtpInput,
 } from "./email.schema.js";
 import { rateLimit } from "../../utils/rateLimit.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function emailPublicRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "public" });
   server.post<{ Body: SendEmailInput }>(
     "/send-email",
     {

@@ -143,7 +143,7 @@ describe("sendSupportEmailHandler", () => {
 
 describe("the /email route", () => {
   test("rate limits before it checks the token", async () => {
-    const server: any = { post: vi.fn(), get: vi.fn() };
+    const server: any = { post: vi.fn(), get: vi.fn(), addHook: vi.fn() };
 
     await supportUserWebhookRoutes(server);
 

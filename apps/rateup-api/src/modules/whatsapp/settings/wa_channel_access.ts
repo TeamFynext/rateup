@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma.js";
+import type { Actor } from "../../../authz/actor.js";
 import { channelIdentifierSpellings } from "../../../utils/channelIdentifier.js";
 
 /**
@@ -43,14 +44,16 @@ export function invalidateChannelAccessCache(orgId?: string) {
   }
 }
 
-async function computeScope(orgId: string, userId: string): Promise<ChannelScope> {
-  const teams = await prisma.team.findMany({
-    where: { orgId, members: { some: { userId } } },
-    select: { allChannels: true, channelAccess: { select: { channelId: true } } },
-  });
+async function computeScope(actor: Actor): Promise<ChannelScope> {
+  if (actor.scope.all) return SCOPE_ALL;
 
   // Not in any team — scoping was never applied to this user.
-  if (teams.length === 0) return SCOPE_ALL;
+  if (actor.scope.teamIds.length === 0) return SCOPE_ALL;
+
+  const teams = await prisma.team.findMany({
+    where: { orgId: actor.orgId, id: { in: [...actor.scope.teamIds] } },
+    select: { allChannels: true, channelAccess: { select: { channelId: true } } },
+  });
 
   // Any unscoped team widens the union to everything.
   if (teams.some((team) => team.allChannels)) return SCOPE_ALL;
@@ -74,14 +77,13 @@ async function computeScope(orgId: string, userId: string): Promise<ChannelScope
  * "match nothing", not as "no filter".
  */
 export async function getScopedSourceIdentifiers(
-  orgId: string,
-  userId: string,
+  actor: Actor,
 ): Promise<{ all: boolean; identifiers: string[] }> {
-  const scope = await getChannelScope(orgId, userId);
+  const scope = await getChannelScope(actor);
   if (scope.all) return { all: true, identifiers: [] };
 
   const channels = await prisma.whatsappSettings.findMany({
-    where: { orgId, id: { in: Array.from(scope.ids) } },
+    where: { orgId: actor.orgId, id: { in: Array.from(scope.ids) } },
     select: { phone: true, ibaId: true, fbPageId: true },
   });
 
@@ -102,12 +104,13 @@ export async function getScopedSourceIdentifiers(
   return { all: false, identifiers: Array.from(identifiers) };
 }
 
-export async function getChannelScope(orgId: string, userId: string): Promise<ChannelScope> {
-  const cacheKey = `${orgId}:${userId}`;
+export async function getChannelScope(actor: Actor): Promise<ChannelScope> {
+  if (actor.scope.all) return SCOPE_ALL;
+  const cacheKey = `${actor.orgId}:${actor.userId ?? actor.principal.kind}`;
   const cached = scopeCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.scope;
 
-  const scope = await computeScope(orgId, userId);
+  const scope = await computeScope(actor);
 
   // Cheap bound: the cache is a latency optimisation, not a correctness requirement.
   if (scopeCache.size >= CACHE_MAX_ENTRIES) scopeCache.clear();

@@ -169,6 +169,12 @@ function makeReply() {
   return reply;
 }
 
+const ACTOR = {
+  orgId: "org-1",
+  userId: "user-1",
+  scope: { all: false, teamIds: [], inbox: "all" },
+} as any;
+
 function makeRequest(overrides: Record<string, unknown> = {}) {
   return {
     params: {},
@@ -176,6 +182,7 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
     query: {},
     userId: "user-1",
     user: { orgId: "org-1", userId: "user-1", role: "ADMIN" },
+    actor: ACTOR,
     ...overrides,
   } as any;
 }
@@ -340,13 +347,13 @@ describe("getAssignedUserForContactHandler", () => {
 });
 
 describe("getContactsCountByInboxTabHandler", () => {
-  test("counts the tabs for the caller's org, user and role", async () => {
+  test("counts the tabs for the caller's org, user and scope", async () => {
     m.counts.mockResolvedValue({ NEW: 2, ASSIGNED: 5 });
     const reply = makeReply();
 
     await getContactsCountByInboxTabHandler(makeRequest(), reply);
 
-    expect(m.counts).toHaveBeenCalledWith("org-1", "user-1", "ADMIN");
+    expect(m.counts).toHaveBeenCalledWith("org-1", "user-1", ACTOR);
     expect(reply.payload).toEqual({ NEW: 2, ASSIGNED: 5 });
   });
 
@@ -545,7 +552,7 @@ describe("getFilteredContactsHandler", () => {
 
     await getFilteredContactsHandler(makeRequest({ query: { page: "2", filterData } }), reply);
 
-    expect(m.filterChats).toHaveBeenCalledWith("org-1", 2, { status: ["NEW"] }, "user-1", "ADMIN");
+    expect(m.filterChats).toHaveBeenCalledWith("org-1", 2, { status: ["NEW"] }, "user-1", ACTOR);
     expect(reply.payload).toEqual({ rows: [{ id: "c1" }], nextOffset: 3 });
   });
 

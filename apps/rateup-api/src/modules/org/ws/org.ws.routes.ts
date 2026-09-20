@@ -7,7 +7,9 @@ import {
 } from "./org.ws.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { afterAuthIdParamsSchema } from "./org.ws.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 export async function orgWsRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   server.get(
     "/auth",
     {
@@ -42,6 +44,7 @@ export async function orgWsRoutes(server: FastifyInstance) {
   }>(
     "/:afterAuthId/widget",
     {
+      config: { access: "public" },
       preHandler: checkWidgetToken,
       websocket: true,
       schema: {
@@ -54,6 +57,7 @@ export async function orgWsRoutes(server: FastifyInstance) {
   server.get(
     "/:afterAuthId/mobilews",
     {
+      config: { access: "public" },
       preHandler: checkMobileId,
       websocket: true,
     },

@@ -1,13 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   getAllTestimonialByOrgHandler,
   getAllTestimonialBySurveyIdHandler,
 } from "./testimonial.controller.js";
 import { bySurveyIdParamsSchema } from "./testimonial.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function testimonialRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.get(
     "/:surveyId",
     {

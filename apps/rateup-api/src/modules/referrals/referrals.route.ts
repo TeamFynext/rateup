@@ -17,8 +17,10 @@ import {
   type CreateReferralInput,
   type TrackVisitInput,
 } from "./referrals.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function referralRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   // Referrals are a Starter-and-above capability; this tree was previously ungated at
   // the subscription level. Applied per-route rather than as a hook so /track-visit
   // stays public — it is hit by referred visitors who have no session and are not the
@@ -56,6 +58,7 @@ export async function referralRoutes(server: FastifyInstance) {
   server.post<{ Body: TrackVisitInput }>(
     "/track-visit",
     {
+      config: { access: "public" },
       preHandler: rateLimit({ max: 60, windowSeconds: 3600, key: "referralTrackVisit" }),
       schema: { body: trackVisitSchema },
     },

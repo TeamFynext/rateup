@@ -54,16 +54,10 @@ vi.mock("../whatsapp/whatsappSurvey/wasurvey.controller.js", () => ({
   webhookSubscribeHandler: vi.fn(),
 }));
 vi.mock("fastify-raw-body", () => ({ default: vi.fn() }));
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  // Tagged with the roles it was built for so route registration can assert
-  // which gate each route carries.
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { webhookSubscribeHandler } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import { callMetaAgentApi, MetaAgentApiError } from "./metaAgent.client.js";
 import crypto from "node:crypto";
@@ -487,7 +481,7 @@ describe("metaAgentWebhookEventHandler", () => {
     // ask for it.
     expect(routes[1].opts.config.rawBody).toBe(true);
     expect(srv.register).toHaveBeenCalledOnce();
-    expect(srv.addHook).not.toHaveBeenCalled();
+    expect(srv.addHook).toHaveBeenCalledWith("onRoute", expect.any(Function));
   });
 });
 
@@ -845,7 +839,13 @@ describe("metaAgentRoutes", () => {
   test("requires a session for the whole tree", async () => {
     const { hooks } = await collect();
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const read: any = { method: "GET", url: "/x", config: {} };
+    const write: any = { method: "POST", url: "/x", config: {} };
+    hooks[0].fn(read);
+    hooks[0].fn(write);
+    expect(read.config).toEqual({ permission: "meta_agent.read", access: "session" });
+    expect(write.config).toEqual({ permission: "meta_agent.use", access: "session" });
   });
 
   test("every route is scoped under the channel id", async () => {
@@ -870,7 +870,7 @@ describe("metaAgentRoutes", () => {
     const credentialRoutes = routes.filter((r) => /upsert(ApiKey|OAuth|Certificate)/i.test(r.url));
     expect(credentialRoutes.length).toBe(3);
     for (const r of credentialRoutes) {
-      expect((r.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+      expect(r.opts.config.permission).toBe("meta_agent.manage");
       expect(r.opts.schema.body).toBeDefined();
     }
   });
@@ -879,7 +879,7 @@ describe("metaAgentRoutes", () => {
     const { routes } = await collect();
 
     const gated = routes
-      .filter((r) => r.opts.preHandler)
+      .filter((r) => r.opts.config?.permission === "meta_agent.manage")
       .map((r) => `${r.method} ${r.url.replace("/:whatsappSettingsId", "")}`);
 
     expect(gated).toEqual([

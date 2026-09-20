@@ -156,6 +156,7 @@ const dequeueAdd = (waCampaignDequeue as unknown as { add: Mock }).add;
 const getDelayedMock = (waMessageQueue as unknown as { getDelayed: Mock }).getDelayed;
 
 const ORG_A = "org-a";
+const ALL_ACTOR = { scope: { all: true, teamIds: [] } } as any;
 const CAMPAIGN_ID = "camp-1";
 
 /** Reconstructs a $queryRaw call's SQL, with fragments spliced back in. */
@@ -326,7 +327,11 @@ describe("createCampaign", () => {
   });
 
   test("creates the campaign, its drip stages and its stats row", async () => {
-    await createCampaign({ ...input, dripStages: [{ templateId: "tpl-1", delay: 1 }] }, ORG_A);
+    await createCampaign(
+      { ...input, dripStages: [{ templateId: "tpl-1", delay: 1 }] },
+      ORG_A,
+      ALL_ACTOR,
+    );
 
     expect(db.campaign.create.mock.calls[0][0].data).toMatchObject({
       name: "March push",
@@ -345,13 +350,13 @@ describe("createCampaign", () => {
   });
 
   test("stores an empty tag list when none was given", async () => {
-    await createCampaign(input, ORG_A);
+    await createCampaign(input, ORG_A, ALL_ACTOR);
 
     expect(db.campaign.create.mock.calls[0][0].data.dynamicTags).toEqual([]);
   });
 
   test("resolves a Meta flow id to our own before storing it", async () => {
-    await createCampaign({ ...input, flowId: "wa-flow-1" }, ORG_A);
+    await createCampaign({ ...input, flowId: "wa-flow-1" }, ORG_A, ALL_ACTOR);
 
     expect(db.waFlow.findFirst.mock.calls[0][0]).toEqual({
       where: { flowId: "wa-flow-1", orgId: ORG_A },
@@ -362,33 +367,33 @@ describe("createCampaign", () => {
   test("refuses a team belonging to another org", async () => {
     db.team.findFirst.mockResolvedValue(null);
 
-    await expect(createCampaign({ ...input, teamId: "another-orgs-team" }, ORG_A)).rejects.toThrow(
-      "Team not found",
-    );
+    await expect(
+      createCampaign({ ...input, teamId: "another-orgs-team" }, ORG_A, ALL_ACTOR),
+    ).rejects.toThrow("Team not found");
     expect(db.campaign.create).not.toHaveBeenCalled();
   });
 
   test("resolves the team against the caller's org", async () => {
-    await createCampaign(input, ORG_A);
+    await createCampaign(input, ORG_A, ALL_ACTOR);
 
     expect(db.team.findFirst.mock.calls[0][0].where).toEqual({ id: "team-1", orgId: ORG_A });
   });
 
   test("stores an empty flow id for a campaign that has no flow", async () => {
-    await createCampaign(input, ORG_A);
+    await createCampaign(input, ORG_A, ALL_ACTOR);
 
     expect(db.waFlow.findFirst).not.toHaveBeenCalled();
     expect(db.campaign.create.mock.calls[0][0].data.flowId).toBe("");
   });
 
   test("stores the status the wizard posted", async () => {
-    await createCampaign({ ...input, status: "DRAFT" }, ORG_A);
+    await createCampaign({ ...input, status: "DRAFT" }, ORG_A, ALL_ACTOR);
 
     expect(db.campaign.create.mock.calls[0][0].data.status).toBe("DRAFT");
   });
 
   test("falls back to DRAFT when no status was given", async () => {
-    await createCampaign(input, ORG_A);
+    await createCampaign(input, ORG_A, ALL_ACTOR);
 
     expect(db.campaign.create.mock.calls[0][0].data.status).toBe("DRAFT");
   });
@@ -396,7 +401,7 @@ describe("createCampaign", () => {
   test("throws for a flow id that matches nothing", async () => {
     db.waFlow.findFirst.mockResolvedValue(null);
 
-    await expect(createCampaign({ ...input, flowId: "nope" }, ORG_A)).rejects.toThrow(
+    await expect(createCampaign({ ...input, flowId: "nope" }, ORG_A, ALL_ACTOR)).rejects.toThrow(
       "WaFlow with flowId nope not found.",
     );
   });

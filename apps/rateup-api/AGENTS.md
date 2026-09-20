@@ -223,7 +223,7 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
 - **Queue:** BullMQ + Redis (ioredis)
 - **Streaming:** Kafka (kafkajs)
 - **Auth:** SuperTokens
-- **Authorization:** CASL
+- **Authorization:** permission catalogue + system roles in `src/authz/` — every `/api` route declares `config.permission` or `config.access` (see CLAUDE.md "Request auth & authorization layering")
 - **Payments:** Stripe, Razorpay
 - **Storage:** AWS S3
 - **Email:** SendGrid, Nodemailer

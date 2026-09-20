@@ -1,3 +1,5 @@
+import { buildActor, loadActor } from "../../../authz/actor.js";
+import { roleKeyToLegacy } from "../../../authz/roles.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import crypto from "node:crypto";
 import { orgWsMessage } from "../../../types/global.js";
@@ -223,6 +225,8 @@ export const checkWidgetToken = async (
   }
 
   request.user = { orgId, role: Role.SUPER_ADMIN };
+  request.principal = { kind: "widget", orgId };
+  request.actor = buildActor(request.principal);
 };
 
 export const checkMobileId = async (
@@ -263,6 +267,7 @@ export const checkMobileId = async (
   }
   request.userId = userId;
   const { role, orgId, email } = session.getAccessTokenPayload();
-  const user = { userId, role, orgId, email };
-  request.user = user;
+  const actor = orgId ? await loadActor(userId, orgId) : null;
+  if (actor) request.actor = actor;
+  request.user = { userId, role: actor ? roleKeyToLegacy(actor.roleKey!) : role, orgId, email };
 };

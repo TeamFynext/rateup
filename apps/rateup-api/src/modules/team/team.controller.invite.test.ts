@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { legacyRoleToKey, ROLE_PERMISSIONS, type LegacyRole } from "../../authz/roles.js";
 
 vi.mock("./team.service.js", () => ({
   addMemberToTeams: vi.fn(),
@@ -176,7 +177,7 @@ describe("addMembertoTeamsHandler", () => {
 
     await addMembertoTeamsHandler(memberRequest({ userId: "user-1", orgId: "org-1" }), reply);
 
-    expect(addMemberToTeams).toHaveBeenCalledWith(["team-1"], "user-2");
+    expect(addMemberToTeams).toHaveBeenCalledWith(["team-1"], "user-2", "org-1");
     expect(addMembersToTeamsMail).toHaveBeenCalledWith("invitee@acme.com", "Support", {
       id: "user-1",
       orgId: "org-1",
@@ -208,6 +209,7 @@ describe("inviteMemberHandler", () => {
         role: invitedRole,
       },
       user: { userId: "user-1", orgId: "org-1", role: callerRole },
+      actor: { permissions: ROLE_PERMISSIONS[legacyRoleToKey(callerRole as LegacyRole, false)] },
     } as any;
   }
 

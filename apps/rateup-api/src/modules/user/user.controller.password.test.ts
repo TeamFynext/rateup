@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("../../authz/ownership.js", () => ({
+  assertMemberOfOrg: vi.fn(),
+  assertNotOwner: vi.fn(),
+}));
 vi.mock("../../../generated/prisma/client.js", () => ({
   Prisma: {
     PrismaClientKnownRequestError: class extends Error {

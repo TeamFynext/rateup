@@ -20,6 +20,7 @@ import {
   type GetLeadMetaQuery,
   type GetLeadSettingsBody,
 } from "./getlead.schema.js";
+import { declareAccess } from "../../../../authz/registry.js";
 
 /**
  * Only what the generic integration CRUD cannot do.
@@ -32,6 +33,7 @@ import {
  * receiver they point at is public, and lives in `getlead.public.route.ts`.
  */
 export async function getleadRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   server.post<{ Body: GetLeadConnectBody }>(
     "/connect",
     {

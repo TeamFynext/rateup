@@ -15,9 +15,10 @@ import {
   ProgramIdParam,
   DeleteProgramQuery,
 } from "./program.schema.js";
-import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function loyaltyProgramRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.manage" });
   server.post(
     "/",
     {
@@ -57,7 +58,7 @@ export async function loyaltyProgramRoutes(server: FastifyInstance) {
   server.delete<{ Params: ProgramIdParam; Querystring: DeleteProgramQuery }>(
     "/:programId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "loyalty.manage" },
       schema: {
         params: programIdParamSchema,
         querystring: deleteProgramQuerySchema,

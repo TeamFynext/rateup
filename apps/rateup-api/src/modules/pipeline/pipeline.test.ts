@@ -79,7 +79,7 @@ import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.
 import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.service.js";
 import { sendWonConversionEvent } from "../integrations/meta/conversions.service.js";
 import {
-  isPipelineMember,
+  isPipelineAccessible,
   TeamAccessError,
   createPipeline,
   DEFAULT_STAGES,
@@ -112,6 +112,9 @@ import { createStageRequestSchema } from "./pipelineStage/stage.schema.js";
 const db = prisma as unknown as Record<string, any>;
 
 const USER = "11111111-1111-1111-1111-111111111111";
+/** A team-scoped actor reaching exactly these teams. */
+const scoped = (teamIds: string[]) =>
+  ({ orgId: ORG, userId: USER, scope: { all: false, teamIds, inbox: "all" } }) as any;
 const ORG = "22222222-2222-4222-8222-222222222222";
 const PIPELINE = "33333333-3333-4333-8333-333333333333";
 const STAGE = "44444444-4444-4444-8444-444444444444";
@@ -165,19 +168,22 @@ beforeEach(() => {
 describe("pipeline access", () => {
   test("a member of one of the pipeline's teams has access", async () => {
     db.pipelineTeam.findFirst.mockResolvedValue({ pipelineId: PIPELINE });
-    await expect(isPipelineMember(PIPELINE, USER)).resolves.toBe(true);
+    await expect(isPipelineAccessible(PIPELINE, scoped(["own-team"]))).resolves.toBe(true);
   });
 
   test("someone on none of its teams does not", async () => {
     db.pipelineTeam.findFirst.mockResolvedValue(null);
-    await expect(isPipelineMember(PIPELINE, USER)).resolves.toBe(false);
+    await expect(isPipelineAccessible(PIPELINE, scoped(["own-team"]))).resolves.toBe(false);
   });
 
   test("the guard answers 403 rather than letting the handler run", async () => {
     db.pipelineTeam.findFirst.mockResolvedValue(null);
     const rep = reply();
 
-    await verifyPipelineAccess({ params: { id: PIPELINE }, userId: USER } as any, rep);
+    await verifyPipelineAccess(
+      { params: { id: PIPELINE }, userId: USER, actor: scoped(["own-team"]) } as any,
+      rep,
+    );
 
     expect(answer(rep).code).toBe(403);
   });
@@ -186,11 +192,17 @@ describe("pipeline access", () => {
 // Board tuning is for whoever works the board; handing it to another team or
 // deleting it is not. The UI hides both, and these keep the routes honest.
 describe("owner-only pipeline actions", () => {
-  const member = (body: unknown) => ({ params: { id: PIPELINE }, body, user: { role: "MEMBER" } });
+  const member = (body: unknown) => ({
+    params: { id: PIPELINE },
+    body,
+    user: { role: "MEMBER" },
+    actor: { can: () => false },
+  });
   const owner = (body: unknown) => ({
     params: { id: PIPELINE },
     body,
     user: { role: "SUPER_ADMIN" },
+    actor: { can: (p: string) => p === "pipelines.admin" },
   });
 
   test("a member may still retune the funnel", async () => {
@@ -224,7 +236,7 @@ describe("owner-only pipeline actions", () => {
 
 describe("creating a pipeline", () => {
   test("refuses teams the caller does not belong to", async () => {
-    db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
+    const actor = scoped(["own-team"]);
 
     await expect(
       createPipeline({
@@ -232,6 +244,7 @@ describe("creating a pipeline", () => {
         teamIds: ["own-team", "someone-elses-team"],
         orgId: ORG,
         userId: USER,
+        actor,
       }),
     ).rejects.toBeInstanceOf(TeamAccessError);
     expect(db.pipeline.create).not.toHaveBeenCalled();
@@ -240,7 +253,7 @@ describe("creating a pipeline", () => {
   // The board is the org's own, so it starts from the template rather than from
   // anything the inbox happens to hold.
   test("seeds the default funnel, in order, ending in Won and Lost", async () => {
-    db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
+    const actor = scoped(["own-team"]);
     db.pipeline.findFirst.mockResolvedValue(null);
     db.pipeline.create.mockResolvedValue({ id: PIPELINE, stages: [] });
 
@@ -249,6 +262,7 @@ describe("creating a pipeline", () => {
       teamIds: ["own-team"],
       orgId: ORG,
       userId: USER,
+      actor,
     });
 
     const data = db.pipeline.create.mock.calls[0][0].data;
@@ -274,7 +288,7 @@ describe("creating a pipeline", () => {
 
   // The board no longer reads the org's lifecycles at all.
   test("does not look at the org's lifecycles", async () => {
-    db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
+    const actor = scoped(["own-team"]);
     db.pipeline.findFirst.mockResolvedValue(null);
     db.pipeline.create.mockResolvedValue({ id: PIPELINE, stages: [] });
 
@@ -283,6 +297,7 @@ describe("creating a pipeline", () => {
       teamIds: ["own-team"],
       orgId: ORG,
       userId: USER,
+      actor,
     });
 
     expect(db.lifecycle.findMany).not.toHaveBeenCalled();
@@ -291,7 +306,7 @@ describe("creating a pipeline", () => {
   // One board per org for now. The count is per-org, so another org having one
   // must not block this one.
   test("refuses a second pipeline in the same org", async () => {
-    db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
+    const actor = scoped(["own-team"]);
     db.pipeline.count.mockResolvedValue(1);
 
     await expect(
@@ -300,6 +315,7 @@ describe("creating a pipeline", () => {
         teamIds: ["own-team"],
         orgId: ORG,
         userId: USER,
+        actor,
       }),
     ).rejects.toBeInstanceOf(PipelineLimitError);
 
@@ -316,10 +332,10 @@ describe("changing a pipeline's teams", () => {
 
   test("refuses to add a team the caller does not belong to", async () => {
     db.pipelineTeam.findMany.mockResolvedValue([{ teamId: "own-team" }]);
-    db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
+    const actor = scoped(["own-team"]);
 
     await expect(
-      updatePipeline(PIPELINE, { teamIds: ["own-team", "someone-elses-team"] }, USER),
+      updatePipeline(PIPELINE, { teamIds: ["own-team", "someone-elses-team"] }, actor),
     ).rejects.toBeInstanceOf(TeamAccessError);
     expect(db.pipeline.update).not.toHaveBeenCalled();
   });
@@ -328,9 +344,9 @@ describe("changing a pipeline's teams", () => {
   // including ones that leave that team exactly where it is.
   test("lets a team already on the board be kept", async () => {
     db.pipelineTeam.findMany.mockResolvedValue([{ teamId: "own-team" }, { teamId: "their-team" }]);
-    db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }]);
+    const actor = scoped(["own-team"]);
 
-    await updatePipeline(PIPELINE, { teamIds: ["own-team", "their-team"] }, USER);
+    await updatePipeline(PIPELINE, { teamIds: ["own-team", "their-team"] }, actor);
 
     expect(db.pipeline.update.mock.calls[0][0].data.teams.createMany.data).toEqual([
       { teamId: "own-team" },
@@ -340,9 +356,9 @@ describe("changing a pipeline's teams", () => {
 
   test("a team taken off the board stops filing contacts onto it", async () => {
     db.pipelineTeam.findMany.mockResolvedValue([{ teamId: "own-team" }, { teamId: "dropped" }]);
-    db.teamMember.findMany.mockResolvedValue([{ teamId: "own-team" }, { teamId: "dropped" }]);
+    const actor = scoped(["own-team", "dropped"]);
 
-    await updatePipeline(PIPELINE, { teamIds: ["own-team"] }, USER);
+    await updatePipeline(PIPELINE, { teamIds: ["own-team"] }, actor);
 
     expect(db.team.updateMany).toHaveBeenCalledWith({
       where: { defaultPipelineId: PIPELINE, id: { notIn: ["own-team"] } },
@@ -351,7 +367,7 @@ describe("changing a pipeline's teams", () => {
   });
 
   test("an edit that does not touch teams leaves the routing alone", async () => {
-    await updatePipeline(PIPELINE, { rottingEnabled: false }, USER);
+    await updatePipeline(PIPELINE, { rottingEnabled: false }, scoped(["own-team"]));
 
     expect(db.pipelineTeam.findMany).not.toHaveBeenCalled();
     expect(db.team.updateMany).not.toHaveBeenCalled();

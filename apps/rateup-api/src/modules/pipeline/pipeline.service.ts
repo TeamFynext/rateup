@@ -1,3 +1,6 @@
+import type { Actor } from "../../authz/actor.js";
+import { pipelineInScope } from "../../authz/resourceScope.js";
+import { inScope } from "../../authz/scope.js";
 import prisma from "../../utils/prisma.js";
 import type {
   CreateLabelRequestSchema,
@@ -91,38 +94,22 @@ export class PipelineLimitError extends Error {
   }
 }
 
-async function assertTeamsAreTheCallers(teamIds: string[], userId: string) {
+function assertTeamsInScope(teamIds: string[], actor: Actor) {
   if (!teamIds.length) throw new TeamAccessError([]);
-  const memberships = await prisma.teamMember.findMany({
-    where: { userId, teamId: { in: teamIds } },
-    select: { teamId: true },
-  });
-  const allowed = new Set(memberships.map((m) => m.teamId));
-  const foreign = teamIds.filter((id) => !allowed.has(id));
+  const foreign = teamIds.filter((id) => !inScope(actor, id));
   if (foreign.length) throw new TeamAccessError(foreign);
 }
 
-/** Teams the user belongs to — the scope every pipeline read is filtered by. */
-async function teamIdsForUser(userId: string) {
-  const memberships = await prisma.teamMember.findMany({
-    where: { userId },
-    select: { teamId: true },
-  });
-  return memberships.map((m) => m.teamId);
-}
-
-export async function isPipelineMember(pipelineId: string, userId: string) {
-  const match = await prisma.pipelineTeam.findFirst({
-    where: { pipelineId, team: { members: { some: { userId } } } },
-    select: { pipelineId: true },
-  });
-  return Boolean(match);
+/** A board is reachable when one of its teams is in the actor's scope. */
+export async function isPipelineAccessible(pipelineId: string, actor: Actor | undefined) {
+  if (!actor) return false;
+  return pipelineInScope(pipelineId, actor);
 }
 
 export async function createPipeline(
-  data: CreatePipelineRequestSchema & { orgId: string; userId: string },
+  data: CreatePipelineRequestSchema & { orgId: string; userId: string; actor: Actor },
 ) {
-  await assertTeamsAreTheCallers(data.teamIds, data.userId);
+  assertTeamsInScope(data.teamIds, data.actor);
 
   return prisma.$transaction(async (tx) => {
     // Checked inside the transaction so a slow create cannot be raced past a
@@ -163,12 +150,14 @@ export async function createPipeline(
   });
 }
 
-export async function getPipelines(userId: string, orgId: string) {
-  const teamIds = await teamIdsForUser(userId);
-  if (!teamIds.length) return [];
+export async function getPipelines(actor: Actor, orgId: string) {
+  if (!actor.scope.all && actor.scope.teamIds.length === 0) return [];
 
   const pipelines = await prisma.pipeline.findMany({
-    where: { orgId, teams: { some: { teamId: { in: teamIds } } } },
+    where: {
+      orgId,
+      ...(actor.scope.all ? {} : { teams: { some: { teamId: { in: [...actor.scope.teamIds] } } } }),
+    },
     orderBy: [{ order: "asc" }, { name: "asc" }],
     include: {
       teams: { select: { teamId: true } },
@@ -216,11 +205,7 @@ export async function getPipelineById(id: string) {
   };
 }
 
-export async function updatePipeline(
-  id: string,
-  data: UpdatePipelineRequestSchema,
-  userId: string,
-) {
+export async function updatePipeline(id: string, data: UpdatePipelineRequestSchema, actor: Actor) {
   if (data.teamIds !== undefined) {
     const current = await prisma.pipelineTeam.findMany({
       where: { pipelineId: id },
@@ -228,7 +213,7 @@ export async function updatePipeline(
     });
     const existing = new Set(current.map((row) => row.teamId));
     const added = data.teamIds.filter((teamId) => !existing.has(teamId));
-    if (added.length) await assertTeamsAreTheCallers(added, userId);
+    if (added.length) assertTeamsInScope(added, actor);
   }
 
   return prisma.$transaction(async (tx) => {

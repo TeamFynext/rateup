@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   createGoogleSheetAuthToken,
   createIntegrationHandler,
@@ -27,11 +26,11 @@ import {
   type ByNameParams,
   type UpdateIntgrationInput,
 } from "./integrations.schema.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { shopifyRoutes } from "./shopify/shopify.route.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function integrationsRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { read: "integrations.read", write: "integrations.manage" });
 
   server.register(shopifyRoutes, { prefix: "/shopify" });
 
@@ -49,7 +48,6 @@ export async function integrationsRoutes(server: FastifyInstance) {
   server.post<{ Body: IntegrationSchema }>(
     "/",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         body: integrationSchema,
       },
@@ -59,7 +57,6 @@ export async function integrationsRoutes(server: FastifyInstance) {
   server.put<{ Params: ByNameParams; Body: UpdateIntgrationInput }>(
     "/:name",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         params: byNameSchema,
         body: updateIntgrationSchema,
@@ -77,19 +74,14 @@ export async function integrationsRoutes(server: FastifyInstance) {
     deleteIntegrationByNameHandler,
   );
 
-  server.post<{ Body: { code: string } }>(
-    "/google/auth-token",
-    {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
-    },
-    createGoogleSheetAuthToken,
-  );
+  server.post<{ Body: { code: string } }>("/google/auth-token", {}, createGoogleSheetAuthToken);
 
   server.get("/google/auth-url", getGoogleAuthUrlForSheetHandler);
   server.get("/wa_payment_configurations", getWaPaymentConfigurationsHandler);
   server.get(
     "/regenerate_wa_payment_config_oauth/:name",
     {
+      config: { permission: "integrations.manage" },
       schema: {
         params: byNameSchema,
       },

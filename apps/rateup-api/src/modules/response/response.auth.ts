@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessToSurvey } from "../../utils/auth.js";
+import { surveyInScope } from "../../authz/resourceScope.js";
 import { GetResponsesParams, getResponsesBody } from "./response.schema.js";
 import { getSurveyIdfromMap } from "../../utils/surveyTeam/mapActions.js";
 
@@ -23,7 +23,7 @@ export async function verifyAccess(
     return reply.code(400).send({ message: "No survey named in the request" });
   }
 
-  const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
+  const hasAccess = request.actor ? await surveyInScope(surveyId, request.actor) : false;
 
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have access to this survey" });

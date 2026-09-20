@@ -21,12 +21,11 @@ vi.mock("./question.utils.js", async () => {
     getQuestionsArrUpdatedGRTypeQuestion: vi.fn(async (questions: unknown) => questions),
   };
 });
-vi.mock("../../utils/auth.js", () => ({ hasAccessToSurvey: vi.fn() }));
+vi.mock("../../authz/resourceScope.js", () => ({ surveyInScope: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
-import { hasAccessToSurvey } from "../../utils/auth.js";
-import { checkSession } from "../../utils/checkSession.js";
+import { surveyInScope } from "../../authz/resourceScope.js";
 import { updateSurveyVariables, getSurveyById } from "../survey/survey.service.js";
 import {
   createQuestion,
@@ -64,6 +63,8 @@ const db = prisma as unknown as {
 };
 
 const USER = "11111111-1111-1111-1111-111111111111";
+// Any actor: the scope lookup itself is mocked.
+const ACTOR = { scope: { all: false, teamIds: [] } } as any;
 const SURVEY = "22222222-2222-2222-2222-222222222222";
 
 const q = (id: string, over: Record<string, unknown> = {}) => ({
@@ -89,7 +90,7 @@ beforeEach(() => {
   db.survey.update.mockResolvedValue({ id: SURVEY });
   db.waFlow.findFirst.mockResolvedValue(null);
   db.waFlow.update.mockResolvedValue({});
-  (hasAccessToSurvey as unknown as Mock).mockResolvedValue(true);
+  (surveyInScope as unknown as Mock).mockResolvedValue(true);
   (updateSurveyVariables as unknown as Mock).mockResolvedValue(undefined);
   (getSurveyById as unknown as Mock).mockResolvedValue({ languages: ["English"] });
 });
@@ -554,20 +555,27 @@ describe("questionRoutes", () => {
   test("guards the whole tree with the session and survey checks", async () => {
     const { hooks } = await collectRoutes();
 
-    expect(hooks.map((h) => h.fn)).toEqual([checkSession, verifySurveyAccess]);
+    expect(hooks.map((h) => h.name)).toEqual(["onRoute", "preHandler"]);
+    expect(hooks[1].fn).toBe(verifySurveyAccess);
   });
 
   test("the access check resolves the survey from the route prefix", async () => {
-    await verifySurveyAccess({ params: { surveyId: SURVEY }, userId: USER } as never, reply());
+    await verifySurveyAccess(
+      { params: { surveyId: SURVEY }, userId: USER, actor: ACTOR } as never,
+      reply(),
+    );
 
-    expect(hasAccessToSurvey).toHaveBeenCalledWith(SURVEY, USER);
+    expect(surveyInScope).toHaveBeenCalledWith(SURVEY, ACTOR);
   });
 
   test("it refuses a caller without access", async () => {
-    (hasAccessToSurvey as unknown as Mock).mockResolvedValueOnce(false);
+    (surveyInScope as unknown as Mock).mockResolvedValueOnce(false);
     const rep = reply();
 
-    await verifySurveyAccess({ params: { surveyId: SURVEY }, userId: USER } as never, rep);
+    await verifySurveyAccess(
+      { params: { surveyId: SURVEY }, userId: USER, actor: ACTOR } as never,
+      rep,
+    );
 
     expect(answer(rep)).toEqual({
       code: 403,

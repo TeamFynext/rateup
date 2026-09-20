@@ -38,6 +38,10 @@ vi.mock("supertokens-node/recipe/session/index.js", () => ({
 }));
 
 vi.mock("../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
+vi.mock("../../../authz/actor.js", () => ({
+  buildActor: vi.fn(() => ({})),
+  loadActor: vi.fn().mockResolvedValue(null),
+}));
 vi.mock("../../apiAccessToken/apiAccessToken.service.js", () => ({
   verifyApiAccessToken: vi.fn(),
 }));
@@ -487,7 +491,7 @@ describe("orgWsRoutes", () => {
     return { routes, hooks };
   }
 
-  test("registers four routes and adds no tree-wide hook", async () => {
+  test("registers four routes and declares session access for the tree", async () => {
     const { routes, hooks } = await collect();
 
     expect(routes.map((r) => r.url)).toEqual([
@@ -496,7 +500,7 @@ describe("orgWsRoutes", () => {
       "/:afterAuthId/widget",
       "/:afterAuthId/mobilews",
     ]);
-    expect(hooks).toHaveLength(0);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
   });
 
   test("the widget socket authenticates on its own token, not a session", async () => {

@@ -15,8 +15,10 @@ import {
 } from "./zoho.controller.js";
 import { successSchema, zohoAuthSchema, zohoQuerySchema } from "./zoho.schema.js";
 import { ZohoProduct } from "./zoho.client.js";
+import { declareAccess } from "../../../../authz/registry.js";
 
 export async function zohoRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   // Authentication endpoint
   server.post<{ Querystring: ZohoAuthQuery; Body: ZohoAuthBody }>(
     "/auth",
@@ -95,7 +97,7 @@ export async function zohoRoutes(server: FastifyInstance) {
     syncZohoLeadsHandler,
   );
 
-  server.post("/webhooks/:product", handleZohoWebhook);
+  server.post("/webhooks/:product", { config: { access: "public" } }, handleZohoWebhook);
 
   server.post<{ Params: { orgId: string } }>(
     "/unsubscribe/:orgId",

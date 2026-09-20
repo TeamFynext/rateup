@@ -10,10 +10,8 @@ import {
   initiateAutomatedReplyByIdHandler,
   verifyAutomationTriggerLimitHandler,
 } from "./wa_automatedReply.controller.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
-import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 // --- Rule Controller Imports ---
 import {
   createRuleHandler,
@@ -36,14 +34,14 @@ import type {
   CreateAutomatedReplySchema,
   InitiateAutomatedReplyBody,
 } from "./wa_automatedReply.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
-  fastify.addHook("preHandler", checkSession);
+  declareAccess(fastify, { read: "automation.read", write: "automation.manage" });
   fastify.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
   );
-  fastify.addHook("preHandler", requireFeature(TeamFeature.automation));
   fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
   fastify.get("/", getAllAutomatedRepliesByOrgIdHandler);
   fastify.post<{ Body: CreateAutomatedReplySchema }>("/", {}, createAutomatedReplyHandler);

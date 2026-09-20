@@ -47,14 +47,20 @@ beforeEach(() => {
 });
 
 describe("notifyConversationLimitReached", () => {
-  test("targets only active owners/admins of the org", async () => {
+  test("targets active members who hold notify.billing, overrides included", async () => {
     membersMock.mockResolvedValue([]);
     await notifyConversationLimitReached("org-1");
 
     expect(membersMock).toHaveBeenCalledWith({
       where: {
         orgId: "org-1",
-        role: { in: [Role.SUPER_ADMIN, Role.ADMIN] },
+        OR: [
+          {
+            role: { in: [Role.SUPER_ADMIN, Role.ADMIN] },
+            NOT: { permissionDenies: { has: "notify.billing" } },
+          },
+          { permissionGrants: { has: "notify.billing" } },
+        ],
         user: { active: true },
       },
       select: { userId: true },

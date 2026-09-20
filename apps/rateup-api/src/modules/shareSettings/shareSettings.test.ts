@@ -479,7 +479,8 @@ describe("shareSettingsRoutes", () => {
 
     await shareSettingsRoutes(srv);
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: preHandlerHook }]);
+    expect(hooks.map((h) => h.name)).toEqual(["onRoute", "preHandler"]);
+    expect(hooks[1].fn).toBe(preHandlerHook);
   });
 
   test("registers a read and a write on the same path", async () => {

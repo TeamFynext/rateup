@@ -17,6 +17,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
   server.put(
     "/session/:shop",
     {
+      config: { permission: "integrations.shopify" },
       schema: {
         params: byShopParamsSchema,
       },
@@ -24,17 +25,26 @@ export async function shopifyRoutes(server: FastifyInstance) {
     updateShopifyIntegrationByShopHandler,
   );
 
-  server.delete("/delete-webhooks", deleteAllWebhookHandler);
+  server.delete(
+    "/delete-webhooks",
+    { config: { permission: "integrations.shopify" } },
+    deleteAllWebhookHandler,
+  );
 
   server.get("/products", getProductsHandler);
 
   server.get("/registered-webhooks", getRegisteredWebhooksHandler);
 
-  server.post("/register-webhooks", registerWebhookHandler);
+  server.post(
+    "/register-webhooks",
+    { config: { permission: "integrations.shopify" } },
+    registerWebhookHandler,
+  );
 
   server.post(
     "/webhooks/topic",
     {
+      config: { permission: "integrations.shopify" },
       schema: {
         body: registerWebhookbyTopicSchema,
       },
@@ -45,6 +55,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
   server.delete(
     "/webhooks/topic",
     {
+      config: { permission: "integrations.shopify" },
       schema: {
         body: registerWebhookbyTopicSchema,
       },
@@ -55,6 +66,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
   server.delete(
     "/:shop",
     {
+      config: { permission: "integrations.shopify" },
       schema: {
         params: byShopParamsSchema,
       },
@@ -62,5 +74,5 @@ export async function shopifyRoutes(server: FastifyInstance) {
     deleteIntegrationByShopHandler,
   );
   server.get("/orders/:id/fulfillment-orders", getFulfillmentOrdersHandler);
-  server.post("/orders/fulfill", createFulfillmentHandler);
+  server.post("/orders/fulfill", { config: { access: "session" } }, createFulfillmentHandler);
 }

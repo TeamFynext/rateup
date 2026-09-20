@@ -12,7 +12,6 @@ vi.mock("../../utils/logger.js", () => ({
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { QuestionType } from "../../types/enums.js";
 import {
   createTestimonial,
@@ -405,12 +404,15 @@ describe("testimonialRoutes", () => {
     return { srv, routes, hooks };
   }
 
-  test("guards the tree with checkSession and nothing else", async () => {
+  test("declares session access for the tree and nothing else", async () => {
     const { srv, hooks, routes } = fakeServer();
 
     await testimonialRoutes(srv);
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const probe: any = { method: "GET", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "session" });
     for (const r of routes) {
       expect(r.opts?.preHandler).toBeUndefined();
     }

@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../../utils/checkSession.js";
 import {
   cloneAndDeprecateFlowHandler,
   cloneFlowHandler,
@@ -23,7 +22,6 @@ import {
 import { log } from "../../../utils/logger.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
-import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 import {
   type ByDbFlowIdParams,
   byDbFlowIdParams,
@@ -41,18 +39,18 @@ import {
   updateFlowInput,
   updateFlowMetaInput,
 } from "./flow.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function flowRoutes(server: FastifyInstance) {
   server.addHook("onError", (req, res, err, done) => {
     log.error(err);
     done();
   });
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { read: "flows.read", write: "flows.manage" });
   server.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
   );
-  server.addHook("preHandler", requireFeature(TeamFeature.flows));
 
   server.get(
     "/",
@@ -225,6 +223,7 @@ export async function flowRoutes(server: FastifyInstance) {
   server.post<{ Body: SendFlowBody; Params: ByDbFlowIdParams }>(
     "/:dbFlowId/send",
     {
+      config: { permission: "inbox.reply" },
       schema: {
         body: sendFlowBodySchema,
         params: byDbFlowIdParams,

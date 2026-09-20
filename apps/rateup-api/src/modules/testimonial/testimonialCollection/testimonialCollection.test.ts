@@ -33,7 +33,6 @@ vi.mock("../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import {
   addMultipleTestimonialToCollection,
   CollectionAccessError,
@@ -596,12 +595,15 @@ function fakeServer() {
 }
 
 describe("route registration", () => {
-  test("the authenticated tree adds checkSession and nothing else", async () => {
+  test("the authenticated tree declares session access and nothing else", async () => {
     const { srv, hooks, routes } = fakeServer();
 
     await testimonialCollectionRoutes(srv);
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const probe: any = { method: "GET", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "session" });
     for (const r of routes) {
       expect(r.opts?.preHandler).toBeUndefined();
     }

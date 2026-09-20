@@ -18,6 +18,8 @@ vi.mock("./org.services.js", async () => {
     deleteOrg: vi.fn(),
     pauseOrg: vi.fn(),
     updateOrgUserRole: vi.fn(),
+    setMemberPermissionOverrides: vi.fn(),
+    getMemberActivity: vi.fn(),
     getWebhookSecret: vi.fn(),
     createOrg: vi.fn(),
     getAllOrgs: vi.fn(),
@@ -44,6 +46,10 @@ vi.mock("./businessHour.controller.js", () => ({
 
 vi.mock("../../utils/webhook.js", () => ({ getWebhookSecret: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
+vi.mock("../../authz/ownership.js", () => ({
+  assertNotOwner: vi.fn(),
+  transferOwnership: vi.fn(),
+}));
 vi.mock("../../utils/auth.js", async () => {
   const { isRootOrg } = await vi.importActual<any>("../../utils/auth.js");
   // assertRootOrg is stubbed so route registration can be identity-compared;
@@ -51,22 +57,23 @@ vi.mock("../../utils/auth.js", async () => {
   // branch is one of the things under test.
   return { assertRootOrg: vi.fn(), isRootOrg };
 });
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
 
 import * as orgService from "./org.services.js";
 import { getWebhookSecret } from "../../utils/webhook.js";
 import { assertRootOrg } from "../../utils/auth.js";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   deleteOrgAdminHandler,
   deleteOrgHandler,
   getWebhookClientSecretHandler,
   pauseOrgHandler,
   updateRoleController,
+  updateMemberPermissionsHandler,
+  memberActivityHandler,
 } from "./org.controller.js";
 import { orgRoutes } from "./org.route.js";
+import { ROLE_PERMISSIONS } from "../../authz/roles.js";
+import { assertNotOwner } from "../../authz/ownership.js";
+import { ForbiddenError } from "../../authz/errors.js";
 import { pauseOrgSchema, updateRoleSchema } from "./org.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -166,7 +173,7 @@ describe("deleteOrgHandler", () => {
 
     expect(byId.handler).toBe(deleteOrgHandler);
     expect(admin.handler).toBe(deleteOrgAdminHandler);
-    expect((byId.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+    expect(byId.opts.config.permission).toBe("org.delete");
     expect(admin.opts.preHandler).toBe(assertRootOrg);
   });
 
@@ -263,14 +270,14 @@ describe("pauseOrgHandler", () => {
   // The route gates are unchanged — the role check is still the right check for
   // "may this member act on their own org". What changed is that the handlers
   // now take the org from the session rather than the path.
-  test("both destructive routes are gated on role", async () => {
+  test("both destructive routes are gated on a permission", async () => {
     const { routes } = await collectRoutes();
 
     const pause = routes.find((r) => r.url === "/pause/:id");
     const del = routes.find((r) => r.method === "DELETE" && r.url === "/:orgId");
 
-    expect((pause.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
-    expect((del.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+    expect(pause.opts.config.permission).toBe("members.manage");
+    expect(del.opts.config.permission).toBe("org.delete");
   });
 });
 
@@ -284,19 +291,85 @@ describe("updateRoleController", () => {
   // outside the caller's organisation.
   test("passes the request through so the service can scope on the session", async () => {
     await updateRoleController(
-      { params: { id: MEMBER }, body: { role: "ADMIN" }, user: { orgId: OWN_ORG } } as never,
+      {
+        params: { id: MEMBER },
+        body: { role: "ADMIN" },
+        user: { orgId: OWN_ORG },
+        actor: { permissions: ROLE_PERMISSIONS.OWNER },
+      } as never,
       reply(),
     );
 
     expect(svc.updateOrgUserRole).toHaveBeenCalledOnce();
+    expect(svc.updateOrgUserRole.mock.calls[0][0]).toEqual({ roleKey: "MANAGER" });
     expect(svc.updateOrgUserRole.mock.calls[0][1]).toEqual({ id: MEMBER });
+  });
+
+  test("accepts the new role key spelling as is", async () => {
+    await updateRoleController(
+      {
+        params: { id: MEMBER },
+        body: { roleKey: "AGENT" },
+        user: { orgId: OWN_ORG },
+        actor: { permissions: ROLE_PERMISSIONS.MANAGER },
+      } as never,
+      reply(),
+    );
+
+    expect(svc.updateOrgUserRole.mock.calls[0][0]).toEqual({ roleKey: "AGENT" });
+  });
+
+  test("refuses a role the caller does not hold themselves", async () => {
+    const rep = reply();
+
+    await updateRoleController(
+      {
+        params: { id: MEMBER },
+        body: { role: "SUPER_ADMIN" },
+        user: { orgId: OWN_ORG },
+        actor: { permissions: ROLE_PERMISSIONS.MANAGER },
+      } as never,
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(403);
+    expect(svc.updateOrgUserRole).not.toHaveBeenCalled();
+  });
+
+  test("never changes the owner's role", async () => {
+    (assertNotOwner as unknown as Mock).mockRejectedValueOnce(
+      new ForbiddenError("The organisation owner cannot be given another role.", {
+        reason: "permission",
+        permission: "org.transfer_ownership",
+      }),
+    );
+    const rep = reply();
+
+    await updateRoleController(
+      {
+        params: { id: MEMBER },
+        body: { role: "MEMBER" },
+        user: { orgId: OWN_ORG },
+        actor: { permissions: ROLE_PERMISSIONS.OWNER },
+      } as never,
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(403);
+    expect(answer(rep).body).toMatchObject({ permission: "org.transfer_ownership" });
+    expect(svc.updateOrgUserRole).not.toHaveBeenCalled();
   });
 
   test("400s a body with no role", async () => {
     const rep = reply();
 
     await updateRoleController(
-      { params: { id: MEMBER }, body: {}, user: { orgId: OWN_ORG } } as never,
+      {
+        params: { id: MEMBER },
+        body: {},
+        user: { orgId: OWN_ORG },
+        actor: { permissions: ROLE_PERMISSIONS.OWNER },
+      } as never,
       rep,
     );
 
@@ -312,7 +385,12 @@ describe("updateRoleController", () => {
     const rep = reply();
 
     await updateRoleController(
-      { params: { id: MEMBER }, body: { role: "ADMIN" }, user: { orgId: OWN_ORG } } as never,
+      {
+        params: { id: MEMBER },
+        body: { role: "ADMIN" },
+        user: { orgId: OWN_ORG },
+        actor: { permissions: ROLE_PERMISSIONS.OWNER },
+      } as never,
       rep,
     );
 
@@ -322,10 +400,15 @@ describe("updateRoleController", () => {
     });
   });
 
-  test("the role schema accepts only the three real roles", () => {
+  test("the role schema accepts either spelling and nothing else", () => {
     for (const role of ["SUPER_ADMIN", "ADMIN", "MEMBER"]) {
       expect(updateRoleSchema.safeParse({ role }).success).toBe(true);
     }
+    for (const roleKey of ["OWNER", "ADMIN", "MANAGER", "STAFF", "AGENT", "VIEWER"]) {
+      expect(updateRoleSchema.safeParse({ roleKey }).success).toBe(true);
+    }
+    expect(updateRoleSchema.safeParse({}).success).toBe(false);
+    expect(updateRoleSchema.safeParse({ roleKey: "WIZARD" }).success).toBe(false);
     expect(updateRoleSchema.safeParse({ role: "not-a-role" }).success).toBe(false);
     expect(updateRoleSchema.safeParse({ role: "" }).success).toBe(false);
     expect(updateRoleSchema.safeParse({ role: "super_admin" }).success).toBe(false);
@@ -364,7 +447,10 @@ describe("orgRoutes", () => {
   test("requires a session for the whole tree", async () => {
     const { hooks } = await collectRoutes();
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const probe: any = { method: "GET", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "session" });
   });
 
   test("the platform-wide reads are gated on the root org", async () => {
@@ -406,5 +492,126 @@ describe("orgRoutes", () => {
     for (const r of bh) {
       expect(r.opts?.preHandler).toBeUndefined();
     }
+  });
+});
+
+// ===========================================================================
+// updateMemberPermissionsHandler — fine-tuning on top of the role
+// ===========================================================================
+
+describe("updateMemberPermissionsHandler", () => {
+  const req = (over: Record<string, unknown> = {}) =>
+    ({
+      params: { id: MEMBER },
+      body: { grants: ["billing.read"], denies: ["campaigns.send"] },
+      user: { orgId: OWN_ORG, userId: "caller" },
+      actor: { permissions: ROLE_PERMISSIONS.ADMIN },
+      ...over,
+    }) as never;
+
+  test("the route needs members.manage_roles and validates its body", async () => {
+    const { routes } = await collectRoutes();
+    const route = routes.find((r) => r.method === "PUT" && r.url === "/members/:id/permissions");
+    expect(route.handler).toBe(updateMemberPermissionsHandler);
+    expect(route.opts.config.permission).toBe("members.manage_roles");
+    expect(route.opts.schema.body).toBeDefined();
+  });
+
+  test("hands the deltas to the service for the caller's org", async () => {
+    svc.setMemberPermissionOverrides.mockResolvedValueOnce({
+      grants: ["billing.read"],
+      denies: ["campaigns.send"],
+    });
+    const rep = reply();
+
+    await updateMemberPermissionsHandler(req(), rep);
+
+    expect(svc.setMemberPermissionOverrides).toHaveBeenCalledWith(
+      OWN_ORG,
+      MEMBER,
+      ["billing.read"],
+      ["campaigns.send"],
+    );
+    expect(answer(rep).code).toBe(200);
+  });
+
+  test("refuses to change the caller's own permissions", async () => {
+    const rep = reply();
+
+    await updateMemberPermissionsHandler(req({ params: { id: "caller" } }), rep);
+
+    expect(answer(rep).code).toBe(403);
+    expect(svc.setMemberPermissionOverrides).not.toHaveBeenCalled();
+  });
+
+  test("refuses a grant the caller does not hold", async () => {
+    const rep = reply();
+
+    await updateMemberPermissionsHandler(
+      req({
+        actor: { permissions: ROLE_PERMISSIONS.MANAGER },
+        body: { grants: ["billing.manage"], denies: [] },
+      }),
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(403);
+    expect(answer(rep).body).toMatchObject({ permission: "members.manage_roles" });
+    expect(svc.setMemberPermissionOverrides).not.toHaveBeenCalled();
+  });
+
+  test("relays the service's owner protection as a 403", async () => {
+    svc.setMemberPermissionOverrides.mockRejectedValueOnce(
+      new ForbiddenError("The organisation owner cannot be given custom permissions.", {
+        reason: "permission",
+        permission: "org.transfer_ownership",
+      }),
+    );
+    const rep = reply();
+
+    await updateMemberPermissionsHandler(req(), rep);
+
+    expect(answer(rep).code).toBe(403);
+  });
+});
+
+describe("memberActivityHandler", () => {
+  test("the route needs org.audit.read and validates its query", async () => {
+    const { routes } = await collectRoutes();
+    const route = routes.find((r) => r.method === "GET" && r.url === "/members/:id/activity");
+    expect(route.handler).toBe(memberActivityHandler);
+    expect(route.opts.config.permission).toBe("org.audit.read");
+    expect(route.opts.schema.querystring).toBeDefined();
+  });
+
+  test("reads the member's trail inside the caller's org", async () => {
+    svc.getMemberActivity.mockResolvedValueOnce({ items: [], total: 0, page: 2, limit: 25 });
+    const rep = reply();
+
+    await memberActivityHandler(
+      { params: { id: MEMBER }, query: { page: 2, limit: 25 }, user: { orgId: OWN_ORG } } as never,
+      rep,
+    );
+
+    expect(svc.getMemberActivity).toHaveBeenCalledWith(OWN_ORG, MEMBER, 2, 25);
+    expect(answer(rep)).toEqual({ code: 200, body: { items: [], total: 0, page: 2, limit: 25 } });
+  });
+
+  test("a member of another org answers 403, not 500", async () => {
+    svc.getMemberActivity.mockRejectedValueOnce(
+      new ForbiddenError("That user is not a member of your organisation.", { reason: "scope" }),
+    );
+    const rep = reply();
+
+    await memberActivityHandler(
+      {
+        params: { id: "stranger" },
+        query: { page: 1, limit: 25 },
+        user: { orgId: OWN_ORG },
+      } as never,
+      rep,
+    );
+
+    expect(answer(rep).code).toBe(403);
   });
 });

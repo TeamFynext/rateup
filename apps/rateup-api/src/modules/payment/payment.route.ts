@@ -20,8 +20,6 @@ import {
   updateSubscriptionOrderHandler,
 } from "./payment.controller.js";
 import { assertRootOrg } from "../../utils/auth.js";
-import { checkSession } from "../../utils/checkSession.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   createCheckoutRequestSchema,
   createRateUpPlanSchema,
@@ -42,9 +40,10 @@ import {
   conversationAddonOrderSchema,
   type ConversationAddonOrderInput,
 } from "./payment.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function paymentRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.post("/sync-plans", { preHandler: [assertRootOrg] }, syncPaymentPlansHandler);
 
@@ -90,6 +89,7 @@ export async function paymentRoutes(server: FastifyInstance) {
   server.post(
     "/create-checkout-session",
     {
+      config: { permission: "billing.manage" },
       schema: {
         body: createCheckoutRequestSchema,
       },
@@ -116,20 +116,28 @@ export async function paymentRoutes(server: FastifyInstance) {
   server.put(
     "/subscriptions/cancel",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "billing.manage" },
     },
     cancelRazorpaySubscriptionHandler,
   );
 
-  server.get("/subscriptions/change-options", getSubscriptionChangeOptionsHandler);
+  server.get(
+    "/subscriptions/change-options",
+    { config: { permission: "billing.read" } },
+    getSubscriptionChangeOptionsHandler,
+  );
 
-  server.get("/subscriptions/conversation-addon", getConversationAddonOfferHandler);
+  server.get(
+    "/subscriptions/conversation-addon",
+    { config: { permission: "billing.read" } },
+    getConversationAddonOfferHandler,
+  );
 
   server.post<{ Body: ConversationAddonOrderInput }>(
     "/subscriptions/conversation-addon",
     {
+      config: { permission: "billing.manage" },
       // Same gate as changing the plan: it spends the org's money.
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
       schema: { body: conversationAddonOrderSchema },
     },
     createConversationAddonOrderHandler,
@@ -138,16 +146,16 @@ export async function paymentRoutes(server: FastifyInstance) {
   server.put<{ Body: ChangePlanInput }>(
     "/subscriptions/change-plan",
     {
+      config: { permission: "billing.manage" },
       // Same gate as cancelling: changing what the org is billed is an owner action.
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
       schema: { body: changePlanSchema },
     },
     changeSubscriptionPlanHandler,
   );
 
-  server.get("/org/orders", getAllOrdersByOrg);
+  server.get("/org/orders", { config: { permission: "billing.read" } }, getAllOrdersByOrg);
 
-  server.get("/org/invoices", getOrgInvoicesHandler);
+  server.get("/org/invoices", { config: { permission: "billing.read" } }, getOrgInvoicesHandler);
 
   server.get(
     "/orders/all",
@@ -171,7 +179,7 @@ export async function paymentRoutes(server: FastifyInstance) {
   server.put<{ Params: OrderIdParamsInput; Body: UpdateOrderStatusInput }>(
     "/order/:orderId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "billing.manage" },
       schema: {
         params: orderIdParamsSchema,
         body: updateOrderStatusSchema,

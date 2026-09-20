@@ -17,7 +17,6 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../utils/auth.js", () => ({ hasAccessToTeam: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../team/team.auth.js", () => ({ verifyTeamAccess: vi.fn() }));
 vi.mock("../survey/survey.service.js", () => ({ getGoogleUrlBySurveyTeamMapId: vi.fn() }));
@@ -27,7 +26,6 @@ vi.mock("../../utils/rateLimit.js", () => ({
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { hasAccessToTeam } from "../../utils/auth.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
 import { getGoogleUrlBySurveyTeamMapId } from "../survey/survey.service.js";
@@ -65,6 +63,9 @@ const db = prisma as unknown as { reviewSuggestion: Record<string, Mock> };
 
 const USER = "11111111-1111-1111-1111-111111111111";
 const OWN_TEAM = "22222222-2222-2222-2222-222222222222";
+// An org-wide actor, and one that reaches OWN_TEAM only.
+const ALL_ACTOR = { scope: { all: true, teamIds: [] } } as any;
+const SCOPED_ACTOR = { scope: { all: false, teamIds: [OWN_TEAM] } } as any;
 const VICTIM_TEAM = "33333333-3333-3333-3333-333333333333";
 const VICTIM_REVIEW = "3f8a1e2c-5b7d-4c9e-8a1b-2d3e4f5a6b7c";
 const MAP = "7c6b5a4f-3e2d-4b1a-9c8d-7e6f5a4b3c2d";
@@ -90,7 +91,6 @@ beforeEach(() => {
   db.reviewSuggestion.createMany.mockResolvedValue({ count: 2 });
   db.reviewSuggestion.update.mockResolvedValue({ id: VICTIM_REVIEW });
   db.reviewSuggestion.delete.mockResolvedValue({ id: VICTIM_REVIEW });
-  (hasAccessToTeam as unknown as Mock).mockResolvedValue(true);
   (getGoogleUrlBySurveyTeamMapId as unknown as Mock).mockResolvedValue("https://g.page/r/xyz");
 });
 
@@ -102,6 +102,7 @@ function fakeServer() {
   const routes: any[] = [];
   const srv: any = {
     setErrorHandler: vi.fn(),
+    addHook: vi.fn(),
     get: vi.fn((url, opts, handler) => routes.push({ method: "GET", url, opts, handler })),
     post: vi.fn((url, opts, handler) => routes.push({ method: "POST", url, opts, handler })),
     put: vi.fn((url, opts, handler) => routes.push({ method: "PUT", url, opts, handler })),
@@ -216,15 +217,12 @@ describe("deleteReviewSuggestion", () => {
       id: VICTIM_REVIEW,
       teamId: VICTIM_TEAM,
     });
-    (hasAccessToTeam as unknown as Mock).mockResolvedValueOnce(false);
     const rep = reply();
 
     await deleteReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER, actor: SCOPED_ACTOR } as never,
       rep,
     );
-
-    expect(hasAccessToTeam).toHaveBeenCalledWith(VICTIM_TEAM, USER);
     expect(db.reviewSuggestion.delete).not.toHaveBeenCalled();
     expect(answer(rep).code).toBe(403);
   });
@@ -236,7 +234,7 @@ describe("deleteReviewSuggestion", () => {
     });
 
     await deleteReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER, actor: ALL_ACTOR } as never,
       reply(),
     );
 
@@ -258,7 +256,7 @@ describe("deleteReviewSuggestion", () => {
     const rep = reply();
 
     await deleteReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER, actor: ALL_ACTOR } as never,
       rep,
     );
 
@@ -269,7 +267,7 @@ describe("deleteReviewSuggestion", () => {
     const rep = reply();
 
     await deleteReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER } as never,
+      { params: { reviewSuggestionId: VICTIM_REVIEW }, userId: USER, actor: ALL_ACTOR } as never,
       rep,
     );
 
@@ -325,6 +323,7 @@ describe("updateReviewSuggestion", () => {
         params: { reviewSuggestionId: VICTIM_REVIEW },
         body: { review: "x", language: "English", teamId: VICTIM_TEAM },
         userId: USER,
+        actor: ALL_ACTOR,
       } as never,
       reply(),
     );
@@ -356,9 +355,7 @@ describe("updateReviewSuggestion", () => {
       teamId: VICTIM_TEAM,
     });
 
-    await hasAccessToReview(USER, VICTIM_REVIEW);
-
-    expect(hasAccessToTeam).toHaveBeenCalledWith(VICTIM_TEAM, USER);
+    await hasAccessToReview(SCOPED_ACTOR, VICTIM_REVIEW);
   });
 
   test("a caller outside the team is refused, with a completed reply", async () => {
@@ -366,11 +363,15 @@ describe("updateReviewSuggestion", () => {
       id: VICTIM_REVIEW,
       teamId: VICTIM_TEAM,
     });
-    (hasAccessToTeam as unknown as Mock).mockResolvedValueOnce(false);
     const rep = reply();
 
     await updateReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW }, body: {}, userId: USER } as never,
+      {
+        params: { reviewSuggestionId: VICTIM_REVIEW },
+        body: {},
+        userId: USER,
+        actor: SCOPED_ACTOR,
+      } as never,
       rep,
     );
 
@@ -401,11 +402,16 @@ describe("updateReviewSuggestion", () => {
   });
 
   test("an unknown review answers 404", async () => {
-    await expect(hasAccessToReview(USER, VICTIM_REVIEW)).resolves.toBe("not-found");
+    await expect(hasAccessToReview(SCOPED_ACTOR, VICTIM_REVIEW)).resolves.toBe("not-found");
 
     const rep = reply();
     await updateReviewSuggestionHandler(
-      { params: { reviewSuggestionId: VICTIM_REVIEW }, body: {}, userId: USER } as never,
+      {
+        params: { reviewSuggestionId: VICTIM_REVIEW },
+        body: {},
+        userId: USER,
+        actor: ALL_ACTOR,
+      } as never,
       rep,
     );
 
@@ -414,14 +420,13 @@ describe("updateReviewSuggestion", () => {
 
   test("the three outcomes are distinguishable without an exception", async () => {
     db.reviewSuggestion.findUnique.mockResolvedValueOnce({ id: VICTIM_REVIEW, teamId: OWN_TEAM });
-    await expect(hasAccessToReview(USER, VICTIM_REVIEW)).resolves.toBe("allowed");
+    await expect(hasAccessToReview(SCOPED_ACTOR, VICTIM_REVIEW)).resolves.toBe("allowed");
 
     db.reviewSuggestion.findUnique.mockResolvedValueOnce({
       id: VICTIM_REVIEW,
       teamId: VICTIM_TEAM,
     });
-    (hasAccessToTeam as unknown as Mock).mockResolvedValueOnce(false);
-    await expect(hasAccessToReview(USER, VICTIM_REVIEW)).resolves.toBe("forbidden");
+    await expect(hasAccessToReview(SCOPED_ACTOR, VICTIM_REVIEW)).resolves.toBe("forbidden");
   });
 });
 

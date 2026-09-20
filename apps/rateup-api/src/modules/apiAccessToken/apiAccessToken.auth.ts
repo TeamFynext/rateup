@@ -1,7 +1,9 @@
+import { buildActor } from "../../authz/actor.js";
+import { isPermission } from "../../authz/permissions.js";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { log } from "../../utils/logger.js";
 import { ByOrgIdParams } from "../org/org.schema.js";
-import { verifyApiAccessToken } from "./apiAccessToken.service.js";
+import { authenticateApiAccessToken } from "./apiAccessToken.service.js";
 import { getOrgById } from "../org/org.services.js";
 import { Role } from "../../../generated/prisma/client.js";
 
@@ -56,12 +58,15 @@ export const assertApiAccessToken = async (request: FastifyRequest) => {
     throw new ApiAuthError(401, "no_token", "No access token found in headers");
   }
 
-  if (!(await verifyApiAccessToken(orgId, accessToken))) {
+  const grant = await authenticateApiAccessToken(orgId, accessToken);
+  if (!grant) {
     log.error({ orgId }, "Invalid access token");
     throw new ApiAuthError(401, "invalid_token", "Invalid access token");
   }
 
   request.user = { orgId, role: Role.SUPER_ADMIN };
+  request.principal = { kind: "apiKey", orgId, scopes: (grant.scopes ?? []).filter(isPermission) };
+  request.actor = buildActor(request.principal);
 };
 
 /**
