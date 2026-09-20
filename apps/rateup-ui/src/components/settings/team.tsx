@@ -243,8 +243,8 @@ export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
 
         {/* Submit */}
         <div className="flex items-end justify-end pt-2">
-          <Button type="submit" disabled={isLoading} className="bg-primary">
-            {isLoading ? translations("Saving") : translations("Save Changes")}
+          <Button type="submit" loading={isLoading} className="bg-primary">
+            {translations("Save Changes")}
           </Button>
         </div>
       </form>
@@ -385,7 +385,7 @@ export function AddMembers({
               <div className="flex items-center gap-2">
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={getFileUrlFromKey(user?.profilePhoto ?? "")} />
-                  <AvatarFallback className="bg-primary text-white text-xs">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {user.name?.toUpperCase().slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
@@ -566,7 +566,7 @@ export function AddMembers({
   }
 
   return (
-    <div className="space-y-6 ">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -693,18 +693,13 @@ export function AddMembers({
                       type="button"
                       variant="outline"
                       onClick={() => setIsInviteOpen(false)}
-                      disabled={inviteNewUser.isPending}
+                      loading={inviteNewUser.isPending}
                     >
                       {translations("Cancel")}
                     </Button>
 
-                    <Button type="submit" disabled={inviteNewUser.isPending}>
-                      {inviteNewUser.isPending && (
-                        <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
-                      )}
-                      {inviteNewUser.isPending
-                        ? translations("Inviting")
-                        : translations("Send invite")}
+                    <Button type="submit" loading={inviteNewUser.isPending}>
+                      {translations("Send invite")}
                     </Button>
                   </div>
                 </form>
@@ -735,8 +730,10 @@ export function AddMembers({
                 ? translations(
                     "This invitation will stop working. You can always invite them again.",
                   )
-                : translations("Are you sure you want to remove")}{" "}
-              <span className="font-semibold">{memberToDelete?.name}</span>{" "}
+                : translations("Are you sure you want to remove")}
+              {""}
+              <span className="font-semibold">{memberToDelete?.name}</span>
+              {""}
               {!memberToDelete?.isInvitation && translations("from this team?")}
             </DialogDescription>
           </DialogHeader>
@@ -828,20 +825,21 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
               {translations("Confirm Deletion")}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              {translations("This action")} <strong>{translations("cannot be undone")}.</strong>{" "}
+              {translations("This action")} <strong>{translations("cannot be undone")}.</strong>
+              {""}
               {translations("Are you sure you want to permanently delete this team")}?
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isDeleting}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} loading={isDeleting}>
               {translations("Cancel")}
             </Button>
 
             <Button
               variant="destructive"
               onClick={() => handleDeleteTeam(teamId)}
-              disabled={isDeleting}
+              loading={isDeleting}
             >
               {isDeleting ? translations("Deleting") : translations("Delete")}
             </Button>

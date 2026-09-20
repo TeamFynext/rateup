@@ -17,6 +17,7 @@ import { userKeys } from "@/backend/user/user.keys";
 import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Card } from "@/components/ui/card.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import type { OnboardingFormData } from "./onboarding-types.ts";
@@ -42,7 +43,11 @@ export default function OnboardingWizard() {
   const { route, updateRouteAndCart } = useRouteAndCartStore();
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Spinner className="size-6 text-muted-foreground" />
+      </div>
+    );
   }
 
   const handleFinish = () => {
@@ -141,7 +146,7 @@ export default function OnboardingWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 flex flex-col items-center justify-center p-4 w-full">
+    <div className="min-h-screen bg-linear-to-br from-ru-blue-50/40 via-purple-50/30 to-pink-50/40 flex flex-col items-center justify-center p-4 w-full">
       <AnimatePresence>
         {activeIntegration && (
           <motion.div
@@ -151,7 +156,7 @@ export default function OnboardingWizard() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-xl w-[90vw] max-w-lg relative h-[90vh] overflow-scroll"
+              className="bg-card rounded-xl p-6 shadow-xl w-[90vw] max-w-lg relative h-[90vh] overflow-scroll"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -159,7 +164,7 @@ export default function OnboardingWizard() {
             >
               <button
                 onClick={() => setActiveIntegration(null)}
-                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
               >
                 <IconX className="w-5 h-5" />
               </button>
@@ -170,12 +175,12 @@ export default function OnboardingWizard() {
       </AnimatePresence>
       <div className="max-w-xl">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/30 dark:bg-blue-900/60 rounded-full blur-3xl animate-pulse"></div>
           <div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl animate-pulse"
+            className="absolute bottom-20 right-10 w-96 h-96 bg-purple-200/30 dark:bg-purple-900/60 rounded-full blur-3xl animate-pulse"
             style={{ animationDelay: "1s" }}
           ></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-100/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-100/20 dark:bg-indigo-950/50 rounded-full blur-3xl"></div>
         </div>
 
         <div className="relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
@@ -184,14 +189,14 @@ export default function OnboardingWizard() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center flex flex-col gap-1 items-center justify-center"
           >
-            <div className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-100 to-purple-100 border border-blue-200/60 rounded-full px-3 py-1 shadow-sm backdrop-blur-sm mb-2">
+            <div className="inline-flex items-center space-x-2 bg-linear-to-r from-ru-blue-100 to-purple-100 border border-blue-200/60 dark:border-blue-900/60 rounded-full px-3 py-1 shadow-sm backdrop-blur-sm mb-2">
               <IconSparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span className="text-blue-700 text-sm">Setup Guide</span>
+              <span className="text-blue-700 dark:text-blue-400 text-sm">Setup Guide</span>
             </div>
-            <h1 className="text-gray-900 text-sm">
+            <h1 className="text-foreground text-sm">
               Welcome to RateUp, {info?.nameOfUser || ""}! 👋
             </h1>
-            <p className="text-gray-600 text-sm">
+            <p className="text-muted-foreground text-sm">
               Let`&apos;s get your customer engagement platform ready in 3 quick steps
             </p>
           </motion.div>
@@ -222,12 +227,12 @@ export default function OnboardingWizard() {
                             whileTap={isAccessible ? { scale: 0.95 } : {}}
                             className={`flex-1 flex flex-col items-center space-y-1.5 p-2 rounded-xl border-2 transition-all duration-300 ${
                               isActive
-                                ? "bg-linear-to-br from-blue-100 to-indigo-100 border-blue-400 shadow-lg shadow-blue-200/60"
+                                ? "bg-linear-to-br from-ru-blue-100 to-indigo-100 border-blue-400 shadow-lg shadow-blue-200/60"
                                 : isCompleted
                                   ? "bg-linear-to-br from-green-50 to-emerald-50 border-green-400/60 hover:border-green-500 cursor-pointer"
                                   : isAccessible
-                                    ? "bg-white/80 backdrop-blur-sm border-gray-300 hover:border-gray-400 cursor-pointer shadow-sm"
-                                    : "bg-gray-100/50 border-gray-300 opacity-60 cursor-not-allowed"
+                                    ? "bg-white/80 backdrop-blur-sm border-border hover:border-border cursor-pointer shadow-sm"
+                                    : "bg-muted/50 border-border opacity-60 cursor-not-allowed"
                             }`}
                           />
                         }
@@ -255,7 +260,7 @@ export default function OnboardingWizard() {
                             </motion.div>
                           ) : (
                             <step.icon
-                              className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`}
+                              className={`w-4 h-4 ${isActive ? "text-white" : "text-muted-foreground"}`}
                             />
                           )}
                           {isActive && (
@@ -273,10 +278,10 @@ export default function OnboardingWizard() {
                           <p
                             className={`transition-colors duration-300 text-sm ${
                               isActive
-                                ? "text-gray-900"
+                                ? "text-foreground"
                                 : isCompleted
                                   ? "text-green-600"
-                                  : "text-gray-600"
+                                  : "text-muted-foreground"
                             }`}
                           >
                             {step.title}
@@ -285,9 +290,9 @@ export default function OnboardingWizard() {
                       </TooltipTrigger>
                       <TooltipContent
                         side="bottom"
-                        className="bg-white/95 backdrop-blur-sm border-gray-200/60 shadow-lg"
+                        className="bg-white/95 backdrop-blur-sm border-border/60 shadow-lg"
                       >
-                        <p className="text-gray-700 text-xs">{step.description}</p>
+                        <p className="text-foreground text-xs">{step.description}</p>
                       </TooltipContent>
                     </Tooltip>
                     {index < stepInfo.length - 1 && (
@@ -295,7 +300,7 @@ export default function OnboardingWizard() {
                         className={`h-0.5 flex-1 transition-all duration-500 ${
                           completedSteps.includes(step.id)
                             ? "bg-linear-to-r from-green-400 to-emerald-400"
-                            : "bg-gray-300/60"
+                            : "bg-muted/60"
                         }`}
                       />
                     )}
@@ -312,12 +317,12 @@ export default function OnboardingWizard() {
             className=""
           >
             <div className="flex justify-between mb-1">
-              <span className="text-gray-600 text-sm">
+              <span className="text-muted-foreground text-sm">
                 Step {currentStep} of {totalSteps}
               </span>
               <span className="text-blue-600 text-sm">{Math.round(progress)}% complete</span>
             </div>
-            <div className="w-full bg-gray-200/60 rounded-full h-1.5 overflow-hidden shadow-inner backdrop-blur-sm border border-gray-300/60">
+            <div className="w-full bg-muted/60 rounded-full h-1.5 overflow-hidden shadow-inner backdrop-blur-sm border border-border/60">
               <motion.div
                 className="h-full bg-linear-to-r from-blue-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out shadow-sm"
                 initial={{ width: 0 }}
@@ -334,7 +339,7 @@ export default function OnboardingWizard() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="p-5 shadow-xl border-2 border-gray-200/60 bg-white/90 backdrop-blur-sm">
+            <Card className="p-5 shadow-xl border-2 border-border/60 bg-white/90 backdrop-blur-sm">
               {currentStep === 1 && (
                 <OnboardingStep1
                   data={formData}

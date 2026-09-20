@@ -131,7 +131,7 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload: (uploading: boolean
   return useMutation({
     mutationFn: (values: IUpdateLogo) => updateOrgLogo(values),
     onSuccess: () => {
-      toast.success("Logo Updated Successfully!", {
+      toast.success("Logo updated", {
         id: "load-data",
       });
       setIsLoadingUpload(false);

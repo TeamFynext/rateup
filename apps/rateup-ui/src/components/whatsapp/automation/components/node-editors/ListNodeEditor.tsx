@@ -57,7 +57,7 @@ export const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
         maxLength={60}
       />
       <div className="text-xs font-bold text-muted-foreground">
-        Body Text <span className="text-red-500">*</span>
+        Body Text <span className="text-destructive">*</span>
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
@@ -205,6 +205,7 @@ export const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
             description="Max 24 characters"
             rightSection={
               <Button
+                aria-label="Remove"
                 type="button"
                 variant="ghost"
                 size="icon-sm"
@@ -225,6 +226,7 @@ export const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
             <div key={rowIndex} className={`${styles.rowContainer} flex flex-col gap-2 p-2`}>
               <div className="flex flex-wrap items-center justify-end gap-2.5">
                 <Button
+                  aria-label="Remove"
                   type="button"
                   variant="ghost"
                   size="icon-sm"

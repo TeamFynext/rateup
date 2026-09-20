@@ -136,7 +136,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
   return (
     <Card className="gap-2 p-4">
       <p className="underline">CHOICES</p>
-      <p className="text-xs text-red-500">{props.error}</p>
+      <p className="text-xs text-destructive">{props.error}</p>
       <div className="flex flex-col gap-2">
         {choices?.map((choice: FlowChoice, i: number) => (
           <ChoiceRow
@@ -184,7 +184,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
                         )}
                       </InputGroup>
                       {fieldState.error && (
-                        <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                        <p className="text-xs text-destructive">{fieldState.error.message}</p>
                       )}
                     </Field>
                   )}
@@ -286,7 +286,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
             variant="outline"
             className="mt-2 w-fit"
             onClick={submitAdd}
-            disabled={fileUploadLoading}
+            loading={fileUploadLoading}
           >
             <IconPlus />
             {translations("Add choice")}
@@ -424,10 +424,17 @@ function ChoiceRow({
           )}
         </div>
       </div>
-      <Button variant="ghost" size="icon-sm" onClick={openEditModal} disabled={disabled}>
+      <Button
+        aria-label={translations("Edit")}
+        variant="ghost"
+        size="icon-sm"
+        onClick={openEditModal}
+        disabled={disabled}
+      >
         <IconPencil />
       </Button>
       <Button
+        aria-label={translations("Delete")}
         variant="ghost"
         size="icon-sm"
         className="text-destructive"
@@ -467,7 +474,7 @@ function ChoiceRow({
                       )}
                     </InputGroup>
                     {fieldState.error && (
-                      <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                      <p className="text-xs text-destructive">{fieldState.error.message}</p>
                     )}
                   </Field>
                 )}

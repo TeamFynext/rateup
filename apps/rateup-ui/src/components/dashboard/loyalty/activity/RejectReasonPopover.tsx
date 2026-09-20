@@ -19,12 +19,7 @@ export function RejectReasonPopover({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            disabled={disabled}
-          />
+          <Button size="sm" variant="outline" className="text-destructive" disabled={disabled} />
         }
       >
         <IconX size={14} />

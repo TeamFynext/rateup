@@ -136,6 +136,7 @@ const ButtonInput = ({
             {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
@@ -205,6 +206,7 @@ const ButtonInput = ({
                           trigger={
                             <span>
                               <Button
+                                aria-label={translations("Insert a variable")}
                                 variant="ghost"
                                 size="icon-sm"
                                 className="shrink-0"
@@ -245,6 +247,7 @@ const ButtonInput = ({
             </>
           )}
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
@@ -281,6 +284,7 @@ const ButtonInput = ({
           </Field>
           <PhoneNumberField form={form} path={`buttons.${index}.phone_number`} />
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
@@ -308,6 +312,7 @@ const ButtonInput = ({
             {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
@@ -354,6 +359,7 @@ const ButtonInput = ({
             {err("example") && <FieldError>{err("example")}</FieldError>}
           </Field>
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
@@ -399,6 +405,7 @@ const ButtonInput = ({
             label={<p className="text-sm font-medium">{translations("Flow")}</p>}
           />
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
@@ -437,6 +444,7 @@ const ButtonInput = ({
             </Field>
             {form.watch().category === "MARKETING" && (
               <Button
+                aria-label={translations("Delete")}
                 variant="ghost"
                 size="icon-sm"
                 className="shrink-0"
@@ -501,6 +509,7 @@ const ButtonInput = ({
             </Select>
           </Field>
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"
@@ -566,6 +575,7 @@ const ButtonInput = ({
               </Select>
             </Field>
             <Button
+              aria-label={translations("Delete")}
               variant="ghost"
               size="icon-sm"
               className="shrink-0"
@@ -623,6 +633,7 @@ const ButtonInput = ({
                   />
                 </Field>
                 <Button
+                  aria-label={translations("Remove")}
                   variant="ghost"
                   size="icon-sm"
                   className="shrink-0"
@@ -684,6 +695,7 @@ const ButtonInput = ({
             </Select>
           </Field>
           <Button
+            aria-label={translations("Delete")}
             variant="ghost"
             size="icon-sm"
             className="shrink-0"

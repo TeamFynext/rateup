@@ -94,7 +94,7 @@ export function ConversionsApiSection() {
             const datasets = await syncDatasets.mutateAsync();
             if (datasets && datasets.length > 0) {
               finalData.conversionsApiDatasetId = datasets[0].id;
-              toast.success(t("Auto-selected dataset: {{name}}", { name: datasets[0].name }));
+              toast.success(t("Auto-selected dataset: {name}", { name: datasets[0].name }));
             } else {
               toast.info(t("No Meta datasets found for this account."));
             }
@@ -245,6 +245,7 @@ export function ConversionsApiSection() {
                   looks like it has an unsaved change when it does not. */}
               {pixelIdDraft !== (conversionData.conversionsApiDatasetId || "") && (
                 <Button
+                  aria-label={t("Save")}
                   type="button"
                   size="icon"
                   onClick={() =>

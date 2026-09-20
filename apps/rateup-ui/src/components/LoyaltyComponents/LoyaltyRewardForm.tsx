@@ -975,7 +975,7 @@ export function LoyaltyRewardForm({
       {/* Referral Reward Form */}
       {category === "referral" && (
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-ru-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <IconInfoCircle className="w-5 h-5 text-[#1873E8] shrink-0 mt-0.5" />
               <div>

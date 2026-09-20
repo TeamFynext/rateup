@@ -133,7 +133,8 @@ export function JoiningCard({
           </Dialog>
         )}
         <p className="text-xs text-muted-foreground">
-          {t("The keyword and the welcome they get are the “Joining the program” reply.")}{" "}
+          {t("The keyword and the welcome they get are the “Joining the program” reply.")}
+          {""}
           <Link
             to={LOYALTY_PATHS.messages}
             search={{ tab: "replies" }}

@@ -34,7 +34,7 @@ const TestimonialTemplate: React.FC<{
         );
       case "minimal":
         return (
-          <div className="p-4 rounded-xl bg-linear-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/10 space-y-2">
+          <div className="p-4 rounded-xl bg-linear-to-r from-ru-blue-50 to-ru-blue-100 dark:from-blue-900/20 dark:to-blue-800/10 space-y-2">
             <p className="text-sm">
               "Collecting testimonials has been a game-changer for our business."
             </p>

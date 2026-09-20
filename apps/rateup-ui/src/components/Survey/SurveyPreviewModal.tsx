@@ -18,9 +18,10 @@ function SurveyPreviewModal({
     <div className="absolute inset-0 max-h-[900px] rounded-2xl p-4 [&_.edit-page-theme-btn]:!hidden [&_.survey-editor-page-header]:hidden [&_.theme-preview-container]:shadow-none">
       <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-[0_1px_0_rgba(0,0,0,0.05),0_0_8px_rgba(0,0,0,0.11)]">
         <Button
+          aria-label="Close"
           size="icon"
           variant="ghost"
-          className="absolute right-2 top-2 z-[100] rounded-full text-gray-500 hover:text-gray-700"
+          className="absolute right-2 top-2 z-[100] rounded-full text-muted-foreground hover:text-foreground"
           onClick={onClose}
         >
           <IconX />

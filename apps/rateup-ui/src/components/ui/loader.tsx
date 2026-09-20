@@ -4,7 +4,7 @@ export function Loader({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent",
+        "h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent",
         className,
       )}
     />

@@ -7,7 +7,7 @@ import { imagesPath } from "@/utils/constants.ts";
 
 const ReviewAiHero = () => {
   return (
-    <section className="py-20 px-6 lg:px-8 ">
+    <section className="py-20 px-6 lg:px-8">
       <div className="container mx-auto max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="animate-fade-in">
@@ -33,7 +33,7 @@ const ReviewAiHero = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-[#009987] text-[#009987] cursor-pointer  hover:bg-[#e6f7ff] group"
+                  className="border-[#009987] text-[#009987] cursor-pointer hover:bg-[#e6f7ff] group"
                 >
                   Learn More
                   <IconArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -41,7 +41,7 @@ const ReviewAiHero = () => {
               </BookDemoLink>
             </div>
           </div>
-          <div className="hidden lg:flex justify-center ">
+          <div className="hidden lg:flex justify-center">
             <Image
               src={`${imagesPath}/ai-powered-insights/AI Powered Insights.png`}
               width={600}

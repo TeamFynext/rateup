@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
@@ -252,7 +253,7 @@ export function MembersPage() {
         {isPending ? (
           <div className="flex flex-col gap-2 py-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-12 animate-pulse rounded-md bg-muted" />
+              <Skeleton key={i} className="h-12" />
             ))}
           </div>
         ) : visibleMembers.length === 0 && visibleInvitations.length === 0 ? (
@@ -458,7 +459,7 @@ function Presence({ status }: Readonly<{ status?: string }>) {
     status === "online"
       ? "bg-green-600"
       : status === "busy"
-        ? "bg-red-500"
+        ? "bg-destructive"
         : "border border-muted-foreground/50";
   const label = status === "online" ? t("Online") : status === "busy" ? t("Busy") : t("Offline");
   return (

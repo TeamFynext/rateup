@@ -198,7 +198,7 @@ export function FlowTextDetailedView() {
                     style={fontStyle}
                   />
                   {fieldState.error && (
-                    <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                    <p className="text-xs text-destructive">{fieldState.error.message}</p>
                   )}
                 </div>
               )}

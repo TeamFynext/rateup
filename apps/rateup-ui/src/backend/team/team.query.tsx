@@ -92,7 +92,7 @@ export function useEditTeamMutation(
   return useMutation({
     mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
     onSuccess: (_res) => {
-      toast.success("Team Details Updated Successfully!", {
+      toast.success("Team Details updated", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -195,7 +195,7 @@ export function useAddUsertoTeams() {
       queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
       queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
 
-      toast.success("success");
+      toast.success("Added to the team");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed");
@@ -214,7 +214,7 @@ export function useRemoveUserFromTeam(teamId: string) {
         queryKey: teamKeys.invitedByTeam(teamId),
       });
 
-      toast.success("success");
+      toast.success("Removed from the team");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed");

@@ -27,7 +27,7 @@ const SortDropdown = ({
 
   return (
     <div className={"flex items-center w-full gap-1"}>
-      <p className="text-gray-600 text-xs w-14">{translations("SORT BY")}:</p>
+      <p className="text-muted-foreground text-xs w-14">{translations("SORT BY")}:</p>
       <Select
         onValueChange={(value) => handleSortChange(value ?? "")}
         defaultValue={sortOption}

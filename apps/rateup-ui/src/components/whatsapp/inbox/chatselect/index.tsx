@@ -694,7 +694,7 @@ const WaInboxChatSelect = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={bulkDeleteMutation.isPending}
+                              loading={bulkDeleteMutation.isPending}
                               className="h-8 w-8 p-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                               onClick={() => {
                                 handleBulkDelete();

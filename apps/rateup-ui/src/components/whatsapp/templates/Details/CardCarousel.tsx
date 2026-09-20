@@ -270,7 +270,12 @@ const CardCarousel = ({
               <div className="border-b px-3 py-2">
                 <div className="flex items-center justify-between">
                   <p>Card {index + 1}</p>
-                  <Button variant="ghost" size="icon-sm" onClick={() => deleteMediaCard(index)}>
+                  <Button
+                    aria-label={translations("Delete")}
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => deleteMediaCard(index)}
+                  >
                     <IconTrash size={16} color="red" />
                   </Button>
                 </div>
@@ -425,6 +430,7 @@ const CardCarousel = ({
                       </Field>
                     ) : null}
                     <Button
+                      aria-label={translations("Remove")}
                       variant="ghost"
                       size="icon-sm"
                       className="shrink-0"
@@ -457,7 +463,12 @@ const CardCarousel = ({
               <div className="border-b px-3 py-2">
                 <div className="flex items-center justify-between">
                   <p>Card {index + 1}</p>
-                  <Button variant="ghost" size="icon-sm" onClick={() => deleteProductCard(index)}>
+                  <Button
+                    aria-label={translations("Delete")}
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => deleteProductCard(index)}
+                  >
                     <IconTrash size={16} color="red" />
                   </Button>
                 </div>

@@ -16,7 +16,6 @@ import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCa
 import { Button, buttonVariants } from "../ui/button.tsx";
 import { Field, FieldGroup, FieldLabel } from "../ui/field.tsx";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 
 import styles from "./AuthForm.module.css";
 
@@ -127,11 +126,10 @@ function VerifyPhoneNumberPage() {
         </FieldGroup>
         <Button
           type="button"
-          disabled={isLoading}
+          loading={isLoading}
           className={styles["login-signup-form-submit-btn"]}
           onClick={handleOTPInput}
         >
-          {isLoading && <Spinner />}
           {translations("Verify OTP")}
         </Button>
         <div className="flex justify-end gap-0">

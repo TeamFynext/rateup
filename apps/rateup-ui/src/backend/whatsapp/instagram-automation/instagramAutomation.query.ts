@@ -38,7 +38,7 @@ export const useCreateInstagramAutomationMutation = () => {
     mutationFn: (data: RequestPayload) => createInstagramAutomation(data),
     onSuccess: (_response) => {
       qc.invalidateQueries({ queryKey: ["allInstagramAutomations"] });
-      toast.success("Instagram Automation Created Successfully");
+      toast.success("Instagram Automation created");
     },
     onError: (error) => {
       toast.error(error?.message || "Error Creating Instagram Automation");
@@ -52,7 +52,7 @@ export const useDeleteInstagramAutomationMutation = () => {
     mutationFn: (automationId: string) => deleteInstagramAutomation(automationId),
     onSuccess: (_res) => {
       qc.invalidateQueries({ queryKey: ["allInstagramAutomations"] });
-      toast.success("Instagram Automation Deleted Successfully");
+      toast.success("Instagram Automation deleted");
     },
     onError: (error) => {
       toast.error(error?.message || "Error Deleting Instagram Automation");

@@ -4,7 +4,7 @@ import { SectionHead } from "./parts";
 export default function InboxShowcase() {
   return (
     /* Rides up over the hero's navy as a rounded sheet, as the homepage's overview does. */
-    <section className="relative -mt-8 rounded-t-4xl bg-ink-25 px-5 pt-12 pb-14 sm:-mt-10 sm:rounded-t-[2.5rem] sm:pt-20 sm:pb-24">
+    <section className="relative -mt-8 rounded-t-4xl bg-ru-n-25 px-5 pt-12 pb-14 sm:-mt-10 sm:rounded-t-[2.5rem] sm:pt-20 sm:pb-24">
       <div className="mx-auto max-w-300">
         <SectionHead
           eyebrow="The inbox"

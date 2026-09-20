@@ -162,14 +162,14 @@ export function GroupPage() {
 }
 
 const GROUP_COLORS = [
-  "bg-blue-100 text-blue-700 border-blue-300",
-  "bg-green-100 text-green-700 border-green-300",
-  "bg-purple-100 text-purple-700 border-purple-300",
-  "bg-pink-100 text-pink-700 border-pink-300",
-  "bg-orange-100 text-orange-700 border-orange-300",
-  "bg-emerald-100 text-emerald-700 border-emerald-300",
-  "bg-indigo-100 text-indigo-700 border-indigo-300",
-  "bg-red-100 text-red-700 border-red-300",
+  "bg-ru-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border-blue-300",
+  "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400 border-green-300",
+  "bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border-purple-300",
+  "bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 border-pink-300",
+  "bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border-orange-300",
+  "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-300",
+  "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border-indigo-300",
+  "bg-destructive/10 text-destructive border-destructive/40",
 ];
 
 function getColorClass(str: string) {
@@ -252,9 +252,9 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
               e.stopPropagation();
               handleDelete(group);
             }}
-            className="text-red-600"
+            className="text-destructive"
           >
-            <IconTrash className="w-4 h-4 mr-2 text-red-500" />
+            <IconTrash className="w-4 h-4 mr-2 text-destructive" />
             Delete Group
           </DropdownMenuItem>
         </DropdownMenuGroup>

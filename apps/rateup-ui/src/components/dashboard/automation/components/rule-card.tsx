@@ -25,6 +25,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
       <DropdownMenuTrigger
         render={
           <Button
+            aria-label="More actions"
             variant="ghost"
             size="icon"
             className="h-8 w-8"
@@ -53,7 +54,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
             event.stopPropagation();
             onDelete(event);
           }}
-          className="text-red-600 focus:text-red-600"
+          className="text-destructive"
         >
           <IconTrash className="mr-2 h-4 w-4" />
           Delete
@@ -77,7 +78,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
                 ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200"
                 : item.platform === "INSTAGRAM"
                   ? "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-200"
-                  : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+                  : "bg-ru-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
             }
           >
             {item.platform}
@@ -101,7 +102,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
           className={
             item.isActive
               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-              : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+              : "bg-muted text-foreground"
           }
         >
           {item.isActive ? "Active" : "Inactive"}

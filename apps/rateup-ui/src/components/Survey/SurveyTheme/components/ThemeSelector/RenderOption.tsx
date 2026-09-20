@@ -45,9 +45,10 @@ function RenderOption({
       <div className="flex shrink-0 flex-nowrap items-center gap-2.5">
         {!isDefaultOption && (
           <Button
+            aria-label="Edit"
             size="icon-xs"
             variant="outline"
-            className="border-gray-300 bg-transparent text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+            className="border-border bg-transparent text-muted-foreground hover:border-blue-300 hover:bg-ru-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600"
             onClick={handleEditBtnClick}
           >
             <IconPencil size={"1rem"} />
@@ -55,9 +56,10 @@ function RenderOption({
         )}
         {!isDefaultOption && !isDeletingTheme && (
           <Button
+            aria-label="Delete"
             size="icon-xs"
             variant="outline"
-            className="border-gray-300 bg-transparent text-red-500 hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+            className="border-border bg-transparent text-destructive hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
             onClick={handleDeleteBtnClick}
           >
             <IconTrash size={"1rem"} />
@@ -67,7 +69,7 @@ function RenderOption({
           <Button
             size="icon-xs"
             variant="outline"
-            className="border-gray-300 bg-transparent"
+            className="border-border bg-transparent"
             disabled
             onClick={(e) => e.stopPropagation()}
           >
@@ -75,7 +77,7 @@ function RenderOption({
           </Button>
         )}
         {isSurveyThemeActive && (
-          <Badge className="border border-gray-300 bg-white text-green-600">Active</Badge>
+          <Badge className="border bg-card text-green-600 dark:text-green-400">Active</Badge>
         )}
       </div>
     </div>

@@ -115,7 +115,7 @@ export const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
 
       {/* Body - Required */}
       <div className="text-xs font-bold text-muted-foreground">
-        Body Text (Required) <span className="text-red-500">*</span>
+        Body Text (Required) <span className="text-destructive">*</span>
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
@@ -265,6 +265,7 @@ export const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
             description="Max 20 characters"
             rightSection={
               <Button
+                aria-label="Remove"
                 type="button"
                 variant="ghost"
                 size="icon-xs"

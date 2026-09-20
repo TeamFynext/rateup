@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 interface DisplayNameFormValues {
@@ -193,13 +192,11 @@ export function WaDisplayNamePanel({
             type="button"
             variant="outline"
             onClick={() => reRegisterMutation.mutate(phoneId)}
-            disabled={reRegisterMutation.isPending}
+            loading={reRegisterMutation.isPending}
           >
-            {reRegisterMutation.isPending && <Spinner />}
             {translations("Re-register number")}
           </Button>
-          <Button type="submit" disabled={updateMutation.isPending}>
-            {updateMutation.isPending && <Spinner />}
+          <Button type="submit" loading={updateMutation.isPending}>
             {translations("Submit for review")}
           </Button>
         </div>

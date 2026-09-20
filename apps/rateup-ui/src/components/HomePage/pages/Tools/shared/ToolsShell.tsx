@@ -57,7 +57,7 @@ export default function ToolsShell({
             </ol>
           </nav>
 
-          <h1 className="max-w-[840px] font-nunito text-[34px] leading-[1.05] font-black tracking-[-0.025em] text-foreground sm:text-[42px] lg:text-[52px]">
+          <h1 className="max-w-[840px] font-display text-[34px] leading-[1.05] font-black tracking-[-0.025em] text-foreground sm:text-[42px] lg:text-[52px]">
             {title}
           </h1>
           <p className="mt-4 max-w-[700px] text-[16px] leading-[1.55] text-muted-foreground sm:text-[18px]">

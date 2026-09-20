@@ -488,7 +488,7 @@ export function ScheduleCard({
 
       {canManage && isEditing && (
         <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+          <Button variant="outline" onClick={handleCancel} loading={isSaving}>
             {isDirty ? t("Cancel") : t("Done")}
           </Button>
           <Button onClick={handleSave} disabled={!isDirty || !isValid || isSaving}>

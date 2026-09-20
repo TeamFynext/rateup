@@ -136,10 +136,11 @@ const EmailOtpExtraProps = ({
                 <p className="text-sm font-medium">{translations("Allowed Email IDs")}</p>
                 {selectedEmailIds.length > 0 && (
                   <Button
+                    aria-label={translations("Delete")}
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-7 text-destructive hover:text-destructive"
+                    className="size-7 text-destructive"
                     onClick={handleDelete}
                   >
                     <IconTrash className="size-4" />

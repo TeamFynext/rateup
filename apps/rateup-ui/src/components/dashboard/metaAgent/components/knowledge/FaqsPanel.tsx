@@ -30,7 +30,6 @@ import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import { faqFormSchema, type FaqFormValues } from "../../metaAgent.schemas";
@@ -94,7 +93,7 @@ export function FaqsPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) 
                   size="icon-sm"
                   className="shrink-0"
                   aria-label={`Delete "${faq.question}"`}
-                  disabled={deleteFaq.isPending}
+                  loading={deleteFaq.isPending}
                   onClick={() => deleteFaq.mutate(faq.id)}
                 >
                   <IconTrash className="text-destructive" />
@@ -193,8 +192,7 @@ function FaqDialog({
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Spinner data-icon="inline-start" />}
+              <Button type="submit" loading={isPending}>
                 {faq ? "Save changes" : "Create FAQ"}
               </Button>
             </DialogFooter>

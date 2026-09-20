@@ -132,7 +132,8 @@ export function CouponsPage() {
                   <span className="text-xs text-muted-foreground">
                     <span className="font-bold text-foreground">
                       {c.used.toLocaleString("en-IN")}
-                    </span>{" "}
+                    </span>
+                    {""}
                     uses
                   </span>
                   <Switch checked={c.enabled} onCheckedChange={() => toggle(c.code)} />

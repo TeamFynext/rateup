@@ -366,7 +366,7 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
           line across the sidebar and the page. */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-card px-6">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="font-heading text-[17px] font-bold tracking-[-0.02em]">
+          <span className="font-display text-[17px] font-bold tracking-[-0.02em]">
             {translations("Set up RateUp")}
           </span>
           {orgInfo?.orgName && (
@@ -385,7 +385,7 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
             <div className="flex flex-wrap items-center gap-5 rounded-xl bg-ru-blue-900 p-6">
               <img src={rateupIcon} alt="" className="size-11 shrink-0 object-contain" />
               <div className="flex min-w-55 flex-1 flex-col gap-1.5">
-                <span className="font-heading text-2xl font-bold tracking-[-0.02em] text-white">
+                <span className="font-display text-2xl font-bold tracking-[-0.02em] text-white">
                   {translations("You're live.")}
                 </span>
                 <span className="text-[14.5px] leading-normal text-white/70">
@@ -401,7 +401,7 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
           ) : (
             <div className="flex flex-wrap items-end gap-7">
               <div className="flex min-w-[min(100%,26rem)] flex-1 flex-col gap-3">
-                <h1 className="m-0 font-heading text-[28px] leading-tight font-bold tracking-[-0.025em]">
+                <h1 className="m-0 font-display text-[28px] leading-tight font-bold tracking-[-0.025em]">
                   {orgInfo?.nameOfUser
                     ? translations("Welcome to RateUp, {name}.", {
                         name: orgInfo.nameOfUser.split(" ")[0],

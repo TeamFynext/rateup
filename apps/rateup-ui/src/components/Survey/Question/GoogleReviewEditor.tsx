@@ -10,7 +10,6 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { Button } from "@/components/ui/button.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import useFlowStore, { EditorType } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { cn } from "@/lib/utils";
@@ -318,8 +317,7 @@ const GoogleReviewEditor = ({
         <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
           {translations("Cancel")}
         </Button>
-        <Button onClick={handleSave} disabled={questionUpdateMutation.isPending}>
-          {questionUpdateMutation.isPending && <Spinner data-icon="inline-start" />}
+        <Button onClick={handleSave} loading={questionUpdateMutation.isPending}>
           {translations("Save")}
         </Button>
       </div>

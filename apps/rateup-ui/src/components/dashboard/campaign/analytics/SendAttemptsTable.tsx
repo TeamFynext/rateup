@@ -8,6 +8,7 @@ import {
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { pressable } from "@/components/common/pressable.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -153,7 +154,9 @@ export function SendAttemptsTable({
               return (
                 <div
                   key={send.id}
-                  onClick={() => (pending ? undefined : onSelectSend?.(send))}
+                  {...pressable(() => {
+                    if (!pending) onSelectSend?.(send);
+                  })}
                   className={cn(
                     "grid items-center gap-3 px-5 py-3 text-[13px] tabular-nums",
                     pending

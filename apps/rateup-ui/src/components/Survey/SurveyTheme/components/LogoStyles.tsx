@@ -162,6 +162,7 @@ function LogoStyles() {
               Upload
             </Button>
             <Button
+              aria-label="Delete"
               type="button"
               variant="destructive"
               size="icon-sm"

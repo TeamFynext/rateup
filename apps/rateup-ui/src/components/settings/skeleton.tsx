@@ -4,13 +4,13 @@ function TeamSkeleton() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center gap-4">
             {/* Back button */}
             <Skeleton className="h-8 w-32 rounded-md" />
 
-            <div className="h-6 w-px bg-gray-300" />
+            <div className="h-6 w-px bg-muted" />
 
             {/* Avatar */}
             <Skeleton className="w-12 h-12 rounded-xl" />
@@ -27,7 +27,7 @@ function TeamSkeleton() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Tabs */}
-        <div className="flex gap-8 border-b border-gray-200 pb-3">
+        <div className="flex gap-8 border-b border-border pb-3">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-4 w-20" />
         </div>

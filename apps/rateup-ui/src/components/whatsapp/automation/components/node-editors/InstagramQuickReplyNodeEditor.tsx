@@ -56,6 +56,7 @@ export const InstagramQuickReplyNodeEditor: React.FC<
             }}
           />
           <Button
+            aria-label="Remove"
             type="button"
             variant="ghost"
             size="icon-sm"

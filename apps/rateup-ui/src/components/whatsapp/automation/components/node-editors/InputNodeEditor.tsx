@@ -40,7 +40,7 @@ export const InputNodeEditor: React.FC<
   return (
     <div className={styles.editorSection}>
       <div className="text-xs font-bold text-muted-foreground">
-        Question Text <span className="text-red-500">*</span>
+        Question Text <span className="text-destructive">*</span>
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">

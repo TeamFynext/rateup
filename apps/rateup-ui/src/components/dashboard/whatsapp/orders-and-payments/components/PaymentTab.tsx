@@ -89,8 +89,8 @@ const STANDARD_METHODS: PaymentMethodOption[] = [
   {
     id: "manual",
     icon: IconHeartHandshake,
-    iconBg: "bg-slate-100 dark:bg-slate-900",
-    iconColor: "text-slate-600",
+    iconBg: "bg-muted",
+    iconColor: "text-muted-foreground",
     label: "Manual",
     desc: "Customer receives an order summary. Your team contacts them to arrange payment manually.",
     logos: [],
@@ -144,7 +144,7 @@ const STANDARD_METHODS: PaymentMethodOption[] = [
   {
     id: "bank",
     icon: IconBuildingBank,
-    iconBg: "bg-blue-100 dark:bg-blue-950",
+    iconBg: "bg-ru-blue-100 dark:bg-blue-950",
     iconColor: "text-blue-600",
     label: "Bank Transfer",
     desc: "Customer receives bank account details to transfer funds and verify payment.",

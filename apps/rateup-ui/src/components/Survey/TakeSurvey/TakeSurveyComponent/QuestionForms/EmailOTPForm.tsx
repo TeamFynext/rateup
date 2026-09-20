@@ -134,7 +134,8 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
             <p className="text-sm" style={{ color: themePrimaryColor }}>
               {translations(
                 "Note: * The OTP expires in 10 minutes once it is sent. You can resend in",
-              )}{" "}
+              )}
+              {""}
               {timeLeft}
             </p>
           ) : !asAnswer(response).isValid ? (
@@ -144,10 +145,9 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
               </p>
               <Button
                 onClick={handleGetOTP}
-                disabled={sendOtpMailMutation.isPending}
+                loading={sendOtpMailMutation.isPending}
                 className="w-fit"
               >
-                {sendOtpMailMutation.isPending && <Spinner data-icon="inline-start" />}
                 {translations("Resend OTP")}
               </Button>
             </>

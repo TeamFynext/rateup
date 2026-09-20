@@ -287,7 +287,7 @@ export function WhatsAppCta({
 
 /**
  * The hero wash, as `HeroSectionNew` and `BookDemoPage` draw it — cream at the top settling
- * into `#fcfcfd` (the value behind `ink-25`), so the band dissolves into the sections below.
+ * into `#fcfcfd` (the value behind `ru-n-25`), so the band dissolves into the sections below.
  * A constant rather than four copies of the gradient, since every page that opens with a
  * hero has to match it exactly or the site reads as two different sites.
  */

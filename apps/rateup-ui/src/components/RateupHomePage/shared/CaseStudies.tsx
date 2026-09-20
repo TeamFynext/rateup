@@ -183,7 +183,7 @@ export default function CaseStudies() {
   return (
     <section
       id="results"
-      className="border-b border-ru-n-100 bg-ink-25"
+      className="border-b border-ru-n-100 bg-ru-n-25"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}

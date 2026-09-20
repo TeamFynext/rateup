@@ -11,7 +11,7 @@ const classMap = {
   [WaTemplateStatus.APPROVED]: "bg-green-600/10 text-green-600 dark:text-green-500",
   [WaTemplateStatus.PENDING]: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
   [WaTemplateStatus.REJECTED]: "bg-destructive/10 text-destructive",
-  [WaTemplateStatus.DRAFT]: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
+  [WaTemplateStatus.DRAFT]: "bg-ru-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
 };
 export default function WaTemplateStatusBadge({
   status,

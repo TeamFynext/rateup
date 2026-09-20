@@ -23,7 +23,7 @@ export interface TemplateVariables {
 }
 
 /**
- * The `{{n}}` placeholders in a template's body, and what they can be filled from.
+ * The `{n}` placeholders in a template's body, and what they can be filled from.
  *
  * Lifted out of `CreateCampaignModal`'s second tab, where the same derivation was
  * spread across three `useMemo`s and an effect. Both the wizard's Template step

@@ -22,7 +22,6 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { SurveyVariableType } from "@/types/enums.ts";
 
@@ -73,6 +72,7 @@ const SurveyVariableEditor = ({
                     <Input readOnly value={variable?.name} />
                     <Input readOnly value={variable?.value} />
                     <Button
+                      aria-label={translations("Edit")}
                       variant="ghost"
                       size="icon-xs"
                       onClick={() => {
@@ -83,6 +83,7 @@ const SurveyVariableEditor = ({
                       <IconEdit />
                     </Button>
                     <Button
+                      aria-label={translations("Delete")}
                       variant="ghost"
                       size="icon-xs"
                       onClick={() => handleDeleteVariable(variable)}
@@ -259,8 +260,7 @@ const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateV
             >
               {translations("Cancel")}
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending && <Spinner data-icon="inline-start" />}
+            <Button type="submit" loading={isPending}>
               {isEdit ? translations("Update") : translations("Create")}
             </Button>
           </DialogFooter>

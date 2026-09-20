@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { WaTemplateFetchBody } from "@/types/global";
 
-/** The body text with `{{n}}` swapped for what each variable resolves to. */
+/** The body text with `{n}` swapped for what each variable resolves to. */
 function fillPlaceholders(text: string, sample: Record<string, string>): string {
   return text.replace(/{{(\d+)}}/g, (match, index: string) => sample[index] ?? match);
 }

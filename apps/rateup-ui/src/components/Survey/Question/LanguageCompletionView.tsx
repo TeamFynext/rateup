@@ -32,14 +32,14 @@ export const LanguageCompletionView = ({
             className={cn(
               "h-8 shrink-0 gap-1.5 px-2.5",
               hasIncomplete
-                ? "border-red-300 text-red-500 hover:border-red-400 hover:text-red-600"
-                : "border-green-300 text-green-600 hover:border-green-400 hover:text-green-700",
+                ? "border-destructive/40 text-destructive hover:border-destructive/50 hover:text-destructive"
+                : "border-green-300 text-green-600 hover:border-green-400 hover:text-green-700 dark:hover:text-green-400",
             )}
           />
         }
       >
         <span
-          className={cn("size-2 rounded-full", hasIncomplete ? "bg-red-500" : "bg-green-500")}
+          className={cn("size-2 rounded-full", hasIncomplete ? "bg-destructive" : "bg-green-500")}
         />
         <span className="text-xs font-medium">{selectedLanguage}</span>
         <IconChevronDown className="size-3.5 opacity-60" />
@@ -55,7 +55,10 @@ export const LanguageCompletionView = ({
               className={cn("gap-2", isSelected && "bg-accent")}
             >
               <span
-                className={cn("size-2 rounded-full", isComplete ? "bg-green-500" : "bg-red-500")}
+                className={cn(
+                  "size-2 rounded-full",
+                  isComplete ? "bg-green-500" : "bg-destructive",
+                )}
               />
               {language}
             </DropdownMenuItem>

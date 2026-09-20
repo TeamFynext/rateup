@@ -54,12 +54,12 @@ const statusOptions: {
   {
     value: "busy",
     label: "Busy",
-    icon: <IconCircle className="mr-2 h-4 w-4 text-red-500 fill-red-500" />,
+    icon: <IconCircle className="mr-2 h-4 w-4 text-destructive fill-red-500" />,
   },
   {
     value: "offline",
     label: "Offline",
-    icon: <IconCircleX className="mr-2 h-4 w-4 text-black " />,
+    icon: <IconCircleX className="mr-2 h-4 w-4 text-black" />,
   },
 ];
 
@@ -71,7 +71,7 @@ const getStatusRing = (status: UserAvailabilityStatus): string => {
     case UserAvailabilityStatus.busy:
       return "ring-2 ring-red-500";
     case UserAvailabilityStatus.offline:
-      return "ring-2 ring-black";
+      return "ring-2 ring-foreground";
     default:
       return "ring-2 ring-blue-500";
   }

@@ -163,13 +163,13 @@ export function LoyaltySettingsPage() {
             <Button
               variant="outline"
               onClick={() => setStatus("paused")}
-              disabled={update.isPending}
+              loading={update.isPending}
             >
               <IconPlayerPause size={16} /> {t("Pause earning")}
             </Button>
           )}
           {state === "paused" && (
-            <Button onClick={() => setStatus("active")} disabled={update.isPending}>
+            <Button onClick={() => setStatus("active")} loading={update.isPending}>
               <IconPlayerPlay size={16} /> {t("Resume earning")}
             </Button>
           )}
@@ -397,7 +397,8 @@ export function LoyaltySettingsPage() {
           </DialogHeader>
           <div className="flex flex-col gap-2 py-2">
             <p className="text-sm text-muted-foreground">
-              {t("Type")} <span className="font-semibold text-foreground">“{program.name}”</span>{" "}
+              {t("Type")} <span className="font-semibold text-foreground">“{program.name}”</span>
+              {""}
               {t("to confirm")}
             </p>
             <Input

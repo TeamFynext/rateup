@@ -61,7 +61,8 @@ const ApplyLifecycletoContactsModal = ({
           <DialogDescription>{t("Update Lifecycle Stage of Contacts")}</DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 text-muted-foreground">
-          <IconUsers className="w-5 h-5" />{" "}
+          <IconUsers className="w-5 h-5" />
+          {""}
           <span>
             {contactIds.length} {t("contacts selected")}
           </span>

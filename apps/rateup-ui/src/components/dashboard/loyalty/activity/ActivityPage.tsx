@@ -54,7 +54,7 @@ export function ActivityPage({ search }: Readonly<{ search: ActivitySearch }>) {
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger
-              render={<Button variant="outline" disabled={exportLedger.isPending} />}
+              render={<Button variant="outline" loading={exportLedger.isPending} />}
             >
               <IconDownload size={16} />
               {exportLedger.isPending ? t("Exporting…") : t("Export")}

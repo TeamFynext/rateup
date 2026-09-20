@@ -1,9 +1,7 @@
-import { IconArrowLeft } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
+import { BackLink } from "@/components/common/back-link.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PERMISSION_GROUPS, PERMISSION_LABELS } from "@/utils/authz/permissions.ts";
@@ -22,15 +20,7 @@ export function RolesMatrixPage() {
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-4">
       <div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-2 mb-2 text-muted-foreground hover:text-foreground"
-          render={<Link to="/dashboard/settings/members" />}
-        >
-          <IconArrowLeft className="size-4" aria-hidden="true" />
-          {t("Back to Members")}
-        </Button>
+        <BackLink to="/dashboard/settings/members" label={t("Members")} className="mb-2" />
         <h2 className="mb-1 text-2xl">{t("Roles")}</h2>
         <p className="max-w-2xl text-sm text-muted-foreground">
           {t(

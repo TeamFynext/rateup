@@ -105,7 +105,7 @@ export function UsageMeters({
     <Card>
       <CardContent className="flex items-center justify-between">
         <div>
-          <h3 className="font-heading text-base font-medium">{t("Usage this period")}</h3>
+          <h3 className="font-display text-base font-medium">{t("Usage this period")}</h3>
           <p className="text-sm text-muted-foreground">
             {t("What your plan allows, and how much of it you have used.")}
           </p>

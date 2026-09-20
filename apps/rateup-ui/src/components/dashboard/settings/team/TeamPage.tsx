@@ -313,8 +313,8 @@ export function TeamPage() {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={isCreating} className="bg-primary">
-                  {isCreating ? translations("Creating") : translations("Create Team")}
+                <Button type="submit" loading={isCreating} className="bg-primary">
+                  {translations("Create Team")}
                 </Button>
               </DialogFooter>
             </form>

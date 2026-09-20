@@ -93,7 +93,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
                 <PlanBanner />
 
                 <div
-                  className={`min-h-0 flex-1 ${paddingExclusion ? "" : "p-4"} overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
+                  className={`min-h-0 flex-1 ${paddingExclusion ? "" : "p-4"} overflow-y-auto bg-background relative`}
                 >
                   <LifecycleContext value={lifecycles || []}>
                     <CustomFieldsProvider initialFields={customFieldData || []}>

@@ -76,7 +76,7 @@ export function SetupRowCard({
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <span className="flex flex-wrap items-center gap-2.5">
-          <span className="font-heading text-[17px] font-bold tracking-[-0.015em]">{title}</span>
+          <span className="font-display text-[17px] font-bold tracking-[-0.015em]">{title}</span>
           {badges}
         </span>
         <span className="max-w-[66ch] text-sm leading-relaxed text-muted-foreground">

@@ -85,9 +85,11 @@ export function RewardCard({
         return "Reward";
     }
   };
-  const lightGreen = "text-green-700 bg-green-50 border-green-200";
-  const lightGray = "text-gray-600 bg-gray-100 border-gray-300";
-  const lightBlue = "text-blue-700 bg-blue-50 border-blue-200";
+  const lightGreen =
+    "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-900";
+  const lightGray = "text-muted-foreground bg-muted border-border";
+  const lightBlue =
+    "text-blue-700 dark:text-blue-400 bg-ru-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900";
 
   // What a point is worth here, so a reward's cost can be shown in money and not only in
   // points. Both queries behind this are cached app-wide, so it adds no request.
@@ -99,7 +101,9 @@ export function RewardCard({
       return (
         <>
           <div className={`px-2 py-1 rounded border ${lightBlue}`}>
-            <p className="text-xs font-medium text-blue-700">{reward.pointsCost || 0} pts</p>
+            <p className="text-xs font-medium text-blue-700 dark:text-blue-400">
+              {reward.pointsCost || 0} pts
+            </p>
           </div>
           <RewardWorthLine
             rewardValue={reward.rewardValue}
@@ -111,7 +115,7 @@ export function RewardCard({
             variant="chip"
           />
           <div className={`px-2 py-1 rounded border ${lightGreen}`}>
-            <p className="text-xs font-medium text-green-700">
+            <p className="text-xs font-medium text-green-700 dark:text-green-400">
               {reward.stockRedeemed || 0} redeemed
             </p>
           </div>
@@ -121,7 +125,7 @@ export function RewardCard({
     if (category === "coupons") {
       return (
         <div className={`px-2 py-1 rounded border ${lightBlue}`}>
-          <p className="text-xs font-medium text-blue-700">
+          <p className="text-xs font-medium text-blue-700 dark:text-blue-400">
             {reward.stockRedeemed || 0}/{reward.stockQuantity || "∞"}
           </p>
         </div>
@@ -130,7 +134,7 @@ export function RewardCard({
     if (category === "free-gifts") {
       return (
         <div className={`px-2 py-1 rounded border ${lightBlue}`}>
-          <p className="text-xs font-medium text-blue-700">
+          <p className="text-xs font-medium text-blue-700 dark:text-blue-400">
             {reward.stockRedeemed || 0}/{reward.stockQuantity || 0}
           </p>
         </div>
@@ -269,13 +273,20 @@ export function RewardCard({
                 checked={reward.status === LoyaltyRewardStatus.ACTIVE}
                 onCheckedChange={onToggleStatus}
               />
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEditStart}>
+              <Button
+                aria-label="Edit"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={onEditStart}
+              >
                 <IconPencil className="w-3.5 h-3.5" />
               </Button>
               <Button
+                aria-label="Delete"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="h-7 w-7 text-destructive hover:bg-destructive/10"
                 onClick={onDelete}
               >
                 <IconTrash className="w-3.5 h-3.5" />

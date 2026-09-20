@@ -78,7 +78,7 @@ export default function FlowSettings({
             <div className="flex flex-col gap-6">
               <Field>
                 <FieldLabel htmlFor="flow-name">
-                  Flow Name <span className="text-red-500">*</span>
+                  Flow Name <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
                   id="flow-name"
@@ -106,9 +106,9 @@ export default function FlowSettings({
                 <Button
                   size="default"
                   onClick={handleSaveGeneral}
-                  disabled={updateFlowMetadata.isPending}
+                  loading={updateFlowMetadata.isPending}
                 >
-                  {updateFlowMetadata.isPending ? "Saving..." : "Save Changes"}
+                  {"Save Changes"}
                 </Button>
               </div>
             </div>
@@ -140,8 +140,8 @@ export default function FlowSettings({
               </Field>
 
               <div>
-                <Button size="default" onClick={handleSaveTeams} disabled={editSurvey.isPending}>
-                  {editSurvey.isPending ? "Saving..." : "Save Changes"}
+                <Button size="default" onClick={handleSaveTeams} loading={editSurvey.isPending}>
+                  {"Save Changes"}
                 </Button>
               </div>
             </div>
@@ -169,8 +169,8 @@ export default function FlowSettings({
               </div>
 
               <div>
-                <Button size="default" onClick={handleSaveWebhook} disabled={editSurvey.isPending}>
-                  {editSurvey.isPending ? "Saving..." : "Save Changes"}
+                <Button size="default" onClick={handleSaveWebhook} loading={editSurvey.isPending}>
+                  {"Save Changes"}
                 </Button>
               </div>
             </div>
@@ -179,15 +179,13 @@ export default function FlowSettings({
 
         {/* Danger Zone - Full Width */}
         <div className="col-span-1 lg:col-span-2">
-          <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-700 rounded p-5 px-6">
+          <div className="bg-card border border-border rounded p-5 px-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-bold text-gray-900 dark:text-gray-50 m-0 mb-1 tracking-wide">
+                <p className="text-sm font-bold text-foreground m-0 mb-1 tracking-wide">
                   DANGER ZONE
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 m-0">
-                  Reset data and responses
-                </p>
+                <p className="text-sm text-muted-foreground m-0">Reset data and responses</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="destructive" size="default">

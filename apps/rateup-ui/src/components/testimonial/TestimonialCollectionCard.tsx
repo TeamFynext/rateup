@@ -65,7 +65,14 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
           menu events through the React tree even though the popup is portaled. */}
       <DropdownMenuTrigger
         onClick={(e) => e.stopPropagation()}
-        render={<Button variant="ghost" size="icon" className="h-8 w-8" />}
+        render={
+          <Button
+            aria-label={translations("More actions")}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+          />
+        }
       >
         <IconDotsVertical className="w-4 h-4" />
       </DropdownMenuTrigger>

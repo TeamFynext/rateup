@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 import { FeatureCard } from "./FeatureCard.tsx";
@@ -153,8 +152,7 @@ export function SubscriptionEditorModal({
             <Button variant="outline" onClick={onClose}>
               {translations("Cancel")}
             </Button>
-            <Button disabled={updateMutation.isPending} onClick={handleSave}>
-              {updateMutation.isPending && <Spinner />}
+            <Button loading={updateMutation.isPending} onClick={handleSave}>
               {translations("Save")}
             </Button>
           </div>

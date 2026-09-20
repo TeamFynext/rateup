@@ -423,6 +423,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                               {/* Remove condition */}
                               {jump.conditions.length > 1 ? (
                                 <Button
+                                  aria-label={translations("Remove")}
                                   variant="ghost"
                                   size="icon"
                                   className="text-destructive shrink-0 self-end"

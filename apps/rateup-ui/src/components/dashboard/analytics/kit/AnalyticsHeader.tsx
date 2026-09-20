@@ -17,7 +17,7 @@ export function AnalyticsHeader({
   leading?: ReactNode;
   /** After the title: a status. */
   badge?: ReactNode;
-  /** Before the icon on a drill-down: a link back to the list, styled with `BACK_LINK`. */
+  /** Before the icon on a drill-down: a `BackLink` to the list. */
   back?: ReactNode;
 }>) {
   return (
@@ -27,7 +27,7 @@ export function AnalyticsHeader({
         {leading}
         <div className="flex min-w-0 flex-col">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h1 className="m-0 truncate font-heading text-xl leading-tight font-bold tracking-tight">
+            <h1 className="m-0 truncate font-display text-xl leading-tight font-bold tracking-tight">
               {title}
             </h1>
             {badge}
@@ -40,10 +40,6 @@ export function AnalyticsHeader({
     </header>
   );
 }
-
-/** For the back link a drill-down passes as `back`; put an arrow icon inside it. */
-export const BACK_LINK =
-  "inline-flex size-9 items-center justify-center rounded-md border border-border hover:bg-muted hover:text-foreground";
 
 /**
  * The sticky strip that holds a page's filters and actions. `-top-4` and `-mx-4`

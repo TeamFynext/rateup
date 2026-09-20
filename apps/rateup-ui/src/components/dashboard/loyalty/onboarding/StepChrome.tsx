@@ -189,7 +189,7 @@ export function StepFooter({
   const { t } = useTranslation();
 
   const submit = (
-    <Button type="submit" disabled={isSaving}>
+    <Button type="submit" loading={isSaving}>
       {isSaving ? t("Saving…") : (submitLabel ?? t("Continue"))}
     </Button>
   );
@@ -213,13 +213,13 @@ export function StepFooter({
             aria-label={secondaryAction.label}
             title={secondaryAction.label}
             onClick={secondaryAction.onClick}
-            disabled={isSaving}
+            loading={isSaving}
           >
             <IconX size={16} />
           </Button>
         ) : (
           onBack && (
-            <Button type="button" variant="ghost" onClick={onBack} disabled={isSaving}>
+            <Button type="button" variant="ghost" onClick={onBack} loading={isSaving}>
               {t("Back")}
             </Button>
           )
@@ -259,12 +259,12 @@ export function SectionActions({
           aria-label={secondaryAction.label}
           title={secondaryAction.label}
           onClick={secondaryAction.onClick}
-          disabled={isSaving}
+          loading={isSaving}
         >
           <IconX size={16} />
         </Button>
       )}
-      <Button type="submit" disabled={isSaving}>
+      <Button type="submit" loading={isSaving}>
         {isSaving ? t("Saving…") : (submitLabel ?? t("Save"))}
       </Button>
     </div>

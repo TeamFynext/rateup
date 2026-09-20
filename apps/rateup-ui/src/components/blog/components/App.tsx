@@ -45,7 +45,7 @@ export default function App({ posts, authors, tags }: AppProps) {
             {isSearching ? (
               <>
                 <div className="flex items-baseline justify-between">
-                  <h3 className="font-nunito font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em] m-0">
+                  <h3 className="font-display font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em] m-0">
                     Search Results ({filteredPosts.length})
                   </h3>
                   <button

@@ -51,7 +51,8 @@ const ImageCarouselInput = (props: FlowInputProps<CarouselImage[]>) => {
       const base64String = await FileConverter.fileToBase64(file);
       commit(images.map((img, i) => (i === idx ? { ...img, src: base64String } : img)));
     } catch (error) {
-      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
+      console.error("Image read failed", error);
+      toast.error("Could not read that image.", {
         id: "file-converting",
       });
     }
@@ -104,7 +105,7 @@ const ImageCarouselInput = (props: FlowInputProps<CarouselImage[]>) => {
                 aria-invalid={!!props.errors?.[`images.${idx}.alt-text`]}
               />
               {props.errors?.[`images.${idx}.alt-text`] && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-destructive">
                   {props.errors[`images.${idx}.alt-text`] as string}
                 </p>
               )}

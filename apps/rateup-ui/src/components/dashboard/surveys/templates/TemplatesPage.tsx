@@ -16,6 +16,7 @@ import {
   ListPageHeader,
   ListPageHeaderSection,
 } from "@/components/common/list-page-layout.tsx";
+import { pressable } from "@/components/common/pressable.ts";
 import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
 import SurveySectionTabs from "@/components/Survey/SurveySectionTabs.tsx";
@@ -64,7 +65,7 @@ export function TemplatesPage() {
             <div
               key={survey?.id}
               className="cursor-pointer"
-              onClick={() => handleTemplateSelect(survey)}
+              {...pressable(() => handleTemplateSelect(survey))}
             >
               <SurveyTemplates
                 key={index}

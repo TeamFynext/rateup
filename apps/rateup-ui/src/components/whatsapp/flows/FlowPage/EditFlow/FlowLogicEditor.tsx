@@ -174,7 +174,20 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
     }
   }, [dbFlow]);
 
-  if (isLoading || isError) return null;
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner className="size-5 text-muted-foreground" />
+      </div>
+    );
+  }
+  if (isError) {
+    return (
+      <p className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+        {translations("Could not load this flow's logic.")}
+      </p>
+    );
+  }
 
   const handleSave = () => {
     const updatedLogicJumps = {
@@ -228,8 +241,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           <Button variant="outline" size="lg" onClick={() => afterSave()}>
             {translations("Close ")}
           </Button>
-          <Button size="lg" onClick={handleSave} disabled={updateFlowMutation.isPending}>
-            {updateFlowMutation.isPending && <Spinner />}
+          <Button size="lg" onClick={handleSave} loading={updateFlowMutation.isPending}>
             {translations("Save")}
           </Button>
         </div>
@@ -352,7 +364,13 @@ function AtomicConditionBlock({
           />
         )}
       </div>
-      <Button variant="outline" size="icon-sm" className="absolute right-3" onClick={handleDelete}>
+      <Button
+        aria-label={translations("Delete")}
+        variant="outline"
+        size="icon-sm"
+        className="absolute right-3"
+        onClick={handleDelete}
+      >
         <IconTrash />
       </Button>
     </div>

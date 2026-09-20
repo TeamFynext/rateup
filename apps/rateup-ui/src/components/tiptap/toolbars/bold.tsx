@@ -19,6 +19,7 @@ const BoldToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
         <TooltipTrigger
           render={
             <Button
+              aria-label="Bold"
               variant="ghost"
               size="icon"
               className={cn(

@@ -15,6 +15,7 @@ const ItalicToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<t
         <TooltipTrigger
           render={
             <Button
+              aria-label="Italic"
               variant="ghost"
               size="icon"
               className={cn(

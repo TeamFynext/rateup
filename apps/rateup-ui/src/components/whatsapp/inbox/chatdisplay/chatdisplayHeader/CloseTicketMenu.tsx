@@ -315,7 +315,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           size="sm"
           variant="outline"
           className="h-8 shrink-0 gap-1.5"
-          disabled={spamMutation.isPending}
+          loading={spamMutation.isPending}
           onClick={() => handleSpam(false)}
         >
           <IconShieldOff className="size-3.5" />
@@ -333,7 +333,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
         <Button
           size="sm"
           className="h-8 shrink-0 gap-1.5 border-transparent bg-primary text-primary-foreground shadow-none"
-          disabled={reopenMutation.isPending}
+          loading={reopenMutation.isPending}
           onClick={handleReopen}
         >
           <IconRotate className="size-3.5" />
@@ -352,7 +352,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             <Button
               size="sm"
               className="h-8 shrink-0 gap-1.5 border-transparent bg-green-600 text-white shadow-none"
-              disabled={editContactMutation.isPending}
+              loading={editContactMutation.isPending}
             />
           }
         >

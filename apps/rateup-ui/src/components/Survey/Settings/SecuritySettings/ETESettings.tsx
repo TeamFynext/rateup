@@ -104,9 +104,10 @@ export default function ETESettings({ survey }: ETESettingsInterface) {
               <TooltipTrigger
                 render={
                   <Button
+                    aria-label={translations("Show the key")}
                     variant="ghost"
                     size="icon"
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive"
                     onClick={() => navigate({ to: "/dashboard/settings/account" })}
                   />
                 }

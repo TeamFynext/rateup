@@ -133,7 +133,7 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
     });
   }, [registerSubmit, wizard, templateId, dynamicTags, selected, incomplete, t]);
 
-  // What the preview substitutes for each `{{n}}`, so the phone shows a real
+  // What the preview substitutes for each `{n}`, so the phone shows a real
   // message rather than a template with holes in it.
   const sampleValues = useMemo(() => {
     const sample: Record<string, string> = {};
@@ -329,7 +329,7 @@ function BroadcastTemplateStep({ wizard, registerSubmit }: Readonly<CampaignWiza
                     "flex items-start gap-2 rounded-lg px-3 py-2.5 text-[12.5px] leading-snug",
                     blocking
                       ? "bg-destructive/10 text-destructive"
-                      : "text-secondary-foreground bg-blue-50 dark:bg-blue-950/30",
+                      : "text-secondary-foreground bg-ru-blue-50 dark:bg-blue-950/30",
                   )}
                 >
                   <IconInfoCircle

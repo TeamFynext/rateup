@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -114,7 +115,11 @@ function TabPanelsComp({
       </TabsContent>
       <TabsContent value={TabEnum.Analytics} className="min-h-0">
         <Suspense
-          fallback={<div className="flex items-center justify-center h-64">Loading...</div>}
+          fallback={
+            <div className="flex h-64 items-center justify-center">
+              <Spinner className="size-5 text-muted-foreground" />
+            </div>
+          }
         >
           <ResultsOverviewWebForm
             surveyId={surveyId}

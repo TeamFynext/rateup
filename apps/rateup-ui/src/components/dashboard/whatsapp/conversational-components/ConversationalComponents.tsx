@@ -53,9 +53,9 @@ export function ConversationalComponents() {
           />
         </div>
         {selectedPhoneId && (
-          <Button variant="default" onClick={handleSync} disabled={syncMutation.isPending}>
-            <IconRefresh className={syncMutation.isPending ? "animate-spin" : ""} size={18} />
-            {syncMutation.isPending ? t("Syncing...") : t("Sync from WhatsApp")}
+          <Button variant="default" onClick={handleSync} loading={syncMutation.isPending}>
+            <IconRefresh className={""} size={18} />
+            {t("Sync from WhatsApp")}
           </Button>
         )}
       </div>
@@ -182,7 +182,12 @@ function DisplayConversationalSettings({
                 maxLength={80}
               />
               <span className="shrink-0 text-xs text-muted-foreground">{prompt.length}/80</span>
-              <Button variant="ghost" size="icon" onClick={() => handleRemovePrompt(index)}>
+              <Button
+                aria-label={t("Remove")}
+                variant="ghost"
+                size="icon"
+                onClick={() => handleRemovePrompt(index)}
+              >
                 <IconTrash className="h-4 w-4" />
               </Button>
             </div>
@@ -243,6 +248,7 @@ function DisplayConversationalSettings({
                 </Field>
               </div>
               <Button
+                aria-label={t("Remove")}
                 variant="ghost"
                 size="icon"
                 className="mt-6"
@@ -261,8 +267,8 @@ function DisplayConversationalSettings({
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={updateMutation.isPending}>
-        {updateMutation.isPending ? t("Saving...") : t("Save Changes")}
+      <Button onClick={handleSave} loading={updateMutation.isPending}>
+        {t("Save Changes")}
       </Button>
     </div>
   );

@@ -156,7 +156,7 @@ function EncryptionPasswordModal({
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {translations("Enter the password to view the survey data")}
           </p>
           <Field>

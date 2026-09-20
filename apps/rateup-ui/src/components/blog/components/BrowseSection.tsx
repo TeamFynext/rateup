@@ -6,7 +6,7 @@ export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[
   return (
     <section className="mt-7">
       <div className="flex items-center justify-between mb-4">
-        <div className="font-nunito font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em]">
+        <div className="font-display font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em]">
           Browse Posts
         </div>
         <a

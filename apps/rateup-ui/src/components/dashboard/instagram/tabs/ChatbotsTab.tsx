@@ -49,7 +49,7 @@ export function ChatbotsTab() {
   const isEmpty = !igPending && !igError && filteredData.length === 0;
 
   return (
-    <Card className="bg-ink-25 dark:bg-card">
+    <Card className="bg-ru-n-25 dark:bg-card">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950">

@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.t
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import {
   Tooltip,
   TooltipContent,
@@ -56,7 +55,7 @@ const WebhookSettings = ({
       <Card>
         <CardHeader className="flex flex-row items-center gap-2.25">
           <IconWebhook className="size-4 text-primary" />
-          <CardTitle className="font-nunito text-[15px] font-extrabold">
+          <CardTitle className="font-display text-[15px] font-extrabold">
             {translations("Webhooks")}
           </CardTitle>
         </CardHeader>
@@ -115,8 +114,7 @@ const WebhookSettings = ({
               </FieldGroup>
 
               <div className="flex justify-end">
-                <Button size="sm" onClick={handleSave} disabled={editSurvey.isPending}>
-                  {editSurvey.isPending && <Spinner data-icon="inline-start" />}
+                <Button size="sm" onClick={handleSave} loading={editSurvey.isPending}>
                   {translations("Save Changes")}
                 </Button>
               </div>

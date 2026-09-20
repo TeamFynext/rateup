@@ -115,7 +115,7 @@ export function LabelsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
         </div>
       </div>
     );
@@ -129,9 +129,9 @@ export function LabelsPage() {
       {labels.length === 0 ? (
         <div className="grid place-content-center py-12 h-full">
           <div className="text-center">
-            <IconTag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No labels yet</h3>
-            <p className="text-gray-600 mb-4">
+            <IconTag className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No labels yet</h3>
+            <p className="text-muted-foreground mb-4">
               Create your first label to start organizing contacts.
             </p>
             <Button
@@ -212,8 +212,8 @@ export function LabelsPage() {
               <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? "Creating..." : "Create Label"}
+              <Button type="submit" loading={submitting}>
+                {"Create Label"}
               </Button>
             </DialogFooter>
           </form>
@@ -271,8 +271,8 @@ export function LabelsPage() {
               <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? "Updating..." : "Update Label"}
+              <Button type="submit" loading={submitting}>
+                {"Update Label"}
               </Button>
             </DialogFooter>
           </form>

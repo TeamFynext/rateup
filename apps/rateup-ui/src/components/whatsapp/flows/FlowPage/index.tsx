@@ -284,7 +284,7 @@ function FlowPage() {
                   <ShareFlow allowUnpublishedShare={true} />
                 </TabsContent>
                 <TabsContent value={FlowTabEnum.Analytics}>
-                  <div className="p-6 text-center text-gray-500">
+                  <div className="p-6 text-center text-muted-foreground">
                     Analytics content coming soon...
                   </div>
                 </TabsContent>

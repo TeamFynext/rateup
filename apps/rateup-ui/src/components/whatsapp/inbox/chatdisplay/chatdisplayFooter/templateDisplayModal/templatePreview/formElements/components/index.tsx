@@ -457,6 +457,7 @@ interface LeadFormQuestionsInputComponentProps {
 }
 
 function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentProps) {
+  const { t: translations } = useTranslation();
   const uid = useId();
   // The flowbot editor carries the automation's id in the URL's search, not its path.
   const searchParams = useSearch({ strict: false });
@@ -505,10 +506,11 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
           <TooltipTrigger
             render={
               <Button
+                aria-label={translations("Refresh")}
                 variant="outline"
                 size="icon"
                 className="mt-6 h-9 w-9 shrink-0"
-                disabled={syncformQuestionsMut.isPending}
+                loading={syncformQuestionsMut.isPending}
                 onClick={() =>
                   syncformQuestionsMut.mutate({
                     fbPageId: props.leadgenData.data.fbPageId,

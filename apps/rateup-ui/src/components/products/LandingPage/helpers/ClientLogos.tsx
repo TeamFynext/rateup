@@ -39,7 +39,7 @@ const ClientLogos = () => {
   const allLogos = [...logos, ...logos]; // duplicate for seamless loop
 
   return (
-    <section className=" py-4 overflow-hidden  ">
+    <section className="py-4 overflow-hidden">
       <div className="relative overflow-hidden">
         <motion.div
           className="flex gap-12 min-w-max"

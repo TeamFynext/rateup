@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
@@ -106,7 +105,7 @@ const GeneralSettings = ({
     <Card>
       <CardHeader className="flex flex-row items-center gap-2.25 pb-2">
         <IconAdjustmentsHorizontal className="size-4 text-primary" />
-        <CardTitle className="font-nunito text-[15px] font-extrabold">
+        <CardTitle className="font-display text-[15px] font-extrabold">
           {translations("General")}
         </CardTitle>
         <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
@@ -202,8 +201,7 @@ const GeneralSettings = ({
           </div>
 
           <div className="flex justify-end pt-1">
-            <Button type="submit" size="sm" disabled={editSurvey.isPending}>
-              {editSurvey.isPending && <Spinner data-icon="inline-start" />}
+            <Button type="submit" size="sm" loading={editSurvey.isPending}>
               {translations("Save Changes")}
             </Button>
           </div>

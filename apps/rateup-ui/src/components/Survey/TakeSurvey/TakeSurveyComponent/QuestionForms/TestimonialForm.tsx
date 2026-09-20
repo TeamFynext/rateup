@@ -166,7 +166,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                   className={
                     Number(asAnswer(response).rating ?? 0) >= star
                       ? "fill-primary text-primary"
-                      : "text-gray-300"
+                      : "text-muted-foreground"
                   }
                 />
               </button>
@@ -180,7 +180,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
             {features?.[selectedLanguage]?.photoQn || translations("Upload Photo")}
           </p>
           <div className="flex items-center gap-4">
-            <div className="relative rounded-[10px] h-[150px] w-[200px] ">
+            <div className="relative rounded-[10px] h-[150px] w-[200px]">
               <Dialog
                 open={opened}
                 onOpenChange={(nextOpen) => {
@@ -202,7 +202,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                 </DialogContent>
               </Dialog>
               {isUploading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[10px] bg-white/60 backdrop-blur-sm">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[10px] bg-background/60 backdrop-blur-sm">
                   <Spinner />
                 </div>
               )}

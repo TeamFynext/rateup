@@ -68,5 +68,8 @@ export function rewardsSentence(t: TFunction, dashboard: LoyaltyDashboardStats):
   const share = total > 0 ? Math.round((top.redeemed / total) * 100) : 0;
   return share >= 60
     ? t("{reward} is carrying the whole program.", { reward: top.name })
-    : t("{reward} is the most redeemed, at {share}% of redemptions.", { reward: top.name, share });
+    : t("{reward} is the most redeemed, at {share}% of redemptions.", {
+        reward: top.name,
+        share,
+      });
 }

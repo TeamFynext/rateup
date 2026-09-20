@@ -43,7 +43,8 @@ const NotificationList = ({
         return (
           <div className="flex flex-col gap-2">
             <p className="w-70 text-sm text-muted-foreground">
-              A chat from <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
+              A chat from <span className="font-medium text-foreground">{data?.contactName}</span>
+              {""}
               has been assigned to you.
               <Link
                 to="/dashboard/inbox"
@@ -77,8 +78,9 @@ const NotificationList = ({
         return (
           <div className="flex flex-col gap-2">
             <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              You were mentioned in a chat from{" "}
-              <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
+              You were mentioned in a chat from{""}
+              <span className="font-medium text-foreground">{data?.contactName}</span>
+              {""}
               <Link
                 to="/dashboard/inbox"
                 search={{ tab: "mine", contactId: data?.contactId }}

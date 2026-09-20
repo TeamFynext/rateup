@@ -6,7 +6,6 @@ import { useCallback, useState } from "react";
 import type { LinktreeTheme } from "@/backend/linktree/linktree.api.ts";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 
 import { useLinktreeObj } from "../../../LinktreeContext/LinktreeContext.tsx";
 import { initialState as defaultThemeobj } from "../../ThemeContext/constants.ts";
@@ -97,10 +96,9 @@ function SaveChangesBtn() {
       </p>
       <Button
         className={"h-auto rounded-[2.5rem] px-6 py-2 leading-normal"}
-        disabled={isSaving}
+        loading={isSaving}
         onClick={handleSavingLinktreeChanges}
       >
-        {isSaving && <Spinner data-icon="inline-start" />}
         Save
       </Button>
     </div>

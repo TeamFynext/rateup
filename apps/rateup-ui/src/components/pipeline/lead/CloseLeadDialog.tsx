@@ -87,7 +87,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
               {isLost ? <IconCircleX className="size-5" /> : <IconCircleCheck className="size-5" />}
             </span>
             <div className="min-w-0">
-              <DialogTitle className="font-nunito text-xl leading-tight font-bold tracking-[-0.01em]">
+              <DialogTitle className="font-display text-xl leading-tight font-bold tracking-[-0.01em]">
                 {isLost ? t("Mark as lost") : t("Mark as won")}
               </DialogTitle>
               <DialogDescription>

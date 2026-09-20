@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconLoader2 } from "@tabler/icons-react";
 import { useId, useEffect, useState } from "react";
 import type { Control } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
@@ -784,11 +783,10 @@ const AddCatalogProduct = ({
       </div>
 
       <DialogFooter>
-        <Button variant="outline" onClick={cancel} disabled={isSaving}>
+        <Button variant="outline" onClick={cancel} loading={isSaving}>
           Cancel
         </Button>
-        <Button onClick={form.handleSubmit(handleSave)} disabled={isSaving}>
-          {isSaving && <IconLoader2 data-icon="inline-start" className="animate-spin" />}
+        <Button onClick={form.handleSubmit(handleSave)} loading={isSaving}>
           {addToShopify ? "Add to Shopify" : productData ? "Save changes" : "Add product"}
         </Button>
       </DialogFooter>

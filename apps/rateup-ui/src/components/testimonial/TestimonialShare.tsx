@@ -78,9 +78,15 @@ export const TestimonialShareModal = ({
         <DialogTitle className="sr-only">{translations("Share Your Testimonials")}</DialogTitle>
         {!isPreview ? (
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-0 rounded-[10px] p-8 text-white bg-primary">
+            <div className="flex flex-col gap-0 rounded-[10px] p-8 text-primary-foreground bg-primary">
               <div className="flex justify-end">
-                <Button variant="ghost" size="icon" className="text-white" onClick={onClose}>
+                <Button
+                  aria-label={translations("Close")}
+                  variant="ghost"
+                  size="icon"
+                  className="text-white"
+                  onClick={onClose}
+                >
                   <IconX size={"1.5rem"} />
                 </Button>
               </div>

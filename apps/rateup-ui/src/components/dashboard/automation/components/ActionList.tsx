@@ -627,12 +627,13 @@ const ActionList: React.FC = () => {
           />
 
           <Button
+            aria-label="Delete Action"
             type="button"
             variant="ghost"
             size="icon"
             onClick={() => remove(index)}
             title="Delete Action"
-            className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 h-10 w-10"
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 w-10"
           >
             <IconTrash className="w-4 h-4" />
           </Button>

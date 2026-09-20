@@ -19,7 +19,7 @@ interface Props {
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
   };
 }
-/** One `{{n}}` slot's value: literal text, or a reference the sender resolves. */
+/** One `{n}` slot's value: literal text, or a reference the sender resolves. */
 type BodyVariable = NonNullable<WaTemplateParameter["text"]>;
 
 export default function WaTemplateFormElements(props: Props) {

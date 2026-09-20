@@ -32,7 +32,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "../ui/input-group.tsx";
-import { Loader } from "../ui/loader.tsx";
 import { AUTH_CONTROL, AUTH_CTA, AuthShell, AuthTitle } from "./AuthShell.tsx";
 import { CheckInboxCard } from "./CheckInboxCard.tsx";
 
@@ -258,9 +257,8 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                 )}
               />
 
-              <Button type="submit" disabled={isLoading} className={AUTH_CTA}>
-                {isLoading && <Loader className="size-4 border-white/35" />}
-                {isLoading ? translations("Sending link…") : translations("Send reset link")}
+              <Button type="submit" loading={isLoading} className={AUTH_CTA}>
+                {translations("Send reset link")}
               </Button>
             </form>
           ) : (
@@ -394,9 +392,8 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                 )}
               </AnimatePresence>
 
-              <Button type="submit" disabled={isLoading} className={AUTH_CTA}>
-                {isLoading && <Loader className="size-4 border-white/35" />}
-                {isLoading ? translations("Updating…") : translations("Update password")}
+              <Button type="submit" loading={isLoading} className={AUTH_CTA}>
+                {translations("Update password")}
               </Button>
             </form>
           )}

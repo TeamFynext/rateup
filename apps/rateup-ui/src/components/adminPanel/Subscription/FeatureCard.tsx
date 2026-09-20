@@ -40,7 +40,7 @@ export function FeatureCard({ featurePathName, control }: Readonly<FeatureCardPr
           <FeatureBadge featurePathName={featurePathName} />
         </button>
         {Object.keys(feature || {}).length > 1 && (
-          <Button variant="ghost" size="icon" onClick={toggle}>
+          <Button aria-label="Collapse" variant="ghost" size="icon" onClick={toggle}>
             {opened ? <IconChevronUp /> : <IconChevronDown />}
           </Button>
         )}

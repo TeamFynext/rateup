@@ -131,7 +131,7 @@ export default function WaInboxChatDisplayHeader({
                     side="bottom"
                     trigger={
                       <Badge
-                        className="w-full h-4.5 text-[10px] text-red-600 bg-red-100"
+                        className="w-full h-4.5 text-[10px] text-destructive bg-destructive/10 "
                         variant={"secondary"}
                       >
                         <IconBellOff /> DND
@@ -160,7 +160,7 @@ export default function WaInboxChatDisplayHeader({
                 size="icon-sm"
                 aria-label={contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}
                 aria-pressed={!!contact?.isFavorite}
-                disabled={toggleFavorite.isPending}
+                loading={toggleFavorite.isPending}
                 onClick={() =>
                   toggleFavorite.mutate({
                     conversationId: getRowKey(contact),
@@ -189,7 +189,7 @@ export default function WaInboxChatDisplayHeader({
                   variant="ghost"
                   size="icon-sm"
                   aria-label="Clear mention"
-                  disabled={clearMention.isPending}
+                  loading={clearMention.isPending}
                   onClick={() =>
                     clearMention.mutate({
                       contactId: contact.id,
@@ -257,7 +257,7 @@ export default function WaInboxChatDisplayHeader({
             <Popover>
               <PopoverTrigger asChild className="hover:bg-accent p-1 rounded-md">
                 <Bot
-                  className={`h-7 w-7 ${contact.aiWaChat ? "text-blue-600" : "text-gray-200"} cursor-pointer`}
+                  className={`h-7 w-7 ${contact.aiWaChat ?"text-blue-600" :"text-muted-foreground"} cursor-pointer`}
                 />
               </PopoverTrigger>
               <PopoverContent className="w-40 break-words">

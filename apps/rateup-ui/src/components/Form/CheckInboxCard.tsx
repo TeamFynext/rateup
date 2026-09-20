@@ -70,7 +70,8 @@ export function CheckInboxCard({
 
         <AuthTitle align="center" title={title} />
         <p className="max-w-[40ch] text-[13.5px] leading-normal text-muted-foreground">
-          {description}{" "}
+          {description}
+          {""}
           <strong className="font-semibold text-foreground">
             {email ?? translations("your email address")}
           </strong>
@@ -90,7 +91,8 @@ export function CheckInboxCard({
         <div className="flex w-full items-start gap-2.75 rounded-xl border border-border bg-muted px-3.5 py-3 text-left">
           <IconInfoCircle className="mt-px size-4 shrink-0 text-muted-foreground" stroke={1.8} />
           <span className="text-[12.5px] leading-normal text-muted-foreground">
-            {translations("Nothing after a minute? Check your spam folder, or")}{" "}
+            {translations("Nothing after a minute? Check your spam folder, or")}
+            {""}
             <Link to="/contact-us" className="font-medium text-primary hover:underline">
               {translations("get in touch with support")}
             </Link>

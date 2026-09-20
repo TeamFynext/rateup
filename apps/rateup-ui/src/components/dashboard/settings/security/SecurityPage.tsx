@@ -346,8 +346,8 @@ export function SecurityPage() {
                 <Button type="button" variant="outline" onClick={closePasswordForm}>
                   {translations("Cancel")}
                 </Button>
-                <Button disabled={isLoading} type="submit">
-                  {isLoading ? translations("Updating") : translations("Update Password")}
+                <Button loading={isLoading} type="submit">
+                  {translations("Update Password")}
                 </Button>
               </div>
             </form>
@@ -417,8 +417,8 @@ export function SecurityPage() {
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <IconAlertTriangle className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <IconAlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
                   <DialogTitle className="text-xl text-destructive">
@@ -466,7 +466,8 @@ export function SecurityPage() {
                   Type{" "}
                   <code className="rounded bg-destructive/10 px-2 py-1 font-mono text-xs text-destructive">
                     DELETE ORGANIZATION
-                  </code>{" "}
+                  </code>
+                  {""}
                   {translations("to confirm")}
                 </FieldLabel>
                 <Input
@@ -487,7 +488,7 @@ export function SecurityPage() {
                   setIsDeleteDialogOpen(false);
                   setConfirmText("");
                 }}
-                disabled={isDeleting}
+                loading={isDeleting}
                 className="w-full sm:w-auto"
               >
                 {translations("Cancel")}
@@ -524,8 +525,8 @@ export function SecurityPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <IconAlertTriangle className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                <IconAlertTriangle className="w-6 h-6 text-destructive" />
               </div>
               <div>
                 <DialogTitle className="text-xl text-destructive">
@@ -586,7 +587,8 @@ export function SecurityPage() {
                   Type{" "}
                   <code className="rounded bg-destructive/10 px-2 py-1 font-mono text-xs text-destructive">
                     DELETE ACCOUNT
-                  </code>{" "}
+                  </code>
+                  {""}
                   {translations("to confirm")}
                 </FieldLabel>
 

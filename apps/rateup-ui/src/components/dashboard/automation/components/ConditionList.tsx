@@ -196,7 +196,7 @@ const ConditionValueInput = ({
     }
 
     return (
-      <div className="flex  gap-4 space-y-1">
+      <div className="flex gap-4 space-y-1">
         <Select
           onValueChange={(val) => {
             if (val === "custom") {
@@ -367,12 +367,13 @@ const ConditionRow = ({
       </div>
 
       <Button
+        aria-label="Delete Condition"
         type="button"
         variant="ghost"
         size="icon"
         onClick={() => remove(index)}
         title="Delete Condition"
-        className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 h-10 w-10"
+        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 w-10"
       >
         <IconTrash className="w-4 h-4" />
       </Button>
@@ -439,7 +440,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
       <Button
         type="button"
         variant="outline"
-        className="w-full border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+        className="w-full border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-ru-blue-50 dark:bg-blue-950/20 hover:bg-ru-blue-100 dark:hover:bg-blue-900/30"
         onClick={() => {
           const defaultField =
             getConditionFields().length > 0 ? getConditionFields()[0].value : "CONTACT_EMAIL";

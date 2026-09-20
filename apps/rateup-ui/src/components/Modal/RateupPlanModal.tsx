@@ -24,7 +24,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 import { TagsInput } from "../ui/tags-input.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
@@ -415,7 +414,7 @@ const RateupPlanModal = ({
                 <span className="text-xs">
                   {translations("Features - (give data in json format)")}
                 </span>
-                <span className="text-xs text-red-500">*</span>
+                <span className="text-xs text-destructive">*</span>
               </div>
               <Badge
                 variant={checked ? "default" : "outline"}
@@ -439,8 +438,7 @@ const RateupPlanModal = ({
             <Button type="reset" variant="ghost" onClick={closeModal}>
               {translations("Cancel")}
             </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving && <Spinner />}
+            <Button type="submit" loading={isSaving}>
               {isEdit ? "Update" : "Save"}
             </Button>
           </DialogFooter>

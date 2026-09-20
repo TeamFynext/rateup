@@ -30,7 +30,7 @@ export function IntegrationEmptyState({
         <IntegrationPlate icon={icon} />
 
         <div className="flex max-w-md flex-col gap-1.5">
-          <h3 className="font-heading text-lg font-medium">{title}</h3>
+          <h3 className="font-display text-lg font-medium">{title}</h3>
           <p className="text-sm/relaxed text-muted-foreground">{description}</p>
         </div>
 

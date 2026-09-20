@@ -294,11 +294,11 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <Button
                   size="sm"
                   onClick={handleSaveStartMessage}
-                  disabled={updateFlowMutation.isPending}
+                  loading={updateFlowMutation.isPending}
                   className="h-8 text-xs"
                 >
                   <IconDeviceFloppy size={14} className="mr-1.5" />
-                  {updateFlowMutation.isPending ? "Saving..." : "Save"}
+                  {"Save"}
                 </Button>
               </div>
             </div>
@@ -369,7 +369,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <Button
                   size="sm"
                   className="h-8 text-xs"
-                  disabled={imageUploading}
+                  loading={imageUploading}
                   onClick={() => document.getElementById("flow-image-upload")?.click()}
                 >
                   <IconUpload size={14} className="mr-2" />
@@ -435,11 +435,11 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <Button
                   size="sm"
                   onClick={handleSaveTemplateMessage}
-                  disabled={updateFlowMutation.isPending}
+                  loading={updateFlowMutation.isPending}
                   className="h-8 text-xs"
                 >
                   <IconDeviceFloppy size={14} className="mr-1.5" />
-                  {updateFlowMutation.isPending ? "Saving..." : "Save"}
+                  {"Save"}
                 </Button>
               </div>
             </div>

@@ -45,7 +45,7 @@ export function ToolCard({
       )}
     >
       {title ? (
-        <div className="font-nunito text-[19px] font-extrabold text-foreground">{title}</div>
+        <div className="font-display text-[19px] font-extrabold text-foreground">{title}</div>
       ) : null}
       {subtitle ? <p className="mt-1.5 text-[12.5px] text-muted-foreground">{subtitle}</p> : null}
       <div className={title || subtitle ? "mt-5" : undefined}>{children}</div>
@@ -89,7 +89,7 @@ export function ResultFigure({
   return (
     <>
       <div className="mt-2.5 flex flex-wrap items-end gap-3.5">
-        <span className="font-nunito text-[40px] leading-none font-black tracking-[-0.02em] text-white sm:text-[56px]">
+        <span className="font-display text-[40px] leading-none font-black tracking-[-0.02em] text-white sm:text-[56px]">
           {value}
         </span>
         {suffix ? (
@@ -331,16 +331,16 @@ export function CopyButton({
 export function HowItWorks({ steps }: Readonly<{ steps: ToolStep[] }>) {
   return (
     <ToolContainer className="pt-16">
-      <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
+      <h2 className="m-0 font-display text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
         How it works
       </h2>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         {steps.map((step) => (
           <div key={step.n} className="rounded-xl border border-border bg-card p-6">
-            <div className="bg-ru-star bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
+            <div className="bg-ru-star bg-clip-text font-display text-[32px] leading-none font-black text-transparent">
               {step.n}
             </div>
-            <div className="mt-2.5 mb-1.5 font-nunito text-[16px] font-extrabold text-foreground">
+            <div className="mt-2.5 mb-1.5 font-display text-[16px] font-extrabold text-foreground">
               {step.title}
             </div>
             <p className="m-0 text-[13.5px] leading-[1.55] text-muted-foreground">{step.body}</p>
@@ -361,7 +361,7 @@ export function FaqSection({ faqs }: Readonly<{ faqs: ToolFaq[] }>) {
     <ToolContainer className="pt-14">
       <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
-          <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
+          <h2 className="m-0 font-display text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
             Questions
           </h2>
           <p className="mt-3 text-[14px] leading-[1.6] text-muted-foreground">
@@ -372,7 +372,7 @@ export function FaqSection({ faqs }: Readonly<{ faqs: ToolFaq[] }>) {
         <div className="flex flex-col gap-0.5">
           {faqs.map((faq) => (
             <div key={faq.question} className="rounded-xl border border-border bg-card px-6 py-5">
-              <div className="font-nunito text-[16px] font-extrabold text-foreground">
+              <div className="font-display text-[16px] font-extrabold text-foreground">
                 {faq.question}
               </div>
               <p className="mt-2 text-[14px] leading-[1.6] text-muted-foreground">{faq.answer}</p>
@@ -391,7 +391,7 @@ export function RelatedTools({ slug }: Readonly<{ slug: string }>) {
 
   return (
     <ToolContainer className="pt-14">
-      <h2 className="m-0 font-nunito text-[24px] font-extrabold tracking-[-0.02em] text-foreground">
+      <h2 className="m-0 font-display text-[24px] font-extrabold tracking-[-0.02em] text-foreground">
         Related tools
       </h2>
       <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -401,7 +401,7 @@ export function RelatedTools({ slug }: Readonly<{ slug: string }>) {
             to={toolPath(tool.slug)}
             className="block rounded-xl border border-border bg-card p-[22px] transition-colors hover:border-border"
           >
-            <div className="font-nunito text-[16px] font-extrabold text-foreground">
+            <div className="font-display text-[16px] font-extrabold text-foreground">
               {tool.name}
             </div>
             <p className="mt-2 text-[13px] leading-[1.5] text-muted-foreground">
@@ -424,7 +424,7 @@ export function ToolCta({ title, description }: Readonly<{ title: string; descri
           <div className="text-[11px] font-extrabold tracking-[0.14em] text-ru-blue-300 uppercase">
             Ready to automate it?
           </div>
-          <h2 className="mt-3.5 font-nunito text-[28px] leading-[1.1] font-black tracking-[-0.025em] text-white sm:text-[40px]">
+          <h2 className="mt-3.5 font-display text-[28px] leading-[1.1] font-black tracking-[-0.025em] text-white sm:text-[40px]">
             {title}
           </h2>
           <p className="mt-3.5 max-w-[520px] text-[15px] leading-[1.6] text-white/75 sm:text-[16px]">

@@ -77,11 +77,11 @@ export function CancelPlanDialog({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+            <Button variant="outline" onClick={() => onOpenChange(false)} loading={isPending}>
               {t("Keep my plan")}
             </Button>
-            <Button variant="destructive" onClick={confirm} disabled={isPending}>
-              {isPending ? t("Cancelling") : t("Cancel plan")}
+            <Button variant="destructive" onClick={confirm} loading={isPending}>
+              {t("Cancel plan")}
             </Button>
           </DialogFooter>
         </DialogContent>

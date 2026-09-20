@@ -63,7 +63,7 @@ const CatalogProducts = ({ catalogData }: { catalogData: WaCatalog }) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[220px]">
               {/* <DropdownMenuItem
-                className="text-green-600 focus:text-green-700 focus:bg-green-50"
+                className="text-green-600 focus:text-green-700 dark:focus:text-green-400 focus:bg-green-50 dark:focus:bg-green-950/40"
                 onClick={handleSyncFromShopify}
                 disabled={syncFromShopifyMut.isPending}
               >
@@ -71,7 +71,7 @@ const CatalogProducts = ({ catalogData }: { catalogData: WaCatalog }) => {
                 Sync from Shopify
               </DropdownMenuItem> */}
               <DropdownMenuItem
-                className="text-blue-600 focus:text-blue-700 focus:bg-blue-50"
+                className="text-blue-600 focus:text-blue-700 dark:focus:text-blue-400 focus:bg-ru-blue-50 dark:focus:bg-blue-950/40"
                 onClick={() => handleSyncFromMeta()}
                 disabled={syncFromMetaMut.isPending}
               >

@@ -108,6 +108,7 @@ const DraggableTable = <T extends Record<string, unknown>>({
                             <div className="flex items-center gap-1">
                               {editEnabled && (
                                 <Button
+                                  aria-label="Edit"
                                   type="button"
                                   variant="ghost"
                                   size="icon"
@@ -119,10 +120,11 @@ const DraggableTable = <T extends Record<string, unknown>>({
                               )}
                               {deleteEnabled && (
                                 <Button
+                                  aria-label="Delete"
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  className="size-7 text-destructive hover:text-destructive"
+                                  className="size-7 text-destructive"
                                   onClick={() => handleDelete?.(item)}
                                 >
                                   <IconTrash className="size-4" />

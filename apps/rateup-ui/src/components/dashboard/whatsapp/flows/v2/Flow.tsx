@@ -9,6 +9,7 @@ import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import Result from "@/components/Survey/Result/Result.tsx";
 import ResultComparison from "@/components/Survey/Result/ResultComparison.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow.tsx";
 import { FlowScreenSheet } from "@/components/whatsapp/flow-v2/Preview/WhatsAppPreview.tsx";
@@ -168,7 +169,11 @@ export function Flow() {
               </TabsContent>
               <TabsContent value={FlowTabEnum.Analytics} className="h-full overflow-y-auto mt-0">
                 <Suspense
-                  fallback={<div className="flex items-center justify-center h-64">Loading...</div>}
+                  fallback={
+                    <div className="flex h-64 items-center justify-center">
+                      <Spinner className="size-5 text-muted-foreground" />
+                    </div>
+                  }
                 >
                   <ResultsOverviewWebForm
                     surveyId={survey?.id}

@@ -178,7 +178,7 @@ function Page() {
             {post.primary_tag && (
               <div className="mb-4">
                 <Link to="/blog/tag/$slug" params={{ slug: post.primary_tag.slug }}>
-                  <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+                  <span className="inline-flex items-center rounded-full bg-ru-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
                     {post.primary_tag?.name}
                   </span>
                 </Link>
@@ -351,13 +351,13 @@ function Page() {
             className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-ru-blue-400/30 blur-3xl"
           />
           <div className="relative mx-auto max-w-2xl">
-            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-blue-100 uppercase backdrop-blur-sm">
+            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-ru-blue-100 uppercase backdrop-blur-sm">
               Get started free
             </span>
-            <h2 className="font-nunito mt-5 text-3xl font-black tracking-tight sm:text-4xl">
+            <h2 className="font-display mt-5 text-3xl font-black tracking-tight sm:text-4xl">
               Ready to improve your business reviews?
             </h2>
-            <p className="mt-4 text-lg leading-relaxed text-blue-100/90">
+            <p className="mt-4 text-lg leading-relaxed text-ru-blue-100/90">
               Join thousands of businesses using RateUp to enhance their online reputation.
             </p>
             <div className="mt-8 flex justify-center">

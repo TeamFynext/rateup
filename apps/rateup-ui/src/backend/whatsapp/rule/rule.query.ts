@@ -24,7 +24,7 @@ export const useCreateRuleMutation = () => {
     mutationFn: (data: CreateRule) => createRule(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["rules"] });
-      toast.success("Rule Created Successfully");
+      toast.success("Rule created");
     },
     onError: (error) => {
       toast.error(error?.message || "Error Creating Rule");
@@ -39,7 +39,7 @@ export const useUpdateRuleMutation = () => {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["rules"] });
       qc.invalidateQueries({ queryKey: ["rule", { id: variables.id }] });
-      toast.success("Rule Updated Successfully");
+      toast.success("Rule updated");
     },
     onError: (error) => {
       toast.error(error?.message || "Error Updating Rule");
@@ -53,7 +53,7 @@ export const useDeleteRuleMutation = () => {
     mutationFn: (id: string) => deleteRule(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["rules"] });
-      toast.success("Rule Deleted Successfully");
+      toast.success("Rule deleted");
     },
     onError: (error) => {
       toast.error(error?.message || "Error Deleting Rule");

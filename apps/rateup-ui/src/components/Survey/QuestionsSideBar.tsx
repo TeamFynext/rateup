@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { surveyKeys } from "@/backend/surveys/survey.keys";
+import { pressable } from "@/components/common/pressable.ts";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -219,7 +220,7 @@ export function QuestionsSideBar({
           <div className="shrink-0 border-b border-border p-3.5">
             <Button
               className="h-9.5 w-full gap-1.75 rounded-lg text-[13px] font-bold"
-              onClick={handleAddQn}
+              {...pressable(handleAddQn, translations("Add a question"))}
             >
               <IconPlus size={15} />
               {translations("Add Element")}
@@ -230,7 +231,7 @@ export function QuestionsSideBar({
           <div
             className="flex h-full cursor-pointer items-center justify-center"
             style={{ maxHeight: "850px" }}
-            onClick={handleAddQn}
+            {...pressable(handleAddQn, translations("Add Content"))}
           >
             <div className="flex flex-col items-center gap-2">
               <IconPlus size={36} />

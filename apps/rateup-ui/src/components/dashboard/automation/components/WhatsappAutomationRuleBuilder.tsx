@@ -8,6 +8,7 @@ import {
   useRuleById,
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
@@ -123,7 +124,11 @@ const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   if (isEditMode && isRuleLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner className="size-5 text-muted-foreground" />
+      </div>
+    );
   }
 
   let buttonText = "Create Automation";

@@ -42,7 +42,7 @@ function CopyBlock({
       <p className="text-[12px] font-bold tracking-[0.08em] uppercase text-wa-green mb-3.5">
         {eyebrow}
       </p>
-      <h6 className="font-nunito font-extrabold text-[clamp(28px,3.6vw,48px)] leading-[1.06] tracking-[-0.025em] text-white">
+      <h6 className="font-display font-extrabold text-[clamp(28px,3.6vw,48px)] leading-[1.06] tracking-[-0.025em] text-white">
         {h3}
       </h6>
       <p className="text-white/70 text-[16px] leading-[1.6] mt-5 mb-[22px] max-w-[460px]">{p}</p>
@@ -285,11 +285,11 @@ function FlowsTab() {
             </svg>
             Feedback Flow Builder
           </div>
-          <p className="text-[11px] text-ink-500 mb-3.5 pl-[26px]">
+          <p className="text-[11px] text-ru-n-500 mb-3.5 pl-[26px]">
             Interactive forms native to WhatsApp · no links, no redirects
           </p>
           <div className="bg-[#f6f8fc] rounded-[10px] px-3 py-2.5 mb-2">
-            <div className="text-[11px] font-bold text-ink-400 uppercase tracking-[0.05em] mb-1">
+            <div className="text-[11px] font-bold text-ru-n-400 uppercase tracking-[0.05em] mb-1">
               Question 1
             </div>
             <div className="text-[13px] font-bold text-[#111]">
@@ -311,7 +311,7 @@ function FlowsTab() {
             </div>
           </div>
           <div className="bg-[#f6f8fc] rounded-[10px] px-3 py-2.5 mb-2">
-            <div className="text-[11px] font-bold text-ink-400 uppercase tracking-[0.05em] mb-1">
+            <div className="text-[11px] font-bold text-ru-n-400 uppercase tracking-[0.05em] mb-1">
               Question 2
             </div>
             <div className="text-[13px] font-bold text-[#111]">
@@ -334,7 +334,7 @@ function FlowsTab() {
             </div>
           </div>
           <div className="bg-[#f6f8fc] rounded-[10px] px-3 py-2.5 mb-2">
-            <div className="text-[11px] font-bold text-ink-400 uppercase tracking-[0.05em] mb-1">
+            <div className="text-[11px] font-bold text-ru-n-400 uppercase tracking-[0.05em] mb-1">
               Question 3
             </div>
             <div className="text-[13px] font-bold text-[#111]">
@@ -428,7 +428,7 @@ function AnalyticsTab() {
           </p>
           <div className="grid grid-cols-3 gap-2 mb-3.5">
             <div className="bg-[#f6f8fc] rounded-[10px] p-2.5">
-              <div className="font-nunito font-black text-[19px] text-fb-green tracking-[-0.02em]">
+              <div className="font-display font-black text-[19px] text-fb-green tracking-[-0.02em]">
                 662
               </div>
               <div className="text-[10px] text-[#6b7280] mt-0.5 leading-tight">
@@ -436,13 +436,13 @@ function AnalyticsTab() {
               </div>
             </div>
             <div className="bg-[#f6f8fc] rounded-[10px] p-2.5">
-              <div className="font-nunito font-black text-[19px] text-fb-green tracking-[-0.02em]">
+              <div className="font-display font-black text-[19px] text-fb-green tracking-[-0.02em]">
                 35%
               </div>
               <div className="text-[10px] text-[#6b7280] mt-0.5 leading-tight">Response Rate</div>
             </div>
             <div className="bg-[#f6f8fc] rounded-[10px] p-2.5">
-              <div className="font-nunito font-black text-[19px] text-fb-green tracking-[-0.02em]">
+              <div className="font-display font-black text-[19px] text-fb-green tracking-[-0.02em]">
                 4.8★
               </div>
               <div className="text-[10px] text-[#6b7280] mt-0.5 leading-tight">Avg Rating</div>
@@ -688,15 +688,15 @@ export default function SolutionSection() {
   const active = tabs.find((t) => t.id === activeTab);
 
   return (
-    <section className="bg-ink-25 py-24 pb-[100px]" id="solution">
+    <section className="bg-ru-n-25 py-24 pb-[100px]" id="solution">
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
-          <h2 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
+          <h2 className="font-display font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ru-n-600">
             RateUp + WhatsApp: The Feedback
             <br />
             Solution That Actually Works
           </h2>
-          <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
+          <p className="mt-4 text-[17px] leading-[1.55] text-ru-n-500">
             Boost your response rate by up to 35%. RateUp leverages WhatsApp Flows — native,
             interactive forms inside the world's most popular messaging app — so customers engage
             effortlessly.

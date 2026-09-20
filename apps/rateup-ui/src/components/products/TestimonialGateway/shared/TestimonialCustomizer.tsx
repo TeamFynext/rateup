@@ -64,7 +64,7 @@ export default function TestimonialCustomizer() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Left: Controls + Tabs */}
           <Tabs defaultValue="modern" className="w-full" onValueChange={setCustomTheme}>
-            <TabsList className="grid w-full  grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               {themes.map(({ value, label }) => (
                 <TabsTrigger className="cursor-pointer" key={value} value={value}>
                   {label}
@@ -131,7 +131,7 @@ export default function TestimonialCustomizer() {
           </Tabs>
 
           {/* Right: Static Preview (desktop only) */}
-          <div className=" p-6 bg-white/60 dark:bg-black/60 backdrop-blur-sm rounded-xl border border-white/30 dark:border-white/10 shadow-soft">
+          <div className="p-6 bg-white/60 dark:bg-black/60 backdrop-blur-sm rounded-xl border border-white/30 dark:border-white/10 shadow-soft">
             <div className="text-sm font-medium text-muted-foreground mb-4">Preview</div>
             {customTheme === "modern" ? (
               <TestimonialCard

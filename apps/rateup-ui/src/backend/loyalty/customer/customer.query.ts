@@ -126,7 +126,7 @@ export const useLCAction = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.customers() });
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.redeems() });
-      toast.success("success action");
+      toast.success("Action recorded");
     },
     onError: (error) => {
       toast.error(error?.message || `Failed`);

@@ -288,7 +288,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
             <Button
               variant="destructive"
               size="sm"
-              disabled={updateIntegration.isPending}
+              loading={updateIntegration.isPending}
               onClick={() => confirmAndRun("ShopifySurveyAll", handleDeleteAllShopifySurveys)}
             >
               <IconTrash data-icon="inline-start" />
@@ -297,7 +297,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
             <Button
               variant="destructive"
               size="sm"
-              disabled={updateIntegration.isPending}
+              loading={updateIntegration.isPending}
               onClick={() => confirmAndRun("Schedules", handleDeleteAllSchedules)}
             >
               <IconTrash data-icon="inline-start" />

@@ -78,12 +78,12 @@ export default function ProblemSection() {
     <section className="bg-white py-16 md:py-[100px]">
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
-          <h6 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
+          <h6 className="font-display font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ru-n-600">
             Are You Losing Customers
             <br />
             Because You Can't Hear Them?
           </h6>
-          <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
+          <p className="mt-4 text-[17px] leading-[1.55] text-ru-n-500">
             Email surveys get lost in spam. SMS goes unread. Phone calls annoy. Relying on these
             outdated methods means you're missing critical feedback, operating blind, and
             potentially losing business to a dismal <strong>2% response rate</strong>.
@@ -94,21 +94,21 @@ export default function ProblemSection() {
           {cards.map((c) => (
             <div
               key={c.title}
-              className={`border border-ink-100 rounded-[22px] px-[26px] py-8 pb-7 text-center bg-white shadow-[0_1px_2px_rgba(11,31,72,0.06),0_2px_6px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:shadow-[0_1px_2px_rgba(11,31,72,0.06),0_8px_24px_rgba(11,31,72,0.06)] transition-all relative overflow-hidden ${style.reveal}`}
+              className={`border border-ru-n-200 rounded-[22px] px-[26px] py-8 pb-7 text-center bg-white shadow-[0_1px_2px_rgba(11,31,72,0.06),0_2px_6px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:shadow-[0_1px_2px_rgba(11,31,72,0.06),0_8px_24px_rgba(11,31,72,0.06)] transition-all relative overflow-hidden ${style.reveal}`}
               data-d={c.delay}
             >
               <div className="relative w-[72px] h-[72px] mx-auto mb-[22px]">
-                <div className="w-[72px] h-[72px] rounded-[20px] bg-ink-50 flex items-center justify-center">
-                  <span className="w-8 h-8 text-ink-400 flex items-center justify-center">
+                <div className="w-[72px] h-[72px] rounded-[20px] bg-ru-n-50 flex items-center justify-center">
+                  <span className="w-8 h-8 text-ru-n-400 flex items-center justify-center">
                     {c.icon("currentColor")}
                   </span>
                 </div>
                 <div className="absolute left-[-5px] top-[50%] w-[calc(100%+10px)] h-[2.5px] bg-destructive rounded-[2px] -rotate-[35deg] -translate-y-1/2 opacity-75 pointer-events-none" />
               </div>
-              <h6 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
+              <h6 className="font-display font-extrabold text-[20px] text-ru-n-600 mb-2.5">
                 {c.title}
               </h6>
-              <p className="text-sm text-ink-500 leading-[1.55] mb-5">{c.desc}</p>
+              <p className="text-sm text-ru-n-500 leading-[1.55] mb-5">{c.desc}</p>
               <div className="inline-flex items-center gap-1.5 bg-[#FFF0F0] text-red-600 font-extrabold text-sm py-1.5 px-3.5 rounded-full">
                 <XIcon />
                 {c.badge}
@@ -118,7 +118,7 @@ export default function ProblemSection() {
         </div>
 
         <div className={`text-center mt-16 ${style.reveal}`}>
-          <div className="inline-block text-[13px] font-bold text-ink-400 uppercase tracking-[0.08em] border border-ink-200 rounded-full py-1.5 px-[18px] mb-8">
+          <div className="inline-block text-[13px] font-bold text-ru-n-400 uppercase tracking-[0.08em] border border-ru-n-300 rounded-full py-1.5 px-[18px] mb-8">
             Meanwhile, your customers are on WhatsApp every day
           </div>
           <div className="flex items-start gap-4 md:gap-5 bg-[linear-gradient(135deg,#163A2D_0%,#1E4D3C_100%)] rounded-3xl px-5 md:px-9 py-6 md:py-8 max-w-[680px] mx-auto shadow-[0_24px_56px_rgba(14,36,24,0.30)]">
@@ -128,7 +128,7 @@ export default function ProblemSection() {
               </svg>
             </div>
             <div>
-              <h6 className="font-nunito font-extrabold text-[22px] text-white mb-1.5">
+              <h6 className="font-display font-extrabold text-[22px] text-white mb-1.5">
                 No apps. No forms. Just feedback.
               </h6>
               <p className="text-[15px] text-white/70 mb-3.5 leading-[1.5]">

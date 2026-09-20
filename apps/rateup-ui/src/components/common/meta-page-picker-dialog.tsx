@@ -265,7 +265,7 @@ export function MetaPagePickerDialog({
           <Button variant="secondary" size="lg" onClick={handleClose}>
             {translations("Cancel")}
           </Button>
-          <Button size="lg" onClick={save} disabled={upsertMutation.isPending}>
+          <Button size="lg" onClick={save} loading={upsertMutation.isPending}>
             {upsertMutation.isPending
               ? translations("Loading...")
               : connectedPageId && !selectedPageId

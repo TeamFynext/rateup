@@ -161,7 +161,7 @@ export function ShopifyPage() {
         </div>
       </div>
       {/* Info Alert */}
-      <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
+      <Card className="border-blue-200 bg-ru-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
         <CardHeader>
           <div className="flex items-center gap-2">
             <IconShoppingBag className="h-4 w-4 text-blue-600" />

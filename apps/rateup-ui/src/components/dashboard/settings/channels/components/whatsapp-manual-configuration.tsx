@@ -220,8 +220,8 @@ export function WhatsAppManualConfiguration({
             {translations("Cancel")}
           </Button>
         )}
-        <Button type="submit" disabled={upsertMutation.isPending}>
-          {upsertMutation.isPending ? "Saving" : translations("Save Changes")}
+        <Button type="submit" loading={upsertMutation.isPending}>
+          {translations("Save Changes")}
         </Button>
       </div>
     </form>

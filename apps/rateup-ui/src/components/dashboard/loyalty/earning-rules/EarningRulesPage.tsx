@@ -27,6 +27,7 @@ import {
   useLoyaltyTiers,
 } from "@/backend/loyalty/tiers.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
+import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { calculateGiveback } from "@/components/dashboard/loyalty/giveback/calculateGiveback.ts";
 import { GivebackPanel } from "@/components/dashboard/loyalty/giveback/GivebackPanel.tsx";
 import { useProgrammeGiveback } from "@/components/dashboard/loyalty/giveback/useProgrammeGiveback.ts";
@@ -53,6 +54,7 @@ import {
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useConfirm } from "@/context/confirm-provider";
+import { cn } from "@/lib/utils.ts";
 import { docsPath } from "@/utils/constants.ts";
 import { randomHexColor } from "@/utils/index.ts";
 
@@ -304,7 +306,7 @@ export function EarningRulesPage() {
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="mb-1 text-2xl font-semibold">{t("Point Earning Rules")}</h1>
+              <h1 className={cn(PAGE_TITLE, "mb-1")}>{t("Point Earning Rules")}</h1>
               <p className="text-sm text-muted-foreground">
                 {t("Define how customers earn points through purchases and activities")}
               </p>
@@ -388,13 +390,9 @@ export function EarningRulesPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleAddTier}
-                    disabled={createTierMutation.isPending}
+                    loading={createTierMutation.isPending}
                   >
-                    {createTierMutation.isPending ? (
-                      <IconLoader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    ) : (
-                      <IconPlus className="mr-1.5 h-4 w-4" />
-                    )}
+                    <IconPlus className="mr-1.5 h-4 w-4" />
                     {t("Add tier")}
                   </Button>
                 )}
@@ -949,18 +947,9 @@ export function EarningRulesPage() {
                   >
                     {t("Cancel")}
                   </Button>
-                  <Button type="submit" className="flex-1" disabled={createRuleMutation.isPending}>
-                    {createRuleMutation.isPending ? (
-                      <>
-                        <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t("Creating...")}
-                      </>
-                    ) : (
-                      <>
-                        <IconPlus className="mr-2 h-4 w-4" />
-                        {t("Create Earning Rule")}
-                      </>
-                    )}
+                  <Button type="submit" className="flex-1" loading={createRuleMutation.isPending}>
+                    <IconPlus className="mr-2 h-4 w-4" />
+                    {t("Create Earning Rule")}
                   </Button>
                 </div>
               </form>

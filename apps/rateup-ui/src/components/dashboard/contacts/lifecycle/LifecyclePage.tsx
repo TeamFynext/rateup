@@ -48,7 +48,9 @@ export function ContactSettings() {
   const [addName, setAddName] = useState("");
   const [addDesc, setAddDesc] = useState("");
   const [addEmoji, setAddEmoji] = useState("🔹");
-  const [addColor, setAddColor] = useState("bg-white");
+  // The same fill the form resets to. It was white, and the chip's label is white, so a new
+  // stage showed an invisible emoji until a colour was picked.
+  const [addColor, setAddColor] = useState("bg-sky-400");
 
   const createLifecycle = useCreateLifeCycleMutation();
   const updateLifecycle = useUpdateLifeCycleMutation();

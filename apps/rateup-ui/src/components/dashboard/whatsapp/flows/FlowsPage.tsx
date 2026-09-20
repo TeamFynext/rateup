@@ -80,7 +80,7 @@ export function FlowsPage() {
             {/* Not gated on a connected channel: the wizard is reachable before one
                 exists. The flow itself is still created on a WABA at Meta, so the
                 create call is what reports a missing channel. */}
-            <Button onClick={handleCreateFlowModalOpen} disabled={isLoading}>
+            <Button onClick={handleCreateFlowModalOpen} loading={isLoading}>
               {translations("Create Flow")}
               <IconPlus size={16} className="ml-2" />
             </Button>

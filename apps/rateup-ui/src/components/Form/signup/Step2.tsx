@@ -128,7 +128,8 @@ export function Step2({
           render={({ field }) => (
             <Field data-invalid={!!errors.website} className="gap-0.5">
               <FieldLabel htmlFor="website" className="text-xs font-medium">
-                {translations("Website")}{" "}
+                {translations("Website")}
+                {""}
                 <span className="font-normal text-muted-foreground">
                   {translations("(optional)")}
                 </span>

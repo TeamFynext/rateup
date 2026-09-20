@@ -169,7 +169,7 @@ export const useCreateFlowMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
       qc.invalidateQueries({ queryKey: surveyKeys.all() });
-      toast.success("Flow Created Successfully");
+      toast.success("Flow created");
     },
     onError: (error) => {
       toast.error(error?.message || (error?.message ?? "Error creating flows"));
@@ -201,7 +201,7 @@ export const useDeleteFlowMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
       qc.invalidateQueries({ queryKey: surveyKeys.all() });
-      toast.success("Flow Deleted Successfully");
+      toast.success("Flow deleted");
     },
     onError: (error) => {
       toast.error(error?.message || "Error deleting flows");
@@ -260,7 +260,7 @@ export const useSendFlowToUser = (
       sendFlow(dbFlowId, phone ?? "", teamId ?? "", flowId ?? "", whatsappSettingsPhoneId ?? ""),
     onMutate: (variables) => ({ pendingId: pending.begin(variables.pending) }),
     onSuccess: (_data, _variables, context) => {
-      toast.success("Flow Sent Successfully");
+      toast.success("Flow sent");
       // Invalidates the thread itself, then takes the pending card back down.
       return pending.settle(context?.pendingId);
     },

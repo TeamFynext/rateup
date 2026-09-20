@@ -54,7 +54,8 @@ export function RecentActivity({
               <PremiumAvatar name={activity.user} size="md" className="shrink-0" />
               <div className="min-w-0">
                 <p className="truncate text-sm text-foreground">
-                  <span className="font-medium">{activity.user}</span> {activity.action}{" "}
+                  <span className="font-medium">{activity.user}</span> {activity.action}
+                  {""}
                   <span className="font-medium">{activity.item}</span>
                 </p>
                 <p className="text-xs text-muted-foreground">

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import { useGetWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
+import { pressable } from "@/components/common/pressable.ts";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
 export function isJSONString(string: string) {
@@ -40,7 +41,7 @@ export const WaQuickReply = ({
               <div
                 key={reply.id}
                 className="flex items-center gap-1 border p-2 rounded-sm bg-gray-100 dark:bg-transparent cursor-pointer"
-                onClick={() => handleSelectQuickReply(reply?.text ?? "")}
+                {...pressable(() => handleSelectQuickReply(reply?.text ?? ""))}
               >
                 <IconBolt className="text-primary w-3 h-3" />
                 <span className="text-xs">

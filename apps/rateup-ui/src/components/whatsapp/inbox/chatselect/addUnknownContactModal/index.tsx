@@ -36,8 +36,10 @@ export default function AddUnknownContactModal(props: UnknownContactModalProps) 
           <div className="space-y-1 text-sm text-muted-foreground">
             <p>{translations("This PhoneNumber is not in your contact list")}</p>
             <p>
-              {translations("Message")}{" "}
-              <span className="font-semibold text-foreground">{props.phone}</span>{" "}
+              {translations("Message")}
+              {""}
+              <span className="font-semibold text-foreground">{props.phone}</span>
+              {""}
               {translations("on Whatsap?")}
             </p>
           </div>
@@ -47,6 +49,7 @@ export default function AddUnknownContactModal(props: UnknownContactModalProps) 
         </div>
       ) : (
         <Button
+          aria-label={translations("Add a member")}
           variant="secondary"
           size="icon"
           className="h-[30px] w-[30px] rounded-md"

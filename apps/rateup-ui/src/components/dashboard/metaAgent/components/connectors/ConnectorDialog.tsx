@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -267,8 +266,7 @@ export function ConnectorDialog({
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Spinner data-icon="inline-start" />}
+              <Button type="submit" loading={isPending}>
                 {connector ? "Save changes" : "Create connector"}
               </Button>
             </DialogFooter>

@@ -15,6 +15,7 @@ const CodeToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
         <TooltipTrigger
           render={
             <Button
+              aria-label="Inline code"
               variant="ghost"
               size="icon"
               className={cn(

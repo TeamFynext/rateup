@@ -48,7 +48,7 @@ export function FeaturedPost({ post }: { post?: Post }) {
           </span>
         )}
 
-        <h2 className="font-nunito font-black text-[#0E1E3A] text-[clamp(21px,2.2vw,28px)] leading-[1.15] tracking-[-0.02em] m-0">
+        <h2 className="font-display font-black text-[#0E1E3A] text-[clamp(21px,2.2vw,28px)] leading-[1.15] tracking-[-0.02em] m-0">
           {post.title}
         </h2>
 
@@ -66,7 +66,7 @@ export function FeaturedPost({ post }: { post?: Post }) {
               className="w-[34px] h-[34px] rounded-full object-cover"
             />
           ) : (
-            <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-[linear-gradient(135deg,#3D8BEE,#2360C8)] flex items-center justify-center font-nunito font-extrabold text-[13px] text-white">
+            <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-[linear-gradient(135deg,#3D8BEE,#2360C8)] flex items-center justify-center font-display font-extrabold text-[13px] text-white">
               {initials}
             </div>
           )}

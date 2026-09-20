@@ -194,32 +194,52 @@ const PREDEFINED_TEMPLATES: PredefinedTemplate[] = [
 ];
 
 const CATEGORY_META: Record<string, { label: string; color: string; bg: string }> = {
-  MARKETING: { label: "Marketing", color: "text-violet-700", bg: "bg-violet-50 border-violet-200" },
-  UTILITY: { label: "Utility", color: "text-sky-700", bg: "bg-sky-50 border-sky-200" },
+  MARKETING: {
+    label: "Marketing",
+    color: "text-violet-700 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-900",
+  },
+  UTILITY: {
+    label: "Utility",
+    color: "text-sky-700 dark:text-sky-400",
+    bg: "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900",
+  },
   AUTHENTICATION: {
     label: "Authentication",
-    color: "text-rose-700",
-    bg: "bg-rose-50 border-rose-200",
+    color: "text-rose-700 dark:text-rose-400",
+    bg: "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900",
   },
-  Blank: { label: "Blank", color: "text-slate-600", bg: "bg-slate-50 border-slate-200" },
+  Blank: { label: "Blank", color: "text-muted-foreground", bg: "bg-muted border-border" },
 };
 
 const TEMPLATE_TYPE_META: Record<string, { color: string; bg: string }> = {
-  [TemplateType.GENERAL_NOTIFICATION]: { color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-  [TemplateType.ORDER_DETAILS]: { color: "text-teal-700", bg: "bg-teal-50 border-teal-200" },
-  [TemplateType.PAYMENT_CONFIRMATION]: {
-    color: "text-emerald-700",
-    bg: "bg-emerald-50 border-emerald-200",
+  [TemplateType.GENERAL_NOTIFICATION]: {
+    color: "text-blue-700 dark:text-blue-400",
+    bg: "bg-ru-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900",
   },
-  [TemplateType.LOYALTY]: { color: "text-fuchsia-700", bg: "bg-fuchsia-50 border-fuchsia-200" },
-  [TemplateType.CAROUSEL]: { color: "text-indigo-700", bg: "bg-indigo-50 border-indigo-200" },
+  [TemplateType.ORDER_DETAILS]: {
+    color: "text-teal-700 dark:text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900",
+  },
+  [TemplateType.PAYMENT_CONFIRMATION]: {
+    color: "text-emerald-700 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900",
+  },
+  [TemplateType.LOYALTY]: {
+    color: "text-fuchsia-700 dark:text-fuchsia-400",
+    bg: "bg-fuchsia-50 dark:bg-fuchsia-950/40 border-fuchsia-200 dark:border-fuchsia-900",
+  },
+  [TemplateType.CAROUSEL]: {
+    color: "text-indigo-700 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900",
+  },
 };
 
 const ACCOUNT_CHIP_CLASS =
-  "text-[11px] font-medium px-2 py-0.5 rounded-md border bg-pink-50 border-pink-200 text-pink-700";
+  "text-[11px] font-medium px-2 py-0.5 rounded-md border bg-pink-50 dark:bg-pink-950/40 border-pink-200 dark:border-pink-900 text-pink-700 dark:text-pink-400";
 
 const CHIP_CLASS =
-  "text-[11px] font-medium px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400";
+  "text-[11px] font-medium px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground";
 
 const STATUS_BADGE_META: Record<string, { label: string; className: string }> = {
   APPROVED: {
@@ -232,11 +252,11 @@ const STATUS_BADGE_META: Record<string, { label: string; className: string }> = 
   },
   REJECTED: {
     label: "Rejected",
-    className: "text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400",
+    className: "text-destructive bg-destructive/10 ",
   },
   DRAFT: {
     label: "Draft",
-    className: "text-gray-500 bg-gray-100 dark:bg-zinc-800 dark:text-zinc-400",
+    className: "text-muted-foreground bg-muted",
   },
 };
 
@@ -771,6 +791,7 @@ interface TemplateCardProps {
 }
 
 function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProps>) {
+  const { t: translations } = useTranslation();
   const hasActiveCampaign = (template?._count?.Campaign ?? 0) > 0;
 
   const menu = (
@@ -778,6 +799,7 @@ function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProp
       <DropdownMenuTrigger
         render={
           <Button
+            aria-label={translations("More actions")}
             variant="ghost"
             size="icon"
             className="h-8 w-8"

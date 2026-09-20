@@ -95,7 +95,7 @@ function FlowScreensList({
   return (
     <div className={styles["flow-screens-list-container"]}>
       {flowEditable || (
-        <div className="flex items-center justify-center gap-2 rounded-sm bg-red-100 p-1 text-red-900 dark:bg-red-950/40 dark:text-red-400">
+        <div className="flex items-center justify-center gap-2 rounded-sm bg-destructive/10 p-1 text-destructive ">
           <IconAlertTriangle />
           <p>{translations("Cannot Edit a Published Flow")}</p>
         </div>

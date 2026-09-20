@@ -66,7 +66,7 @@ import { DeleteStageDialog } from "./DeleteStageDialog.tsx";
 
 /** A section heading, at the one size and weight the design uses for them. */
 function SectionTitle({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <h2 className="font-nunito text-foreground text-[15px] font-semibold">{children}</h2>;
+  return <h2 className="font-display text-foreground text-[15px] font-semibold">{children}</h2>;
 }
 
 function SectionNote({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -839,7 +839,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             lifecycle now, because a lead reaching a Won column is what fires the
             event. Sits directly above the danger zone. */}
         <section>
-          <h2 className="font-nunito text-[15px] font-semibold">{t("Conversion tracking")}</h2>
+          <h2 className="font-display text-[15px] font-semibold">{t("Conversion tracking")}</h2>
           <SectionNote>
             {t("Send a conversion event to Meta when a lead is won on this board.")}
           </SectionNote>
@@ -850,7 +850,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             cannot be undone, so it should not sit above routine tuning. */}
         {isOrgAdmin && (
           <section>
-            <h2 className="text-destructive font-nunito text-[15px] font-semibold">
+            <h2 className="text-destructive font-display text-[15px] font-semibold">
               {t("Danger zone")}
             </h2>
             <SectionNote>{t("Actions here cannot be undone.")}</SectionNote>

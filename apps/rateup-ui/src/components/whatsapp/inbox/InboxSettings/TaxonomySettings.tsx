@@ -232,12 +232,9 @@ export default function TaxonomySettings({
               {t("Delete")} “{pendingDelete?.name}”?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t(
-                "It will be removed from every {{noun}} it is attached to. This cannot be undone.",
-                {
-                  noun: usageNoun,
-                },
-              )}
+              {t("It will be removed from every {noun} it is attached to. This cannot be undone.", {
+                noun: usageNoun,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

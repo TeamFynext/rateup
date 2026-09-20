@@ -77,7 +77,7 @@ export function IceBreakersTab({
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-ru-blue-100 dark:bg-blue-950">
             <IconMessageDots className="size-4.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="flex-1">
@@ -108,6 +108,7 @@ export function IceBreakersTab({
                 <TooltipTrigger
                   render={
                     <Button
+                      aria-label={t("Delete")}
                       type="button"
                       variant="ghost"
                       size="icon"
@@ -182,7 +183,7 @@ export function IceBreakersTab({
             variant="destructive"
             size="sm"
             onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
+            loading={deleteMutation.isPending}
           >
             <IconCloudOff className="mr-1.5 size-4" />
             {t("Clear from Meta")}
@@ -192,7 +193,7 @@ export function IceBreakersTab({
             variant="secondary"
             size="sm"
             onClick={() => syncMutation.mutate()}
-            disabled={syncMutation.isPending}
+            loading={syncMutation.isPending}
           >
             <IconCloudUpload className="mr-1.5 size-4" />
             {t("Sync with Meta")}

@@ -1,4 +1,4 @@
-import { IconArrowRight, IconBolt, IconClock, IconLoader2, IconPencil } from "@tabler/icons-react";
+import { IconArrowRight, IconBolt, IconClock, IconPencil } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -167,7 +167,7 @@ export default function InboxAutomation() {
       {/* Rules list container */}
       <div className="bg-white dark:bg-card border border-border rounded-2xl shadow-sm divide-y divide-border overflow-hidden">
         {/* Row 1: New / Unassigned Chats */}
-        <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-gray-50/50 dark:hover:bg-zinc-800/10 transition-colors w-full">
+        <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-muted/50 /10 transition-colors w-full">
           {/* Icon Badge */}
           <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <IconBolt className="w-4 h-4 fill-primary/10" />
@@ -179,7 +179,7 @@ export default function InboxAutomation() {
               {t("New / Unassigned Chats")}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {t("Inactive for {{time}} → Close Conversation", {
+              {t("Inactive for {time} → Close Conversation", {
                 time: getHourLabel(unassignedDelayHours),
               })}
             </div>
@@ -190,12 +190,12 @@ export default function InboxAutomation() {
             <span className="bg-primary/10 text-primary text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("New / Unassigned")}
             </span>
-            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 select-none">
               <IconClock className="w-3.5 h-3.5" />
               {getHourLabel(unassignedDelayHours)}
             </span>
-            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("Close")}
             </span>
@@ -223,7 +223,7 @@ export default function InboxAutomation() {
         </div>
 
         {/* Row 2: Assigned Chats */}
-        <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-gray-50/50 dark:hover:bg-zinc-800/10 transition-colors w-full">
+        <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-muted/50 /10 transition-colors w-full">
           {/* Icon Badge */}
           <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <IconBolt className="w-4 h-4 fill-emerald-50/20" />
@@ -233,7 +233,7 @@ export default function InboxAutomation() {
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-foreground">{t("Assigned Chats")}</div>
             <div className="text-xs text-muted-foreground mt-1">
-              {t("Inactive for {{time}} → Close Conversation", {
+              {t("Inactive for {time} → Close Conversation", {
                 time: getHourLabel(assignedDelayHours),
               })}
             </div>
@@ -244,12 +244,12 @@ export default function InboxAutomation() {
             <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("Assigned")}
             </span>
-            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 select-none">
               <IconClock className="w-3.5 h-3.5" />
               {getHourLabel(assignedDelayHours)}
             </span>
-            <IconArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <IconArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
               {t("Close")}
             </span>
@@ -331,7 +331,7 @@ export default function InboxAutomation() {
                     className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-all ${
                       tempHours === h && !customMode
                         ? "border-primary bg-primary/10 text-primary font-semibold"
-                        : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {getHourLabel(h)}
@@ -347,7 +347,7 @@ export default function InboxAutomation() {
                   className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-all ${
                     customMode
                       ? "border-primary bg-primary/10 text-primary font-semibold"
-                      : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:text-foreground"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {t("Custom")}
@@ -369,7 +369,7 @@ export default function InboxAutomation() {
                       }
                     }}
                     placeholder={t("e.g. 36")}
-                    className="w-28 px-3 py-1.5 border border-border rounded-lg bg-zinc-50 dark:bg-zinc-900 text-xs outline-none focus:border-primary transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-28 px-3 py-1.5 border border-border rounded-lg bg-muted text-xs outline-none focus:border-primary transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <span className="text-xs font-medium text-muted-foreground">{t("hours")}</span>
                 </div>
@@ -410,13 +410,18 @@ export default function InboxAutomation() {
             {/* Rule Preview */}
             <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground leading-relaxed">
               <span className="font-semibold text-foreground">{t("Preview:")} </span>
-              {t("If a")}{" "}
+              {t("If a")}
+              {""}
               <strong className="text-primary">
                 {editingRule === "UNASSIGNED" ? t("New/Unassigned") : t("Assigned")}
-              </strong>{" "}
-              {t("chat is inactive for")}{" "}
-              <strong className="text-primary">{previewHoursText}</strong>, {t("automatically")}{" "}
-              <strong className="text-emerald-600 dark:text-emerald-400">{t("close")}</strong>{" "}
+              </strong>
+              {""}
+              {t("chat is inactive for")}
+              {""}
+              <strong className="text-primary">{previewHoursText}</strong>, {t("automatically")}
+              {""}
+              <strong className="text-emerald-600 dark:text-emerald-400">{t("close")}</strong>
+              {""}
               {t("it.")}
             </div>
           </div>
@@ -433,10 +438,9 @@ export default function InboxAutomation() {
               type="submit"
               size="sm"
               onClick={handleSaveChanges}
-              disabled={isPending}
+              loading={isPending}
               className="bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-semibold px-4 flex items-center gap-1.5"
             >
-              {isPending && <IconLoader2 className="w-3.5 h-3.5 animate-spin" />}
               {t("Save Changes")}
             </Button>
           </DialogFooter>

@@ -51,7 +51,7 @@ function LocalOrUnsplashImagePicker({
         <div className="flex-[0.2]">
           <Button
             size="icon-sm"
-            className="size-7.5 rounded-full bg-red-600 text-white hover:bg-red-700 disabled:bg-muted disabled:text-muted-foreground"
+            className="size-7.5 rounded-full bg-destructive text-white hover:bg-destructive disabled:bg-muted disabled:text-muted-foreground"
             disabled={!value}
             onClick={() => onImageSelected(null)}
             aria-label={translations("Delete")}

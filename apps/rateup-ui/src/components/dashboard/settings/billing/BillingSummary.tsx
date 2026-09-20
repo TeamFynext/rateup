@@ -94,7 +94,7 @@ function PlanCell({ data }: Readonly<{ data: BillingData }>) {
   return (
     <Cell label={t("Plan")} icon={<IconSparkles className="size-3.5" />}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-heading text-xl font-semibold leading-tight">
+        <span className="font-display text-xl font-semibold leading-tight">
           {subscription?.basePlan?.displayName || t("No plan")}
         </span>
         {statusBadge(state, t)}
@@ -152,7 +152,8 @@ function ChargeCell({ data }: Readonly<{ data: BillingData }>) {
       <Cell label={t("Next charge")} icon={<IconCalendarDollar className="size-3.5" />}>
         <p className="text-xl font-semibold leading-tight">{t("By agreement")}</p>
         <p className="text-sm text-muted-foreground">
-          {t("Invoiced directly —")}{" "}
+          {t("Invoiced directly —")}
+          {""}
           <a href="mailto:hello@rateup.app" className="text-primary hover:underline">
             hello@rateup.app
           </a>
@@ -291,8 +292,7 @@ function ConversationsCell({
           {used.toLocaleString()}
           {max > 0 && !unlimited && (
             <span className="text-sm font-normal text-muted-foreground">
-              {" "}
-              / {max.toLocaleString()}
+              {""}/ {max.toLocaleString()}
             </span>
           )}
         </p>

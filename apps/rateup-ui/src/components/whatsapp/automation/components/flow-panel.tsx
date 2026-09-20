@@ -57,7 +57,7 @@ export function FlowPanel({
     return (
       <div
         className={cn(
-          "flex w-11 shrink-0 flex-col items-center gap-3 border-border bg-ink-25 dark:bg-card",
+          "flex w-11 shrink-0 flex-col items-center gap-3 border-border bg-ru-n-25 dark:bg-card",
           borderSide,
         )}
       >
@@ -75,7 +75,10 @@ export function FlowPanel({
 
   return (
     <div
-      className={cn("flex w-72 shrink-0 flex-col border-border bg-ink-25 dark:bg-card", borderSide)}
+      className={cn(
+        "flex w-72 shrink-0 flex-col border-border bg-ru-n-25 dark:bg-card",
+        borderSide,
+      )}
     >
       {/* h-14 is the shared panel-header height (sidebar, phone preview, inbox
           panels), and the divider lives on the h-14 box itself so its line lands

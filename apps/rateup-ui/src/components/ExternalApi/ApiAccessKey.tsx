@@ -97,14 +97,10 @@ export default function ApiAccessKeyPage() {
               type="button"
               className="w-fit"
               onClick={handleGenerateApiKey}
-              disabled={generateMutation.isPending}
+              loading={generateMutation.isPending}
               aria-busy={generateMutation.isPending}
             >
-              {generateMutation.isPending ? (
-                <IconReload className="animate-spin" data-icon="inline-start" />
-              ) : (
-                <IconKey data-icon="inline-start" />
-              )}
+              <IconKey data-icon="inline-start" />
               {translations("Generate API key")}
             </Button>
             <span role="status" aria-live="polite" className="sr-only">
@@ -192,6 +188,7 @@ function ApiRegenerateButton({ onRegenerate }: Readonly<ApiRegenerateButtonProps
 
   return (
     <Button
+      aria-label={translations("Refresh")}
       variant="ghost"
       size="icon"
       className="h-8 w-8"
@@ -233,6 +230,7 @@ function ApiDeleteButton({ onDelete }: Readonly<ApiDeleteButtonProps>) {
 
   return (
     <Button
+      aria-label={translations("Delete")}
       variant="ghost"
       size="icon"
       className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"

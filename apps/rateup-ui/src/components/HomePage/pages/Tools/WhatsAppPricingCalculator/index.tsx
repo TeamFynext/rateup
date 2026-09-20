@@ -272,7 +272,7 @@ export default function WhatsAppPricingCalculator() {
                 <div className="text-[11px] font-bold tracking-[0.1em] text-white/55 uppercase">
                   Saved by the 24h window
                 </div>
-                <div className="mt-1 font-nunito text-[22px] font-extrabold text-white">
+                <div className="mt-1 font-display text-[22px] font-extrabold text-white">
                   {money(breakdown.savedByWindow)}
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function WhatsAppPricingCalculator() {
                 <div className="text-[11px] font-bold tracking-[0.1em] text-white/55 uppercase">
                   Per billed message
                 </div>
-                <div className="mt-1 font-nunito text-[22px] font-extrabold text-white">
+                <div className="mt-1 font-display text-[22px] font-extrabold text-white">
                   {rate(breakdown.blended)}
                 </div>
               </div>

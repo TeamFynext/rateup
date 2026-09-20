@@ -17,6 +17,7 @@ const StrikeThroughToolbar = React.forwardRef<
       <TooltipTrigger
         render={
           <Button
+            aria-label="Strikethrough"
             variant="ghost"
             size="icon"
             className={cn(

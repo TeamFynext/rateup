@@ -7,7 +7,6 @@ import {
   IconDeviceFloppy,
   IconGift,
   IconLink,
-  IconLoader2,
   IconMessageCircle,
   IconMessageStar,
   IconPlus,
@@ -42,6 +41,7 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import InfoButton from "@/components/Button/InfoButton.tsx";
+import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { calculateGiveback } from "@/components/dashboard/loyalty/giveback/calculateGiveback.ts";
 import { GivebackPanel } from "@/components/dashboard/loyalty/giveback/GivebackPanel.tsx";
 import {
@@ -81,6 +81,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { cn } from "@/lib/utils.ts";
 import { LoyaltyRewardStatus, TemplateType } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
 
@@ -599,10 +600,11 @@ export function RewardsPage() {
     <div className="space-y-5 relative">
       {rewardsViewMode === "list" && (
         <>
-          {/* Header */}{" "}
+          {/* Header */}
+          {""}
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h1 className="text-2xl mb-1">Rewards</h1>
+              <h1 className={cn(PAGE_TITLE, "mb-1")}>Rewards</h1>
               <p className="text-sm text-muted-foreground">
                 Manage all types of rewards - point-based, coupons, and referral programs
               </p>
@@ -1097,13 +1099,9 @@ export function RewardsPage() {
               <Button
                 className="w-full"
                 onClick={handleSaveReferralSettings}
-                disabled={updateLoyaltyProgramMutation.isPending}
+                loading={updateLoyaltyProgramMutation.isPending}
               >
-                {updateLoyaltyProgramMutation.isPending ? (
-                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <IconDeviceFloppy className="w-4 h-4 mr-2" />
-                )}
+                <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 Save Referral Settings
               </Button>
 

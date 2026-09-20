@@ -118,8 +118,8 @@ function PetpoojaConfig({
       description="Your Petpooja restaurant, and the address Petpooja should send orders to."
       actions={
         <>
-          <Button onClick={handleConfig} disabled={createIntegration.isPending}>
-            {createIntegration.isPending ? "Saving..." : "Save changes"}
+          <Button onClick={handleConfig} loading={createIntegration.isPending}>
+            {"Save changes"}
           </Button>
           <Button variant="ghost" onClick={handleDeleteConfig} disabled={!integration}>
             <IconTrash data-icon="inline-start" />

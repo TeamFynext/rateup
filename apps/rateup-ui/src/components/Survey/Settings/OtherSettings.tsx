@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 
@@ -118,11 +117,10 @@ const OtherSettings = () => {
             {translations("Once reset, all response data will be lost.")}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResetOpen(false)} disabled={isLoading}>
+            <Button variant="outline" onClick={() => setResetOpen(false)} loading={isLoading}>
               {translations("Cancel")}
             </Button>
-            <Button variant="destructive" onClick={confirmReset} disabled={isLoading}>
-              {isLoading && <Spinner data-icon="inline-start" />}
+            <Button variant="destructive" onClick={confirmReset} loading={isLoading}>
               {translations("Confirm")}
             </Button>
           </DialogFooter>
@@ -141,11 +139,10 @@ const OtherSettings = () => {
             {translations("This action cannot be undone.!!")}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={isLoading}>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} loading={isLoading}>
               {translations("Cancel")}
             </Button>
-            <Button variant="destructive" onClick={confirmDeleteSurvey} disabled={isLoading}>
-              {isLoading && <Spinner data-icon="inline-start" />}
+            <Button variant="destructive" onClick={confirmDeleteSurvey} loading={isLoading}>
               {translations("Confirm")}
             </Button>
           </DialogFooter>

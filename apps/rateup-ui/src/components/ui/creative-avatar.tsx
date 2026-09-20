@@ -193,7 +193,7 @@ export function CreativeAvatar({
     variant || ringClassName
       ? {
           bg: "bg-primary/10",
-          ring: ringClassName ?? "ring-1 ring-slate-100 dark:ring-slate-800",
+          ring: ringClassName ?? "ring-1 ring-border",
           text: "text-primary",
         }
       : platform
@@ -219,8 +219,8 @@ export function CreativeAvatar({
       {showOnlineStatus && (
         <span
           className={`absolute ${sizes.online[onlineStatusPosition]} rounded-full ${
-            isOnline ? "bg-green-500" : "bg-gray-400"
-          } border-white`}
+            isOnline ? "bg-green-500" : "bg-muted-foreground"
+          } border-background`}
         />
       )}
     </div>

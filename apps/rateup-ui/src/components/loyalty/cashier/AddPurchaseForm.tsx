@@ -132,7 +132,8 @@ export function AddPurchaseForm({
             <p className="text-2xl font-semibold text-foreground">
               <span className="text-green-700 dark:text-green-500">
                 +{estimate.points.toLocaleString()}
-              </span>{" "}
+              </span>
+              {""}
               <span className="text-base font-normal text-muted-foreground">{pointsName}</span>
             </p>
             {mathLine && <p className="text-xs text-muted-foreground">{mathLine}</p>}
@@ -175,7 +176,7 @@ export function AddPurchaseForm({
       />
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="ghost" className="h-12" onClick={onBack} disabled={isSaving}>
+        <Button type="button" variant="ghost" className="h-12" onClick={onBack} loading={isSaving}>
           {t("Cancel")}
         </Button>
         <Button type="submit" className="h-12" disabled={isSaving || !estimate}>

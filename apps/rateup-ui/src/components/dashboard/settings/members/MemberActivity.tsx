@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useMemberActivity } from "@/backend/org/org.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { describeActivity } from "./activityLabel.ts";
@@ -35,7 +36,7 @@ export function MemberActivity({ memberId }: Readonly<{ memberId: string }>) {
     return (
       <div className="flex flex-col gap-2 py-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-10 animate-pulse rounded-md bg-muted" />
+          <Skeleton key={i} className="h-10" />
         ))}
       </div>
     );

@@ -96,7 +96,7 @@ export function BusinessInfoPanel({ waSettingsId }: Readonly<{ waSettingsId: str
         <AlertDialog>
           <AlertDialogTrigger
             render={
-              <Button variant="ghost" size="sm" disabled={reset.isPending}>
+              <Button variant="ghost" size="sm" loading={reset.isPending}>
                 <IconRestore data-icon="inline-start" />
                 Reset
               </Button>

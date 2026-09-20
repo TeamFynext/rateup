@@ -62,7 +62,7 @@ export function RedeemList({
       let note: string;
       if (!inTier) {
         const names = (reward.availableForTiers ?? []).map((id) => tierNames.get(id) ?? id);
-        note = t("{tiers} only", { tiers: names.join(" & ") });
+        note = t("{tiers} only", { tiers: names.join(" &") });
       } else if (!affordable) {
         const short = reward.pointsCost - currentPoints;
         const visits =
@@ -74,7 +74,10 @@ export function RedeemList({
                 points: pointsName,
                 visits,
               })
-            : t("{short} {points} short", { short: short.toLocaleString(), points: pointsName });
+            : t("{short} {points} short", {
+                short: short.toLocaleString(),
+                points: pointsName,
+              });
       } else if (reward.pointsCost === 0) {
         note = t("No {points} needed", { points: pointsName });
       } else {

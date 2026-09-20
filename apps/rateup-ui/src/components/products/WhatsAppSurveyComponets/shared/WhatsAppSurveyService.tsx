@@ -6,7 +6,7 @@ export default function WhatsAppSurveyService() {
   return (
     <section id="features" className="py-20 px-8 bg-white">
       <div className="flex flex-col justify-center px-6 items-center">
-        <h3 className="text-4xl text-center font-semibold  text-[#009987]">
+        <h3 className="text-4xl text-center font-semibold text-[#009987]">
           Built for Businesses That Thrive on Customer Happiness
         </h3>
 
@@ -21,7 +21,7 @@ export default function WhatsAppSurveyService() {
             key={index}
             className="flex items-start p-6 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition"
           >
-            <div className="shrink-0 w-14 h-14 mr-6 bg-blue-100 text-[#009987] rounded-full flex items-center justify-center">
+            <div className="shrink-0 w-14 h-14 mr-6 bg-ru-blue-100 text-[#009987] rounded-full flex items-center justify-center">
               <feature.icon className="w-6 h-6" />
             </div>
             <div>

@@ -304,7 +304,7 @@ export function QuestionDetailedView({
       <div className="flex h-full flex-col" ref={formRef}>
         <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-card px-4">
           {/* Question number badge */}
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary font-nunito text-sm font-black text-primary-foreground">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary font-display text-sm font-black text-primary-foreground">
             {(survey?.questions?.findIndex((q) => q.id === question.id) ?? 0) + 1}
           </div>
           {/* Label */}
@@ -353,7 +353,7 @@ export function QuestionDetailedView({
             size="sm"
             className="h-8 gap-1.5 rounded-[7px] px-3 text-xs font-semibold"
             onClick={handleSave}
-            disabled={isSaving}
+            loading={isSaving}
           >
             <IconDeviceSdCard className="size-3.5" />
             {translations("Save")}
@@ -361,7 +361,7 @@ export function QuestionDetailedView({
         </div>
         <ScrollArea className={cn("min-h-0")} style={{ flex: "1 1 0" }}>
           <div className="flex flex-col gap-4 p-4">
-            <div className="flex items-start justify-between ">
+            <div className="flex items-start justify-between">
               <div
                 className="mr-2 flex flex-1 flex-col overflow-hidden"
                 style={{ minHeight: "150px" }}

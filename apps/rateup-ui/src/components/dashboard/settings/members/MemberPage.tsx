@@ -1,6 +1,6 @@
-import { IconArrowLeft, IconCrown, IconLock, IconTrash } from "@tabler/icons-react";
+import { IconCrown, IconLock, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -25,6 +25,7 @@ import {
   useUpdateProfileMutation,
   useUpdateUserPause,
 } from "@/backend/user/user.query";
+import { BackLink } from "@/components/common/back-link.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import { RoleSelect } from "@/components/common/RoleSelect.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
@@ -54,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -97,8 +99,8 @@ export function MemberPage({ memberId }: Readonly<Props>) {
   if (membersPending) {
     return (
       <div className="mx-auto flex w-full max-w-265 flex-col gap-4 pt-6">
-        <div className="h-8 w-48 animate-pulse rounded-md bg-muted" />
-        <div className="h-40 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-40" />
       </div>
     );
   }
@@ -117,15 +119,7 @@ function MemberMissing() {
   const { t } = useTranslation();
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col items-start gap-3 pt-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-2 text-muted-foreground hover:text-foreground"
-        render={<Link to="/dashboard/settings/members" />}
-      >
-        <IconArrowLeft className="size-4" aria-hidden="true" />
-        {t("Back to Members")}
-      </Button>
+      <BackLink to="/dashboard/settings/members" label={t("Members")} />
       <p className="text-sm font-medium">{t("This person is not in your organisation")}</p>
       <p className="text-sm text-muted-foreground">
         {t("They may have been removed, or the link may be from another organisation.")}
@@ -308,15 +302,12 @@ function MemberDetails({
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-5 pt-6 pb-8">
       <div className="flex flex-wrap items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={t("Back to Members")}
-          className="shrink-0 text-muted-foreground hover:text-foreground"
-          render={<Link to="/dashboard/settings/members" />}
-        >
-          <IconArrowLeft className="size-4" aria-hidden="true" />
-        </Button>
+        <BackLink
+          to="/dashboard/settings/members"
+          label={t("Members")}
+          iconOnly
+          className="shrink-0"
+        />
         <Avatar className="size-12">
           <AvatarImage
             src={member.profilePhoto ? getFileUrlFromKey(member.profilePhoto) : undefined}
@@ -572,7 +563,7 @@ function MemberDetails({
                       variant="outline"
                       size="sm"
                       onClick={handOver}
-                      disabled={transfer.isPending}
+                      loading={transfer.isPending}
                     >
                       <IconCrown className="size-4" aria-hidden="true" />
                       {t("Transfer")}
@@ -594,7 +585,7 @@ function MemberDetails({
                       variant="destructive"
                       size="sm"
                       onClick={remove}
-                      disabled={removeMember.isPending}
+                      loading={removeMember.isPending}
                     >
                       <IconTrash className="size-4" aria-hidden="true" />
                       {t("Remove")}

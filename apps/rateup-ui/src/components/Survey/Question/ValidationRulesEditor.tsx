@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
@@ -364,7 +363,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
 
     return (
       <>
-        <Card className="bg-yellow-50 p-3">
+        <Card className="bg-yellow-50 dark:bg-yellow-950/40 p-3">
           <div className="flex flex-wrap items-end gap-3">
             <Field>
               <FieldLabel htmlFor="field-key-select">{translations("select field Key")}</FieldLabel>
@@ -408,10 +407,11 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
         <ScrollArea className="h-[230px]">
           {multiInputRules &&
             Object.entries(multiInputRules)?.map(([fieldKey, rules], index) => (
-              <Card key={index} className="my-2.5 bg-blue-50 p-3">
+              <Card key={index} className="my-2.5 bg-ru-blue-50 dark:bg-blue-950/40 p-3">
                 <div className="flex items-center gap-2">
                   <h6 className="text-sm font-semibold">{fieldKey}</h6>
                   <Button
+                    aria-label={translations("Delete")}
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => {
@@ -478,6 +478,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                       </p>
                     </Field>
                     <Button
+                      aria-label={translations("Edit")}
                       variant="ghost"
                       size="icon-xs"
                       onClick={() => {
@@ -488,6 +489,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                       <IconEdit />
                     </Button>
                     <Button
+                      aria-label={translations("Delete")}
                       variant="ghost"
                       size="icon-xs"
                       onClick={() => {
@@ -622,7 +624,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
 
                   return (
                     <div key={ruleType}>
-                      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl bg-blue-50 px-5 py-3">
+                      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl bg-ru-blue-50 dark:bg-blue-950/40 px-5 py-3">
                         <h4 className="w-[100px] max-w-[100px] text-base font-semibold">
                           {ruleTitle(ruleType) || ruleType}
                         </h4>
@@ -727,6 +729,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                         </Field>
 
                         <Button
+                          aria-label={translations("Delete")}
                           variant="ghost"
                           size="icon-xs"
                           className="px-8"
@@ -740,7 +743,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                 })}
 
                 {Object.keys(values).length < 3 && (
-                  <div className="mt-8 flex max-w-[350px] items-center gap-3 rounded-xl bg-yellow-50 p-4">
+                  <div className="mt-8 flex max-w-[350px] items-center gap-3 rounded-xl bg-yellow-50 dark:bg-yellow-950/40 p-4">
                     <h4 className="max-w-[120px] text-base font-semibold">
                       {translations("Add Rule :")}
                     </h4>
@@ -774,8 +777,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
         <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
           {translations("Cancel")}
         </Button>
-        <Button onClick={handleSave} disabled={questionUpdateMutation.isPending}>
-          {questionUpdateMutation.isPending && <Spinner data-icon="inline-start" />}
+        <Button onClick={handleSave} loading={questionUpdateMutation.isPending}>
           {translations("Save")}
         </Button>
       </div>

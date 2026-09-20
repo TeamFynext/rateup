@@ -63,7 +63,8 @@ export function CampaignPausedBanner({
       <AlertTitle>{copy.title}</AlertTitle>
       <AlertDescription className="flex flex-col gap-3">
         <p>
-          {copy.body}{" "}
+          {copy.body}
+          {""}
           {pendingCount > 0
             ? t("{count} recipients have not been messaged yet and will be sent when you resume.", {
                 count: pendingCount.toLocaleString(),

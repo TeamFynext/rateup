@@ -1,10 +1,11 @@
-import { IconArrowLeft, IconUsers } from "@tabler/icons-react";
-import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
+import { IconUsers } from "@tabler/icons-react";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetTeamById, useTeamMembersFromInvitation } from "@/backend/team/team.query";
+import { BackLink } from "@/components/common/back-link.tsx";
 import TeamSkeleton from "@/components/settings/skeleton.tsx";
 import {
   AddMembers,
@@ -12,7 +13,6 @@ import {
   EditTeam,
   TeamChannelAccess,
 } from "@/components/settings/team.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { usePermissions } from "@/hooks/usePermission.ts";
 
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/dashboard/settings/team/$teamId/")({
 });
 
 function TeamManagement() {
-  const { history } = useRouter();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("members");
   const { teamId } = useParams({
@@ -45,15 +44,7 @@ function TeamManagement() {
   return (
     <div className="h-full relative">
       <div className="mx-auto w-full max-w-265 pt-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => history.back()}
-          className="-ml-2 mb-3 text-muted-foreground hover:text-foreground"
-        >
-          <IconArrowLeft className="w-4 h-4 mr-2" />
-          {t("Back to Teams")}
-        </Button>
+        <BackLink to="/dashboard/settings/team" label={t("Teams")} className="mb-3" />
 
         <div className="flex flex-wrap items-center gap-3">
           <div

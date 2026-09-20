@@ -93,7 +93,7 @@ export function ImportFromShopifyModal({
             <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : isError ? (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-destructive">
             Failed to load Shopify products. Make sure Shopify is connected.
           </p>
         ) : products?.length === 0 ? (
@@ -126,8 +126,8 @@ export function ImportFromShopifyModal({
                     onClick={() => toggleOne(p.retailer_id)}
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 px-3 py-2.5 transition-colors ${
                       selectedIds.has(p.retailer_id)
-                        ? "border-blue-400 bg-blue-50"
-                        : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                        ? "border-blue-400 bg-ru-blue-50 dark:bg-blue-950/40"
+                        : "border-border hover:border-border hover:bg-muted"
                     }`}
                   >
                     <Checkbox

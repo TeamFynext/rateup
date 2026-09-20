@@ -173,7 +173,7 @@ export function PremiumAvatar({
                 w-full h-full
                 rounded-full 
                 ${isOnline ? "bg-linear-to-br from-green-400 to-green-600" : "bg-linear-to-br from-gray-400 to-gray-500"} 
-                ring-2 ring-white
+                ring-2 ring-background
                 shadow-lg
                 ${isOnline ? "shadow-green-500/40" : "shadow-gray-400/30"}
                 transition-all
@@ -202,8 +202,8 @@ export function PremiumAvatar({
           className={`
             absolute ${sizes.source} z-20
             rounded-full
-            bg-linear-to-br from-[#25D366] to-[#1DA851]
-            ring-2 ring-white
+            bg-linear-to-br from-wa-green to-[#1DA851]
+            ring-2 ring-background
             flex items-center justify-center
             shadow-lg shadow-green-500/30
             transition-all duration-300
@@ -237,7 +237,7 @@ export function PremiumAvatar({
             absolute ${sizes.source} z-20
             rounded-full
             bg-linear-to-br from-[#E4405F] via-[#F77737] to-[#FCAF45]
-            ring-2 ring-white
+            ring-2 ring-background
             flex items-center justify-center
             shadow-lg shadow-pink-500/30
             transition-all duration-300
