@@ -122,16 +122,18 @@ export function PointsExpirationSettings({
             )}
           />
 
-          <Button size="sm" className="w-full" type="submit" disabled={isPending || disabled}>
-            {isPending ? (
-              <>
-                <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t("Saving")}
-              </>
-            ) : (
-              t("Save Changes")
-            )}
-          </Button>
+          <div className="flex justify-end">
+            <Button size="sm" type="submit" disabled={isPending || disabled}>
+              {isPending ? (
+                <>
+                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {t("Saving")}
+                </>
+              ) : (
+                t("Save Changes")
+              )}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
