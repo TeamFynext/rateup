@@ -4,10 +4,12 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-naviga
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
 import { getInboxHeaderBg } from "@/constants/inboxDesign";
+import { usePermissions } from "@/hooks/usePermissions";
 
 function ProtectedLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { can } = usePermissions();
 
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
@@ -23,10 +25,12 @@ function ProtectedLayout() {
           <NativeTabs.Trigger.Label>Inbox</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        <NativeTabs.Trigger name="loyalty">
-          <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
-          <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
-        </NativeTabs.Trigger>
+        {can("loyalty.cashier") && (
+          <NativeTabs.Trigger name="loyalty">
+            <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
+            <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
+          </NativeTabs.Trigger>
+        )}
 
         {/* A form, which is literally what a WhatsApp Flow is: fields the customer fills
             in without leaving the chat. `list.bullet.rectangle.portrait` is iOS 15, under

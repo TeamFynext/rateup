@@ -9,7 +9,9 @@ import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { useChatAssignStatusStore } from "@/utils/store";
 import { useContactsStore } from "@/store/inboxStore";
 import { Toast } from "@/components/common/Notice";
+import { usePermissions } from "@/hooks/usePermissions";
 const NotAssigned = ({ contactId }: { contactId: string }) => {
+  const { can } = usePermissions();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
@@ -81,6 +83,8 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
       },
     );
   };
+
+  if (!can("inbox.assign")) return null;
 
   return (
     <View

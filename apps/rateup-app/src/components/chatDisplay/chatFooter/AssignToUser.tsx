@@ -1,4 +1,5 @@
 import { Toast } from "@/components/common/Notice";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   useAssignInboxToUser,
   useGetAssignedUserForContact,
@@ -43,6 +44,7 @@ export default function AssignToUser({
   /** Borderless row, for use inside menus whose other items are plain rows. */
   plain?: boolean;
 }) {
+  const { can } = usePermissions();
   const [visible, setVisible] = useState(false);
   const assignMut = useAssignInboxToUser(contactId);
   const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
@@ -185,6 +187,9 @@ export default function AssignToUser({
       },
     );
   };
+
+  // Hooks above run unconditionally; only the render is gated.
+  if (!can("inbox.assign")) return null;
 
   return (
     <>

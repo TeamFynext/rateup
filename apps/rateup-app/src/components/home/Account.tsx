@@ -9,6 +9,7 @@ import { useColorScheme } from "nativewind";
 import { getThemePreference, setThemePreference, ThemePreference } from "../../utils/theme";
 import { Colors } from "@/constants/colors";
 import { pendingCashierWrites } from "@/utils/clearLocalData";
+import { roleLabelOf } from "@/hooks/usePermissions";
 
 interface UserProfile {
   email: string;
@@ -166,7 +167,7 @@ const AccountBar = ({
           <Text className="text-xl font-semibold mt-4 dark:text-white">{userName}</Text>
 
           <View className="mt-2 bg-blue-100 px-3 py-1 rounded-full">
-            <Text className="text-blue-600 text-xs font-semibold">{role}</Text>
+            <Text className="text-blue-600 text-xs font-semibold">{roleLabelOf({ role })}</Text>
           </View>
         </View>
 
