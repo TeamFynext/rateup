@@ -1,18 +1,22 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { cachedAnalytics, parseDateRangeParam } from "../../utils/analyticsCache.js";
 import { log } from "../../utils/logger.js";
 import {
   getDeliveredFailedTrend,
-  getDeliveredFailedWeekTrend,
   getTeamPerformanceStats,
   getTemplateCategoryOverview,
   getTemplatePerformanceStats,
   getWaMessageOverview,
+  resolveTrendGranularity,
 } from "./apianalytics.service.js";
 import { StatsQuerySchema, TrendQuerySchema } from "./apianalytics.schema.js";
 
-function parseDateRange(dateRange: string | undefined): [string, string] | undefined {
-  const parts = dateRange?.split(",") ?? [];
-  return parts.length === 2 ? [parts[0], parts[1]] : undefined;
+/**
+ * The team as it goes into a cache key. The service reads "all", "null", and an
+ * absent team the same way, so they must not get an entry each.
+ */
+function teamForKey(teamId: string | null | undefined): string {
+  return !teamId || teamId === "all" || teamId === "null" ? "all" : teamId;
 }
 
 export async function getApiAnalyticsHandler(
@@ -22,11 +26,21 @@ export async function getApiAnalyticsHandler(
   reply: FastifyReply,
 ) {
   const { orgId } = request.user;
-  const dateRange = parseDateRange(request.query.dateRange);
+  const dateRange = parseDateRangeParam(request.query.dateRange);
   const teamId = request.query?.teamId;
   const apiType = request.query?.apiType ?? "all";
   try {
-    const res = await getWaMessageOverview(orgId, teamId, dateRange, apiType);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "messages:overview",
+        params: { teamId: teamForKey(teamId), apiType },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      () => getWaMessageOverview(orgId, teamId, dateRange, apiType),
+    );
     reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching api analytics");
@@ -43,19 +57,26 @@ export async function getDeliveredFailedTrendHandler(
   const { orgId } = request.user;
   const apiType = request.query?.apiType ?? "all";
   const teamId = request.query.teamId ?? "all";
-  const granularity = request.query.granularity === "hour" ? "hour" : "day";
-  const dateRange = parseDateRange(request.query.dateRange);
+  const dateRange = parseDateRangeParam(request.query.dateRange);
+  const granularity = resolveTrendGranularity(request.query.granularity, dateRange);
 
   try {
-    const [trend, weekTrend] = await Promise.all([
-      getDeliveredFailedTrend(orgId, teamId, granularity, dateRange, apiType),
-      getDeliveredFailedWeekTrend(orgId, teamId, dateRange, apiType),
-    ]);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "messages:trend",
+        params: { teamId: teamForKey(teamId), apiType, granularity },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      async () => {
+        const trend = await getDeliveredFailedTrend(orgId, teamId, granularity, dateRange, apiType);
+        return { trend, granularity };
+      },
+    );
 
-    reply.send({
-      trend,
-      weekTrend,
-    });
+    reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching message trend");
     reply.status(500).send({
@@ -72,19 +93,29 @@ export async function getTemplateCategoryHandler(
 ) {
   const { orgId } = request.user;
   const apiType = request.query?.apiType ?? "all";
-  const dateRange = parseDateRange(request.query.dateRange);
+  const dateRange = parseDateRangeParam(request.query.dateRange);
   const teamId = request.query?.teamId || "all";
 
   try {
-    const [categoryOverview, templatePerformance] = await Promise.all([
-      getTemplateCategoryOverview(orgId, teamId, dateRange, apiType),
-      getTemplatePerformanceStats(orgId, teamId, dateRange, apiType),
-    ]);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "messages:template-overview",
+        params: { teamId: teamForKey(teamId), apiType },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      async () => {
+        const [categoryOverview, templatePerformance] = await Promise.all([
+          getTemplateCategoryOverview(orgId, teamId, dateRange, apiType),
+          getTemplatePerformanceStats(orgId, teamId, dateRange, apiType),
+        ]);
+        return { categoryOverview, templatePerformance };
+      },
+    );
 
-    reply.send({
-      categoryOverview,
-      templatePerformance,
-    });
+    reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching template analytics");
     reply.status(500).send({
@@ -101,9 +132,19 @@ export async function getTeamPerformanceStatsHandler(
 ) {
   const { orgId } = request.user;
   const apiType = request.query?.apiType ?? "all";
-  const dateRange = parseDateRange(request.query.dateRange);
+  const dateRange = parseDateRangeParam(request.query.dateRange);
   try {
-    const res = await getTeamPerformanceStats(orgId, dateRange, apiType);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "messages:team-overview",
+        params: { apiType },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      () => getTeamPerformanceStats(orgId, dateRange, apiType),
+    );
     reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching team api stats");

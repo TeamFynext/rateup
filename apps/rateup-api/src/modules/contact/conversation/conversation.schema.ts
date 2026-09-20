@@ -73,6 +73,10 @@ const statsQuerySchema = z.object({
   dateKey: z.string().optional(),
   dateRange: z.string().optional(),
   days: z.coerce.number().optional(),
+  /** Scopes conversation analytics to one team; "all" or absent means every team. */
+  teamId: z.union([z.uuid(), z.enum(["all", "null"])]).optional(),
+  /** "1" skips the analytics cache — the dashboard's Refresh button sends it. */
+  fresh: z.string().optional(),
 });
 
 const staffIdParamsSchema = z.object({

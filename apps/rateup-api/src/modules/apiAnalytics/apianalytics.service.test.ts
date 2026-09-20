@@ -19,11 +19,11 @@ import prisma from "../../utils/prisma.js";
 import { WaTemplateCategory } from "../../types/enums.js";
 import {
   getDeliveredFailedTrend,
-  getDeliveredFailedWeekTrend,
   getTeamPerformanceStats,
   getTemplateCategoryOverview,
   getTemplatePerformanceStats,
   getWaMessageOverview,
+  resolveTrendGranularity,
 } from "./apianalytics.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -341,33 +341,83 @@ describe("getDeliveredFailedTrend", () => {
   });
 });
 
-describe("getDeliveredFailedWeekTrend", () => {
-  test("returns one point per day, timed in ISO", async () => {
-    queryRawMock.mockResolvedValue([
-      {
-        day: new Date("2026-03-01T00:00:00Z"),
-        total_messages: 4,
-        delivered_messages: 3,
-        failed_messages: 1,
-      },
-    ]);
+describe("the date range every panel filters on", () => {
+  const RANGE = ["2026-03-01T00:00:00Z", "2026-03-08T00:00:00Z"];
 
-    await expect(getDeliveredFailedWeekTrend(ORG, TEAM, null, "all")).resolves.toEqual([
-      {
-        time: "2026-03-01T00:00:00.000Z",
-        totalMessages: 4,
-        deliveredMessages: 3,
-        failedMessages: 1,
-      },
+  test("ranges the map table too, so its (orgId, createdAt) index can pick the rows", async () => {
+    await getWaMessageOverview(ORG, TEAM, RANGE, "all");
+
+    const { sql } = queryAt(0);
+    expect(sql).toContain('motm."createdAt" BETWEEN');
+    expect(sql).toContain('wm."createdAt" BETWEEN');
+  });
+
+  test("pads only the map table's end, by the hour a map row may trail its message", async () => {
+    await getWaMessageOverview(ORG, TEAM, RANGE, "all");
+
+    const dates = queryAt(0).bound.filter((v): v is Date => v instanceof Date);
+    expect(dates.map((d) => d.toISOString())).toEqual([
+      "2026-03-01T00:00:00.000Z",
+      "2026-03-08T01:00:00.000Z",
+      "2026-03-01T00:00:00.000Z",
+      "2026-03-08T00:00:00.000Z",
     ]);
   });
 
-  test("defaults to the last seven days, unlike the trend beside it", async () => {
-    await getDeliveredFailedWeekTrend(ORG, TEAM, null, "all");
+  test("keeps the message's own range exact, so the numbers do not move", async () => {
+    await getWaMessageOverview(ORG, TEAM, RANGE, "all");
 
-    const dates = queryAt(0).bound.filter((v): v is Date => v instanceof Date);
-    const days = (dates[1].getTime() - dates[0].getTime()) / (24 * 60 * 60 * 1000);
-    expect(Math.round(days)).toBe(6);
+    const [start, end] = queryAt(0).bound.slice(-2) as Date[];
+    expect(start.toISOString()).toBe("2026-03-01T00:00:00.000Z");
+    expect(end.toISOString()).toBe("2026-03-08T00:00:00.000Z");
+  });
+
+  test.each([
+    ["the trend", () => getDeliveredFailedTrend(ORG, TEAM, "day", RANGE, "all")],
+    ["the template categories", () => getTemplateCategoryOverview(ORG, TEAM, RANGE, "all")],
+    ["the template table", () => getTemplatePerformanceStats(ORG, TEAM, RANGE, "all")],
+    ["the team table", () => getTeamPerformanceStats(ORG, RANGE, "all")],
+  ])("applies to %s", async (_name, run) => {
+    await run();
+
+    const { sql } = queryAt(0);
+    expect(sql).toContain('motm."createdAt" BETWEEN');
+    expect(sql).toContain('wm."createdAt" BETWEEN');
+  });
+
+  test("ranges the team table's map rows in the join, so idle teams survive it", async () => {
+    await getTeamPerformanceStats(ORG, RANGE, "all");
+
+    const { sql } = queryAt(0);
+    const rangePos = sql.indexOf('motm."createdAt" BETWEEN');
+    expect(rangePos).toBeGreaterThan(sql.indexOf('LEFT JOIN "WaMessageOrgTeamMap"'));
+    expect(rangePos).toBeLessThan(sql.indexOf('WHERE t."orgId"'));
+  });
+});
+
+describe("resolveTrendGranularity", () => {
+  test.each(["hour", "day"])("gives a caller the %s buckets it asked for", (asked) => {
+    expect(resolveTrendGranularity(asked, ["2026-03-01", "2026-03-31"])).toBe(asked);
+  });
+
+  test("treats a bucket size it does not know as a day", () => {
+    expect(resolveTrendGranularity("week", null)).toBe("day");
+  });
+
+  test("picks hours for a range of two days or less", () => {
+    expect(
+      resolveTrendGranularity(undefined, ["2026-03-01T00:00:00Z", "2026-03-03T00:00:00Z"]),
+    ).toBe("hour");
+  });
+
+  test("picks days for anything longer", () => {
+    expect(
+      resolveTrendGranularity(undefined, ["2026-03-01T00:00:00Z", "2026-03-03T00:00:01Z"]),
+    ).toBe("day");
+  });
+
+  test("picks days for the default seven-day window", () => {
+    expect(resolveTrendGranularity(undefined, null)).toBe("day");
   });
 });
 

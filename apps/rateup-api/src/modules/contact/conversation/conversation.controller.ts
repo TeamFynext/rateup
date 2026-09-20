@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { analyticsTeamId, cachedAnalytics } from "../../../utils/analyticsCache.js";
 import { recordAuditEvent } from "../../../utils/auditLog.js";
 import { log } from "../../../utils/logger.js";
 import {
@@ -151,7 +152,20 @@ export async function getConversationOverviewHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
-    const stats = await getConversationOverview(request.user.orgId, dateRange);
+    const { orgId } = request.user;
+    // The cache key is built from `params` and the range only, so the team must be in it.
+    const teamId = analyticsTeamId(request.query.teamId);
+    const stats = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:overview",
+        params: { teamId },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      () => getConversationOverview(orgId, dateRange, teamId),
+    );
     reply.send(stats);
   } catch (error) {
     log.error({ err: error }, "Error fetching conversation overview:");
@@ -172,10 +186,19 @@ export async function getResolvedConversationStatsHandler(
     // `days` is optional on the querystring; previously an omitted value was
     // passed straight through to `Date#setDate`, producing an `Invalid Date`
     // rather than a sensible default window.
-    const response = await getResolvedCountandTotalCountofDailyInLastNDays(
-      request.user.orgId,
-      request.query.days ?? 30,
-      dateRange,
+    const { orgId } = request.user;
+    const days = request.query.days ?? 30;
+    const teamId = analyticsTeamId(request.query.teamId);
+    const response = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:resolved-stats",
+        params: { days, teamId },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      () => getResolvedCountandTotalCountofDailyInLastNDays(orgId, days, dateRange, teamId),
     );
     reply.send(response);
   } catch (error) {
@@ -193,10 +216,18 @@ export async function getAverageConversationResponseTimeHandler(
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
     const dateKey = request.query.dateKey ?? "";
-    const res = await getAvargeResponseTimeofTodyaInEveryHour(
-      request.user.orgId,
-      dateKey,
-      dateRange,
+    const { orgId } = request.user;
+    const teamId = analyticsTeamId(request.query.teamId);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:response-stats",
+        params: { dateKey, teamId },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      () => getAvargeResponseTimeofTodyaInEveryHour(orgId, dateKey, dateRange, teamId),
     );
     reply.send(res);
   } catch (e) {
@@ -213,7 +244,19 @@ export async function getConversationOnAccountDistributionHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
-    const res = await getConversationOnAccountDistribution(request.user.orgId, dateRange);
+    const { orgId } = request.user;
+    const teamId = analyticsTeamId(request.query.teamId);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:account-distribution",
+        params: { teamId },
+        dateRange,
+        liveness: "standard",
+        query: request.query,
+      },
+      () => getConversationOnAccountDistribution(orgId, dateRange, teamId),
+    );
     reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching conversation on account distribution stats:");
@@ -224,11 +267,22 @@ export async function getConversationOnAccountDistributionHandler(
 }
 
 export async function getOverAllQuickStatsOfConversationsHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: StatsQuerySchema }>,
   reply: FastifyReply,
 ) {
   try {
-    const res = await getOverAllQuickStatsOfConversations(request.user.orgId);
+    const { orgId } = request.user;
+    const teamId = analyticsTeamId(request.query.teamId);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:quick-stats",
+        params: { teamId },
+        liveness: "quick",
+        query: request.query,
+      },
+      () => getOverAllQuickStatsOfConversations(orgId, teamId),
+    );
     reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching overall quick stats of conversations:");
@@ -244,7 +298,19 @@ export async function getStaffConverSationMetricsHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
-    const res = await getStaffConverSationMetrics(request.user.orgId, dateRange);
+    const { orgId } = request.user;
+    const teamId = analyticsTeamId(request.query.teamId);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:staff-metrics",
+        params: { teamId },
+        dateRange,
+        liveness: "heavy",
+        query: request.query,
+      },
+      () => getStaffConverSationMetrics(orgId, dateRange, teamId),
+    );
     reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching staff conversation metrics:");
@@ -262,10 +328,18 @@ export async function getStaffDetailedConversationAnalyticsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getStaffDetailedConversationAnalytics(
-      request.user.orgId,
-      request.params.staffId,
-      request.query.days ?? 30,
+    const { orgId } = request.user;
+    const { staffId } = request.params;
+    const days = request.query.days ?? 30;
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:staff-detailed",
+        params: { staffId, days },
+        liveness: "heavy",
+        query: request.query,
+      },
+      () => getStaffDetailedConversationAnalytics(orgId, staffId, days),
     );
     reply.send(res);
   } catch (e) {
@@ -282,7 +356,19 @@ export async function getTeamOverviewHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
-    const res = await getTeamOverview(request.user.orgId, dateRange);
+    const { orgId } = request.user;
+    const teamId = analyticsTeamId(request.query.teamId);
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:team-overview",
+        params: { teamId },
+        dateRange,
+        liveness: "heavy",
+        query: request.query,
+      },
+      () => getTeamOverview(orgId, dateRange, teamId),
+    );
     reply.send(res);
   } catch (e) {
     log.error({ err: e }, "Error fetching team overview :");
@@ -300,10 +386,18 @@ export async function getTeamDetailedMetricsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getTeamDetailedMetrics(
-      request.params.teamId,
-      request.user.orgId,
-      request.query.days ?? 30,
+    const { orgId } = request.user;
+    const { teamId } = request.params;
+    const days = request.query.days ?? 30;
+    const res = await cachedAnalytics(
+      {
+        orgId,
+        endpoint: "conversation:team-metrics",
+        params: { teamId, days },
+        liveness: "heavy",
+        query: request.query,
+      },
+      () => getTeamDetailedMetrics(teamId, orgId, days),
     );
     reply.send(res);
   } catch (e) {

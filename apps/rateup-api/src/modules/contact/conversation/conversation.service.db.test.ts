@@ -801,7 +801,22 @@ describe("getConversationOverview", () => {
 
     const bound = db.$queryRaw.mock.calls[0].slice(1);
     expect(bound[0]).toEqual(new Date("2026-01-01"));
-    expect(bound.at(-1)).toBe(ORG);
+    // The team filter fragment is bound last, after the org.
+    expect(bound.at(-2)).toBe(ORG);
+  });
+
+  test("adds the team's assignment check only when a team is given", async () => {
+    db.$queryRaw.mockResolvedValue([{}]);
+    const team = "22222222-2222-4222-8222-222222222222";
+
+    await getConversationOverview(ORG, [], team);
+    await getConversationOverview(ORG, [], null);
+
+    const [scoped] = db.$queryRaw.mock.calls[0].slice(-1);
+    const [unscoped] = db.$queryRaw.mock.calls[3].slice(-1);
+    expect(scoped.sql).toContain("ConversationAssignedUserTeamMap");
+    expect(scoped.values).toEqual([team]);
+    expect(unscoped.sql).toBe("");
   });
 
   test("binds both window bounds as undefined when no range is given", async () => {
@@ -813,13 +828,47 @@ describe("getConversationOverview", () => {
     expect(db.$queryRaw.mock.calls[0][2]).toBeUndefined();
   });
 
-  test("returns the single aggregate row", async () => {
-    db.$queryRaw.mockResolvedValue([{ totalConversations: 3, resolutionRate: 50 }]);
+  test("returns the window's aggregates with the resolution rate worked out beside them", async () => {
+    db.$queryRaw
+      .mockResolvedValueOnce([{ totalConversations: 3, averageResponseTime: 12 }])
+      .mockResolvedValueOnce([{ count: 2 }])
+      .mockResolvedValueOnce([{ count: 8 }]);
 
+    // 2 closed in the window, out of the 8 that existed by the end of it.
     expect(await getConversationOverview(ORG, [])).toEqual({
       totalConversations: 3,
-      resolutionRate: 50,
+      averageResponseTime: 12,
+      resolutionRate: 25,
     });
+  });
+
+  test("reports a zero resolution rate for an org with no conversations yet", async () => {
+    db.$queryRaw
+      .mockResolvedValueOnce([{ totalConversations: 0 }])
+      .mockResolvedValueOnce([{ count: 0 }])
+      .mockResolvedValueOnce([{ count: 0 }]);
+
+    expect((await getConversationOverview(ORG, [])).resolutionRate).toBe(0);
+  });
+
+  test("ranges every query, so none of them reads the org's whole history", async () => {
+    await getConversationOverview(ORG, ["2026-01-01", "2026-01-31"]);
+
+    expect(db.$queryRaw).toHaveBeenCalledTimes(3);
+    const sqls = db.$queryRaw.mock.calls.map((call) => (call[0] as string[]).join("?"));
+    expect(sqls[0]).toContain('c."createdAt" BETWEEN');
+    expect(sqls[1]).toContain('c."closedAt" BETWEEN');
+    expect(sqls[2]).toContain('c."createdAt" <=');
+    for (const sql of sqls) expect(sql).toContain('c."orgId" =');
+  });
+
+  test("falls back to a conversation's own messages, never to every org's", async () => {
+    await getConversationOverview(ORG, []);
+
+    const sql = (db.$queryRaw.mock.calls[0][0] as string[]).join("?");
+    expect(sql).not.toContain("first_agent_message");
+    expect(sql).toContain('fwm."conversationId" = c.id');
+    expect(sql).toContain('c."firstRespondedByUserAt" IS NULL');
   });
 
   test("returns the zeroed fallback for an empty result", async () => {
@@ -881,17 +930,17 @@ describe("getConversationOnAccountDistribution", () => {
   test("scopes to the org and binds the window", async () => {
     await getConversationOnAccountDistribution(ORG, ["2026-01-01", "2026-01-31"]);
 
-    // Bound order: orgId, the WEBCHAT platform literal, then the two bounds.
+    // Bound order: orgId, the WEBCHAT platform literal, the two bounds, the team filter.
     const bound = db.$queryRaw.mock.calls[0].slice(1);
     expect(bound[0]).toBe(ORG);
-    expect(bound.at(-2)).toEqual(new Date("2026-01-01"));
+    expect(bound.at(-3)).toEqual(new Date("2026-01-01"));
   });
 
   test("binds undefined bounds when no range is given, letting COALESCE apply", async () => {
     await getConversationOnAccountDistribution(ORG, []);
 
     const bound = db.$queryRaw.mock.calls[0].slice(1);
-    expect(bound.at(-1)).toBeUndefined();
+    expect(bound.at(-2)).toBeUndefined();
   });
 });
 
