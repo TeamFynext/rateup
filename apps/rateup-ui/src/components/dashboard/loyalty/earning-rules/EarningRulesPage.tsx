@@ -937,11 +937,10 @@ export function EarningRulesPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-8 flex gap-3">
+                <div className="mt-8 flex justify-end gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
                     onClick={() => {
                       setEarningRulesViewMode("list");
                       resetCreateForm();
@@ -949,7 +948,7 @@ export function EarningRulesPage() {
                   >
                     {t("Cancel")}
                   </Button>
-                  <Button type="submit" className="flex-1" disabled={createRuleMutation.isPending}>
+                  <Button type="submit" disabled={createRuleMutation.isPending}>
                     {createRuleMutation.isPending ? (
                       <>
                         <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
