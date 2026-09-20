@@ -2,7 +2,7 @@ import { IconFileTypePdf, IconLoader2, IconRefresh } from "@tabler/icons-react";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import { requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
+import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { analyticsKeys } from "@/backend/org/org.keys";
 import { ApiSelector } from "@/components/apiAnalytics/APISelector.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -42,7 +42,9 @@ export function AnalyticsFilterBar({
   function refresh() {
     // The server caches these numbers for a minute or so; Refresh wants the database's answer.
     requestFreshAnalytics();
-    queryClient.invalidateQueries({ predicate: isAnalyticsQuery });
+    queryClient
+      .invalidateQueries({ predicate: isAnalyticsQuery, refetchType: "all" })
+      .finally(endFreshAnalytics);
   }
 
   const hasFilters = show.dateRange || show.team || show.channelType;

@@ -16,7 +16,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
+import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation/conversation.query";
 import { staffKeys } from "@/backend/org/org.keys";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
@@ -66,9 +66,12 @@ export function AnalyticsPage() {
 
   function refresh() {
     requestFreshAnalytics();
-    queryClient.invalidateQueries({
-      queryKey: staffKeys.detailedConversationAnalytics(staffid, { days: day }),
-    });
+    queryClient
+      .invalidateQueries({
+        queryKey: staffKeys.detailedConversationAnalytics(staffid, { days: day }),
+        refetchType: "all",
+      })
+      .finally(endFreshAnalytics);
   }
 
   async function exportPdf() {

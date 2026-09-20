@@ -360,7 +360,9 @@ function ChannelDistributionCard({ filters }: Readonly<{ filters: AnalyticsFilte
             label: channel.phone || channel.ibaId || platform,
             secondary: channel.phone || channel.ibaId ? platform : undefined,
             value: count,
-            display: `${formatCount(count)} · ${Math.round((count / total) * 100)}%`,
+            display: total
+              ? `${formatCount(count)} · ${Math.round((count / total) * 100)}%`
+              : formatCount(count),
           };
         })}
       />

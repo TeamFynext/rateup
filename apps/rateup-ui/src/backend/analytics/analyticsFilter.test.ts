@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   analyticsRequestParams,
+  endFreshAnalytics,
   requestFreshAnalytics,
   toAnalyticsParams,
 } from "./analyticsFilter";
@@ -123,9 +124,16 @@ describe("analyticsRequestParams", () => {
     expect(analyticsRequestParams({ days: 30 })).toHaveProperty("fresh", 1);
   });
 
-  it("goes back to cached answers once the refresh is over", () => {
+  it("goes back to cached answers once the refetches have settled", () => {
     requestFreshAnalytics();
-    vi.advanceTimersByTime(11_000);
+    endFreshAnalytics();
+
+    expect(analyticsRequestParams({ days: 7 })).toEqual({ days: 7 });
+  });
+
+  it("gives up on its own if a refresh never reports back", () => {
+    requestFreshAnalytics();
+    vi.advanceTimersByTime(31_000);
 
     expect(analyticsRequestParams({ days: 7 })).toEqual({ days: 7 });
   });

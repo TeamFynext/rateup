@@ -112,7 +112,12 @@ export function DateSelector({ days, setDays }: { days: number; setDays: (days: 
     { value: "60", label: t("Last 60 Days") },
   ];
   return (
-    <Select value={String(days)} onValueChange={(value) => setDays(Number(value))} items={options}>
+    <Select
+      value={String(days)}
+      // Base UI clears with `null`; `Number(null)` is 0, which asks the server for an empty range.
+      onValueChange={(value) => setDays(value === null ? days : Number(value))}
+      items={options}
+    >
       <SelectTrigger aria-label={t("Date range")}>
         <SelectValue />
       </SelectTrigger>

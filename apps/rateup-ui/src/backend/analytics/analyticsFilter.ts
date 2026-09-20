@@ -1,3 +1,5 @@
+import { keepPreviousData } from "@tanstack/react-query";
+
 import type { QueryFilter } from "@/types/api.ts";
 
 /**
@@ -16,20 +18,29 @@ import type { QueryFilter } from "@/types/api.ts";
 export type AnalyticsParam = string | number | boolean;
 export type AnalyticsParams = Record<string, AnalyticsParam>;
 
-/** How long after a manual refresh requests ask the server to skip its cache. */
-const FRESH_WINDOW_MS = 10_000;
+/** A refresh that never reported back must not leave every later request bypassing the cache. */
+const FRESH_WINDOW_MS = 30_000;
 
 let freshUntil = 0;
 
 /**
- * Call right before invalidating analytics queries from the Refresh button. For the
- * next few seconds every analytics request carries `fresh=1`, which the API reads as
- * "skip the analytics cache" — so a manual refresh shows the database's numbers, not
- * a cached minute-old copy. It is a query parameter rather than `Cache-Control`
+ * Call right before invalidating analytics queries from the Refresh button. Until
+ * `endFreshAnalytics`, every analytics request carries `fresh=1`, which the API reads
+ * as "skip the analytics cache" — so a manual refresh shows the database's numbers,
+ * not a cached minute-old copy. It is a query parameter rather than `Cache-Control`
  * because the API's CORS policy only admits a fixed list of request headers.
+ *
+ * Invalidate with `refetchType: "all"`: `invalidateQueries` only refetches mounted
+ * queries by default, so a view opened after the refresh would come back from the
+ * server's cache — up to six hours old for a range that has closed.
  */
 export function requestFreshAnalytics() {
   freshUntil = Date.now() + FRESH_WINDOW_MS;
+}
+
+/** Call once the refetches a refresh started have settled. */
+export function endFreshAnalytics() {
+  freshUntil = 0;
 }
 
 function isTeamUnset(value: unknown): boolean {
@@ -89,8 +100,13 @@ export function analyticsRequestParams(filter: QueryFilter | null | undefined): 
  */
 export const ANALYTICS_TIMEOUT_MS = 30_000;
 
-/** Shared react-query options for analytics reads. */
+/**
+ * Shared react-query options for analytics reads. `keepPreviousData` is what lets a
+ * card dim its old numbers while a new range or team loads (`isPlaceholderData` in
+ * `AnalyticsCard`/`TileGroup`) instead of blanking the whole page to skeletons.
+ */
 export const analyticsQueryOptions = {
   staleTime: 5 * 60_000,
   refetchOnWindowFocus: false,
+  placeholderData: keepPreviousData,
 } as const;

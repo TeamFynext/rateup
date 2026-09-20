@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
+import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
 import { teamKeys } from "@/backend/org/org.keys";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
@@ -60,7 +60,12 @@ export function TeamPage() {
 
   function refresh() {
     requestFreshAnalytics();
-    queryClient.invalidateQueries({ queryKey: teamKeys.detailedMetrics(teamid, { days: day }) });
+    queryClient
+      .invalidateQueries({
+        queryKey: teamKeys.detailedMetrics(teamid, { days: day }),
+        refetchType: "all",
+      })
+      .finally(endFreshAnalytics);
   }
 
   async function exportPdf() {
