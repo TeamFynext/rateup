@@ -285,7 +285,11 @@ async function sendCardAfterEnrolment(
 
 /** The points the new member is owed: the joining bonus plus a points-type referee bonus. */
 function pointsOwedToNewMember(snapshot: LoyaltyPendingBonuses): number {
-  const refereePoints = snapshot.refereeBonusType === "points" ? snapshot.refereeBonus : 0;
+  // The referee bonus is for joining on someone's code, so it is owed only when there is a
+  // referrer. `creditNewMember` writes its ledger row under the same condition, and the two
+  // have to agree: a balance the ledger cannot explain is what a member sees as free points.
+  const refereePoints =
+    snapshot.referredById && snapshot.refereeBonusType === "points" ? snapshot.refereeBonus : 0;
   return snapshot.signupBonus + refereePoints;
 }
 
