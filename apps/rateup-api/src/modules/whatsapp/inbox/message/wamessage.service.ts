@@ -33,6 +33,7 @@ import {
   WaMessageAssignStatus,
 } from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
+import { internalEventSentence } from "./internalEvent.js";
 import { wait } from "../../whatsappSurvey/wasurvey.controller.js";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
 import {
@@ -2353,6 +2354,15 @@ export async function createInternalWaMessage({
         assignStatus = waMessageAssignStatus;
     }
 
+    const byId = new Map(assignedUserDetails.map((u) => [u.id, u]));
+    const summary = internalEventSentence({
+      status: assignStatus,
+      actor: triggeredByUserDetails,
+      added: addedUsers.map((u) => byId.get(u.userId)).filter((u) => u !== undefined),
+      removed: removedUsers.map((u) => byId.get(u.userId)).filter((u) => u !== undefined),
+      fallback: messageText,
+    });
+
     const wamessage = await prisma.waMessage.create({
       data: {
         contactId,
@@ -2366,6 +2376,9 @@ export async function createInternalWaMessage({
           exchangeProcess: "internal",
           internal: {
             text: { body: messageText },
+            // The finished sentence. `text.body` stays the old fragment so rows written
+            // before this keep rendering, and a client that has not been updated still works.
+            summary,
             triggeredByUser: triggeredByUserDetails,
             assignStatus,
             assignedUsers: assignedUserDetails,

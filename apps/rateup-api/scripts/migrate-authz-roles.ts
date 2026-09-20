@@ -12,19 +12,15 @@
  * OrgMember and Invitation for the whole rewrite. This commits per org and only touches
  * rows whose roleKey is still NULL, so it can be re-run after an interruption.
  *
- * Needs DATABASE_URL and REDIS_URL in the environment.
+ * Needs DATABASE_URL in the environment; REDIS_URL is used to clear the actor cache and may be
+ * unreachable from a laptop, in which case the cache simply expires.
  */
 import "dotenv/config";
 
 import prisma from "../src/utils/prisma.js";
 import redis from "../src/utils/redisConnection.js";
 import { planOrgRoles, tallyRoles, type MemberRow } from "../src/authz/migration.js";
-import {
-  legacyRoleToKey,
-  roleKeyToLegacy,
-  DEFAULT_INVITED_ROLE,
-  type LegacyRole,
-} from "../src/authz/roles.js";
+import { legacyRoleToKey, roleKeyToLegacy, DEFAULT_INVITED_ROLE } from "../src/authz/roles.js";
 
 const apply = process.argv.includes("--apply");
 
@@ -44,17 +40,35 @@ async function archiveTeamFeatureAccess(): Promise<number> {
 }
 
 async function clearActorCache(): Promise<number> {
-  let cursor = "0";
-  let removed = 0;
-  do {
-    const [next, keys] = await redis.scan(cursor, "MATCH", "authz:*", "COUNT", 500);
-    cursor = next;
-    if (keys.length > 0) {
-      removed += keys.length;
-      if (apply) await redis.del(...keys);
-    }
-  } while (cursor !== "0");
-  return removed;
+  // Best effort: the actor cache expires within 60 s on its own, and this often runs from a
+  // machine that can reach Postgres but not the private Redis host. The client queues commands
+  // while disconnected, so without a deadline an unreachable Redis would hang here forever.
+  // The rewrite above has already committed, so a failure is reported, not fatal.
+  const sweep = async () => {
+    let cursor = "0";
+    let removed = 0;
+    do {
+      const [next, keys] = await redis.scan(cursor, "MATCH", "authz:*", "COUNT", 500);
+      cursor = next;
+      if (keys.length > 0) {
+        removed += keys.length;
+        if (apply) await redis.del(...keys);
+      }
+    } while (cursor !== "0");
+    return removed;
+  };
+  const deadline = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Redis did not answer within 5 s")), 5_000),
+  );
+  try {
+    return await Promise.race([sweep(), deadline]);
+  } catch (err) {
+    console.warn(
+      "Could not clear the actor cache; it expires within 60 s.",
+      err instanceof Error ? err.message : err,
+    );
+    return -1;
+  }
 }
 
 async function main() {
@@ -115,7 +129,11 @@ async function main() {
   console.log(`owners repaired: ${plans.filter((p) => p.newOwnerId).length}`);
   console.log(`pending invitations with no role → ${DEFAULT_INVITED_ROLE}: ${nullRoleInvites}`);
   console.log(`TeamFeatureAccess rows archived: ${archived}`);
-  console.log(`actor cache keys cleared: ${cacheKeys}`);
+  console.log(
+    cacheKeys < 0
+      ? "actor cache: not cleared (Redis unreachable), expires within 60 s"
+      : `actor cache keys cleared: ${cacheKeys}`,
+  );
   if (warnings.length > 0) {
     console.log("\nwarnings:");
     for (const w of warnings) console.log("  " + w);
