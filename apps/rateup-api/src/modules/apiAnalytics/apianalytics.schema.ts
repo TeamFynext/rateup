@@ -21,12 +21,16 @@ const teamIdSchema = z
 
 const apiTypeSchema = z.enum(["all", "external", "whatsapp"]).optional();
 
+/** "1" skips the analytics cache — the dashboard's Refresh button sends it. */
+const freshSchema = z.string().optional();
+
 const statsQuerySchema = z.object({
   dateKey: z.string().optional(),
   dateRange: dateRangeSchema,
   days: z.number().optional(),
   teamId: teamIdSchema,
   apiType: apiTypeSchema,
+  fresh: freshSchema,
 });
 
 const trendQuerySchema = z.object({
@@ -36,6 +40,7 @@ const trendQuerySchema = z.object({
   teamId: teamIdSchema,
   granularity: z.enum(["hour", "day"]).optional(),
   apiType: apiTypeSchema,
+  fresh: freshSchema,
 });
 
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;

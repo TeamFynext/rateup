@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+// The cache sits between the handlers and the service. Here it is a straight
+// pass-through, so these tests keep describing the handlers; the cache itself is
+// covered in src/utils/cache.test.ts.
+vi.mock("../../../utils/cache.js", () => ({
+  withCache: vi.fn((_key: string, _ttl: number, load: () => Promise<unknown>) => load()),
+  cacheKeyFor: vi.fn(() => "test-key"),
+}));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
@@ -23,6 +30,7 @@ vi.mock("./conversation.service.js", () => ({
 }));
 
 import { recordAuditEvent } from "../../../utils/auditLog.js";
+import { cacheKeyFor } from "../../../utils/cache.js";
 import {
   deleteConversation,
   deleteConversations,
@@ -240,7 +248,7 @@ describe("getConversationOverviewHandler", () => {
       reply(),
     );
 
-    expect(getConversationOverview).toHaveBeenCalledWith(ORG, ["2026-01-01", "2026-01-31"]);
+    expect(getConversationOverview).toHaveBeenCalledWith(ORG, ["2026-01-01", "2026-01-31"], null);
   });
 
   test("passes an empty range when the query has none", async () => {
@@ -248,7 +256,30 @@ describe("getConversationOverviewHandler", () => {
 
     await getConversationOverviewHandler(request({ query: {} }), reply());
 
-    expect(getConversationOverview).toHaveBeenCalledWith(ORG, []);
+    expect(getConversationOverview).toHaveBeenCalledWith(ORG, [], null);
+  });
+
+  test("scopes to a team and keys the cache on it", async () => {
+    const team = "22222222-2222-4222-8222-222222222222";
+    (getConversationOverview as Mock).mockResolvedValue({});
+
+    await getConversationOverviewHandler(request({ query: { teamId: team } }), reply());
+
+    expect(getConversationOverview).toHaveBeenCalledWith(ORG, [], team);
+    expect(cacheKeyFor).toHaveBeenCalledWith(
+      expect.any(String),
+      ORG,
+      "conversation:overview",
+      expect.objectContaining({ teamId: team }),
+    );
+  });
+
+  test('reads teamId "all" as every team', async () => {
+    (getConversationOverview as Mock).mockResolvedValue({});
+
+    await getConversationOverviewHandler(request({ query: { teamId: "all" } }), reply());
+
+    expect(getConversationOverview).toHaveBeenCalledWith(ORG, [], null);
   });
 
   test("reports a failure as a 500", async () => {
@@ -270,10 +301,12 @@ describe("getResolvedConversationStatsHandler", () => {
       reply(),
     );
 
-    expect(getResolvedCountandTotalCountofDailyInLastNDays).toHaveBeenCalledWith(ORG, 30, [
-      "2026-01-01",
-      "2026-01-31",
-    ]);
+    expect(getResolvedCountandTotalCountofDailyInLastNDays).toHaveBeenCalledWith(
+      ORG,
+      30,
+      ["2026-01-01", "2026-01-31"],
+      null,
+    );
   });
 
   test("reports a failure as a 500", async () => {
@@ -295,10 +328,12 @@ describe("getAverageConversationResponseTimeHandler", () => {
       reply(),
     );
 
-    expect(getAvargeResponseTimeofTodyaInEveryHour).toHaveBeenCalledWith(ORG, "today", [
-      "2026-01-01",
-      "2026-01-02",
-    ]);
+    expect(getAvargeResponseTimeofTodyaInEveryHour).toHaveBeenCalledWith(
+      ORG,
+      "today",
+      ["2026-01-01", "2026-01-02"],
+      null,
+    );
   });
 
   test("forwards an empty range rather than refusing the request", async () => {
@@ -307,7 +342,7 @@ describe("getAverageConversationResponseTimeHandler", () => {
 
     await getAverageConversationResponseTimeHandler(request({ query: {} }), rep);
 
-    expect(getAvargeResponseTimeofTodyaInEveryHour).toHaveBeenCalledWith(ORG, "", []);
+    expect(getAvargeResponseTimeofTodyaInEveryHour).toHaveBeenCalledWith(ORG, "", [], null);
     expect(rep.status).not.toHaveBeenCalled();
   });
 
@@ -330,10 +365,11 @@ describe("getConversationOnAccountDistributionHandler", () => {
       reply(),
     );
 
-    expect(getConversationOnAccountDistribution).toHaveBeenCalledWith(ORG, [
-      "2026-01-01",
-      "2026-01-31",
-    ]);
+    expect(getConversationOnAccountDistribution).toHaveBeenCalledWith(
+      ORG,
+      ["2026-01-01", "2026-01-31"],
+      null,
+    );
   });
 
   test("reports a failure as a 500", async () => {
@@ -353,7 +389,7 @@ describe("getOverAllQuickStatsOfConversationsHandler", () => {
 
     await getOverAllQuickStatsOfConversationsHandler(request(), rep);
 
-    expect(getOverAllQuickStatsOfConversations).toHaveBeenCalledWith(ORG);
+    expect(getOverAllQuickStatsOfConversations).toHaveBeenCalledWith(ORG, null);
     expect(rep.send).toHaveBeenCalledWith({ resolved: 4 });
   });
 
@@ -376,7 +412,11 @@ describe("getStaffConverSationMetricsHandler", () => {
       reply(),
     );
 
-    expect(getStaffConverSationMetrics).toHaveBeenCalledWith(ORG, ["2026-01-01", "2026-01-31"]);
+    expect(getStaffConverSationMetrics).toHaveBeenCalledWith(
+      ORG,
+      ["2026-01-01", "2026-01-31"],
+      null,
+    );
   });
 
   test("reports a failure as a 500", async () => {
@@ -434,7 +474,7 @@ describe("getTeamOverviewHandler", () => {
       reply(),
     );
 
-    expect(getTeamOverview).toHaveBeenCalledWith(ORG, ["2026-01-01", "2026-01-31"]);
+    expect(getTeamOverview).toHaveBeenCalledWith(ORG, ["2026-01-01", "2026-01-31"], null);
   });
 
   test("reports a failure as a 500", async () => {

@@ -11,6 +11,7 @@ import {
   InboxActor,
   UpdateConversationSchema,
 } from "./conversation.schema.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { isTerminalInboxStatus } from "../../whatsapp/constants.js";
 import {
@@ -695,9 +696,31 @@ export async function checkIfFirstUserSendMessageInConversation(
   return messages[0].id === messageId;
 }
 
+/**
+ * Limits an analytics query on `"Conversation" c` to one team's conversations: those
+ * with a live assignment row for it. A conversation never assigned belongs to no team.
+ *
+ * Un-assignment is soft (`lastRemovedAt`, see `updateConversationAssignees`), so without
+ * that guard an escalated conversation keeps counting for the team that handed it over
+ * and is counted again under the team that took it.
+ */
+function conversationTeamFilter(teamId: string | null) {
+  return teamId
+    ? Prisma.sql`AND EXISTS (SELECT 1 FROM "ConversationAssignedUserTeamMap" tf WHERE tf."conversationId" = c.id AND tf."teamId" = ${teamId}::uuid AND tf."lastRemovedAt" IS NULL)`
+    : Prisma.empty;
+}
+
+/** Limits an `"OrgMember" om` row to members of one team. */
+function memberTeamFilter(teamId: string | null) {
+  return teamId
+    ? Prisma.sql`AND EXISTS (SELECT 1 FROM "TeamMember" tmf WHERE tmf."userId" = om."userId" AND tmf."teamId" = ${teamId}::uuid)`
+    : Prisma.empty;
+}
+
 export async function getConversationOverview(
   orgId: string,
   dateRange: string[],
+  teamId: string | null = null,
 ): Promise<{
   totalConversations: number;
   averageResponseTime: number;
@@ -710,46 +733,70 @@ export async function getConversationOverview(
     endDate = new Date(dateRange[1]);
   }
 
-  const res = await prisma.$queryRaw<
-    {
-      totalConversations: number; // conversation created on range of given days
-      averageResponseTime: number;
-      averageResponseTimeByAgent: number;
-      resolutionRate: number; // resolved conversation rate on the range of given day by total conversation till the date
-    }[]
-  >`
-  WITH first_agent_message AS (
-   SELECT wm."conversationId", MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
-   FROM "WaMessage" wm
-   WHERE wm."sendBy" IS NOT NULL
-   GROUP BY wm."conversationId"
-  )
-  SELECT 
-   (COUNT(*) FILTER (WHERE c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())))::INTEGER AS "totalConversations",
-   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL AND c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW()))
+  // Three queries, each answerable from one index range, instead of one pass over
+  // every conversation the org has ever had:
+  //   - what was created in the window            -> (orgId, createdAt)
+  //   - what was closed in the window             -> (orgId, closedAt)
+  //   - how many existed by the end of the window -> (orgId, createdAt), index-only
+  // The closed count cannot share the first query's range: a conversation resolved
+  // this week may have been opened months ago.
+  const teamFilter = conversationTeamFilter(teamId);
+  const [rangeRows, resolvedRows, existingRows] = await Promise.all([
+    prisma.$queryRaw<
+      {
+        totalConversations: number; // conversation created on range of given days
+        averageResponseTime: number;
+        averageResponseTimeByAgent: number;
+      }[]
+    >`
+  SELECT
+   COUNT(*)::INTEGER AS "totalConversations",
+   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL)
    AS "averageResponseTime",
-   AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL AND c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW()))
-   AS "averageResponseTimeByAgent",
-   CASE WHEN COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) = 0 THEN 0
-        ELSE ( 
-         COUNT(*) FILTER (
-         WHERE c."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" BETWEEN 
-         COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())
-        )::float / COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) * 100)
-   END AS "resolutionRate"
+   AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL)
+   AS "averageResponseTimeByAgent"
   FROM "Conversation" c
-  LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
-  WHERE c."orgId" = ${orgId}::uuid;`;
-  // The query has no GROUP BY, so it always returns exactly one aggregate row —
-  // the length check guards the theoretical empty-result case defensively.
-  return res.length
-    ? res[0]
-    : {
-        totalConversations: 0,
-        averageResponseTime: 0,
-        averageResponseTimeByAgent: 0,
-        resolutionRate: 0,
-      };
+  LEFT JOIN LATERAL (
+    SELECT MIN(fwm."waCreatedAt") AS "firstAgentMessageAt"
+    FROM "WaMessage" fwm
+    WHERE fwm."conversationId" = c.id
+      AND fwm."sendBy" IS NOT NULL
+      AND c."firstRespondedByUserAt" IS NULL
+  ) fam ON true
+  WHERE c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())
+    AND c."orgId" = ${orgId}::uuid
+    ${teamFilter};`,
+    prisma.$queryRaw<{ count: number }[]>`
+  SELECT COUNT(*)::INTEGER AS "count"
+  FROM "Conversation" c
+  WHERE c."orgId" = ${orgId}::uuid
+    AND c."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+    AND c."closedAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())
+    ${teamFilter};`,
+    prisma.$queryRaw<{ count: number }[]>`
+  SELECT COUNT(*)::INTEGER AS "count"
+  FROM "Conversation" c
+  WHERE c."orgId" = ${orgId}::uuid
+    AND c."createdAt" <= COALESCE(${endDate}, NOW())
+    ${teamFilter};`,
+  ]);
+  // An aggregate without GROUP BY always returns one row — the length check
+  // guards the theoretical empty-result case defensively.
+  if (!rangeRows.length) {
+    return {
+      totalConversations: 0,
+      averageResponseTime: 0,
+      averageResponseTimeByAgent: 0,
+      resolutionRate: 0,
+    };
+  }
+  // resolved conversation rate on the range of given day by total conversation till the date
+  const resolved = resolvedRows[0]?.count ?? 0;
+  const existing = existingRows[0]?.count ?? 0;
+  return {
+    ...rangeRows[0],
+    resolutionRate: existing === 0 ? 0 : (resolved / existing) * 100,
+  };
 }
 
 export async function getResolvedConversationWeeklyStats(orgId: string) {
@@ -777,7 +824,9 @@ export async function getResolvedCountandTotalCountofDailyInLastNDays(
   orgId: string,
   days: number,
   dateRange: string[],
+  teamId: string | null = null,
 ) {
+  const teamFilter = conversationTeamFilter(teamId);
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - days);
   let startDate = sinceDate;
@@ -786,6 +835,8 @@ export async function getResolvedCountandTotalCountofDailyInLastNDays(
     startDate = new Date(dateRange[0]);
     endDate = new Date(dateRange[1]);
   }
+  // Both per-day CTEs stop at the last day of the series. Anything later was
+  // dropped by the join onto `dates` anyway; bounding it just stops it being read.
   const result = await prisma.$queryRaw<
     {
       date: string;
@@ -805,10 +856,12 @@ created_per_day AS (
   SELECT
     DATE("createdAt") AS day,
     COUNT(*)::INTEGER AS createdCount
-  FROM "Conversation"
+  FROM "Conversation" c
   WHERE
     "orgId" = ${orgId}::uuid
     AND "createdAt" >= ${startDate}::date
+    AND "createdAt" < (${endDate}::date + INTERVAL '1 day')
+    ${teamFilter}
   GROUP BY DATE("createdAt")
 ),
 
@@ -816,12 +869,14 @@ resolved_per_day AS (
   SELECT
     DATE("closedAt") AS day,
     COUNT(*)::INTEGER AS resolvedCount
-  FROM "Conversation"
+  FROM "Conversation" c
   WHERE
     "orgId" = ${orgId}::uuid
     AND "status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     AND "closedAt" IS NOT NULL
     AND "closedAt" >= ${startDate}::date
+    AND "closedAt" < (${endDate}::date + INTERVAL '1 day')
+    ${teamFilter}
   GROUP BY DATE("closedAt")
 ),
 
@@ -858,6 +913,7 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
   orgId: string,
   dateKey: string,
   dateRange: string[],
+  teamId: string | null = null,
 ) {
   const hasRange = dateRange?.length === 2;
   const startDate = hasRange ? new Date(dateRange[0]) : new Date(0);
@@ -869,15 +925,7 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
     : `date_trunc('day', c."createdAt")`;
 
   const query = `
-WITH first_agent_message AS (
-  SELECT
-    wm."conversationId",
-    MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
-  FROM "WaMessage" wm
-  WHERE wm."sendBy" IS NOT NULL
-  GROUP BY wm."conversationId"
-),
-convo AS (
+WITH convo AS (
   SELECT
     c."createdAt",
     COALESCE(
@@ -885,8 +933,13 @@ convo AS (
       fam."firstAgentMessageAt"
     ) AS "respondedAt"
   FROM "Conversation" c
-  LEFT JOIN first_agent_message fam
-    ON fam."conversationId" = c.id
+  LEFT JOIN LATERAL (
+    SELECT MIN(fwm."waCreatedAt") AS "firstAgentMessageAt"
+    FROM "WaMessage" fwm
+    WHERE fwm."conversationId" = c.id
+      AND fwm."sendBy" IS NOT NULL
+      AND c."firstRespondedByUserAt" IS NULL
+  ) fam ON true
   WHERE c."orgId" = $1::uuid
     AND COALESCE(
       c."firstRespondedByUserAt",
@@ -894,6 +947,14 @@ convo AS (
     ) IS NOT NULL
     AND c."createdAt" >= $2
     AND c."createdAt" < $3
+    AND (
+      $4::uuid IS NULL
+      OR EXISTS (
+        SELECT 1 FROM "ConversationAssignedUserTeamMap" tf
+        WHERE tf."conversationId" = c.id AND tf."teamId" = $4::uuid
+          AND tf."lastRemovedAt" IS NULL
+      )
+    )
 )
 SELECT
   ${periodColumn} AS period,
@@ -911,12 +972,16 @@ ORDER BY period;
       period: string;
       averageResponseTime: number;
     }[]
-  >(query, orgId, startDate, endDate);
+  >(query, orgId, startDate, endDate, teamId);
 
   return result;
 }
 
-export async function getConversationOnAccountDistribution(orgId: string, dateRange: string[]) {
+export async function getConversationOnAccountDistribution(
+  orgId: string,
+  dateRange: string[],
+  teamId: string | null = null,
+) {
   let startDate, endDate;
   if (dateRange.length) {
     startDate = new Date(dateRange[0]);
@@ -953,6 +1018,7 @@ WHERE c."orgId" = ${orgId}::uuid
       )
   AND c."createdAt" >= COALESCE(${startDate}, '1970-01-01'::timestamptz)
   AND c."createdAt" < COALESCE(${endDate}, NOW())
+  ${conversationTeamFilter(teamId)}
 GROUP BY
     ws."phoneId",
     ws."ibaId",
@@ -962,7 +1028,14 @@ GROUP BY
   return result;
 }
 
-export async function getOverAllQuickStatsOfConversations(orgId: string) {
+/**
+ * Live counts. Under a team filter, unassigned conversations stay org-wide: a
+ * conversation nobody has picked up has no team yet.
+ */
+export async function getOverAllQuickStatsOfConversations(
+  orgId: string,
+  teamId: string | null = null,
+) {
   const result = await prisma.$queryRaw<
     {
       conversationInProgress: number;
@@ -984,13 +1057,16 @@ export async function getOverAllQuickStatsOfConversations(orgId: string) {
     AND c."closedAt" <  date_trunc('week', CURRENT_DATE)))::INTEGER AS "resolvedLastWeek",
     COUNT(*) FILTER (WHERE c."createdAt"::date = CURRENT_DATE)::INTEGER AS "conversationCreatedToday",
     COUNT(*)::INTEGER AS "totalConversation",
-    COUNT(*) FILTER (WHERE c."status"::text = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS "newConversations",
+    (SELECT COUNT(*)::INTEGER FROM "Conversation" uc
+     WHERE uc."orgId" = ${orgId}::uuid
+       AND uc."status"::text = ${WaMessageAssignStatus.UNASSIGNED}) AS "newConversations",
     (SELECT COUNT(*)::INTEGER
  FROM "OrgMember" om
  JOIN "User" u ON u.id = om."userId"
  WHERE om."orgId" = ${orgId}
    AND om."status" = 'online'
    AND u."active" = true
+   ${memberTeamFilter(teamId)}
 ) AS "staffOnline",
 
 (SELECT COUNT(*)::INTEGER
@@ -998,9 +1074,11 @@ export async function getOverAllQuickStatsOfConversations(orgId: string) {
  JOIN "User" u ON u.id = om."userId"
  WHERE om."orgId" = ${orgId}
    AND u."active" = true
+   ${memberTeamFilter(teamId)}
 ) AS "totalStaff"
 FROM "Conversation" c
-WHERE c."orgId" = ${orgId}::uuid;
+WHERE c."orgId" = ${orgId}::uuid
+  ${conversationTeamFilter(teamId)};
   `;
   const {
     resolvedLastWeek,
@@ -1021,7 +1099,12 @@ WHERE c."orgId" = ${orgId}::uuid;
   return { ...rest, resolvedRateDifference };
 }
 
-export async function getStaffConverSationMetrics(orgId: string, dateRange: string[]) {
+/** Under a team filter, both the rows (the team's members) and their numbers (the team's conversations) are scoped. */
+export async function getStaffConverSationMetrics(
+  orgId: string,
+  dateRange: string[],
+  teamId: string | null = null,
+) {
   const sevenDaysAgo = new Date();
   const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -1038,6 +1121,7 @@ export async function getStaffConverSationMetrics(orgId: string, dateRange: stri
         name: string;
         status: string;
         email: string;
+        profilePhoto: string | null;
       };
       totalAssignedConversations: number;
       totalClosedConversations: number;
@@ -1057,6 +1141,7 @@ WITH valid_conversations AS (
     c."closedAt"
   FROM "Conversation" c
   WHERE c."orgId" = ${orgId}::uuid
+    ${conversationTeamFilter(teamId)}
 ),
 
 assignments AS (
@@ -1174,7 +1259,8 @@ SELECT
     'userId', om."userId",
     'name', u."name",
     'status', om."status",
-    'email', u."email"
+    'email', u."email",
+    'profilePhoto', u."profilePhoto"
   ) AS staff,
 
   -- Totals (optional DATE RANGE)
@@ -1226,7 +1312,8 @@ LEFT JOIN message_stats m ON m."userId" = om."userId"
 LEFT JOIN response_stats r ON r."userId" = om."userId"
 WHERE om."orgId" = ${orgId}
 AND u."active" = true
-AND u."deletedAt" IS NULL;
+AND u."deletedAt" IS NULL
+${memberTeamFilter(teamId)};
   `;
   return result;
 }
@@ -1399,6 +1486,10 @@ resolution_stats AS (
   WHERE vc."closedBy" = ${userId}
 ),
 
+-- handled_messages below reads only messages sent by this agent, and only the days this
+-- series covers, so the (sendBy, waCreatedAt) index serves it. It used to read
+-- every message the org ever had. A day with no rows still reads 0 through the
+-- COALESCE where the two are joined.
 dates AS (
     SELECT generate_series(
         ${sinceDate.toISOString()}::date,
@@ -1410,11 +1501,12 @@ dates AS (
 handled_messages AS (
     SELECT 
         DATE(wm."waCreatedAt") AS day,
-        COUNT(*) FILTER (WHERE wm."sendBy" = ${userId})::INTEGER AS "messageCount"
+        COUNT(*)::INTEGER AS "messageCount"
     FROM "WaMessage" wm
     JOIN "Conversation" cv ON cv.id = wm."conversationId"
-    JOIN "Contact" c ON c.id = cv."contactId"
-    WHERE c."orgId" = ${orgId}::uuid
+    WHERE cv."orgId" = ${orgId}::uuid
+      AND wm."sendBy" = ${userId}
+      AND wm."waCreatedAt" >= ${sinceDate.toISOString()}::date
     GROUP BY DATE(wm."waCreatedAt")
 ),
 
@@ -1625,7 +1717,11 @@ SELECT
   return result[0];
 }
 
-export async function getTeamOverview(orgId: string, dateRange: string[]) {
+export async function getTeamOverview(
+  orgId: string,
+  dateRange: string[],
+  teamId: string | null = null,
+) {
   const sevenDaysAgo = new Date();
   const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -1648,13 +1744,7 @@ export async function getTeamOverview(orgId: string, dateRange: string[]) {
       messagesSent: number;
     }[]
   >`
-  WITH first_agent_message AS (
-    SELECT wm."conversationId", MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
-    FROM "WaMessage" wm
-    WHERE wm."sendBy" IS NOT NULL
-    GROUP BY wm."conversationId"
-  ),
-     messages_per_team AS (
+  WITH messages_per_team AS (
      SELECT cau."teamId", COUNT(*)::INTEGER AS "messagesSent"
     FROM "WaMessage" wm
     JOIN "Conversation" c ON c.id = wm."conversationId"
@@ -1691,9 +1781,15 @@ COUNT(DISTINCT u.id) FILTER (
   LEFT JOIN "ConversationAssignedUserTeamMap" cau ON cau."teamId" = t.id
   LEFT JOIN "Conversation" c ON c.id = cau."conversationId"
   LEFT JOIN "Contact" ct ON ct.id = c."contactId"
-  LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
+  LEFT JOIN LATERAL (
+    SELECT MIN(fwm."waCreatedAt") AS "firstAgentMessageAt"
+    FROM "WaMessage" fwm
+    WHERE fwm."conversationId" = c.id
+      AND fwm."sendBy" IS NOT NULL
+      AND c."firstRespondedByUserAt" IS NULL
+  ) fam ON true
   LEFT JOIN "TeamMember" tm ON tm."teamId" = t.id
-  LEFT JOIN "User" u 
+  LEFT JOIN "User" u
   ON tm."userId" = u.id
  AND u."active" = true
  AND u."deletedAt" IS NULL
@@ -1702,6 +1798,7 @@ LEFT JOIN "OrgMember" om
  AND om."orgId" = ${orgId}
   LEFT JOIN "messages_per_team" mpt ON mpt."teamId" = t.id
   WHERE t."orgId" = ${orgId}::uuid
+    ${teamId ? Prisma.sql`AND t.id = ${teamId}::uuid` : Prisma.empty}
   GROUP BY t.id, t.name,t."color", mpt."messagesSent"
   ORDER BY "assignedConversations" DESC;
   `;
@@ -1743,21 +1840,20 @@ export async function getTeamDetailedMetrics(
         | null;
     }[]
   >`
-  WITH first_agent_message AS (
-    SELECT wm."conversationId", MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
-    FROM "WaMessage" wm
-    WHERE wm."sendBy" IS NOT NULL
-    GROUP BY wm."conversationId"
-  ),
-
-  team_convos AS (
+  WITH team_convos AS (
     SELECT DISTINCT c.id, c."createdAt",
       COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") AS respondedAt,
       c."status",
       c."closedAt"
     FROM "Conversation" c
     JOIN "ConversationAssignedUserTeamMap" cau ON cau."conversationId" = c.id AND cau."teamId" = ${teamId}::uuid
-    LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
+    LEFT JOIN LATERAL (
+      SELECT MIN(fwm."waCreatedAt") AS "firstAgentMessageAt"
+      FROM "WaMessage" fwm
+      WHERE fwm."conversationId" = c.id
+        AND fwm."sendBy" IS NOT NULL
+        AND c."firstRespondedByUserAt" IS NULL
+    ) fam ON true
     WHERE c."orgId" = ${orgId}::uuid
       AND c."createdAt" >= ${sinceDate}
   )
@@ -1830,9 +1926,10 @@ export async function getTeamDetailedMetrics(
         AND u."deletedAt" IS NULL
         LEFT JOIN "OrgMember" om ON om."userId" = tm."userId" AND om."orgId" = ${orgId}::uuid
         LEFT JOIN "ConversationAssignedUserTeamMap" cau ON cau."userId" = tm."userId" AND cau."teamId" = ${teamId}::uuid
-        LEFT JOIN "Conversation" vc ON vc.id = cau."conversationId"
+        -- Scoped in the join, not with an inner join after it: that would drop every
+        -- member with no conversations yet, and the list would miss people the header counts.
+        LEFT JOIN "Conversation" vc ON vc.id = cau."conversationId" AND vc."orgId" = ${orgId}::uuid
         LEFT JOIN "WaMessage" wm ON wm."conversationId" = vc.id AND wm."sendBy" = tm."userId"
-        JOIN "Contact" c ON c.id = vc."contactId" AND c."orgId" = ${orgId}::uuid
         WHERE tm."teamId" = ${teamId}::uuid
         GROUP BY tm."userId", u."name", om."status"
       ) ms

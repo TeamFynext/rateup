@@ -73,6 +73,7 @@ import type {
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { ByContactIdParams } from "../../../contact/contact.schema.js";
 import { channelDigits, channelIdentifierSpellings } from "../../../../utils/channelIdentifier.js";
+import { dateFilterFor } from "../../../apiAnalytics/apianalytics.service.js";
 
 /**
  * One row of the raw inbox-list query. The projection is built by hand in SQL and spread
@@ -2530,10 +2531,9 @@ export async function getWaMessageLogs(
       ? Prisma.sql`AND motm."teamId" = ${team}::uuid`
       : Prisma.sql``;
 
-  const dateFilter =
-    rangeStart && rangeEnd
-      ? Prisma.sql`AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}`
-      : Prisma.sql``;
+  // The same index-friendly pair of predicates the analytics panels use: the
+  // range on the map row picks the rows, the one on the message keeps it exact.
+  const dateFilter = rangeStart && rangeEnd ? dateFilterFor(rangeStart, rangeEnd) : Prisma.sql``;
 
   let sourceFilter = Prisma.sql``;
   if (sourceMessage && sourceMessage !== "all") {
@@ -2561,8 +2561,11 @@ export async function getWaMessageLogs(
           )`
       : Prisma.sql``;
 
+  // The map row carries the same org as the contact the message went to. Naming
+  // it as well lets the (orgId, createdAt) index on the map table drive the scan.
   const baseWhere = Prisma.sql`
     WHERE c."orgId" = ${orgId}
+      AND motm."orgId" = ${orgId}::uuid
       AND wm."sourceMessage" IN ('TEMPLATE','CAMPAIGN')
       AND wm."messageBody"->>'exchangeProcess' = 'send'
       ${sourceFilter}

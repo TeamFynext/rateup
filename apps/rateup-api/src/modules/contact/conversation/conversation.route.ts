@@ -121,7 +121,15 @@ export async function conversationRoutes(server: FastifyInstance) {
     },
     getStaffConverSationMetricsHandler,
   );
-  server.get("/quick-stats", getOverAllQuickStatsOfConversationsHandler);
+  server.get(
+    "/quick-stats",
+    {
+      schema: {
+        querystring: statsQuerySchema,
+      },
+    },
+    getOverAllQuickStatsOfConversationsHandler,
+  );
   server.get(
     "/staff-detailed-analytics/:staffId",
     {

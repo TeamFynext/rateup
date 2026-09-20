@@ -2997,6 +2997,8 @@ model ConversationAssignedUserTeamMap {
   @@index([userId, conversationId])
   @@index([conversationId])
   @@index([userId, lastAssignedAt, lastRemovedAt])
+  // Team overview and team metrics start from a team and fan out to its conversations.
+  @@index([teamId, conversationId])
 }
 
 /// Storage vocabulary for inbox status. Mirrored between `Contact.waMessageAssignStatus`
@@ -3084,6 +3086,8 @@ model Conversation {
   @@index([orgId, createdAt])
   @@index([orgId, lastMessageAt(sort: Desc)])
   @@index([orgId, isFavorite])
+  // Resolution rate, resolved-per-day and the quick stats all filter on closedAt.
+  @@index([orgId, closedAt])
 }
 
 /// Org-defined vocabulary for tagging a single conversation ("Bug Report",
@@ -3176,6 +3180,10 @@ model WaMessageOrgTeamMap {
   @@index([teamId])
   // Joins from WaMessage and the ON DELETE CASCADE check both look rows up by messageId.
   @@index([messageId])
+  // Message analytics and the message log range-scan an org's (or one team's) sends
+  // by date. Without these every query walks the org's whole history.
+  @@index([orgId, createdAt])
+  @@index([orgId, teamId, createdAt])
 }
 
 model Webhook {

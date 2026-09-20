@@ -1,12 +1,25 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("./apianalytics.service.js", () => ({
-  getDeliveredFailedTrend: vi.fn(),
-  getDeliveredFailedWeekTrend: vi.fn(),
-  getTeamPerformanceStats: vi.fn(),
-  getTemplateCategoryOverview: vi.fn(),
-  getTemplatePerformanceStats: vi.fn(),
-  getWaMessageOverview: vi.fn(),
+vi.mock("./apianalytics.service.js", async () => {
+  // `resolveTrendGranularity` is pure, so it runs for real.
+  const actual = await vi.importActual<typeof import("./apianalytics.service.js")>(
+    "./apianalytics.service.js",
+  );
+  return {
+    resolveTrendGranularity: actual.resolveTrendGranularity,
+    getDeliveredFailedTrend: vi.fn(),
+    getTeamPerformanceStats: vi.fn(),
+    getTemplateCategoryOverview: vi.fn(),
+    getTemplatePerformanceStats: vi.fn(),
+    getWaMessageOverview: vi.fn(),
+  };
+});
+// The cache sits between the handlers and the service. Here it is a straight
+// pass-through, so these tests keep describing the handlers; the cache itself is
+// covered in src/utils/cache.test.ts.
+vi.mock("../../utils/cache.js", () => ({
+  withCache: vi.fn((_key: string, _ttl: number, load: () => Promise<unknown>) => load()),
+  cacheKeyFor: vi.fn(() => "test-key"),
 }));
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
@@ -14,7 +27,6 @@ vi.mock("../../utils/logger.js", () => ({
 
 import {
   getDeliveredFailedTrend,
-  getDeliveredFailedWeekTrend,
   getTeamPerformanceStats,
   getTemplateCategoryOverview,
   getTemplatePerformanceStats,
@@ -32,13 +44,19 @@ type Mock = ReturnType<typeof vi.fn>;
 const m = {
   overview: getWaMessageOverview as unknown as Mock,
   trend: getDeliveredFailedTrend as unknown as Mock,
-  weekTrend: getDeliveredFailedWeekTrend as unknown as Mock,
   categoryOverview: getTemplateCategoryOverview as unknown as Mock,
   templatePerformance: getTemplatePerformanceStats as unknown as Mock,
   teamPerformance: getTeamPerformanceStats as unknown as Mock,
 };
 
 const ORG = "org-1";
+
+const DAY_POINT = {
+  time: "2026-03-01T00:00:00.000Z",
+  totalMessages: 10,
+  deliveredMessages: 8,
+  failedMessages: 2,
+};
 
 function request(query: Record<string, unknown> = {}): any {
   return { user: { orgId: ORG, userId: "user-1", role: "ADMIN" }, userId: "user-1", query };
@@ -56,8 +74,7 @@ function sent(rep: any, index = 0) {
 beforeEach(() => {
   vi.clearAllMocks();
   m.overview.mockResolvedValue({ totalMessages: 10 });
-  m.trend.mockResolvedValue([{ time: "2026-03-01T00:00:00.000Z" }]);
-  m.weekTrend.mockResolvedValue([{ time: "2026-03-02T00:00:00.000Z" }]);
+  m.trend.mockResolvedValue([DAY_POINT]);
   m.categoryOverview.mockResolvedValue({ totalTemplates: 3, byCategory: [] });
   m.templatePerformance.mockResolvedValue([{ templateName: "order_update" }]);
   m.teamPerformance.mockResolvedValue([{ teamId: "team-1" }]);
@@ -136,30 +153,56 @@ describe("getApiAnalyticsHandler", () => {
 });
 
 describe("getDeliveredFailedTrendHandler", () => {
-  test("returns both trends together", async () => {
+  test("returns the trend and says how it is bucketed", async () => {
     const rep = reply();
 
     await getDeliveredFailedTrendHandler(request(), rep);
 
-    expect(sent(rep)).toEqual({
-      trend: [{ time: "2026-03-01T00:00:00.000Z" }],
-      weekTrend: [{ time: "2026-03-02T00:00:00.000Z" }],
-    });
+    expect(sent(rep)).toEqual({ trend: [DAY_POINT], granularity: "day" });
+  });
+
+  test("reads the rows once", async () => {
+    await getDeliveredFailedTrendHandler(request({ granularity: "hour" }), reply());
+
+    expect(m.trend).toHaveBeenCalledTimes(1);
   });
 
   test("looks at every team unless one is named", async () => {
     await getDeliveredFailedTrendHandler(request(), reply());
 
     expect(m.trend.mock.calls[0][1]).toBe("all");
-    expect(m.weekTrend.mock.calls[0][1]).toBe("all");
   });
 
-  test("buckets by day unless the hour was asked for", async () => {
-    await getDeliveredFailedTrendHandler(request(), reply());
+  test("buckets by whatever the caller asked for", async () => {
+    await getDeliveredFailedTrendHandler(request({ granularity: "day" }), reply());
     expect(m.trend.mock.calls[0][2]).toBe("day");
 
     await getDeliveredFailedTrendHandler(request({ granularity: "hour" }), reply());
     expect(m.trend.mock.calls[1][2]).toBe("hour");
+  });
+
+  test("picks days for a long range when the caller names no bucket", async () => {
+    await getDeliveredFailedTrendHandler(
+      request({ dateRange: "2026-03-01T00:00:00Z,2026-03-31T00:00:00Z" }),
+      reply(),
+    );
+
+    expect(m.trend.mock.calls[0][2]).toBe("day");
+  });
+
+  test("picks hours for a range of two days or less when the caller names no bucket", async () => {
+    await getDeliveredFailedTrendHandler(
+      request({ dateRange: "2026-03-01T00:00:00Z,2026-03-02T00:00:00Z" }),
+      reply(),
+    );
+
+    expect(m.trend.mock.calls[0][2]).toBe("hour");
+  });
+
+  test("picks days for the default seven-day window", async () => {
+    await getDeliveredFailedTrendHandler(request(), reply());
+
+    expect(m.trend.mock.calls[0][2]).toBe("day");
   });
 
   test("treats an unrecognised granularity as a day", async () => {
@@ -174,28 +217,19 @@ describe("getDeliveredFailedTrendHandler", () => {
     expect(m.trend.mock.calls[0][3]).toBeUndefined();
   });
 
-  test("gives both trends the same range", async () => {
+  test("passes the range it was given", async () => {
     await getDeliveredFailedTrendHandler(request({ dateRange: "2026-03-01,2026-03-07" }), reply());
 
     expect(m.trend.mock.calls[0][3]).toEqual(["2026-03-01", "2026-03-07"]);
-    // weekTrend has no granularity parameter, so its range sits one slot earlier.
-    expect(m.weekTrend.mock.calls[0][2]).toEqual(["2026-03-01", "2026-03-07"]);
   });
 
-  test("answers 500 when either trend fails", async () => {
-    m.weekTrend.mockRejectedValue(new Error("db down"));
+  test("answers 500 when the trend fails", async () => {
+    m.trend.mockRejectedValue(new Error("db down"));
     const rep = reply();
 
     await getDeliveredFailedTrendHandler(request(), rep);
 
     expect(rep.status).toHaveBeenCalledWith(500);
-  });
-
-  test("hands the same absent range to both trends", async () => {
-    await getDeliveredFailedTrendHandler(request(), reply());
-
-    expect(m.trend.mock.calls[0][3]).toBeUndefined();
-    expect(m.weekTrend.mock.calls[0][2]).toBeUndefined();
   });
 });
 

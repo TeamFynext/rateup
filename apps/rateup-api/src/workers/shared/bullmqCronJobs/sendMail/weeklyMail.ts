@@ -255,15 +255,7 @@ export function formatTimeToNearestUnitFromSeconds(seconds: number) {
 
 async function fetchTeamOverviewByOrg(orgId: string) {
   const rows = await prisma.$queryRaw<any[]>`
-    WITH first_agent_message AS (
-      SELECT wm."conversationId", MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
-      FROM "WaMessage" wm
-      WHERE wm."sendBy" IS NOT NULL
-        AND wm."waCreatedAt" >= NOW() - INTERVAL '7 days'
-      GROUP BY wm."conversationId"
-    ),
-
-    messages_per_team AS (
+    WITH messages_per_team AS (
       SELECT cau."teamId", COUNT(*)::INTEGER AS "messagesSent"
       FROM "WaMessage" wm
       JOIN "Conversation" c ON c.id = wm."conversationId"
@@ -304,7 +296,14 @@ async function fetchTeamOverviewByOrg(orgId: string) {
     LEFT JOIN "ConversationAssignedUserTeamMap" cau ON cau."teamId" = t.id
     LEFT JOIN "Conversation" c ON c.id = cau."conversationId"
     LEFT JOIN "Contact" ct ON ct.id = c."contactId"
-    LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
+    LEFT JOIN LATERAL (
+      SELECT MIN(fwm."waCreatedAt") AS "firstAgentMessageAt"
+      FROM "WaMessage" fwm
+      WHERE fwm."conversationId" = c.id
+        AND fwm."sendBy" IS NOT NULL
+        AND fwm."waCreatedAt" >= NOW() - INTERVAL '7 days'
+        AND c."firstRespondedByUserAt" IS NULL
+    ) fam ON true
     LEFT JOIN "TeamMember" tm ON tm."teamId" = t.id
     LEFT JOIN "User" u ON tm."userId" = u.id
       AND u."active" = true
