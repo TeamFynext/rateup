@@ -190,7 +190,9 @@ export function CustomerView({
             )}
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Each action is as wide as its label; full width only when they stack, because
+              the cashier reaches for these on a phone at the counter. */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button className="h-12" onClick={() => onAction("purchase")}>
               <IconPlus size={18} /> {t("Add purchase")}
             </Button>
