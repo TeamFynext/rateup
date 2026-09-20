@@ -11,6 +11,8 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } fro
 
 import type { MonthlyPoint } from "@/backend/admin/admin.api";
 import { useAdminOverview } from "@/backend/admin/admin.query";
+import { outcomeColor, outcomeConfig, singleSeriesConfig } from "@/components/common/chartTheme.ts";
+import { StatTile } from "@/components/common/StatTile.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -29,9 +31,6 @@ import {
 } from "@/components/ui/empty.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
-
-import { outcomeColor, outcomeConfig, singleSeriesConfig } from "./chartTheme";
-import { StatTile } from "./StatTile";
 
 const RANGES = ["6", "12", "24"] as const;
 

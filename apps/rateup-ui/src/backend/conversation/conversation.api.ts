@@ -1,25 +1,33 @@
 import type { QueryFilter } from "@/types/api.ts";
 
+import { ANALYTICS_TIMEOUT_MS, analyticsRequestParams } from "../analytics/analyticsFilter";
 import { axiosClient } from "../apiClient";
 import { CONTACT_BASE_URL } from "../campaign/contacts/contacts.api";
 
 const baseUrl = `${CONTACT_BASE_URL}/conversations`;
 
+/** Encoded, normalised params and the analytics timeout — see analyticsFilter.ts. */
+const analyticsRequest = (filter: QueryFilter | null | undefined) => ({
+  params: analyticsRequestParams(filter),
+  timeout: ANALYTICS_TIMEOUT_MS,
+});
+
 export const getConversationOverView = async (
   filter: QueryFilter,
 ): Promise<ConversationOverviewStats> => {
-  const query = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const response = await axiosClient.get<ConversationOverviewStats>(`${baseUrl}/overview?${query}`);
+  const response = await axiosClient.get<ConversationOverviewStats>(
+    `${baseUrl}/overview`,
+    analyticsRequest(filter),
+  );
   return response.data;
 };
 
 export interface ConversationOverviewStats {
   totalConversations: number;
-  averageResponseTime: number;
+  /** Seconds; null when no conversation in the range has had a reply. */
+  averageResponseTime: number | null;
   resolutionRate: number;
-  averageResponseTimeByAgent: number;
+  averageResponseTimeByAgent: number | null;
 }
 export interface ConversationResponseStats {
   period: string;
@@ -29,11 +37,9 @@ export interface ConversationResponseStats {
 export const getAverageConversationResponseTimeGraphData = async (
   filter: QueryFilter | null = null,
 ): Promise<ConversationResponseStats[]> => {
-  const query = Object.entries(filter || {})
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
   const response = await axiosClient.get<ConversationResponseStats[]>(
-    `${baseUrl}/conversation-response-stats?${query}`,
+    `${baseUrl}/conversation-response-stats`,
+    analyticsRequest(filter),
   );
   return response.data;
 };
@@ -45,11 +51,9 @@ export interface ConversationResolvedResponse {
 export const getResolvedConversationStats = async (
   filter: QueryFilter,
 ): Promise<ConversationResolvedResponse[]> => {
-  const query = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
   const response = await axiosClient.get<ConversationResolvedResponse[]>(
-    `${baseUrl}/conversation-resolved-stats?${query}`,
+    `${baseUrl}/conversation-resolved-stats`,
+    analyticsRequest(filter),
   );
   return response.data;
 };
@@ -65,11 +69,9 @@ export interface ConversationAccountDistribution {
 export const getConversationAccountDistribution = async (
   filter: QueryFilter,
 ): Promise<ConversationAccountDistribution[]> => {
-  const query = Object.entries(filter || {})
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
   const response = await axiosClient.get<ConversationAccountDistribution[]>(
-    `${baseUrl}/account-distribution?${query}`,
+    `${baseUrl}/account-distribution`,
+    analyticsRequest(filter),
   );
   return response.data;
 };
@@ -86,10 +88,10 @@ export interface ConversationQuickStats {
 export const getConversationQuickStats = async (
   filter: QueryFilter | null,
 ): Promise<ConversationQuickStats> => {
-  const query = Object.entries(filter || {})
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const response = await axiosClient.get<ConversationQuickStats>(`${baseUrl}/quick-stats?${query}`);
+  const response = await axiosClient.get<ConversationQuickStats>(
+    `${baseUrl}/quick-stats`,
+    analyticsRequest(filter),
+  );
   return response.data;
 };
 
@@ -99,11 +101,13 @@ export interface StaffPerformanceonConversation {
     name: string;
     status: string;
     email: string;
+    profilePhoto: string | null;
   };
   totalAssignedConversations: number;
   totalClosedConversations: number;
   totalMessagesHandled: number;
-  averageResponseTime: number;
+  /** Seconds; null when the agent has no first responses in the range. */
+  averageResponseTime: number | null;
   responseTimeRateByLastWeek: number;
   messagesHandledRateByLastWeek: number;
 }
@@ -111,11 +115,9 @@ export interface StaffPerformanceonConversation {
 export const getStaffPerformanceonConversation = async (
   filter: QueryFilter | null,
 ): Promise<StaffPerformanceonConversation[]> => {
-  const query = Object.entries(filter || {})
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
   const response = await axiosClient.get<StaffPerformanceonConversation[]>(
-    `${baseUrl}/staff-metrics?${query}`,
+    `${baseUrl}/staff-metrics`,
+    analyticsRequest(filter),
   );
   return response.data;
 };
@@ -160,20 +162,30 @@ export const getStaffDetailedConversationAnalytics = async (
   staffId: string,
   filter: QueryFilter | null,
 ): Promise<StaffDetailedConversationAnalytics> => {
-  const query = Object.entries(filter || {})
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
   const response = await axiosClient.get<StaffDetailedConversationAnalytics>(
-    `${baseUrl}/staff-detailed-analytics/${staffId}?${query}`,
+    `${baseUrl}/staff-detailed-analytics/${staffId}`,
+    analyticsRequest(filter),
   );
   return response.data;
 };
 
+/** One team's conversation workload for a range. */
+export interface TeamOverviewRow {
+  teamId: string;
+  teamName: string;
+  teamColor?: string | null;
+  teamMembers?: number;
+  teamMembersOnline?: number;
+  messagesSent?: number;
+  assignedConversations?: number;
+  averageResponseTime?: number | null;
+}
+
 export const getTeamOverview = async (filter: QueryFilter | null) => {
-  const query = Object.entries(filter || {})
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const response = await axiosClient.get(`${baseUrl}/team-overview?${query}`);
+  const response = await axiosClient.get<TeamOverviewRow[]>(
+    `${baseUrl}/team-overview`,
+    analyticsRequest(filter),
+  );
   return response.data;
 };
 
@@ -201,11 +213,9 @@ export interface TeamDetailedMetrics {
 }
 
 export const getTeamDetailedMetrics = async (teamId: string, filter: QueryFilter | null) => {
-  const query = Object.entries(filter || {})
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
   const response = await axiosClient.get<TeamDetailedMetrics>(
-    `${baseUrl}/team-metrics/${teamId}?${query}`,
+    `${baseUrl}/team-metrics/${teamId}`,
+    analyticsRequest(filter),
   );
   return response.data;
 };

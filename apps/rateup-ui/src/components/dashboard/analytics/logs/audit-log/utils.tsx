@@ -1,11 +1,11 @@
-import { IconAlertTriangle, IconCalendar, IconShield, IconUser } from "@tabler/icons-react";
+import { IconCalendar, IconShield, IconUser } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { AuditLogData } from "@/backend/user/user.api";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
@@ -197,50 +197,43 @@ const TimestampCell = ({ timestamp }: { timestamp: string }) => (
   </div>
 );
 
-export const ErrorCard = ({ message }: { message: string }) => (
-  <div className="flex items-center justify-center h-[50vh]">
-    <Card className="w-96">
-      <CardHeader>
-        <CardTitle className="text-destructive flex items-center gap-2">
-          <IconAlertTriangle className="h-5 w-5" />
-          Error
-        </CardTitle>
-        <CardDescription>{message}</CardDescription>
-      </CardHeader>
-    </Card>
-  </div>
-);
-
-export const columns = [
-  {
-    accessorKey: "action",
-    header: "Action",
-    cell: ({ row }) => (
-      <ActionCell
-        action={row.original?.action}
-        method={row.original?.method}
-        route={row.original?.route}
-      />
-    ),
-    meta: { title: "Action" },
-  },
-  {
-    accessorKey: "user",
-    header: createSortableHeader("User Name"),
-    accessorFn: (row) => row.user?.name,
-    cell: ({ row }) => <UserCell user={row.original?.user} />,
-    meta: { title: "User Name" },
-  },
-  {
-    accessorKey: "body",
-    header: "Metadata",
-    cell: ({ row }) => <MetadataCell body={row.getValue("body")} />,
-    meta: { title: "Metadata" },
-  },
-  {
-    accessorKey: "createdAt",
-    header: createSortableHeader("Timestamp"),
-    cell: ({ row }) => <TimestampCell timestamp={row.getValue("createdAt")} />,
-    meta: { title: "Timestamp" },
-  },
-] as ColumnDef<AuditLogData>[];
+/** The activity log's columns. `user` and `createdAt` are the ids the API sorts by. */
+export function useAuditColumns() {
+  const { t } = useTranslation();
+  return useMemo<ColumnDef<AuditLogData>[]>(
+    () => [
+      {
+        accessorKey: "action",
+        header: t("Action"),
+        cell: ({ row }) => (
+          <ActionCell
+            action={row.original?.action}
+            method={row.original?.method}
+            route={row.original?.route}
+          />
+        ),
+        meta: { title: t("Action") },
+      },
+      {
+        id: "user",
+        header: createSortableHeader(t("User")),
+        accessorFn: (row) => row.user?.name,
+        cell: ({ row }) => <UserCell user={row.original?.user} />,
+        meta: { title: t("User") },
+      },
+      {
+        accessorKey: "body",
+        header: t("Details"),
+        cell: ({ row }) => <MetadataCell body={row.getValue("body")} />,
+        meta: { title: t("Details") },
+      },
+      {
+        accessorKey: "createdAt",
+        header: createSortableHeader(t("Time")),
+        cell: ({ row }) => <TimestampCell timestamp={row.getValue("createdAt")} />,
+        meta: { title: t("Time") },
+      },
+    ],
+    [t],
+  );
+}
