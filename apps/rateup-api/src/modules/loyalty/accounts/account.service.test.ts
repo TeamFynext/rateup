@@ -523,6 +523,20 @@ describe("createCustomerAccount — referrals", () => {
     });
   });
 
+  test("a member who joined on nobody's code opens with the joining bonus alone", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(
+      program({ signupBonus: 100, refereeBonus: 100 }),
+    );
+
+    await createCustomerAccount(signupInput, PROGRAM, ORG);
+
+    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).toMatchObject({
+      currentPoints: 100,
+      lifetimePoints: 100,
+      referredById: null,
+    });
+  });
+
   test("credits the referee's bonus into the opening balance", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ refereeBonus: 25 }));
     db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
