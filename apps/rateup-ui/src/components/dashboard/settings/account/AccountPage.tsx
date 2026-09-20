@@ -9,12 +9,9 @@ import {
   IconHome,
   IconMail,
   IconMapPin,
-  IconMessageCircle,
   IconPencil,
   IconPhone,
-  IconShield,
   IconUpload,
-  IconUserCog,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
@@ -36,9 +33,9 @@ import {
   useUpdateProfilePhotoMutation,
 } from "@/backend/user/user.query";
 import { BusinessHoursSection } from "@/components/account/business-hours/BusinessHoursSection.tsx";
+import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import {
@@ -62,7 +59,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { cropImageToSquare } from "@/utils/file-upload/autoCropSquare.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -70,6 +67,8 @@ export function AccountPage() {
   const { t: translations } = useTranslation();
   const { isLoading: isProfileLoading, data: profileData } = useGetUserProfile();
   const { user } = useUser();
+  const canEditOrg = usePermissions().can("org.settings");
+  const { roleKey: currentRoleKey } = usePermissions();
   const countries = countryList().getData();
 
   const orgFormSchema = z.object({
@@ -339,40 +338,12 @@ export function AccountPage() {
                       : "—"}
                   </p>
 
-                  {/* Outline badge with the role's own icon and colour, as everywhere else. */}
                   <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
-                    {(() => {
-                      const role = profileData?.data?.data?.role;
-                      if (!role) return null;
-
-                      const roleStyles = {
-                        [UserRole.SUPADM]: {
-                          icon: IconShield,
-                          label: translations("Super Admin"),
-                          className: "text-primary",
-                        },
-                        [UserRole.ADM]: {
-                          icon: IconUserCog,
-                          label: translations("Admin"),
-                          className: "text-rateup-orange",
-                        },
-                        [UserRole.MEMBER]: {
-                          icon: IconMessageCircle,
-                          label: translations("Staff"),
-                          className: "text-green-600",
-                        },
-                      }[role as string];
-
-                      if (!roleStyles) return null;
-                      const RoleIcon = roleStyles.icon;
-
-                      return (
-                        <Badge variant="outline" className="gap-1.5 text-xs font-normal sm:text-sm">
-                          <RoleIcon className={`size-3.5 ${roleStyles.className}`} />
-                          {roleStyles.label}
-                        </Badge>
-                      );
-                    })()}
+                    <RoleBadge
+                      roleKey={currentRoleKey}
+                      role={profileData?.data?.data?.role}
+                      className="text-xs font-normal sm:text-sm"
+                    />
                   </div>
                 </div>
 
@@ -418,7 +389,7 @@ export function AccountPage() {
               </p>
             </div>
           </div>
-          {user?.role === UserRole.SUPADM && (
+          {canEditOrg && (
             <Button variant="outline" size="sm" onClick={() => setIsBusinessDialogOpen(true)}>
               <IconPencil className="size-4" />
               {translations("Edit")}
@@ -435,7 +406,7 @@ export function AccountPage() {
                 {user?.orgName?.slice(0, 1)}
               </AvatarFallback>
             </Avatar>
-            {user?.role === UserRole.SUPADM && (
+            {canEditOrg && (
               <button
                 onClick={() => setIsBusinessDialogOpen(true)}
                 className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1 sm:p-1.5 shadow-md transition-all hover:scale-110"
@@ -494,7 +465,7 @@ export function AccountPage() {
         </div>
       </Card>
       {/* Business Information Dialog */}
-      {user?.role === UserRole.SUPADM && (
+      {canEditOrg && (
         <Dialog open={isBusinessDialogOpen} onOpenChange={setIsBusinessDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -882,7 +853,7 @@ export function AccountPage() {
         </DialogContent>
       </Dialog>
       {/* Business Hours Section */}
-      <BusinessHoursSection canManage={user?.role === UserRole.SUPADM} />
+      <BusinessHoursSection canManage={canEditOrg} />
     </div>
   );
 }

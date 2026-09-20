@@ -1,14 +1,9 @@
 import {
   IconCheck,
-  IconCrown,
   IconLoader2,
   IconMail,
   IconPlus,
-  IconMessageCircle,
-  IconShield,
   IconTrash,
-  IconUserCog,
-  IconUser,
   IconUserPlus,
   IconUsers,
   IconMailPlus,
@@ -23,7 +18,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { teamKeys } from "@/backend/org/org.keys";
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { inviteTeamMember } from "@/backend/team/team.api";
 import {
   useAddUsertoTeams,
@@ -33,14 +27,14 @@ import {
   useNotTeamMembers,
   useRemoveUserFromTeam,
   useTeamChannels,
-  useTeamFeatures,
   useTeamMembersFromInvitation,
   useUpdateTeamChannels,
-  useUpdateTeamFeatures,
 } from "@/backend/team/team.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { ColorField } from "@/components/common/color-field.tsx";
+import { RoleBadge } from "@/components/common/RoleBadge.tsx";
+import { RoleSelect } from "@/components/common/RoleSelect.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -56,25 +50,16 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
-import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
+import { resolveRoleKey } from "@/utils/authz/can.ts";
+import { roleKeyToLegacy, type RoleKey } from "@/utils/authz/roles.ts";
 import { HEX_COLOR } from "@/utils/color.ts";
-import { UserRole } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
-import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
 
 import { Card, CardContent } from "../ui/card.tsx";
 
@@ -284,9 +269,8 @@ export function AddMembers({
     isInvitation?: boolean;
   } | null>(null);
   const { t: translations } = useTranslation();
-  const { user } = useUser();
-  // Granting SUPER_ADMIN is the owner's alone; the API refuses it for an ADMIN inviter.
-  const canInviteSuperAdmin = user?.role === UserRole.SUPADM;
+  // Only roles inside the inviter's own may be handed out; the API refuses anything else.
+  const { grantableRoles } = usePermissions();
   const teamID = selectedTeam;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const { isLoading: isLoadingNotTeamsUser, data: notTeamMembersData } = useNotTeamMembers(
@@ -299,23 +283,20 @@ export function AddMembers({
 
   // "Add existing user" moves an existing account into the team; "Invite new user" emails
   // someone without one a link to create it.
-  const inviteForm = useForm<{ name: string; email: string; role: string }>({
-    defaultValues: { name: "", email: "", role: UserRole.MEMBER },
+  const inviteForm = useForm<{ name: string; email: string; role: RoleKey | "" }>({
+    defaultValues: { name: "", email: "", role: "STAFF" },
   });
 
   const inviteNewUser = useMutation({
-    mutationFn: async (values: { name: string; email: string; role: string }) => {
-      const [{ orgId }, { userId }] = await Promise.all([getOrgIdRole(), getUserID()]);
-
+    mutationFn: async (values: { name: string; email: string; role: RoleKey | "" }) => {
+      // The org and the inviter come from the session on the server.
       return (
         await inviteTeamMember({
           name: values.name.trim(),
           email: values.email.trim(),
-          orgId,
-          invitedBy: userId,
           teamId: selectedTeam,
           type: "TEAM",
-          role: values.role,
+          role: roleKeyToLegacy(values.role || "STAFF"),
         })
       ).data;
     },
@@ -331,29 +312,6 @@ export function AddMembers({
       toast.error(error?.message || translations("An error occurred"));
     },
   });
-
-  const getRoleStyles = (role: string) => {
-    switch (role) {
-      case UserRole.SUPADM:
-        return {
-          icon: IconCrown,
-          className: "bg-secondary text-secondary-foreground border-border",
-        };
-
-      case UserRole.ADM:
-        return {
-          icon: IconShield,
-          className: "bg-accent text-accent-foreground border-border",
-        };
-
-      case UserRole.MEMBER:
-      default:
-        return {
-          icon: IconUser,
-          className: "bg-muted text-foreground border-border",
-        };
-    }
-  };
 
   const removeTeam = (userid: string) => {
     removeteam.mutate(
@@ -382,6 +340,7 @@ export function AddMembers({
     email?: string;
     phone?: string;
     role?: string;
+    roleKey?: string;
     profilePhoto?: string;
     createdAt?: string;
     isInvitation?: boolean;
@@ -493,8 +452,6 @@ export function AddMembers({
         <div className="flex flex-col divide-y divide-border">
           {teamMembersObjArr.map((member) => {
             const isInvitation = Boolean(member?.isInvitation);
-            const roleData = member?.role ? getRoleStyles(member.role) : null;
-            const RoleIcon = roleData?.icon;
             const joinedAt = member?.createdAt ? dayjs(member.createdAt).format("MMM D, YYYY") : "";
 
             return (
@@ -548,19 +505,7 @@ export function AddMembers({
                       );
                     }
 
-                    if (roleData && RoleIcon) {
-                      return (
-                        <Badge
-                          variant="outline"
-                          className={`capitalize inline-flex items-center gap-1 text-xs font-normal ${roleData.className}`}
-                        >
-                          <RoleIcon className="size-3" />
-                          {member.role}
-                        </Badge>
-                      );
-                    }
-
-                    return null;
+                    return <RoleBadge roleKey={member?.roleKey} role={member?.role} size="sm" />;
                   })()}
                 </div>
 
@@ -572,36 +517,38 @@ export function AddMembers({
                 </div>
 
                 <div className="flex sm:w-20 sm:justify-end">
-                  {canManage && member?.role !== UserRole.SUPADM && (
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={
-                              isInvitation
-                                ? translations("Delete invite")
-                                : translations("Remove Member")
-                            }
-                            className="text-muted-foreground hover:text-destructive"
-                            onClick={() => setMemberToDelete(member as { id: string })}
-                          />
-                        }
-                      >
-                        {isInvitation ? (
-                          <IconTrash className="size-4" />
-                        ) : (
-                          <IconUserX className="size-4" />
-                        )}
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {isInvitation
-                          ? translations("Delete invite")
-                          : translations("Remove Member")}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                  {canManage &&
+                    resolveRoleKey({ roleKey: member?.roleKey, role: member?.role }) !==
+                      "OWNER" && (
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={
+                                isInvitation
+                                  ? translations("Delete invite")
+                                  : translations("Remove Member")
+                              }
+                              className="text-muted-foreground hover:text-destructive"
+                              onClick={() => setMemberToDelete(member as { id: string })}
+                            />
+                          }
+                        >
+                          {isInvitation ? (
+                            <IconTrash className="size-4" />
+                          ) : (
+                            <IconUserX className="size-4" />
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isInvitation
+                            ? translations("Delete invite")
+                            : translations("Remove Member")}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                 </div>
               </div>
             );
@@ -726,44 +673,14 @@ export function AddMembers({
                   />
 
                   <Field>
-                    <FieldLabel htmlFor="invite-role">{translations("User Role")}</FieldLabel>
-                    <Select
+                    <FieldLabel htmlFor="invite-role">{translations("Role")}</FieldLabel>
+                    <RoleSelect
+                      id="invite-role"
+                      className="w-full"
                       value={inviteForm.watch("role")}
-                      onValueChange={(value) => inviteForm.setValue("role", value ?? "")}
-                      items={[
-                        ...(canInviteSuperAdmin
-                          ? [{ value: UserRole.SUPADM, label: translations("Super Admin") }]
-                          : []),
-                        { value: UserRole.ADM, label: translations("Admin") },
-                        { value: UserRole.MEMBER, label: translations("Staff") },
-                      ]}
-                    >
-                      <SelectTrigger id="invite-role" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {canInviteSuperAdmin && (
-                          <SelectItem value={UserRole.SUPADM}>
-                            <div className="flex items-center gap-2">
-                              <IconShield className="w-3.5 h-3.5 text-primary" />
-                              <span>{translations("Super Admin")}</span>
-                            </div>
-                          </SelectItem>
-                        )}
-                        <SelectItem value={UserRole.ADM}>
-                          <div className="flex items-center gap-2">
-                            <IconUserCog className="w-3.5 h-3.5 text-rateup-orange" />
-                            <span>{translations("Admin")}</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value={UserRole.MEMBER}>
-                          <div className="flex items-center gap-2">
-                            <IconMessageCircle className="w-3.5 h-3.5 text-green-600" />
-                            <span>{translations("Staff")}</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                      grantable={grantableRoles}
+                      onChange={(role) => inviteForm.setValue("role", role)}
+                    />
                   </Field>
 
                   <p className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -935,71 +852,6 @@ export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   );
 }
 
-const FEATURES_WITH_SUBSCRIPTION: {
-  feature: TeamFeature;
-  label: string;
-  requiredSubscriptions?: sfpn[];
-}[] = [
-  {
-    feature: TeamFeature.Inbox,
-    label: "Inbox",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  { feature: TeamFeature.Analytics, label: "Analytics" },
-  {
-    feature: TeamFeature.Contacts,
-    label: "Contacts",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Campaigns,
-    label: "Campaigns",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Flows,
-    label: "Flows",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Chatbots,
-    label: "Chatbots",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Templates,
-    label: "Templates",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Automation,
-    label: "Automation",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Loyalty,
-    label: "Loyalty",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.WebForms,
-    label: "Web Forms / Surveys",
-    requiredSubscriptions: [sfpn.WebSurvey],
-  },
-  {
-    feature: TeamFeature.Pipeline,
-    label: "Pipeline",
-  },
-  { feature: TeamFeature.QrStudio, label: "QR Studio" },
-  {
-    feature: TeamFeature.AiChatbot,
-    label: "Chatbot (AI)",
-    requiredSubscriptions: [sfpn.AI],
-  },
-  { feature: TeamFeature.AppsServices, label: "Apps & Services" },
-  { feature: TeamFeature.Settings, label: "Settings" },
-];
-
 /** How long after the last switch flip the section saves itself. */
 const AUTOSAVE_DELAY_MS = 700;
 /** How long "Saved" stays up before the section goes quiet again. */
@@ -1059,96 +911,6 @@ function AutosaveStatusLabel({ status }: Readonly<{ status: AutosaveStatus }>) {
         </>
       )}
     </span>
-  );
-}
-
-export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
-  const { t: translations } = useTranslation();
-  const teamId = selectedTeam?.id as string;
-
-  const { data, isLoading } = useTeamFeatures(teamId);
-  const updateMutation = useUpdateTeamFeatures(teamId);
-  const { data: subscription } = useSubscription();
-
-  const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(
-    ({ requiredSubscriptions }) =>
-      !requiredSubscriptions || requiredSubscriptions.every((sfp) => hasFeature(subscription, sfp)),
-  );
-
-  const serverChecked = useMemo(
-    () => new Set((data?.features || []).map((f) => f.feature)),
-    [data],
-  );
-  // `null` means "untouched" — the server's set is what the switches show until then.
-  const [draft, setDraft] = useState<Set<string> | null>(null);
-  const checked = draft ?? serverChecked;
-
-  const status = useAutosave(draft, (value, done) => {
-    updateMutation.mutate(Array.from(value), {
-      onSuccess: () => {
-        // Only drop the draft while it is still the one that was sent; a switch flipped
-        // mid-request has replaced it and is queued to save in its turn.
-        setDraft((current) => (current === value ? null : current));
-        done(true);
-      },
-      onError: () => {
-        // The mutation has toasted why; fall back to what the server actually holds.
-        setDraft(null);
-        done(false);
-      },
-    });
-  });
-
-  const handleToggle = (feature: string) => {
-    const next = new Set(checked);
-    if (next.has(feature)) next.delete(feature);
-    else next.add(feature);
-    setDraft(next);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={`feat-skel-${i}`} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4 pt-2">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl mb-1">{translations("Feature Access")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {translations(
-              "Select which features this team can access. Changes save on their own. Org owners always have full access.",
-            )}
-          </p>
-        </div>
-        <AutosaveStatusLabel status={status} />
-      </div>
-
-      <Card>
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {availableFeatures.map(({ feature, label }) => (
-              <div
-                key={feature}
-                className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-              >
-                <span>{label}</span>
-                <Switch
-                  checked={checked.has(feature)}
-                  onCheckedChange={() => handleToggle(feature)}
-                />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
   );
 }
 

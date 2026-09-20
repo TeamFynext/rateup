@@ -34,6 +34,7 @@ import {
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
 import type { ChatFilter } from "@/store/chat-filter.store.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
@@ -47,7 +48,6 @@ import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage } from "@/types/global";
 import { INBOX_BULK_CHUNK_SIZE, INBOX_BULK_SELECTION_LIMIT } from "@/utils/constants.ts";
-import { UserRole } from "@/utils/enums/index.ts";
 
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
@@ -129,8 +129,8 @@ const WaInboxChatSelect = () => {
     total: number;
   } | null>(null);
   const confirm = useConfirm();
-  // Deleting is admin-only, matching the endpoint's own gate and the per-row action.
-  const canBulkDelete = user?.role === UserRole.SUPADM || user?.role === UserRole.ADM;
+  // Matches the endpoint's own gate and the per-row action.
+  const canBulkDelete = usePermissions().can("inbox.delete");
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 

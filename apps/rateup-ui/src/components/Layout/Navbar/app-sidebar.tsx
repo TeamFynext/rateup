@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/sidebar.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
 import { useChatFilterStore } from "@/store/chat-filter.store.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
@@ -641,9 +642,10 @@ export default function AppSidebar({
   const { user } = useUser();
   const { chatFilterStore, handleFilter } = useChatFilter();
 
-  // Feature-gating: consumed from TeamFeaturesProvider (shared with RouteAccessGuard).
-  // null = bypass (SUPER_ADMIN), Set = restrict (MEMBER).
+  // Module gating: consumed from TeamFeaturesProvider (shared with RouteAccessGuard).
+  // null = every module (org-wide roles), Set = the modules the role's permissions open.
   const { allowedFeatures } = useTeamFeatures();
+  const { can } = usePermissions();
 
   const isSubscriptionExpired = Boolean(
     subscription?.expiresAt && checkExpiry(subscription.expiresAt),
@@ -677,6 +679,7 @@ export default function AppSidebar({
     hiddenModules,
     handleFilter,
     allowedFeatures,
+    can,
     user,
     sectionCounts: useChatContactCountStore().sectionCounts,
     pipelineNav,

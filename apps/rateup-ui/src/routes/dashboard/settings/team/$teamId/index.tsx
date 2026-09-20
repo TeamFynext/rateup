@@ -11,12 +11,10 @@ import {
   DeleteTeam,
   EditTeam,
   TeamChannelAccess,
-  TeamFeatureAccess,
 } from "@/components/settings/team.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 
 export const Route = createFileRoute("/dashboard/settings/team/$teamId/")({
   component: TeamManagement,
@@ -33,13 +31,11 @@ function TeamManagement() {
   // `/team/:id` returns the team row with no members relation, so the count comes from the
   // query the Members tab already caches.
   const { data: teamMembersData } = useTeamMembersFromInvitation(teamId ?? "");
-  const { user } = useUser();
-  // Mirrors TEAM_MANAGER_ROLES in rateup-api's team routes: the owner and org admins manage
-  // a team; a plain member only reads the roster.
-  const canManage = user?.role === UserRole.SUPADM || user?.role === UserRole.ADM;
-  // Feature access and deleting a team stay with the owner — both decide what a whole team
-  // can reach, and the routes behind them are SUPER_ADMIN-only.
-  const isSuperAdmin = user?.role === UserRole.SUPADM;
+  const { can } = usePermissions();
+  // Mirrors the API's route declarations: adding and removing people is `teams.manage_members`;
+  // channel scope and deleting the team are `teams.manage`.
+  const canManage = can("teams.manage_members");
+  const canAdminister = can("teams.manage");
   if (isPending) {
     return <TeamSkeleton />;
   }
@@ -108,25 +104,20 @@ function TeamManagement() {
       <div className="mx-auto w-full max-w-265 pt-4 pb-6 space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           {/* A member can look at who is in the team; changing it needs manage rights, and
-              feature access is narrower still. */}
+              channel scope is narrower still. */}
           <TabsList>
             <TabsTrigger value="members">{t("Members")}</TabsTrigger>
-            {isSuperAdmin && (
-              <TabsTrigger value="feature-access">{t("Feature Access")}</TabsTrigger>
-            )}
-            {canManage && <TabsTrigger value="settings">{t("Settings")}</TabsTrigger>}
+            {canAdminister && <TabsTrigger value="channels">{t("Channels")}</TabsTrigger>}
+            {canManage && <TabsTrigger value="settings">{t("Details")}</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="members">
             <AddMembers selectedTeam={teamId ?? ""} canManage={canManage} />
           </TabsContent>
 
-          {isSuperAdmin && (
-            <TabsContent value="feature-access">
-              <div className="space-y-6">
-                <TeamFeatureAccess selectedTeam={teamsData} />
-                <TeamChannelAccess selectedTeam={teamsData} />
-              </div>
+          {canAdminister && (
+            <TabsContent value="channels">
+              <TeamChannelAccess selectedTeam={teamsData} />
             </TabsContent>
           )}
 
@@ -134,7 +125,7 @@ function TeamManagement() {
             <TabsContent value="settings">
               <div className="space-y-6">
                 <EditTeam selectedTeam={teamsData} />
-                {isSuperAdmin && <DeleteTeam selectedTeam={teamsData} />}
+                {canAdminister && <DeleteTeam selectedTeam={teamsData} />}
               </div>
             </TabsContent>
           )}

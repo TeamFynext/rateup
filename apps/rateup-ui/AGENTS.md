@@ -147,6 +147,19 @@ reintroduce them.)
   chips → `Badge`, actions → `Button`. Extend components with `cva` variants, never with `className`
   color/typography overrides.
 
+## Permissions and roles
+
+What a signed-in user may do is a permission list from `GET /user/info`, not a role name.
+
+- Ask with `usePermissions()` / `useCan("inbox.delete")` (`src/hooks/usePermission.ts`) or wrap markup in
+  `<Can permission="…">` (`src/components/common/Can.tsx`). Never compare `user.role` to a string.
+- The catalogue and the six system roles are mirrored in `src/utils/authz/` from
+  `rateup-api/src/authz/`; when the API changes them, change the mirror in the same PR.
+  `resolvePermissions` falls back to the role's bundle when an older API answers without a list.
+- Role pickers use `RoleSelect` with `usePermissions().grantableRoles`; roles render with `RoleBadge`.
+- Which sidebar sections and routes a user reaches is derived from permissions in
+  `src/utils/authz/features.ts` and consumed through `TeamFeaturesContext` / `RouteAccessGuard`.
+
 ## Internationalization
 
 - Uses `react-i18next` with locale files in `src/locales/`

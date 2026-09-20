@@ -27,12 +27,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { docsPath } from "@/utils/constants.ts";
-import { UserRole } from "@/utils/enums/index.ts";
 
 export function TemplatesPage() {
-  const { user } = useUser();
+  const canManageSurveys = usePermissions().can("surveys.manage");
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
   const [selectedTemplate, setSelectedTemplate] = useState<Survey | null>(null);
   const navigate = useNavigate();
@@ -88,7 +87,7 @@ export function TemplatesPage() {
       <ListPage>
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
-            {user?.role !== UserRole.MEMBER && (
+            {canManageSurveys && (
               <Button
                 onClick={() => {
                   navigate({

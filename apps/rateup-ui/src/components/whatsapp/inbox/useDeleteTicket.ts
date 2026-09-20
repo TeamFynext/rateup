@@ -1,7 +1,6 @@
 import { useDeleteConversation } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useConfirm } from "@/context/confirm-provider.tsx";
-import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 
 /** The bits of an inbox row this action needs — any ticket row satisfies it. */
 export interface DeletableTicket {
@@ -23,12 +22,12 @@ export interface DeletableTicket {
  * to address.
  */
 export function useDeleteTicket(contact: DeletableTicket | null | undefined) {
-  const { user } = useUser();
+  const { can } = usePermissions();
   const confirm = useConfirm();
   const mutation = useDeleteConversation();
 
   const conversationId = contact?.conversationId ?? null;
-  const isAdmin = user?.role === UserRole.SUPADM || user?.role === UserRole.ADM;
+  const isAdmin = can("inbox.delete");
   const canDelete = Boolean(contact && conversationId && isAdmin);
 
   async function deleteTicket() {

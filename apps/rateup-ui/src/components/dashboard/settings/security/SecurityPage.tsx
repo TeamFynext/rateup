@@ -41,7 +41,7 @@ import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field
 import { Input } from "@/components/ui/input.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 
 export function SecurityPage() {
   const uid = useId();
@@ -71,6 +71,7 @@ export function SecurityPage() {
     : userConfirmText === "DELETE ACCOUNT";
   const queryClient = useQueryClient();
   const { user } = useUser();
+  const canDeleteOrg = usePermissions().can("org.delete");
   const navigate = useNavigate();
 
   const passwordRegex =
@@ -385,7 +386,7 @@ export function SecurityPage() {
               </Button>
             </div>
 
-            {user?.role === UserRole.SUPADM && (
+            {canDeleteOrg && (
               <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <FieldTitle>{translations("Delete Organization")}</FieldTitle>
@@ -411,7 +412,7 @@ export function SecurityPage() {
         </Card>
       </div>
       {/* Delete Confirmation Dialog */}
-      {user?.role === UserRole.SUPADM && (
+      {canDeleteOrg && (
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -497,7 +498,8 @@ export function SecurityPage() {
                   toast.loading(translations("Hold on, your organization is getting deleted..."), {
                     id: "delete-data",
                   });
-                  await orgDeleteMutation.mutateAsync({ id: user?.orgId });
+                  if (!user?.orgId) return;
+                  await orgDeleteMutation.mutateAsync({ id: user.orgId });
                 }}
                 disabled={!isConfirmValid || isDeleting}
                 className="w-full sm:w-auto"

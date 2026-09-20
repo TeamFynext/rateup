@@ -54,9 +54,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
-import { UserRole } from "@/utils/enums/index.ts";
 
 import { STAGE_COLOR_CHOICES, STAGE_STATUSES, STATUS_BAND } from "../pipeline.constants.tsx";
 import { stageStatusLabel } from "../pipeline.labels.ts";
@@ -556,7 +555,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   const deleteLostReason = useDeleteLostReasonMutation();
   const [newReason, setNewReason] = useState("");
   const [addingReason, setAddingReason] = useState(false);
-  const { user } = useUser();
+  const { can } = usePermissions();
   const reorderStages = useReorderStagesMutation();
 
   const stages = pipeline?.stages;
@@ -630,7 +629,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   // Who works a board and whether it is deleted are org-level calls, not board
   // tuning: a member can retune their own funnel without being able to hand the
   // board to another team or destroy it and every lead on it.
-  const isOrgAdmin = user?.role === UserRole.SUPADM;
+  const isOrgAdmin = can("pipelines.admin");
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">

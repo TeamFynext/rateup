@@ -36,7 +36,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 
 import { formatMoney } from "../giveback/format.ts";
 import { pickJoinKeyword, pickWhatsappNumber } from "../joinLink.ts";
@@ -57,7 +57,7 @@ export function LoyaltySettingsPage() {
   const confirm = useConfirm();
   const uid = useId();
   const { user } = useUser();
-  const isSuperAdmin = user?.role === UserRole.SUPADM;
+  const isSuperAdmin = usePermissions().can("loyalty.manage");
 
   const { data: program, isLoading } = useLoyaltyProgram();
   const { data: dashboard } = useLoyaltyDashboardData();
