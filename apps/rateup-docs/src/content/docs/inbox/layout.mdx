@@ -48,31 +48,49 @@ Each row is a **ticket**, not a customer. A customer with three tickets appears 
 
 <ScreenShot src="/docs/screenshots/inbox/ticket-row-annotated.png" alt="Anatomy of a ticket row" />
 
+{/* TODO: re-capture — rows now carry a channel chip, outlined # conversation-tag chips, a stage chip and the Unassigned / New badge beside the name */}
+
 ### What a row tells you
 
 | Element | Meaning |
 |---------|---------|
-| **Avatar + channel badge** | The customer and where they wrote from |
+| **Avatar + platform badge** | The customer, and whether they wrote on WhatsApp, Instagram, Messenger or Webchat. A green dot on the avatar means their 24-hour window is open |
 | **Star** | The ticket is a favourite. Hover any row to star it |
-| **`#1042` + title** | The ticket's number and subject |
-| **Message preview** | The most recent message on this ticket |
-| **Status pill** | **New**, **Assigned** or **Closed** |
-| **@ Mention chip** | A colleague mentioned you on this ticket |
-| **Coloured chips** | Contact labels and lifecycle stage |
+| **Bold name + Unassigned / New badge** | A message arrived in the last 24 hours. A filled amber **Unassigned** badge means nobody owns it yet; an outlined **New** badge means it is assigned |
+| **Relative time** | How long ago the last message arrived |
+| **`#1042` + title** | The ticket's number and subject. Hover the title to read its description |
+| **Message preview** | The most recent message on this ticket — bold while unread |
+| **Status pill** | **New**, **Assigned** or **Closed**. Hover a **Closed** pill for who closed it, when and how |
+| **Channel chip** | Which of *your* numbers or accounts the ticket came in on. Hover for *"Received on …"*. A **dashed** outline means that number is no longer connected |
+| **@ Mention chip** | A colleague mentioned you on this ticket — with a count if more than once |
+| **Filled coloured chips** | Contact labels |
+| **Outlined `#` chips** | Conversation tags |
+| **Grey chip with a dot** | The customer's pipeline stage, or their lifecycle stage if they are not on the board |
 | **Green badge** | Number of unread messages |
-| **Avatar on the right** | Who the ticket is assigned to (`+2` if several) |
-| **Amber left edge** | Nobody owns this ticket yet |
-| **Person + button** | Assign the ticket to yourself in one click |
+| **Avatar on the right** | Who the ticket is assigned to (`+2` if several) — hover for the list |
+| **Cream background + amber left edge** | Unowned and recent — nobody has picked it up |
+| **Person + button** | **Assign to me** in one click — shown on every unassigned row |
 | **Red Spam pill** | The contact is flagged as spam — only shown in **Spam** |
 
 A deleted message reads *"This message was deleted"* in the preview, in place of its text.
 
+<Callout type="info">
+  The channel chip is always shown when a ticket has one. Webchat and internal-only threads have no
+  number to name, so they have no chip. If you run several WhatsApp numbers, this chip is the
+  quickest way to see which one the customer wrote to.
+</Callout>
+
+The **compact list** hides the preview and the whole chip row, keeping the name, time, `#number` +
+title and the right-hand avatars. [Switch views →](/inbox/toolbar#switch-to-a-compact-list)
+
 ### Above the list
 
-- The **view name** and the toolbar: search, select, export, refresh, **New**
+- The **view name** and the toolbar: compact list, search, select, export, refresh, **New Contact**
 - A second row with the **count** for the view and the **sort** control
+- In selection mode, a **selection bar** with select-all and the bulk **assign**, **close** and
+  **delete** buttons
 
-[Toolbar in detail →](/inbox/toolbar)
+[Toolbar and bulk actions in detail →](/inbox/toolbar)
 
 ---
 
@@ -87,15 +105,19 @@ history.
 
 | Control | What it does |
 |---------|--------------|
-| **Customer name and sub-line** | Name, channel, account and phone number |
+| **Customer name and sub-line** | Name, then the platform and the customer's phone number — *"WhatsApp · +44 7700 900123"* |
+| **DND badge** | The contact has not consented to template messages |
 | **★ Star** | Add or remove this ticket from **Favourites** |
 | **@** | Clear your mention on this ticket (only shown when you have one) |
 | **Countdown** | Time left in WhatsApp's 24-hour reply window |
 | **Status pill** | New, Assigned or Closed |
 | **Close / Reopen** | End the ticket, or start a successor once it is closed |
 | **Not spam** | Replaces Close / Reopen when the contact is flagged as spam |
-| **⋮** | Contact actions on a closed or spam ticket — where the **Close** menu would otherwise host them |
+| **⋮** | Contact actions — and, for admins, **Delete conversation** — on a closed or spam ticket, where the **Close** menu would otherwise host them |
 | **Panel icon** | Show or hide the Ticket Details panel |
+
+On narrower screens the countdown and status pill are dropped from the header to leave room for the
+name. Both are still on the list row and in Ticket Details.
 
 ### Ticket strip
 
@@ -110,11 +132,16 @@ and result, and click any of them to jump straight there.
 
 ### Message thread
 
-- Customer messages on the left, your replies on the right
-- **Internal notes** appear centred, with a padlock and the author's name
+- Customer messages on the left, your replies on the right with the sender's name
+- Messages sent by a chatbot or automation are labelled **Automation**, and campaign sends
+  **Campaign**, in a lighter bubble
+- **Internal notes** appear centred in amber, with a padlock and the author's name
 - **System notes** record assignments, closures, reopenings and spam flags
 - Delivery ticks show **Sent → Delivered → Read**
+- Each message has a **Copy** button, and customer messages can be reacted to with an emoji
 - A message deleted on WhatsApp keeps its place, shown as *"This message was deleted"*
+
+[Working with messages →](/inbox/responding-to-conversation#working-with-messages-in-the-thread)
 
 ### Composer
 
@@ -140,14 +167,24 @@ It contains, top to bottom:
 
 - **Ticket #number** and a **copy link** button
 - **Assignment** — the owner and team, with **Change**
-- **Lifecycle Stage** — the customer's stage
-- **Labels** — add or remove contact labels
-- **Contact** — name, phone, channel, customer since, consent
-- **Ticket Info** — channel, account, created date, close result
 - **Title & Description** — editable with the pencil icon
+- **Lead stage** — where the customer sits on your pipeline board
+- **Conversation Tags** — tags on this ticket
+- **Contact Labels** — labels on the customer
+- **Contact** — name (editable), phone, customer since, consent
+- **Ticket Info** — channel, account, created date, close result
 - **Mark contact as spam** — or **Not spam**, if they are already flagged
+- **Delete conversation** — admins only
 
 [Ticket Details in full →](/inbox/ticket-details)
+
+---
+
+## Resize the List
+
+On a wide screen, drag the divider between the conversation list and the chat window to make the
+list wider or narrower. The list can take between roughly a fifth and two-fifths of the space.
+A wider list shows longer titles and more chips; a narrower one gives the conversation more room.
 
 ---
 

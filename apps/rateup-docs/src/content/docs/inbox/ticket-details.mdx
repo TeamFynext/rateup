@@ -1,6 +1,6 @@
 ---
 title: "Ticket Details Panel"
-description: The right-hand panel — assignment, lifecycle, labels, contact information, ticket info, and the ticket title and description.
+description: The right-hand panel — assignment, title and description, lead stage, conversation tags, contact labels, contact and ticket info, spam and delete.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -9,10 +9,26 @@ import ScreenShot from "@/components/Screenshot";
 The **Ticket Details** panel is everything about a ticket and its customer that does not belong in
 the message thread.
 
-Open it with the **panel icon** at the far right of the chat header; close it with the chevron in
-the panel's own header.
+Open it with the **panel icon** at the far right of the chat header (**Toggle details panel**); close
+it with the chevron in the panel's own header. On a wide screen it sits beside the conversation. On
+a narrower one it opens over it.
 
 <ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel" />
+
+{/* TODO: re-capture — the panel now runs Assignment, Title & Description, Lead stage, Conversation Tags, Contact Labels, Contact, Ticket Info, then the spam and delete buttons */}
+
+From top to bottom:
+
+| Section | Belongs to |
+|---------|-----------|
+| [Assignment](#assignment) | The ticket |
+| [Title & Description](#title--description) | The ticket |
+| [Lead stage](#lead-stage) | The contact |
+| [Conversation Tags](#conversation-tags) | The ticket |
+| [Contact Labels](#contact-labels) | The contact |
+| [Contact](#contact) | The contact |
+| [Ticket Info](#ticket-info) | The ticket |
+| [Mark contact as spam / Delete conversation](#spam-and-delete) | The contact / the ticket |
 
 ---
 
@@ -21,24 +37,25 @@ the panel's own header.
 | Control | What it does |
 |---------|--------------|
 | **Ticket #number** | The ticket's identity |
-| **Copy link** | Copies a direct link to this ticket — paste it to a colleague and they land here |
-| **Chevron** | Collapses the panel to give the conversation more room |
+| **Copy link to ticket** (🔗) | Copies a link to this ticket to your clipboard; the icon briefly reads **Copied** |
+| **Collapse Panel** (›) | Hides the panel to give the conversation more room |
 
 ---
 
 ## Assignment
 
-Shows the current owner and their team, or **Unassigned**.
+Shows the first assignee and their team, with `+N` if there are more, or **Unassigned**.
 
 <Steps>
 <Step>
 Click **Change**.
 </Step>
 <Step>
-Pick a team or an individual — availability is shown next to each person.
+Open the **Assign** picker, expand a team, and tick people — or use **Assign entire team**.
+Online / offline status is shown next to each person.
 </Step>
 <Step>
-Click **Done** to collapse the picker.
+Click **Done** to collapse the section.
 </Step>
 </Steps>
 
@@ -46,62 +63,113 @@ Click **Done** to collapse the picker.
 
 ---
 
-## Pipeline Stage
+## Title & Description
 
-Every column of your [pipeline](/pipeline) board, as chips. Click one to put this customer on it —
-which opens a lead there if they had none. The current column is highlighted, and clicking it again
-takes them off the board. With nothing set the section reads *"Not on the board. Pick a stage to add
-them."*
-
-This belongs to the **contact**, so it applies to all of their tickets.
-
-<Callout type="warn">
-  Clicking the highlighted chip **deletes the lead** — its notes, next activities, timeline and
-  assignees go with it, and the confirmation counts each of them first. To record a deal that did
-  not happen, mark it [lost](/pipeline/leads#closing-a-lead) instead.
-</Callout>
-
-The section is absent for organisations without the **Pipeline** feature, and on a board with no
-columns. Columns are configured in [Pipeline → Stages](/pipeline/stages).
-
----
-
-## Labels
-
-Labels are colour-coded tags on the **contact** — VIP, refund pending, wholesale, and so on.
+The ticket's own words, directly under Assignment because they are what an agent reads first. A
+ticket with no title shows **Untitled ticket**.
 
 <Steps>
 <Step>
-Click **+** in the **Labels** section.
+Click the **pencil** (**Edit title and description**).
 </Step>
 <Step>
-Tick the labels to apply, untick to remove.
+Write a short, specific **Ticket title**. It is what your team reads in the conversation list.
+</Step>
+<Step>
+Add a **Description** for context the messages do not make obvious.
+</Step>
+<Step>
+Click **Save**, or **Cancel** to discard.
 </Step>
 </Steps>
 
-Labels show on every conversation row for that customer and can be used as a filter in the
-toolbar.
+| Good title | Weak title |
+|-----------|------------|
+| Refund not received for order 8821 | Question |
+| Wrong size delivered — needs exchange | Customer issue |
+| Bulk pricing request, 200 units | Follow up |
+
+Hover a title in the conversation list to read its description without opening the ticket.
+
+---
+
+## Lead Stage
+
+One row showing where this customer sits on your [pipeline](/pipeline) board. It shows the current
+column in that column's colour, or **Not on the board**.
+
+<Steps>
+<Step>
+Click the stage row to open the picker. It lists every column on the board, each marked as open,
+won or lost.
+</Step>
+<Step>
+Click a column. The customer moves there — a lead is opened for them if they had none.
+</Step>
+</Steps>
+
+To take the customer off the board, open the picker and choose **Remove from the board** at the
+bottom, then confirm with **Remove**.
+
+<Callout type="warn">
+  **Remove from the board** deletes the lead. Its notes, tasks, timeline and assignees go with it,
+  and the confirmation counts each of them first. To record a deal that did not happen, mark it
+  [lost](/pipeline/leads#closing-a-lead) instead.
+</Callout>
+
+This belongs to the **contact**, so it applies to all of their tickets and shows as a chip on each
+of their rows. The section is absent for organisations without the **Pipeline** feature, and on a
+board with no columns. Columns are configured in [Pipeline → Stages](/pipeline/stages).
+
+---
+
+## Conversation Tags
+
+Tags on **this ticket only** — *Bug Report*, *Escalated*, *Refund*.
+
+<Steps>
+<Step>
+Click **+ Add**.
+</Step>
+<Step>
+Tick the tags that apply; untick to remove. Or click the **✕** on a tag chip.
+</Step>
+</Steps>
+
+If no tags exist yet, the picker reads *"No conversation tags yet — create them in Inbox
+Settings."* [Tags & labels →](/inbox/conversation-tags)
+
+---
+
+## Contact Labels
+
+Colour-coded labels on the **customer** — VIP, wholesale, churn risk.
+
+<Steps>
+<Step>
+Click **+ Add**.
+</Step>
+<Step>
+Tick the labels to apply; untick to remove. Or click the **✕** on a label chip.
+</Step>
+</Steps>
+
+Labels show on every conversation row for that customer, and filter the Inbox from the sidebar's
+**Contact Labels** section.
 
 ---
 
 ## Contact
 
-The customer's own details:
+| Field | Notes |
+|-------|-------|
+| **Name** | Click the **pencil** (**Edit name**), type, then **Save** |
+| **Phone** | The customer's number |
+| **Customer since** | Month and year the contact was created |
+| **Consent** | **Given** or **Not given** |
 
-- Name and avatar
-- Phone number
-- Channel
-- Customer since
-- Consent status
-
-<ScreenShot
-  src={`/docs/screenshots/inbox/edit-contact.png`}
-  alt="Editing contact details"
-  width={420}
-/>
-
-Editing here updates the contact everywhere in RateUp — campaigns, contact lists and every one of
-their tickets.
+Renaming here updates the contact everywhere in RateUp — campaigns, contact lists and every one of
+their tickets. For other fields, open the contact under [Contacts](/contacts/managing-contacts).
 
 <Callout type="warn">
   **Consent** controls whether this customer may receive template messages. A contact without
@@ -117,47 +185,27 @@ Read-only facts about this ticket:
 | Field | Meaning |
 |-------|---------|
 | **Channel** | WhatsApp, Instagram, Messenger or Webchat |
-| **Account** | Which of your numbers or accounts the customer wrote to |
+| **Account** | Which of your numbers or accounts the ticket came in on — marked *(no longer connected)* if you have since disconnected it |
 | **Created** | When the ticket was opened |
 | **Result** | The outcome it was closed with, if any |
 
----
-
-## Title & Description
-
-The only fields that belong to **this ticket alone**.
-
-<Steps>
-<Step>
-Click the **pencil** icon next to **Title & Description**.
-</Step>
-<Step>
-Write a short, specific title. It is what your team reads in the conversation list.
-</Step>
-<Step>
-Add a description for context the messages do not make obvious.
-</Step>
-<Step>
-Click **Save**, or **Cancel** to discard.
-</Step>
-</Steps>
-
-| Good title | Weak title |
-|-----------|------------|
-| Refund not received for order 8821 | Question |
-| Wrong size delivered — needs exchange | Customer issue |
-| Bulk pricing request, 200 units | Follow up |
+**Account** is read from the ticket's own messages, so it stays correct even if the customer has
+since written to a different number of yours.
 
 ---
 
-## Mark Contact as Spam
+## Spam and Delete
 
-At the bottom of the panel — the same action as **Close → Mark contact as spam**. It flags the
-**contact**, closes their open tickets and moves them into the **Spam** tab.
+Two buttons at the foot of the panel.
 
-If the contact is already flagged, the button reads **Not spam** and takes them back out again.
-
+**Mark contact as spam** — the same action as **Close → Mark contact as spam**. It flags the
+**contact**, closes their open tickets and moves them into the **Spam** tab. If the contact is
+already flagged, the button reads **Not spam** and takes them back out.
 [More about spam →](/inbox/inboxview/spam)
+
+**Delete conversation** — **admins only**. Permanently deletes this ticket and every message in it,
+after a confirmation. The contact and their other tickets are untouched.
+[More about deleting →](/inbox/conversation-lifecycle#deleting-a-conversation)
 
 ---
 
@@ -168,11 +216,11 @@ Knowing which is which saves confusion:
 | Belongs to the **ticket** | Belongs to the **contact** |
 |--------------------------|---------------------------|
 | Title and description | Name, phone, email |
-| Assignment | Lifecycle stage |
-| Status and result | Labels |
-| Created and closed dates | Consent |
-| Favourite star | Custom fields |
-| | Spam and blocked flags |
+| Assignment | Lead stage and lifecycle |
+| Conversation tags | Contact labels |
+| Status and result | Consent |
+| Created and closed dates | Custom fields |
+| Favourite star | Spam and blocked flags |
 
 Change a contact field and it applies to every ticket that customer will ever have. Change a
 ticket field and only this ticket is affected.
@@ -182,6 +230,7 @@ ticket field and only this ticket is affected.
 ## Related Pages
 
 - [Tickets & Conversations](/inbox/tickets)
-- [Pipeline](/pipeline) — the board those stage chips write to
+- [Conversation Tags & Contact Labels](/inbox/conversation-tags)
+- [Pipeline](/pipeline) — the board the lead stage writes to
 - [Assignment & Reassignment](/inbox/asigning-conversation)
-- [Search, Filters & Sorting](/inbox/toolbar)
+- [Closing & Reopening](/inbox/conversation-lifecycle)

@@ -1,19 +1,27 @@
 ---
 title: "New"
-description: The New view holds every ticket without an owner — the queue that needs attention first.
+description: The New view holds recent tickets without an owner — the queue that needs attention first.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-**New** shows every active ticket that is **not yet assigned to anyone**.
+**New** shows every open ticket that is **not yet assigned to anyone** and has had a message in the
+**last 24 hours**.
 
-It is the only view where work has no owner, which makes it the first place any agent or manager
-should look.
+It is the queue of fresh, unowned work, which makes it the first place any agent or manager should
+look.
 
 <Callout type="info">
-  **New means unassigned.** A ticket leaves this view the moment someone is assigned — even if
-  nobody has replied yet. It is about ownership, not about whether the customer got an answer.
+  **New means unassigned *and* recent.** A ticket leaves this view the moment someone is assigned —
+  even if nobody has replied yet. It also drops out once 24 hours pass without a message. It is
+  still open and unowned, but you now find it only in **Open**.
+</Callout>
+
+<Callout type="warn">
+  An empty **New** view does not mean nothing is waiting. Unowned tickets older than a day are only
+  in [**Open**](/inbox/inboxview/open). Look for rows with a **New** status pill there, and sort by
+  **Oldest First** to find them.
 </Callout>
 
 ---
@@ -23,7 +31,7 @@ should look.
 <ScreenShot src="/docs/screenshots/inbox/view-new.png" alt="Unassigned tickets in the New view" />
 
 - Every ticket is **unassigned**
-- Rows carry an **amber left edge**
+- Rows carry a cream background, an **amber left edge** and a filled **Unassigned** badge
 - Each row shows the customer, ticket number and title, last message and time
 - The **person +** button on the right assigns the ticket to you instantly
 

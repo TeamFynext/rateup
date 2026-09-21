@@ -16,14 +16,14 @@ what has to be connected, and what each role is allowed to see.
 
 You need:
 
-- A RateUp account with an **Inbox-enabled role**
+- A RateUp account in a team with the **Inbox** feature — Admins and Super Admins always have it
 - At least one connected channel — a **WhatsApp Business** number or an **Instagram** account
 - Membership of at least one **team**, if your organisation routes tickets by team
 
 <Callout type="warn">
-  If the Inbox is missing from your sidebar, it is almost always one of two things: your role does
-  not include Inbox access, or no channel has been connected yet. Ask a Super Admin to check
-  both.
+  If the Inbox is missing from your sidebar, it is almost always one of two things: none of your
+  teams has the **Inbox** feature, or no channel has been connected yet. Ask a Super Admin to check
+  both under [Teams](/settings/teams) and [Channels](/settings/channels).
 </Callout>
 
 ---
@@ -68,8 +68,8 @@ Two things narrow this further:
 - **Channel access comes from teams.** A user's channels are the union of those granted to the
   teams they belong to. A user in **no** team is not restricted — they see every channel. See
   [Teams](/settings/teams).
-- **Access to Inbox is a separate per-user permission.** Without it the Inbox is hidden entirely,
-  whatever the role says.
+- **The Inbox itself comes from teams too.** A Staff user sees it only if one of their teams has the
+  **Inbox** feature under [Feature Access](/settings/teams#feature-access).
 
 <Callout type="info">
   Whether **Staff** see tickets assigned to other people is an organisation-level setting, not a
@@ -81,16 +81,14 @@ Two things narrow this further:
 
 ## What Your Role Controls
 
-Permissions affect more than visibility. Depending on your role you may or may not be able to:
+Inside a ticket you can see, most actions — replying, assigning, closing, reopening, spam, blocking,
+exporting — are open to everyone. A few are fixed by role:
 
-- Assign or reassign tickets to other people
-- Close and reopen tickets
-- Flag a contact as spam, or block them
-- Export conversation history
-- Edit contact details
-- Change Inbox settings and automation rules
-
-These are configured under [Users](/settings/users) and [Teams](/settings/teams), not in the Inbox itself.
+| Action | Who |
+|--------|-----|
+| **Delete conversation**, singly or in bulk | Admins and Super Admins |
+| Inbox Settings — tags, labels, quick replies, auto-close | Anyone who can open **Inbox → Settings**; see [Inbox Settings](/inbox/inbox-settings) |
+| Channels, teams and who sees what | Configured under [Teams](/settings/teams) and [Channels](/settings/channels), not in the Inbox |
 
 ---
 
@@ -98,10 +96,12 @@ These are configured under [Users](/settings/users) and [Teams](/settings/teams)
 
 | Symptom | Likely cause | What to do |
 |---------|--------------|------------|
-| Inbox is missing from the sidebar | Role does not include Inbox access | Ask a Super Admin to update your role |
+| Inbox is missing from the sidebar | None of your teams has the **Inbox** feature | Ask a Super Admin to turn it on under [Teams](/settings/teams) |
 | Inbox opens but is empty | No channel connected, or no tickets match your permissions | Check the **All** view; ask an admin to confirm the channel is live |
 | You can read but not reply | The ticket is unassigned, or closed | Assign it to yourself, or reopen it |
 | You cannot see a colleague's ticket | It belongs to a team you are not in | Ask an admin to assign it to you or your team |
+| **Delete conversation** is missing | You are Staff | Ask an Admin or Super Admin |
+| **New** is empty but customers are waiting | **New** only holds unassigned tickets from the last 24 hours | Check **Open** for older unassigned tickets |
 
 ---
 

@@ -1,11 +1,11 @@
 ---
 title: "Closing & Reopening Tickets"
-description: The ticket lifecycle end to end — the three close outcomes, what closing changes, and what reopening actually does.
+description: The ticket lifecycle end to end — the three close outcomes, closing in bulk, blocking, reopening, and permanently deleting a conversation.
 ---
 
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 Every ticket ends. This page covers how to end one properly, and what happens afterwards.
 
@@ -30,13 +30,11 @@ Every ticket ends. This page covers how to end one properly, and what happens af
 
 The green **Close** button sits in the top-right of the chat window, next to the panel toggle.
 
-<ImagePlaceholder
-  file="inbox/close-menu.png"
-  shot="The Close dropdown open on an active ticket: the three close statuses, a separator, then the contact actions 'Mark contact as spam' and 'Block contact'."
-  caption="The Close menu."
+<ScreenShot
+  src="/docs/screenshots/inbox/close_status.png"
+  alt="The Close menu"
+  width="60%"
 />
-
-{/* TODO: re-capture — the menu no longer lists "Mark as Spam" among the close statuses */}
 
 <Steps>
 <Step>
@@ -63,9 +61,21 @@ Pick the outcome that describes what actually happened.
   support team that looks perfect and one that can actually find its weak spots — pick honestly.
 </Callout>
 
+An option is greyed out when the ticket already has that status. Hover **Mark as Unresolved** for
+a reminder that closing removes every assignee.
+
 Below the outcomes, separated from them, sit the two **contact** actions — **Mark contact as spam**
 and **Block contact**. They are not ways of finishing a ticket: they apply to the person, and to
 every ticket they have. [Spam in detail →](/inbox/inboxview/spam)
+
+Admins see a third group at the very bottom: **Delete conversation**. See
+[Deleting a Conversation](#deleting-a-conversation).
+
+### Closing many tickets at once
+
+To close a whole batch — a backlog after a campaign, say — use selection mode in the list: tick the
+tickets, or use the select-all checkbox, then **Close selected chats**. Bulk close always records
+**Closed**, never an outcome. [Bulk actions →](/inbox/toolbar#close-many-tickets-at-once)
 
 ---
 
@@ -88,7 +98,7 @@ Once a ticket is closed:
 
 ## Blocking a Contact
 
-**Block contact** sits at the bottom of the **Close** menu. On an already-closed ticket it moves
+**Block contact** sits in the **Close** menu, below **Mark contact as spam**. On an already-closed ticket it moves
 into the **⋮** overflow menu next to **Reopen**.
 
 <Steps>
@@ -100,7 +110,15 @@ Confirm in the dialog.
 </Step>
 </Steps>
 
-A blocked contact cannot message you, and you cannot message them.
+A blocked contact cannot message you, and you cannot message them. The composer is replaced by
+*"This contact has been blocked by you."* with an **Unblock contact** button. Click it and confirm
+to lift the block.
+
+<Callout type="info">
+  **Block contact** only appears while the customer's 24-hour window is open, and only for a contact
+  who is not already blocked. If the option is missing from the menu, the customer has not written
+  in the last 24 hours.
+</Callout>
 
 <Callout type="warn">
   Blocking cuts communication in both directions — the customer cannot reach you even if they later
@@ -153,6 +171,54 @@ stays closed.
 
 This is the whole point of the ticket model: one topic, one ticket, one honest record of how it
 went.
+
+---
+
+## Deleting a Conversation
+
+Closing keeps a ticket as a permanent record. **Deleting** removes it, along with every message in
+it. Use it for test threads, duplicates, or a conversation that should never have been stored.
+**Admins and Super Admins only.**
+
+There are three places to delete from:
+
+| From | How |
+|------|-----|
+| **The Close menu** | Open the ticket → **Close** → **Delete conversation**, at the bottom |
+| **The ⋮ menu** | On a closed or spam ticket, where there is no Close menu |
+| **Ticket Details panel** | **Delete conversation**, the last button in the panel |
+
+<Steps>
+<Step>
+Choose **Delete conversation** from any of the places above.
+</Step>
+<Step>
+Read the confirmation — *"Ticket #1042 with Priya Sharma will be deleted."*
+</Step>
+<Step>
+Click **Delete**.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Deleting cannot be undone. The ticket and every message in it are removed for everyone. The
+  customer's WhatsApp is not affected, since they still have their copy. Nor are the contact
+  themselves, their details, labels and pipeline lead, or their other tickets.
+</Callout>
+
+| Deleted | Kept |
+|---------|------|
+| The ticket, its number, title and description | The contact and everything on it |
+| Every message, private note and system note in it | The customer's other tickets |
+| Its conversation tags | The customer's 24-hour window |
+
+To delete many tickets at once, use selection mode in the list and **Delete selected chats**. See
+[Bulk Actions](/inbox/toolbar#delete-many-tickets-at-once).
+
+<Callout type="info">
+  If you only want a customer out of your queue, [mark them as spam](/inbox/inboxview/spam)
+  instead. It is reversible, and nothing is lost.
+</Callout>
 
 ---
 

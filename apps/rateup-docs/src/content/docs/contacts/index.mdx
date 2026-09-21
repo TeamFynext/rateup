@@ -20,15 +20,18 @@ the database usable as it grows.
 
 | Tool | What it is | Example |
 |------|-----------|---------|
-| **[Groups](/contacts/groups)** | Explicit lists you add people to | *Newsletter subscribers* |
-| **[Labels](/contacts/labels)** | Coloured tags for cross-cutting traits | *VIP*, *Refund pending* |
-| **[Lifecycle stages](/contacts/lifecycle)** | Where someone is in your funnel | *Lead → Customer* |
+| **[Groups](/contacts/groups)** | Team-owned lists you add people to — campaign audiences | *Newsletter subscribers* |
+| **[Labels](/contacts/labels)** | Coloured tags for traits, shown across the Inbox | *VIP*, *Refund pending* |
+| **[Lead stage](/pipeline)** | Where someone sits on your pipeline board | *Qualified → Won* |
 | **[Custom fields](/contacts/custom-fields)** | Extra data you define | *Membership number* |
 
 <Callout type="info">
-  A contact sits in **one** lifecycle stage at a time, but can carry **many** labels and belong to
+  A contact sits on **one** pipeline stage at a time, but can carry **many** labels and belong to
   **many** groups. If you find yourself creating a group called "VIP", what you want is a label.
 </Callout>
+
+Organisations without a pipeline board track progress with [lifecycle stages](/contacts/lifecycle)
+instead. That page is no longer in the sidebar, but still works.
 
 ---
 
@@ -38,27 +41,22 @@ the database usable as it grows.
   <Card
     title="Managing Contacts"
     href="/contacts/managing-contacts"
-    description="Adding, editing, searching, filtering, importing and exporting."
+    description="Add, search, filter, view details, message, bulk-edit, import, export and delete."
   />
   <Card
     title="Groups"
     href="/contacts/groups"
-    description="Explicit lists for campaigns and routing."
+    description="Team-owned lists for campaigns — add members, import straight in, remove them."
+  />
+  <Card
+    title="Custom Fields"
+    href="/contacts/custom-fields"
+    description="Text, number, email and multi-value fields for data RateUp does not have by default."
   />
   <Card
     title="Labels"
     href="/contacts/labels"
     description="Coloured tags visible everywhere the contact appears."
-  />
-  <Card
-    title="Lifecycle Stages"
-    href="/contacts/lifecycle"
-    description="The customer journey funnel, from lead to customer."
-  />
-  <Card
-    title="Custom Fields"
-    href="/contacts/custom-fields"
-    description="Store the data your business needs that RateUp does not have by default."
   />
 </Cards>
 
@@ -67,7 +65,9 @@ the database usable as it grows.
 ## Contacts and Consent
 
 Every contact carries a **consent** status, which controls whether they may receive template
-messages and campaigns. Contacts without consent show a **DND** badge in the Inbox.
+messages and campaigns. It shows as **Granted** or **Denied** in the contacts table's **Consent**
+column, and contacts without it carry a **DND** badge in the Inbox and a **No consent** badge in
+their details.
 
 <Callout type="warn">
   Consent is not a formality. Messaging people who did not opt in damages your WhatsApp account's

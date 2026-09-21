@@ -19,8 +19,8 @@ shared inbox suffers from:
 - **Duplicate replies** — two agents answering the same customer minutes apart
 - **Silent drops** — everyone assuming somebody else picked it up
 
-An unassigned ticket is visible to everyone but owned by nobody, and it sits in **New** with an
-amber edge until that changes.
+An unassigned ticket is visible to everyone but owned by nobody. It carries a **New** status pill
+until that changes, and while it is recent it also sits in the **New** view with an amber edge.
 
 ---
 
@@ -28,9 +28,10 @@ amber edge until that changes.
 
 | Route | Best for | Where |
 |-------|----------|-------|
-| **Quick assign** | Taking a ticket without reading it first | The **person +** button on a list row |
+| **Quick assign** | Taking a ticket without reading it first | The **person +** button on a list row (**Assign to me**) |
 | **Assign bar** | Taking a ticket you have just read | Above the composer in an unassigned ticket |
 | **Ticket Details** | Assigning to someone else, or reassigning | Panel → **Assignment** → **Change** |
+| **Bulk assign** | Handing many tickets to one person | Selection mode → **Assign selected chats** |
 
 ---
 
@@ -65,28 +66,53 @@ visible.
 Open the ticket.
 </Step>
 <Step>
-Click the **dropdown** next to **Assign to me**, or open **Ticket Details** and click **Change**
-under **Assignment**.
+Click **Assign** next to **Assign to me** in the bar above the composer, or open **Ticket Details**
+and click **Change** under **Assignment**.
 </Step>
 <Step>
-Choose a **team** or an **individual**. Online / offline availability is shown next to each person.
+The picker, *"Assign to team or individual"*, lists your teams. Click a team to expand it.
 </Step>
 <Step>
-The ticket is assigned instantly and appears in that person's **Mine** view.
+Click people to tick or untick them. Each shows **Online** or **Offline**, and you are marked
+**( You )**.
+</Step>
+<Step>
+Close the picker. The change saves by itself about half a second after your last click, with no
+Save button, and a system note records it.
 </Step>
 </Steps>
 
 <ScreenShot src="/docs/screenshots/inbox/assign-panel.png" alt="Choosing between a team and an individual" />
 
+Once people are assigned, the button shows their avatars — up to three, then `+N` — and the first
+name. Hover it for *"Assigned N staff"*.
+
 ---
 
-## Team vs Individual
+## Assigning a Whole Team
 
-| | Assign to a team | Assign to an individual |
+Expand a team and click **Assign entire team**. Every current member of that team is ticked in one
+go. Click **Unassign entire team** to untick them all.
+
+<Callout type="info">
+  **Assign entire team** assigns each **member individually**, not the team as a unit. Every one of
+  them sees the ticket in their own **Mine** view. Someone who joins the team later is not added to
+  tickets assigned before they joined.
+</Callout>
+
+A team row shows a ✓ when every member is ticked, and a dashed circle when only some are.
+
+### One person, one team
+
+A person in several teams is assigned **under one team at a time**. If you tick them under a second
+team, they move across. The picker shows a grey chip with the other team's name beside anyone
+already assigned elsewhere. Hover it for *"Assigned under …"*.
+
+| | **Assign entire team** | Assign one person |
 |---|-----------------|------------------------|
-| **Who can respond** | Any member, subject to permissions | That person |
-| **Shows in Mine for** | Nobody in particular | That person |
-| **Use when** | You want the fastest available person | The work needs a specific skill or owner |
+| **Who is assigned** | Every current member | That person |
+| **Shows in Mine for** | Every one of those members | That person |
+| **Use when** | The whole team should see it and anyone may pick it up | The work needs a specific skill or owner |
 
 <Callout type="info">
   You can assign several people to one ticket. The list row then shows the first assignee's avatar
@@ -129,8 +155,10 @@ The ticket leaves your **Mine** view and enters theirs. A system note records th
 
 Closed tickets cannot be reassigned in place — they are a finished record.
 
-Assigning one, or clicking **Reopen**, opens a **new ticket** for the same customer and carries the
-previous assignees across. The closed ticket keeps its number, close time and result.
+A closed ticket's composer reads *"This chat has been closed by … at …. Assign it to start the
+conversation again."*, with **Assign to me** and **Assign** beside it. Assigning from there, or
+clicking **Reopen** in the header, opens a **new ticket** for the same customer. **Reopen** carries
+the previous assignees across. The closed ticket keeps its number, close time and result.
 
 [More on reopening →](/inbox/conversation-lifecycle)
 
@@ -142,17 +170,27 @@ To hand several tickets to one person at once:
 
 <Steps>
 <Step>
-Click the **select** (✅) icon in the toolbar to enter selection mode.
+Click the **Select Chats** (✅) icon in the toolbar to enter selection mode.
 </Step>
 <Step>
-Tick the tickets you want to move.
+Tick the tickets you want to move — or tick one, then use the select-all checkbox in the selection
+bar.
 </Step>
 <Step>
-Choose the assignee and confirm.
+Click **Assign selected chats**. In the dialog, pick a team under **Select Team** and a person under
+**Select Member**, then click **Assign Chats**. Or click **Assign To Me** to take them all.
 </Step>
 </Steps>
 
-Useful at shift changes, or when redistributing an absent colleague's queue.
+Useful at shift changes, or when redistributing an absent colleague's queue. Bulk assign is not
+offered in **Mine** or **Spam**.
+
+<Callout type="warn">
+  Bulk assign **replaces** the existing assignees. Each ticket ends up with only the person you
+  picked, so anyone who was on it before is taken off.
+</Callout>
+
+[Bulk actions in detail →](/inbox/toolbar#assign-many-tickets-at-once)
 
 ---
 

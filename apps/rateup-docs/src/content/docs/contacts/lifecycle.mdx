@@ -52,7 +52,7 @@ The funnel has two kinds of endpoint:
 
 | Type | Meaning |
 |------|---------|
-| **Won stage** | The contact converted |
+| **Won stage** | The contact converted. Switch a stage to **Won stage** to mark it — there must always be at least one |
 | **Lost stages** | The contact did not — add these with **Add Lost Stage** |
 
 Several lost stages is usually better than one. *Too expensive*, *Went to competitor* and
@@ -90,10 +90,11 @@ Lifecycle is being retired rather than removed: on an organisation with a
 | Surface | Now |
 |---------|-----|
 | The sidebar | **Contacts → Lifecycle** is gone; the route still works |
-| Inbox details panel | Shows [**Pipeline Stage**](/inbox/ticket-details) instead of Lifecycle Stage |
-| Contacts table column | A **Stage** column replaces **Lifecycle Stage** once the org has a board |
-| Contacts bulk action | **Update Pipeline Stage**, or **Update Lifecycle Stage** without the feature |
-| Automation action | **Assign Stage**; **Assign Lifecycle** is legacy — see [Actions](/automation/actions) |
+| Inbox details panel | Shows [**Lead stage**](/inbox/ticket-details#lead-stage) instead of Lifecycle Stage |
+| Contacts table column | A **Lead stage** column replaces **Lifecycle Stage** once the org has a board |
+| Contacts list filter | A **Lead stage** filter replaces the Lifecycle filter once the org has a board |
+| Contacts bulk action | **Update lead stage**, or **Update Lifecycle Stage** without the feature |
+| Automation | **Assign Lead Stage** action and **Lead Stage Updated** trigger; **Assign Lifecycle** and **Lifecycle Updated** are legacy — see [Actions](/automation/actions) |
 
 Still read from the lifecycle, and unchanged:
 
@@ -119,7 +120,7 @@ honest in a way that relying on people to remember never does.
 reads *"Lifecycle Display is Hidden"* — the stages still exist and still apply.
 
 The contacts table's **Lifecycle Stage** column also depends on this switch, and is replaced by a
-**Stage** column once your organisation has a pipeline board.
+**Lead stage** column once your organisation has a pipeline board.
 
 Descriptions can be shown or hidden with **Show description** / **Hide description**.
 
@@ -130,8 +131,10 @@ Descriptions can be shown or hidden with **Show description** / **Hide descripti
 Use **Update Lifecycle Stage** to change a stage's name, icon or description.
 
 <Callout type="warn">
-  **Cannot delete default stage** — the default is required. Deleting any other stage asks
-  *"Delete lifecycle stage?"*; make sure contacts sitting in it are moved somewhere sensible first.
+  **Cannot delete default stage** — the default is required, and so is at least one won stage:
+  *"Cannot delete the last won stage. There must be at least one won stage."* Deleting any other
+  stage asks *"Delete lifecycle stage?"*; make sure contacts sitting in it are moved somewhere
+  sensible first.
 </Callout>
 
 ---
