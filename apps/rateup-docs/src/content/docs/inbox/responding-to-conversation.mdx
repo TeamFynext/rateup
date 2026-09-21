@@ -1,6 +1,6 @@
 ---
 title: "Replying to Customers"
-description: Send messages, quick replies, attachments and templates — and understand when the composer is locked and why.
+description: Send messages, quick replies, attachments, templates and chatbots; copy, react to and download messages — and understand when the composer is locked and why.
 ---
 
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
@@ -129,16 +129,85 @@ Quick replies are created under [Inbox Settings](/inbox/inbox-settings).
 
 ---
 
-## Attachments, Templates & Flows
+## The Composer Toolbar
 
-The menu beside the composer lets you send more than text:
+Under the message box sits a row of tools. Which ones you see depends on the channel.
 
-| Option | Use |
-|--------|-----|
-| **Attachments** | Images, documents, video and audio |
-| **Voice note** | Record and send audio directly |
-| **Send WhatsApp Template** | Approved templates — required outside the 24-hour window |
-| **Send WhatsApp Flow** | Interactive flows |
+| Tool | What it does | Channels |
+|------|--------------|----------|
+| 😀 **Emoji** | Insert an emoji | All |
+| **Format Message** (T) | Bold, italic, strikethrough, **Clear formatting**, code, quote, bulleted and numbered lists | All |
+| **Undo / Redo** | Step back or forward through your edits | All |
+| 📎 **Insert Media** | Attach a file — see below | All |
+| **Template** | Send an approved WhatsApp template | WhatsApp |
+| **Flow** | Send a WhatsApp Flow | WhatsApp |
+| **Automation** | Start one of your chatbots for this customer — see below | WhatsApp |
+| 🎙️ **Voice note** | Record and send audio | All but Webchat |
+| **From** selector | Which of your numbers the reply is sent from — see below | All but Webchat |
+
+On a phone, **Template**, **Flow**, **Automation**, **Undo** and **Redo** fold into a single **⋯**
+button.
+
+Formatting is converted to WhatsApp's own markup when the message is sent, so **bold** arrives as
+bold on the customer's phone.
+
+### Attachments
+
+**Insert Media** (📎) offers:
+
+| Type | Accepted | Not offered on |
+|------|----------|----------------|
+| **Document** | PDF, TXT, Word, Excel, PowerPoint | Instagram |
+| **Image** | Image files | — |
+| **Video** | Video files | — |
+| **Audio** | AAC, AMR, MP3, MP4 audio, OGG | — |
+| **Contacts** | Share contact cards — pick **Individual** contacts or a whole **Group** | Instagram, Messenger |
+| **Location** | Share a pin — drop it on the map, or use your current location | Instagram, Messenger |
+
+You can also **drag files** straight onto the message box.
+
+Attached files appear as thumbnails above the box. Click the red **✕** on one to remove it, or click
+an image or video to preview it first. Then click **Send**.
+
+<Callout type="info">
+  **Location** uses your browser's location to centre the map. If you have blocked location access
+  for RateUp, the picker reads *"Browser location access denied"*. Allow it in your browser's site
+  settings, or drop the pin by hand.
+</Callout>
+
+### Choose which number you reply from
+
+The **From** selector at the right of the toolbar shows the number or account this reply will be
+sent from. It is set automatically to the number **the customer wrote to**, and switches back each
+time you open a different ticket.
+
+Only change it if you have a reason to. A reply sent from a number the customer has not written to
+has no open 24-hour window, and WhatsApp rejects it. If the customer's number is no longer
+connected, the selector is left empty and you must pick one before sending. Sending without one
+gives *"Select a account to send the message"*.
+
+On Instagram and Messenger the selector is locked to the account the conversation is on.
+
+### Start a chatbot for this customer
+
+**Automation** (the robot icon) hands the customer to one of your
+[WhatsApp chatbots](/whatsapp/chatbots).
+
+<Steps>
+<Step>
+Click **Automation**. The **Initiate Automation** dialog lists your chatbots.
+</Step>
+<Step>
+Select one under **Select an automation**.
+</Step>
+<Step>
+Click **Send**. The chatbot's first message goes out and it takes the conversation from there.
+</Step>
+</Steps>
+
+Use it to hand a customer to a self-service flow — booking, order tracking, a feedback survey —
+without typing the steps out yourself. With no chatbots set up, the dialog reads *"No Automations
+found"*. Automation needs an open 24-hour window, so it is not offered once the window has closed.
 
 [Sending templates in detail →](/inbox/send-templates)
 
@@ -150,12 +219,19 @@ The composer is replaced by a banner in four situations:
 
 | Situation | What you see | How to continue |
 |-----------|--------------|-----------------|
-| **Unassigned ticket** | Amber **Assign to me** bar | Take the ticket, or assign it to someone |
-| **Closed ticket** | "This chat has been closed by … at …" | Click **Reopen** in the header |
-| **Blocked contact** | Blocked-contact banner | Unblock the contact |
-| **Contact flagged as spam** | "This contact is marked as spam." | Click **Not spam** in the banner |
-| **24-hour window expired** | Template-only options | Send an approved template |
-| **Conversation limit reached** | Amber upgrade callout | Upgrade the plan, or wait for the reset |
+| **Unassigned ticket** | *"This conversation is new and unassigned."* with **Assign to me** | Take the ticket, or use **Assign** to give it to someone |
+| **Closed ticket** | *"This chat has been closed by … at …. Assign it to start the conversation again."* | Click **Assign to me**, or **Reopen** in the header |
+| **Blocked contact** | *"This contact has been blocked by you."* | Click **Unblock contact** |
+| **Contact flagged as spam** | *"This contact is marked as spam."* | Click **Not spam** in the banner |
+| **WhatsApp 24-hour window expired** | Only a pulsing **+** button | **+ → Send WhatsApp Template** |
+| **Instagram / Messenger window expired** | No composer at all | Wait for the customer to write again |
+| **Conversation limit reached** | *"Conversation limit reached (used/limit)"* with **Upgrade Plan** | Upgrade the plan, or wait for the reset |
+
+<Callout type="warn">
+  Once a WhatsApp window expires, the **Private Note** tab goes too. The whole composer is replaced
+  by the template button, so you cannot leave an internal note on that ticket until the customer
+  writes again. Write handover notes before the window closes.
+</Callout>
 
 ---
 
@@ -177,6 +253,8 @@ WhatsApp — not RateUp — restricts when you may send free-form messages.
 ### Outside the window
 
 - Free-form messaging is disabled
+- The composer shrinks to a single **+** button with a pulsing green dot. It opens a menu with just
+  **Send WhatsApp Template**
 - Only **approved templates** can be sent
 - Once the customer replies to your template, a **new 24-hour window** opens and normal replying
   resumes
@@ -199,7 +277,51 @@ Outgoing messages show delivery ticks:
 | **Delivered** | Reached the customer's device |
 | **Read** | Opened by the customer |
 
-Hover a message to see the exact timestamps.
+Hover a message's time to see the exact timestamps. A message still waiting for WhatsApp shows a
+**clock** instead of a tick.
+
+---
+
+## Working With Messages in the Thread
+
+### Copy a message
+
+Every message except a deleted one has a **Copy** button beside its time. Click it to copy the
+text to your clipboard. A *"Copied to clipboard"* notice confirms it.
+
+### React to a customer's message
+
+<Steps>
+<Step>
+Find the customer's message and click the **emoji** button beside its time.
+</Step>
+<Step>
+Pick an emoji. It is sent to the customer as a reaction on that message.
+</Step>
+</Steps>
+
+Reactions work on messages the **customer** sent, not on your own. A reaction the customer sends
+shows as a small emoji on the bubble. Hover it to see who reacted.
+
+<Callout type="info">
+  Instagram and Messenger accept only a limited set of reactions. Picking one they do not support
+  gives *"… not supported"*, and nothing is sent.
+</Callout>
+
+### Download an image
+
+Every image in a conversation carries a **Download image** button, on the thumbnail and again in
+the full-size view. Click the image to open it full size.
+
+### Messages you did not type
+
+| Label on the bubble | Sent by |
+|---------------------|---------|
+| Your colleague's name and avatar | A person on your team |
+| 🤖 **Automation** | A chatbot, flow or automation rule — in a lighter bubble |
+| 📣 **Campaign** | A [campaign](/campaign) |
+| Centred grey chip | A system note — assigned, reassigned, closed, reopened, spam |
+| Centred amber bubble with 🔒 | A private note — never sent to the customer |
 
 ---
 
@@ -227,18 +349,6 @@ it sent from the WhatsApp Business app.
 
 A deletion is an edit to history, not a new message: it starts no automations, opens no ticket and
 does not touch the 24-hour window.
-
----
-
-## Automated vs Manual Messages
-
-A ticket can contain both:
-
-- **Automated messages** come from flows and automation rules, and often carry buttons. They are
-  visually distinct from an agent's reply.
-- **Manual replies** are sent by people and show the sender's name.
-- **System notes** record assignments, closures and reopenings.
-- **Private notes** are centred, padlocked, and never leave your team.
 
 ---
 

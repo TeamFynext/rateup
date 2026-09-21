@@ -1,33 +1,112 @@
 ---
 title: "Managing Contacts"
-description: Add, edit, search, filter, import and export the people in your database.
+description: Add, find, view, edit, message, import, export and delete the people in your database — one at a time or in bulk.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Day-to-day work with the contact list: getting people in, finding them again, and keeping the data
-clean.
+**Contacts → All Contacts** is the full list of everyone in your database. This page covers getting
+people in, finding them again, working on them in bulk, and keeping the data clean.
+
+<ScreenShot src="/docs/screenshots/contacts/list.png" alt="The contacts list" />
+
+{/* TODO: re-capture — the toolbar now carries the stage, label and source filters, Add Contact, Export and Import */}
 
 ---
 
 ## Where Contacts Come From
 
-| Source | How |
-|--------|-----|
-| **Inbound message** | Anyone who messages you becomes a contact automatically |
-| **Manual entry** | Added by an agent, including from the Inbox toolbar |
-| **Import** | A CSV or spreadsheet upload |
-| **Web forms** | Someone submitting a [form](/web-forms) |
-| **Integrations** | Synced from a connected platform |
+Every contact carries a **source**, shown as a badge on the list and in their details:
+
+| Source badge | How they arrived |
+|--------------|------------------|
+| **WhatsApp** | They messaged one of your WhatsApp numbers |
+| **Instagram** | They messaged or commented on your Instagram account |
+| **Web Chat** | They wrote in through your website chat |
+| **Manual** | Someone on your team added them by hand |
+| **Imported** | They came in through a file [import](#import-contacts-from-a-file) |
+| **Loyalty Customer** | They joined your [loyalty programme](/loyalty) |
+
+Anyone who messages you becomes a contact automatically — you never have to add inbound customers
+yourself.
 
 ---
 
-## Adding a Contact
+## The Contacts Table
 
-Add a contact from the contacts list, or start a conversation directly from the
-[Inbox toolbar](/inbox/toolbar). Either way you provide the name, phone number, and any other
-fields you need.
+By default the table shows **Name**, **Phone/IGSID**, **Label**, **Source** and **Date Added**.
+More columns are available from the **View** menu at the top right of the toolbar:
+
+| Column | Shows |
+|--------|-------|
+| **Name** | The contact's name — click it to open their [details](#view-a-contacts-details) |
+| **Phone/IGSID** | Phone number, or Instagram ID for Instagram contacts |
+| **Status** | **Active**, or **Blocked** if you have blocked them on WhatsApp |
+| **Other** | Extra information, such as a location |
+| **Label** | Their [labels](/contacts/labels) |
+| **Lead stage** | Their column on your [pipeline](/pipeline) board. Organisations without a board see **Lifecycle Stage** instead, if lifecycle display is on |
+| *Each custom field* | One column per [custom field](/contacts/custom-fields) |
+| **Source** | Where they came from — see above |
+| **Consent** | **Granted** or **Denied** — whether they may receive templates and campaigns |
+| **Date Added** | When the contact was created |
+| **Last Contact** | When they last messaged you |
+
+Sort by **Name**, **Date Added** or **Last Contact** by clicking the column header. The list is
+paged; pick how many rows to show at the foot of the table.
+
+---
+
+## Search and Filter
+
+The toolbar holds one search box and three filters. They combine, so *Label: VIP* plus
+*Source: Instagram* shows only VIPs who came in through Instagram.
+
+| Control | Narrows by |
+|---------|-----------|
+| **Search by name, phone, or email...** | Text anywhere in the name, phone number or email. A leading `+` is ignored, so paste numbers as they are |
+| **Stage** | A column of your pipeline board. Without a board, this is a **Lifecycle** filter instead |
+| **Label** | **All Contacts**, one label, or a status: **Active** or **Blocked** |
+| **Source** | **All Sources**, **WhatsApp**, **Instagram**, **Web**, **Manual** or **Imported** |
+
+**Reset** appears once a filter is active and clears them.
+
+<Callout type="info">
+  There is no filter for groups or custom fields on this page. To see who is in a group, open the
+  group itself under [Groups](/contacts/groups).
+</Callout>
+
+---
+
+## Add a Contact
+
+<Steps>
+<Step>
+Click **Add Contact**.
+</Step>
+<Step>
+Fill in **Full Name** and **Phone Number** — both are required, and the phone number must be valid
+with its country code. *"Invalid phone number"* means it is not.
+</Step>
+<Step>
+Optionally add:
+
+- **Email**
+- **Labels** — pick any number
+- **Lead stage** — puts them straight onto your [pipeline](/pipeline) board (shown only if your board
+  has columns)
+- **Assignee** — the team members responsible for them
+- **Group** — any number of [groups](/contacts/groups)
+- **notes**
+- A value for each [custom field](/contacts/custom-fields)
+</Step>
+<Step>
+Click **Save**. If something is wrong, a *"Fix the following before saving:"* list tells you what.
+</Step>
+</Steps>
+
+You can also add a contact from the Inbox, with **New Contact** in the
+[Inbox toolbar](/inbox/toolbar#adding-a-contact).
 
 <Callout type="info">
   Adding a contact does not open a messaging window. If they have never written to you, your first
@@ -36,93 +115,182 @@ fields you need.
 
 ---
 
-## Searching and Filtering
+## Act on One Contact
 
-Search by **name**, **phone number** or **email**.
+Every row has a **⋮** menu at the end:
 
-**Filter contacts** narrows the list by the ways you have organised them — labels, groups,
-lifecycle stage, source and custom field values.
+| Option | What it does |
+|--------|--------------|
+| **View Details** | Opens the contact's details — the same as clicking their name |
+| **Edit** | Opens **Edit Contact** with every field from [Add a Contact](#add-a-contact) |
+| **Send Message** | Sends a quick text message without leaving the page — see below |
+| **Open in Inbox** | Jumps to this contact's conversation in the [Inbox](/inbox) |
+| **Delete contact** | Deletes them — see [Deleting Contacts](#deleting-contacts) |
 
-Combine them the way you would build a segment: *lifecycle = Customer* **and** *label = VIP* is the
-list you would send a loyalty offer to.
+### View a contact's details
 
----
+Click a contact's **name** (or **⋮ → View Details**) to open everything RateUp knows about them in
+one place.
 
-## Importing
+| Section | Contains |
+|---------|----------|
+| **Header** | Name and phone, with badges for source, inbox status, lifecycle, **No consent**, **Blocked** and **Spam** where they apply |
+| **Contact** | Phone, Email, WhatsApp name, Location, Date of birth, Consent, Added, External ID |
+| **Activity** | Last received, Last sent, Assigned to, Lead stage, Lead owner, and how many campaigns they have been in |
+| **Labels** | Their labels, or *"No labels"* |
+| **Custom fields** | Every custom field with a value — hidden fields are left out |
+| **Loyalty** | Programme, Tier, Points (available and lifetime) and Referral code — only for loyalty members |
+| **Groups** | Every group they are in. Click **✕** to remove them from one, or **Add to group** to add them to another |
+| **Notes** | Free-text notes about the customer. Click the pencil to edit, then **Save** |
 
-<ScreenShot src="/docs/screenshots/contacts/import.png" alt="Importing contacts" />
+Rows with nothing to show are left out, so a sparse contact gets a short dialog. Hover a phone
+number, email, ID or referral code to reveal a **copy** button.
+
+**Send Message** at the bottom of the dialog opens the quick-message box.
+
+### Send a quick message
 
 <Steps>
 <Step>
-Click **Import**.
+Choose **⋮ → Send Message**, or **Send Message** in the details dialog.
 </Step>
 <Step>
-Click **Download Demo Csv File** and match your data to its columns. This is the single biggest
-cause of failed imports.
+Pick the channel under **Select Channel** — **WhatsApp** or **Instagram** — and the **Account** to send
+from.
 </Step>
 <Step>
-Select your file. CSV, XLSX and ODS are accepted — you will be told
-*"Please select a CSV file to import"* if nothing is chosen.
-</Step>
-<Step>
-Decide whether to **update the existing data while importing**:
-
-- **On** — existing contacts are updated with the new values
-- **Off** — existing contacts are left as they are
-</Step>
-<Step>
-Run the import.
+Type the **Message** and send it.
 </Step>
 </Steps>
 
 <Callout type="warn">
-  Import with update **on** overwrites what is already there. If your file has blank cells, you can
-  wipe good data with them. Test with a handful of rows before importing thousands.
-</Callout>
-
-### Before importing
-
-- Check phone numbers include the country code
-- Remove duplicates in the file itself — importing them creates duplicate contacts
-- Confirm you have consent for everyone in the list
-
----
-
-## Exporting
-
-Export the current, filtered list. Filter first, then export — it is far easier than trimming a
-spreadsheet afterwards.
-
-<Callout type="warn">
-  Exports contain personal data. Treat the file accordingly and delete it when you are done.
+  This sends free text, which WhatsApp and Instagram only accept within 24 hours of the customer's
+  last message. For anyone who has not written recently, it will fail — send a
+  [template](/inbox/send-templates) from the Inbox instead.
 </Callout>
 
 ---
 
 ## Bulk Actions
 
-Select several contacts to act on them together:
+Tick the checkbox on each row you want — or the checkbox in the header to take the whole page. A bar
+appears showing *"N Selected"* with four actions:
 
-| Action | Use |
-|--------|-----|
-| **Add to Group** | Build a campaign audience |
-| **Apply Label** | Tag a set of people at once |
-| **Update Pipeline Stage** | Put them all on one column of the [pipeline](/pipeline) board, opening a lead for anyone not on it |
-| **Delete** | Remove contacts permanently |
+| Action | What it does |
+|--------|--------------|
+| **Add to Group** | Adds everyone selected to one [group](/contacts/groups) |
+| **Apply Label** | Opens **Apply Labels to Contacts** — pick one or more labels and click **Apply** |
+| **Update lead stage** | Puts everyone on one column of your [pipeline](/pipeline) board, opening a lead for anyone not on it. Organisations without the Pipeline feature see **Update Lifecycle Stage** |
+| **Delete** | Deletes everyone selected, after a confirmation |
 
-**Update Pipeline Stage** reads **Update Lifecycle Stage** instead for organisations without the
-**Pipeline** feature. See [Leads that open themselves](/pipeline/automatic-leads).
+The header checkbox selects the current **page** only. To act on more people, raise the rows per
+page first.
 
 ---
 
-## Deleting a Contact
+## Import Contacts From a File
 
-**Delete contact** removes the person from your database.
+<ScreenShot src="/docs/screenshots/contacts/import.png" alt="Importing contacts" />
+
+<Steps>
+<Step>
+Click **Import**. The **Import Contacts** dialog opens.
+</Step>
+<Step>
+Click **Download Demo Csv File** and lay your data out the same way. The file needs a **name** and a
+**phone** column.
+</Step>
+<Step>
+Under **Custom Fields**, tick the custom fields your file contains. Each one's column must be headed
+with that field's **Field ID** — shown on the [Custom Fields](/contacts/custom-fields) page.
+</Step>
+<Step>
+Set the two switches:
+
+- **Update the existing data while importing** — see below
+- **First row contains column headers (name, phone, ...)** — on by default. Turn it off for a file
+  with no header row. The columns must then run **name**, **phone**, then the ticked custom fields in
+  order
+</Step>
+<Step>
+Choose the file — **CSV**, **XLSX** or **ODS** — and click **Import**.
+</Step>
+</Steps>
+
+Imported contacts get the source **Imported**.
+
+### Existing contacts
+
+A phone number can only belong to one contact, so an import never creates duplicates:
+
+| Update the existing data while importing | A phone number already in your contacts is… |
+|----------------------------------|-------------------------------------|
+| **Off** (default) | Skipped — the existing contact is left exactly as it is |
+| **On** | Updated with the file's **name** and any custom-field values it has |
+
+A blank custom-field cell never overwrites a value that is already there.
+
+### Rows that are rejected
+
+A row is rejected if its **name** is missing or its **phone number** is missing or invalid. The rest
+still import, and a **Failed contact import** list shows each rejected row with the reason — for
+example *"phone is missing"* or *"…: Invalid phone number"*.
+
+<Callout type="info">
+  Phone numbers must include the **country code** — `447700900123`, not `07700900123`. Numbers
+  spreadsheets have turned into scientific notation (`4.477E+11`) are converted back for you.
+</Callout>
+
+### What an import can set
+
+An import sets **name**, **phone** and **custom fields** only. Email, labels, groups and stages are
+not read from the file — apply them afterwards with [bulk actions](#bulk-actions). To import straight
+into a group, import from the group's **Add Members** dialog instead — see
+[Groups](/contacts/groups#add-members).
 
 <Callout type="warn">
-  Deleting is permanent and takes their conversation history with them. If someone asks not to be
-  contacted, withdrawing consent is usually the right answer — deletion is for data-removal
-  requests.
+  Only import people who have agreed to hear from you. Messaging a list that never opted in lowers
+  your WhatsApp quality rating, and that is far harder to repair than a slow month of campaigns.
+</Callout>
+
+---
+
+## Export Contacts
+
+<Steps>
+<Step>
+Use the **View** menu to show the columns you want in the file.
+</Step>
+<Step>
+Click **Export** and choose **Download as Excel** or **Download as OpenDocument (ODS)**.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  The export contains **every contact in your organisation**, newest first — your search and filters
+  do not narrow it. It includes these visible columns: name, phone, status, other, source, consent,
+  date added and custom fields. The Label, Lead stage and Last Contact columns come out empty.
+</Callout>
+
+Exports contain personal data. Treat the file accordingly and delete it when you are done.
+
+---
+
+## Deleting Contacts
+
+Delete one contact from **⋮ → Delete contact**, or several with the **Delete** bulk action.
+
+<Callout type="warn">
+  Deleting a contact cannot be undone, and it reaches further than RateUp:
+
+  - **Every conversation and message** with them is deleted, along with their group memberships,
+    labels and campaign history
+  - If you have [Zoho CRM or Bigin connected](/settings/integrations), the matching contact is
+    **deleted there too**
+  - Zapier receives a **contact deleted** event
+
+  Their pipeline lead is kept but no longer linked to anyone. If someone just asks not to be
+  contacted, withdraw their consent instead — deletion is for data-removal requests.
 </Callout>
 
 ---
@@ -130,7 +298,7 @@ Select several contacts to act on them together:
 ## Keeping the Database Clean
 
 - Import carefully; most bad data arrives in bulk
-- Use [lifecycle stages](/contacts/lifecycle) so stale leads are visible rather than hidden
+- Keep country codes on every phone number
 - Review contacts with repeated message failures — see
   [Message Analytics](/analytics/message-analytics)
 - Agree naming conventions for [labels](/contacts/labels) before everyone invents their own
@@ -141,4 +309,6 @@ Select several contacts to act on them together:
 
 - [Groups](/contacts/groups)
 - [Labels](/contacts/labels)
+- [Custom Fields](/contacts/custom-fields)
+- [Pipeline](/pipeline) — the board **Lead stage** writes to
 - [Campaigns](/campaign)

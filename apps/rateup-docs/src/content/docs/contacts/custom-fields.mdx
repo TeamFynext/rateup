@@ -1,59 +1,128 @@
 ---
 title: "Custom Fields"
-description: Store the contact data your business needs that RateUp does not have by default.
+description: Store the contact data your business needs that RateUp does not have by default — field types, Field IDs, visibility and importing values.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
 **Custom fields** extend the contact record with data specific to your business — a membership
-number, a vehicle registration, a dietary requirement, a renewal date.
+number, a vehicle registration, a preferred branch.
 
 <ScreenShot src="/docs/screenshots/contacts/custom-fields.png" alt="Custom fields" />
 
+The **Custom Fields** page lists each field's **Name**, **Field ID**, **Description**,
+**Visibility**, **Type** and **Created At**. Use **Search by field name...** to find one.
+
 ---
 
-## Creating a Field
+## Create a Field
 
 <Steps>
 <Step>
 Click **Add Custom Field**.
 </Step>
 <Step>
-Give it a clear **name** — this is what your team sees on every contact record.
+Enter a **Name** — this is what your team sees on every contact.
 </Step>
 <Step>
-Choose the field type.
+Check the **Field ID**. It is filled in from the name as you type — *Membership Number* becomes
+`membership_number` — and you can change it now.
 </Step>
 <Step>
-Save. The field appears on every contact.
+Choose the **Type** — see below. For **Multi-value**, type each option under **Input Values** and
+press **Enter** after each.
+</Step>
+<Step>
+Leave **Visibility** on unless the field is for internal use only — see below.
+</Step>
+<Step>
+Optionally add a **Description**, then click **Create Custom Field**.
 </Step>
 </Steps>
 
-Use **Edit Custom Field** to change one later.
+<Callout type="warn">
+  The **Field ID** cannot be changed once the field is created. It is the column heading your import
+  files must use, so choose it carefully.
+</Callout>
+
+---
+
+## Field Types
+
+| Type | Entered as | Checked for |
+|------|-----------|-------------|
+| **Text** | Free text | — |
+| **Number** | A number | *"Must be a valid number"* |
+| **Email** | An email address | *"Invalid email format."* |
+| **Multi-value** | One choice from a dropdown of the **Input Values** you defined | — |
+
+---
+
+## Visibility
+
+**Visibility** controls whether the field shows in a contact's details dialog. A hidden field still
+exists, still holds its values, and can still be filled in on the **Add / Edit Contact** form and by
+import — it is simply left out of the details view.
 
 ---
 
 ## Where Custom Fields Appear
 
-| Location | Use |
-|----------|-----|
-| **Contact record** | Viewing and editing the value |
-| **Ticket Details panel** | Agents see it while replying |
-| **Contact filters** | Segmenting on the value |
-| **Import** | Populating in bulk |
+| Place | Use |
+|-------|-----|
+| **Add / Edit Contact** | Every field gets its own input, of its type |
+| **Contact details** | Visible fields with a value, under **Custom fields** |
+| **Contacts table** | One column per field — switch it on from the **View** menu |
+| **Import** | Tick the field in the import dialog, and head its column with the Field ID |
+| **Export** | Show its column in the table before exporting |
+
+<Callout type="info">
+  Custom fields are not shown in the Inbox, and the contacts list cannot be filtered by them. If
+  your agents need to see a trait while replying, or you want to filter on it, use a
+  [label](/contacts/labels).
+</Callout>
+
+---
+
+## Fill In Values in Bulk
+
+<Steps>
+<Step>
+Export your contacts, or build a sheet with **name** and **phone** columns.
+</Step>
+<Step>
+Add a column for each custom field, headed with its **Field ID** exactly.
+</Step>
+<Step>
+Import it with **Update the existing data while importing** on, and the fields ticked under
+**Custom Fields**. Blank cells leave existing values alone.
+</Step>
+</Steps>
+
+[Importing in detail →](/contacts/managing-contacts#import-contacts-from-a-file)
+
+---
+
+## Edit or Delete a Field
+
+Open the row's **⋮** menu:
+
+- **Edit** — change the name, type, values, visibility or description, then **Update Custom Field**.
+  The Field ID stays fixed
+- **Delete** — asks you to confirm. It cannot be undone, and every value stored in the field goes with
+  it
 
 ---
 
 ## Custom Fields vs Labels
 
-The choice is about what kind of thing you are storing:
-
 | | Custom fields | [Labels](/contacts/labels) |
 |---|--------------|--------|
-| **Store** | A value — a number, a date, text | A yes/no trait |
+| **Store** | A value — a number, an email, text, a choice | A yes/no trait |
 | **Example** | *Membership number: 4471* | *VIP* |
-| **Visible in the Inbox list** | No | Yes |
+| **Visible in the Inbox** | No | Yes |
+| **Filter the contacts list** | No | Yes |
 
 If the answer is "yes or no", use a label. If the answer is "which one" or "how much", use a
 custom field.
@@ -69,7 +138,7 @@ custom field.
 
 - Add a field only when you know what you will do with the data
 - Name it so its meaning is obvious to someone who joined last week
-- Populate existing contacts by [import](/contacts/managing-contacts) rather than by hand
+- Populate existing contacts by import rather than by hand
 - Review yearly and remove fields nobody fills in
 
 ---
@@ -78,4 +147,3 @@ custom field.
 
 - [Managing Contacts](/contacts/managing-contacts) — importing values in bulk
 - [Labels](/contacts/labels)
-- [Ticket Details](/inbox/ticket-details)

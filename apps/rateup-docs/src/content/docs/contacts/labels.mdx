@@ -1,8 +1,9 @@
 ---
 title: "Labels"
-description: Coloured tags that describe a contact, visible everywhere they appear.
+description: Coloured tags that describe a contact, visible everywhere they appear — create, apply, filter and clean them up.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
 A **label** is a coloured tag on a contact. Unlike groups, labels show up wherever the contact
@@ -10,14 +11,34 @@ appears — including on every row in the [Inbox](/inbox).
 
 <ScreenShot src="/docs/screenshots/contacts/labels.png" alt="Contact labels" />
 
+The **Labels** page lists each label with its **Description**, how many **Contacts** carry it, and
+when it was **Created**. Use **Search labels...** to find one. With none yet, the page reads *"No
+labels yet"* with a **Create Label** button.
+
 ---
 
-## Creating Labels
+## Create a Label
 
-Create a label with a **name** and a **colour**. The colour is what makes labels useful at a glance
-— an agent scanning the Inbox reads colour long before they read text.
+<Steps>
+<Step>
+Click **Create Label**. The **Create New Label** dialog opens.
+</Step>
+<Step>
+Enter a **Name** (required).
+</Step>
+<Step>
+Pick a **Color** with the colour picker, or type a hex value such as `#3b82f6`.
+</Step>
+<Step>
+Optionally add a **Description** so everyone applies it the same way.
+</Step>
+<Step>
+Click **Create Label**.
+</Step>
+</Steps>
 
-Pick colours with meaning and stick to it:
+The colour is what makes labels useful at a glance — an agent scanning the Inbox reads colour long
+before they read text. Pick colours with meaning and stick to it:
 
 | Colour | Convention |
 |--------|-----------|
@@ -26,16 +47,35 @@ Pick colours with meaning and stick to it:
 | **Green** | Positive — *VIP*, *Advocate* |
 | **Grey** | Neutral classification — *Wholesale* |
 
+Labels can also be created from **Inbox → Settings → Contact labels**. It is the same list.
+
 ---
 
-## Applying Labels
+## Edit or Delete a Label
+
+Open the row's **⋮** menu:
+
+- **Edit** — change the name, colour or description, then **Update Label**
+- **Delete** — asks you to confirm, and says how many contacts carry the label
+
+<Callout type="warn">
+  Deleting a label removes it from **every contact** that carries it, and it cannot be undone.
+  Renaming is almost always the better choice.
+</Callout>
+
+---
+
+## Apply Labels
 
 | From | How |
 |------|-----|
-| **Contacts list** | Select contacts → **Apply Label** |
-| **Contact record** | Add labels directly |
-| **Inbox** | Ticket Details panel → **Labels** |
-| **Automation** | The **Attach Label** action |
+| **Contacts list** | Tick contacts → **Apply Label** → pick labels → **Apply** |
+| **Add / Edit Contact** | The **Labels** field |
+| **Inbox** | Ticket Details panel → **Contact Labels** → **+ Add** |
+| **Automation** | The **Attach Label** action — see [Actions](/automation/actions) |
+
+To remove a label from one person, edit the contact, or click the **✕** on the label chip in the
+Inbox's Ticket Details panel.
 
 Automation is where labels earn their keep. A rule that labels every refund enquiry costs nothing
 and makes "how many refund requests last month?" a question you can answer.
@@ -44,22 +84,15 @@ and makes "how many refund requests last month?" a question you can answer.
 
 ## Where Labels Show Up
 
-- On every conversation row in the Inbox
-- In the Ticket Details panel
-- In the contacts list
-- As a filter in contacts, the Inbox and campaigns
+- On every conversation row in the Inbox, for every ticket that customer has
+- In the Inbox's Ticket Details panel
+- In the **Label** column of the contacts table, and in each contact's details
+- As a filter: the **Label** filter on the contacts list, and **Contact Labels** in the Inbox sidebar
 
----
-
-## Labels vs Lifecycle Stages
-
-| | Labels | [Lifecycle stages](/contacts/lifecycle) |
-|---|--------|-----------|
-| **How many** | Many per contact | Exactly one |
-| **Describe** | Traits, states, categories | Position in your funnel |
-| **Change** | Freely, in any direction | Progressively through the journey |
-
-Someone can be *VIP* **and** *Refund pending* at once. They cannot be both *Lead* and *Customer*.
+<Callout type="info">
+  A label describes the **customer**. To tag a single conversation instead — *Escalated*, *Refund* —
+  use a [conversation tag](/inbox/conversation-tags).
+</Callout>
 
 ---
 
@@ -71,7 +104,7 @@ Someone can be *VIP* **and** *Refund pending* at once. They cannot be both *Lead
 </Callout>
 
 - Agree the list before rolling it out, and keep it short
-- Review quarterly and delete labels nobody applies
+- Check the **Contacts** count and delete labels nobody applies
 - Use consistent wording — *VIP*, not *vip* and *V.I.P.*
 - Automate the ones that can be automated; humans forget
 
@@ -80,5 +113,5 @@ Someone can be *VIP* **and** *Refund pending* at once. They cannot be both *Lead
 ## Related Pages
 
 - [Groups](/contacts/groups)
-- [Lifecycle Stages](/contacts/lifecycle)
+- [Conversation Tags & Contact Labels](/inbox/conversation-tags)
 - [Automation Actions](/automation/actions)

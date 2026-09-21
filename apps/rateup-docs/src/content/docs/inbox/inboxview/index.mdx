@@ -17,7 +17,7 @@ where work is waiting without opening anything.
 | View | Contains | Mainly used by |
 |------|----------|----------------|
 | **[Open](/inbox/inboxview/open)** | Every active ticket, assigned or not | Managers |
-| **[New](/inbox/inboxview/newchat)** | Active tickets with **no owner** | Everyone |
+| **[New](/inbox/inboxview/newchat)** | Active tickets with **no owner** and a message in the last 24 hours | Everyone |
 | **[Closed](/inbox/inboxview/closed)** | Finished tickets | Everyone |
 | **All** | Every ticket, any status | Anyone searching |
 | **[Mine](/inbox/inboxview/mine)** | Tickets assigned to **you** | Agents |
@@ -32,7 +32,8 @@ where work is waiting without opening anything.
 The views are not mutually exclusive — the same ticket can appear in several at once.
 
 - **New** and **Mine** are both subsets of **Open**
-- A ticket is in **New** only while nobody owns it; assign it and it moves to **Mine**
+- A ticket is in **New** only while nobody owns it and it has had a message in the last 24 hours;
+  assign it and it moves to **Mine**, leave it quiet for a day and it stays only in **Open**
 - **@Mentions** and **Favourites** cut across status — a closed ticket can still be starred
 - **All** contains every ticket, open and closed
 
@@ -42,7 +43,7 @@ including **All**, and the badges stop counting them.
 ```
 All
 ├── Open
-│   ├── New      (no owner)
+│   ├── New      (no owner, active in the last 24h)
 │   └── Mine     (owner = you)
 └── Closed
 

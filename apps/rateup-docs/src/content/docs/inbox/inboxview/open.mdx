@@ -18,8 +18,10 @@ It is the default view when you enter the Inbox, and the one managers live in.
 <ScreenShot src="/docs/screenshots/inbox/view-open.png" alt="Assigned and unassigned tickets side by side" />
 
 - Every ticket is still active
-- Each row shows **New** (unassigned) or **Assigned**
-- Unassigned rows carry an **amber left edge**
+- Each row's status pill shows **New** (unassigned) or **Assigned**
+- Unassigned rows with a message in the last 24 hours are highlighted: cream background, **amber
+  left edge** and a filled **Unassigned** badge. Older unassigned rows are not highlighted — only
+  their **New** pill gives them away
 - The assignee's avatar sits on the right; `+2` means several people are assigned
 
 ---
@@ -29,7 +31,7 @@ It is the default view when you enter the Inbox, and the one managers live in.
 | View | Meaning |
 |------|---------|
 | **Open** | All active tickets, assigned or not |
-| **New** | Active tickets with **no owner** |
+| **New** | Active tickets with **no owner** and a message in the last 24 hours |
 | **Mine** | Active tickets assigned **to you** |
 
 **New** and **Mine** are both subsets of **Open**.
@@ -64,9 +66,9 @@ Pick another team or team member. The ticket is reassigned instantly and a syste
 </Steps>
 
 <Callout type="info">
-  Assigning a **team** makes the ticket available to every member of it. Assigning an
-  **individual** puts it in exactly one person's **Mine** view. Use teams when you want the fastest
-  available person to pick it up.
+  **Assign entire team** assigns every member of the team individually, so the ticket lands in all
+  of their **Mine** views. Assigning one person puts it in exactly one **Mine** view.
+  [How team assignment works →](/inbox/asigning-conversation#assigning-a-whole-team)
 </Callout>
 
 ---
@@ -75,7 +77,7 @@ Pick another team or team member. The ticket is reassigned instantly and a syste
 
 - Sort by **oldest first** to surface tickets that have been waiting
 - Use the **staff** and **team** filters to check one person's or one team's load
-- Watch for rows with an amber edge — those have nobody on them
+- Watch for **New** status pills — those tickets have nobody on them, highlighted or not
 - Reassign when someone goes offline rather than letting their tickets stall
 
 ---

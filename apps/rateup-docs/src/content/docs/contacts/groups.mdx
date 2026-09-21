@@ -1,45 +1,125 @@
 ---
 title: "Groups"
-description: Explicit lists of contacts, used mainly as campaign audiences.
+description: Explicit, team-owned lists of contacts — create them, manage members, import straight into them, and send campaigns to them.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-A **group** is a list you put contacts into deliberately. Groups are what campaigns are sent to.
+A **group** is a list you put contacts into deliberately. Groups are what [campaigns](/campaign) are
+sent to. Every group belongs to a **team**.
 
 <ScreenShot src="/docs/screenshots/contacts/groups.png" alt="Contact groups" />
 
+Each group is a card showing its icon, name, member count, owning team and creation date. Click a
+card to open the group. Use **Search contact groups...** to find one once you have several.
+
 ---
 
-## Creating a Group
+## Create a Group
 
 <Steps>
 <Step>
-Click **Create Group**.
+Click **Create Group**. The **Create New Group** dialog opens.
 </Step>
 <Step>
-Give it a name that describes the audience, not the campaign — *Newsletter subscribers* outlives
+Enter a **Group Name**. Name the audience, not the campaign — *Newsletter subscribers* outlives
 *March mailer*.
 </Step>
 <Step>
-Add members, from the group page or by bulk-selecting in the contacts list.
+Pick the team that owns it under **Select Team**. This is required.
+</Step>
+<Step>
+Optionally **Upload Icon** — an image shown on the card.
+</Step>
+<Step>
+Click **Create Group**.
 </Step>
 </Steps>
 
-Use **Search contact groups…** to find one once you have several.
+To rename a group, change its team or icon, open the card's **⋮** menu and choose **Edit Group**.
 
 ---
 
-## Adding and Removing Members
+## Inside a Group
+
+<ScreenShot
+  src="/docs/screenshots/contacts/contact_groups_page.png"
+  alt="An open group"
+/>
+
+The top of the page shows the group's icon, name, **Team** and **Total Members**.
+
+| Control | What it does |
+|---------|--------------|
+| **Pencil** next to the name | Rename in place — **Enter** or ✓ saves, **Esc** or ✕ cancels |
+| **Icon** | Click to change or remove the group's icon |
+| **Back to Groups** | Return to the list |
+| **Delete Group** | Delete the group — see below |
+
+Below sits the **Group Members** table. Search it with **Search by name or phone...**.
+
+---
+
+## Add Members
+
+There are three ways to put people in a group:
 
 | From | How |
 |------|-----|
-| **Contacts list** | Select contacts → **Add to Group** |
-| **Group page** | Add members directly |
-| **Import** | Assign a group during import |
+| **The group page** | **Add Members** — pick existing contacts, add a new one, or import a file |
+| **Contacts list** | Tick contacts → **Add to Group** |
+| **A contact's details** | **Groups → Add to group**, or the **Group** field when adding or editing a contact |
+
+### From the group page
+
+<Steps>
+<Step>
+Click **Add Members**.
+</Step>
+<Step>
+Under **Choose**, pick **Add Existing Contacts** or **Add New Contact**.
+</Step>
+<Step>
+**Add Existing Contacts** — search with **Search Contact**, or narrow with **Filter contacts** to
+pull people from other groups. Tick the ones you want, or **Select All**, then click **Add Member**.
+Contacts already in the group cannot be ticked again.
+
+**Add New Contact** — choose **Manual** to type one person in, or **Import CSV/XLSX** to upload a
+file. Everyone created or imported this way lands in the group.
+</Step>
+</Steps>
+
+Importing here works like the main [contact import](/contacts/managing-contacts#import-contacts-from-a-file)
+— same demo file, same **Update the existing data while importing** and header-row switches — but
+every contact in the file is also added to this group.
+
+---
+
+## Remove Members
+
+<Steps>
+<Step>
+Tick members in the **Group Members** table.
+</Step>
+<Step>
+Click **Remove (N)**. **Clear** unticks them instead.
+</Step>
+</Steps>
+
+You can also remove one person from a group in their [contact details](/contacts/managing-contacts#view-a-contacts-details)
+— click **✕** next to the group.
 
 Removing someone from a group does not delete the contact — it only takes them off that list.
+
+---
+
+## Delete a Group
+
+Use **Delete Group** on the group page, or **⋮ → Delete Group** on its card, and confirm.
+
+Deleting a group removes the list only. Its members stay in your contacts, in their other groups,
+with everything else about them intact.
 
 ---
 
@@ -51,6 +131,7 @@ This is the distinction people get wrong most often:
 |---|--------|--------|
 | **Are** | Lists you build | Tags describing a trait |
 | **Answer** | "Who should get this campaign?" | "What is true about this person?" |
+| **Owned by** | A team | The whole organisation |
 | **Visible in the Inbox** | No | Yes, on every conversation row |
 | **Typical name** | *Newsletter subscribers* | *VIP*, *Refund pending* |
 
@@ -65,7 +146,6 @@ This is the distinction people get wrong most often:
 
 - Keep them purposeful — a group nobody sends to is dead weight
 - Prefer a few durable groups over one per campaign
-- Build segments by filtering on labels and lifecycle rather than creating a group per combination
 - Review membership before big sends; groups drift
 
 ---
