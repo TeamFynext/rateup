@@ -11,7 +11,9 @@ import type {
   GiftFormValues,
   PointRewardFormValues,
 } from "@/components/dashboard/loyalty/rewards/schemas.ts";
+import { ShopifyDiscountCard } from "@/components/dashboard/loyalty/rewards/ShopifyDiscountCard.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { DatePicker } from "@/components/ui/date-picker.tsx";
 import {
   Field,
   FieldDescription,
@@ -29,6 +31,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { fromDateKey, toDateKey } from "@/utils/dateTime.ts";
 import { numberInputValue } from "@/utils/form.ts";
 
 interface LoyaltyRewardFormProps {
@@ -65,6 +68,22 @@ export function LoyaltyRewardForm({
   loyaltyTiers,
 }: Readonly<LoyaltyRewardFormProps>) {
   const uid = useId();
+  // A free item or service has no Shopify discount equivalent, so the card says so rather
+  // than letting the merchant switch on a sync that would never produce a code.
+  const pointRewardKind = useWatch({ control: pointRewardForm.control, name: "rewardType" });
+  const pointShopifyEnabled = useWatch({
+    control: pointRewardForm.control,
+    name: "shopifyDiscountEnabled",
+  });
+  const pointShopifyDays = useWatch({
+    control: pointRewardForm.control,
+    name: "shopifyValidForDays",
+  });
+  const couponValidFrom = fromDateKey(useWatch({ control: couponForm.control, name: "validFrom" }));
+  const couponShopifyEnabled = useWatch({
+    control: couponForm.control,
+    name: "shopifyDiscountEnabled",
+  });
   const DAYS_OF_WEEK = [
     { label: "Monday", value: "monday" },
     { label: "Tuesday", value: "tuesday" },
@@ -409,6 +428,19 @@ export function LoyaltyRewardForm({
                   </div>
                 )}
               </div>
+              <ShopifyDiscountCard
+                enabled={!!pointShopifyEnabled}
+                onEnabledChange={(checked) =>
+                  pointRewardForm.setValue("shopifyDiscountEnabled", checked)
+                }
+                validForDays={pointShopifyDays}
+                onValidForDaysChange={(days) =>
+                  pointRewardForm.setValue("shopifyValidForDays", days)
+                }
+                supported={
+                  pointRewardKind === "fixed-discount" || pointRewardKind === "percentage-discount"
+                }
+              />
               <div className="border rounded-lg p-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -472,26 +504,39 @@ export function LoyaltyRewardForm({
       {/* Coupon Form */}
       {category === "coupons" && (
         <form className="space-y-5">
-          <Controller
-            control={couponForm.control}
-            name="couponCode"
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Coupon Code</FieldLabel>
-                <Input
-                  id={field.name}
-                  aria-invalid={fieldState.invalid}
-                  placeholder="e.g., SAVE20"
-                  className="font-mono"
-                  {...field}
-                />
-                <FieldDescription>
-                  Unique code customers will use to redeem this coupon
-                </FieldDescription>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
+          {/*
+            First, because it decides what the rest of the form asks for: a synced coupon has
+            no single code to type in — each customer gets their own when they redeem.
+          */}
+          <ShopifyDiscountCard
+            enabled={!!couponShopifyEnabled}
+            onEnabledChange={(checked) => couponForm.setValue("shopifyDiscountEnabled", checked)}
+            supported
+            inheritsExpiryFrom="the coupon's Valid To date"
           />
+
+          {!couponShopifyEnabled && (
+            <Controller
+              control={couponForm.control}
+              name="couponCode"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>Coupon Code</FieldLabel>
+                  <Input
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder="e.g., SAVE20"
+                    className="font-mono"
+                    {...field}
+                  />
+                  <FieldDescription>
+                    Unique code customers will use to redeem this coupon
+                  </FieldDescription>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+          )}
 
           <Controller
             control={couponForm.control}
@@ -661,12 +706,16 @@ export function LoyaltyRewardForm({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Valid From</FieldLabel>
-                    <Input
+                    <DatePicker
                       id={field.name}
-                      aria-invalid={fieldState.invalid}
-                      type="date"
-                      {...field}
-                      value={field.value || ""}
+                      className="w-full"
+                      placeholder="Starts immediately"
+                      invalid={fieldState.invalid}
+                      value={fromDateKey(field.value)}
+                      onChange={(date) => field.onChange(date ? toDateKey(date) : "")}
+                      // The picker disallows the future by default, which is exactly backwards
+                      // for a promotion that has not started yet.
+                      disabled={false}
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
@@ -679,12 +728,17 @@ export function LoyaltyRewardForm({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Valid To</FieldLabel>
-                    <Input
+                    <DatePicker
                       id={field.name}
-                      aria-invalid={fieldState.invalid}
-                      type="date"
-                      {...field}
-                      value={field.value || ""}
+                      className="w-full"
+                      placeholder="No end date"
+                      invalid={fieldState.invalid}
+                      value={fromDateKey(field.value)}
+                      onChange={(date) => field.onChange(date ? toDateKey(date) : "")}
+                      // An end before the start is a coupon nobody can ever use, and with the
+                      // Shopify sync on it is a code that is never created at all.
+                      disabled={couponValidFrom ? { before: couponValidFrom } : false}
+                      startMonth={couponValidFrom}
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>

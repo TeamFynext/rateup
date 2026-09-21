@@ -8,6 +8,11 @@ const base = LOYALTY_BASE + "/redemptions";
 export interface RedeemRewardResponse {
   message?: string;
   redemptionCode?: string;
+  /**
+   * Set when the reward syncs to Shopify: opening it applies the code to the customer's cart,
+   * so they never have to type it. Null when the reward does not sync or the sync failed.
+   */
+  shopifyDiscountUrl?: string | null;
   redemption?: {
     id: string;
     status?: string;
