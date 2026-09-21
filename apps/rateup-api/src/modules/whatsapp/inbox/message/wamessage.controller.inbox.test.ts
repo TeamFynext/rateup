@@ -782,8 +782,54 @@ describe("exportWaMessageLogsHandler", () => {
 });
 
 describe("exportWhatsappChatsHandler", () => {
-  const constraints = encodeURIComponent(JSON.stringify({ from: "2026-07-01" }));
+  // The shape the Inbox export form sends: every date field, unused ones empty.
+  const formValues = (date: Record<string, unknown>) => ({
+    date: {
+      type: "between",
+      inclusive: false,
+      between: { from: "", to: "" },
+      before: "",
+      after: "",
+      on: "",
+      ...date,
+    },
+    repliesOnly: false,
+  });
+  const validConstraints = formValues({ between: { from: "2026-07-01", to: "2026-07-27" } });
+  const constraints = encodeURIComponent(JSON.stringify(validConstraints));
   const filterData = encodeURIComponent(JSON.stringify({ status: ["NEW"] }));
+
+  test.each([
+    ["an injected date", formValues({ type: "on", on: "2026-07-27' OR 1=1 --" })],
+    ["a date with a time", formValues({ type: "before", before: "2026-07-27T00:00:00Z" })],
+    ["the chosen date left empty", formValues({ type: "after" })],
+    ["an unknown date type", formValues({ type: "sometime" })],
+    ["a missing date", { repliesOnly: false }],
+  ])("refuses constraints with %s", async (_name, value) => {
+    const reply = makeReply();
+
+    await exportWhatsappChatsHandler(
+      makeRequest({
+        query: { constraints: encodeURIComponent(JSON.stringify(value)), filterData },
+      }),
+      reply,
+    );
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(m.exportChats).not.toHaveBeenCalled();
+  });
+
+  test("refuses constraints that are not JSON", async () => {
+    const reply = makeReply();
+
+    await exportWhatsappChatsHandler(
+      makeRequest({ query: { constraints: "not-json", filterData } }),
+      reply,
+    );
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(m.exportChats).not.toHaveBeenCalled();
+  });
 
   test("refuses to export without constraints", async () => {
     const reply = makeReply();
@@ -805,7 +851,7 @@ describe("exportWhatsappChatsHandler", () => {
 
     expect(m.exportChats).toHaveBeenCalledWith(
       "org-1",
-      { from: "2026-07-01" },
+      validConstraints,
       { status: ["NEW"] },
       5000,
       0,

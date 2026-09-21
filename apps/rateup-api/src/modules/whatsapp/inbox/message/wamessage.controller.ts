@@ -5,6 +5,7 @@ import {
   WaChatFilterQuerySchema,
   WaChatExportQuerySchema,
   WaChatExportConstraints,
+  waChatExportConstraints,
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
   BlockUserBody,
@@ -808,7 +809,16 @@ export async function exportWhatsappChatsHandler(
   if (constraints) {
     const orgId = request.user.orgId;
 
-    const constraintsDecoded: WaChatExportConstraints = JSON.parse(decodeURIComponent(constraints));
+    let constraintsDecoded: WaChatExportConstraints;
+    try {
+      const parsed = waChatExportConstraints.safeParse(JSON.parse(decodeURIComponent(constraints)));
+      if (!parsed.success) {
+        return reply.status(400).send("Invalid export constraints");
+      }
+      constraintsDecoded = parsed.data;
+    } catch {
+      return reply.status(400).send("Invalid export constraints");
+    }
 
     const filterfilterDataDecoded = JSON.parse(
       decodeURIComponent(filterData?.replace(/(^"|"$)/g, "")),

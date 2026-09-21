@@ -493,14 +493,17 @@ describe("exportWhatsapChats", () => {
     expect(db.$queryRawUnsafe.mock.calls[0][1]).toBe("org-1");
   });
 
+  const boundParams = () => db.$queryRawUnsafe.mock.calls[0].slice(1);
+
   test("covers the whole of the last day in a between-dates export", async () => {
     const sql = await runExport({
       date: { type: "between", between: { from: "2026-07-01", to: "2026-07-27" } },
     });
 
-    expect(sql).toContain(`wm."createdAt" >= '2026-07-01'`);
+    expect(sql).toContain(`wm."createdAt" >= $2::date`);
+    expect(sql).toContain(`wm."createdAt" < $3::date`);
     // The upper bound rolls to the next day so the final day is included.
-    expect(sql).toContain(`wm."createdAt" < '2026-07-28'`);
+    expect(boundParams()).toEqual(["org-1", "2026-07-01", "2026-07-28"]);
   });
 
   test.each([
@@ -511,13 +514,23 @@ describe("exportWhatsapChats", () => {
   ])("respects a %s constraint", async (_name, date, operator) => {
     const sql = await runExport({ date });
 
-    expect(sql).toContain(`${operator} '2026-07`);
+    expect(sql).toContain(`${operator} $2`);
+    expect(boundParams()[1]).toMatch(/^2026-07/);
   });
 
   test("matches a single day exactly", async () => {
     const sql = await runExport({ date: { type: "on", on: "2026-07-27" } });
 
-    expect(sql).toContain(`= '2026-07-27'`);
+    expect(sql).toContain(`= $2`);
+    expect(boundParams()).toEqual(["org-1", "2026-07-27"]);
+  });
+
+  test("never writes a date into the SQL text", async () => {
+    const payload = "2026-07-27' OR 1=1 --";
+    const sql = await runExport({ date: { type: "on", on: payload } });
+
+    expect(sql).not.toContain(payload);
+    expect(boundParams()).toEqual(["org-1", payload]);
   });
 
   test("limits the export to customer replies when asked", async () => {

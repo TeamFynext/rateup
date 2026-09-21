@@ -1097,6 +1097,14 @@ export async function exportWhatsapChats(
     templatename: string;
   }>
 > {
+  // $1 is the org id. The dates are user input, so they are always bound as
+  // parameters and never written into the SQL text.
+  const params: string[] = [orgId];
+  const bind = (value: string) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+
   function extendedWhereClause(): string {
     let extendedWhereClause = "";
 
@@ -1105,20 +1113,20 @@ export async function exportWhatsapChats(
       switch (constraints.date.type) {
         case DateType.BETWEEN:
           extendedWhereClause += `
-          AND wm."createdAt" >= '${constraints.date.between.from}'
-          AND wm."createdAt" < '${dayjs(constraints.date.between.to)
-            .add(1, "day")
-            .format("YYYY-MM-DD")}'
+          AND wm."createdAt" >= ${bind(constraints.date.between.from)}::date
+          AND wm."createdAt" < ${bind(
+            dayjs(constraints.date.between.to).add(1, "day").format("YYYY-MM-DD"),
+          )}::date
           `;
           break;
         case DateType.BEFORE:
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? "<=" : "<"} '${constraints.date.before}' `;
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? "<=" : "<"} ${bind(constraints.date.before)} `;
           break;
         case DateType.AFTER:
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? ">=" : ">"} '${constraints.date.after}' `;
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? ">=" : ">"} ${bind(constraints.date.after)} `;
           break;
         case DateType.ON:
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') = '${constraints.date.on}' `;
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') = ${bind(constraints.date.on)} `;
           break;
       }
     }
@@ -1172,7 +1180,7 @@ export async function exportWhatsapChats(
       wm."createdAt" ASC
     ${limit != null ? `LIMIT ${Number(limit)} OFFSET ${Number(offset ?? 0)}` : ""}`;
 
-  const result = await prisma.$queryRawUnsafe(query, orgId);
+  const result = await prisma.$queryRawUnsafe(query, ...params);
   return result as Array<{
     date: string;
     from: string;
