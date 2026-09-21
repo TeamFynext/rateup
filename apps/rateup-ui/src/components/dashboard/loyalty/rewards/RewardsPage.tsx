@@ -227,6 +227,9 @@ export function RewardsPage() {
   const [minimumSpendEnabled, setMinimumSpendEnabled] = useState(false);
   const [timeRestrictionsEnabled, setTimeRestrictionsEnabled] = useState(false);
 
+  /** Points paid the moment someone joins — a `LoyaltyProgram` column, like the referral pair. */
+  const [signupBonus, setSignupBonus] = useState(0);
+
   // Referral settings
   const [referralBonus, setReferralBonus] = useState(0);
   const [referralBonusType, setReferralBonusType] = useState<"points" | "gift">("points");
@@ -310,6 +313,7 @@ export function RewardsPage() {
 
   useEffect(() => {
     if (loyaltyProgram) {
+      setSignupBonus(loyaltyProgram.signupBonus || 0);
       setReferralBonus(loyaltyProgram.referralBonus || 0);
       setReferralBonusType(loyaltyProgram.referralBonusType || "points");
       setReferralRewardId(loyaltyProgram.referralRewardId);
@@ -397,6 +401,12 @@ export function RewardsPage() {
 
     setRewardFormCategory(category);
     setRewardsViewMode("create");
+  };
+
+  const handleSaveSignupBonus = () => {
+    if (loyaltyProgram?.id) {
+      updateLoyaltyProgramMutation.mutate({ signupBonus });
+    }
   };
 
   const handleSaveReferralSettings = () => {
@@ -645,6 +655,15 @@ export function RewardsPage() {
                   </Badge>
                 </div>
               </TabsTrigger>
+              <TabsTrigger value="joining">
+                <div className="flex items-center gap-2">
+                  <IconSparkles className="w-4 h-4" />
+                  <span>Joining Bonus</span>
+                  <Badge variant="outline" className="text-xs">
+                    {signupBonus > 0 ? signupBonus : "Off"}
+                  </Badge>
+                </div>
+              </TabsTrigger>
               <TabsTrigger value="referral">
                 <div className="flex items-center gap-2">
                   <IconUserPlus className="w-4 h-4" />
@@ -865,6 +884,67 @@ export function RewardsPage() {
             </TabsContent>
 
             {/* Referral Program */}
+            {/* The one reward paid for joining rather than for spending. It is a programme
+                column, not a reward row, so it saves on its own. */}
+            <TabsContent value="joining" className="space-y-5 mt-0">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <IconSparkles className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-sm font-semibold leading-none">
+                        Joining Bonus
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Paid once, the moment a customer joins
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="rounded-md bg-muted/50 border px-3 py-2 text-xs text-muted-foreground">
+                    Triggered on registration, however the customer joined
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Amount
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={signupBonus}
+                        onChange={(e) => setSignupBonus(Number.parseFloat(e.target.value) || 0)}
+                        className="h-9"
+                      />
+                      <span className="text-sm font-medium text-muted-foreground shrink-0">
+                        {programmeGiveback.pointsName}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Set it to 0 to give nothing for joining.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSaveSignupBonus}
+                  disabled={updateLoyaltyProgramMutation.isPending}
+                >
+                  {updateLoyaltyProgramMutation.isPending ? (
+                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <IconDeviceFloppy className="w-4 h-4 mr-2" />
+                  )}
+                  Save Joining Bonus
+                </Button>
+              </div>
+            </TabsContent>
+
             <TabsContent value="referral" className="space-y-5 mt-0">
               {/* Hero banner */}
               <div className="rounded-xl bg-linear-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-5">

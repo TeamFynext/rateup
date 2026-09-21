@@ -935,11 +935,10 @@ export function EarningRulesPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-8 flex gap-3">
+                <div className="mt-8 flex justify-end gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
                     onClick={() => {
                       setEarningRulesViewMode("list");
                       resetCreateForm();
