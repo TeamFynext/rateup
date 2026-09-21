@@ -19,7 +19,7 @@ import "dotenv/config";
 
 import prisma from "../src/utils/prisma.js";
 import redis from "../src/utils/redisConnection.js";
-import { planOrgRoles, tallyRoles, type MemberRow } from "../src/authz/migration.js";
+import { planOrgRoles, tallyRoles } from "../src/authz/migration.js";
 import { legacyRoleToKey, roleKeyToLegacy, DEFAULT_INVITED_ROLE } from "../src/authz/roles.js";
 
 const apply = process.argv.includes("--apply");
@@ -79,12 +79,15 @@ async function main() {
       id: true,
       name: true,
       ownerId: true,
-      orgMembers: { select: { userId: true, role: true, roleKey: true, createdAt: true } },
+      // `members`, not `orgMembers`: that is the relation's name on Org (schema.prisma:177).
+      members: { select: { userId: true, role: true, roleKey: true, createdAt: true } },
     },
   });
 
   const plans = orgs.map((org) =>
-    planOrgRoles({ id: org.id, ownerId: org.ownerId, members: org.orgMembers as MemberRow[] }),
+    // No cast: the select above already produces `MemberRow`, and asserting it was what let a
+    // wrong relation name through to runtime.
+    planOrgRoles({ id: org.id, ownerId: org.ownerId, members: org.members }),
   );
 
   for (const plan of plans) {

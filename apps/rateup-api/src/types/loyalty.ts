@@ -238,6 +238,21 @@ export interface ApprovalRules {
   auto_approve_for_tiers?: string[];
 }
 
+/**
+ * Opt-in mirroring of this reward's redemption codes into the merchant's Shopify store, as
+ * discount codes the customer can type (or auto-apply via the share link) at checkout.
+ * Implemented in `integrations/shopify/shopifyDiscount.service.ts`.
+ */
+export interface ShopifyDiscountRules {
+  enabled?: boolean;
+  valid_for_days?: number | null;
+  combines_with?: {
+    order_discounts?: boolean;
+    product_discounts?: boolean;
+    shipping_discounts?: boolean;
+  };
+}
+
 export interface LoyaltyRedemptionRules {
   time_restrictions?: TimeRestrictions;
   quantity_restrictions?: QuantityRestrictions;
@@ -247,6 +262,7 @@ export interface LoyaltyRedemptionRules {
   inventory?: InventoryRestrictions;
   combination_rules?: CombinationRules;
   approval?: ApprovalRules;
+  shopify?: ShopifyDiscountRules;
 }
 
 // ============================================================================
