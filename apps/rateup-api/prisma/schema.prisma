@@ -2552,6 +2552,17 @@ model LoyaltyRedemption {
   rulesValidatedAt      DateTime @default(now())
   rulesValidationPassed Boolean  @default(true)
 
+  /// Mirror of this code as a Shopify discount, when the reward is configured to sync
+  /// (`redemptionRules.shopify.enabled`). `redemptionCode` *is* the discount code, so the
+  /// code the customer gets over WhatsApp is the one that works at the shop's checkout.
+  /// `shopifyDiscountError` holds why a sync did not happen — a missing `write_discounts`
+  /// scope, or a reward value with no discount equivalent — so a cashier-only code can be
+  /// explained rather than just looking broken.
+  shopifyDiscountId    String?
+  shopifyDiscountUrl   String?
+  shopifyDiscountError String?
+  shopifySyncedAt      DateTime?
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

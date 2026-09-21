@@ -9,6 +9,6 @@
     "esModuleInterop": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "utils/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "utils/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["dist", "node_modules"]
 }
