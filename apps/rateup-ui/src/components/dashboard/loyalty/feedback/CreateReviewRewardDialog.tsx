@@ -158,7 +158,7 @@ export function CreateReviewRewardDialog({
             <Button type="button" variant="outline" onClick={close}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={create.isPending}>
+            <Button type="submit" loading={create.isPending}>
               {t("Create reward")}
             </Button>
           </DialogFooter>

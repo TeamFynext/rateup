@@ -80,7 +80,12 @@ const AddGoogleReviewLinkForTeamModal = ({
       <span className="flex-1">{team.name}</span>
       <span>:</span>
       <Input className="flex-1" value={team?.reviewPageLinks?.[platform] ?? ""} readOnly />
-      <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
+      <Button
+        aria-label={translations("Edit")}
+        variant="ghost"
+        size="icon"
+        onClick={() => setOpen(true)}
+      >
         <IconEdit />
       </Button>
       <Dialog

@@ -189,7 +189,7 @@ const StageColumn = memo(function StageColumn({
     >
       <div className="border-border border-b px-3.25 pt-3 pb-2.5">
         <div className="flex items-center gap-1.75">
-          <span className="font-nunito text-foreground min-w-0 flex-1 truncate text-sm font-semibold">
+          <span className="font-display text-foreground min-w-0 flex-1 truncate text-sm font-semibold">
             {stage.name}
           </span>
           <span className="border-border text-muted-foreground rounded-full border px-1.75 text-[11.5px] font-medium">

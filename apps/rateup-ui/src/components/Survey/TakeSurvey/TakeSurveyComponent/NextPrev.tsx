@@ -145,6 +145,7 @@ function NextPrev({
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-end gap-4">
           <Button
+            aria-label={translations("Previous question")}
             variant="outline"
             size="icon"
             title=""

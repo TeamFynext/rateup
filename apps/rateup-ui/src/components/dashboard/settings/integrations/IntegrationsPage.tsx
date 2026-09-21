@@ -42,7 +42,7 @@ function IntegrationCard({
       <CardContent className="flex flex-col gap-3">
         <IntegrationPlate icon={config.icon} connected={connected} own={isOwn} size="sm" />
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="font-heading text-sm font-medium">{config.name}</span>
+          <span className="font-display text-sm font-medium">{config.name}</span>
           <p className="text-xs leading-relaxed text-muted-foreground">{config.description}</p>
         </div>
       </CardContent>
@@ -160,7 +160,7 @@ export function IntegrationsPage() {
     <div className="mx-auto w-full max-w-265 space-y-8 pb-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-heading mb-1 text-2xl font-semibold">{t("Integrations")}</h2>
+          <h2 className="font-display mb-1 text-2xl font-semibold">{t("Integrations")}</h2>
           <p className="text-sm text-muted-foreground">
             {t("Connect RateUp to the tools you already run your business on.")}
           </p>

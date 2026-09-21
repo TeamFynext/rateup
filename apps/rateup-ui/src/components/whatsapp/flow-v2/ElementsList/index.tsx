@@ -10,6 +10,7 @@ import {
 import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
+import { pressable } from "@/components/common/pressable.ts";
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { FieldLabel } from "@/components/ui/field.tsx";
@@ -203,7 +204,7 @@ function ElementCard({ element, index, isExpanded, onToggle, onDelete }: Element
             {/* Element Header */}
             <div
               className="flex items-center gap-3 p-3 cursor-pointer select-none"
-              onClick={onToggle}
+              {...pressable(onToggle)}
             >
               <div {...provided.dragHandleProps}>
                 <IconGripVertical
@@ -217,12 +218,13 @@ function ElementCard({ element, index, isExpanded, onToggle, onDelete }: Element
               <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                 <p className="font-medium text-sm truncate flex flex-wrap">
                   {getElementLabel()}
-                  {element.required && <span className="text-red-500 ml-1">*</span>}
+                  {element.required && <span className="text-destructive ml-1">*</span>}
                 </p>
                 <p className="text-xs text-muted-foreground">{element.metaType || element.type}</p>
               </div>
               <div className="flex gap-1">
                 <Button
+                  aria-label={translations("Delete")}
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8"
@@ -233,7 +235,12 @@ function ElementCard({ element, index, isExpanded, onToggle, onDelete }: Element
                 >
                   <IconTrash size={14} className="text-destructive" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8">
+                <Button
+                  aria-label={translations("Collapse")}
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                >
                   {isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
                 </Button>
               </div>

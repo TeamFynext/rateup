@@ -139,8 +139,9 @@ export function MessagesStep({
           <AlertDescription>
             {t(
               "These are already used by another automation or command, so they were not saved. Pick different words and save again:",
-            )}{" "}
-            <strong>{skipped.map((s) => s.requestMessage).join(", ")}</strong>
+            )}
+            {""}
+            <strong>{skipped.map((s) => s.requestMessage).join(",")}</strong>
           </AlertDescription>
         </Alert>
       )}
@@ -408,7 +409,8 @@ function EventVariableHint({ variables }: Readonly<{ variables: LoyaltyMessageVa
   if (variables.length === 0) return null;
   return (
     <FieldDescription className="text-xs">
-      {t("Filled in when it sends:")}{" "}
+      {t("Filled in when it sends:")}
+      {""}
       <span className="font-mono">
         {variables.map((variable) => `${variable.token} ${variable.label}`).join(" · ")}
       </span>

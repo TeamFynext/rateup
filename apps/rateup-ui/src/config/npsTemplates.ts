@@ -32,7 +32,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     industry: "Ecommerce / D2C brand",
     sector: "Retail & D2C",
     ratingQuestion:
-      "How likely are you to recommend {{brand}} to a friend or family member? (0 = not at all, 10 = definitely)",
+      "How likely are you to recommend {brand} to a friend or family member? (0 = not at all, 10 = definitely)",
     followUps: {
       promoter: "Love that! What did we get right — the product, the delivery, or something else?",
       passive: "Thanks for the honest score. What would have made it a 10?",
@@ -47,7 +47,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "fashion-apparel",
     industry: "Fashion & apparel",
     sector: "Retail & D2C",
-    ratingQuestion: "How likely are you to recommend shopping with {{brand}} to a friend? (0–10)",
+    ratingQuestion: "How likely are you to recommend shopping with {brand} to a friend? (0–10)",
     followUps: {
       promoter: "Wonderful! Would you mind telling us which piece you loved most?",
       passive: "Thank you. Was it the fit, the fabric or the delivery that fell short?",
@@ -63,7 +63,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     industry: "Beauty & skincare",
     sector: "Retail & D2C",
     ratingQuestion:
-      "How likely are you to recommend {{brand}} to someone with a similar skin type? (0–10)",
+      "How likely are you to recommend {brand} to someone with a similar skin type? (0–10)",
     followUps: {
       promoter: "That's great to hear! Which product worked best for you?",
       passive:
@@ -79,7 +79,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "grocery-quick-commerce",
     industry: "Grocery & quick commerce",
     sector: "Retail & D2C",
-    ratingQuestion: "How likely are you to recommend {{brand}} for your daily essentials? (0–10)",
+    ratingQuestion: "How likely are you to recommend {brand} for your daily essentials? (0–10)",
     followUps: {
       promoter: "Thank you! Is it the speed, the prices or the range that keeps you coming back?",
       passive: "Thanks for the score. What one thing would make us your default?",
@@ -94,7 +94,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     industry: "Restaurant & café",
     sector: "Food & hospitality",
     ratingQuestion:
-      "How likely are you to recommend {{brand}} to a friend looking for a place to eat? (0–10)",
+      "How likely are you to recommend {brand} to a friend looking for a place to eat? (0–10)",
     followUps: {
       promoter: "So glad you enjoyed it! What was your favourite dish?",
       passive: "Thanks for visiting. What would have made the meal a 10?",
@@ -109,7 +109,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "cloud-kitchen-delivery",
     industry: "Cloud kitchen & food delivery",
     sector: "Food & hospitality",
-    ratingQuestion: "How likely are you to order from {{brand}} again and recommend us? (0–10)",
+    ratingQuestion: "How likely are you to order from {brand} again and recommend us? (0–10)",
     followUps: {
       promoter: "Brilliant! What did you order, and what made it good?",
       passive: "Thanks. Was it the food, the packaging or the delivery time?",
@@ -124,7 +124,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "hotel-hospitality",
     industry: "Hotel & hospitality",
     sector: "Food & hospitality",
-    ratingQuestion: "How likely are you to recommend staying at {{brand}} to a friend? (0–10)",
+    ratingQuestion: "How likely are you to recommend staying at {brand} to a friend? (0–10)",
     followUps: {
       promoter: "Thank you! What made your stay memorable?",
       passive: "Thanks for staying with us. What would have made it a 10?",
@@ -140,7 +140,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     industry: "Clinic & healthcare",
     sector: "Health & wellness",
     ratingQuestion:
-      "How likely are you to recommend {{brand}} to a friend or family member needing similar care? (0–10)",
+      "How likely are you to recommend {brand} to a friend or family member needing similar care? (0–10)",
     followUps: {
       promoter: "Thank you. What made your visit a good experience?",
       passive: "Thanks for your feedback. What could we have done better?",
@@ -156,7 +156,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     industry: "Dental clinic",
     sector: "Health & wellness",
     ratingQuestion:
-      "How likely are you to recommend {{brand}} to someone looking for a dentist? (0–10)",
+      "How likely are you to recommend {brand} to someone looking for a dentist? (0–10)",
     followUps: {
       promoter: "Thank you! Would you be open to sharing that as a review?",
       passive: "Thanks. Was there anything about the visit that felt uncomfortable?",
@@ -170,7 +170,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "salon-spa",
     industry: "Salon & spa",
     sector: "Health & wellness",
-    ratingQuestion: "How likely are you to recommend {{brand}} to a friend? (0–10)",
+    ratingQuestion: "How likely are you to recommend {brand} to a friend? (0–10)",
     followUps: {
       promoter: "Lovely! Which stylist looked after you? We'd love to pass it on.",
       passive: "Thanks. What would have made your visit a 10?",
@@ -185,7 +185,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     industry: "Gym & fitness studio",
     sector: "Health & wellness",
     ratingQuestion:
-      "How likely are you to recommend {{brand}} to a friend who wants to get fit? (0–10)",
+      "How likely are you to recommend {brand} to a friend who wants to get fit? (0–10)",
     followUps: {
       promoter: "Great! What's working best — the trainers, the equipment or the classes?",
       passive: "Thanks. What one change would make this your favourite gym?",
@@ -199,8 +199,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "education-coaching",
     industry: "Education & coaching",
     sector: "Services",
-    ratingQuestion:
-      "How likely are you to recommend {{brand}} to another parent or student? (0–10)",
+    ratingQuestion: "How likely are you to recommend {brand} to another parent or student? (0–10)",
     followUps: {
       promoter: "Thank you! What has made the biggest difference for you?",
       passive: "Thanks for the feedback. What would you like us to improve?",
@@ -214,8 +213,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "real-estate",
     industry: "Real estate",
     sector: "Services",
-    ratingQuestion:
-      "How likely are you to recommend {{brand}} to someone buying or renting? (0–10)",
+    ratingQuestion: "How likely are you to recommend {brand} to someone buying or renting? (0–10)",
     followUps: {
       promoter: "Thank you! What did your agent do particularly well?",
       passive: "Thanks. What part of the process felt harder than it should have?",
@@ -229,7 +227,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "logistics-courier",
     industry: "Logistics & courier",
     sector: "Services",
-    ratingQuestion: "How likely are you to recommend {{brand}} for deliveries? (0–10)",
+    ratingQuestion: "How likely are you to recommend {brand} for deliveries? (0–10)",
     followUps: {
       promoter: "Thank you! Was it the speed, the tracking or the delivery agent?",
       passive: "Thanks. Where did the experience fall short?",
@@ -244,7 +242,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     industry: "B2B SaaS",
     sector: "B2B & SaaS",
     ratingQuestion:
-      "How likely are you to recommend {{brand}} to a colleague in a similar role? (0–10)",
+      "How likely are you to recommend {brand} to a colleague in a similar role? (0–10)",
     followUps: {
       promoter: "Thank you! Which part of the product has been most valuable to your team?",
       passive:
@@ -260,7 +258,7 @@ export const NPS_TEMPLATES: NpsTemplate[] = [
     slug: "financial-services",
     industry: "Financial services",
     sector: "B2B & SaaS",
-    ratingQuestion: "How likely are you to recommend {{brand}} to a friend or colleague? (0–10)",
+    ratingQuestion: "How likely are you to recommend {brand} to a friend or colleague? (0–10)",
     followUps: {
       promoter: "Thank you. What has given you the most confidence in us?",
       passive: "Thanks. What would make you more comfortable recommending us?",

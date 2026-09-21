@@ -126,7 +126,7 @@ export function FlowEmbeddedLinkDetailedView() {
                     textareaClassName="text-2xl font-extrabold"
                   />
                   {fieldState.error && (
-                    <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                    <p className="text-xs text-destructive">{fieldState.error.message}</p>
                   )}
                 </div>
               )}

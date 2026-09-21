@@ -80,8 +80,8 @@ export default function OnboardingStep1({
         >
           <IconClipboardList className="w-5 h-5 text-white" />
         </motion.div>
-        <h2 className="text-gray-900 text-base">Select Your Services</h2>
-        <p className="text-gray-600 text-sm">
+        <h2 className="text-foreground text-base">Select Your Services</h2>
+        <p className="text-muted-foreground text-sm">
           Choose the tools and features you need for your business
         </p>
       </div>
@@ -92,8 +92,8 @@ export default function OnboardingStep1({
             <Card
               className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
                 data.services.includes(service.id)
-                  ? "border-blue-400 bg-linear-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
-                  : "border-gray-200 hover:border-blue-300 bg-white"
+                  ? "border-blue-400 bg-linear-to-r from-ru-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                  : "border-border hover:border-primary/40 bg-card"
               }`}
               onClick={() => handleServiceToggle(service.id)}
             >
@@ -105,14 +105,14 @@ export default function OnboardingStep1({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <span className="text-gray-900 text-sm">{service.name}</span>
+                    <span className="text-foreground text-sm">{service.name}</span>
                     {service.recommended && (
                       <span className="bg-linear-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm text-sm">
                         Recommended
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-600 text-sm">{service.description}</p>
+                  <p className="text-muted-foreground text-sm">{service.description}</p>
                   <p className="text-blue-600 mt-1 text-sm">✓ {service.benefit}</p>
                 </div>
                 {data.services.includes(service.id) && (
@@ -131,27 +131,27 @@ export default function OnboardingStep1({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-linear-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-2.5 mt-3 shadow-sm backdrop-blur-sm"
+          className="bg-linear-to-r from-ru-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-2.5 mt-3 shadow-sm backdrop-blur-sm"
         >
           <div className="flex items-center space-x-2.5">
             <IconCircleCheck className="w-4 h-4 text-blue-600" />
             <div>
-              <p className="text-blue-700 text-sm">
+              <p className="text-blue-700 dark:text-blue-400 text-sm">
                 Great! You've selected {data.services.length} service
                 {data.services.length !== 1 ? "s" : ""}
               </p>
-              <p className="text-gray-700 mt-0.5 text-sm">We'll configure these for you</p>
+              <p className="text-foreground mt-0.5 text-sm">We'll configure these for you</p>
             </div>
           </div>
         </motion.div>
       )}
 
-      <div className="flex justify-between mt-5 pt-4 border-t border-gray-200">
+      <div className="flex justify-between mt-5 pt-4 border-t border-border">
         <Button
           variant="outline"
           onClick={handleBack}
           disabled={currentStep === 1}
-          className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="flex items-center px-4 py-2 border-2 border-border hover:border-muted-foreground text-foreground bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           <IconArrowLeft className="w-4 h-4 mr-2" />
           Back

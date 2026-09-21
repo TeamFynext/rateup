@@ -725,7 +725,7 @@ export function PartnerApplyModal({ open, onOpenChange }: Readonly<PartnerApplyM
                   variant="outline"
                   size="sm"
                   onClick={back}
-                  disabled={partnerMutation.isPending}
+                  loading={partnerMutation.isPending}
                 >
                   <IconArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                   Back
@@ -735,14 +735,9 @@ export function PartnerApplyModal({ open, onOpenChange }: Readonly<PartnerApplyM
                 size="sm"
                 className="bg-[#2E5BFF] hover:bg-[#1a3db8] text-white border-0"
                 onClick={next}
-                disabled={partnerMutation.isPending}
+                loading={partnerMutation.isPending}
               >
-                {partnerMutation.isPending ? (
-                  <>
-                    <div className="mr-1.5 h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-r-transparent" />
-                    Submitting...
-                  </>
-                ) : step === STEPS.length - 1 ? (
+                {step === STEPS.length - 1 ? (
                   <>
                     <IconSend className="mr-1.5 h-3.5 w-3.5" />
                     Submit application

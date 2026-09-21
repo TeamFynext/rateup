@@ -1,11 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
 import { orgKeys, teamKeys } from "@/backend/org/org.keys";
 import { userKeys } from "@/backend/user/user.keys";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
-import type { IUpdateLogo, IUpdateOrgDetails } from "./org.api";
+import type { IMemberPermissions, IUpdateLogo, IUpdateOrgDetails } from "./org.api";
 import {
   completeOrgDetails,
   deleteOrgByAdmin,
@@ -17,10 +18,14 @@ import {
   getWebhookClientSecret,
   orgNameAndPhone,
   sendDeleteOrgEmail,
+  getMemberActivity,
+  updateMemberPermissions,
   updateOrgDetails,
   updateOrgLogo,
   updateOrgPause,
   updateRole,
+  transferOwnership,
+  type IUpdateRole,
 } from "./org.api";
 
 export const useTeamsMembersOfOrg = () => {
@@ -53,15 +58,17 @@ export const useOrgStats = (orgId: string) =>
 export function useUpdateRoleMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values: { memberId: string; body: { role: string } }) =>
+    mutationFn: (values: { memberId: string; body: IUpdateRole }) =>
       updateRole(values.memberId, values.body),
     onSuccess: () => {
-      toast.success("Staff Role Updated Successfully!", {
+      toast.success("Role updated", {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: orgKeys.teams() });
       queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
       queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
+      // The changed person may be the one signed in on another tab; their own permissions refresh too.
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
     },
     onError: (error) => {
       console.error("Error Role Update:", error.message);
@@ -72,12 +79,59 @@ export function useUpdateRoleMutation() {
   });
 }
 
+/**
+ * Hands the organisation to another member. The API makes them OWNER and leaves the caller as
+ * ADMIN; everything role-derived on this device is stale afterwards, so the whole cache refetches.
+ */
+export function useMemberActivity(memberId: string, page: number, enabled = true) {
+  return useQuery({
+    queryKey: orgKeys.memberActivity(memberId, page),
+    queryFn: () => getMemberActivity(memberId, page),
+    enabled: enabled && memberId.length > 0,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useUpdateMemberPermissionsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: { memberId: string; body: IMemberPermissions }) =>
+      updateMemberPermissions(values.memberId, values.body),
+    onSuccess: () => {
+      toast.success("Permissions saved", { id: "member-permissions" });
+      queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
+      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not save the permissions"), {
+        id: "member-permissions",
+      });
+    },
+  });
+}
+
+export function useTransferOwnershipMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => transferOwnership(userId),
+    onSuccess: () => {
+      toast.success("Ownership transferred", { id: "transfer-ownership" });
+      queryClient.invalidateQueries();
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Could not transfer ownership"), {
+        id: "transfer-ownership",
+      });
+    },
+  });
+}
+
 export function useUpdateOrgLogoMutation(setIsLoadingUpload: (uploading: boolean) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateLogo) => updateOrgLogo(values),
     onSuccess: () => {
-      toast.success("Logo Updated Successfully!", {
+      toast.success("Logo updated", {
         id: "load-data",
       });
       setIsLoadingUpload(false);

@@ -52,7 +52,7 @@ function Page() {
     <ConfirmProvider>
       <SidebarProvider defaultOpen={true}>
         <AppSidebar data={data && "data" in data ? data : undefined} />
-        <SidebarInset className=" overflow-hidden">
+        <SidebarInset className="overflow-hidden">
           <NavHeader pathname={pathname} />
           <div className="flex flex-1 flex-col gap-4 px-4 pt-0">
             <Outlet />

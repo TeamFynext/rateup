@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
@@ -281,8 +280,7 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
           <DialogClose render={<Button variant="secondary" type="button" />}>
             <span className="text-sm font-normal">{t("Cancel")}</span>
           </DialogClose>
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Spinner />}
+          <Button type="submit" loading={isPending}>
             <span className="text-sm font-normal">
               {data ? t("Update Custom Field") : t("Create Custom Field")}
             </span>

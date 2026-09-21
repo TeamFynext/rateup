@@ -84,7 +84,7 @@ export function AutomationPage() {
     <ListPage>
       <ListPageHeader>
         <ListPageHeaderSection className="gap-3">
-          <Button onClick={handleCreate} disabled={isLoading}>
+          <Button onClick={handleCreate} loading={isLoading}>
             Create Automation
             <IconPlus size={16} className="ml-2" />
           </Button>
@@ -105,7 +105,7 @@ export function AutomationPage() {
                     variant="outline"
                     size="sm"
                     className="text-xs gap-1"
-                    disabled={isLoading}
+                    loading={isLoading}
                   />
                 }
               >
@@ -143,7 +143,7 @@ export function AutomationPage() {
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="sm"
                 className="gap-2"
-                disabled={isLoading}
+                loading={isLoading}
               >
                 <IconGrid3x3 className="w-4 h-4" />
                 Grid
@@ -153,7 +153,7 @@ export function AutomationPage() {
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
                 className="gap-2"
-                disabled={isLoading}
+                loading={isLoading}
               >
                 <IconList className="w-4 h-4" />
                 List

@@ -51,19 +51,20 @@ export default function WaInboxImage(props: Props) {
     <>
       <div className="flex flex-col gap-1 p-0">
         <div className="group relative w-fit">
-          <img
-            src={imageUrl}
-            alt="chat media image"
-            className="max-w-[150px] rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+          <button
+            type="button"
             onClick={() => setOpened(true)}
-          />
+            className="block cursor-pointer rounded-md transition-opacity hover:opacity-90"
+          >
+            <img src={imageUrl} alt="chat media image" className="max-w-[150px] rounded-md" />
+          </button>
           <Button
             type="button"
             size="icon-sm"
             variant="secondary"
             aria-label="Download image"
             title="Download image"
-            disabled={downloading}
+            loading={downloading}
             onClick={handleDownload}
             // Always reachable by keyboard and on touch, where there is no hover.
             className="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"

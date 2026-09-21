@@ -1,11 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { UsersPage } from "@/components/dashboard/settings/users/UsersPage.tsx";
-
+// The Users page became Members; old links and bookmarks still land somewhere useful.
 export const Route = createFileRoute("/dashboard/settings/users/")({
-  component: RouteComponent,
+  loader: () => {
+    throw redirect({ to: "/dashboard/settings/members", replace: true });
+  },
 });
-
-function RouteComponent() {
-  return <UsersPage />;
-}

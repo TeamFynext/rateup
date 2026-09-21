@@ -96,7 +96,7 @@ export default function PostGrid({
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   {post?.primary_tag?.name && (
-                    <Badge className="mb-2 self-start bg-blue-100 text-blue-700">
+                    <Badge className="mb-2 self-start bg-ru-blue-100 text-blue-700">
                       {post.primary_tag.name}
                     </Badge>
                   )}

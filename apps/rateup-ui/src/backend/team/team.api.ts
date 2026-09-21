@@ -9,13 +9,14 @@ export interface ICreateTeam {
 
 export interface IInviteMember {
   name: string;
-  orgId: string | undefined;
-  invitedBy: string;
+  /** Ignored when sent: the API takes both from the session. */
+  orgId?: string;
+  invitedBy?: string;
   /** Null invites the member to the organisation without a team. */
   teamId: string | null;
   email: string;
   type?: string;
-  /** The role the invitee is created with on accept. Omitted means ADMIN. */
+  /** The legacy role string the invitee is created with on accept. Omitted means Staff. */
   role?: string;
   /** Every team the invitee joins on accept. Omitted means `teamId` alone. */
   teamIds?: string[];
@@ -134,31 +135,6 @@ export async function removeUserFromTeam({ teamId, userId }: { teamId: string; u
 
 export async function getTeamById(teamId: string) {
   const res = await axiosClient.get(`/team/teams/${teamId}`);
-  return res.data;
-}
-
-// ─── Team Features ────────────────────────────────────────────────────────────
-
-interface TeamFeatureItem {
-  id: string;
-  feature: string;
-  createdAt: string;
-}
-
-export interface TeamFeaturesResponse {
-  features: TeamFeatureItem[];
-}
-
-export async function getTeamFeatures(teamId: string): Promise<TeamFeaturesResponse> {
-  const res = await axiosClient.get(`/team/${teamId}/features`);
-  return res.data;
-}
-
-export async function updateTeamFeatures(
-  teamId: string,
-  features: string[],
-): Promise<TeamFeaturesResponse> {
-  const res = await axiosClient.put(`/team/${teamId}/features`, { features });
   return res.data;
 }
 

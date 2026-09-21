@@ -52,6 +52,7 @@ export const InstagramIceBreakerNodeEditor: React.FC<
             />
           </div>
           <Button
+            aria-label="Remove"
             type="button"
             style={{ marginTop: "20px" }}
             variant="ghost"

@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
+import { PAGE_TITLE, SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -197,8 +198,8 @@ function QuestionReviewPageEditor({
 
   return (
     <div className="flex h-full flex-col gap-4 p-4">
-      <h1 className="text-2xl">Review Page Settings</h1>
-      <div className=" flex w-fit items-center gap-3 text-lg">
+      <h1 className={PAGE_TITLE}>{translations("Review Page Settings")}</h1>
+      <div className="flex w-fit items-center gap-3 text-lg">
         <span>{selectedQ?.reviewPageOptions ? "Disable" : "Enable"} Review Page: </span>
         <Switch
           checked={Boolean(selectedQ?.reviewPageOptions)}
@@ -254,8 +255,8 @@ function QuestionReviewPageEditor({
             {componentToBeRendered}
             <Separator />
             <div className="flex flex-col gap-4">
-              <h1 className="text-2xl">Review Page Links</h1>
-              <div className="flex flex-col gap-4 ">
+              <h2 className={SECTION_TITLE}>{translations("Review Page Links")}</h2>
+              <div className="flex flex-col gap-4">
                 {teamsToDisplay &&
                   teamsToDisplay.map((team) => (
                     <AddGoogleReviewLinkForTeamModal

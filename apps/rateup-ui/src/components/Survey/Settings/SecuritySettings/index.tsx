@@ -23,7 +23,7 @@ function SecuritySettings({
     <Card>
       <CardHeader className="flex flex-row items-center gap-2.25">
         <IconShieldCheck className="size-4 text-primary" />
-        <CardTitle className="font-nunito text-[15px] font-extrabold">Security</CardTitle>
+        <CardTitle className="font-display text-[15px] font-extrabold">Security</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <PremiumFeature isSubscribed={enabledModules.includes("endtoendencryption")}>

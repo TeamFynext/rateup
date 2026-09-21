@@ -138,12 +138,8 @@ function TestAgentCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
             ) : (
               <span />
             )}
-            <Button type="submit" disabled={testAgent.isPending}>
-              {testAgent.isPending ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <IconSend data-icon="inline-start" />
-              )}
+            <Button type="submit" loading={testAgent.isPending}>
+              <IconSend data-icon="inline-start" />
               Send
             </Button>
           </div>
@@ -225,7 +221,7 @@ function ThreadControlCard({ waSettingsId }: Readonly<{ waSettingsId: string }>)
           <Button
             type="button"
             variant="outline"
-            disabled={setThreadControl.isPending}
+            loading={setThreadControl.isPending}
             onClick={() => submit("pass")}
           >
             <IconPhoneOutgoing data-icon="inline-start" />
@@ -233,14 +229,10 @@ function ThreadControlCard({ waSettingsId }: Readonly<{ waSettingsId: string }>)
           </Button>
           <Button
             type="button"
-            disabled={setThreadControl.isPending}
+            loading={setThreadControl.isPending}
             onClick={() => submit("release")}
           >
-            {setThreadControl.isPending ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <IconPhoneOff data-icon="inline-start" />
-            )}
+            <IconPhoneOff data-icon="inline-start" />
             Release control
           </Button>
         </div>
@@ -341,12 +333,8 @@ function AgentEventCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
             )}
           </FormField>
           <div className="flex justify-end">
-            <Button type="submit" disabled={submitEvent.isPending}>
-              {submitEvent.isPending ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <IconMessage2 data-icon="inline-start" />
-              )}
+            <Button type="submit" loading={submitEvent.isPending}>
+              <IconMessage2 data-icon="inline-start" />
               Submit event
             </Button>
           </div>
@@ -404,10 +392,9 @@ function EvalRunCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
             type="button"
             variant="outline"
             size="sm"
-            disabled={loadCases.isPending}
+            loading={loadCases.isPending}
             onClick={() => loadCases.mutate()}
           >
-            {loadCases.isPending && <Spinner data-icon="inline-start" />}
             {cases.length ? "Reload cases" : "Load eval cases"}
           </Button>
           {!!cases.length && (
@@ -508,7 +495,8 @@ function EvalRunCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
                 <div className="flex flex-wrap gap-4 text-sm">
                   {run.result.avg_conversation_score !== undefined && (
                     <span>
-                      <span className="text-muted-foreground">Conversation score</span>{" "}
+                      <span className="text-muted-foreground">Conversation score</span>
+                      {""}
                       <strong className="tabular-nums">
                         {run.result.avg_conversation_score.toFixed(2)}
                       </strong>
@@ -516,7 +504,8 @@ function EvalRunCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
                   )}
                   {run.result.avg_turn_score !== undefined && (
                     <span>
-                      <span className="text-muted-foreground">Turn score</span>{" "}
+                      <span className="text-muted-foreground">Turn score</span>
+                      {""}
                       <strong className="tabular-nums">
                         {run.result.avg_turn_score.toFixed(2)}
                       </strong>

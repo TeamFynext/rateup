@@ -216,7 +216,7 @@ function EditFlow() {
 
   return (
     <div
-      className="h-full flex gap-2 p-2.5 overflow-hidden [&>div]:min-w-[200px] [&>div]:h-full [&>div]:rounded-2xl [&>div]:shadow-[rgba(0,0,0,0.05)_0px_1px_0px,rgba(0,0,0,0.11)_0px_0px_8px] [&>div]:p-4 [&>div]:bg-white dark:[&>div]:bg-gray-800"
+      className="h-full flex gap-2 p-2.5 overflow-hidden [&>div]:min-w-[200px] [&>div]:h-full [&>div]:rounded-2xl [&>div]:shadow-[rgba(0,0,0,0.05)_0px_1px_0px,rgba(0,0,0,0.11)_0px_0px_8px] [&>div]:p-4 [&>div]:bg-white dark:[&>div]:bg-card"
       style={{
         position: "relative",
       }}

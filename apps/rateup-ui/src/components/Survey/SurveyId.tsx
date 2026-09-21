@@ -30,8 +30,7 @@ import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
-import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { getFromSessionStorage } from "@/utils/essential/index.ts";
 
 import ErrorComponent from "../404/ErrorComponent.tsx";
@@ -69,7 +68,7 @@ export default function SurveyID() {
   });
   const surveyId = params.surveyId as string;
   const tab = Object.values(TabEnum).find((value) => value === searchParams.tab);
-  const { user } = useUser();
+  const canManageSurveys = usePermissions().can("surveys.manage");
 
   if (Array.isArray(surveyId)) {
     throw new Error("surveyId is an array");
@@ -147,7 +146,7 @@ export default function SurveyID() {
   );
 
   useEffect(() => {
-    if (user?.role === UserRole.MEMBER) {
+    if (!canManageSurveys) {
       setActiveTab(TabEnum.Responses);
     }
   }, [survey]);
@@ -233,7 +232,7 @@ export default function SurveyID() {
           }}
         >
           <div className="flex flex-col h-full">
-            {user?.role !== UserRole.MEMBER && (
+            {canManageSurveys && (
               <SurveyPageHeader
                 title={survey?.title ?? ""}
                 activeTab={activeTab}

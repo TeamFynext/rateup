@@ -23,7 +23,7 @@ export default function QrHeroSection() {
       className="w-full bg-white  min-h-[100vh] flex sm:pt-0 pt-20
  bg-gradient-to-l from-[#004F98] to-[#001C57]"
     >
-      <div className="w-full grid grid-cols-1 xl:grid-cols-2  items-center gap-x-1">
+      <div className="w-full grid grid-cols-1 xl:grid-cols-2 items-center gap-x-1">
         {/* Left Content */}
         <div className="space-y-2 text-center flex flex-col justify-center md:text-left px-4 md:px-16">
           <h1 className="text-3xl sm:text-3xl lg:text-5xl font-bold text-gray-50 leading-tight tracking-tight">

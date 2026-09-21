@@ -133,6 +133,7 @@ export function PersistentMenuTab({
                 <TooltipTrigger
                   render={
                     <Button
+                      aria-label={t("Delete")}
                       type="button"
                       variant="ghost"
                       size="icon"
@@ -249,7 +250,7 @@ export function PersistentMenuTab({
             variant="destructive"
             size="sm"
             onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
+            loading={deleteMutation.isPending}
           >
             <IconCloudOff className="mr-1.5 size-4" />
             {t("Clear from Meta")}
@@ -259,7 +260,7 @@ export function PersistentMenuTab({
             variant="secondary"
             size="sm"
             onClick={() => syncMutation.mutate()}
-            disabled={syncMutation.isPending}
+            loading={syncMutation.isPending}
           >
             <IconCloudUpload className="mr-1.5 size-4" />
             {t("Sync with Meta")}

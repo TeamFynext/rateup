@@ -101,7 +101,7 @@ export function CampaignWizardShell({
             variant="ghost"
             onClick={onDiscard}
             disabled={isBusy}
-            className="text-destructive hover:text-destructive mr-auto"
+            className="text-destructive mr-auto"
           >
             <IconTrash className="size-4" aria-hidden />
             {t("Discard draft")}

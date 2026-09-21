@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -227,7 +226,8 @@ export function ChoicesCreator({
       const base64String = await FileConverter.fileToBase64(file);
       setValue("image", base64String);
     } catch (error) {
-      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
+      console.error("Image read failed", error);
+      toast.error("Could not read that image.", {
         id: "file-converting",
       });
     }
@@ -318,13 +318,9 @@ export function ChoicesCreator({
                     size="sm"
                     className="shrink-0"
                     onClick={handleAddChoice}
-                    disabled={fileUploadLoading}
+                    loading={fileUploadLoading}
                   >
-                    {fileUploadLoading ? (
-                      <Spinner data-icon="inline-start" />
-                    ) : (
-                      <IconPlus data-icon="inline-start" />
-                    )}
+                    <IconPlus data-icon="inline-start" />
                     {translations("Add choice")}
                   </Button>
                 </div>

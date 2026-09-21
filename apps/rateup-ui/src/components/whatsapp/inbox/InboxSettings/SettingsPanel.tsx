@@ -1,3 +1,4 @@
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty.tsx";
 import { cn } from "@/lib/utils.ts";
 
 /**
@@ -36,9 +37,11 @@ export function SettingsEmpty({
   message,
 }: Readonly<{ icon?: React.ReactNode; message: string }>) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2.5 rounded-xl border border-dashed border-border px-6 py-12 text-center text-muted-foreground">
-      {icon}
-      <p className="text-sm">{message}</p>
-    </div>
+    <Empty className="rounded-xl border">
+      <EmptyHeader>
+        {icon ? <EmptyMedia>{icon}</EmptyMedia> : null}
+        <EmptyDescription>{message}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
 }

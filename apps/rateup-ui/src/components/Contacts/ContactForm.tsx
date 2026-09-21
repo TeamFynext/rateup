@@ -8,6 +8,7 @@ import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
@@ -135,7 +136,12 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
     }
   };
 
-  if (isPending) return <div>Loading...</div>;
+  if (isPending)
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner className="size-5 text-muted-foreground" />
+      </div>
+    );
 
   return (
     <div className="grid grid-cols-2 gap-4">

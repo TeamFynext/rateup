@@ -37,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import {
   Tooltip,
@@ -319,6 +318,7 @@ const ShareSurvey = ({
                       </span>
                       {isScheduled && (
                         <Button
+                          aria-label={translations("Edit")}
                           size="icon"
                           variant="ghost"
                           className="size-6"
@@ -341,6 +341,7 @@ const ShareSurvey = ({
                           : "Nil"}
                       </span>
                       <Button
+                        aria-label={translations("Edit")}
                         size="icon"
                         variant="ghost"
                         className="size-6"
@@ -361,6 +362,7 @@ const ShareSurvey = ({
                       <TooltipTrigger
                         render={
                           <Button
+                            aria-label={translations("Schedule")}
                             size="icon"
                             variant="ghost"
                             onClick={() => {
@@ -425,7 +427,7 @@ const ShareSurvey = ({
                             ) as React.ReactNode
                           }
                         </h4>
-                        <ul className="list-disc space-y-1 pl-4 text-sm text-red-500">
+                        <ul className="list-disc space-y-1 pl-4 text-sm text-destructive">
                           {item?.errors?.map((error: string, index: number) => (
                             <li key={index}>{error}</li>
                           ))}
@@ -433,7 +435,7 @@ const ShareSurvey = ({
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-destructive">
                       {translations("Error: ")}
                       {errors?.error}
                     </p>
@@ -802,7 +804,8 @@ const PubliShSettingsModal = ({
                 <div className="flex flex-col gap-2">
                   <Field>
                     <FieldLabel htmlFor={`${uid}-label-4`}>
-                      {translations("Publish Survey At")}{" "}
+                      {translations("Publish Survey At")}
+                      {""}
                       <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
@@ -812,7 +815,7 @@ const PubliShSettingsModal = ({
                       {...register("surveyPublishAt")}
                     />
                   </Field>
-                  <p className="text-xs text-red-500">
+                  <p className="text-xs text-destructive">
                     * {translations("*Time will be rounded to nearest hours")}
                     <br />*{" "}
                     {translations("Publish time must be at least 1 hour ahead of current time.")}
@@ -855,7 +858,7 @@ const PubliShSettingsModal = ({
                       {...register("surveyEndAt")}
                     />
                   </Field>
-                  <p className="text-xs text-red-500">
+                  <p className="text-xs text-destructive">
                     * {translations("End date must be after the publish date.")}
                   </p>
                 </div>
@@ -871,12 +874,11 @@ const PubliShSettingsModal = ({
               reset();
               close();
             }}
-            disabled={surveyUpdateMutation.isPending}
+            loading={surveyUpdateMutation.isPending}
           >
             {translations("Cancel")}
           </Button>
-          <Button onClick={handlePublish} disabled={surveyUpdateMutation.isPending}>
-            {surveyUpdateMutation.isPending && <Spinner data-icon="inline-start" />}
+          <Button onClick={handlePublish} loading={surveyUpdateMutation.isPending}>
             {buttonTitle}
           </Button>
         </DialogFooter>

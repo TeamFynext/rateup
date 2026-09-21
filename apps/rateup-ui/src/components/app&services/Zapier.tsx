@@ -1,4 +1,4 @@
-import { IconKey, IconReload, IconTrash } from "@tabler/icons-react";
+import { IconReload, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -34,7 +34,6 @@ import { Card } from "../ui/card";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
-import { Spinner } from "../ui/spinner";
 
 export function Zapier() {
   const {
@@ -138,14 +137,14 @@ function APIKeyGenerate({ integration }: { integration: AppIntegration }) {
                           render={
                             <Button
                               onClick={handleRegenerate}
-                              disabled={updateKey.isPending}
+                              loading={updateKey.isPending}
                               aria-label={translations("Regenerate")}
                               variant="ghost"
                               size="icon"
                             />
                           }
                         >
-                          {updateKey.isPending ? <Spinner /> : <IconReload />}
+                          <IconReload />
                         </TooltipTrigger>
                         <TooltipContent>{translations("Regenerate")}</TooltipContent>
                       </Tooltip>
@@ -155,7 +154,7 @@ function APIKeyGenerate({ integration }: { integration: AppIntegration }) {
                         render={
                           <Button
                             onClick={handleDelete}
-                            disabled={deleteMut.isPending}
+                            loading={deleteMut.isPending}
                             aria-label={translations("Delete")}
                             variant="ghost"
                             size="icon"
@@ -163,7 +162,7 @@ function APIKeyGenerate({ integration }: { integration: AppIntegration }) {
                           />
                         }
                       >
-                        {deleteMut.isPending ? <Spinner /> : <IconTrash />}
+                        <IconTrash />
                       </TooltipTrigger>
                       <TooltipContent>{translations("Delete")}</TooltipContent>
                     </Tooltip>
@@ -190,10 +189,9 @@ function APIKeyGenerate({ integration }: { integration: AppIntegration }) {
             id="zapier-generate-key"
             className="w-fit"
             onClick={handleCreate}
-            disabled={createMut.isPending}
+            loading={createMut.isPending}
           >
-            {createMut.isPending ? <Spinner /> : <IconKey data-icon="inline-start" />}
-            {createMut.isPending ? translations("Generating...") : translations("Generate API key")}
+            {translations("Generate API key")}
           </Button>
         </Field>
       )}
@@ -210,6 +208,7 @@ function ZapierTriggerList({
   refetch: () => void;
   isLoading: boolean;
 }) {
+  const { t: translations } = useTranslation();
   const triggers = integration ? (integration.credential?.triggerSubscriptions ?? []) : [];
   const confirm = useConfirm();
   const deleteMut = useDeleteZapierTriggerHook();
@@ -237,7 +236,7 @@ function ZapierTriggerList({
   return (
     <Card className="p-(--card-spacing)">
       <div className="flex items-center gap-2">
-        <h4 className="font-heading text-base font-medium">Trigger subscriptions</h4>
+        <h4 className="font-display text-base font-medium">Trigger subscriptions</h4>
         <RefreshButton onClick={refetch} isLoading={isLoading} />
       </div>
       <div className="flex flex-col gap-4 py-6">
@@ -253,7 +252,8 @@ function ZapierTriggerList({
                       <TooltipTrigger
                         render={
                           <Button
-                            disabled={deleteMut.isPending}
+                            aria-label={translations("Delete")}
+                            loading={deleteMut.isPending}
                             variant="ghost"
                             size="icon"
                             className="text-destructive"

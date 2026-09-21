@@ -311,8 +311,8 @@ export function EditSurvey({
                       <>
                         {uniquePages.includes(selectedQ?.type as PageType) ? (
                           <div className="flex flex-col h-full">
-                            <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-white px-4">
-                              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rateup-blue-4 font-nunito text-sm font-black text-white">
+                            <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-card px-4">
+                              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ru-blue-600 font-display text-sm font-black text-white">
                                 {(survey?.questions?.findIndex((q) => q.id === selectedQ.id) ?? 0) +
                                   1}
                               </div>
@@ -325,7 +325,7 @@ export function EditSurvey({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-gray-50"
+                                className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted"
                                 onClick={() => openSurveyPreviewModal()}
                               >
                                 <IconEye className="size-3.5" />
@@ -360,7 +360,7 @@ export function EditSurvey({
                 {activeTab === QuestionTabsEnum.TypeSelection && (
                   <div className="flex h-full flex-col bg-card">
                     <div className="flex h-13.5 shrink-0 items-center gap-3.5 border-b border-border px-5.5">
-                      <span className="shrink-0 font-nunito text-[17px] font-extrabold text-foreground">
+                      <span className="shrink-0 font-display text-[17px] font-extrabold text-foreground">
                         {translations("Add Element")}
                       </span>
                       <div className="relative max-w-md flex-1">

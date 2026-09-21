@@ -155,6 +155,7 @@ export const CatalogNodeEditor = ({
           rightSectionPointerEvents="all"
           rightSection={
             <Button
+              aria-label="Sync from Meta"
               type="button"
               variant="ghost"
               size="icon-sm"
@@ -172,7 +173,7 @@ export const CatalogNodeEditor = ({
         typedData?.type === CatalogMessages.ProductSet) && (
         <>
           <div className="text-xs font-bold text-muted-foreground">
-            Header Text ( Required ) <span className="text-red-500">*</span>
+            Header Text ( Required ) <span className="text-destructive">*</span>
           </div>
           <div className="flex items-start space-x-2 pb-0">
             <div className="flex-1">
@@ -229,8 +230,9 @@ export const CatalogNodeEditor = ({
         </>
       )}
       <div className="text-xs font-bold text-muted-foreground">
-        {`Body Text ${typedData?.type === CatalogMessages.SingleProduct ? " ( optional ) " : ""}`}{" "}
-        <span className="text-red-500">*</span>
+        {`Body Text ${typedData?.type === CatalogMessages.SingleProduct ? " ( optional )" : ""}`}
+        {""}
+        <span className="text-destructive">*</span>
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
@@ -376,6 +378,7 @@ export const CatalogNodeEditor = ({
               description="Max 24 characters"
               rightSection={
                 <Button
+                  aria-label="Remove"
                   type="button"
                   variant="ghost"
                   size="icon-sm"

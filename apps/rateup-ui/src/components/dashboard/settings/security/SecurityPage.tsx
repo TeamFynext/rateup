@@ -41,7 +41,7 @@ import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field
 import { Input } from "@/components/ui/input.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 
 export function SecurityPage() {
   const uid = useId();
@@ -71,6 +71,7 @@ export function SecurityPage() {
     : userConfirmText === "DELETE ACCOUNT";
   const queryClient = useQueryClient();
   const { user } = useUser();
+  const canDeleteOrg = usePermissions().can("org.delete");
   const navigate = useNavigate();
 
   const passwordRegex =
@@ -345,8 +346,8 @@ export function SecurityPage() {
                 <Button type="button" variant="outline" onClick={closePasswordForm}>
                   {translations("Cancel")}
                 </Button>
-                <Button disabled={isLoading} type="submit">
-                  {isLoading ? translations("Updating") : translations("Update Password")}
+                <Button loading={isLoading} type="submit">
+                  {translations("Update Password")}
                 </Button>
               </div>
             </form>
@@ -385,7 +386,7 @@ export function SecurityPage() {
               </Button>
             </div>
 
-            {user?.role === UserRole.SUPADM && (
+            {canDeleteOrg && (
               <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <FieldTitle>{translations("Delete Organization")}</FieldTitle>
@@ -411,13 +412,13 @@ export function SecurityPage() {
         </Card>
       </div>
       {/* Delete Confirmation Dialog */}
-      {user?.role === UserRole.SUPADM && (
+      {canDeleteOrg && (
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <IconAlertTriangle className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <IconAlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
                   <DialogTitle className="text-xl text-destructive">
@@ -465,7 +466,8 @@ export function SecurityPage() {
                   Type{" "}
                   <code className="rounded bg-destructive/10 px-2 py-1 font-mono text-xs text-destructive">
                     DELETE ORGANIZATION
-                  </code>{" "}
+                  </code>
+                  {""}
                   {translations("to confirm")}
                 </FieldLabel>
                 <Input
@@ -486,7 +488,7 @@ export function SecurityPage() {
                   setIsDeleteDialogOpen(false);
                   setConfirmText("");
                 }}
-                disabled={isDeleting}
+                loading={isDeleting}
                 className="w-full sm:w-auto"
               >
                 {translations("Cancel")}
@@ -497,7 +499,8 @@ export function SecurityPage() {
                   toast.loading(translations("Hold on, your organization is getting deleted..."), {
                     id: "delete-data",
                   });
-                  await orgDeleteMutation.mutateAsync({ id: user?.orgId });
+                  if (!user?.orgId) return;
+                  await orgDeleteMutation.mutateAsync({ id: user.orgId });
                 }}
                 disabled={!isConfirmValid || isDeleting}
                 className="w-full sm:w-auto"
@@ -522,8 +525,8 @@ export function SecurityPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <IconAlertTriangle className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                <IconAlertTriangle className="w-6 h-6 text-destructive" />
               </div>
               <div>
                 <DialogTitle className="text-xl text-destructive">
@@ -584,7 +587,8 @@ export function SecurityPage() {
                   Type{" "}
                   <code className="rounded bg-destructive/10 px-2 py-1 font-mono text-xs text-destructive">
                     DELETE ACCOUNT
-                  </code>{" "}
+                  </code>
+                  {""}
                   {translations("to confirm")}
                 </FieldLabel>
 

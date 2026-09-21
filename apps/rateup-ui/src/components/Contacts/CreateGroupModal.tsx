@@ -31,7 +31,6 @@ import {
 import { Field, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 
 interface GroupModalProps {
   opened: boolean;
@@ -207,7 +206,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                 )}
               />
             </div>
-            <div className="flex flex-col gap-2 mt-4 ">
+            <div className="flex flex-col gap-2 mt-4">
               {iconValue?.length ? (
                 <Avatar>
                   <AvatarImage src={getFileUrlFromKey(iconValue)} alt={nameValue} />
@@ -234,10 +233,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
             <DialogClose render={<Button variant="secondary" type="button" />}>
               <span className="text-sm font-normal">{translations("Cancel")}</span>
             </DialogClose>
-            <Button disabled={isUploading} type="submit">
-              {(editContactGroupMutation.isPending || createContactGroupMutation.isPending) && (
-                <Spinner />
-              )}
+            <Button loading={isUploading} type="submit">
               <span className="text-sm font-normal">
                 {isEdit ? translations("Save") : translations("Create Group")}
               </span>

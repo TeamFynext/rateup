@@ -198,17 +198,17 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="space-y-1">
-              <p className="text-sm text-gray-500">
-                <span className="font-semibold text-gray-900">Order placed: </span>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">Order placed: </span>
                 {dayjs(selectedOrder?.createdAt).format("DD/MM/YYYY hh:mm A")}
               </p>
-              <p className="text-sm text-gray-500">
-                <span className="font-semibold text-gray-900">Order ID: </span>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">Order ID: </span>
                 {selectedOrder?.id}
               </p>
               {selectedOrder?.shopifyInvoiceUrl && (
-                <p className="text-sm text-gray-500">
-                  <span className="font-semibold text-gray-900">Shopify Checkout: </span>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">Shopify Checkout: </span>
                   <a
                     href={selectedOrder.shopifyInvoiceUrl}
                     target="_blank"

@@ -81,6 +81,7 @@ export const TextFormateToolBar = ({
           key={btn.label}
           trigger={
             <Button
+              aria-label={btn.label}
               type="button"
               variant="ghost"
               size="icon-xs"

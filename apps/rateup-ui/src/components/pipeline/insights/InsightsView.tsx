@@ -40,7 +40,7 @@ function KpiCard({
       <span className={cn("mb-2.5 flex size-7.5 items-center justify-center rounded-md", tone)}>
         <KpiIcon className="size-4" />
       </span>
-      <div className="font-nunito text-foreground text-[30px] leading-none font-bold tracking-[-0.02em] tabular-nums">
+      <div className="font-display text-foreground text-[30px] leading-none font-bold tracking-[-0.02em] tabular-nums">
         {value}
       </div>
       <div className="text-muted-foreground mt-1.25 text-xs">{label}</div>
@@ -54,7 +54,7 @@ function KpiCard({
 function PanelHeading({ title, subtitle }: Readonly<{ title: string; subtitle?: string }>) {
   return (
     <div className="mb-4.5">
-      <div className="font-nunito text-foreground text-[15px] font-semibold">{title}</div>
+      <div className="font-display text-foreground text-[15px] font-semibold">{title}</div>
       {subtitle ? <div className="text-muted-foreground text-xs">{subtitle}</div> : null}
     </div>
   );

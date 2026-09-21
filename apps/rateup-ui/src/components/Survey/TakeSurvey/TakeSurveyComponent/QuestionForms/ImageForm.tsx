@@ -85,6 +85,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
       {isImageSelected && (
         <div className="relative max-w-[300px]">
           <Button
+            aria-label={translations("Remove")}
             type="button"
             variant="secondary"
             size="icon-sm"
@@ -97,7 +98,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
           <div className="flex flex-col items-center gap-2">
             <div className="relative size-[150px]">
               {isUploading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-white/60 backdrop-blur-sm">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-background/60 backdrop-blur-sm">
                   <Spinner />
                 </div>
               )}
@@ -109,7 +110,8 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
             </div>
 
             <p className="text-center text-sm" style={{ color: pickedFileTextColor }}>
-              {translations("Picked file:")}{" "}
+              {translations("Picked file:")}
+              {""}
               {file?.name || getFileName(asAnswerText(response), isPreview || false)}
             </p>
           </div>

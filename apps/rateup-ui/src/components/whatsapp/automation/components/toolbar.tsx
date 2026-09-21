@@ -53,6 +53,7 @@ function ToolButton({
       <TooltipTrigger
         render={
           <Button
+            aria-label={label}
             type="button"
             variant={variant}
             size="icon-sm"
@@ -92,6 +93,7 @@ export default function Toolbar({
         <TooltipTrigger
           render={
             <Button
+              aria-label="Save"
               type="button"
               variant={saveDisabled ? "ghost" : "default"}
               size="icon-sm"
@@ -129,7 +131,16 @@ export default function Toolbar({
         <Tooltip>
           <DropdownMenuTrigger
             render={
-              <TooltipTrigger render={<Button type="button" variant="ghost" size="icon-sm" />} />
+              <TooltipTrigger
+                render={
+                  <Button
+                    aria-label="Generate with AI"
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                  />
+                }
+              />
             }
           >
             <IconSparkles />

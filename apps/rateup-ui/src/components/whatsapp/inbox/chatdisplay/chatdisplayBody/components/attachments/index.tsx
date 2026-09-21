@@ -73,7 +73,9 @@ const WaInboxAttachments = ({
         );
 
       default:
-        return <span className="text-xs text-red-500 font-medium">Unsupported message type</span>;
+        return (
+          <span className="text-xs text-destructive font-medium">Unsupported message type</span>
+        );
     }
   }
 

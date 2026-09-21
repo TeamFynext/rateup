@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 
 import { PanelCard } from "../shared/PanelCard";
 
@@ -68,12 +67,8 @@ export function FilesPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>)
               e.target.value = "";
             }}
           />
-          <Button size="sm" disabled={upload.isPending} onClick={() => inputRef.current?.click()}>
-            {upload.isPending ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <IconUpload data-icon="inline-start" />
-            )}
+          <Button size="sm" loading={upload.isPending} onClick={() => inputRef.current?.click()}>
+            <IconUpload data-icon="inline-start" />
             Upload
           </Button>
         </>
@@ -107,7 +102,7 @@ export function FilesPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>)
               size="icon-sm"
               className="shrink-0"
               aria-label={`Delete ${file.fileName}`}
-              disabled={deleteFile.isPending}
+              loading={deleteFile.isPending}
               onClick={() => deleteFile.mutate(file.id)}
             >
               <IconTrash className="text-destructive" />

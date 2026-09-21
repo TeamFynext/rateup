@@ -25,7 +25,6 @@ import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 
 import { websiteFormSchema, type WebsiteFormValues } from "../../metaAgent.schemas";
 import { FormField } from "../shared/FormField";
@@ -85,7 +84,7 @@ export function WebsitesPanel({ waSettingsId }: Readonly<{ waSettingsId: string 
                   placeholder="https://example.com/faq"
                   className="min-w-0 flex-1"
                 />
-                <Button type="submit" variant="outline" disabled={createWebsite.isPending}>
+                <Button type="submit" variant="outline" loading={createWebsite.isPending}>
                   <IconPlus data-icon="inline-start" />
                   Add
                 </Button>
@@ -134,7 +133,7 @@ export function WebsitesPanel({ waSettingsId }: Readonly<{ waSettingsId: string 
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Remove ${site.url}`}
-                  disabled={deleteWebsite.isPending}
+                  loading={deleteWebsite.isPending}
                   onClick={() => deleteWebsite.mutate(site.id)}
                 >
                   <IconTrash className="text-destructive" />
@@ -191,8 +190,7 @@ function EditWebsiteDialog({
               <Button type="button" variant="ghost" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={updateWebsite.isPending}>
-                {updateWebsite.isPending && <Spinner data-icon="inline-start" />}
+              <Button type="submit" loading={updateWebsite.isPending}>
                 Save changes
               </Button>
             </DialogFooter>

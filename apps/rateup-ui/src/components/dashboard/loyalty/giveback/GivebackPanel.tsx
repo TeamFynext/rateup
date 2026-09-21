@@ -294,8 +294,9 @@ function SkippedRewards({ result }: Readonly<{ result: GivebackResult }>) {
   return (
     <div className="flex flex-col gap-1 text-xs">
       <p className="text-muted-foreground">
-        {t("Not counted, because no value is set:")}{" "}
-        <span className="text-foreground">{unpriced.map((r) => r.name).join(", ")}</span>
+        {t("Not counted, because no value is set:")}
+        {""}
+        <span className="text-foreground">{unpriced.map((r) => r.name).join(",")}</span>
       </p>
     </div>
   );

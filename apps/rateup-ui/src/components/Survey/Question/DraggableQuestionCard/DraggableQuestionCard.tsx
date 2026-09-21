@@ -7,6 +7,7 @@ import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
+import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -90,11 +91,11 @@ export function DraggableQuestionCard({
                 },
               )}
               ref={provided.innerRef}
-              onClick={() => {
+              {...pressable(() => {
                 if (!nonClickableQuestionTypeStrs.includes(question.type)) {
                   handleOpenQuestion(question);
                 }
-              }}
+              })}
               {...provided.draggableProps}
               data-select={selected}
               style={{
@@ -144,6 +145,7 @@ export function DraggableQuestionCard({
 
                 {!nonDeletablePagetypeStrs.includes(question.type) && hovered && (
                   <Button
+                    aria-label={translations("Delete")}
                     size="icon-sm"
                     variant="ghost"
                     className="text-muted-foreground hover:text-destructive"

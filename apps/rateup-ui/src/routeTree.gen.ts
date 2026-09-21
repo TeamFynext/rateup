@@ -162,6 +162,9 @@ import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/dash
 import { Route as DashboardSettingsBillingIndexRouteImport } from './routes/dashboard/settings/billing/index'
 import { Route as DashboardSettingsChannelsIndexRouteImport } from './routes/dashboard/settings/channels/index'
 import { Route as DashboardSettingsIntegrationsIndexRouteImport } from './routes/dashboard/settings/integrations/index'
+import { Route as DashboardSettingsMembersIndexRouteImport } from './routes/dashboard/settings/members/index'
+import { Route as DashboardSettingsMembersMemberIdRouteImport } from './routes/dashboard/settings/members/$memberId'
+import { Route as DashboardSettingsMembersRolesRouteImport } from './routes/dashboard/settings/members/roles'
 import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/dashboard/settings/security/index'
 import { Route as DashboardSettingsTeamIndexRouteImport } from './routes/dashboard/settings/team/index'
 import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashboard/settings/users/index'
@@ -1056,6 +1059,24 @@ const DashboardSettingsIntegrationsIndexRoute =
     path: '/settings/integrations/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsMembersIndexRoute =
+  DashboardSettingsMembersIndexRouteImport.update({
+    id: '/settings/members/',
+    path: '/settings/members/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsMembersMemberIdRoute =
+  DashboardSettingsMembersMemberIdRouteImport.update({
+    id: '/settings/members/$memberId',
+    path: '/settings/members/$memberId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsMembersRolesRoute =
+  DashboardSettingsMembersRolesRouteImport.update({
+    id: '/settings/members/roles',
+    path: '/settings/members/roles',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardSettingsSecurityIndexRoute =
   DashboardSettingsSecurityIndexRouteImport.update({
     id: '/settings/security/',
@@ -1379,6 +1400,8 @@ export interface FileRoutesByFullPath {
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
+  '/dashboard/settings/members/roles': typeof DashboardSettingsMembersRolesRoute
   '/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
@@ -1454,6 +1477,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/billing/': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
+  '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
@@ -1567,6 +1591,8 @@ export interface FileRoutesByTo {
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
+  '/dashboard/settings/members/roles': typeof DashboardSettingsMembersRolesRoute
   '/login/complete-login': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password': typeof authLoginResetPasswordIndexRoute
   '/login/verify-email': typeof authLoginVerifyEmailIndexRoute
@@ -1642,6 +1668,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/billing': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsIndexRoute
+  '/dashboard/settings/members': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users': typeof DashboardSettingsUsersIndexRoute
@@ -1764,6 +1791,8 @@ export interface FileRoutesById {
   '/(marketing)/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
   '/dashboard/campaign/$campaignId/edit': typeof DashboardCampaignCampaignIdEditRoute
   '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  '/dashboard/settings/members/$memberId': typeof DashboardSettingsMembersMemberIdRoute
+  '/dashboard/settings/members/roles': typeof DashboardSettingsMembersRolesRoute
   '/(auth)/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/(auth)/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/(auth)/login/verify-email/': typeof authLoginVerifyEmailIndexRoute
@@ -1839,6 +1868,7 @@ export interface FileRoutesById {
   '/dashboard/settings/billing/': typeof DashboardSettingsBillingIndexRoute
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
+  '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
@@ -1959,6 +1989,8 @@ export interface FileRouteTypes {
     | '/blog/tag/sitemap.xml'
     | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
+    | '/dashboard/settings/members/$memberId'
+    | '/dashboard/settings/members/roles'
     | '/login/complete-login/'
     | '/login/reset-password/'
     | '/login/verify-email/'
@@ -2034,6 +2066,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/billing/'
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/integrations/'
+    | '/dashboard/settings/members/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
@@ -2147,6 +2180,8 @@ export interface FileRouteTypes {
     | '/blog/tag/sitemap.xml'
     | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
+    | '/dashboard/settings/members/$memberId'
+    | '/dashboard/settings/members/roles'
     | '/login/complete-login'
     | '/login/reset-password'
     | '/login/verify-email'
@@ -2222,6 +2257,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/billing'
     | '/dashboard/settings/channels'
     | '/dashboard/settings/integrations'
+    | '/dashboard/settings/members'
     | '/dashboard/settings/security'
     | '/dashboard/settings/team'
     | '/dashboard/settings/users'
@@ -2343,6 +2379,8 @@ export interface FileRouteTypes {
     | '/(marketing)/blog/tag/sitemap.xml'
     | '/dashboard/campaign/$campaignId/edit'
     | '/dashboard/instagram/flowbots/$flowbotId'
+    | '/dashboard/settings/members/$memberId'
+    | '/dashboard/settings/members/roles'
     | '/(auth)/login/complete-login/'
     | '/(auth)/login/reset-password/'
     | '/(auth)/login/verify-email/'
@@ -2418,6 +2456,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/billing/'
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/integrations/'
+    | '/dashboard/settings/members/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
@@ -3548,6 +3587,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIntegrationsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/settings/members/': {
+      id: '/dashboard/settings/members/'
+      path: '/settings/members'
+      fullPath: '/dashboard/settings/members/'
+      preLoaderRoute: typeof DashboardSettingsMembersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/members/$memberId': {
+      id: '/dashboard/settings/members/$memberId'
+      path: '/settings/members/$memberId'
+      fullPath: '/dashboard/settings/members/$memberId'
+      preLoaderRoute: typeof DashboardSettingsMembersMemberIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/members/roles': {
+      id: '/dashboard/settings/members/roles'
+      path: '/settings/members/roles'
+      fullPath: '/dashboard/settings/members/roles'
+      preLoaderRoute: typeof DashboardSettingsMembersRolesRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/settings/security/': {
       id: '/dashboard/settings/security/'
       path: '/settings/security'
@@ -4230,6 +4290,8 @@ interface DashboardRouteRouteChildren {
   DashboardWhatsappIndexRoute: typeof DashboardWhatsappIndexRoute
   DashboardCampaignCampaignIdEditRoute: typeof DashboardCampaignCampaignIdEditRoute
   DashboardInstagramFlowbotsFlowbotIdRoute: typeof DashboardInstagramFlowbotsFlowbotIdRoute
+  DashboardSettingsMembersMemberIdRoute: typeof DashboardSettingsMembersMemberIdRoute
+  DashboardSettingsMembersRolesRoute: typeof DashboardSettingsMembersRolesRoute
   DashboardAnalyticsStaffidIndexRoute: typeof DashboardAnalyticsStaffidIndexRoute
   DashboardAnalyticsAuditLogIndexRoute: typeof DashboardAnalyticsAuditLogIndexRoute
   DashboardAutomationAutomationIdIndexRoute: typeof DashboardAutomationAutomationIdIndexRoute
@@ -4244,6 +4306,7 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsBillingIndexRoute: typeof DashboardSettingsBillingIndexRoute
   DashboardSettingsChannelsIndexRoute: typeof DashboardSettingsChannelsIndexRoute
   DashboardSettingsIntegrationsIndexRoute: typeof DashboardSettingsIntegrationsIndexRoute
+  DashboardSettingsMembersIndexRoute: typeof DashboardSettingsMembersIndexRoute
   DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsTeamIndexRoute: typeof DashboardSettingsTeamIndexRoute
   DashboardSettingsUsersIndexRoute: typeof DashboardSettingsUsersIndexRoute
@@ -4293,6 +4356,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardCampaignCampaignIdEditRoute: DashboardCampaignCampaignIdEditRoute,
   DashboardInstagramFlowbotsFlowbotIdRoute:
     DashboardInstagramFlowbotsFlowbotIdRoute,
+  DashboardSettingsMembersMemberIdRoute: DashboardSettingsMembersMemberIdRoute,
+  DashboardSettingsMembersRolesRoute: DashboardSettingsMembersRolesRoute,
   DashboardAnalyticsStaffidIndexRoute: DashboardAnalyticsStaffidIndexRoute,
   DashboardAnalyticsAuditLogIndexRoute: DashboardAnalyticsAuditLogIndexRoute,
   DashboardAutomationAutomationIdIndexRoute:
@@ -4312,6 +4377,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsChannelsIndexRoute: DashboardSettingsChannelsIndexRoute,
   DashboardSettingsIntegrationsIndexRoute:
     DashboardSettingsIntegrationsIndexRoute,
+  DashboardSettingsMembersIndexRoute: DashboardSettingsMembersIndexRoute,
   DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsTeamIndexRoute: DashboardSettingsTeamIndexRoute,
   DashboardSettingsUsersIndexRoute: DashboardSettingsUsersIndexRoute,

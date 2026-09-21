@@ -97,7 +97,7 @@ export const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
       )}
 
       <div className="text-xs font-bold text-muted-foreground">
-        Body Text <span className="text-red-500">*</span>
+        Body Text <span className="text-destructive">*</span>
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">

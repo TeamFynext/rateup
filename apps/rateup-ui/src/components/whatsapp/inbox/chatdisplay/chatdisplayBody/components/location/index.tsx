@@ -6,11 +6,11 @@ const WaInboxLocation = ({ messageContent }: { messageContent: WaSendMessageBody
   const { latitude, longitude, name, address } = messageContent ?? {};
 
   return (
-    <div
+    <a
+      href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+      target="_blank"
+      rel="noopener noreferrer"
       className="flex w-full max-w-67.5 cursor-pointer flex-col gap-0.5"
-      onClick={() =>
-        window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, "_blank")
-      }
     >
       {/* No `width`: pigeon-maps measures its container (ResizeObserver) when the
           prop is absent, so the tiles follow the bubble instead of spilling out
@@ -22,7 +22,7 @@ const WaInboxLocation = ({ messageContent }: { messageContent: WaSendMessageBody
       </div>
       {name && <p className="text-sm font-semibold mt-1 min-w-0">{name}</p>}
       {address && <p className="text-xs text-muted-foreground leading-snug min-w-0">{address}</p>}
-    </div>
+    </a>
   );
 };
 

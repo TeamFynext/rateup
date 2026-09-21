@@ -190,7 +190,7 @@ export function ResumeCampaignDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} loading={isPending}>
             {t("Cancel")}
           </Button>
           <Button onClick={confirm} disabled={isPending || customIsPast}>

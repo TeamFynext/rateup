@@ -16,15 +16,15 @@ export const ConditionalNodeEditor: React.FC<NodeComponentProps<"conditionalNode
         label="Condition"
         value={typedData.condition || ""}
         onChange={(e) => handleInputChange("condition", e.target.value)}
-        placeholder="Enter condition (e.g., {{variable}} == 'value')"
+        placeholder="Enter condition (e.g., {variable} == 'value')"
         error={useFieldError("condition")}
       />
       <div className={styles.conditionalHelp}>
         <h4>Condition Examples:</h4>
         <ul>
-          <li>{"{{name}} == 'John'"}</li>
-          <li>{"{{age}} > 18"}</li>
-          <li>{"{{response}} includes 'yes'"}</li>
+          <li>{"{name} == 'John'"}</li>
+          <li>{"{age} > 18"}</li>
+          <li>{"{response} includes 'yes'"}</li>
         </ul>
       </div>
     </div>

@@ -28,7 +28,7 @@ const LabelCell = ({ label }: { label: ContactLabel }) => (
 );
 
 const DescriptionCell = ({ description }: { description: string | null }) => (
-  <span className="text-gray-600">{description || "No description"}</span>
+  <span className="text-muted-foreground">{description || "No description"}</span>
 );
 
 const ContactsCell = ({ count }: { count: number }) => <Badge variant="secondary">{count}</Badge>;
@@ -54,7 +54,7 @@ const ActionsCell = ({
         <IconPencil className="mr-2 h-4 w-4" />
         Edit
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onDelete(label)} className="text-red-600">
+      <DropdownMenuItem onClick={() => onDelete(label)} className="text-destructive">
         <IconTrash className="mr-2 h-4 w-4" />
         Delete
       </DropdownMenuItem>

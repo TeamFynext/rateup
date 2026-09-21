@@ -394,8 +394,9 @@ export default function WaInboxChatDisplayFooter({
       <CustomTooltip
         trigger={
           <Button
+            aria-label={translations("Send")}
             size="icon-lg"
-            className="size-9 shrink-0 bg-green-600 hover:bg-green-700 sm:size-10"
+            className="size-9 shrink-0 bg-green-600 hover:bg-green-700 dark:hover:bg-green-300 sm:size-10"
             onClick={handleSendMessage}
             disabled={
               isSessionExpired ||
@@ -416,8 +417,9 @@ export default function WaInboxChatDisplayFooter({
       <CustomTooltip
         trigger={
           <Button
+            aria-label={translations("Send")}
             size="icon-lg"
-            className="size-9 shrink-0 bg-amber-600 hover:bg-amber-700 sm:size-10"
+            className="size-9 shrink-0 bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-300 sm:size-10"
             onClick={handleSendPrivateMessage}
             disabled={
               isSessionExpired ||
@@ -459,7 +461,7 @@ export default function WaInboxChatDisplayFooter({
             <TabsList className="h-8! min-w-0 shrink rounded-lg bg-muted p-0.5 sm:h-9! sm:p-1">
               <TabsTrigger
                 value="message"
-                className="flex items-center px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-white sm:text-sm"
+                className="flex items-center px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:text-sm"
               >
                 <IconMessage className="mr-1.5 size-3.5" />
                 Message
@@ -629,7 +631,7 @@ export const WaInboxAssignUserFooter = ({
 
   function handleAssignToMe() {
     if (!user) {
-      return toast.error("failed!try again");
+      return toast.error("Your account details haven't loaded yet.");
     }
     const message = `Chat assigned to ${user.userName}`;
     const id = generateInternalMessageId();
@@ -750,7 +752,7 @@ export const WaInboxAssignUserFooter = ({
       <Button
         size="sm"
         className="h-8 shrink-0 gap-1.5 border-transparent bg-primary text-primary-foreground shadow-none"
-        disabled={assignMut.isPending}
+        loading={assignMut.isPending}
         onClick={handleAssignToMe}
       >
         <IconUserCheck className="size-3.5" />
@@ -801,7 +803,7 @@ export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithU
         variant="outline"
         className="h-8 shrink-0"
         onClick={handleUnblock}
-        disabled={unblockMut.isPending}
+        loading={unblockMut.isPending}
       >
         <span className="text-xs font-bold">Unblock contact</span>
       </Button>
@@ -840,7 +842,7 @@ export const WaInboxSpamContactFooter = ({ contact }: { contact: ContactWithUpda
         variant="outline"
         className="h-8 shrink-0"
         onClick={handleNotSpam}
-        disabled={spamMutation.isPending}
+        loading={spamMutation.isPending}
       >
         <span className="text-xs font-bold">Not spam</span>
       </Button>

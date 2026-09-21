@@ -235,7 +235,8 @@ export function CreateSurveyModal({
                   <FieldLabel htmlFor={field.name}>
                     {templateName === null
                       ? translations("Title")
-                      : translations("Template Selected")}{" "}
+                      : translations("Template Selected")}
+                    {""}
                     <span className="text-destructive">*</span>
                   </FieldLabel>
                   <Input

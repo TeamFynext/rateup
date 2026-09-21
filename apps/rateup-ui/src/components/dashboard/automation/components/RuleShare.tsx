@@ -104,6 +104,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
               <div className="flex gap-2">
                 <Input value={shareUrl} readOnly />
                 <Button
+                  aria-label="Copy"
                   variant="outline"
                   size="icon"
                   onClick={() => {

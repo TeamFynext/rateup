@@ -225,7 +225,7 @@ function AtomicConditionBlock({
 
   if (!selectedQ || logicSupportedQuestionsInScreen?.length === 0) {
     return (
-      <div className="p-4 bg-white rounded-lg">
+      <div className="p-4 bg-card rounded-lg">
         <p className="text-sm text-muted-foreground">
           {translations("No questions available for logic jumps")}
         </p>
@@ -234,7 +234,7 @@ function AtomicConditionBlock({
   }
 
   return (
-    <div className="flex gap-2 bg-white rounded-lg relative p-4 min-w-[320px]">
+    <div className="flex gap-2 bg-card rounded-lg relative p-4 min-w-[320px]">
       <div className="flex flex-col gap-2 grow">
         <Field>
           <FieldLabel htmlFor={`${uid}-field`}>{translations("For Question")}</FieldLabel>
@@ -324,6 +324,7 @@ function AtomicConditionBlock({
         )}
       </div>
       <Button
+        aria-label={translations("Delete")}
         variant="ghost"
         size="icon"
         className="absolute right-3 top-3 text-destructive"
@@ -376,7 +377,7 @@ function ConditionsActionMapBlock({
   }, [selectedAction]);
 
   return (
-    <div className="flex gap-6 bg-green-50 rounded-xl relative p-6 min-w-fit items-stretch">
+    <div className="flex gap-6 bg-green-50 dark:bg-green-950/40 rounded-xl relative p-6 min-w-fit items-stretch">
       <div className="grow min-w-[350px]">
         <h5 className="text-base font-semibold mb-4 text-center">{translations("Conditions")}</h5>
         <div className="flex flex-col gap-4 text-left">
@@ -428,7 +429,7 @@ function ConditionsActionMapBlock({
       </div>
       <Field className="min-w-[300px] max-w-[350px]">
         <h5 className="text-base font-semibold text-center mb-4">{translations("Action")}</h5>
-        <div className="flex grow rounded-lg p-6 bg-white items-center justify-center gap-2">
+        <div className="flex grow rounded-lg p-6 bg-card items-center justify-center gap-2">
           <Field className="w-full">
             <FieldLabel htmlFor={`${uid}-field-5`}>{translations("Navigate to")}</FieldLabel>
             <Select

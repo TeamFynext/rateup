@@ -22,6 +22,7 @@ import { DataTableToolbar } from "@/components/admin/subscriptions/data-table-to
 import { FeatureBadge } from "@/components/adminPanel/Subscription/FeatureBadge.tsx";
 import { SubscriptionEditorModal } from "@/components/adminPanel/Subscription/SubscriptionEditorModal.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { pressable } from "@/components/common/pressable.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
@@ -165,7 +166,7 @@ export function SubscriptionPage() {
 
         return (
           <>
-            <div className="flex flex-wrap gap-1 max-w-[300px] cursor-pointer" onClick={open}>
+            <div className="flex flex-wrap gap-1 max-w-[300px] cursor-pointer" {...pressable(open)}>
               {activeFeatures.slice(0, 3).map((feature) => (
                 <FeatureBadge
                   key={feature}
@@ -293,7 +294,7 @@ export function SubscriptionPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-ru-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -328,7 +329,7 @@ export function SubscriptionPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border-red-200 dark:border-red-800">
+          <Card className="relative overflow-hidden border-destructive/30 ">
             <div className="absolute inset-0 bg-linear-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
@@ -341,10 +342,8 @@ export function SubscriptionPage() {
               </div>
             </CardHeader>
             <CardContent className="relative">
-              <div className="text-3xl font-bold text-red-700 dark:text-red-400">
-                {expiredSubscriptions}
-              </div>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">Need renewal</p>
+              <div className="text-3xl font-bold text-destructive ">{expiredSubscriptions}</div>
+              <p className="text-xs text-destructive mt-1">Need renewal</p>
             </CardContent>
           </Card>
 

@@ -108,7 +108,7 @@ export function DeleteStageDialog({
               <IconAlertTriangle className="size-5" />
             </span>
             <div className="min-w-0">
-              <DialogTitle className="font-nunito font-extrabold">
+              <DialogTitle className="font-display font-extrabold">
                 {t("Delete {stage}", { stage: stage.name })}
               </DialogTitle>
               <DialogDescription>
@@ -164,7 +164,7 @@ export function DeleteStageDialog({
         {connectedCrms.length > 0 && (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs dark:border-amber-900/50 dark:bg-amber-950/30">
             <p className="text-foreground mb-1 font-medium">
-              {t("{crms} will not be updated", { crms: connectedCrms.join(" and ") })}
+              {t("{crms} will not be updated", { crms: connectedCrms.join(" and") })}
             </p>
             <p className="text-muted-foreground">
               {t(

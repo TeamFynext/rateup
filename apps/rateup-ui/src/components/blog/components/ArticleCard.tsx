@@ -95,7 +95,7 @@ export function ArticleCard({
                   decoding="async"
                   className="w-4 h-4"
                 />
-                <span className="font-nunito font-black text-[10px] text-white/80">
+                <span className="font-display font-black text-[10px] text-white/80">
                   Rate<span className="text-ru-blue-300">Up</span>
                 </span>
               </div>
@@ -120,7 +120,7 @@ export function ArticleCard({
               )}
 
               {/* Thumb title */}
-              <p className="font-nunito font-black text-[13px] text-white leading-tight m-0 max-w-[175px]">
+              <p className="font-display font-black text-[13px] text-white leading-tight m-0 max-w-[175px]">
                 {post.title.length > 40 ? post.title.substring(0, 40) + "…" : post.title}
               </p>
             </div>
@@ -135,7 +135,7 @@ export function ArticleCard({
             </span>
           )}
 
-          <h3 className="font-nunito font-extrabold text-[16px] text-[#0E1E3A] leading-[1.25] tracking-[-0.01em] m-0 line-clamp-2">
+          <h3 className="font-display font-extrabold text-[16px] text-[#0E1E3A] leading-[1.25] tracking-[-0.01em] m-0 line-clamp-2">
             {post.title}
           </h3>
 
@@ -154,7 +154,7 @@ export function ArticleCard({
                 className="w-[26px] h-[26px] rounded-full object-cover"
               />
             ) : (
-              <div className="w-[26px] h-[26px] rounded-full shrink-0 bg-[linear-gradient(135deg,#3D8BEE,#2360C8)] flex items-center justify-center font-nunito font-extrabold text-[10px] text-white">
+              <div className="w-[26px] h-[26px] rounded-full shrink-0 bg-[linear-gradient(135deg,#3D8BEE,#2360C8)] flex items-center justify-center font-display font-extrabold text-[10px] text-white">
                 {initials}
               </div>
             )}

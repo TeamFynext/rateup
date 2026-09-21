@@ -55,8 +55,8 @@ describe("reminderCatalog", () => {
     }
   });
 
-  // Nothing here interpolates: the repo passes single braces to an i18next configured for
-  // double, so `t("Needs {thing}", …)` renders the placeholder verbatim.
+  // A colon in a key is read as i18next's namespace separator, so `t("09:00")` looks up key
+  //"00" in namespace"09". This catalogue stays plain text so no key can hit that.
   test("no copy relies on interpolation or contains a colon", () => {
     for (const occasion of reminderCatalog(t)) {
       for (const copy of [

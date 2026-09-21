@@ -38,7 +38,7 @@ export function PlansDataTableToolbar<TData>({ table }: Readonly<DataTableToolba
           variant="outline"
           size="sm"
           onClick={() => syncPlans.mutate()}
-          disabled={syncPlans.isPending}
+          loading={syncPlans.isPending}
         >
           <IconRefresh className={`h-4 w-4 mr-2 ${syncPlans.isPending ? "animate-spin" : ""}`} />
           Sync Plans

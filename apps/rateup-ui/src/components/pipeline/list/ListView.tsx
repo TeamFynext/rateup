@@ -324,7 +324,7 @@ function StageGroup({
       >
         <ChevronIcon className="text-muted-foreground size-3.5" />
         <StageDot color={stage.color} className="size-2" />
-        <span className="font-nunito text-foreground text-[13px] font-semibold">{stage.name}</span>
+        <span className="font-display text-foreground text-[13px] font-semibold">{stage.name}</span>
         <span className="bg-muted border-border text-muted-foreground rounded-full border px-1.75 text-[11.5px] font-medium">
           {count}
         </span>

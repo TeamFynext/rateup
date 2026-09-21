@@ -36,7 +36,7 @@ export default function NpsSurveyTemplates() {
         <NpsCalculator />
 
         <div className="mt-11 flex flex-wrap items-center justify-between gap-4">
-          <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
+          <h2 className="m-0 font-display text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
             {NPS_TEMPLATES.length} templates by industry
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -75,7 +75,7 @@ export default function NpsSurveyTemplates() {
                   {template.timing}
                 </span>
               </div>
-              <div className="mt-3.5 mb-2 font-nunito text-[16px] leading-[1.3] font-extrabold text-foreground">
+              <div className="mt-3.5 mb-2 font-display text-[16px] leading-[1.3] font-extrabold text-foreground">
                 {template.industry}
               </div>
               <p className="m-0 text-[13px] leading-[1.5] text-muted-foreground">
@@ -118,7 +118,7 @@ function NpsCalculator() {
     <ToolCard>
       <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.2fr]">
         <div>
-          <div className="font-nunito text-[19px] font-extrabold text-foreground">
+          <div className="font-display text-[19px] font-extrabold text-foreground">
             Score your responses
           </div>
           <p className="mt-1.5 mb-4.5 text-[13px] text-muted-foreground">
@@ -159,7 +159,7 @@ function NpsCalculator() {
                 <div className="text-[11px] font-extrabold tracking-[0.12em] text-primary uppercase">
                   Your NPS
                 </div>
-                <div className="font-nunito text-[48px] leading-none font-black tracking-[-0.02em] text-primary sm:text-[60px]">
+                <div className="font-display text-[48px] leading-none font-black tracking-[-0.02em] text-primary sm:text-[60px]">
                   {result.score}
                 </div>
               </div>

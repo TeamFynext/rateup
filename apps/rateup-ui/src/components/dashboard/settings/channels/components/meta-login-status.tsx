@@ -8,6 +8,7 @@ import { ContinueWithFacebookButton } from "@/components/common/continue-with-fa
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
@@ -37,12 +38,16 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
 
   if (!waSettings?.length) {
     return (
-      <div className="mt-4 flex flex-col items-center gap-4 rounded-lg border border-dashed bg-muted p-8">
-        <p className="text-sm text-muted-foreground">
-          {translations("No WhatsApp Business accounts connected yet.")}
-        </p>
-        <ContinueWithFacebookButton buttonType="login_with" />
-      </div>
+      <Empty className="mt-4 border bg-muted">
+        <EmptyHeader>
+          <EmptyDescription>
+            {translations("No WhatsApp Business accounts connected yet.")}
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <ContinueWithFacebookButton buttonType="login_with" />
+        </EmptyContent>
+      </Empty>
     );
   }
 

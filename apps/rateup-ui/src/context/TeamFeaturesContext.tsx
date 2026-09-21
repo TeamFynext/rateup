@@ -1,15 +1,15 @@
 import { createContext, useContext, useMemo } from "react";
 
-import { useMyAllowedFeatures } from "@/backend/team/team.query";
-import { useUserInfo } from "@/backend/user/user.query";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
+import type { TeamFeature } from "@/types/enums.ts";
+import { allowedFeaturesFromPermissions } from "@/utils/authz/features.ts";
 
 /**
- * null  → bypass (OWNER / ADMIN / SUPER_ADMIN — no restrictions)
- * Set   → restrict to the features the member's teams have enabled
+ * The modules the signed-in user may open, derived from their permissions. `null` keeps
+ * the old meaning of "no restriction" for org-wide roles, so the navigation and the route
+ * guard read it unchanged.
  */
-
-export type AllowedFeatures = Set<string> | null;
+export type AllowedFeatures = Set<TeamFeature> | null;
 interface TeamFeaturesContextValue {
   allowedFeatures: AllowedFeatures;
   isPending: boolean;
@@ -18,33 +18,20 @@ interface TeamFeaturesContextValue {
 const TeamFeaturesContext = createContext<TeamFeaturesContextValue | undefined>(undefined);
 
 export function TeamFeaturesProvider({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { data: userQueryData, isPending: isUserPending } = useUserInfo();
-  const user = userQueryData && "data" in userQueryData ? userQueryData.data : null;
-  const hasUser = user !== null;
+  const { permissions, seesAllTeams, roleKey, isPending } = usePermissions();
 
-  // Only SUPER_ADMIN bypasses feature checks.
-  const isSuperAdmin = user?.role === UserRole.SUPADM;
-  const teamIds = isSuperAdmin ? [] : (user?.teams ?? []);
-  const { allowedFeatures: memberFeatures, isPending: featuresPending } =
-    useMyAllowedFeatures(teamIds);
-
-  // null means "bypass all checks" for SUPER_ADMIN only.
-  let allowedFeatures: AllowedFeatures = null;
-  if (hasUser && !isSuperAdmin) {
-    allowedFeatures = memberFeatures;
-  }
-  const isPending = isUserPending || (!hasUser && !isSuperAdmin) || featuresPending;
-  const value = useMemo(() => ({ allowedFeatures, isPending }), [allowedFeatures, isPending]);
+  const value = useMemo<TeamFeaturesContextValue>(() => {
+    const orgWide = seesAllTeams && (roleKey === "OWNER" || roleKey === "ADMIN");
+    return {
+      allowedFeatures: orgWide ? null : allowedFeaturesFromPermissions(permissions),
+      isPending,
+    };
+  }, [permissions, seesAllTeams, roleKey, isPending]);
 
   return <TeamFeaturesContext.Provider value={value}>{children}</TeamFeaturesContext.Provider>;
 }
 
-/**
- * Returns `null` for non-members (bypass) or a `Set<string>` of allowed
- * TeamFeature values for MEMBER-role users.
- *
- * Throws if used outside of `<TeamFeaturesProvider>`.
- */
+/** Throws if used outside of `<TeamFeaturesProvider>`. */
 export function useTeamFeatures(): TeamFeaturesContextValue {
   const ctx = useContext(TeamFeaturesContext);
   if (ctx === undefined) {

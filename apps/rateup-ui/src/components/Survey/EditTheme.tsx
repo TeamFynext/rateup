@@ -106,6 +106,7 @@ export function EditTheme({
             />
           )}
           <Button
+            aria-label="Change language"
             size="icon"
             variant="ghost"
             className="absolute top-3 right-3 z-[100] h-auto w-auto p-[5px]"

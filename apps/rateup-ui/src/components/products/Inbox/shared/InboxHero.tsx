@@ -45,9 +45,9 @@ const InboxHero = () => {
       className="w-full bg-gradient-to-b
      from-[#e6f7ffde] to-[#ffffffde] pb-10 min-h-[70vh] flex items-center"
     >
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 items-center gap-x-1 ">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 items-center gap-x-1">
         {/* Left Content */}
-        <div className="px-3 sm:px-16 sm:pt-0 pt-8 ">
+        <div className="px-3 sm:px-16 sm:pt-0 pt-8">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 leading-tight">
             Go Beyond Feedback{" "}
             <span className="inline-block text-primary font-bold">
@@ -90,7 +90,7 @@ const InboxHero = () => {
             height={700}
             width={500}
             alt="Dashboard showing testimonial management system"
-            className="w-full "
+            className="w-full"
           />
         </div>
       </div>

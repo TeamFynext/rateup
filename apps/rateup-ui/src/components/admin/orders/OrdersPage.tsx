@@ -87,7 +87,7 @@ export function OrdersPage() {
         return (
           <div className="flex items-center gap-2">
             <IconBuilding className="h-4 w-4 text-muted-foreground" />
-            <span className={isDeleted ? "text-red-500 italic" : ""}>{orgName}</span>
+            <span className={isDeleted ? "text-destructive italic" : ""}>{orgName}</span>
           </div>
         );
       },
@@ -140,7 +140,7 @@ export function OrdersPage() {
           <div className="flex items-center gap-2">
             <IconUserCheck className="h-4 w-4 text-muted-foreground" />
             <span
-              className={`text-sm max-w-[180px] truncate ${isDeleted ? "text-red-500 italic" : ""}`}
+              className={`text-sm max-w-[180px] truncate ${isDeleted ? "text-destructive italic" : ""}`}
             >
               {createdBy}
             </span>
@@ -238,7 +238,7 @@ export function OrdersPage() {
         {/* Stats Cards */}
         {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-ru-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -299,7 +299,7 @@ export function OrdersPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border-red-200 dark:border-red-800">
+          <Card className="relative overflow-hidden border-destructive/30 ">
             <div className="absolute inset-0 bg-linear-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
@@ -312,10 +312,10 @@ export function OrdersPage() {
               </div>
             </CardHeader>
             <CardContent className="relative">
-              <div className="text-3xl font-bold text-red-700 dark:text-red-400">
+              <div className="text-3xl font-bold text-destructive ">
                 {failedOrders}
               </div>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              <p className="text-xs text-destructive mt-1">
                 Payment failed
               </p>
             </CardContent>

@@ -77,7 +77,7 @@ function CreateLinktreeModal({
     <Dialog open={opened} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
         {/* Header with gradient background */}
-        <DialogHeader className="relative bg-primary text-white px-6 py-6 space-y-3">
+        <DialogHeader className="relative bg-primary text-primary-foreground px-6 py-6 space-y-3">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
 
@@ -132,7 +132,7 @@ function CreateLinktreeModal({
             </Field>
 
             {/* Info Box */}
-            <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-rateup-darkblue dark:to-transparent border-l-4 border-primary rounded-r-lg p-3.5 flex gap-3">
+            <div className="bg-linear-to-r from-ru-blue-50 to-indigo-50 dark:from-ru-blue-900 dark:to-transparent border-l-4 border-primary rounded-r-lg p-3.5 flex gap-3">
               <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
                 <IconInfoCircle className="w-3 h-3 text-white" />
               </div>

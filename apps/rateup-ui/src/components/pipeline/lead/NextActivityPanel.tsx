@@ -152,7 +152,7 @@ export function NextActivityPanel({ lead }: Readonly<{ lead: LeadDetail }>) {
           size="sm"
           className="h-auto shrink-0 p-0 text-xs font-bold"
           onClick={() => updateTask.mutate({ taskId: task.id, input: { completed: true } })}
-          disabled={updateTask.isPending}
+          loading={updateTask.isPending}
         >
           {t("Mark done")}
         </Button>

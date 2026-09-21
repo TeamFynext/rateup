@@ -86,13 +86,13 @@ const LargeTextResponseSummary = ({
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
-            size="icon"
-            className="size-8"
+            size="sm"
+            className="-ml-2 font-bold text-muted-foreground hover:text-foreground"
             onClick={() => setSummaryTab(ResponseSummaryType.All)}
           >
-            <IconArrowLeft className="size-4" />
+            <IconArrowLeft data-icon="inline-start" aria-hidden="true" />
+            {translations("Back")}
           </Button>
-          <span className="font-bold text-muted-foreground">{translations("Back")}</span>
         </div>
 
         <div className="flex flex-col gap-4 px-4">

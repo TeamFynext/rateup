@@ -3,14 +3,12 @@
 // other screens — the Activity ledger — can link straight to a customer.
 
 import {
-  IconArrowLeft,
   IconCopy,
   IconDownload,
   IconFileSpreadsheet,
   IconFileText,
   IconFilter,
   IconLink,
-  IconLoader2,
   IconPencil,
   IconPhone,
   IconSearch,
@@ -29,6 +27,8 @@ import {
 import type { LoyaltyChannel } from "@/backend/loyalty/program.api";
 import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
+import { BackLink } from "@/components/common/back-link.tsx";
+import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { CustomerSummaryPanel } from "@/components/loyalty/cashier/CustomerSummaryPanel.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -42,6 +42,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import type { WaInboxMessage } from "@/types/global";
 import { docsPath } from "@/utils/constants.ts";
 
@@ -163,15 +164,15 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
 
   const getTierBadgeClassName = (tierColor: string) => {
     if (tierColor === "purple") {
-      return "bg-purple-50 text-purple-700 hover:bg-purple-50 border border-purple-200";
+      return "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 border border-purple-200 dark:border-purple-900";
     }
     if (tierColor === "yellow") {
-      return "bg-yellow-50 text-yellow-700 hover:bg-yellow-50 border border-yellow-200";
+      return "bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-900";
     }
     if (tierColor === "amber") {
-      return "bg-amber-50 text-amber-700 hover:bg-amber-50 border border-amber-200";
+      return "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-amber-200 dark:border-amber-900";
     }
-    return "bg-gray-100 text-gray-700 hover:bg-gray-100 border border-gray-200";
+    return "bg-muted text-foreground hover:bg-muted border border-border";
   };
 
   const columns: ColumnDef<CustomerDetails>[] = [
@@ -302,19 +303,16 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl mb-1">{t("Customers")}</h1>
+              <h1 className={cn(PAGE_TITLE, "mb-1")}>{t("Customers")}</h1>
               <p className="text-sm text-muted-foreground">
                 {t("Manage your loyalty program members")}
               </p>
-            </div>{" "}
+            </div>
+            {""}
             <div className="flex items-start justify-between gap-2">
               <DropdownMenu>
-                <DropdownMenuTrigger render={<Button disabled={exportMutation.isPending} />}>
-                  {exportMutation.isPending ? (
-                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <IconDownload className="w-4 h-4 mr-2" />
-                  )}
+                <DropdownMenuTrigger render={<Button loading={exportMutation.isPending} />}>
+                  <IconDownload className="w-4 h-4 mr-2" />
                   {t("Export Data")}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -327,7 +325,8 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
                     {t("Export as Excel")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>{" "}
+              </DropdownMenu>
+              {""}
               <InfoButton docUrl={`${docsPath}/loyality/customers`} />
             </div>
           </div>
@@ -355,13 +354,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
       ) : (
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => navigate({ to: LOYALTY_PATHS.customers, search: {} })}
-            >
-              <IconArrowLeft className="w-4 h-4 mr-2" />
-              {t("Back to Customers")}
-            </Button>
+            <BackLink to={LOYALTY_PATHS.customers} search={{}} label={t("Customers")} />
             {/* Their own details — name, birthday — as opposed to their points and tier,
                 which the panel below owns and the counter changes. Only offered once the
                 account is known: a link can name a number the programme has no member for. */}

@@ -89,7 +89,7 @@ export function AuthTitle({
       }`}
     >
       <h1
-        className={`font-heading font-bold tracking-[-0.028em] text-foreground ${
+        className={`font-display font-bold tracking-[-0.028em] text-foreground ${
           large ? "text-[29px] leading-[1.1]" : "text-[25px] leading-[1.15]"
         }`}
       >

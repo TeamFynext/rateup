@@ -96,7 +96,7 @@ export function GoogleLinkDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={editTeam.isPending}>
+            <Button type="submit" loading={editTeam.isPending}>
               {t("Save")}
             </Button>
           </DialogFooter>

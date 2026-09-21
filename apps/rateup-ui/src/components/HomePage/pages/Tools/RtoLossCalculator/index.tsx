@@ -181,7 +181,7 @@ export default function RtoLossCalculator() {
                 <div className="text-[11.5px] font-extrabold tracking-[0.1em] text-[#0F7A42] uppercase">
                   You&apos;d save
                 </div>
-                <div className="mt-1 font-nunito text-[32px] leading-[1.1] font-black text-[#0B5C32] sm:text-[38px]">
+                <div className="mt-1 font-display text-[32px] leading-[1.1] font-black text-[#0B5C32] sm:text-[38px]">
                   {inr(result.saving)}
                 </div>
                 <div className="mt-0.5 text-[13px] text-[#0F7A42]">

@@ -140,7 +140,7 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
                               size="icon-sm"
                               variant="destructive"
                               onClick={() => handleDelete(product)}
-                              disabled={deleteProducts.isPending}
+                              loading={deleteProducts.isPending}
                             />
                           }
                         >

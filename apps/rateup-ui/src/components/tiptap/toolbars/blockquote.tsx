@@ -15,6 +15,7 @@ const BlockquoteToolbar = React.forwardRef<HTMLButtonElement, React.ComponentPro
         <TooltipTrigger
           render={
             <Button
+              aria-label="Quote"
               variant="ghost"
               size="icon"
               className={cn(

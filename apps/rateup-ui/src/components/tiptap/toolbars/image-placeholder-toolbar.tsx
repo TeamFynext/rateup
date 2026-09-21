@@ -22,6 +22,7 @@ const ImagePlaceholderToolbar = React.forwardRef<
       <TooltipTrigger
         render={
           <Button
+            aria-label="Insert an image"
             variant="ghost"
             size="icon"
             className={cn(

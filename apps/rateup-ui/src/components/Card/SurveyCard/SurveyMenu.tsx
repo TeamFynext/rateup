@@ -245,6 +245,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
       <DropdownMenuTrigger
         render={
           <Button
+            aria-label={translations("More actions")}
             variant="ghost"
             size="icon"
             className="text-muted-foreground"

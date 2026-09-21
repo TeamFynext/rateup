@@ -33,6 +33,7 @@ export default function WaInboxFooterMenu(props: Props) {
           <DropdownMenuTrigger
             render={
               <Button
+                aria-label="Message actions"
                 size="icon"
                 className={cn(
                   // Bigger where it is a touch target, smaller once it sits in a

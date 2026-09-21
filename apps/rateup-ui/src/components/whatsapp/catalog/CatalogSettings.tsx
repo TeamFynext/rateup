@@ -72,7 +72,7 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
   }, [catalogData, waSettings]);
   async function handleDisconnect() {
     if (!wabaId) {
-      toast.error("Try again!");
+      toast.error("No WhatsApp account is connected.");
       return;
     }
 
@@ -164,7 +164,7 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
             </SelectContent>
           </Select>
         </Field>
-        <Button variant="destructive" onClick={handleDisconnect} disabled={disconnect.isPending}>
+        <Button variant="destructive" onClick={handleDisconnect} loading={disconnect.isPending}>
           <IconLogin2 size={16} />
           Disconnect WhatsApp Business Account
         </Button>
@@ -193,7 +193,7 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
           <FieldLabel htmlFor={`${uid}-checkout-message`}>Checkout Message</FieldLabel>
           <Input
             id={`${uid}-checkout-message`}
-            placeholder="Thanks for your order! Complete your purchase here: {{link}}"
+            placeholder="Thanks for your order! Complete your purchase here: {link}"
             defaultValue={catalogData.checkoutMessage || ""}
             onBlur={(e) => {
               if (e.target.value !== catalogData.checkoutMessage) {
@@ -202,7 +202,7 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
             }}
           />
           <FieldDescription>
-            Use {"{{link}}"} where you want the Shopify URL to appear.
+            Use {"{link}"} where you want the Shopify URL to appear.
           </FieldDescription>
         </Field>
       )}
@@ -227,7 +227,7 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
           variant="destructive"
           className="w-fit"
           onClick={handleDeleteCatalog}
-          disabled={deleteCatalog.isPending}
+          loading={deleteCatalog.isPending}
         >
           <IconTrash size={16} />
           Delete Catalog
@@ -247,10 +247,10 @@ const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) =
 
       {/* Import from Shopify
       <div className="flex flex-col gap-1">
-        <div className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50">
+        <div className="flex justify-between items-center p-3 border border-border rounded-lg bg-muted">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-sm">Import from Shopify</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Browse your Shopify products and selectively add new ones to this
               catalog.
             </p>
@@ -265,7 +265,7 @@ const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) =
           </Button>
         </div>
         {!shopifyLoading && !shopifyIntegration && (
-          <p className="text-xs text-red-500 italic mt-1 ml-1">
+          <p className="text-xs text-destructive italic mt-1 ml-1">
             Shopify is not connected. Connect your store from Apps & Services to
             enable imports.
           </p>
@@ -299,7 +299,7 @@ const ProductSetsSection = ({ catalogId }: { catalogId: string }) => {
           variant="outline"
           size="sm"
           onClick={() => syncProductSetsMut.mutate(catalogId)}
-          disabled={syncProductSetsMut.isPending}
+          loading={syncProductSetsMut.isPending}
         >
           <IconRefresh size={16} />
           Sync from Meta

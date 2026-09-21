@@ -39,7 +39,7 @@ export const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
   return (
     <div className={styles.editorSection}>
       <div className="text-xs font-bold text-muted-foreground">
-        Message Text <span className="text-red-500">*</span>
+        Message Text <span className="text-destructive">*</span>
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">

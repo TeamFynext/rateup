@@ -123,13 +123,15 @@ export function ChangePlanDialog({
                   them across by hand — without this they are left at a wall with no
                   next step. */}
               <p>
-                {translations("Need the new plan sooner? Write to us at")}{" "}
+                {translations("Need the new plan sooner? Write to us at")}
+                {""}
                 <a
                   href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Plan change help")}`}
                   className="font-medium text-primary hover:underline"
                 >
                   {SUPPORT_EMAIL}
-                </a>{" "}
+                </a>
+                {""}
                 {translations("and we will sort it out with you.")}
               </p>
             </AlertDescription>

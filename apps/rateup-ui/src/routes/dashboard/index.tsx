@@ -1,25 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import Session from "supertokens-auth-react/recipe/session";
 
-import { getTeamFeatures } from "@/backend/team/team.api";
 import { userInfoQuery } from "@/backend/user/user.options";
 import { Loader } from "@/components/ui/loader.tsx";
 import { isEmailVerified, VERIFY_EMAIL_PATH } from "@/utils/auth/emailVerification.ts";
+import { resolvePermissions } from "@/utils/authz/can.ts";
+import { allowedFeaturesFromPermissions } from "@/utils/authz/features.ts";
 import { getDashboardLandingTarget } from "@/utils/dashboard-feature-access.ts";
-import { UserRole } from "@/utils/enums/index.ts";
-
-async function getMemberAllowedFeatures(teamIds: string[]): Promise<Set<string>> {
-  const teamFeaturesResponses = await Promise.all(teamIds.map((id) => getTeamFeatures(id)));
-  const allowedFeatures = new Set<string>();
-
-  for (const result of teamFeaturesResponses) {
-    for (const feature of result.features) {
-      allowedFeatures.add(feature.feature);
-    }
-  }
-
-  return allowedFeatures;
-}
 
 export const Route = createFileRoute("/dashboard/")({
   ssr: false,
@@ -52,20 +39,19 @@ export const Route = createFileRoute("/dashboard/")({
       });
     }
 
-    if (!user.onboardingChecklistCompleted && user.role === UserRole.SUPADM) {
+    const permissions = resolvePermissions(user);
+
+    // Setup connects channels for the whole org, so it is the org-wide roles' job.
+    if (!user.onboardingChecklistCompleted && permissions.has("channels.manage")) {
       throw redirect({
         to: "/dashboard/setup",
         replace: true,
       });
     }
 
-    const teamIds = user?.role === UserRole.SUPADM ? [] : (user.teams ?? []);
-
-    if (teamIds.length > 0) {
-      const allowedFeatures = await getMemberAllowedFeatures(teamIds);
-      const firstAllowedTarget = getDashboardLandingTarget(allowedFeatures);
+    if (!permissions.has("inbox.read")) {
       throw redirect({
-        to: firstAllowedTarget,
+        to: getDashboardLandingTarget(allowedFeaturesFromPermissions(permissions)),
         replace: true,
       });
     }

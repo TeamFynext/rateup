@@ -48,12 +48,12 @@ const formatDateTime = (value: string | Date | null | undefined) =>
   value ? dayjs(value).format("DD MMM YYYY, h:mm A") : null;
 
 const STATUS_STYLES: Record<string, string> = {
-  UNASSIGNED: "bg-gray-100 text-gray-700",
-  ASSIGNED: "bg-blue-100 text-blue-700",
-  RESOLVED: "bg-green-100 text-green-700",
-  UNRESOLVED: "bg-amber-100 text-amber-700",
-  CLOSED: "bg-slate-200 text-slate-700",
-  SPAM: "bg-red-100 text-red-700",
+  UNASSIGNED: "bg-muted text-foreground",
+  ASSIGNED: "bg-ru-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400",
+  RESOLVED: "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400",
+  UNRESOLVED: "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400",
+  CLOSED: "bg-muted text-foreground",
+  SPAM: "bg-destructive/10 text-destructive ",
 };
 
 /**
@@ -243,24 +243,27 @@ const ContactDetailedView = ({
             {inboxStatus && (
               <Badge
                 variant="secondary"
-                className={STATUS_STYLES[inboxStatus] ?? "bg-gray-100 text-gray-700"}
+                className={STATUS_STYLES[inboxStatus] ?? "bg-muted text-foreground"}
               >
                 {inboxStatus}
               </Badge>
             )}
             {lifecycleName && <Badge variant="outline">{lifecycleName}</Badge>}
             {!hasConsent && (
-              <Badge variant="secondary" className="bg-amber-100 text-amber-700">
+              <Badge
+                variant="secondary"
+                className="bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400"
+              >
                 No consent
               </Badge>
             )}
             {(details?.blockedOnWhatsApp ?? selectedContact.blockedOnWhatsApp) && (
-              <Badge variant="secondary" className="bg-red-100 text-red-700">
+              <Badge variant="secondary" className="bg-destructive/10 text-destructive ">
                 Blocked
               </Badge>
             )}
             {details?.isSpam && (
-              <Badge variant="secondary" className="bg-red-100 text-red-700">
+              <Badge variant="secondary" className="bg-destructive/10 text-destructive ">
                 Spam
               </Badge>
             )}

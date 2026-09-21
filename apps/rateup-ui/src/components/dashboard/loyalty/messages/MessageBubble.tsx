@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * A message as the customer sees it, with the `{{n}}` slots picked out so the merchant
+ * A message as the customer sees it, with the `{n}` slots picked out so the merchant
  * can tell the words they wrote from the values the programme fills in.
  */
 export function MessageBubble({ text, className }: Readonly<{ text: string; className?: string }>) {

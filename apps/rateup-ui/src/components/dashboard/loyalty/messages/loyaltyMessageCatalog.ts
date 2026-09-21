@@ -326,7 +326,7 @@ export function loyaltyKeywordDefinition(
  * Both rules are rejections at submit time, not warnings, and the merchant only sees them
  * as a Meta error several minutes later — so the editor asks first.
  *
- * The copy deliberately contains no `{{n}}`: these strings go through i18next-icu, which
+ * The copy deliberately contains no `{n}`: these strings go through i18next-icu, which
  * reads a brace as the start of a format element.
  */
 export function templateBodyProblem(body: string, t: TFunction): string | null {

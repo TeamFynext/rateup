@@ -1,10 +1,11 @@
-import { IconArrowLeft, type TablerIcon } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
+import { type TablerIcon } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { BackLink } from "@/components/common/back-link.tsx";
+import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { cn } from "@/lib/utils.ts";
 import { docsPath } from "@/utils/constants.ts";
 
 export interface SurveyHeaderTab<T extends string> {
@@ -26,24 +27,13 @@ export default function SurveyPageHeader<T extends string>({
   onTabChange,
   tabs,
 }: Readonly<SurveyPageHeaderProps<T>>) {
-  const navigate = useNavigate();
   const { t: translations } = useTranslation();
 
   return (
     <div className="flex-shrink-0 bg-background">
       <div className="flex h-[62px] items-center gap-4 border-b border-border px-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate({ to: "/dashboard/surveys" })}
-          className="gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-3 text-[13px] font-semibold text-primary hover:bg-primary/20"
-        >
-          <IconArrowLeft className="size-3.5" />
-          {translations("Back")}
-        </Button>
-        <h1 className="truncate font-nunito text-[22px] font-extrabold tracking-tight text-foreground">
-          {title}
-        </h1>
+        <BackLink to="/dashboard/surveys" label={translations("Surveys")} />
+        <h1 className={cn(SECTION_TITLE, "truncate")}>{title}</h1>
         <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
       </div>
 

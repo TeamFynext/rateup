@@ -1,4 +1,4 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { orgKeys, teamKeys } from "@/backend/org/org.keys";
@@ -17,13 +17,11 @@ import {
   getSurveyLanguagesFromTeam,
   getTeamById,
   getTeamChannels,
-  getTeamFeatures,
   getTeamMembersFromInvitation,
   getTeamsByUser,
   removeUserFromTeam,
   resendInviteTeamMember,
   updateTeamChannels,
-  updateTeamFeatures,
 } from "./team.api";
 
 export function useTeamsByUser() {
@@ -54,7 +52,6 @@ interface CreateTeamValues {
   name: string;
   code: string;
   color: string;
-  features: string[];
   whatsappAccessToken?: string;
 }
 
@@ -95,7 +92,7 @@ export function useEditTeamMutation(
   return useMutation({
     mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
     onSuccess: (_res) => {
-      toast.success("Team Details Updated Successfully!", {
+      toast.success("Team Details updated", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -145,7 +142,6 @@ async function handleCreateTeam(values: CreateTeamValues) {
     orgId: orgId!,
     userId,
     whatsappAccessToken: values.whatsappAccessToken!,
-    features: values.features,
   };
   return createTeam(data);
 }
@@ -199,7 +195,7 @@ export function useAddUsertoTeams() {
       queryClient.invalidateQueries({ queryKey: teamKeys.invited() });
       queryClient.invalidateQueries({ queryKey: orgKeys.teamsAll() });
 
-      toast.success("success");
+      toast.success("Added to the team");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed");
@@ -218,7 +214,7 @@ export function useRemoveUserFromTeam(teamId: string) {
         queryKey: teamKeys.invitedByTeam(teamId),
       });
 
-      toast.success("success");
+      toast.success("Removed from the team");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed");
@@ -231,27 +227,6 @@ export function useGetTeamById(teamId: string) {
     queryKey: teamKeys.detail(teamId),
     queryFn: () => getTeamById(teamId),
     enabled: !!teamId,
-  });
-}
-
-export function useTeamFeatures(teamId: string) {
-  return useQuery({
-    queryKey: teamKeys.features(teamId),
-    queryFn: () => getTeamFeatures(teamId),
-    enabled: !!teamId,
-  });
-}
-
-export function useUpdateTeamFeatures(teamId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (features: string[]) => updateTeamFeatures(teamId, features),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teamKeys.features(teamId) });
-    },
-    onError: (error) => {
-      toast.error(error?.message || "Failed to update feature access.");
-    },
   });
 }
 
@@ -277,35 +252,4 @@ export function useUpdateTeamChannels(teamId: string) {
       toast.error(error?.message || "Failed to update channel access.");
     },
   });
-}
-
-/**
- * Returns the union of all enabled features across the given teamIds.
- * Pass an empty array (or skip) to get an empty Set.
- */
-export function useMyAllowedFeatures(teamIds: string[]): {
-  allowedFeatures: Set<string>;
-  isPending: boolean;
-} {
-  const results = useQueries({
-    queries: teamIds.map((id) => ({
-      queryKey: teamKeys.features(id),
-      queryFn: () => getTeamFeatures(id),
-      enabled: !!id,
-    })),
-  });
-
-  const union = new Set<string>();
-  let isPending = false;
-  for (const result of results) {
-    if (result.isPending || result.isLoading) {
-      isPending = true;
-    }
-    if (result.data) {
-      for (const f of result.data.features) {
-        union.add(f.feature);
-      }
-    }
-  }
-  return { allowedFeatures: union, isPending };
 }

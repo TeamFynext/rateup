@@ -2,6 +2,7 @@ import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -89,7 +90,9 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
   return (
     <div className="flex flex-col gap-4">
       <div
-        onClick={() => !isPreview && fileInputRef.current?.click()}
+        {...pressable(() => {
+          if (!isPreview) fileInputRef.current?.click();
+        })}
         onDragEnter={(e) => {
           e.preventDefault();
           if (!isPreview) setIsDragActive(true);
@@ -144,6 +147,7 @@ const FileInputForm = ({ isPreview }: FileInputFormProps) => {
               <Spinner className="size-4" />
             ) : (
               <Button
+                aria-label={translations("Remove")}
                 onClick={() => handleRemoveFile(asAnswerText(response))}
                 variant="secondary"
                 size="icon"

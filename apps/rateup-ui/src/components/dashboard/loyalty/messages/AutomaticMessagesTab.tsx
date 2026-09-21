@@ -186,7 +186,7 @@ export function AutomaticMessagesTab() {
             </span>
             <Button
               size="sm"
-              disabled={seed.isPending}
+              loading={seed.isPending}
               onClick={() =>
                 seed.mutate({
                   commands: [],
@@ -198,7 +198,7 @@ export function AutomaticMessagesTab() {
                 })
               }
             >
-              {seed.isPending ? t("Submitting…") : t("Set up the standard notifications")}
+              {t("Set up the standard notifications")}
             </Button>
           </AlertDescription>
         </Alert>

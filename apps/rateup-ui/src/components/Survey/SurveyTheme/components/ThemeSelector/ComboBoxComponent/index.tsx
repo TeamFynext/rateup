@@ -1,6 +1,7 @@
 import { IconChevronDown, IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 
+import { pressable } from "@/components/common/pressable.ts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -57,10 +58,10 @@ function ComboBoxComponent({
                 key={optionObj.value}
                 data-combobox-active={String(optionObj.value === value)}
                 className={cn("cursor-pointer rounded-sm px-2 py-1.5", classNames.option)}
-                onClick={() => {
+                {...pressable(() => {
                   onChange(optionObj.value);
                   setOpen(false);
-                }}
+                })}
               >
                 <RenderOption option={optionObj} {...renderOptionProps} />
               </div>

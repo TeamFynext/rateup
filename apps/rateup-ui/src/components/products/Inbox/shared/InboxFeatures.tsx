@@ -52,7 +52,7 @@ export const InboxFeatures = () => {
             </p>
 
             {/* Features List */}
-            <div className="mt-10 bg-white p-6 sm:p-8 rounded-3xl  border border-[#d6e4f5]">
+            <div className="mt-10 bg-white p-6 sm:p-8 rounded-3xl border border-[#d6e4f5]">
               <ul className="space-y-6">
                 {features.map((item, idx) => (
                   <motion.li
@@ -85,7 +85,7 @@ export const InboxFeatures = () => {
             <Image
               src={`${imagesPath}/inbox/AI ANALYTICS.png`}
               alt="Reputation Management Illustration"
-              className="w-full h-auto "
+              className="w-full h-auto"
               width={2432}
               height={1442}
             />

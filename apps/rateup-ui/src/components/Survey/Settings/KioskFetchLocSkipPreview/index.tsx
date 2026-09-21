@@ -102,7 +102,7 @@ function KioskFetchLocSkipPreview({
       <Card>
         <CardHeader className="flex flex-row items-center gap-2.25">
           <IconSettings2 className="size-4 text-primary" />
-          <CardTitle className="font-nunito text-[15px] font-extrabold">
+          <CardTitle className="font-display text-[15px] font-extrabold">
             {translations("Survey Behaviour")}
           </CardTitle>
         </CardHeader>

@@ -1,8 +1,7 @@
-import { IconChevronLeft } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
 import type { ComponentType, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { BackLink } from "@/components/common/back-link.tsx";
 import { cn } from "@/lib/utils";
 
 import { IntegrationPlate } from "./IntegrationPlate.tsx";
@@ -69,19 +68,13 @@ export function IntegrationShell({
   return (
     <div className="mx-auto flex w-full max-w-265 flex-col gap-6 pb-2">
       <div className="flex flex-col gap-4">
-        <Link
-          to="/dashboard/settings/integrations"
-          className="-ml-1 inline-flex w-fit items-center gap-1 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-        >
-          <IconChevronLeft className="size-4" />
-          {t("Integrations")}
-        </Link>
+        <BackLink to="/dashboard/settings/integrations" label={t("Integrations")} />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <IntegrationPlate icon={icon} connected={connected ?? false} own={own} />
             <div className="flex min-w-0 flex-col gap-0.5">
-              <h2 className="font-heading truncate text-2xl font-semibold">{name}</h2>
+              <h2 className="font-display truncate text-2xl font-semibold">{name}</h2>
               {connected === undefined ? null : (
                 <ConnectionStatus connected={connected} detail={detail} />
               )}

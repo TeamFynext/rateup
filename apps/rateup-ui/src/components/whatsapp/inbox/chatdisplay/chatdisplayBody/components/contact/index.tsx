@@ -94,6 +94,7 @@ const Contact = ({
             <PopoverTrigger
               render={
                 <Button
+                  aria-label="Contact details"
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground shrink-0"

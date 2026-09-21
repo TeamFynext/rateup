@@ -147,7 +147,7 @@ export const useDeleteGroupMutation = () => {
         exact: false,
         refetchType: "all",
       });
-      toast.success("Contact Group Deleted successfully", {
+      toast.success("Contact Group deleted", {
         id: "contact-group-delete",
       });
     },
@@ -286,7 +286,7 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
       queryClient.invalidateQueries({
         queryKey: campaignKeys.contactGroups(),
       });
-      toast.success("Contact Groups Deleted successfully", {
+      toast.success("Contact Groups deleted", {
         id: "contact-group-delete",
       });
       onSucess();

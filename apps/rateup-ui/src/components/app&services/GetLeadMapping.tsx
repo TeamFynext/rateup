@@ -251,8 +251,8 @@ export function GetLeadMapping({ meta }: Props) {
         ) : (
           <span />
         )}
-        <Button onClick={handleSave} disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? t("Saving...") : t("Save settings")}
+        <Button onClick={handleSave} loading={saveMutation.isPending}>
+          {t("Save settings")}
         </Button>
       </div>
 

@@ -79,12 +79,12 @@ const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQ
   }, [logoTabPanelState]);
 
   return (
-    <div className="bg-white dark:bg-[#121212] rounded-lg border dark:border-gray-700 p-6">
+    <div className="bg-card rounded-lg border p-6">
       <h2 className="text-base font-semibold mb-6 dark:text-white">QR Code</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LogoTabpanel state={logoTabPanelState} dispatch={logoTabPanelDispatch} />
         <div className="flex flex-col gap-4">
-          <div className="border dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-[#1a1a1a] gap-2">
+          <div className="border rounded-lg flex flex-col items-center justify-center p-6 bg-muted gap-2">
             <Preview
               logoTabPanelState={logoTabPanelState}
               url={url}

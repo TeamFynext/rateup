@@ -295,8 +295,8 @@ export default function BookDemoForm({
 
         {/* Full-width and tall: this is the only CTA on the demo page, and the modal reads
             better for it too. */}
-        <Button type="submit" disabled={isPending} className="mt-1 h-12 w-full text-base font-bold">
-          {isPending ? "Booking..." : "Book My Demo"}
+        <Button type="submit" loading={isPending} className="mt-1 h-12 w-full text-base font-bold">
+          {"Book My Demo"}
         </Button>
 
         <p className="-mt-1 text-center text-[11px] text-slate-400">

@@ -141,7 +141,8 @@ export const MediaNodeEditor: React.FC<
       setMedia(base64String);
       setFile(file);
     } catch (error) {
-      toast.error(translations("Error converting file to Base64:") + JSON.stringify(error), {
+      console.error("Image read failed", error);
+      toast.error(translations("Could not read that image."), {
         id: "file-converting",
       });
     }
@@ -324,9 +325,9 @@ export const MediaNodeEditor: React.FC<
       {mediaError && <p className="text-center text-xs text-destructive">{mediaError}</p>}
 
       {file && (
-        <Button onClick={uploadFileData} disabled={loading}>
-          {loading ? <Spinner /> : <IconDeviceFloppy />}
-          {loading ? "Uploading..." : "Upload"}
+        <Button onClick={uploadFileData} loading={loading}>
+          <IconDeviceFloppy />
+          {"Upload"}
         </Button>
       )}
       {nodeType !== "audioNode" && !disableCaption && (

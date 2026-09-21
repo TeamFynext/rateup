@@ -108,6 +108,7 @@ function QuestionDetailedViewFooter({
         <DropdownMenuTrigger
           render={
             <Button
+              aria-label={translations("More actions")}
               variant="ghost"
               size="icon"
               className="size-7 text-muted-foreground hover:text-foreground"

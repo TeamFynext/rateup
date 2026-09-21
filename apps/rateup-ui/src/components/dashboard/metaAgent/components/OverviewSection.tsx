@@ -94,14 +94,10 @@ function OnboardingSteps({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
             <Button
               size="sm"
               variant={eligible ? "outline" : "default"}
-              disabled={checkEligibility.isPending}
+              loading={checkEligibility.isPending}
               onClick={() => checkEligibility.mutate()}
             >
-              {checkEligibility.isPending ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <IconRefresh data-icon="inline-start" />
-              )}
+              <IconRefresh data-icon="inline-start" />
               {eligible || ineligible ? "Re-check" : "Check with Meta"}
             </Button>
           }
@@ -251,7 +247,7 @@ function AllowlistPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
                   onBlur={field.onBlur}
                   className="w-full max-w-72"
                 />
-                <Button type="submit" variant="outline" disabled={addEntry.isPending}>
+                <Button type="submit" variant="outline" loading={addEntry.isPending}>
                   <IconPlus data-icon="inline-start" />
                   Add
                 </Button>
@@ -311,12 +307,8 @@ function DangerZone({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
         <AlertDialog>
           <AlertDialogTrigger
             render={
-              <Button variant="destructive" size="sm" disabled={deleteAgent.isPending}>
-                {deleteAgent.isPending ? (
-                  <Spinner data-icon="inline-start" />
-                ) : (
-                  <IconTrash data-icon="inline-start" />
-                )}
+              <Button variant="destructive" size="sm" loading={deleteAgent.isPending}>
+                <IconTrash data-icon="inline-start" />
                 Delete agent
               </Button>
             }

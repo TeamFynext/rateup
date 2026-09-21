@@ -5,7 +5,6 @@ import {
   IconAward,
   IconDeviceFloppy,
   IconInfoCircle,
-  IconLoader2,
   IconPencil,
   IconTrash,
   IconX,
@@ -151,13 +150,9 @@ export function TierCard({
                 type="submit"
                 size="sm"
                 className="h-8"
-                disabled={updateTierMutation.isPending}
+                loading={updateTierMutation.isPending}
               >
-                {updateTierMutation.isPending ? (
-                  <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <IconDeviceFloppy className="mr-1 h-3.5 w-3.5" />
-                )}
+                <IconDeviceFloppy className="mr-1 h-3.5 w-3.5" />
                 Save
               </Button>
             </div>

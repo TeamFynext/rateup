@@ -89,7 +89,7 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
                   onSuccess: () => setIsConfirmOpen(false),
                 });
               }}
-              disabled={deleteMutation.isPending}
+              loading={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? (
                 <>
@@ -107,6 +107,7 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
         <PopoverTrigger
           render={
             <Button
+              aria-label={translations("Copy")}
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
@@ -135,6 +136,7 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
                   className="h-8 font-mono text-xs text-black dark:text-white bg-white dark:bg-black"
                 />
                 <Button
+                  aria-label={translations("Copy")}
                   size="icon"
                   variant="outline"
                   className="h-8 w-8 shrink-0"
@@ -160,6 +162,7 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
                   className="h-8 font-mono text-[10px] text-black dark:text-white bg-white dark:bg-black"
                 />
                 <Button
+                  aria-label={translations("Copy")}
                   size="icon"
                   variant="outline"
                   className="h-8 w-8 shrink-0"
@@ -177,17 +180,14 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
         </PopoverContent>
       </Popover>
       <Button
+        aria-label={translations("Delete")}
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-red-600"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive"
         onClick={handleDelete}
-        disabled={deleteMutation.isPending}
+        loading={deleteMutation.isPending}
       >
-        {deleteMutation.isPending ? (
-          <IconRefresh className="h-4 w-4 animate-spin" />
-        ) : (
-          <IconTrash className="h-4 w-4" />
-        )}
+        <IconTrash className="h-4 w-4" />
       </Button>
     </div>
   );
@@ -380,7 +380,7 @@ export function ReferralsPage() {
               <Button
                 onClick={handleCreateReferral}
                 disabled={createReferralMutation.isPending || !name.trim() || !email.trim()}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-purple-600 hover:bg-purple-700 dark:hover:bg-purple-300"
                 size="lg"
               >
                 {createReferralMutation.isPending ? (
@@ -408,9 +408,10 @@ export function ReferralsPage() {
                       id={`${uid}-generated-referral-code`}
                       value={generatedCode}
                       readOnly
-                      className="bg-gray-50 dark:bg-gray-900/50 font-mono text-sm text-black dark:text-white"
+                      className="bg-muted /50 font-mono text-sm text-black dark:text-white"
                     />
                     <Button
+                      aria-label={translations("Copy referral code")}
                       type="button"
                       variant="outline"
                       size="icon"
@@ -438,9 +439,10 @@ export function ReferralsPage() {
                       id={`${uid}-final-referral-link`}
                       value={generatedLink}
                       readOnly
-                      className="bg-gray-50 dark:bg-gray-900/50 font-mono text-xs text-black dark:text-white"
+                      className="bg-muted /50 font-mono text-xs text-black dark:text-white"
                     />
                     <Button
+                      aria-label={translations("Copy referral link")}
                       type="button"
                       variant="outline"
                       size="icon"

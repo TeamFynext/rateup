@@ -20,7 +20,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import type { LeadgenNodeData } from "../../types/node-types.ts";
@@ -179,14 +178,15 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           <TooltipTrigger
             render={
               <Button
+                aria-label="Refresh"
                 type="button"
                 variant="ghost"
                 size="icon-sm"
                 className="mt-6"
                 onClick={() => syncfbpageMut.mutate()}
-                disabled={syncfbpageMut.isPending}
+                loading={syncfbpageMut.isPending}
               >
-                {syncfbpageMut.isPending ? <Spinner /> : <IconRefresh />}
+                <IconRefresh />
               </Button>
             }
           />
@@ -194,8 +194,7 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         </Tooltip>
       </div>
       {!isFieldSubscribed && (
-        <Button className="w-full" onClick={subscribeTolead} disabled={subscribeFieldMut.isPending}>
-          {subscribeFieldMut.isPending && <Spinner />}
+        <Button className="w-full" onClick={subscribeTolead} loading={subscribeFieldMut.isPending}>
           Subscribe to Lead
         </Button>
       )}
@@ -213,14 +212,15 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           <TooltipTrigger
             render={
               <Button
+                aria-label="Refresh"
                 type="button"
                 variant="ghost"
                 size="icon-sm"
                 className="mt-6"
                 onClick={() => syncAdAccMut.mutate()}
-                disabled={syncAdAccMut.isPending}
+                loading={syncAdAccMut.isPending}
               >
-                {syncAdAccMut.isPending ? <Spinner /> : <IconRefresh />}
+                <IconRefresh />
               </Button>
             }
           />
@@ -242,6 +242,7 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           <TooltipTrigger
             render={
               <Button
+                aria-label="Refresh"
                 type="button"
                 variant="ghost"
                 size="icon-sm"
@@ -252,9 +253,9 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
                     pageAccessToken: typedData?.pageAccessToken,
                   })
                 }
-                disabled={syncLeadgenFormsMut.isPending}
+                loading={syncLeadgenFormsMut.isPending}
               >
-                {syncLeadgenFormsMut.isPending ? <Spinner /> : <IconRefresh />}
+                <IconRefresh />
               </Button>
             }
           />
@@ -277,14 +278,15 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           <TooltipTrigger
             render={
               <Button
+                aria-label="Refresh"
                 type="button"
                 variant="ghost"
                 size="icon-sm"
                 className="mt-6"
                 onClick={() => syncAdsMut.mutate()}
-                disabled={syncAdsMut.isPending}
+                loading={syncAdsMut.isPending}
               >
-                {syncAdsMut.isPending ? <Spinner /> : <IconRefresh />}
+                <IconRefresh />
               </Button>
             }
           />
@@ -305,6 +307,7 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           <TooltipTrigger
             render={
               <Button
+                aria-label="Refresh"
                 type="button"
                 variant="ghost"
                 size="icon-sm"
@@ -315,9 +318,9 @@ export const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
                     pageAccessToken: typedData?.pageAccessToken,
                   })
                 }
-                disabled={syncformQuestionsMut.isPending}
+                loading={syncformQuestionsMut.isPending}
               >
-                {syncformQuestionsMut.isPending ? <Spinner /> : <IconRefresh />}
+                <IconRefresh />
               </Button>
             }
           />

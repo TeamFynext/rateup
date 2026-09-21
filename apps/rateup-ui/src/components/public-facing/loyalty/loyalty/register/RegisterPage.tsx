@@ -401,17 +401,10 @@ function RegisterForm({ program }: Readonly<{ program: PublicLoyaltyProgram | un
             <Button
               type="submit"
               className="mt-2 w-full"
-              disabled={join.isPending}
+              loading={join.isPending}
               style={{ backgroundColor: colour, color: readableTextOn(colour) }}
             >
-              {join.isPending ? (
-                <>
-                  <IconLoader2 className="size-4 animate-spin" />
-                  {t("Joining…")}
-                </>
-              ) : (
-                t("Join the program")
-              )}
+              {t("Join the program")}
             </Button>
           </form>
         )}
@@ -457,7 +450,9 @@ function JoinedState({
                     points: pointsName,
                   },
                 )
-              : t("Say hi on WhatsApp and we'll keep your {points} there.", { points: pointsName })}
+              : t("Say hi on WhatsApp and we'll keep your {points} there.", {
+                  points: pointsName,
+                })}
         </p>
       </div>
       {!isStaff && waLink && (

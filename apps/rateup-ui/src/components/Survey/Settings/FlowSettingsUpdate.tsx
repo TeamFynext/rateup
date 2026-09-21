@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 const FlowSettingsUpdate = ({
@@ -68,8 +67,7 @@ const FlowSettingsUpdate = ({
           </div>
 
           <div className="flex justify-center">
-            <Button type="submit" disabled={updateFlowMetaDataMutation.isPending}>
-              {updateFlowMetaDataMutation.isPending && <Spinner data-icon="inline-start" />}
+            <Button type="submit" loading={updateFlowMetaDataMutation.isPending}>
               {translations("Save Changes")}
             </Button>
           </div>

@@ -85,7 +85,7 @@ function StatCard({
       case "rose":
         return "from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20 border-rose-200 dark:border-rose-800";
       default:
-        return "from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800";
+        return "from-ru-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800";
     }
   };
 
@@ -263,7 +263,7 @@ export function OrgById() {
                 <>
                   <span
                     className={`text-sm font-medium ${
-                      isInactive ? "text-red-500" : "text-green-600"
+                      isInactive ? "text-destructive" : "text-green-600"
                     }`}
                   >
                     {isInactive ? "Inactive" : "Active"}
@@ -510,7 +510,7 @@ function DeleteOrgModal({
     <>
       {/* 🔹 First Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-[420px] space-y-5 shadow-lg">
+        <div className="bg-card rounded-xl p-6 w-[420px] space-y-5 shadow-lg">
           <div>
             <h2 className="text-lg font-semibold">Delete Organization</h2>
             <p className="text-sm text-muted-foreground mt-1">
@@ -556,7 +556,7 @@ function DeleteOrgModal({
       {/* 🔴 Second Confirmation Modal */}
       {openConfirmDelete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-[420px] space-y-5 shadow-lg">
+          <div className="bg-card rounded-xl p-6 w-[420px] space-y-5 shadow-lg">
             <div>
               <h2 className="text-lg font-semibold text-destructive">Confirm Deletion</h2>
               <p className="text-sm text-muted-foreground mt-1">

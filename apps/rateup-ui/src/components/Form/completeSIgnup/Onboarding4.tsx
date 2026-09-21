@@ -44,8 +44,8 @@ function OnboardingStep4({
         >
           <IconBolt className="w-6 h-6 text-white" />
         </motion.div>
-        <h2 className="text-gray-900 mb-1.5">Connect Your Channels</h2>
-        <p className="text-gray-600">
+        <h2 className="text-foreground mb-1.5">Connect Your Channels</h2>
+        <p className="text-muted-foreground">
           Link your social media and messaging accounts to get started
         </p>
       </div>
@@ -56,8 +56,8 @@ function OnboardingStep4({
             key={integration.id}
             className={`p-3 border-2 transition-all duration-300 hover:shadow-md ${
               data.integrationsSelected.includes(integration.id)
-                ? "border-blue-400 bg-linear-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
-                : "border-gray-200 bg-white hover:border-blue-300"
+                ? "border-blue-400 bg-linear-to-r from-ru-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                : "border-border bg-card hover:border-primary/40"
             }`}
           >
             <div className="flex sm:flex-row flex-col sm:items-center justify-between">
@@ -65,7 +65,7 @@ function OnboardingStep4({
                 <Checkbox
                   checked={data.integrationsSelected.includes(integration.id)}
                   onCheckedChange={() => handleIntegrationToggle(integration.id)}
-                  className="border-2 border-gray-300"
+                  className="border-2 border-border"
                 />
                 <div className="flex items-center space-x-1 sm:space-x-2.5">
                   <div
@@ -75,7 +75,7 @@ function OnboardingStep4({
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-gray-900">{integration.name}</span>
+                      <span className="text-foreground">{integration.name}</span>
                       <div className="hidden sm:block">
                         {integration.required && (
                           <span className="bg-linear-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm">
@@ -84,7 +84,7 @@ function OnboardingStep4({
                         )}
                       </div>
                     </div>
-                    <p className="text-gray-600">{integration.description}</p>
+                    <p className="text-muted-foreground">{integration.description}</p>
                   </div>
                 </div>
               </div>
@@ -95,7 +95,7 @@ function OnboardingStep4({
                   handleIntegrationToggle(integration.id);
                 }}
                 size="sm"
-                className="border-2 border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-700 bg-white hover:bg-blue-50 shadow-sm"
+                className="border-2 border-border hover:border-primary hover:text-primary text-foreground bg-card hover:bg-primary/5 shadow-sm"
               >
                 Connect
               </Button>
@@ -106,18 +106,18 @@ function OnboardingStep4({
         <div className="bg-linear-to-r from-green-100 to-emerald-100 border border-green-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm">
           <div className="text-center">
             <IconBolt className="w-4 h-4 text-green-600 mx-auto mb-2" />
-            <p className="text-green-700">No worries if you skip this step!</p>
-            <p className="text-gray-700 mt-1">
+            <p className="text-green-700 dark:text-green-400">No worries if you skip this step!</p>
+            <p className="text-foreground mt-1">
               You can connect these accounts anytime from your dashboard settings
             </p>
           </div>
         </div>
       </div>
-      <div className="flex justify-between mt-5 pt-4 border-t border-gray-200">
+      <div className="flex justify-between mt-5 pt-4 border-t border-border">
         <Button
           variant="outline"
           onClick={handleBack}
-          className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="flex items-center px-4 py-2 border-2 border-border hover:border-muted-foreground text-foreground bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           <IconArrowLeft className="w-4 h-4 mr-2" />
           Back

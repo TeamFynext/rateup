@@ -161,6 +161,7 @@ function FlowCard({
       <DropdownMenuTrigger
         render={
           <Button
+            aria-label={translations("More actions")}
             variant="ghost"
             size="icon"
             className="h-8 w-8"
@@ -185,7 +186,7 @@ function FlowCard({
                 e.stopPropagation();
                 handleDelete();
               }}
-              className="text-red-600 focus:text-red-600"
+              className="text-destructive"
             >
               <IconTrash size={16} className="mr-2" />
               {translations("Delete")}

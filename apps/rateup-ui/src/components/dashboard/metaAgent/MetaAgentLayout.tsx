@@ -2,6 +2,7 @@ import { IconCircleCheck, IconCircleDashed, IconRocket } from "@tabler/icons-rea
 import { Outlet } from "@tanstack/react-router";
 
 import { useMetaBusinessAgent } from "@/backend/metaAgent/metaAgent.query";
+import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { Badge } from "@/components/ui/badge";
 import {
   Empty,
@@ -65,7 +66,7 @@ function MetaAgentShell() {
             <IconRocket data-icon="inline-start" />
             Meta Business Agent
           </Badge>
-          <h1 className="text-2xl font-semibold tracking-tight">AI Agent for WhatsApp</h1>
+          <h1 className={PAGE_TITLE}>AI Agent for WhatsApp</h1>
         </div>
         <div className="flex items-center gap-3">
           {!!waSettingsId && <AgentStatusBadge waSettingsId={waSettingsId} />}

@@ -280,7 +280,7 @@ export function AddLeadDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-nunito text-xl leading-tight font-bold tracking-[-0.01em]">
+          <DialogTitle className="font-display text-xl leading-tight font-bold tracking-[-0.01em]">
             {t("Add lead")}
           </DialogTitle>
           <DialogDescription>

@@ -67,7 +67,7 @@ function ThemeSelector({
         className={`flex-1 choose-theme-dropdown`}
         classNames={{
           option:
-            "w-full [&>div]:w-full hover:bg-gray-50 data-[combobox-active=true]:bg-primary data-[combobox-active=true]:text-white data-[combobox-active=true]:hover:bg-primary",
+            "w-full [&>div]:w-full hover:bg-muted data-[combobox-active=true]:bg-primary data-[combobox-active=true]:text-primary-foreground data-[combobox-active=true]:hover:bg-primary",
         }}
         value={themeSelectorState ?? ""}
         data={getOptions(allThemesArr)}

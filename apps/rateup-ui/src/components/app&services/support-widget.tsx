@@ -86,7 +86,7 @@ const emailSchema = z.object({
 const FIELD =
   "h-12.5 w-full rounded-xl border border-ru-n-200 bg-white px-3.5 text-[15.5px] text-ru-n-700 outline-none transition-colors placeholder:text-ru-n-400 focus:border-ru-blue-600";
 
-const ERROR_TEXT = "mt-1 text-[12.5px] text-red-600";
+const ERROR_TEXT = "mt-1 text-[12.5px] text-destructive";
 
 /* How long the contact card waits after the last thing the visitor sent. Every new message
    pushes it back, so someone firing off two or three questions in a row is never cut off
@@ -590,7 +590,7 @@ export default function SupportWidget({
           )}
           {/* Pulled in from the corner: on a circle the old -0.5 offsets left the badge
               floating off the edge rather than sitting on it. */}
-          <span className="absolute right-0.5 bottom-0.5 size-3.75 rounded-full border-[2.5px] border-ink-25 bg-wa-green" />
+          <span className="absolute right-0.5 bottom-0.5 size-3.75 rounded-full border-[2.5px] border-ru-n-25 bg-wa-green" />
         </button>
       </div>
     );

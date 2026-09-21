@@ -138,6 +138,7 @@ export function PhonePreviewPanel() {
             <span className="text-sm font-medium">{t("Device Preview")}</span>
           </div>
           <Button
+            aria-label={t("Close")}
             type="button"
             variant="ghost"
             size="icon"

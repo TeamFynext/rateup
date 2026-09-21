@@ -50,7 +50,7 @@ export const useUpdateNotificationSettings = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: notificationKeys.settings() });
-      toast.success("success", {
+      toast.success("Notification settings saved", {
         id: "notification",
       });
     },
@@ -74,7 +74,7 @@ export const useDeleteNotification = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: notificationKeys.all() });
       qc.invalidateQueries({ queryKey: notificationKeys.count() });
-      toast.success("success", {
+      toast.success("Notification settings saved", {
         id: "notification",
       });
     },
@@ -98,7 +98,7 @@ export const useDeleteAllNotifications = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: notificationKeys.all() });
       qc.invalidateQueries({ queryKey: notificationKeys.count() });
-      toast.success("success", {
+      toast.success("Notification settings saved", {
         id: "notification",
       });
     },

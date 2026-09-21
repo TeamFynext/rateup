@@ -307,7 +307,7 @@ export default function WebhookIntegration() {
                     type="button"
                     variant="ghost"
                     onClick={() => setConfirmDeleteOpen(true)}
-                    disabled={deleteMutation.isPending}
+                    loading={deleteMutation.isPending}
                   >
                     {deleteMutation.isPending ? (
                       <IconLoader2 className="animate-spin" data-icon="inline-start" />
@@ -352,7 +352,7 @@ export default function WebhookIntegration() {
                   },
                 });
               }}
-              disabled={deleteMutation.isPending}
+              loading={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? (
                 <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -136,6 +136,7 @@ function CustomSelectForMobile({
           >
             <div className={`${cx("back-btn-and-search-input-container")} flex items-center`}>
               <Button
+                aria-label={translations("Close")}
                 type="button"
                 variant="ghost"
                 size="icon"

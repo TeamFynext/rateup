@@ -23,6 +23,7 @@ import {
 } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import { useContactGroupsByTeamId } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
+import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
@@ -392,7 +393,8 @@ export function AudiencePicker({
         <div className="bg-card ring-foreground/10 flex min-h-0 flex-col overflow-hidden rounded-xl shadow-xs ring-1">
           <div className="border-border flex items-center justify-between gap-3 border-b px-4 py-3.5">
             <span className="font-display text-sm font-semibold">
-              {t("Available")}{" "}
+              {t("Available")}
+              {""}
               <span className="text-muted-foreground/70 font-medium tabular-nums">
                 · {totalAvailable.toLocaleString()}
               </span>
@@ -566,7 +568,8 @@ export function AudiencePicker({
         <div className="bg-card ring-foreground/10 flex min-h-0 flex-col overflow-hidden rounded-xl shadow-xs ring-1">
           <div className="border-border flex h-15 shrink-0 items-center justify-between gap-3 border-b px-4">
             <span className="font-display text-sm font-semibold">
-              {t("Selected")}{" "}
+              {t("Selected")}
+              {""}
               {/* Enrolled plus picked: the audience the campaign will have. Counting
                   only the unsaved picks meant the panel read "· 0" the moment a
                   selection was written, with the recipients listed right below it. */}
@@ -579,7 +582,7 @@ export function AudiencePicker({
                 variant="link"
                 size="sm"
                 className="h-auto p-0"
-                disabled={clearParticipants.isPending}
+                loading={clearParticipants.isPending}
                 onClick={() => void clearAll()}
               >
                 {t("Clear all")}
@@ -874,7 +877,7 @@ export const Individual = ({
         isAlreadySelected && !canRemoveEnrolled ? "opacity-55" : "hover:bg-muted cursor-pointer",
         (isSelected || isAlreadySelected) && "bg-accent/60",
       )}
-      onClick={toggle}
+      {...pressable(toggle)}
     >
       <Checkbox
         checked={isSelected || isAlreadySelected}
@@ -930,7 +933,7 @@ export const CustomerGroup = ({ group, selectedGroups, setSelectedGroups }: Cust
         empty ? "opacity-55" : "hover:bg-muted cursor-pointer",
         isSelected && "bg-accent/60",
       )}
-      onClick={toggle}
+      {...pressable(toggle)}
     >
       <Checkbox
         checked={isSelected}
@@ -988,7 +991,7 @@ export const CustomerCampaign = ({
         empty ? "opacity-55" : "hover:bg-muted cursor-pointer",
         isSelected && "bg-accent/60",
       )}
-      onClick={toggle}
+      {...pressable(toggle)}
     >
       <Checkbox
         checked={isSelected}

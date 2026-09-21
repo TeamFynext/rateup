@@ -2,7 +2,6 @@
 // config only. Behaviour is unchanged.
 
 import {
-  IconArrowLeft,
   IconCheck,
   IconEdit,
   IconFolder,
@@ -16,6 +15,7 @@ import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/reac
 import { Image } from "@unpic/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import {
@@ -25,6 +25,9 @@ import {
   useEditContactGroupMutation,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { BackLink } from "@/components/common/back-link.tsx";
+import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
+import { pressable } from "@/components/common/pressable.ts";
 import { ContactDetailHost } from "@/components/Contacts/ContactDetailedView.tsx";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant.tsx";
@@ -56,6 +59,7 @@ import { PAGE_SIZE } from "@/utils/constants.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 export function ContactGroup() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useDebouncedState("", 500);
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
   const [pagination, setPagination] = useState({
@@ -194,13 +198,13 @@ export function ContactGroup() {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <Card className="border-0 shadow-lg bg-linear-to-br from-white via-white to-blue-50/30 shrink-0 p-4">
+      <Card className="border-0 shadow-lg bg-linear-to-br from-white via-white to-ru-blue-50/30 shrink-0 p-4">
         <div className="flex items-center justify-between gap-8">
           <div className="relative flex items-center gap-5 flex-1">
             <div className="relative shrink-0 group">
               <div
-                className="w-16 h-16 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-primary"
-                onClick={() => setShowEditIconDialog(true)}
+                className="w-16 h-16 rounded-2xl bg-linear-to-br from-ru-amber-500 via-orange-400 to-ru-amber-500/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-primary"
+                {...pressable(() => setShowEditIconDialog(true), t("Change the group icon"))}
               >
                 {groupDetails?.icon ? (
                   <Image
@@ -219,7 +223,7 @@ export function ContactGroup() {
                   <IconUpload className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-linear-to-br from-primary to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-linear-to-br from-primary to-ru-blue-700 flex items-center justify-center shadow-md ring-4 ring-background">
                 <IconUsers className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
@@ -255,16 +259,14 @@ export function ContactGroup() {
                         size="sm"
                         variant="outline"
                         onClick={handleCancelEditName}
-                        className="h-9 w-9 p-0 hover:bg-gray-100"
+                        className="h-9 w-9 p-0 hover:bg-muted"
                       >
                         <IconX className="w-4 h-4" />
                       </Button>
                     </div>
                   ) : (
                     <>
-                      <h1 className="text-2xl bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                        {groupDetails?.name}
-                      </h1>
+                      <h1 className={PAGE_TITLE}>{groupDetails?.name}</h1>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -272,7 +274,7 @@ export function ContactGroup() {
                           setGroupName(groupDetails?.name ?? "");
                           setIsEditingName(true);
                         }}
-                        className="h-8 w-8 p-0 hover:bg-blue-50 text-primary"
+                        className="h-8 w-8 p-0 hover:bg-ru-blue-50 dark:hover:bg-blue-950/40 text-primary"
                       >
                         <IconEdit className="w-3.5 h-3.5" />
                       </Button>
@@ -291,7 +293,7 @@ export function ContactGroup() {
               </div>
 
               {!isEditingName && (
-                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-linear-to-br from-blue-50 to-indigo-50 border border-blue-100 shrink-0 ml-auto">
+                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-linear-to-br from-ru-blue-50 to-indigo-50 border border-ru-blue-100 dark:border-blue-900 shrink-0 ml-auto">
                   <div className="text-3xl bg-linear-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
                     {groupDetails?._count?.contacts || 0}
                   </div>
@@ -303,25 +305,16 @@ export function ContactGroup() {
 
           {!isEditingName && (
             <div className="flex gap-2 shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  navigate({
-                    to: "/dashboard/contacts/groups",
-                  });
-                  void router.invalidate();
-                }}
-                className="gap-2 hover:bg-gray-100 h-9"
-              >
-                <IconArrowLeft className="w-4 h-4" />
-                <span className="text-sm">Back to Groups</span>
-              </Button>
+              <BackLink
+                to="/dashboard/contacts/groups"
+                label={t("Groups")}
+                onClick={() => void router.invalidate()}
+              />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleDeleteGroup()}
-                className="h-9 gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-400 transition-all"
+                className="h-9 gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-all"
               >
                 <IconTrash className="w-3.5 h-3.5" />
                 Delete Group
@@ -416,7 +409,7 @@ function ContactGroupIconEditDialog({
       <DialogContent className="border-0 shadow-2xl max-w-md">
         <DialogHeader>
           <div className="w-14 h-14 rounded-full bg-linear-to-br from-orange-100 to-orange-200 flex items-center justify-center mb-4">
-            <IconFolder className="w-7 h-7 text-rateup-orange" />
+            <IconFolder className="w-7 h-7 text-ru-amber-500" />
           </div>
           <DialogTitle className="text-2xl">Edit Group Icon</DialogTitle>
           <DialogDescription className="text-base">
@@ -426,7 +419,7 @@ function ContactGroupIconEditDialog({
         <div className="py-6">
           {/* Current Icon Preview */}
           <div className="flex justify-center mb-6">
-            <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 overflow-hidden">
+            <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-ru-amber-500 via-orange-400 to-ru-amber-500/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 overflow-hidden">
               {group?.icon ? (
                 <Image
                   src={getFileUrlFromKey(group?.icon ?? "") ?? ""}
@@ -461,7 +454,7 @@ function ContactGroupIconEditDialog({
               <Button
                 variant="outline"
                 onClick={handleRemoveIcon}
-                className="w-full h-12 gap-3 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
+                className="w-full h-12 gap-3 text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
               >
                 <IconX className="w-5 h-5" />
                 Remove Icon

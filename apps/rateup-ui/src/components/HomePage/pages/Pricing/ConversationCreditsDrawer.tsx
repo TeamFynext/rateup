@@ -137,7 +137,7 @@ export function ConversationCreditsDrawer({
 
       <SheetContent className="w-full gap-0 overflow-y-auto bg-card p-0 text-foreground sm:max-w-md">
         <div className="border-b border-border px-6 pb-4 pt-5">
-          <SheetTitle className="font-nunito pr-7 text-lg font-extrabold text-foreground">
+          <SheetTitle className="font-display pr-7 text-lg font-extrabold text-foreground">
             Additional conversation credits
           </SheetTitle>
           <SheetDescription className="mt-1 text-[13px] text-muted-foreground">

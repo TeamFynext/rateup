@@ -42,7 +42,7 @@ function FlowbotId() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Failed to load automation</p>
+          <p className="text-destructive mb-4">Failed to load automation</p>
           <button onClick={refetch} className="px-4 py-2 bg-blue-500 text-white rounded">
             Retry
           </button>

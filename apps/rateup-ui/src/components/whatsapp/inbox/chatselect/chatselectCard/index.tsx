@@ -22,6 +22,7 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
+import { pressable } from "@/components/common/pressable.ts";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { StageDot } from "@/components/pipeline/shared/atoms.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -197,7 +198,7 @@ export default function WaInboxChatSelectCard({
   function handleAssignToMe(e: React.MouseEvent) {
     e.stopPropagation();
     if (!user) {
-      toast.error("failed!try again");
+      toast.error("Your account details haven't loaded yet.");
       return;
     }
     const contactId = contact.id;
@@ -257,7 +258,7 @@ export default function WaInboxChatSelectCard({
 
   return (
     <div
-      onClick={() => {
+      {...pressable(() => {
         if (isSelectionMode) {
           // Selection is keyed by ticket (`rowKey`), like the list itself and
           // "select all" — keying it by contact would tick every row of a contact
@@ -268,7 +269,7 @@ export default function WaInboxChatSelectCard({
         // Selecting the row is all it takes to open the thread — stacked layouts
         // swap panes off the selection itself.
         setSelectedContact(contact);
-      }}
+      })}
       className={cn(
         "group box-border flex max-w-full cursor-pointer gap-2.75 border-b border-l-[3px] border-b-border px-4 py-3.25 transition-colors",
         isSelected
@@ -410,7 +411,7 @@ export default function WaInboxChatSelectCard({
           {/* Spam is a contact flag, so it outranks the ticket's own status pill —
               in the Spam tab the row IS the contact, not one of their tickets. */}
           {contact?.isSpam && (
-            <span className={cn(STATUS_PILL_BASE, "bg-red-500/10 text-red-600 dark:text-red-500")}>
+            <span className={cn(STATUS_PILL_BASE, "bg-destructive text-destructive ")}>
               <IconShieldExclamation className="size-2.75" />
               {translations("Spam")}
             </span>
@@ -465,8 +466,9 @@ export default function WaInboxChatSelectCard({
               }
               content={
                 <span>
-                  {translations("Received on")}{" "}
-                  {[channel.label, channel.account].filter(Boolean).join(" · ")}
+                  {translations("Received on")}
+                  {""}
+                  {[channel.label, channel.account].filter(Boolean).join(" ·")}
                   {!channel.isConnected && ` (${translations("no longer connected")})`}
                 </span>
               }
@@ -539,7 +541,7 @@ export default function WaInboxChatSelectCard({
           <CustomTooltip
             trigger={
               <span className="flex items-center">
-                <span className="flex size-5.5 items-center justify-center rounded-full text-[9px] font-extrabold text-white bg-primary">
+                <span className="flex size-5.5 items-center justify-center rounded-full text-[9px] font-extrabold text-primary-foreground bg-primary">
                   {primaryAssignee?.name?.charAt(0)?.toUpperCase()}
                 </span>
                 {contact?.assignedUsers?.length > 1 && (
@@ -604,7 +606,7 @@ export function getContactClosedIcon(status: string) {
     case WaMessageAssignStatus.SPAM:
       return {
         icon: IconAlertCircle,
-        color: "text-red-500 dark:text-red-600",
+        color: "text-destructive ",
       };
   }
 }

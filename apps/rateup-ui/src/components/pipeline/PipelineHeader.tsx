@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { pipelineKeys } from "@/backend/pipeline/pipeline.keys.ts";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -115,7 +116,7 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
           >
             <SelectTrigger
               aria-label={t("Active pipeline")}
-              className="font-nunito h-9 border-none px-1 text-xl font-extrabold shadow-none"
+              className="font-display h-9 border-none px-1 text-xl font-extrabold shadow-none"
             >
               <SelectValue />
             </SelectTrigger>
@@ -128,9 +129,7 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
             </SelectContent>
           </Select>
         ) : (
-          <h1 className="font-nunito text-foreground text-xl font-extrabold">
-            {pipeline?.name ?? t("Pipeline")}
-          </h1>
+          <h1 className={SECTION_TITLE}>{pipeline?.name ?? t("Pipeline")}</h1>
         )}
 
         <RefreshButton queryKeys={[...pipelineKeys.all()]} />
@@ -148,7 +147,7 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
             variant="ghost"
             size="sm"
             onClick={() => setView({ filter: "rotting" })}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 gap-1.5 rounded-full px-3 text-xs font-bold"
+            className="text-destructive hover:bg-destructive/10 h-7 gap-1.5 rounded-full px-3 text-xs font-bold"
           >
             <IconAlertTriangle className="size-3.5" />
             {t("{total} need attention", { total: rottingCount })}

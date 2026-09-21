@@ -9,12 +9,9 @@ import {
   IconHome,
   IconMail,
   IconMapPin,
-  IconMessageCircle,
   IconPencil,
   IconPhone,
-  IconShield,
   IconUpload,
-  IconUserCog,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
@@ -36,9 +33,9 @@ import {
   useUpdateProfilePhotoMutation,
 } from "@/backend/user/user.query";
 import { BusinessHoursSection } from "@/components/account/business-hours/BusinessHoursSection.tsx";
+import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import {
@@ -62,7 +59,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { UserRole } from "@/utils/enums/index.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { cropImageToSquare } from "@/utils/file-upload/autoCropSquare.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -70,6 +67,8 @@ export function AccountPage() {
   const { t: translations } = useTranslation();
   const { isLoading: isProfileLoading, data: profileData } = useGetUserProfile();
   const { user } = useUser();
+  const canEditOrg = usePermissions().can("org.settings");
+  const { roleKey: currentRoleKey } = usePermissions();
   const countries = countryList().getData();
 
   const orgFormSchema = z.object({
@@ -288,7 +287,7 @@ export function AccountPage() {
             {/* Avatar Skeleton */}
             <div className="relative">
               <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 rounded-full" />
-              <Skeleton className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white" />
+              <Skeleton className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-background" />
             </div>
 
             {/* Text Skeleton */}
@@ -308,21 +307,21 @@ export function AccountPage() {
           </div>
         </Card>
       ) : (
-        <Card className="p-4 sm:p-6 shadow-sm ">
+        <Card className="p-4 sm:p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar Section */}
             <div className="relative group">
-              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-white shadow-lg">
+              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-background shadow-lg">
                 <AvatarImage src={avatarSrc || ""} />
-                <AvatarFallback className="bg-primary text-white text-2xl">
+                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                   {profileData?.data?.data?.name?.slice(0, 1)}
                 </AvatarFallback>
               </Avatar>
               <button
                 onClick={() => setIsEditProfileDialogOpen(true)}
-                className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1.5 sm:p-2 shadow-md transition-all group-hover:scale-110"
+                className="absolute bottom-0 right-0 bg-background hover:bg-muted border-2 border-border rounded-full p-1.5 sm:p-2 shadow-md transition-all group-hover:scale-110"
               >
-                <IconCamera className="w-4 h-4 text-gray-600" />
+                <IconCamera className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
@@ -332,47 +331,20 @@ export function AccountPage() {
                 {/* Name + Info */}
                 <div className="flex flex-col gap-0.5">
                   <p className="text-lg sm:text-xl font-medium">{profileData?.data?.data?.name}</p>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    {profileData?.data?.data?.email} • {translations("Member since")}{" "}
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    {profileData?.data?.data?.email} • {translations("Member since")}
+                    {""}
                     {profileData?.data?.data?.createdAt
                       ? dayjs(profileData.data.data.createdAt).format("MMM D, YYYY")
                       : "—"}
                   </p>
 
-                  {/* Outline badge with the role's own icon and colour, as everywhere else. */}
                   <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
-                    {(() => {
-                      const role = profileData?.data?.data?.role;
-                      if (!role) return null;
-
-                      const roleStyles = {
-                        [UserRole.SUPADM]: {
-                          icon: IconShield,
-                          label: translations("Super Admin"),
-                          className: "text-primary",
-                        },
-                        [UserRole.ADM]: {
-                          icon: IconUserCog,
-                          label: translations("Admin"),
-                          className: "text-rateup-orange",
-                        },
-                        [UserRole.MEMBER]: {
-                          icon: IconMessageCircle,
-                          label: translations("Staff"),
-                          className: "text-green-600",
-                        },
-                      }[role as string];
-
-                      if (!roleStyles) return null;
-                      const RoleIcon = roleStyles.icon;
-
-                      return (
-                        <Badge variant="outline" className="gap-1.5 text-xs font-normal sm:text-sm">
-                          <RoleIcon className={`size-3.5 ${roleStyles.className}`} />
-                          {roleStyles.label}
-                        </Badge>
-                      );
-                    })()}
+                    <RoleBadge
+                      roleKey={currentRoleKey}
+                      role={profileData?.data?.data?.role}
+                      className="text-xs font-normal sm:text-sm"
+                    />
                   </div>
                 </div>
 
@@ -405,7 +377,7 @@ export function AccountPage() {
         </Card>
       )}
       {/* Business Information Modal Trigger */}
-      <Card className="p-6 shadow-sm border-gray-200 flex flex-col gap-4">
+      <Card className="p-6 shadow-sm border-border flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
@@ -418,7 +390,7 @@ export function AccountPage() {
               </p>
             </div>
           </div>
-          {user?.role === UserRole.SUPADM && (
+          {canEditOrg && (
             <Button variant="outline" size="sm" onClick={() => setIsBusinessDialogOpen(true)}>
               <IconPencil className="size-4" />
               {translations("Edit")}
@@ -429,72 +401,72 @@ export function AccountPage() {
         {/* Business Overview */}
         <div className="flex items-center gap-4 mt-2">
           <div className="relative">
-            <Avatar className="w-16 h-16 border-2 border-white shadow-sm">
+            <Avatar className="w-16 h-16 border-2 border-background shadow-sm">
               <AvatarImage src={orgAvatarSrc} />
-              <AvatarFallback className="bg-primary text-white text-lg">
+              <AvatarFallback className="bg-primary text-primary-foreground text-lg">
                 {user?.orgName?.slice(0, 1)}
               </AvatarFallback>
             </Avatar>
-            {user?.role === UserRole.SUPADM && (
+            {canEditOrg && (
               <button
                 onClick={() => setIsBusinessDialogOpen(true)}
-                className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1 sm:p-1.5 shadow-md transition-all hover:scale-110"
+                className="absolute bottom-0 right-0 bg-background hover:bg-muted border-2 border-border rounded-full p-1 sm:p-1.5 shadow-md transition-all hover:scale-110"
               >
-                <IconCamera className="w-3 h-3 text-gray-600" />
+                <IconCamera className="w-3 h-3 text-muted-foreground" />
               </button>
             )}
           </div>
           <div>
             <p className="font-medium text-base">{user?.orgName}</p>
-            <p className="text-xs text-gray-500 mt-1">{user?.onboarding?.industry}</p>
+            <p className="text-xs text-muted-foreground mt-1">{user?.onboarding?.industry}</p>
           </div>
         </div>
 
         {/* Detailed Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
           <div className="flex items-start gap-2.5">
-            <IconPhone className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconPhone className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">{translations("Phone")}</p>
-              <p className="text-gray-500">{orgPhone || "—"}</p>
+              <p className="font-medium text-foreground mb-0.5">{translations("Phone")}</p>
+              <p className="text-muted-foreground">{orgPhone || "—"}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
-            <IconMail className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconMail className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">{translations("Email")}</p>
-              <p className="text-gray-500">{user?.onboarding?.businessmail || "—"}</p>
+              <p className="font-medium text-foreground mb-0.5">{translations("Email")}</p>
+              <p className="text-muted-foreground">{user?.onboarding?.businessmail || "—"}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
-            <IconGlobe className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconGlobe className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">{translations("Website")}</p>
-              <p className="text-gray-500">{user?.onboarding?.website || "—"}</p>
+              <p className="font-medium text-foreground mb-0.5">{translations("Website")}</p>
+              <p className="text-muted-foreground">{user?.onboarding?.website || "—"}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
-            <IconMapPin className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconMapPin className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">{translations("Location")}</p>
-              <p className="text-gray-500">{user?.onboarding?.location || "—"}</p>
+              <p className="font-medium text-foreground mb-0.5">{translations("Location")}</p>
+              <p className="text-muted-foreground">{user?.onboarding?.location || "—"}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5 md:col-span-2">
-            <IconHome className="w-4 h-4 mt-0.5 text-gray-500" />
+            <IconHome className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">{translations("Address")}</p>
-              <p className="text-gray-500">{orgAddress || "—"}</p>
+              <p className="font-medium text-foreground mb-0.5">{translations("Address")}</p>
+              <p className="text-muted-foreground">{orgAddress || "—"}</p>
             </div>
           </div>
         </div>
       </Card>
       {/* Business Information Dialog */}
-      {user?.role === UserRole.SUPADM && (
+      {canEditOrg && (
         <Dialog open={isBusinessDialogOpen} onOpenChange={setIsBusinessDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -508,15 +480,15 @@ export function AccountPage() {
               <FieldGroup className="gap-4">
                 {/* Logo Upload */}
                 <div className="flex items-center gap-6">
-                  <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+                  <Avatar className="w-20 h-20 border-4 border-background shadow-lg">
                     <AvatarImage src={orgAvatarSrc || ""} />
-                    <AvatarFallback className="bg-primary text-white text-xl">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                       {user?.orgName?.slice(0, 1)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <FieldLabel htmlFor="orgLogoUpload" className="cursor-pointer">
-                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted rounded-lg transition-colors w-fit">
                         <IconUpload className="w-4 h-4" />
                         <span className="text-sm">{translations("Upload Logo")}</span>
                       </div>
@@ -645,7 +617,8 @@ export function AccountPage() {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor="businessEmail">
-                          {translations("Business Email")}{" "}
+                          {translations("Business Email")}
+                          {""}
                           <span className="text-muted-foreground">
                             ({translations("optional")})
                           </span>
@@ -675,7 +648,7 @@ export function AccountPage() {
                           onBlur={field.onBlur}
                           placeholder={translations("Select Your Location")}
                           isSearchable
-                          className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
+                          className="rounded-md text-sm bg-background [&>input]:w-full border-border"
                         />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -733,15 +706,15 @@ export function AccountPage() {
             <FieldGroup className="gap-4">
               {/* Profile Image Upload */}
               <div className="flex items-center gap-6">
-                <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+                <Avatar className="w-20 h-20 border-4 border-background shadow-lg">
                   <AvatarImage src={avatarSrc} />
-                  <AvatarFallback className="bg-primary text-white text-xl">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                     {profileData?.data?.data?.name?.slice(0, 1) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <FieldLabel htmlFor="profileImageUpload" className="cursor-pointer">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted rounded-lg transition-colors w-fit">
                       <IconUpload className="w-4 h-4" />
                       <span className="text-sm">{translations("Upload Photo")}</span>
                     </div>
@@ -767,7 +740,7 @@ export function AccountPage() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="title">
-                      {translations("Title")} <span className="text-red-500">*</span>
+                      {translations("Title")} <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Select
                       name={field.name}
@@ -804,7 +777,7 @@ export function AccountPage() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="fullname">
-                      {translations("Full Name")} <span className="text-red-500">*</span>
+                      {translations("Full Name")} <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
                       {...field}
@@ -826,7 +799,7 @@ export function AccountPage() {
                   value={profileData?.data?.data?.email || ""}
                   disabled={true}
                   readOnly
-                  className="bg-gray-100 cursor-not-allowed opacity-70"
+                  className="bg-muted cursor-not-allowed opacity-70"
                 />
               </Field>
 
@@ -861,7 +834,7 @@ export function AccountPage() {
                   id="profileRole"
                   value={profileData?.data?.data?.role || ""}
                   disabled
-                  className="bg-gray-50"
+                  className="bg-muted"
                 />
               </Field>
 
@@ -882,7 +855,7 @@ export function AccountPage() {
         </DialogContent>
       </Dialog>
       {/* Business Hours Section */}
-      <BusinessHoursSection canManage={user?.role === UserRole.SUPADM} />
+      <BusinessHoursSection canManage={canEditOrg} />
     </div>
   );
 }

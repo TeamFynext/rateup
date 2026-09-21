@@ -179,7 +179,7 @@ export default function ProfitMarginCalculator() {
                   <div className="text-[11.5px] font-extrabold tracking-[0.1em] text-muted-foreground uppercase">
                     Markup
                   </div>
-                  <div className="mt-1 font-nunito text-[22px] font-black">
+                  <div className="mt-1 font-display text-[22px] font-black">
                     {pct(result.markup)}
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export default function ProfitMarginCalculator() {
                   <div className="text-[11.5px] font-extrabold tracking-[0.1em] text-muted-foreground uppercase">
                     Breakeven ROAS
                   </div>
-                  <div className="mt-1 font-nunito text-[22px] font-black">
+                  <div className="mt-1 font-display text-[22px] font-black">
                     {result.breakevenRoas === Infinity
                       ? "∞"
                       : `${result.breakevenRoas.toFixed(2)}×`}

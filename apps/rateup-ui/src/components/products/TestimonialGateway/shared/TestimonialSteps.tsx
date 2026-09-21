@@ -8,7 +8,7 @@ const TestimonialSteps = () => {
           <h2 className="text-3xl md:text-4xl font-semibold text-gray-800 pb-2">
             Collect testimonials in four simple steps
           </h2>
-          <p className="text-gray-600 max-w-3xl ">
+          <p className="text-gray-600 max-w-3xl">
             Our streamlined process makes it easy to collect and highlight authentic customer
             feedback
           </p>
@@ -23,7 +23,7 @@ const TestimonialSteps = () => {
               key={index}
               className="flex flex-col items-center text-center w-full md:w-1/4 mb-10 md:mb-0 relative z-10"
             >
-              <div className="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mb-5">
+              <div className="bg-ru-blue-100 rounded-full w-20 h-20 flex items-center justify-center mb-5">
                 <div className="text-[#0041a8]">{step.icon}</div>
               </div>
 

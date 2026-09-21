@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
@@ -251,7 +250,8 @@ export function Choice({
       const base64String = await FileConverter.fileToBase64(file);
       setFormValue("image", base64String);
     } catch (error) {
-      toast.error(translations("Error converting file to Base64:") + JSON.stringify(error), {
+      console.error("Image read failed", error);
+      toast.error(translations("Could not read that image."), {
         id: "file-converting",
       });
     }
@@ -330,6 +330,7 @@ export function Choice({
       )}
 
       <Button
+        aria-label={translations("Edit")}
         type="button"
         variant="ghost"
         size="icon"
@@ -339,10 +340,11 @@ export function Choice({
         <IconEdit className="size-4" />
       </Button>
       <Button
+        aria-label={translations("Delete")}
         type="button"
         variant="ghost"
         size="icon"
-        className="size-7 shrink-0 text-destructive hover:text-destructive"
+        className="size-7 shrink-0 text-destructive"
         onClick={onDelete}
       >
         <IconTrash className="size-4" />
@@ -494,8 +496,7 @@ export function Choice({
           </FieldGroup>
 
           <DialogFooter>
-            <Button onClick={handleEditChoice} disabled={fileUploadLoading}>
-              {fileUploadLoading && <Spinner data-icon="inline-start" />}
+            <Button onClick={handleEditChoice} loading={fileUploadLoading}>
               {translations("Update Choice")}
             </Button>
           </DialogFooter>

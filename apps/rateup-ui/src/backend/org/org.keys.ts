@@ -23,6 +23,9 @@ export const orgKeys = {
   teams: () => ["orgTeamsDataQuery"] as const,
   /** Teams-of-org listing (all members). */
   teamsAll: () => ["orgTeamsAllDataQuery"] as const,
+  /** One member's audit trail, one page at a time. */
+  memberActivity: (memberId: KeyPart, page: KeyPart) =>
+    ["orgMemberActivity", memberId, page] as const,
 } as const;
 
 export const teamKeys = {

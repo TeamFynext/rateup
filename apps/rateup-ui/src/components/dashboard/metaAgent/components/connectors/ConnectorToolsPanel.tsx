@@ -33,7 +33,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -80,7 +79,7 @@ export function ConnectorToolsPanel({
           <Button
             variant="outline"
             size="sm"
-            disabled={sync.isPending}
+            loading={sync.isPending}
             onClick={() => sync.mutate()}
           >
             <IconRefresh
@@ -123,7 +122,8 @@ export function ConnectorToolsPanel({
                 <p className="mt-1 font-mono text-xs">
                   <span className={METHOD_COLOR[tool.requestDefinition.method] ?? ""}>
                     {tool.requestDefinition.method}
-                  </span>{" "}
+                  </span>
+                  {""}
                   <span className="text-muted-foreground">{tool.requestDefinition.path}</span>
                 </p>
               </div>
@@ -148,7 +148,7 @@ export function ConnectorToolsPanel({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Delete ${tool.name}`}
-                  disabled={deleteTool.isPending}
+                  loading={deleteTool.isPending}
                   onClick={() => deleteTool.mutate(tool.id)}
                 >
                   <IconTrash className="text-destructive" />
@@ -382,8 +382,7 @@ function ToolDialog({
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Spinner data-icon="inline-start" />}
+              <Button type="submit" loading={isPending}>
                 {tool ? "Save changes" : "Create tool"}
               </Button>
             </DialogFooter>
@@ -458,12 +457,8 @@ function RunToolDialog({
               <Button type="button" variant="ghost" onClick={onClose}>
                 Close
               </Button>
-              <Button type="submit" disabled={run.isPending}>
-                {run.isPending ? (
-                  <Spinner data-icon="inline-start" />
-                ) : (
-                  <IconPlayerPlay data-icon="inline-start" />
-                )}
+              <Button type="submit" loading={run.isPending}>
+                <IconPlayerPlay data-icon="inline-start" />
                 Run
               </Button>
             </DialogFooter>

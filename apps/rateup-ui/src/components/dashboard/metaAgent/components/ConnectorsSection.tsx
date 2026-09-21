@@ -150,7 +150,7 @@ export function ConnectorsSection({ waSettingsId }: Readonly<{ waSettingsId: str
                           variant="ghost"
                           size="icon-sm"
                           aria-label={`Delete ${connector.name}`}
-                          disabled={deleteConnector.isPending}
+                          loading={deleteConnector.isPending}
                         >
                           <IconTrash className="text-destructive" />
                         </Button>

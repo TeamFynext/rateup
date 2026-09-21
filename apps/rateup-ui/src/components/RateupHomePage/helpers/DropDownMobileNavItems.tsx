@@ -24,9 +24,9 @@ export default function DropDownMobileNavItems() {
     <div className="w-full border-b border-gray-200">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left py-3  text-primary text-lg flex items-center justify-between"
+        className="w-full text-left py-3 text-primary text-lg flex items-center justify-between"
       >
-        <span className=" font-semibold">Products</span>
+        <span className="font-semibold">Products</span>
         <svg
           className={`w-5 h-5 transform transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""

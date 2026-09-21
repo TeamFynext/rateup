@@ -426,10 +426,10 @@ const DeleteModal = ({
           <DialogTitle>{translations("Delete Response")}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-2">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-sm text-foreground">
             {translations("Are you sure you want to delete this response?")}
           </p>
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-destructive ">
             {translations("Once deleted, response entry data will be lost.")}
           </p>
         </div>

@@ -71,7 +71,7 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
 
         {/* Failed */}
         <MetricCard
-          icon={<IconCircleX className="w-5 h-5 text-red-600" />}
+          icon={<IconCircleX className="w-5 h-5 text-destructive" />}
           value={failed}
           label={t("Failed")}
           badge={`${percent(failed)}%`}
@@ -97,7 +97,7 @@ function MetricCard({ icon, value, label, badge, color, badgeColor, iconColor }:
   const colorMap = {
     primary:
       "text-primary border-primary/20 " +
-      "bg-linear-to-br from-blue-50 to-white " +
+      "bg-linear-to-br from-ru-blue-50 to-white " +
       "dark:from-blue-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
 
@@ -120,7 +120,7 @@ function MetricCard({ icon, value, label, badge, color, badgeColor, iconColor }:
       "hover:shadow-md transition-all group",
 
     red:
-      "text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 " +
+      "text-destructive border-destructive/30 " +
       "bg-linear-to-br from-red-50 to-white " +
       "dark:from-red-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
@@ -133,20 +133,20 @@ function MetricCard({ icon, value, label, badge, color, badgeColor, iconColor }:
     read: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-xs border-0",
     pending:
       "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-xs border-0",
-    failed: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-xs border-0",
+    failed: "bg-destructive/10 text-destructive text-xs border-0",
   };
 
   const iconColrMap = {
     sentBadge:
       "w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors",
     delBadge:
-      "w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors",
+      "w-10 h-10 rounded-lg bg-green-100 dark:bg-green-950/50 flex items-center justify-center group-hover:bg-green-200 dark:group-hover:bg-green-900/60 transition-colors",
     readBadge:
-      "w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors",
+      "w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/60 transition-colors",
     pendingBadge:
-      "w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors",
+      "w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center group-hover:bg-amber-200 dark:group-hover:bg-amber-900/60 transition-colors",
     faildBadge:
-      "w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors",
+      "w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center group-hover:bg-destructive/15 transition-colors",
   };
   return (
     <Card className={` ${colorMap[color ?? "primary"]}`}>

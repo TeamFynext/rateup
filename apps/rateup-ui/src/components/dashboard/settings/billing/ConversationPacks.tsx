@@ -105,11 +105,14 @@ export function ConversationPacks({ offer, isPending, onBuy, isPurchasing }: Rea
         {offer.packs > 0 && (
           <div className="rounded-lg border border-border bg-muted/40 p-4">
             <p className="text-sm">
-              {translations("Your packs add")}{" "}
+              {translations("Your packs add")}
+              {""}
               <span className="font-semibold text-foreground">
                 {formatCount(offer.allowance.addonConversations)}
-              </span>{" "}
-              {translations("conversations, for a total of")}{" "}
+              </span>
+              {""}
+              {translations("conversations, for a total of")}
+              {""}
               <span className="font-semibold text-foreground">
                 {formatCount(offer.allowance.effectiveMax)}
               </span>
@@ -173,7 +176,8 @@ export function ConversationPacks({ offer, isPending, onBuy, isPurchasing }: Rea
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">
-              {formatCount(quantity * offer.conversationsPerPack)}{" "}
+              {formatCount(quantity * offer.conversationsPerPack)}
+              {""}
               {translations("extra conversations")}
               {typeof offer.price === "number" &&
                 ` · ${symbol}${(quantity * offer.price).toLocaleString(

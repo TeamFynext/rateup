@@ -263,7 +263,7 @@ const ChatselectPanelHeader = ({
                       // radius 8, brand fill, 16px user-plus glyph.
                       <button
                         aria-label="New Contact"
-                        className="flex size-7.5 cursor-pointer items-center justify-center rounded-lg border-0 p-0 text-white outline-none bg-primary"
+                        className="flex size-7.5 cursor-pointer items-center justify-center rounded-lg border-0 p-0 text-primary-foreground outline-none bg-primary"
                       />
                     }
                   >
@@ -284,7 +284,7 @@ const ChatselectPanelHeader = ({
                         {translations("Add New WhatsApp contact")}
                       </h1>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {translations(
                         "Add a contact to start WhatsApp conversation Enter their details below to begin messaging",
                       )}

@@ -77,6 +77,7 @@ const GenerateTags = ({
             <TooltipTrigger
               render={
                 <Button
+                  aria-label={translations("Shuffle")}
                   size="icon"
                   variant="outline"
                   onClick={handleGenerateTag}
