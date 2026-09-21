@@ -316,7 +316,13 @@ describe("the error notification", () => {
 
     expect(db.orgMember.findMany.mock.calls[0][0].where).toEqual({
       orgId: ORG,
-      role: { in: ["ADMIN", "SUPER_ADMIN"] },
+      OR: [
+        {
+          role: { in: ["SUPER_ADMIN", "ADMIN"] },
+          NOT: { permissionDenies: { has: "notify.integrations" } },
+        },
+        { permissionGrants: { has: "notify.integrations" } },
+      ],
     });
   });
 

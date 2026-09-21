@@ -52,12 +52,10 @@ vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
   addZapierTriggerToQueue: vi.fn(),
   ZapierTriggers: { RESPONSE_SUBMITTED: "response_submitted" },
 }));
-vi.mock("../../utils/auth.js", () => ({ hasAccessToSurvey: vi.fn(), assertRootOrg: vi.fn() }));
+vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
+vi.mock("../../authz/resourceScope.js", () => ({ surveyInScope: vi.fn() }));
 vi.mock("../../utils/surveyTeam/mapActions.js", () => ({ getSurveyIdfromMap: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
 
 import prisma from "../../utils/prisma.js";
 import * as service from "./response.service.js";
@@ -66,9 +64,8 @@ import { createTestimonial } from "../testimonial/testimonial.service.js";
 import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
 import { log } from "../../utils/logger.js";
 import { fetchLocation } from "../../utils/location.js";
-import { hasAccessToSurvey } from "../../utils/auth.js";
+import { surveyInScope } from "../../authz/resourceScope.js";
 import { getSurveyIdfromMap } from "../../utils/surveyTeam/mapActions.js";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   createResponseHandler,
   deleteResponseHandler,
@@ -93,6 +90,8 @@ const db = prisma as unknown as Record<string, any>;
 const svc = service as unknown as Record<string, Mock>;
 
 const USER = "11111111-1111-1111-1111-111111111111";
+// Any actor: the scope lookup itself is mocked.
+const ACTOR = { scope: { all: false, teamIds: [] } } as any;
 const ORG = "22222222-2222-2222-2222-222222222222";
 const OWN_MAP = "3f8a1e2c-5b7d-4c9e-8a1b-2d3e4f5a6b7c";
 const VICTIM_MAP = "7c6b5a4f-3e2d-4b1a-9c8d-7e6f5a4b3c2d";
@@ -143,7 +142,7 @@ beforeEach(() => {
   svc.syncResponseToGoogleSheet.mockResolvedValue({ id: VICTIM_SURVEY });
   (getTeamIdsByUserId as unknown as Mock).mockResolvedValue([]);
   (getTeamIdsBySurveyMapId as unknown as Mock).mockResolvedValue([]);
-  (hasAccessToSurvey as unknown as Mock).mockResolvedValue(true);
+  (surveyInScope as unknown as Mock).mockResolvedValue(true);
   (getSurveyIdfromMap as unknown as Mock).mockResolvedValue(VICTIM_SURVEY);
   (fetchLocation as unknown as Mock).mockResolvedValue(undefined);
   (createTestimonial as unknown as Mock).mockResolvedValue(undefined);
@@ -158,13 +157,14 @@ describe("verifyAccess", () => {
     routeOptions: { url: "/api/response/survey/:surveyId" },
     params: { surveyId: VICTIM_SURVEY },
     userId: USER,
+    actor: ACTOR,
     ...over,
   });
 
   test("checks the survey named in the path", async () => {
     await verifyAccess(req(), reply());
 
-    expect(hasAccessToSurvey).toHaveBeenCalledWith(VICTIM_SURVEY, USER);
+    expect(surveyInScope).toHaveBeenCalledWith(VICTIM_SURVEY, ACTOR);
   });
 
   test("resolves the survey from a map id when that is what the route binds", async () => {
@@ -177,11 +177,11 @@ describe("verifyAccess", () => {
     );
 
     expect(getSurveyIdfromMap).toHaveBeenCalledWith(OWN_MAP);
-    expect(hasAccessToSurvey).toHaveBeenCalledWith(VICTIM_SURVEY, USER);
+    expect(surveyInScope).toHaveBeenCalledWith(VICTIM_SURVEY, ACTOR);
   });
 
   test("refuses a caller without access", async () => {
-    (hasAccessToSurvey as unknown as Mock).mockResolvedValueOnce(false);
+    (surveyInScope as unknown as Mock).mockResolvedValueOnce(false);
     const rep = reply();
 
     await verifyAccess(req(), rep);
@@ -198,7 +198,7 @@ describe("verifyAccess", () => {
       reply(),
     );
 
-    expect(hasAccessToSurvey).not.toHaveBeenCalled();
+    expect(surveyInScope).not.toHaveBeenCalled();
     expect(getSurveyIdfromMap).not.toHaveBeenCalled();
   });
 
@@ -212,11 +212,11 @@ describe("verifyAccess", () => {
       reply(),
     );
 
-    expect(hasAccessToSurvey).toHaveBeenCalledWith(VICTIM_SURVEY, USER);
+    expect(surveyInScope).toHaveBeenCalledWith(VICTIM_SURVEY, ACTOR);
   });
 
   test("refuses the download when the caller has no access to that survey", async () => {
-    (hasAccessToSurvey as unknown as Mock).mockResolvedValueOnce(false);
+    (surveyInScope as unknown as Mock).mockResolvedValueOnce(false);
     const rep = reply();
 
     await verifyAccess(
@@ -251,7 +251,7 @@ describe("verifyAccess", () => {
     await verifyAccess(req({ routeOptions: { url: "/api/response/x" }, params: {} }), rep);
 
     expect(answer(rep).code).toBe(400);
-    expect(hasAccessToSurvey).not.toHaveBeenCalled();
+    expect(surveyInScope).not.toHaveBeenCalled();
   });
 });
 
@@ -537,7 +537,7 @@ describe("getAllResponsesHandler", () => {
     svc.getAllResponses.mockResolvedValueOnce([{ id: "r-1" }]);
 
     await getAllResponsesHandler(
-      { params: { surveyId: VICTIM_SURVEY }, userId: USER } as never,
+      { params: { surveyId: VICTIM_SURVEY }, userId: USER, actor: ACTOR } as never,
       reply(),
     );
 
@@ -549,7 +549,7 @@ describe("getAllResponsesHandler", () => {
     const rep = reply();
 
     await getAllResponsesHandler(
-      { params: { surveyId: VICTIM_SURVEY }, userId: USER } as never,
+      { params: { surveyId: VICTIM_SURVEY }, userId: USER, actor: ACTOR } as never,
       rep,
     );
 
@@ -563,7 +563,7 @@ describe("getAllResponsesHandler", () => {
     const rep = reply();
 
     await getAllResponsesHandler(
-      { params: { surveyId: VICTIM_SURVEY }, userId: USER } as never,
+      { params: { surveyId: VICTIM_SURVEY }, userId: USER, actor: ACTOR } as never,
       rep,
     );
 
@@ -641,7 +641,8 @@ describe("responseRoutes", () => {
 
     await responseRoutes(srv);
 
-    expect(hooks.map((h) => h.fn)).toEqual([checkSession, verifyAccess]);
+    expect(hooks.map((h) => h.name)).toEqual(["onRoute", "preHandler"]);
+    expect(hooks[1].fn).toBe(verifyAccess);
   });
 
   test("role-gates the destructive routes", async () => {
@@ -649,7 +650,7 @@ describe("responseRoutes", () => {
 
     await responseRoutes(srv);
 
-    const gated = routes.filter((r) => r.opts?.preHandler?.[0]?.roles);
+    const gated = routes.filter((r) => r.opts?.config?.permission);
     expect(gated.map((r) => `${r.method} ${r.url}`)).toEqual([
       "DELETE /reset/:surveyId",
       "DELETE /:surveyTeamMapId/delete/:id",
@@ -658,7 +659,9 @@ describe("responseRoutes", () => {
       "POST /summarize/:surveyId",
     ]);
     for (const r of gated) {
-      expect(r.opts.preHandler[0].roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+      expect(r.opts.config.permission).toBe(
+        r.url === "/export-contacts/:surveyId" ? "contacts.export" : "responses.manage",
+      );
     }
   });
 
@@ -669,8 +672,8 @@ describe("responseRoutes", () => {
 
     const exportRoute = routes.find((r) => r.url === "/export-contacts/:surveyId");
     const summarize = routes.find((r) => r.url === "/summarize/:surveyId");
-    expect(exportRoute.opts.preHandler[0].roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
-    expect(summarize.opts.preHandler[0].roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+    expect(exportRoute.opts.config.permission).toBe("contacts.export");
+    expect(summarize.opts.config.permission).toBe("responses.manage");
   });
 
   test("the download route declares a body schema and no extra guard", async () => {

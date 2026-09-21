@@ -21,9 +21,11 @@ import {
   setupFeedbackBodySchema,
   updateFeedbackSettingSchema,
 } from "./feedback.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 // Session, subscription and TeamFeature.loyalty hooks come from the loyalty root plugin.
 export async function loyaltyFeedbackRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.manage" });
   const errors = {
     400: feedbackErrorSchema,
     404: feedbackErrorSchema,
@@ -68,7 +70,10 @@ export async function loyaltyFeedbackRoutes(server: FastifyInstance) {
 
   server.post(
     "/submit",
-    { schema: { response: { 200: feedbackOverviewSchema, ...errors } } },
+    {
+      config: { permission: "loyalty.cashier" },
+      schema: { response: { 200: feedbackOverviewSchema, ...errors } },
+    },
     submitFeedbackFlowHandler,
   );
 

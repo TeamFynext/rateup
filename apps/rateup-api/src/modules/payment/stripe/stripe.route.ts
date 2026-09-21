@@ -9,8 +9,6 @@ import {
   syncStripeProductsHandler,
   updateStripeProductsHandler,
 } from "./stripe.controller.js";
-import { checkSession } from "../../../utils/checkSession.js";
-import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
 import { assertRootOrg } from "../../../utils/auth.js";
 import {
   createStripeCheckoutSchema,
@@ -20,13 +18,15 @@ import {
   type productIdParamsInput,
   type updateProductInput,
 } from "./stripe.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function paymentStripeRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.post(
     "/create-checkout-session",
     {
+      config: { permission: "billing.manage" },
       schema: {
         body: createStripeCheckoutSchema,
       },
@@ -37,6 +37,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
   server.get(
     "/session-status",
     {
+      config: { permission: "billing.read" },
       schema: {
         querystring: getSessionStatus,
       },
@@ -51,7 +52,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
   server.put(
     "/subscriptions/cancel",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "billing.manage" },
     },
     cancelStripeSubscriptionHandler,
   );

@@ -128,9 +128,11 @@ describe("route registration", () => {
 
     await zapierRoutes(srv);
 
-    expect(hooks).toHaveLength(1);
-    expect(hooks[0].name).toBe("preHandler");
-    expect(hooks[0].fn).toBe(zapierAuthenticationHandler);
+    expect(hooks.map((h) => h.name)).toEqual(["onRoute", "preHandler"]);
+    expect(hooks[1].fn).toBe(zapierAuthenticationHandler);
+    const probe: any = { method: "POST", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "token" });
     // The hook covers every route, so none of them needs its own.
     for (const r of routes) {
       expect(r.opts?.onRequest).toBeUndefined();

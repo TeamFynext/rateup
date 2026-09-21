@@ -1,5 +1,6 @@
 import { Job } from "bullmq";
-import { Prisma, Role } from "../../../generated/prisma/client.js";
+import { Prisma } from "../../../generated/prisma/client.js";
+import { recipientsWhere } from "../../authz/recipients.js";
 import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { log } from "../../utils/logger.js";
 import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
@@ -108,7 +109,7 @@ export async function notifyConversationLimitReached(orgId: string) {
   try {
     const [admins, subscription] = await Promise.all([
       prisma.orgMember.findMany({
-        where: { orgId, role: { in: [Role.SUPER_ADMIN, Role.ADMIN] }, user: { active: true } },
+        where: { orgId, ...recipientsWhere("notify.billing"), user: { active: true } },
         select: { userId: true },
       }),
       prisma.subscription.findUnique({

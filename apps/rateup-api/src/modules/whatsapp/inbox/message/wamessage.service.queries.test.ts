@@ -65,6 +65,7 @@ vi.mock("../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 vi.mock("../../../../../generated/prisma/client.js", () => ({
+  Role: { SUPER_ADMIN: "SUPER_ADMIN", ADMIN: "ADMIN", MEMBER: "MEMBER" },
   PlatformType: {
     WHATSAPP: "WHATSAPP",
     INSTAGRAM: "INSTAGRAM",
@@ -84,7 +85,6 @@ import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.servic
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { sendMessageQueue } from "../../../../workers/bullmq/queues/index.js";
 import { log } from "../../../../utils/logger.js";
-import { Role } from "../../../org/org.services.js";
 import {
   exportWhatsapChats,
   filterChats,
@@ -111,6 +111,17 @@ const db = prisma as unknown as {
 };
 
 const scopeMock = getScopedSourceIdentifiers as unknown as Mock;
+// An org-wide actor and a team-scoped one who only sees conversations assigned to them.
+const ALL_ACTOR = {
+  orgId: "org-1",
+  userId: "user-1",
+  scope: { all: true, teamIds: [], inbox: "all" },
+} as any;
+const MEMBER_ACTOR = {
+  orgId: "org-1",
+  userId: "user-1",
+  scope: { all: false, teamIds: [], inbox: "assigned_only" },
+} as any;
 const waSettingsMock = getWaSettings as unknown as Mock;
 const inboxCountsMock = getInboxCountsFromConversations as unknown as Mock;
 const teamIdsMock = getTeamIdsByUserId as unknown as Mock;
@@ -124,7 +135,7 @@ async function runFilter(filters: Record<string, unknown> = {}, opts: any = {}) 
     opts.page ?? 1,
     filters as any,
     opts.userId ?? "user-1",
-    opts.role ?? Role.SUPER_ADMIN,
+    opts.actor ?? ALL_ACTOR,
   );
   const [sql, ...params] = db.$queryRawUnsafe.mock.calls[0];
   return { sql: sql as string, params };
@@ -251,7 +262,7 @@ describe("filterChats - which tickets the list may show", () => {
 
 describe("filterChats - channel scoping", () => {
   test("does not narrow channels for a super admin", async () => {
-    await runFilter({}, { role: Role.SUPER_ADMIN });
+    await runFilter({}, { actor: ALL_ACTOR });
 
     expect(scopeMock).not.toHaveBeenCalled();
   });
@@ -259,7 +270,7 @@ describe("filterChats - channel scoping", () => {
   test("narrows to the channels a member may see", async () => {
     scopeMock.mockResolvedValue({ all: false, identifiers: ["15550001"] });
 
-    const { sql, params } = await runFilter({}, { role: Role.MEMBER });
+    const { sql, params } = await runFilter({}, { actor: MEMBER_ACTOR });
 
     // Matched against every spelling the scope lists, and on the column itself so
     // the existing index still serves it — an expression match would seq-scan a
@@ -272,7 +283,7 @@ describe("filterChats - channel scoping", () => {
   test("matches nothing when a member is scoped to no channel at all", async () => {
     scopeMock.mockResolvedValue({ all: false, identifiers: [] });
 
-    const { sql } = await runFilter({}, { role: Role.MEMBER });
+    const { sql } = await runFilter({}, { actor: MEMBER_ACTOR });
 
     expect(sql).toContain("1 = 0");
   });
@@ -280,7 +291,7 @@ describe("filterChats - channel scoping", () => {
   test("applies no channel filter when the member may see them all", async () => {
     scopeMock.mockResolvedValue({ all: true, identifiers: [] });
 
-    const { sql } = await runFilter({}, { role: Role.MEMBER });
+    const { sql } = await runFilter({}, { actor: MEMBER_ACTOR });
 
     expect(sql).not.toContain("1 = 0");
   });
@@ -423,9 +434,7 @@ describe("filterChats - shaping the result", () => {
   test("returns an empty list when nothing matches", async () => {
     db.$queryRawUnsafe.mockResolvedValue([]);
 
-    await expect(filterChats("org-1", 1, {} as any, "user-1", Role.SUPER_ADMIN)).resolves.toEqual(
-      [],
-    );
+    await expect(filterChats("org-1", 1, {} as any, "user-1", ALL_ACTOR)).resolves.toEqual([]);
   });
 
   test("attaches each ticket's recent messages and last-message summary", async () => {
@@ -444,7 +453,7 @@ describe("filterChats - shaping the result", () => {
       { id: "m1", conversationId: "conv-1", senderName: "Ada", senderProfilePhoto: null },
     ]);
 
-    const [row] = await filterChats("org-1", 1, {} as any, "user-1", Role.SUPER_ADMIN);
+    const [row] = await filterChats("org-1", 1, {} as any, "user-1", ALL_ACTOR);
 
     expect(row.lastMessage).toMatchObject({ sourcePlatform: "WHATSAPP" });
     expect(row.metadata).toEqual({ a: 1 });
@@ -455,7 +464,7 @@ describe("filterChats - shaping the result", () => {
   test("leaves the summary null for a ticket with no messages yet", async () => {
     db.$queryRawUnsafe.mockResolvedValue([{ conversationId: "conv-1", lastMessageBody: null }]);
 
-    const [row] = await filterChats("org-1", 1, {} as any, "user-1", Role.SUPER_ADMIN);
+    const [row] = await filterChats("org-1", 1, {} as any, "user-1", ALL_ACTOR);
 
     expect(row.lastMessage).toBeNull();
     expect(row.messages).toEqual([]);
@@ -464,9 +473,7 @@ describe("filterChats - shaping the result", () => {
   test("returns an empty list and logs when the query fails", async () => {
     db.$queryRawUnsafe.mockRejectedValue(new Error("bad parameter"));
 
-    await expect(filterChats("org-1", 1, {} as any, "user-1", Role.SUPER_ADMIN)).resolves.toEqual(
-      [],
-    );
+    await expect(filterChats("org-1", 1, {} as any, "user-1", ALL_ACTOR)).resolves.toEqual([]);
     expect(log.error).toHaveBeenCalled();
   });
 });
@@ -550,7 +557,7 @@ describe("getContactsCountByInbox", () => {
   });
 
   test("reports the badge for every inbox tab", async () => {
-    const result = await getContactsCountByInbox("org-1", "user-1", "ADMIN");
+    const result = await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
     expect(result).toMatchObject({
       new: 5,
@@ -567,20 +574,20 @@ describe("getContactsCountByInbox", () => {
   });
 
   test("counts unassigned for the New badge so it matches the New list", async () => {
-    const result = await getContactsCountByInbox("org-1", "user-1", "ADMIN");
+    const result = await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
     expect(result.new).toBe(result.newUnassigned);
     expect(result.new).not.toBe(result.newAssigned);
   });
 
   test("counts spam per contact, not per ticket", async () => {
-    await getContactsCountByInbox("org-1", "user-1", "ADMIN");
+    await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
     expect(db.contact.count).toHaveBeenCalledWith({ where: { orgId: "org-1", isSpam: true } });
   });
 
   test("excludes blocked and spam contacts from the favourite badge", async () => {
-    await getContactsCountByInbox("org-1", "user-1", "ADMIN");
+    await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
     expect(db.conversation.count).toHaveBeenCalledWith({
       where: {
@@ -597,7 +604,7 @@ describe("getContactsCountByInbox", () => {
       { conversationId: "conv-2", contactId: "contact-1" },
     ]);
 
-    const result = await getContactsCountByInbox("org-1", "user-1", "ADMIN");
+    const result = await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
     expect(result.mentions).toBe(2);
   });
@@ -609,7 +616,7 @@ describe("getContactsCountByInbox", () => {
       { conversationId: null, contactId: "contact-1" },
     ]);
 
-    const result = await getContactsCountByInbox("org-1", "user-1", "ADMIN");
+    const result = await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
     expect(result.mentions).toBe(1);
   });
@@ -625,7 +632,7 @@ describe("getContactsCountByInbox", () => {
     db.inboxMention.findMany.mockResolvedValue([]);
     inboxCountsMock.mockResolvedValue({ all_count: 0, open_count: 0, closed_count: 0 });
 
-    const result = await getContactsCountByInbox("org-1", "user-1", "ADMIN");
+    const result = await getContactsCountByInbox("org-1", "user-1", ALL_ACTOR);
 
     expect(result.mine).toBe(0);
   });

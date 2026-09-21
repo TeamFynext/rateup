@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth.js";
+import { inScope } from "../../authz/scope.js";
 import { EditTeamInput, IdParamInput } from "./team.schema.js";
 import { enforcePlanLimit } from "../subscription/planLimits.js";
 
@@ -11,14 +11,10 @@ export async function verifyTeamAdminAccess(
   reply: FastifyReply,
 ) {
   const teamId = request.params.id;
-  const userId = request.userId;
+  const actor = request.actor;
 
-  if (!userId) {
-    reply.code(403).send({ message: "Unauthorised" });
-    return;
-  }
-
-  const hasAccess = await hasAccessOfTeamAdmin(teamId, userId);
+  // Managing a team takes the permission and, for a team-scoped role, membership of it.
+  const hasAccess = actor ? actor.can("teams.manage_members") && inScope(actor, teamId) : false;
 
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have team admin access" });
@@ -44,7 +40,7 @@ export async function verifyTeamAccess(
     reply.code(400).send({ message: "No teamId found in params or body" });
     return;
   }
-  const hasAccess = await hasAccessToTeam(teamId, request.userId);
+  const hasAccess = request.actor ? inScope(request.actor, teamId) : false;
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have access to this team" });
   }

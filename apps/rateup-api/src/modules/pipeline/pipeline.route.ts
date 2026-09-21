@@ -1,6 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
-import { requireFeature, TeamFeature } from "../../utils/permissions.js";
 import {
   createLabelHandler,
   createLostReasonHandler,
@@ -39,10 +37,10 @@ import {
 } from "./pipeline.auth.js";
 import { stageRoutes } from "./pipelineStage/stage.route.js";
 import { leadRoutes } from "./pipelineLead/lead.route.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function pipelineRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", requireFeature(TeamFeature.pipeline));
+  declareAccess(server, { read: "pipelines.read", write: "pipelines.manage" });
 
   server.register(stageRoutes, { prefix: "stages" });
   server.register(leadRoutes, { prefix: "leads" });

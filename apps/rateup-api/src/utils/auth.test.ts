@@ -38,10 +38,6 @@ import {
   assertRootOrg,
   getVerifySubscriptionForPublicHandler,
   getVerifySubscriptionHandler,
-  hasAccessOfTeamAdmin,
-  hasAccessToSurvey,
-  hasAccessToTeam,
-  verifyRole,
   verifySubscription,
 } from "./auth.js";
 
@@ -105,127 +101,6 @@ beforeEach(() => {
   db.subscription.create.mockResolvedValue(subscription());
   getSubscriptionMock.mockResolvedValue(subscription());
   process.env.ROOT_ORG = "root-org";
-});
-
-describe("hasAccessToSurvey", () => {
-  test("grants access when the user is on one of the survey's teams", async () => {
-    db.surveyTeamMap.findMany.mockResolvedValue([{ team: { id: "team-1" } }]);
-    db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
-
-    await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBe(true);
-  });
-
-  test("checks every team the survey is shared with", async () => {
-    db.surveyTeamMap.findMany.mockResolvedValue([
-      { team: { id: "team-1" } },
-      { team: { id: "team-2" } },
-    ]);
-    db.teamMember.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "tm-2" });
-
-    await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBe(true);
-    expect(db.teamMember.findFirst).toHaveBeenCalledTimes(2);
-  });
-
-  test("denies access when the user is on none of the teams", async () => {
-    db.surveyTeamMap.findMany.mockResolvedValue([{ team: { id: "team-1" } }]);
-
-    await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBeFalsy();
-  });
-
-  test.each([
-    ["a missing survey id", "", "user-1"],
-    ["a missing user id", "survey-1", ""],
-  ])("denies access for %s", async (_name, surveyId, userId) => {
-    await expect(hasAccessToSurvey(surveyId, userId)).resolves.toBeFalsy();
-    expect(db.surveyTeamMap.findMany).not.toHaveBeenCalled();
-  });
-
-  test("denies access when the lookup fails", async () => {
-    db.surveyTeamMap.findMany.mockRejectedValue(new Error("db down"));
-
-    await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBe(false);
-  });
-
-  // The deny path returns false explicitly, so a caller comparing `=== false` denies
-  // rather than silently granting access.
-  test("returns false, not undefined, when access is denied", async () => {
-    db.surveyTeamMap.findMany.mockResolvedValue([{ team: { id: "team-1" } }]);
-
-    await expect(hasAccessToSurvey("survey-1", "user-1")).resolves.toBe(false);
-  });
-});
-
-describe("hasAccessToTeam", () => {
-  test("grants access to a member of the team", async () => {
-    db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
-
-    await expect(hasAccessToTeam("team-1", "user-1")).resolves.toBe(true);
-    expect(db.teamMember.findFirst).toHaveBeenCalledWith({
-      where: { userId: "user-1", teamId: "team-1" },
-    });
-  });
-
-  test("denies access to someone outside the team", async () => {
-    await expect(hasAccessToTeam("team-1", "user-1")).resolves.toBe(false);
-  });
-});
-
-describe("hasAccessOfTeamAdmin", () => {
-  test("grants access to a super admin of the team's org", async () => {
-    db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
-    db.orgMember.findFirst.mockResolvedValue({ id: "om-1", role: "SUPER_ADMIN" });
-
-    await expect(hasAccessOfTeamAdmin("team-1", "user-1")).resolves.toBe(true);
-  });
-
-  test("grants access to an org admin of the team's org", async () => {
-    db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
-    db.orgMember.findFirst.mockResolvedValue({ id: "om-1", role: "ADMIN" });
-
-    await expect(hasAccessOfTeamAdmin("team-1", "user-1")).resolves.toBe(true);
-  });
-
-  test("denies a team member who is neither an owner nor an admin", async () => {
-    db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
-
-    await expect(hasAccessOfTeamAdmin("team-1", "user-1")).resolves.toBe(false);
-  });
-
-  test("denies a super admin who is not on the team", async () => {
-    db.teamMember.findFirst.mockResolvedValue(null);
-
-    await expect(hasAccessOfTeamAdmin("team-1", "user-1")).resolves.toBe(false);
-    expect(db.orgMember.findFirst).not.toHaveBeenCalled();
-  });
-
-  test("looks for a managing role within the org owning that team", async () => {
-    db.teamMember.findFirst.mockResolvedValue({ id: "tm-1" });
-
-    await hasAccessOfTeamAdmin("team-1", "user-1");
-
-    expect(db.orgMember.findFirst.mock.calls[0][0].where).toMatchObject({
-      userId: "user-1",
-      role: { in: ["SUPER_ADMIN", "ADMIN"] },
-      org: { teams: { some: { id: "team-1" } } },
-    });
-  });
-});
-
-describe("verifyRole", () => {
-  test("confirms a matching role", () => {
-    expect(verifyRole(makeRequest({ user: { role: "SUPER_ADMIN" } }), "SUPER_ADMIN" as any)).toBe(
-      true,
-    );
-  });
-
-  test("rejects a different role", () => {
-    expect(verifyRole(makeRequest({ user: { role: "MEMBER" } }), "SUPER_ADMIN" as any)).toBe(false);
-  });
-
-  test("rejects rather than throwing when the request carries no user", () => {
-    expect(verifyRole({ user: undefined } as any, "SUPER_ADMIN" as any)).toBe(false);
-    expect(log.fatal).toHaveBeenCalled();
-  });
 });
 
 describe("getVerifySubscriptionHandler", () => {

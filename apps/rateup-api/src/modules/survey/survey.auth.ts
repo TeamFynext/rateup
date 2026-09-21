@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth.js";
+import { surveyInScope } from "../../authz/resourceScope.js";
+import { inScope } from "../../authz/scope.js";
 import { CreateSurveyInput } from "./survey.schema.js";
 import { GetSurveyByIdParams } from "./survey.schema.js";
 import {
@@ -17,7 +18,7 @@ export async function verifySurveyAccess(
   reply: FastifyReply,
 ) {
   const surveyId = request.params.id;
-  const hasAccess = await hasAccessToSurvey(surveyId, request.userId);
+  const hasAccess = request.actor ? await surveyInScope(surveyId, request.actor) : false;
 
   if (!hasAccess) {
     reply.code(403).send({ message: "You don't have access to this survey" });
@@ -31,12 +32,10 @@ export async function verifySurveyCreateAccess(
   reply: FastifyReply,
 ) {
   const teamIds = request.body.teamIds;
+  const actor = request.actor;
 
-  for (let teamId of teamIds) {
-    if (!(await hasAccessToTeam(teamId, request.userId))) {
-      reply.code(403).send();
-      return;
-    }
+  if (!actor || !teamIds.every((teamId) => inScope(actor, teamId))) {
+    reply.code(403).send();
   }
 }
 

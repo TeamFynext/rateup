@@ -16,6 +16,7 @@ export async function waAutomationRoutes(server: FastifyInstance) {
   server.post(
     "/enable",
     {
+      config: { permission: "automation.manage" },
       schema: {
         body: enableInboxAutomationSchema,
       },
@@ -25,6 +26,7 @@ export async function waAutomationRoutes(server: FastifyInstance) {
   server.get(
     "/",
     {
+      config: { permission: "automation.read" },
       schema: {
         querystring: getInboxAutomationQuerySchema,
       },
@@ -34,6 +36,7 @@ export async function waAutomationRoutes(server: FastifyInstance) {
   server.put(
     "/",
     {
+      config: { permission: "automation.manage" },
       schema: {
         body: updateInboxAutomationSchema,
       },
@@ -43,6 +46,7 @@ export async function waAutomationRoutes(server: FastifyInstance) {
   server.delete(
     "/",
     {
+      config: { permission: "automation.manage" },
       schema: {
         querystring: deleteInboxAutomationQuerySchema,
       },

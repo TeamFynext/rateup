@@ -16,6 +16,7 @@ import {
   themeIdParamsSchema,
   updateActiveThemeBodySchema,
 } from "./surveyTheme.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 const publicRouteOptions: CustomRouteShortHandOptions = {
   config: {
@@ -24,6 +25,7 @@ const publicRouteOptions: CustomRouteShortHandOptions = {
 };
 
 export async function surveyThemeRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   server.addHook("onRoute", (routeOptions) => {
     const declared = Array.isArray(routeOptions.preHandler)
       ? routeOptions.preHandler

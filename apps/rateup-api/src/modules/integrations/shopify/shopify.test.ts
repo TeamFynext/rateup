@@ -658,13 +658,14 @@ describe("shopifyRoutes", () => {
     expect(hooks).toHaveLength(0);
   });
 
-  test("the shop-claiming route validates only the shape of the shop param", async () => {
+  test("the shop-claiming route needs integrations.shopify and validates the shop param", async () => {
     const { srv, routes } = server();
 
     await shopifyRoutes(srv);
 
     const claim = routes.find((r) => r.method === "PUT" && r.url === "/session/:shop");
-    expect(Object.keys(claim.opts)).toEqual(["schema"]);
+    expect(Object.keys(claim.opts)).toEqual(["config", "schema"]);
+    expect(claim.opts.config.permission).toBe("integrations.shopify");
     expect(claim.opts.schema.params).toBeDefined();
   });
 

@@ -101,9 +101,6 @@ import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js"
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
 
 vi.mock("../../utils/email/payments/subscriptionPurchasedAlert.js", () => ({
   sendSubscriptionPurchasedAlert: vi.fn(),
@@ -116,7 +113,6 @@ import prisma from "../../utils/prisma.js";
 import * as paymentService from "./payment.service.js";
 import * as stripeService from "./stripe/stripe.service.js";
 import { assertRootOrg } from "../../utils/auth.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { sendSubscriptionPurchasedAlert } from "../../utils/email/payments/subscriptionPurchasedAlert.js";
 import { updateSubscriptionOrderHandler, verificationHandler } from "./payment.controller.js";
 import {
@@ -285,12 +281,12 @@ describe("updateSubscriptionOrderHandler", () => {
     expect(answer(rep)).toEqual({ code: 500, body: { message: "Updating order failed" } });
   });
 
-  test("the route requires SUPER_ADMIN and validates its body", async () => {
+  test("the route requires billing.manage and validates its body", async () => {
     const { routes } = await collectPaymentRoutes();
 
     const order = routes.find((r) => r.url === "/order/:orderId");
     expect(order.handler).toBe(updateSubscriptionOrderHandler);
-    expect((order.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+    expect(order.opts.config.permission).toBe("billing.manage");
     expect(order.opts.schema.body).toBe(updateOrderStatusSchema);
     expect(order.opts.schema.params).toBe(orderIdParamsSchema);
   });
@@ -355,11 +351,11 @@ describe("the Stripe product routes", () => {
     ]);
   });
 
-  test("the cancellation keeps its role check rather than a platform one", async () => {
+  test("the cancellation needs billing.manage rather than the platform org", async () => {
     const { routes } = await collectStripeRoutes();
 
     const cancel = routes.find((r) => r.url === "/subscriptions/cancel");
-    expect((cancel.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+    expect(cancel.opts.config.permission).toBe("billing.manage");
   });
 
   test("the buyer-facing routes stay open to any member", async () => {
@@ -696,15 +692,19 @@ describe("route registration", () => {
     const a = await collectPaymentRoutes();
     const b = await collectStripeRoutes();
 
-    expect(a.hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
-    expect(b.hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    for (const { hooks } of [a, b]) {
+      expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+      const probe: any = { method: "GET", url: "/x", config: {} };
+      hooks[0].fn(probe);
+      expect(probe.config).toEqual({ access: "session" });
+    }
   });
 
   test("the Razorpay cancellation is restricted to the owner role", async () => {
     const { routes } = await collectPaymentRoutes();
 
     const cancel = routes.find((r) => r.url === "/subscriptions/cancel");
-    expect((cancel.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+    expect(cancel.opts.config.permission).toBe("billing.manage");
   });
 
   test("the per-org order listing needs no extra gate", async () => {

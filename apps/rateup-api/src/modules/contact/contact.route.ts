@@ -33,7 +33,6 @@ import {
 } from "./contact.controller.js";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route.js";
 import { contactLabelRoutes } from "./contactLabel/contactLabel.route.js";
-import { checkSession } from "../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
@@ -41,11 +40,10 @@ import { conversationRoutes } from "./conversation/conversation.route.js";
 import { conversationTagRoutes } from "./conversationTag/conversationTag.route.js";
 import { lifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 
-import { requireFeature, TeamFeature } from "../../utils/permissions.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function contactRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", requireFeature(TeamFeature.contacts));
+  declareAccess(server, { read: "contacts.read", write: "contacts.manage" });
 
   server.register(contactGroupRoutes, { prefix: "/group" });
 
@@ -204,7 +202,7 @@ export async function contactRoutes(server: FastifyInstance) {
     },
     deleteCustomFieldHandler,
   );
-  server.post("/export", exportContactHandler);
+  server.post("/export", { config: { permission: "contacts.export" } }, exportContactHandler);
 
   server.put(
     "/lifecycle-stage-update/:lifecycleId",
@@ -220,6 +218,7 @@ export async function contactRoutes(server: FastifyInstance) {
   server.put(
     "/bulk-assign-status",
     {
+      config: { permission: "inbox.assign" },
       schema: {
         body: bulkUpdateContactStatusSchema,
       },

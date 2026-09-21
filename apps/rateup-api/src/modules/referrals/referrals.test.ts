@@ -105,7 +105,7 @@ describe("referralRoutes", () => {
     return { srv, routes };
   }
 
-  test("registers four routes and adds no tree-wide hook", async () => {
+  test("registers four routes and declares session access for the tree", async () => {
     const { srv, routes } = fakeServer();
 
     await referralRoutes(srv);
@@ -116,7 +116,7 @@ describe("referralRoutes", () => {
       "DELETE /:id",
       "POST /track-visit",
     ]);
-    expect(srv.addHook).not.toHaveBeenCalled();
+    expect(srv.addHook).toHaveBeenCalledWith("onRoute", expect.any(Function));
   });
 
   test("the three administrative routes require the platform root org", async () => {

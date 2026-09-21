@@ -13,9 +13,6 @@ vi.mock("../../utils/logger.js", () => ({
 vi.mock("../../workers/bullmq/queues/index.js", () => ({ outgoingWebhookQueue: { add: vi.fn() } }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
 
 vi.mock("node:dns/promises", () => ({ lookup: vi.fn() }));
 
@@ -23,8 +20,6 @@ import prisma from "../../utils/prisma.js";
 import { lookup } from "node:dns/promises";
 import { log } from "../../utils/logger.js";
 import { outgoingWebhookQueue } from "../../workers/bullmq/queues/index.js";
-import { checkSession } from "../../utils/checkSession.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   deleteWebhook,
   enqueueWebhookDispatch,
@@ -521,12 +516,15 @@ describe("webhookRoutes", () => {
     return { srv, routes, hooks };
   }
 
-  test("guards the tree with checkSession", async () => {
+  test("declares session access for the tree", async () => {
     const { srv, hooks } = fakeServer();
 
     await webhookRoutes(srv);
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const probe: any = { method: "GET", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "session" });
   });
 
   test("registers three routes, all on the collection path", async () => {
@@ -543,18 +541,17 @@ describe("webhookRoutes", () => {
     await webhookRoutes(srv);
 
     expect(routes[0].opts.schema.body).toBe(saveWebhookSchema);
-    expect(routes[1].opts).toBe(getWebhookHandler);
+    expect(routes[1].handler).toBe(getWebhookHandler);
     expect(routes[2].opts.schema).toBeUndefined();
   });
 
-  test("the two writers require an admin role, and the read does not", async () => {
+  test("the two writers need webhooks.manage and the read webhooks.read", async () => {
     const { srv, routes } = fakeServer();
 
     await webhookRoutes(srv);
 
-    expect(checkRoleHandler).toHaveBeenCalledWith(["SUPER_ADMIN", "ADMIN"]);
-    expect(routes[0].opts.preHandler).toBeDefined();
-    expect(routes[2].opts.preHandler).toBe(routes[0].opts.preHandler);
-    expect(routes[1].opts).toBe(getWebhookHandler);
+    expect(routes[0].opts.config.permission).toBe("webhooks.manage");
+    expect(routes[2].opts.config.permission).toBe("webhooks.manage");
+    expect(routes[1].opts.config.permission).toBe("webhooks.read");
   });
 });

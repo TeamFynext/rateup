@@ -30,7 +30,7 @@ vi.mock("./wa_settings.service.js", () => ({
 vi.mock("../../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
 vi.mock("../../user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
 vi.mock("../../org/org.services.js", () => ({
-  Role: { SUPER_ADMIN: "SUPER_ADMIN", ADMIN: "ADMIN", AGENT: "AGENT" },
+  Role: { SUPER_ADMIN: "SUPER_ADMIN", ADMIN: "ADMIN", MEMBER: "MEMBER" },
 }));
 vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
@@ -147,9 +147,12 @@ const DISPLAY_NAME_STATUS = {
   newNameStatus: null,
 };
 
+const ACTOR = { orgId: ORG_A, userId: "user-1", scope: { all: false, teamIds: [] } } as any;
+
 function request(overrides: Record<string, unknown> = {}): any {
   return {
     user: { orgId: ORG_A, userId: "user-1", role: "ADMIN" },
+    actor: ACTOR,
     userId: "user-1",
     params: {},
     query: {},
@@ -197,21 +200,7 @@ beforeEach(() => {
   m.callMetaApi.mockResolvedValue({ data: { business_verification_status: "verified" } });
 });
 
-describe("the super-admin gate on the three settings write paths", () => {
-  test.each([
-    ["create", (req: any, rep: any) => createWaSettingsHandler(req, rep)],
-    ["update", (req: any, rep: any) => updateWaSettingsHandler(req, rep)],
-    ["upsert", (req: any, rep: any) => upsertWaSettingsHandler(req, rep)],
-    ["delete", (req: any, rep: any) => deleteWaSettingsHandler(req, rep)],
-  ])("refuses a non super admin on %s", async (_label, handler) => {
-    m.getOrgIdAndRole.mockResolvedValue({ orgId: ORG_A, role: "ADMIN" });
-    const rep = reply();
-
-    await handler(request({ params: { phoneId: PHONE_ID } }), rep);
-
-    expect(rep.status).toHaveBeenCalledWith(403);
-  });
-
+describe("the settings write paths", () => {
   test("creates a manual channel for a super admin", async () => {
     const rep = reply();
 
@@ -225,14 +214,6 @@ describe("the super-admin gate on the three settings write paths", () => {
     expect(m.createWaSettings.mock.calls[0][0]).toBe(ORG_A);
     expect(m.createWaSettings.mock.calls[0][1].type).toBe("Manual");
     expect(rep.status).toHaveBeenCalledWith(200);
-  });
-
-  test("uses the org from the role lookup rather than the one on the session", async () => {
-    m.getOrgIdAndRole.mockResolvedValue({ orgId: ORG_B, role: "SUPER_ADMIN" });
-
-    await createWaSettingsHandler(request({ body: {} }), reply());
-
-    expect(m.createWaSettings.mock.calls[0][0]).toBe(ORG_B);
   });
 
   test("deletes the channel by the number in the path", async () => {
@@ -252,23 +233,6 @@ describe("the super-admin gate on the three settings write paths", () => {
 
     expect(rep.code).toHaveBeenCalledWith(500);
   });
-
-  test("the by-id update path refuses a non super admin, like its siblings", async () => {
-    m.getOrgIdAndRole.mockResolvedValue({ orgId: ORG_A, role: "AGENT" });
-    const rep = reply();
-
-    await updateWaSettingsByIdHandler(
-      request({
-        user: { orgId: ORG_A, userId: "user-1", role: "AGENT" },
-        params: { whatsappSettingsId: SETTINGS_ID },
-        body: { appId: "rewritten" },
-      }),
-      rep,
-    );
-
-    expect(m.updateWaSettingsById).not.toHaveBeenCalled();
-    expect(rep.status).toHaveBeenCalledWith(403);
-  });
 });
 
 describe("getWaSettingsHandler", () => {
@@ -277,7 +241,7 @@ describe("getWaSettingsHandler", () => {
 
     await getWaSettingsHandler(request(), rep);
 
-    expect(m.getAccessibleWaSettings).toHaveBeenCalledWith(ORG_A, "user-1", "ADMIN");
+    expect(m.getAccessibleWaSettings).toHaveBeenCalledWith(ACTOR);
     expect(rep.status).toHaveBeenCalledWith(200);
   });
 
@@ -302,7 +266,7 @@ describe("getWaSettingsHandler", () => {
     const rep = reply();
 
     await getWaSettingsHandler(
-      request({ user: { orgId: ORG_A, userId: "user-1", role: "AGENT" } }),
+      request({ user: { orgId: ORG_A, userId: "user-1", role: "MEMBER" } }),
       rep,
     );
 
@@ -601,7 +565,7 @@ describe("getMetaAssetsHandler", () => {
 
     await getMetaAssetsHandler(
       request({
-        user: { orgId: ORG_B, userId: "user-2", role: "AGENT" },
+        user: { orgId: ORG_B, userId: "user-2", role: "MEMBER" },
         params: { whatsappSettingsId: SETTINGS_ID },
       }),
       rep,

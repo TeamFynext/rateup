@@ -1673,7 +1673,10 @@ declare module "fastify" {
     };
     subscription: Subscription;
     features: Set<import("../../generated/prisma/client.js").TeamFeature>;
-    can: (feature: import("../../generated/prisma/client.js").TeamFeature) => boolean;
+    /** Who is calling and what they may do; set by the authz preHandler. */
+    actor?: import("../authz/actor.js").Actor;
+    /** Set by the non-session auth paths (API token, Zapier, widget, public flow). */
+    principal?: import("../authz/principal.js").Principal;
     loyaltyProgram?: Awaited<
       ReturnType<
         typeof import("../modules/loyalty/program/program.service.js").getLoyaltyProgramByOrg

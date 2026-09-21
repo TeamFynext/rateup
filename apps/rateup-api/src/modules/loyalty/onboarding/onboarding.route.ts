@@ -7,8 +7,10 @@ import {
   getStateHandler,
 } from "./onboarding.controller.js";
 import { stepParamSchema } from "./onboarding.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function loyaltyOnboardingRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.manage" });
   server.get("/presets", getPresetsHandler);
 
   server.get("/state", getStateHandler);

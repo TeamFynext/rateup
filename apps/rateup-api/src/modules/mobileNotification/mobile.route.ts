@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import { addExpoToken, deleteToken, getExpoTokens } from "./mobile.controller.js";
 import { addExpoTokenSchema, deleteExpoTokenSchema } from "./mobile.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function mobileNotificationRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.post(
     "/",

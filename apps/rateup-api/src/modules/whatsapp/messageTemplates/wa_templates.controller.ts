@@ -1,4 +1,4 @@
-import { Role, TemplateType } from "../../../../generated/prisma/client.js";
+import { TemplateType } from "../../../../generated/prisma/client.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   SubscriptionFeaturePathName,
@@ -7,7 +7,6 @@ import {
   WaTemplateStatus,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
-import { getOrgIdAndRole } from "../../user/user.service.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import {
@@ -80,7 +79,7 @@ export async function getTemplateByIdHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+  const orgAndRole = { orgId: request.user.orgId };
   if (!orgAndRole) {
     reply.code(403).send({ message: "User is not a member of any org" });
     return;
@@ -180,7 +179,7 @@ export async function saveTemplateAsDraftHandler(
   reply: FastifyReply,
 ) {
   try {
-    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = { orgId: request.user.orgId };
     if (!orgAndRole) {
       reply.code(403).send({ message: "User is not a member of any org" });
       return;
@@ -244,7 +243,7 @@ export async function updateTemplateHandler(
   reply: FastifyReply,
 ) {
   try {
-    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = { orgId: request.user.orgId };
     if (!orgAndRole) {
       reply.code(403).send({ message: "User is not a member of any org" });
       return;
@@ -287,7 +286,7 @@ export async function deleteTemplateHandler(
 ) {
   const { templateId } = request.params;
   try {
-    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = { orgId: request.user.orgId };
     if (!orgAndRole) {
       reply.code(403);
       return;
@@ -322,12 +321,7 @@ export async function syncTemplatesHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const orgAndRole = await getOrgIdAndRole({ id: request.userId });
-
-  if (!orgAndRole || (orgAndRole.role !== Role.SUPER_ADMIN && orgAndRole.role !== Role.ADMIN)) {
-    reply.code(403);
-    return;
-  }
+  const orgAndRole = { orgId: request.user.orgId };
   const result = await syncTemplates(orgAndRole.orgId, request.body.whatsappSettingsPhoneIds);
   if (result.success) {
     reply.code(200).send(result);
@@ -341,7 +335,7 @@ export async function getUnregisteredTemplatesHandler(
   reply: FastifyReply,
 ) {
   try {
-    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = { orgId: request.user.orgId };
     if (!orgAndRole) {
       reply.code(403).send({ message: "User is not a member of any org" });
       return;
@@ -361,7 +355,7 @@ export async function registerTemplatesInDbHandler(
   reply: FastifyReply,
 ) {
   try {
-    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = { orgId: request.user.orgId };
     if (!orgAndRole) {
       reply.code(403).send({ message: "User is not a member of any org" });
       return;
@@ -385,7 +379,7 @@ export async function uploadHandler(request: FastifyRequest, reply: FastifyReply
       data.file.resume();
       return reply.code(400).send({ message: validation.message });
     }
-    const orgAndRole = await getOrgIdAndRole({ id: request.userId });
+    const orgAndRole = { orgId: request.user.orgId };
     if (!orgAndRole) {
       data.file.resume();
       return reply.code(403).send({ message: "User is not a member of any org" });

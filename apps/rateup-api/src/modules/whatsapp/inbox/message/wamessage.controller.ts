@@ -73,7 +73,7 @@ import { writeXlsx } from "hucre/xlsx";
 import { XlsxStreamWriter } from "hucre";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { PlatformType } from "../../../../../generated/prisma/client.js";
-import { Role } from "../../../../utils/enums/index.js";
+import { Role } from "../../../../../generated/prisma/client.js";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
 import {
   OutgoingTemplateComponent,
@@ -765,7 +765,7 @@ export async function getFilteredContactsHandler(
       pageNumber,
       JSON.parse(decodeURIComponent(filterData)),
       userId,
-      role as Role,
+      request.actor!,
     );
     reply.status(200).send({
       rows: contacts ?? [],
@@ -896,7 +896,7 @@ export async function getContactsCountByInboxTabHandler(
       reply.status(401).send("User not found on request");
       return;
     }
-    const res = await getContactsCountByInbox(orgId, userId, role);
+    const res = await getContactsCountByInbox(orgId, userId, request.actor!);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

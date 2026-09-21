@@ -10,8 +10,10 @@ import {
   updateLinktreeWithShortIdRouteOptions,
   updatePageVisitsOrLinkClicksOptions,
 } from "./linktree.routeOptions.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function linkRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   server.addHook("onRoute", (routeOptions) => {
     const declared = Array.isArray(routeOptions.preHandler)
       ? routeOptions.preHandler

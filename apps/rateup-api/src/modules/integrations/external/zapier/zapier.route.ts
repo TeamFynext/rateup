@@ -28,8 +28,10 @@ import {
   successSchema,
   triggerSubscriptionBodySchema,
 } from "./zapier.schema.js";
+import { declareAccess } from "../../../../authz/registry.js";
 
 export async function zapierRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "token" });
   server.addHook("preHandler", zapierAuthenticationHandler);
 
   //auth

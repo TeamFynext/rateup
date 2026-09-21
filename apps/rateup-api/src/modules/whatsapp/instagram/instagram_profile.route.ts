@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify";
 
-import { checkSession } from "../../../utils/checkSession.js";
 import {
   deleteInstagramIceBreakersHandler,
   deleteInstagramPersistentMenuHandler,
@@ -12,9 +11,10 @@ import {
   syncInstagramIceBreakersHandler,
   syncInstagramPersistentMenuHandler,
 } from "./instagram_profile.controller.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function instagramProfileRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.get("/:whatsappSettingsId", getInstagramProfileHandler);
   server.post("/:whatsappSettingsId/ice-breakers", setInstagramIceBreakersHandler);

@@ -1,4 +1,13 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { ForbiddenError } from "../../authz/errors.js";
+import { assertCanGrantPermissions, canGrant } from "../../authz/grant.js";
+import { assertNotOwner, transferOwnership } from "../../authz/ownership.js";
+import { legacyRoleToKey, type LegacyRole } from "../../authz/roles.js";
+import type {
+  MemberActivityQuery,
+  MemberPermissionsInput,
+  TransferOwnershipInput,
+} from "./org.schema.js";
 import {
   completeOrgDetails,
   createOrg,
@@ -16,6 +25,8 @@ import {
   updateOrgDetails,
   updateOrgLogo,
   updateOrgUserRole,
+  setMemberPermissionOverrides,
+  getMemberActivity,
 } from "./org.services.js";
 import {
   ByOrgIdParams,
@@ -123,13 +134,20 @@ export async function updateRoleController(
   const id = request.params;
   let roleUpdate;
 
-  if (!body.role) {
+  const roleKey =
+    body.roleKey ?? (body.role ? legacyRoleToKey(body.role as LegacyRole, false) : undefined);
+  if (!roleKey) {
     reply.code(400).send({ success: false, message: "Role is required" });
+    return;
+  }
+  if (!request.actor || !canGrant(request.actor, roleKey)) {
+    reply.code(403).send({ success: false, message: `You cannot grant the ${roleKey} role.` });
     return;
   }
 
   try {
-    roleUpdate = await updateOrgUserRole(body as { role: string }, id, request, reply);
+    await assertNotOwner(request.user.orgId, id.id, "given another role");
+    roleUpdate = await updateOrgUserRole({ roleKey }, id, request, reply);
 
     // Check if the roleUpdate is an error message
     if (typeof roleUpdate === "string") {
@@ -137,12 +155,87 @@ export async function updateRoleController(
       return;
     }
   } catch (e) {
+    if (e instanceof ForbiddenError) {
+      reply.code(403).send({ success: false, ...e.toBody() });
+      return;
+    }
     console.error(e);
     reply.code(500).send({ success: false, message: errorMessage(e) });
     return;
   }
 
   reply.code(201).send({ success: true, data: roleUpdate });
+}
+
+export async function memberActivityHandler(
+  request: FastifyRequest<{ Params: IdParamInput; Querystring: MemberActivityQuery }>,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await getMemberActivity(
+      request.user.orgId,
+      request.params.id,
+      request.query.page,
+      request.query.limit,
+    );
+    reply.code(200).send(result);
+  } catch (e) {
+    if (e instanceof ForbiddenError) {
+      reply.code(403).send({ success: false, ...e.toBody() });
+      return;
+    }
+    log.error({ err: e }, "Fetching member activity failed");
+    reply.code(500).send({ success: false, message: errorMessage(e) });
+  }
+}
+
+export async function updateMemberPermissionsHandler(
+  request: FastifyRequest<{ Body: MemberPermissionsInput; Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  // Fine-tuning your own access is a role change in disguise; it stays with someone else.
+  if (request.params.id === request.user.userId) {
+    reply.code(403).send({ success: false, message: "You cannot change your own permissions." });
+    return;
+  }
+  try {
+    if (!request.actor) {
+      reply.code(403).send({ success: false, message: "Permissions failed." });
+      return;
+    }
+    assertCanGrantPermissions(request.actor, request.body.grants);
+    const result = await setMemberPermissionOverrides(
+      request.user.orgId,
+      request.params.id,
+      request.body.grants,
+      request.body.denies,
+    );
+    reply.code(200).send({ success: true, data: result });
+  } catch (e) {
+    if (e instanceof ForbiddenError) {
+      reply.code(403).send({ success: false, ...e.toBody() });
+      return;
+    }
+    log.error({ err: e }, "Updating member permissions failed");
+    reply.code(500).send({ success: false, message: errorMessage(e) });
+  }
+}
+
+export async function transferOwnershipHandler(
+  request: FastifyRequest<{ Body: TransferOwnershipInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    await transferOwnership(request.user.orgId, request.user.userId!, request.body.userId);
+    reply.code(200).send({ success: true });
+  } catch (e) {
+    if (e instanceof ForbiddenError) {
+      reply.code(403).send({ success: false, ...e.toBody() });
+      return;
+    }
+    log.error({ err: e }, "Ownership transfer failed");
+    reply.code(500).send({ success: false, message: errorMessage(e) });
+  }
 }
 
 export async function updateLogoHandler(

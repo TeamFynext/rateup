@@ -75,14 +75,34 @@ export async function regenerateApiKey(orgId: string) {
 }
 
 export async function verifyApiAccessToken(orgId: string, accessToken: string) {
-  const apiKeyHash = await prisma.apiAccessToken.findUnique({
-    where: {
-      orgId,
-    },
-  });
+  return (await authenticateApiAccessToken(orgId, accessToken)) !== null;
+}
 
-  if (!apiKeyHash) {
-    return false;
-  }
-  return await bcrypt.compare(accessToken, apiKeyHash.accessToken);
+/**
+ * The key's grant when it matches, null otherwise. `scopes` is empty for a key issued
+ * before scopes existed, which the actor reads as every permission.
+ */
+export async function authenticateApiAccessToken(
+  orgId: string,
+  accessToken: string,
+): Promise<{ scopes: string[] } | null> {
+  const row = await prisma.apiAccessToken.findUnique({
+    where: { orgId },
+    select: { accessToken: true, scopes: true },
+  });
+  if (!row) return null;
+  const matches = await bcrypt.compare(accessToken, row.accessToken);
+  return matches ? { scopes: row.scopes } : null;
+}
+
+export async function getApiKeyScopes(orgId: string): Promise<string[] | null> {
+  const row = await prisma.apiAccessToken.findUnique({
+    where: { orgId },
+    select: { scopes: true },
+  });
+  return row?.scopes ?? null;
+}
+
+export async function setApiKeyScopes(orgId: string, scopes: string[]) {
+  return prisma.apiAccessToken.update({ where: { orgId }, data: { scopes } });
 }

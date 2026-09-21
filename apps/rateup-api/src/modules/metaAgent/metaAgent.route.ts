@@ -1,6 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import * as ctrl from "./metaAgent.controller.js";
 import {
   type ByConnectorIdParams,
@@ -42,13 +40,12 @@ import {
   upsertOAuthBodySchema,
   websiteBodySchema,
 } from "./metaAgent.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function metaAgentRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { read: "meta_agent.read", write: "meta_agent.use" });
 
   const p = "/:whatsappSettingsId";
-
-  const adminOnly = [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])];
 
   server.get(
     p,
@@ -71,7 +68,10 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   // sits behind the same role gate as the credential writes below.
   server.delete<{ Params: ByWhatsappSettingsIdParams }>(
     `${p}/agent`,
-    { preHandler: adminOnly, schema: { params: byWhatsappSettingsIdParamSchema } },
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byWhatsappSettingsIdParamSchema },
+    },
     ctrl.deleteAgentHandler,
   );
 
@@ -275,19 +275,25 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   server.post<{ Params: ByWhatsappSettingsIdParams; Body: ConnectorBody }>(
     `${p}/connectors`,
     {
-      preHandler: adminOnly,
+      config: { permission: "meta_agent.manage" },
       schema: { params: byWhatsappSettingsIdParamSchema, body: connectorBodySchema },
     },
     ctrl.createConnectorHandler,
   );
   server.put<{ Params: ByIdParams; Body: ConnectorBody }>(
     `${p}/connectors/:id`,
-    { preHandler: adminOnly, schema: { params: byIdParamSchema, body: connectorBodySchema } },
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byIdParamSchema, body: connectorBodySchema },
+    },
     ctrl.updateConnectorHandler,
   );
   server.delete<{ Params: ByIdParams }>(
     `${p}/connectors/:id`,
-    { preHandler: adminOnly, schema: { params: byIdParamSchema } },
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byIdParamSchema },
+    },
     ctrl.deleteConnectorHandler,
   );
   server.get(
@@ -297,18 +303,24 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   );
   server.post<{ Params: ByIdParams; Body: UpsertApiKeyBody }>(
     `${p}/connectors/:id/upsertApiKey`,
-    { preHandler: adminOnly, schema: { params: byIdParamSchema, body: upsertApiKeyBodySchema } },
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byIdParamSchema, body: upsertApiKeyBodySchema },
+    },
     ctrl.upsertConnectorApiKeyHandler,
   );
   server.post<{ Params: ByIdParams; Body: UpsertOAuthBody }>(
     `${p}/connectors/:id/upsertOAuth`,
-    { preHandler: adminOnly, schema: { params: byIdParamSchema, body: upsertOAuthBodySchema } },
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byIdParamSchema, body: upsertOAuthBodySchema },
+    },
     ctrl.upsertConnectorOAuthHandler,
   );
   server.post<{ Params: ByIdParams; Body: UpsertCertificateBody }>(
     `${p}/connectors/:id/upsertCertificate`,
     {
-      preHandler: adminOnly,
+      config: { permission: "meta_agent.manage" },
       schema: { params: byIdParamSchema, body: upsertCertificateBodySchema },
     },
     ctrl.upsertConnectorCertificateHandler,
@@ -328,7 +340,7 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   server.post<{ Params: ByConnectorIdParams; Body: ConnectorToolBody }>(
     `${p}/connectors/:connectorId/tools`,
     {
-      preHandler: adminOnly,
+      config: { permission: "meta_agent.manage" },
       schema: { params: byConnectorIdParamSchema, body: connectorToolBodySchema },
     },
     ctrl.createConnectorToolHandler,
@@ -336,14 +348,17 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   server.put<{ Params: ByConnectorToolIdParams; Body: ConnectorToolBody }>(
     `${p}/connectors/:connectorId/tools/:toolId`,
     {
-      preHandler: adminOnly,
+      config: { permission: "meta_agent.manage" },
       schema: { params: byConnectorToolIdParamSchema, body: connectorToolBodySchema },
     },
     ctrl.updateConnectorToolHandler,
   );
   server.delete<{ Params: ByConnectorToolIdParams }>(
     `${p}/connectors/:connectorId/tools/:toolId`,
-    { preHandler: adminOnly, schema: { params: byConnectorToolIdParamSchema } },
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byConnectorToolIdParamSchema },
+    },
     ctrl.deleteConnectorToolHandler,
   );
   // A tool run is an outbound call to the business's own systems using those
@@ -351,7 +366,7 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   server.post<{ Params: ByConnectorToolIdParams; Body: ConnectorToolRunBody }>(
     `${p}/connectors/:connectorId/tools/:toolId/run`,
     {
-      preHandler: adminOnly,
+      config: { permission: "meta_agent.manage" },
       schema: { params: byConnectorToolIdParamSchema, body: connectorToolRunBodySchema },
     },
     ctrl.runConnectorToolHandler,

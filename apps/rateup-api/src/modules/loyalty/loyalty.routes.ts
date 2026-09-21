@@ -1,8 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
-import { requireFeature, TeamFeature } from "../../utils/permissions.js";
 
 // New Loyalty System Routes
 import { loyaltyProgramRoutes } from "./program/program.route.js";
@@ -20,16 +18,16 @@ import { loyaltyApiSettingRoutes } from "./apiSetting/apiSetting.route.js";
 import { loyaltyOnboardingRoutes } from "./onboarding/onboarding.route.js";
 import { loyaltyGivebackRoutes } from "./giveback/giveback.route.js";
 import { loyaltyFeedbackRoutes } from "./feedback/feedback.route.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function loyaltyRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { read: "loyalty.read" });
   // WhatsappLoyalty, not Whatsapp: loyalty is a Starter-and-above capability, while
   // whatsapp.active stays on for every tier so Free keeps the inbox.
   server.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsappLoyalty]),
   );
-  server.addHook("preHandler", requireFeature(TeamFeature.loyalty));
 
   // New Loyalty System Routes
   server.register(loyaltyProgramRoutes, { prefix: "/program" });

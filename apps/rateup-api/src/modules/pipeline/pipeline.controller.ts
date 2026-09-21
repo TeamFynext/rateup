@@ -38,6 +38,7 @@ export async function createPipelineHandler(
       ...request.body,
       orgId: request.user.orgId,
       userId: request.userId,
+      actor: request.actor!,
     });
     return reply.code(201).send(pipeline);
   } catch (error) {
@@ -54,7 +55,7 @@ export async function createPipelineHandler(
 
 export async function getPipelinesHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const pipelines = await getPipelines(request.userId, request.user.orgId);
+    const pipelines = await getPipelines(request.actor!, request.user.orgId);
     return reply.code(200).send(pipelines);
   } catch (error) {
     request.log.error(error);
@@ -83,7 +84,7 @@ export async function updatePipelineHandler(
   reply: FastifyReply,
 ) {
   try {
-    const pipeline = await updatePipeline(request.params.id, request.body, request.userId);
+    const pipeline = await updatePipeline(request.params.id, request.body, request.actor!);
     return reply.code(200).send(pipeline);
   } catch (error) {
     if (error instanceof TeamAccessError) {

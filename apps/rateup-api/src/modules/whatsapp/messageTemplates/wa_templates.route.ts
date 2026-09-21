@@ -12,10 +12,8 @@ import {
   updateTemplateHandler,
   uploadHandler,
 } from "./wa_templates.controller.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
-import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 import fastifyMultipart from "@fastify/multipart";
 import {
   type ByTemplateIdParamsSchema,
@@ -26,6 +24,7 @@ import {
   type WaUserSendTemplateBodySchema,
   waUserSendTemplateBodySchema,
 } from "./wa_templates.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {
@@ -34,12 +33,11 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     },
     throwFileSizeLimit: true,
   });
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { read: "templates.read", write: "templates.manage" });
   server.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
   );
-  server.addHook("preHandler", requireFeature(TeamFeature.templates));
 
   server.get(
     "/",
@@ -102,6 +100,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/sync",
     {
+      config: { permission: "templates.sync" },
       schema: {
         body: syncTemplatesSchema,
       },
@@ -124,6 +123,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post<{ Params: ByTemplateIdParamsSchema; Body: WaUserSendTemplateBodySchema }>(
     "/:templateId/send",
     {
+      config: { permission: "inbox.reply" },
       schema: {
         params: byTemplateIdParamsSchema,
         body: waUserSendTemplateBodySchema,

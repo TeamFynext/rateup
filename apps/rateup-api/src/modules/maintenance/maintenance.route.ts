@@ -1,7 +1,6 @@
 import { FastifyInstance } from "fastify";
 
 import { assertRootOrg } from "../../utils/auth.js";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   listMaintenanceTasksHandler,
   runMaintenanceTaskHandler,
@@ -12,6 +11,7 @@ import {
   type RunTaskInput,
   type TaskIdParamInput,
 } from "./maintenance.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 /**
  * Data migrations, behind the admin gate.
@@ -21,7 +21,7 @@ import {
  * pipelines. These require a session and root-org membership, like the rest of admin.
  */
 export async function maintenanceRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.get("/tasks", { preHandler: [assertRootOrg] }, listMaintenanceTasksHandler);
 

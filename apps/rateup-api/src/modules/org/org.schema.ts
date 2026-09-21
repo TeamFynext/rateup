@@ -1,3 +1,6 @@
+import { Role } from "../../../generated/prisma/client.js";
+import { PERMISSIONS } from "../../authz/permissions.js";
+import { ROLE_KEYS } from "../../authz/roles.js";
 import { z } from "zod";
 import { WaAssignedChatPermission } from "../../types/enums.js";
 
@@ -21,9 +24,33 @@ const idParamRequestSchema = z.object({
   id: z.string(),
 });
 
-const updateRoleSchema = z.object({
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MEMBER"]),
+/** Either spelling of the target role; `roleKey` (src/authz/roles.ts) is the one clients move to. */
+const updateRoleSchema = z
+  .object({
+    role: z.enum(Role).optional(),
+    roleKey: z.enum(ROLE_KEYS).optional(),
+  })
+  .refine((body) => body.role !== undefined || body.roleKey !== undefined, {
+    message: "Role is required",
+  });
+
+/** Hand-picked additions to and removals from a member's role. */
+export const memberPermissionsSchema = z.object({
+  grants: z.array(z.enum(PERMISSIONS)).default([]),
+  denies: z.array(z.enum(PERMISSIONS)).default([]),
 });
+export type MemberPermissionsInput = z.infer<typeof memberPermissionsSchema>;
+
+export const memberActivityQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+});
+export type MemberActivityQuery = z.infer<typeof memberActivityQuerySchema>;
+
+export const transferOwnershipSchema = z.object({
+  userId: z.string().uuid(),
+});
+export type TransferOwnershipInput = z.infer<typeof transferOwnershipSchema>;
 
 const updateLogoSchema = z.object({
   logo: z

@@ -19,6 +19,15 @@ const ORG = "org-1";
 const OTHER_ORG = "org-2";
 const USER = "user-1";
 
+/** A team-scoped actor; the scope used to come from a membership query, now from the actor. */
+const actorFor = (orgId: string, userId: string, teamIds: string[] = ["team-1"]) =>
+  ({
+    orgId,
+    userId,
+    principal: { kind: "user" },
+    scope: { all: false, teamIds, inbox: "all" },
+  }) as any;
+
 /** A team row as `computeScope` selects it. */
 const team = (allChannels: boolean, ...channelIds: string[]) => ({
   allChannels,
@@ -38,9 +47,9 @@ afterEach(() => {
 describe("getChannelScope — resolving a user's reach", () => {
   test("a user in no team at all keeps full access", async () => {
     // Scoping is opt-in per team; org admins and fresh invitees belong to none.
-    prismaMock.team.findMany.mockResolvedValue([]);
+    const scope = await getChannelScope(actorFor(ORG, USER, []));
 
-    const scope = await getChannelScope(ORG, USER);
+    expect(prismaMock.team.findMany).not.toHaveBeenCalled();
 
     expect(scope.all).toBe(true);
   });
@@ -48,7 +57,7 @@ describe("getChannelScope — resolving a user's reach", () => {
   test("a team with allChannels grants everything", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(true)]);
 
-    const scope = await getChannelScope(ORG, USER);
+    const scope = await getChannelScope(actorFor(ORG, USER));
 
     expect(scope.all).toBe(true);
   });
@@ -56,7 +65,7 @@ describe("getChannelScope — resolving a user's reach", () => {
   test("a scoped team grants exactly its own channels", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a", "chan-b")]);
 
-    const scope = await getChannelScope(ORG, USER);
+    const scope = await getChannelScope(actorFor(ORG, USER));
 
     expect(scope.all).toBe(false);
     expect([...scope.ids].sort()).toEqual(["chan-a", "chan-b"]);
@@ -68,7 +77,7 @@ describe("getChannelScope — resolving a user's reach", () => {
       team(false, "chan-b", "chan-a"),
     ]);
 
-    const scope = await getChannelScope(ORG, USER);
+    const scope = await getChannelScope(actorFor(ORG, USER));
 
     expect(scope.all).toBe(false);
     expect([...scope.ids].sort()).toEqual(["chan-a", "chan-b"]);
@@ -79,7 +88,7 @@ describe("getChannelScope — resolving a user's reach", () => {
     // Because access unions across teams and the widest one wins.
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a"), team(true)]);
 
-    const scope = await getChannelScope(ORG, USER);
+    const scope = await getChannelScope(actorFor(ORG, USER));
 
     expect(scope.all).toBe(true);
   });
@@ -87,20 +96,20 @@ describe("getChannelScope — resolving a user's reach", () => {
   test("a scoped team with no channels grants nothing — not everything", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(false)]);
 
-    const scope = await getChannelScope(ORG, USER);
+    const scope = await getChannelScope(actorFor(ORG, USER));
 
     expect(scope.all).toBe(false);
     expect(scope.ids.size).toBe(0);
   });
 
-  test("only teams in the caller's org and containing the user are considered", async () => {
+  test("only the actor's teams, within the caller's org, are considered", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
 
-    await getChannelScope(ORG, USER);
+    await getChannelScope(actorFor(ORG, USER));
 
     expect(prismaMock.team.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { orgId: ORG, members: { some: { userId: USER } } },
+        where: { orgId: ORG, id: { in: ["team-1"] } },
       }),
     );
   });
@@ -110,8 +119,8 @@ describe("getChannelScope — caching", () => {
   test("a repeat lookup inside the TTL does not re-query", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
 
-    await getChannelScope(ORG, USER);
-    await getChannelScope(ORG, USER);
+    await getChannelScope(actorFor(ORG, USER));
+    await getChannelScope(actorFor(ORG, USER));
 
     expect(prismaMock.team.findMany).toHaveBeenCalledTimes(1);
   });
@@ -120,9 +129,9 @@ describe("getChannelScope — caching", () => {
     vi.useFakeTimers();
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
 
-    await getChannelScope(ORG, USER);
+    await getChannelScope(actorFor(ORG, USER));
     vi.advanceTimersByTime(61_000);
-    await getChannelScope(ORG, USER);
+    await getChannelScope(actorFor(ORG, USER));
 
     expect(prismaMock.team.findMany).toHaveBeenCalledTimes(2);
   });
@@ -130,8 +139,8 @@ describe("getChannelScope — caching", () => {
   test("different users in the same org are cached separately", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
 
-    await getChannelScope(ORG, USER);
-    await getChannelScope(ORG, "user-2");
+    await getChannelScope(actorFor(ORG, USER));
+    await getChannelScope(actorFor(ORG, "user-2"));
 
     expect(prismaMock.team.findMany).toHaveBeenCalledTimes(2);
   });
@@ -139,11 +148,11 @@ describe("getChannelScope — caching", () => {
   test("invalidating an org forces the next lookup to re-read", async () => {
     // This is what makes a channel-assignment change take effect immediately.
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
-    await getChannelScope(ORG, USER);
+    await getChannelScope(actorFor(ORG, USER));
 
     invalidateChannelAccessCache(ORG);
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a", "chan-b")]);
-    const scope = await getChannelScope(ORG, USER);
+    const scope = await getChannelScope(actorFor(ORG, USER));
 
     expect(prismaMock.team.findMany).toHaveBeenCalledTimes(2);
     expect([...scope.ids].sort()).toEqual(["chan-a", "chan-b"]);
@@ -151,12 +160,12 @@ describe("getChannelScope — caching", () => {
 
   test("invalidating one org leaves another org's cache intact", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
-    await getChannelScope(ORG, USER);
-    await getChannelScope(OTHER_ORG, USER);
+    await getChannelScope(actorFor(ORG, USER));
+    await getChannelScope(actorFor(OTHER_ORG, USER));
     expect(prismaMock.team.findMany).toHaveBeenCalledTimes(2);
 
     invalidateChannelAccessCache(OTHER_ORG);
-    await getChannelScope(ORG, USER);
+    await getChannelScope(actorFor(ORG, USER));
 
     expect(prismaMock.team.findMany).toHaveBeenCalledTimes(2);
   });
@@ -166,7 +175,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
   test("an unscoped user needs no identifier list", async () => {
     prismaMock.team.findMany.mockResolvedValue([team(true)]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result).toEqual({ all: true, identifiers: [] });
     expect(prismaMock.whatsappSettings.findMany).not.toHaveBeenCalled();
@@ -178,7 +187,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
       { phone: "+15551323034", ibaId: null, fbPageId: null },
     ]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result.all).toBe(false);
     expect(result.identifiers.sort()).toEqual(["+15551323034", "15551323034"]);
@@ -196,7 +205,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
       { phone: "+1555-132-3034", ibaId: null, fbPageId: null },
     ]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result.identifiers.sort()).toEqual(
       ["+1555-132-3034", "1555-132-3034", "15551323034", "+15551323034"].sort(),
@@ -212,7 +221,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
       { phone: "+", ibaId: null, fbPageId: null },
     ]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result.identifiers).not.toContain("");
   });
@@ -225,7 +234,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
       { phone: null, ibaId: null, fbPageId: "1029384756" },
     ]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result.identifiers.sort()).toEqual(["1029384756", "17841400000"]);
   });
@@ -238,7 +247,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
       { phone: "+15551323034", ibaId: "", fbPageId: null },
     ]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result.identifiers).not.toContain("");
     expect(result.identifiers.sort()).toEqual(["+15551323034", "15551323034"]);
@@ -251,7 +260,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
       { phone: "+15551323034", ibaId: null, fbPageId: null },
     ]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result.identifiers.sort()).toEqual(["+15551323034", "15551323034"]);
   });
@@ -262,7 +271,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
     prismaMock.team.findMany.mockResolvedValue([team(false)]);
     prismaMock.whatsappSettings.findMany.mockResolvedValue([]);
 
-    const result = await getScopedSourceIdentifiers(ORG, USER);
+    const result = await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(result.all).toBe(false);
     expect(result.identifiers).toEqual([]);
@@ -272,7 +281,7 @@ describe("getScopedSourceIdentifiers — translating ids for the inbox query", (
     prismaMock.team.findMany.mockResolvedValue([team(false, "chan-a")]);
     prismaMock.whatsappSettings.findMany.mockResolvedValue([]);
 
-    await getScopedSourceIdentifiers(ORG, USER);
+    await getScopedSourceIdentifiers(actorFor(ORG, USER));
 
     expect(prismaMock.whatsappSettings.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

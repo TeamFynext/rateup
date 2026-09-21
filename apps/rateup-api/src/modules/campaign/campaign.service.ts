@@ -1,3 +1,5 @@
+import type { Actor } from "../../authz/actor.js";
+import { assertInScope } from "../../authz/scope.js";
 import prisma from "../../utils/prisma.js";
 import { CampaignNotFoundError } from "./campaign.errors.js";
 export { CampaignNotFoundError };
@@ -183,12 +185,13 @@ export async function getCampaignsByOrgId(orgId: string, type?: string) {
   return campaigns;
 }
 
-export async function createCampaign(data: CreateCampaignInput, orgId: string) {
+export async function createCampaign(data: CreateCampaignInput, orgId: string, actor: Actor) {
   const team = await prisma.team.findFirst({
     where: { id: data.teamId, orgId },
     select: { id: true },
   });
   if (!team) throw new CampaignNotFoundError("Team not found");
+  assertInScope(actor, data.teamId);
 
   let flowId = "";
   if (data.flowId) {

@@ -13,10 +13,8 @@ import {
   updateCampaignByIdHandler,
 } from "./campaign.controller.js";
 import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
-import { requireFeature, TeamFeature } from "../../utils/permissions.js";
 import {
   byCampaignIdParamsSchema,
   bySendIdParamsSchema,
@@ -40,14 +38,14 @@ import {
   updateCampaignRetryPolicyHandler,
 } from "./campaignAnalytics.controller.js";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function campaignRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { read: "campaigns.read", write: "campaigns.manage" });
   server.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsappCampaign]),
   );
-  server.addHook("preHandler", requireFeature(TeamFeature.campaigns));
   server.register(campaignParticipantRoutes, {
     prefix: ":campaignId/participants",
   });
@@ -117,6 +115,7 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post(
     "/:campaignId/send",
     {
+      config: { permission: "campaigns.send" },
       schema: {
         params: byCampaignIdParamsSchema,
         // `sendCampaignInputSchema` has existed since the send dialog was built;
@@ -131,6 +130,7 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post(
     "/:campaignId/send-test",
     {
+      config: { permission: "campaigns.send" },
       schema: {
         params: byCampaignIdParamsSchema,
         body: sendTestInputSchema,
@@ -181,7 +181,10 @@ export async function campaignRoutes(server: FastifyInstance) {
   );
   server.post(
     "/:campaignId/retries/cancel",
-    { schema: { params: byCampaignIdParamsSchema } },
+    {
+      config: { permission: "campaigns.send" },
+      schema: { params: byCampaignIdParamsSchema },
+    },
     cancelPendingRetriesHandler,
   );
   server.get(
@@ -201,6 +204,7 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post(
     "/:campaignId/download",
     {
+      config: { permission: "contacts.export" },
       schema: {
         params: byCampaignIdParamsSchema,
       },

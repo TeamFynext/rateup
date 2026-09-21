@@ -30,12 +30,14 @@ import {
   PauseUserInput,
   UserStatusSchema,
 } from "./user.schema.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { checkSession } from "../../utils/checkSession.js";
+import { assertRootOrg } from "../../utils/auth.js";
 import { idParamsSchema } from "../stats/stats.schema.js";
 import { IdParamInput } from "../survey/survey.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function userRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "session" });
   server.get(
     "/info",
     {
@@ -122,6 +124,7 @@ export async function userRoutes(server: FastifyInstance) {
   server.post(
     "/complete-google-signup",
     {
+      config: { access: "public" },
       schema: {
         body: createUserGoogleSchema,
       },
@@ -132,6 +135,7 @@ export async function userRoutes(server: FastifyInstance) {
   server.post(
     "/complete-apple-signup",
     {
+      config: { access: "public" },
       schema: {
         body: createUserGoogleSchema,
       },
@@ -139,10 +143,14 @@ export async function userRoutes(server: FastifyInstance) {
     createAppleUserHandler,
   );
 
+  // Both answer for every user on the platform, not the caller's org, so they are the
+  // root org's alone. checkSession rather than verifySession: assertRootOrg reads
+  // request.user.orgId, which only checkSession sets.
   server.get(
     "/all",
     {
-      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "members.manage" },
+      preHandler: [checkSession, assertRootOrg],
     },
     getAllUsersHandler,
   );
@@ -150,7 +158,8 @@ export async function userRoutes(server: FastifyInstance) {
   server.post(
     "/update-recipe",
     {
-      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "members.manage" },
+      preHandler: [checkSession, assertRootOrg],
     },
     updateRecipeNameHandler,
   );
@@ -158,7 +167,8 @@ export async function userRoutes(server: FastifyInstance) {
   server.put<{ Body: PauseUserInput; Params: IdParamInput }>(
     "/pause/:id",
     {
-      preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "members.manage" },
+      preHandler: [verifySession()],
       schema: {
         params: idParamsSchema,
         body: pauseUserSchema,
@@ -188,7 +198,8 @@ export async function userRoutes(server: FastifyInstance) {
   }>(
     "/audit-logs",
     {
-      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "org.audit.read" },
+      preHandler: [checkSession],
     },
     auditLogHandler,
   );

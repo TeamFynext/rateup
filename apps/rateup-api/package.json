@@ -25,13 +25,13 @@
     "prepare": "husky",
     "postinstall": "prisma generate",
     "recover:campaign-sends": "tsx scripts/recover-unrecorded-campaign-sends.ts",
-    "backfill:first-responded": "tsx scripts/backfill-first-responded-at.ts"
+    "backfill:first-responded": "tsx scripts/backfill-first-responded-at.ts",
+    "authz:migrate": "tsx scripts/migrate-authz-roles.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1123.0",
     "@aws-sdk/client-sesv2": "^3.1123.0",
     "@aws-sdk/lib-storage": "^3.1123.0",
-    "@casl/ability": "^7.0.1",
     "@faker-js/faker": "^10.6.0",
     "@fastify/cors": "^11.3.0",
     "@fastify/formbody": "^9.0.0",

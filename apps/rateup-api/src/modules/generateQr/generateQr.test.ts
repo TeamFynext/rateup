@@ -584,13 +584,13 @@ describe("routes", () => {
     return { srv, routes, hooks };
   }
 
-  test("registers seven routes behind a single onRoute hook", async () => {
+  test("registers seven routes behind the two onRoute hooks", async () => {
     const { srv, routes, hooks } = fakeServer();
 
     await linkRoutes(srv);
 
-    expect(hooks).toHaveLength(1);
-    expect(hooks[0].name).toBe("onRoute");
+    // One hook declares session access for the tree, the other adds checkSession off the isPublic flag.
+    expect(hooks.map((h) => h.name)).toEqual(["onRoute", "onRoute"]);
     expect(routes.map((r) => `${r.method} ${r.url}`)).toEqual([
       "GET /public/:shortUrlId",
       "POST /noOfScans/:shortUrlId",
@@ -618,7 +618,7 @@ describe("routes", () => {
     await linkRoutes(srv);
 
     const opts: any = { schema: {} };
-    hooks[0].fn(opts);
+    hooks[1].fn(opts);
 
     expect(opts.preHandler).toEqual([checkSession]);
   });
@@ -628,7 +628,7 @@ describe("routes", () => {
     await linkRoutes(srv);
 
     const opts: any = { config: { isPublic: true } };
-    hooks[0].fn(opts);
+    hooks[1].fn(opts);
 
     expect(opts.preHandler).toEqual([]);
   });
@@ -639,7 +639,7 @@ describe("routes", () => {
 
     const ownGuard = vi.fn();
     const opts: any = { preHandler: [ownGuard] };
-    hooks[0].fn(opts);
+    hooks[1].fn(opts);
 
     expect(opts.preHandler).toEqual([checkSession, ownGuard]);
   });
@@ -650,7 +650,7 @@ describe("routes", () => {
 
     const limiter = vi.fn();
     const opts: any = { config: { isPublic: true }, preHandler: [limiter] };
-    hooks[0].fn(opts);
+    hooks[1].fn(opts);
 
     expect(opts.preHandler).toEqual([limiter]);
     expect(opts.preHandler).not.toContain(checkSession);
@@ -662,7 +662,7 @@ describe("routes", () => {
 
     const ownGuard = vi.fn();
     const opts: any = { preHandler: ownGuard };
-    hooks[0].fn(opts);
+    hooks[1].fn(opts);
 
     expect(opts.preHandler).toEqual([checkSession, ownGuard]);
   });
@@ -672,7 +672,7 @@ describe("routes", () => {
     await linkRoutes(srv);
 
     const opts: any = { config: { isPublic: "true" } };
-    hooks[0].fn(opts);
+    hooks[1].fn(opts);
 
     expect(opts.preHandler).toEqual([checkSession]);
   });

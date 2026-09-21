@@ -17,6 +17,9 @@ import {
   updateLogoHandler,
   updateOrgDetailsHandler,
   updateRoleController,
+  transferOwnershipHandler,
+  updateMemberPermissionsHandler,
+  memberActivityHandler,
 } from "./org.controller.js";
 import {
   createBusinessHourHandler,
@@ -30,8 +33,6 @@ import {
   businessHourParamsSchema,
   updateBusinessHourSchema,
 } from "./businessHour.schema.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import {
   byOrgIdParams,
@@ -47,8 +48,17 @@ import {
   UpdateRoleInput,
   updateRoleSchema,
 } from "./org.schema.js";
+import { declareAccess } from "../../authz/registry.js";
+import {
+  memberActivityQuerySchema,
+  memberPermissionsSchema,
+  transferOwnershipSchema,
+  type MemberActivityQuery,
+  type MemberPermissionsInput,
+  type TransferOwnershipInput,
+} from "./org.schema.js";
 export async function orgRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.post(
     "/",
@@ -85,10 +95,10 @@ export async function orgRoutes(server: FastifyInstance) {
   server.delete<{ Params: { orgId: string } }>(
     "/:orgId",
     {
+      config: { permission: "org.delete" },
       schema: {
         params: byOrgIdParams,
       },
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
     },
     deleteOrgHandler,
   );
@@ -107,18 +117,27 @@ export async function orgRoutes(server: FastifyInstance) {
   server.get(
     "/teams-and-members",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "members.manage" },
     },
     getAllTeamsAndMembers,
   );
 
-  server.get("/members-with-teams", getAllMembersWithTeamsHandler);
+  server.get(
+    "/members-with-teams",
+    { config: { permission: "members.read" } },
+    getAllMembersWithTeamsHandler,
+  );
 
-  server.get("/members-with-teams-and-invitation", getAllMembersWithTeamsAndInvitationHandler);
+  server.get(
+    "/members-with-teams-and-invitation",
+    { config: { permission: "members.invite" } },
+    getAllMembersWithTeamsAndInvitationHandler,
+  );
 
   server.put(
     "/update-logo",
     {
+      config: { permission: "org.settings" },
       schema: {
         body: updateLogoSchema,
       },
@@ -128,6 +147,7 @@ export async function orgRoutes(server: FastifyInstance) {
   server.put(
     "/update-details",
     {
+      config: { permission: "org.settings" },
       schema: {
         body: updateOrgDetailsSchema,
       },
@@ -135,10 +155,19 @@ export async function orgRoutes(server: FastifyInstance) {
     updateOrgDetailsHandler,
   );
 
+  server.post<{ Body: TransferOwnershipInput }>(
+    "/transfer-ownership",
+    {
+      config: { permission: "org.transfer_ownership" },
+      schema: { body: transferOwnershipSchema },
+    },
+    transferOwnershipHandler,
+  );
+
   server.put<{ Body: UpdateRoleInput; Params: IdParamInput }>(
     "/members/change-role/:id",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "members.manage_roles" },
       schema: {
         params: idParamRequestSchema,
         body: updateRoleSchema,
@@ -147,10 +176,34 @@ export async function orgRoutes(server: FastifyInstance) {
     updateRoleController,
   );
 
+  server.get<{ Params: IdParamInput; Querystring: MemberActivityQuery }>(
+    "/members/:id/activity",
+    {
+      config: { permission: "org.audit.read" },
+      schema: {
+        params: idParamRequestSchema,
+        querystring: memberActivityQuerySchema,
+      },
+    },
+    memberActivityHandler,
+  );
+
+  server.put<{ Body: MemberPermissionsInput; Params: IdParamInput }>(
+    "/members/:id/permissions",
+    {
+      config: { permission: "members.manage_roles" },
+      schema: {
+        params: idParamRequestSchema,
+        body: memberPermissionsSchema,
+      },
+    },
+    updateMemberPermissionsHandler,
+  );
+
   server.put<{ Body: PauseOrgInput; Params: IdParamInput }>(
     "/pause/:id",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+      config: { permission: "members.manage" },
       schema: {
         params: idParamRequestSchema,
         body: pauseOrgSchema,
@@ -159,15 +212,24 @@ export async function orgRoutes(server: FastifyInstance) {
     pauseOrgHandler,
   );
 
-  server.get("/webhook-client-secret", getWebhookClientSecretHandler);
+  server.get(
+    "/webhook-client-secret",
+    { config: { permission: "org.webhook_secret" } },
+    getWebhookClientSecretHandler,
+  );
 
-  server.put("/completeorgdetails", completeOrgDetailsHandler);
+  server.put(
+    "/completeorgdetails",
+    { config: { permission: "org.settings" } },
+    completeOrgDetailsHandler,
+  );
   server.get("/orgnameandphone", orgNameAndPhoneNumber);
 
   // BusinessHour routes
   server.post(
     "/business-hours",
     {
+      config: { permission: "org.settings" },
       schema: {
         body: createBusinessHourSchema,
       },
@@ -190,6 +252,7 @@ export async function orgRoutes(server: FastifyInstance) {
   server.put(
     "/business-hours/:id",
     {
+      config: { permission: "org.settings" },
       schema: {
         params: businessHourParamsSchema,
         body: updateBusinessHourSchema,
@@ -201,6 +264,7 @@ export async function orgRoutes(server: FastifyInstance) {
   server.delete(
     "/business-hours/:id",
     {
+      config: { permission: "org.settings" },
       schema: {
         params: businessHourParamsSchema,
       },

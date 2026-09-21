@@ -1,4 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { ForbiddenError } from "../../authz/errors.js";
+import { assertMemberOfOrg, assertNotOwner } from "../../authz/ownership.js";
 import {
   auditLog,
   checkEmailExist,
@@ -404,7 +406,7 @@ export async function updateUserActiveStatusHandler(
       });
     }
 
-    const isSuperAdmin = sessionUser.role === "SUPER_ADMIN";
+    const isSuperAdmin = request.actor?.can("members.manage") ?? false;
     const isSelfDelete = sessionUser.userId === targetUserId;
 
     if (!isSuperAdmin && !isSelfDelete) {
@@ -448,8 +450,16 @@ export async function updateUserActiveStatusHandler(
       }
     }
 
+    if (!isSelfDelete) {
+      await assertMemberOfOrg(sessionUser.orgId, targetUserId);
+      await assertNotOwner(sessionUser.orgId, targetUserId, "removed");
+    }
+
     await updateUserActiveStatus(request.params.userId);
   } catch (e) {
+    if (e instanceof ForbiddenError) {
+      return reply.code(403).send({ success: false, ...e.toBody() });
+    }
     console.error(e);
     reply
       .code(500)
@@ -502,9 +512,15 @@ export async function pauseUserHandler(
 ) {
   try {
     const userId = request.params.id;
+    await assertMemberOfOrg(request.user.orgId, userId);
+    await assertNotOwner(request.user.orgId, userId, "paused");
     const res = await pauseUser(userId, request.body);
     reply.code(200).send(res);
   } catch (e) {
+    if (e instanceof ForbiddenError) {
+      reply.code(403).send(e.toBody());
+      return;
+    }
     log.error(e);
     reply.code(500).send(e);
   }

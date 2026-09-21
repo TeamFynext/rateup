@@ -32,16 +32,12 @@ vi.mock("../../utils/logger.js", () => ({
 
 vi.mock("../org/org.services.js", () => ({ getOrgById: vi.fn() }));
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
 
 import bcrypt from "bcrypt";
 import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
 import { getOrgById } from "../org/org.services.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { generateRandomAlphaId } from "../../utils/misc/random.utils.js";
 import {
   ApiKeyAlreadyExistsError,
@@ -57,6 +53,7 @@ import {
   deleteApiAccessTokenHandler,
   getApiAccessTokenCreatedAtHandler,
   regenerateApiAccessTokenHandler,
+  updateApiAccessTokenScopesHandler,
 } from "./apiAccessToken.controller.js";
 import { verifyApiAccessTokenHook } from "./apiAccessToken.auth.js";
 import { apiAccessTokenRoutes } from "./apiAccessToken.route.js";
@@ -219,7 +216,10 @@ describe("verifyApiAccessToken", () => {
     db.apiAccessToken.findUnique.mockResolvedValueOnce({ orgId: ORG, accessToken: hash });
 
     await expect(verifyApiAccessToken(ORG, key)).resolves.toBe(true);
-    expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({ where: { orgId: ORG } });
+    expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({
+      where: { orgId: ORG },
+      select: { accessToken: true, scopes: true },
+    });
   });
 
   test("a key belonging to another org does not verify", async () => {
@@ -241,7 +241,10 @@ describe("verifyApiAccessToken", () => {
 
     await verifyApiAccessToken(OTHER_ORG, "k");
 
-    expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({ where: { orgId: OTHER_ORG } });
+    expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({
+      where: { orgId: OTHER_ORG },
+      select: { accessToken: true, scopes: true },
+    });
   });
 
   test("every verification pays a bcrypt comparison", async () => {
@@ -426,7 +429,10 @@ describe("verifyApiAccessTokenHook", () => {
   test("the token is verified against the org the caller named", async () => {
     await runHook({ params: { orgId: OTHER_ORG } }, false);
 
-    expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({ where: { orgId: OTHER_ORG } });
+    expect(db.apiAccessToken.findUnique).toHaveBeenCalledWith({
+      where: { orgId: OTHER_ORG },
+      select: { accessToken: true, scopes: true },
+    });
   });
 
   test("a lookup failure on the org replies 404 and stops", async () => {
@@ -614,7 +620,7 @@ describe("controllers", () => {
 
     await getApiAccessTokenCreatedAtHandler(req(), rep);
 
-    expect(rep.send).toHaveBeenCalledWith({ exists: true, createdAt: CREATED });
+    expect(rep.send).toHaveBeenCalledWith({ exists: true, createdAt: CREATED, scopes: [] });
   });
 
   test("no key reads back an explicit absence", async () => {
@@ -623,7 +629,7 @@ describe("controllers", () => {
 
     await getApiAccessTokenCreatedAtHandler(req(), rep);
 
-    expect(rep.send).toHaveBeenCalledWith({ exists: false, createdAt: null });
+    expect(rep.send).toHaveBeenCalledWith({ exists: false, createdAt: null, scopes: [] });
   });
 
   test("regenerate answers with a fresh plaintext key", async () => {
@@ -656,49 +662,54 @@ describe("routes", () => {
       addHook: vi.fn((name, fn) => hooks.push({ name, fn })),
       get: vi.fn((url, opts, handler) => routes.push({ method: "GET", url, opts, handler })),
       post: vi.fn((url, opts, handler) => routes.push({ method: "POST", url, opts, handler })),
+      put: vi.fn((url, opts, handler) => routes.push({ method: "PUT", url, opts, handler })),
       delete: vi.fn((url, opts, handler) => routes.push({ method: "DELETE", url, opts, handler })),
     };
     return { srv, routes, hooks };
   }
 
-  test("registers four routes behind a single session check", async () => {
+  test("registers five routes behind a single session check", async () => {
     const { srv, routes, hooks } = fakeServer();
 
     await apiAccessTokenRoutes(srv);
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const probe: any = { method: "GET", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "session" });
     expect(routes.map((r) => `${r.method} ${r.url}`)).toEqual([
       "POST /",
       "DELETE /",
       "POST /regenerate",
+      "PUT /scopes",
       "GET /",
     ]);
   });
 
-  test("minting, deleting and regenerating require SUPER_ADMIN", async () => {
+  test("minting, deleting, regenerating and scoping require api_tokens.manage", async () => {
     const { srv, routes } = fakeServer();
 
     await apiAccessTokenRoutes(srv);
 
-    for (const url of ["POST /", "DELETE /", "POST /regenerate"]) {
+    for (const url of ["POST /", "DELETE /", "POST /regenerate", "PUT /scopes"]) {
       const r = routes.find((x) => `${x.method} ${x.url}` === url);
-      expect((r.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN"]);
+      expect(r.opts.config.permission).toBe("api_tokens.manage");
     }
   });
 
   // The read returns only whether a key exists and when it was minted, never
   // the key itself.
-  test("the created-at read stays open to any member", async () => {
+  test("the created-at read needs only api_tokens.read", async () => {
     const { srv, routes } = fakeServer();
 
     await apiAccessTokenRoutes(srv);
 
     const read = routes.find((r) => r.method === "GET");
-    expect(read.opts).toBe(getApiAccessTokenCreatedAtHandler);
-    expect(read.handler).toBeUndefined();
+    expect(read.opts.config.permission).toBe("api_tokens.read");
+    expect(read.handler).toBe(getApiAccessTokenCreatedAtHandler);
   });
 
-  test("the three gated routes carry their handler in the third argument", async () => {
+  test("every route carries its handler in the third argument", async () => {
     const { srv, routes } = fakeServer();
 
     await apiAccessTokenRoutes(srv);
@@ -707,16 +718,17 @@ describe("routes", () => {
       createApiAccessTokenHandler,
       deleteApiAccessTokenHandler,
       regenerateApiAccessTokenHandler,
-      undefined,
+      updateApiAccessTokenScopesHandler,
+      getApiAccessTokenCreatedAtHandler,
     ]);
   });
 
-  test("the session check is the only hook", async () => {
+  test("the access declaration is the only hook", async () => {
     const { srv, hooks } = fakeServer();
 
     await apiAccessTokenRoutes(srv);
 
     expect(hooks).toHaveLength(1);
-    expect(hooks[0].name).toBe("preHandler");
+    expect(hooks[0].name).toBe("onRoute");
   });
 });

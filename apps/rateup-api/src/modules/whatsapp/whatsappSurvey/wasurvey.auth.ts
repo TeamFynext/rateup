@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { Role } from "../../../../generated/prisma/client.js";
+import { buildActor } from "../../../authz/actor.js";
 import { checkPlanLimit } from "../../subscription/planLimits.js";
 
 export async function getWhatsappSurveyVerifySubscriptionHandler(
@@ -13,6 +14,8 @@ export async function getWhatsappSurveyVerifySubscriptionHandler(
   // Public flow routes are org-scoped by path, not by session; the subscription gate
   // below reads only `orgId`, so the role is filled with the least-privileged one.
   request.user = { orgId: request.params.orgId, role: Role.MEMBER };
+  request.principal = { kind: "publicFlow", orgId: request.params.orgId };
+  request.actor = buildActor(request.principal);
   await getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp])(request, reply);
 }
 

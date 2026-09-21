@@ -15,8 +15,10 @@ import {
   expireRequestSchema,
   cancelRequestSchema,
 } from "./approval.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function approvalRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.cashier" });
   // Create a new approval request
   server.post(
     "/",
@@ -54,6 +56,7 @@ export async function approvalRoutes(server: FastifyInstance) {
   server.post(
     "/:approvalId/approve",
     {
+      config: { permission: "loyalty.approve" },
       schema: {
         params: approvalIdParamSchema,
         body: reviewRequestSchema,
@@ -66,6 +69,7 @@ export async function approvalRoutes(server: FastifyInstance) {
   server.post(
     "/:approvalId/reject",
     {
+      config: { permission: "loyalty.approve" },
       schema: {
         params: approvalIdParamSchema,
         body: expireRequestSchema,

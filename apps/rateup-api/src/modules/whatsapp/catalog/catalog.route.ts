@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify";
 import { waCatalogProductRoutes } from "./products/product.route.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import {
@@ -31,9 +30,10 @@ import {
   updateCatalogSettingsSchema,
   createAddressFlowSchema,
 } from "./catalog.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function waCatalogRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   // Catalog + Shopify sync is a Starter-and-above capability. This route tree was
   // previously ungated at the subscription level.
   server.addHook(

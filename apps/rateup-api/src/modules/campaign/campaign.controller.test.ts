@@ -120,9 +120,12 @@ const SEND_ID = "00000000-0000-0000-0000-0000000000ff";
 const ORG_A = "org-a";
 const CAMPAIGN_ID = "camp-1";
 
+const ACTOR = { orgId: ORG_A, userId: "user-1", scope: { all: true, teamIds: [] } } as any;
+
 function request(overrides: Record<string, unknown> = {}): any {
   return {
     user: { orgId: ORG_A, userId: "user-1", role: "ADMIN" },
+    actor: ACTOR,
     userId: "user-1",
     params: { campaignId: CAMPAIGN_ID },
     query: {},
@@ -195,7 +198,7 @@ describe("createCampaignHandler", () => {
 
     await createCampaignHandler(request({ body }), rep);
 
-    expect(m.create).toHaveBeenCalledWith(body, ORG_A);
+    expect(m.create).toHaveBeenCalledWith(body, ORG_A, ACTOR);
     expect(rep.status).toHaveBeenCalledWith(201);
     expect(sent(rep)).toEqual({ id: CAMPAIGN_ID });
   });

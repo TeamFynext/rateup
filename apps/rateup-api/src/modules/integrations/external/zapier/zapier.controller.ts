@@ -1,10 +1,11 @@
+import { buildActor } from "../../../../authz/actor.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../../utils/logger.js";
 import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
 import { IntegratedApps, WaMessageAssignStatus } from "../../../../types/enums.js";
 import { ByOrgIdParams } from "../../../org/org.schema.js";
 import bcrypt from "bcrypt";
-import { Role } from "../../../org/org.services.js";
+import { Role } from "../../../../../generated/prisma/client.js";
 import {
   deleteContactById,
   getContactById,
@@ -91,6 +92,8 @@ export async function zapierAuthenticationHandler(
 
     const user = { orgId, role: Role.SUPER_ADMIN };
     request.user = user;
+    request.principal = { kind: "zapier", orgId, scopes: [] };
+    request.actor = buildActor(request.principal);
     if (request.url.includes("/auth")) return reply.send({ user: user });
   } catch (e) {
     log.error({ err: e }, "Error checking session");
