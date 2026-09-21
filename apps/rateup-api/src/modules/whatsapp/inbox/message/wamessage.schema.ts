@@ -112,20 +112,37 @@ const waChatFilterQuerySchema = PaginateQuerySchema.extend({
   filterData: z.string(),
 });
 
-const waChatExportConstraints = z.object({
-  date: z.object({
-    type: z.enum(DateType),
-    inclusive: z.boolean().default(false),
-    between: z.object({
-      from: z.string(),
-      to: z.string(),
+// The export form sends every date field and leaves the unused ones as "". Anything
+// else must be a plain calendar date: these values reach the export's SQL.
+const exportDate = z.union([z.literal(""), z.iso.date()]);
+
+const waChatExportConstraints = z
+  .object({
+    date: z.object({
+      type: z.enum(DateType),
+      inclusive: z.boolean().default(false),
+      between: z.object({
+        from: exportDate,
+        to: exportDate,
+      }),
+      before: exportDate,
+      after: exportDate,
+      on: exportDate,
     }),
-    before: z.string(),
-    after: z.string(),
-    on: z.string(),
-  }),
-  repliesOnly: z.boolean().default(false),
-});
+    repliesOnly: z.boolean().default(false),
+  })
+  .superRefine(({ date }, ctx) => {
+    const required: Array<[string, string[]]> =
+      date.type === DateType.BETWEEN
+        ? [
+            [date.between.from, ["date", "between", "from"]],
+            [date.between.to, ["date", "between", "to"]],
+          ]
+        : [[date[date.type], ["date", date.type]]];
+    for (const [value, path] of required) {
+      if (!value) ctx.addIssue({ code: "custom", message: "Date is required", path });
+    }
+  });
 const waChatExportQuerySchema = z.object({
   constraints: z.string(),
   filterData: z.string(),

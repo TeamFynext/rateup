@@ -43,6 +43,76 @@ const SKIPPED_METHOD_ROUTES = new Set([
   "DELETE /api/contact/conversations/",
 ]);
 
+export const REDACTED = "[redacted]";
+
+// Field names are compared lower-cased with `_`/`-` removed, so `api_key`, `apiKey`
+// and `API-KEY` all match. Any name containing one of these is withheld...
+const SENSITIVE_FRAGMENTS = [
+  "password",
+  "passwd",
+  "secret",
+  "token",
+  "apikey",
+  "accesskey",
+  "privatekey",
+  "authorization",
+  "cookie",
+  "credential",
+];
+// ...and these only as the whole name, since they are too short to match inside
+// others (`key` would catch `keyword`, `pin` would catch `shipping`).
+const SENSITIVE_NAMES = new Set(["key", "otp", "pin", "pwd", "cvv"]);
+
+/** A body larger than this is recorded as its field names only. */
+const MAX_BODY_CHARS = 4000;
+
+function isSensitiveField(name: string): boolean {
+  const normalized = name.toLowerCase().replace(/[-_]/g, "");
+  // `promptTokens`, `maxTokens`: AI usage counts, not credentials.
+  if (normalized.endsWith("tokens")) return false;
+  return (
+    SENSITIVE_NAMES.has(normalized) ||
+    SENSITIVE_FRAGMENTS.some((fragment) => normalized.includes(fragment))
+  );
+}
+
+function redactValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactValue);
+  if (value === null || typeof value !== "object") return value;
+  // Uploads and streams (multipart bodies) are not data worth keeping in a log.
+  if (Buffer.isBuffer(value) || typeof (value as { pipe?: unknown }).pipe === "function") {
+    return "[binary]";
+  }
+  if (value instanceof Date) return value.toISOString();
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([name, field]) => [
+      name,
+      isSensitiveField(name) ? REDACTED : redactValue(field),
+    ]),
+  );
+}
+
+/**
+ * The version of a request body that is safe to keep in the audit log: every field
+ * whose name looks like a credential (at any depth) is replaced with `[redacted]`,
+ * and an oversized body (an import, a campaign payload) is cut down to its field
+ * names. Team Activity is readable by admins, so nothing here may be a live secret.
+ * It matches on names, so a credential under an innocuous name still gets through:
+ * a route with one of those records its own event (`recordAuditEvent`) or is skipped.
+ */
+export function redactAuditBody(body: unknown): unknown {
+  if (body === null || body === undefined) return {};
+  const redacted = redactValue(body);
+  if (JSON.stringify(redacted).length <= MAX_BODY_CHARS) return redacted;
+  return {
+    note: "Too large to record",
+    fields:
+      redacted && typeof redacted === "object" && !Array.isArray(redacted)
+        ? Object.keys(redacted)
+        : [],
+  };
+}
+
 /**
  * Record a team-activity entry the generic hook can't describe on its own, e.g.
  * "Channel added". `action` is shown verbatim in the Team Activity table, so keep
@@ -63,7 +133,7 @@ export async function recordAuditEvent(
         action,
         method: request.method,
         route: request.url ?? request.routeOptions?.url,
-        body: body ?? {},
+        body: redactAuditBody(body) as object,
         orgId: request.user?.orgId ?? null,
       },
     });
@@ -93,7 +163,7 @@ export async function auditLogHook(request: FastifyRequest, _reply: FastifyReply
         action: readableAction,
         method: request.method,
         route: route,
-        body: request.body ?? {},
+        body: redactAuditBody(request.body) as object,
         orgId: request.user?.orgId ?? null,
       },
     });
