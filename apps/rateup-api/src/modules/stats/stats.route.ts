@@ -1,9 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import { getUsageStatHandler } from "./stats.controller.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function statsRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.get("/", getUsageStatHandler);
 }

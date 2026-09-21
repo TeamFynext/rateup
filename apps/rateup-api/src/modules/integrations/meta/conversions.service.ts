@@ -2,7 +2,7 @@ import { callMetaApi } from "../../whatsapp/wa_axios.js";
 import crypto from "crypto";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { Role } from "../../../../generated/prisma/client.js";
+import { recipientsWhere } from "../../../authz/recipients.js";
 import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
 import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 
@@ -137,7 +137,7 @@ export async function sendWonConversionEvent(contact: ConversionContact, stageNa
       const admins = await prisma.orgMember.findMany({
         where: {
           orgId: contact.orgId,
-          role: { in: [Role.ADMIN, Role.SUPER_ADMIN] },
+          ...recipientsWhere("notify.integrations"),
         },
         select: { userId: true },
       });

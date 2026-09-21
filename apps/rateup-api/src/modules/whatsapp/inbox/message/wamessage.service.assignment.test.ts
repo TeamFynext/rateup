@@ -693,9 +693,10 @@ describe("createInternalWaMessage - system notes", () => {
       messageId: "msg-1",
     });
 
-    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.text.body).toBe(
-      "Chat assigned to Ada",
-    );
+    const body = db.waMessage.create.mock.calls[0][0].data.messageBody.internal;
+    expect(body.summary).toBe("Grace assigned this chat to Ada");
+    // The old fragment stays, so rows written before `summary` still render.
+    expect(body.text.body).toBe("Chat assigned to Ada");
   });
 
   test("falls back to a generic line when the names cannot be resolved", async () => {
@@ -706,12 +707,12 @@ describe("createInternalWaMessage - system notes", () => {
       messageId: "msg-1",
     });
 
-    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.text.body).toBe(
-      "Assigned this chat",
+    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.summary).toBe(
+      "Grace assigned this chat",
     );
   });
 
-  test("names who a chat was revoked from", async () => {
+  test("names who was taken off a chat", async () => {
     await createInternalWaMessage({
       contactId: "contact-1",
       waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
@@ -720,8 +721,8 @@ describe("createInternalWaMessage - system notes", () => {
       messageId: "msg-1",
     });
 
-    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.text.body).toBe(
-      "Chat revoked from Ada",
+    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.summary).toBe(
+      "Grace removed Ada from this chat",
     );
   });
 
@@ -739,8 +740,8 @@ describe("createInternalWaMessage - system notes", () => {
       messageId: "msg-1",
     });
 
-    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.text.body).toBe(
-      "Chat reassigned from Grace to Ada",
+    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.summary).toBe(
+      "Grace moved this chat from Grace to Ada",
     );
   });
 
@@ -752,12 +753,12 @@ describe("createInternalWaMessage - system notes", () => {
       messageId: "msg-1",
     });
 
-    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.text.body).toBe(
-      "marked this chat as closed by automation",
+    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.summary).toBe(
+      "Closed automatically",
     );
   });
 
-  test("labels a close a person made", async () => {
+  test("names the person who closed a chat", async () => {
     await createInternalWaMessage({
       contactId: "contact-1",
       waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
@@ -765,8 +766,8 @@ describe("createInternalWaMessage - system notes", () => {
       messageId: "msg-1",
     });
 
-    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.text.body).toBe(
-      "marked this chat as closed",
+    expect(db.waMessage.create.mock.calls[0][0].data.messageBody.internal.summary).toBe(
+      "Grace closed this chat",
     );
   });
 

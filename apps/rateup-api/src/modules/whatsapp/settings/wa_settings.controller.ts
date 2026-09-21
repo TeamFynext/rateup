@@ -13,8 +13,6 @@ import {
   UpdateDisplayNameInput,
   whatsappSettingsIdParamSchema,
 } from "./wa_settings.schema.js";
-import { getOrgIdAndRole } from "../../user/user.service.js";
-import { Role } from "../../org/org.services.js";
 import {
   createWaSettings,
   deleteWaSettings,
@@ -79,13 +77,7 @@ export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (!org || org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
-  }
+  const org = { orgId: req.user.orgId };
   const waSettings = await createWaSettings(org.orgId, {
     accessToken: req.body.accessToken,
     wabaId: req.body.wabaId,
@@ -102,7 +94,7 @@ export async function createWaSettingsHandler(
 
 export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyReply) {
   const { orgId, userId, role } = req.user;
-  const waSettings = await getAccessibleWaSettings(orgId, userId!, role);
+  const waSettings = await getAccessibleWaSettings(req.actor!);
   if (!waSettings?.length) {
     return res.status(200).send([]);
   }
@@ -126,13 +118,7 @@ export async function updateWaSettingsHandler(
   }>,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (!org || org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
-  }
+  const org = { orgId: req.user.orgId };
   if (!req.body.phoneId) {
     return res.status(400).send({
       statusCode: 400,
@@ -204,13 +190,7 @@ export async function upsertWaSettingsHandler(
   res: FastifyReply,
 ) {
   try {
-    const org = await getOrgIdAndRole({ id: req.userId });
-    if (!org || org.role !== Role.SUPER_ADMIN) {
-      return res.status(403).send({
-        statusCode: 403,
-        message: "You are not authorized to perform this action",
-      });
-    }
+    const org = { orgId: req.user.orgId };
     if (!req.body.phoneId) {
       return res.status(400).send({
         statusCode: 400,
@@ -260,13 +240,7 @@ export async function updateWaSettingsByIdHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const org = await getOrgIdAndRole({ id: request.userId });
-    if (!org || org.role !== Role.SUPER_ADMIN) {
-      return reply.status(403).send({
-        statusCode: 403,
-        message: "You are not authorized to perform this action",
-      });
-    }
+    const org = { orgId: request.user.orgId };
     const { whatsappSettingsId } = request.params;
     const settings = await getWaSettingsById(whatsappSettingsId, orgId);
     if (!settings) {
@@ -325,13 +299,7 @@ export async function deleteWaSettingsHandler(
   }>,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (!org || org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
-  }
+  const org = { orgId: req.user.orgId };
 
   const deleted = await deleteWaSettings(req.user.orgId, req.params.phoneId);
   await recordAuditEvent(req, "Channel removed", {

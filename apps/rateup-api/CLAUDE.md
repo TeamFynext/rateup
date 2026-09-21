@@ -32,14 +32,18 @@ Feature modules live in `src/modules/<domain>/` and follow a consistent file lay
 
 ## Request auth & authorization layering
 
-Auth is applied via `preHandler` hooks, typically composed in this order on protected routes:
+Every route under `/api` declares who may reach it, and the root hooks in `src/registerRoutes.ts` enforce it. There is no per-route role check to remember.
 
-1. `checkSession` (`src/utils/checkSession.ts`) — validates the SuperTokens session, then decorates the request with `request.userId` and `request.user = { userId, role, orgId, email }` (pulled from the access-token payload set in `src/config.ts`'s `Session.init` override). Also fires the audit-log hook.
-2. `getVerifySubscriptionHandler([...features])` (`src/utils/auth.ts`) — checks the org's subscription/expiry and required feature flags; sets `request.subscription`. Note: when no subscription exists it currently auto-creates an unlimited free plan rather than rejecting.
-3. Feature gating (`src/utils/permissions.ts`) — `requireFeature(TeamFeature.x)` / `attachUserFeatures` gate on per-team `TeamFeature` access; `SUPER_ADMIN` bypasses all feature checks.
-4. Module-specific checks (`*.auth.ts`) — resource ownership, e.g. `hasAccessToSurvey`/`hasAccessToTeam` in `src/utils/auth.ts`.
+1. **Declaration** — a route carries `config: { permission: "inbox.reply" }` (any one of a list also works) or `config: { access: "session" | "public" | "token" }`. A module usually declares once at the top of its plugin with `declareAccess(server, { read: "x.read", write: "x.manage" })` (`src/authz/registry.ts`); a route's own `config` wins over the module default. `/api/public/*`, `/api/health/*` and `/api/external/v1/*` are tagged by prefix. With `AUTHZ_STRICT=1` (set in vitest) an undeclared route fails boot.
+2. **`authorize`** (`src/authz/authorize.ts`), a root `preHandler` — for a session or permission route it validates the SuperTokens session, loads the **actor** (`src/authz/actor.ts`: role key, permissions, team scope, cached in Redis for 60 s under `authz:<userId>:<orgId>`) and sets `request.actor` plus the legacy `request.user` (`role` now comes from the database, not the token). A missing permission answers `403 { reason: "permission", permission }`. `AUTHZ_AUDIT_ONLY=<module,...>` logs the refusal and lets the request through, per `/api/<module>` prefix, for a rollout soak.
+3. `getVerifySubscriptionHandler([...features])` (`src/utils/auth.ts`) — plan gate; `403 { reason: "subscription" }`. Kept separate from permissions on purpose: "upgrade" and "ask your admin" are different messages.
+4. **Scope** (`src/authz/scope.ts`, `resourceScope.ts`) — team-scoped roles see only rows whose team is in `actor.scope.teamIds`; `inScope`, `assertInScope`, `scopeWhere`, `surveyInScope`, `pipelineInScope`. Module `*.auth.ts` guards read `request.actor`, never `request.user.role`.
 
-Authentication is **SuperTokens** (EmailPassword + Google/Apple ThirdParty + Passwordless SMS), all configured in `src/config.ts`. Sign-up/sign-in overrides there create the app-side user record and stamp `orgId`/`role` onto the session. Authorization combines role checks, CASL (`@casl/ability`), and the `TeamFeature` system.
+**Roles** (`src/authz/roles.ts`): OWNER, ADMIN (org-wide), MANAGER, STAFF, AGENT, VIEWER (their teams). The catalogue of `resource.action` permissions is `src/authz/permissions.ts`; rateup-ui keeps a mirror in `src/utils/authz/`. `OrgMember.roleKey` holds the role once `npm run authz:migrate` has run; until then the actor derives it from the legacy `role` column and `Org.ownerId`. Handing out a role goes through `assertCanGrant` (`src/authz/grant.ts`); ownership moves only through `POST /api/org/transfer-ownership`. A member can be fine-tuned with `OrgMember.permissionGrants` / `permissionDenies` (`PUT /api/org/members/:id/permissions`, resolved by `src/authz/overrides.ts`); overrides never change team scope and never apply to the owner.
+
+Non-user principals (API key, Zapier, the widget socket, the public flow callback) set `request.principal` and get an actor from it (`src/authz/principal.ts`); an API key's `scopes` narrow it.
+
+Authentication is **SuperTokens** (EmailPassword + Google/Apple ThirdParty + Passwordless SMS), all configured in `src/config.ts`. Sign-up/sign-in overrides there create the app-side user record and stamp `orgId` onto the session.
 
 ## Database (Prisma)
 

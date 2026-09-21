@@ -12,8 +12,10 @@ import {
   tierIdParamSchema,
   loyaltyTierUpdateSchema,
 } from "./tier.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function loyaltyTierRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.manage" });
   server.post(
     "/",
     {

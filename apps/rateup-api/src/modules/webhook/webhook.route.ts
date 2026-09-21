@@ -1,23 +1,29 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   deleteWebhookHandler,
   getWebhookHandler,
   saveWebhookHandler,
 } from "./webhook.controller.js";
 import { saveWebhookSchema } from "./webhook.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function webhookRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
-
-  const requireAdmin = checkRoleHandler(["SUPER_ADMIN", "ADMIN"]);
+  declareAccess(server, { access: "session" });
 
   server.post<{ Body: import("./webhook.schema.js").SaveWebhookInput }>(
     "/",
-    { preHandler: requireAdmin, schema: { body: saveWebhookSchema } },
+    {
+      config: { permission: "webhooks.manage" },
+      schema: { body: saveWebhookSchema },
+    },
     saveWebhookHandler,
   );
-  server.get("/", getWebhookHandler);
-  server.delete("/", { preHandler: requireAdmin }, deleteWebhookHandler);
+  server.get("/", { config: { permission: "webhooks.read" } }, getWebhookHandler);
+  server.delete(
+    "/",
+    {
+      config: { permission: "webhooks.manage" },
+    },
+    deleteWebhookHandler,
+  );
 }

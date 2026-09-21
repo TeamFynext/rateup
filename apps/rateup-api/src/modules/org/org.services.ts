@@ -1,3 +1,8 @@
+import { bustActor, bustActorsForOrg, resolveRoleKey } from "../../authz/actor.js";
+import { ForbiddenError } from "../../authz/errors.js";
+import { assertMemberOfOrg, assertNotOwner } from "../../authz/ownership.js";
+import { effectivePermissions, normaliseOverrides } from "../../authz/overrides.js";
+import { roleKeyToLegacy, type RoleKey } from "../../authz/roles.js";
 import prisma from "../../utils/prisma.js";
 import {
   CreateOrgInput,
@@ -85,6 +90,7 @@ export async function getTeamsMembers(orgId: string) {
   }));
 }
 export async function getAllMembersWithTeams(orgId: string) {
+  const org = await prisma.org.findUnique({ where: { id: orgId }, select: { ownerId: true } });
   const members = await prisma.orgMember.findMany({
     where: { orgId: orgId, user: { active: true } },
     select: {
@@ -103,6 +109,9 @@ export async function getAllMembersWithTeams(orgId: string) {
       },
       status: true,
       role: true,
+      roleKey: true,
+      permissionGrants: true,
+      permissionDenies: true,
     },
   });
   return members.map((m) => ({
@@ -110,6 +119,9 @@ export async function getAllMembersWithTeams(orgId: string) {
     name: m.user.name,
     email: m.user.email,
     role: m.role,
+    roleKey: resolveRoleKey(m, org?.ownerId === m.user.id),
+    permissionGrants: m.permissionGrants,
+    permissionDenies: m.permissionDenies,
     teams: m.user.teamMember.map((tm) => ({
       team_id: tm.team.id,
       team_name: tm.team.name,
@@ -121,6 +133,7 @@ export async function getAllMembersWithTeams(orgId: string) {
 }
 
 export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
+  const org = await prisma.org.findUnique({ where: { id: orgId }, select: { ownerId: true } });
   // Fetch active org members
   const members = await prisma.orgMember.findMany({
     where: { orgId, user: { active: true } },
@@ -143,6 +156,9 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
       },
       status: true,
       role: true,
+      roleKey: true,
+      permissionGrants: true,
+      permissionDenies: true,
     },
     orderBy: {
       createdAt: "asc",
@@ -157,6 +173,9 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
       email: m.user.email,
       profilePhoto: m.user.profilePhoto,
       role: m.role,
+      roleKey: resolveRoleKey(m, org?.ownerId === m.user.id),
+      permissionGrants: m.permissionGrants,
+      permissionDenies: m.permissionDenies,
       phone: m.user.phone,
       gender: m.user.gender,
       teams: m.user.teamMember.map((tm) => ({
@@ -223,14 +242,8 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
   };
 }
 
-export enum Role {
-  SUPER_ADMIN = "SUPER_ADMIN",
-  ADMIN = "ADMIN",
-  MEMBER = "MEMBER",
-}
-
 export async function updateOrgUserRole(
-  { role }: { role: string },
+  { roleKey }: { roleKey: RoleKey },
   params: IdParamInput,
   request: FastifyRequest,
   reply: FastifyReply,
@@ -263,11 +276,73 @@ export async function updateOrgUserRole(
       },
     },
     data: {
-      role: role as Role,
+      role: roleKeyToLegacy(roleKey),
+      roleKey,
     },
   });
+  await bustActor(params.id, orgId);
 
   return member;
+}
+
+/**
+ * Replaces a member's hand-picked permission overrides. Stored as deltas against the role so a
+ * later role change does not carry stale entries; the owner is never overridden.
+ */
+export async function setMemberPermissionOverrides(
+  orgId: string,
+  userId: string,
+  grants: readonly string[],
+  denies: readonly string[],
+) {
+  await assertMemberOfOrg(orgId, userId);
+  await assertNotOwner(orgId, userId, "given custom permissions");
+  const member = await prisma.orgMember.findUnique({
+    where: { userId_orgId: { userId, orgId } },
+    select: { role: true, roleKey: true },
+  });
+  if (!member)
+    throw new ForbiddenError("That user is not a member of your organisation.", {
+      reason: "scope",
+    });
+  const roleKey = resolveRoleKey(member, false);
+  const normalised = normaliseOverrides(roleKey, grants, denies);
+  await prisma.orgMember.update({
+    where: { userId_orgId: { userId, orgId } },
+    data: { permissionGrants: normalised.grants, permissionDenies: normalised.denies },
+  });
+  await bustActor(userId, orgId);
+  return {
+    roleKey,
+    ...normalised,
+    permissions: [...effectivePermissions(roleKey, normalised.grants, normalised.denies)].sort(),
+  };
+}
+
+/**
+ * One member's audit trail, newest first. The request body is left out on purpose: it can
+ * carry customer data, and the page only needs what was done and when.
+ */
+export async function getMemberActivity(
+  orgId: string,
+  userId: string,
+  page: number,
+  limit: number,
+) {
+  await assertMemberOfOrg(orgId, userId);
+  const take = Math.min(Math.max(limit, 1), 100);
+  const skip = Math.max(page - 1, 0) * take;
+  const [items, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      where: { orgId, userId },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+      select: { id: true, action: true, method: true, route: true, createdAt: true },
+    }),
+    prisma.auditLog.count({ where: { orgId, userId } }),
+  ]);
+  return { items, total, page: Math.max(page, 1), limit: take };
 }
 
 export async function updateOrgLogo(
@@ -342,6 +417,7 @@ export async function updateOrgDetails(
       },
     },
   });
+  if (waAssignedChatPermission !== undefined) await bustActorsForOrg(orgId);
   return org;
 }
 

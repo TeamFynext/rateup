@@ -1,4 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { canGrant } from "../../authz/grant.js";
+import {
+  DEFAULT_INVITED_ROLE,
+  legacyRoleToKey,
+  roleKeyToLegacy,
+  type LegacyRole,
+} from "../../authz/roles.js";
 import {
   completeInvite,
   createTeam,
@@ -18,9 +25,7 @@ import {
   getUsersNotInTeam,
   addMembersToTeamsMail,
   getTeamChannels,
-  getTeamFeatures,
   setTeamChannels,
-  setTeamFeatures,
 } from "./team.service.js";
 import {
   CreateTeamInput,
@@ -32,7 +37,6 @@ import {
   InviteCompleteInput,
   InviteMemberInput,
   SetTeamChannelsInput,
-  SetTeamFeaturesInput,
   tagQuerySchema,
 } from "./team.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
@@ -54,9 +58,6 @@ export async function createTeamHandler(
 
   try {
     team = await createTeam(body);
-    if (request.body?.features?.length && team?.team?.id) {
-      await setTeamFeatures(team.team.id, { features: request.body.features });
-    }
   } catch (e) {
     console.error(e);
     reply.code(500).send({ success: false, message: errorMessage(e) });
@@ -72,6 +73,10 @@ export async function getAllTeamsByOrgHandler(
   }>,
   reply: FastifyReply,
 ) {
+  if (request.params.orgId !== request.user.orgId) {
+    reply.code(403).send({ message: "You can only list your own organisation's teams" });
+    return;
+  }
   try {
     //TODO:change all the status code to 404 when the requested resource is not found
     const teams = await getTeamsByOrgId({ orgId: request.params.orgId });
@@ -127,16 +132,24 @@ export async function inviteMemberHandler(
 ) {
   const body = request.body;
 
-  // Team management is open to ADMIN, so without this an admin could invite a SUPER_ADMIN
-  // and hand themselves an owner-level account.
-  if (request.user.role !== "SUPER_ADMIN" && body.role === "SUPER_ADMIN") {
+  // An inviter may only hand out a role whose permissions they hold themselves.
+  const target = legacyRoleToKey(
+    (body.role ?? roleKeyToLegacy(DEFAULT_INVITED_ROLE)) as LegacyRole,
+    false,
+  );
+  if (!request.actor || !canGrant(request.actor, target)) {
     return reply
       .code(403)
-      .send({ success: false, message: "Only a Super Admin can invite a Super Admin." });
+      .send({ success: false, message: `You cannot invite someone as ${target}.` });
   }
 
   try {
-    const invite = await inviteTeamMember(body);
+    // The org and the inviter are whoever is signed in, whatever the body claims.
+    const invite = await inviteTeamMember({
+      ...body,
+      orgId: request.user.orgId,
+      invitedBy: request.user.userId!,
+    });
     //reply.code(201).send({ success: true, data: team });
     reply.code(201).send(invite);
 
@@ -327,7 +340,7 @@ export async function addMembertoTeamsHandler(
       reply.code(401).send({ message: "Missing user" });
       return;
     }
-    const res = await addMemberToTeams(request.body.teamIds, request.params.id);
+    const res = await addMemberToTeams(request.body.teamIds, request.params.id, user.orgId);
     const team = await getTeamById(request.body.teamIds[0]);
     if (!team) {
       throw new Error("Team not found");
@@ -356,33 +369,6 @@ export async function getTeamByIdHandler(
       return;
     }
     reply.send(team);
-  } catch {
-    reply.code(500).send({ message: "Internal server error" });
-  }
-}
-
-export async function getTeamFeaturesHandler(
-  request: FastifyRequest<{ Params: { teamId: string } }>,
-  reply: FastifyReply,
-) {
-  try {
-    const features = await getTeamFeatures(request.params.teamId);
-    reply.send({ features });
-  } catch {
-    reply.code(500).send({ message: "Internal server error" });
-  }
-}
-
-export async function setTeamFeaturesHandler(
-  request: FastifyRequest<{
-    Params: { teamId: string };
-    Body: SetTeamFeaturesInput;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const features = await setTeamFeatures(request.params.teamId, request.body);
-    reply.send({ features });
   } catch {
     reply.code(500).send({ message: "Internal server error" });
   }

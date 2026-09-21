@@ -12,17 +12,17 @@ import {
   deleteInstagramAutomationHandler,
   initiateInstagramAutomationHandler,
 } from "./instagram_automatedReply.controller.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import {
   instagramAutomationIdParamSchema,
   createInstagramAutomationBodySchema,
   updateInstagramAutomationBodySchema,
   initiateInstagramAutomationBodySchema,
 } from "./instagram_automatedReply.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function instagramAutomationRoutes(server: FastifyInstance) {
   // Add authentication check to all routes
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   // Get all Instagram automations for the organization
   server.get("/", {

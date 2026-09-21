@@ -29,7 +29,6 @@ vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   createLifecycle,
   deleteLifecycleById,
@@ -621,15 +620,18 @@ describe("lifecycleRoutes", () => {
     return { srv, routes, hooks };
   }
 
-  test("guards the whole tree with checkSession", async () => {
+  test("declares session access for the whole tree", async () => {
     const { srv, hooks } = server();
 
     await lifecycleRoutes(srv);
 
-    expect(hooks).toEqual([{ name: "preHandler", fn: checkSession }]);
+    expect(hooks).toEqual([{ name: "onRoute", fn: expect.any(Function) }]);
+    const probe: any = { method: "GET", url: "/x", config: {} };
+    hooks[0].fn(probe);
+    expect(probe.config).toEqual({ access: "session" });
   });
 
-  // NOTE: checkSession establishes who the caller is. Nothing in this tree
+  // NOTE: the session declaration establishes who the caller is. Nothing in this tree
   // establishes that a :lifecycleId belongs to them.
   test("adds no role check anywhere", async () => {
     const { srv, routes } = server();

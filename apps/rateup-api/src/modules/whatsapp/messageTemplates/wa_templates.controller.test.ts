@@ -487,16 +487,6 @@ describe("syncTemplatesHandler", () => {
     expect(rep.code).toHaveBeenCalledWith(200);
   });
 
-  test("refuses anyone below admin", async () => {
-    m.getOrgIdAndRole.mockResolvedValue({ orgId: ORG_A, role: "AGENT" });
-    const rep = reply();
-
-    await syncTemplatesHandler(request({ body: { whatsappSettingsPhoneIds: [] } }), rep);
-
-    expect(rep.code).toHaveBeenCalledWith(403);
-    expect(m.syncTemplates).not.toHaveBeenCalled();
-  });
-
   test("answers 500 when the sync reports failure", async () => {
     m.syncTemplates.mockResolvedValue({ success: false, created: 0, updated: 0 });
     const rep = reply();

@@ -27,7 +27,6 @@ import {
   getNPSGraphHandler,
 } from "./survey.controller.js";
 import { verifySurveyAccess, verifySurveyCreateAccess } from "./survey.auth.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import {
@@ -44,9 +43,10 @@ import {
   updateSurveyRequestSchema,
 } from "./survey.schema.js";
 import { getResponsesParamsSchema } from "../response/response.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function surveyRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.addHook(
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.WebSurvey]),

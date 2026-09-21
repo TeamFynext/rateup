@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { isPipelineMember } from "../pipeline.service.js";
+import { isPipelineAccessible } from "../pipeline.service.js";
 import { getPipelineIdByStageId } from "./stage.service.js";
 
 const FORBIDDEN = { message: "You don't have access to this pipeline" };
@@ -12,7 +12,7 @@ export async function verifyStageAccess(
   if (!pipelineId) {
     return reply.code(404).send({ message: "Stage not found" });
   }
-  if (!(await isPipelineMember(pipelineId, request.userId))) {
+  if (!(await isPipelineAccessible(pipelineId, request.actor))) {
     return reply.code(403).send(FORBIDDEN);
   }
 }
@@ -21,7 +21,7 @@ export async function verifyStagesReorderAccess(
   request: FastifyRequest<{ Body: { pipelineId: string } }>,
   reply: FastifyReply,
 ) {
-  if (!(await isPipelineMember(request.body.pipelineId, request.userId))) {
+  if (!(await isPipelineAccessible(request.body.pipelineId, request.actor))) {
     return reply.code(403).send(FORBIDDEN);
   }
 }

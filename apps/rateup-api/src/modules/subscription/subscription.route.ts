@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   getAllSubscriptionsHandler,
   getMessageStatsHandler,
@@ -10,9 +9,10 @@ import {
 import { assertRootOrg } from "../../utils/auth.js";
 import { updateSubscriptionInput, updateSubscriptionInputSchema } from "./subscription.schema.js";
 import { ByOrgIdParams, byOrgIdParams } from "../org/org.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function subscriptionRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.get("/", getUserSubscriptionHandler);
   server.get(

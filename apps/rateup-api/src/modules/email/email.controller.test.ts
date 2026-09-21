@@ -373,7 +373,8 @@ describe("emailPublicRoutes", () => {
 
     await emailPublicRoutes(srv);
 
-    expect(srv.addHook).not.toHaveBeenCalled();
+    // The tree declares itself public; no route adds authentication of its own.
+    expect(srv.addHook).toHaveBeenCalledWith("onRoute", expect.any(Function));
     for (const p of posts) {
       expect(p.opts.preHandler).toBeTypeOf("function");
       expect(p.opts.onRequest).toBeUndefined();

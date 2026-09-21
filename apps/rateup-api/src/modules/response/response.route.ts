@@ -16,8 +16,6 @@ import {
   getHappyIndexResponsesHandler,
 } from "./response.controller.js";
 import { verifyAccess } from "./response.auth.js";
-import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
-import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import {
   deleteResponseParamsSchema,
@@ -31,9 +29,10 @@ import {
   summarizeSchema,
   SummarizeInput,
 } from "./response.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function responseRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.addHook("preHandler", verifyAccess);
   server.get(
     "/:surveyTeamMapId",
@@ -85,7 +84,7 @@ export async function responseRoutes(server: FastifyInstance) {
   server.delete<{ Params: GetResponsesParams }>(
     "/reset/:surveyId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "responses.manage" },
       schema: {
         params: getResponsesParamsSchema,
       },
@@ -97,7 +96,7 @@ export async function responseRoutes(server: FastifyInstance) {
   server.delete<{ Params: DeleteResponseParamsSchema }>(
     "/:surveyTeamMapId/delete/:id",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "responses.manage" },
       schema: {
         params: deleteResponseParamsSchema,
       },
@@ -108,7 +107,7 @@ export async function responseRoutes(server: FastifyInstance) {
   server.post<{ Params: { surveyId: string } }>(
     "/:surveyId/sync-response",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "responses.manage" },
     },
     syncResponseToGoogleSheetHandler,
   );
@@ -116,7 +115,7 @@ export async function responseRoutes(server: FastifyInstance) {
   server.post<{ Params: GetResponsesParams }>(
     "/export-contacts/:surveyId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "contacts.export" },
     },
     exportContactResponseToContactsHandler,
   );
@@ -124,7 +123,7 @@ export async function responseRoutes(server: FastifyInstance) {
   server.post<{ Params: GetResponsesParams; Body: SummarizeInput }>(
     "/summarize/:surveyId",
     {
-      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+      config: { permission: "responses.manage" },
       schema: {
         body: summarizeSchema,
       },

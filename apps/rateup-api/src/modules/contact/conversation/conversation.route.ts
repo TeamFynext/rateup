@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import { verifyAnalyticsTeamScope } from "./conversation.auth.js";
 import {
   updateConversationSchema,
   conversationParamsSchema,
@@ -24,12 +25,12 @@ import {
   getTeamOverviewHandler,
   updateConversationHandler,
 } from "./conversation.controller.js";
-import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
 
 export async function conversationRoutes(server: FastifyInstance) {
   server.put(
     "/:conversationId",
     {
+      config: { permission: "inbox.manage" },
       schema: {
         body: updateConversationSchema,
         params: conversationParamsSchema,
@@ -43,7 +44,7 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.delete<{ Params: ConversationParamsSchema }>(
     "/:conversationId",
     {
-      preHandler: checkRoleHandler(["SUPER_ADMIN", "ADMIN"]),
+      config: { permission: "inbox.delete" },
       schema: {
         params: conversationParamsSchema,
       },
@@ -56,7 +57,7 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.delete<{ Body: DeleteConversationsSchema }>(
     "/",
     {
-      preHandler: checkRoleHandler(["SUPER_ADMIN", "ADMIN"]),
+      config: { permission: "inbox.delete" },
       schema: {
         body: deleteConversationsSchema,
       },
@@ -69,6 +70,7 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/by-contact/:contactId",
     {
+      config: { permission: "inbox.read" },
       schema: {
         params: contactConversationsParamsSchema,
       },
@@ -79,6 +81,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/overview",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         querystring: statsQuerySchema,
       },
@@ -88,6 +92,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/conversation-resolved-stats",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         querystring: statsQuerySchema,
       },
@@ -97,6 +103,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/conversation-response-stats",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         querystring: statsQuerySchema,
       },
@@ -106,6 +114,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/account-distribution",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         querystring: statsQuerySchema,
       },
@@ -115,6 +125,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/staff-metrics",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         querystring: statsQuerySchema,
       },
@@ -124,6 +136,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/quick-stats",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         querystring: statsQuerySchema,
       },
@@ -133,6 +147,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/staff-detailed-analytics/:staffId",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         params: staffIdParamsSchema,
         querystring: statsQuerySchema,
@@ -143,6 +159,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/team-overview",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         querystring: statsQuerySchema,
       },
@@ -152,6 +170,8 @@ export async function conversationRoutes(server: FastifyInstance) {
   server.get(
     "/team-metrics/:teamId",
     {
+      config: { permission: "analytics.read" },
+      preHandler: [verifyAnalyticsTeamScope],
       schema: {
         params: teamIdParamsSchema,
         querystring: statsQuerySchema,

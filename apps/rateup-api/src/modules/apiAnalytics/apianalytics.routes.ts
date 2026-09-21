@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   getApiAnalyticsHandler,
   getDeliveredFailedTrendHandler,
@@ -7,9 +6,10 @@ import {
   getTemplateCategoryHandler,
 } from "./apianalytics.controller.js";
 import { statsQuerySchema, trendQuerySchema } from "./apianalytics.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function apiAnalyticsRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.get(
     "/",
     {

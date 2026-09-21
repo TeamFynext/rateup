@@ -5,6 +5,8 @@ import {
   createApiKey,
   deleteApiKey,
   getApiKeyCreatedAt,
+  getApiKeyScopes,
+  setApiKeyScopes,
   regenerateApiKey,
 } from "./apiAccessToken.service.js";
 
@@ -33,8 +35,22 @@ export async function deleteApiAccessTokenHandler(req: FastifyRequest, rep: Fast
 
 export async function getApiAccessTokenCreatedAtHandler(req: FastifyRequest, rep: FastifyReply) {
   const orgId = req.user.orgId;
-  const date = await getApiKeyCreatedAt(orgId);
-  rep.send({ exists: Boolean(date), createdAt: date ?? null });
+  const [date, scopes] = await Promise.all([getApiKeyCreatedAt(orgId), getApiKeyScopes(orgId)]);
+  // An empty scope list means the key holds every permission (see authz/principal.ts).
+  rep.send({ exists: Boolean(date), createdAt: date ?? null, scopes: scopes ?? [] });
+}
+
+export async function updateApiAccessTokenScopesHandler(
+  req: FastifyRequest<{ Body: { scopes: string[] } }>,
+  rep: FastifyReply,
+) {
+  const orgId = req.user.orgId;
+  if (!(await getApiKeyCreatedAt(orgId))) {
+    rep.code(404).send({ message: "This organization has no API key" });
+    return;
+  }
+  await setApiKeyScopes(orgId, req.body.scopes);
+  rep.send({ scopes: req.body.scopes });
 }
 
 export async function regenerateApiAccessTokenHandler(req: FastifyRequest, rep: FastifyReply) {

@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { isPipelineMember } from "../pipeline.service.js";
+import { isPipelineAccessible } from "../pipeline.service.js";
 import {
   getPipelineIdByLeadId,
   getPipelineIdByNoteId,
@@ -14,7 +14,7 @@ function guard(resolve: (id: string) => Promise<string | undefined>, notFound: s
     if (!pipelineId) {
       return reply.code(404).send({ message: notFound });
     }
-    if (!(await isPipelineMember(pipelineId, request.userId))) {
+    if (!(await isPipelineAccessible(pipelineId, request.actor))) {
       return reply.code(403).send(FORBIDDEN);
     }
   };
@@ -38,7 +38,7 @@ export async function verifyLeadsBulkAccess(
   }
 
   for (const pipelineId of pipelineIds) {
-    if (!(await isPipelineMember(pipelineId, request.userId))) {
+    if (!(await isPipelineAccessible(pipelineId, request.actor))) {
       return reply.code(403).send(FORBIDDEN);
     }
   }

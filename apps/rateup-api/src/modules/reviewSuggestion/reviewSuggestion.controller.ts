@@ -77,7 +77,7 @@ export async function updateReviewSuggestionHandler(
   reply: FastifyReply,
 ) {
   const { reviewSuggestionId } = request.params;
-  const access = await hasAccessToReview(request.userId, reviewSuggestionId);
+  const access = await hasAccessToReview(request.actor, reviewSuggestionId);
   if (access !== "allowed") return refuse(reply, access);
 
   const updatedReview = await updateReviewSuggestion(reviewSuggestionId, request.body);
@@ -89,7 +89,7 @@ export async function deleteReviewSuggestionHandler(
   reply: FastifyReply,
 ) {
   const { reviewSuggestionId } = request.params;
-  const access = await hasAccessToReview(request.userId, reviewSuggestionId);
+  const access = await hasAccessToReview(request.actor, reviewSuggestionId);
   if (access !== "allowed") return refuse(reply, access);
 
   const reviews = await deleteReviewSuggestion(reviewSuggestionId);

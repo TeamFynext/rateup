@@ -1,4 +1,6 @@
 import { FastifyInstance } from "fastify";
+import { authorize } from "./authz/authorize.js";
+import { registerAuthzRouteRegistry } from "./authz/registry.js";
 
 // Import all routes
 import { orgRoutes } from "./modules/org/org.route.js";
@@ -139,7 +141,12 @@ const routeConfigs = [
 ];
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
-  // Register all routes
+  // Both must be on the root instance before any route registers: the registry sees every
+  // route's config as it is added, and a root preHandler runs ahead of the plugin-level
+  // checkSession hooks the modules still carry.
+  registerAuthzRouteRegistry(server);
+  server.addHook("preHandler", authorize);
+
   for (const { plugin, prefix } of routeConfigs) {
     await server.register(plugin, { prefix });
   }

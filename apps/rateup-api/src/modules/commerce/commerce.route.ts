@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   exportCommerceOrdersHandler,
   exportCommerceOverviewHandler,
@@ -17,9 +16,10 @@ import {
   exportOrdersSchema,
   exportOverviewSchema,
 } from "./commerce.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function commerceRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.get("/channels", getCommerceChannelsHandler);
 

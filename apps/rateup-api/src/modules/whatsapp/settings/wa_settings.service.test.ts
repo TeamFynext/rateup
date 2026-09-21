@@ -357,8 +357,11 @@ describe("reading a channel", () => {
 });
 
 describe("getAccessibleWaSettings", () => {
-  test("gives a super admin every channel in the org", async () => {
-    await getAccessibleWaSettings(ORG_A, "user-1", "SUPER_ADMIN");
+  const ORG_WIDE = { orgId: ORG_A, userId: "user-1", scope: { all: true, teamIds: [] } } as any;
+  const SCOPED = { orgId: ORG_A, userId: "user-1", scope: { all: false, teamIds: ["t-1"] } } as any;
+
+  test("gives an org-wide actor every channel in the org", async () => {
+    await getAccessibleWaSettings(ORG_WIDE);
 
     expect(getChannelScopeMock).not.toHaveBeenCalled();
     expect(db.whatsappSettings.findMany.mock.calls[0][0].where).toEqual({ orgId: ORG_A });
@@ -367,7 +370,7 @@ describe("getAccessibleWaSettings", () => {
   test("gives an unrestricted user every channel in the org", async () => {
     getChannelScopeMock.mockResolvedValue({ all: true, ids: new Set() });
 
-    await getAccessibleWaSettings(ORG_A, "user-1", "ADMIN");
+    await getAccessibleWaSettings(SCOPED);
 
     expect(db.whatsappSettings.findMany.mock.calls[0][0].where).toEqual({ orgId: ORG_A });
   });
@@ -375,7 +378,7 @@ describe("getAccessibleWaSettings", () => {
   test("narrows a scoped user to the channels their teams reach", async () => {
     getChannelScopeMock.mockResolvedValue({ all: false, ids: new Set(["c-1", "c-2"]) });
 
-    await getAccessibleWaSettings(ORG_A, "user-1", "AGENT");
+    await getAccessibleWaSettings(SCOPED);
 
     expect(db.whatsappSettings.findMany.mock.calls[0][0].where).toEqual({
       orgId: ORG_A,
@@ -386,7 +389,7 @@ describe("getAccessibleWaSettings", () => {
   test("still filters by org, so a stale scope cannot reach another tenant", async () => {
     getChannelScopeMock.mockResolvedValue({ all: false, ids: new Set(["c-from-another-org"]) });
 
-    await getAccessibleWaSettings(ORG_A, "user-1", "AGENT");
+    await getAccessibleWaSettings(SCOPED);
 
     expect(db.whatsappSettings.findMany.mock.calls[0][0].where.orgId).toBe(ORG_A);
   });
@@ -395,7 +398,7 @@ describe("getAccessibleWaSettings", () => {
     getChannelScopeMock.mockResolvedValue({ all: false, ids: new Set() });
     db.whatsappSettings.findMany.mockResolvedValue([]);
 
-    await expect(getAccessibleWaSettings(ORG_A, "user-1", "AGENT")).resolves.toEqual([]);
+    await expect(getAccessibleWaSettings(SCOPED)).resolves.toEqual([]);
   });
 });
 

@@ -24,13 +24,9 @@ vi.mock("./integrations.service.js", () => ({
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
-vi.mock("../../utils/checkRoleHandler.js", () => ({
-  checkRoleHandler: vi.fn((roles) => Object.assign(vi.fn(), { roles })),
-}));
 vi.mock("./shopify/shopify.route.js", () => ({ shopifyRoutes: vi.fn() }));
 
 import { log } from "../../utils/logger.js";
-import { checkSession } from "../../utils/checkSession.js";
 import * as service from "./integrations.service.js";
 import {
   createGoogleSheetAuthToken,
@@ -426,14 +422,19 @@ describe("route registration", () => {
     return { srv, routes, hooks };
   }
 
-  test("the authenticated tree adds checkSession once, for everything", async () => {
+  test("the authenticated tree declares its read and write permissions once, for everything", async () => {
     const { srv, hooks } = server();
 
     await integrationsRoutes(srv);
 
     expect(hooks).toHaveLength(1);
-    expect(hooks[0].name).toBe("preHandler");
-    expect(hooks[0].fn).toBe(checkSession);
+    expect(hooks[0].name).toBe("onRoute");
+    const read: any = { method: "GET", url: "/x", config: {} };
+    const write: any = { method: "POST", url: "/x", config: {} };
+    hooks[0].fn(read);
+    hooks[0].fn(write);
+    expect(read.config).toEqual({ permission: "integrations.read", access: "session" });
+    expect(write.config).toEqual({ permission: "integrations.manage", access: "session" });
   });
 
   test("no longer registers a cross-org listing route", async () => {
@@ -444,15 +445,18 @@ describe("route registration", () => {
     expect(routes.find((r) => r.url === "/all")).toBeUndefined();
   });
 
-  test("role-gates every credential-writing route, not just the OAuth one", async () => {
-    const { srv, routes } = server();
+  test("every credential-writing route needs integrations.manage, not just the OAuth one", async () => {
+    const { srv, routes, hooks } = server();
 
     await integrationsRoutes(srv);
 
-    const gated = routes.filter((r) => r.opts?.preHandler);
-    expect(gated.map((r) => r.url).sort()).toEqual(["/", "/:name", "/google/auth-token"]);
-    for (const route of gated) {
-      expect((route.opts.preHandler[0] as any).roles).toEqual(["SUPER_ADMIN", "ADMIN"]);
+    for (const url of ["/", "/:name", "/google/auth-token", "/wa_payment_configuration"]) {
+      const r = routes.find((x) => x.url === url && x.method !== "GET");
+      expect(r, url).toBeDefined();
+      // The module default applies at registration time, so replay the hook on the route.
+      const probe: any = { method: r.method, url, config: { ...r.opts?.config } };
+      hooks[0].fn(probe);
+      expect(probe.config.permission).toBe("integrations.manage");
     }
   });
 

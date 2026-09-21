@@ -33,6 +33,7 @@ vi.mock("../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { ad
 vi.mock("../../utils/email/supertoken/inviteEmail.js", () => ({ createEmailBody: vi.fn() }));
 vi.mock("../email/email.util.js", () => ({ getEmailBodyTemplate: vi.fn() }));
 vi.mock("../../../generated/prisma/client.js", () => ({
+  Role: { SUPER_ADMIN: "SUPER_ADMIN", ADMIN: "ADMIN", MEMBER: "MEMBER" },
   Prisma: {
     PrismaClientKnownRequestError: class extends Error {
       code: string;
@@ -49,7 +50,6 @@ import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 import EmailVerification from "supertokens-node/recipe/emailverification/index.js";
 import { createUser, getUserRecipeName } from "../user/user.service.js";
 import { createHubSpotContact, getHubSpotCompanyByOwnerEmail } from "../../utils/hubspot.js";
-import { Role } from "../../utils/enums/index.js";
 import { completeInvite } from "./team.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -194,7 +194,7 @@ describe("completeInvite - the invitee already has an account", () => {
     await completeInvite(TOKEN);
 
     expect(db.orgMember.create).toHaveBeenCalledWith({
-      data: { orgId: "org-1", userId: "user-9", role: Role.ADMIN },
+      data: { orgId: "org-1", userId: "user-9", role: "ADMIN" },
     });
     expect(db.teamMember.create).toHaveBeenCalledWith({
       data: { teamId: "team-1", userId: "user-9" },
@@ -202,7 +202,7 @@ describe("completeInvite - the invitee already has an account", () => {
   });
 
   test("adds them only to the team when they are already an org member", async () => {
-    db.orgMember.findFirst.mockResolvedValue({ orgId: "org-1", role: Role.ADMIN });
+    db.orgMember.findFirst.mockResolvedValue({ orgId: "org-1", role: "ADMIN" });
 
     await completeInvite(TOKEN);
 
@@ -213,7 +213,7 @@ describe("completeInvite - the invitee already has an account", () => {
   });
 
   test("fails when they are already a member of the invited team", async () => {
-    db.orgMember.findFirst.mockResolvedValue({ orgId: "org-1", role: Role.ADMIN });
+    db.orgMember.findFirst.mockResolvedValue({ orgId: "org-1", role: "ADMIN" });
     db.teamMember.findFirst.mockResolvedValue({ id: "team-member-existing" });
 
     await expect(completeInvite(TOKEN)).rejects.toThrow("Team member Record already exists");
@@ -230,7 +230,7 @@ describe("completeInvite - the invitee already has an account", () => {
   // NOTE: the org-membership lookup is not scoped to the inviting org, so a user who
   // already belongs to any other org is never added to this one.
   test("does not add them to the inviting org when they belong to a different org", async () => {
-    db.orgMember.findFirst.mockResolvedValue({ orgId: "other-org", role: Role.ADMIN });
+    db.orgMember.findFirst.mockResolvedValue({ orgId: "other-org", role: "ADMIN" });
 
     await completeInvite(TOKEN);
 
@@ -296,7 +296,7 @@ describe("completeInvite - the invitee is brand new", () => {
     await completeInvite(TOKEN);
 
     expect(db.orgMember.create).toHaveBeenCalledWith({
-      data: { orgId: "org-1", userId: "user-2", role: Role.ADMIN },
+      data: { orgId: "org-1", userId: "user-2", role: "ADMIN" },
     });
   });
 

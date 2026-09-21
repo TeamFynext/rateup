@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession.js";
 import {
   getUnsplashImageListHandler,
   triggerDownloadUnsplashImageHandler,
@@ -8,9 +7,10 @@ import {
   getUnsplashImageQueryStringSchema,
   triggerDownloadUnsplashImageSchema,
 } from "./unsplash.schema.js";
+import { declareAccess } from "../../authz/registry.js";
 
 export async function unsplashRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
   server.get(
     "/photos",
     {

@@ -10,7 +10,7 @@ import {
 } from "./user.schema.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session/index.js";
-import { Role } from "../../utils/enums/index.js";
+import { Role } from "../../../generated/prisma/client.js";
 import supertokens from "supertokens-node";
 import { log } from "../../utils/logger.js";
 import { createFreePlanSubscription } from "../subscription/subscription.service.js";
@@ -25,7 +25,9 @@ import { createHubSpotCompany, createHubSpotContact } from "../../utils/hubspot.
 import prisma from "../../utils/prisma.js";
 import { UserPresenceMode } from "../../../generated/prisma/enums.js";
 import { Org, Team, TeamMember, User } from "../../../generated/prisma/client.js";
-import { GRANTABLE_TEAM_FEATURES } from "../../utils/canAccess.js";
+import { bustActorsForUser, loadActor } from "../../authz/actor.js";
+import { grantableRoles } from "../../authz/grant.js";
+import { PERMISSIONS_VERSION } from "../../authz/permissions.js";
 
 async function createUser({ id, email, recipeName, prefLanguage }: CreateUserParams) {
   const user = await prisma.user.create({
@@ -103,6 +105,7 @@ export async function createUserSignup({
           orgId: org.id,
           userId: newUser.id,
           role: Role.SUPER_ADMIN,
+          roleKey: "OWNER",
         },
       });
 
@@ -113,9 +116,6 @@ export async function createUserSignup({
           orgId: org.id,
           // A team with no TeamFeatureAccess rows grants nothing, so the default team gets
           // every feature. Subscription gates still apply on top.
-          featureAccess: {
-            create: GRANTABLE_TEAM_FEATURES.map((feature) => ({ feature })),
-          },
         },
       });
 
@@ -212,6 +212,8 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
   await session!.mergeIntoAccessTokenPayload({ orgId: orgId, role: role });
   // }
 
+  const actor = orgId ? await loadActor(userId, orgId) : null;
+
   let profile = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -278,6 +280,11 @@ export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyR
     userId,
     userName: profile?.name,
     role,
+    roleKey: actor?.roleKey,
+    permissions: actor ? [...actor.permissions].sort() : [],
+    permissionsVersion: PERMISSIONS_VERSION,
+    scope: actor?.scope,
+    grantableRoles: actor ? grantableRoles(actor) : [],
     email,
     profilePhoto: profile?.profilePhoto,
     orgId,
@@ -461,6 +468,7 @@ export { createUser, getOrgIdAndRole };
 //email id also invalidated & removed from supertoken
 
 export async function updateUserActiveStatus(userId: string) {
+  await bustActorsForUser(userId);
   const userData = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -526,6 +534,7 @@ export async function checkEmailExist(email: string) {
 export async function deleteUser(userId: string) {
   // TODO: if cascading is safe, then use it
   try {
+    await bustActorsForUser(userId);
     await prisma.teamMember.deleteMany({
       where: { userId: userId },
     });

@@ -24,6 +24,7 @@ import {
   getWaSettingsByPhone,
 } from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
+import type { Actor } from "../../../../authz/actor.js";
 import axios from "axios";
 import type { InboxStatus } from "../../../../types/enums.js";
 import {
@@ -32,6 +33,7 @@ import {
   WaMessageAssignStatus,
 } from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
+import { internalEventSentence } from "./internalEvent.js";
 import { wait } from "../../whatsappSurvey/wasurvey.controller.js";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
 import {
@@ -44,7 +46,6 @@ import {
 } from "../../whatsappSurvey/wasurvey.utils.js";
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../../constants.js";
 import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.service.js";
-import { Role } from "../../../org/org.services.js";
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
 import { getNotificationSettings } from "../../../notification/notification.service.js";
@@ -437,7 +438,7 @@ export async function filterChats(
   page: number,
   bodyFilterProps: WaChatFilterSchema,
   userId: string,
-  role: Role,
+  actor: Actor,
 ) {
   try {
     let teamIdsCache: string[] | null = null;
@@ -457,8 +458,8 @@ export async function filterChats(
     // else's channel cannot widen it. The user's own phone filter below ANDs on top of this.
     // Contact-grained, matching the phone filter: legacy messages carry a null conversationId,
     // so scoping by conversation would hide un-backfilled tickets outright.
-    if (role !== Role.SUPER_ADMIN) {
-      const scope = await getScopedSourceIdentifiers(orgId, userId);
+    if (!actor.scope.all) {
+      const scope = await getScopedSourceIdentifiers(actor);
       if (!scope.all) {
         if (scope.identifiers.length === 0) {
           // Scoped to zero channels: match nothing rather than falling through to no filter.
@@ -697,10 +698,7 @@ export async function filterChats(
 
         // Build user conditions
         if (hasUserFilter) {
-          if (
-            waAssignedChatPermission === WaAssignedChatPermission.Admins &&
-            role === Role.MEMBER
-          ) {
+          if (actor.scope.inbox === "assigned_only") {
             if (bodyFilterProps.assignedUserIds?.includes(userId)) {
               params.push(userId);
               const userParam = paramIndex++;
@@ -1494,7 +1492,7 @@ export async function deleteAssignedUsersforContact(contactId: string) {
     },
   });
 }
-export async function getContactsCountByInbox(orgId: string, userId: string, role: string) {
+export async function getContactsCountByInbox(orgId: string, userId: string, actor: Actor) {
   const teamIds = await getTeamIdsByUserId(userId);
   const stats = await getInboxCountsFromConversations(orgId);
   const count: {
@@ -1533,7 +1531,7 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     COUNT(*) FILTER (WHERE mf."waMessageAssignStatus"::TEXT = ${WaMessageAssignStatus.ASSIGNED} AND (
       CASE 
         WHEN orgDetails.permission = ${WaAssignedChatPermission.All} THEN 1
-        WHEN orgDetails.permission = ${WaAssignedChatPermission.Admins} THEN ${role === Role.MEMBER ? 0 : 1}
+        WHEN orgDetails.permission = ${WaAssignedChatPermission.Admins} THEN ${actor.scope.inbox === "assigned_only" ? 0 : 1}
         WHEN orgDetails.permission = ${WaAssignedChatPermission.TeamMembers} THEN is_assigned_to_my_team::int
       END 
     ) = 1)::INTEGER AS new_assigned_count,
@@ -2356,6 +2354,15 @@ export async function createInternalWaMessage({
         assignStatus = waMessageAssignStatus;
     }
 
+    const byId = new Map(assignedUserDetails.map((u) => [u.id, u]));
+    const summary = internalEventSentence({
+      status: assignStatus,
+      actor: triggeredByUserDetails,
+      added: addedUsers.map((u) => byId.get(u.userId)).filter((u) => u !== undefined),
+      removed: removedUsers.map((u) => byId.get(u.userId)).filter((u) => u !== undefined),
+      fallback: messageText,
+    });
+
     const wamessage = await prisma.waMessage.create({
       data: {
         contactId,
@@ -2369,6 +2376,9 @@ export async function createInternalWaMessage({
           exchangeProcess: "internal",
           internal: {
             text: { body: messageText },
+            // The finished sentence. `text.body` stays the old fragment so rows written
+            // before this keep rendering, and a client that has not been updated still works.
+            summary,
             triggeredByUser: triggeredByUserDetails,
             assignStatus,
             assignedUsers: assignedUserDetails,

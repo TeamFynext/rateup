@@ -46,11 +46,9 @@ import { cloneSurvey } from "../survey/survey.service.js";
 import { updateReferral } from "../referrals/referrals.service.js";
 import { createHubSpotCompany, createHubSpotContact } from "../../utils/hubspot.js";
 import { log } from "../../utils/logger.js";
-import { Role } from "../../utils/enums/index.js";
 import { UserRecipes } from "../../types/enums.js";
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
 import { createUserSignup } from "./user.service.js";
-import { GRANTABLE_TEAM_FEATURES } from "../../utils/canAccess.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -178,11 +176,11 @@ describe("createUserSignup - records created in the transaction", () => {
     });
   });
 
-  test("makes the signing-up user a SUPER_ADMIN of their org", async () => {
+  test("makes the signing-up user the OWNER of their org", async () => {
     await createUserSignup(signupInput());
 
     expect(tx.orgMember.create).toHaveBeenCalledWith({
-      data: { orgId: "org-1", userId: "user-1", role: Role.SUPER_ADMIN },
+      data: { orgId: "org-1", userId: "user-1", role: "SUPER_ADMIN", roleKey: "OWNER" },
     });
   });
 
@@ -195,18 +193,6 @@ describe("createUserSignup - records created in the transaction", () => {
     expect(tx.teamMember.create).toHaveBeenCalledWith({
       data: { teamId: "team-1", userId: "user-1" },
     });
-  });
-
-  test("grants the Main team every grantable feature", async () => {
-    await createUserSignup(signupInput());
-
-    const created = tx.team.create.mock.calls[0][0].data.featureAccess.create;
-    expect(created.map((row: { feature: string }) => row.feature).sort()).toEqual(
-      [...GRANTABLE_TEAM_FEATURES].sort(),
-    );
-    // A team with no rows grants nothing, so an empty list here would be the bug this covers.
-    expect(created.length).toBeGreaterThan(0);
-    expect(created).not.toContainEqual({ feature: "tickets" });
   });
 
   test("provisions the free-plan subscription inside the same transaction", async () => {

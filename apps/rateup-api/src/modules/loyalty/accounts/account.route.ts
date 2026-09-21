@@ -29,8 +29,10 @@ import {
   searchQuerySchema,
   contactSearchQuerySchema,
 } from "./account.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function customerAccountRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.cashier" });
   server.post(
     "/",
     {
@@ -180,5 +182,9 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     redeemRewardByShortCodeHandler,
   );
 
-  server.get("/export", exportCustomerAccountsHandler);
+  server.get(
+    "/export",
+    { config: { permission: "loyalty.accounts.export" } },
+    exportCustomerAccountsHandler,
+  );
 }

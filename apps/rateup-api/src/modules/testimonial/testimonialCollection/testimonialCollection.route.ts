@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../../utils/checkSession.js";
 import {
   createTestimonialCollectionSchema,
   byIdParamsSchema,
@@ -15,8 +14,9 @@ import {
   getTestimonialCollections,
   updateTestimonialCollectionHandler,
 } from "./testimonialCollection.controller.js";
+import { declareAccess } from "../../../authz/registry.js";
 export async function testimonialCollectionRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { access: "session" });
 
   server.post(
     "/create",

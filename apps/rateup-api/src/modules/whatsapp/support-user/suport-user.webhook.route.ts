@@ -10,8 +10,10 @@ import { getChatByContactId } from "../inbox/message/wamessage.service.js";
 import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
 import { type ByContactIdParams, byContactIdSchema } from "../../contact/contact.schema.js";
 import type { ByOrgIdParams } from "../../org/org.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function supportUserWebhookRoutes(server: FastifyInstance) {
+  declareAccess(server, { access: "token" });
   // TODO: implement challanges for webhook
   // server.get("/", webhookSubscribeHandler);
   server.post("/", { preHandler: verifyApiAccessTokenHook }, supportUserWebhookEventHandler);

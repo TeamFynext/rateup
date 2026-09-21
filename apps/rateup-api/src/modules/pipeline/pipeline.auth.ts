@@ -1,10 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Role } from "../../../generated/prisma/client.js";
-import { verifyRole } from "../../utils/auth.js";
 import {
   getPipelineIdByLabelId,
   getPipelineIdByLostReasonId,
-  isPipelineMember,
+  isPipelineAccessible,
 } from "./pipeline.service.js";
 
 const FORBIDDEN = { message: "You don't have access to this pipeline" };
@@ -14,7 +12,7 @@ export async function verifyPipelineAccess(
   request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
 ) {
-  if (!(await isPipelineMember(request.params.id, request.userId))) {
+  if (!(await isPipelineAccessible(request.params.id, request.actor))) {
     return reply.code(403).send(FORBIDDEN);
   }
 }
@@ -24,7 +22,7 @@ export async function verifyPipelineAccessFromBody(
   request: FastifyRequest<{ Body: { pipelineId: string } }>,
   reply: FastifyReply,
 ) {
-  if (!(await isPipelineMember(request.body.pipelineId, request.userId))) {
+  if (!(await isPipelineAccessible(request.body.pipelineId, request.actor))) {
     return reply.code(403).send(FORBIDDEN);
   }
 }
@@ -34,7 +32,7 @@ export async function verifyPipelineAccessFromQuery(
   request: FastifyRequest<{ Querystring: { pipelineId: string } }>,
   reply: FastifyReply,
 ) {
-  if (!(await isPipelineMember(request.query.pipelineId, request.userId))) {
+  if (!(await isPipelineAccessible(request.query.pipelineId, request.actor))) {
     return reply.code(403).send(FORBIDDEN);
   }
 }
@@ -44,7 +42,7 @@ export async function verifyOwnerForTeamChange(
   reply: FastifyReply,
 ) {
   if (request.body?.teamIds === undefined) return;
-  if (!verifyRole(request, Role.SUPER_ADMIN)) {
+  if (!request.actor?.can("pipelines.admin")) {
     return reply.code(403).send({ message: "Only an owner can change a pipeline's teams" });
   }
 }
@@ -54,7 +52,7 @@ export async function verifyOwnerForDelete(
   request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
 ) {
-  if (!verifyRole(request, Role.SUPER_ADMIN)) {
+  if (!request.actor?.can("pipelines.admin")) {
     return reply.code(403).send({ message: "Only an owner can delete a pipeline" });
   }
 }
@@ -67,7 +65,7 @@ export async function verifyLostReasonAccess(
   if (!pipelineId) {
     return reply.code(404).send({ message: "Lost reason not found" });
   }
-  if (!(await isPipelineMember(pipelineId, request.userId))) {
+  if (!(await isPipelineAccessible(pipelineId, request.actor))) {
     return reply.code(403).send(FORBIDDEN);
   }
 }
@@ -80,7 +78,7 @@ export async function verifyLabelAccess(
   if (!pipelineId) {
     return reply.code(404).send({ message: "Label not found" });
   }
-  if (!(await isPipelineMember(pipelineId, request.userId))) {
+  if (!(await isPipelineAccessible(pipelineId, request.actor))) {
     return reply.code(403).send(FORBIDDEN);
   }
 }

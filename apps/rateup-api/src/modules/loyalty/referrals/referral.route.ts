@@ -10,8 +10,10 @@ import {
   completeReferralSchema,
   referrerIdParamSchema,
 } from "./referral.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function referralRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.cashier" });
   server.post(
     "/track",
     {

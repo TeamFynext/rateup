@@ -25,7 +25,6 @@ import {
   updateWaSettingsByIdHandler,
   upsertWaSettingsHandler,
 } from "./wa_settings.controller.js";
-import { checkSession } from "../../../utils/checkSession.js";
 import {
   businessProfileSchema,
   byAdAccountIdParamsSchema,
@@ -39,6 +38,7 @@ import {
   updateWaSettingsInputSchema,
   whatsappSettingsIdParamSchema,
 } from "./wa_settings.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function waSettingsRoutes(server: FastifyInstance) {
   // Registered per route scope, not globally — without this the profile photo upload is
@@ -50,7 +50,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     throwFileSizeLimit: true,
   });
-  server.addHook("preHandler", checkSession);
+  declareAccess(server, { read: "channels.read", write: "channels.manage" });
   server.get("/", getWaSettingsHandler);
   server.post(
     "/",

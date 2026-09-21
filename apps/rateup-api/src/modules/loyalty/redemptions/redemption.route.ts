@@ -13,8 +13,10 @@ import {
   customerIdParamSchema,
 } from "../accounts/account.schema.js";
 import { transactionFilterSchema } from "./redemption.schema.js";
+import { declareAccess } from "../../../authz/registry.js";
 
 export async function redemptionRoutes(server: FastifyInstance) {
+  declareAccess(server, { write: "loyalty.cashier" });
   server.post(
     "/redeem",
     {

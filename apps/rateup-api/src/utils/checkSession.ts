@@ -10,6 +10,8 @@ import { getOrgIdAndRole } from "../modules/user/user.service.js";
  * @param reply
  */
 export const checkSession = async (request: FastifyRequest, reply: FastifyReply) => {
+  // The root authorize hook has already done this for a route that declares its access.
+  if (request.actor) return;
   try {
     let session = await Session.getSession(request, reply);
     const userId = session.getUserId();
