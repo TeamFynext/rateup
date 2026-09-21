@@ -86,6 +86,7 @@ import { LoyaltyRewardStatus, TemplateType } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
 
 import { giftFromExample, pointRewardFromExample } from "./fromExample.ts";
+import { shopifyRulesFrom, shopifyRulesToForm } from "./shopifyRules.ts";
 
 /**
  * Shown instead of a bare gap when a reward category has nothing in it yet. The create action is
@@ -165,6 +166,8 @@ export function RewardsPage() {
     availableDays: [],
     timeFrom: undefined,
     timeTo: undefined,
+    shopifyDiscountEnabled: false,
+    shopifyValidForDays: undefined,
   };
 
   const defaultCouponValues: z.infer<typeof couponSchema> = {
@@ -174,7 +177,7 @@ export function RewardsPage() {
     couponDescription: "",
     discountType: "percentage",
     discountValue: 0,
-    stockQuantity: 0,
+    stockQuantity: 1,
     perUserLimit: 1,
     validFrom: "",
     validTo: "",
@@ -182,6 +185,7 @@ export function RewardsPage() {
     minimumSpend: 0,
     waTemplateId: "",
     tierIds: [],
+    shopifyDiscountEnabled: false,
   };
 
   const defaultGiftValues: z.infer<typeof giftSchema> = {
@@ -286,6 +290,7 @@ export function RewardsPage() {
 
     const spendMin = reward.redemptionRules?.spend_requirements?.minimum_spend;
     const timeRestrictions = reward.redemptionRules?.time_restrictions;
+    const shopifyRules = reward.redemptionRules?.shopify;
 
     pointRewardForm.reset({
       name: reward.name || "",
@@ -302,6 +307,7 @@ export function RewardsPage() {
       availableDays: timeRestrictions?.allowed_days || [],
       timeFrom: timeRestrictions?.allowed_time_ranges?.[0]?.start || undefined,
       timeTo: timeRestrictions?.allowed_time_ranges?.[0]?.end || undefined,
+      ...shopifyRulesToForm(shopifyRules),
     });
 
     setMinimumSpendEnabled(!!spendMin);
@@ -337,7 +343,9 @@ export function RewardsPage() {
           couponDescription: editingReward.rewardValue?.description || "",
           discountType: couponRewardValue.discountType === "fixed" ? "fixed" : "percentage",
           discountValue: Number(couponRewardValue.discountValue || 0),
-          stockQuantity: editingReward.stockQuantity || 0,
+          // A legacy coupon saved with 0 is one nobody can redeem; it opens showing 1 so the
+          // merchant sees the correction before saving rather than after wondering why.
+          stockQuantity: editingReward.stockQuantity || 1,
           perUserLimit:
             Number(
               editingReward.redemptionRules?.quantity_restrictions?.max_redemptions_per_customer,
@@ -354,6 +362,7 @@ export function RewardsPage() {
             Number(editingReward.redemptionRules?.spend_requirements?.minimum_spend) || 0,
           waTemplateId: editingReward.waTemplateId || undefined,
           tierIds: editingReward.availableForTiers || [],
+          shopifyDiscountEnabled: !!editingReward.redemptionRules?.shopify?.enabled,
         });
       } else if (editingReward.rewardType === "assigned") {
         giftForm.reset({
@@ -460,6 +469,8 @@ export function RewardsPage() {
       };
     }
 
+    redemptionRules.shopify = shopifyRulesFrom(data);
+
     const payload = {
       name: data.name,
       description: data.description,
@@ -508,13 +519,21 @@ export function RewardsPage() {
       };
     }
 
+    // Only the switch: the code's end date comes from Valid To above, which is already in
+    // `time_restrictions`, and a second deadline here could silently contradict it.
+    redemptionRules.shopify = shopifyRulesFrom({
+      shopifyDiscountEnabled: data.shopifyDiscountEnabled,
+    });
+
     const payload = {
       name: data.name,
       description: data.description,
       rewardType: "coupon" as const,
       pointsCost: 0,
       rewardValue: {
-        code: data.couponCode,
+        // A synced coupon has no fixed code — each redemption generates its own, and storing
+        // a stale one here would show up on the reward card as if customers could use it.
+        code: data.shopifyDiscountEnabled ? undefined : data.couponCode,
         description: data.couponDescription,
         discountType: data.discountType || undefined,
         discountValue: data.discountValue || undefined,
@@ -933,11 +952,9 @@ export function RewardsPage() {
               <div className="flex justify-end">
                 <Button
                   onClick={handleSaveSignupBonus}
-                  disabled={updateLoyaltyProgramMutation.isPending}
+                  loading={updateLoyaltyProgramMutation.isPending}
                 >
-                  {updateLoyaltyProgramMutation.isPending ? (
-                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
+                  {!updateLoyaltyProgramMutation.isPending && (
                     <IconDeviceFloppy className="w-4 h-4 mr-2" />
                   )}
                   Save Joining Bonus
