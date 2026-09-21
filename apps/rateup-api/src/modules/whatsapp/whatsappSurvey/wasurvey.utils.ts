@@ -616,15 +616,8 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
 
     if (order.shopifyDraftOrderId) {
       try {
-        const productsTotal = order.products.reduce(
-          (sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 1),
-          0,
-        );
-        const deliveryCharge = Number(order.deliveryOption?.charge || 0);
-        const orderTotal = productsTotal + deliveryCharge;
-
-        // We multiply by 100 because captureShopifyOrderPayment divides by 100
-        await captureShopifyOrderPayment(orgId, order.shopifyDraftOrderId, orderTotal * 100);
+        // Marks the order paid in full: the WhatsApp payment covered its total.
+        await captureShopifyOrderPayment(orgId, order.shopifyDraftOrderId);
       } catch (e) {
         log.error({ err: e }, "Failed to capture Shopify payment");
       }

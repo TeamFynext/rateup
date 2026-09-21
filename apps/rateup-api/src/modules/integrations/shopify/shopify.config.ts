@@ -1,6 +1,5 @@
 import "@shopify/shopify-api/adapters/node";
 import { ApiVersion, LogSeverity, shopifyApi } from "@shopify/shopify-api";
-import { restResources } from "@shopify/shopify-api/rest/admin/2024-10";
 import { API_URL } from "../../../utils/constants/constants.js";
 
 const apiUrl = new URL(API_URL);
@@ -20,17 +19,20 @@ function initializeShopify() {
     scopes: scopes.split(","),
     hostName: protocol == "http" ? "localhost:3001" : apiUrl.hostname,
     hostScheme: protocol as "http" | "https",
-    apiVersion: ApiVersion.October24,
-    restResources,
+    // Keep in step with [webhooks] api_version in shopify.app.toml. Shopify
+    // supports each version for 12 months, then silently serves the oldest
+    // supported one instead.
+    apiVersion: ApiVersion.July26,
     isEmbeddedApp: false,
-    future: {
-      customerAddressDefaultFix: true,
-      lineItemBilling: true,
-    },
+    // Warnings and errors only: Debug/Info log every OAuth redirect and session
+    // creation, plus the startup banner.
     logger: {
-      level: LogSeverity.Debug,
+      level: LogSeverity.Warning,
       timestamps: true,
     },
+    // The flags it would list only affect REST resources and managed pricing,
+    // neither of which this app uses.
+    _logDisabledFutureFlags: false,
   });
 }
 

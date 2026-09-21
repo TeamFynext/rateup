@@ -4,6 +4,8 @@ import { awardPoints } from "../../loyalty/accounts/account.service.js";
 import { resolveProgramMember } from "../../loyalty/accounts/memberLookup.js";
 import { reversePurchasePoints } from "../../loyalty/accounts/pointsReversal.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
+import { applyRedemption } from "../../loyalty/redemptions/redemption.service.js";
+import { LoyaltyError } from "../../loyalty/loyalty.errors.js";
 import { shopifyLoyaltyQueue } from "../../../workers/bullmq/queues/webhook.queue.js";
 import type { ShopifyBody } from "./shopify.types.js";
 
@@ -24,6 +26,8 @@ export interface ShopifyLoyaltyJobData {
   phone: string | null;
   email: string | null;
   amount: number | null;
+  /** Codes applied at checkout; a RateUp voucher among them is marked used. */
+  discountCodes?: string[];
 }
 
 export type ShopifyLoyaltyOutcome =
@@ -64,6 +68,47 @@ export function extractOrderIdentity(body: ShopifyBody): ShopifyOrderIdentity {
   return { orderId: b?.id != null ? String(b.id) : null, phone, email };
 }
 
+/** The discount codes a customer applied at checkout, as typed. */
+export function extractDiscountCodes(body: ShopifyBody): string[] {
+  const codes = (body as unknown as { discount_codes?: { code?: unknown }[] | null })
+    .discount_codes;
+  return (codes ?? [])
+    .map((c) => (typeof c?.code === "string" ? c.code.trim() : ""))
+    .filter(Boolean);
+}
+
+/**
+ * Topics on which an order has actually consumed its discount codes. A code is
+ * spent when the order is placed, so paid or not; ORDERS_PAID repeats it for a
+ * shop that only subscribes to that topic.
+ */
+const REDEEMING_TOPICS = new Set<string>([ShopifyEvents.ORDERS_CREATE, ShopifyEvents.ORDERS_PAID]);
+
+/**
+ * Marks the RateUp vouchers used on this order as used, the same way a cashier's
+ * "Mark as used" does. Codes that aren't RateUp vouchers, or were already marked
+ * (the other topic got there first), are skipped. Never throws: a voucher problem
+ * must not cost the customer their points or retry the whole job.
+ */
+async function useOrderVouchers(job: ShopifyLoyaltyJobData) {
+  if (!REDEEMING_TOPICS.has(job.topic)) return;
+  for (const code of job.discountCodes ?? []) {
+    try {
+      await applyRedemption(
+        { redemptionCode: code, appliedBy: "shopify", notes: `Shopify order ${job.orderId}` },
+        job.orgId,
+      );
+      log.info({ shop: job.shop, orderId: job.orderId, code }, "Voucher used at Shopify checkout");
+    } catch (e) {
+      if (e instanceof LoyaltyError) continue; // not ours, not approved, or already used
+      log.error(
+        { err: e, shop: job.shop, orderId: job.orderId, code },
+        "Could not mark a Shopify-applied voucher as used",
+      );
+    }
+  }
+}
+
 /**
  * What the customer actually paid, in the shop's own currency.
  *
@@ -99,7 +144,9 @@ export const reversalKey = (shop: string, orderId: string) => `${awardKey(shop, 
 
 export async function enqueueShopifyOrderLoyalty(data: ShopifyLoyaltyJobData) {
   await shopifyLoyaltyQueue.add("order-loyalty", data, {
-    jobId: `loyalty:${data.shop}:${data.topic}:${data.orderId}`,
+    // BullMQ 6 rejects a custom id containing ":" (unless it splits into exactly
+    // three parts), so the separator is "-".
+    jobId: `loyalty-${data.shop}-${data.topic}-${data.orderId}`,
     attempts: 5,
     backoff: { type: "exponential", delay: 10_000 },
     removeOnComplete: { count: 5000 },
@@ -118,6 +165,10 @@ export async function processShopifyOrderLoyalty(
   job: ShopifyLoyaltyJobData,
 ): Promise<ShopifyLoyaltyOutcome> {
   const { shop, topic, orgId, orderId } = job;
+
+  // Independent of the points switch below: a voucher is spent whether or not
+  // orders earn points.
+  await useOrderVouchers(job);
 
   const program = await getLoyaltyProgramByOrg(orgId);
   if (!program || program.status !== "active" || !program.enableShopifyOrderPoints) {

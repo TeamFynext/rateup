@@ -670,13 +670,12 @@ describe("applyRedemption", () => {
     expect(db.loyaltyReward.update).not.toHaveBeenCalled();
   });
 
-  test("tells the customer the reward was used", async () => {
+  test("does not re-send the redemption confirmation once the code is spent", async () => {
+    // REWARD_REDEEMED says "show code … to redeem it"; it went out when the code
+    // was issued. Sending it again on use read as an invitation to reuse the code.
     await applyRedemption(applyInput, ORG);
 
-    expect(sentEvent(LoyaltyEventType.REWARD_REDEEMED)).toMatchObject({
-      orgId: ORG,
-      data: { code: "RU-ABC123" },
-    });
+    expect(sentEvent(LoyaltyEventType.REWARD_REDEEMED)).toBeUndefined();
   });
 
   test("applies a code only within the caller's org", async () => {

@@ -1,10 +1,10 @@
 import prisma from "../../../utils/prisma.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import shopify from "./shopify.config.js";
-import { GraphqlClient, GraphQLClientResponse, Session, DataType } from "@shopify/shopify-api";
+import { getActiveShopifySession } from "./shopify.session.js";
+import { GraphqlClient, GraphQLClientResponse, Session } from "@shopify/shopify-api";
 import type { IncomingMessage, ServerResponse } from "http";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import isEmpty from "lodash/isEmpty.js";
 import { notificationQueue, shopifySurveyQueue } from "../../../workers/bullmq/queues/index.js";
 import crypto from "crypto";
 import _get from "lodash/get.js";
@@ -29,6 +29,7 @@ import { parsePhoneNumber } from "libphonenumber-js";
 import {
   PaymentSource,
   ShopifyOrderWebhookTopicEventMap,
+  toShopifyProvinceCode,
   ShopifyPlanMap,
   shopifyRecurringChargeStatus,
   shopifyRecurringChargeSubscriptionStatusMap,
@@ -47,20 +48,29 @@ import { getSubscription } from "../../subscription/subscription.service.js";
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { pauseOrg } from "../../org/org.services.js";
-import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
+import { WEBHOOK_API_ROUTE, defaultWebhookHandlers } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
-import { enqueueShopifyOrderLoyalty, extractPurchaseAmount } from "./shopifyLoyalty.service.js";
+import {
+  enqueueShopifyOrderLoyalty,
+  extractDiscountCodes,
+  extractPurchaseAmount,
+} from "./shopifyLoyalty.service.js";
 import { ShopifyBody, shopifyErrorDetail } from "./shopify.types.js";
 import { signFlowToken } from "../../whatsapp/flows/flowToken.js";
 import type {
   ShopifyDeliveryOptionsData,
   ShopifyFulfillmentCreateData,
   ShopifyFulfillmentOrdersData,
-  ShopifyRestResponse,
-  ShopifyDraftOrderPayload,
+  ShopifyDraftOrderCompleteData,
+  ShopifyDraftOrderCreateData,
+  ShopifyDraftOrderLookupData,
+  ShopifyOrderCreateData,
+  ShopifyOrderMarkAsPaidData,
+  ShopifyProductImageData,
+  ShopifyShippingAddressInput,
+  ShopifyUserError,
   ShopifyNodesLookupData,
-  ShopifyOrderPayload,
   ShopifyProductCreateData,
   ShopifyProductsByTitleData,
   ShopifyProductVariantsData,
@@ -90,6 +100,8 @@ export async function getShopifyAuthUrl(
 export async function handleShopifyAuthCallback(request: FastifyRequest, reply: FastifyReply) {
   if (!shopify) throw new Error("Shopify integration is not configured");
   return await shopify.auth.callback({
+    // Public apps must use expiring offline tokens from 2027-01-01.
+    expiring: true,
     rawRequest: request.raw,
     rawResponse: reply.raw,
   });
@@ -122,7 +134,9 @@ export async function updateShopifyIntegrationByOrgId(orgId: string, data: Updat
 
 export async function updateShopifyIntegrationByShop(
   shop: string,
-  data: UpdateIntgrationInput & { orgId?: string },
+  // Not the credential: those writes go through updateIntegrationByName, which
+  // keeps the stored session intact.
+  data: Omit<UpdateIntgrationInput, "credential"> & { orgId?: string },
 ) {
   return await prisma.integration.updateMany({
     where: {
@@ -148,18 +162,17 @@ export async function claimUnownedShopifyIntegration(shop: string, orgId: string
   });
 }
 
+/**
+ * Subscribes the shop to every per-shop topic it isn't subscribed to yet.
+ * App-level topics (uninstall, billing, scopes, compliance) come from
+ * shopify.app.toml instead.
+ */
 export async function registerShopifyWebhook(session: Session) {
   if (!shopify) throw new Error("Shopify integration is not configured");
-  const response = await shopify.webhooks.register({
-    session,
-  });
-  console.dir(response, { depth: null });
-  if (!response || isEmpty(response)) throw new Error("Error registering webhook");
-
-  for (const hook of Object.keys(response)) {
-    if (response[hook].length && !response[hook][0].success) {
-      throw new Error(`Error registering webhook with topic ${hook}`);
-    }
+  const client = new shopify.clients.Graphql({ session });
+  const registered = new Set((await getManagableWebhooks(client)).map((w) => w.topic));
+  for (const topic of Object.keys(defaultWebhookHandlers)) {
+    if (!registered.has(topic)) await registerWebhookByTopic(topic, session);
   }
 }
 
@@ -306,7 +319,7 @@ export async function sendShopifySurveyCronAction() {
 
   for (const integration of integrations) {
     const {
-      credential: { shopifySurveys, session },
+      credential: { shopifySurveys },
       orgId,
     } = integration;
 
@@ -332,7 +345,9 @@ export async function sendShopifySurveyCronAction() {
     if (callShopifyApi) {
       try {
         if (!shopify) throw new Error("Shopify integration is not configured");
-        const client = new shopify.clients.Graphql({ session });
+        const client = new shopify.clients.Graphql({
+          session: await getActiveShopifySession(integration),
+        });
         allCheckouts = await getAbandonedCheckouts(client);
       } catch (e) {
         log.error({ err: e }, "Error getting abandoned checkouts");
@@ -723,19 +738,16 @@ export async function deleteAllWebhooks(session: Session) {
 export async function registerWebhookByTopic(topic: string, session: Session) {
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({ session });
-  await client.request(
+  const response = await client.request<{
+    webhookSubscriptionCreate: { userErrors: { field: string[] | null; message: string }[] };
+  }>(
     `mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
   webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
     webhookSubscription {
       id
       topic
       format
-      endpoint {
-        __typename
-        ... on WebhookHttpEndpoint {
-          callbackUrl
-        }
-      }
+      uri
     }
     userErrors {
       field
@@ -747,12 +759,22 @@ export async function registerWebhookByTopic(topic: string, session: Session) {
       variables: {
         topic,
         webhookSubscription: {
-          callbackUrl: `${API_URL}${WEBHOOK_API_ROUTE}`,
+          uri: `${API_URL}${WEBHOOK_API_ROUTE}`,
           format: "JSON",
         },
       },
     },
   );
+  // "Address for this topic has already been taken": the shop is already
+  // subscribed to this topic at this URL, which is the state we want.
+  const userErrors = (response.data?.webhookSubscriptionCreate?.userErrors ?? []).filter(
+    (e) => !/already been taken/i.test(e.message),
+  );
+  if (userErrors.length) {
+    throw new Error(
+      `Error registering webhook with topic ${topic}: ${userErrors.map((e) => e.message).join("; ")}`,
+    );
+  }
 }
 
 interface ManagableWebhookNode {
@@ -850,17 +872,21 @@ export async function handleSubscriptionUpdateFromShopify(
   const chargeId = payload.app_subscription?.admin_graphql_api_id ?? "";
 
   const client = new shopify.clients.Graphql({
-    session: integration.credential.session,
+    session: await getActiveShopifySession(integration),
   });
   const recurringCharge = await getRecurringCharge(chargeId, integration);
 
   let haltSubscription = false;
 
-  const shopResponse = await client.request<{ shop: ShopifyShopDetails }>(
-    `query { shop { name, email, phone } } `,
-  );
+  const shopResponse = await client.request<{
+    shop: { name?: string; email?: string; shopAddress?: { phone?: string | null } };
+  }>(`query { shop { name, email, shopAddress { phone } } } `);
   if (!shopResponse.data) throw new Error("Shopify shop query returned no data");
-  const shopDetails = shopResponse.data.shop;
+  const { shopAddress, ...shopFields } = shopResponse.data.shop;
+  const shopDetails: ShopifyShopDetails = {
+    ...shopFields,
+    phone: shopAddress?.phone ?? undefined,
+  };
 
   switch (payload.app_subscription?.status) {
     case shopifyRecurringChargeStatus.pending:
@@ -1114,7 +1140,7 @@ interface ShopifyRecurringCharge {
 
 export async function getRecurringCharge(
   chargeId: string,
-  // Only `credential.session` is read below — `org` was an over-tight
+  // Only the session is read below — `org` was an over-tight
   // requirement inherited from one particular caller
   // (`getShopifyIntegrationByShop`); `getShopifyInfo`'s callers don't have it.
   integration: ShopifyIntegration | null,
@@ -1122,7 +1148,7 @@ export async function getRecurringCharge(
   if (!integration) return null;
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: integration.credential.session,
+    session: await getActiveShopifySession(integration),
   });
   const appSubscriptions = await client.request<{ node: ShopifyRecurringCharge | null }>(
     `query GetRecurringApplicationCharges($id: ID!) {
@@ -1159,7 +1185,10 @@ interface FulfillmentOrderShowData {
     order: {
       id: string | null;
       email: string | null;
-      customer: { phone: string | null; email: string | null } | null;
+      customer: {
+        defaultPhoneNumber: { phoneNumber: string } | null;
+        defaultEmailAddress: { emailAddress: string } | null;
+      } | null;
     } | null;
     lineItems: {
       edges: { node: { lineItem: { product: { id: string } | null } } }[];
@@ -1194,7 +1223,7 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       return;
     }
     const client = new shopify.clients.Graphql({
-      session: shopifyInfo.credential.session,
+      session: await getActiveShopifySession(shopifyInfo),
     });
     // BUG (fixed): this started `false`, so the pagination loop's body — the
     // only place that fetches the order/customer/line-items and sets
@@ -1211,8 +1240,12 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
             id
             email
             customer {
-        phone
-        email
+        defaultPhoneNumber {
+          phoneNumber
+        }
+        defaultEmailAddress {
+          emailAddress
+        }
       }
     }
     lineItems(first: 10, after: $cursor) {
@@ -1254,9 +1287,12 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       // query selects `customer`), so this always threw
       // "Cannot read properties of undefined (reading 'phone')" once the loop
       // body actually executed.
-      customerPhone = fulfillmentOrder.order?.customer?.phone ?? customerPhone;
+      customerPhone =
+        fulfillmentOrder.order?.customer?.defaultPhoneNumber?.phoneNumber ?? customerPhone;
       customerEmail =
-        fulfillmentOrder.order?.customer?.email ?? fulfillmentOrder.order?.email ?? customerEmail;
+        fulfillmentOrder.order?.customer?.defaultEmailAddress?.emailAddress ??
+        fulfillmentOrder.order?.email ??
+        customerEmail;
     }
   } else {
     customerPhone =
@@ -1286,6 +1322,7 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       phone: customerPhone ?? null,
       email: customerEmail ?? null,
       amount: extractPurchaseAmount(body),
+      discountCodes: extractDiscountCodes(body),
     });
   }
 
@@ -1437,7 +1474,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         const { waTemplateId, teamId } = abandonedCheckoutConfig;
         if (!shopify) throw new Error("Shopify integration is not configured");
         const client = new shopify.clients.Graphql({
-          session: credential.session,
+          session: await getActiveShopifySession(integration),
         });
         const allCheckouts = await getAbandonedCheckouts(client);
 
@@ -1764,65 +1801,35 @@ export async function resolveShopifyVariants(
   return variantMap;
 }
 
-export async function createShopifyPendingOrder(
-  orgId: string,
-  products: { retailerId: string; quantity: number; title?: string }[],
-  customerPhone?: string,
-) {
-  const shopifyInfo = await getShopifyInfo(orgId);
-  if (!shopifyInfo || !shopifyInfo.active) {
-    log.trace("Shopify integration not active for orgId %s. Will not create an order.", orgId);
-    return null;
+const toGid = (type: string, id: string | number) =>
+  String(id).startsWith("gid://") ? String(id) : `gid://shopify/${type}/${id}`;
+
+function throwOnUserErrors(operation: string, userErrors: ShopifyUserError[] | undefined) {
+  if (userErrors?.length) {
+    throw new Error(`${operation} failed: ${userErrors.map((e) => e.message).join("; ")}`);
   }
+}
 
-  if (!shopify) throw new Error("Shopify integration is not configured");
-  const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
-  });
+async function getShopCurrencyCode(client: GraphqlClient): Promise<string> {
+  const response = await client.request<{ shop: { currencyCode: string } }>(
+    `query shopCurrency { shop { currencyCode } }`,
+  );
+  if (!response.data) throw new Error("Shopify shop query returned no data");
+  return response.data.shop.currencyCode;
+}
 
-  const variantMap = await resolveShopifyVariants(products, client);
-  const lineItems = [];
-  for (const product of products) {
-    const variantId = variantMap.get(product.retailerId);
-    if (variantId) {
-      lineItems.push({
-        variant_id: parseInt(variantId),
-        quantity: product.quantity,
-      });
-    } else {
-      log.warn(`Product SKU ${product.retailerId} not found in Shopify.`);
-    }
-  }
-
-  if (lineItems.length === 0) {
-    log.trace("No products matched in Shopify, skipping Shopify order creation.");
-    return null;
-  }
-
-  if (!shopify) throw new Error("Shopify integration is not configured");
-  const restClient = new shopify.clients.Rest({
-    session: shopifyInfo.credential.session,
-  });
-
-  try {
-    const response: ShopifyRestResponse = await restClient.post({
-      path: "orders",
-      type: DataType.JSON,
-      data: {
-        order: {
-          line_items: lineItems,
-          financial_status: "pending",
-          ...(customerPhone && {
-            phone: customerPhone.startsWith("+") ? customerPhone : `+${customerPhone}`,
-          }),
-        },
-      },
-    });
-    return response.body.order;
-  } catch (error) {
-    log.error({ err: shopifyErrorDetail(error) }, "Failed to create pending order in Shopify");
-    return null;
-  }
+function toMailingAddress(address: ShopifyShippingAddressInput) {
+  return {
+    firstName: address.first_name,
+    lastName: address.last_name,
+    address1: address.address1,
+    address2: address.address2,
+    city: address.city,
+    provinceCode: toShopifyProvinceCode(address.country_code, address.province),
+    zip: address.zip,
+    countryCode: address.country_code || "IN",
+    phone: address.phone,
+  };
 }
 
 // Create Shopify Draft Order with address + shipping line
@@ -1834,19 +1841,9 @@ export async function createShopifyDraftOrderWithAddress(
     title?: string;
     price?: number | string;
   }[],
-  shippingAddress?: {
-    first_name?: string;
-    last_name?: string;
-    address1?: string;
-    address2?: string;
-    city?: string;
-    province?: string;
-    zip?: string;
-    country_code?: string;
-    phone?: string;
-  } | null,
+  shippingAddress?: ShopifyShippingAddressInput | null,
   deliveryOption?: { name?: string; charge?: number } | null,
-) {
+): Promise<{ id: string; invoice_url: string | null } | null> {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
     log.trace("Shopify not active for orgId %s - skipping draft order creation", orgId);
@@ -1855,107 +1852,134 @@ export async function createShopifyDraftOrderWithAddress(
 
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
+    session: await getActiveShopifySession(shopifyInfo),
   });
   const variantMap = await resolveShopifyVariants(products, client);
-
-  const lineItems = [];
-  for (const product of products) {
-    const variantId = variantMap.get(product.retailerId);
-    if (variantId) {
-      lineItems.push({
-        variant_id: parseInt(variantId),
-        quantity: product.quantity,
-      });
-    } else {
-      // Fallback: custom line item with title and price from WA catalog data
-      const price = parseFloat(String(product.price ?? "0")) || 0;
-      lineItems.push({
-        title: product.title ?? product.retailerId,
-        price: price.toFixed(2),
-        quantity: product.quantity,
-        requires_shipping: true,
-      });
-    }
-  }
-
-  if (lineItems.length === 0) {
+  if (products.length === 0) {
     log.trace("No line items for draft order — skipping");
     return null;
   }
+  const currencyCode = await getShopCurrencyCode(client);
 
-  if (!shopify) throw new Error("Shopify integration is not configured");
-  const restClient = new shopify.clients.Rest({
-    session: shopifyInfo.credential.session,
+  const lines = products.map((product) => {
+    const variantId = variantMap.get(product.retailerId);
+    if (variantId) {
+      return { variantId: toGid("ProductVariant", variantId), quantity: product.quantity };
+    }
+    // Fallback: custom line item with title and price from WA catalog data
+    const price = parseFloat(String(product.price ?? "0")) || 0;
+    return {
+      title: product.title ?? product.retailerId,
+      amount: price.toFixed(2),
+      quantity: product.quantity,
+    };
   });
-
-  const draftOrderPayload: ShopifyDraftOrderPayload = {
-    draft_order: {
-      line_items: lineItems,
-      ...(shippingAddress && { shipping_address: shippingAddress }),
-      ...(deliveryOption && {
-        shipping_line: {
-          custom: true,
-          title: deliveryOption.name ?? "Delivery",
-          price: String(deliveryOption.charge ?? 0),
-        },
-      }),
-      note: "Order from WhatsApp Catalog",
-    },
+  const address = shippingAddress ? toMailingAddress(shippingAddress) : undefined;
+  const shipping = deliveryOption && {
+    title: deliveryOption.name ?? "Delivery",
+    amount: String(deliveryOption.charge ?? 0),
   };
 
   try {
-    const response: ShopifyRestResponse = await restClient.post({
-      path: "draft_orders",
-      type: DataType.JSON,
-      data: draftOrderPayload,
-    });
-    log.info("Created Shopify draft order %s for orgId %s", response.body.draft_order?.id, orgId);
-    return response.body.draft_order;
+    const response = await client.request<ShopifyDraftOrderCreateData>(
+      `mutation createDraftOrder($input: DraftOrderInput!) {
+        draftOrderCreate(input: $input) {
+          draftOrder {
+            legacyResourceId
+            invoiceUrl
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`,
+      {
+        variables: {
+          input: {
+            lineItems: lines.map((line) =>
+              "variantId" in line
+                ? line
+                : {
+                    title: line.title,
+                    quantity: line.quantity,
+                    requiresShipping: true,
+                    originalUnitPriceWithCurrency: { amount: line.amount, currencyCode },
+                  },
+            ),
+            ...(address && { shippingAddress: address }),
+            ...(shipping && {
+              shippingLine: {
+                title: shipping.title,
+                priceWithCurrency: { amount: shipping.amount, currencyCode },
+              },
+            }),
+            note: "Order from WhatsApp Catalog",
+          },
+        },
+      },
+    );
+    throwOnUserErrors("draftOrderCreate", response.data?.draftOrderCreate.userErrors);
+    const draftOrder = response.data?.draftOrderCreate.draftOrder;
+    if (!draftOrder) throw new Error("draftOrderCreate returned no draft order");
+    log.info("Created Shopify draft order %s for orgId %s", draftOrder.legacyResourceId, orgId);
+    return { id: draftOrder.legacyResourceId, invoice_url: draftOrder.invoiceUrl };
   } catch (error) {
     log.error({ err: shopifyErrorDetail(error) }, "Failed to create Shopify draft order");
     try {
       log.warn(
-        "Draft order creation failed (likely missing write_draft_orders scope). Falling back to POST /orders...",
+        "Draft order creation failed (likely missing write_draft_orders scope). Falling back to orderCreate...",
       );
-      const orderPayload: ShopifyOrderPayload = {
-        order: {
-          line_items: lineItems,
-          financial_status: "pending",
-          ...(shippingAddress && { shipping_address: shippingAddress }),
-          ...(deliveryOption && {
-            shipping_lines: [
-              {
-                custom: true,
-                title: deliveryOption.name ?? "Delivery",
-                price: String(deliveryOption.charge ?? 0),
-              },
-            ],
-          }),
-          note: "Order from WhatsApp Catalog",
+      const response = await client.request<ShopifyOrderCreateData>(
+        `mutation createOrder($order: OrderCreateOrderInput!) {
+          orderCreate(order: $order) {
+            order {
+              legacyResourceId
+              statusPageUrl
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }`,
+        {
+          variables: {
+            order: {
+              currency: currencyCode,
+              lineItems: lines.map((line) =>
+                "variantId" in line
+                  ? line
+                  : {
+                      title: line.title,
+                      quantity: line.quantity,
+                      requiresShipping: true,
+                      priceSet: { shopMoney: { amount: line.amount, currencyCode } },
+                    },
+              ),
+              financialStatus: "PENDING",
+              ...(address && { shippingAddress: address }),
+              ...(shipping && {
+                shippingLines: [
+                  {
+                    title: shipping.title,
+                    priceSet: { shopMoney: { amount: shipping.amount, currencyCode } },
+                  },
+                ],
+              }),
+              note: "Order from WhatsApp Catalog",
+            },
+          },
         },
-      };
-      const fallbackResponse: ShopifyRestResponse = await restClient.post({
-        path: "orders",
-        type: DataType.JSON,
-        data: orderPayload,
-      });
-      log.info(
-        "Created fallback Shopify order %s for orgId %s",
-        fallbackResponse.body.order?.id,
-        orgId,
       );
-      const orderData = fallbackResponse.body.order;
-      if (!orderData) {
-        log.error("Fallback Shopify order creation returned no order body");
+      throwOnUserErrors("orderCreate", response.data?.orderCreate.userErrors);
+      const order = response.data?.orderCreate.order;
+      if (!order) {
+        log.error("Fallback Shopify order creation returned no order");
         return null;
       }
-      return {
-        id: orderData.id,
-        invoice_url:
-          orderData.order_status_url ?? `https://${shopifyInfo.credential?.session?.shop}/account`,
-        ...orderData,
-      };
+      log.info("Created fallback Shopify order %s for orgId %s", order.legacyResourceId, orgId);
+      return { id: order.legacyResourceId, invoice_url: order.statusPageUrl };
     } catch (fallbackError) {
       log.error(
         { err: shopifyErrorDetail(fallbackError) },
@@ -1966,7 +1990,12 @@ export async function createShopifyDraftOrderWithAddress(
   }
 }
 
-export async function captureShopifyOrderPayment(orgId: string, orderId: string, amount: number) {
+/**
+ * Marks the order behind a WhatsApp payment as paid. `orderId` is what
+ * createShopifyDraftOrderWithAddress stored: a draft order id, or an order id
+ * when it had to fall back to orderCreate.
+ */
+export async function captureShopifyOrderPayment(orgId: string, orderId: string) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
     log.trace("Shopify integration not active. Cannot capture payment.");
@@ -1974,41 +2003,56 @@ export async function captureShopifyOrderPayment(orgId: string, orderId: string,
   }
 
   if (!shopify) throw new Error("Shopify integration is not configured");
-  const restClient = new shopify.clients.Rest({
-    session: shopifyInfo.credential.session,
+  const client = new shopify.clients.Graphql({
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   try {
-    // First try completing it as a draft order
-    const response: ShopifyRestResponse = await restClient.put({
-      path: `draft_orders/${orderId}/complete`,
-      query: { payment_pending: "false" },
-      type: DataType.JSON,
-      data: {},
-    });
+    // First try completing it as a draft order (paid, since paymentPending defaults to false)
+    const response = await client.request<ShopifyDraftOrderCompleteData>(
+      `mutation completeDraftOrder($id: ID!) {
+        draftOrderComplete(id: $id) {
+          draftOrder {
+            order {
+              legacyResourceId
+            }
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`,
+      { variables: { id: toGid("DraftOrder", orderId) } },
+    );
+    throwOnUserErrors("draftOrderComplete", response.data?.draftOrderComplete.userErrors);
     log.info("Successfully completed Shopify Draft Order %s into a paid order", orderId);
-    return response.body?.draft_order?.order_id || true;
+    return response.data?.draftOrderComplete.draftOrder?.order?.legacyResourceId || true;
   } catch (draftError) {
     log.warn(
       { err: shopifyErrorDetail(draftError) },
-      "Completing draft order failed (might be a direct order ID). Trying POST /orders/%s/transactions...",
+      "Completing draft order failed (might be a direct order ID). Trying orderMarkAsPaid for %s...",
       orderId,
     );
     try {
-      const response: ShopifyRestResponse = await restClient.post({
-        path: `orders/${orderId}/transactions`,
-        type: DataType.JSON,
-        data: {
-          transaction: {
-            kind: "sale",
-            status: "success",
-            amount: (amount / 100).toFixed(2), // Assumes the amount is in smallest currency unit (paise)
-            source: "external",
-          },
-        },
-      });
-      log.info("Successfully captured payment for Shopify Order %s", orderId);
-      return response.body.transaction;
+      const response = await client.request<ShopifyOrderMarkAsPaidData>(
+        `mutation markOrderPaid($input: OrderMarkAsPaidInput!) {
+          orderMarkAsPaid(input: $input) {
+            order {
+              legacyResourceId
+              displayFinancialStatus
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }`,
+        { variables: { input: { id: toGid("Order", orderId) } } },
+      );
+      throwOnUserErrors("orderMarkAsPaid", response.data?.orderMarkAsPaid.userErrors);
+      log.info("Successfully marked Shopify Order %s as paid", orderId);
+      return response.data?.orderMarkAsPaid.order ?? true;
     } catch (error) {
       log.error(
         { err: shopifyErrorDetail(error) },
@@ -2038,7 +2082,7 @@ export async function buildShopifyCartUrl(
 
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   const variantMap = await resolveShopifyVariants(products, client);
@@ -2076,7 +2120,7 @@ export async function createShopifyDraftOrder(
 
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   const skus = products.map((p) => p.retailerId).filter(Boolean);
@@ -2200,7 +2244,7 @@ export async function createShopifyProduct(
 
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   // ── Step 1: Create the product ──────────────────────────────────────────
@@ -2297,15 +2341,7 @@ export async function fetchShopifyShippingRates(
     title?: string;
     price?: number | string;
   }[],
-  shippingAddress: {
-    address1?: string;
-    address2?: string;
-    city?: string;
-    province?: string;
-    zip?: string;
-    country_code?: string;
-    phone?: string;
-  },
+  shippingAddress: ShopifyShippingAddressInput,
 ) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
@@ -2315,7 +2351,7 @@ export async function fetchShopifyShippingRates(
 
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
+    session: await getActiveShopifySession(shopifyInfo),
   });
   const variantMap = await resolveShopifyVariants(products, client);
 
@@ -2342,15 +2378,7 @@ export async function fetchShopifyShippingRates(
     return [];
   }
 
-  const graphqlAddress = {
-    address1: shippingAddress.address1,
-    address2: shippingAddress.address2,
-    city: shippingAddress.city,
-    province: shippingAddress.province,
-    countryCode: shippingAddress.country_code || "IN",
-    zip: shippingAddress.zip,
-    phone: shippingAddress.phone,
-  };
+  const graphqlAddress = toMailingAddress(shippingAddress);
 
   try {
     const response = await client.request<ShopifyDeliveryOptionsData>(
@@ -2406,15 +2434,22 @@ export async function getOrderIdFromDraftOrder(
   }
 
   if (!shopify) throw new Error("Shopify integration is not configured");
-  const restClient = new shopify.clients.Rest({
-    session: shopifyInfo.credential.session,
+  const client = new shopify.clients.Graphql({
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   try {
-    const response: ShopifyRestResponse = await restClient.get({
-      path: `draft_orders/${draftOrderId}`,
-    });
-    const orderId = response.body?.draft_order?.order_id;
+    const response = await client.request<ShopifyDraftOrderLookupData>(
+      `query draftOrderOrder($id: ID!) {
+        draftOrder(id: $id) {
+          order {
+            legacyResourceId
+          }
+        }
+      }`,
+      { variables: { id: toGid("DraftOrder", draftOrderId) } },
+    );
+    const orderId = response.data?.draftOrder?.order?.legacyResourceId;
     if (!orderId) {
       throw new Error(`Draft order ${draftOrderId} has not been completed yet.`);
     }
@@ -2440,16 +2475,26 @@ export async function getShopifyProductImage(
   }
 
   if (!shopify) throw new Error("Shopify integration is not configured");
-  const restClient = new shopify.clients.Rest({
-    session: shopifyInfo.credential.session,
+  const client = new shopify.clients.Graphql({
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   try {
-    const response: ShopifyRestResponse = await restClient.get({
-      path: `products/${productId}`,
-    });
-    console.log("🚀 ~ getShopifyProductImage ~ response:", response);
-    return response.body?.product?.image?.src ?? null;
+    const response = await client.request<ShopifyProductImageData>(
+      `query productImage($id: ID!) {
+        product(id: $id) {
+          featuredMedia {
+            preview {
+              image {
+                url
+              }
+            }
+          }
+        }
+      }`,
+      { variables: { id: toGid("Product", productId) } },
+    );
+    return response.data?.product?.featuredMedia?.preview?.image?.url ?? null;
   } catch (error) {
     log.error(
       { err: shopifyErrorDetail(error) },
@@ -2481,7 +2526,7 @@ export async function getFulfillmentOrders(orgId: string, waCatalogOrderId: stri
 
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   const fullOrderGid = shopifyOrderId.startsWith("gid://")
@@ -2556,7 +2601,7 @@ export async function createShopifyFulfillment(
 
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
+    session: await getActiveShopifySession(shopifyInfo),
   });
 
   try {

@@ -23,7 +23,7 @@ import {
   WaTemplateSendComponent,
 } from "./whatsapp.types.js";
 import { RouteShorthandOptionsWithHandler } from "fastify";
-import { Session } from "@shopify/shopify-api";
+import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
 import z from "zod";
 import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service.js";
 
@@ -218,7 +218,7 @@ declare global {
     credential: GoogleSheetCredential;
   };
   interface ShopifyCredential {
-    session: Session;
+    session: StoredShopifySession;
     isWebhookRegistered: boolean;
     shopifySurveys: ShopifySurvey[];
   }
