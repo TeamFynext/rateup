@@ -40,6 +40,26 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-20-fine-tune-abilities",
+    title: "Each member on their own page",
+    summary:
+      "Click a name in Settings → Members to open that person's page: their role, teams and profile on one tab, and everything they have changed on an Activity tab. You can also add an ability their role lacks or take one away.",
+    publishedAt: "2026-09-20",
+    kinds: ["new"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/members", label: "Open Members" },
+  },
+  {
+    id: "2026-09-20-members-and-roles",
+    title: "Members and roles, in one place",
+    summary:
+      "Settings → Members now lists everyone with their role and teams, and a new Roles page shows exactly what each of the six roles can do. Roles decide what a person may do; teams decide where.",
+    publishedAt: "2026-09-20",
+    kinds: ["new", "improvement"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/members", label: "Open Members" },
+  },
+  {
     id: "2026-09-19-analytics-redesign",
     title: "Analytics, now loads faster with a clean UI",
     summary:

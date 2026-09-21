@@ -1,6 +1,7 @@
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useId, useRef, useState } from "react";
 
+import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
 import {
@@ -35,11 +36,11 @@ function ColorInput({
       {label && <FieldTitle className="text-xs text-muted-foreground">{label}</FieldTitle>}
       <div
         className="flex h-9 w-36 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2 hover:bg-accent"
-        onClick={() => inputRef.current?.click()}
+        {...pressable(() => inputRef.current?.click(), placeholder ?? "Choose a colour")}
         title={placeholder ?? "Choose a color"}
       >
         <span
-          className="size-5 shrink-0 rounded-sm border border-black/10 shadow-sm"
+          className="size-5 shrink-0 rounded-sm border shadow-sm"
           style={{ backgroundColor: value ?? "#000000" }}
         />
         <input
@@ -177,6 +178,7 @@ const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
         </div>
 
         <Button
+          aria-label="Collapse"
           type="button"
           variant="ghost"
           size="icon"

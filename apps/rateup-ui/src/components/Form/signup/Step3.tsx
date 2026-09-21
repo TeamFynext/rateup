@@ -2,7 +2,6 @@ import { IconArrowLeft, IconArrowRight, IconCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "../../ui/button.tsx";
-import { Loader } from "../../ui/loader.tsx";
 import type { SignupForm } from "./shared.tsx";
 
 const BUSINESS_GOALS = [
@@ -91,7 +90,7 @@ export function Step3({
                 />
               </span>
               <span className="flex min-w-0 flex-col gap-0.75">
-                <span className="font-heading text-[14px] font-bold tracking-[-0.015em] text-foreground">
+                <span className="font-display text-[14px] font-bold tracking-[-0.015em] text-foreground">
                   {translations(goal.label)}
                 </span>
                 <span className="text-[12.5px] leading-snug text-muted-foreground">
@@ -114,11 +113,10 @@ export function Step3({
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isLoading}
+          loading={isLoading}
           className="h-10 flex-1 cursor-pointer gap-2 rounded-lg text-sm font-semibold disabled:cursor-not-allowed"
         >
-          {isLoading && <Loader className="size-4 border-white/35" />}
-          {isLoading ? translations("Building your flows…") : translations("Finish setup")}
+          {translations("Finish setup")}
           {!isLoading && <IconArrowRight className="size-4" />}
         </Button>
       </div>

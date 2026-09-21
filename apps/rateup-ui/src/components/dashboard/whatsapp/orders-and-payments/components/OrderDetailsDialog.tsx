@@ -466,11 +466,13 @@ export default function OrderDetailsDialog({
                                   </div>
                                   <div className="flex items-center gap-4 text-xs">
                                     <div>
-                                      <span className="text-muted-foreground">Total:</span>{" "}
+                                      <span className="text-muted-foreground">Total:</span>
+                                      {""}
                                       {item.totalQuantity}
                                     </div>
                                     <div>
-                                      <span className="text-muted-foreground">Remaining:</span>{" "}
+                                      <span className="text-muted-foreground">Remaining:</span>
+                                      {""}
                                       {item.remainingQuantity}
                                     </div>
                                     {hasRemaining && (
@@ -591,7 +593,7 @@ export default function OrderDetailsDialog({
                                     type="checkbox"
                                     checked={notifyCustomer}
                                     onChange={(e) => setNotifyCustomer(e.target.checked)}
-                                    className="rounded border-gray-300"
+                                    className="rounded border-border"
                                   />
                                   Notify customer
                                 </label>

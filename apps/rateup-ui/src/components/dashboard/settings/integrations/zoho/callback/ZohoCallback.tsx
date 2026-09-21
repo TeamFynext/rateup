@@ -41,13 +41,13 @@ export function ZohoCallback() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-slate-50 to-slate-100 px-6">
-      <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white/80 backdrop-blur-xl shadow-2xl p-10">
+      <div className="w-full max-w-2xl rounded-3xl border bg-card/80 backdrop-blur-xl shadow-2xl p-10">
         <div className="flex flex-col items-center justify-center gap-10">
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-3xl font-bold text-slate-800"
+            className="text-3xl font-bold text-foreground"
           >
             {t("Connecting Zoho CRM")}
           </motion.h1>
@@ -57,13 +57,13 @@ export function ZohoCallback() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="z-10 rounded-3xl bg-white shadow-lg border border-slate-200 p-6"
+              className="z-10 rounded-3xl bg-card shadow-lg border p-6"
             >
               <RateupStar className="h-20 w-20" />
             </motion.div>
 
             <div className="absolute flex items-center justify-center w-full px-40">
-              <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-200">
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
                 <motion.div
                   initial={{ x: "-100%" }}
                   animate={{ x: "100%" }}
@@ -81,7 +81,7 @@ export function ZohoCallback() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="z-10 rounded-3xl bg-white shadow-lg border border-slate-200 p-6"
+              className="z-10 rounded-3xl bg-card shadow-lg border p-6"
             >
               <ZohoLogo className="h-20 w-20" />
             </motion.div>
@@ -93,11 +93,11 @@ export function ZohoCallback() {
             transition={{ delay: 0.4 }}
             className="flex flex-col items-center gap-2"
           >
-            <p className="text-lg font-medium text-slate-700">
+            <p className="text-lg font-medium text-foreground">
               {t("Establishing secure OAuth connection")}...
             </p>
 
-            <p className="text-sm text-slate-500 text-center max-w-md">
+            <p className="text-sm text-muted-foreground text-center max-w-md">
               {t("Please wait while we securely connect your Zoho CRM account with Rateup")}.
             </p>
           </motion.div>
@@ -118,7 +118,7 @@ export function ZohoCallback() {
             <motion.div
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-              className="h-3 w-3 rounded-full bg-red-500"
+              className="h-3 w-3 rounded-full bg-destructive"
             />
           </div>
         </div>

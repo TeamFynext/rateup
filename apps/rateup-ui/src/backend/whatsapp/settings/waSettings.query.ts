@@ -169,7 +169,7 @@ export const useSyncFbPages = (waSettingsId: string) => {
     mutationFn: (_options: { silent?: boolean } | void) => syncFbPages(waSettingsId),
     onSuccess: (_data, options) => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
-      if (!options?.silent) toast.success("success");
+      if (!options?.silent) toast.success("Facebook pages synced");
     },
     onError: (error) => {
       toast.error(error?.message || "something went wrong");
@@ -183,7 +183,7 @@ export const useSyncMetaLeadgenForms = (waSettingsId: string) => {
     mutationFn: (data: fbPageQuery) => syncMetaLeadgenForms(waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
-      toast.success("success");
+      toast.success("Lead forms synced");
     },
     onError: (error) => {
       toast.error(error?.message || "error");
@@ -200,7 +200,7 @@ export const useSyncLeadgenFormQuestions = (
     mutationFn: (data: fbPageQuery) => syncLeadgenFormQuestions(formId, waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
-      toast.success("success");
+      toast.success("Form questions synced");
     },
     onError: (error) => {
       toast.error(error?.message || "error");
@@ -214,7 +214,7 @@ export const useSyncAdaccounts = (waSettingsId: string) => {
     mutationFn: () => syncAdAccounts(waSettingsId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
-      toast.success("success");
+      toast.success("Ad accounts synced");
     },
     onError: (error) => {
       toast.error(error?.message || "error");
@@ -228,7 +228,7 @@ export const useSyncAdsByadAccounts = (adAccountId: string, waSettingsId: string
     mutationFn: () => syncAdsByAdAccount(adAccountId, waSettingsId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
-      toast.success("success");
+      toast.success("Ads synced");
     },
     onError: (error) => {
       toast.error(error?.message || "error");
@@ -242,7 +242,7 @@ export const useSubscribeFieldToPage = (waSettingsId: string) => {
     mutationFn: (data: fbPageQuery) => subscribeFieldtoPage(waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: whatsappKeys.metaAssets(waSettingsId) });
-      toast.success("success");
+      toast.success("Page subscribed");
     },
     onError: (error) => {
       toast.error(error?.message || "error");

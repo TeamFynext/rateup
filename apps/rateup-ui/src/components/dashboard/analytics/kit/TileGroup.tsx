@@ -46,7 +46,7 @@ export function TileGroup({
     <section className="flex flex-col gap-3">
       {(title || aside || isStale) && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          {title && <h2 className="font-heading text-[15px] font-bold tracking-tight">{title}</h2>}
+          {title && <h2 className="font-display text-[15px] font-bold tracking-tight">{title}</h2>}
           {aside}
           {isStale && <UpdatingLabel />}
         </div>

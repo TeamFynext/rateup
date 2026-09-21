@@ -33,7 +33,7 @@ export function ActiveStatusBadge({ active, className, ...props }: ActiveBadgePr
       className={cn(
         active
           ? "border-green-200 bg-green-100 text-green-700"
-          : "border-red-200 bg-red-100 text-red-700",
+          : "border-destructive/30 bg-destructive/10 text-destructive",
         className,
       )}
       {...props}

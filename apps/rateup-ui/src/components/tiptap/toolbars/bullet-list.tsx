@@ -16,6 +16,7 @@ const BulletListToolbar = React.forwardRef<HTMLButtonElement, React.ComponentPro
         <TooltipTrigger
           render={
             <Button
+              aria-label="Bulleted list"
               variant="ghost"
               size="icon"
               className={cn(

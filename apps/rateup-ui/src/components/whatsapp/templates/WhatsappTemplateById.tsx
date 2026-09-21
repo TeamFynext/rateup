@@ -866,8 +866,7 @@ export function WhatsappTemplateById({
                   </Button>
                 )}
 
-                <Button disabled={isSubmitting} onClick={() => handleSubmit(false)}>
-                  {isSubmitting && <Spinner />}
+                <Button loading={isSubmitting} onClick={() => handleSubmit(false)}>
                   {translations("Save & Submit")}
                 </Button>
               </React.Fragment>
@@ -1030,7 +1029,8 @@ export function WhatsappTemplateById({
                         <div>
                           <div className="flex items-center gap-1 flex-nowrap">
                             <p className="text-sm font-medium">
-                              {translations("Broadcast header")}{" "}
+                              {translations("Broadcast header")}
+                              {""}
                             </p>
                             {requiredIcon}
                           </div>

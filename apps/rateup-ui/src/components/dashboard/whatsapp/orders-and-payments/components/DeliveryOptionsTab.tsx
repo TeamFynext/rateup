@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch";
 
 const emptyOption = (): DeliveryOption => ({
@@ -89,7 +90,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 rounded-xl bg-muted/30 animate-pulse" />
+          <Skeleton key={i} className="h-16 rounded-xl" />
         ))}
       </div>
     );
@@ -191,15 +192,10 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                     <Button
                       size="sm"
                       onClick={saveEdit}
-                      disabled={isSaving}
+                      loading={isSaving}
                       className="gap-1.5 h-7 px-3 text-xs"
                     >
-                      {isSaving ? (
-                        <IconLoader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <IconCheck className="h-3 w-3" />
-                      )}{" "}
-                      Save
+                      <IconCheck className="h-3 w-3" /> Save
                     </Button>
                     <Button
                       size="sm"
@@ -234,6 +230,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                       disabled={isSaving}
                     />
                     <Button
+                      aria-label="Edit"
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
@@ -242,11 +239,12 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                       <IconPencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button
+                      aria-label="Delete"
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      className="h-7 w-7 text-destructive"
                       onClick={() => deleteOption(opt.id)}
-                      disabled={isSaving}
+                      loading={isSaving}
                     >
                       <IconTrash className="h-3.5 w-3.5" />
                     </Button>
@@ -319,7 +317,8 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                   <IconLoader2 className="h-3 w-3 animate-spin" />
                 ) : (
                   <IconCheck className="h-3 w-3" />
-                )}{" "}
+                )}
+                {""}
                 Add
               </Button>
               <Button

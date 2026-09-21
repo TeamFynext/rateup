@@ -19,7 +19,7 @@ const useUpdateShareSettingsMutation = (queryKey?: string, resourceName?: string
         queryClient.invalidateQueries({
           queryKey: [queryKey, { resourceName, id }],
         });
-        toast.success("Settings Updated Successfully", {
+        toast.success("Settings updated", {
           id: "survey-share-settings",
         });
       }

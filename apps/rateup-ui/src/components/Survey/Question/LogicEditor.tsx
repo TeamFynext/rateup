@@ -99,7 +99,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
               }
             />
           ))}
-          <Button variant="outline" size="sm" className="w-40  " onClick={handleAddNewJump}>
+          <Button variant="outline" size="sm" className="w-40" onClick={handleAddNewJump}>
             <IconPlus />
             {translations("Add Logic Jump")}
           </Button>
@@ -109,7 +109,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
         <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
           {translations("Cancel")}
         </Button>
-        <Button onClick={handleSave} disabled={questionUpdateMutation.isPending}>
+        <Button onClick={handleSave} loading={questionUpdateMutation.isPending}>
           {translations("Save")}
         </Button>
       </div>
@@ -179,7 +179,7 @@ function ConditionBlock({
 
   return (
     <Card>
-      <CardContent className="flex flex-wrap items-end gap-3 ">
+      <CardContent className="flex flex-wrap items-end gap-3">
         <p>If answer</p>
 
         <Field>
@@ -290,9 +290,10 @@ function ConditionBlock({
         </Field>
 
         <Button
+          aria-label={translations("Delete")}
           size="icon-xs"
           variant="outline"
-          className="border-red-300 text-red-500 hover:bg-red-50 hover:text-red-500"
+          className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={handleDelete}
         >
           <IconTrash />

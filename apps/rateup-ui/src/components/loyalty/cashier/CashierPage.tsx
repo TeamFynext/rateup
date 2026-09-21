@@ -36,6 +36,7 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { PageHeading } from "@/components/common/page-heading.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -562,9 +563,13 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
     }
     if (!nav.phone) {
       return (
-        <div className="hidden rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground md:block">
-          {t("Search a customer, or register one on the spot.")}
-        </div>
+        <Empty className="hidden border md:flex">
+          <EmptyHeader>
+            <EmptyDescription>
+              {t("Search a customer, or register one on the spot.")}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       );
     }
     if (lookupLoading) return <Loader />;

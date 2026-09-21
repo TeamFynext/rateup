@@ -475,7 +475,7 @@ export const ZohoTriggerList = ({
             {(selectedPipeline?.requiredFields?.length ?? 0) > 0 && (
               <div className="flex flex-col gap-4 rounded-lg border bg-muted/30 p-4">
                 <div>
-                  <h3 className="font-heading text-base font-medium">{t("Required fields")}</h3>
+                  <h3 className="font-display text-base font-medium">{t("Required fields")}</h3>
 
                   <p className="text-sm text-muted-foreground">
                     {t("Configure mandatory fields for this pipeline")}.

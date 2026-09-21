@@ -27,7 +27,8 @@ const ImageInput = (props: FlowInputProps<string>) => {
       const base64String = await FileConverter.fileToBase64(file);
       props.onChange?.(base64String);
     } catch (error) {
-      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
+      console.error("Image read failed", error);
+      toast.error("Could not read that image.", {
         id: "file-converting",
       });
     }

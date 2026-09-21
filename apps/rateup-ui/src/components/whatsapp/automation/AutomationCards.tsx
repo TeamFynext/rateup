@@ -190,6 +190,7 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
         <DropdownMenuTrigger
           render={
             <Button
+              aria-label={translations("More actions")}
               variant="ghost"
               size="icon"
               className="h-8 w-8"
@@ -224,7 +225,7 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
           )}
 
           <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
+            className="text-destructive"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -252,7 +253,7 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
               <Button
                 variant="outline"
                 onClick={() => setCloneDialogOpened(false)}
-                disabled={isClonePending}
+                loading={isClonePending}
               >
                 {translations("Cancel")}
               </Button>

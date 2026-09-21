@@ -161,7 +161,7 @@ export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
       return <WaInboxOrder messageContent={asOrder(messageContent)} timestamp={timeStamp} />;
     default:
       return (
-        <span className="text-xs text-red-500 font-medium">
+        <span className="text-xs text-destructive font-medium">
           {messageType} {translations("message type display is not supported yet")}
         </span>
       );
@@ -301,14 +301,14 @@ const PendingMessageContent = ({ message }: { message: PendingMessage }) => {
         <video src={body.url} height={"150px"} width={"150px"} />
       )}
       {body.url && body.urlType === "document" && (
-        <p
+        <a
+          href={body.url}
+          target="_blank"
+          rel="noopener noreferrer"
           className="cursor-pointer underline"
-          onClick={() => {
-            window.open(body.url, "_blank");
-          }}
         >
           {body.filename}
-        </p>
+        </a>
       )}
       {body.url && body.urlType === "audio" && <audio src={body.url} />}
       <div>{body.text ? parseJsonToReact(body?.text) : null}</div>

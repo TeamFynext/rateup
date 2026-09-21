@@ -23,7 +23,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "../ui/input-group.tsx";
-import { Loader } from "../ui/loader.tsx";
 import AppleSignInButton from "./AppleSigninButton.tsx";
 import { AuthShell, AuthTitle } from "./AuthShell.tsx";
 import GoogleSignInButton from "./GoogleSigninButton.tsx";
@@ -218,11 +217,10 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
 
             <Button
               type="submit"
-              disabled={isLoading}
+              loading={isLoading}
               className="h-11.5 w-full cursor-pointer gap-2.5 rounded-lg text-[15px] font-semibold disabled:cursor-not-allowed"
             >
-              {isLoading && <Loader className="size-4 border-white/35" />}
-              {isLoading ? translations("Signing you in…") : translations("Sign in")}
+              {translations("Sign in")}
             </Button>
           </form>
 

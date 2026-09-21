@@ -107,7 +107,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
     <motion.div
       onMouseLeave={() => setHovered(null)}
       className={cn(
-        "hidden flex-1 flex-row items-center justify-center gap-1 text-sm font-medium text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:gap-1",
+        "hidden flex-1 flex-row items-center justify-center gap-1 text-sm font-medium text-muted-foreground transition duration-200 hover:text-foreground lg:flex lg:gap-1",
         className,
       )}
     >
@@ -117,21 +117,17 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         <Link
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
-          className={`relative px-4 py-1.5 text-rateup-graytext text-[16px] font-semibold
-           dark:text-neutral-300 ${
-             item.link === pathname
-               ? `rounded-xl
-               bg-[#3f5ba91c] dark:bg-neutral-800`
-               : ""
-           }`}
+          className={cn(
+            "relative px-4 py-1.5 text-[16px] font-semibold text-ru-n-600",
+            item.link === pathname && "rounded-xl bg-[#3f5ba91c]",
+          )}
           key={`link-${idx}`}
           to={item.link}
         >
           {hovered === idx && (
             <motion.div
               layoutId="hovered"
-              className="absolute inset-0 h-full w-full rounded-xl
-               bg-[#3f5ba91c] dark:bg-neutral-800"
+              className="absolute inset-0 h-full w-full rounded-xl bg-[#3f5ba91c]"
             />
           )}
           <span className="relative z-20 text-[var(--nav-link-color)] hover:text-[var(--nav-link-hover)]">
@@ -174,7 +170,7 @@ export const MobileNavMenu = ({ children, className, isOpen }: MobileNavMenuProp
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className={cn(
-            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-start justify-start gap-4 rounded-lg bg-white px-4 py-8 shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] text-black",
+            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-start justify-start gap-4 rounded-lg bg-background px-4 py-8 shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] text-black",
             className,
           )}
         >

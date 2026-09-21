@@ -73,10 +73,10 @@ export function GenerateData() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Generate Survey Response Card */}
         <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+          <div className="absolute inset-0 bg-linear-to-br from-ru-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
           <CardHeader className="relative">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <div className="p-2 bg-ru-blue-100 dark:bg-blue-900/20 rounded-lg">
                 <IconBolt className="h-5 w-5 text-blue-600" />
               </div>
               <div>
@@ -119,12 +119,12 @@ export function GenerateData() {
             <Button
               onClick={handleSubmit}
               disabled={!selectedSurveyTeamMapId || generateResponse?.isPending}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-300"
               size="lg"
             >
               {generateResponse?.isPending ? (
                 <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Generating...
                 </>
               ) : (
@@ -136,7 +136,7 @@ export function GenerateData() {
             </Button>
 
             {selectedSurveyTeamMapId && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="p-3 bg-ru-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="text-xs text-blue-800 dark:text-blue-200">
                   <strong>Survey Map ID:</strong> {selectedSurveyTeamMapId}
                 </div>
@@ -196,12 +196,12 @@ export function GenerateData() {
             <Button
               onClick={handleWaChat}
               disabled={isProduction || generateInboxResponse?.isPending}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-green-600 hover:bg-green-700 dark:hover:bg-green-300"
               size="lg"
             >
               {generateInboxResponse?.isPending ? (
                 <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Generating...
                 </>
               ) : (
@@ -213,8 +213,8 @@ export function GenerateData() {
             </Button>
 
             {isProduction && (
-              <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                <div className="text-xs text-red-800 dark:text-red-200">
+              <div className="p-3 bg-destructive/10 rounded-lg border border-destructive/30 ">
+                <div className="text-xs text-destructive ">
                   <strong>Note:</strong> This feature is disabled in production environment for
                   security reasons.
                 </div>

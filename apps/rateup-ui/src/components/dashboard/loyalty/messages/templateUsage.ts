@@ -4,7 +4,7 @@ import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 
 import type { LoyaltyMessageDefinition } from "./loyaltyMessageCatalog.ts";
 
-/** The BODY text of a stored Meta template, with its `{{n}}` tokens still in place. */
+/** The BODY text of a stored Meta template, with its `{n}` tokens still in place. */
 export function templateBodyOf(
   entry: Pick<WaTemplateListEntry, "data"> | undefined,
 ): string | undefined {

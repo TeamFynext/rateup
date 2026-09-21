@@ -12,7 +12,7 @@ export const WaTextCharacterCount = ({ editor, max }: { editor: Editor | null; m
       className={cn(
         "flex items-center gap-2 p-2.5 text-xs text-muted-foreground [&>svg]:text-green-600",
         editor?.storage?.characterCount?.characters() === max &&
-          "text-red-600 [&>svg]:text-red-600",
+          "text-destructive [&>svg]:text-destructive",
       )}
     >
       <svg height="20" width="20" viewBox="0 0 20 20">

@@ -42,7 +42,7 @@ export const useGetWaPaymentConfigurationByNameMutation = (type: IntegratedApps)
   return useMutation({
     mutationFn: getWaPaymentConfigurationByName,
     onSuccess: () => {
-      toast.success("whatsapp payment configuration found successfully", {
+      toast.success("Payment configuration found", {
         id: "waPaymentConfiguration-get-by-name",
       });
       queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
@@ -60,7 +60,7 @@ export const useCreateWaPaymentConfigurationMutation = (type: IntegratedApps) =>
   return useMutation({
     mutationFn: createWaPaymentConfiguration,
     onSuccess: () => {
-      toast.success("whatsapp payment configuration created successfully", {
+      toast.success("Payment configuration created", {
         id: "waPaymentConfigurations-create",
       });
       queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
@@ -78,7 +78,7 @@ export const useRegenerateWaPaymentConfigurationOauthMutation = (type: Integrate
     mutationFn: regenerateWaPaymentConfigurationOauth,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
-      toast.success("whatsapp payment configuration oauth link updated successfully", {
+      toast.success("Payment configuration updated", {
         id: "waPaymentConfigurations-oauth",
       });
     },
@@ -96,7 +96,7 @@ export const useDeleteWaPaymentConfigurationMutation = (type: IntegratedApps) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: integrationKeys.byType(type) });
 
-      toast.success("whatsapp payment configuration created successfully", {
+      toast.success("Payment configuration created", {
         id: "waPaymentConfigurations-delete",
       });
     },
@@ -196,7 +196,7 @@ export const useDeleteZapierTriggerHook = () => {
       queryClient.invalidateQueries({
         queryKey: integrationKeys.byType(IntegratedApps.zapier),
       });
-      toast.success("success");
+      toast.success("Zapier hook deleted");
     },
     onError: (error) => {
       toast.error(error?.message || "Failed");

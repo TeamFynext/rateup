@@ -74,7 +74,8 @@ export function BrandPreviewCard({
                 {t("Member")}
               </span>
               <span className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">120</span>{" "}
+                <span className="font-semibold text-foreground">120</span>
+                {""}
                 {pointsName.trim() || t("Points")}
               </span>
             </div>

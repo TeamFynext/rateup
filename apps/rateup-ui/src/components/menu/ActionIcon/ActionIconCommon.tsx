@@ -20,6 +20,7 @@ export const ActionIconCommon = ({
       <TooltipTrigger
         render={
           <Button
+            aria-label={label}
             variant="outline"
             size="icon-sm"
             className="rounded-full bg-white"

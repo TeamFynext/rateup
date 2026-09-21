@@ -29,6 +29,7 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
           <div className="flex flex-wrap items-center justify-between gap-2.5">
             <p className="text-sm font-medium">Card {index + 1}</p>
             <Button
+              aria-label="Remove"
               type="button"
               variant="ghost"
               size="icon-sm"
@@ -129,6 +130,7 @@ export const InstagramGenericTemplateNodeEditor: React.FC<
                 />
               )}
               <Button
+                aria-label="Remove"
                 type="button"
                 variant="ghost"
                 size="icon-sm"

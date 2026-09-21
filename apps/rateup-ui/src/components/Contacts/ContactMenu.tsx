@@ -88,8 +88,12 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={openDeleteModal} className="text-red-500">
-          <IconTrash className="text-red-500 w-4 h-4 mr-2" />
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={openDeleteModal}
+          className="text-destructive"
+        >
+          <IconTrash className="text-destructive w-4 h-4 mr-2" />
           {translations("Delete contact")}
         </DropdownMenuItem>
       </DropdownMenuContent>

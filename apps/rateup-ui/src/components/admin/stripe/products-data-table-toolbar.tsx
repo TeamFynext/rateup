@@ -38,7 +38,7 @@ export function ProductsDataTableToolbar<TData>({ table }: Readonly<DataTableToo
           variant="outline"
           size="sm"
           onClick={() => syncStripeProductMutate.mutate()}
-          disabled={syncStripeProductMutate.isPending}
+          loading={syncStripeProductMutate.isPending}
         >
           <IconRefresh
             className={`h-4 w-4 mr-2 ${syncStripeProductMutate.isPending ? "animate-spin" : ""}`}

@@ -153,7 +153,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
                 <div className="flex items-center justify-between w-full gap-2">
                   <span>{account?.label}</span>
                   {isDisconnected && (
-                    <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">
+                    <span className="text-[10px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded font-medium">
                       {translations("Disconnected")}
                     </span>
                   )}

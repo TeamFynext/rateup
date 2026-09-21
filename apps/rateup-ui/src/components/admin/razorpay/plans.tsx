@@ -305,7 +305,7 @@ const RazorpayPlans = () => {
   return (
     <div className="space-y-6">
       {/* Info Alert */}
-      <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
+      <Card className="border-blue-200 bg-ru-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -347,7 +347,7 @@ const RazorpayPlans = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{inactivePlans.length}</div>
+            <div className="text-2xl font-bold text-destructive">{inactivePlans.length}</div>
           </CardContent>
         </Card>
       </div>

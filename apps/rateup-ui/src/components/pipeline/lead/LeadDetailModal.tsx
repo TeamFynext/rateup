@@ -133,9 +133,9 @@ function describeActivity(t: TFunction, activity: LeadActivity): { title: string
       return {
         title: t("Assignees changed"),
         body: [
-          added.length ? t("{actor} assigned {names}", { actor, names: added.join(", ") }) : null,
+          added.length ? t("{actor} assigned {names}", { actor, names: added.join(",") }) : null,
           removed.length
-            ? t("{actor} unassigned {names}", { actor, names: removed.join(", ") })
+            ? t("{actor} unassigned {names}", { actor, names: removed.join(",") })
             : null,
         ]
           .filter(Boolean)
@@ -289,7 +289,7 @@ export function LeadDetailModal({
               <div className="flex items-start gap-3">
                 <LeadAvatar name={lead.name} channel={lead.channel} size="xl" />
                 <div className="min-w-0 flex-1">
-                  <DialogTitle className="font-nunito truncate text-xl leading-tight font-bold tracking-[-0.01em]">
+                  <DialogTitle className="font-display truncate text-xl leading-tight font-bold tracking-[-0.01em]">
                     {lead.name}
                   </DialogTitle>
                   <DialogDescription className="mt-0.5 truncate text-sm">

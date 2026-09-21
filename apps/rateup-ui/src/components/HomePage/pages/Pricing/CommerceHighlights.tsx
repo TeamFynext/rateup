@@ -48,7 +48,7 @@ export const CommerceHighlights = () => (
               {card.icon}
             </svg>
           </div>
-          <h3 className="font-nunito mb-2 mt-[18px] text-[22px] font-extrabold text-foreground">
+          <h3 className="font-display mb-2 mt-[18px] text-[22px] font-extrabold text-foreground">
             {card.title}
           </h3>
           <p className="m-0 text-[15px] leading-relaxed text-muted-foreground">{card.body}</p>

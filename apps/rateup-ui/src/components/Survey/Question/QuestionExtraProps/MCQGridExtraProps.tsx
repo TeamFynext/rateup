@@ -124,6 +124,7 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
+                          aria-label={translations("Edit")}
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => {
@@ -134,6 +135,7 @@ const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: s
                           <IconEdit />
                         </Button>
                         <Button
+                          aria-label={translations("Delete")}
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => handleDeleteQuestion(question)}

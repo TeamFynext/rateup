@@ -99,12 +99,12 @@ export default function BusinessSection() {
     <section className="bg-white py-16 md:py-[100px]" id="business">
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
-          <h6 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
+          <h6 className="font-display font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ru-n-600">
             Built for Businesses That Thrive
             <br />
             on Customer Happiness
           </h6>
-          <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
+          <p className="mt-4 text-[17px] leading-[1.55] text-ru-n-500">
             RateUp is perfect for any business that values customer feedback and wants a modern,
             effective way to collect it.
           </p>
@@ -114,7 +114,7 @@ export default function BusinessSection() {
           {cards.map((c) => (
             <div
               key={c.title}
-              className={`border border-ink-100 rounded-[22px] p-8 bg-white shadow-[0_1px_2px_rgba(11,31,72,0.06),0_2px_6px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:shadow-[0_12px_48px_rgba(11,31,72,0.12)] transition-all ${style.reveal}`}
+              className={`border border-ru-n-200 rounded-[22px] p-8 bg-white shadow-[0_1px_2px_rgba(11,31,72,0.06),0_2px_6px_rgba(11,31,72,0.05)] hover:-translate-y-1 hover:shadow-[0_12px_48px_rgba(11,31,72,0.12)] transition-all ${style.reveal}`}
               data-d={c.delay}
             >
               <div className="w-[52px] h-[52px] rounded-2xl bg-accent flex items-center justify-center mb-[18px]">
@@ -122,10 +122,10 @@ export default function BusinessSection() {
                   {c.icon}
                 </span>
               </div>
-              <h6 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
+              <h6 className="font-display font-extrabold text-[20px] text-ru-n-600 mb-2.5">
                 {c.title}
               </h6>
-              <p className="text-sm text-ink-500 leading-[1.55] mb-5">{c.desc}</p>
+              <p className="text-sm text-ru-n-500 leading-[1.55] mb-5">{c.desc}</p>
               <a
                 href="#"
                 className="inline-flex items-center gap-1.5 text-sm font-bold text-fb-green no-underline [&_svg]:transition-transform hover:[&_svg]:translate-x-0.5"

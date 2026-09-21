@@ -187,9 +187,8 @@ export function WaBusinessProfileForm({
             variant="outline"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
-            disabled={photoMutation.isPending}
+            loading={photoMutation.isPending}
           >
-            {photoMutation.isPending && <Spinner />}
             {profile?.profilePictureUrl
               ? translations("Change photo")
               : translations("Upload photo")}

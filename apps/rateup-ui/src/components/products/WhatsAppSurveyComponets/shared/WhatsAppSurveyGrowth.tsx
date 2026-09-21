@@ -5,7 +5,7 @@ import { articles } from "../WhatsAppSurveyConstants.tsx";
 export default function WhatsAppSurveyGrowth() {
   return (
     <section
-      className="py-16  bg-linear-to-br px-8 from-[#075E54] rounded-b-4xl via-[#075E54] to-[#009987]"
+      className="py-16 bg-linear-to-br px-8 from-[#075E54] rounded-b-4xl via-[#075E54] to-[#009987]"
       id="feedback"
     >
       <div

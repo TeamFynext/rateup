@@ -233,9 +233,10 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                   {block.type} {translations("Block")} {index + 1}
                 </span>
                 <Button
+                  aria-label={translations("Delete")}
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
                   onClick={(e) => {
                     e.stopPropagation();
                     setBlocks(blocks.filter((_, i: number) => i !== index));
@@ -371,9 +372,10 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                             </Field>
                           )}
                           <Button
+                            aria-label={translations("Remove")}
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 mt-7"
+                            className="h-8 w-8 text-destructive hover:bg-destructive/10 mt-7"
                             onClick={() => removeCondition(index, condIndex)}
                             disabled={condIndex === 0}
                           >
@@ -437,9 +439,10 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                             </Field>
                             {caseIndex > 2 && (
                               <Button
+                                aria-label={translations("Remove")}
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                className="h-10 w-10 text-destructive hover:bg-destructive/10"
                                 onClick={() => removeSwitchCase(index, caseKey)}
                               >
                                 <IconTrash size={16} />

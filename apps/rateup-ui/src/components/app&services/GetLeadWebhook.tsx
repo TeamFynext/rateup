@@ -157,7 +157,7 @@ export function GetLeadWebhook() {
           </div>
 
           <div>
-            <Button variant="outline" onClick={rotate} disabled={issueMutation.isPending}>
+            <Button variant="outline" onClick={rotate} loading={issueMutation.isPending}>
               {issueMutation.isPending
                 ? t("Replacing...")
                 : webhook?.configured

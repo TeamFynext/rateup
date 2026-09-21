@@ -87,6 +87,7 @@ export const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = 
           />
           {typedData.contacts.length > 1 && (
             <Button
+              aria-label="Remove"
               type="button"
               variant="ghost"
               size="icon-sm"
@@ -263,6 +264,7 @@ export const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = 
               description="WhatsApp user ID. If omitted, the message will display an Invite to WhatsApp button instead of the standard button"
             />
             <Button
+              aria-label="Remove"
               type="button"
               variant="ghost"
               size="icon-sm"
@@ -328,6 +330,7 @@ export const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = 
               style={{ flex: 1 }}
             />
             <Button
+              aria-label="Remove"
               type="button"
               variant="ghost"
               size="icon-sm"
@@ -376,6 +379,7 @@ export const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = 
             <div className="flex flex-wrap items-center justify-between gap-2.5">
               <p className="text-sm">Address {index + 1}</p>
               <Button
+                aria-label="Remove"
                 type="button"
                 variant="ghost"
                 size="icon-sm"
@@ -544,6 +548,7 @@ export const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = 
               style={{ flex: 1 }}
             />
             <Button
+              aria-label="Remove"
               type="button"
               variant="ghost"
               size="icon-sm"

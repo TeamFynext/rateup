@@ -45,7 +45,7 @@ function StatItem({
   return (
     <div className={style.reveal} data-d={delay}>
       <div
-        className="font-nunito font-black text-[clamp(40px,5.5vw,68px)] text-white tracking-[-0.02em] leading-none"
+        className="font-display font-black text-[clamp(40px,5.5vw,68px)] text-white tracking-[-0.02em] leading-none"
         ref={numRef}
       >
         0{suffix}

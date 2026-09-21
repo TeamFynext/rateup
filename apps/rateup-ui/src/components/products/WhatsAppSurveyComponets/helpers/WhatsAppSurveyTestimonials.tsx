@@ -17,7 +17,7 @@ const testimonials = [
 
 export default function WhatsAppSurveyTestimonials() {
   return (
-    <section className="bg-gradient-to-b from-blue-50 px-8 to-white py-20">
+    <section className="bg-gradient-to-b from-ru-blue-50 px-8 to-white py-20">
       <div className="max-w-6xl mx-auto text-center">
         <h3 className="text-3xl sm:text-4xl font-bold text-[#009987]">
           Don&apos;t Just Take Our Word For It

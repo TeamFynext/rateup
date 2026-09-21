@@ -567,7 +567,7 @@ export default function TicketPanel({
                 size="sm"
                 className="h-7 text-[11px]"
                 onClick={saveTicket}
-                disabled={editConversation.isPending}
+                loading={editConversation.isPending}
               >
                 {t("Save")}
               </Button>
@@ -961,7 +961,7 @@ export default function TicketPanel({
         <Button
           type="button"
           onClick={() => toggleSpam(!contact?.isSpam)}
-          disabled={spamMutation.isPending}
+          loading={spamMutation.isPending}
           variant={contact?.isSpam ? "outline" : "destructive"}
         >
           {contact?.isSpam ? (
@@ -1000,7 +1000,7 @@ export default function TicketPanel({
               {contactStage?.loss && (
                 <>
                   {t(
-                    "This deletes the lead and cannot be undone: {{notes}} note(s), {{tasks}} task(s), {{activities}} timeline entr(y/ies) and {{assignees}} assignee(s) go with it.",
+                    "This deletes the lead and cannot be undone: {notes} note(s), {tasks} task(s), {activities} timeline entr(y/ies) and {assignees} assignee(s) go with it.",
                     contactStage.loss,
                   )}
                 </>
@@ -1011,14 +1011,14 @@ export default function TicketPanel({
             <DialogClose render={<Button variant="outline" />}>{t("Cancel")}</DialogClose>
             <Button
               variant="destructive"
-              disabled={clearStage.isPending}
+              loading={clearStage.isPending}
               onClick={() =>
                 clearStage.mutate(undefined, {
                   onSuccess: () => setClearOpen(false),
                 })
               }
             >
-              {clearStage.isPending ? t("Removing...") : t("Remove")}
+              {t("Remove")}
             </Button>
           </DialogFooter>
         </DialogContent>

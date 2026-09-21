@@ -285,8 +285,9 @@ function BadgeorTextorPreview({
         {response?.photo ? (
           <>
             <div className="flex items-center gap-2">
-              <span className="font-light text-md text-gray-700 dark:text-gray-300">
-                {translations("Profile Picture:")}{" "}
+              <span className="font-light text-md text-foreground">
+                {translations("Profile Picture:")}
+                {""}
               </span>
               <Button className="w-fit" onClick={open} size="sm" variant="outline">
                 <IconEye className="mr-1.5 size-3.5" />
@@ -323,7 +324,7 @@ function BadgeorTextorPreview({
   } else if (questionType == QuestionType.File) {
     return response ? (
       <div className="flex gap-2 items-center">
-        <span className="font-light text-md text-gray-700 dark:text-gray-300 w-37.5 break-words">
+        <span className="font-light text-md text-foreground w-37.5 break-words">
           {getFileNameFromKey(response)}
         </span>
         <Button
@@ -366,7 +367,7 @@ export function ActionMenu({
           render={
             <Button
               variant="outline"
-              className="rounded-lg text-xs text-gray-500 max-w-fit -ml-3.5"
+              className="rounded-lg text-xs text-muted-foreground max-w-fit -ml-3.5"
               size="sm"
             />
           }
@@ -377,7 +378,7 @@ export function ActionMenu({
 
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            className="text-red-500"
+            className="text-destructive"
             onClick={() => {
               setSelectedRowId?.(resId ?? "");
               setSelectedRowSurveyTeamMapId?.(resSurveyTeamMapId ?? "");

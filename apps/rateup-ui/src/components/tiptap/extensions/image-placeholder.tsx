@@ -1,4 +1,4 @@
-import { IconLink, IconLoader2, IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
+import { IconLink, IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
 import {
   type CommandProps,
   Node,
@@ -173,7 +173,12 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
           <div className="rounded-lg border bg-card p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Add Image</h3>
-              <Button variant="ghost" size="icon" onClick={() => setIsExpanded(false)}>
+              <Button
+                aria-label="Close"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsExpanded(false)}
+              >
                 <IconX className="h-4 w-4" />
               </Button>
             </div>
@@ -217,13 +222,10 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
                           placeholder="Alt text (optional)"
                         />
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={handleRemove} disabled={uploading}>
+                          <Button variant="outline" onClick={handleRemove} loading={uploading}>
                             Remove
                           </Button>
-                          <Button disabled={uploading}>
-                            {uploading && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Upload
-                          </Button>
+                          <Button loading={uploading}>Upload</Button>
                         </div>
                       </div>
                     </div>

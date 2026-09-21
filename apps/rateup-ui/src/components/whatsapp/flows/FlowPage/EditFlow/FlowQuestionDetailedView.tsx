@@ -35,7 +35,6 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import {
   getFlowLabelLimit,
@@ -591,8 +590,8 @@ function ElementEditor({
               </Button>
             )}
           </div>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Spinner /> : <IconDeviceSdCard />}
+          <Button onClick={handleSave} loading={isSaving}>
+            <IconDeviceSdCard />
             {getIncompleteLanguages().length > 1 ||
             (getIncompleteLanguages().length > 0 &&
               getIncompleteLanguages()[0] !== selectedLanguage)

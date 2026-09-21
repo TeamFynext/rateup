@@ -269,7 +269,7 @@ function CampaignsMock() {
         />
         <div className="flex flex-col rounded-xl border border-ru-n-200 bg-white p-3">
           <div className="ml-auto max-w-[88%] self-end rounded-2xl rounded-br-xs bg-ru-blue-600 px-3.25 py-2.5 text-sm/[1.5] text-white">
-            Hi {"{{name}}"} — this weekend earn <strong className="font-semibold">2× points</strong>{" "}
+            Hi {"{name}"} — this weekend earn <strong className="font-semibold">2× points</strong>{" "}
             on every order. Tap to shop and redeem.
           </div>
           <div className="mt-2.5 flex flex-wrap gap-1.75">

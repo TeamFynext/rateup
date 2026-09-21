@@ -2,6 +2,7 @@ import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
+import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 
@@ -32,12 +33,7 @@ const QuickReplyItem = ({
       className={`group flex items-center justify-between gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-gray-50/50 dark:hover:bg-zinc-800/10 transition-colors w-full ${
         cursor ? "cursor-pointer" : ""
       }`}
-      onClick={(e) => {
-        if (onClick) {
-          e.preventDefault();
-          onClick(reply.text);
-        }
-      }}
+      {...pressable(() => onClick?.(reply.text))}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Key Badge */}
@@ -46,7 +42,7 @@ const QuickReplyItem = ({
             {reply.key.startsWith("/") ? reply.key : `/${reply.key}`}
           </span>
         ) : (
-          <span className="shrink-0 text-red-500 text-sm font-semibold select-none">
+          <span className="shrink-0 text-destructive text-sm font-semibold select-none">
             *{t("key not found")}
           </span>
         )}
@@ -103,7 +99,7 @@ const QuickReplyItem = ({
             trigger={
               <Button
                 variant="ghost"
-                className="hover:bg-red-50 dark:hover:bg-red-950/20 text-muted-foreground hover:text-red-600 h-8 w-8 p-0"
+                className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive h-8 w-8 p-0"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();

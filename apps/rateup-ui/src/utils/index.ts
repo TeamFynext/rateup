@@ -1,7 +1,4 @@
-import { useTranslation } from "react-i18next";
-
 import { COORDINATESX, COORDINATESY } from "./constants.ts";
-import { UserRole } from "./enums/index.ts";
 
 export function getTimeSince(date: string | Date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -94,29 +91,6 @@ export const getContent = (title: string) => {
   if (isHtml(title)) return extractText(title);
   else return title;
 };
-
-export function getUserRoleColor(role: string) {
-  switch (role) {
-    case UserRole.SUPADM:
-      return "#B22222";
-    case UserRole.ADM:
-      return "#FFA500";
-    case UserRole.MEMBER:
-      return "#ADD8E6";
-  }
-}
-
-export function UserRoleLabel({ role }: { role: keyof typeof UserRole }) {
-  const { t: translations } = useTranslation();
-  switch (role) {
-    case UserRole.SUPADM:
-      return translations("Super Admin");
-    case UserRole.ADM:
-      return translations("Admin");
-    case UserRole.MEMBER:
-      return translations("Staff");
-  }
-}
 
 export function isValidUrl(url: string, checkHttps: boolean = true) {
   try {

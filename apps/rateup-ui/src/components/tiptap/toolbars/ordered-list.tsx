@@ -15,6 +15,7 @@ const OrderedListToolbar = React.forwardRef<HTMLButtonElement, React.ComponentPr
         <TooltipTrigger
           render={
             <Button
+              aria-label="Numbered list"
               variant="ghost"
               size="icon"
               className={cn(

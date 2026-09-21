@@ -464,7 +464,7 @@ function FlowEditorContent({
   return (
     <div className="relative flex h-full w-full bg-background">
       <div
-        className="relative h-full grow bg-ink-100 dark:bg-background"
+        className="relative h-full grow bg-ru-n-200 dark:bg-background"
         ref={reactFlowWrapper}
         style={{
           backgroundImage:

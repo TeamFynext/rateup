@@ -1,8 +1,6 @@
-import { IconArrowLeft } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@/components/ui/button.tsx";
+import { BackLink } from "@/components/common/back-link.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 
@@ -17,15 +15,7 @@ export function ProgramSectionEditor({ children }: Readonly<{ children: React.Re
 
   return (
     <div className="flex flex-col gap-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="self-start"
-        render={<Link to={LOYALTY_PATHS.program} search={{}} />}
-      >
-        <IconArrowLeft size={16} />
-        {t("Back to Program")}
-      </Button>
+      <BackLink to={LOYALTY_PATHS.program} search={{}} label={t("Program")} />
       <div className="min-w-0">{children}</div>
     </div>
   );

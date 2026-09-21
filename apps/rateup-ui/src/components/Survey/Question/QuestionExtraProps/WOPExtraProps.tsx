@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
+import { pressable } from "@/components/common/pressable.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -40,10 +41,10 @@ function ColorInput({
       </FieldTitle>
       <div
         className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2 hover:bg-accent"
-        onClick={() => inputRef.current?.click()}
+        {...pressable(() => inputRef.current?.click(), "Choose a colour")}
       >
         <span
-          className="size-5 shrink-0 rounded-sm border border-black/10 shadow-sm"
+          className="size-5 shrink-0 rounded-sm border shadow-sm"
           style={{ backgroundColor: value ?? "#000000" }}
         />
         <input
@@ -234,6 +235,7 @@ const WOPExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
             />
             {values.imageSrc && (
               <Button
+                aria-label={translations("Clear")}
                 type="button"
                 variant="ghost"
                 size="icon"

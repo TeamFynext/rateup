@@ -74,7 +74,7 @@ const SurveyQuestion = ({
     if (active && payload?.length) {
       const { count, percentage } = payload[0].payload;
       return (
-        <div className="bg-white border px-3 py-1 rounded shadow-sm text-sm text-gray-700">
+        <div className="bg-card border px-3 py-1 rounded shadow-sm text-sm text-foreground">
           {count} Votes ({percentage}%)
         </div>
       );
@@ -82,7 +82,7 @@ const SurveyQuestion = ({
     return null;
   };
   return (
-    <div className="space-y-8 border border-[#E2E5ED] rounded-md shadow-sm bg-white">
+    <div className="space-y-8 border rounded-md shadow-sm bg-card">
       <h2 className="font-bold text-md px-6 pt-6">Survey Question Breakdown</h2>
       <div className="py-8 px-4 md:px-14 flex flex-col gap-16">
         {choiceWise?.map(([questionId, questionData], index) => {
@@ -138,7 +138,7 @@ const SurveyQuestion = ({
                 {/* Right Section */}
                 <div className="w-full md:w-[60%] flex flex-col gap-4">
                   {/* Chart */}
-                  <div className="h-[300px] border rounded-md bg-white shadow-sm px-4 pt-4">
+                  <div className="h-[300px] border rounded-md bg-card shadow-sm px-4 pt-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartData} barSize={30} barGap={4} barCategoryGap="15%">
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
@@ -246,7 +246,7 @@ const SurveyQuestion = ({
               </div>
 
               {/* Divider */}
-              <div className="w-full border border-gray-200 mt-10" />
+              <div className="w-full border border-border mt-10" />
             </div>
           );
         })}

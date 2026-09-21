@@ -392,6 +392,7 @@ function WhatsappPaymentList({
                       <TooltipTrigger
                         render={
                           <Button
+                            aria-label="Refresh"
                             variant="ghost"
                             size="icon"
                             onClick={() =>

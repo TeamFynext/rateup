@@ -15,16 +15,29 @@ export const pointRewardSchema = z.object({
   availableDays: z.array(z.string()).optional(),
   timeFrom: z.string().optional(),
   timeTo: z.string().optional(),
+  /** Mirror each redemption code into the connected Shopify store as a discount code. */
+  shopifyDiscountEnabled: z.boolean().optional(),
+  /** Days the Shopify code stays valid from issue. Blank = no expiry. */
+  shopifyValidForDays: z.coerce.number().int().min(1).optional(),
 });
 
-export const couponSchema = z.object({
+const couponBaseSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  couponCode: z.string().min(1, "Coupon code is required"),
+  /**
+   * The one code every customer types. A Shopify-synced coupon has none: each redemption gets
+   * its own generated code, so the field is hidden and not required — see the refinement below.
+   */
+  couponCode: z.string().optional(),
   couponDescription: z.string().optional(),
   discountType: z.enum(["percentage", "fixed"]).optional(),
   discountValue: z.coerce.number().min(0).optional(),
-  stockQuantity: z.coerce.number().min(0).optional(),
+  /**
+   * Zero is not "unlimited", it is "out of stock": `validateStock` refuses a redemption as soon
+   * as `stockRedeemed >= stockQuantity`, so a coupon saved with 0 can never be redeemed by
+   * anyone. One is the smallest coupon that actually works.
+   */
+  stockQuantity: z.coerce.number().min(1, "Allow at least one redemption").optional(),
   perUserLimit: z.coerce.number().min(1).optional(),
   validFrom: z.string().optional(),
   validTo: z.string().optional(),
@@ -32,6 +45,21 @@ export const couponSchema = z.object({
   minimumSpend: z.coerce.number().min(0).optional(),
   waTemplateId: z.string().optional(),
   tierIds: z.array(z.string()).optional(),
+  /**
+   * No `shopifyValidForDays` here on purpose: a coupon already states when it stops working,
+   * in Valid To, and the Shopify code is built to end with it.
+   */
+  shopifyDiscountEnabled: z.boolean().optional(),
+});
+
+export const couponSchema = couponBaseSchema.superRefine((value, ctx) => {
+  if (!value.shopifyDiscountEnabled && !value.couponCode?.trim()) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["couponCode"],
+      message: "Coupon code is required",
+    });
+  }
 });
 
 export const giftSchema = z.object({

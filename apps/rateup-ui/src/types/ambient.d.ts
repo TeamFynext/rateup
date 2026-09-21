@@ -545,6 +545,12 @@ declare global {
     showLifecycle: boolean;
     isConversionApiActive: boolean;
     onboardingChecklistCompleted: boolean;
+    /** System role and its permissions (rateup-api/src/authz). Absent from an older API. */
+    roleKey?: string;
+    permissions?: string[];
+    permissionsVersion?: number;
+    scope?: { all: boolean; teamIds: string[]; inbox: "all" | "own_teams" | "assigned_only" };
+    grantableRoles?: string[];
   }
 
   interface UserInfoQueryData {

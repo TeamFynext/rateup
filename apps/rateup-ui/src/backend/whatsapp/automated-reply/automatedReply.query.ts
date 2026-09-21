@@ -50,7 +50,7 @@ export const useCreateWaAutomatedReplyMutation = () => {
     mutationFn: (data: RequestPayload) => createWaAutomatedReply(data),
     onSuccess: (_, _data) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
-      toast.success("Automated Reply Created Successfully");
+      toast.success("Automated Reply created");
     },
     onError: (error) => {
       if (!shouldSkipLocalErrorToast(error))
@@ -65,7 +65,7 @@ export const useDeleteWaAutomatedReplyMutation = () => {
     mutationFn: (waAutomatedReplyId: string) => deleteWaAutomatedReply(waAutomatedReplyId),
     onSuccess: (_res) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
-      toast.success("Automated Reply Deleted Successfully");
+      toast.success("Automated Reply deleted");
     },
   });
 };

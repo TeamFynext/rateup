@@ -11,6 +11,7 @@ import {
   useGetWaQuickReplies,
 } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import { Button } from "@/components/ui/button.tsx";
+import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty.tsx";
 
 import CreateOrEditQuickReply from "./CreateOrEditQuickReply.tsx";
 import QuickReplyItem from "./QuickReplyItem.tsx";
@@ -54,6 +55,7 @@ const WaQuickReplySettings = () => {
             {quickReplies?.length || 0}
           </span>
           <Button
+            aria-label={t("Refresh")}
             variant="ghost"
             onClick={() => refetch()}
             className="text-muted-foreground hover:text-foreground h-7 w-7 p-0"
@@ -90,9 +92,11 @@ const WaQuickReplySettings = () => {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border rounded-2xl text-center bg-white dark:bg-card">
-          <p className="text-muted-foreground text-sm">{t("No quick replies found")}</p>
-        </div>
+        <Empty className="rounded-2xl border">
+          <EmptyHeader>
+            <EmptyDescription>{t("No quick replies found")}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       )}
 
       <CreateOrEditQuickReply

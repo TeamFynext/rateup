@@ -23,14 +23,14 @@ function PreviewDeviceSelector({
         <ToggleGroupItem
           pressed={value === PreviewTypeEnum.DESKTOP}
           onPressedChange={() => onChange(PreviewTypeEnum.DESKTOP)}
-          className="aria-pressed:bg-primary aria-pressed:text-white"
+          className="aria-pressed:bg-primary aria-pressed:text-primary-foreground"
         >
           <IconDeviceDesktop size={"1.25rem"} />
         </ToggleGroupItem>
         <ToggleGroupItem
           pressed={value === PreviewTypeEnum.MOBILE}
           onPressedChange={() => onChange(PreviewTypeEnum.MOBILE)}
-          className="aria-pressed:bg-primary aria-pressed:text-white"
+          className="aria-pressed:bg-primary aria-pressed:text-primary-foreground"
         >
           <IconDeviceMobile size={"1.25rem"} />
         </ToggleGroupItem>

@@ -102,7 +102,9 @@ const getIcon = (type: string | undefined) => {
 
 export function SendMessageMock() {
   return (
-    <div className="flex flex-nowrap gap-0 rounded-b-xl bg-wa-gray p-0.5">
+    // A picture of WhatsApp's compose bar, not a control surface: nothing here is
+    // clickable, so a screen reader should walk past the whole thing.
+    <div aria-hidden="true" className="flex flex-nowrap gap-0 rounded-b-xl bg-wa-gray p-0.5">
       <div className="mb-4 flex">
         <Button variant="ghost" size="icon-xs" className="text-wa-blue">
           <IconPlus size={15} />
@@ -117,10 +119,15 @@ export function SendMessageMock() {
             <IconNote size={15} />
           </Button>
         </div>
-        <Button variant="ghost" size="icon-xs" className="text-wa-blue">
+        <Button aria-label="Take a photo" variant="ghost" size="icon-xs" className="text-wa-blue">
           <IconCamera size={15} />
         </Button>
-        <Button variant="ghost" size="icon-xs" className="text-wa-blue">
+        <Button
+          aria-label="Record a voice note"
+          variant="ghost"
+          size="icon-xs"
+          className="text-wa-blue"
+        >
           <IconMicrophone size={15} />
         </Button>
       </div>

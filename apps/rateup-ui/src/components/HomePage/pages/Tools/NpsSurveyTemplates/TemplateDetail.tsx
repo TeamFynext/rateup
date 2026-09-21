@@ -62,7 +62,7 @@ export default function NpsTemplateDetail({ template }: Readonly<{ template: Nps
               {template.ratingQuestion}
             </blockquote>
             <p className="mt-2 text-[11.5px] text-muted-foreground">
-              Replace <span className="font-mono">{"{{brand}}"}</span> with your business name.
+              Replace <span className="font-mono">{"{brand}"}</span> with your business name.
             </p>
 
             <div className="mt-7 text-[11px] font-extrabold tracking-[0.12em] text-muted-foreground uppercase">

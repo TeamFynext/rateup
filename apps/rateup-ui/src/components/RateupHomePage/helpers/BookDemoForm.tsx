@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { fromDateKey, toDateKey } from "@/utils/dateTime";
 
 /** Half-hour slots across a working day, kept as `HH:mm` so the payload stays locale-free. */
 const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
@@ -36,20 +37,6 @@ const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
 /** Sentinel for "no preference": Base UI's `Select` has no empty-string item, and the field is optional. */
 const ANY_TIME = "__any__";
 const TIME_ITEMS = [{ value: ANY_TIME, label: "No preference" }, ...TIME_SLOTS];
-
-/** `YYYY-MM-DD` in the visitor's own timezone. `toISOString()` would shift the day for anyone
- *  east or west of UTC at the wrong hour, which is how a "tomorrow" pick becomes today. */
-const toDateKey = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
-
-/** The inverse, parsed as a local date for the same reason. */
-const fromDateKey = (key: string) => {
-  const [year, month, day] = key.split("-").map(Number);
-
-  return new Date(year, month - 1, day);
-};
 
 interface BookDemoFormProps {
   /** Ids are prefixed with this so two instances can be mounted without colliding labels. */
@@ -295,8 +282,8 @@ export default function BookDemoForm({
 
         {/* Full-width and tall: this is the only CTA on the demo page, and the modal reads
             better for it too. */}
-        <Button type="submit" disabled={isPending} className="mt-1 h-12 w-full text-base font-bold">
-          {isPending ? "Booking..." : "Book My Demo"}
+        <Button type="submit" loading={isPending} className="mt-1 h-12 w-full text-base font-bold">
+          {"Book My Demo"}
         </Button>
 
         <p className="-mt-1 text-center text-[11px] text-slate-400">

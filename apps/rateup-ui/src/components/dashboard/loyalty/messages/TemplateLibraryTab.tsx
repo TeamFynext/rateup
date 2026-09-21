@@ -214,7 +214,7 @@ export function TemplateLibraryTab() {
                           variant="ghost"
                           size="icon"
                           aria-label={t("Delete")}
-                          disabled={remove.isPending}
+                          loading={remove.isPending}
                           onClick={() => void onDelete(entry.data?.name ?? entry.id, entry.id)}
                         >
                           <IconTrash size={16} />

@@ -58,15 +58,15 @@ export default function OnboardingStep2({
         >
           <IconBuilding className="w-5 h-5 text-white" />
         </motion.div>
-        <h2 className="text-gray-900">What's Your Industry?</h2>
-        <p className="text-gray-600 text-sm">
+        <h2 className="text-foreground">What's Your Industry?</h2>
+        <p className="text-muted-foreground text-sm">
           This helps us provide industry-specific recommendations
         </p>
       </div>
 
       <div className="space-y-3 w-full">
         <Field className="w-full">
-          <FieldLabel htmlFor={`${uid}-select-your-industry`} className="text-gray-700">
+          <FieldLabel htmlFor={`${uid}-select-your-industry`} className="text-foreground">
             Select Your Industry
           </FieldLabel>
           <Select
@@ -76,16 +76,16 @@ export default function OnboardingStep2({
           >
             <SelectTrigger
               id={`${uid}-select-your-industry`}
-              className="h-11 border-2 border-gray-300 focus:border-orange-400 bg-white text-gray-900 shadow-sm w-full"
+              className="h-11 border-2 border-border focus:border-primary bg-background text-foreground shadow-sm w-full"
             >
               <SelectValue placeholder="Choose your industry..." />
             </SelectTrigger>
-            <SelectContent className="bg-white border-gray-200 w-full">
+            <SelectContent className="bg-popover border-border w-full">
               {industries.map((industry) => (
                 <SelectItem
                   key={industry}
                   value={industry}
-                  className="text-gray-900 focus:bg-gray-100 focus:text-gray-900 w-full"
+                  className="text-foreground focus:bg-muted focus:text-foreground w-full"
                 >
                   {industry}
                 </SelectItem>
@@ -104,8 +104,10 @@ export default function OnboardingStep2({
             <div className="flex items-start space-x-3">
               <IconSparkles className="w-3 h-3 text-orange-600" />
               <div>
-                <p className="text-orange-700 text-sm">Perfect! We'll customize your experience</p>
-                <p className="text-gray-700 text-sm">
+                <p className="text-orange-700 dark:text-orange-400 text-sm">
+                  Perfect! We'll customize your experience
+                </p>
+                <p className="text-foreground text-sm">
                   Expect industry-specific templates and features for {data.industry}
                 </p>
               </div>
@@ -113,12 +115,12 @@ export default function OnboardingStep2({
           </motion.div>
         )}
       </div>
-      <div className="flex justify-between mt-5 pt-4 border-t border-gray-200">
+      <div className="flex justify-between mt-5 pt-4 border-t border-border">
         <Button
           variant="outline"
           onClick={handleBack}
           disabled={currentStep === 1}
-          className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="flex items-center px-4 py-2 border-2 border-border hover:border-muted-foreground text-foreground bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           <IconArrowLeft className="w-4 h-4 mr-2" />
           Back

@@ -662,7 +662,7 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
       );
       if (variables.stageName) {
         // Single braces: this app runs i18next with the ICU format, where
-        // `{{stage}}` is not a placeholder and rendered literally.
+        // `{stage}` is not a placeholder and rendered literally.
         toast.success(t("Moved to {stage}", { stage: variables.stageName }), {
           id: "pipeline-lead-move",
         });

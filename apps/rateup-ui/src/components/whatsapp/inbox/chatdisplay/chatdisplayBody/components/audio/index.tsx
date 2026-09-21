@@ -1,4 +1,4 @@
-import { IconDownload, IconLoader2 } from "@tabler/icons-react";
+import { IconDownload } from "@tabler/icons-react";
 import type { JSX } from "react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -67,13 +67,9 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
           className="absolute right-2 rounded-full h-8 w-8 shrink-0"
           onClick={handleDownload}
           aria-label="Download Audio"
-          disabled={isPending}
+          loading={isPending}
         >
-          {isPending ? (
-            <IconLoader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <IconDownload size={16} />
-          )}
+          <IconDownload size={16} />
         </Button>
       )}
     </div>

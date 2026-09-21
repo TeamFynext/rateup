@@ -289,13 +289,14 @@ export function ChatbotTab() {
                     <span className="text-xs">
                       {drift.missing.length > 0 &&
                         t("Not in the menu: {words}.", {
-                          words: drift.missing.map((entry) => entry.keyword).join(", "),
-                        })}{" "}
+                          words: drift.missing.map((entry) => entry.keyword).join(","),
+                        })}
+                      {""}
                       {drift.stale.length > 0 &&
-                        t("No longer answered: {words}.", { words: drift.stale.join(", ") })}
+                        t("No longer answered: {words}.", { words: drift.stale.join(",") })}
                     </span>
-                    <Button size="sm" onClick={updateMenu} disabled={updateBot.isPending}>
-                      {updateBot.isPending ? t("Updating…") : t("Update the menu")}
+                    <Button size="sm" onClick={updateMenu} loading={updateBot.isPending}>
+                      {t("Update the menu")}
                     </Button>
                   </AlertDescription>
                 </Alert>
@@ -349,7 +350,8 @@ export function ChatbotTab() {
                     .map((item) => item.keyword)
                     .join(", "),
                 },
-              )}{" "}
+              )}
+            {""}
             {plan.excluded.some((item) => item.reason === "over_limit") &&
               t("WhatsApp allows {max} rows, so these did not fit: {words}.", {
                 max: MENU_MAX_ROWS,

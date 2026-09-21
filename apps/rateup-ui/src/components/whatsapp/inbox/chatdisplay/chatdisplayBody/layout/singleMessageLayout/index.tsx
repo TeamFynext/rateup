@@ -236,7 +236,15 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger
-          render={<Button variant="ghost" size="icon" className="size-8" onClick={handleCopy} />}
+          render={
+            <Button
+              aria-label="Copy"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={handleCopy}
+            />
+          }
         >
           {copied ? <IconCheck className="size-4" /> : <IconCopy size={16} />}
         </TooltipTrigger>

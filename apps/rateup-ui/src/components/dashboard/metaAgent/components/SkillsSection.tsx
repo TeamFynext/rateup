@@ -30,7 +30,6 @@ import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import { skillFormSchema, type SkillFormValues } from "../metaAgent.schemas";
@@ -104,7 +103,7 @@ export function SkillsSection({ waSettingsId }: Readonly<{ waSettingsId: string 
                   size="icon-sm"
                   className="shrink-0"
                   aria-label={`Delete ${skill.title}`}
-                  disabled={deleteSkill.isPending}
+                  loading={deleteSkill.isPending}
                   onClick={() => deleteSkill.mutate(skill.id)}
                 >
                   <IconTrash className="text-destructive" />
@@ -236,8 +235,7 @@ function SkillDialog({
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Spinner data-icon="inline-start" />}
+              <Button type="submit" loading={isPending}>
                 {skill ? "Save changes" : "Create skill"}
               </Button>
             </DialogFooter>

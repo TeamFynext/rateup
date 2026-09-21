@@ -80,7 +80,7 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
 
   async function handleDisconnect() {
     if (!wabaId) {
-      toast.error("Try again!");
+      toast.error("No WhatsApp account is connected.");
       return;
     }
 
@@ -218,7 +218,7 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
               <FieldLabel htmlFor="checkout-message">Checkout message</FieldLabel>
               <Input
                 id="checkout-message"
-                placeholder="Thanks for your order! Complete your purchase here: {{link}}"
+                placeholder="Thanks for your order! Complete your purchase here: {link}"
                 defaultValue={catalogData.checkoutMessage || ""}
                 onBlur={(e) => {
                   if (e.target.value !== catalogData.checkoutMessage) {
@@ -227,7 +227,7 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
                 }}
               />
               <FieldDescription>
-                Use {"{{link}}"} where you want the Shopify URL to appear.
+                Use {"{link}"} where you want the Shopify URL to appear.
               </FieldDescription>
             </Field>
           )}
@@ -249,7 +249,7 @@ export default function CatalogSettingsTab({ catalogData }: Readonly<{ catalogDa
             variant="destructive"
             className="w-fit"
             onClick={handleDelete}
-            disabled={deleteCatalog.isPending}
+            loading={deleteCatalog.isPending}
           >
             <IconTrash data-icon="inline-start" />
             Delete Catalog

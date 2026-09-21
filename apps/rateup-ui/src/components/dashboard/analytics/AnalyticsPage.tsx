@@ -1,7 +1,6 @@
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
-  IconArrowLeft,
   IconClock,
   IconClock2,
   IconFileTypePdf,
@@ -11,7 +10,7 @@ import {
   IconTarget,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -19,6 +18,7 @@ import { toast } from "sonner";
 import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation/conversation.query";
 import { staffKeys } from "@/backend/org/org.keys";
+import { BackLink } from "@/components/common/back-link.tsx";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -36,7 +36,7 @@ import { MessagePlatform } from "@/types/enums.ts";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
 import { AnalyticsCard } from "./kit/AnalyticsCard.tsx";
-import { AnalyticsHeader, AnalyticsToolbar, BACK_LINK } from "./kit/AnalyticsHeader.tsx";
+import { AnalyticsHeader, AnalyticsToolbar } from "./kit/AnalyticsHeader.tsx";
 import { TrendBars } from "./kit/charts.tsx";
 import {
   formatBucket,
@@ -118,14 +118,12 @@ export function AnalyticsPage() {
       ) : (
         <AnalyticsHeader
           back={
-            <Link
+            <BackLink
               to="/dashboard/analytics"
               search={{ tab: "conversations", view: "agents" }}
-              className={BACK_LINK}
-              aria-label={t("Agents")}
-            >
-              <IconArrowLeft className="size-4 rtl:rotate-180" />
-            </Link>
+              label={t("Agents")}
+              iconOnly
+            />
           }
           leading={
             <CreativeAvatar name={agent?.name} platform={MessagePlatform.WEBCHAT} size="md" />

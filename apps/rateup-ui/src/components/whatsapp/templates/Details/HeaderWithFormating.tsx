@@ -53,7 +53,7 @@ export function HeaderWithFormatting(text: string | File, type: string) {
           </MediaCardPreview>
           <div className="bg-muted">
             <p className="text-[10px]">{"{{Location name}}"}</p>
-            <p className="text-[10px]">{"{{Address}}"}</p>
+            <p className="text-[10px]">{"{Address}"}</p>
           </div>
         </>
       );

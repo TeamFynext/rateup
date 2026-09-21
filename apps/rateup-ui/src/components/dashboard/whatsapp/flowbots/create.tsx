@@ -4,7 +4,6 @@ import {
   IconBrandWhatsapp,
   IconCheck,
   IconLayoutGrid,
-  IconLoader2,
   IconSearch,
   IconTemplate,
   IconX,
@@ -229,7 +228,8 @@ function TemplatePicker({ open, onClose, onSelect, platform }: Readonly<Template
           <div className="text-sm text-muted-foreground truncate">
             {selectedTemplate ? (
               <span>
-                {t("Selected:")}{" "}
+                {t("Selected:")}
+                {""}
                 <span className="font-medium text-foreground">{selectedTemplate.name}</span>
               </span>
             ) : (
@@ -617,8 +617,7 @@ export function AutomatedReplyForm({
           </Button>
 
           {/* Right: Save with proper spinner */}
-          <Button type="submit" disabled={isSaving} className="min-w-30">
-            {isSaving && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" loading={isSaving} className="min-w-30">
             {!isSaving && saveSuccess && editMode && <IconCheck size={16} className="mr-2" />}
             {submitLabel}
           </Button>

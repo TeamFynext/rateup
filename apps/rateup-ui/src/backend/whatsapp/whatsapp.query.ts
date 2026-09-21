@@ -40,7 +40,7 @@ export const useCreateTemplateMutation = (onSuccess: () => void, onError: () => 
   const createMutation = useMutation({
     mutationFn: (templateData: RequestPayload) => createWaTemplate(templateData),
     onSuccess: () => {
-      toast.success("Template Created Successfully");
+      toast.success("Template created");
       queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
       onSuccess();
     },
@@ -90,7 +90,7 @@ export const useUpdateTemplateMutation = (
       templateData: RequestPayload;
     }) => updateWaTemplate(templateId, templateData),
     onSuccess: () => {
-      toast.success("Template Updated Successfully");
+      toast.success("Template updated");
       queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });
       queryClient.invalidateQueries({ queryKey: whatsappKeys.template(id) });
       onSuccess?.();
@@ -108,7 +108,7 @@ export const useDeleteWaTemplateMutation = (onSuccess?: () => void, onError?: ()
   const deleteMutation = useMutation({
     mutationFn: deleteWaTemplate,
     onSuccess: () => {
-      toast.success("Template Deleted Successfully", {
+      toast.success("Template deleted", {
         id: "template-delete",
       });
       queryClient.invalidateQueries({ queryKey: whatsappKeys.templates() });

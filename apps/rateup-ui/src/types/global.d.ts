@@ -546,6 +546,11 @@ export interface WaInternalMessageBody {
     id: string;
     name: string;
   };
+  /**
+   * The whole event as one sentence, actor included. Absent on rows written before the
+   * server composed it, which is why `text.body` and its client-side glue survive.
+   */
+  summary?: string;
   assignStatus?: string;
   assignedUsers?: {
     id: string;

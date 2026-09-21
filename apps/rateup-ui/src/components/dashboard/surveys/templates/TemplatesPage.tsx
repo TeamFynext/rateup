@@ -16,6 +16,7 @@ import {
   ListPageHeader,
   ListPageHeaderSection,
 } from "@/components/common/list-page-layout.tsx";
+import { pressable } from "@/components/common/pressable.ts";
 import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
 import SurveySectionTabs from "@/components/Survey/SurveySectionTabs.tsx";
@@ -27,12 +28,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { docsPath } from "@/utils/constants.ts";
-import { UserRole } from "@/utils/enums/index.ts";
 
 export function TemplatesPage() {
-  const { user } = useUser();
+  const canManageSurveys = usePermissions().can("surveys.manage");
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
   const [selectedTemplate, setSelectedTemplate] = useState<Survey | null>(null);
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ export function TemplatesPage() {
             <div
               key={survey?.id}
               className="cursor-pointer"
-              onClick={() => handleTemplateSelect(survey)}
+              {...pressable(() => handleTemplateSelect(survey))}
             >
               <SurveyTemplates
                 key={index}
@@ -88,7 +88,7 @@ export function TemplatesPage() {
       <ListPage>
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
-            {user?.role !== UserRole.MEMBER && (
+            {canManageSurveys && (
               <Button
                 onClick={() => {
                   navigate({

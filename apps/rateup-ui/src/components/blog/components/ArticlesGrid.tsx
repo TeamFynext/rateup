@@ -9,7 +9,7 @@ export function ArticlesGrid({ posts }: { posts: Post[] }) {
     <section className="mt-[30px]">
       {/* Header */}
       <div className="flex items-baseline justify-between mb-[18px]">
-        <h3 className="font-nunito font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em] m-0">
+        <h3 className="font-display font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em] m-0">
           Latest Articles
         </h3>
       </div>

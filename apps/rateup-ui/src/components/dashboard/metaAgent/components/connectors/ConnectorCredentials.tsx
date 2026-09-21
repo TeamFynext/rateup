@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
 import { TagsInput } from "@/components/ui/tags-input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -186,8 +185,7 @@ function ApiKeyForm({
               <IconPlus data-icon="inline-start" />
               Add field
             </Button>
-            <Button type="submit" disabled={upsert.isPending}>
-              {upsert.isPending && <Spinner data-icon="inline-start" />}
+            <Button type="submit" loading={upsert.isPending}>
               Save at Meta
             </Button>
           </div>
@@ -302,8 +300,7 @@ function OAuthForm({
           </FormField>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={upsert.isPending}>
-              {upsert.isPending && <Spinner data-icon="inline-start" />}
+            <Button type="submit" loading={upsert.isPending}>
               Save at Meta
             </Button>
           </div>
@@ -397,8 +394,7 @@ function CertificateForm({
           </FormField>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={upsert.isPending}>
-              {upsert.isPending && <Spinner data-icon="inline-start" />}
+            <Button type="submit" loading={upsert.isPending}>
               Save at Meta
             </Button>
           </div>

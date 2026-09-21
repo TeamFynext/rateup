@@ -112,7 +112,7 @@ export function useUpdateProfileMutation() {
   return useMutation({
     mutationFn: (values: IUpdateProfile) => updateUserProfile(values),
     onSuccess: () => {
-      toast.success("Profile Updated Successfully!", {
+      toast.success("Profile updated", {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: userKeys.info() });
@@ -147,7 +147,7 @@ export function useUpdateUserLanguageMutation(setIsLoading: (loading: boolean) =
   return useMutation({
     mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),
     onSuccess: () => {
-      toast.success("Language Updated Successfully!", {
+      toast.success("Language updated", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -170,7 +170,7 @@ export function useUpdateProfilePhotoMutation(setIsLoadingUpload: (uploading: bo
   return useMutation({
     mutationFn: (values: IUpdateProfilePhoto) => updateUserProfilePhoto(values),
     onSuccess: () => {
-      toast.success("Profile Photo Updated Successfully!", {
+      toast.success("Profile Photo updated", {
         id: "load-data",
       });
       setIsLoadingUpload(false);
@@ -195,7 +195,7 @@ export function useUpdateActiveStatusMutation() {
     mutationFn: ({ userId, password }: { userId: string; password?: string }) =>
       updateActiveStatus(userId, password),
     onSuccess: () => {
-      toast.success("Member Deleted Successfully!", {
+      toast.success("Member deleted", {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: userKeys.info() });
@@ -224,7 +224,7 @@ export function useUpdateRecipeNameMutation() {
   return useMutation({
     mutationFn: updateRecipeName,
     onSuccess: () => {
-      toast.success("updated recipe name", {
+      toast.success("Sign-in method updated", {
         id: "user-recipe",
       });
       queryClient.invalidateQueries({ queryKey: userKeys.all() });

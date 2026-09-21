@@ -97,10 +97,10 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
   return (
     <div className="pt-6 psw-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {stats.map(({ title, value, badge, icon }) => (
-        <Card key={title} size="sm" className="flex-row items-center justify-between gap-4  p-2 ">
+        <Card key={title} size="sm" className="flex-row items-center justify-between gap-4 p-2">
           <div>
             <p className="text-xs font-bold text-[#343A40]">{title}</p>
-            <div className="text-3xl font-bold  flex items-end">
+            <div className="text-3xl font-bold flex items-end">
               <div>{value}</div>
               <div className="mb-1">{badge}</div>
             </div>

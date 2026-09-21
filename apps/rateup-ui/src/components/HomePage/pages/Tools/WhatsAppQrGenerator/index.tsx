@@ -175,7 +175,7 @@ export default function WhatsAppQrGenerator() {
                   </div>
                 )}
               </div>
-              <div className="mt-3.5 flex items-center gap-2 font-nunito text-[14px] font-extrabold text-foreground">
+              <div className="mt-3.5 flex items-center gap-2 font-display text-[14px] font-extrabold text-foreground">
                 <span className="inline-block size-5 rounded-[5px] bg-[#25D366]" />
                 <span>Scan to chat on WhatsApp</span>
               </div>

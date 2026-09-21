@@ -170,6 +170,7 @@ function TagManager({
         <TooltipTrigger
           render={
             <Button
+              aria-label={translations("Tags")}
               disabled={!isPublished}
               onClick={() => setTagManagerOpened(true)}
               variant="outline"
@@ -266,6 +267,7 @@ function TagManager({
                             <div className="flex items-center gap-2 justify-center">
                               <Input readOnly value={url} className="flex-1 max-w-md" />
                               <Button
+                                aria-label={translations("Copy")}
                                 variant={copiedUrl === url ? "default" : "outline"}
                                 size="icon"
                                 onClick={() => handleCopyUrl(url)}
@@ -278,7 +280,7 @@ function TagManager({
                               </Button>
                             </div>
                           </TableCell>
-                          <TableCell className="text-center ">
+                          <TableCell className="text-center">
                             <Preview
                               url={url}
                               isSurveyPublished={isPublished}
@@ -319,6 +321,7 @@ function TagManager({
                 </span>
                 <div className="flex gap-1">
                   <Button
+                    aria-label={translations("Previous page")}
                     variant="outline"
                     size="icon"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -327,6 +330,7 @@ function TagManager({
                     <IconChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button
+                    aria-label={translations("Next page")}
                     variant="outline"
                     size="icon"
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}

@@ -267,7 +267,7 @@ export const useDeletePaymentPlanMutation = () => {
     mutationFn: deletePaymentPlan,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentPlansQuery"] });
-      toast.success("Plan Deleted Succefully", {
+      toast.success("Plan deleted", {
         id: "plan",
       });
     },

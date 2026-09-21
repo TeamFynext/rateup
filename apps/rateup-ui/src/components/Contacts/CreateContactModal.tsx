@@ -347,7 +347,7 @@ const CreateContactModal = ({
                     setCsvfile(event.target.files?.[0] ?? null);
                     setCsvFileError("");
                   }}
-                  className="h-15 border-2 border-dashed border-gray-300 text-center"
+                  className="h-15 border-2 border-dashed border-border text-center"
                 />
                 {csvFileError && <FieldError id="csv-file-error">{csvFileError}</FieldError>}
               </Field>
@@ -449,7 +449,7 @@ export const UserSelector = (props: UserSelectorProps) => {
         <div>
           <IconUser className="size-4 text-muted-foreground" />
         </div>
-        <span className="text-sm ">
+        <span className="text-sm">
           <SelectValue placeholder="Select staff" />
         </span>
       </SelectTrigger>
@@ -459,7 +459,7 @@ export const UserSelector = (props: UserSelectorProps) => {
             <span>{user.name}</span>
             <Activity mode={user.id !== "all" ? "visible" : "hidden"}>
               <span
-                className={`text-xs capitalize ${user.status === "online" ? "text-green-700" : "text-gray-400"}`}
+                className={`text-xs capitalize ${user.status === "online" ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}`}
               >
                 ({user.status})
               </span>

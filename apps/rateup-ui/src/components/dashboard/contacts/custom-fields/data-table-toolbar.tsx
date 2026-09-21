@@ -31,7 +31,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
             <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search by field name..."
-              className="pl-10 placeholder:text-sm bg-gray-100 border-none"
+              className="pl-10 placeholder:text-sm bg-muted border-none"
               value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
               onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
             />

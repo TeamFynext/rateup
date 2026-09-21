@@ -65,7 +65,7 @@ export function FeedbackFlowPicker({ state }: Readonly<{ state: FeedbackState }>
             size="sm"
             variant="outline"
             onClick={() => detach.mutate()}
-            disabled={detach.isPending}
+            loading={detach.isPending}
           >
             <IconUnlink size={16} />
             {t("Detach")}

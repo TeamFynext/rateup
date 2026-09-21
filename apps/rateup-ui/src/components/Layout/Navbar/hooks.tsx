@@ -80,7 +80,7 @@ import { cn } from "@/lib/utils.ts";
 import type { ChatFilterStore } from "@/store/chat-filter.store.ts";
 import type { ChatContactCountStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
-import { UserRole } from "@/utils/enums/index.ts";
+import type { Permission } from "@/utils/authz/permissions.ts";
 
 type NavIcon = React.ComponentType<{ size?: number | string; className?: string }>;
 
@@ -190,6 +190,8 @@ interface NavMainInput {
   hiddenModules: string[];
   handleFilter: (label: string, value: string) => void;
   allowedFeatures: AllowedFeatures;
+  /** `usePermissions().can`; what the signed-in user may do. */
+  can: (permission: Permission) => boolean;
   user: User | null;
   sectionCounts: ChatContactCountStore["sectionCounts"];
   pipelineNav: PipelineNavInput;
@@ -209,6 +211,7 @@ export function useNavMain({
   hiddenModules,
   handleFilter,
   allowedFeatures,
+  can,
   user,
   sectionCounts,
   pipelineNav,
@@ -223,7 +226,7 @@ export function useNavMain({
   return useMemo<NavEntry[]>(() => {
     // Empty once the org has finished or dismissed setup, which is what takes the
     // rocket back out of the rail.
-    const setupItems = user?.role === UserRole.SUPADM ? buildSetupNavItems(setupNav) : [];
+    const setupItems = can("channels.manage") ? buildSetupNavItems(setupNav) : [];
 
     return [
       ...(setupItems.length > 0
@@ -786,11 +789,11 @@ export function useNavMain({
                 url: "/dashboard/settings/account",
                 icon: IconUser,
               },
-              ...(user?.role === UserRole.SUPADM
+              ...(can("members.read")
                 ? [
                     {
-                      title: t("Users"),
-                      url: "/dashboard/settings/users",
+                      title: t("Members"),
+                      url: "/dashboard/settings/members",
                       icon: IconUserCog,
                     },
                   ]
@@ -804,14 +807,14 @@ export function useNavMain({
           },
           // Both entries below are conditional, so the group itself has to be too — otherwise a
           // member with neither gets a bare "Platform Settings" heading with nothing under it.
-          ...(user?.role === UserRole.SUPADM || hasTeamFeature(TeamFeature.AppsServices)
+          ...(can("channels.manage") || hasTeamFeature(TeamFeature.AppsServices)
             ? [
                 {
                   group: t("Platform Settings"),
                   items: [
-                    // Channels is super-admin only: connecting or removing a WhatsApp/Instagram
-                    // account changes messaging for the whole org, not just one team.
-                    ...(user?.role === UserRole.SUPADM
+                    // Connecting or removing a WhatsApp/Instagram account changes messaging for
+                    // the whole org, not just one team.
+                    ...(can("channels.manage")
                       ? [
                           {
                             title: t("Channels"),
@@ -841,7 +844,7 @@ export function useNavMain({
                 url: "/dashboard/settings/security",
                 icon: IconShield,
               },
-              ...(user?.role === UserRole.SUPADM
+              ...(can("billing.read")
                 ? [
                     {
                       title: t("Billing"),
@@ -852,8 +855,7 @@ export function useNavMain({
                 : []),
             ],
           },
-          ...(subscription?.orgId === import.meta.env.VITE_ROOT_ORG &&
-          user?.role === UserRole.SUPADM
+          ...(subscription?.orgId === import.meta.env.VITE_ROOT_ORG && can("billing.manage")
             ? [
                 {
                   group: t("Admin Settings"),

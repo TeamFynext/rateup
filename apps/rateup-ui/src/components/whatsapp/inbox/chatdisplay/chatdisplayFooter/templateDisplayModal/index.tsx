@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
+import { pressable } from "@/components/common/pressable.ts";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { WaTemplateStatus } from "@/types/enums.ts";
@@ -28,7 +29,9 @@ function templateBodyText(templateComponent: WaTemplateFetchBodyComponent[]) {
 
   const truncated = text.length > 50 ? text.slice(0, 20) + "..." : text;
 
-  return <div className="text-gray-500 text-sm py-4 w-full sm:max-w-[23vw]">{truncated}</div>;
+  return (
+    <div className="text-muted-foreground text-sm py-4 w-full sm:max-w-[23vw]">{truncated}</div>
+  );
 }
 
 export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }: Readonly<Props>) {
@@ -81,7 +84,7 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
               <DialogTitle className="text-lg sm:text-xl font-semibold">
                 {translations("Send Template Message")}
               </DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm text-gray-500 max-w-xl">
+              <DialogDescription className="text-xs sm:text-sm text-muted-foreground max-w-xl">
                 {translations(
                   "Select an approved template for messages sent after 24 hours of inactivity",
                 )}
@@ -92,7 +95,7 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
         {/* Top controls */}
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between mb-4">
           <div className="flex items-center gap-2 border rounded-xl max-w-xl w-full p-1.5">
-            <IconSearch className="shrink-0 text-gray-500" />
+            <IconSearch className="shrink-0 text-muted-foreground" />
             <input
               placeholder="Search template"
               value={searchTerm}
@@ -106,8 +109,7 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
         <div className="flex flex-col sm:flex-row gap-6 items-start">
           {/* LEFT: templates list */}
           <div
-            className="
-        w-full
+            className="w-full
         p-2
         h-[50vh]
         overflow-x-auto
@@ -154,12 +156,18 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
                 <div
                   key={i}
                   className={`border p-3 sm:p-4 rounded-xl flex flex-col items-start justify-center gap-2 transition-all duration-200 hover:scale-[1.02] cursor-pointer shadow-sm ${
-                    selectedTemplateId === template?.id ? "border-green-500 bg-green-50" : ""
+                    selectedTemplateId === template?.id
+                      ? "border-green-500 bg-green-50 dark:bg-green-950/40"
+                      : ""
                   }`}
-                  onClick={() => setSelectedTemplateId(template.id)}
+                  {...pressable(() => setSelectedTemplateId(template.id))}
                 >
                   <div className="flex items-center justify-start gap-2">
-                    <IconFileDescription className="text-gray-500" strokeWidth={1} size={18} />
+                    <IconFileDescription
+                      className="text-muted-foreground"
+                      strokeWidth={1}
+                      size={18}
+                    />
                     <h1 className="text-sm sm:text-base font-semibold line-clamp-1">
                       {template?.data?.name}
                     </h1>
@@ -177,14 +185,14 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
                       >
                         {template?.data?.status}
                       </p>
-                      <p className="bg-blue-100 text-blue-600 border border-blue-600 px-3 py-1 text-[11px] sm:text-xs font-medium rounded-full">
+                      <p className="bg-ru-blue-100 dark:bg-blue-950/50 text-blue-600 border border-blue-600 px-3 py-1 text-[11px] sm:text-xs font-medium rounded-full">
                         {template?.data?.category}
                       </p>
                     </div>
                     {templateBodyText(template?.data?.components)}
                   </div>
 
-                  <div className="text-[11px] sm:text-xs text-gray-500">
+                  <div className="text-[11px] sm:text-xs text-muted-foreground">
                     {dayjs(template?.createdAt).format("DD MMM YYYY")}
                   </div>
                 </div>
@@ -194,8 +202,7 @@ export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }
 
           {/* RIGHT: preview (only this scrolls on larger screens) */}
           <div
-            className="
-        flex-1 w-full
+            className="flex-1 w-full
         max-h-none
         sm:h-[50vh]
         overflow-visible

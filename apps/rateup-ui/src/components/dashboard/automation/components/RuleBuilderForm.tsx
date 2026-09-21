@@ -76,9 +76,9 @@ const platformColor: Record<Platform, { pill: string; activePill: string; glow: 
     glow: "shadow-pink-500/10",
   },
   FACEBOOK: {
-    pill: "hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/40 dark:hover:text-blue-300",
+    pill: "hover:bg-ru-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/40 dark:hover:text-blue-300",
     activePill:
-      "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 ring-1 ring-blue-300 dark:ring-blue-700",
+      "bg-ru-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 ring-1 ring-blue-300 dark:ring-blue-700",
     glow: "shadow-blue-500/10",
   },
 };
@@ -330,20 +330,22 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
             <span className="font-medium text-foreground">{ruleName || "Untitled rule"}</span>
             {triggerLabel && (
               <>
-                {" "}
-                — <span className="text-amber-600 dark:text-amber-400 font-medium">when</span>{" "}
+                {""}— <span className="text-amber-600 dark:text-amber-400 font-medium">when</span>
+                {""}
                 <span className="italic">{triggerLabel.toLowerCase()}</span>
               </>
             )}
             {conditionCount > 0 && (
               <>
-                , <span className="text-violet-600 dark:text-violet-400 font-medium">if</span>{" "}
+                , <span className="text-violet-600 dark:text-violet-400 font-medium">if</span>
+                {""}
                 {conditionCount} condition{conditionCount !== 1 ? "s" : ""} match
               </>
             )}
             {actionCount > 0 && (
               <>
-                , <span className="text-emerald-600 dark:text-emerald-400 font-medium">then</span>{" "}
+                , <span className="text-emerald-600 dark:text-emerald-400 font-medium">then</span>
+                {""}
                 {actionCount} action{actionCount !== 1 ? "s" : ""}
               </>
             )}
@@ -472,7 +474,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
               <Button type="button" variant="ghost" onClick={onCancel} className="h-9">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending} className="h-9 min-w-32">
+              <Button type="submit" loading={isPending} className="h-9 min-w-32">
                 <IconDeviceFloppy className="w-4 h-4 mr-2" />
                 {buttonText}
               </Button>
@@ -755,6 +757,7 @@ const ConditionsPanel: React.FC<{
                   )}
                 />
                 <Button
+                  aria-label="Delete"
                   type="button"
                   variant="ghost"
                   size="icon"
@@ -762,7 +765,7 @@ const ConditionsPanel: React.FC<{
                     const next = shopifyProductIds.filter((_, i: number) => i !== index);
                     form.setValue("options.shopifyProductIds", next);
                   }}
-                  className="text-muted-foreground hover:text-red-500"
+                  className="text-muted-foreground hover:text-destructive"
                 >
                   <IconTrash className="w-4 h-4" />
                 </Button>
@@ -782,6 +785,7 @@ const ConditionsPanel: React.FC<{
                 Add product
               </Button>
               <Button
+                aria-label="Refresh products"
                 type="button"
                 variant="outline"
                 size="icon"
@@ -814,7 +818,7 @@ const ConditionsPanel: React.FC<{
               size="sm"
               onClick={() => removeGroup(groupIndex)}
               disabled={triggerEvent === "MESSAGE_RECEIVED" && groupFields.length === 1}
-              className="h-7 text-muted-foreground hover:text-red-500"
+              className="h-7 text-muted-foreground hover:text-destructive"
             >
               <IconTrash className="w-3.5 h-3.5" />
             </Button>

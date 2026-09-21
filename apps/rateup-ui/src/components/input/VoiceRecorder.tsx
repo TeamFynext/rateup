@@ -255,7 +255,7 @@ const VoiceRecorder = () => {
               size="sm"
               className="h-8 w-8 p-0"
             >
-              <IconTrash className="text-red-500" />
+              <IconTrash className="text-destructive" />
             </Button>
           }
           content={<p>Delete</p>}

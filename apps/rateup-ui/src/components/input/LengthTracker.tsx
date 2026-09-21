@@ -9,7 +9,7 @@ export function LengthTracker({ maxValue, length, atStart = false }: LengthTrack
   return (
     <div className={cn("flex", atStart ? "justify-start" : "justify-end")}>
       <p className="pr-2 text-[0.8rem] text-muted-foreground">
-        <span className={length > maxValue ? "text-red-500" : ""}>{length}</span>
+        <span className={length > maxValue ? "text-destructive" : ""}>{length}</span>
         <span>{` / ${maxValue}`}</span>
       </p>
     </div>

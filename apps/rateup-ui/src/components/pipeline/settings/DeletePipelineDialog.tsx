@@ -64,7 +64,7 @@ export function DeletePipelineDialog({
               <IconAlertTriangle className="size-5" />
             </span>
             <div className="min-w-0">
-              <DialogTitle className="font-nunito font-extrabold">
+              <DialogTitle className="font-display font-extrabold">
                 {t("Delete {name}", { name: pipeline.name })}
               </DialogTitle>
               <DialogDescription>
@@ -78,7 +78,9 @@ export function DeletePipelineDialog({
 
         <ul className="text-muted-foreground bg-muted flex flex-col gap-1 rounded-lg p-3 text-xs">
           <li>
-            {t("{total} stages and every lead sitting in them", { total: pipeline.stages.length })}
+            {t("{total} stages and every lead sitting in them", {
+              total: pipeline.stages.length,
+            })}
           </li>
           <li>
             {t("{labels} labels and {reasons} lost reasons", {

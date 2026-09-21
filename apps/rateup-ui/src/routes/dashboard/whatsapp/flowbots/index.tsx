@@ -54,7 +54,7 @@ function FlowbotsPage() {
       <ListPage>
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
-            <Button onClick={() => setOpened(true)} disabled={isPending}>
+            <Button onClick={() => setOpened(true)} loading={isPending}>
               {translations("Create Chatbot")}
               <IconPlus size={16} className="ml-2" />
             </Button>

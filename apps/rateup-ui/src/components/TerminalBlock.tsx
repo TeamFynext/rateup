@@ -12,7 +12,7 @@ const TerminalBlock: React.FC<TerminalBlockProps> = ({ code, className }) => {
     <div className={`bg-gray-900 text-white p-4 rounded-md ${className ?? ""}`}>
       <div className="flex justify-between items-center mb-2">
         <span className="text-gray-400 flex gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500" />
+          <div className="w-3 h-3 rounded-full bg-destructive" />
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
           <div className="w-3 h-3 rounded-full bg-green-500" />
         </span>

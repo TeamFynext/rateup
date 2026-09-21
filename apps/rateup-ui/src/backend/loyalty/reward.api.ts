@@ -84,6 +84,21 @@ interface ApprovalRules {
   auto_approve_under_value?: number | null;
 }
 
+/**
+ * Mirror this reward's redemption codes into the connected Shopify store as discount codes,
+ * so the customer can use the code at the shop's checkout and not only at a cashier.
+ * Consumed server-side by `integrations/shopify/shopifyDiscount.service.ts`.
+ */
+export interface ShopifyDiscountRules {
+  enabled?: boolean;
+  valid_for_days?: number | null;
+  combines_with?: {
+    order_discounts?: boolean;
+    product_discounts?: boolean;
+    shipping_discounts?: boolean;
+  };
+}
+
 interface RedemptionRules {
   time_restrictions?: TimeRestrictions;
   quantity_restrictions?: QuantityRestrictions;
@@ -93,6 +108,7 @@ interface RedemptionRules {
   inventory?: InventoryRestrictions;
   combination_rules?: CombinationRules;
   approval_rules?: ApprovalRules;
+  shopify?: ShopifyDiscountRules;
 }
 
 // Status type matching backend

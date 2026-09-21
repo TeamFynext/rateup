@@ -18,6 +18,7 @@ import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/cha
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 const InboxContactsControl = () => {
+  const { t: translations } = useTranslation();
   const [opened, setOpened] = useState(false);
 
   const { body, setBody, resetBody } = useMessageBodyStore();
@@ -35,7 +36,13 @@ const InboxContactsControl = () => {
             {`${body.contacts?.contactIds.length ?? 0} contacts, ${body.contacts?.groupIds.length ?? 0} groups selected`}
           </span>
         )}
-        <Button variant="ghost" size="icon" title="Contacts" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
+        <Button
+          aria-label={translations("Contacts")}
+          variant="ghost"
+          size="icon"
+          title="Contacts"
+          className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+        >
           <IconAddressBook size={16} />
         </Button>
       </PopoverTrigger>

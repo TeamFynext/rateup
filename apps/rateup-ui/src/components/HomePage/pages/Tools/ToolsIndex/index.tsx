@@ -32,7 +32,7 @@ export default function ToolsIndex() {
 
           return (
             <section key={category} className={categoryIndex === 0 ? "" : "mt-11"}>
-              <h2 className="m-0 font-nunito text-[22px] font-extrabold tracking-[-0.02em] text-foreground">
+              <h2 className="m-0 font-display text-[22px] font-extrabold tracking-[-0.02em] text-foreground">
                 {category}
               </h2>
 
@@ -54,7 +54,7 @@ export default function ToolsIndex() {
                         </span>
                       </div>
 
-                      <div className="mt-4 font-nunito text-[17px] font-extrabold text-foreground">
+                      <div className="mt-4 font-display text-[17px] font-extrabold text-foreground">
                         {tool.name}
                       </div>
                       <p className="mt-2 flex-1 text-[13.5px] leading-[1.55] text-muted-foreground">
@@ -71,16 +71,16 @@ export default function ToolsIndex() {
       </ToolContainer>
 
       <ToolContainer className="pt-16">
-        <h2 className="m-0 font-nunito text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
+        <h2 className="m-0 font-display text-[26px] font-extrabold tracking-[-0.02em] text-foreground sm:text-[32px]">
           Why we built these
         </h2>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
           {PROMISES.map((promise) => (
             <div key={promise.n} className="rounded-xl border border-border bg-card p-6">
-              <div className="bg-ru-star bg-clip-text font-nunito text-[32px] leading-none font-black text-transparent">
+              <div className="bg-ru-star bg-clip-text font-display text-[32px] leading-none font-black text-transparent">
                 {promise.n}
               </div>
-              <div className="mt-2.5 mb-1.5 font-nunito text-[16px] font-extrabold text-foreground">
+              <div className="mt-2.5 mb-1.5 font-display text-[16px] font-extrabold text-foreground">
                 {promise.title}
               </div>
               <p className="m-0 text-[13.5px] leading-[1.55] text-muted-foreground">

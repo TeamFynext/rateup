@@ -43,7 +43,7 @@ const ContactNameCell = ({ contact }: { contact: ContactsData }) => {
       className="group flex gap-1 items-center text-left cursor-pointer"
     >
       <Avatar>
-        <AvatarFallback className="rounded-lg bg-blue-200 text-primary p-1 text-xs">
+        <AvatarFallback className="rounded-lg bg-blue-200 dark:bg-blue-900/60 text-primary p-1 text-xs">
           {getInitials(contact?.name)}
         </AvatarFallback>
       </Avatar>
@@ -101,32 +101,32 @@ export const getSourceBadge = (source: string | null | undefined) => {
     whatsapp: {
       icon: IconMessage,
       label: "WhatsApp",
-      className: "bg-green-100 text-green-700",
+      className: "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400",
     },
     instagram: {
       icon: IconBrandInstagram,
       label: "Instagram",
-      className: "bg-pink-100 text-pink-700",
+      className: "bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400",
     },
     WEBCHAT: {
       icon: IconGlobe,
       label: "Web Chat",
-      className: "bg-blue-100 text-blue-700",
+      className: "bg-ru-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400",
     },
     MANUAL: {
       icon: IconUserPlus,
       label: "Manual",
-      className: "bg-gray-100 text-gray-700",
+      className: "bg-muted text-foreground",
     },
     "CSV IMPORT": {
       icon: IconUpload,
       label: "Imported",
-      className: "bg-gray-100 text-gray-700",
+      className: "bg-muted text-foreground",
     },
     loyalty_program: {
       icon: IconGift,
       label: "Loyalty Customer",
-      className: "bg-orange-100 text-orange-700",
+      className: "bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400",
     },
   };
   const sourceConfig = config[source as keyof typeof config] ?? config.MANUAL;
@@ -161,12 +161,15 @@ export const contactColumn = (
       accessorKey: "blockedOnWhatsApp",
       cell: (info) =>
         !info.getValue() ? (
-          <Badge variant="secondary" className="bg-green-100 text-green-700">
+          <Badge
+            variant="secondary"
+            className="bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400"
+          >
             <IconBolt />
             Active
           </Badge>
         ) : (
-          <Badge variant="secondary" className="bg-red-100 text-red-700">
+          <Badge variant="secondary" className="bg-destructive/10 text-destructive ">
             <IconBan />
             Blocked
           </Badge>
@@ -277,12 +280,15 @@ export const contactColumn = (
       id: "consent",
       cell: (info) =>
         info.getValue() ? (
-          <Badge variant="secondary" className="bg-green-100 text-green-700">
+          <Badge
+            variant="secondary"
+            className="bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400"
+          >
             <IconCircleCheck />
             Granted
           </Badge>
         ) : (
-          <Badge variant="secondary" className="bg-red-100 text-red-700">
+          <Badge variant="secondary" className="bg-destructive/10 text-destructive ">
             <IconCircleX />
             Denied
           </Badge>

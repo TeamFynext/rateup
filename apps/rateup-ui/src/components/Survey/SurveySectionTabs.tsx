@@ -43,14 +43,14 @@ export default function SurveySectionTabs() {
       <TabsList
         variant="line"
         className="mb-4"
-        // className="h-auto w-full justify-start gap-0 rounded-none border-b border-ink-100 bg-white p-0 px-[22px]"
+        // className="h-auto w-full justify-start gap-0 rounded-none border-b border-ru-n-200 bg-white p-0 px-[22px]"
       >
         {SECTION_TABS.map(({ value, label, icon: Icon }) => (
           <TabsTrigger
             key={value}
             value={value}
-            className="after:bg-rateup-blue-4 data-active:font-semibold data-active:text-rateup-blue-4"
-            // className="h-[42px] flex-none gap-[6px] rounded-none border-0 px-4 text-[14px] font-medium text-ink-500 after:bottom-[-1px] after:bg-rateup-blue-4 data-active:font-semibold data-active:text-rateup-blue-4"
+            className="after:bg-ru-blue-600 data-active:font-semibold data-active:text-ru-blue-600"
+            // className="h-[42px] flex-none gap-[6px] rounded-none border-0 px-4 text-[14px] font-medium text-ru-n-500 after:bottom-[-1px] after:bg-ru-blue-600 data-active:font-semibold data-active:text-ru-blue-600"
           >
             <Icon className="size-3.5" />
             {translations(label)}

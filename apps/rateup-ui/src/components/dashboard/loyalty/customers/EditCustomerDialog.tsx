@@ -30,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 
 import { channelLabel } from "../channels/channels.ts";
 
@@ -273,11 +272,10 @@ export function EditCustomerDialog({
           </FieldGroup>
 
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+            <Button type="button" variant="outline" onClick={onClose} loading={isSaving}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving && <Spinner />}
+            <Button type="submit" loading={isSaving}>
               {t("Save")}
             </Button>
           </DialogFooter>

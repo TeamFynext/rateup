@@ -17,6 +17,7 @@ const HorizontalRuleToolbar = React.forwardRef<
       <TooltipTrigger
         render={
           <Button
+            aria-label="Horizontal rule"
             variant="ghost"
             size="icon"
             className={cn("h-8 w-8 p-0 sm:h-9 sm:w-9", className)}

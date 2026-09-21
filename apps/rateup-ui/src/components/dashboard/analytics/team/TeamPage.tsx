@@ -1,5 +1,4 @@
 import {
-  IconArrowLeft,
   IconChevronRight,
   IconClock,
   IconFileTypePdf,
@@ -19,6 +18,7 @@ import { toast } from "sonner";
 import { endFreshAnalytics, requestFreshAnalytics } from "@/backend/analytics/analyticsFilter";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
 import { teamKeys } from "@/backend/org/org.keys";
+import { BackLink } from "@/components/common/back-link.tsx";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -28,7 +28,7 @@ import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSel
 import { MessagePlatform } from "@/types/enums.ts";
 
 import { AnalyticsCard } from "../kit/AnalyticsCard.tsx";
-import { AnalyticsHeader, AnalyticsToolbar, BACK_LINK } from "../kit/AnalyticsHeader.tsx";
+import { AnalyticsHeader, AnalyticsToolbar } from "../kit/AnalyticsHeader.tsx";
 import { formatCount, formatDuration, formatPercent, toNumber } from "../kit/format.ts";
 import { StaffStatusBadge } from "../kit/StatusBadges.tsx";
 import { CLICKABLE_ROWS, NAME_LINK } from "../kit/tableStyles.ts";
@@ -171,14 +171,12 @@ export function TeamPage() {
       ) : (
         <AnalyticsHeader
           back={
-            <Link
+            <BackLink
               to="/dashboard/analytics"
               search={{ tab: "conversations", view: "teams" }}
-              className={BACK_LINK}
-              aria-label={t("Teams")}
-            >
-              <IconArrowLeft className="size-4 rtl:rotate-180" />
-            </Link>
+              label={t("Teams")}
+              iconOnly
+            />
           }
           leading={
             <div

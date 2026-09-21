@@ -48,7 +48,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { FlowSelector } from "@/components/whatsapp/flows/FlowSelector/FlowSelector";
@@ -177,7 +176,7 @@ export function UiSkillsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
                     variant="ghost"
                     size="icon-sm"
                     aria-label={`Delete ${uiSkill.title}`}
-                    disabled={deleteUiSkill.isPending}
+                    loading={deleteUiSkill.isPending}
                     onClick={() => deleteUiSkill.mutate(uiSkill.id)}
                   >
                     <IconTrash className="text-destructive" />
@@ -419,8 +418,7 @@ function UiSkillDialog({
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Spinner data-icon="inline-start" />}
+              <Button type="submit" loading={isPending}>
                 {uiSkill ? "Save changes" : "Create UI skill"}
               </Button>
             </DialogFooter>

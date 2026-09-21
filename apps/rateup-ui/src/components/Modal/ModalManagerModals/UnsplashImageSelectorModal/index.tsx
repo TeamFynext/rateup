@@ -83,7 +83,7 @@ function UnsplashImageSelectorModal({
     <div className="relative flex flex-col gap-4 min-h-[70vh]">
       <LoadingOverlay visible={unsplashPhotosList?.isPending} />
       {unsplashPhotosList?.isError && (
-        <p className="text-red-500">Currently Unsplash Is Unavailable</p>
+        <p className="text-destructive">Currently Unsplash Is Unavailable</p>
       )}
       {!unsplashPhotosList?.isError && (
         <div className="flex items-center justify-center mb-6">

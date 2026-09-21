@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhonePreviewButton } from "@/components/ui/phone-preview";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { WaQuestions } from "@/types/enums";
 
 const SHOPIFY_FIELDS = [
@@ -119,9 +120,9 @@ const STATUS_CONFIG = {
     badge: "default" as const,
   },
   rejected: {
-    icon: <IconCircleX className="h-5 w-5 text-red-500" />,
+    icon: <IconCircleX className="h-5 w-5 text-destructive" />,
     label: "Rejected by Meta",
-    color: "text-red-600",
+    color: "text-destructive",
     badge: "destructive" as const,
   },
 };
@@ -135,7 +136,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 rounded-xl bg-muted/30 animate-pulse" />
+          <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
     );
@@ -226,7 +227,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
       <div className="flex flex-col gap-4">
         {/* Flow status panel */}
         <Card
-          className={`${status === "approved" ? "border-green-300 bg-green-50/40 dark:bg-green-950/20" : status === "rejected" ? "border-red-300 bg-red-50/40 dark:bg-red-950/20" : status === "review" ? "border-amber-300 bg-amber-50/40 dark:bg-amber-950/20" : ""}`}
+          className={`${status === "approved" ? "border-green-300 bg-green-50/40 dark:bg-green-950/20" : status === "rejected" ? "border-destructive/40 bg-destructive/10 " : status === "review" ? "border-amber-300 bg-amber-50/40 dark:bg-amber-950/20" : ""}`}
         >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-4">

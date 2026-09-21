@@ -15,6 +15,7 @@ const UnderlineToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProp
         <TooltipTrigger
           render={
             <Button
+              aria-label="Underline"
               variant="ghost"
               size="icon"
               className={cn(

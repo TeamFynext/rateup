@@ -62,7 +62,7 @@ export default function Overview() {
   return (
     /* The band rides up over the hero's navy as a rounded sheet. A gradient fade between the
        two goes muddy halfway: navy into cream passes through grey-brown. */
-    <section className="relative -mt-8 rounded-t-4xl bg-ink-25 px-5 pt-12 pb-12 sm:-mt-10 sm:rounded-t-[2.5rem] sm:pt-20 sm:pb-18">
+    <section className="relative -mt-8 rounded-t-4xl bg-ru-n-25 px-5 pt-12 pb-12 sm:-mt-10 sm:rounded-t-[2.5rem] sm:pt-20 sm:pb-18">
       <div className="mx-auto max-w-280">
         <div className="mx-auto mb-8 max-w-190 text-center sm:mb-12">
           <Eyebrow

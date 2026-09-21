@@ -164,3 +164,25 @@ export function formatTimeToNearestUnitFromSeconds(seconds?: number | string) {
   }
   return { value, suffix };
 }
+
+/**
+ * `YYYY-MM-DD` in the viewer's own timezone. `toISOString()` would shift the day for anyone
+ * east or west of UTC at the wrong hour, which is how a "tomorrow" pick becomes today.
+ */
+export const toDateKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+
+/**
+ * The inverse, parsed as a local date for the same reason. Returns undefined for a blank or
+ * unparseable key, so a picker bound to an empty field shows its placeholder instead of
+ * "Invalid Date".
+ */
+export const fromDateKey = (key: string | null | undefined): Date | undefined => {
+  if (!key) return undefined;
+  const [year, month, day] = key.split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  const parsed = new Date(year, month - 1, day);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};

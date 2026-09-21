@@ -106,9 +106,9 @@ export function OrgDisplay() {
         return (
           <div className="flex items-center gap-2">
             <IconCalendar
-              className={`h-4 w-4 ${isOld ? "text-red-500 font-medium" : "text-muted-foreground"}`}
+              className={`h-4 w-4 ${isOld ? "text-destructive font-medium" : "text-muted-foreground"}`}
             />
-            <span className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}>
+            <span className={`text-sm ${isOld ? "text-destructive font-medium" : ""}`}>
               {formatIsoDateStringWithTime(value)}
             </span>
           </div>
@@ -190,8 +190,10 @@ export function OrgDisplay() {
 
         return (
           <div className="flex items-center gap-2">
-            <IconMail className={`h-4 w-4 ${isOld ? "text-red-500" : "text-muted-foreground"}`} />
-            <span className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}>
+            <IconMail
+              className={`h-4 w-4 ${isOld ? "text-destructive" : "text-muted-foreground"}`}
+            />
+            <span className={`text-sm ${isOld ? "text-destructive font-medium" : ""}`}>
               {formatIsoDateStringWithTime(value)}
             </span>
           </div>
@@ -282,7 +284,7 @@ export function OrgDisplay() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-ru-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">

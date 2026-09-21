@@ -197,7 +197,7 @@ export const useContactDeleteMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: contactGroupKeys.detail(groupId),
       });
-      toast.success("Contact Deleted successfully", {
+      toast.success("Contact deleted", {
         id: "contact-delete",
       });
       deleteContactsByIds([variables]);
@@ -271,7 +271,7 @@ export const useDeleteManyContactsMutation = () => {
         queryKey: campaignKeys.contactGroups(),
       });
       // showSuccessToast(
-      //   "Contact Deleted successfully",
+      //   "Contact deleted",
       //   "contact-delete",
       //   <IconCheck />,
       //   true,

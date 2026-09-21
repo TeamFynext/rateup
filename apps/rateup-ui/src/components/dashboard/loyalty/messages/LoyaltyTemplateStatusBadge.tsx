@@ -70,7 +70,8 @@ export function LoyaltyTemplateStatusBadge({
           variant="secondary"
           className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500"
         >
-          <IconClock size={12} />{" "}
+          <IconClock size={12} />
+          {""}
           {days > 0 ? t("Awaiting Meta · {days} days", { days }) : t("Awaiting Meta")}
         </Badge>
       );

@@ -7,7 +7,6 @@ import {
   IconMail,
   IconPlayerPause,
   IconPlayerPlay,
-  IconShield,
   IconUserCheck,
   IconUsers,
 } from "@tabler/icons-react";
@@ -25,6 +24,7 @@ import {
 import { DataTableToolbar } from "@/components/admin/userstats/data-table-toolbar.tsx";
 import UserModal from "@/components/admin/userstats/UserModal.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -46,8 +46,6 @@ import {
   isToday,
   isYesterday,
 } from "@/utils/dateTime.ts";
-import type { UserRole } from "@/utils/enums/index.ts";
-import { getUserRoleColor, UserRoleLabel } from "@/utils/index.ts";
 
 interface UserTableData {
   id: string;
@@ -117,15 +115,8 @@ export function UserstatsPage() {
       accessorKey: "role",
       header: createSortableHeader("Role"),
       cell: ({ row }) => {
-        const role: keyof typeof UserRole = row.getValue("role");
-        return (
-          <div className="flex items-center gap-2">
-            <IconShield className="h-4 w-4 text-muted-foreground" />
-            <Badge variant="outline" className={`text-${getUserRoleColor(role)}-600`}>
-              <UserRoleLabel role={role} />
-            </Badge>
-          </div>
-        );
+        const role: string = row.getValue("role");
+        return <RoleBadge role={role} size="sm" />;
       },
       meta: { title: "Role" },
     },
@@ -291,7 +282,7 @@ export function UserstatsPage() {
           <Button
             onClick={handleUpdateUserRecipe}
             disabled={isUpdatedRecipe}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-300"
           >
             {translations("Update User Recipe")}
           </Button>
@@ -300,7 +291,7 @@ export function UserstatsPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-ru-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">

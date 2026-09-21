@@ -20,7 +20,7 @@ This file provides essential guidance for AI coding agents working in this codeb
 
 - **Framework:** TanStack Start + TanStack Router, React 19, TypeScript
 - **Build Tooling:** Vite 8 + Nitro runtime output
-- **UI:** Tailwind CSS with a mixed component stack (shadcn/ui on Base UI, and existing Mantine)
+- **UI:** Tailwind CSS + shadcn/ui on Base UI, against Design System V2 tokens (`src/styles/foundation.css`)
 - **Monorepo:** No (single app)
 
 ## Build & Test Commands
@@ -88,7 +88,6 @@ code compile** — fix the type instead. `npm run typecheck` must be clean befor
 - Use `npx shadcn@latest` for component management
 - Always check for existing components before creating new ones
 - Compose UI using provided patterns (see shadcn skill)
-- Do not perform broad Mantine-to-shadcn rewrites unless explicitly requested.
 - shadcn/ui primitives in `src/components/ui/` are built on `@base-ui/react` (not Radix). There is no direct `@radix-ui/*` dependency in `package.json`; don't add one or reintroduce `cmdk`/`Command`-based patterns.
 - For select-style fields prefer `Select` (`src/components/ui/select.tsx`) for single choice and `MultiSelect` (`src/components/ui/multi-select.tsx`, a thin wrapper over `Combobox` in `src/components/ui/combobox.tsx`) for multi choice. Always pass `items` on `<Select>`/`<Combobox>` roots so the trigger renders the correct label.
 - **`ScrollArea` needs a bounded height, not a `max-h-*`.** Base UI puts `overflow: scroll` on an
@@ -122,7 +121,46 @@ visitor downloaded the dashboard, the survey editor and the admin panel (563 KB)
 - Marketing HTML is edge-cacheable (`s-maxage`) from the `(marketing)` layout, which also sets
   `Vary: Accept` because those routes serve Markdown to clients that ask for it.
 
+## Page shells and shared controls
+
+Reach for the existing component before writing a new header, back link or empty block. The
+audit that produced these rules found 8 page-shell families, 13 page-title treatments and 13
+back-button treatments, several of them written the same week.
+
+- **Page title** → `PageHeading` (`src/components/common/page-heading.tsx`), or its exported
+  `PAGE_TITLE` / `SECTION_TITLE` class when the screen states its own heading. Not a bare
+  `<h1>`, and not a new font size.
+- **Back to a parent page** → `BackLink` (`src/components/common/back-link.tsx`). It names the
+  destination and renders a real `<Link>`.
+- **List pages** → the kit in `src/components/common/list-page-layout.tsx`.
+- **Empty state** → `src/components/ui/empty.tsx`. Not a hand-rolled centred div, and not the
+  older `NothingFound`.
+- **Loading** → `Skeleton` when the shape is known, `Spinner` otherwise. Never `return null`,
+  and never a bare `Loading...`.
+- **Pending buttons** → `<Button loading={mutation.isPending}>`. Do not hand-roll a spinner or
+  swap the label.
+- **Destructive confirm** → `useConfirm()` (`src/context/confirm-provider.tsx`). Not a
+  hand-rolled Dialog or `window.confirm`.
+- **A clickable element that cannot be a `<button>`** → `pressable()`
+  (`src/components/common/pressable.ts`), which adds the role, the tab stop and the Enter/Space
+  handler. Anything that goes to a URL is an `<a>`, so it opens in a new tab.
+- **An icon-only button needs `aria-label`.** The icon is not its name.
+
+The page container is `mx-auto w-full max-w-265`. The app shell already applies `p-4`, so pages
+must not add their own outer padding.
+
 ## Styling & Design Tokens
+
+`npm run check:tokens` guards this section. It fails when the app surface gains colour debt, and
+its baseline may only go down. Run it before committing UI work; `--list` prints the offending
+lines. There is one type face (`font-display`), one danger colour (`--destructive`), and the V1
+aliases (`ink-*`, `rateup-orange`, `rateup-graytext`, `rateup-darkblue`, `rateup-blue-4`,
+`font-nunito`, `font-heading`) are gone — Tailwind emits nothing for them, so a reappearance is
+silent.
+
+**Interpolation is `{name}`, not `{{name}}`.** `src/i18n.ts` loads `i18next-icu`, so a message is
+ICU MessageFormat, not i18next's own syntax: single braces, and `{count, plural, one {…} other {…}}`
+where a count changes the wording. A double brace is not a placeholder here and renders verbatim.
 
 Color and styling go through **Tailwind utilities + shadcn semantic tokens**, never a bespoke
 scoped-token CSS system. (The inbox's old `inbox-v2.css` `.inbox-v2` token scope and its
@@ -143,9 +181,27 @@ reintroduce them.)
   `amber-*` (e.g. `text-amber-700 dark:text-amber-500`, `bg-amber-50 dark:bg-amber-950/40`);
   success → `green-600` / `bg-green-600/10`. Only truly brand-specific one-offs (channel colors) use
   literal hex, and only when consumed as a dynamic `style` value.
+- **`npm run check:tokens` enforces this** on the authenticated app: absolute colours, raw
+  neutral palette, `bg-primary` with `text-white`, accents with no `dark:`, and hexes that are
+  already a token. It runs against a baseline that may only go down — see
+  `scripts/design-tokens.baseline.json`. Marketing is deliberately out of scope, because those
+  pages carry per-product sub-brands and are light-only by design.
 - **Prefer shadcn components over custom styled markup:** callouts/banners → `Alert`, status/count
   chips → `Badge`, actions → `Button`. Extend components with `cva` variants, never with `className`
   color/typography overrides.
+
+## Permissions and roles
+
+What a signed-in user may do is a permission list from `GET /user/info`, not a role name.
+
+- Ask with `usePermissions()` / `useCan("inbox.delete")` (`src/hooks/usePermission.ts`) or wrap markup in
+  `<Can permission="…">` (`src/components/common/Can.tsx`). Never compare `user.role` to a string.
+- The catalogue and the six system roles are mirrored in `src/utils/authz/` from
+  `rateup-api/src/authz/`; when the API changes them, change the mirror in the same PR.
+  `resolvePermissions` falls back to the role's bundle when an older API answers without a list.
+- Role pickers use `RoleSelect` with `usePermissions().grantableRoles`; roles render with `RoleBadge`.
+- Which sidebar sections and routes a user reaches is derived from permissions in
+  `src/utils/authz/features.ts` and consumed through `TeamFeaturesContext` / `RouteAccessGuard`.
 
 ## Internationalization
 

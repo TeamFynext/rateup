@@ -207,7 +207,7 @@ export const useCreateSurveyLandingPageMutation = ({
   const createMutation = useMutation({
     mutationFn: createSurveyLandingPage,
     onSuccess: () => {
-      toast.success("Survey Landing Page created Created...!", {
+      toast.success("Landing page created", {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: surveyKeys.landing() });
@@ -340,7 +340,7 @@ export function useEditSurveyMutation(id: string) {
   return useMutation({
     mutationFn: (data: RequestPayload) => updateSurvey(id, data),
     onSuccess: () => {
-      toast.success("Survey Updated Successfully!", {
+      toast.success("Survey updated", {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
@@ -435,7 +435,7 @@ export function useUpdateSurveyMutation() {
     mutationFn: ({ surveyId, data }: { surveyId: string; data: RequestPayload }) =>
       updateSurvey(surveyId, data),
     onSuccess: () => {
-      toast.success("Survey Updated Successfully!");
+      toast.success("Survey updated");
       queryClient.invalidateQueries({ queryKey: surveyKeys.all() });
     },
   });

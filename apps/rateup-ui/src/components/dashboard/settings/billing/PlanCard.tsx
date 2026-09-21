@@ -44,7 +44,7 @@ export function PlanCard({
     <Card>
       <CardContent className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h3 className="font-heading text-lg font-medium">
+          <h3 className="font-display text-lg font-medium">
             {subscription?.basePlan?.displayName || t("No plan")}
           </h3>
           {state.isFreePlan ? (

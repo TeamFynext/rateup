@@ -325,7 +325,7 @@ const AssignUser = ({
                 );
               })}
               {assignedStaff.length > 3 && (
-                <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
+                <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-background">
                   +{assignedStaff.length - 3}
                 </div>
               )}

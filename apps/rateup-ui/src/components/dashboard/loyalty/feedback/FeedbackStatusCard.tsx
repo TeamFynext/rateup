@@ -1,4 +1,4 @@
-import { IconChartBar, IconEdit, IconLoader2, IconUnlink, IconSend } from "@tabler/icons-react";
+import { IconChartBar, IconEdit, IconUnlink, IconSend } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -73,7 +73,10 @@ export function FeedbackStatusCard({
   const summary = [
     team ? t("Reviews go to {team}", { team: team.name }) : null,
     reward ? t("Reward: {reward}", { reward: reward.name }) : t("No review reward"),
-    t("{sent} asked · {completed} answered", { sent: counts.sent, completed: counts.completed }),
+    t("{sent} asked · {completed} answered", {
+      sent: counts.sent,
+      completed: counts.completed,
+    }),
   ]
     .filter((part): part is string => part !== null)
     .join(" · ");
@@ -122,12 +125,8 @@ export function FeedbackStatusCard({
         )}
         <div className="flex flex-wrap gap-2">
           {needsSubmit && (
-            <Button type="button" onClick={onSubmit} disabled={submit.isPending}>
-              {submit.isPending ? (
-                <IconLoader2 className="size-4 animate-spin" />
-              ) : (
-                <IconSend size={16} />
-              )}
+            <Button type="button" onClick={onSubmit} loading={submit.isPending}>
+              <IconSend size={16} />
               {templateOnly ? t("Create message template") : t("Submit to Meta")}
             </Button>
           )}
@@ -154,7 +153,7 @@ export function FeedbackStatusCard({
             variant="ghost"
             className="ml-auto text-muted-foreground"
             onClick={onDetach}
-            disabled={detach.isPending}
+            loading={detach.isPending}
           >
             <IconUnlink size={16} />
             {t("Detach")}

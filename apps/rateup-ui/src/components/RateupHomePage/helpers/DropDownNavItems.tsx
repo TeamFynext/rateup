@@ -26,37 +26,37 @@ const components: {
   description: string;
 }[] = [
   {
-    icon: <IconApi className="size-6 text-rateup-graytext" />,
+    icon: <IconApi className="size-6 text-ru-n-600" />,
     title: "WhatsApp Business API",
     to: "/products/whatsapp-business-api",
     description: "The channel everything else here is built on.",
   },
   {
-    icon: <IconSpeakerphone className="size-6 text-rateup-graytext" />,
+    icon: <IconSpeakerphone className="size-6 text-ru-n-600" />,
     title: "WhatsApp Broadcast",
     to: "/products/whatsapp-broadcast",
     description: "Segmented campaigns to thousands, on the official API.",
   },
   {
-    icon: <IconMessageCircle className="size-6 text-rateup-graytext" />,
+    icon: <IconMessageCircle className="size-6 text-ru-n-600" />,
     title: "Whatsapp Loyalty",
     to: "/products/whatsapp-loyalty",
     description: "Engage where your customers are most active.",
   },
   {
-    icon: <IconDeviceDesktop className="size-6 text-rateup-graytext" />,
+    icon: <IconDeviceDesktop className="size-6 text-ru-n-600" />,
     title: "Whatsapp Feedback",
     to: "/products/whatsapp-feedback",
     description: "Collect and analyze customer insights easily.",
   },
   {
-    icon: <IconInbox className="size-6 text-rateup-graytext" />,
+    icon: <IconInbox className="size-6 text-ru-n-600" />,
     title: "Omnichannel Inbox",
     to: "/products/omnichannel-inbox",
     description: "All your customer messages flow into one unified workspace.",
   },
   {
-    icon: <IconPlug className="size-6 text-rateup-graytext" />,
+    icon: <IconPlug className="size-6 text-ru-n-600" />,
     title: "Integrations",
     to: "/integrations",
     description: "Shopify, WooCommerce, POS, CRM and 3,000+ apps via Zapier.",

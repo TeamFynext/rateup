@@ -291,6 +291,7 @@ function TiptapImage(props: NodeViewProps) {
             )}
           >
             <Button
+              aria-label="Align left"
               size="icon"
               className={cn("size-7", node.attrs.align === "left" && "bg-accent")}
               variant="ghost"
@@ -299,6 +300,7 @@ function TiptapImage(props: NodeViewProps) {
               <IconAlignLeft className="size-4" />
             </Button>
             <Button
+              aria-label="Align centre"
               size="icon"
               className={cn("size-7", node.attrs.align === "center" && "bg-accent")}
               variant="ghost"
@@ -307,6 +309,7 @@ function TiptapImage(props: NodeViewProps) {
               <IconAlignCenter className="size-4" />
             </Button>
             <Button
+              aria-label="Align right"
               size="icon"
               className={cn("size-7", node.attrs.align === "right" && "bg-accent")}
               variant="ghost"
@@ -317,7 +320,14 @@ function TiptapImage(props: NodeViewProps) {
             <Separator orientation="vertical" className="h-[20px]" />
             <DropdownMenu open={openedMore} onOpenChange={setOpenedMore}>
               <DropdownMenuTrigger
-                render={<Button size="icon" className="size-7" variant="ghost" />}
+                render={
+                  <Button
+                    aria-label="More actions"
+                    size="icon"
+                    className="size-7"
+                    variant="ghost"
+                  />
+                }
               >
                 <IconDotsVertical className="size-4" />
               </DropdownMenuTrigger>
@@ -407,10 +417,7 @@ function TiptapImage(props: NodeViewProps) {
                   <IconMaximize className="mr-2 size-4" /> Full Width
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={deleteNode}
-                >
+                <DropdownMenuItem className="text-destructive" onClick={deleteNode}>
                   <IconTrash className="mr-2 size-4" /> Delete Image
                 </DropdownMenuItem>
               </DropdownMenuContent>

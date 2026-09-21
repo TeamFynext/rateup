@@ -1,4 +1,3 @@
-import { IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -60,10 +59,9 @@ function SaveButton({
     <div className={cn("save-button-root-div flex w-full justify-center", className)}>
       <Button
         className="h-auto rounded-full px-4 py-2 text-xs leading-normal"
-        disabled={isSaving}
+        loading={isSaving}
         onClick={handleSaveTheme}
       >
-        {isSaving && <IconLoader2 className="mr-1 size-3 animate-spin" />}
         {isThemeObjBeingEditedDefaultTheme
           ? translations("Apply")
           : selectedPageTab === ThemeTabEnum.SURVEY

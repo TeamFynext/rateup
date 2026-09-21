@@ -68,7 +68,7 @@ export function DataTableToolbar<TData, TValue>({
                   variant="outline"
                   size="sm"
                   onClick={handleRemoveMembers}
-                  className="gap-2 h-8 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
+                  className="gap-2 h-8 text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
                 >
                   <IconTrash className="w-3.5 h-3.5" />
                   <span className="text-sm">Remove ({selectedMembers.length})</span>
@@ -100,7 +100,7 @@ export function DataTableToolbar<TData, TValue>({
                 placeholder="Search by name or phone..."
                 value={filter.searchTerm}
                 onChange={(e) => setFilter({ searchTerm: e.currentTarget.value })}
-                className="pl-10 h-8 border-gray-200 focus:ring-2 focus:ring-primary/20 placeholder:text-sm"
+                className="pl-10 h-8 border-border focus:ring-2 focus:ring-primary/20 placeholder:text-sm"
               />
               {filter.searchTerm && (
                 <Button

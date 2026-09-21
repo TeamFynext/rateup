@@ -255,7 +255,7 @@ const Breakdown = ({
   const colorMap = {
     green: "text-green-600 bg-green-500",
     yellow: "text-yellow-600 bg-yellow-400",
-    red: "text-red-600 bg-red-500",
+    red: "text-destructive bg-destructive",
   };
   return (
     <div className={`flex items-center gap-1 ${colorMap[color].split(" ")[0]}`}>

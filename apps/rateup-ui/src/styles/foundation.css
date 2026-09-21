@@ -64,12 +64,16 @@
 
 .dark {
   /* Design System V2 `[data-theme="dark"]` scope. */
-  --background: oklch(0.1665 0.0124 254.17); /* --canvas #0b0f14 */
+  --background: oklch(0.1857 0.019 255); /* --canvas #0d131b */
   --foreground: oklch(0.954 0.0063 255.48); /* --fg #edf0f4 */
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
+  /* Raised surfaces sit on the V2 navy ramp like every other dark token; they were
+     left on the stock shadcn hue (285.9) when the rest of the scope was migrated, which
+     made cards the one surface reading a different temperature from the page. Lightness
+     is unchanged, so only the colour temperature moves. */
+  --card: oklch(0.21 0.016 255.5);
+  --card-foreground: oklch(0.954 0.0063 255.48);
+  --popover: oklch(0.21 0.016 255.5);
+  --popover-foreground: oklch(0.954 0.0063 255.48);
   --primary: oklch(0.6294 0.1034 253.03); /* --accent / blue-400 #5a8cc6 */
   --primary-foreground: oklch(0.1823 0.0305 249.25); /* --on-accent #07131f */
   --secondary: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
@@ -105,12 +109,9 @@
 }
 
 @theme inline {
-  /* Design System V2 type: Instrument Sans for body/UI, Figtree for display.
-     `--font-nunito` is kept as the historical alias for the display face so the
-     existing `font-nunito` markup picks up the new family. */
+  /* Design System V2 type: Instrument Sans for body/UI, Figtree for display. */
   --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-nunito: var(--font-display);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -147,7 +148,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-heading: var(--font-display);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
@@ -183,6 +183,7 @@
   --color-ru-green-600: #177f45;
   --color-ru-green-700: #115f34;
 
+  --color-ru-n-25: #fcfcfd; /* the page canvas marketing sections sit on */
   --color-ru-n-50: #f7f8fa;
   --color-ru-n-100: #eff1f5;
   --color-ru-n-200: #e4e7ec;
@@ -191,12 +192,6 @@
   --color-ru-n-500: #6b7480;
   --color-ru-n-600: #434a55;
   --color-ru-n-700: #1b2027; /* ink stops at 700, never black */
-
-  /* Legacy aliases, repointed onto the V2 ramps. */
-  --color-rateup-orange: var(--color-ru-amber-500);
-  --color-rateup-graytext: var(--color-ru-n-600);
-  --color-rateup-darkblue: var(--color-ru-blue-900);
-  --color-rateup-blue-4: var(--color-ru-blue-600);
 
   /* WhatsApp Feedback theme configurations */
   --color-fb-green: #2a6254;
@@ -207,19 +202,6 @@
   --color-periwinkle: #b8d0ca;
   --color-periwinkle-2: #a6c2bb;
   --color-chip-dark: #102820;
-
-  /* `ink-*` were the V1 warm neutrals; mapped by role onto the V2 cool ramp. */
-  --color-ink-25: #fcfcfd; /* --canvas */
-  --color-ink-50: var(--color-ru-n-50);
-  --color-ink-100: var(--color-ru-n-200); /* border role */
-  --color-ink-200: var(--color-ru-n-300);
-  --color-ink-400: var(--color-ru-n-400);
-  --color-ink-500: var(--color-ru-n-500);
-  --color-ink-800: var(--color-ru-n-600);
-  --color-ink-900: var(--color-ru-n-700);
-
-  --color-blue-50: var(--color-ru-blue-50);
-  --color-blue-100: var(--color-ru-blue-100);
 
   --animate-panel-fade: panelFade 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-blink: blink 1.2s infinite both;

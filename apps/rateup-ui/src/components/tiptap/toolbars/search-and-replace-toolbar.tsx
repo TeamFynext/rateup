@@ -104,7 +104,7 @@ export function SearchAndReplaceToolbar() {
           <div className={cn("relative flex gap-1.5 items-center")}>
             <Input
               value={searchText}
-              className=" w-48"
+              className="w-48"
               onChange={(e) => {
                 setSearchText(e.target.value);
               }}
@@ -113,14 +113,27 @@ export function SearchAndReplaceToolbar() {
             <span>
               {results?.length === 0 ? selectedResult : (selectedResult ?? 0) + 1}/{results?.length}
             </span>
-            <Button onClick={selectPrevious} size="icon" variant="ghost" className="size-7">
+            <Button
+              aria-label="Previous match"
+              onClick={selectPrevious}
+              size="icon"
+              variant="ghost"
+              className="size-7"
+            >
               <IconArrowLeft className="size-4" />
             </Button>
-            <Button onClick={selectNext} size="icon" className="size-7" variant="ghost">
+            <Button
+              aria-label="Next match"
+              onClick={selectNext}
+              size="icon"
+              className="size-7"
+              variant="ghost"
+            >
               <IconArrowRight className="h-4 w-4" />
             </Button>
             <Separator orientation="vertical" className="h-7 mx-0.5" />
             <Button
+              aria-label="Repeat"
               onClick={() => {
                 setReplacing(true);
               }}
@@ -131,6 +144,7 @@ export function SearchAndReplaceToolbar() {
               <IconRepeat className="h-4 w-4" />
             </Button>
             <Button
+              aria-label="Close"
               onClick={() => {
                 setOpen(false);
               }}
@@ -151,6 +165,7 @@ export function SearchAndReplaceToolbar() {
             />
             <div className="flex w-full items-center gap-3">
               <Button
+                aria-label="Back to search"
                 size="icon"
                 className="size-7 rounded-full"
                 variant="ghost"
@@ -213,6 +228,7 @@ export function SearchAndReplaceToolbar() {
             <div className="actions mt-6 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Button
+                  aria-label="Previous match"
                   onClick={selectPrevious}
                   size="icon"
                   className="h-7 w-7"
@@ -220,7 +236,13 @@ export function SearchAndReplaceToolbar() {
                 >
                   <IconArrowLeft className="h-4 w-4" />
                 </Button>
-                <Button onClick={selectNext} size="icon" className="h-7 w-7" variant="secondary">
+                <Button
+                  aria-label="Next match"
+                  onClick={selectNext}
+                  size="icon"
+                  className="h-7 w-7"
+                  variant="secondary"
+                >
                   <IconArrowRight className="h-4 w-4" />
                 </Button>
               </div>

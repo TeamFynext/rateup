@@ -20,35 +20,6 @@
   border-bottom-color: #374151;
 }
 
-.back-button {
-  padding: 6px 12px;
-  height: auto;
-  font-size: 0.875rem;
-  color: #6b7280;
-  gap: 6px;
-  flex-shrink: 0;
-  box-shadow: none;
-}
-
-:global(.dark) .back-button {
-  color: #9ca3af;
-}
-
-.back-button:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-  box-shadow: none;
-}
-
-:global(.dark) .back-button:hover {
-  background-color: #374151;
-  color: #d1d5db;
-}
-
-.back-text {
-  font-weight: 400;
-}
-
 .title-section {
   flex: 1;
 }

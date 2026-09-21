@@ -66,7 +66,7 @@ export const ReputationManagement = () => {
             <Image
               src={`${imagesPath}/Understand+Your+Online+Reputation.png`}
               alt="Reputation Management Illustration"
-              className="w-full h-auto "
+              className="w-full h-auto"
               width={2432}
               height={1442}
             />

@@ -463,8 +463,7 @@ function DetailsStep({
         <Button type="button" variant="outline" onClick={onBack}>
           {t("Back")}
         </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending && <Spinner />}
+        <Button type="submit" loading={isPending}>
           {t("Create Flow")}
         </Button>
       </DialogFooter>

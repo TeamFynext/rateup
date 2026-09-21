@@ -201,7 +201,7 @@ export const TakeSurveyLayoutWeb = ({
             }}
             onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitSurveyPassword]])}
           >
-            <p className="mt-5 text-sm text-gray-500">
+            <p className="mt-5 text-sm text-muted-foreground">
               Hey Welcome , <br /> You need to enter password to continue.
             </p>
             <div className="h-5" />

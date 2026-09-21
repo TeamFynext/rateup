@@ -71,7 +71,7 @@ function RedirectSettings({
       <Card>
         <CardHeader className="flex flex-row items-center gap-2.25">
           <IconExternalLink className="size-4 text-primary" />
-          <CardTitle className="font-nunito text-[15px] font-extrabold">
+          <CardTitle className="font-display text-[15px] font-extrabold">
             {translations("Redirect")}
           </CardTitle>
         </CardHeader>
@@ -137,7 +137,8 @@ function RedirectSettings({
 
               <Field data-invalid={!!redirectError?.time}>
                 <FieldLabel htmlFor={`${uid}-field-2`}>
-                  {translations("Redirect After (in seconds)")}{" "}
+                  {translations("Redirect After (in seconds)")}
+                  {""}
                   <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input

@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
+import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -90,7 +91,7 @@ function CustomColorPicker({
     return (
       <div
         className="custom-element-from-props cursor-pointer"
-        onClick={() => colorInputRef.current?.click()}
+        {...pressable(() => colorInputRef.current?.click(), "Pick a colour")}
       >
         {elementToBeDisplayed}
         {colorInput}

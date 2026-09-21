@@ -4,14 +4,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconChevronRight, IconPlus, IconRefresh, IconUsers } from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useId, useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
 
 import { useAllTeamsMembersOfOrg } from "@/backend/org/org.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useCreateTeamMutation, useTeamsByUser } from "@/backend/team/team.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { ColorField } from "@/components/common/color-field.tsx";
@@ -26,79 +25,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
-import { useUser } from "@/context/UserContext.tsx";
-import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { HEX_COLOR } from "@/utils/color.ts";
-import { UserRole } from "@/utils/enums/index.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
-
-const FEATURES_WITH_SUBSCRIPTION: {
-  feature: TeamFeature;
-  label: string;
-  requiredSubscriptions?: sfpn[];
-}[] = [
-  {
-    feature: TeamFeature.Inbox,
-    label: "Inbox",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  { feature: TeamFeature.Analytics, label: "Analytics" },
-  {
-    feature: TeamFeature.Contacts,
-    label: "Contacts",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Campaigns,
-    label: "Campaigns",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Flows,
-    label: "Flows",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Chatbots,
-    label: "Chatbots",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Templates,
-    label: "Templates",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Automation,
-    label: "Automation",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.Loyalty,
-    label: "Loyalty",
-    requiredSubscriptions: [sfpn.Whatsapp],
-  },
-  {
-    feature: TeamFeature.WebForms,
-    label: "Web Forms / Surveys",
-    requiredSubscriptions: [sfpn.WebSurvey],
-  },
-  {
-    feature: TeamFeature.Pipeline,
-    label: "Pipeline",
-  },
-  { feature: TeamFeature.QrStudio, label: "QR Studio" },
-  {
-    feature: TeamFeature.AiChatbot,
-    label: "Chatbot (AI)",
-    requiredSubscriptions: [sfpn.AI],
-  },
-  { feature: TeamFeature.AppsServices, label: "Apps & Services" },
-  { feature: TeamFeature.Settings, label: "Settings" },
-];
 
 export function TeamPage() {
   const uid = useId();
@@ -107,39 +37,11 @@ export function TeamPage() {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
   const action = searchParams?.action;
-  const { user } = useUser();
-  // Creating a team is the owner's: the dialog also sets the new team's feature access, which
-  // is not an admin's to decide. Opening a team to look at who is in it is nobody's privilege —
-  // a member needs to know who they can hand a chat to.
-  const canManageTeams = user?.role === UserRole.SUPADM;
-  const { data: subscription } = useSubscription();
+  // Opening a team to look at who is in it is nobody's privilege — a member needs to know who
+  // they can hand a chat to. Creating one is `teams.manage`.
+  const canManageTeams = usePermissions().can("teams.manage");
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
-  const [selectedFeatures, setSelectedFeatures] = useState<Set<TeamFeature>>(new Set());
-  // Only show features that are active in this org's subscription
-  const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(({ requiredSubscriptions }) => {
-    if (!requiredSubscriptions || requiredSubscriptions.length === 0) return true;
-    return requiredSubscriptions.every((sfp) => hasFeature(subscription, sfp));
-  });
-
-  const toggleFeature = (feature: TeamFeature) => {
-    setSelectedFeatures((prev) => {
-      const next = new Set(prev);
-      if (next.has(feature)) next.delete(feature);
-      else next.add(feature);
-      return next;
-    });
-  };
-
-  const allEnabled = selectedFeatures.size === availableFeatures.length;
-  const toggleAll = () => {
-    if (allEnabled) {
-      setSelectedFeatures(new Set());
-    } else {
-      setSelectedFeatures(new Set(availableFeatures.map((f) => f.feature)));
-    }
-  };
-
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
@@ -204,10 +106,7 @@ export function TeamPage() {
         id: "load-data",
       },
     );
-    createTeamMutation.mutate({
-      ...values,
-      features: Array.from(selectedFeatures),
-    });
+    createTeamMutation.mutate(values);
   };
   useEffect(() => {
     if (action === "create") {
@@ -352,9 +251,6 @@ export function TeamPage() {
           open={isCreateTeamDialogOpen}
           onOpenChange={(open) => {
             setIsCreateTeamDialogOpen(open);
-            if (!open) {
-              setSelectedFeatures(new Set());
-            }
           }}
         >
           <DialogContent className="sm:max-w-2xl">
@@ -415,45 +311,10 @@ export function TeamPage() {
                     />
                   )}
                 />
-
-                {/* Feature Access */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <FieldTitle>{translations("Feature Access")}</FieldTitle>
-                    <button
-                      type="button"
-                      onClick={toggleAll}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      {allEnabled ? translations("Disable All") : translations("Enable All")}
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
-                    {availableFeatures.map(({ feature, label }) => (
-                      <Field
-                        key={feature}
-                        orientation="horizontal"
-                        className="justify-between rounded-md border px-3 py-1.5"
-                      >
-                        <FieldLabel
-                          htmlFor={`${uid}-feature-${feature}`}
-                          className="text-sm font-normal text-muted-foreground"
-                        >
-                          {label}
-                        </FieldLabel>
-                        <Switch
-                          id={`${uid}-feature-${feature}`}
-                          checked={selectedFeatures.has(feature)}
-                          onCheckedChange={() => toggleFeature(feature)}
-                        />
-                      </Field>
-                    ))}
-                  </div>
-                </div>
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={isCreating} className="bg-primary">
-                  {isCreating ? translations("Creating") : translations("Create Team")}
+                <Button type="submit" loading={isCreating} className="bg-primary">
+                  {translations("Create Team")}
                 </Button>
               </DialogFooter>
             </form>

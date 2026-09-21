@@ -44,7 +44,13 @@ function ScreensList() {
         <Tooltip>
           <TooltipTrigger
             render={
-              <Button onClick={handleAddScreen} variant="ghost" size="icon" className="h-8 w-8" />
+              <Button
+                aria-label={translations("Add Screen")}
+                onClick={handleAddScreen}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+              />
             }
           >
             <IconPlus size={16} />
@@ -54,7 +60,7 @@ function ScreensList() {
           </TooltipContent>
         </Tooltip>
       </div>
-      <p className="text-xs text-muted-foreground ">
+      <p className="text-xs text-muted-foreground">
         {translations("Build your flow step by step")}
       </p>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -144,14 +150,16 @@ function ScreenCard({ screen, index, isSelected, onSelect, onDelete }: Readonly<
                 </p>
                 <p className="text-xs text-muted-foreground leading-4 mt-0.5">
                   {screen.layout?.children?.filter((c) => c.type !== WaQuestions.Footer).length ||
-                    0}{" "}
+                    0}
+                  {""}
                   {translations("elements")}
                 </p>
               </div>
               <Button
+                aria-label={translations("Delete")}
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete();

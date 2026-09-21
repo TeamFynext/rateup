@@ -72,7 +72,7 @@ export function LeadAvatar({
         {photo ? <AvatarImage src={photo} alt={name ?? ""} /> : null}
         <AvatarFallback
           className={cn(
-            "font-nunito font-semibold tracking-[-0.01em]",
+            "font-display font-semibold tracking-[-0.01em]",
             tone === "person" ? "text-white" : "bg-primary/10 text-primary",
           )}
           // A teammate's colour is picked from the brand accents at runtime, so

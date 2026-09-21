@@ -1,25 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { getTeamFeatures } from "@/backend/team/team.api";
 import { userInfoQuery } from "@/backend/user/user.options";
-import {
-  getDashboardLandingTarget,
-  getWhatsappLandingTarget,
-} from "@/utils/dashboard-feature-access.ts";
-import { UserRole } from "@/utils/enums/index.ts";
-
-async function getMemberAllowedFeatures(teamIds: string[]): Promise<Set<string>> {
-  const teamFeaturesResponses = await Promise.all(teamIds.map((id) => getTeamFeatures(id)));
-
-  const allowedFeatures = new Set<string>();
-  for (const result of teamFeaturesResponses) {
-    for (const feature of result.features) {
-      allowedFeatures.add(feature.feature);
-    }
-  }
-
-  return allowedFeatures;
-}
+import { resolvePermissions } from "@/utils/authz/can.ts";
+import { allowedFeaturesFromPermissions } from "@/utils/authz/features.ts";
+import { getWhatsappLandingTarget } from "@/utils/dashboard-feature-access.ts";
 
 export const Route = createFileRoute("/dashboard/whatsapp/")({
   ssr: false,
@@ -33,23 +17,7 @@ export const Route = createFileRoute("/dashboard/whatsapp/")({
       throw redirect({ to: "/login", replace: true });
     }
 
-    const teamIds = user?.role === UserRole.SUPADM ? [] : (user.teams ?? []);
-
-    if (teamIds.length > 0) {
-      const allowedFeatures = await getMemberAllowedFeatures(teamIds);
-      throw redirect({
-        to: getWhatsappLandingTarget(allowedFeatures),
-        replace: true,
-      });
-    }
-
-    if (user.role === UserRole.SUPADM) {
-      throw redirect({ to: "/dashboard/whatsapp/flows", replace: true });
-    }
-
-    throw redirect({
-      to: getDashboardLandingTarget(new Set<string>()),
-      replace: true,
-    });
+    const allowed = allowedFeaturesFromPermissions(resolvePermissions(user));
+    throw redirect({ to: getWhatsappLandingTarget(allowed), replace: true });
   },
 });

@@ -239,7 +239,8 @@ export function AdminDashboard() {
             <CardHeader>
               <CardTitle className="text-base">Revenue collected</CardTitle>
               <CardDescription>
-                {inr(data.totals.revenueThisMonth)} this month · {inr(data.totals.revenueAllTime)}{" "}
+                {inr(data.totals.revenueThisMonth)} this month · {inr(data.totals.revenueAllTime)}
+                {""}
                 all time
               </CardDescription>
             </CardHeader>

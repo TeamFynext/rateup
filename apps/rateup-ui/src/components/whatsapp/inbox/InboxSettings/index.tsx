@@ -2,6 +2,7 @@ import { IconBolt, IconHash, IconMessage, IconRadio } from "@tabler/icons-react"
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import WaQuickReplySettings from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -32,9 +33,7 @@ const InboxSettings = () => {
            Sits on the surface with a hairline under it, so the tab row reads as
            part of the page chrome rather than as content. */}
       <div className="shrink-0 border-b border-border bg-card px-7 py-4">
-        <h1 className="text-xl font-extrabold tracking-tight text-foreground">
-          {t("Inbox Settings")}
-        </h1>
+        <h1 className={SECTION_TITLE}>{t("Inbox Settings")}</h1>
         <p className="mt-0.5 text-[13px] text-muted-foreground">
           {t("Manage channels, conversation tags, quick replies and automation.")}
         </p>

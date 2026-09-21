@@ -110,7 +110,8 @@ export function NewTemplateDialog({ open, starter, onClose }: Readonly<NewTempla
               onClick={() => openEditor(null)}
               className="mt-3 w-full rounded-lg border border-dashed border-border p-3 text-left text-sm text-muted-foreground hover:bg-muted/40"
             >
-              <span className="font-medium text-foreground">{t("Start blank")}</span>{" "}
+              <span className="font-medium text-foreground">{t("Start blank")}</span>
+              {""}
               {t("— header, footer, buttons and all, in the WhatsApp template editor.")}
             </button>
           </div>

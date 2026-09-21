@@ -89,7 +89,8 @@ export default function SignupSuccessPage() {
         </Card>
 
         <p className="text-center text-[13.5px] text-muted-foreground">
-          {translations("Need a hand getting started?")}{" "}
+          {translations("Need a hand getting started?")}
+          {""}
           <Link to="/contact-us" className="font-semibold text-primary hover:text-primary/80">
             {translations("Talk to us")}
           </Link>

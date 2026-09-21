@@ -2,7 +2,6 @@
 // config only. Behaviour is unchanged.
 
 import {
-  IconArrowLeft,
   IconChartBar,
   IconFileText,
   IconFileDownload,
@@ -14,7 +13,7 @@ import {
   IconTrendingUp,
   IconUsers,
 } from "@tabler/icons-react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -30,6 +29,7 @@ import {
 } from "@/backend/campaign/campaign.query";
 import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { BackLink } from "@/components/common/back-link.tsx";
 import { CampaignPausedBanner } from "@/components/dashboard/campaign/CampaignPausedBanner.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -187,7 +187,7 @@ export function CampaignDetails() {
     !campaignQuery.data
   ) {
     return (
-      <div className="h-screen flex items-center justify-center text-slate-600">
+      <div className="h-screen flex items-center justify-center text-muted-foreground">
         {t("We couldn't load this campaign.")}
       </div>
     );
@@ -370,12 +370,7 @@ export function CampaignDetails() {
       <div className="bg-card flex shrink-0 flex-col gap-3.5 px-8 pt-5">
         <div className="flex items-center justify-between gap-5">
           <div className="flex gap-3">
-            <Link
-              to="/dashboard/campaign"
-              className="text-muted-foreground hover:text-foreground inline-flex w-max items-center gap-1 text-[13px]"
-            >
-              <IconArrowLeft className="size-3.5" aria-hidden />
-            </Link>
+            <BackLink to="/dashboard/campaign" label={t("Campaigns")} iconOnly />
             <div className="flex min-w-0 items-center gap-3">
               <h1 className="font-display truncate text-2xl font-bold tracking-tight">
                 {campaign.name}
@@ -409,10 +404,10 @@ export function CampaignDetails() {
                   action in two places, one of which quietly ignored half of it. */}
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={<Button variant="ghost" disabled={deliveryReportMutation.isPending} />}
+                render={<Button variant="ghost" loading={deliveryReportMutation.isPending} />}
               >
                 <IconFileDownload className="size-4" aria-hidden />
-                {deliveryReportMutation.isPending ? t("Generating...") : t("Export")}
+                {t("Export")}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 {/* The label is a Base UI menu group part, so it only works
@@ -443,7 +438,7 @@ export function CampaignDetails() {
             <Button
               variant="outline"
               size="icon"
-              className="text-destructive hover:text-destructive"
+              className="text-destructive"
               aria-label={t("Delete")}
               title={t("Delete")}
               onClick={handleDelete}
@@ -507,7 +502,7 @@ export function CampaignDetails() {
                     <Button
                       variant="outline"
                       className="rounded-md gap-2"
-                      disabled={sendCampaignMutation.isPending}
+                      loading={sendCampaignMutation.isPending}
                       onClick={() => void handlePauseCampaign()}
                     >
                       <IconPlayerPause className="w-4 h-4" />
@@ -521,7 +516,7 @@ export function CampaignDetails() {
                 {canResume && (
                   <Button
                     className="rounded-md gap-2"
-                    disabled={sendCampaignMutation.isPending}
+                    loading={sendCampaignMutation.isPending}
                     title={t("Sends to the {count} recipients not messaged yet", {
                       count: pendingCount.toLocaleString(),
                     })}

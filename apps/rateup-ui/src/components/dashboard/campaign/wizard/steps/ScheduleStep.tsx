@@ -215,7 +215,8 @@ export function ScheduleStep({ wizard, registerSubmit }: Readonly<CampaignWizard
                           {t("{recipients} recipients at {perDay}/day → finishes", {
                             recipients: recipients.toLocaleString(),
                             perDay: perDay.toLocaleString(),
-                          })}{" "}
+                          })}
+                          {""}
                           <strong className="text-foreground font-semibold">
                             {finishesOn.end.toLocaleDateString(undefined, {
                               weekday: "short",

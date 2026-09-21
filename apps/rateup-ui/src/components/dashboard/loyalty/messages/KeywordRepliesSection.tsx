@@ -189,7 +189,7 @@ export function KeywordRepliesSection({
                       size="icon"
                       aria-label={t("Remove")}
                       onClick={() => void onDelete(command)}
-                      disabled={remove.isPending}
+                      loading={remove.isPending}
                     >
                       <IconTrash size={16} />
                     </Button>
@@ -203,7 +203,8 @@ export function KeywordRepliesSection({
                 <p className="text-xs text-muted-foreground">
                   {command.waTemplateId && template ? (
                     <>
-                      {t("Customers who have never messaged you get the template instead.")}{" "}
+                      {t("Customers who have never messaged you get the template instead.")}
+                      {""}
                       <Link
                         to="/dashboard/loyalty/templates/$templateId"
                         params={{ templateId: command.waTemplateId }}
@@ -214,7 +215,8 @@ export function KeywordRepliesSection({
                     </>
                   ) : (
                     <>
-                      {t("Only reaches customers who have messaged you in the last 24 hours.")}{" "}
+                      {t("Only reaches customers who have messaged you in the last 24 hours.")}
+                      {""}
                       {kind && onCreateTemplate && (
                         <button
                           type="button"
@@ -399,7 +401,7 @@ function KeywordEditor({
           </FieldDescription>
         </Field>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSaving}>
+          <Button variant="ghost" size="sm" onClick={onCancel} loading={isSaving}>
             {t("Cancel")}
           </Button>
           <Button

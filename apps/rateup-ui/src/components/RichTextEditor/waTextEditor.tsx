@@ -19,6 +19,7 @@ import type { Editor } from "@tiptap/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { pressable } from "@/components/common/pressable.ts";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
 import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
@@ -351,7 +352,7 @@ function WaTextEditor({
           media.map((me) => {
             return (
               <div className="relative inline-flex" key={me?.key}>
-                <span className="absolute -top-2 -right-2 z-10 flex size-4 items-center justify-center rounded-full bg-red-600 text-white">
+                <span className="absolute -top-2 -right-2 z-10 flex size-4 items-center justify-center rounded-full bg-destructive text-white">
                   <IconX
                     onClick={() => removeMedia(me.key ?? "")}
                     size={12}
@@ -361,11 +362,11 @@ function WaTextEditor({
                 <div
                   className="w-[50px] h-[50px] border-2 border-white flex flex-col justify-center items-center relative"
                   style={{ zIndex: 9999 }}
-                  onClick={() => {
+                  {...pressable(() => {
                     if (["audio", "document"].includes(me.type)) return;
                     setSelectedMedia(me);
                     open();
-                  }}
+                  }, me.name)}
                 >
                   {me.type === "image" && (
                     <img src={me.url} className="w-[48px] h-[48px] object-cover" alt={me.name} />
@@ -395,7 +396,7 @@ function WaTextEditor({
               <IconX className="w-3 h-3" />
             </Button>
           </div>
-          <div className="overflow-auto min-w-40 min-h-20 max-h-50 ">
+          <div className="overflow-auto min-w-40 min-h-20 max-h-50">
             <WaQuickReply
               handleSelectQuickReply={(value) => {
                 if (editor) {
@@ -427,7 +428,7 @@ function WaTextEditor({
       )}
       {label && (
         <div className="text-xs font-bold text-muted-foreground">
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-destructive">*</span>}
         </div>
       )}
       <div className={`flex items-start gap-2 ${border ? "p-2 sm:p-4" : ""} pb-0`}>
@@ -724,7 +725,7 @@ const ShowMedia = ({ opened, close }: { opened: boolean; close: () => void }) =>
           <Button
             size="icon"
             aria-label="Remove media"
-            className="bg-red-600 text-white hover:bg-red-700"
+            className="bg-destructive text-white hover:bg-destructive"
             onClick={async () => {
               await removeMedia(media.key ?? "");
               close();
@@ -753,7 +754,7 @@ const WaTextCharacterCount = ({ editor, max }: { editor: Editor | null; max: num
       className={cn(
         "flex items-center gap-2 p-2.5 text-xs text-muted-foreground [&>svg]:text-green-600",
         editor?.storage?.characterCount?.characters() === max &&
-          "text-red-600 [&>svg]:text-red-600",
+          "text-destructive [&>svg]:text-destructive",
       )}
     >
       <svg height="20" width="20" viewBox="0 0 20 20">

@@ -10,11 +10,10 @@ import { TabsContent } from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
-import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { QuestionType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement } from "@/types/global";
 import type { WaFlowJson, WaFlowMap, WaFlowScreen } from "@/types/global";
-import { UserRole } from "@/utils/enums/index.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 import {
   getFlowElementJsonFromQuestion,
@@ -155,7 +154,7 @@ function FlowPage() {
   }, [questions, flow]);
   // surveyId start
   // Things common to [surveyId].tsx
-  const { user } = useUser();
+  const canManageFlows = usePermissions().can("flows.manage");
 
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [, setdefaultLanguage] = useState<string | null>(null);
@@ -167,7 +166,7 @@ function FlowPage() {
   const [filterTags] = useState<string[]>([]);
   const [screenNumber, setScreenNumber] = useState(0);
   useEffect(() => {
-    if (user?.role === UserRole.MEMBER) {
+    if (!canManageFlows) {
       setTab(FlowTabEnum.Responses);
     }
   }, [survey]);
@@ -285,7 +284,7 @@ function FlowPage() {
                   <ShareFlow allowUnpublishedShare={true} />
                 </TabsContent>
                 <TabsContent value={FlowTabEnum.Analytics}>
-                  <div className="p-6 text-center text-gray-500">
+                  <div className="p-6 text-center text-muted-foreground">
                     Analytics content coming soon...
                   </div>
                 </TabsContent>

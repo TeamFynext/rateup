@@ -1,10 +1,9 @@
-import { IconArrowLeft } from "@tabler/icons-react";
-import { Link, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { BackLink } from "@/components/common/back-link.tsx";
 import { PageHeading } from "@/components/common/page-heading.tsx";
-import { buttonVariants } from "@/components/ui/button.tsx";
 
 import { MetaConnectionsList } from "./components/meta-connections-list.tsx";
 import { WhatsAppSettingsDetail } from "./components/whatsapp-settings-detail";
@@ -36,15 +35,7 @@ export function ChannelDetailsPage() {
 
   const channel = params?.channel;
 
-  const backLink = (
-    <Link
-      to="/dashboard/settings/channels"
-      className={buttonVariants({ variant: "secondary", size: "sm" })}
-    >
-      <IconArrowLeft className="size-4" />
-      {translations("All channels")}
-    </Link>
-  );
+  const backLink = <BackLink to="/dashboard/settings/channels" label={translations("Channels")} />;
 
   if (!isChannel(channel)) {
     return (

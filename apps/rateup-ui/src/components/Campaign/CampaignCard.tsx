@@ -10,6 +10,7 @@ import {
   campaignProgressSegments,
   PROGRESS_SEGMENTS,
 } from "@/components/Campaign/campaignProgress.ts";
+import { pressable } from "@/components/common/pressable.ts";
 import { CampaignStatusBadge } from "@/components/dashboard/campaign/campaignStatus.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -82,7 +83,7 @@ function LiveCampaignCard({
 
   return (
     <div
-      onClick={() => onView(campaign)}
+      {...pressable(() => onView(campaign), campaign.name)}
       className="bg-card ring-foreground/10 flex cursor-pointer flex-col gap-3 rounded-xl p-5 shadow-xs ring-1 transition hover:-translate-y-0.5 hover:shadow-md"
     >
       {/* Status sits at the end of the title line, where the eye lands last and
@@ -105,7 +106,8 @@ function LiveCampaignCard({
           <span className="text-secondary-foreground">
             <strong className="text-foreground font-semibold tabular-nums">
               {recipients.toLocaleString()}
-            </strong>{" "}
+            </strong>
+            {""}
             {t("recipients")}
           </span>
           <span className="text-muted-foreground tabular-nums">
@@ -210,7 +212,7 @@ function DraftCampaignCard({
 
   return (
     <div
-      onClick={() => onEdit(campaign)}
+      {...pressable(() => onEdit(campaign), campaign.name)}
       className="border-input bg-card hover:border-primary/40 flex cursor-pointer flex-col gap-3 rounded-xl border border-dashed p-5 transition hover:shadow-md"
     >
       <div className="flex items-center justify-between gap-2">

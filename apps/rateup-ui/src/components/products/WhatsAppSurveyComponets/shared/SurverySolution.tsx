@@ -51,7 +51,7 @@ export default function SurveySection() {
             height={700}
             width={500}
             alt="Dashboard Illustration"
-            className="w-full h-auto rounded-xl "
+            className="w-full h-auto rounded-xl"
           />
         </div>
       </div>

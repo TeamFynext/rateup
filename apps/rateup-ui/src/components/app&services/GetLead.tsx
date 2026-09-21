@@ -105,7 +105,7 @@ export function GetLead() {
         actions={
           <>
             {showForm && (
-              <Button type="submit" disabled={connectMutation.isPending}>
+              <Button type="submit" loading={connectMutation.isPending}>
                 {connectMutation.isPending
                   ? t("Checking key...")
                   : connected
@@ -118,7 +118,7 @@ export function GetLead() {
               <Button
                 type="button"
                 variant="ghost"
-                disabled={deleteMutation.isPending}
+                loading={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate()}
               >
                 <IconTrash data-icon="inline-start" />
@@ -181,7 +181,7 @@ export function GetLead() {
                       type="button"
                       variant="outline"
                       size="icon"
-                      disabled={connectMutation.isPending}
+                      loading={connectMutation.isPending}
                       aria-label={editing ? t("Cancel") : t("Replace API key")}
                       onClick={() => (editing ? cancelEdit() : setEditing(true))}
                     >

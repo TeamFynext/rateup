@@ -1,5 +1,4 @@
 import {
-  IconArrowLeft,
   IconBrandWhatsapp,
   IconChartBar,
   IconEdit,
@@ -10,10 +9,11 @@ import {
   IconShare,
   IconUsers,
 } from "@tabler/icons-react";
-import { useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
+import { BackLink } from "@/components/common/back-link.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
@@ -58,7 +58,7 @@ function FlowPageHeader({
   flowDbId,
   phonePreview,
 }: Readonly<FlowPageHeaderProps>) {
-  const { history } = useRouter();
+  const { t } = useTranslation();
   const pushToWaMutation = usePushToWaMutation();
 
   const handleSaveToWhatsapp = () => {
@@ -73,10 +73,7 @@ function FlowPageHeader({
     <div className={styles["flow-page-header"]}>
       {/* Row 1: Back Button, Title, Badge, and Subtitle */}
       <div className={styles["header-row-1"]}>
-        <Button variant="ghost" onClick={() => history.back()} className={styles["back-button"]}>
-          <IconArrowLeft size={18} />
-          <span className={styles["back-text"]}>Back</span>
-        </Button>
+        <BackLink to="/dashboard/whatsapp/flows" label={t("Flows")} />
 
         <div className={styles["title-section"]}>
           <div className={styles["title-row"]}>
@@ -89,9 +86,9 @@ function FlowPageHeader({
         <div className="flex gap-2">
           {/* Save to WhatsApp Button - Visible in all tabs */}
           {flowDbId && (
-            <Button onClick={handleSaveToWhatsapp} disabled={pushToWaMutation.isPending}>
+            <Button onClick={handleSaveToWhatsapp} loading={pushToWaMutation.isPending}>
               <IconBrandWhatsapp size={16} className="mr-2" />
-              {pushToWaMutation.isPending ? "Syncing..." : "Save to WhatsApp"}
+              {"Save to WhatsApp"}
             </Button>
           )}
           {/* Device Preview Button - Only show in Edit tab */}

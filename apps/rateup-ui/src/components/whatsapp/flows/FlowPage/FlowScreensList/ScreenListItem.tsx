@@ -19,6 +19,7 @@ import { toast } from "sonner";
 
 import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { pressable } from "@/components/common/pressable.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
@@ -237,7 +238,7 @@ function ScreenListItem({
         <div className="flex h-full cursor-pointer flex-col items-center justify-center">
           <CustomTooltip
             trigger={
-              <div className="flex flex-col items-center" onClick={handleCreateScreenClick}>
+              <div className="flex flex-col items-center" {...pressable(handleCreateScreenClick)}>
                 <IconPlus size={30} />
                 <Button size="lg" className="mt-6" disabled={!flowEditable}>
                   {translations("Add Screen")}
@@ -256,6 +257,7 @@ function ScreenListItem({
               <CustomTooltip
                 trigger={
                   <Button
+                    aria-label={translations("Previous screen")}
                     variant="ghost"
                     size="icon-sm"
                     className="mt-7 rounded-full"
@@ -290,6 +292,7 @@ function ScreenListItem({
                   {flowEditable && (
                     <InputGroupAddon align="inline-end">
                       <Button
+                        aria-label={translations("Edit")}
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => screenTitleInputRef.current?.focus()}
@@ -304,6 +307,7 @@ function ScreenListItem({
               <CustomTooltip
                 trigger={
                   <Button
+                    aria-label={translations("Next screen")}
                     variant="ghost"
                     size="icon-sm"
                     className="mt-7 rounded-full"
@@ -321,6 +325,7 @@ function ScreenListItem({
                 <CustomTooltip
                   trigger={
                     <Button
+                      aria-label={translations("Add")}
                       variant="ghost"
                       size="icon-sm"
                       onClick={handleCreateScreenClick}
@@ -335,7 +340,12 @@ function ScreenListItem({
                   <>
                     <CustomTooltip
                       trigger={
-                        <Button variant="ghost" size="icon-sm" onClick={handleDeleteScreen}>
+                        <Button
+                          aria-label={translations("Delete")}
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={handleDeleteScreen}
+                        >
                           <IconTrash size={20} />
                         </Button>
                       }
@@ -343,7 +353,12 @@ function ScreenListItem({
                     />
                     <CustomTooltip
                       trigger={
-                        <Button variant="ghost" size="icon-sm" onClick={open}>
+                        <Button
+                          aria-label={translations("Replace")}
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={open}
+                        >
                           <IconReplace size={20} />
                         </Button>
                       }
@@ -356,6 +371,7 @@ function ScreenListItem({
                 <CustomTooltip
                   trigger={
                     <Button
+                      aria-label={translations("Save")}
                       variant="ghost"
                       size="icon-sm"
                       onClick={handleSaveJsonToWa}
@@ -432,6 +448,7 @@ function ScreenListItem({
                   {flowEditable && (
                     <InputGroupAddon align="inline-end">
                       <Button
+                        aria-label={translations("Edit")}
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => footerLabelInputRef.current?.focus()}
@@ -495,6 +512,7 @@ function FormElementCard({
   screen,
   dragHandleProps,
 }: Readonly<FormElementCardProps>) {
+  const { t: translations } = useTranslation();
   const params = useParams({
     strict: false,
   });
@@ -505,7 +523,7 @@ function FormElementCard({
 
   return (
     <div
-      onClick={() => handleOpen(index)}
+      {...pressable(() => handleOpen(index))}
       className={`${dndClasses.item} ${selected ? "bg-muted" : "bg-background"}`}
     >
       <div className="flex h-full items-center" {...dragHandleProps}>
@@ -522,6 +540,7 @@ function FormElementCard({
       )}
       {flowEditable && (
         <Button
+          aria-label={translations("Delete")}
           variant="ghost"
           size="icon-sm"
           className="me-2 text-muted-foreground"

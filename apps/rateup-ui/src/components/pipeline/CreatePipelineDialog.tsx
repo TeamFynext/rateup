@@ -76,7 +76,7 @@ export function CreatePipelineDialog({
               <IconGitBranch className="size-5" />
             </span>
             <div className="min-w-0">
-              <DialogTitle className="font-nunito font-extrabold">{t("New pipeline")}</DialogTitle>
+              <DialogTitle className="font-display font-extrabold">{t("New pipeline")}</DialogTitle>
               <DialogDescription>
                 {t(
                   "The board starts with a standard funnel — New Lead through to Won and Lost. Rename the columns, or change what each one does, afterwards in pipeline settings.",

@@ -233,7 +233,7 @@ export function CampaignsPage({
             {/* Creation is a route now, not a modal: a half-built campaign is
                 a real DRAFT with a URL, so it survives a refresh and can be
                 picked up again from the list. */}
-            <Button render={<Link to="/dashboard/campaign/new" />} disabled={isPending}>
+            <Button render={<Link to="/dashboard/campaign/new" />} loading={isPending}>
               {t("Create Campaign")}
             </Button>
             <InfoButton docUrl={`${docsPath}/campaign`} />

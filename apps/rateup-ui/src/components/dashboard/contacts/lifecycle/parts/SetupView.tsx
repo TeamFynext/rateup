@@ -110,8 +110,8 @@ export function SetupView({
 
         <div className="grid min-h-125 grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
           <div className="space-y-6 p-6">
-            <div className="rounded-xl border border-emerald-100/60 bg-emerald-50/50 p-4">
-              <h4 className="text-[12px] font-black uppercase tracking-wider text-emerald-800">
+            <div className="rounded-xl border border-emerald-100/60 dark:border-emerald-900/60 bg-emerald-50/50 dark:bg-emerald-950/40 p-4">
+              <h4 className="text-[12px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
                 {t("Lifecycle Stages")}
               </h4>
               <p className="mt-1.5 text-[11px] font-semibold leading-relaxed text-emerald-600">
@@ -185,8 +185,8 @@ export function SetupView({
           </div>
 
           <div className="space-y-6 bg-muted/20 p-6">
-            <div className="rounded-xl border border-rose-100/60 bg-rose-50/50 p-4">
-              <h4 className="text-[12px] font-black uppercase tracking-wider text-rose-800">
+            <div className="rounded-xl border border-rose-100/60 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/40 p-4">
+              <h4 className="text-[12px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-400">
                 {t("Lost Stages")}
               </h4>
               <p className="mt-1.5 text-[11px] font-semibold leading-relaxed text-rose-600">
@@ -342,6 +342,7 @@ export function StageListItem({
 
         {canDelete ? (
           <Button
+            aria-label={t("Delete")}
             type="button"
             variant="ghost"
             size="icon"
@@ -355,6 +356,7 @@ export function StageListItem({
 
         <div className="flex shrink-0 items-center gap-0.5 rounded-md border border-border bg-background p-0.5 shadow-xs">
           <Button
+            aria-label={t("Move up")}
             type="button"
             variant="ghost"
             size="icon"
@@ -365,6 +367,7 @@ export function StageListItem({
             <IconArrowUp className="size-3" />
           </Button>
           <Button
+            aria-label={t("Move down")}
             type="button"
             variant="ghost"
             size="icon"
@@ -432,6 +435,7 @@ export function AddStageForm({
           {isLost ? t("Add Lost Stage") : t("Add Lifecycle Stage")}
         </h4>
         <Button
+          aria-label={t("Close")}
           type="button"
           variant="ghost"
           size="icon"
@@ -481,6 +485,7 @@ export function AddStageForm({
 
         <div className="flex items-center gap-2.5">
           <Button
+            aria-label={t("Choose an emoji and colour")}
             type="button"
             variant="ghost"
             size="icon"
@@ -490,7 +495,6 @@ export function AddStageForm({
               addColor,
               "focus-visible:ring-ring",
             )}
-            title="Click to select emoji and color"
           >
             <span>{addEmoji}</span>
           </Button>

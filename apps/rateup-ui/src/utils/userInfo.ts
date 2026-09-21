@@ -1,13 +1,13 @@
 import Session from "supertokens-auth-react/recipe/session";
 
+/** The org on the session. The role is not read from the token: `/user/info` carries it. */
 export async function getOrgIdRole() {
-  let orgId: string | undefined, role: string | undefined;
+  let orgId: string | undefined;
   if (await Session.doesSessionExist()) {
     const accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
     orgId = accessTokenPayload.orgId;
-    role = accessTokenPayload.role;
   }
-  return { orgId, role };
+  return { orgId };
 }
 
 export async function getUserID() {

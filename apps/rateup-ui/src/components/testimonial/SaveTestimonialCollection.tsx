@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { defaultTestimonialStyle } from "@/utils/testimonial.ts";
 
 type SaveTestimonialCollectionProps = Readonly<{
@@ -158,8 +157,7 @@ const SaveTestimonialCollection = ({ opened, close }: SaveTestimonialCollectionP
               <DialogClose render={<Button variant="secondary" type="button" />}>
                 <span className="text-sm font-normal">{translations("Cancel")}</span>
               </DialogClose>
-              <Button type="submit" disabled={saveCollection.isPending}>
-                {saveCollection.isPending && <Spinner />}
+              <Button type="submit" loading={saveCollection.isPending}>
                 <span className="text-sm font-normal">{translations("Save")}</span>
               </Button>
             </DialogFooter>

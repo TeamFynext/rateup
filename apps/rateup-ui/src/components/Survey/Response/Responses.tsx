@@ -360,7 +360,7 @@ const DeleteModal = ({
           }}
         >
           <div className="flex flex-col gap-4 py-2">
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-foreground">
               {translations("To proceed further, verify your email id.")}
             </p>
             <Field>
@@ -376,7 +376,7 @@ const DeleteModal = ({
                 onChange={(e) => setVerifyEmail(e.target.value)}
               />
             </Field>
-            <p className="text-sm text-red-600 dark:text-red-400">
+            <p className="text-sm text-destructive ">
               {translations("Once deleted, response entry data will be lost.")}
             </p>
           </div>

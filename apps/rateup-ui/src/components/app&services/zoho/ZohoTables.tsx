@@ -79,11 +79,9 @@ export function ZohoContactsTable({ integration }: { integration: AppIntegration
           )}
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleSync} disabled={syncMutation.isPending}>
-              <IconRefresh
-                className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"}
-              />
-              {syncMutation.isPending ? t("Syncing") : t("Sync to Rateup")}
+            <Button onClick={handleSync} loading={syncMutation.isPending}>
+              <IconRefresh className={"h-4 w-4"} />
+              {t("Sync to Rateup")}
             </Button>
           </div>
         </div>
@@ -204,12 +202,10 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
             )}
 
             <div className="flex items-center gap-2">
-              <Button onClick={handleSync} disabled={syncMutation.isPending}>
-                <IconRefresh
-                  className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"}
-                />
+              <Button onClick={handleSync} loading={syncMutation.isPending}>
+                <IconRefresh className={"h-4 w-4"} />
 
-                {syncMutation.isPending ? t("Syncing") : t("Configure & Sync")}
+                {t("Configure & Sync")}
               </Button>
             </div>
           </div>
@@ -358,11 +354,9 @@ export function BiginContactsTable({ integration }: { integration: AppIntegratio
           )}
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleSync} disabled={syncMutation.isPending}>
-              <IconRefresh
-                className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"}
-              />
-              {syncMutation.isPending ? t("Syncing") : t("Sync to Rateup")}
+            <Button onClick={handleSync} loading={syncMutation.isPending}>
+              <IconRefresh className={"h-4 w-4"} />
+              {t("Sync to Rateup")}
             </Button>
           </div>
         </div>

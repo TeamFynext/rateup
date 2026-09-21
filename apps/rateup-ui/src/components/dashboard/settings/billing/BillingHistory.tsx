@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 import type { PaymentOrder } from "./types.ts";
@@ -170,7 +171,7 @@ export function BillingHistory({
         {isPending ? (
           <div className="space-y-3">
             {[0, 1, 2].map((row) => (
-              <div key={row} className="h-16 animate-pulse rounded-lg bg-muted" />
+              <Skeleton key={row} className="h-16 rounded-lg" />
             ))}
           </div>
         ) : !rows.length ? (

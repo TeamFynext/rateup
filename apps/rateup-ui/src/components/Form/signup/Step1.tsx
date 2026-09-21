@@ -24,7 +24,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "../../ui/input-group.tsx";
-import { Loader } from "../../ui/loader.tsx";
 import AppleSignInButton from "../AppleSigninButton.tsx";
 import { AUTH_CONTROL, AUTH_CTA } from "../AuthShell.tsx";
 import GoogleSignInButton from "../GoogleSigninButton.tsx";
@@ -345,11 +344,14 @@ export function Step1({
             htmlFor="terms"
             className="text-[13px] leading-snug font-normal text-secondary-foreground"
           >
-            {translations("I agree to the")}{" "}
+            {translations("I agree to the")}
+            {""}
             <Link to="/terms-of-service" className="font-medium text-primary hover:underline">
               {translations("Terms of Service")}
-            </Link>{" "}
-            {translations("and")}{" "}
+            </Link>
+            {""}
+            {translations("and")}
+            {""}
             <Link to="/privacy-policy" className="font-medium text-primary hover:underline">
               {translations("Privacy Policy")}
             </Link>
@@ -364,9 +366,8 @@ export function Step1({
         )}
       </div>
 
-      <Button onClick={handleClick} disabled={loading} className={`mt-auto ${AUTH_CTA}`}>
-        {loading && <Loader className="size-4 border-white/35" />}
-        {loading ? translations("Creating account…") : translations("Continue")}
+      <Button onClick={handleClick} loading={loading} className={`mt-auto ${AUTH_CTA}`}>
+        {translations("Continue")}
       </Button>
     </div>
   );

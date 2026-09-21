@@ -54,9 +54,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useUser } from "@/context/UserContext.tsx";
+import { usePermissions } from "@/hooks/usePermission.ts";
 import { cn } from "@/lib/utils.ts";
-import { UserRole } from "@/utils/enums/index.ts";
 
 import { STAGE_COLOR_CHOICES, STAGE_STATUSES, STATUS_BAND } from "../pipeline.constants.tsx";
 import { stageStatusLabel } from "../pipeline.labels.ts";
@@ -67,7 +66,7 @@ import { DeleteStageDialog } from "./DeleteStageDialog.tsx";
 
 /** A section heading, at the one size and weight the design uses for them. */
 function SectionTitle({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <h2 className="font-nunito text-foreground text-[15px] font-semibold">{children}</h2>;
+  return <h2 className="font-display text-foreground text-[15px] font-semibold">{children}</h2>;
 }
 
 function SectionNote({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -556,7 +555,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   const deleteLostReason = useDeleteLostReasonMutation();
   const [newReason, setNewReason] = useState("");
   const [addingReason, setAddingReason] = useState(false);
-  const { user } = useUser();
+  const { can } = usePermissions();
   const reorderStages = useReorderStagesMutation();
 
   const stages = pipeline?.stages;
@@ -630,7 +629,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   // Who works a board and whether it is deleted are org-level calls, not board
   // tuning: a member can retune their own funnel without being able to hand the
   // board to another team or destroy it and every lead on it.
-  const isOrgAdmin = user?.role === UserRole.SUPADM;
+  const isOrgAdmin = can("pipelines.admin");
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
@@ -840,7 +839,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             lifecycle now, because a lead reaching a Won column is what fires the
             event. Sits directly above the danger zone. */}
         <section>
-          <h2 className="font-nunito text-[15px] font-semibold">{t("Conversion tracking")}</h2>
+          <h2 className="font-display text-[15px] font-semibold">{t("Conversion tracking")}</h2>
           <SectionNote>
             {t("Send a conversion event to Meta when a lead is won on this board.")}
           </SectionNote>
@@ -851,7 +850,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             cannot be undone, so it should not sit above routine tuning. */}
         {isOrgAdmin && (
           <section>
-            <h2 className="text-destructive font-nunito text-[15px] font-semibold">
+            <h2 className="text-destructive font-display text-[15px] font-semibold">
               {t("Danger zone")}
             </h2>
             <SectionNote>{t("Actions here cannot be undone.")}</SectionNote>

@@ -57,9 +57,44 @@ export async function getAllTeamsMembersOfOrg() {
   }
 }
 
+/** Either spelling; `roleKey` (src/utils/authz/roles.ts) is the one this app sends. */
 export interface IUpdateRole {
-  role: string;
+  role?: string;
+  roleKey?: string;
 }
+
+export interface IMemberPermissions {
+  grants: string[];
+  denies: string[];
+}
+
+export const updateMemberPermissions = (memberId: string, data: IMemberPermissions) =>
+  axiosClient({ url: `/org/members/${memberId}/permissions`, method: "PUT", data });
+
+export interface MemberActivityItem {
+  id: string;
+  action: string;
+  method: string;
+  route: string;
+  createdAt: string;
+}
+
+export interface MemberActivityPage {
+  items: MemberActivityItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export async function getMemberActivity(memberId: string, page: number, limit = 25) {
+  const res = await axiosClient.get<MemberActivityPage>(`/org/members/${memberId}/activity`, {
+    params: { page, limit },
+  });
+  return res.data;
+}
+
+export const transferOwnership = (userId: string) =>
+  axiosClient({ url: "/org/transfer-ownership", method: "POST", data: { userId } });
 
 export interface IUpdateLogo {
   logo: string;

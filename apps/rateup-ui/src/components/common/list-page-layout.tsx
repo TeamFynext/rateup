@@ -258,7 +258,7 @@ export function ListPageHeader({ children, className }: Readonly<ListPageHeaderP
   return (
     <div
       className={cn(
-        "sticky -top-4 z-10 flex flex-wrap items-center justify-between gap-4 bg-ink-25/80 dark:bg-[#121212]/80 backdrop-blur-md",
+        "sticky -top-4 z-10 flex flex-wrap items-center justify-between gap-4 bg-background/80 backdrop-blur-md",
         className,
       )}
     >

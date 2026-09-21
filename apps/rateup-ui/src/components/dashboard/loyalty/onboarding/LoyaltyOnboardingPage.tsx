@@ -17,6 +17,7 @@ import {
   useApplyRewardsStepMutation,
   useApplyTiersStepMutation,
 } from "@/backend/loyalty/onboarding.query";
+import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Stepper, type StepperStep } from "@/components/ui/stepper.tsx";
@@ -152,9 +153,7 @@ export function LoyaltyOnboardingPage({ initialStep }: Readonly<LoyaltyOnboardin
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-8">
       <header className="flex flex-col gap-4">
         <div>
-          <h1 className="font-display text-xl font-bold text-foreground">
-            {t("Set up your loyalty program")}
-          </h1>
+          <h1 className={SECTION_TITLE}>{t("Set up your loyalty program")}</h1>
           <p className="text-sm text-muted-foreground">
             {t(
               "Six short steps, about ten minutes. Everything is saved as you go, and nothing reaches customers until you activate.",

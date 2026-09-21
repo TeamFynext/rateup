@@ -213,7 +213,8 @@ export function CampaignParticipantsTab({
       <div className="bg-card ring-foreground/10 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-xs ring-1">
         <div className="border-border flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3">
           <span className="font-display text-sm font-semibold">
-            {status === "ALL" ? t("All recipients") : t("{status} recipients", { status })}{" "}
+            {status === "ALL" ? t("All recipients") : t("{status} recipients", { status })}
+            {""}
             <span className="text-muted-foreground/70 font-medium tabular-nums">
               · {total.toLocaleString()}
             </span>
@@ -277,7 +278,7 @@ export function CampaignParticipantsTab({
             <Button
               variant="ghost"
               size="sm"
-              disabled={removeParticipants.isPending}
+              loading={removeParticipants.isPending}
               onClick={() => removeParticipants.mutate({ data: selected, campaignId })}
             >
               <IconUserX className="size-4" aria-hidden />

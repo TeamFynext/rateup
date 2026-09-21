@@ -23,7 +23,6 @@ import { Field, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { ScrollArea } from "../ui/scroll-area.tsx";
-import { Spinner } from "../ui/spinner.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 import ContactPagination from "./ContactPagination.tsx";
@@ -245,6 +244,7 @@ const AddCustomerModal = ({
                           <TooltipTrigger
                             render={
                               <Button
+                                aria-label={translations("Refresh")}
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => {
@@ -281,8 +281,7 @@ const AddCustomerModal = ({
               <Button variant="secondary" onClick={close}>
                 {translations("cancel")}
               </Button>
-              <Button onClick={handleAddExistingContacts} disabled={isCreating}>
-                {isCreating && <Spinner />}
+              <Button onClick={handleAddExistingContacts} loading={isCreating}>
                 {translations("Add Member")}
               </Button>
             </div>

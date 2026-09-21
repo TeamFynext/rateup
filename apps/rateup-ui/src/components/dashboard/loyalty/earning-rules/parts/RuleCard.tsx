@@ -5,7 +5,6 @@ import {
   IconCalendar,
   IconClock,
   IconDeviceFloppy,
-  IconLoader2,
   IconPencil,
   IconTrash,
   IconX,
@@ -271,13 +270,9 @@ export function RuleCard({
                 type="submit"
                 size="sm"
                 className="h-8"
-                disabled={updateRuleMutation.isPending}
+                loading={updateRuleMutation.isPending}
               >
-                {updateRuleMutation.isPending ? (
-                  <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <IconDeviceFloppy className="mr-1 h-3.5 w-3.5" />
-                )}
+                <IconDeviceFloppy className="mr-1 h-3.5 w-3.5" />
                 Save
               </Button>
             </div>
@@ -701,13 +696,9 @@ export function RuleCard({
                 size="sm"
                 className="h-8 text-destructive hover:bg-destructive/10"
                 onClick={onDelete}
-                disabled={isDeleting}
+                loading={isDeleting}
               >
-                {isDeleting ? (
-                  <IconLoader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <IconTrash className="mr-1 h-3.5 w-3.5" />
-                )}
+                <IconTrash className="mr-1 h-3.5 w-3.5" />
                 {t("Delete Rule")}
               </Button>
             </div>

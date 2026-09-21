@@ -35,7 +35,16 @@ const WelcomeTour = ({ steps }: { steps: DriveStep[] }) => {
 
   return (
     <Tooltip>
-      <TooltipTrigger render={<Button onClick={startTour} variant="outline" size="icon-sm" />}>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label="More information"
+            onClick={startTour}
+            variant="outline"
+            size="icon-sm"
+          />
+        }
+      >
         <IconInfoCircle size={24} />
       </TooltipTrigger>
       <TooltipContent>

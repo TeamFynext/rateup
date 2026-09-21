@@ -114,6 +114,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
         header: "",
         cell: ({ row }) => (
           <Button
+            aria-label={translations("Delete")}
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -121,7 +122,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
             }}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+            className="h-8 w-8 text-destructive hover:bg-destructive/10 "
           >
             <IconTrash className="h-4 w-4" />
           </Button>

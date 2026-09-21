@@ -101,8 +101,8 @@ const SourceSelector = ({
       onValueChange={(value) => onChange(value ?? "")}
       items={ContactSources.map((source) => ({ value: source.value, label: source.label }))}
     >
-      <SelectTrigger className="w-37.5 bg-gray-100 border-none">
-        <span className="text-sm ">
+      <SelectTrigger className="w-37.5 bg-muted border-none">
+        <span className="text-sm">
           <SelectValue placeholder="Select Source" />
         </span>
       </SelectTrigger>
@@ -160,8 +160,8 @@ const LabelSelector = ({
       onValueChange={(value) => onChange(value ?? "")}
       items={labels.map((label) => ({ value: label.id, label: label.name }))}
     >
-      <SelectTrigger className="w-37.5 bg-gray-100 border-none">
-        <span className="text-sm ">
+      <SelectTrigger className="w-37.5 bg-muted border-none">
+        <span className="text-sm">
           <SelectValue placeholder="Select Label" />
         </span>
       </SelectTrigger>
@@ -240,7 +240,7 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
               <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name, phone, or email..."
-                className="pl-10 placeholder:text-sm bg-gray-100 border-none"
+                className="pl-10 placeholder:text-sm bg-muted border-none"
                 value={filter.searchTerm}
                 onChange={(event) =>
                   setFilter({
@@ -338,7 +338,11 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
               <IconActivity />
               <span>{hasPipeline ? t("Update lead stage") : t("Update Lifecycle Stage")}</span>
             </Button>
-            <Button variant="outline" className="hover:text-red-500" onClick={handleDeleteContacts}>
+            <Button
+              variant="outline"
+              className="hover:text-destructive"
+              onClick={handleDeleteContacts}
+            >
               <IconTrash />
               <span>{t("Delete")}</span>
             </Button>
@@ -503,12 +507,12 @@ const ImportContactModal = ({
               <Field
                 key={field.id}
                 orientation="horizontal"
-                className="rounded-lg bg-blue-100 p-1 w-fit px-2"
+                className="rounded-lg bg-ru-blue-100 dark:bg-blue-950/50 p-1 w-fit px-2"
               >
                 <Checkbox
                   checked={fields.some((p) => p.id === field.id)}
                   id={field.id}
-                  className="rounded-xl data-[state=unchecked]:bg-gray-200"
+                  className="rounded-xl data-[state=unchecked]:bg-muted"
                   onCheckedChange={(checked) => {
                     setFields((prev) =>
                       checked ? [...prev, field] : prev.filter((p) => p.id !== field.id),
@@ -522,8 +526,8 @@ const ImportContactModal = ({
             ))}
           </Field>
 
-          <blockquote className="border-l-4 border-blue-500 bg-blue-50 p-4 flex flex-col gap-2">
-            <div className="flex gap-2 text-blue-700 text-sm">
+          <blockquote className="border-l-4 border-blue-500 bg-ru-blue-50 dark:bg-blue-950/40 p-4 flex flex-col gap-2">
+            <div className="flex gap-2 text-blue-700 dark:text-blue-400 text-sm">
               <IconInfoCircle />
               {t(
                 "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
@@ -538,7 +542,7 @@ const ImportContactModal = ({
           <Field orientation="horizontal" className="gap-2 mt-4">
             <Switch
               id="update-existing-data"
-              className="data-[state=unchecked]:bg-gray-400"
+              className="data-[state=unchecked]:bg-muted-foreground"
               checked={updateExisting}
               onCheckedChange={setUpdateExisting}
             />
@@ -549,7 +553,7 @@ const ImportContactModal = ({
           <Field orientation="horizontal" className="gap-2 mt-4">
             <Switch
               id="has-header-row"
-              className="data-[state=unchecked]:bg-gray-400"
+              className="data-[state=unchecked]:bg-muted-foreground"
               checked={hasHeaderRow}
               onCheckedChange={setHasHeaderRow}
             />
@@ -565,7 +569,7 @@ const ImportContactModal = ({
               onChange={(e) => setCsvfile(e.target.files?.[0] || null)}
             />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 mt-6 text-sm">
             <DialogClose render={<Button variant="secondary" onClick={reset} />}>
               {t("Cancel")}

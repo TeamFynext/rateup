@@ -60,7 +60,7 @@ export function ForecastView({ data, onOpenLead }: Readonly<ForecastViewProps>) 
             >
               <div className="border-border border-b px-3.75 py-3.5">
                 <div className="flex items-baseline justify-between">
-                  <span className="font-nunito text-foreground text-[15px] font-semibold">
+                  <span className="font-display text-foreground text-[15px] font-semibold">
                     {column.unscheduled
                       ? t("Unscheduled")
                       : dayjs(`${column.key}-01`).format("MMM YYYY")}
@@ -70,7 +70,7 @@ export function ForecastView({ data, onOpenLead }: Readonly<ForecastViewProps>) 
                   </span>
                 </div>
                 <div className="mt-2 flex items-baseline gap-1.5">
-                  <span className="font-nunito text-primary text-[28px] leading-none font-bold tracking-[-0.02em]">
+                  <span className="font-display text-primary text-[28px] leading-none font-bold tracking-[-0.02em]">
                     {column.expected}
                   </span>
                   <span className="text-muted-foreground text-[11px]">
