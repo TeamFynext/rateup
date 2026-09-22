@@ -1,0 +1,45 @@
+# Shopify app configuration for the production RateUp app (App Store listing),
+# pushed with `shopify app deploy --config production`. This file, not the Dev
+# Dashboard, is the source of truth for the production app's scopes, URLs and
+# app-level webhooks.
+#
+# The production API must run with SHOPIFY_API_KEY = client_id below and
+# SHOPIFY_SCOPES = [access_scopes].scopes.
+# Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
+
+# The production app's client ID (the production server's SHOPIFY_API_KEY).
+client_id = "90f3d69442c481b89453c5e2871be52b"
+name = "RateUp"
+application_url = "https://api.rateup.app/api/public/integrations/shopify/auth"
+# RateUp runs outside the Shopify admin (no App Bridge).
+embedded = false
+
+[build]
+include_config_on_deploy = true
+automatically_update_urls_on_dev = false
+
+[access_scopes]
+# Shopify managed installation: merchants are asked for exactly these scopes at
+# install, and again whenever this list changes and is deployed (reported back
+# through app/scopes_update). Changing it changes what every merchant sees.
+scopes = "read_assigned_fulfillment_orders,read_cart_transforms,read_checkouts,read_customers,read_draft_orders,read_fulfillments,read_merchant_managed_fulfillment_orders,read_orders,read_products,read_third_party_fulfillment_orders,unauthenticated_read_customers,unauthenticated_write_customers,write_customers,write_discounts,write_products"
+
+[auth]
+# The OAuth callback still issues the (expiring) offline token: a non-embedded
+# app has no App Bridge ID token to use token exchange with.
+redirect_urls = ["https://api.rateup.app/api/public/integrations/shopify/auth/callback"]
+
+[webhooks]
+# Keep in step with apiVersion in src/modules/integrations/shopify/shopify.config.ts.
+api_version = "2026-07"
+
+# App-level topics, subscribed once for every shop. Order topics stay per shop
+# (Admin API) because each merchant switches them on separately.
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled", "app_subscriptions/update", "app/scopes_update"]
+uri = "https://api.rateup.app/api/public/integrations/shopify/webhooks"
+
+# Mandatory for App Store apps; these can't be subscribed through the Admin API.
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "https://api.rateup.app/api/public/integrations/shopify/webhooks"

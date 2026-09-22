@@ -536,21 +536,11 @@ export async function applyRedemption(data: ApplyRedemptionInput, orgId: string)
     return used;
   });
 
-  // Send notification
-  if (updated.account.contact?.phone && updated.account.contact?.orgId) {
-    await sendLoyaltyEvent(
-      updated.account.contact.orgId,
-      LoyaltyEventType.REWARD_REDEEMED,
-      { accountId: updated.accountId },
-      {
-        name: updated.account.contact.name || "Customer",
-        rewardName: updated.reward.name,
-        code: data.redemptionCode,
-      },
-      { rewardWaTemplateId: updated.reward.waTemplateId },
-    );
-  }
-
+  // No message here. REWARD_REDEEMED ("your reward is confirmed, show code … to
+  // redeem it") already went out when the code was issued — on redeem, or on
+  // approval — so re-sending it once the code is spent told the customer to use
+  // a code they just used, and without `cost`, whose empty {{4}} the template
+  // sender swaps for the template's sample value ("Sample 4").
   return updated;
 }
 

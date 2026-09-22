@@ -109,6 +109,12 @@ export const agentSettingsBodySchema = z
   });
 export type AgentSettingsBody = z.infer<typeof agentSettingsBodySchema>;
 
+/** Rateup-side agent behaviour; never forwarded to Meta. */
+export const agentInboxSettingsBodySchema = z.object({
+  releaseOnTicketClose: z.boolean(),
+});
+export type AgentInboxSettingsBody = z.infer<typeof agentInboxSettingsBodySchema>;
+
 // ---- knowledge: business info ----
 export const businessInfoBodySchema = z.object({
   business_description: z.string().trim().max(5000).optional(),
@@ -191,9 +197,20 @@ export type UiSkillComponentType = z.infer<typeof uiSkillComponentTypeEnum>;
 
 export const uiSkillStatusEnum = z.enum(["enabled", "disabled"]);
 
+/** A UI skill title is a slug: lowercase letters, digits and inner hyphens. */
+const uiSkillTitleSchema = z
+  .string()
+  .trim()
+  .min(1, "A title is required")
+  .max(128, "Titles are limited to 128 characters")
+  .regex(
+    /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+    "Use only lowercase letters, numbers and hyphens, and don't start or end with a hyphen",
+  );
+
 export const uiSkillBodySchema = z
   .object({
-    title: z.string().trim().min(1, "A title is required").max(128),
+    title: uiSkillTitleSchema,
     component_type: uiSkillComponentTypeEnum,
     status: uiSkillStatusEnum.default("enabled"),
     instruction: z.string().trim().min(1, "Tell the agent when to send this component").max(4096),
@@ -209,7 +226,7 @@ export type UiSkillBody = z.infer<typeof uiSkillBodySchema>;
 
 /** Meta's update endpoint takes only these three; component_type is immutable. */
 export const uiSkillUpdateBodySchema = z.object({
-  title: z.string().trim().min(1).max(128).optional(),
+  title: uiSkillTitleSchema.optional(),
   status: uiSkillStatusEnum.optional(),
   instruction: z.string().trim().min(1).max(4096).optional(),
 });

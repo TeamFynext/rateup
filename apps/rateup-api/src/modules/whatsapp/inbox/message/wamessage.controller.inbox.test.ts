@@ -88,7 +88,11 @@ vi.mock("../../../../../generated/prisma/client.js", () => ({
     WEBCHAT: "WEBCHAT",
     INTERNAL: "INTERNAL",
   },
+  MetaAgentThreadOwner: { AI: "AI", STAFF: "STAFF" },
   Prisma: {},
+}));
+vi.mock("../../../metaAgent/metaAgent.threadOwner.js", () => ({
+  setMetaAgentThreadOwner: vi.fn(),
 }));
 
 import {

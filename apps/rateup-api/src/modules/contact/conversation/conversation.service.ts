@@ -19,6 +19,7 @@ import {
   transitionInboxStat,
 } from "../../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { incrementConversationCount } from "../../stats/stats.service.js";
+import { releaseThreadsOnTicketClose } from "../../metaAgent/metaAgent.autoRelease.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -207,6 +208,11 @@ export async function setInboxStatus(
   // It is maintained after commit, the same way every other writer treats it.
   const { before, contact } = result;
   const statusChanged = before.waMessageAssignStatus !== contact.waMessageAssignStatus;
+
+  // A closed ticket ends the escalation — see releaseThreadsOnTicketClose.
+  if (terminal && statusChanged) {
+    await releaseThreadsOnTicketClose(contact.orgId, [contactId]);
+  }
   if (statusChanged && before.lastReceivedMessageTimeStamp && !contact.blockedOnWhatsApp) {
     await transitionInboxStat(
       contact.orgId,

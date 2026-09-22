@@ -86,5 +86,7 @@ export const waMessageRecordQueue = new Queue<WaMessageRecordJob>("waMessageReco
 
 /** Queue a record job for an accepted message. Deduplicated on the wamid. */
 export function enqueueWaMessageRecord(job: WaMessageRecordJob) {
-  return waMessageRecordQueue.add("record", job, { jobId: `record:${job.messageId}` });
+  // "-", not ":": BullMQ 6 rejects a custom id with a colon unless it has exactly
+  // three parts, which made every enqueue here throw.
+  return waMessageRecordQueue.add("record", job, { jobId: `record-${job.messageId}` });
 }

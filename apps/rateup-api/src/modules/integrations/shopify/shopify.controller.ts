@@ -17,12 +17,10 @@ import {
 } from "./shopify.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import shopify from "./shopify.config.js";
+import { getActiveShopifySession, saveShopifySession, toStoredSession } from "./shopify.session.js";
 import { HttpResponseError, type GraphQLClientResponse } from "@shopify/shopify-api";
 
-import webhookHandlers, {
-  defaultWebhookHandlers,
-  mandatoryWebhookHandlers,
-} from "./shopify.handler.js";
+import webhookHandlers from "./shopify.handler.js";
 import { FRONTEND_URL } from "../../../utils/constants/constants.js";
 import { log } from "../../../utils/logger.js";
 import { createIntegration, updateIntegrationByName } from "../integrations.service.js";
@@ -35,15 +33,13 @@ export async function getShopifyAuthHandler(
 ) {
   try {
     if (!shopify) throw new Error("Shopify integration is not configured");
-    if (!shopify.config.scopes) throw new Error("Shopify scopes are not configured");
     const { shop } = request.query;
     if (!shop) return reply.code(404).send("Shop is missing");
     const shopifyInfo = await getShopifyIntegrationByShop(shop);
-    if (
-      !shopifyInfo ||
-      !shopifyInfo.active ||
-      !shopify.config.scopes.equals(shopifyInfo.credential.session.scope)
-    ) {
+    // Scopes are granted by Shopify managed installation (shopify.app.toml) and
+    // reported through app/scopes_update, so a scope change no longer needs a
+    // fresh OAuth round-trip; only a missing or disconnected integration does.
+    if (!shopifyInfo || !shopifyInfo.active) {
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
     } else {
       reply.redirect(`${FRONTEND_URL}`);
@@ -70,30 +66,22 @@ export async function getShopifyAuthCallbackHandler(
     const data = {
       name: IntegratedApps.shopify,
       credential: {
-        session: {
-          id: session.id,
-          shop: session.shop,
-          state: session.state,
-          isOnline: session.isOnline,
-          accessToken: session.accessToken,
-          scope: session.scope,
-        },
+        session: toStoredSession(session),
         isWebhookRegistered: false,
         shopifySurveys,
       },
     };
     const integrationbyshop = await getShopifyIntegrationByShop(session.shop);
-    if (integrationbyshop && integrationbyshop?.orgId)
+    if (integrationbyshop && integrationbyshop?.orgId) {
       await updateShopifyIntegrationByOrgId(integrationbyshop?.orgId, {
         credential: data.credential,
         active: true,
       });
-    else await createIntegration(data);
-    await Promise.all(
-      ["APP_UNINSTALLED", "APP_SUBSCRIPTIONS_UPDATE"].map(async (topic) => {
-        await registerWebhookByTopic(topic, session);
-      }),
-    );
+      // The credential update above never touches the session; only this does.
+      await saveShopifySession(integrationbyshop.id, session);
+    } else await createIntegration(data);
+    // app/uninstalled and app/subscriptions_update are app-level subscriptions
+    // in shopify.app.toml, so nothing is registered per shop here.
     reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
   } catch (e) {
     console.error(e);
@@ -126,7 +114,7 @@ export async function updateShopifyIntegrationByShopHandler(
     reply.code(200).send({ message: "success" });
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -135,18 +123,14 @@ export async function registerWebhookHandler(request: FastifyRequest, reply: Fas
     if (!shopify) throw new Error("Shopify integration is not configured");
     const { orgId } = request.user;
     const shopifyInfo = await getShopifyInfo(orgId);
-    shopify.webhooks.addHandlers({
-      ...defaultWebhookHandlers,
-      ...mandatoryWebhookHandlers,
-    });
-    await registerShopifyWebhook(shopifyInfo?.credential?.session);
+    await registerShopifyWebhook(await getActiveShopifySession(shopifyInfo));
     await updateIntegrationByName(orgId, IntegratedApps.shopify, {
       credential: { ...shopifyInfo.credential, isWebhookRegistered: true },
     });
     reply.code(200).send();
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -157,11 +141,11 @@ export async function registerWebhookByTopicHandler(
   try {
     const { topic } = request.body;
     const integration = await getShopifyInfo(request.user.orgId);
-    await registerWebhookByTopic(topic, integration.credential.session);
+    await registerWebhookByTopic(topic, await getActiveShopifySession(integration));
     reply.code(200).send();
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -173,7 +157,7 @@ export async function deleteWebhookByTopicHandler(
     if (!shopify) throw new Error("Shopify integration is not configured");
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const { topic } = request.body;
-    const session = shopifyInfo.credential?.session;
+    const session = await getActiveShopifySession(shopifyInfo);
     const client = new shopify.clients.Graphql({ session });
     const data = await getManagableWebhooks(client);
     const matchedWebhook = data.find((webhook) => webhook.topic === topic);
@@ -182,7 +166,7 @@ export async function deleteWebhookByTopicHandler(
     reply.code(200).send(webhook);
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -190,7 +174,7 @@ export async function deleteAllWebhookHandler(request: FastifyRequest, reply: Fa
   try {
     const { orgId } = request.user;
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
-    const session = shopifyInfo.credential.session;
+    const session = await getActiveShopifySession(shopifyInfo);
     await deleteAllWebhooks(session);
     await updateShopifyIntegrationByOrgId(orgId, {
       credential: {
@@ -202,7 +186,7 @@ export async function deleteAllWebhookHandler(request: FastifyRequest, reply: Fa
     reply.code(200).send({ message: "success" });
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -231,14 +215,14 @@ export async function getRegisteredWebhooksHandler(request: FastifyRequest, repl
   try {
     if (!shopify) throw new Error("Shopify integration is not configured");
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
-    const session = shopifyInfo.credential.session;
+    const session = await getActiveShopifySession(shopifyInfo);
     const client = new shopify.clients.Graphql({ session });
     const data = await getManagableWebhooks(client);
     const webhookslist = data.map((e) => e.topic);
     reply.code(200).send(webhookslist);
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -258,7 +242,7 @@ export async function getProductsHandler(request: FastifyRequest, reply: Fastify
   try {
     if (!shopify) throw new Error("Shopify integration is not configured");
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
-    const session = shopifyInfo.credential.session;
+    const session = await getActiveShopifySession(shopifyInfo);
     const client = new shopify.clients.Graphql({ session });
     let hasNextPage = true;
     let cursor: string | null = null;
@@ -291,7 +275,7 @@ export async function getProductsHandler(request: FastifyRequest, reply: Fastify
     reply.code(200).send(products);
   } catch (e) {
     console.error(e);
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
@@ -304,7 +288,7 @@ export async function deleteIntegrationByShopHandler(
     const integration = await getShopifyIntegrationByShop(request.params.shop);
     try {
       const client = new shopify.clients.Graphql({
-        session: integration.credential.session,
+        session: await getActiveShopifySession(integration),
       });
       const data = await client.request<{ shop: { name: string } | null }>(
         `query { shop { name }}`,
@@ -319,7 +303,7 @@ export async function deleteIntegrationByShopHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error({ err: e }, "error deleting integration");
-    reply.code(500).send(e);
+    return reply.code(500).send({ error: errorMessage(e) });
   }
 }
 
