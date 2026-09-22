@@ -1,7 +1,8 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 
 import { meQueryOptions } from "@/api/auth.query";
+import { activeItem } from "@/components/shell/nav";
 import { Rail } from "@/components/shell/rail";
 import { SearchPalette, useSearchHotkey } from "@/components/shell/search-palette";
 import { TopBar } from "@/components/shell/top-bar";
@@ -33,12 +34,22 @@ function useScrolled(threshold = 4) {
   return scrolled;
 }
 
+/** The browser tab reads the same name as the menu link: "Organisations · RateUp Admin". */
+function usePageTitle() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const title = activeItem(pathname)?.title;
+  useEffect(() => {
+    document.title = title ? `${title} · RateUp Admin` : "RateUp Admin";
+  }, [title]);
+}
+
 /** Full-bleed white: the rail pinned on the left, the page beside it. */
 function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useSearchHotkey(openSearch);
   const scrolled = useScrolled();
+  usePageTitle();
 
   return (
     <div className="flex min-h-svh bg-background md:p-3">

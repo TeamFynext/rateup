@@ -1,4 +1,4 @@
-import { IconBuilding, IconPhone, IconUser } from "@tabler/icons-react";
+import { IconBuilding, IconPhone, IconSearch, IconUser } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
@@ -90,10 +90,21 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
                   <IconBuilding />
                   <span className="truncate">{org.name}</span>
                   <span className="ml-auto truncate text-xs text-muted-foreground">
-                    {org.ownerEmail ?? org.plan}
+                    {org.ownerEmail}
                   </span>
                 </CommandItem>
               ))}
+              <CommandItem
+                value="org-all"
+                onSelect={() => {
+                  close();
+                  void navigate({ to: "/orgs", search: { q: term } });
+                }}
+                className="text-muted-foreground"
+              >
+                <IconSearch />
+                See every organisation matching “{term}”
+              </CommandItem>
             </CommandGroup>
           )}
 
@@ -104,15 +115,21 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
                   key={user.id}
                   value={`user-${user.id}`}
                   onSelect={() => {
-                    if (user.orgId) return openOrg(user.orgId);
+                    // One org: that's who they are to support. Several: the users list shows them all.
+                    if (user.orgs.length === 1) return openOrg(user.orgs[0].id);
                     close();
                     void navigate({ to: "/users", search: { q: user.email } });
                   }}
                 >
                   <IconUser />
-                  <span className="truncate">{user.name ?? user.email}</span>
-                  <span className="ml-auto truncate text-xs text-muted-foreground">
-                    {user.name ? user.email : user.orgName}
+                  <span className="min-w-0 truncate">
+                    {user.name ?? user.email}
+                    {user.name && (
+                      <span className="ml-2 text-xs text-muted-foreground">{user.email}</span>
+                    )}
+                  </span>
+                  <span className="ml-auto max-w-40 shrink-0 truncate text-xs text-muted-foreground">
+                    {user.orgs.map((org) => org.name).join(", ")}
                   </span>
                 </CommandItem>
               ))}
@@ -123,14 +140,16 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
             <CommandGroup heading="Phone numbers">
               {results.phones.map((phone) => (
                 <CommandItem
-                  key={`${phone.orgId}-${phone.phone}`}
-                  value={`phone-${phone.orgId}-${phone.phone}`}
-                  onSelect={() => openOrg(phone.orgId)}
+                  key={phone.id}
+                  value={`phone-${phone.id}`}
+                  onSelect={() => openOrg(phone.org.id)}
                 >
                   <IconPhone />
-                  <span className="truncate tabular-nums">{phone.phone}</span>
+                  <span className="truncate tabular-nums">
+                    {phone.phone ?? phone.wabaId ?? phone.displayName}
+                  </span>
                   <span className="ml-auto truncate text-xs text-muted-foreground">
-                    {phone.orgName}
+                    {phone.org.name}
                   </span>
                 </CommandItem>
               ))}

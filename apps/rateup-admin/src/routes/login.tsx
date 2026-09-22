@@ -49,7 +49,7 @@ function LoginPage() {
         <div className="flex items-center justify-between">
           <span className="flex items-baseline gap-2">
             <span className="text-[22px] font-semibold tracking-tight">RateUp</span>
-            <span className="text-sm font-medium text-muted-foreground">Staff</span>
+            <span className="text-sm font-medium text-muted-foreground">Admin</span>
           </span>
           <span className="flex size-10 items-center justify-center rounded-2xl bg-rail text-rail-foreground">
             <IconLock className="size-4.5" />
@@ -58,9 +58,7 @@ function LoginPage() {
 
         <div className="space-y-2">
           <h1 className="text-[26px] leading-tight font-medium tracking-tight">Sign in</h1>
-          <p className="text-sm text-muted-foreground">
-            Restricted to RateUp team members.
-          </p>
+          <p className="text-sm text-muted-foreground">Restricted to RateUp team members.</p>
         </div>
 
         <div className="flex flex-col gap-4">

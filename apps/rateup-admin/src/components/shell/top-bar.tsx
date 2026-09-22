@@ -1,12 +1,15 @@
-import { IconMenu2, IconSearch } from "@tabler/icons-react";
+import { IconLogout, IconMenu2, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { isStaffMock } from "@/api/auth.api";
+import { useLogout, useStaff } from "@/api/auth.query";
+import { useTheme } from "@/components/theme/theme-provider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 import { activeGroup, isItemActive, NAV_GROUPS } from "./nav";
+import { StaffAvatar } from "./rail";
 
 const APP_ENV = import.meta.env.VITE_APP_ENV ?? import.meta.env.MODE;
 
@@ -26,7 +29,7 @@ export function Wordmark() {
   return (
     <Link to="/" className="flex items-baseline gap-2 text-foreground">
       <span className="text-[22px] font-semibold tracking-tight">RateUp</span>
-      <span className="text-sm font-medium text-muted-foreground">Staff</span>
+      <span className="text-sm font-medium text-muted-foreground">Admin</span>
     </Link>
   );
 }
@@ -67,7 +70,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
 
       <nav
         aria-label={group.title}
-        className="-mx-1 flex max-w-full items-center gap-7 overflow-x-auto px-1 md:ml-auto md:gap-10"
+        className="order-3 -mx-1 flex w-full items-center gap-7 overflow-x-auto px-1 scrollbar-none md:order-2 md:ml-auto md:w-auto md:gap-10"
       >
         {group.items.map((item) => {
           const active = isItemActive(pathname, item.to as string);
@@ -93,7 +96,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
         type="button"
         aria-label="Search"
         onClick={onSearch}
-        className="ml-auto flex size-10 items-center justify-center rounded-xl hover:bg-muted md:hidden"
+        className="order-2 ml-auto flex size-10 items-center justify-center rounded-xl hover:bg-muted md:hidden"
       >
         <IconSearch className="size-5" />
       </button>
@@ -103,7 +106,11 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
   );
 }
 
-/** Below md the rail is hidden; its sections live in a sheet instead. */
+/**
+ * Below md the rail is hidden; this sheet is the rail for phones. It holds the same four
+ * sections (the section's pages are the top bar's links, as on desktop), plus the theme
+ * switch and the account, which the rail carries at its foot.
+ */
 function MobileNav({
   open,
   onOpenChange,
@@ -113,38 +120,78 @@ function MobileNav({
   onOpenChange: (open: boolean) => void;
   pathname: string;
 }) {
+  const current = activeGroup(pathname);
+  const staff = useStaff();
+  const logout = useLogout();
+  const { theme, setTheme } = useTheme();
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" && globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches);
+
+  const row =
+    "flex h-12 w-full items-center gap-3 rounded-2xl px-3 text-[15px] transition-colors [&_svg]:size-5";
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-72 bg-rail p-0 text-rail-foreground">
-        <SheetHeader className="px-6 pt-6">
-          <SheetTitle className="text-lg font-semibold text-rail-foreground">
-            RateUp Staff
+      <SheetContent
+        side="left"
+        className="flex w-72 flex-col gap-0 bg-rail p-0 text-rail-foreground"
+      >
+        <SheetHeader className="px-6 pt-6 pb-6">
+          <SheetTitle className="flex items-baseline gap-2 text-rail-foreground">
+            <span className="text-xl font-semibold tracking-tight">RateUp</span>
+            <span className="text-sm font-medium text-rail-foreground/50">Admin</span>
           </SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col gap-6 overflow-y-auto px-4 pb-6">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.id}>
-              <p className="px-2 pb-2 text-[11px] font-medium tracking-wider text-rail-foreground/40 uppercase">
+
+        <nav aria-label="Sections" className="flex flex-col gap-1 px-4">
+          {NAV_GROUPS.map((group) => {
+            const active = group.id === current.id;
+            return (
+              <Link
+                key={group.id}
+                to={group.items[0].to}
+                onClick={() => onOpenChange(false)}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  row,
+                  active
+                    ? "bg-rail-foreground font-medium text-rail"
+                    : "text-rail-foreground/75 hover:bg-rail-foreground/10",
+                )}
+              >
+                <group.icon />
                 {group.title}
-              </p>
-              {group.items.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => onOpenChange(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
-                    isItemActive(pathname, item.to as string)
-                      ? "bg-rail-foreground text-rail"
-                      : "text-rail-foreground/70 hover:bg-rail-foreground/10",
-                  )}
-                >
-                  <item.icon className="size-4" />
-                  {item.title}
-                </Link>
-              ))}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="mt-auto flex flex-col gap-1 border-t border-rail-foreground/10 px-4 pt-4 pb-6">
+          <button
+            type="button"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className={cn(row, "text-rail-foreground/75 hover:bg-rail-foreground/10")}
+          >
+            {isDark ? <IconSun /> : <IconMoon />}
+            {isDark ? "Light mode" : "Dark mode"}
+          </button>
+          <div className="flex items-center gap-3 px-3 py-3">
+            <StaffAvatar className="size-9" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{staff.name || staff.email}</p>
+              <p className="truncate text-xs text-rail-foreground/50">{staff.email}</p>
             </div>
-          ))}
+          </div>
+          <button
+            type="button"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate()}
+            className={cn(row, "text-rail-foreground/75 hover:bg-rail-foreground/10")}
+          >
+            <IconLogout />
+            Sign out
+          </button>
         </div>
       </SheetContent>
     </Sheet>

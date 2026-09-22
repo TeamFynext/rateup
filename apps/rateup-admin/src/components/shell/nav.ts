@@ -38,7 +38,7 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   {
     id: "workspace",
-    title: "Workspace",
+    title: "Customers",
     icon: IconLayoutDashboard,
     items: [
       { title: "Overview", to: "/", icon: IconGauge },
@@ -60,7 +60,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     id: "ops",
-    title: "Ops",
+    title: "Operations",
     icon: IconTool,
     items: [
       { title: "Update center", to: "/ops/update-center", icon: IconRefresh },
@@ -72,10 +72,10 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     id: "access",
-    title: "Access",
+    title: "Staff",
     icon: IconShieldLock,
     items: [
-      { title: "Staff", to: "/staff", icon: IconShieldLock },
+      { title: "Staff members", to: "/staff", icon: IconShieldLock },
       { title: "Audit log", to: "/audit", icon: IconHistory },
     ],
   },
@@ -94,4 +94,9 @@ export function activeGroup(pathname: string): NavGroup {
       group.items.some((item) => isItemActive(pathname, item.to as string)),
     ) ?? NAV_GROUPS[0]
   );
+}
+
+/** The page the pathname is on (an org's page counts as Organisations), if it is in the nav. */
+export function activeItem(pathname: string): NavItem | undefined {
+  return NAV_ITEMS.find((item) => isItemActive(pathname, item.to as string));
 }

@@ -1,6 +1,6 @@
 # rateup-admin
 
-The RateUp staff console: a static Vite + React SPA (TanStack Router file routes, TanStack
+RateUp Admin, the staff console: a static Vite + React SPA (TanStack Router file routes, TanStack
 Query, Tailwind 4, shadcn on Base UI) talking to rateup-api's `/api/staff` through a
 same-origin proxy. Plan: `i-want-to-redesign-glittery-pony.md`.
 
@@ -16,10 +16,12 @@ system does not apply here. Tokens live in `src/styles/theme.css` (light + dark)
   around the reference image is only its presentation backdrop. An ink-black icon rail pinned on
   the left (`bg-rail`, `rounded-3xl`, inset `md:p-3`), generous whitespace (`px-12` on desktop).
 - **Theme**: light is the default; dark is opt-in from the account menu or the rail toggle.
-- **Navigation**: the rail holds one icon per section (Workspace, Billing, Ops, Access) plus
+- **Navigation**: the rail holds one icon per section (Customers, Billing, Operations, Staff) plus
   search, theme and account. The top bar shows the wordmark and the active section's pages as
   UPPERCASE links (13px, `tracking-[0.04em]`); the active one is bold with the ✦ `Sparkle`.
-  Both read `components/shell/nav.ts`.
+  Both read `components/shell/nav.ts`. On phones the menu sheet is the rail: the same four
+  sections plus theme and account, never the full page list. Page headings, the browser tab
+  and the menu link all use the nav item's `title` (`ComingSoon` reads it by path).
 - **Colour**: monochrome. Ink (`primary`) is the accent: black buttons, black highlight tiles,
   black featured stat card. Colour only comes from the pastel stat tones (`tone-peach`,
   `tone-mint`, `tone-sky`, `tone-slate`, each with an `-accent` for its arrow), `positive` /

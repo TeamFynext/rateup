@@ -1,9 +1,14 @@
 import { IconHammer } from "@tabler/icons-react";
 
+import { NAV_ITEMS, type NavItem } from "./nav";
 import { PageHeader } from "./page-header";
 
-/** Stand-in body for sections whose screens haven't been ported yet. */
-export function ComingSoon({ title, description }: { title: string; description?: string }) {
+/**
+ * Stand-in body for sections whose screens haven't been ported yet. The heading is the
+ * page's menu name, read from nav.ts, so the two always match.
+ */
+export function ComingSoon({ to, description }: { to: NavItem["to"]; description?: string }) {
+  const title = NAV_ITEMS.find((item) => item.to === to)?.title ?? "";
   return (
     <div className="flex flex-col gap-10">
       <PageHeader title={title} description={description} />
