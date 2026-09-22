@@ -8,7 +8,7 @@
  * Why the API refused a request, when it refused with 403.
  *
  * A plan gate and a permission gate are both 403s but they are opposite problems, and
- * telling someone on the Free plan to "contact your super admin" helps nobody. The API
+ * telling someone on the Free plan to "contact your admin" helps nobody. The API
  * sends this so the UI does not have to guess from the status code.
  */
 export type AccessDenialReason = "subscription" | "subscription_expired" | "team" | "unknown";

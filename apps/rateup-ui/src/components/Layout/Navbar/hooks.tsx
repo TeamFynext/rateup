@@ -222,7 +222,7 @@ export function useNavMain({
 }: NavMainInput) {
   const { t } = useTranslation();
 
-  // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
+  // null = sees every feature; Set = restricted to the team's enabled features
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
   return useMemo<NavEntry[]>(() => {
@@ -574,12 +574,12 @@ export function useNavMain({
               url: "/dashboard/whatsapp/flows",
               icon: IconBrandWhatsapp,
               items: [
-                ...(hasTeamFeature(TeamFeature.Flows)
+                ...(hasTeamFeature(TeamFeature.Templates)
                   ? [
                       {
-                        title: t("Flow"),
-                        url: "/dashboard/whatsapp/flows",
-                        icon: IconWaveSine,
+                        title: t("Templates"),
+                        url: "/dashboard/whatsapp/templates",
+                        icon: IconTemplate,
                       },
                     ]
                   : []),
@@ -592,12 +592,12 @@ export function useNavMain({
                       },
                     ]
                   : []),
-                ...(hasTeamFeature(TeamFeature.Templates)
+                ...(hasTeamFeature(TeamFeature.Flows)
                   ? [
                       {
-                        title: t("Templates"),
-                        url: "/dashboard/whatsapp/templates",
-                        icon: IconTemplate,
+                        title: t("WhatsApp Flow"),
+                        url: "/dashboard/whatsapp/flows",
+                        icon: IconWaveSine,
                       },
                     ]
                   : []),

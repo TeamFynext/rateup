@@ -57,7 +57,7 @@ export function LoyaltySettingsPage() {
   const confirm = useConfirm();
   const uid = useId();
   const { user } = useUser();
-  const isSuperAdmin = usePermissions().can("loyalty.manage");
+  const canManage = usePermissions().can("loyalty.manage");
 
   const { data: program, isLoading } = useLoyaltyProgram();
   const { data: dashboard } = useLoyaltyDashboardData();
@@ -369,7 +369,7 @@ export function LoyaltySettingsPage() {
               setDeleteText("");
               setDeleteOpen(true);
             }}
-            showDelete={isSuperAdmin}
+            showDelete={canManage}
           />
           <p className="text-xs text-muted-foreground">
             {t(

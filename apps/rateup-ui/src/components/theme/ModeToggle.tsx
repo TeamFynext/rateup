@@ -19,8 +19,6 @@ export function ModeToggle() {
     }
   };
 
-  if (import.meta.env.VITE_EXPERIMENT !== "TRUE") return null;
-
   return (
     <Button
       variant="secondary"
