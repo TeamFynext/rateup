@@ -627,27 +627,31 @@ export async function convertNodeToWhatsAppMessage(
   }
 }
 export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: string) => {
-  let orgId = process.env.ROOT_ORG;
-
   const order = await prisma.waCatalogOrder.findFirst({
     where: { transactionId: refrenceId },
     include: { catalog: true },
   });
 
-  if (order) {
-    orgId = order.catalog.orgId;
-    await prisma.waCatalogOrder.update({
-      where: { id: order.id },
-      data: { paymentStatus: "PAID", orderStage: "COMPLETED" },
-    });
+  // The order is the only thing that says which org was paid. Without it there is
+  // no org to answer from — this used to fall back to ROOT_ORG, which sent the
+  // confirmation from RateUp's own number with RateUp's template.
+  if (!order) {
+    log.warn({ refrenceId }, "No catalog order for this payment; not sending a confirmation");
+    return;
+  }
 
-    if (order.shopifyDraftOrderId) {
-      try {
-        // Marks the order paid in full: the WhatsApp payment covered its total.
-        await captureShopifyOrderPayment(orgId, order.shopifyDraftOrderId);
-      } catch (e) {
-        log.error({ err: e }, "Failed to capture Shopify payment");
-      }
+  const orgId = order.catalog.orgId;
+  await prisma.waCatalogOrder.update({
+    where: { id: order.id },
+    data: { paymentStatus: "PAID", orderStage: "COMPLETED" },
+  });
+
+  if (order.shopifyDraftOrderId) {
+    try {
+      // Marks the order paid in full: the WhatsApp payment covered its total.
+      await captureShopifyOrderPayment(orgId, order.shopifyDraftOrderId);
+    } catch (e) {
+      log.error({ err: e }, "Failed to capture Shopify payment");
     }
   }
 
@@ -681,10 +685,6 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
       },
     },
   };
-  if (!orgId) {
-    log.error({ refrenceId }, "No orgId found for payment confirmation");
-    throw new Error("No orgId found for payment confirmation");
-  }
   await sendMessage(orgId, templateMessage);
 };
 export function getMessageObject(data: WaMessageBody) {
