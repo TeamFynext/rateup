@@ -1,12 +1,13 @@
 // The loyalty section's sidebar rows, as data for the shared app sidebar.
 //
-// Ten entries. One (Program) defines the programme; the others run it, named after what
-// the owner or staff came to do. The badges carry the things that need chasing — pending
+// Eleven entries. Program and Rewards define the programme; the others run it, named after
+// what the owner or staff came to do. The badges carry the things that need chasing — pending
 // approvals, Meta template reviews, an unfinished feedback flow — plus the member count.
 
 import {
   IconClock,
   IconDashboard,
+  IconGift,
   IconLogs,
   IconMessage,
   IconMessageStar,
@@ -73,6 +74,7 @@ export function buildLoyaltyNavItems({
       ...badge,
       ...(inProgramEditors ? { isActive: true } : {}),
     },
+    { title: t("Rewards"), url: LOYALTY_PATHS.rewards, icon: IconGift },
     { title: t("Activity"), url: LOYALTY_PATHS.activity, icon: IconLogs, count: pendingApprovals },
     // Messages carries the template library as a tab, so the Meta reviews are chased there.
     {

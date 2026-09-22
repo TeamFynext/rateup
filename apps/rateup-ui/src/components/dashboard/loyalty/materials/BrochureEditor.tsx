@@ -190,11 +190,10 @@ export function BrochureEditor({
               <p className="text-sm text-muted-foreground">
                 {t("No point rewards yet.")}{" "}
                 <Link
-                  to={LOYALTY_PATHS.program}
-                  search={{ section: "rewards" }}
+                  to={LOYALTY_PATHS.rewards}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  {t("Add rewards in Program › Rewards")}
+                  {t("Add rewards in Rewards")}
                 </Link>
               </p>
             ) : (

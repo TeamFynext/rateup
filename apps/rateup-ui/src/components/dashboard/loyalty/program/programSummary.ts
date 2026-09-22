@@ -7,7 +7,8 @@ import type { GivebackResult } from "../giveback/calculateGiveback";
 import { formatMoney, formatPoints, singularPoints } from "../giveback/format";
 
 /**
- * The one-line summaries on the Program page's section cards.
+ * The one-line summaries on the Program page's section cards. Rewards has its own page and
+ * no card here.
  *
  * Pure so it can be tested: everything it reads is handed in. Each line is the sentence a
  * merchant would read out loud about that part of the programme; the tags carry the
@@ -39,8 +40,6 @@ export interface SummaryInput {
   /** Loyalty WhatsApp templates still awaiting Meta. */
 }
 
-const ACTIVE_REWARD = "ACTIVE";
-
 export function buildSectionSummaries({
   t,
   state,
@@ -53,7 +52,7 @@ export function buildSectionSummaries({
   const symbol = program?.currencySymbol ?? "₹";
   const code = program?.currencyCode ?? "INR";
   const money = (amount: number) => formatMoney(amount, code, symbol);
-  const { rules, tiers, rewards } = state.saved;
+  const { rules, tiers } = state.saved;
 
   /* ── profile ── */
   const basicsParts = [
@@ -122,68 +121,6 @@ export function buildSectionSummaries({
             .join(" · ")
         : t("No tiers yet");
 
-  /* ── rewards ── */
-  const live = rewards.filter((r) => !r.status || r.status === ACTIVE_REWARD);
-  const priced = live.filter((r) => r.pointsCost > 0);
-  const cheapest = priced.length ? Math.min(...priced.map((r) => r.pointsCost)) : null;
-  const popular = dashboard?.popularRewards[0];
-  const kinds = {
-    point: live.filter((r) => r.rewardType === "point").length,
-    coupon: live.filter((r) => r.rewardType === "coupon").length,
-    assigned: live.filter((r) => r.rewardType === "assigned").length,
-  };
-  const rewardsLineParts: string[] = [];
-  if (cheapest !== null) {
-    const visits = perOrder && perOrder > 0 ? Math.max(1, Math.round(cheapest / perOrder)) : null;
-    rewardsLineParts.push(
-      visits
-        ? t("Cheapest is {cost} — roughly {visits} visits.", {
-            cost: formatPoints(cheapest, pointsName),
-            visits,
-          })
-        : t("Cheapest is {cost}.", { cost: formatPoints(cheapest, pointsName) }),
-    );
-  }
-  if (popular && popular.redeemed > 0) {
-    rewardsLineParts.push(
-      t("Most popular: {name}, {cost}.", {
-        name: popular.name,
-        cost: formatPoints(popular.pointsCost, pointsName),
-      }),
-    );
-  }
-  const rewardsLine = rewardsLineParts.length
-    ? rewardsLineParts.join(" ")
-    : t("Nothing to redeem yet — customers can earn but have no target.");
-  const rewardsTags: SummaryTag[] = [];
-  if (kinds.point)
-    rewardsTags.push({
-      label: t("{count} point rewards", { count: kinds.point }),
-      tone: "neutral",
-    });
-  if (kinds.coupon)
-    rewardsTags.push({ label: t("{count} coupons", { count: kinds.coupon }), tone: "neutral" });
-  if (kinds.assigned)
-    rewardsTags.push({
-      label: t("{count} free gifts", { count: kinds.assigned }),
-      tone: "neutral",
-    });
-  if ((program?.signupBonus ?? 0) > 0) {
-    rewardsTags.push({
-      label: t("{bonus} to join", { bonus: formatPoints(program?.signupBonus ?? 0, pointsName) }),
-      tone: "accent",
-    });
-  }
-  if ((program?.referralBonus ?? 0) > 0 || (program?.refereeBonus ?? 0) > 0) {
-    rewardsTags.push({
-      label: t("Referral: {a} / {b}", {
-        a: program?.referralBonus ?? 0,
-        b: program?.refereeBonus ?? 0,
-      }),
-      tone: "accent",
-    });
-  }
-
   return [
     {
       key: "profile",
@@ -208,17 +145,6 @@ export function buildSectionSummaries({
         : t("Off · one flat rate"),
       line: tiersLine,
       tags: [],
-    },
-    {
-      key: "rewards",
-      title: t("Rewards"),
-      caption:
-        (program?.referralBonus ?? 0) > 0 || (program?.signupBonus ?? 0) > 0
-          ? t("{count} live · includes join and referral points", { count: live.length })
-          : t("{count} live", { count: live.length }),
-      line: rewardsLine,
-      tags: rewardsTags,
-      attention: live.length === 0,
     },
   ];
 }
