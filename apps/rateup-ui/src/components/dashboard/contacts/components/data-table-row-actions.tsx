@@ -37,9 +37,12 @@ export function DataTableRowActions({ row }: Readonly<DataTableRowActionsProps>)
 
   const handleDelete = async () => {
     const confirmed = await confirm({
-      title: t("Are you sure you want to delete this label?"),
-      description: t("This action is irreversible. Please confirm your action."),
-      confirmText: t("Confirm"),
+      title: t("Delete this custom field?"),
+      // Deleting the field cascades to every contact's value for it.
+      description: t(
+        "Its value will be removed from every contact that has one. This can't be undone.",
+      ),
+      confirmText: t("Delete"),
       cancelText: t("Cancel"),
     });
 

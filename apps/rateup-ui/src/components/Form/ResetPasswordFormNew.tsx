@@ -10,7 +10,6 @@ import {
   IconShield,
 } from "@tabler/icons-react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -34,6 +33,8 @@ import {
 } from "../ui/input-group.tsx";
 import { AUTH_CONTROL, AUTH_CTA, AuthShell, AuthTitle } from "./AuthShell.tsx";
 import { CheckInboxCard } from "./CheckInboxCard.tsx";
+import { PasswordStrengthMeter } from "./PasswordStrength.tsx";
+import { isPasswordValid } from "./signup/shared.tsx";
 
 /** Fields of either step of the reset flow — the email step or the new-password step. */
 type ResetPasswordValues = {
@@ -49,7 +50,6 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const rid = searchParams.rid;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const requestStatus = searchParams.requestStatus;
   const emailTo = searchParams.emailTo;
 
@@ -73,14 +73,12 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
 
   const pwdSchema = z
     .object({
+      // The same rule as signup, so a reset can't leave a weaker password behind.
       password: z
         .string()
         .min(1, { message: translations("Password is required") })
-        .min(5, {
-          message: translations("Password should be at least 5 characters long"),
-        })
-        .refine((val) => /\d/.test(val) && /[a-zA-Z]/.test(val), {
-          message: translations("Password should contain at least one letter and one number!"),
+        .refine(isPasswordValid, {
+          message: translations("Your password must meet all security requirements"),
         }),
       confirmPassword: z.string().min(1, { message: translations("Confirm password is required") }),
     })
@@ -112,25 +110,6 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const password = pwdForm.watch("password");
   // const isEmailPage = true;
   const [isLoading, setIsLoading] = useState(false);
-  const rules = [
-    {
-      label: "At least 8 characters",
-      valid: /.{8,}/.test(password),
-    },
-    {
-      label: "1 uppercase letter",
-      valid: /[A-Z]/.test(password),
-    },
-    {
-      label: "1 lowercase letter",
-      valid: /[a-z]/.test(password),
-    },
-    { label: "1 number", valid: /[0-9]/.test(password) },
-    {
-      label: "1 special character",
-      valid: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    },
-  ];
 
   const handleSuccess = () => {
     toast.success("Password updated successfully!", { id: "password-success" });
@@ -275,7 +254,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                   name="password"
                   control={pwdForm.control}
                   render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid} className="gap-0.5">
+                    <Field data-invalid={fieldState.invalid} className="gap-1">
                       <FieldLabel htmlFor="password" className="text-xs font-medium">
                         {translations("New password")}
                       </FieldLabel>
@@ -291,11 +270,6 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                           placeholder={translations("Enter new password")}
                           aria-invalid={fieldState.invalid}
                           className="text-[13.5px]"
-                          onFocus={() => setIsPasswordFocused(true)}
-                          onBlur={() => {
-                            field.onBlur();
-                            setIsPasswordFocused(false);
-                          }}
                         />
                         <InputGroupAddon align="inline-end" className="pr-2">
                           <InputGroupButton
@@ -311,6 +285,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                           </InputGroupButton>
                         </InputGroupAddon>
                       </InputGroup>
+                      <PasswordStrengthMeter password={password ?? ""} />
                       {fieldState.invalid && (
                         <FieldError className="flex items-center gap-1.5 text-[12.5px]">
                           <IconAlertCircle className="size-3.5 shrink-0" />
@@ -366,31 +341,6 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
                   )}
                 />
               </FieldGroup>
-
-              <AnimatePresence>
-                {isPasswordFocused && (
-                  <motion.ul
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="flex flex-col gap-1 overflow-hidden text-[12.5px]"
-                  >
-                    {rules.map((rule) => (
-                      <li key={rule.label} className="flex items-center gap-2">
-                        <span
-                          className={`size-1.5 shrink-0 rounded-full ${
-                            rule.valid ? "bg-green-600 dark:bg-green-500" : "bg-input"
-                          }`}
-                        />
-                        <span className={rule.valid ? "text-foreground" : "text-muted-foreground"}>
-                          {translations(rule.label)}
-                        </span>
-                      </li>
-                    ))}
-                  </motion.ul>
-                )}
-              </AnimatePresence>
 
               <Button type="submit" loading={isLoading} className={AUTH_CTA}>
                 {translations("Update password")}
