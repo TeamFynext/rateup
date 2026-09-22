@@ -3,7 +3,14 @@ import type { FastifyError, FastifyInstance, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
 import { rateLimit } from "../../utils/rateLimit.js";
 import prisma from "../../utils/prisma.js";
+import { staffAccessRoutes } from "./access/access.route.js";
 import { staffAuthRoutes } from "./auth/staffAuth.route.js";
+import { staffBillingRoutes } from "./billing/billing.route.js";
+import { staffOpsRoutes } from "./ops/ops.route.js";
+import { staffOrgRoutes } from "./orgs/orgs.route.js";
+import { staffOverviewRoutes } from "./overview/overview.route.js";
+import { staffSearchRoutes } from "./search/search.route.js";
+import { staffUserRoutes } from "./users/users.route.js";
 import {
   assertStaffConfig,
   isStaffConsoleEnabled,
@@ -129,4 +136,11 @@ export async function registerStaffApi(
   });
 
   await server.register(staffAuthRoutes(config));
+  await server.register(staffOverviewRoutes);
+  await server.register(staffSearchRoutes);
+  await server.register(staffOrgRoutes);
+  await server.register(staffUserRoutes);
+  await server.register(staffBillingRoutes);
+  await server.register(staffOpsRoutes);
+  await server.register(staffAccessRoutes);
 }

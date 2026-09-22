@@ -17,6 +17,17 @@ vi.mock("../../utils/redisConnection.js", () => ({ default: redis }));
 vi.mock("../../utils/logger.js", () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
+// The read routes reach into billing and maintenance services, whose imports would boot the
+// whole app (queues, Redis); the guard chain is what this file tests, so they are stubbed.
+vi.mock("../payment/payment.service.js", () => ({
+  getAllPaymentSubscriptions: vi.fn(),
+  getOrgInvoices: vi.fn(),
+}));
+vi.mock("../payment/stripe/stripe.service.js", () => ({ getAllStripeSubscriptions: vi.fn() }));
+vi.mock("../maintenance/maintenance.tasks.js", () => ({
+  MAINTENANCE_TASKS: [],
+  findTask: vi.fn(),
+}));
 
 import Fastify, { type FastifyInstance, type RouteOptions } from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
@@ -354,4 +365,68 @@ describe("route table", () => {
       expect(!!route.config?.staffPublic, id).toBe(STAFF_PUBLIC_ROUTES.includes(id));
     }
   });
+});
+
+describe("read routes", () => {
+  const reads = [
+    "/api/staff/overview",
+    "/api/staff/search?q=acme",
+    "/api/staff/orgs",
+    "/api/staff/orgs/plans",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/members",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/usage",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/channels",
+    "/api/staff/users",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/orders",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/invoices",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/message-stats",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/activity",
+    "/api/staff/billing/plans",
+    "/api/staff/billing/razorpay/plans",
+    "/api/staff/billing/razorpay/subscriptions",
+    "/api/staff/billing/stripe/products",
+    "/api/staff/billing/stripe/subscriptions",
+    "/api/staff/billing/orders",
+    "/api/staff/billing/subscriptions",
+    "/api/staff/ops/maintenance/tasks",
+    "/api/staff/ops/shopify",
+    "/api/staff/ops/referrals",
+    "/api/staff/staff-users",
+    "/api/staff/audit",
+    "/api/staff/audit/actions",
+  ];
+
+  test("none of them answer without a staff session", async () => {
+    const { app } = await buildApp();
+    for (const url of reads) {
+      const res = await app.inject({ method: "GET", url, headers: proxied });
+      expect(res.statusCode, url).toBe(401);
+    }
+  });
+
+  test("malformed input is a 400 in the staff error shape, before any query", async () => {
+    const { app } = await buildApp();
+    for (const url of [
+      "/api/staff/orgs/not-an-id",
+      "/api/staff/search?q=a",
+      "/api/staff/orgs?pageSize=5000",
+      "/api/staff/orgs?status=deleted",
+      "/api/staff/billing/orders?status=REFUNDED",
+      "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/activity?source=everyone",
+      "/api/staff/audit?staffUserId=nope",
+    ]) {
+      const res = await app.inject({ method: "GET", url, headers: withSession });
+      expect(res.statusCode, url).toBe(400);
+      expect(res.json().code, url).toBe("VALIDATION");
+    }
+  });
+});
+
+test("a maintenance preview needs a session and the CSRF header, like any POST", async () => {
+  const { app } = await buildApp();
+  const url = "/api/staff/ops/maintenance/tasks/seed-plans/preview";
+  expect((await app.inject({ method: "POST", url, headers: proxied })).statusCode).toBe(401);
+  const noCsrf = await app.inject({ method: "POST", url, headers: withSession, payload: {} });
+  expect(noCsrf.statusCode).toBe(403);
 });

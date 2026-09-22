@@ -51,7 +51,7 @@ export interface AdminOverview {
     campaigns: number;
   };
   /** The heaviest accounts, which is who a capacity conversation is about. */
-  topOrgsByConversations: { org: string; conversations: number }[];
+  topOrgsByConversations: { orgId: string; org: string; conversations: number }[];
 }
 
 /** Zero-filled month buckets, so a quiet month is a gap in the line rather than a missing point. */
@@ -149,8 +149,8 @@ export async function getAdminOverview(months = 12): Promise<AdminOverview> {
       },
     }),
 
-    prisma.$queryRaw<{ org: string; conversations: number }[]>`
-      SELECT o.name AS org, u."monthlyMeteredConversationsCount"::int AS conversations
+    prisma.$queryRaw<{ orgId: string; org: string; conversations: number }[]>`
+      SELECT o.id AS "orgId", o.name AS org, u."monthlyMeteredConversationsCount"::int AS conversations
       FROM "UsageStats" u JOIN "Org" o ON o.id = u."orgId"
       WHERE u."monthlyMeteredConversationsCount" > 0
       ORDER BY u."monthlyMeteredConversationsCount" DESC
@@ -198,6 +198,7 @@ export async function getAdminOverview(months = 12): Promise<AdminOverview> {
       campaigns: usage._sum.waAutomationCount ?? 0,
     },
     topOrgsByConversations: topOrgs.map((row) => ({
+      orgId: row.orgId,
       org: row.org,
       conversations: Number(row.conversations),
     })),
