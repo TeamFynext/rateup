@@ -69,6 +69,7 @@ import {
   testAgent,
   type UiSkillInput,
   type UiSkillUpdateInput,
+  updateAgentInboxSettings,
   updateAgentSettings,
   updateBusinessInfo,
   updateConnector,
@@ -202,6 +203,23 @@ export const useUpdateAgentSettings = (waSettingsId: string) => {
       toast.success("Agent settings saved and pushed to Meta");
     },
     onError: onErr("Failed to update agent settings"),
+  });
+};
+
+export const useUpdateAgentInboxSettings = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { releaseOnTicketClose: boolean }) =>
+      updateAgentInboxSettings(waSettingsId, data),
+    onSuccess: (data) => {
+      qc.setQueryData(key("settings", waSettingsId), data);
+      toast.success(
+        data.releaseOnTicketClose
+          ? "Closed tickets now go back to Meta AI"
+          : "Closed tickets now stay with staff",
+      );
+    },
+    onError: onErr("Failed to update inbox settings"),
   });
 };
 

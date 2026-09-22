@@ -579,6 +579,11 @@ export interface WaSendMessageBody {
   messaging_product: "whatsapp";
   recipient_type: "individual";
   to: string; // PHONE_NUMBER type
+  /**
+   * The sender's own tag, echoed back by Meta. A reply the Meta Business Agent
+   * (Meta AI) wrote carries `{"originator":"bizai",…}` — see `isMetaAiMessage`.
+   */
+  biz_opaque_callback_data?: string;
   type:
     | "text"
     | "image"
@@ -1112,7 +1117,7 @@ export interface CampaignDripStage {
 
 // type for org websocket messages
 export interface orgWsMessage {
-  type: "inbox" | "message_status_update" | "message_deleted";
+  type: "inbox" | "message_status_update" | "message_deleted" | "meta_agent_thread";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
@@ -1133,6 +1138,13 @@ export interface orgWsMessage {
     deletedAt: string;
     /** Identifies the message inside the inbox row's last-message preview. */
     waCreatedAt?: string | null;
+  };
+  /** Who now holds a contact's thread under Meta AI thread control. */
+  meta_agent_thread?: {
+    contactId: string;
+    owner: "AI" | "STAFF";
+    reason: string | null;
+    at: string;
   };
 }
 

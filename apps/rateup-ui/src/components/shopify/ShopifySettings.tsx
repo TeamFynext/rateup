@@ -236,7 +236,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
             <Switch
               id="webhook-master"
               disabled={registerWebhooksmutate.isPending || deleteAllWebhooksmt.isPending}
-              checked={isWebhookEnabled}
+              checked={isWebhookEnabled ?? false}
               onCheckedChange={(checked) => handleWebhookRegistration(checked)}
             />
             <FieldLabel htmlFor="webhook-master" className="font-normal">
@@ -268,7 +268,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
                       </FieldLabel>
                       <Switch
                         id={`webhook-${event.value}`}
-                        checked={webhooks?.includes(event.value)}
+                        checked={webhooks?.includes(event.value) ?? false}
                         onCheckedChange={(checked) => handleChangeWebhookByTopic(event, checked)}
                       />
                     </Field>

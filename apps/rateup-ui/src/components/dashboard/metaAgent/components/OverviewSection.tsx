@@ -1,298 +1,366 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+// The agent's setup guide: the page the sidebar's "Meta AI Agent" opens on. It
+// follows the RateUp setup guide (`dashboard/setup/RateUpOnboarding.tsx`): a
+// welcome with progress, the required Meta steps in a dashed well, then each
+// area of the agent as a row that opens the page where you finish it.
+
 import {
   IconAlertTriangle,
   IconCircleCheck,
   IconCircleX,
-  IconPlus,
   IconRefresh,
   IconShieldCheck,
   IconTrash,
 } from "@tabler/icons-react";
-import { useForm } from "react-hook-form";
+import { useNavigate } from "@tanstack/react-router";
 
 import {
-  useAddAllowlistEntry,
-  useAllowlist,
   useCheckAgentEligibility,
   useDeleteAgent,
   useMetaBusinessAgent,
   useOnboardAgent,
-  useRemoveAllowlistEntry,
-  useSyncAllowlist,
 } from "@/backend/metaAgent/metaAgent.query";
+import { PageHeading, SectionHeading } from "@/components/common/page-heading.tsx";
+import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FieldGroup } from "@/components/ui/field";
-import { PhoneInput } from "@/components/ui/phone-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import { cn } from "@/lib/utils";
+import { useConfirm } from "@/context/confirm-provider";
 
-import { allowlistFormSchema, type AllowlistFormValues } from "../metaAgent.schemas";
-import { FormField } from "./shared/FormField";
-import { PanelCard } from "./shared/PanelCard";
+import { StepIconChip } from "../../loyalty/onboarding/StepChrome.tsx";
+import {
+  AGENT_STEP_META,
+  AGENT_STEPS,
+  type AgentSetupProgress,
+  type AgentStep,
+  type AgentStepGroup,
+} from "../setup/agentSetup.ts";
+import { useAgentSetup } from "../setup/useAgentSetup.ts";
+
+const GROUPS: { id: Exclude<AgentStepGroup, "connect">; title: string; hint: string }[] = [
+  {
+    id: "teach",
+    title: "Teach your agent",
+    hint: "The more it knows, the fewer chats reach your team",
+  },
+  {
+    id: "extend",
+    title: "Go further",
+    hint: "Optional — richer replies and live data from your own systems",
+  },
+  {
+    id: "launch",
+    title: "Test and go live",
+    hint: "Try it yourself, then choose who it answers",
+  },
+];
 
 export function OverviewSection({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
+  const setup = useAgentSetup(waSettingsId);
+
+  if (setup.isLoading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-52 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <OnboardingSteps waSettingsId={waSettingsId} />
-      <AllowlistPanel waSettingsId={waSettingsId} />
+    <div className="flex flex-col gap-6.5">
+      <GuideHero setup={setup} />
+
+      <section className="flex flex-col gap-3">
+        <SectionHeading
+          title="Connect to Meta"
+          hint="Meta has to approve the number before the agent can exist"
+          badge={<Badge variant="system">Required</Badge>}
+        />
+        <ConnectSteps waSettingsId={waSettingsId} />
+      </section>
+
+      {GROUPS.map((group) => (
+        <section key={group.id} className="flex flex-col gap-3">
+          <SectionHeading title={group.title} hint={group.hint} />
+          <div className="flex flex-col gap-3">
+            {AGENT_STEPS.filter((step) => AGENT_STEP_META[step].group === group.id).map((step) => (
+              <StepRow key={step} step={step} setup={setup} />
+            ))}
+          </div>
+        </section>
+      ))}
+
       <DangerZone waSettingsId={waSettingsId} />
+    </div>
+  );
+}
+
+/** Welcome and progress while there is work left; a "you're live" banner after. */
+function GuideHero({ setup }: Readonly<{ setup: AgentSetupProgress }>) {
+  const navigate = useNavigate();
+
+  if (setup.live) {
+    return (
+      <div className="flex flex-wrap items-center gap-5 rounded-xl bg-ru-blue-900 p-6">
+        <StepIconChip tone="green" className="size-11 [&>svg]:size-6">
+          <IconCircleCheck />
+        </StepIconChip>
+        <div className="flex min-w-55 flex-1 flex-col gap-1.5">
+          <span className="font-display text-2xl font-bold tracking-[-0.02em] text-white">
+            Your agent is live.
+          </span>
+          <span className="text-[14.5px] leading-normal text-white/70">
+            It is answering customers on WhatsApp. Keep teaching it below — every change reaches
+            Meta as soon as you save.
+          </span>
+        </div>
+        <Button
+          size="lg"
+          variant="secondary"
+          onClick={() => navigate({ to: AGENT_STEP_META.operate.to })}
+        >
+          Open test console
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-end gap-7">
+      <div className="flex min-w-[min(100%,26rem)] flex-1">
+        <PageHeading
+          title="Put an AI agent on your WhatsApp."
+          description="Connect with Meta, teach the agent about your business, test it, then switch it on. Nothing reaches customers until you do."
+        />
+      </div>
+
+      <div className="flex w-65 shrink-0 flex-col gap-2">
+        <div className="flex items-baseline justify-between text-[13px] text-muted-foreground">
+          <span>
+            {setup.done} of {setup.total} complete
+          </span>
+          <span>{setup.minsLeft} min left</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500 ease-in-out"
+            style={{ width: `${setup.pct}%` }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
 /**
  * Meta's onboarding is strictly ordered — a number has to be eligible before it
- * can be onboarded — so it reads as a checklist rather than three equal buttons.
+ * can be onboarded — so the two calls are two rows, the second waiting on the
+ * first. Each calls Meta once, when pressed; nothing runs on page load.
  */
-function OnboardingSteps({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
-  const { data: agent, isLoading } = useMetaBusinessAgent(waSettingsId);
+function ConnectSteps({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
+  const { data: agent } = useMetaBusinessAgent(waSettingsId);
   const checkEligibility = useCheckAgentEligibility(waSettingsId);
   const onboard = useOnboardAgent(waSettingsId);
 
   const onboarded = agent?.status === "ONBOARDED";
-  const eligible = agent?.isEligible === true;
-  const ineligible = agent?.isEligible === false;
-
-  if (isLoading) return <Skeleton className="h-52 w-full rounded-xl" />;
+  const eligible = agent?.isEligible === true || onboarded;
+  const ineligible = agent?.isEligible === false && !onboarded;
 
   return (
-    <Card className="border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
-      <CardHeader>
-        <CardTitle>Getting the agent live</CardTitle>
-        <CardDescription>
-          Each step calls Meta once, when you press it. Nothing runs automatically.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Step
-          index={1}
-          title="Check eligibility"
-          state={eligible ? "done" : ineligible ? "blocked" : "todo"}
-          description={
-            ineligible
-              ? "Meta says this number is not eligible for the Business Agent yet."
-              : eligible
-                ? "Meta confirmed this number is eligible."
-                : "Ask Meta whether this WhatsApp number can run a Business Agent."
-          }
-          action={
-            <Button
-              size="sm"
-              variant={eligible ? "outline" : "default"}
-              loading={checkEligibility.isPending}
-              onClick={() => checkEligibility.mutate()}
-            >
-              <IconRefresh data-icon="inline-start" />
-              {eligible || ineligible ? "Re-check" : "Check with Meta"}
-            </Button>
-          }
-        />
+    <div className="flex flex-col gap-3 rounded-xl border border-dashed border-input bg-muted p-3.5">
+      <SetupRowCard
+        icon={IconShieldCheck}
+        tint="green"
+        title="Check eligibility"
+        done={eligible}
+        badges={
+          eligible ? (
+            <DoneBadge />
+          ) : ineligible ? (
+            <Badge variant="destructive">
+              <IconCircleX size={12} />
+              Not eligible
+            </Badge>
+          ) : null
+        }
+        description={
+          ineligible
+            ? "Meta says this number cannot run a Business Agent yet."
+            : eligible
+              ? "Meta confirmed this number can run a Business Agent."
+              : "Ask Meta whether this WhatsApp number can run a Business Agent."
+        }
+        detail={
+          ineligible ? (
+            <Alert variant="destructive" className="mt-2">
+              <IconAlertTriangle />
+              <AlertTitle>What decides eligibility</AlertTitle>
+              <AlertDescription>
+                Your business vertical and country, and whether the Meta Business Agent terms are
+                accepted in WhatsApp Manager. Check again once those are in place.
+              </AlertDescription>
+            </Alert>
+          ) : null
+        }
+        action={
+          <Button
+            variant={eligible ? "secondary" : "default"}
+            className="h-10 w-full"
+            loading={checkEligibility.isPending}
+            onClick={() => checkEligibility.mutate()}
+          >
+            <IconRefresh data-icon="inline-start" />
+            {eligible || ineligible ? "Check again" : "Check with Meta"}
+          </Button>
+        }
+      />
 
-        <Step
-          index={2}
-          title="Onboard the agent"
-          state={onboarded ? "done" : eligible ? "todo" : "waiting"}
-          description={
-            onboarded
-              ? `Onboarded on the ${agent?.channel} channel. Agent id ${agent?.agentId ?? "—"}.`
-              : eligible
-                ? "Creates the agent at Meta and returns the agent id every other call is scoped to."
-                : "Available once Meta confirms the number is eligible."
-          }
-          action={
-            <Button
-              size="sm"
-              variant={onboarded ? "outline" : "default"}
-              disabled={onboard.isPending || !eligible}
-              onClick={() => onboard.mutate("whatsapp")}
-            >
-              {onboard.isPending ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <IconShieldCheck data-icon="inline-start" />
-              )}
-              {onboarded ? "Re-onboard" : "Onboard agent"}
-            </Button>
-          }
-        />
-
-        <Step
-          index={3}
-          title="Configure and turn it on"
-          state={onboarded ? "todo" : "waiting"}
-          description="Add knowledge and skills, then enable rollout under Settings."
-        />
-
-        {ineligible && (
-          <Alert variant="destructive">
-            <IconAlertTriangle />
-            <AlertTitle>This number is not eligible</AlertTitle>
-            <AlertDescription>
-              Eligibility depends on your business vertical and country, and on the Meta Business
-              Agent terms being accepted in WhatsApp Manager. Re-check after those are in place.
-            </AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-type StepState = "done" | "todo" | "waiting" | "blocked";
-
-function Step({
-  index,
-  title,
-  description,
-  state,
-  action,
-}: Readonly<{
-  index: number;
-  title: string;
-  description: string;
-  state: StepState;
-  action?: React.ReactNode;
-}>) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-start justify-between gap-3 rounded-lg border bg-background p-3",
-        state === "waiting" && "opacity-60",
-      )}
-    >
-      <div className="flex min-w-0 items-start gap-3">
-        <span
-          className={cn(
-            "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-            state === "done" && "bg-green-600/10 text-green-600",
-            state === "blocked" && "bg-destructive/10 text-destructive",
-            (state === "todo" || state === "waiting") && "bg-muted text-muted-foreground",
-          )}
-        >
-          {state === "done" ? (
-            <IconCircleCheck className="size-4" />
-          ) : state === "blocked" ? (
-            <IconCircleX className="size-4" />
-          ) : (
-            index
-          )}
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-medium">{title}</p>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      {action}
+      <SetupRowCard
+        icon={AGENT_STEP_META.overview.icon}
+        tint="green"
+        title="Create the agent"
+        done={onboarded}
+        muted={!eligible}
+        badges={
+          onboarded ? (
+            <DoneBadge />
+          ) : !eligible ? (
+            <Badge variant="secondary">Waiting on eligibility</Badge>
+          ) : null
+        }
+        description={
+          onboarded
+            ? `Created on the ${agent?.channel} channel. Agent id ${agent?.agentId ?? "—"}.`
+            : "Creates the agent at Meta. Everything you set up next is attached to it."
+        }
+        action={
+          <Button
+            variant={onboarded ? "secondary" : "default"}
+            className="h-10 w-full"
+            disabled={!eligible}
+            loading={onboard.isPending}
+            onClick={() => onboard.mutate("whatsapp")}
+          >
+            {onboarded ? "Re-create agent" : "Create agent"}
+          </Button>
+        }
+      />
     </div>
   );
 }
 
-function AllowlistPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
-  const { data: allowlist, isLoading } = useAllowlist(waSettingsId);
-  const addEntry = useAddAllowlistEntry(waSettingsId);
-  const removeEntry = useRemoveAllowlistEntry(waSettingsId);
-  const sync = useSyncAllowlist(waSettingsId);
+/** Copy for the row of each area, from what is already saved for it. */
+function rowCopy(step: AgentStep, setup: AgentSetupProgress) {
+  const { facts } = setup;
+  const done = setup.status[step] === true;
 
-  const form = useForm<AllowlistFormValues>({
-    resolver: zodResolver(allowlistFormSchema),
-    defaultValues: { phone: "" },
-  });
+  switch (step) {
+    case "knowledge":
+      return {
+        title: "Add what it knows",
+        detail: done ? "The agent has knowledge to answer from." : null,
+        action: done ? "Edit knowledge" : "Add knowledge",
+      };
+    case "skills":
+      return {
+        title: "Write skills",
+        detail: done ? `${facts.skillCount} written` : null,
+        action: done ? "Edit skills" : "Write a skill",
+      };
+    case "ui-skills":
+      return {
+        title: "Send rich replies",
+        detail: done ? `${facts.uiSkillCount} set up` : null,
+        action: done ? "Edit rich replies" : "Add a rich reply",
+      };
+    case "connectors":
+      return {
+        title: "Connect your systems",
+        detail: done ? `${facts.connectorCount} connected` : null,
+        action: done ? "Manage connectors" : "Add a connector",
+      };
+    case "operate":
+      return { title: "Test the agent", detail: null, action: "Open test console" };
+    case "settings":
+      return {
+        title: "Switch it on",
+        detail: facts.rolloutEnabled ? null : "Off — the agent is not answering anyone.",
+        action: done ? "Review settings" : "Go live",
+      };
+    default:
+      return { title: AGENT_STEP_META[step].label, detail: null, action: "Open" };
+  }
+}
 
-  const onSubmit = (values: AllowlistFormValues) =>
-    addEntry.mutate(values.phone, { onSuccess: () => form.reset() });
+function StepRow({ step, setup }: Readonly<{ step: AgentStep; setup: AgentSetupProgress }>) {
+  const navigate = useNavigate();
+  const meta = AGENT_STEP_META[step];
+  const { title, detail, action } = rowCopy(step, setup);
+  const done = setup.status[step] === true;
+  // Everything past the connect steps is attached to the agent, so it waits on it.
+  const blocked = !setup.facts.onboarded;
 
   return (
-    <PanelCard
-      title="Allowlist"
-      description="Only consulted when the AI audience is set to allowlisted numbers only, under Settings."
-      count={allowlist?.length ?? 0}
-      onSync={() => sync.mutate()}
-      isSyncing={sync.isPending}
-    >
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FieldGroup>
-          <FormField
-            control={form.control}
-            name="phone"
-            label="Consumer phone number"
-            required
-            description="E.164 format, including the country code."
-          >
-            {(field, controlProps) => (
-              <div className="flex flex-wrap items-start gap-2">
-                <PhoneInput
-                  {...controlProps}
-                  name={field.name}
-                  defaultCountry="IN"
-                  international
-                  countryCallingCodeEditable={false}
-                  placeholder="Enter phone number"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  className="w-full max-w-72"
-                />
-                <Button type="submit" variant="outline" loading={addEntry.isPending}>
-                  <IconPlus data-icon="inline-start" />
-                  Add
-                </Button>
-              </div>
-            )}
-          </FormField>
-        </FieldGroup>
-      </form>
+    <SetupRowCard
+      icon={meta.icon}
+      tint={meta.tint}
+      title={title}
+      description={meta.description}
+      done={done}
+      muted={blocked}
+      badges={
+        <>
+          {done && <DoneBadge />}
+          {blocked && <Badge variant="secondary">Waiting on Meta</Badge>}
+          {!done && !blocked && meta.group === "extend" && (
+            <Badge variant="outline">Optional</Badge>
+          )}
+        </>
+      }
+      detail={detail ? <span className="text-xs text-muted-foreground">{detail}</span> : null}
+      action={
+        <Button
+          variant={done ? "secondary" : "default"}
+          disabled={blocked}
+          className="h-10 w-full"
+          onClick={() => navigate({ to: meta.to })}
+        >
+          {action}
+        </Button>
+      }
+      actionFooter={<span className="text-xs text-muted-foreground">{meta.minutes} min</span>}
+    />
+  );
+}
 
-      {isLoading && <Skeleton className="mt-4 h-8 w-full" />}
-
-      {!isLoading && !allowlist?.length && (
-        <p className="mt-4 text-sm text-muted-foreground">
-          No numbers allowlisted. With the allowlisted-only audience, the agent will not answer
-          anyone.
-        </p>
-      )}
-
-      {!!allowlist?.length && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {allowlist.map((entry) => (
-            <Badge key={entry.id} variant="secondary" className="gap-1.5 pr-1 text-sm">
-              {entry.consumerPhoneNumber}
-              <button
-                type="button"
-                aria-label={`Remove ${entry.consumerPhoneNumber}`}
-                className="rounded-full p-0.5 hover:bg-background/60"
-                disabled={removeEntry.isPending}
-                onClick={() => removeEntry.mutate(entry.id)}
-              >
-                <IconCircleX className="size-3.5" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-    </PanelCard>
+function DoneBadge() {
+  return (
+    <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
+      <IconCircleCheck size={12} />
+      Done
+    </Badge>
   );
 }
 
 function DangerZone({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
   const { data: agent } = useMetaBusinessAgent(waSettingsId);
   const deleteAgent = useDeleteAgent(waSettingsId);
+  const confirm = useConfirm();
 
   if (agent?.status !== "ONBOARDED") return null;
+
+  const onDelete = async () => {
+    const ok = await confirm({
+      title: "Delete this Business Agent?",
+      description:
+        "Meta will drop the agent and everything configured on it — business info, FAQs, files, websites, skills, rich replies and connectors. This cannot be undone; you would have to set it up again from scratch.",
+      confirmText: "Delete agent",
+    });
+    if (ok) deleteAgent.mutate();
+  };
 
   return (
     <Card className="border-destructive/30">
@@ -300,39 +368,14 @@ function DangerZone({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
         <CardTitle className="text-destructive">Delete the agent</CardTitle>
         <CardDescription>
           Removes the agent at Meta and clears every knowledge item, skill and connector mirrored
-          here. Eligibility is kept so you can onboard again later.
+          here. Eligibility is kept so you can create it again later.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button variant="destructive" size="sm" loading={deleteAgent.isPending}>
-                <IconTrash data-icon="inline-start" />
-                Delete agent
-              </Button>
-            }
-          />
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete this Business Agent?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Meta will drop the agent and everything configured on it — business info, FAQs,
-                files, websites, skills, UI skills and connectors. This cannot be undone; you would
-                have to onboard and configure it again from scratch.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => deleteAgent.mutate()}
-                className="bg-destructive text-white hover:bg-destructive/90"
-              >
-                Delete agent
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Button variant="destructive" size="sm" loading={deleteAgent.isPending} onClick={onDelete}>
+          <IconTrash data-icon="inline-start" />
+          Delete agent
+        </Button>
       </CardContent>
     </Card>
   );

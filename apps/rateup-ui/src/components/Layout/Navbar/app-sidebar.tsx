@@ -16,6 +16,7 @@ import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { ConversationTagOption } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.api.ts";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
 import type { LoyaltyNavInput } from "@/components/dashboard/loyalty/loyalty.nav.ts";
+import type { MetaAgentNavInput } from "@/components/dashboard/metaAgent/metaAgent.nav.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -616,6 +617,7 @@ export default function AppSidebar({
   pipelineNav,
   setupNav,
   loyaltyNav,
+  metaAgentNav,
 }: Readonly<{
   subscription?: Subscription;
   lifecycles?: GetLabelsRes[];
@@ -628,6 +630,7 @@ export default function AppSidebar({
   pipelineNav: PipelineNavInput;
   setupNav: SetupNavInput;
   loyaltyNav?: LoyaltyNavInput;
+  metaAgentNav: MetaAgentNavInput;
 }>) {
   const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
@@ -685,6 +688,7 @@ export default function AppSidebar({
     pipelineNav,
     setupNav,
     loyaltyNav,
+    metaAgentNav,
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);

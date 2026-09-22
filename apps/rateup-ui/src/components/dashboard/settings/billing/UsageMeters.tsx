@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { aiAllowance, aiTokensUsed } from "@/hooks/usePlanStatus.ts";
 
 /** One allowance: what it is, how much is gone, how much is left. Every meter uses this. */
 export function UsageMeter({
@@ -144,18 +145,12 @@ export function UsageMeters({
         />
 
         {features?.ai?.active && (
-          <>
-            <UsageMeter
-              label={t("AI input tokens")}
-              used={stats?.aiPromptTokensCount ?? 0}
-              max={features.ai?.count?.promptTokens}
-            />
-            <UsageMeter
-              label={t("AI output tokens")}
-              used={stats?.aiCompletionTokensCount ?? 0}
-              max={features.ai?.count?.completionTokens}
-            />
-          </>
+          <UsageMeter
+            label={t("AI tokens")}
+            used={aiTokensUsed(stats)}
+            max={aiAllowance(features)}
+            hint={t("Your AI chatbot and Meta AI replies share this allowance.")}
+          />
         )}
 
         {features?.loyalty?.active && (
