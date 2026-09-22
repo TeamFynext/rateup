@@ -165,7 +165,14 @@ function EditWebsiteDialog({
   });
 
   return (
-    <Dialog open={!!website} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={!!website}
+      onOpenChange={(open) => !open && onClose()}
+      // The dialog stays mounted between opens, and `values` only resets the form
+      // when it changes — two "Add"s in a row pass the same empty values, so the
+      // last draft would reappear. Reset once it has finished closing instead.
+      onOpenChangeComplete={(isOpen) => !isOpen && form.reset()}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit website</DialogTitle>

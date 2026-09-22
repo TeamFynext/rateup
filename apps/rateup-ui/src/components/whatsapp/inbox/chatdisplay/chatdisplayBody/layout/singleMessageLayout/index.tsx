@@ -10,6 +10,7 @@ import {
   IconLock,
   IconRobot,
   IconShieldOff,
+  IconSparkles,
   IconSpeakerphone,
   IconUserCog,
 } from "@tabler/icons-react";
@@ -44,7 +45,7 @@ import { useContactsStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaReceiveMessageBody } from "@/types/global";
 import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";
-import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
+import { getContactPlatform, isMetaAiMessage } from "@/utils/whatsapp/inbox.ts";
 
 interface Props {
   exchangeProcess: "send" | "receive" | "internal" | "privateNote";
@@ -317,16 +318,21 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
       JSON.stringify(messageObject?.sourceMessage);
     }
     const isCampaign = messageObject?.sourceMessage?.toLowerCase() === "campaign";
+    // A reply the Meta Business Agent wrote is automated too, but it is Meta's AI
+    // answering, not one of the org's own rules — worth telling apart at a glance.
+    const isMetaAi = !isCampaign && isMetaAiMessage(messageObject);
     return (
       <Message align="end">
         <MessageContent>
           <MessageHeader className="gap-1">
             {isCampaign ? (
               <IconSpeakerphone className="size-3 shrink-0" />
+            ) : isMetaAi ? (
+              <IconSparkles className="size-3 shrink-0" />
             ) : (
               <IconRobot className="size-3 shrink-0" />
             )}
-            {isCampaign ? "Campaign" : "Automation"}
+            {isCampaign ? "Campaign" : isMetaAi ? "Meta AI" : "Automation"}
           </MessageHeader>
           <Bubble variant="muted" align="end">
             <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>

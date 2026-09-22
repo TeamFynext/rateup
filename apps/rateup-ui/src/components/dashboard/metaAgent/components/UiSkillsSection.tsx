@@ -295,7 +295,14 @@ function UiSkillDialog({
   }));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      // The dialog stays mounted between opens, and `values` only resets the form
+      // when it changes — two "Add"s in a row pass the same empty values, so the
+      // last draft would reappear. Reset once it has finished closing instead.
+      onOpenChangeComplete={(isOpen) => !isOpen && form.reset()}
+    >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{uiSkill ? "Edit UI skill" : "Add UI skill"}</DialogTitle>
@@ -307,9 +314,15 @@ function UiSkillDialog({
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="gap-4">
-            <FormField control={form.control} name="title" label="Title" required>
+            <FormField
+              control={form.control}
+              name="title"
+              label="Title"
+              required
+              description="Lowercase letters, numbers and hyphens, like book-a-table."
+            >
               {(field, controlProps) => (
-                <Input {...field} {...controlProps} placeholder="Book a table" />
+                <Input {...field} {...controlProps} placeholder="book-a-table" />
               )}
             </FormField>
 

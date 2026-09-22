@@ -92,6 +92,8 @@ export interface AgentSettings {
   ai_audience?: "EVERYONE" | "ALLOWLISTED_ONLY";
   never_say_phrases?: string[];
   settingsSyncedAt?: string | null;
+  /** Rateup-only: hand the thread back to Meta AI when a ticket closes. */
+  releaseOnTicketClose?: boolean;
 }
 
 export const getAgentSettings = async (waSettingsId: string) => {
@@ -101,6 +103,15 @@ export const getAgentSettings = async (waSettingsId: string) => {
 
 export const updateAgentSettings = async (waSettingsId: string, data: Partial<AgentSettings>) => {
   const res = await axiosClient.put(`${base(waSettingsId)}/settings`, data);
+  return res.data as AgentSettings;
+};
+
+/** Rateup-side behaviour only — this never reaches Meta. */
+export const updateAgentInboxSettings = async (
+  waSettingsId: string,
+  data: { releaseOnTicketClose: boolean },
+) => {
+  const res = await axiosClient.put(`${base(waSettingsId)}/settings/inbox`, data);
   return res.data as AgentSettings;
 };
 

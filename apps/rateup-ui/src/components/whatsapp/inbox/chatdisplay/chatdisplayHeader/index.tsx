@@ -29,6 +29,7 @@ import { getSoucePlatformIconAndColor } from "../../util.tsx";
 import CloseTicketMenu from "./CloseTicketMenu.tsx";
 import ConversationHistoryStrip from "./ConversationHistoryStrip.tsx";
 import WaInboxCountdownTimer from "./countDown/index.tsx";
+import MetaAgentThreadBadge from "./MetaAgentThreadBadge.tsx";
 import { deriveStatus, STATUS_PILL_BASE } from "./ticket.ts";
 import TicketSubBar from "./TicketSubBar.tsx";
 
@@ -142,6 +143,7 @@ export default function WaInboxChatDisplayHeader({
                     }
                   />
                 )}
+                <MetaAgentThreadBadge contact={contact} />
               </div>
             </div>
             <p className="truncate text-[11px] leading-snug text-muted-foreground" title={subLine}>

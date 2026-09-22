@@ -23,6 +23,8 @@ import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { feedbackNavState } from "@/components/dashboard/loyalty/feedback/feedbackStatus.ts";
 import type { LoyaltyNavInput } from "@/components/dashboard/loyalty/loyalty.nav.ts";
 import { programStateOf } from "@/components/dashboard/loyalty/program/programState.ts";
+import type { MetaAgentNavInput } from "@/components/dashboard/metaAgent/metaAgent.nav.ts";
+import { useAgentSetup } from "@/components/dashboard/metaAgent/setup/useAgentSetup.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
@@ -30,6 +32,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
 import i18n from "@/i18n.ts";
 import { useChatContactCountStore } from "@/store/inbox.store.ts";
+import { useMetaAgentChannelStore } from "@/store/metaAgent.store.ts";
 import { usePipelineStore } from "@/store/pipeline.store.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { normalizeLocale } from "@/utils/locale.ts";
@@ -103,8 +106,10 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const isInbox = pathname?.includes("/dashboard/inbox");
   const paddingExclusion = isInbox
     ? true
-    : // The setup guide carries a fixed header over its own scroller.
+    : // The setup guide, and the Meta AI Agent built like it, carry a fixed
+      // header over their own scroller.
       pathname?.includes("/dashboard/setup") ||
+      pathname?.includes("/dashboard/meta-agent") ||
       pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
       pathname?.includes("/dashboard/whatsapp/flowbots/") ||
       pathname?.includes("/dashboard/instagram/flowbots/");
@@ -214,6 +219,24 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       isSetup,
       search?.step,
     ],
+  );
+
+  // Same rule again: the agent's step ticks read nine queries, so they run only
+  // on the agent's own pages — which make the same queries, so it costs nothing
+  // there. The channel is the one the page is showing, or the first as it would.
+  const isMetaAgent = Boolean(pathname?.includes("/dashboard/meta-agent"));
+  const { data: waChannels } = useWaSettings(isMetaAgent);
+  const pickedChannelId = useMetaAgentChannelStore((state) => state.waSettingsId);
+  const agentChannelId = isMetaAgent
+    ? ((waChannels?.some((channel) => channel.id === pickedChannelId) ? pickedChannelId : null) ??
+      waChannels?.[0]?.id ??
+      "")
+    : "";
+  const agentSetup = useAgentSetup(agentChannelId);
+  const agentStatus = agentChannelId && !agentSetup.isLoading ? agentSetup.status : null;
+  const metaAgentNav = useMemo<MetaAgentNavInput>(
+    () => ({ t, status: agentStatus }),
+    [t, agentStatus],
   );
 
   const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
@@ -334,6 +357,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     pipelineNav,
     resolvedUserInfo,
     setupNav,
+    metaAgentNav,
     staff: userRes?.data ?? [],
     subscription: sub,
     teams: teamRes?.data ?? [],

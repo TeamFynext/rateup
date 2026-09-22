@@ -116,13 +116,7 @@ export function usePlanStatus(): PlanStatus {
         features?.team?.teamMember?.count?.max,
         false,
       ),
-      meter(
-        "ai",
-        "AI tokens",
-        (stats?.aiPromptTokensCount ?? 0) + (stats?.aiCompletionTokensCount ?? 0),
-        aiAllowance(features),
-        true,
-      ),
+      meter("ai", "AI tokens", aiTokensUsed(stats), aiAllowance(features), true),
     ].filter((entry): entry is PlanMeter => entry !== null);
 
     const metered = candidates.filter((entry) => entry.resetsEachPeriod);
@@ -139,6 +133,11 @@ export function usePlanStatus(): PlanStatus {
   }, [subscription, stats, subscriptionPending, statsPending]);
 }
 
+/** AI tokens used, input and output together — see `aiAllowance`. */
+export function aiTokensUsed(stats: UsageStats | undefined) {
+  return (stats?.aiPromptTokensCount ?? 0) + (stats?.aiCompletionTokensCount ?? 0);
+}
+
 /** The metered 24h-window counters, which are what the plan allowance is enforced against. */
 function conversationUsage(stats: UsageStats | undefined, isAnnual: boolean) {
   return isAnnual
@@ -146,7 +145,12 @@ function conversationUsage(stats: UsageStats | undefined, isAnnual: boolean) {
     : stats?.monthlyMeteredConversationsCount;
 }
 
-function aiAllowance(features: SubscriptionFeatures | undefined) {
+/**
+ * The AI allowance as one number. Plans store it as separate input (prompt) and
+ * output (completion) budgets, but it is shown and enforced as a single pool —
+ * the split means nothing to a customer and only let one half run out first.
+ */
+export function aiAllowance(features: SubscriptionFeatures | undefined) {
   const count = features?.ai?.count;
   if (!count) return undefined;
   return (count.promptTokens ?? 0) + (count.completionTokens ?? 0);

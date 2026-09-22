@@ -465,3 +465,26 @@ export function validateInboxTemplateSending(
     }
   });
 }
+
+/**
+ * Whether a sent message was written by the Meta Business Agent (Meta AI). Meta
+ * tags the agent's replies with `biz_opaque_callback_data` of
+ * `{"originator":"bizai",…}`, and the API stores the echo as it arrived, so the
+ * tag is on the stored body.
+ */
+export function isMetaAiMessage(message: Pick<WaGetMessagesBody, "messageBody">): boolean {
+  const send = message.messageBody?.send;
+  const tag = send && "biz_opaque_callback_data" in send ? send.biz_opaque_callback_data : null;
+  if (typeof tag !== "string" || !tag) return false;
+  try {
+    const parsed: unknown = JSON.parse(tag);
+    return (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "originator" in parsed &&
+      parsed.originator === "bizai"
+    );
+  } catch {
+    return false;
+  }
+}

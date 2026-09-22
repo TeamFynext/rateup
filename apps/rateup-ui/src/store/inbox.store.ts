@@ -189,6 +189,33 @@ function isFresherRow(incoming: ContactWithUpdatedAt, existing: ContactWithUpdat
   return incomingAt >= existingAt;
 }
 
+/**
+ * Meta AI thread state on a row the cached copy outranked. The client never
+ * edits these, so a newer local `updatedAt` says nothing about them: without
+ * this a row edited once kept whatever thread state it was cached with.
+ */
+function metaAgentFieldsFrom(
+  incoming: ContactWithUpdatedAt,
+  existing: ContactWithUpdatedAt,
+): Partial<ContactWithUpdatedAt> {
+  const incomingAt = Date.parse(incoming.metaAgentThreadOwnerAt ?? "");
+  const existingAt = Date.parse(existing.metaAgentThreadOwnerAt ?? "");
+  const ownerIsNewer =
+    !Number.isNaN(incomingAt) && (Number.isNaN(existingAt) || incomingAt > existingAt);
+  return {
+    ...(incoming.metaAgentInvolved !== undefined
+      ? { metaAgentInvolved: incoming.metaAgentInvolved }
+      : {}),
+    ...(ownerIsNewer
+      ? {
+          metaAgentThreadOwner: incoming.metaAgentThreadOwner,
+          metaAgentThreadOwnerAt: incoming.metaAgentThreadOwnerAt,
+          metaAgentHandoverReason: incoming.metaAgentHandoverReason,
+        }
+      : {}),
+  };
+}
+
 function liveRowKeyForContact(
   contactsById: Map<string, ContactWithUpdatedAt>,
   contactId: string,
@@ -311,6 +338,8 @@ export const useContactsStore = create<ContactsStoreState>()(
                   conversationId: rest.conversationId ?? existing?.conversationId,
                   unReadMessageCount: selectedRowKey === rowKey ? 0 : c.unReadMessageCount,
                 });
+              } else {
+                contactsByIdMap.set(rowKey, { ...existing, ...metaAgentFieldsFrom(c, existing) });
               }
               const updatedContact = contactsByIdMap.get(rowKey)!;
 

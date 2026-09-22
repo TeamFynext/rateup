@@ -40,6 +40,26 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-22-meta-ai-handover-badge",
+    title: "See when Meta AI hands a chat to you",
+    summary:
+      "The inbox now shows whether Meta AI or your team is answering each customer, and lets you hand a chat back to Meta AI. Closing a ticket hands it back automatically; you can turn that off in the agent's settings.",
+    publishedAt: "2026-09-22",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", label: "Open the inbox" },
+  },
+  {
+    id: "2026-09-22-meta-agent-setup-flow",
+    title: "A guided setup for your AI agent",
+    summary:
+      "Meta AI Agent now opens on a setup guide that walks you from connecting with Meta to going live, with your progress shown as you go. Every page has Back and Continue, so you can follow the steps in order.",
+    publishedAt: "2026-09-22",
+    kinds: ["improvement"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/overview", label: "Open the setup guide" },
+  },
+  {
     id: "2026-09-20-fine-tune-abilities",
     title: "Each member on their own page",
     summary:
