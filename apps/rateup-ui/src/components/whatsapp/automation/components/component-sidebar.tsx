@@ -25,7 +25,6 @@ import type { AutomationPlatform } from "@/types/platform.ts";
 import { isComponentSupportedOnPlatform } from "@/types/platform.ts";
 
 import { FlowPanel } from "./flow-panel.tsx";
-import { getNodeVisual } from "./nodes/node-config.tsx";
 
 // Component categories and items
 const categories = [
@@ -202,29 +201,20 @@ export default function ComponentSidebar({ platform }: Readonly<{ platform: stri
             <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {category.name}
             </h3>
-            {category.items.map((item) => {
-              const accent = getNodeVisual(item.id).color;
-              return (
-                <div
-                  key={item.id}
-                  className="group flex cursor-grab items-center gap-3 rounded-lg border border-transparent bg-background p-2.5 transition-colors hover:border-border hover:bg-accent active:cursor-grabbing"
-                  role="none"
-                  draggable
-                  onDragStart={(event) => onDragStart(event, item.id, getDefaultNodeData(item.id))}
-                >
-                  <span
-                    className="flex size-8 shrink-0 items-center justify-center rounded-md"
-                    style={{
-                      backgroundColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
-                      color: accent,
-                    }}
-                  >
-                    {item.icon}
-                  </span>
-                  <span className="text-sm font-medium">{item.label}</span>
-                </div>
-              );
-            })}
+            {category.items.map((item) => (
+              <div
+                key={item.id}
+                className="group flex cursor-grab items-center gap-3 rounded-lg border border-transparent bg-background p-2.5 transition-colors hover:border-border hover:bg-accent active:cursor-grabbing"
+                role="none"
+                draggable
+                onDragStart={(event) => onDragStart(event, item.id, getDefaultNodeData(item.id))}
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center text-primary">
+                  {item.icon}
+                </span>
+                <span className="text-sm font-medium">{item.label}</span>
+              </div>
+            ))}
           </div>
         ))}
       </div>

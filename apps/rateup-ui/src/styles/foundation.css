@@ -63,25 +63,22 @@
 }
 
 .dark {
-  /* Design System V2 `[data-theme="dark"]` scope. */
-  --background: oklch(0.1857 0.019 255); /* --canvas #0d131b */
-  --foreground: oklch(0.954 0.0063 255.48); /* --fg #edf0f4 */
-  /* Raised surfaces sit on the V2 navy ramp like every other dark token; they were
-     left on the stock shadcn hue (285.9) when the rest of the scope was migrated, which
-     made cards the one surface reading a different temperature from the page. Lightness
-     is unchanged, so only the colour temperature moves. */
-  --card: oklch(0.21 0.016 255.5);
-  --card-foreground: oklch(0.954 0.0063 255.48);
-  --popover: oklch(0.21 0.016 255.5);
-  --popover-foreground: oklch(0.954 0.0063 255.48);
+  /* Design System V2 `[data-theme="dark"]` scope, lifted to a softer slate so the
+     page reads as charcoal rather than near-black. */
+  --background: oklch(0.2547 0.0128 258.37); /* --canvas #1f2329 */
+  --foreground: oklch(0.9484 0.0046 258.32); /* --fg #eceef1 */
+  --card: oklch(0.288 0.014 261.7); /* --surface #272b32 */
+  --card-foreground: oklch(0.9484 0.0046 258.32);
+  --popover: oklch(0.288 0.014 261.7);
+  --popover-foreground: oklch(0.9484 0.0046 258.32);
   --primary: oklch(0.6294 0.1034 253.03); /* --accent / blue-400 #5a8cc6 */
   --primary-foreground: oklch(0.1823 0.0305 249.25); /* --on-accent #07131f */
-  --secondary: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
-  --secondary-foreground: oklch(0.954 0.0063 255.48);
-  --muted: oklch(0.2286 0.0221 257.28); /* --surface-2 #161d27 */
-  --muted-foreground: oklch(0.6664 0.0238 256.76); /* --fg-3 #8b95a3 */
-  --accent: oklch(0.2613 0.0221 254.21); /* --surface-3 #1d252f */
-  --accent-foreground: oklch(0.954 0.0063 255.48);
+  --secondary: oklch(0.3473 0.0171 262.27); /* --surface-3 #353a43 */
+  --secondary-foreground: oklch(0.9484 0.0046 258.32);
+  --muted: oklch(0.3125 0.0154 264.32); /* --surface-2 #2d3139 */
+  --muted-foreground: oklch(0.7231 0.0147 258.35); /* --fg-3 #a0a6af */
+  --accent: oklch(0.3473 0.0171 262.27); /* --surface-3 #353a43 */
+  --accent-foreground: oklch(0.9484 0.0046 258.32);
   --destructive: oklch(0.7229 0.1388 25.33); /* --error #f08078 */
   --border: oklch(0.29 0.0254 255.73); /* --border #232c38 */
   --input: oklch(0.3853 0.0343 253.54); /* --border-strong #374556 */
