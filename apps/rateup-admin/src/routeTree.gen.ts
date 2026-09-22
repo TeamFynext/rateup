@@ -9,50 +9,414 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAuditRouteImport } from './routes/_app/audit'
+import { Route as AppStaffRouteImport } from './routes/_app/staff'
+import { Route as AppUsersRouteImport } from './routes/_app/users'
+import { Route as AppBillingOrdersRouteImport } from './routes/_app/billing/orders'
+import { Route as AppBillingPlansRouteImport } from './routes/_app/billing/plans'
+import { Route as AppBillingRazorpayRouteImport } from './routes/_app/billing/razorpay'
+import { Route as AppBillingStripeRouteImport } from './routes/_app/billing/stripe'
+import { Route as AppBillingSubscriptionsRouteImport } from './routes/_app/billing/subscriptions'
+import { Route as AppOpsReferralsRouteImport } from './routes/_app/ops/referrals'
+import { Route as AppOpsShareQrRouteImport } from './routes/_app/ops/share-qr'
+import { Route as AppOpsShopifyRouteImport } from './routes/_app/ops/shopify'
+import { Route as AppOpsTestDataRouteImport } from './routes/_app/ops/test-data'
+import { Route as AppOpsUpdateCenterRouteImport } from './routes/_app/ops/update-center'
+import { Route as AppOrgsIndexRouteImport } from './routes/_app/orgs/index'
+import { Route as AppOrgsOrgIdRouteImport } from './routes/_app/orgs/$orgId'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAuditRoute = AppAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStaffRoute = AppStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUsersRoute = AppUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingOrdersRoute = AppBillingOrdersRouteImport.update({
+  id: '/billing/orders',
+  path: '/billing/orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingPlansRoute = AppBillingPlansRouteImport.update({
+  id: '/billing/plans',
+  path: '/billing/plans',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingRazorpayRoute = AppBillingRazorpayRouteImport.update({
+  id: '/billing/razorpay',
+  path: '/billing/razorpay',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingStripeRoute = AppBillingStripeRouteImport.update({
+  id: '/billing/stripe',
+  path: '/billing/stripe',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingSubscriptionsRoute = AppBillingSubscriptionsRouteImport.update({
+  id: '/billing/subscriptions',
+  path: '/billing/subscriptions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOpsReferralsRoute = AppOpsReferralsRouteImport.update({
+  id: '/ops/referrals',
+  path: '/ops/referrals',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOpsShareQrRoute = AppOpsShareQrRouteImport.update({
+  id: '/ops/share-qr',
+  path: '/ops/share-qr',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOpsShopifyRoute = AppOpsShopifyRouteImport.update({
+  id: '/ops/shopify',
+  path: '/ops/shopify',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOpsTestDataRoute = AppOpsTestDataRouteImport.update({
+  id: '/ops/test-data',
+  path: '/ops/test-data',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOpsUpdateCenterRoute = AppOpsUpdateCenterRouteImport.update({
+  id: '/ops/update-center',
+  path: '/ops/update-center',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgsIndexRoute = AppOrgsIndexRouteImport.update({
+  id: '/orgs/',
+  path: '/orgs/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgsOrgIdRoute = AppOrgsOrgIdRouteImport.update({
+  id: '/orgs/$orgId',
+  path: '/orgs/$orgId',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
+  '/audit': typeof AppAuditRoute
+  '/staff': typeof AppStaffRoute
+  '/users': typeof AppUsersRoute
+  '/billing/orders': typeof AppBillingOrdersRoute
+  '/billing/plans': typeof AppBillingPlansRoute
+  '/billing/razorpay': typeof AppBillingRazorpayRoute
+  '/billing/stripe': typeof AppBillingStripeRoute
+  '/billing/subscriptions': typeof AppBillingSubscriptionsRoute
+  '/ops/referrals': typeof AppOpsReferralsRoute
+  '/ops/share-qr': typeof AppOpsShareQrRoute
+  '/ops/shopify': typeof AppOpsShopifyRoute
+  '/ops/test-data': typeof AppOpsTestDataRoute
+  '/ops/update-center': typeof AppOpsUpdateCenterRoute
+  '/orgs/$orgId': typeof AppOrgsOrgIdRoute
+  '/orgs/': typeof AppOrgsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/audit': typeof AppAuditRoute
+  '/staff': typeof AppStaffRoute
+  '/users': typeof AppUsersRoute
+  '/': typeof AppIndexRoute
+  '/billing/orders': typeof AppBillingOrdersRoute
+  '/billing/plans': typeof AppBillingPlansRoute
+  '/billing/razorpay': typeof AppBillingRazorpayRoute
+  '/billing/stripe': typeof AppBillingStripeRoute
+  '/billing/subscriptions': typeof AppBillingSubscriptionsRoute
+  '/ops/referrals': typeof AppOpsReferralsRoute
+  '/ops/share-qr': typeof AppOpsShareQrRoute
+  '/ops/shopify': typeof AppOpsShopifyRoute
+  '/ops/test-data': typeof AppOpsTestDataRoute
+  '/ops/update-center': typeof AppOpsUpdateCenterRoute
+  '/orgs/$orgId': typeof AppOrgsOrgIdRoute
+  '/orgs': typeof AppOrgsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/audit': typeof AppAuditRoute
+  '/_app/staff': typeof AppStaffRoute
+  '/_app/users': typeof AppUsersRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/billing/orders': typeof AppBillingOrdersRoute
+  '/_app/billing/plans': typeof AppBillingPlansRoute
+  '/_app/billing/razorpay': typeof AppBillingRazorpayRoute
+  '/_app/billing/stripe': typeof AppBillingStripeRoute
+  '/_app/billing/subscriptions': typeof AppBillingSubscriptionsRoute
+  '/_app/ops/referrals': typeof AppOpsReferralsRoute
+  '/_app/ops/share-qr': typeof AppOpsShareQrRoute
+  '/_app/ops/shopify': typeof AppOpsShopifyRoute
+  '/_app/ops/test-data': typeof AppOpsTestDataRoute
+  '/_app/ops/update-center': typeof AppOpsUpdateCenterRoute
+  '/_app/orgs/$orgId': typeof AppOrgsOrgIdRoute
+  '/_app/orgs/': typeof AppOrgsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/audit'
+    | '/staff'
+    | '/users'
+    | '/billing/orders'
+    | '/billing/plans'
+    | '/billing/razorpay'
+    | '/billing/stripe'
+    | '/billing/subscriptions'
+    | '/ops/referrals'
+    | '/ops/share-qr'
+    | '/ops/shopify'
+    | '/ops/test-data'
+    | '/ops/update-center'
+    | '/orgs/$orgId'
+    | '/orgs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/login'
+    | '/audit'
+    | '/staff'
+    | '/users'
+    | '/'
+    | '/billing/orders'
+    | '/billing/plans'
+    | '/billing/razorpay'
+    | '/billing/stripe'
+    | '/billing/subscriptions'
+    | '/ops/referrals'
+    | '/ops/share-qr'
+    | '/ops/shopify'
+    | '/ops/test-data'
+    | '/ops/update-center'
+    | '/orgs/$orgId'
+    | '/orgs'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/_app/audit'
+    | '/_app/staff'
+    | '/_app/users'
+    | '/_app/'
+    | '/_app/billing/orders'
+    | '/_app/billing/plans'
+    | '/_app/billing/razorpay'
+    | '/_app/billing/stripe'
+    | '/_app/billing/subscriptions'
+    | '/_app/ops/referrals'
+    | '/_app/ops/share-qr'
+    | '/_app/ops/shopify'
+    | '/_app/ops/test-data'
+    | '/_app/ops/update-center'
+    | '/_app/orgs/$orgId'
+    | '/_app/orgs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/audit': {
+      id: '/_app/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AppAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff': {
+      id: '/_app/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof AppStaffRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/users': {
+      id: '/_app/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AppUsersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/billing/orders': {
+      id: '/_app/billing/orders'
+      path: '/billing/orders'
+      fullPath: '/billing/orders'
+      preLoaderRoute: typeof AppBillingOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/billing/plans': {
+      id: '/_app/billing/plans'
+      path: '/billing/plans'
+      fullPath: '/billing/plans'
+      preLoaderRoute: typeof AppBillingPlansRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/billing/razorpay': {
+      id: '/_app/billing/razorpay'
+      path: '/billing/razorpay'
+      fullPath: '/billing/razorpay'
+      preLoaderRoute: typeof AppBillingRazorpayRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/billing/stripe': {
+      id: '/_app/billing/stripe'
+      path: '/billing/stripe'
+      fullPath: '/billing/stripe'
+      preLoaderRoute: typeof AppBillingStripeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/billing/subscriptions': {
+      id: '/_app/billing/subscriptions'
+      path: '/billing/subscriptions'
+      fullPath: '/billing/subscriptions'
+      preLoaderRoute: typeof AppBillingSubscriptionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ops/referrals': {
+      id: '/_app/ops/referrals'
+      path: '/ops/referrals'
+      fullPath: '/ops/referrals'
+      preLoaderRoute: typeof AppOpsReferralsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ops/share-qr': {
+      id: '/_app/ops/share-qr'
+      path: '/ops/share-qr'
+      fullPath: '/ops/share-qr'
+      preLoaderRoute: typeof AppOpsShareQrRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ops/shopify': {
+      id: '/_app/ops/shopify'
+      path: '/ops/shopify'
+      fullPath: '/ops/shopify'
+      preLoaderRoute: typeof AppOpsShopifyRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ops/test-data': {
+      id: '/_app/ops/test-data'
+      path: '/ops/test-data'
+      fullPath: '/ops/test-data'
+      preLoaderRoute: typeof AppOpsTestDataRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ops/update-center': {
+      id: '/_app/ops/update-center'
+      path: '/ops/update-center'
+      fullPath: '/ops/update-center'
+      preLoaderRoute: typeof AppOpsUpdateCenterRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orgs/': {
+      id: '/_app/orgs/'
+      path: '/orgs'
+      fullPath: '/orgs/'
+      preLoaderRoute: typeof AppOrgsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orgs/$orgId': {
+      id: '/_app/orgs/$orgId'
+      path: '/orgs/$orgId'
+      fullPath: '/orgs/$orgId'
+      preLoaderRoute: typeof AppOrgsOrgIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppRouteChildren {
+  AppAuditRoute: typeof AppAuditRoute
+  AppStaffRoute: typeof AppStaffRoute
+  AppUsersRoute: typeof AppUsersRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppBillingOrdersRoute: typeof AppBillingOrdersRoute
+  AppBillingPlansRoute: typeof AppBillingPlansRoute
+  AppBillingRazorpayRoute: typeof AppBillingRazorpayRoute
+  AppBillingStripeRoute: typeof AppBillingStripeRoute
+  AppBillingSubscriptionsRoute: typeof AppBillingSubscriptionsRoute
+  AppOpsReferralsRoute: typeof AppOpsReferralsRoute
+  AppOpsShareQrRoute: typeof AppOpsShareQrRoute
+  AppOpsShopifyRoute: typeof AppOpsShopifyRoute
+  AppOpsTestDataRoute: typeof AppOpsTestDataRoute
+  AppOpsUpdateCenterRoute: typeof AppOpsUpdateCenterRoute
+  AppOrgsOrgIdRoute: typeof AppOrgsOrgIdRoute
+  AppOrgsIndexRoute: typeof AppOrgsIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAuditRoute: AppAuditRoute,
+  AppStaffRoute: AppStaffRoute,
+  AppUsersRoute: AppUsersRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppBillingOrdersRoute: AppBillingOrdersRoute,
+  AppBillingPlansRoute: AppBillingPlansRoute,
+  AppBillingRazorpayRoute: AppBillingRazorpayRoute,
+  AppBillingStripeRoute: AppBillingStripeRoute,
+  AppBillingSubscriptionsRoute: AppBillingSubscriptionsRoute,
+  AppOpsReferralsRoute: AppOpsReferralsRoute,
+  AppOpsShareQrRoute: AppOpsShareQrRoute,
+  AppOpsShopifyRoute: AppOpsShopifyRoute,
+  AppOpsTestDataRoute: AppOpsTestDataRoute,
+  AppOpsUpdateCenterRoute: AppOpsUpdateCenterRoute,
+  AppOrgsOrgIdRoute: AppOrgsOrgIdRoute,
+  AppOrgsIndexRoute: AppOrgsIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

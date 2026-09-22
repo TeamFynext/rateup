@@ -16,10 +16,11 @@ export default defineConfig(({ mode }) => {
     // Local stand-in for the Cloudflare Pages Function: same-origin `/api/staff/*`, with the proxy
     // secret injected here so it never reaches the browser bundle (no `VITE_` prefix).
     server: {
-      port: 5174,
+      port: 4000,
+      strictPort: true,
       proxy: {
         "/api/staff": {
-          target: env.API_ORIGIN || "http://localhost:4000",
+          target: env.API_ORIGIN || "http://localhost:3001",
           changeOrigin: true,
           headers: env.STAFF_PROXY_SECRET ? { "X-Staff-Proxy-Secret": env.STAFF_PROXY_SECRET } : {},
         },

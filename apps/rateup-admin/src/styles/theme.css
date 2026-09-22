@@ -1,0 +1,202 @@
+/*
+ * The console's design language (docs/design-reference.png): a full-bleed white app with an
+ * ink-black icon rail, monochrome ink for emphasis, pastel tones for stat cards and
+ * large, soft radii. Deliberately not rateup-ui's navy system.
+ *
+ * `components.json` points `npx shadcn add` here, so shadcn primitives pick these tokens up.
+ */
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.875rem;
+
+  /* Surfaces */
+  --background: #ffffff;
+  --foreground: #1b1b1d; /* ink */
+  --card: #ffffff;
+  --card-foreground: #1b1b1d;
+  --popover: #ffffff;
+  --popover-foreground: #1b1b1d;
+
+  /* Ink is the accent: black buttons, black highlights. */
+  --primary: #1b1b1d;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f7;
+  --secondary-foreground: #1b1b1d;
+  --muted: #f5f6f8;
+  --muted-foreground: #8b909a;
+  --accent: #f3f4f7;
+  --accent-foreground: #1b1b1d;
+  --destructive: #d9453b;
+  --border: #eceef1;
+  --input: #e4e6ea;
+  --ring: #1b1b1d;
+
+  /* The rail */
+  --rail: #1b1b1d;
+  --rail-foreground: #ffffff;
+
+  /* Stat-card tones: tint + the arrow/accent that sits on it. */
+  --tone-peach: #fdf0e6;
+  --tone-peach-accent: #e0874a;
+  --tone-mint: #edf9ef;
+  --tone-mint-accent: #3fae5f;
+  --tone-sky: #e5f4f8;
+  --tone-sky-accent: #3aa6c4;
+  --tone-slate: #f3f4f7;
+  --tone-slate-accent: #1b1b1d;
+
+  --positive: #3fae5f;
+  --negative: #d9453b;
+
+  /* Charts: ink first, then the scatter palette from the reference. */
+  --chart-1: #1b1b1d;
+  --chart-2: #d4d6db;
+  --chart-3: #e57ac4; /* pink */
+  --chart-4: #b06ae0; /* purple */
+  --chart-5: #2f6fe0; /* blue */
+
+  /* shadcn's sidebar primitive is unused (the rail replaces it); kept mapped so it renders. */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1b1b1d;
+  --sidebar-primary: #1b1b1d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f7;
+  --sidebar-accent-foreground: #1b1b1d;
+  --sidebar-border: #eceef1;
+  --sidebar-ring: #1b1b1d;
+}
+
+.dark {
+  --background: #141416;
+  --foreground: #f2f2f3;
+  --card: #1a1a1d;
+  --card-foreground: #f2f2f3;
+  --popover: #1a1a1d;
+  --popover-foreground: #f2f2f3;
+
+  --primary: #f2f2f3;
+  --primary-foreground: #141416;
+  --secondary: #222226;
+  --secondary-foreground: #f2f2f3;
+  --muted: #1f1f23;
+  --muted-foreground: #8b8e96;
+  --accent: #26262b;
+  --accent-foreground: #f2f2f3;
+  --destructive: #ef6a60;
+  --border: #26262b;
+  --input: #2e2e33;
+  --ring: #f2f2f3;
+
+  --rail: #000000;
+  --rail-foreground: #ffffff;
+
+  --tone-peach: #2b211b;
+  --tone-peach-accent: #f0a06a;
+  --tone-mint: #18261c;
+  --tone-mint-accent: #5cc97b;
+  --tone-sky: #16252a;
+  --tone-sky-accent: #5ec0dc;
+  --tone-slate: #1f1f23;
+  --tone-slate-accent: #f2f2f3;
+
+  --positive: #5cc97b;
+  --negative: #ef6a60;
+
+  --chart-1: #f2f2f3;
+  --chart-2: #3a3a40;
+  --chart-3: #ef8fd2;
+  --chart-4: #c38cec;
+  --chart-5: #5b8ff0;
+
+  --sidebar: #1a1a1d;
+  --sidebar-foreground: #f2f2f3;
+  --sidebar-primary: #f2f2f3;
+  --sidebar-primary-foreground: #141416;
+  --sidebar-accent: #26262b;
+  --sidebar-accent-foreground: #f2f2f3;
+  --sidebar-border: #26262b;
+  --sidebar-ring: #f2f2f3;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* One family throughout; kept as an alias so `font-display` in shared primitives resolves. */
+  --font-display: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 14px);
+  --radius-4xl: calc(var(--radius) + 20px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
+
+  --color-tone-peach: var(--tone-peach);
+  --color-tone-peach-accent: var(--tone-peach-accent);
+  --color-tone-mint: var(--tone-mint);
+  --color-tone-mint-accent: var(--tone-mint-accent);
+  --color-tone-sky: var(--tone-sky);
+  --color-tone-sky-accent: var(--tone-sky-accent);
+  --color-tone-slate: var(--tone-slate);
+  --color-tone-slate-accent: var(--tone-slate-accent);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /* Figures line up in tables and stat rows. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

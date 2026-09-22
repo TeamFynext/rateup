@@ -10,7 +10,7 @@ interface ThemeProviderState {
 const STORAGE_KEY = "theme";
 
 const ThemeProviderContext = createContext<ThemeProviderState>({
-  theme: "system",
+  theme: "light",
   setTheme: () => {},
 });
 
@@ -19,9 +19,9 @@ function readStoredTheme(): Theme {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "light" || stored === "dark" || stored === "system") return stored;
   } catch {
-    // Storage blocked: fall through to the system preference.
+    // Storage blocked: fall through to the default.
   }
-  return "system";
+  return "light";
 }
 
 function applyTheme(theme: Theme) {
