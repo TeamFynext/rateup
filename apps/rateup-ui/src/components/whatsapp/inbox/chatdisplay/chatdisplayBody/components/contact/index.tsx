@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useImportCSVContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import CreateContactModal from "@/components/Contacts/CreateContactModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
+import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -21,7 +21,7 @@ const WaInboxContact = ({ messageContent }: { messageContent: WaSendMessageBody[
   return (
     <div className="flex flex-col gap-2 pt-2">
       <div className="flex items-center gap-2">
-        <ContactAvatar
+        <CreativeAvatar
           name={contacts[0].name ? contacts[0].name.formatted_name : contacts[0].phones[0].phone}
           size="xs"
         />
@@ -82,7 +82,7 @@ const Contact = ({
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ContactAvatar
+            <CreativeAvatar
               name={contact.name ? contact.name.formatted_name : contact.phones[0].phone}
               size="xs"
             />
@@ -160,7 +160,7 @@ const ContactInfo = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <ContactAvatar
+          <CreativeAvatar
             name={contact.name ? contact.name.formatted_name : contact.phones[0].phone}
             size="xs"
           />

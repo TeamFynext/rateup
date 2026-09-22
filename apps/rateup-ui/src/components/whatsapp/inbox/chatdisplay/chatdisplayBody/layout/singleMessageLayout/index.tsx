@@ -23,7 +23,6 @@ import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.
 import { Badge } from "@/components/ui/badge.tsx";
 import { Bubble, BubbleContent, BubbleReactions } from "@/components/ui/bubble.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
@@ -383,7 +382,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   return (
     <Message align="start">
       <MessageAvatar>
-        <ContactAvatar
+        <CreativeAvatar
           name={
             selectedContact?.name ||
             selectedContact?.whatsappUserName ||
@@ -393,6 +392,8 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
           }
           size="xs"
           src={selectedContact?.profilePic}
+          showRing={true}
+          variant="light-blue"
         />
       </MessageAvatar>
       <MessageContent>
