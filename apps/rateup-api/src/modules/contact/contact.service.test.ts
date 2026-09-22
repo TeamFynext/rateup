@@ -54,6 +54,9 @@ vi.mock("../integrations/meta/conversions.service.js", () => ({
 // The board half of the lifecycle mirror; its own behaviour is covered in
 // pipeline.test.ts, so here we only care that the contact side calls it.
 vi.mock("../pipeline/pipelineLead/lead.service.js", () => ({}));
+vi.mock("../metaAgent/metaAgent.autoRelease.js", () => ({
+  releaseThreadsOnTicketClose: vi.fn(),
+}));
 
 vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
   assignWaMessageToUser: vi.fn(),
@@ -123,6 +126,7 @@ vi.mock("../integrations/external/zoho/zoho.utils.js", () => ({
 }));
 
 import prisma from "../../utils/prisma.js";
+import { releaseThreadsOnTicketClose } from "../metaAgent/metaAgent.autoRelease.js";
 import { getChatbotDetails } from "../chatbot/chatbot.service.js";
 import { readSpreadsheetObjects, readSpreadsheetRows } from "../../utils/spreadsheet.js";
 import {
@@ -1010,6 +1014,29 @@ describe("updateContactById", () => {
     expect(data.isSpam).toBe(true);
     expect(data.spamMarkedBy).toBe(USER);
     expect(data.closedAt).toBeInstanceOf(Date);
+  });
+
+  test("closing a ticket hands its thread back to Meta AI; a spam close does not", async () => {
+    db.contact.update.mockResolvedValue(updated({ waMessageAssignStatus: "CLOSED" }));
+
+    await updateContactById(
+      "c1",
+      ORG,
+      { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
+      USER,
+      existing,
+    );
+    expect(releaseThreadsOnTicketClose).toHaveBeenCalledWith(ORG, ["c1"]);
+
+    vi.mocked(releaseThreadsOnTicketClose).mockClear();
+    await updateContactById(
+      "c1",
+      ORG,
+      { waMessageAssignStatus: WaMessageAssignStatus.SPAM } as any,
+      USER,
+      existing,
+    );
+    expect(releaseThreadsOnTicketClose).not.toHaveBeenCalled();
   });
 
   test("a spam mark is recorded in the thread as SPAM, not as CLOSED", async () => {
@@ -1961,6 +1988,18 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
     await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, "RateUp");
 
     expect(db.contact.updateMany.mock.calls[0][0].data.closedBy).toBeNull();
+  });
+
+  test("a bulk close hands every thread back to Meta AI; a bulk assign does not", async () => {
+    db.contact.findMany.mockResolvedValue([contact(), contact({ id: "c2" })]);
+
+    await bulkUpdateWaMessageAssignStatus(["c1", "c2"], ORG, WaMessageAssignStatus.RESOLVED, USER);
+    expect(releaseThreadsOnTicketClose).toHaveBeenCalledWith(ORG, ["c1", "c2"]);
+
+    vi.mocked(releaseThreadsOnTicketClose).mockClear();
+    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.ASSIGNED, USER);
+    await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.SPAM, USER);
+    expect(releaseThreadsOnTicketClose).not.toHaveBeenCalled();
   });
 
   test("a bulk SPAM request closes the ticket and flags the contact", async () => {

@@ -5,6 +5,7 @@ import { callMetaApi } from "../../wa_axios.js";
 import { getWaCatalog } from "../catalog.service.js";
 import { getShopifyInfo } from "../../../integrations/shopify/shopify.service.js";
 import shopify from "../../../integrations/shopify/shopify.config.js";
+import { getActiveShopifySession } from "../../../integrations/shopify/shopify.session.js";
 import { Prisma } from "../../../../../generated/prisma/client.js";
 import type { GraphQLClientResponse } from "@shopify/shopify-api";
 import {
@@ -635,7 +636,8 @@ interface ShopifyProductNode {
   vendor: string;
   handle: string;
   onlineStoreUrl?: string | null;
-  images: { edges: { node: { url: string } }[] };
+  /** `media` aliased; non-image media come back as empty nodes. */
+  images: { edges: { node: { image?: { url: string } | null } }[] };
   variants: { edges: { node: ShopifyProductVariantNode }[] };
 }
 
@@ -650,6 +652,13 @@ interface ShopifyShopCurrencyData {
   shop: { currencyCode?: string };
 }
 
+/** Up to five image URLs of a product, in media order. */
+function shopifyProductImages(product: ShopifyProductNode) {
+  return (product.images?.edges ?? [])
+    .flatMap((e) => (e.node.image?.url ? [{ url: e.node.image.url }] : []))
+    .slice(0, 5);
+}
+
 // Fetches all Shopify products, maps them to catalogProductCore format,
 // and filters out any variants already imported into this catalog.
 export async function getShopifyProductsForCatalog(orgId: string, catalogId: string) {
@@ -659,7 +668,7 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
   }
   if (!shopify) throw new Error("Shopify integration is not configured");
 
-  const session = shopifyInfo.credential.session;
+  const session = await getActiveShopifySession(shopifyInfo);
   const client = new shopify.clients.Graphql({ session });
 
   const shopData: GraphQLClientResponse<ShopifyShopCurrencyData> =
@@ -684,8 +693,8 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
               vendor
               handle
               onlineStoreUrl
-              images(first: 5) {
-                edges { node { url } }
+              images: media(first: 10) {
+                edges { node { ... on MediaImage { image { url } } } }
               }
               variants(first: 100) {
                 edges {
@@ -726,9 +735,7 @@ export async function getShopifyProductsForCatalog(orgId: string, catalogId: str
   // Map each unimported variant to a catalogProductCore item
   const catalogItems: CatalogProductCoreInput[] = [];
   for (const product of allProducts) {
-    const images = (product.images?.edges ?? []).map((e) => ({
-      url: e.node.url,
-    }));
+    const images = shopifyProductImages(product);
     if (images.length === 0) continue; // Meta requires at least one image
 
     const productLink: string =
@@ -778,7 +785,7 @@ export async function syncShopifyProductsToCatalog(
   }
   if (!shopify) throw new Error("Shopify integration is not configured");
 
-  const session = shopifyInfo.credential.session;
+  const session = await getActiveShopifySession(shopifyInfo);
   const client = new shopify.clients.Graphql({ session });
 
   const shopData: GraphQLClientResponse<ShopifyShopCurrencyData> =
@@ -803,8 +810,8 @@ export async function syncShopifyProductsToCatalog(
               vendor
               handle
               onlineStoreUrl
-              images(first: 5) {
-                edges { node { url } }
+              images: media(first: 10) {
+                edges { node { ... on MediaImage { image { url } } } }
               }
               variants(first: 100) {
                 edges {
@@ -864,9 +871,7 @@ export async function syncShopifyProductsToCatalog(
     }
 
     const { variant: v, product } = match;
-    const images = (product.images?.edges ?? []).map((e) => ({
-      url: e.node.url,
-    }));
+    const images = shopifyProductImages(product);
     if (images.length === 0) continue;
 
     const productLink: string =

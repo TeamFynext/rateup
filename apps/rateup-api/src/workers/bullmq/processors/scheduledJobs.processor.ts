@@ -19,6 +19,7 @@ import {
   sendShopifySurveyCronAction,
   sendTemplateForShopifyAbandonedCheckouts,
 } from "../../../modules/integrations/shopify/shopify.service.js";
+import { renewShopifyTokensCronAction } from "../../../modules/integrations/shopify/shopify.session.js";
 import { refreshZohoTokensAndWebhooks } from "../../../modules/integrations/external/zoho/zoho.service.js";
 import {
   processDripCampaigns,
@@ -76,6 +77,11 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
       "sendTemplateForShopifyAbandonedCheckouts",
       sendTemplateForShopifyAbandonedCheckouts,
     );
+  },
+
+  shopifyTokenRenewal: async () => {
+    log.info("Running daily JOB --> Shopify offline token renewal");
+    await safeRun("renewShopifyTokensCronAction", renewShopifyTokensCronAction);
   },
 
   zohoRefresh: async () => {

@@ -1,4 +1,5 @@
 import shopify from "./shopify.config.js";
+import { getActiveShopifySession } from "./shopify.session.js";
 import { getShopifyInfo } from "./shopify.service.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
@@ -51,7 +52,7 @@ interface BasicCodeDiscountInput {
   code: string;
   startsAt: string;
   endsAt?: string;
-  customerSelection: { all: boolean };
+  context: { all: "ALL" };
   customerGets: { value: Record<string, unknown>; items: { all: boolean } };
   minimumRequirement?: { subtotal: { greaterThanOrEqualToSubtotal: string } };
   appliesOncePerCustomer: boolean;
@@ -207,7 +208,8 @@ export function buildBasicCodeDiscountInput(params: {
     code: params.code,
     startsAt: window.startsAt.toISOString(),
     ...(window.endsAt ? { endsAt: window.endsAt.toISOString() } : {}),
-    customerSelection: { all: true },
+    // `customerSelection` was removed from DiscountCodeBasicInput; `context` replaces it.
+    context: { all: "ALL" },
     customerGets: { value: discountValue, items: { all: true } },
     ...(minimumSpend && minimumSpend > 0
       ? {
@@ -316,8 +318,10 @@ export async function syncRedemptionToShopify(redemptionId: string): Promise<Sho
   if (!shopify) return { status: "skipped", reason: "shopify_not_configured" };
 
   const integration = await getShopifyInfo(orgId);
-  const session = integration?.credential?.session;
-  if (!session?.shop) return { status: "skipped", reason: "shop_not_connected" };
+  if (!integration?.credential?.session?.shop) {
+    return { status: "skipped", reason: "shop_not_connected" };
+  }
+  const session = await getActiveShopifySession(integration);
 
   try {
     const client = new shopify.clients.Graphql({ session });
@@ -374,8 +378,8 @@ export async function deactivateRedemptionDiscount(redemptionId: string): Promis
 
   try {
     const integration = await getShopifyInfo(orgId);
-    const session = integration?.credential?.session;
-    if (!session?.shop) return false;
+    if (!integration?.credential?.session?.shop) return false;
+    const session = await getActiveShopifySession(integration);
 
     const client = new shopify.clients.Graphql({ session });
     await client.request(DEACTIVATE_MUTATION, { variables: { id: discountId } });

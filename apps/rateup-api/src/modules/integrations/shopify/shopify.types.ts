@@ -208,78 +208,10 @@ export interface LineItemsEntity {
 /**
  * Shapes for the Shopify Admin API responses this module reads.
  *
- * `@shopify/shopify-api` types the REST client's `response.body` as `unknown`
- * (the payload depends on the path requested) and returns GraphQL documents
- * untyped. These name only the fields Rateup actually reads; each carries an
- * index signature for the rest of the payload.
+ * `@shopify/shopify-api` returns GraphQL documents untyped. These name only the
+ * fields Rateup actually reads; some carry an index signature for the rest of
+ * the payload.
  */
-
-/** A line item on an order or draft order returned by the Admin API. */
-export interface ShopifyApiLineItem {
-  id?: number | string;
-  title?: string;
-  quantity?: number;
-  price?: string | number;
-  variant_id?: number | string;
-  fulfillment_status?: string | null;
-  [field: string]: unknown;
-}
-
-export interface ShopifyApiOrder {
-  id?: number | string;
-  name?: string;
-  order_number?: number;
-  financial_status?: string;
-  total_price?: string;
-  currency?: string;
-  line_items?: ShopifyApiLineItem[];
-  [field: string]: unknown;
-}
-
-export interface ShopifyApiDraftOrder {
-  id?: number | string;
-  order_id?: number | string | null;
-  name?: string;
-  invoice_url?: string;
-  total_price?: string;
-  currency?: string;
-  line_items?: ShopifyApiLineItem[];
-  [field: string]: unknown;
-}
-
-export interface ShopifyApiTransaction {
-  id?: number | string;
-  status?: string;
-  kind?: string;
-  amount?: string;
-  [field: string]: unknown;
-}
-
-export interface ShopifyApiProduct {
-  id?: number | string;
-  title?: string;
-  image?: { src?: string } | null;
-  images?: Array<{ src?: string }>;
-  [field: string]: unknown;
-}
-
-/**
- * A REST response body, keyed by the resource the requested path returns. Which
- * key is present depends on the endpoint that was called.
- */
-export interface ShopifyRestBody {
-  order?: ShopifyApiOrder;
-  draft_order?: ShopifyApiDraftOrder;
-  transaction?: ShopifyApiTransaction;
-  product?: ShopifyApiProduct;
-  shipping_rates?: Array<{ handle?: string; title?: string; price?: string }>;
-  [resource: string]: unknown;
-}
-
-/** A REST call's return value, narrowed to the bodies used in this module. */
-export interface ShopifyRestResponse {
-  body: ShopifyRestBody;
-}
 
 /** A node of a GraphQL connection, as returned under `edges[].node`. */
 export interface ShopifyGraphqlNode {
@@ -375,34 +307,59 @@ export interface ShopifyProductCreateData {
   };
 }
 
-/** A draft-order or order line item Rateup sends to the Admin API. */
-export interface ShopifyOrderLineItemInput {
-  variant_id?: number | string;
-  quantity?: number;
-  title?: string;
-  price?: string | number;
+/** The REST-shaped shipping address the WhatsApp address flow stores. */
+export interface ShopifyShippingAddressInput {
+  first_name?: string;
+  last_name?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  province?: string;
+  zip?: string;
+  country_code?: string;
+  phone?: string;
 }
 
-/** The `draft_order` create payload. */
-export interface ShopifyDraftOrderPayload {
-  draft_order: {
-    line_items: ShopifyOrderLineItemInput[];
-    shipping_address?: Record<string, unknown>;
-    shipping_line?: { custom: boolean; title: string; price: string };
-    note?: string;
+export interface ShopifyUserError {
+  field?: string[] | null;
+  message: string;
+}
+
+/** `legacyResourceId` is an UnsignedInt64, which the API serializes as a string. */
+export interface ShopifyDraftOrderCreateData {
+  draftOrderCreate: {
+    draftOrder: { legacyResourceId: string; invoiceUrl: string | null } | null;
+    userErrors: ShopifyUserError[];
   };
 }
 
-/** The `order` create payload used as a fallback when draft orders fail. */
-export interface ShopifyOrderPayload {
-  order: {
-    line_items: ShopifyOrderLineItemInput[];
-    financial_status?: string;
-    shipping_address?: Record<string, unknown>;
-    shipping_lines?: Array<{ custom?: boolean; title: string; price: string; code?: string }>;
-    note?: string;
-    phone?: string;
+export interface ShopifyOrderCreateData {
+  orderCreate: {
+    order: { legacyResourceId: string; statusPageUrl: string } | null;
+    userErrors: ShopifyUserError[];
   };
+}
+
+export interface ShopifyDraftOrderCompleteData {
+  draftOrderComplete: {
+    draftOrder: { order: { legacyResourceId: string } | null } | null;
+    userErrors: ShopifyUserError[];
+  };
+}
+
+export interface ShopifyOrderMarkAsPaidData {
+  orderMarkAsPaid: {
+    order: { legacyResourceId: string; displayFinancialStatus: string | null } | null;
+    userErrors: ShopifyUserError[];
+  };
+}
+
+export interface ShopifyDraftOrderLookupData {
+  draftOrder: { order: { legacyResourceId: string } | null } | null;
+}
+
+export interface ShopifyProductImageData {
+  product: { featuredMedia: { preview: { image: { url: string } | null } | null } | null } | null;
 }
 
 /** `draftOrderAvailableDeliveryOptions` query result. */

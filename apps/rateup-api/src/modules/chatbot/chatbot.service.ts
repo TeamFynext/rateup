@@ -67,15 +67,24 @@ async function getAiAllowance(orgId: string) {
     },
   });
 
-  // A malformed allowance (a plan that stores something other than a number) is
-  // left to the remote service rather than turned into a refusal here — refusing
-  // on a shape this module does not own would take working chatbots down.
+  // One pool: the plan stores input (prompt) and output (completion) budgets
+  // separately, but billing shows a single "AI tokens" meter, so the refusal is
+  // on the total. Checking each half let a chatbot stop while the meter still
+  // showed room. A malformed allowance (a plan that stores something other than
+  // a number) is left to the remote service rather than turned into a refusal
+  // here — refusing on a shape this module does not own would take working
+  // chatbots down.
+  // Both halves must be real numbers: `null + 50000` is 50000 in JS, which would
+  // quietly turn a malformed plan into a real limit.
+  const { promptTokens, completionTokens } = allowedTokens;
+  const allowedTotal =
+    Number.isFinite(promptTokens) && Number.isFinite(completionTokens)
+      ? promptTokens + completionTokens
+      : Number.NaN;
   if (
     usedTokens &&
-    ((Number.isFinite(allowedTokens.promptTokens) &&
-      usedTokens.aiPromptTokensCount >= allowedTokens.promptTokens) ||
-      (Number.isFinite(allowedTokens.completionTokens) &&
-        usedTokens.aiCompletionTokensCount >= allowedTokens.completionTokens))
+    Number.isFinite(allowedTotal) &&
+    usedTokens.aiPromptTokensCount + usedTokens.aiCompletionTokensCount >= allowedTotal
   ) {
     throw new AiAllowanceError(`The AI token allowance for org ${orgId} is exhausted`);
   }

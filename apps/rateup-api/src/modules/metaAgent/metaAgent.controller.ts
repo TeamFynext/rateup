@@ -5,6 +5,7 @@ import * as service from "./metaAgent.service.js";
 import { MetaAgentValidationError } from "./metaAgent.service.js";
 import {
   AgentEventBody,
+  AgentInboxSettingsBody,
   AgentSettingsBody,
   AgentTestBody,
   BusinessInfoBody,
@@ -422,6 +423,10 @@ export const getAgentEventStatusHandler = wrap<
 export const testAgentHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: AgentTestBody }>
 >((req, orgId) => service.testAgent(orgId, req.params.whatsappSettingsId, req.body));
+
+export const updateInboxSettingsHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: AgentInboxSettingsBody }>
+>((req, orgId) => service.updateInboxSettings(orgId, req.params.whatsappSettingsId, req.body));
 
 // ---- operate: thread control ----
 export const setThreadControlHandler = wrap<

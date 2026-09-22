@@ -42,8 +42,35 @@ dayjs.extend(customParseFormat);
 
 export const ratingEmoji = "⭐️";
 
+/**
+ * Whether a send was written by the Meta Business Agent (Meta AI) rather than a
+ * person or our own automation. Meta tags the agent's sends — the echo and every
+ * status for it — with `biz_opaque_callback_data` of `{"originator":"bizai",…}`.
+ */
+export function isMetaAiOriginated(bizOpaqueCallbackData: unknown): boolean {
+  if (typeof bizOpaqueCallbackData !== "string" || !bizOpaqueCallbackData) return false;
+  try {
+    const parsed: unknown = JSON.parse(bizOpaqueCallbackData);
+    return (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      (parsed as { originator?: unknown }).originator === "bizai"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function getEventType(data: WaMessageBody) {
   if (data.object === "whatsapp_business_account") {
+    // Checked first: a standby change nests its messages and statuses under
+    // `value.standby`, so every branch below would read it as empty.
+    if (data.entry[0].changes[0].field === WaEvent.Standby) {
+      return WaEvent.Standby;
+    }
+    if (data.entry[0].changes[0].field === WaEvent.MessagingHandovers) {
+      return WaEvent.MessagingHandovers;
+    }
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
     } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
@@ -600,34 +627,31 @@ export async function convertNodeToWhatsAppMessage(
   }
 }
 export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: string) => {
-  let orgId = process.env.ROOT_ORG;
-
   const order = await prisma.waCatalogOrder.findFirst({
     where: { transactionId: refrenceId },
     include: { catalog: true },
   });
 
-  if (order) {
-    orgId = order.catalog.orgId;
-    await prisma.waCatalogOrder.update({
-      where: { id: order.id },
-      data: { paymentStatus: "PAID", orderStage: "COMPLETED" },
-    });
+  // The order is the only thing that says which org was paid. Without it there is
+  // no org to answer from — this used to fall back to ROOT_ORG, which sent the
+  // confirmation from RateUp's own number with RateUp's template.
+  if (!order) {
+    log.warn({ refrenceId }, "No catalog order for this payment; not sending a confirmation");
+    return;
+  }
 
-    if (order.shopifyDraftOrderId) {
-      try {
-        const productsTotal = order.products.reduce(
-          (sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 1),
-          0,
-        );
-        const deliveryCharge = Number(order.deliveryOption?.charge || 0);
-        const orderTotal = productsTotal + deliveryCharge;
+  const orgId = order.catalog.orgId;
+  await prisma.waCatalogOrder.update({
+    where: { id: order.id },
+    data: { paymentStatus: "PAID", orderStage: "COMPLETED" },
+  });
 
-        // We multiply by 100 because captureShopifyOrderPayment divides by 100
-        await captureShopifyOrderPayment(orgId, order.shopifyDraftOrderId, orderTotal * 100);
-      } catch (e) {
-        log.error({ err: e }, "Failed to capture Shopify payment");
-      }
+  if (order.shopifyDraftOrderId) {
+    try {
+      // Marks the order paid in full: the WhatsApp payment covered its total.
+      await captureShopifyOrderPayment(orgId, order.shopifyDraftOrderId);
+    } catch (e) {
+      log.error({ err: e }, "Failed to capture Shopify payment");
     }
   }
 
@@ -661,10 +685,6 @@ export const handlePaymentConfirmation = async (phoneNo: string, refrenceId: str
       },
     },
   };
-  if (!orgId) {
-    log.error({ refrenceId }, "No orgId found for payment confirmation");
-    throw new Error("No orgId found for payment confirmation");
-  }
   await sendMessage(orgId, templateMessage);
 };
 export function getMessageObject(data: WaMessageBody) {

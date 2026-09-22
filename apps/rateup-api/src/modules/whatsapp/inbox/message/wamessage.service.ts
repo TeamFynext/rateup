@@ -775,7 +775,10 @@ export async function filterChats(
           -- was cached forever and a ticket closed since first load kept its old
           -- status client-side. Contact has no updatedAt column; the ticket's own
           -- is what changes when it moves.
-          COALESCE(conv."updatedAt", conv."createdAt") AS "updatedAt",
+          --
+          -- Who holds the thread under Meta AI thread control lives on the contact,
+          -- so its change time counts too, or a handover never refreshed the row.
+          GREATEST(COALESCE(conv."updatedAt", conv."createdAt"), c."metaAgentThreadOwnerAt") AS "updatedAt",
           conv."createdAt"         AS "ticketCreatedAt",
           conv."closedAt"          AS "ticketClosedAt",
           conv."reopenCount"       AS "ticketReopenCount",
@@ -793,6 +796,32 @@ export async function filterChats(
           c."blockedOnWhatsApp",
           c."isSpam",
           c."spamMarkedAt",
+          c."metaAgentThreadOwner",
+          c."metaAgentThreadOwnerAt",
+          c."metaAgentHandoverReason",
+          -- Whether Meta AI has been part of this customer's conversation — its
+          -- replies are stored with Meta's originator=bizai tag — on a number
+          -- that still has the agent. Lets the inbox offer a hand-back before any
+          -- handover has been seen, without offering one on every chat of that number.
+          (
+            EXISTS (
+              SELECT 1
+              FROM "MetaBusinessAgent" mba
+              JOIN "WhatsappSettings" mws ON mws.id = mba."whatsappSettingsId"
+              WHERE mba."orgId" = c."orgId"
+                AND mba.status = 'ONBOARDED'
+                AND (
+                  c."lastReceivedMetadata"->>'phone_number_id' IS NULL
+                  OR mws."phoneId" = c."lastReceivedMetadata"->>'phone_number_id'
+                )
+            )
+            AND EXISTS (
+              SELECT 1
+              FROM "WaMessage" aiw
+              WHERE aiw."contactId" = c.id
+                AND aiw."messageBody"->'send'->>'biz_opaque_callback_data' LIKE '%"originator":"bizai"%'
+            )
+          ) AS "metaAgentInvolved",
           conv."isFavorite",
           c."source",
           c."igsId",
@@ -1097,6 +1126,14 @@ export async function exportWhatsapChats(
     templatename: string;
   }>
 > {
+  // $1 is the org id. The dates are user input, so they are always bound as
+  // parameters and never written into the SQL text.
+  const params: string[] = [orgId];
+  const bind = (value: string) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+
   function extendedWhereClause(): string {
     let extendedWhereClause = "";
 
@@ -1105,20 +1142,20 @@ export async function exportWhatsapChats(
       switch (constraints.date.type) {
         case DateType.BETWEEN:
           extendedWhereClause += `
-          AND wm."createdAt" >= '${constraints.date.between.from}'
-          AND wm."createdAt" < '${dayjs(constraints.date.between.to)
-            .add(1, "day")
-            .format("YYYY-MM-DD")}'
+          AND wm."createdAt" >= ${bind(constraints.date.between.from)}::date
+          AND wm."createdAt" < ${bind(
+            dayjs(constraints.date.between.to).add(1, "day").format("YYYY-MM-DD"),
+          )}::date
           `;
           break;
         case DateType.BEFORE:
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? "<=" : "<"} '${constraints.date.before}' `;
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? "<=" : "<"} ${bind(constraints.date.before)} `;
           break;
         case DateType.AFTER:
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? ">=" : ">"} '${constraints.date.after}' `;
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? ">=" : ">"} ${bind(constraints.date.after)} `;
           break;
         case DateType.ON:
-          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') = '${constraints.date.on}' `;
+          extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') = ${bind(constraints.date.on)} `;
           break;
       }
     }
@@ -1172,7 +1209,7 @@ export async function exportWhatsapChats(
       wm."createdAt" ASC
     ${limit != null ? `LIMIT ${Number(limit)} OFFSET ${Number(offset ?? 0)}` : ""}`;
 
-  const result = await prisma.$queryRawUnsafe(query, orgId);
+  const result = await prisma.$queryRawUnsafe(query, ...params);
   return result as Array<{
     date: string;
     from: string;

@@ -18,6 +18,7 @@ vi.mock("../../utils/prisma.js", () => ({
       delete: vi.fn(),
     },
     survey: { updateMany: vi.fn() },
+    $executeRaw: vi.fn(),
   },
 }));
 
@@ -210,6 +211,35 @@ describe("createIntegration", () => {
 // ===========================================================================
 
 describe("updateIntegrationByName", () => {
+  test("a Shopify credential write never replaces the stored session", async () => {
+    const execRaw = (prisma as unknown as { $executeRaw: Mock }).$executeRaw;
+
+    await updateIntegrationByName(ORG, "shopify", {
+      credential: {
+        session: {
+          shop: "demo.myshopify.com",
+          accessToken: "shpat_stale",
+          refreshToken: "shprt_stale",
+        },
+        shopifySurveys: [],
+        isWebhookRegistered: true,
+      },
+      active: true,
+    });
+
+    // The rest of the credential goes through one statement that carries the stored session over…
+    const [sql, credentialJson] = execRaw.mock.calls[0];
+    expect((sql as string[]).join("?")).toContain(
+      "jsonb_build_object('session', credential->'session')",
+    );
+    expect(JSON.parse(credentialJson as string)).toEqual({
+      shopifySurveys: [],
+      isWebhookRegistered: true,
+    });
+    // …and the ordinary update carries no credential at all.
+    expect(db.integration.update.mock.calls[0][0].data).toEqual({ active: true });
+  });
+
   test("selects the row by the caller's org and the name", async () => {
     await updateIntegrationByName(ORG, "amelia", { credential: { a: 1 } });
 

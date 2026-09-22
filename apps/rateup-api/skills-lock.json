@@ -6,6 +6,18 @@
       "sourceType": "github",
       "skillPath": "skills/fastify/SKILL.md",
       "computedHash": "b3a771fa66bc5d8dac0af14e99e51fca2ff4a9add56f09d986778528bdf72c4c"
+    },
+    "shopify-dev": {
+      "source": "Shopify/shopify-ai-toolkit",
+      "sourceType": "github",
+      "skillPath": "skills/shopify-dev/SKILL.md",
+      "computedHash": "8036a37a698dfef04e7589f45f2ca2ef8c540fe267c2c75fb03c82e52547e4eb"
+    },
+    "shopify-use-shopify-cli": {
+      "source": "Shopify/shopify-ai-toolkit",
+      "sourceType": "github",
+      "skillPath": "skills/shopify-use-shopify-cli/SKILL.md",
+      "computedHash": "96bb8dcfd9be314a8d0e5eb4bc5a433ba65dc732d9e6827b8d6c0e67cf8ea984"
     }
   }
 }
