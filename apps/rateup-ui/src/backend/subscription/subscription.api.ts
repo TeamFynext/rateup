@@ -11,15 +11,8 @@ export async function getSubscription(orgId: string) {
 export async function getAllSubscriptions() {
   return (await axiosClient.get(`${SUBSCRIPTION_URL}/all`)).data as Array<Subscription>;
 }
-export async function updateSubscription(
-  orgId: string,
-  updatedData: object,
-  isMenuPlanChange: boolean = false,
-) {
-  const url = isMenuPlanChange
-    ? `${SUBSCRIPTION_URL}/menu/${orgId}`
-    : `${SUBSCRIPTION_URL}/${orgId}`;
-  return (await axiosClient.put(url, updatedData)).data;
+export async function updateSubscription(orgId: string, updatedData: object) {
+  return (await axiosClient.put(`${SUBSCRIPTION_URL}/${orgId}`, updatedData)).data;
 }
 
 export async function getMessageStats(orgId: string, filter = "") {
