@@ -65,6 +65,7 @@ export interface WaPhoneNumberNameUpdate {
 /** Every payload shape a webhook `changes[].value` can carry. */
 export type WaWebhookChangeValue =
   | WaReceiveMessageBody
+  | WaStandbyChangeValue
   | LeadGenBody
   | WaTemplateStatusChange
   | WaTemplateCategoryChange
@@ -190,6 +191,8 @@ export interface WaReceiveMessageBody {
       revoke?: {
         original_message_id: string;
       };
+      /** Sender's own tag. Meta AI replies carry `{"originator":"bizai",…}`. */
+      biz_opaque_callback_data?: string;
     },
   ];
   statuses: [
@@ -227,8 +230,42 @@ export interface WaReceiveMessageBody {
       };
       /** Present on a failed status update; the same shape as a Graph API error. */
       errors?: WaGraphApiErrorDetail[];
+      /** Echoed from the send. Meta AI replies carry `{"originator":"bizai",…}`. */
+      biz_opaque_callback_data?: string;
     },
   ];
+}
+
+/**
+ * A reply Meta sent on a standby thread — nested, unlike an `smb_message_echoes`
+ * echo: the id and time sit on the wrapper and the send itself under `message`.
+ */
+export interface WaStandbyEcho {
+  id: string;
+  timestamp: string;
+  message: {
+    to: string;
+    recipient?: string;
+    type: WaMessageTypes;
+    recipient_type?: string;
+    biz_opaque_callback_data?: string;
+    [key: string]: unknown;
+  };
+}
+
+/**
+ * `field: "standby"` — a thread another app holds (the Meta Business Agent).
+ * Each arm is what the regular webhook would carry at the top of `value`.
+ */
+export interface WaStandbyChangeValue {
+  messaging_product: "whatsapp";
+  metadata: WaReceiveMessageBody["metadata"];
+  standby: {
+    contacts?: WaReceiveMessageBody["contacts"];
+    messages?: WaReceiveMessageBody["messages"];
+    message_echoes?: WaStandbyEcho[];
+    statuses?: WaReceiveMessageBody["statuses"];
+  };
 }
 
 export interface WaMessageEchoBody {

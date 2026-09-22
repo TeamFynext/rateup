@@ -140,5 +140,5 @@ nlp_auth.json
 docker-compose.yaml
 
 # Shopify CLI config for each developer's own app (URLs differ per machine).
-# The production app's config, shopify.app.production.toml, is committed.
+# The shared configs, shopify.app.dev.toml and shopify.app.production.toml, are committed.
 shopify.app.toml

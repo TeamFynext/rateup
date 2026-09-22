@@ -3,6 +3,7 @@ import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import { ContactNotFoundError } from "./contact.errors.js";
 import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "./contact.channel.js";
+import { releaseThreadsOnTicketClose } from "../metaAgent/metaAgent.autoRelease.js";
 export { ContactNotFoundError };
 import {
   ContactCore,
@@ -862,6 +863,12 @@ export async function updateContactById(
 
     return updated;
   });
+
+  // A closed ticket ends the escalation: Meta AI takes the customer's next
+  // conversation, where the agent is set to. Spam is left with staff.
+  if (closing && !markingSpam) {
+    await releaseThreadsOnTicketClose(orgId, [contactId]);
+  }
 
   // InboxStats Hook
   const isFirstReceive =
@@ -2069,6 +2076,13 @@ export async function bulkUpdateWaMessageAssignStatus(
       });
     }
   });
+
+  if (closing && !markingSpam) {
+    await releaseThreadsOnTicketClose(
+      orgId,
+      contacts.map((c) => c.id),
+    );
+  }
 
   const newField = mapStatusToField(waMessageAssignStatus);
   const transitions: Partial<Record<StatsField, number>> = {};

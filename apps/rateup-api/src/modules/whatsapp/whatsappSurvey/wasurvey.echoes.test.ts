@@ -4,6 +4,7 @@ vi.mock("../../../utils/prisma.js", () => ({ default: {}, excludeFields: vi.fn()
 
 const handleWaMessages = vi.fn();
 const getWaSettingsByPhoneId = vi.fn();
+const getWaMessageByMessageId = vi.fn();
 
 vi.mock("../inbox/message/wamessage.controller.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -12,6 +13,10 @@ vi.mock("../inbox/message/wamessage.controller.js", async (importOriginal) => ({
 vi.mock("../settings/wa_settings.service.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   getWaSettingsByPhoneId,
+}));
+vi.mock("../inbox/message/wamessage.service.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  getWaMessageByMessageId,
 }));
 
 const { whatsappEventHandler } = await import("./wasurvey.controller.js");
@@ -62,6 +67,7 @@ const reply = () => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  getWaMessageByMessageId.mockResolvedValue(null);
   getWaSettingsByPhoneId.mockResolvedValue({
     orgId: "org-1",
     phoneId: PHONE_ID,

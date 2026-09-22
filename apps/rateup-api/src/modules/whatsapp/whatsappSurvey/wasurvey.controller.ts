@@ -10,6 +10,7 @@ import {
   getEventType,
   getMessageObject,
   handlePaymentConfirmation,
+  isMetaAiOriginated,
   parseMessage,
   parseStartMessage,
   parseToWhatsAppFormat,
@@ -55,6 +56,7 @@ import {
 import type {
   WaAccountUpdate,
   WaPhoneNumberNameUpdate,
+  WaStandbyChangeValue,
   WaTemplateCategoryChange,
   WaTemplateSendComponent,
   WaTemplateStatusChange,
@@ -75,9 +77,17 @@ import {
 import { signFlowToken } from "../flows/flowToken.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { recordMetaAiTokenUsage } from "../../metaAgent/metaAgent.usage.js";
+import {
+  metaTimestampToDate,
+  resolveHandoverOwner,
+  setMetaAgentThreadOwner,
+  type WaMessagingHandoverValue,
+} from "../../metaAgent/metaAgent.threadOwner.js";
 import {
   CampaignParticipant,
   Contact,
+  MetaAgentThreadOwner,
   PlatformType,
   WhatsappSettings,
 } from "../../../../generated/prisma/client.js";
@@ -214,6 +224,14 @@ export async function whatsappEventHandler(request: FastifyRequest, reply: Fasti
         await handleSMBMessageEchoes(body);
         break;
 
+      case WaEvent.Standby:
+        await handleStandbyEvent(body);
+        break;
+
+      case WaEvent.MessagingHandovers:
+        await handleMessagingHandoversEvent(body);
+        break;
+
       default:
         log.warn("Unhandled event type: %s", eventType);
     }
@@ -260,7 +278,7 @@ async function handleCapturedEvent(body: WaMessageBody) {
 }
 
 // Handler: Manage incoming WhatsApp messages
-async function handleMessageEvent(body: WaMessageBody) {
+async function handleMessageEvent(body: WaMessageBody, options: InboundOptions = {}) {
   log.trace("messageObject => %o", getMessageObject(body));
 
   for (const entry of body.entry || []) {
@@ -274,7 +292,7 @@ async function handleMessageEvent(body: WaMessageBody) {
       }
 
       await safeAsyncOperation(
-        () => whatsappMessageHandler(waSettings, body),
+        () => whatsappMessageHandler(waSettings, body, options),
         (error) => {
           log.error({ err: error }, "Error processing WhatsApp message for phone_id %s", phoneId);
         },
@@ -317,7 +335,14 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
               await handleRevokedMessage(waSettings, message);
               continue;
             }
-            await handleWaMessages(
+            // Meta can deliver the same echo more than once; the id is Meta's own.
+            if (message.id && (await getWaMessageByMessageId(message.id))) continue;
+
+            // A Meta AI reply is automation, not something a person typed in the
+            // WA app. The tag stays on the stored body, which is what the inbox
+            // reads to label it as the AI's.
+            const byMetaAi = isMetaAiOriginated(message.biz_opaque_callback_data);
+            const stored = await handleWaMessages(
               "send",
               message,
               message.to,
@@ -326,7 +351,21 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
               channelIdentifier,
               undefined,
               message.id,
+              undefined,
+              false,
+              null,
+              byMetaAi ? "AUTOMATED" : "INBOX",
+              byMetaAi,
             );
+            // After the store, so a redelivered echo (skipped above) is never
+            // counted twice and a reply that failed to save is not counted at all.
+            if (byMetaAi && stored?.contactId) {
+              await recordMetaAiTokenUsage({
+                orgId: waSettings.orgId,
+                contactId: stored.contactId,
+                replyBody: message,
+              });
+            }
           } catch (error) {
             log.error(
               { err: error },
@@ -334,6 +373,137 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
             );
           }
         }
+      }
+    }
+  }
+}
+
+/**
+ * A `standby` change: a thread the Meta Business Agent (Meta AI) is answering.
+ * Meta nests what would normally be the whole `value` under `value.standby`, so
+ * each arm is unwrapped into the regular webhook shape and handed to the handler
+ * that already stores it:
+ *
+ * - `messages` — the customer's side. Stored only: the agent is replying, and
+ *   our own automations answering too would talk over it.
+ * - `message_echoes` — the agent's replies, tagged `originator: bizai`. Stored as
+ *   automated sends, which the inbox labels as Meta AI.
+ * - `statuses` — delivery for those replies, same as any other send.
+ *
+ * One message or status per synthetic body, because the downstream handlers
+ * only ever read the first.
+ */
+async function handleStandbyEvent(body: WaMessageBody) {
+  for (const entry of body.entry || []) {
+    for (const change of entry.changes || []) {
+      const value = change.value as WaStandbyChangeValue;
+      const standby = value?.standby;
+      if (!standby) continue;
+
+      // Meta only routes a thread to standby while the agent holds it, so any
+      // traffic here says the AI is answering — even if we never saw a handover.
+      await markStandbyThreadsAsAi(value);
+
+      const base = { messaging_product: value.messaging_product, metadata: value.metadata };
+      const wrap = (field: string, inner: object) =>
+        ({
+          object: body.object,
+          entry: [{ id: entry.id, changes: [{ field, value: { ...base, ...inner } }] }],
+        }) as unknown as WaMessageBody;
+
+      for (const message of standby.messages ?? []) {
+        await handleMessageEvent(
+          wrap(WaEvent.Message, { contacts: standby.contacts, messages: [message] }),
+          { storeOnly: true },
+        );
+      }
+
+      if (standby.message_echoes?.length) {
+        // Flattened to the `smb_message_echoes` shape: id and time from the
+        // wrapper, the send itself from `message`, `from` as the business number.
+        const echoes = standby.message_echoes.map((echo) => ({
+          ...echo.message,
+          id: echo.id,
+          timestamp: echo.timestamp,
+          from: value.metadata?.display_phone_number,
+        }));
+        await handleSMBMessageEchoes(wrap(WaEvent.SMBMessageEchoes, { message_echoes: echoes }));
+      }
+
+      for (const status of standby.statuses ?? []) {
+        await handleMessageStatusEvent(
+          wrap(status.status, { contacts: standby.contacts, statuses: [status] }),
+          status.status as WaEvent,
+        );
+      }
+    }
+  }
+}
+
+/** Each customer seen in a standby change, at the latest moment seen, is on Meta AI. */
+async function markStandbyThreadsAsAi(value: WaStandbyChangeValue) {
+  const phoneId = value?.metadata?.phone_number_id;
+  if (!phoneId) return;
+  const latest = new Map<string, Date>();
+  const note = (phone: string | undefined, timestamp: string | undefined) => {
+    if (!phone) return;
+    const at = metaTimestampToDate(timestamp);
+    const seen = latest.get(phone);
+    if (!seen || seen < at) latest.set(phone, at);
+  };
+  for (const message of value.standby.messages ?? []) note(message.from, message.timestamp);
+  for (const echo of value.standby.message_echoes ?? []) note(echo.message?.to, echo.timestamp);
+  if (latest.size === 0) return;
+
+  const waSettings = await getWaSettingsByPhoneId(phoneId);
+  if (!waSettings) return;
+  for (const [phone, at] of latest) {
+    try {
+      await setMetaAgentThreadOwner({
+        orgId: waSettings.orgId,
+        phone,
+        owner: MetaAgentThreadOwner.AI,
+        at,
+      });
+    } catch (error) {
+      log.error({ err: error, phone }, "Failed to mark a standby thread as held by Meta AI");
+    }
+  }
+}
+
+/**
+ * A `messaging_handovers` change: a thread moved between the Meta Business Agent
+ * and a person — e.g. `control_passed` to `escalation` when the customer asks for
+ * a human. Recorded on the contact so the inbox can say who is answering.
+ */
+async function handleMessagingHandoversEvent(body: WaMessageBody) {
+  for (const entry of body.entry || []) {
+    for (const change of entry.changes || []) {
+      const value = change.value as unknown as WaMessagingHandoverValue;
+      const phoneId = value?.recipient?.phone_number_id ?? value?.metadata?.phone_number_id;
+      const phone = value?.sender?.phone_number;
+      const resolved = value ? resolveHandoverOwner(value) : null;
+      if (!phoneId || !phone || !resolved) {
+        log.warn({ value }, "Unrecognised messaging_handovers change; ignored");
+        continue;
+      }
+
+      const waSettings = await getWaSettingsByPhoneId(phoneId);
+      if (!waSettings) {
+        log.error("WaSettings not found for phone_id: %s", phoneId);
+        continue;
+      }
+
+      try {
+        await setMetaAgentThreadOwner({
+          orgId: waSettings.orgId,
+          phone,
+          owner: resolved.owner,
+          reason: resolved.reason,
+          at: metaTimestampToDate(value.timestamp),
+        });
+      } catch (error) {
+        log.error({ err: error, phone }, "Failed to record a Meta AI thread handover");
       }
     }
   }
@@ -525,9 +695,19 @@ async function handleRevokedMessage(
   );
 }
 
+interface InboundOptions {
+  /**
+   * Store the message and stop: no loyalty commands, chatbots, flows, automated
+   * replies or push notifications. For a thread another app is answering (the
+   * Meta Business Agent) — replying from here as well would talk over it.
+   */
+  storeOnly?: boolean;
+}
+
 async function whatsappMessageHandler(
   waSettings: Omit<WhatsappSettings, "accessToken_iv">,
   waMessage: WaMessageBody,
+  options: InboundOptions = {},
 ) {
   // check for '/start' command
   // let phone_number_id =
@@ -570,6 +750,7 @@ async function whatsappMessageHandler(
     userName,
     (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]?.id,
   );
+  if (options.storeOnly) return;
   if (type === WaMessageTypes.order) {
     if (!messageObj) {
       log.error("handleWaMessages did not return a message; skipping catalog order handling");

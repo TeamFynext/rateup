@@ -83,6 +83,7 @@ import {
   requestDefinitionSchema,
   skillBodySchema,
   uiSkillBodySchema,
+  uiSkillUpdateBodySchema,
   upsertApiKeyBodySchema,
   upsertCertificateBodySchema,
   upsertOAuthBodySchema,
@@ -769,10 +770,31 @@ describe("the settings, skill and ui-skill schemas", () => {
     expect(skill("a".repeat(65))).toBe(false);
   });
 
+  test("a ui-skill title is a lowercase slug that does not start or end with a hyphen", () => {
+    const title = (value: string) =>
+      uiSkillBodySchema.safeParse({
+        title: value,
+        component_type: "cta_url",
+        status: "enabled",
+        instruction: "Send when the customer wants to book",
+      }).success;
+
+    expect(title("book-a-table")).toBe(true);
+    expect(title("menu2")).toBe(true);
+    expect(title("a")).toBe(true);
+    expect(title("Book a table")).toBe(false);
+    expect(title("book_a_table")).toBe(false);
+    expect(title("-book")).toBe(false);
+    expect(title("book-")).toBe(false);
+    expect(title("-")).toBe(false);
+    expect(uiSkillUpdateBodySchema.safeParse({ title: "Book" }).success).toBe(false);
+    expect(uiSkillUpdateBodySchema.safeParse({ title: "book" }).success).toBe(true);
+  });
+
   test("a flow ui-skill is the one component type that needs a flow id", () => {
     const uiSkill = (over: Record<string, unknown>) =>
       uiSkillBodySchema.safeParse({
-        title: "Book a table",
+        title: "book-a-table",
         status: "enabled",
         instruction: "Send when the customer wants to book",
         ...over,

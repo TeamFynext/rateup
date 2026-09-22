@@ -73,7 +73,8 @@ import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
 import { writeXlsx } from "hucre/xlsx";
 import { XlsxStreamWriter } from "hucre";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
-import { PlatformType } from "../../../../../generated/prisma/client.js";
+import { MetaAgentThreadOwner, PlatformType } from "../../../../../generated/prisma/client.js";
+import { setMetaAgentThreadOwner } from "../../../metaAgent/metaAgent.threadOwner.js";
 import { Role } from "../../../../../generated/prisma/client.js";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
 import {
@@ -402,6 +403,41 @@ export async function handleWaMessages(
         },
         orgId,
       );
+    // A person replying from the inbox takes the thread back from Meta AI —
+    // Meta hands control to whichever app sends. Only a real staff send counts:
+    // automations and campaigns are not someone taking over the conversation.
+    if (
+      type === "send" &&
+      userId &&
+      !failed &&
+      !isAutomated &&
+      !campaign &&
+      sourcePlatform === PlatformType.WHATSAPP &&
+      contact.phone &&
+      contact.metaAgentThreadOwner === MetaAgentThreadOwner.AI
+    ) {
+      const now = new Date();
+      try {
+        const changed = await setMetaAgentThreadOwner({
+          orgId,
+          phone: contact.phone,
+          owner: MetaAgentThreadOwner.STAFF,
+          reason: "staff_reply",
+          at: now,
+        });
+        if (changed) {
+          contact = {
+            ...contact,
+            metaAgentThreadOwner: MetaAgentThreadOwner.STAFF,
+            metaAgentThreadOwnerAt: now,
+            metaAgentHandoverReason: "staff_reply",
+          };
+        }
+      } catch (error) {
+        log.error({ err: error, contactId: contact.id }, "Failed to mark a staff takeover");
+      }
+    }
+
     // Notify connected clients
     const inboxEvent = {
       type: "inbox" as const,

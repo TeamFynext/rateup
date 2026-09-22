@@ -42,8 +42,35 @@ dayjs.extend(customParseFormat);
 
 export const ratingEmoji = "⭐️";
 
+/**
+ * Whether a send was written by the Meta Business Agent (Meta AI) rather than a
+ * person or our own automation. Meta tags the agent's sends — the echo and every
+ * status for it — with `biz_opaque_callback_data` of `{"originator":"bizai",…}`.
+ */
+export function isMetaAiOriginated(bizOpaqueCallbackData: unknown): boolean {
+  if (typeof bizOpaqueCallbackData !== "string" || !bizOpaqueCallbackData) return false;
+  try {
+    const parsed: unknown = JSON.parse(bizOpaqueCallbackData);
+    return (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      (parsed as { originator?: unknown }).originator === "bizai"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function getEventType(data: WaMessageBody) {
   if (data.object === "whatsapp_business_account") {
+    // Checked first: a standby change nests its messages and statuses under
+    // `value.standby`, so every branch below would read it as empty.
+    if (data.entry[0].changes[0].field === WaEvent.Standby) {
+      return WaEvent.Standby;
+    }
+    if (data.entry[0].changes[0].field === WaEvent.MessagingHandovers) {
+      return WaEvent.MessagingHandovers;
+    }
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
     } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
