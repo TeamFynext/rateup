@@ -4,11 +4,7 @@ import { useRouter } from "expo-router";
 import { Filter } from "lucide-react-native";
 import { getInboxHeaderBg, getInboxRowTheme } from "@/constants/inboxDesign";
 
-const InboxButtons = ({
-  activeFilterCount = 0,
-}: {
-  activeFilterCount?: number;
-}) => {
+const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number }) => {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -50,7 +46,7 @@ const InboxButtons = ({
             style={{
               color: "#fff",
               fontSize: 8,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
             }}
           >
             {activeFilterCount}

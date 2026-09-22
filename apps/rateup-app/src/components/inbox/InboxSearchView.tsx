@@ -32,7 +32,9 @@ export default function InboxSearchView({
     <View
       style={{
         flex: 1,
-        backgroundColor: isDark ? "#091522" : "#FAFAF7",
+        // The page base, from the theme rather than a copy of it — this pair
+        // was the old hardcoded dark navy / warm off-white.
+        backgroundColor: t.pageBg,
       }}
     >
       {/* Search bar */}
@@ -85,7 +87,7 @@ export default function InboxSearchView({
             style={{
               flex: 1,
               fontSize: 14,
-              fontFamily: "Nunito_400Regular",
+              fontFamily: "InstrumentSans_400Regular",
               color: t.fg1,
               padding: 0,
             }}
@@ -101,12 +103,11 @@ export default function InboxSearchView({
               paddingVertical: 24,
               paddingHorizontal: 20,
               fontSize: 13,
-              fontFamily: "Nunito_400Regular",
+              fontFamily: "InstrumentSans_400Regular",
               color: t.fg4,
             }}
           >
-            Start typing to search across every conversation, ticket code and
-            customer.
+            Start typing to search across every conversation, ticket code and customer.
           </Text>
         ) : (
           children
@@ -134,7 +135,7 @@ export function InboxSearchEmpty() {
         style={{
           marginTop: 8,
           fontSize: 13,
-          fontFamily: "Nunito_400Regular",
+          fontFamily: "InstrumentSans_400Regular",
           color: t.fg4,
         }}
       >

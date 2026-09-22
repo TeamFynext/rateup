@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { View, useColorScheme } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useLocalSearchParams } from "expo-router";
@@ -49,11 +49,14 @@ const ChatDisplay = () => {
   // hydration below seeds the very store this reads, so a live check would flip
   // to false the moment the cached row lands and switch the network fetch off,
   // pinning the screen to stale data for as long as it stayed open.
-  const arrivedWithoutContact = useRef(
-    useSelectedContactStore.getState().selectedContact?.id !== id,
+  // Held in state with a lazy initialiser rather than a ref: a ref read during render is
+  // not safe under concurrent rendering, and the initialiser gives the same capture-once
+  // behaviour while actually evaluating the store lookup only on the first render.
+  const [arrivedWithoutContact] = useState(
+    () => useSelectedContactStore.getState().selectedContact?.id !== id,
   );
   const { data: fetchedContact, isError: contactFetchFailed } = useContactById(
-    arrivedWithoutContact.current ? id : "",
+    arrivedWithoutContact ? id : "",
   );
 
   // Paint from the last inbox sync while the request is in flight. The row is
@@ -62,7 +65,7 @@ const ChatDisplay = () => {
   // install, a contact never listed, or the first open after a sign-out cleared
   // the cache — simply falls through to the fetch, exactly as before.
   useEffect(() => {
-    if (!id || !arrivedWithoutContact.current) return;
+    if (!id || !arrivedWithoutContact) return;
     let cancelled = false;
 
     loadContactFromDB(id)
@@ -81,7 +84,7 @@ const ChatDisplay = () => {
     return () => {
       cancelled = true;
     };
-  }, [id, setSelectedContact]);
+  }, [id, arrivedWithoutContact, setSelectedContact]);
 
   // The network result always wins, including over anything seeded above.
   useEffect(() => {

@@ -119,7 +119,7 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
       return (
         <Text
           style={{
-            fontFamily: "Nunito_700Bold",
+            fontFamily: "InstrumentSans_700Bold",
             fontSize: 15,
             color: isDark ? "#fff" : Colors.light.textPrimary,
             marginBottom: 6,
@@ -156,7 +156,7 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
         >
           <Text
             style={{
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: isDark ? Colors.accent.cyan : Colors.brand.blue,
               textDecorationLine: "underline",
               fontSize: 13,
@@ -180,7 +180,7 @@ const WaInboxTemplateBody = ({ templateComponent }: Props) => {
   return (
     <Text
       style={{
-        fontFamily: "Nunito_400Regular",
+        fontFamily: "InstrumentSans_400Regular",
         fontSize: 14,
         color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
         lineHeight: 20,
@@ -197,7 +197,7 @@ const WaInboxTemplateFooter = (props: WaTemplateFetchBodyComponent) => {
   return (
     <Text
       style={{
-        fontFamily: "Nunito_400Regular",
+        fontFamily: "InstrumentSans_400Regular",
         fontSize: 12,
         color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
         marginTop: 6,
@@ -230,7 +230,7 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
             <ReplyIcon size={15} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
             <Text
               style={{
-                fontFamily: "Nunito_600SemiBold",
+                fontFamily: "InstrumentSans_600SemiBold",
                 fontSize: 13,
                 color: isDark ? Colors.accent.cyan : Colors.brand.blue,
                 marginLeft: 8,
@@ -254,7 +254,6 @@ interface AccountSelectorProps {
 export function AccountSelector({ value, onChange, label = "Account" }: AccountSelectorProps) {
   const { data, isPending, isError } = useWaSettings();
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedLabel, setSelectedLabel] = useState("");
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -271,19 +270,20 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
     [data],
   );
 
+  // Just the selected option's text — derived, so it can never disagree with `value`.
+  const selectedLabel = accountOptions.find((opt) => opt.value === value)?.label ?? "";
+
+  // Defaulting to the first account stays an effect: it is a real side effect, telling the
+  // parent what was picked rather than describing what is on screen.
   useEffect(() => {
-    if (!value && accountOptions.length > 0) {
-      onChange?.(accountOptions[0].value);
-      setSelectedLabel(accountOptions[0].label);
-    } else {
-      const match = accountOptions.find((opt) => opt.value === value);
-      if (match) setSelectedLabel(match.label);
-    }
+    if (!value && accountOptions.length > 0) onChange?.(accountOptions[0].value);
   }, [accountOptions, value, onChange]);
 
   if (isError)
     return (
-      <Text style={{ color: "red", fontFamily: "Nunito_600SemiBold" }}>Something went wrong!</Text>
+      <Text style={{ color: "red", fontFamily: "InstrumentSans_600SemiBold" }}>
+        Something went wrong!
+      </Text>
     );
 
   if (isPending) {
@@ -308,7 +308,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
     <View style={{ marginBottom: 14 }}>
       <Text
         style={{
-          fontFamily: "Nunito_600SemiBold",
+          fontFamily: "InstrumentSans_600SemiBold",
           color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
           fontSize: 14,
           marginBottom: 6,
@@ -333,7 +333,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
       >
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             fontSize: 14,
             color: selectedLabel
               ? isDark
@@ -382,8 +382,8 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                   return (
                     <TouchableOpacity
                       onPress={() => {
+                        // No label to set — it follows from `value`.
                         onChange?.(item.value);
-                        setSelectedLabel(item.label);
                         setModalVisible(false);
                       }}
                       style={{
@@ -398,7 +398,9 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                     >
                       <Text
                         style={{
-                          fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_600SemiBold",
+                          fontFamily: isSelected
+                            ? "InstrumentSans_700Bold"
+                            : "InstrumentSans_600SemiBold",
                           fontSize: 15,
                           color: isSelected
                             ? isDark
@@ -420,7 +422,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                 ListEmptyComponent={
                   <Text
                     style={{
-                      fontFamily: "Nunito_600SemiBold",
+                      fontFamily: "InstrumentSans_600SemiBold",
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                       color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,

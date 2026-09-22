@@ -23,16 +23,9 @@ const ResponseId = () => {
 
   const router = useRouter();
 
-  if (!data?.length || !data[0]?.responses) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
-        <Text className="text-black dark:text-white">No response found.</Text>
-      </SafeAreaView>
-    );
-  }
-
-  const responses = data[0].responses;
-
+  // Above the early return, not below it: a hook after a conditional return is only called
+  // on some renders, and React matches hooks by call order. The moment this screen went
+  // from "no response" to having one, every later hook would read the wrong slot.
   const questionMap = useMemo(() => {
     const map: Record<string, string> = {};
 
@@ -42,6 +35,16 @@ const ResponseId = () => {
 
     return map;
   }, [questions]);
+
+  if (!data?.length || !data[0]?.responses) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
+        <Text className="text-black dark:text-white">No response found.</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const responses = data[0].responses;
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-950 px-4">

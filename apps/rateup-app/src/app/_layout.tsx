@@ -15,40 +15,42 @@ import { configurePlaybackAudioMode } from "@/utils/audio";
 import { Colors } from "@/constants/colors";
 import { NoticeHost } from "@/components/common/Notice";
 import {
+  Figtree_300Light,
+  Figtree_800ExtraBold,
+  Figtree_900Black,
+} from "@expo-google-fonts/figtree";
+import {
   useFonts,
-  Nunito_300Light,
-  Nunito_400Regular,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-  Nunito_800ExtraBold,
-  Nunito_900Black,
-} from "@expo-google-fonts/nunito";
+  InstrumentSans_400Regular,
+  InstrumentSans_500Medium,
+  InstrumentSans_600SemiBold,
+  InstrumentSans_700Bold,
+} from "@expo-google-fonts/instrument-sans";
 import "../global.css";
 
-// Monkey-patch Text and TextInput components to use Nunito_400Regular as the global default font
+// Monkey-patch Text and TextInput components to use InstrumentSans_400Regular as the global default font
 if ((Text as any).defaultProps) {
   (Text as any).defaultProps.style = {
-    fontFamily: "Nunito_400Regular",
+    fontFamily: "InstrumentSans_400Regular",
     ...(Text as any).defaultProps.style,
   };
 } else {
   (Text as any).defaultProps = {
     style: {
-      fontFamily: "Nunito_400Regular",
+      fontFamily: "InstrumentSans_400Regular",
     },
   };
 }
 
 if ((TextInput as any).defaultProps) {
   (TextInput as any).defaultProps.style = {
-    fontFamily: "Nunito_400Regular",
+    fontFamily: "InstrumentSans_400Regular",
     ...(TextInput as any).defaultProps.style,
   };
 } else {
   (TextInput as any).defaultProps = {
     style: {
-      fontFamily: "Nunito_400Regular",
+      fontFamily: "InstrumentSans_400Regular",
     },
   };
 }
@@ -83,14 +85,17 @@ function RootLayout() {
 
 export default function LayoutWrapper() {
   const { setColorScheme } = useColorScheme();
+  // Design System V2's split, the same one `rateup-ui/src/styles/foundation.css` sets:
+  // Instrument Sans carries body and UI, Figtree the display sizes. Instrument Sans stops
+  // at 700, which is why the two heaviest faces and the 300 label weight are Figtree's.
   const [fontsLoaded] = useFonts({
-    Nunito_300Light,
-    Nunito_400Regular,
-    Nunito_500Medium,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
-    Nunito_800ExtraBold,
-    Nunito_900Black,
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
+    InstrumentSans_700Bold,
+    Figtree_300Light,
+    Figtree_800ExtraBold,
+    Figtree_900Black,
     Geist: require("@/assets/fonts/Geist-Regular.ttf"),
   });
 

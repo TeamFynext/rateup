@@ -1,13 +1,18 @@
-import AccountBar from "@/components/home/Account";
 import { useLoggedInUser } from "@/api/api";
-import { ActivityIndicator, View, Text, ScrollView, RefreshControl } from "react-native";
+import AccountBar from "@/components/home/Account";
+import ScreenHeader from "@/components/common/ScreenHeader";
 import { colors } from "@/constants/constants";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { UserX } from "lucide-react-native";
-import { useState, useCallback } from "react";
+import { useColorScheme } from "nativewind";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react-native";
 
 export default function AccountScreen() {
   const { data: userData, isLoading, isError, refetch } = useLoggedInUser();
   const [refreshing, setRefreshing] = useState(false);
+  const { colorScheme } = useColorScheme();
+  const t = getInboxRowTheme(colorScheme === "dark");
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -15,23 +20,23 @@ export default function AccountScreen() {
     setRefreshing(false);
   }, [refetch]);
 
-  if (isLoading && !refreshing) {
-    return (
-      <View className="flex-1 justify-center items-center dark:bg-slate-950">
-        <ActivityIndicator size="large" color={colors["primary-blue"]} />
-      </View>
-    );
-  }
-
   const renderContent = () => {
+    if (isLoading && !refreshing) {
+      return (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color={colors["primary-blue"]} />
+        </View>
+      );
+    }
+
     if (isError) {
       return (
-        <View className="flex-1 justify-center items-center bg-white dark:bg-slate-950 min-h-[80vh]">
-          <UserX size={48} color="#9CA3AF" />
-          <Text className="text-lg font-medium text-gray-700 dark:text-gray-300 mt-4">
+        <View className="flex-1 justify-center items-center min-h-[70vh]">
+          <UserX size={48} color={t.fg4} />
+          <Text className="text-lg font-medium mt-4" style={{ color: t.fg1 }}>
             Check your internet connection
           </Text>
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center px-6">
+          <Text className="text-sm mt-2 text-center px-6" style={{ color: t.fg3 }}>
             We couldn&apos;t reach the server to fetch your account details.
           </Text>
         </View>
@@ -42,19 +47,10 @@ export default function AccountScreen() {
       return null;
     }
 
-    const {
-      email,
-      orgName,
-      role,
-      profilePhoto,
-      orgPhone,
-      userName,
-      orgId,
-      userId,
-    } = userData;
+    const { email, orgName, role, profilePhoto, orgPhone, userName, orgId, userId } = userData;
 
     return (
-      <View className="flex-1 bg-white dark:bg-slate-950 min-h-[80vh]">
+      <View className="flex-1 min-h-[70vh]">
         <AccountBar
           email={email}
           userId={userId}
@@ -69,20 +65,25 @@ export default function AccountScreen() {
     );
   };
 
+  // The bar stays mounted through loading and the error state, so the tab reads as the
+  // same screen throughout rather than appearing only once the fetch lands — and it is
+  // the same `ScreenHeader` the other four tabs use, at the one title size and weight.
   return (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      className="bg-white dark:bg-slate-950"
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors["primary-blue"]}
-          colors={[colors["primary-blue"]]}
-        />
-      }
-    >
-      {renderContent()}
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: t.pageBg }}>
+      <ScreenHeader title="Account Details" />
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors["primary-blue"]}
+            colors={[colors["primary-blue"]]}
+          />
+        }
+      >
+        {renderContent()}
+      </ScrollView>
+    </View>
   );
 }

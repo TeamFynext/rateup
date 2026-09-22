@@ -1,6 +1,6 @@
 {
   "name": "rateup",
-  "version": "1.2.1",
+  "version": "1.2.4",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -12,6 +12,8 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:watch": "tsc --noEmit -p tsconfig.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint:ox": "oxlint src",
     "lint:ox:fix": "oxlint src --fix",
     "format": "oxfmt .",
@@ -20,7 +22,8 @@
     "brand:assets": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {
-    "@expo-google-fonts/nunito": "^0.4.2",
+    "@expo-google-fonts/figtree": "^0.4.1",
+    "@expo-google-fonts/instrument-sans": "^0.4.2",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
@@ -37,6 +40,7 @@
     "expo-audio": "~57.0.4",
     "expo-blur": "~57.0.2",
     "expo-build-properties": "~57.0.17",
+    "expo-camera": "~57.0.5",
     "expo-clipboard": "~57.0.1",
     "expo-constants": "~57.0.2",
     "expo-crypto": "~57.0.2",
@@ -95,6 +99,7 @@
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",
     "sharp": "^0.35.4",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.0"
   }
 }

@@ -74,9 +74,7 @@ const NpsOverview = ({ surveyId }: { surveyId: string }) => {
 
   return (
     <View className="p-4 bg-white dark:bg-slate-950 flex-1">
-      <RNText className="text-lg font-semibold text-black dark:text-white">
-        NPS Overview
-      </RNText>
+      <RNText className="text-lg font-semibold text-black dark:text-white">NPS Overview</RNText>
 
       <View className="flex flex-col items-center justify-center mt-4 space-y-4">
         <NPSGaugeWithNeedle
@@ -88,41 +86,36 @@ const NpsOverview = ({ surveyId }: { surveyId: string }) => {
         />
 
         <View className="flex bg-white dark:bg-slate-950 justify-around w-full mt-4 gap-4">
-          {npsList.map(
-            ({ label, percentage, value, color, bg, icon: Icon }, index) => (
-              <View
-                key={index}
-                className="flex flex-row items-center justify-between p-4 rounded-2xl border"
-                style={{
-                  backgroundColor: isDark ? "#0f172a" : "#FAFAFA",
-                  borderColor: isDark ? "#1e293b" : "#E5E7EB",
-                }}
-              >
-                <View className="flex flex-row items-center justify-center">
-                  <View
-                    className="rounded-full p-2"
-                    style={{ backgroundColor: bg }}
-                  >
-                    <Icon color={color} width={30} height={30} />
-                  </View>
-
-                  <View className="flex items-start px-3">
-                    <RNText className="text-lg font-medium text-black dark:text-white">
-                      {label}
-                    </RNText>
-
-                    <RNText className="text-sm text-[#7A8289] dark:text-slate-400 font-medium">
-                      {value} Responses
-                    </RNText>
-                  </View>
+          {npsList.map(({ label, percentage, value, color, bg, icon: Icon }, index) => (
+            <View
+              key={index}
+              className="flex flex-row items-center justify-between p-4 rounded-2xl border"
+              style={{
+                backgroundColor: isDark ? "#0f172a" : "#FAFAFA",
+                borderColor: isDark ? "#1e293b" : "#E5E7EB",
+              }}
+            >
+              <View className="flex flex-row items-center justify-center">
+                <View className="rounded-full p-2" style={{ backgroundColor: bg }}>
+                  <Icon color={color} width={30} height={30} />
                 </View>
 
-                <RNText className="text-3xl font-bold" style={{ color }}>
-                  {percentage}%
-                </RNText>
+                <View className="flex items-start px-3">
+                  <RNText className="text-lg font-medium text-black dark:text-white">
+                    {label}
+                  </RNText>
+
+                  <RNText className="text-sm text-[#7A8289] dark:text-slate-400 font-medium">
+                    {value} Responses
+                  </RNText>
+                </View>
               </View>
-            ),
-          )}
+
+              <RNText className="text-3xl font-bold" style={{ color }}>
+                {percentage}%
+              </RNText>
+            </View>
+          ))}
         </View>
       </View>
     </View>
@@ -140,12 +133,7 @@ const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => {
   };
 };
 
-const getArc = (
-  startAngle: number,
-  sweepAngle: number,
-  radius: number,
-  color: string,
-) => {
+const getArc = (startAngle: number, sweepAngle: number, radius: number, color: string) => {
   const endAngle = startAngle + sweepAngle;
 
   const start = polarToCartesian(110, 110, radius, endAngle);
@@ -179,13 +167,11 @@ const NPSGaugeWithNeedle = ({
 }) => {
   nps = typeof nps === "number" && !isNaN(nps) ? nps : 0;
 
-  promoters =
-    typeof promoters === "number" && !isNaN(promoters) ? promoters : 0;
+  promoters = typeof promoters === "number" && !isNaN(promoters) ? promoters : 0;
 
   passives = typeof passives === "number" && !isNaN(passives) ? passives : 0;
 
-  detractors =
-    typeof detractors === "number" && !isNaN(detractors) ? detractors : 0;
+  detractors = typeof detractors === "number" && !isNaN(detractors) ? detractors : 0;
 
   const total = promoters + passives + detractors || 1;
 
@@ -267,12 +253,7 @@ const NPSGaugeWithNeedle = ({
           />
         </G>
 
-        <Circle
-          cx="110"
-          cy="110"
-          r="30"
-          fill={isDark ? "#1e293b" : "#F5F5F5"}
-        />
+        <Circle cx="110" cy="110" r="30" fill={isDark ? "#1e293b" : "#F5F5F5"} />
 
         <SvgText
           x="110"
@@ -288,9 +269,7 @@ const NPSGaugeWithNeedle = ({
 
       {/* Label */}
       <View className="-mt-2">
-        <RNText
-          className={`text-xs text-white py-1 px-3 rounded-sm font-medium ${bg}`}
-        >
+        <RNText className={`text-xs text-white py-1 px-3 rounded-sm font-medium ${bg}`}>
           {label}
         </RNText>
       </View>

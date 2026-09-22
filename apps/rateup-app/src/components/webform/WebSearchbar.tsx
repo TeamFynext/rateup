@@ -8,11 +8,7 @@ const WebFormSearchBar = () => {
 
   return (
     <View style={{ flexDirection: "row", paddingHorizontal: 16 }}>
-      <SearchField
-        value={search}
-        onChangeText={setSearch}
-        placeholder="Search web forms"
-      />
+      <SearchField value={search} onChangeText={setSearch} placeholder="Search web forms" />
     </View>
   );
 };

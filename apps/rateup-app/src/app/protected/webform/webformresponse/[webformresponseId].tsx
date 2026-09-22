@@ -27,6 +27,21 @@ const ResponseId = () => {
 
   const router = useRouter();
 
+  // Above the early returns, not below them: a hook after a conditional return is only
+  // called on some renders, and React matches hooks by call order. This screen has two
+  // guards — loading, and no-response — so the slot moved twice on the way to the list.
+  const questionMap = useMemo(() => {
+    const map: Record<string, string> = {};
+
+    questions?.forEach((q) => {
+      const raw = q.title?.English || q.description?.English || q.label?.English || "";
+
+      map[q.id] = stripHtml(raw);
+    });
+
+    return map;
+  }, [questions]);
+
   if (!data?.length || !data[0]?.responses) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
@@ -44,18 +59,6 @@ const ResponseId = () => {
   }
 
   const responses = data[0].responses;
-
-  const questionMap = useMemo(() => {
-    const map: Record<string, string> = {};
-
-    questions?.forEach((q) => {
-      const raw = q.title?.English || q.description?.English || q.label?.English || "";
-
-      map[q.id] = stripHtml(raw);
-    });
-
-    return map;
-  }, [questions]);
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-950 px-4">

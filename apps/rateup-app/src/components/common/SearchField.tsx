@@ -45,7 +45,7 @@ export default function SearchField({
         style={{
           flex: 1,
           fontSize: 14,
-          fontFamily: "Nunito_400Regular",
+          fontFamily: "InstrumentSans_400Regular",
           color: t.fg1,
           padding: 0,
         }}

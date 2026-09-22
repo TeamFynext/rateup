@@ -32,7 +32,6 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [selectedTeamName, setSelectedTeamName] = useState<string>("");
   const [loadingContact, setLoadingContact] = useState(true);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [sending, setSending] = useState(false);
   const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] = useState<string>("");
 
@@ -62,11 +61,19 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
     getContactDetails();
   }, [contact]);
 
+  // A 300ms spinner while the list re-filters, so the results don't jump under the thumb
+  // mid-type. Expressed as "the settled inputs are behind the current ones" rather than a
+  // flag raised from the effect: the flag needed a synchronous set on every keystroke,
+  // which is a second render per character on a screen already filtering a long list.
+  const templatesKey = `${teamId}|${searchTerm}`;
+  const [settledKey, setSettledKey] = useState(templatesKey);
+  const loadingTemplates = settledKey !== templatesKey;
+
   useEffect(() => {
-    setLoadingTemplates(true);
-    const timeout = setTimeout(() => setLoadingTemplates(false), 300);
+    if (settledKey === templatesKey) return;
+    const timeout = setTimeout(() => setSettledKey(templatesKey), 300);
     return () => clearTimeout(timeout);
-  }, [teamId, searchTerm]);
+  }, [templatesKey, settledKey]);
 
   const approvedTemplates = templatesAvailableForTeam?.filter(
     (template) => template?.data?.status === "APPROVED",
@@ -116,7 +123,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         <ActivityIndicator size="large" color={Colors.brand.blue} />
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
             marginTop: 10,
           }}
@@ -133,7 +140,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
       <View style={{ marginBottom: 14 }}>
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
             fontSize: 14,
             marginBottom: 6,
@@ -158,7 +165,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         >
           <Text
             style={{
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               fontSize: 14,
               color: selectedTeamName
                 ? isDark
@@ -224,7 +231,9 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                       >
                         <Text
                           style={{
-                            fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_600SemiBold",
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_600SemiBold",
                             fontSize: 15,
                             color: isSelected
                               ? isDark
@@ -249,7 +258,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                   ListEmptyComponent={
                     <Text
                       style={{
-                        fontFamily: "Nunito_600SemiBold",
+                        fontFamily: "InstrumentSans_600SemiBold",
                         paddingHorizontal: 16,
                         paddingVertical: 12,
                         color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
@@ -274,7 +283,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         <View style={{ marginBottom: 14 }}>
           <Text
             style={{
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
               color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
               fontSize: 14,
               marginBottom: 6,
@@ -306,7 +315,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
               style={{
                 flex: 1,
                 fontSize: 14,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: isDark ? "#fff" : Colors.light.textPrimary,
                 padding: 0,
               }}
@@ -319,7 +328,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
       {teamId && (
         <Text
           style={{
-            fontFamily: "Nunito_600SemiBold",
+            fontFamily: "InstrumentSans_600SemiBold",
             color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
             fontSize: 14,
             marginBottom: 8,
@@ -368,7 +377,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                 >
                   <Text
                     style={{
-                      fontFamily: "Nunito_700Bold",
+                      fontFamily: "InstrumentSans_700Bold",
                       fontSize: 14,
                       color: isDark ? "#fff" : Colors.light.textPrimary,
                     }}
@@ -381,7 +390,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                 </View>
                 <Text
                   style={{
-                    fontFamily: "Nunito_400Regular",
+                    fontFamily: "InstrumentSans_400Regular",
                     fontSize: 11,
                     color: isDark ? Colors.dark.textSubtle : Colors.light.textSubtle,
                     marginTop: 2,
@@ -397,7 +406,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         teamId && (
           <Text
             style={{
-              fontFamily: "Nunito_400Regular_Italic",
+              fontFamily: "InstrumentSans_400Regular_Italic",
               color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
               textAlign: "center",
               marginVertical: 12,
@@ -442,7 +451,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
           ) : (
             <Text
               style={{
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "InstrumentSans_700Bold",
                 fontSize: 15,
                 color: "#fff",
               }}

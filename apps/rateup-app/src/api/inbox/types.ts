@@ -15,6 +15,17 @@ export type ContactsWithLastMessage = {
   phone: string;
   unReadMessageCount: number;
   lastReceivedMessageTimeStamp: any;
+  /**
+   * The ticket's own recency clock — `COALESCE(conv.lastMessageAt,
+   * conv.createdAt, c.lastReceivedMessageTimeStamp)` from the list query, and
+   * what the server orders the page by. The contact-level
+   * `lastReceivedMessageTimeStamp` only moves when the *customer* writes, so
+   * sorting on it alone buried every ticket whose newest message was outbound
+   * (a flow or template send) below chats days older.
+   */
+  conversationLastMessageAt?: string | null;
+  /** The ticket's newest *inbound* message, for the `newest_wa_created` sorts. */
+  conversationLastCustomerMessageAt?: string | null;
   lastMessage: any;
   /** The ticket's newest messages (up to ten), each with its `sender`. */
   messages?: any[];

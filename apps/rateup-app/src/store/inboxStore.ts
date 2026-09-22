@@ -66,6 +66,35 @@ function latestRowPerContact(rows: any[]): any[] {
 }
 
 /**
+ * The cached ids worth keeping when the caller hands over the complete set of
+ * rows the server has for a filter.
+ *
+ * The id list is cached in SQLite and used to be only ever unioned with the
+ * fresh page, so a chat that left the tab stayed in it forever — a closed
+ * ticket sat in Open until the app's storage was cleared.
+ *
+ * Dropping every unlisted id outright would lose the one kind of row the
+ * response legitimately lacks: a chat the socket added after the request was
+ * built. Those are exactly the rows whose newest message is newer than
+ * anything the server returned, which is the test applied here.
+ */
+function retainedStaleIds(
+  state: ContactsStoreState,
+  existingIds: string[],
+  serverRows: any[],
+): string[] {
+  const serverIds = new Set(serverRows.map((row) => row.id));
+  const newestServerRow = serverRows.reduce(
+    (newest, row) => Math.max(newest, messageTime(row.lastMessage)),
+    0,
+  );
+  return existingIds.filter((id) => {
+    if (serverIds.has(id)) return true;
+    return messageTime(state.contactsById.get(id)?.lastMessage) > newestServerRow;
+  });
+}
+
+/**
  * Fold a server row onto the cached contact.
  *
  * The server is the source of truth, so its row wins — this used to be gated on
@@ -83,6 +112,11 @@ function mergeServerRow(existing: any, incoming: any, isOpen: boolean) {
   if (keepLocalMessage) {
     merged.lastMessage = existing.lastMessage;
     merged.unReadMessageCount = existing.unReadMessageCount;
+    // The preview being kept is newer than the response's, so the ticket clock
+    // the list sorts by has to be kept with it — taking the response's would
+    // sort the row below chats it is in fact newer than.
+    merged.conversationLastMessageAt =
+      existing.conversationLastMessageAt ?? incoming.conversationLastMessageAt;
     if (
       messageTime({ waCreatedAt: existing.lastReceivedMessageTimeStamp }) >
       messageTime({ waCreatedAt: incoming.lastReceivedMessageTimeStamp })
@@ -153,6 +187,7 @@ interface ContactsStoreState {
     filterKey: string,
     contacts: Array<any>,
     updateOtherTabs?: boolean,
+    isFullServerSet?: boolean,
   ) => Promise<void>;
   updateContactById: (
     contactId: string,
@@ -221,7 +256,12 @@ export const useContactsStore = create<ContactsStoreState>()(
         );
       },
 
-      addContactsForFilter: async (filterKey, contacts, updateOtherTabs = false) => {
+      addContactsForFilter: async (
+        filterKey,
+        contacts,
+        updateOtherTabs = false,
+        isFullServerSet = false,
+      ) => {
         const { currentFilterKey } = get();
         if (!filterKey || currentFilterKey !== filterKey) return;
         let sortedList: string[] = [];
@@ -237,7 +277,9 @@ export const useContactsStore = create<ContactsStoreState>()(
           produce((state: ContactsStoreState) => {
             state.isLoading = true;
             const existingIds = state.contactsByFilter[filterKey] || [];
-            const contactIdsSet = new Set(existingIds);
+            const contactIdsSet = new Set(
+              isFullServerSet ? retainedStaleIds(state, existingIds, mergedContacts) : existingIds,
+            );
             const contactsByIdMap = new Map(state.contactsById);
             mergedContacts.forEach((updatedContact) => {
               contactsByIdMap.set(updatedContact.id, updatedContact);
@@ -263,7 +305,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                   currentFilterKey.includes("sortBy:oldest_wa_created");
                 const createdAt = sortByWaCreated
                   ? (c?.lastMessage?.waCreatedAt ?? 0)
-                  : (c?.lastReceivedMessageTimeStamp ?? 0);
+                  : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
                 return { id, createdAt };
               })
               .sort((a, b) => {
@@ -363,7 +405,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                     currentFilterKey.includes("sortBy:oldest_wa_created");
                   const createdAt = sortByWaCreated
                     ? (c?.lastMessage?.waCreatedAt ?? 0)
-                    : (c?.lastReceivedMessageTimeStamp ?? 0);
+                    : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
                   return { id, createdAt };
                 })
                 .sort((a: any, b: any) => {
@@ -462,7 +504,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                         filterKey.includes("sortBy:oldest_wa_created");
                       const createdAt = sortByWaCreated
                         ? (c?.lastMessage?.waCreatedAt ?? 0)
-                        : (c?.lastReceivedMessageTimeStamp ?? 0);
+                        : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
                       return { id, createdAt };
                     })
                     .sort((a, b) => {
@@ -515,7 +557,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                         filterKey.includes("sortBy:oldest_wa_created");
                       const createdAt = sortByWaCreated
                         ? (c?.lastMessage?.waCreatedAt ?? 0)
-                        : (c?.lastReceivedMessageTimeStamp ?? 0);
+                        : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
                       return { id, createdAt };
                     })
                     .sort((a, b) => {
@@ -575,7 +617,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                         filterKey.includes("sortBy:oldest_wa_created");
                       const createdAt = sortByWaCreated
                         ? (c?.lastMessage?.waCreatedAt ?? 0)
-                        : (c?.lastReceivedMessageTimeStamp ?? 0);
+                        : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
                       return { id, createdAt };
                     })
                     .sort((a, b) => {

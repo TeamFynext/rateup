@@ -10,10 +10,7 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
 
   const { data: responseCountData } = useResponseCount(surveyId);
 
-  const responseCount = useMemo(
-    () => responseCountData?.all,
-    [responseCountData],
-  );
+  const responseCount = useMemo(() => responseCountData?.all, [responseCountData]);
 
   const { data: surveyStats } = useGetSurveyStats(surveyId);
 
@@ -31,10 +28,7 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
     );
   }, [surveyStats]);
 
-  const { responseRatePercentage } = getResponseRateInfo(
-    responseCount,
-    visited,
-  );
+  const { responseRatePercentage } = getResponseRateInfo(responseCount, visited);
 
   const stats = [
     {
@@ -101,8 +95,7 @@ function getResponseRateInfo(responseCount: number, visited: number) {
     };
   }
 
-  const rate =
-    visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
+  const rate = visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
 
   const percentage = `${rate}%`;
 

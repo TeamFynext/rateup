@@ -1,4 +1,5 @@
 import { Toast } from "@/components/common/Notice";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   useAssignInboxToUser,
   useGetAssignedUserForContact,
@@ -43,6 +44,7 @@ export default function AssignToUser({
   /** Borderless row, for use inside menus whose other items are plain rows. */
   plain?: boolean;
 }) {
+  const { can } = usePermissions();
   const [visible, setVisible] = useState(false);
   const assignMut = useAssignInboxToUser(contactId);
   const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
@@ -87,25 +89,39 @@ export default function AssignToUser({
   // its children only once `visible` flips — so doing it in the same frame as
   // the tap stalls the slide animation. Render the sheet chrome immediately and
   // the list once the animation has settled.
-  const [contentReady, setContentReady] = useState(false);
+  //
+  // Whether the list is shown is `visible && settled`, derived: a closed sheet is never
+  // ready, so that half needs no effect to maintain, and only the "has the animation
+  // finished" half is actually state.
+  const [contentSettled, setContentSettled] = useState(false);
+  const contentReady = visible && contentSettled;
 
   // Read through a ref so a late-resolving query can't clobber a selection the
   // user is part-way through making.
+  //
+  // Synced in an effect rather than assigned during render: a render can be thrown away
+  // or replayed, and a write from one that never commits would leave the ref holding a
+  // value the screen never showed. This effect is declared *before* the one below so it
+  // always runs first, which is what keeps `.current` fresh at the point it is read.
   const initialAssigneesRef = useRef(initialAssignees);
-  initialAssigneesRef.current = initialAssignees;
+  useEffect(() => {
+    initialAssigneesRef.current = initialAssignees;
+  }, [initialAssignees]);
 
   useEffect(() => {
-    if (!visible) {
-      setContentReady(false);
-      return;
-    }
+    if (!visible) return;
     // Re-seed from the server each time it opens. `useState(initialAssignees)`
     // only ever saw the first render's value — before the query resolved — so
     // the sheet opened with nothing selected and assigning wiped the existing
     // assignees.
     setAssignedStaff(initialAssigneesRef.current);
-    const task = InteractionManager.runAfterInteractions(() => setContentReady(true));
-    return () => task.cancel();
+    const task = InteractionManager.runAfterInteractions(() => setContentSettled(true));
+    // Cleared on close, so the next open defers the list again rather than
+    // painting the whole tree in the frame the sheet starts sliding.
+    return () => {
+      task.cancel();
+      setContentSettled(false);
+    };
   }, [visible]);
 
   const toggleMember = useCallback((userId: string, teamId: string) => {
@@ -172,6 +188,9 @@ export default function AssignToUser({
     );
   };
 
+  // Hooks above run unconditionally; only the render is gated.
+  if (!can("inbox.assign")) return null;
+
   return (
     <>
       {iconOnly ? (
@@ -209,7 +228,7 @@ export default function AssignToUser({
             style={{
               color: textColor,
               fontSize: fontSize,
-              fontFamily: "Nunito_600SemiBold",
+              fontFamily: "InstrumentSans_600SemiBold",
             }}
           >
             Assign
@@ -256,7 +275,7 @@ export default function AssignToUser({
 
           <Text
             style={{
-              fontFamily: "Nunito_700Bold",
+              fontFamily: "InstrumentSans_700Bold",
               fontSize: 18,
               color: isDark ? "#fff" : Colors.light.textPrimary,
               marginBottom: 16,
@@ -315,7 +334,7 @@ export default function AssignToUser({
                       />
                       <Text
                         style={{
-                          fontFamily: "Nunito_700Bold",
+                          fontFamily: "InstrumentSans_700Bold",
                           fontSize: 14,
                           color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
                         }}
@@ -368,7 +387,7 @@ export default function AssignToUser({
                 style={{
                   color: "#fff",
                   textAlign: "center",
-                  fontFamily: "Nunito_700Bold",
+                  fontFamily: "InstrumentSans_700Bold",
                   fontSize: 15,
                 }}
               >
@@ -430,7 +449,7 @@ const MemberRow = memo(function MemberRow({
               style={{
                 color: "#fff",
                 fontSize: 12,
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "InstrumentSans_700Bold",
               }}
             >
               {namePreview(member?.name)}
@@ -439,7 +458,7 @@ const MemberRow = memo(function MemberRow({
           <View>
             <Text
               style={{
-                fontFamily: "Nunito_600SemiBold",
+                fontFamily: "InstrumentSans_600SemiBold",
                 fontSize: 14,
                 color: isDark ? "#fff" : Colors.light.textPrimary,
               }}
@@ -448,7 +467,7 @@ const MemberRow = memo(function MemberRow({
             </Text>
             <Text
               style={{
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 fontSize: 11,
                 color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
               }}

@@ -11,12 +11,9 @@ export async function getMembersByTeam() {
   return members.data;
 }
 
-
 export async function getTeamsMembersOfOrg() {
   try {
-    let members: MembersResponse = (
-      await axios.get("/api/org/members-with-teams")
-    ).data;
+    let members: MembersResponse = (await axios.get("/api/org/members-with-teams")).data;
     return members;
   } catch (e) {
     console.error(e);

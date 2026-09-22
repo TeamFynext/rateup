@@ -8,11 +8,7 @@ const FlowSearchBar = () => {
 
   return (
     <View style={{ flexDirection: "row", paddingHorizontal: 16 }}>
-      <SearchField
-        value={search}
-        onChangeText={setSearch}
-        placeholder="Search flows"
-      />
+      <SearchField value={search} onChangeText={setSearch} placeholder="Search flows" />
     </View>
   );
 };

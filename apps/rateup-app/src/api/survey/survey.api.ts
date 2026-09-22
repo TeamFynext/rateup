@@ -18,8 +18,6 @@ export async function getSurvey(surveyId: string) {
   return res.data;
 }
 
-
-export async function getSurveyStats(surveyId:string) {
-  return (await axios.get(`${SURVEYURL}/surveyStats/all/${surveyId}`))
-    .data;
+export async function getSurveyStats(surveyId: string) {
+  return (await axios.get(`${SURVEYURL}/surveyStats/all/${surveyId}`)).data;
 }

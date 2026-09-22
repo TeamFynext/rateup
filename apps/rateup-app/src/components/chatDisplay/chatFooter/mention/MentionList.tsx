@@ -38,7 +38,7 @@ export default function MentionList({
           borderColor: border,
         }}
       >
-        <Text style={{ fontSize: 12, fontFamily: "Nunito_400Regular", color: muted }}>
+        <Text style={{ fontSize: 12, fontFamily: "InstrumentSans_400Regular", color: muted }}>
           No teammates found
         </Text>
       </View>
@@ -86,9 +86,7 @@ export default function MentionList({
                 backgroundColor: Colors.accent.orange,
               }}
             >
-              <Text
-                style={{ fontSize: 10, fontFamily: "Nunito_700Bold", color: "#fff" }}
-              >
+              <Text style={{ fontSize: 10, fontFamily: "InstrumentSans_700Bold", color: "#fff" }}>
                 {namePreview(user.name)}
               </Text>
             </View>
@@ -97,7 +95,7 @@ export default function MentionList({
               style={{
                 flex: 1,
                 fontSize: 13,
-                fontFamily: "Nunito_600SemiBold",
+                fontFamily: "InstrumentSans_600SemiBold",
                 color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary,
               }}
             >

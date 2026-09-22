@@ -1,16 +1,15 @@
 import { useColorScheme } from "nativewind";
-import { View,
+import {
+  View,
   Text,
   KeyboardAvoidingView,
   Pressable,
   TouchableOpacity,
   Platform,
-  ScrollView } from "react-native";
+  ScrollView,
+} from "react-native";
 import { useRouter } from "expo-router";
-import {
-  useChatFilterStore,
-  useSelectedTabStore,
-} from "@/utils/store";
+import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
 import { useChatFilterData } from "@/api/inbox/contacts/contacts.query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft } from "lucide-react-native";
@@ -35,13 +34,8 @@ const FiltersScreen = () => {
   const { data: waSettings, isLoading: waSettingsLoading } = useWaSettings();
   const { data: filterData, isLoading: filterDataLoading } = useChatFilterData();
 
-  const {
-    filter,
-    setFilter,
-    clearFilter,
-    setPreviousFilterForTab,
-    previousFilterForTab,
-  } = useChatFilterStore();
+  const { filter, setFilter, clearFilter, setPreviousFilterForTab, previousFilterForTab } =
+    useChatFilterStore();
 
   const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
   const bgColor = isDark ? Colors.dark.bg : "white";
@@ -55,9 +49,9 @@ const FiltersScreen = () => {
     { label: "All Channels", value: "all" },
     ...(waSettings
       ? waSettings.map((account: any) => ({
-        label: account.phone,
-        value: account.phone,
-      }))
+          label: account.phone,
+          value: account.phone,
+        }))
       : []),
   ];
 
@@ -91,25 +85,25 @@ const FiltersScreen = () => {
   // 3. Team Options
   const teamOptions = teamRes
     ? teamRes.data?.map((team: any) => ({
-      value: team?.id,
-      label: team?.name,
-    }))
+        value: team?.id,
+        label: team?.name,
+      }))
     : [];
 
   // 4. Member Options
   const memberOptions = membersRes
     ? membersRes.data?.map((member: any) => ({
-      value: member?.id,
-      label: member?.name,
-    }))
+        value: member?.id,
+        label: member?.name,
+      }))
     : [];
 
   // 5. Lifecycle Options
   const lifecycleOptions = lifecycles
     ? lifecycles.map((stage: any) => ({
-      value: stage?.id,
-      label: `${stage?.emoji || ""} ${stage?.name || ""}`.trim(),
-    }))
+        value: stage?.id,
+        label: `${stage?.emoji || ""} ${stage?.name || ""}`.trim(),
+      }))
     : [];
 
   // 6. Label Options
@@ -191,12 +185,21 @@ const FiltersScreen = () => {
               <Pressable onPress={() => router.back()}>
                 <ArrowLeft size={24} color={textColor} />
               </Pressable>
-              <Text className="text-2xl font-bold dark:text-white" style={{ fontFamily: "Nunito_800ExtraBold" }}>
+              <Text
+                className="text-2xl font-bold dark:text-white"
+                style={{ fontFamily: "Figtree_800ExtraBold" }}
+              >
                 Filters
               </Text>
             </View>
-            <TouchableOpacity onPress={handleClearAll} className="bg-gray-100 dark:bg-zinc-800 px-4 py-2 rounded-full">
-              <Text className="text-sm font-semibold text-gray-600 dark:text-gray-300" style={{ fontFamily: "Nunito_700Bold" }}>
+            <TouchableOpacity
+              onPress={handleClearAll}
+              className="bg-gray-100 dark:bg-zinc-800 px-4 py-2 rounded-full"
+            >
+              <Text
+                className="text-sm font-semibold text-gray-600 dark:text-gray-300"
+                style={{ fontFamily: "InstrumentSans_700Bold" }}
+              >
                 Reset
               </Text>
             </TouchableOpacity>
@@ -206,10 +209,12 @@ const FiltersScreen = () => {
             contentContainerStyle={{ paddingBottom: 140 }}
             showsVerticalScrollIndicator={false}
           >
-
             {/* Channels / Phone Number */}
             <View className="mb-6">
-              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+              <Text
+                className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3"
+                style={{ fontFamily: "InstrumentSans_700Bold" }}
+              >
                 Channel
               </Text>
               {waSettingsLoading ? (
@@ -217,20 +222,27 @@ const FiltersScreen = () => {
               ) : (
                 <View className="flex-row flex-wrap gap-2">
                   {channelOptions.map((opt) => {
-                    const isSelected = (filter.phone === opt.value) || (!filter.phone && opt.value === "all");
+                    const isSelected =
+                      filter.phone === opt.value || (!filter.phone && opt.value === "all");
                     return (
                       <Pressable
                         key={opt.value}
                         onPress={() => selectChannel(opt.value)}
-                        className={`px-4 py-2 rounded-full border ${isSelected
-                          ? "bg-primaryBlue border-primaryBlue"
-                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
-                          }`}
+                        className={`px-4 py-2 rounded-full border ${
+                          isSelected
+                            ? "bg-primaryBlue border-primaryBlue"
+                            : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                        }`}
                       >
                         <Text
-                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
-                            }`}
-                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                          className={`text-sm ${
+                            isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                          }`}
+                          style={{
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_400Regular",
+                          }}
                         >
                           {opt.label}
                         </Text>
@@ -244,7 +256,10 @@ const FiltersScreen = () => {
             {/* Status (Only on All or Closed tab) */}
             {(isAllTab || isClosedTab) && (
               <View className="mb-6">
-                <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+                <Text
+                  className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3"
+                  style={{ fontFamily: "InstrumentSans_700Bold" }}
+                >
                   Status
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
@@ -254,15 +269,21 @@ const FiltersScreen = () => {
                       <Pressable
                         key={opt.value}
                         onPress={() => toggleStatus(opt.value)}
-                        className={`px-4 py-2 rounded-full border ${isSelected
-                          ? "bg-primaryBlue border-primaryBlue"
-                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
-                          }`}
+                        className={`px-4 py-2 rounded-full border ${
+                          isSelected
+                            ? "bg-primaryBlue border-primaryBlue"
+                            : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                        }`}
                       >
                         <Text
-                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
-                            }`}
-                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                          className={`text-sm ${
+                            isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                          }`}
+                          style={{
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_400Regular",
+                          }}
                         >
                           {opt.label}
                         </Text>
@@ -275,7 +296,10 @@ const FiltersScreen = () => {
 
             {/* Lifecycle Stages */}
             <View className="mb-6">
-              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+              <Text
+                className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3"
+                style={{ fontFamily: "InstrumentSans_700Bold" }}
+              >
                 Lifecycle
               </Text>
               {lifecyclesLoading ? (
@@ -288,15 +312,21 @@ const FiltersScreen = () => {
                       <Pressable
                         key={opt.value}
                         onPress={() => selectLifecycle(opt.value)}
-                        className={`px-4 py-2 rounded-full border ${isSelected
-                          ? "bg-primaryBlue border-primaryBlue"
-                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
-                          }`}
+                        className={`px-4 py-2 rounded-full border ${
+                          isSelected
+                            ? "bg-primaryBlue border-primaryBlue"
+                            : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                        }`}
                       >
                         <Text
-                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
-                            }`}
-                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                          className={`text-sm ${
+                            isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                          }`}
+                          style={{
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_400Regular",
+                          }}
                         >
                           {opt.label}
                         </Text>
@@ -309,7 +339,10 @@ const FiltersScreen = () => {
 
             {/* Label / Tags Filters */}
             <View className="mb-6">
-              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+              <Text
+                className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3"
+                style={{ fontFamily: "InstrumentSans_700Bold" }}
+              >
                 Labels
               </Text>
               {filterDataLoading ? (
@@ -322,15 +355,21 @@ const FiltersScreen = () => {
                       <Pressable
                         key={opt}
                         onPress={() => toggleLabel(opt)}
-                        className={`px-4 py-2 rounded-full border ${isSelected
-                          ? "bg-primaryBlue border-primaryBlue"
-                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
-                          }`}
+                        className={`px-4 py-2 rounded-full border ${
+                          isSelected
+                            ? "bg-primaryBlue border-primaryBlue"
+                            : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                        }`}
                       >
                         <Text
-                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
-                            }`}
-                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                          className={`text-sm ${
+                            isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                          }`}
+                          style={{
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_400Regular",
+                          }}
                         >
                           {opt}
                         </Text>
@@ -343,7 +382,10 @@ const FiltersScreen = () => {
 
             {/* User Filters */}
             <View className="mb-6">
-              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+              <Text
+                className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3"
+                style={{ fontFamily: "InstrumentSans_700Bold" }}
+              >
                 Assigned User
               </Text>
               {membersLoading ? (
@@ -356,15 +398,21 @@ const FiltersScreen = () => {
                       <Pressable
                         key={opt.value}
                         onPress={() => toggleMember(opt.value)}
-                        className={`px-4 py-2 rounded-full border ${isSelected
-                          ? "bg-primaryBlue border-primaryBlue"
-                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
-                          }`}
+                        className={`px-4 py-2 rounded-full border ${
+                          isSelected
+                            ? "bg-primaryBlue border-primaryBlue"
+                            : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                        }`}
                       >
                         <Text
-                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
-                            }`}
-                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                          className={`text-sm ${
+                            isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                          }`}
+                          style={{
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_400Regular",
+                          }}
                         >
                           {opt.label}
                         </Text>
@@ -377,7 +425,10 @@ const FiltersScreen = () => {
 
             {/* Team Filters */}
             <View className="mb-6">
-              <Text className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3" style={{ fontFamily: "Nunito_700Bold" }}>
+              <Text
+                className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3"
+                style={{ fontFamily: "InstrumentSans_700Bold" }}
+              >
                 Assigned Team
               </Text>
               {teamsLoading ? (
@@ -390,15 +441,21 @@ const FiltersScreen = () => {
                       <Pressable
                         key={opt.value}
                         onPress={() => toggleTeam(opt.value)}
-                        className={`px-4 py-2 rounded-full border ${isSelected
-                          ? "bg-primaryBlue border-primaryBlue"
-                          : "border-gray-200 dark:border-zinc-700 bg-transparent"
-                          }`}
+                        className={`px-4 py-2 rounded-full border ${
+                          isSelected
+                            ? "bg-primaryBlue border-primaryBlue"
+                            : "border-gray-200 dark:border-zinc-700 bg-transparent"
+                        }`}
                       >
                         <Text
-                          className={`text-sm ${isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
-                            }`}
-                          style={{ fontFamily: isSelected ? "Nunito_700Bold" : "Nunito_400Regular" }}
+                          className={`text-sm ${
+                            isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-300"
+                          }`}
+                          style={{
+                            fontFamily: isSelected
+                              ? "InstrumentSans_700Bold"
+                              : "InstrumentSans_400Regular",
+                          }}
                         >
                           {opt.label}
                         </Text>
@@ -418,9 +475,7 @@ const FiltersScreen = () => {
               const index = previousFilterForTab.findIndex((p) => p.tab === selectedTab);
               let updated;
               if (index !== -1) {
-                updated = previousFilterForTab.map((p, i) =>
-                  i === index ? { ...p, filter } : p
-                );
+                updated = previousFilterForTab.map((p, i) => (i === index ? { ...p, filter } : p));
               } else {
                 updated = [...previousFilterForTab, { tab: selectedTab, filter }];
               }
@@ -428,7 +483,10 @@ const FiltersScreen = () => {
               router.back();
             }}
           >
-            <Text className="text-white text-center font-bold text-lg" style={{ fontFamily: "Nunito_700Bold" }}>
+            <Text
+              className="text-white text-center font-bold text-lg"
+              style={{ fontFamily: "InstrumentSans_700Bold" }}
+            >
               Show results
             </Text>
           </Pressable>

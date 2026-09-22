@@ -1,9 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getActiveSurveyStats,
-  getOverallStats,
-  getTeamMemberStats,
-} from "./dashboard.api";
+import { getActiveSurveyStats, getOverallStats, getTeamMemberStats } from "./dashboard.api";
 
 export const useOverallStats = () => {
   return useQuery({

@@ -8,6 +8,7 @@ import { namePreview } from "../../utils/chatbox_utils";
 import { MessagePlatform } from "@/constants/enums";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { useLifecycleContext } from "@/context/LifecycleContext";
+import { useInboxViewStore } from "@/store/inboxViewStore";
 import {
   getInboxRowTheme,
   inboxAssigneeColors,
@@ -49,6 +50,28 @@ export function getDerivedStatus(contact: {
     contact.waMessageAssignStatus) as WaMessageAssignStatus;
   if (WaMessageClosedStatus.includes(status)) return "closed";
   return contact.assignedUsers?.length ? "assigned" : "new";
+}
+
+/** How long a New row keeps the cream highlight. */
+export const NEW_ROW_HIGHLIGHT_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * True when `iso` is within the last {@link NEW_ROW_HIGHLIGHT_MS}.
+ *
+ * The API hands back UTC timestamps, but not always with a zone suffix
+ * (`2026-09-17T09:12:44.000` as often as `...Z`). `Date.parse` reads a bare one
+ * as *local* time, which on an IST phone shifted every row 5.5h into the past
+ * and dropped the highlight half a day early — so a missing zone is spelled out
+ * as UTC before parsing, the same assumption `dayjs.utc` makes in `inbox.tsx`.
+ */
+export function isWithinLastDay(iso: string | null | undefined, now = Date.now()): boolean {
+  if (!iso) return false;
+  const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(iso);
+  const ms = Date.parse(hasZone ? iso : `${iso}Z`);
+  if (Number.isNaN(ms)) return false;
+  // A future timestamp is clock skew between the server and the phone, not an
+  // old message — it stays fresh rather than falling out of the window.
+  return now - ms <= NEW_ROW_HIGHLIGHT_MS;
 }
 
 function channelIcon(platform: string | undefined, color = "#fff", size = 11) {
@@ -108,7 +131,10 @@ function Chip({ label, color, background, dot, border, dashed, icon }: ChipProps
       ) : null}
       {icon}
       {label ? (
-        <Text numberOfLines={1} style={{ fontSize: 11, fontFamily: "Nunito_700Bold", color }}>
+        <Text
+          numberOfLines={1}
+          style={{ fontSize: 11, fontFamily: "InstrumentSans_700Bold", color }}
+        >
           {label}
         </Text>
       ) : null}
@@ -130,6 +156,13 @@ export type ChatBoxProps = ContactsWithLastMessage & {
   channelConnected?: boolean;
   /** Who sent the last message when it is an outgoing send — see `getLastMessageSender`. */
   lastMessageSender?: string;
+  /**
+   * The raw timestamp of the row's newest message, for the 24h cream highlight.
+   *
+   * Separate from `lastMessageTimeStamp`, which the list hands down already
+   * formatted ("2 hours ago") and so cannot be compared against.
+   */
+  lastMessageAt?: string | null;
 };
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -154,10 +187,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   currentUserId,
   channelLabel,
   channelConnected,
+  lastMessageAt,
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const t = useMemo(() => getInboxRowTheme(isDark), [isDark]);
+  const compact = useInboxViewStore((s) => s.compact);
 
   const isUnread = unReadMessageCount > 0;
 
@@ -173,12 +208,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const statusTone = t.status[status.tone];
 
   // Design `selBg` / `edgeColor`: the selected row paints brand-soft with a brand
-  // edge; otherwise a New (nobody-owns-it) ticket paints amber with a yellow
-  // edge, so unclaimed work stands out in the list; every other row stays
-  // transparent over the page.
+  // edge; otherwise a *freshly* New ticket — nobody owns it and its newest
+  // message landed in the last 24h — paints cream with the warm edge, so
+  // unclaimed work that is still actionable stands out in the list. Every other
+  // row, an older New one included, stays transparent over the page and says
+  // what it is through the status chip alone.
+  //
+  // The design's `isFreshNew` gates the fill and the edge together on that same
+  // 24h window, and both go here for the same reason: a queue where every
+  // unclaimed ticket is cream is a queue with no highlight at all.
   const isNew = status.tone === "new";
-  const rowBg = selected ? t.brandSoft : isNew ? t.newRowBg : "transparent";
-  const edgeColor = selected ? t.brand : isNew ? statusTone.color : null;
+  const isFreshlyNew = isNew && isWithinLastDay(lastMessageAt);
+  const rowBg = selected ? t.brandSoft : isFreshlyNew ? t.newRowBg : "transparent";
+  const edgeColor = selected ? t.brand : isFreshlyNew ? statusTone.color : null;
 
   const lifeCycleLabels = useLifecycleContext();
   const lifecycleInfo = useMemo(
@@ -229,7 +271,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             style={{
               color: assignee.fg,
               fontSize: 11,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
             }}
           >
             {assignee.extra > 0 ? `+${assignee.extra + 1}` : assignee.initials}
@@ -299,11 +341,33 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             style={{
               color: "#fff",
               fontSize: 16,
-              fontFamily: "Nunito_800ExtraBold",
+              fontFamily: "Figtree_800ExtraBold",
             }}
           >
             {namePreview(name)}
           </Text>
+          {/* Compact drops the chip row and the channel pill with it, so the
+              platform moves onto the avatar — the design's 18px badge with a 2px
+              surface ring, as the web inbox draws it on every row. */}
+          {compact && channelColor ? (
+            <View
+              style={{
+                position: "absolute",
+                right: -2,
+                bottom: -2,
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                backgroundColor: channelColor,
+                borderWidth: 2,
+                borderColor: t.surface,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {channelIcon(platform, "#fff", 10)}
+            </View>
+          ) : null}
         </View>
       </View>
 
@@ -318,7 +382,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               numberOfLines={1}
               style={{
                 fontSize: 16,
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "InstrumentSans_700Bold",
                 color: t.fg1,
                 flexShrink: 1,
               }}
@@ -343,7 +407,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               numberOfLines={1}
               style={{
                 fontSize: 13,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: t.fg3,
                 flex: 1,
               }}
@@ -361,8 +425,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             </Text>
           </View>
 
-          {/* Chips */}
-          {status || lifecycleInfo || channelPill || contactLabels?.length ? (
+          {/* Chips — dropped by the compact list, which keeps name, time,
+              code + message line and the trailing column. */}
+          {!compact && (status || lifecycleInfo || channelPill || contactLabels?.length) ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
               {/* Platform + which of the org's numbers/accounts the ticket came in
                   on, in one pill: the icon says WhatsApp/Instagram/Facebook, the
@@ -413,7 +478,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             <Text
               style={{
                 fontSize: 12,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: t.fg4,
               }}
             >
@@ -431,7 +496,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 11, fontFamily: "Nunito_800ExtraBold" }}>
+                <Text
+                  style={{ color: t.onAccent, fontSize: 11, fontFamily: "Figtree_800ExtraBold" }}
+                >
                   {unReadMessageCount > 99 ? "99+" : unReadMessageCount}
                 </Text>
               </View>

@@ -1,8 +1,6 @@
 import { parsePhoneNumber } from "libphonenumber-js";
 
-export const convertFullPhoneNumToCoutryCodeAndNationalNum = (
-  fullPhoneNum: string
-) => {
+export const convertFullPhoneNumToCoutryCodeAndNationalNum = (fullPhoneNum: string) => {
   const num = parsePhoneNumber(fullPhoneNum);
 
   return {

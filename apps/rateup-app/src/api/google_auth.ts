@@ -16,17 +16,14 @@ export const signInWithGoogle = async () => {
     const accessToken = tokens.accessToken;
 
     // Send tokens to SuperTokens backend
-    const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`,
-      {
-        thirdPartyId: "google",
-        clientType: "mobile",
-        oAuthTokens: {
-          access_token: accessToken,
-          id_token: idToken,
-        },
+    const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`, {
+      thirdPartyId: "google",
+      clientType: "mobile",
+      oAuthTokens: {
+        access_token: accessToken,
+        id_token: idToken,
       },
-    );
+    });
 
     // Validate session creation
     const sessionExists = await SuperTokens.doesSessionExist();
@@ -57,9 +54,7 @@ export const signInWithGoogle = async () => {
     console.log("Full error object:", JSON.stringify(err, null, 2));
     return {
       success: false,
-      message:
-        err?.response?.data?.message ||
-        "Google Sign-In failed. Please try again.",
+      message: err?.response?.data?.message || "Google Sign-In failed. Please try again.",
     };
   }
 };

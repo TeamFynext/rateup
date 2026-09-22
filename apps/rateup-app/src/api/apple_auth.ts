@@ -22,16 +22,13 @@ export const signInWithApple = async () => {
       };
     }
 
-    const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`,
-      {
-        thirdPartyId: "apple",
-        clientType: "mobile",
-        oAuthTokens: {
-          id_token: idToken,
-        },
+    const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`, {
+      thirdPartyId: "apple",
+      clientType: "mobile",
+      oAuthTokens: {
+        id_token: idToken,
       },
-    );
+    });
 
     // Validate session
     const sessionExists = await SuperTokens.doesSessionExist();
@@ -69,9 +66,7 @@ export const signInWithApple = async () => {
 
     return {
       success: false,
-      message:
-        err?.response?.data?.message ||
-        "Apple Sign-In failed. Please try again.",
+      message: err?.response?.data?.message || "Apple Sign-In failed. Please try again.",
     };
   }
 };

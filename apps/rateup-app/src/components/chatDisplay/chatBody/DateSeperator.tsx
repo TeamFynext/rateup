@@ -23,7 +23,7 @@ const DateSeparator = ({ label }: DateSeparatorProps) => {
         <Text
           style={{
             fontSize: 11,
-            fontFamily: "Nunito_400Regular",
+            fontFamily: "InstrumentSans_400Regular",
             color: t.fg3,
           }}
         >

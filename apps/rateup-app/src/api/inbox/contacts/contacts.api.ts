@@ -72,10 +72,7 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
     );
     return response.data;
   } catch (error: any) {
-    console.error(
-      "Failed to fetch filtered contacts:",
-      error?.response?.data || error.message,
-    );
+    console.error("Failed to fetch filtered contacts:", error?.response?.data || error.message);
     throw new Error("Failed to load contacts.");
   }
 };
@@ -84,13 +81,7 @@ export async function getChatFilterData() {
   return (await axios.get(`/api/wa/inbox/message/filterdata`)).data;
 }
 
-export const editContact = async ({
-  data,
-  contactId,
-}: {
-  data: any;
-  contactId: string;
-}) => {
+export const editContact = async ({ data, contactId }: { data: any; contactId: string }) => {
   let res = await axios.put(`/api/contact/${contactId}`, data);
   return res;
 };

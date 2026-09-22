@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,6 @@ import { colors } from "@/constants/constants";
 export default function AddContactScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [fullPhoneNumber, setFullPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -36,12 +35,13 @@ export default function AddContactScreen() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
 
-  useEffect(() => {
-    if (phone && selectedCountry) {
-      const formatted = selectedCountry.dial_code + phone.replace(/^0+/, "");
-      setFullPhoneNumber(formatted.replace("+", ""));
-    }
-  }, [phone, selectedCountry]);
+  // Computed, not stored: it is a pure function of the country and what has been typed, and
+  // holding it in state meant the submit below could read the *previous* number for one
+  // render after either changed.
+  const fullPhoneNumber =
+    phone && selectedCountry
+      ? (selectedCountry.dial_code + phone.replace(/^0+/, "")).replace("+", "")
+      : "";
 
   const handleSelectCountry = (country: any) => {
     setSelectedCountry(country);
@@ -83,9 +83,7 @@ export default function AddContactScreen() {
     >
       <Text className="text-black dark:text-white mr-2">{item.flag}</Text>
       <Text className="text-black dark:text-white mr-2">{item.name}</Text>
-      <Text className="text-black dark:text-white text-sm">
-        {item.dial_code}
-      </Text>
+      <Text className="text-black dark:text-white text-sm">{item.dial_code}</Text>
     </TouchableOpacity>
   );
 
@@ -104,9 +102,7 @@ export default function AddContactScreen() {
               <Pressable onPress={() => router.back()}>
                 <ArrowLeft color={textColor} />
               </Pressable>
-              <Text className="dark:text-white text-2xl font-bold">
-                Add New Contact
-              </Text>
+              <Text className="dark:text-white text-2xl font-bold">Add New Contact</Text>
             </View>
 
             {/* Error or Success Messages */}
@@ -115,11 +111,7 @@ export default function AddContactScreen() {
                 className="mb-4 p-3 rounded-lg"
                 style={{ backgroundColor: error ? "#ffe5e5" : "#e5fff0" }}
               >
-                <Text
-                  className={`text-sm ${
-                    error ? "text-[#cc0000]" : "text-[#007e33]"
-                  }`}
-                >
+                <Text className={`text-sm ${error ? "text-[#cc0000]" : "text-[#007e33]"}`}>
                   {error || message}
                 </Text>
               </View>
@@ -154,12 +146,8 @@ export default function AddContactScreen() {
                     className="flex-row items-center border border-[#E2E5ED] rounded-lg px-3 py-3 bg-white dark:bg-slate-950"
                     style={{ minWidth: width * 0.28 }}
                   >
-                    <Text className="dark:text-white mr-2 text-base">
-                      {selectedCountry.flag}
-                    </Text>
-                    <Text className="dark:text-white text-base">
-                      {selectedCountry.dial_code}
-                    </Text>
+                    <Text className="dark:text-white mr-2 text-base">{selectedCountry.flag}</Text>
+                    <Text className="dark:text-white text-base">{selectedCountry.dial_code}</Text>
                     {showDropdown ? (
                       <ChevronUp size={18} color={textColor} />
                     ) : (
@@ -227,9 +215,7 @@ export default function AddContactScreen() {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className="text-white font-bold text-lg">
-                  Add Contact
-                </Text>
+                <Text className="text-white font-bold text-lg">Add Contact</Text>
               )}
             </Pressable>
           </View>

@@ -1,13 +1,7 @@
 import { useLoggedInUser } from "@/api/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { CircleUser } from "lucide-react-native";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  useColorScheme,
-} from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, useColorScheme } from "react-native";
 import { Colors } from "@/constants/colors";
 import { useAssignInboxToUser } from "@/api/inbox/messages/message.query";
 import AssignToUser from "./AssignToUser";
@@ -15,12 +9,12 @@ import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { useChatAssignStatusStore } from "@/utils/store";
 import { useContactsStore } from "@/store/inboxStore";
 import { Toast } from "@/components/common/Notice";
+import { usePermissions } from "@/hooks/usePermissions";
 const NotAssigned = ({ contactId }: { contactId: string }) => {
+  const { can } = usePermissions();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const setWaAssignStatus = useChatAssignStatusStore(
-    (state) => state.setWaAssignStatus,
-  );
+  const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
   const queryClient = useQueryClient();
   const { data: userData, isLoading: loadingUser } = useLoggedInUser();
   const assignMut = useAssignInboxToUser(contactId);
@@ -60,15 +54,11 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
           // The inbox list renders from the contacts store (and its SQLite
           // mirror), not react-query, so it needs telling directly or the row
           // keeps its old status and stays out of the assigned lists.
-          useContactsStore
-            .getState()
-            .updateContactById(contactId, (c: any) => ({
-              ...c,
-              waMessageAssignStatus: "ASSIGNED",
-              assignedUsers: [
-                { id: userId, teamId, name: userData?.userName ?? "" },
-              ],
-            }));
+          useContactsStore.getState().updateContactById(contactId, (c: any) => ({
+            ...c,
+            waMessageAssignStatus: "ASSIGNED",
+            assignedUsers: [{ id: userId, teamId, name: userData?.userName ?? "" }],
+          }));
 
           queryClient.invalidateQueries({
             queryKey: ["assigned-contact", contactId],
@@ -87,15 +77,14 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
           Toast.show({
             type: "error",
             text1: "Could not assign",
-            text2:
-              error?.response?.data?.message ??
-              error?.message ??
-              "Please try again.",
+            text2: error?.response?.data?.message ?? error?.message ?? "Please try again.",
           });
         },
       },
     );
   };
+
+  if (!can("inbox.assign")) return null;
 
   return (
     <View
@@ -131,17 +120,13 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
           ) : (
             <>
               <CircleUser
-                color={
-                  isDark ? Colors.dark.textPrimary : Colors.light.textPrimary
-                }
+                color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary}
                 size={18}
               />
               <Text
                 style={{
-                  fontFamily: "Nunito_600SemiBold",
-                  color: isDark
-                    ? Colors.dark.textPrimary
-                    : Colors.light.textPrimary,
+                  fontFamily: "InstrumentSans_600SemiBold",
+                  color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary,
                   fontSize: 14,
                 }}
               >

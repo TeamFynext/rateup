@@ -577,7 +577,7 @@ const MessageSendPanel = ({
                             ? Colors.dark.textMuted
                             : Colors.light.textMuted,
                       fontSize: 13,
-                      fontFamily: "Nunito_600SemiBold",
+                      fontFamily: "InstrumentSans_600SemiBold",
                     }}
                   >
                     Message
@@ -608,7 +608,7 @@ const MessageSendPanel = ({
                             ? Colors.dark.textMuted
                             : Colors.light.textMuted,
                       fontSize: 13,
-                      fontFamily: "Nunito_600SemiBold",
+                      fontFamily: "InstrumentSans_600SemiBold",
                     }}
                   >
                     Note
@@ -667,7 +667,13 @@ const MessageSendPanel = ({
                       setTemplateOptionsVisible(false);
                     }}
                   >
-                    <Text style={{ color: "#fff", fontSize: 13, fontFamily: "Nunito_600SemiBold" }}>
+                    <Text
+                      style={{
+                        color: "#fff",
+                        fontSize: 13,
+                        fontFamily: "InstrumentSans_600SemiBold",
+                      }}
+                    >
                       Send Template
                     </Text>
                   </Pressable>
@@ -715,7 +721,7 @@ const MessageSendPanel = ({
                         style={{
                           color: "#fff",
                           fontSize: 16,
-                          fontFamily: "Nunito_700Bold",
+                          fontFamily: "InstrumentSans_700Bold",
                           flex: 1,
                         }}
                       >
@@ -771,7 +777,7 @@ const MessageSendPanel = ({
                   style={{
                     flex: 1,
                     fontSize: 14,
-                    fontFamily: "Nunito_400Regular",
+                    fontFamily: "InstrumentSans_400Regular",
                     color: isDark ? "#fff" : Colors.light.textPrimary,
                     padding: 0,
                     maxHeight: 120,
@@ -870,7 +876,9 @@ const MessageSendPanel = ({
                   setTemplateOptionsVisible(false);
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 13, fontFamily: "Nunito_600SemiBold" }}>
+                <Text
+                  style={{ color: "#fff", fontSize: 13, fontFamily: "InstrumentSans_600SemiBold" }}
+                >
                   Send Template
                 </Text>
               </Pressable>
@@ -915,7 +923,12 @@ const MessageSendPanel = ({
                   }}
                 >
                   <Text
-                    style={{ color: "#fff", fontSize: 16, fontFamily: "Nunito_700Bold", flex: 1 }}
+                    style={{
+                      color: "#fff",
+                      fontSize: 16,
+                      fontFamily: "InstrumentSans_700Bold",
+                      flex: 1,
+                    }}
                   >
                     Send Template
                   </Text>
@@ -972,7 +985,7 @@ const MessageSendPanel = ({
               style={{
                 flex: 1,
                 fontSize: 14,
-                fontFamily: "Nunito_600SemiBold",
+                fontFamily: "InstrumentSans_600SemiBold",
                 color: "#ef4444",
                 padding: 0,
                 textAlign: "center",

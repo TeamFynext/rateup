@@ -2,7 +2,7 @@
   "expo": {
     "name": "RateUp",
     "slug": "rateup",
-    "version": "1.2.1",
+    "version": "1.2.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rateup",
@@ -116,7 +116,14 @@
       "expo-asset",
       "expo-status-bar",
       "expo-sqlite",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to scan customer loyalty cards.",
+          "recordAudioAndroid": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

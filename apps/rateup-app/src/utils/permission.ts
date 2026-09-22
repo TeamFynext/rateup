@@ -30,13 +30,10 @@ export default async function requestStoragePermission(): Promise<boolean> {
             onPress: () => Linking.openSettings(),
           },
           { text: "Cancel", style: "cancel" },
-        ]
+        ],
       );
     } else {
-      Alert.alert(
-        "Permission Denied",
-        "You must allow storage access to save media files."
-      );
+      Alert.alert("Permission Denied", "You must allow storage access to save media files.");
     }
 
     return false;

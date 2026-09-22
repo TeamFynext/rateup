@@ -158,7 +158,7 @@ const MessageBubble = ({
             <Text
               style={{
                 fontSize: 11,
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "InstrumentSans_700Bold",
                 color: styles.text,
                 textTransform: "uppercase",
                 letterSpacing: 0.5,
@@ -172,7 +172,7 @@ const MessageBubble = ({
             <Text
               style={{
                 fontSize: 10,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
                 marginTop: 4,
               }}
@@ -234,7 +234,7 @@ const MessageBubble = ({
             <Text
               style={{
                 fontSize: 9,
-                fontFamily: "Nunito_800ExtraBold",
+                fontFamily: "Figtree_800ExtraBold",
                 letterSpacing: 0.54,
                 textTransform: "uppercase",
                 color: t.note.label,
@@ -262,7 +262,7 @@ const MessageBubble = ({
 
   const authorLabelStyle = {
     fontSize: 9,
-    fontFamily: "Nunito_800ExtraBold",
+    fontFamily: "Figtree_800ExtraBold",
     color: t.fg4,
     textAlign: "right" as const,
   };
@@ -312,7 +312,7 @@ const MessageBubble = ({
               <Text
                 style={{
                   fontSize: 10,
-                  fontFamily: "Nunito_400Regular",
+                  fontFamily: "InstrumentSans_400Regular",
                   color: timestampColor,
                   marginTop: 3,
                 }}
@@ -351,7 +351,7 @@ const MessageBubble = ({
             <Text
               style={{
                 fontSize: 10,
-                fontFamily: "Nunito_400Regular",
+                fontFamily: "InstrumentSans_400Regular",
                 color: timestampColor,
                 textAlign: "right",
               }}
@@ -388,7 +388,7 @@ const MessageBubble = ({
         >
           <Text
             style={{
-              fontFamily: "Nunito_900Black",
+              fontFamily: "Figtree_900Black",
               fontSize: 10,
               color: "#fff",
             }}

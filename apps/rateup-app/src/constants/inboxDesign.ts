@@ -1,11 +1,18 @@
 /**
  * Tokens lifted from the "RateUp Mobile Inbox" Claude Design project
  * (447ff03d-0634-4064-b362-5bebaaee8f90 → `RateUp Mobile Inbox.dc.html` +
- * `_ds/.../colors_and_type.css`).
+ * `_ds2/tokens/themes.css`).
  *
- * Light values are the design system's `:root` semantics; dark values are the
- * `.theme-dark` override the design file declares in its <helmet> block
- * (Material-style #121212 base + white elevation overlays).
+ * Both themes are now the design's semantic tokens verbatim — `:root` for light,
+ * `[data-theme="dark"]` for dark. Dark used to be a re-tint of those values into
+ * the navy the app's chrome was built from (`Colors.dark.bg` = #091522), on the
+ * grounds that the design's dark base clashed with it. That base is no longer
+ * Material's #121212: `_ds2` bases dark on the cool near-black #0B0F14, and
+ * `Colors.dark` has moved onto it, so the re-tint had nothing left to reconcile
+ * and only made the inbox read warmer and more saturated than the design.
+ *
+ * Keep it that way: a value here should be traceable to a token in
+ * `_ds2/tokens/themes.css`, and a deliberate deviation says so in a comment.
  */
 
 type Tone = { color: string; soft: string; fg: string };
@@ -23,14 +30,45 @@ export type InboxRowTheme = {
   fg3: string;
   fg4: string;
   brand: string;
+  /**
+   * The fixed RateUp navy, for a surface that is filled with the brand rather than
+   * tinted by it — the cashier's balance panel is the only one so far.
+   *
+   * `brand` flips to a bright cyan in dark so it can be read *as text* on the dark base;
+   * white on that cyan is ~2:1, so a filled panel cannot use it. This stays navy in
+   * both themes, where white sits at ~7.5:1 and the panel reads as brand either way.
+   */
+  brandInk: string;
+  /**
+   * `--on-accent`: the foreground for a chip *filled* with `brand` or `success`,
+   * i.e. the unread badge. White in light, but near-black in dark — dark's
+   * `success` is a light mint that white sits on at ~1.9:1.
+   */
+  onAccent: string;
   warm: string;
   success: string;
   danger: string;
   status: Record<InboxStatusTone, Tone>;
   /**
-   * Fill behind a New (unassigned) row. Deeper than `status.new.soft`: the
-   * design's `--warm-soft` is tuned for a pill and all but vanished as a full
-   * row on a phone.
+   * Error surfaces — the cashier's inline errors and the outbox's failure banner.
+   *
+   * Deliberately not a fourth `status` tone: `InboxStatusTone` is the row's *lifecycle*
+   * (`getDerivedStatus`), a nothing-went-wrong axis, and `STATUS_LABEL` in `ChatBox`
+   * maps it exhaustively. A failure is not a lifecycle state, so it sits beside them.
+   * `danger` above is the flat colour for a glyph or a line of text; this is the pair a
+   * tinted panel needs.
+   */
+  dangerTone: Tone;
+  /**
+   * Fill behind a New (unassigned) row whose newest message is under 24h old —
+   * the design's `isFreshNew`, see `isWithinLastDay` in `ChatBox`. An older New
+   * row loses the fill *and* the warm left edge, and reads as New from its chip.
+   *
+   * The design's `--warm-soft`, so the same value as `status.new.soft`. It used
+   * to be deepened (`--ru-amber-100`) on the grounds that `--warm-soft` vanished
+   * as a full-width row on a phone — but that was while *every* unclaimed ticket
+   * was painted. Now that it marks only the fresh ones, the design's tint is
+   * enough, and the deeper amber read as a warning the row was not making.
    */
   newRowBg: string;
   /** `--bg-warm-soft` + `--warm-700`, used by the thread's unassigned banner. */
@@ -47,85 +85,88 @@ export type InboxRowTheme = {
 export type InboxStatusTone = "new" | "assigned" | "closed";
 
 const light: InboxRowTheme = {
-  pageBg: "#FAFAF7",
+  // `_ds2/tokens/themes.css` `:root`.
+  pageBg: "#FCFCFD",
   surface: "#FFFFFF",
-  surface2: "#F4F5F2",
-  border1: "#ECECEA",
-  rowDivider: "#F4F5F2",
-  brandSoft: "#EEF4FB",
-  fg1: "#0A0B0A",
-  fg2: "#2E302E",
-  fg3: "#666864",
-  fg4: "#8B8E8A",
+  surface2: "#F7F8FA",
+  border1: "#E4E7EC",
+  rowDivider: "#EDEFF3",
+  brandSoft: "#F1F6FC",
+  fg1: "#1B2027",
+  fg2: "#434A55",
+  fg3: "#6B7480",
+  fg4: "#9BA3AF",
   brand: "#1C518E",
+  brandInk: "#1C518E",
+  onAccent: "#FFFFFF",
   warm: "#F8951D",
-  success: "#16A34A",
-  danger: "#DC2626",
-  // `_ds2/tokens/themes.css` `:root` — New is `--warm-*`, Assigned `--accent*`,
-  // Closed `--success*`, exactly as the design's `ST` table maps them.
+  success: "#17915A",
+  danger: "#C4342C",
+  // New is `--warm-*`, Assigned `--accent*`, Closed `--success*`, exactly as the
+  // design's `ST` table maps them.
   status: {
     new: { color: "#AE5D07", soft: "#FFF8EC", fg: "#AE5D07" },
     assigned: { color: "#1C518E", soft: "#F1F6FC", fg: "#1C518E" },
     closed: { color: "#17915A", soft: "#E9F7EF", fg: "#17915A" },
   },
-  // `--ru-amber-100`.
-  newRowBg: "#FEECCB",
-  warmSoft: "#FFF8E1",
-  warmStrong: "#A85C07",
+  // `--error*`.
+  dangerTone: { color: "#C4342C", soft: "#FCEEEC", fg: "#C4342C" },
+  newRowBg: "#FFF8EC",
+  warmSoft: "#FFF8EC",
+  warmStrong: "#AE5D07",
+  // The design's note card: `--warm-soft` on `--warm-border`, label `--warm-fg`,
+  // body `--fg`.
   note: {
-    bg: "#FFF6DC",
-    border: "#F1DFAE",
-    label: "#B26A00",
-    text: "#4A3A12",
+    bg: "#FFF8EC",
+    border: "#FCD68F",
+    label: "#AE5D07",
+    text: "#1B2027",
   },
 };
 
 const dark: InboxRowTheme = {
-  pageBg: "#121212",
-  surface: "#1E1E1E",
-  surface2: "#242424",
-  border1: "rgba(255,255,255,0.12)",
-  // The design file leaves the row divider on the literal `--ink-50`, which is a
-  // near-white rule on #121212; dark takes the `.theme-dark` border token instead.
-  rowDivider: "rgba(255,255,255,0.12)",
-  brandSoft: "rgba(79,195,255,0.14)",
-  fg1: "rgba(255,255,255,0.87)",
-  fg2: "rgba(255,255,255,0.72)",
-  fg3: "rgba(255,255,255,0.60)",
-  fg4: "rgba(255,255,255,0.44)",
-  brand: "#4FC3FF",
+  // `_ds2/tokens/themes.css` `[data-theme="dark"]`.
+  pageBg: "#0B0F14",
+  surface: "#111720",
+  surface2: "#161D27",
+  border1: "#232C38",
+  rowDivider: "#1A222C",
+  brandSoft: "rgba(90,140,198,0.14)",
+  fg1: "#EDF0F4",
+  fg2: "#B7C0CC",
+  fg3: "#8B95A3",
+  fg4: "#5F6979",
+  brand: "#5A8CC6",
+  brandInk: "#1C518E",
+  onAccent: "#07131F",
   warm: "#F8951D",
-  success: "#16A34A",
-  danger: "#CF6679",
-  // `_ds2/tokens/themes.css` `[data-theme="dark"]` — the same three tokens.
+  success: "#4ECB8B",
+  danger: "#F08078",
   status: {
     new: { color: "#FBC05C", soft: "rgba(248,149,29,0.11)", fg: "#FBC05C" },
     assigned: { color: "#5A8CC6", soft: "rgba(90,140,198,0.14)", fg: "#5A8CC6" },
     closed: { color: "#4ECB8B", soft: "rgba(78,203,139,0.12)", fg: "#4ECB8B" },
   },
-  // The New edge's own yellow at a visible depth on the app's dark grey.
-  newRowBg: "rgba(251,192,92,0.16)",
-  // The design hardcodes the warm banner and the note card's cream (#FFF6DC),
-  // which would be a full-brightness panel in dark. Dark keeps the amber hue at
-  // the same tint depth `.theme-dark` uses for `--bg-warm-soft`.
-  warmSoft: "rgba(248,149,29,0.14)",
-  warmStrong: "#FBBF24",
+  dangerTone: { color: "#F08078", soft: "rgba(240,128,120,0.12)", fg: "#F08078" },
+  newRowBg: "rgba(248,149,29,0.11)",
+  warmSoft: "rgba(248,149,29,0.11)",
+  warmStrong: "#FBC05C",
   note: {
-    bg: "rgba(248,149,29,0.12)",
-    border: "rgba(248,149,29,0.28)",
-    label: "#FBBF24",
-    text: "rgba(255,255,255,0.87)",
+    bg: "rgba(248,149,29,0.11)",
+    border: "rgba(248,149,29,0.3)",
+    label: "#FBC05C",
+    text: "#EDF0F4",
   },
 };
 
 export const getInboxRowTheme = (isDark: boolean): InboxRowTheme => (isDark ? dark : light);
 
 /**
- * The design's header/segment bar sits on `--bg-surface`. Light takes that
- * verbatim; dark uses this app's raised navy rather than the design's #1E1E1E,
- * so the bar doesn't clash with the rest of the app's dark chrome.
+ * The design's header/segment bar sits on `--bg-surface`, which is what both
+ * themes return here — dark's `surface` is now that same raised navy, so this
+ * is kept only for the call sites that name the header bar directly.
  */
-export const getInboxHeaderBg = (isDark: boolean) => (isDark ? "#0D1E32" : "#FFFFFF");
+export const getInboxHeaderBg = (isDark: boolean) => (isDark ? dark.surface : light.surface);
 
 /** Solid avatar fills used by the design's sample conversations. */
 export const inboxAvatarColors = [
