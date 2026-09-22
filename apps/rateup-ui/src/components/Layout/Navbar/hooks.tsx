@@ -222,7 +222,7 @@ export function useNavMain({
 }: NavMainInput) {
   const { t } = useTranslation();
 
-  // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
+  // null = sees every feature; Set = restricted to the team's enabled features
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
   return useMemo<NavEntry[]>(() => {

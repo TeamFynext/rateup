@@ -121,7 +121,7 @@ export const qrSpecicalFeatures = [
   {
     title: "Multi-Branch Support",
     description:
-      "Manage branches effortlessly. Super admins can add unlimited branches, monitor performance, and compare results across locations.",
+      "Manage branches effortlessly. Owners and admins can add unlimited branches, monitor performance, and compare results across locations.",
     image: cover11,
   },
 ];

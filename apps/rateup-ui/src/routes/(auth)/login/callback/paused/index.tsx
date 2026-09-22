@@ -54,7 +54,7 @@ function getPausedText(pausedby: string | undefined) {
       return (
         <div className="flex flex-col items-center gap-2">
           <p className="text-muted-foreground">
-            Kindly contact your organization Super Admin for details.
+            Kindly contact your organization owner for details.
           </p>
         </div>
       );

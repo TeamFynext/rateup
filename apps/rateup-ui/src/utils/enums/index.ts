@@ -14,12 +14,6 @@ export const AuthMode = {
   VERIFY_PHONE_NO: "VERIFY_PHONE_NO",
 };
 
-export const UserRole = {
-  SUPADM: "SUPER_ADMIN",
-  ADM: "ADMIN",
-  MEMBER: "MEMBER",
-};
-
 export const ResetSteps = {
   STEP_ONE: "STEP_ONE",
   STEP_TWO: "STEP_TWO",
