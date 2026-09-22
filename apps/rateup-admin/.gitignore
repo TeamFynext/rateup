@@ -1,0 +1,12 @@
+node_modules
+dist
+.tanstack
+.wrangler
+*.tsbuildinfo
+.DS_Store
+.vscode/
+.idea
+i-want-to-redesign-glittery-pony.md
+# env files (the template belongs in the repo)
+.env*
+!.env.example
