@@ -191,6 +191,18 @@ export const useChatSocket = () => {
             }
 
             break;
+          case "meta_agent_thread":
+            // Contact-level: routed to that contact's live ticket, which also
+            // refreshes the open header when it is the selected one.
+            if (data?.meta_agent_thread?.contactId) {
+              updateContactById(data.meta_agent_thread.contactId, (contact) => ({
+                ...contact,
+                metaAgentThreadOwner: data.meta_agent_thread.owner,
+                metaAgentThreadOwnerAt: data.meta_agent_thread.at,
+                metaAgentHandoverReason: data.meta_agent_thread.reason,
+              }));
+            }
+            break;
           default:
             break;
         }

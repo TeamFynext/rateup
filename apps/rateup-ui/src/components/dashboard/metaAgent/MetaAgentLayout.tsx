@@ -1,11 +1,11 @@
-import { IconCircleCheck, IconCircleDashed, IconRocket } from "@tabler/icons-react";
-import { Outlet } from "@tanstack/react-router";
+import { IconCircleCheck, IconCircleDashed, IconRobotFace, IconRocket } from "@tabler/icons-react";
+import { Link, Outlet } from "@tanstack/react-router";
 
-import { useMetaBusinessAgent } from "@/backend/metaAgent/metaAgent.query";
-import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -20,13 +20,15 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { StepIconChip } from "../loyalty/onboarding/StepChrome.tsx";
 import { MetaAgentProvider, useMetaAgentContext } from "./MetaAgentContext";
+import { useAgentSetup } from "./setup/useAgentSetup.ts";
 
 /**
- * Wraps every Meta Business Agent section. The sections themselves are routes,
- * listed under "Meta AI Agent" in the main sidebar — so this holds only what is
- * common to all of them: which channel you are configuring, and whether its
- * agent exists yet.
+ * Wraps every Meta Business Agent page. The overview is the setup guide and the
+ * rest are its steps, each a route listed under "Meta AI Agent" in the sidebar —
+ * so this holds only what is common to all of them: which channel you are
+ * configuring, and whether its agent is live.
  */
 export function MetaAgentLayout() {
   return (
@@ -41,54 +43,59 @@ function MetaAgentShell() {
 
   if (!isLoading && !channels.length) {
     return (
-      <div className="mx-auto max-w-3xl py-10">
+      <div className="mx-auto w-full max-w-265 py-10">
         <Empty className="rounded-xl border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <IconRocket />
             </EmptyMedia>
-            <EmptyTitle>No WhatsApp channel connected</EmptyTitle>
+            <EmptyTitle>Connect WhatsApp first</EmptyTitle>
             <EmptyDescription>
-              Connect a WhatsApp number under Settings &rarr; Channels before configuring the Meta
-              Business Agent.
+              The AI agent answers on a WhatsApp number, so it needs one connected before you can
+              set it up.
             </EmptyDescription>
           </EmptyHeader>
+          <EmptyContent>
+            <Button render={<Link to="/dashboard/settings/channels" />}>Connect WhatsApp</Button>
+          </EmptyContent>
         </Empty>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 pb-16">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b pb-5">
-        <div className="flex flex-col gap-2">
-          <Badge variant="secondary" className="w-fit">
-            <IconRocket data-icon="inline-start" />
-            Meta Business Agent
-          </Badge>
-          <h1 className={PAGE_TITLE}>AI Agent for WhatsApp</h1>
-        </div>
-        <div className="flex items-center gap-3">
+    <div className="mx-auto flex w-full max-w-265 flex-col gap-6 pb-16">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <StepIconChip tone="blue" size="sm">
+            <IconRobotFace />
+          </StepIconChip>
+          <span className="font-display text-[17px] font-bold tracking-[-0.02em]">
+            Meta AI Agent
+          </span>
           {!!waSettingsId && <AgentStatusBadge waSettingsId={waSettingsId} />}
-          {!!channels.length && (
-            <Select
-              value={waSettingsId}
-              onValueChange={(value) => value && setWaSettingsId(value)}
-              items={channels.map((channel) => ({ value: channel.id, label: channel.label }))}
-            >
-              <SelectTrigger className="w-56">
-                <SelectValue placeholder="Select WhatsApp number" />
-              </SelectTrigger>
-              <SelectContent>
-                {channels.map((channel) => (
-                  <SelectItem key={channel.id} value={channel.id}>
-                    {channel.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
+        {channels.length > 1 ? (
+          <Select
+            value={waSettingsId}
+            onValueChange={(value) => value && setWaSettingsId(value)}
+            items={channels.map((channel) => ({ value: channel.id, label: channel.label }))}
+          >
+            <SelectTrigger className="w-56" aria-label="WhatsApp number">
+              <SelectValue placeholder="Select WhatsApp number" />
+            </SelectTrigger>
+            <SelectContent>
+              {channels.map((channel) => (
+                <SelectItem key={channel.id} value={channel.id}>
+                  {channel.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          // One number is not a choice — name it rather than offer a one-item picker.
+          <span className="truncate text-sm text-muted-foreground">{channels[0]?.label}</span>
+        )}
       </header>
 
       {isLoading ? <Skeleton className="h-96 w-full rounded-xl" /> : <Outlet />}
@@ -96,19 +103,23 @@ function MetaAgentShell() {
   );
 }
 
+/** Where the agent stands: live, created but switched off, or not created yet. */
 function AgentStatusBadge({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
-  const { data: agent, isLoading } = useMetaBusinessAgent(waSettingsId);
-  if (isLoading) return <Skeleton className="h-6 w-28" />;
+  const { isLoading, live, facts } = useAgentSetup(waSettingsId);
+  if (isLoading) return <Skeleton className="h-5 w-20" />;
 
-  const onboarded = agent?.status === "ONBOARDED";
-  return (
-    <Badge variant={onboarded ? "default" : "secondary"}>
-      {onboarded ? (
+  if (live) {
+    return (
+      <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
         <IconCircleCheck data-icon="inline-start" />
-      ) : (
-        <IconCircleDashed data-icon="inline-start" />
-      )}
-      {onboarded ? "Onboarded" : "Not onboarded"}
+        Live
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="secondary">
+      <IconCircleDashed data-icon="inline-start" />
+      {facts.onboarded ? "Off" : "Not set up"}
     </Badge>
   );
 }

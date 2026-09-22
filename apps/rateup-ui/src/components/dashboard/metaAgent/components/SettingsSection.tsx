@@ -7,11 +7,19 @@ import type { AgentSettings } from "@/backend/metaAgent/metaAgent.api";
 import {
   useAgentSettings,
   useSyncAgentSettings,
+  useUpdateAgentInboxSettings,
   useUpdateAgentSettings,
 } from "@/backend/metaAgent/metaAgent.query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { FieldGroup, FieldSeparator } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -27,6 +35,7 @@ import { TagsInput } from "@/components/ui/tags-input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { settingsFormSchema, type SettingsFormValues } from "../metaAgent.schemas";
+import { AllowlistPanel } from "./AllowlistPanel";
 import { FormField } from "./shared/FormField";
 import { PanelCard } from "./shared/PanelCard";
 
@@ -89,187 +98,233 @@ export function SettingsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
     });
 
   return (
-    <PanelCard
-      title="Rollout & behaviour"
-      description="How the agent behaves once it is live, and who it is allowed to answer."
-      syncedAt={data?.settingsSyncedAt}
-      onSync={() => sync.mutate()}
-      isSyncing={sync.isPending}
-    >
-      {isLoading ? (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-        </div>
-      ) : (
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <FieldGroup className="gap-6">
-            <FormField
-              control={form.control}
-              name="rolloutEnabled"
-              label="Rollout enabled"
-              orientation="horizontal"
-              description="The master switch. With this off, the agent answers nobody, whatever else is configured."
-            >
-              {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
-            </FormField>
-
-            {!rolloutEnabled && (
-              <Alert>
-                <IconInfoCircle />
-                <AlertDescription>
-                  The agent is currently off. Everything below is saved, but nothing takes effect
-                  until rollout is enabled.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <FieldSeparator />
-
-            <FormField
-              control={form.control}
-              name="handoffEnabled"
-              label="Custom handoff message"
-              orientation="horizontal"
-              description="Off means Meta sends its own translated message when handing over to a human."
-            >
-              {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
-            </FormField>
-
-            {handoffEnabled && (
+    <div className="flex flex-col gap-4">
+      <PanelCard
+        title="Rollout & behaviour"
+        description="How the agent behaves once it is live, and who it is allowed to answer."
+        syncedAt={data?.settingsSyncedAt}
+        onSync={() => sync.mutate()}
+        isSyncing={sync.isPending}
+      >
+        {isLoading ? (
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        ) : (
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FieldGroup className="gap-6">
               <FormField
                 control={form.control}
-                name="handoffMessage"
-                label="Handoff message"
-                required
-                hint={`${form.watch("handoffMessage").length}/1024`}
+                name="rolloutEnabled"
+                label="Agent is on"
+                orientation="horizontal"
+                description="The master switch. With this off, the agent answers nobody, whatever else is configured."
               >
-                {(field, controlProps) => (
-                  <Textarea
-                    {...field}
-                    {...controlProps}
-                    rows={2}
-                    placeholder="Let me get a colleague to help with that — one moment."
-                  />
-                )}
+                {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
               </FormField>
-            )}
 
-            <FieldSeparator />
+              {!rolloutEnabled && (
+                <Alert>
+                  <IconInfoCircle />
+                  <AlertDescription>
+                    The agent is currently off. Everything below is saved, but nothing takes effect
+                    until rollout is enabled.
+                  </AlertDescription>
+                </Alert>
+              )}
 
-            <FormField
-              control={form.control}
-              name="followupEnabled"
-              label="Follow up when a customer goes quiet"
-              orientation="horizontal"
-            >
-              {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
-            </FormField>
+              <FieldSeparator />
 
-            {followupEnabled && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-[12rem_minmax(0,1fr)]">
+              <FormField
+                control={form.control}
+                name="handoffEnabled"
+                label="Custom handoff message"
+                orientation="horizontal"
+                description="Off means Meta sends its own translated message when handing over to a human."
+              >
+                {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+              </FormField>
+
+              {handoffEnabled && (
                 <FormField
                   control={form.control}
-                  name="followupInterval"
-                  label="After"
+                  name="handoffMessage"
+                  label="Handoff message"
                   required
-                  description="Meta only supports these intervals."
+                  hint={`${form.watch("handoffMessage").length}/1024`}
                 >
                   {(field, controlProps) => (
-                    <Select
-                      name={field.name}
-                      value={String(field.value)}
-                      onValueChange={(value) => field.onChange(Number(value ?? 0))}
-                      items={INTERVAL_ITEMS}
-                    >
-                      <SelectTrigger {...controlProps} className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {INTERVAL_ITEMS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </FormField>
-                <FormField
-                  control={form.control}
-                  name="followupMessage"
-                  label="Follow-up message"
-                  required
-                  hint={`${form.watch("followupMessage").length}/1024`}
-                >
-                  {(field, controlProps) => (
-                    <Input
+                    <Textarea
                       {...field}
                       {...controlProps}
-                      placeholder="Still there? Happy to keep helping."
+                      rows={2}
+                      placeholder="Let me get a colleague to help with that — one moment."
                     />
                   )}
                 </FormField>
+              )}
+
+              <FieldSeparator />
+
+              <FormField
+                control={form.control}
+                name="followupEnabled"
+                label="Follow up when a customer goes quiet"
+                orientation="horizontal"
+              >
+                {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+              </FormField>
+
+              {followupEnabled && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-[12rem_minmax(0,1fr)]">
+                  <FormField
+                    control={form.control}
+                    name="followupInterval"
+                    label="After"
+                    required
+                    description="Meta only supports these intervals."
+                  >
+                    {(field, controlProps) => (
+                      <Select
+                        name={field.name}
+                        value={String(field.value)}
+                        onValueChange={(value) => field.onChange(Number(value ?? 0))}
+                        items={INTERVAL_ITEMS}
+                      >
+                        <SelectTrigger {...controlProps} className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {INTERVAL_ITEMS.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </FormField>
+                  <FormField
+                    control={form.control}
+                    name="followupMessage"
+                    label="Follow-up message"
+                    required
+                    hint={`${form.watch("followupMessage").length}/1024`}
+                  >
+                    {(field, controlProps) => (
+                      <Input
+                        {...field}
+                        {...controlProps}
+                        placeholder="Still there? Happy to keep helping."
+                      />
+                    )}
+                  </FormField>
+                </div>
+              )}
+
+              <FieldSeparator />
+
+              <FormField
+                control={form.control}
+                name="aiAudience"
+                label="AI audience"
+                required
+                description="Allowlisted-only is the safe way to pilot: only numbers on the allowlist below get the agent."
+              >
+                {(field, controlProps) => (
+                  <Select
+                    name={field.name}
+                    value={field.value}
+                    onValueChange={(value) => field.onChange(value ?? "EVERYONE")}
+                    items={AUDIENCE_ITEMS}
+                  >
+                    <SelectTrigger {...controlProps} className="w-full sm:w-72">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AUDIENCE_ITEMS.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </FormField>
+
+              <FormField
+                control={form.control}
+                name="neverSayPhrases"
+                label="Never-say phrases"
+                description="Exact phrases the agent must never produce. Press Enter after each one."
+              >
+                {(field, controlProps) => (
+                  <TagsInput
+                    id={controlProps.id}
+                    aria-invalid={controlProps["aria-invalid"]}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    maxTags={50}
+                    placeholder="guaranteed refund"
+                  />
+                )}
+              </FormField>
+
+              <div className="flex justify-end border-t pt-4">
+                <Button type="submit" disabled={update.isPending || !form.formState.isDirty}>
+                  {update.isPending && <Spinner data-icon="inline-start" />}
+                  Save &amp; push to Meta
+                </Button>
               </div>
-            )}
+            </FieldGroup>
+          </form>
+        )}
+      </PanelCard>
+      <InboxHandoverPanel waSettingsId={waSettingsId} />
+      <AllowlistPanel waSettingsId={waSettingsId} />
+    </div>
+  );
+}
 
-            <FieldSeparator />
+/**
+ * How Rateup's inbox hands threads between staff and the agent. Saved on toggle
+ * and never pushed to Meta, so it sits apart from the form above.
+ */
+function InboxHandoverPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
+  const { data, isLoading } = useAgentSettings(waSettingsId);
+  const update = useUpdateAgentInboxSettings(waSettingsId);
+  const checked = update.isPending
+    ? !!update.variables?.releaseOnTicketClose
+    : (data?.releaseOnTicketClose ?? true);
 
-            <FormField
-              control={form.control}
-              name="aiAudience"
-              label="AI audience"
-              required
-              description="Allowlisted-only is the safe way to pilot: only numbers on the Overview allowlist get the agent."
-            >
-              {(field, controlProps) => (
-                <Select
-                  name={field.name}
-                  value={field.value}
-                  onValueChange={(value) => field.onChange(value ?? "EVERYONE")}
-                  items={AUDIENCE_ITEMS}
-                >
-                  <SelectTrigger {...controlProps} className="w-full sm:w-72">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AUDIENCE_ITEMS.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </FormField>
-
-            <FormField
-              control={form.control}
-              name="neverSayPhrases"
-              label="Never-say phrases"
-              description="Exact phrases the agent must never produce. Press Enter after each one."
-            >
-              {(field, controlProps) => (
-                <TagsInput
-                  id={controlProps.id}
-                  aria-invalid={controlProps["aria-invalid"]}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  maxTags={50}
-                  placeholder="guaranteed refund"
-                />
-              )}
-            </FormField>
-
-            <div className="flex justify-end border-t pt-4">
-              <Button type="submit" disabled={update.isPending || !form.formState.isDirty}>
-                {update.isPending && <Spinner data-icon="inline-start" />}
-                Save &amp; push to Meta
-              </Button>
-            </div>
-          </FieldGroup>
-        </form>
+  return (
+    <PanelCard
+      title="Inbox handover"
+      description="What happens to a conversation Meta AI handed over to your team. Saved straight away; not sent to Meta."
+    >
+      {isLoading ? (
+        <Skeleton className="h-10 w-full" />
+      ) : (
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldLabel htmlFor="release-on-ticket-close">
+              Hand back to Meta AI when a ticket is closed
+            </FieldLabel>
+            <FieldDescription>
+              Meta AI stays silent for a customer after a handover until the conversation is handed
+              back. With this on, closing or resolving their ticket does that. Spam is never handed
+              back.
+            </FieldDescription>
+          </FieldContent>
+          <Switch
+            id="release-on-ticket-close"
+            checked={checked}
+            disabled={update.isPending}
+            onCheckedChange={(value) => update.mutate({ releaseOnTicketClose: value })}
+          />
+        </Field>
       )}
     </PanelCard>
   );

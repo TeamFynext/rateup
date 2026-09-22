@@ -109,6 +109,16 @@ export type ContactsWithLastMessage = ContactsData & {
     phone_number_id?: string;
   };
   lastReceivedMessageTimeStamp: string;
+  /**
+   * Who holds the thread under Meta AI thread control — contact-level, so it
+   * carries across tickets. Null until a handover or standby message is seen.
+   */
+  metaAgentThreadOwner?: "AI" | "STAFF" | null;
+  metaAgentThreadOwnerAt?: string | null;
+  /** Meta's handover reason (e.g. `customer_request`), or ours (`staff_reply`, `released`, `ticket_closed`). */
+  metaAgentHandoverReason?: string | null;
+  /** Meta AI has replied to this customer, on a number that still has the agent. */
+  metaAgentInvolved?: boolean;
   total_contact_count?: string;
   unReadMessageCount?: number;
   assignedUsers: { id: string; name: string; teamId: string }[];

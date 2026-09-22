@@ -123,7 +123,15 @@ export type SkillFormValues = z.infer<typeof skillFormSchema>;
 // ---- ui skills ----
 export const uiSkillFormSchema = z
   .object({
-    title: z.string().trim().min(1, "A title is required").max(128, "Limited to 128 characters"),
+    title: z
+      .string()
+      .trim()
+      .min(1, "A title is required")
+      .max(128, "Limited to 128 characters")
+      .regex(
+        /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+        "Use only lowercase letters, numbers and hyphens, and don't start or end with a hyphen",
+      ),
     component_type: z.enum(UI_SKILL_COMPONENT_TYPES),
     status: z.enum(["enabled", "disabled"]),
     instruction: z

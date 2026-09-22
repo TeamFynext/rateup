@@ -736,9 +736,10 @@ export function useNavMain({
               icon: IconRobotFace,
               // Each area of the agent is its own route, so the sidebar is the
               // navigation for them rather than a second rail inside the page.
+              // Ordered as the setup flow walks them (see `metaAgent/setup/agentSetup.ts`).
               items: [
                 {
-                  title: t("Overview"),
+                  title: t("Setup guide"),
                   url: "/dashboard/meta-agent/overview",
                   icon: IconRocket,
                 },
@@ -753,7 +754,7 @@ export function useNavMain({
                   icon: IconSparkles,
                 },
                 {
-                  title: t("UI Skills"),
+                  title: t("Rich replies"),
                   url: "/dashboard/meta-agent/ui-skills",
                   icon: IconLayoutGrid,
                 },
@@ -763,14 +764,14 @@ export function useNavMain({
                   icon: IconPlug,
                 },
                 {
-                  title: t("Settings"),
-                  url: "/dashboard/meta-agent/settings",
-                  icon: IconSettings2,
-                },
-                {
-                  title: t("Operate"),
+                  title: t("Test"),
                   url: "/dashboard/meta-agent/operate",
                   icon: IconPlayerPlay,
+                },
+                {
+                  title: t("Go live"),
+                  url: "/dashboard/meta-agent/settings",
+                  icon: IconSettings2,
                 },
               ],
             },

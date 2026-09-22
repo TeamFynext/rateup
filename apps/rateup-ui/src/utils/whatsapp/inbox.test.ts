@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { MessagePlatform } from "@/types/enums.ts";
 
-import { getContactChannelSource, getContactDisplayPhone } from "./inbox.ts";
+import { getContactChannelSource, getContactDisplayPhone, isMetaAiMessage } from "./inbox.ts";
 
 describe("getContactChannelSource", () => {
   it("reads platform and account off the same message", () => {
@@ -62,5 +62,25 @@ describe("getContactDisplayPhone", () => {
         lastMessage: { sourcePlatform: MessagePlatform.FACEBOOK, sourceIdentifier: "page-1" },
       }),
     ).toBeUndefined();
+  });
+});
+
+describe("isMetaAiMessage", () => {
+  const sent = (tag?: string) =>
+    ({
+      messageBody: {
+        exchangeProcess: "send",
+        send: { to: "919188346187", type: "text", biz_opaque_callback_data: tag },
+      },
+    }) as unknown as Parameters<typeof isMetaAiMessage>[0];
+
+  it("recognises a reply the Meta Business Agent wrote", () => {
+    expect(isMetaAiMessage(sent('{"originator":"bizai","channel":"ent"}'))).toBe(true);
+  });
+
+  it("leaves every other send alone", () => {
+    expect(isMetaAiMessage(sent())).toBe(false);
+    expect(isMetaAiMessage(sent('{"originator":"someone-else"}'))).toBe(false);
+    expect(isMetaAiMessage(sent("not json"))).toBe(false);
   });
 });
