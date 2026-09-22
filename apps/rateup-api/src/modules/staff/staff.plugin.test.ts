@@ -1,0 +1,357 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+const db = vi.hoisted(() => ({
+  staffSession: {
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    create: vi.fn(),
+  },
+  staffUser: { findUnique: vi.fn(), update: vi.fn() },
+  staffAuditLog: { create: vi.fn() },
+}));
+const redis = vi.hoisted(() => ({ incr: vi.fn(), expire: vi.fn() }));
+
+vi.mock("../../utils/prisma.js", () => ({ default: db }));
+vi.mock("../../utils/redisConnection.js", () => ({ default: redis }));
+vi.mock("../../utils/logger.js", () => ({
+  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
+import Fastify, { type FastifyInstance, type RouteOptions } from "fastify";
+import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from "jose";
+import type { StaffConfig } from "./staff.config.js";
+import { hashSessionToken, SESSION_IDLE_MS } from "./staff.session.js";
+import { registerStaffApi, STAFF_PUBLIC_ROUTES } from "./staff.plugin.js";
+
+const SECRET = "proxy-secret-for-tests";
+const ORIGIN = "https://admin.rateup.app";
+
+const baseConfig: StaffConfig = {
+  googleClientId: "cid",
+  googleClientSecret: "csecret",
+  googleHd: "rateup.app",
+  consoleOrigin: ORIGIN,
+  proxySecret: SECRET,
+  cookieSecret: "a-cookie-secret-that-is-at-least-32-chars",
+  cfAccessTeam: "rateup",
+  cfAccessAud: "aud-123",
+  cfAccessEnforced: false,
+  secureCookies: true,
+};
+
+const { privateKey, publicKey } = await generateKeyPair("RS256");
+const cfKeys = createLocalJWKSet({ keys: [{ ...(await exportJWK(publicKey)), alg: "RS256" }] });
+
+function cfToken(email: string, audience = "aud-123") {
+  return new SignJWT({ email })
+    .setProtectedHeader({ alg: "RS256" })
+    .setIssuer("https://rateup.cloudflareaccess.com")
+    .setAudience(audience)
+    .setIssuedAt()
+    .setExpirationTime("5m")
+    .sign(privateKey);
+}
+
+async function buildApp(config: Partial<StaffConfig> = {}) {
+  const routes: RouteOptions[] = [];
+  const app = Fastify();
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
+  app.addHook("onRoute", (route) => {
+    routes.push(route);
+  });
+  await app.register(
+    (instance: FastifyInstance) =>
+      registerStaffApi(instance, { ...baseConfig, ...config }, { cfAccessKey: cfKeys }),
+    { prefix: "/api/staff" },
+  );
+  await app.ready();
+  return { app, routes };
+}
+
+const TOKEN = "session-token";
+
+function liveSession(overrides: Record<string, unknown> = {}) {
+  const now = Date.now();
+  return {
+    id: "sess-1",
+    tokenHash: hashSessionToken(TOKEN),
+    staffUserId: "staff-1",
+    createdAt: new Date(now - 60_000),
+    authenticatedAt: new Date(now - 60_000),
+    lastSeenAt: new Date(now - 5_000),
+    expiresAt: new Date(now + 60 * 60_000),
+    revokedAt: null,
+    ip: null,
+    userAgent: null,
+    staffUser: {
+      id: "staff-1",
+      email: "ann@rateup.app",
+      name: "Ann",
+      avatarUrl: null,
+      isOwner: true,
+      active: true,
+    },
+    ...overrides,
+  };
+}
+
+const proxied = { "x-staff-proxy-secret": SECRET };
+const withSession = { ...proxied, cookie: `__Host-rateup_staff=${TOKEN}` };
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  redis.incr.mockResolvedValue(1);
+  db.staffSession.findUnique.mockResolvedValue(liveSession());
+  db.staffSession.updateMany.mockResolvedValue({ count: 1 });
+  db.staffAuditLog.create.mockResolvedValue({});
+});
+
+describe("proxy secret", () => {
+  test("without it the whole API looks like it does not exist", async () => {
+    const { app } = await buildApp();
+    for (const headers of [{}, { "x-staff-proxy-secret": "wrong" }]) {
+      const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers });
+      expect(res.statusCode).toBe(404);
+    }
+    // Refused before anything touched the session store.
+    expect(db.staffSession.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("staff session", () => {
+  test("GET /auth/me returns the signed-in staff member", async () => {
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: withSession,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data).toEqual({
+      id: "staff-1",
+      email: "ann@rateup.app",
+      name: "Ann",
+      avatarUrl: null,
+      isOwner: true,
+    });
+    expect(db.staffSession.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { tokenHash: hashSessionToken(TOKEN) } }),
+    );
+  });
+
+  test("no cookie → 401 UNAUTHENTICATED", async () => {
+    const { app } = await buildApp();
+    const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers: proxied });
+    expect(res.statusCode).toBe(401);
+    expect(res.json().code).toBe("UNAUTHENTICATED");
+  });
+
+  test("a customer app (SuperTokens) session is not a staff session", async () => {
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: { ...proxied, cookie: "sAccessToken=some-supertokens-jwt" },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  test.each([
+    ["unknown", null],
+    ["revoked", liveSession({ revokedAt: new Date() })],
+    ["past its absolute expiry", liveSession({ expiresAt: new Date(Date.now() - 1) })],
+    ["idle too long", liveSession({ lastSeenAt: new Date(Date.now() - SESSION_IDLE_MS - 1) })],
+    [
+      "of a deactivated staff member",
+      liveSession({ staffUser: { ...liveSession().staffUser, active: false } }),
+    ],
+  ])("a session that is %s → 401", async (_label, stored) => {
+    db.staffSession.findUnique.mockResolvedValue(stored);
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: withSession,
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  test("the plain cookie name is not accepted when the console is https", async () => {
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: { ...proxied, cookie: `rateup_staff=${TOKEN}` },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+});
+
+describe("Cloudflare Access", () => {
+  test("enforced: a missing or foreign assertion is refused", async () => {
+    const { app } = await buildApp({ cfAccessEnforced: true });
+    const missing = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: withSession,
+    });
+    expect(missing.statusCode).toBe(403);
+    expect(missing.json().code).toBe("ACCESS_REQUIRED");
+
+    const wrongAud = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: {
+        ...withSession,
+        "cf-access-jwt-assertion": await cfToken("ann@rateup.app", "another-app"),
+      },
+    });
+    expect(wrongAud.statusCode).toBe(403);
+    expect(wrongAud.json().code).toBe("ACCESS_INVALID");
+  });
+
+  test("enforced: Access and the console session must be the same person", async () => {
+    const { app } = await buildApp({ cfAccessEnforced: true });
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: { ...withSession, "cf-access-jwt-assertion": await cfToken("bob@rateup.app") },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe("ACCESS_MISMATCH");
+  });
+
+  test("enforced: the matching person gets through", async () => {
+    const { app } = await buildApp({ cfAccessEnforced: true });
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: { ...withSession, "cf-access-jwt-assertion": await cfToken("Ann@rateup.app") },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+});
+
+describe("browser protections", () => {
+  test("a request from another origin is refused", async () => {
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: { ...withSession, origin: "https://app.rateup.app" },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe("ORIGIN_REJECTED");
+  });
+
+  test("a mutation without the CSRF header is refused, with it it runs", async () => {
+    const { app } = await buildApp();
+    const refused = await app.inject({
+      method: "POST",
+      url: "/api/staff/auth/logout",
+      headers: { ...withSession, origin: ORIGIN },
+    });
+    expect(refused.statusCode).toBe(403);
+    expect(refused.json().code).toBe("CSRF");
+    expect(db.staffSession.updateMany).not.toHaveBeenCalled();
+
+    const ok = await app.inject({
+      method: "POST",
+      url: "/api/staff/auth/logout",
+      headers: { ...withSession, origin: ORIGIN, "x-staff-csrf": "1" },
+    });
+    expect(ok.statusCode).toBe(200);
+    expect(db.staffSession.updateMany).toHaveBeenCalledWith({
+      where: { id: "sess-1", revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
+    expect(db.staffAuditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "staff.logout", staffEmail: "ann@rateup.app" }),
+    });
+  });
+
+  test("rate limited → 429; Redis down → 503 (fails closed)", async () => {
+    const { app } = await buildApp();
+    redis.incr.mockResolvedValue(10_000);
+    const limited = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: withSession,
+    });
+    expect(limited.statusCode).toBe(429);
+
+    redis.incr.mockRejectedValue(new Error("redis down"));
+    const down = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      headers: withSession,
+    });
+    expect(down.statusCode).toBe(503);
+  });
+});
+
+describe("Google sign-in start", () => {
+  test("needs no session and redirects to Google with a signed state cookie", async () => {
+    db.staffSession.findUnique.mockResolvedValue(null);
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/google/start?returnTo=/orgs",
+      headers: proxied,
+    });
+    expect(res.statusCode).toBe(302);
+    const location = new URL(res.headers.location as string);
+    expect(location.host).toBe("accounts.google.com");
+    expect(location.searchParams.get("redirect_uri")).toBe(
+      `${ORIGIN}/api/staff/auth/google/callback`,
+    );
+    const cookie = res.cookies.find((c) => c.name === "__Host-staff_oidc");
+    expect(cookie).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax", path: "/" });
+    expect(db.staffSession.findUnique).not.toHaveBeenCalled();
+  });
+
+  // The session cookie is SameSite=Strict, so Google's cross-site redirect to /callback never
+  // carries it. /start (a same-site navigation) is where the session being replaced is known.
+  test("signing in again records the current session so the callback can revoke it", async () => {
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/google/start",
+      headers: withSession,
+    });
+    const cookie = res.cookies.find((c) => c.name === "__Host-staff_oidc")!;
+    const signed = decodeURIComponent(cookie.value);
+    const state = JSON.parse(signed.slice(0, signed.lastIndexOf(".")));
+    expect(state.replaces).toBe(hashSessionToken(TOKEN));
+    // Only the hash travels; the session token itself never leaves the session cookie.
+    expect(signed).not.toContain(TOKEN);
+  });
+
+  test("a callback without the state cookie goes back to /login", async () => {
+    const { app } = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/google/callback?code=abc&state=xyz",
+      headers: proxied,
+    });
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location).toBe("/login?error=expired");
+  });
+});
+
+describe("route table", () => {
+  test("every route is a staff route, and only the sign-in hops skip the session", async () => {
+    const { routes } = await buildApp();
+    const staffRoutes = routes.filter((r) => r.url.startsWith("/api/staff/"));
+    expect(staffRoutes.length).toBeGreaterThan(0);
+    for (const route of staffRoutes) {
+      const id = `${route.method} ${route.url}`;
+      expect(route.config?.access, id).toBe("staff");
+      if (route.method === "HEAD") continue;
+      expect(!!route.config?.staffPublic, id).toBe(STAFF_PUBLIC_ROUTES.includes(id));
+    }
+  });
+});

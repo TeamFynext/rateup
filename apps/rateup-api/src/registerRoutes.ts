@@ -64,6 +64,7 @@ import { metaAgentRoutes } from "./modules/metaAgent/metaAgent.route.js";
 import { metaAgentWebhookRoutes } from "./modules/metaAgent/metaAgent.webhook.route.js";
 import { maintenanceRoutes } from "./modules/maintenance/maintenance.route.js";
 import { adminRoutes } from "./modules/admin/admin.route.js";
+import { staffPlugin } from "./modules/staff/staff.plugin.js";
 
 // Route configurations
 const routeConfigs = [
@@ -103,6 +104,8 @@ const routeConfigs = [
   { plugin: reviewSuggestionRoutes, prefix: "/api/reviewSuggestion" },
   { plugin: subscriptionRoutes, prefix: "/api/subscription" },
   { plugin: adminRoutes, prefix: "/api/admin" },
+  // The staff console: its own Google login and guards, never SuperTokens (staff.plugin.ts).
+  { plugin: staffPlugin, prefix: "/api/staff" },
   { plugin: maintenanceRoutes, prefix: "/api/maintenance" },
   { plugin: paymentRoutes, prefix: "/api/payment" },
   { plugin: paymentStripeRoutes, prefix: "/api/payment/stripe" },

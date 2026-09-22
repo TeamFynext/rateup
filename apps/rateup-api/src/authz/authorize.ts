@@ -81,7 +81,11 @@ export async function authorize(request: FastifyRequest, reply: FastifyReply): P
 
   // Undeclared: the route's own legacy guards still apply. Public: nothing to check.
   // Token: the external v1 plugin verifies the key and builds the actor itself.
-  if ((!access && !permission) || access === "public" || access === "token") return;
+  // Staff: the staff plugin's hooks have already authenticated (or refused) the request, and
+  // a SuperTokens session must never be what admits anyone there.
+  if ((!access && !permission) || access === "public" || access === "token" || access === "staff") {
+    return;
+  }
 
   if (!(await attachSessionActor(request, reply))) return;
   if (!permission) return;

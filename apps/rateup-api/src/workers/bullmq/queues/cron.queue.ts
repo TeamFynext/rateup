@@ -52,6 +52,8 @@ export const SCHEDULED_JOBS = [
   // "has expired" before anything is taken away.
   { id: "subscriptionExpiryAlerts", pattern: "30 3 * * *" }, // Every day at 3:30 AM
   { id: "downgradeExpiredSubscriptions", pattern: "0 4 * * *" }, // Every day at 4:00 AM
+  // Staff console sessions that ended over 30 days ago.
+  { id: "staffSessionPurge", pattern: "45 3 * * *" },
   // TODO: re-enable once the report is working again.
   // { id: "weeklyInboxReport", pattern: "0 9 * * 0" }, // Sundays at 9:00 AM
 ] as const satisfies ReadonlyArray<{
