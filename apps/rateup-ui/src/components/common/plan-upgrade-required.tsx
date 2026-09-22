@@ -9,8 +9,8 @@ import type { AccessDenialReason } from "@/utils/apiError.ts";
  * Shown when the org's plan does not include the feature behind this page.
  *
  * Deliberately not `UnauthorizedPage`: that one says "you don't have permission,
- * contact your super admin", which is the wrong advice and a dead end for someone on
- * the Free plan — they are the super admin, and the fix is a plan change, not a
+ * contact your owner or an admin", which is the wrong advice and a dead end for
+ * someone on the Free plan — they are the owner, and the fix is a plan change, not a
  * permission change. The API distinguishes the two (see `AccessDenialReason`); this is
  * the half that ends in the billing page rather than in a conversation with an admin.
  */

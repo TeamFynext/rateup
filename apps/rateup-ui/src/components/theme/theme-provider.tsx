@@ -77,13 +77,7 @@ export function ThemeProvider({
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key?.toLowerCase() !== "d") return;
-      if (
-        !(event.metaKey || event.ctrlKey) ||
-        !event.shiftKey ||
-        event.altKey ||
-        import.meta.env.VITE_EXPERIMENT !== "TRUE"
-      )
-        return;
+      if (!(event.metaKey || event.ctrlKey) || !event.shiftKey || event.altKey) return;
 
       // Never steal the keystroke from a text-entry target.
       const target = event.target as HTMLElement | null;

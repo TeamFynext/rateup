@@ -146,6 +146,7 @@ export interface StaffDetailedConversationAnalytics {
   userPerformance: {
     name: string;
     email: string;
+    profilePhoto?: string | null;
     status: string;
     totalAssignedConversations: number;
     totalClosedConversations: number;
@@ -193,6 +194,7 @@ export const getTeamOverview = async (filter: QueryFilter | null) => {
 export interface TeamMemberMetrics {
   userId: string;
   name: string;
+  profilePhoto?: string | null;
   onlineStatus?: string;
   averageResponseTime: number;
   messagesHandled: number;

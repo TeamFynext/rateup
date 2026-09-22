@@ -20,8 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import type { PipelineView } from "@/store/pipeline.store.ts";
 
 import { VIEW_TABS } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel, viewTabLabel } from "./pipeline.labels.ts";
@@ -106,7 +108,7 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
   const rottingCount = stats?.totals.rotting ?? 0;
 
   return (
-    <header className="border-border flex flex-col gap-3 border-b px-4 pt-3 sm:px-6">
+    <header className="border-border flex flex-col gap-3 border-b px-4 py-3 sm:px-6">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         {pipelines.length > 1 ? (
           <Select
@@ -273,38 +275,19 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
         </div>
       ) : null}
 
-      {/* `-mb-px` sits on the row rather than on each tab so the 2px marker still
-          lands on the header's own hairline, without any child hanging outside
-          this box. `overflow-x-auto` forces `overflow-y` to compute to `auto`,
-          so a child overflowing by even a pixel drew a vertical scrollbar next
-          to the tabs. */}
-      <nav
-        className="-mx-4 -mb-px flex items-center gap-5.5 overflow-x-auto px-4 sm:mx-0 sm:px-0"
-        aria-label={t("Pipeline views")}
-      >
-        {VIEW_TABS.map((tab) => {
-          const active = view.view === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setView({ view: tab.id })}
-              aria-current={active ? "page" : undefined}
-              // The marker is a border rather than an absolutely positioned bar
-              // because the row scrolls on mobile, and `overflow-x` would clip
-              // anything hanging outside the box — see the row's own `-mb-px`.
-              className={cn(
-                "flex shrink-0 items-center border-b-2 pt-2 pb-3 text-sm font-medium transition-colors",
-                active
-                  ? "border-primary text-foreground"
-                  : "text-muted-foreground hover:text-foreground border-transparent",
-              )}
-            >
-              {viewTabLabel(t, tab.id)}
-            </button>
-          );
-        })}
-      </nav>
+      {/* Scrolls sideways on phones, where five tabs are wider than the screen. */}
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <Tabs value={view.view} onValueChange={(value) => setView({ view: value as PipelineView })}>
+          <TabsList aria-label={t("Pipeline views")}>
+            {VIEW_TABS.map(({ id, icon: Icon }) => (
+              <TabsTrigger key={id} value={id}>
+                <Icon />
+                {viewTabLabel(t, id)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
     </header>
   );
 }

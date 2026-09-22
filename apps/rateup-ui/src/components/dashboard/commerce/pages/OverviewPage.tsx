@@ -19,16 +19,16 @@ import {
   useCommerceTopProducts,
   useExportCommerceOverviewMutation,
 } from "@/backend/commerce/commerce.query";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { cn } from "@/lib/utils";
 
 import { useCommerce } from "../CommerceContext";
 import { CommerceDateFilter, CommerceExportButton } from "../CommerceFilters";
 import { CommerceShell, StatusPill } from "../CommerceShell";
-import { STAGE_META, avatarClass } from "../orderMeta";
-import { initials, money } from "../utils";
+import { STAGE_META } from "../orderMeta";
+import { money } from "../utils";
 
 const TILE_CLASSES = [
   "bg-primary/10 text-primary",
@@ -283,11 +283,7 @@ export function OverviewPage() {
                   #{String(o.id).slice(-6)}
                 </span>
                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <Avatar className="size-7">
-                    <AvatarFallback className={cn("text-[10px] text-white", avatarClass(name))}>
-                      {initials(name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ContactAvatar name={o.contact?.name} size="sm" />
                   <span className="truncate text-sm text-foreground">{name}</span>
                 </div>
                 <span className="w-[88px] shrink-0 text-right text-sm font-semibold text-foreground">

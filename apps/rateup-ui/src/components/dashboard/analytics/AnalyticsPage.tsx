@@ -21,7 +21,7 @@ import { staffKeys } from "@/backend/org/org.keys";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
   Table,
@@ -32,7 +32,6 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
-import { MessagePlatform } from "@/types/enums.ts";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
 import { AnalyticsCard } from "./kit/AnalyticsCard.tsx";
@@ -46,6 +45,7 @@ import {
   type Numeric,
   toNumber,
 } from "./kit/format.ts";
+import { StaffAvatar } from "./kit/StaffAvatar.tsx";
 import { ConversationStatusBadge, StaffStatusBadge } from "./kit/StatusBadges.tsx";
 import { TileGroup } from "./kit/TileGroup.tsx";
 import { exportAgentReport } from "./report/exportReport.ts";
@@ -126,7 +126,7 @@ export function AnalyticsPage() {
             />
           }
           leading={
-            <CreativeAvatar name={agent?.name} platform={MessagePlatform.WEBCHAT} size="md" />
+            <StaffAvatar name={agent?.name} photo={agent?.profilePhoto} className="size-10" />
           }
           title={agent?.name}
           badge={<StaffStatusBadge status={agent?.status} />}
@@ -234,10 +234,9 @@ export function AnalyticsPage() {
                   <TableRow key={conversation.id}>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <CreativeAvatar
-                          name={conversation.customer?.name}
+                        <ContactAvatar
+                          name={conversation.customer?.name || conversation.customer?.phone}
                           size="sm"
-                          platform={MessagePlatform.WEBCHAT}
                         />
                         <div className="flex min-w-0 flex-col">
                           <span className="truncate font-medium">

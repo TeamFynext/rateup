@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import type { LeadChannel, LeadSource } from "@/backend/pipeline/pipeline.types.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { cn } from "@/lib/utils";
 
 import { CHANNEL_META, SOURCE_META } from "../pipeline.constants.tsx";
@@ -12,10 +13,10 @@ import { personColor } from "./personColor.ts";
 // `text` rides on the monogram itself: AvatarFallback sets its own font size,
 // so a class on the avatar root would never win.
 const SIZES = {
-  sm: { avatar: "size-5", text: "text-[8px]", pip: "size-3", icon: "size-1.75" },
-  md: { avatar: "size-7", text: "text-[10px]", pip: "size-3.25", icon: "size-1.75" },
-  lg: { avatar: "size-8", text: "text-[12px]", pip: "size-3.75", icon: "size-2" },
-  xl: { avatar: "size-11", text: "text-base", pip: "size-4.5", icon: "size-2.5" },
+  sm: { avatar: "size-5", contact: "2xs", text: "text-[8px]", pip: "size-3", icon: "size-1.75" },
+  md: { avatar: "size-7", contact: "xs", text: "text-[10px]", pip: "size-3.25", icon: "size-1.75" },
+  lg: { avatar: "size-8", contact: "sm", text: "text-[12px]", pip: "size-3.75", icon: "size-2" },
+  xl: { avatar: "size-11", contact: "md", text: "text-base", pip: "size-4.5", icon: "size-2.5" },
 } as const;
 
 interface LeadAvatarProps {
@@ -29,7 +30,7 @@ interface LeadAvatarProps {
    * arrived over messaging, so the two would otherwise fight over one corner.
    */
   source?: LeadSource;
-  /** `contact` is the lead itself, in brand blue; `person` is a teammate. */
+  /** `contact` is the lead itself, drawn as a `ContactAvatar`; `person` is a teammate. */
   tone?: "contact" | "person";
   /** What a `person`'s colour is derived from; pass the user id so the colour
    *  survives a rename. Falls back to the name. */
@@ -68,22 +69,21 @@ export function LeadAvatar({
 
   return (
     <span className={cn("relative inline-flex shrink-0", className)}>
-      <Avatar className={dimensions.avatar}>
-        {photo ? <AvatarImage src={photo} alt={name ?? ""} /> : null}
-        <AvatarFallback
-          className={cn(
-            "font-display font-semibold tracking-[-0.01em]",
-            tone === "person" ? "text-white" : "bg-primary/10 text-primary",
-          )}
-          // A teammate's colour is picked from the brand accents at runtime, so
-          // there is no class that names it.
-          style={
-            tone === "person" ? { backgroundColor: personColor(colorKey ?? name ?? "") } : undefined
-          }
-        >
-          <span className={dimensions.text}>{initials(name)}</span>
-        </AvatarFallback>
-      </Avatar>
+      {tone === "contact" ? (
+        <ContactAvatar name={name} src={photo} size={dimensions.contact} />
+      ) : (
+        <Avatar className={dimensions.avatar}>
+          {photo ? <AvatarImage src={photo} alt={name ?? ""} /> : null}
+          <AvatarFallback
+            className="font-display font-semibold tracking-[-0.01em] text-white"
+            // A teammate's colour is picked from the brand accents at runtime, so
+            // there is no class that names it.
+            style={{ backgroundColor: personColor(colorKey ?? name ?? "") }}
+          >
+            <span className={dimensions.text}>{initials(name)}</span>
+          </AvatarFallback>
+        </Avatar>
+      )}
       {badge && BadgeIcon ? (
         <span
           title={badge.label}

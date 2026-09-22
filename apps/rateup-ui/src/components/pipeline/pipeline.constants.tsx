@@ -2,6 +2,7 @@ import {
   IconBrandInstagram,
   IconBrandMessenger,
   IconBrandWhatsapp,
+  IconChartBar,
   IconChecklist,
   IconCircleCheck,
   IconCircleDashed,
@@ -9,9 +10,13 @@ import {
   IconClipboardList,
   IconFileText,
   IconGift,
+  IconLayoutKanban,
+  IconList,
   IconMessage2,
   IconMessageChatbot,
   IconPhone,
+  IconSettings,
+  IconTrendingUp,
   IconUsersGroup,
   IconVideo,
   type Icon,
@@ -33,12 +38,12 @@ import type { PipelineView } from "@/store/pipeline.store.ts";
 export const PIPELINE_LIMIT_PER_ORG = 1;
 
 /** The pipeline’s view tabs, in bar order. Labels come from `viewTabLabel`. */
-export const VIEW_TABS: ReadonlyArray<{ id: PipelineView }> = [
-  { id: "board" },
-  { id: "list" },
-  { id: "forecast" },
-  { id: "insights" },
-  { id: "settings" },
+export const VIEW_TABS: ReadonlyArray<{ id: PipelineView; icon: Icon }> = [
+  { id: "board", icon: IconLayoutKanban },
+  { id: "list", icon: IconList },
+  { id: "forecast", icon: IconTrendingUp },
+  { id: "insights", icon: IconChartBar },
+  { id: "settings", icon: IconSettings },
 ];
 
 interface SourceMeta {

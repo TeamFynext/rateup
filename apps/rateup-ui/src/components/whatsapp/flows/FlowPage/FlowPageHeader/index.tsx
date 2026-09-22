@@ -118,18 +118,13 @@ function FlowPageHeader({
 
       {/* Row 2: Tabs Navigation */}
       <div className={styles["header-row-2"]}>
-        <Tabs
-          value={tab}
-          defaultValue={FlowTabEnum.Edit}
-          onValueChange={setTabState}
-          className={styles["tabs-root"]}
-        >
-          <TabsList className={styles["tabs-list"]}>
+        <Tabs value={tab} defaultValue={FlowTabEnum.Edit} onValueChange={setTabState}>
+          <TabsList>
             {Object.values(FlowTabEnum).map((tabNameString) => {
               const TabIcon = tabIcons[tabNameString];
               return (
-                <TabsTrigger key={tabNameString} value={tabNameString} className={styles["tab"]}>
-                  <TabIcon size={16} className="mr-2" />
+                <TabsTrigger key={tabNameString} value={tabNameString}>
+                  <TabIcon />
                   {tabNameString}
                 </TabsTrigger>
               );

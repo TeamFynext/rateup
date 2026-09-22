@@ -29,6 +29,7 @@
 @source not "../components/ui/button-edge.tsx";
 @source not "../components/ui/chart.tsx";
 @source not "../components/ui/command.tsx";
+@source not "../components/ui/contact-avatar.tsx";
 @source not "../components/ui/creative-avatar.tsx";
 @source not "../components/ui/drawer.tsx";
 @source not "../components/ui/dropdown-menu.tsx";
@@ -41,7 +42,6 @@
 @source not "../components/ui/multi-select.tsx";
 @source not "../components/ui/node-header.tsx";
 @source not "../components/ui/phone-preview.tsx";
-@source not "../components/ui/premium-avatar.tsx";
 @source not "../components/ui/resizable.tsx";
 @source not "../components/ui/resizable-navbar.tsx";
 @source not "../components/ui/sidebar.tsx";

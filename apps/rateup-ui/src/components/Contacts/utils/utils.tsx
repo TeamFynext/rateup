@@ -16,10 +16,10 @@ import dayjs from "dayjs";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import {
   Select,
   SelectContent,
@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { getInitials } from "@/components/ui/utils.ts";
 
 /**
  * The name doubles as the row's "View Details" trigger. It only publishes the row to the
@@ -40,13 +39,9 @@ const ContactNameCell = ({ contact }: { contact: ContactsData }) => {
     <button
       type="button"
       onClick={() => setSelectedContact(contact)}
-      className="group flex gap-1 items-center text-left cursor-pointer"
+      className="group flex gap-2.5 items-center text-left cursor-pointer"
     >
-      <Avatar>
-        <AvatarFallback className="rounded-lg bg-blue-200 dark:bg-blue-900/60 text-primary p-1 text-xs">
-          {getInitials(contact?.name)}
-        </AvatarFallback>
-      </Avatar>
+      <ContactAvatar name={contact?.name || contact?.phone} src={contact?.profilePic} size="sm" />
       <span className="group-hover:underline">{contact?.name}</span>
     </button>
   );

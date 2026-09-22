@@ -33,6 +33,7 @@ import { CustomerSummaryPanel } from "@/components/loyalty/cashier/CustomerSumma
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +41,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { WaInboxMessage } from "@/types/global";
@@ -186,13 +186,11 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
         <button
           type="button"
           onClick={() => openCustomer(row.original.contact?.phone)}
-          className="-mx-1 flex items-center gap-3 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="group -mx-1 flex items-center gap-3 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <PremiumAvatar name={row.getValue("customerName") ?? ""} size="sm" />
+          <ContactAvatar name={row.getValue("customerName")} size="sm" />
           <div>
-            <p className="text-sm font-semibold text-primary underline-offset-2 group-hover:underline">
-              {row.getValue("customerName")}
-            </p>
+            <p className="text-sm group-hover:underline">{row.getValue("customerName")}</p>
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <IconPhone className="w-3 h-3" />
               {row.original.contact?.phone}

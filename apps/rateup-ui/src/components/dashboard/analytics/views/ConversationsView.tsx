@@ -1,4 +1,4 @@
-import { IconChevronRight, IconSearch } from "@tabler/icons-react";
+import { IconChevronRight, IconSearch, IconUser, IconUsersGroup } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 import { useMemo } from "react";
@@ -12,7 +12,7 @@ import {
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils";
 import { MessagePlatform } from "@/types/enums.ts";
 
@@ -382,18 +382,23 @@ export function ConversationsView({
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-4">
-      <ToggleGroup
-        value={[view]}
+      <Tabs
+        value={view}
         onValueChange={(value) => {
-          const next = value[0];
-          if (next === "agents" || next === "teams") onViewChange(next);
+          if (value === "agents" || value === "teams") onViewChange(value);
         }}
-        variant="outline"
-        size="sm"
       >
-        <ToggleGroupItem value="agents">{t("Agents")}</ToggleGroupItem>
-        <ToggleGroupItem value="teams">{t("Teams")}</ToggleGroupItem>
-      </ToggleGroup>
+        <TabsList>
+          <TabsTrigger value="agents">
+            <IconUser />
+            {t("Agents")}
+          </TabsTrigger>
+          <TabsTrigger value="teams">
+            <IconUsersGroup />
+            {t("Teams")}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
       {view === "agents" ? <AgentsTable filters={filters} /> : <TeamsTable filters={filters} />}
       <div className="grid gap-4 lg:grid-cols-2">
         <ResponseTimeCard filters={filters} />

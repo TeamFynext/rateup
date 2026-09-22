@@ -40,19 +40,10 @@ export default function SurveySectionTabs() {
       value={activeSection}
       onValueChange={(value) => navigate({ to: SECTION_ROUTES[value as SurveySection] })}
     >
-      <TabsList
-        variant="line"
-        className="mb-4"
-        // className="h-auto w-full justify-start gap-0 rounded-none border-b border-ru-n-200 bg-white p-0 px-[22px]"
-      >
+      <TabsList className="mb-4">
         {SECTION_TABS.map(({ value, label, icon: Icon }) => (
-          <TabsTrigger
-            key={value}
-            value={value}
-            className="after:bg-ru-blue-600 data-active:font-semibold data-active:text-ru-blue-600"
-            // className="h-[42px] flex-none gap-[6px] rounded-none border-0 px-4 text-[14px] font-medium text-ru-n-500 after:bottom-[-1px] after:bg-ru-blue-600 data-active:font-semibold data-active:text-ru-blue-600"
-          >
-            <Icon className="size-3.5" />
+          <TabsTrigger key={value} value={value}>
+            <Icon />
             {translations(label)}
           </TabsTrigger>
         ))}

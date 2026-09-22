@@ -9,6 +9,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { FieldTitle } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
@@ -230,9 +231,7 @@ const ContactSelectCard = ({
     >
       <div className="flex items-center justify-between flex-nowrap">
         <div className="flex items-center gap-2">
-          <Avatar>
-            <AvatarFallback>{contact.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <ContactAvatar name={contact.name || contact.phone} size="sm" />
           <div className="flex flex-col gap-0.5">
             <span className="font-medium text-sm">{contact.name}</span>
             <span className="text-xs text-muted-foreground">{contact.phone}</span>

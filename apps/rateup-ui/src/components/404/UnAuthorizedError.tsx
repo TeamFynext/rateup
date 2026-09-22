@@ -12,8 +12,8 @@ function UnauthorizedPage() {
         <h3 className="text-2xl font-semibold text-foreground">Access Denied</h3>
       </div>
       <p className="max-w-2xl text-center text-lg text-muted-foreground">
-        You don&apos;t have permission to access this page. Please contact your super admin if you
-        believe this is an error, or return to the homepage.
+        You don&apos;t have permission to access this page. Please contact your organization owner
+        or an admin if you believe this is an error, or return to the homepage.
       </p>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <Button

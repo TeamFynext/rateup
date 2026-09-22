@@ -1,13 +1,27 @@
+import { IconChartBar, IconLink, IconPalette, IconShare } from "@tabler/icons-react";
+
 import { TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 function TabsListComp() {
   return (
     <div className="tabs-list-comp-tabs">
-      <TabsList className="max-w-max overflow-hidden rounded-[0.625rem] border border-border">
-        <TabsTrigger value="links">Links</TabsTrigger>
-        <TabsTrigger value="theme">Theme</TabsTrigger>
-        <TabsTrigger value="share">Share</TabsTrigger>
-        <TabsTrigger value="stats">Stats</TabsTrigger>
+      <TabsList>
+        <TabsTrigger value="links">
+          <IconLink />
+          Links
+        </TabsTrigger>
+        <TabsTrigger value="theme">
+          <IconPalette />
+          Theme
+        </TabsTrigger>
+        <TabsTrigger value="share">
+          <IconShare />
+          Share
+        </TabsTrigger>
+        <TabsTrigger value="stats">
+          <IconChartBar />
+          Stats
+        </TabsTrigger>
       </TabsList>
     </div>
   );
