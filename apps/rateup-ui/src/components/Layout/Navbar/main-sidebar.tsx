@@ -40,6 +40,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
     loyaltyNav,
     resolvedUserInfo,
     setupNav,
+    metaAgentNav,
     staff,
     subscription,
     teams,
@@ -78,6 +79,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
                 pipelineNav={pipelineNav}
                 loyaltyNav={loyaltyNav}
                 setupNav={setupNav}
+                metaAgentNav={metaAgentNav}
                 userData={resolvedUserInfo ?? undefined}
                 staff={staff}
                 teams={teams}

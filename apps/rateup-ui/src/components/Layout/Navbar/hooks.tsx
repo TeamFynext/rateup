@@ -19,22 +19,17 @@ import {
   IconFilterBolt,
   IconFolder,
   IconGift,
-  IconBook,
   IconHash,
   IconInbox,
-  IconLayoutGrid,
   IconLinkPlus,
   IconLogs,
   IconMessage,
   IconMessages,
-  IconPlayerPlay,
-  IconPlug,
   IconQrcode,
   IconRobotFace,
   IconRocket,
   IconSend,
   IconSettings,
-  IconSettings2,
   IconShield,
   IconShieldExclamation,
   IconShoppingCart,
@@ -63,6 +58,11 @@ import {
   type LoyaltyNavInput,
 } from "@/components/dashboard/loyalty/loyalty.nav.ts";
 import { LOYALTY_PATHS } from "@/components/dashboard/loyalty/paths.ts";
+import {
+  buildMetaAgentNavItems,
+  buildMetaAgentNavProgress,
+  type MetaAgentNavInput,
+} from "@/components/dashboard/metaAgent/metaAgent.nav.ts";
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import {
   buildSetupNavItems,
@@ -197,6 +197,7 @@ interface NavMainInput {
   pipelineNav: PipelineNavInput;
   setupNav: SetupNavInput;
   loyaltyNav?: LoyaltyNavInput;
+  metaAgentNav: MetaAgentNavInput;
 }
 
 export function useNavMain({
@@ -217,6 +218,7 @@ export function useNavMain({
   pipelineNav,
   setupNav,
   loyaltyNav,
+  metaAgentNav,
 }: NavMainInput) {
   const { t } = useTranslation();
 
@@ -735,45 +737,10 @@ export function useNavMain({
               url: "/dashboard/meta-agent",
               icon: IconRobotFace,
               // Each area of the agent is its own route, so the sidebar is the
-              // navigation for them rather than a second rail inside the page.
-              // Ordered as the setup flow walks them (see `metaAgent/setup/agentSetup.ts`).
-              items: [
-                {
-                  title: t("Setup guide"),
-                  url: "/dashboard/meta-agent/overview",
-                  icon: IconRocket,
-                },
-                {
-                  title: t("Knowledge"),
-                  url: "/dashboard/meta-agent/knowledge",
-                  icon: IconBook,
-                },
-                {
-                  title: t("Skills"),
-                  url: "/dashboard/meta-agent/skills",
-                  icon: IconSparkles,
-                },
-                {
-                  title: t("Rich replies"),
-                  url: "/dashboard/meta-agent/ui-skills",
-                  icon: IconLayoutGrid,
-                },
-                {
-                  title: t("Connectors"),
-                  url: "/dashboard/meta-agent/connectors",
-                  icon: IconPlug,
-                },
-                {
-                  title: t("Test"),
-                  url: "/dashboard/meta-agent/operate",
-                  icon: IconPlayerPlay,
-                },
-                {
-                  title: t("Go live"),
-                  url: "/dashboard/meta-agent/settings",
-                  icon: IconSettings2,
-                },
-              ],
+              // navigation for them — with the setup guide's done ticks and meter
+              // (see `metaAgent/metaAgent.nav.ts`).
+              progress: buildMetaAgentNavProgress(metaAgentNav),
+              items: buildMetaAgentNavItems(metaAgentNav),
             },
           ]
         : []),
@@ -893,5 +860,6 @@ export function useNavMain({
     teams.length,
     user?.role,
     loyaltyNav,
+    metaAgentNav,
   ]);
 }

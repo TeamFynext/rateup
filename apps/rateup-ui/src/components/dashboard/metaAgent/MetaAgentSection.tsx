@@ -1,12 +1,11 @@
 import { IconArrowLeft, IconArrowRight, IconInfoCircle } from "@tabler/icons-react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
-import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
+import { PageHeading } from "@/components/common/page-heading.tsx";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Stepper, type StepperStep } from "@/components/ui/stepper.tsx";
 
 import { StepIconChip, StepTransition } from "../loyalty/onboarding/StepChrome.tsx";
 import { ConnectorsSection } from "./components/ConnectorsSection";
@@ -62,7 +61,6 @@ function AgentStepPage({
   step,
   waSettingsId,
 }: Readonly<{ step: Exclude<AgentStep, "overview">; waSettingsId: string }>) {
-  const navigate = useNavigate();
   const setup = useAgentSetup(waSettingsId);
   const meta = AGENT_STEP_META[step];
   const Component = SECTION_COMPONENTS[step];
@@ -72,43 +70,31 @@ function AgentStepPage({
   const prev = AGENT_STEPS[index - 1];
   const next = AGENT_STEPS[index + 1];
 
-  const stepperSteps: StepperStep[] = AGENT_STEPS.map((id) => {
-    const StepIcon = AGENT_STEP_META[id].icon;
-    return {
-      id,
-      label: AGENT_STEP_META[id].label,
-      complete: setup.status[id] === true,
-      icon: <StepIcon size={13} />,
-      meta: `${AGENT_STEP_META[id].minutes} min`,
-    };
-  });
-
+  // No step rail in here: as on the setup guide, the sidebar's rows are the
+  // rail — with a done tick per step and the meter at the foot of the panel.
   return (
     <div className="flex flex-col gap-6">
-      <Stepper
-        steps={stepperSteps}
-        currentStep={step}
-        onStepChange={(id) => {
-          const target = AGENT_STEPS.find((candidate) => candidate === id);
-          if (target) navigate({ to: AGENT_STEP_META[target].to });
-        }}
-      />
-
       <StepTransition stepKey={step}>
         <div className="flex min-w-0 flex-col gap-6">
-          <div className="flex items-start gap-3">
-            <StepIconChip tone={meta.tone}>
+          <div className="flex items-start gap-4">
+            <StepIconChip tone={meta.tone} className="mt-1 size-11 [&>svg]:size-6">
               <Icon />
             </StepIconChip>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className={SECTION_TITLE}>{meta.label}</h1>
-                {meta.group === "extend" && <Badge variant="outline">Optional</Badge>}
-                {setup.status[step] === true && (
-                  <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">Done</Badge>
-                )}
-              </div>
-              <p className="max-w-[66ch] text-sm text-muted-foreground">{meta.description}</p>
+              <PageHeading
+                title={meta.label}
+                description={meta.description}
+                actions={
+                  <div className="flex items-center gap-2">
+                    {meta.group === "extend" && <Badge variant="outline">Optional</Badge>}
+                    {setup.status[step] === true && (
+                      <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
+                        Done
+                      </Badge>
+                    )}
+                  </div>
+                }
+              />
             </div>
           </div>
 
