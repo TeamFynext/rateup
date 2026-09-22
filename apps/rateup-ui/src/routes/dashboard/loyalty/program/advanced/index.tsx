@@ -12,6 +12,9 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/dashboard/loyalty/program/advanced/")({
   validateSearch: searchSchema,
   beforeLoad: ({ search }) => {
+    if (search.section === "rewards") {
+      throw redirect({ to: LOYALTY_PATHS.rewards, replace: true });
+    }
     throw redirect({
       to: LOYALTY_PATHS.program,
       search: { section: search.section },

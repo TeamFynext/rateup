@@ -19,8 +19,9 @@ import type { ProgramState } from "../program/programState.ts";
 export type SuggestionTarget =
   | {
       to: typeof LOYALTY_PATHS.program;
-      search: { section: "profile" | "earning" | "tiers" | "rewards" | "messages" };
+      search: { section: "profile" | "earning" | "tiers" | "messages" };
     }
+  | { to: typeof LOYALTY_PATHS.rewards }
   | { to: typeof LOYALTY_PATHS.messages; search: { tab: "automatic" | "replies" | "templates" } }
   | { to: typeof LOYALTY_PATHS.settings }
   | { to: typeof LOYALTY_PATHS.onboarding };
@@ -116,8 +117,8 @@ export function buildSuggestions(input: SuggestionInput): Suggestion[] {
       severity: 2,
       title: t("There is nothing to redeem"),
       body: t("Customers can earn {points} but have nothing to aim at.", { points: pointsName }),
-      cta: t("Open Program › Rewards"),
-      target: { to: LOYALTY_PATHS.program, search: { section: "rewards" } },
+      cta: t("Open Rewards"),
+      target: { to: LOYALTY_PATHS.rewards },
     });
   }
 
@@ -146,8 +147,8 @@ export function buildSuggestions(input: SuggestionInput): Suggestion[] {
           cost: formatPoints(affordability.cheapestRewardCost, pointsName),
         },
       ),
-      cta: t("Open Program › Rewards"),
-      target: { to: LOYALTY_PATHS.program, search: { section: "rewards" } },
+      cta: t("Open Rewards"),
+      target: { to: LOYALTY_PATHS.rewards },
     });
   }
 
