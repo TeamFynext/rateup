@@ -18,9 +18,9 @@ import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import type { RequestPayload } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
 import { Button } from "../ui/button.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { ContactAvatar } from "../ui/contact-avatar.tsx";
 import {
   Dialog,
   DialogClose,
@@ -32,7 +32,6 @@ import {
 } from "../ui/dialog.tsx";
 import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Spinner } from "../ui/spinner.tsx";
-import { getInitials } from "../ui/utils.ts";
 import {
   buildContactSchema,
   type ContactFormValues,
@@ -207,12 +206,11 @@ const CreateOrEditContactModal = ({
         </DialogHeader>
         {initialValues && (
           <div className="flex items-center gap-3 pb-3 border-b">
-            <Avatar className="w-16 h-16">
-              <AvatarImage src={initialValues.profilePic ?? undefined} />
-              <AvatarFallback className="bg-linear-to-br from-primary to-blue-600 text-white">
-                {getInitials(initialValues.name)}
-              </AvatarFallback>
-            </Avatar>
+            <ContactAvatar
+              name={initialValues.name || initialValues.phone}
+              src={initialValues.profilePic}
+              size="lg"
+            />
             <div className="flex-1">
               <p className="font-medium">{initialValues.name}</p>
               <div className="flex items-center gap-2 mt-1">

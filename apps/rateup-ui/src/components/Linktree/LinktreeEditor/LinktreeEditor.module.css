@@ -14,7 +14,7 @@
   align-items: center;
 }
 
-.linktree-name-tabs-empty-div-container div {
+.linktree-name-tabs-empty-div-container > div {
   flex: 1;
 }
 

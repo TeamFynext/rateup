@@ -20,7 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { FRONTEND_URL } from "@/utils/constants.ts";
 
 import { formatMoney } from "../../dashboard/loyalty/giveback/format.ts";
@@ -109,7 +109,7 @@ export function CustomerView({
       <Card className="border-border">
         <CardContent className="flex flex-col gap-5 p-4 sm:p-5">
           <div className="flex items-start gap-3">
-            <PremiumAvatar name={customer.name} size="lg" />
+            <ContactAvatar name={customer.name} size="lg" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="truncate text-lg font-semibold text-foreground">{customer.name}</h2>

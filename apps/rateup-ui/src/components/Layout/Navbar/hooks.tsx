@@ -571,7 +571,14 @@ export function useNavMain({
         ? [
             {
               title: t("WhatsApp"),
-              url: "/dashboard/whatsapp/flows",
+              // The first item listed below that this person can see.
+              url: hasTeamFeature(TeamFeature.Templates)
+                ? "/dashboard/whatsapp/templates"
+                : hasTeamFeature(TeamFeature.Chatbots)
+                  ? "/dashboard/whatsapp/flowbots"
+                  : hasTeamFeature(TeamFeature.Flows)
+                    ? "/dashboard/whatsapp/flows"
+                    : "/dashboard/whatsapp/conversational-components",
               icon: IconBrandWhatsapp,
               items: [
                 ...(hasTeamFeature(TeamFeature.Templates)

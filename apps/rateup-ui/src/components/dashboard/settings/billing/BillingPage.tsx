@@ -1,4 +1,4 @@
-import { IconRefresh } from "@tabler/icons-react";
+import { IconChartBar, IconCreditCard, IconReceipt, IconRefresh } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -80,9 +80,18 @@ export function BillingPage({ tab }: Readonly<{ tab: BillingTab }>) {
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as BillingTab)}>
         <TabsList>
-          <TabsTrigger value="plan">{t("Plan")}</TabsTrigger>
-          <TabsTrigger value="usage">{t("Usage")}</TabsTrigger>
-          <TabsTrigger value="history">{t("History")}</TabsTrigger>
+          <TabsTrigger value="plan">
+            <IconCreditCard />
+            {t("Plan")}
+          </TabsTrigger>
+          <TabsTrigger value="usage">
+            <IconChartBar />
+            {t("Usage")}
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            <IconReceipt />
+            {t("History")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="plan" className="flex flex-col gap-4">

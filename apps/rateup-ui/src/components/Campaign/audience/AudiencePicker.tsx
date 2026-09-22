@@ -26,6 +26,7 @@ import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { pressable } from "@/components/common/pressable.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
@@ -624,7 +625,7 @@ export function AudiencePicker({
                       participant.contact?.phone ||
                       t("Unnamed contact")
                     }
-                    initials={initialsOf(participant.contact?.name || participant.contact?.phone)}
+                    contactName={participant.contact?.name || participant.contact?.phone || null}
                     disabled={removeParticipant.isPending}
                     onRemove={() =>
                       removeParticipant.mutate({
@@ -684,7 +685,7 @@ export function AudiencePicker({
                     key={contact.id}
                     tone="plain"
                     label={contact.name || contact.phone || ""}
-                    initials={initialsOf(contact.name || contact.phone)}
+                    contactName={contact.name || contact.phone || null}
                     onRemove={() =>
                       setSelectedContacts((prev) => prev.filter((c) => c.id !== contact.id))
                     }
@@ -746,15 +747,6 @@ export function AudienceTabs({
   );
 }
 
-/** Two initials from a name or number, for the avatar circles. */
-export function initialsOf(value: string | null | undefined): string {
-  if (!value) return "?";
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 function EmptyRow({ label }: Readonly<{ label: string }>) {
   return <p className="text-muted-foreground py-8 text-center text-[13px]">{label}</p>;
 }
@@ -779,14 +771,15 @@ function SelectedChip({
   tone,
   label,
   meta,
-  initials,
+  contactName,
   onRemove,
   disabled = false,
 }: Readonly<{
   tone: "accent" | "plain";
   label: string;
   meta?: number;
-  initials?: string;
+  /** Set for a contact chip; a group chip has none and shows the group icon. */
+  contactName?: string | null;
   onRemove: () => void;
   disabled?: boolean;
 }>) {
@@ -798,10 +791,8 @@ function SelectedChip({
           : "bg-muted text-foreground ring-foreground/10 inline-flex h-7.5 items-center gap-1.5 rounded-lg py-0 pr-1.5 pl-1 text-[12.5px] font-medium ring-1"
       }
     >
-      {initials ? (
-        <span className="bg-accent text-primary font-display inline-flex size-5.5 items-center justify-center rounded-full text-[9.5px] font-semibold">
-          {initials}
-        </span>
+      {contactName !== undefined ? (
+        <ContactAvatar name={contactName} size="2xs" variant="light-blue" />
       ) : (
         <IconUsersGroup className="size-3.5" aria-hidden />
       )}
@@ -886,9 +877,7 @@ export const Individual = ({
         onClick={(event) => event.stopPropagation()}
         aria-label={customer?.name ?? customer?.phone ?? ""}
       />
-      <span className="bg-accent text-primary font-display flex size-8 shrink-0 items-center justify-center rounded-full text-[11.5px] font-semibold">
-        {initialsOf(customer?.name || customer?.phone)}
-      </span>
+      <ContactAvatar name={customer?.name || customer?.phone} size="sm" />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-[13.5px] font-medium">
           {customer?.name || t("Unnamed contact")}

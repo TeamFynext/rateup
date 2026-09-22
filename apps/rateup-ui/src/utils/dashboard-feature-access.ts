@@ -10,9 +10,9 @@ const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = 
 ];
 
 const WHATSAPP_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = [
-  { feature: TeamFeature.Flows, to: "/dashboard/whatsapp/flows" },
-  { feature: TeamFeature.Chatbots, to: "/dashboard/whatsapp/flowbots" },
   { feature: TeamFeature.Templates, to: "/dashboard/whatsapp/templates" },
+  { feature: TeamFeature.Chatbots, to: "/dashboard/whatsapp/flowbots" },
+  { feature: TeamFeature.Flows, to: "/dashboard/whatsapp/flows" },
   { feature: TeamFeature.Automation, to: "/dashboard/automation" },
 ];
 

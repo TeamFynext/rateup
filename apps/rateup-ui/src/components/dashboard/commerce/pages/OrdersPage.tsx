@@ -19,9 +19,9 @@ import {
   useExportCommerceOrdersMutation,
 } from "@/backend/commerce/commerce.query";
 import OrderDetailsDialog from "@/components/dashboard/whatsapp/orders-and-payments/components/OrderDetailsDialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,8 +36,8 @@ import { cn } from "@/lib/utils";
 import { useCommerce } from "../CommerceContext";
 import { CommerceDateFilter, CommerceExportButton } from "../CommerceFilters";
 import { CommerceShell } from "../CommerceShell";
-import { STAGE_META, avatarClass } from "../orderMeta";
-import { initials, money } from "../utils";
+import { STAGE_META } from "../orderMeta";
+import { money } from "../utils";
 
 const STATUS_OPTIONS = [
   { id: "PENDING_PAYMENT", label: "Pending", dot: "bg-amber-500" },
@@ -200,11 +200,7 @@ export function OrdersPage() {
                       #{String(o.id).slice(-6)}
                     </span>
                     <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                      <Avatar className="size-[30px]">
-                        <AvatarFallback className={cn("text-xs text-white", avatarClass(name))}>
-                          {initials(name)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <ContactAvatar name={o.contact?.name} size="sm" />
                       <span className="truncate text-sm text-foreground">{name}</span>
                     </div>
                     <span className="hidden w-[70px] shrink-0 text-center text-sm text-muted-foreground md:block">

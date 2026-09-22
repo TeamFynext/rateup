@@ -21,9 +21,9 @@ import { useContactTableStore } from "@/components/dashboard/contacts/store/cont
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { copyToClipboard } from "@/utils/whatsappLink.ts";
 
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
 import { Badge } from "../ui/badge.tsx";
 import { Button } from "../ui/button.tsx";
+import { ContactAvatar } from "../ui/contact-avatar.tsx";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +36,6 @@ import { FieldLabel } from "../ui/field.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { Textarea } from "../ui/textarea.tsx";
-import { getInitials } from "../ui/utils.ts";
 import AddToGroupModal from "./AddToGroupModal.tsx";
 import SendMessageModal from "./SendMessageModal.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";
@@ -221,12 +220,10 @@ const ContactDetailedView = ({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12">
-              <AvatarImage src={details?.profilePic ?? selectedContact.profilePic} />
-              <AvatarFallback className="bg-linear-to-r from-primary to-blue-600 text-white">
-                {getInitials(selectedContact.name)}
-              </AvatarFallback>
-            </Avatar>
+            <ContactAvatar
+              name={contactName || phone}
+              src={details?.profilePic ?? selectedContact.profilePic}
+            />
             <div className="min-w-0">
               <div className="group/row flex items-center gap-1.5">
                 <DialogTitle className="truncate">{contactName}</DialogTitle>

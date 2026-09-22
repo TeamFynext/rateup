@@ -37,18 +37,15 @@ export default function SurveyPageHeader<T extends string>({
         <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as T)}>
-        <TabsList
-          variant="line"
-          className="h-11.5 w-full justify-start gap-0.5 rounded-none border-b border-border bg-background p-0 px-3"
-        >
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => onTabChange(value as T)}
+        className="border-b border-border px-6 py-2"
+      >
+        <TabsList>
           {tabs.map(({ value, label, icon: Icon }) => (
-            <TabsTrigger
-              key={value}
-              value={value}
-              className="h-full flex-none gap-1.75 rounded-none border-0 px-3.25 text-[13px] font-medium text-muted-foreground after:bg-primary group-data-horizontal/tabs:after:-bottom-px data-active:font-bold data-active:text-primary"
-            >
-              <Icon className="size-3.75" />
+            <TabsTrigger key={value} value={value}>
+              <Icon />
               {label}
             </TabsTrigger>
           ))}

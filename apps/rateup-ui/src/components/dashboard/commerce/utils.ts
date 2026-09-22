@@ -1,13 +1,3 @@
-export function initials(name: string): string {
-  const parts = (name ?? "")
-    .replace(/[^a-zA-Z ]/g, "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-  if (parts.length === 0) return "?";
-  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
-}
-
 /**
  * Catalog prices come from Meta already formatted with their own currency symbol
  * ("₹399.00"), but manually added products can carry a bare number. Only prefix the

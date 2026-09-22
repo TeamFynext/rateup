@@ -27,7 +27,7 @@ import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { StageDot } from "@/components/pipeline/shared/atoms.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import type { OptimisticMessage } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
@@ -292,14 +292,12 @@ export default function WaInboxChatSelectCard({
 
       {/* Avatar + channel badge */}
       <div className="relative shrink-0">
-        <CreativeAvatar
+        <ContactAvatar
           name={displayName}
-          size="md"
-          showOnlineStatus={true}
-          isOnline={!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)}
-          onlineStatusPosition="topLeft"
           src={contact?.profilePic}
-          showRing={true}
+          size="md"
+          showOnlineStatus
+          isOnline={!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)}
         />
         <span
           className={cn(

@@ -25,12 +25,3 @@ export const STAGE_META: Record<string, { label: string; short: string; cls: str
   CANCELLED: { label: "Cancelled", short: "Cancelled", cls: "bg-destructive/10 text-destructive" },
   DEFAULT: { label: "Pending", short: "Pending", cls: "bg-muted text-muted-foreground" },
 };
-
-const AVATAR_CLASSES = ["bg-primary", "bg-amber-500", "bg-slate-500", "bg-sky-500"];
-
-export function avatarClass(seed: string): string {
-  let hash = 0;
-  for (let i = 0; i < (seed ?? "").length; i++)
-    hash = (hash + seed.charCodeAt(i)) % AVATAR_CLASSES.length;
-  return AVATAR_CLASSES[hash];
-}

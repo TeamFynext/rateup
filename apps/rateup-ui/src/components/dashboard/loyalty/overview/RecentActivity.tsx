@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { LoyaltyDashboardStats } from "@/backend/loyalty/dashboard/dashboard.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 
 import { LOYALTY_PATHS } from "../paths.ts";
 import type { ProgramState } from "../program/programState.ts";
@@ -51,7 +51,7 @@ export function RecentActivity({
             className="flex items-center justify-between gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
           >
             <div className="flex min-w-0 items-center gap-3">
-              <PremiumAvatar name={activity.user} size="md" className="shrink-0" />
+              <ContactAvatar name={activity.user} size="md" className="shrink-0" />
               <div className="min-w-0">
                 <p className="truncate text-sm text-foreground">
                   <span className="font-medium">{activity.user}</span> {activity.action}

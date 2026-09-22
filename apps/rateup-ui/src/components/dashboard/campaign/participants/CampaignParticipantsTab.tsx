@@ -19,6 +19,7 @@ import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
@@ -67,15 +68,6 @@ interface ParticipantRow {
   failureMessage?: string | null;
   readAt?: string | null;
   errorMessage?: string | null;
-}
-
-/** Two initials from a name or number, for the avatar circles. */
-function initialsOf(value: string | null | undefined): string {
-  if (!value) return "?";
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 /**
@@ -343,9 +335,7 @@ export function CampaignParticipantsTab({
                 />
 
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="bg-accent text-primary font-display flex size-8 shrink-0 items-center justify-center rounded-full text-[11.5px] font-semibold">
-                    {initialsOf(row.contact?.name || row.contact?.phone)}
-                  </span>
+                  <ContactAvatar name={row.contact?.name || row.contact?.phone} size="sm" />
                   <div className="flex min-w-0 flex-col">
                     <span className="truncate font-medium">
                       {row.contact?.name || t("Unnamed contact")}

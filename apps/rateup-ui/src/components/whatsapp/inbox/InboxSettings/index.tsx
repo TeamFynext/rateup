@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { SECTION_TITLE } from "@/components/common/page-heading.tsx";
 import WaQuickReplySettings from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings.tsx";
-import { cn } from "@/lib/utils.ts";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import ChannelSettings from "./ChannelSettings.tsx";
 import ConversationTagSettings from "./ConversationTagSettings.tsx";
@@ -38,27 +38,17 @@ const InboxSettings = () => {
           {t("Manage channels, conversation tags, quick replies and automation.")}
         </p>
 
-        <div className="mt-3.5 flex gap-1 overflow-x-auto">
-          {TABS.map(({ value, label, icon: Icon }) => {
-            const isActive = activeTab === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setActiveTab(value)}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "flex shrink-0 cursor-pointer items-center gap-1.5 rounded-[9px] px-3.5 py-2 text-[13px] font-bold transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Icon className="size-3.75" />
-                {t(label)}
-              </button>
-            );
-          })}
+        <div className="mt-3.5 overflow-x-auto">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)}>
+            <TabsList>
+              {TABS.map(({ value, label, icon: Icon }) => (
+                <TabsTrigger key={value} value={value}>
+                  <Icon />
+                  {t(label)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 

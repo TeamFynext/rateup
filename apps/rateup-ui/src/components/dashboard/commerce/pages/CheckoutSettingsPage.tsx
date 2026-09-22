@@ -85,7 +85,7 @@ export function CheckoutSettingsPage() {
       description="Taxes, address collection, delivery and checkout behaviour."
     >
       <Tabs defaultValue="collection" className="flex flex-col gap-5">
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+        <TabsList>
           {/* TODO:commerce */}
           {/* <TabsTrigger value="general">
             <Settings2 data-icon="inline-start" />

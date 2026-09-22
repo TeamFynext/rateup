@@ -22,14 +22,13 @@ import { BackLink } from "@/components/common/back-link.tsx";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
-import { MessagePlatform } from "@/types/enums.ts";
 
 import { AnalyticsCard } from "../kit/AnalyticsCard.tsx";
 import { AnalyticsHeader, AnalyticsToolbar } from "../kit/AnalyticsHeader.tsx";
 import { formatCount, formatDuration, formatPercent, toNumber } from "../kit/format.ts";
+import { StaffAvatar } from "../kit/StaffAvatar.tsx";
 import { StaffStatusBadge } from "../kit/StatusBadges.tsx";
 import { CLICKABLE_ROWS, NAME_LINK } from "../kit/tableStyles.ts";
 import { TileGroup } from "../kit/TileGroup.tsx";
@@ -40,6 +39,7 @@ const ICON = "size-4 text-muted-foreground";
 interface MemberRow {
   id: string;
   name: string;
+  photo: string | null;
   status: string | undefined;
   messages: number;
   responseSeconds: number | undefined;
@@ -96,6 +96,7 @@ export function TeamPage() {
       (data?.members ?? []).map((member) => ({
         id: member.userId,
         name: member.name,
+        photo: member.profilePhoto ?? null,
         status: member.onlineStatus,
         messages: toNumber(member.messagesHandled) ?? 0,
         responseSeconds: toNumber(member.averageResponseTime) ?? undefined,
@@ -111,7 +112,7 @@ export function TeamPage() {
         header: createSortableHeader(t("Agent")),
         cell: ({ row }) => (
           <div className="flex min-w-44 items-center gap-3">
-            <CreativeAvatar name={row.original.name} platform={MessagePlatform.WEBCHAT} size="sm" />
+            <StaffAvatar name={row.original.name} photo={row.original.photo} className="size-8" />
             <Link
               to="/dashboard/analytics/$staffid"
               params={{ staffid: row.original.id }}
