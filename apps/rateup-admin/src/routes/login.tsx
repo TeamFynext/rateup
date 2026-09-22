@@ -7,11 +7,16 @@ import { meQueryOptions } from "@/api/auth.query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
-/** Reasons the API's OIDC callback sends back as `?error=`. */
+/**
+ * Reasons the API's OIDC callback sends back as `?error=`. Every refusal reads the same, so
+ * the page never says which domain is accepted or whether an account is on the staff list;
+ * the real reason is in the audit log (`staff.login_denied`).
+ */
+const DENIED = "This account can't sign in here. Ask a console owner if you need access.";
 const ERROR_MESSAGES: Record<string, string> = {
-  not_allowed: "This Google account is not on the staff list. Ask a console owner to add you.",
-  domain: "Sign in with your rateup.app Google Workspace account.",
-  access_mismatch: "The Google account doesn't match the one you used for Cloudflare Access.",
+  not_allowed: DENIED,
+  domain: DENIED,
+  access_mismatch: DENIED,
   expired: "The sign-in attempt expired. Try again.",
 };
 
@@ -54,7 +59,7 @@ function LoginPage() {
         <div className="space-y-2">
           <h1 className="text-[26px] leading-tight font-medium tracking-tight">Sign in</h1>
           <p className="text-sm text-muted-foreground">
-            Restricted to RateUp team members. Use your rateup.app Google account.
+            Restricted to RateUp team members.
           </p>
         </div>
 
