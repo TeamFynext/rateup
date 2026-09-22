@@ -192,6 +192,8 @@ import { Route as publicFacingWsShortIdResponseSubmittedIndexRouteImport } from 
 import { Route as DashboardAnalyticsTeamTeamidIndexRouteImport } from './routes/dashboard/analytics/team/$teamid/index'
 import { Route as DashboardContactsGroupsGroupIdIndexRouteImport } from './routes/dashboard/contacts/groups/$groupId/index'
 import { Route as DashboardLoyaltyProgramAdvancedIndexRouteImport } from './routes/dashboard/loyalty/program/advanced/index'
+import { Route as DashboardLoyaltyRewardsRewardIdIndexRouteImport } from './routes/dashboard/loyalty/rewards/$rewardId/index'
+import { Route as DashboardLoyaltyRewardsNewIndexRouteImport } from './routes/dashboard/loyalty/rewards/new/index'
 import { Route as DashboardLoyaltyTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/loyalty/templates/$templateId/index'
 import { Route as DashboardSettingsChannelsChannelIndexRouteImport } from './routes/dashboard/settings/channels/$channel/index'
 import { Route as DashboardSettingsIntegrationsIdIndexRouteImport } from './routes/dashboard/settings/integrations/$id/index'
@@ -1239,6 +1241,18 @@ const DashboardLoyaltyProgramAdvancedIndexRoute =
     path: '/program/advanced/',
     getParentRoute: () => DashboardLoyaltyRouteRoute,
   } as any)
+const DashboardLoyaltyRewardsRewardIdIndexRoute =
+  DashboardLoyaltyRewardsRewardIdIndexRouteImport.update({
+    id: '/rewards/$rewardId/',
+    path: '/rewards/$rewardId/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
+const DashboardLoyaltyRewardsNewIndexRoute =
+  DashboardLoyaltyRewardsNewIndexRouteImport.update({
+    id: '/rewards/new/',
+    path: '/rewards/new/',
+    getParentRoute: () => DashboardLoyaltyRouteRoute,
+  } as any)
 const DashboardLoyaltyTemplatesTemplateIdIndexRoute =
   DashboardLoyaltyTemplatesTemplateIdIndexRouteImport.update({
     id: '/templates/$templateId/',
@@ -1505,6 +1519,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
   '/dashboard/loyalty/program/advanced/': typeof DashboardLoyaltyProgramAdvancedIndexRoute
+  '/dashboard/loyalty/rewards/$rewardId/': typeof DashboardLoyaltyRewardsRewardIdIndexRoute
+  '/dashboard/loyalty/rewards/new/': typeof DashboardLoyaltyRewardsNewIndexRoute
   '/dashboard/loyalty/templates/$templateId/': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1696,6 +1712,8 @@ export interface FileRoutesByTo {
   '/dashboard/analytics/team/$teamid': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId': typeof DashboardContactsGroupsGroupIdIndexRoute
   '/dashboard/loyalty/program/advanced': typeof DashboardLoyaltyProgramAdvancedIndexRoute
+  '/dashboard/loyalty/rewards/$rewardId': typeof DashboardLoyaltyRewardsRewardIdIndexRoute
+  '/dashboard/loyalty/rewards/new': typeof DashboardLoyaltyRewardsNewIndexRoute
   '/dashboard/loyalty/templates/$templateId': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1896,6 +1914,8 @@ export interface FileRoutesById {
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
   '/dashboard/loyalty/program/advanced/': typeof DashboardLoyaltyProgramAdvancedIndexRoute
+  '/dashboard/loyalty/rewards/$rewardId/': typeof DashboardLoyaltyRewardsRewardIdIndexRoute
+  '/dashboard/loyalty/rewards/new/': typeof DashboardLoyaltyRewardsNewIndexRoute
   '/dashboard/loyalty/templates/$templateId/': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -2094,6 +2114,8 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/team/$teamid/'
     | '/dashboard/contacts/groups/$groupId/'
     | '/dashboard/loyalty/program/advanced/'
+    | '/dashboard/loyalty/rewards/$rewardId/'
+    | '/dashboard/loyalty/rewards/new/'
     | '/dashboard/loyalty/templates/$templateId/'
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
@@ -2285,6 +2307,8 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/team/$teamid'
     | '/dashboard/contacts/groups/$groupId'
     | '/dashboard/loyalty/program/advanced'
+    | '/dashboard/loyalty/rewards/$rewardId'
+    | '/dashboard/loyalty/rewards/new'
     | '/dashboard/loyalty/templates/$templateId'
     | '/dashboard/settings/channels/$channel'
     | '/dashboard/settings/integrations/$id'
@@ -2484,6 +2508,8 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/team/$teamid/'
     | '/dashboard/contacts/groups/$groupId/'
     | '/dashboard/loyalty/program/advanced/'
+    | '/dashboard/loyalty/rewards/$rewardId/'
+    | '/dashboard/loyalty/rewards/new/'
     | '/dashboard/loyalty/templates/$templateId/'
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
@@ -3797,6 +3823,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLoyaltyProgramAdvancedIndexRouteImport
       parentRoute: typeof DashboardLoyaltyRouteRoute
     }
+    '/dashboard/loyalty/rewards/$rewardId/': {
+      id: '/dashboard/loyalty/rewards/$rewardId/'
+      path: '/rewards/$rewardId'
+      fullPath: '/dashboard/loyalty/rewards/$rewardId/'
+      preLoaderRoute: typeof DashboardLoyaltyRewardsRewardIdIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
+    '/dashboard/loyalty/rewards/new/': {
+      id: '/dashboard/loyalty/rewards/new/'
+      path: '/rewards/new'
+      fullPath: '/dashboard/loyalty/rewards/new/'
+      preLoaderRoute: typeof DashboardLoyaltyRewardsNewIndexRouteImport
+      parentRoute: typeof DashboardLoyaltyRouteRoute
+    }
     '/dashboard/loyalty/templates/$templateId/': {
       id: '/dashboard/loyalty/templates/$templateId/'
       path: '/templates/$templateId'
@@ -4206,6 +4246,8 @@ interface DashboardLoyaltyRouteRouteChildren {
   DashboardLoyaltyTemplatesIndexRoute: typeof DashboardLoyaltyTemplatesIndexRoute
   DashboardLoyaltyTransactionsIndexRoute: typeof DashboardLoyaltyTransactionsIndexRoute
   DashboardLoyaltyProgramAdvancedIndexRoute: typeof DashboardLoyaltyProgramAdvancedIndexRoute
+  DashboardLoyaltyRewardsRewardIdIndexRoute: typeof DashboardLoyaltyRewardsRewardIdIndexRoute
+  DashboardLoyaltyRewardsNewIndexRoute: typeof DashboardLoyaltyRewardsNewIndexRoute
   DashboardLoyaltyTemplatesTemplateIdIndexRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
 }
 
@@ -4231,6 +4273,9 @@ const DashboardLoyaltyRouteRouteChildren: DashboardLoyaltyRouteRouteChildren = {
     DashboardLoyaltyTransactionsIndexRoute,
   DashboardLoyaltyProgramAdvancedIndexRoute:
     DashboardLoyaltyProgramAdvancedIndexRoute,
+  DashboardLoyaltyRewardsRewardIdIndexRoute:
+    DashboardLoyaltyRewardsRewardIdIndexRoute,
+  DashboardLoyaltyRewardsNewIndexRoute: DashboardLoyaltyRewardsNewIndexRoute,
   DashboardLoyaltyTemplatesTemplateIdIndexRoute:
     DashboardLoyaltyTemplatesTemplateIdIndexRoute,
 }

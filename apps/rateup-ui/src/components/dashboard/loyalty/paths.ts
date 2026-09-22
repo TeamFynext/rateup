@@ -9,6 +9,11 @@ export const LOYALTY_PATHS = {
   cashierStandalone: "/cashier",
   customers: "/dashboard/loyalty/customers",
   program: "/dashboard/loyalty/program",
+  /** The reward catalog, with the joining and referral bonuses above it. */
+  rewards: "/dashboard/loyalty/rewards",
+  /** `?type=point|coupon|assigned` */
+  rewardNew: "/dashboard/loyalty/rewards/new",
+  rewardEdit: "/dashboard/loyalty/rewards/$rewardId",
   /** Redirects to `program?section=`; the sections show the full editors themselves now. */
   programAdvanced: "/dashboard/loyalty/program/advanced",
   activity: "/dashboard/loyalty/activity",

@@ -25,7 +25,6 @@ import { VipTierStep } from "../onboarding/steps/VipTierStep.tsx";
 import { useProgramEditorData } from "../onboarding/useProgramEditorData.ts";
 import { removedTiers, toTiersPayload } from "../onboarding/vipTier.ts";
 import { LOYALTY_PATHS } from "../paths.ts";
-import { RewardsPage } from "../rewards/RewardsPage.tsx";
 import { ProgramSectionCard } from "./ProgramSectionCard.tsx";
 import { ProgramSectionEditor } from "./ProgramSectionEditor.tsx";
 import { programStateOf } from "./programState.ts";
@@ -36,14 +35,10 @@ import { buildSectionSummaries, type SectionKey } from "./programSummary.ts";
 /**
  * The Program page: everything that defines what the programme promises, in one place.
  *
- * The four cards are what the programme promises: its profile, how points are earned, its
- * tiers and its rewards. The wizard walks a fifth step, Messages, but that is not shown
- * here — what the programme *says* belongs to Loyalty → Messages, and when it says it to
- * Loyalty → Reminders. Editing one opens that section's
- * full editor under a Back button. Profile, VIP tier and Messages are the wizard's own
- * forms in section mode; Earning and Rewards are the complete editors (time windows and
- * tier restrictions on a rule; coupons, gifts, limits and validity on a reward), which
- * used to sit one more click away behind an "open the full editor" link.
+ * The three cards are what the programme promises: its profile, how points are earned and
+ * its tiers, each opening its editor under a Back button. What customers can redeem is
+ * Loyalty → Rewards; what the programme *says* is Loyalty → Messages, and when it says it
+ * is Loyalty → Reminders.
  */
 export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
   const { t } = useTranslation();
@@ -238,12 +233,6 @@ export function ProgramPage({ section }: Readonly<{ section?: SectionKey }>) {
               }
             }}
           />
-        </ProgramSectionEditor>
-      )}
-
-      {section === "rewards" && (
-        <ProgramSectionEditor>
-          <RewardsPage />
         </ProgramSectionEditor>
       )}
     </div>

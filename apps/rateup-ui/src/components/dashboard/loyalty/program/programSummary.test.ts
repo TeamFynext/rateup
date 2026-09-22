@@ -219,27 +219,13 @@ describe("buildSectionSummaries", () => {
     expect(byKey.tiers.line).toBe("Bronze 812 · Gold 2");
   });
 
-  test("rewards counts only live rewards by kind and names the cheapest and most popular", () => {
-    expect(byKey.rewards.caption).toBe("4 live · includes join and referral points");
-    expect(byKey.rewards.line).toBe(
-      "Cheapest is 250 Beans — roughly 10 visits. Most popular: Free regular hot drink, 500 Beans.",
-    );
-    expect(byKey.rewards.tags).toEqual([
-      { label: "2 point rewards", tone: "neutral" },
-      { label: "1 coupons", tone: "neutral" },
-      { label: "1 free gifts", tone: "neutral" },
-      { label: "50 Beans to join", tone: "accent" },
-      { label: "Referral: 100 / 50", tone: "accent" },
-    ]);
-  });
-
   // Program describes what the programme promises — its economics. What it *says* is the
   // Messages page's, and when it says it is Reminders'. A Messages card here showed the
   // same keyword replies and notifications a click away, and once the birthday gift and
   // quiet-days settings moved to Reminders its tags advertised controls it no longer held.
   test("Program carries no messages card — Messages owns that", () => {
     expect(byKey.messages).toBeUndefined();
-    expect(Object.keys(byKey)).toEqual(["profile", "earning", "tiers", "rewards"]);
+    expect(Object.keys(byKey)).toEqual(["profile", "earning", "tiers"]);
   });
 
   test("a bare draft is honest about what is missing", () => {
@@ -257,6 +243,5 @@ describe("buildSectionSummaries", () => {
     expect(d.earning.line).toBe("No default rule — customers earn nothing yet");
     expect(d.earning.attention).toBe(true);
     expect(d.tiers.caption).toBe("Off · one flat rate");
-    expect(d.rewards.attention).toBe(true);
   });
 });
