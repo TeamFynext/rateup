@@ -1,117 +1,70 @@
-import { IconDeviceFloppy, IconLoader2 } from "@tabler/icons-react";
-import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { useImmerReducer } from "use-immer";
 
 import {
   useGetShareSettings,
   useUpdateShareSettingsMutation,
 } from "@/backend/surveyShareSettings/surveyShareSettings.query";
-import { Button } from "@/components/ui/button.tsx";
+import { SectionHeading } from "@/components/common/page-heading.tsx";
+import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
+import { QrDesigner } from "@/components/common/qr-designer/QrDesigner.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
-import Preview from "../Preview/Preview.tsx";
-import LogoTabpanel from "./LogoTabPanel/index.tsx";
-import {
-  initialLogoTabPanelState,
-  logoTabPanelReducer,
-} from "./LogoTabPanel/LogoTabPanelReducer.tsx";
+/** Mirrors SHARE_SETTINGS_RESOURCES in rateup-api's shareSettings.schema.ts. */
+const SAVEABLE_RESOURCES = new Set(["survey", "generateQr"]);
 
 interface ShareQRProps {
   url: string;
-  sx?: React.CSSProperties;
   title: string;
   isPublished: boolean;
+  /** With `queryKey` and a saveable `resourceName`, the design is loaded and saved. */
   id?: string;
   queryKey?: string;
   resourceName?: string;
+  /** Inside an existing card, drop the designer's own cards. */
+  flat?: boolean;
 }
 
-const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQRProps) => {
-  const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer(
-    logoTabPanelReducer,
-    initialLogoTabPanelState,
-  );
+/** The share QR for a survey, flow or automation link: design it, then download or print. */
+const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName, flat }: ShareQRProps) => {
+  const { t } = useTranslation();
+  const saveable = !!id && !!queryKey && SAVEABLE_RESOURCES.has(resourceName ?? "");
+  const settings = useGetShareSettings(queryKey, resourceName, saveable ? id : "");
+  const mutation = useUpdateShareSettingsMutation(queryKey, resourceName, id ?? "");
 
-  // currently we are using only two resources(first arg below) survey, menu.
-  const shareSettings = useGetShareSettings(queryKey, resourceName, id ?? "");
-  // useUpdateShareSettingsMutation can return null.
-  const shareSettingsMutation = useUpdateShareSettingsMutation(queryKey, resourceName, id ?? "");
-  const { t: translations } = useTranslation();
-  useEffect(() => {
-    const qrSettingsFromApi = shareSettings?.data;
-    if (qrSettingsFromApi) {
-      logoTabPanelDispatch({
-        type: "update-state-from-api",
-        payload: qrSettingsFromApi,
-      });
+  const save = async (design: QrDesign) => {
+    const body = new FormData();
+    for (const [key, value] of Object.entries(design)) {
+      body.append(key, value instanceof File ? value : String(value));
     }
-  }, [shareSettings.data]);
-
-  const handleSaveOfSurveyShareSettings = useCallback(async () => {
-    if (shareSettingsMutation) {
-      const formData = new FormData();
-      for (const [property, rawValue] of Object.entries(logoTabPanelState)) {
-        let value: string | File = rawValue as string | File;
-
-        if (typeof rawValue === "number") {
-          value = rawValue.toString();
-        }
-
-        if (typeof rawValue === "boolean") {
-          value = rawValue ? "true" : "false";
-        }
-
-        formData.append(property, value);
-      }
-      try {
-        await shareSettingsMutation.mutateAsync({
-          params: {
-            resourceName,
-            id,
-          },
-          body: formData,
-        });
-      } catch {
-        toast.error(translations("Unable to save settings, Please try again later"));
-      }
+    try {
+      await mutation.mutateAsync({ params: { resourceName, id }, body });
+      return true;
+    } catch {
+      return false;
     }
-  }, [logoTabPanelState]);
+  };
 
   return (
-    <div className="bg-card rounded-lg border p-6">
-      <h2 className="text-base font-semibold mb-6 dark:text-white">QR Code</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <LogoTabpanel state={logoTabPanelState} dispatch={logoTabPanelDispatch} />
-        <div className="flex flex-col gap-4">
-          <div className="border rounded-lg flex flex-col items-center justify-center p-6 bg-muted gap-2">
-            <Preview
-              logoTabPanelState={logoTabPanelState}
-              url={url}
-              surveyTitle={title}
-              isSurveyPublished={isPublished}
-            />
-            <Button
-              className="w-full flex items-center justify-center gap-2"
-              onClick={handleSaveOfSurveyShareSettings}
-              disabled={shareSettingsMutation ? shareSettingsMutation.isPending : false}
-            >
-              {shareSettingsMutation?.isPending ? (
-                <>
-                  <IconLoader2 className="h-4 w-4 animate-spin" />
-                  {translations("Saving...")}
-                </>
-              ) : (
-                <>
-                  <IconDeviceFloppy className="h-4 w-4" />
-                  {translations("Save")}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <section className="flex flex-col gap-3">
+      <SectionHeading
+        title={t("QR code")}
+        hint={isPublished ? t("For posters, receipts and table cards.") : undefined}
+      />
+      {saveable && settings.isPending ? (
+        <Skeleton className="h-96 rounded-xl" />
+      ) : (
+        <QrDesigner
+          key={id ?? url}
+          url={url}
+          fileName={title}
+          initial={saveable ? settings.data : null}
+          disabled={!isPublished}
+          disabledReason={t("Publish to download or print the code.")}
+          onSave={saveable ? save : undefined}
+          flat={flat}
+        />
+      )}
+    </section>
   );
 };
 

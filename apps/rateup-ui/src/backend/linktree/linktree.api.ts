@@ -39,20 +39,23 @@ export interface LinktreeTheme {
   linkListItem: { styles: CSSProperties };
 }
 
-async function getLinktrees() {
-  const res = await axiosClient.get(url);
-  return res.data;
-}
-
 /** A linktree page as the editor's endpoint returns it. */
 export interface LinktreeData {
   id: string;
   name: string;
+  shortUrlId: string;
+  createdAt: string;
+  visitorsCount?: number;
   isPublished?: boolean;
   links?: LinktreeLink[];
   theme?: LinktreeTheme;
   shareSettings?: Record<string, unknown>;
   [key: string]: unknown;
+}
+
+async function getLinktrees() {
+  const res = await axiosClient.get<LinktreeData[]>(url);
+  return res.data;
 }
 
 function getLinktreeWithShortId(shortUrlId: string) {
@@ -63,17 +66,17 @@ function getLinktreeWithShortId(shortUrlId: string) {
 }
 
 async function getPublicLinktreeWithShortId(shortUrlId: string) {
-  const res = await axiosClient.get(`${url}/public/${shortUrlId}`);
+  const res = await axiosClient.get<LinktreeData | null>(`${url}/public/${shortUrlId}`);
   return res.data;
 }
 
 async function createLinktree(data: RequestPayload) {
-  const res = await axiosClient.post(url, data);
+  const res = await axiosClient.post<LinktreeData>(url, data);
   return res.data;
 }
 
 async function updateLinktree(data: RequestPayload) {
-  const res = await axiosClient.put(url, data);
+  const res = await axiosClient.put<LinktreeData>(url, data);
   return res.data;
 }
 
@@ -82,9 +85,18 @@ async function deleteLinktree(id: string) {
   return res.data;
 }
 
+/** A survey offered by the add-link picker, with the teams it is shared to. */
+export interface LinktreeSurveyOption {
+  id: string;
+  title: string;
+  teams: Array<{ id: string; shortUrlId?: string | null; team: { name: string } }>;
+}
+
 function getDropdownOptionsOfLinkType(linkType: string) {
   return async () => {
-    const res = await axiosClient.get(`${url}/linkTypeDropdownOptions/${linkType}`);
+    const res = await axiosClient.get<LinktreeSurveyOption[]>(
+      `${url}/linkTypeDropdownOptions/${linkType}`,
+    );
     return res.data;
   };
 }

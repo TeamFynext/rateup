@@ -1,36 +1,49 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { getPublicLinktreeWithShortId } from "@/backend/linktree/linktree.api";
-import LinkTreeC from "@/components/(public-facing)/lt/$shortId/linktreeC.tsx";
+import type { LinktreeData } from "@/backend/linktree/linktree.api";
+import { useLinkPageTracking } from "@/components/(public-facing)/lt/$shortId/useLinkPageTracking.ts";
+import { LinkPageView } from "@/components/dashboard/qr-links/link-pages/LinkPageView.tsx";
+import { DEFAULT_LINK_PAGE_THEME } from "@/components/dashboard/qr-links/link-pages/theme.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { rateupIconBw } from "@/utils/constants";
 
-import styles from "@/components/(public-facing)/lt/$shortId/lt.module.css";
-
 export const Route = createFileRoute("/(public-facing)/lt/$shortId/")({
-  component: Lt,
+  component: LinkPage,
   loader: async ({ params }) => {
-    const { shortId } = params;
-    const linktreeObj = await getPublicLinktreeWithShortId(shortId);
-    if (linktreeObj?.isPublished) {
-      return linktreeObj;
-    } else {
-      return {
-        linktreeObj: null,
-      };
-    }
+    const page = await getPublicLinktreeWithShortId(params.shortId);
+    return { page: page?.isPublished ? page : null };
   },
 });
 
-// Linktree Public Page
-function Lt() {
-  const linktreeObj = Route.useLoaderData();
-  if (!linktreeObj) {
+function LinkPage() {
+  const { page } = Route.useLoaderData();
+  const { t } = useTranslation();
+  if (!page) {
     return (
-      <div className={`flex items-center gap-2 ${styles["not-available-div"]}`}>
-        <img src={rateupIconBw} alt="logo" width={70} height={70} />
-        <p className={styles["not-available-p"]}>Linktree Not available</p>
+      <div className="flex min-h-screen items-center justify-center gap-3 p-4">
+        <img src={rateupIconBw} alt="" width={56} height={56} />
+        <p className="text-2xl font-bold text-muted-foreground">{t("This page isn't available")}</p>
       </div>
     );
   }
-  return <LinkTreeC linktreeObj={linktreeObj} />;
+  return <PublishedLinkPage page={page} />;
+}
+
+function PublishedLinkPage({ page }: Readonly<{ page: LinktreeData }>) {
+  const onLinkClick = useLinkPageTracking(page.shortUrlId);
+  const isPhone = useMediaQuery("(max-width: 425px)");
+  const theme = page.theme ?? DEFAULT_LINK_PAGE_THEME;
+  const { desktopBgImgUrl, mobileBgImgUrl } = theme.background;
+
+  return (
+    <LinkPageView
+      theme={theme}
+      links={page.links ?? []}
+      backgroundImage={(isPhone ? mobileBgImgUrl : desktopBgImgUrl) ?? null}
+      onLinkClick={onLinkClick}
+      className="min-h-screen"
+    />
+  );
 }

@@ -588,21 +588,16 @@ const ShareSurvey = ({
             </CardContent>
           </Card>
 
-          {/* QR Code Card */}
-          <Card>
-            <CardContent className="pt-5">
-              {shareUrl && (
-                <ShareQR
-                  url={shareUrl}
-                  title={survey?.title}
-                  isPublished={!disableShare}
-                  id={surveyId}
-                  queryKey={"surveyShareSettings"}
-                  resourceName={"survey"}
-                />
-              )}
-            </CardContent>
-          </Card>
+          {shareUrl && (
+            <ShareQR
+              url={shareUrl}
+              title={survey?.title}
+              isPublished={!disableShare}
+              id={surveyId}
+              queryKey={"surveyShareSettings"}
+              resourceName={"survey"}
+            />
+          )}
 
           {/* IFrame modal */}
           <Dialog open={openedIframe} onOpenChange={(v) => !v && setOpenedIframe(false)}>

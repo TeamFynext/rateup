@@ -1,11 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { GenerateQr } from "@/components/dashboard/qrCreator/GenerateQr.tsx";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/qrCreator/")({
-  component: RouteComponent,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/qr-codes" });
+  },
 });
-
-function RouteComponent() {
-  return <GenerateQr />;
-}

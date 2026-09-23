@@ -40,6 +40,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-23-qr-codes-link-pages",
+    title: "QR codes and link pages, redesigned",
+    summary:
+      "QR Studio is now QR & Links: QR Creator is QR codes and Access Links is Link pages. The link page editor shows a live phone preview as you add links and change the look.",
+    publishedAt: "2026-09-23",
+    kinds: ["improvement"],
+    area: "QR & Links",
+    link: { to: "/dashboard/link-pages", label: "Open link pages" },
+  },
+  {
     id: "2026-09-22-meta-ai-handover-badge",
     title: "See when Meta AI hands a chat to you",
     summary:
