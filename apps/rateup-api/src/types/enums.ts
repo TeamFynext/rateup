@@ -246,6 +246,8 @@ export enum CampaignPauseReason {
   /// Meta 131042: no payment method, credit line over limit, or a billing
   /// setting missing on the WhatsApp Business account.
   PAYMENT_METHOD = "PAYMENT_METHOD",
+  /// RateUp staff suspended the account (src/modules/staff).
+  ACCOUNT_SUSPENDED = "ACCOUNT_SUSPENDED",
 }
 export enum CampaignType {
   WHATSAPP = "WHATSAPP",

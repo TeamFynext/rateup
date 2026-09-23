@@ -8,6 +8,12 @@ vi.mock("./logger.js", () => ({
 }));
 vi.mock("./auditLog.js", () => ({ auditLogHook: vi.fn() }));
 vi.mock("../modules/user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
+// Reaches Redis and the org row; the suspension rule has its own tests in
+// modules/org/orgSuspension.test.ts and authz/authorize.test.ts.
+vi.mock("../modules/org/orgSuspension.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../modules/org/orgSuspension.js")>();
+  return { ...actual, isOrgSuspended: vi.fn().mockResolvedValue(false) };
+});
 vi.mock("../authz/actor.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../authz/actor.js")>();
   return { ...actual, loadActor: vi.fn() };

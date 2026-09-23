@@ -392,6 +392,7 @@ describe("read routes", () => {
     "/api/staff/ops/maintenance/tasks",
     "/api/staff/ops/shopify",
     "/api/staff/ops/referrals",
+    "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24/notes",
     "/api/staff/staff-users",
     "/api/staff/audit",
     "/api/staff/audit/actions",
@@ -421,6 +422,26 @@ describe("read routes", () => {
       expect(res.json().code, url).toBe("VALIDATION");
     }
   });
+});
+
+test("a subscription change without a reason is refused before anything is written", async () => {
+  const { app } = await buildApp();
+  const org = "/api/staff/orgs/0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24";
+  const headers = { ...withSession, origin: ORIGIN, "x-staff-csrf": "1" };
+  const future = new Date(Date.now() + 86_400_000).toISOString();
+  for (const [method, url, payload] of [
+    ["PUT", `${org}/subscription/plan`, { rateupPlanId: org.slice(-36), expiresAt: future }],
+    ["PUT", `${org}/subscription/expiry`, { expiresAt: future, reason: "no" }],
+    ["PUT", `${org}/subscription/overrides`, { features: {}, reason: "A fine reason" }],
+    ["POST", `${org}/addons`, { quantity: 50, reason: "A fine reason" }],
+    ["POST", `${org}/suspend`, { reason: "no" }],
+    ["POST", `${org}/unsuspend`, {}],
+    ["POST", `${org}/notes`, { body: "" }],
+  ] as const) {
+    const res = await app.inject({ method, url, headers, payload });
+    expect(res.statusCode, url).toBe(400);
+    expect(res.json().code, url).toBe("VALIDATION");
+  }
 });
 
 test("a maintenance preview needs a session and the CSRF header, like any POST", async () => {

@@ -4,6 +4,12 @@ vi.mock("supertokens-node/recipe/session/index.js", () => ({ default: { getSessi
 vi.mock("../utils/logger.js", () => ({ log: { warn: vi.fn(), error: vi.fn() } }));
 vi.mock("../utils/auditLog.js", () => ({ auditLogHook: vi.fn() }));
 vi.mock("../modules/user/user.service.js", () => ({ getOrgIdAndRole: vi.fn() }));
+// Reads Redis and the org row on every authenticated request; the suspension rule itself
+// is covered in modules/org/orgSuspension.test.ts.
+vi.mock("../modules/org/orgSuspension.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../modules/org/orgSuspension.js")>();
+  return { ...actual, isOrgSuspended: vi.fn() };
+});
 vi.mock("./actor.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./actor.js")>();
   return { ...actual, loadActor: vi.fn() };
@@ -13,6 +19,7 @@ import Session from "supertokens-node/recipe/session/index.js";
 import { auditLogHook } from "../utils/auditLog.js";
 import { log } from "../utils/logger.js";
 import { getOrgIdAndRole } from "../modules/user/user.service.js";
+import { isOrgSuspended } from "../modules/org/orgSuspension.js";
 import { buildActor, loadActor } from "./actor.js";
 import { attachSessionActor, authorize, isAuditOnly, routeModule } from "./authorize.js";
 import type { RoleKey } from "./roles.js";
@@ -21,6 +28,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const getSession = Session.getSession as unknown as Mock;
 const loadActorMock = loadActor as unknown as Mock;
 const getOrgIdAndRoleMock = getOrgIdAndRole as unknown as Mock;
+const isOrgSuspendedMock = isOrgSuspended as unknown as Mock;
 
 const PAYLOAD = { role: "SUPER_ADMIN", orgId: "org-1", email: "a@b.c" };
 
@@ -59,6 +67,31 @@ beforeEach(() => {
   getSession.mockResolvedValue(session());
   loadActorMock.mockResolvedValue(actorFor("STAFF", ["t1"]));
   getOrgIdAndRoleMock.mockResolvedValue(null);
+  isOrgSuspendedMock.mockResolvedValue(false);
+});
+
+describe("an org RateUp staff have suspended", () => {
+  test("is refused with ORG_SUSPENDED, before the route or the audit hook runs", async () => {
+    isOrgSuspendedMock.mockResolvedValue(true);
+    const req = request({ access: "session" });
+    const rep = reply();
+    await authorize(req, rep);
+    expect(rep.statusCode).toBe(403);
+    expect(rep.payload).toMatchObject({ code: "ORG_SUSPENDED" });
+    expect(auditLogHook).not.toHaveBeenCalled();
+  });
+
+  test("can still reach the routes that render the suspended screen", async () => {
+    isOrgSuspendedMock.mockResolvedValue(true);
+    const req = request(
+      { access: "session" },
+      { routeOptions: { url: "/api/user/info", config: { access: "session" } } },
+    );
+    const rep = reply();
+    await authorize(req, rep);
+    expect(rep.send).not.toHaveBeenCalled();
+    expect(req.actor.roleKey).toBe("STAFF");
+  });
 });
 
 afterEach(() => {

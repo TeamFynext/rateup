@@ -7,8 +7,16 @@ import { pageQuerySchema, searchTextSchema } from "../staff.schema.js";
  * - `no_plan`: no subscription row at all.
  * - `paused`: paused by the customer (`Org.isPaused`), which staff only read.
  * - `paid`: an active subscription on a tier that carries a price.
+ * - `suspended`: switched off by RateUp staff (`Org.suspendedAt`), which `paused` is not.
  */
-export const ORG_STATUSES = ["active", "expired", "no_plan", "paused", "paid"] as const;
+export const ORG_STATUSES = [
+  "active",
+  "expired",
+  "no_plan",
+  "paused",
+  "paid",
+  "suspended",
+] as const;
 export type OrgStatusFilter = (typeof ORG_STATUSES)[number];
 
 export const ORG_SORTS = ["created", "name", "expires", "conversations"] as const;

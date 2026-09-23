@@ -220,6 +220,40 @@ model Org {
   inboxMentions           InboxMention[]
   conversationTags        ConversationTag[]
   pipelines               Pipeline[]
+
+  /// Suspended by RateUp staff (src/modules/staff). Deliberately NOT `isPaused`: the
+  /// customer's own admin and a Shopify uninstall both set that one, so reusing it would
+  /// let a customer lift their own suspension — and would leave staff unable to tell the
+  /// two apart. Null means not suspended.
+  suspendedAt        DateTime?
+  /// Why, in staff's words. Not shown to the customer; the audit row carries it too.
+  suspendedReason    String?
+  /// The StaffUser who suspended. No FK: a staff member can be deleted, the record stays.
+  suspendedByStaffId String?   @db.Uuid
+  staffNotes         OrgNote[]
+
+  @@index([suspendedAt])
+}
+
+/// A note staff keep on an org: context for whoever picks the account up next.
+/// Never shown to the customer.
+model OrgNote {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org         Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId       String    @db.Uuid
+  /// No FK to StaffUser: the note survives the author being removed from the allowlist.
+  staffUserId String?   @db.Uuid
+  /// Kept beside the id so an old note still says who wrote it.
+  staffEmail  String
+  body        String
+  /// Pinned notes show on the org's Overview tab.
+  pinned      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  /// Soft delete: a note staff removed stays readable in the audit trail.
+  deletedAt   DateTime?
+
+  @@index([orgId, pinned, createdAt])
 }
 
 model UsageStats {

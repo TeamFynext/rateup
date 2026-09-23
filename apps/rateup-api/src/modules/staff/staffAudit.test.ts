@@ -26,6 +26,21 @@ describe("redact", () => {
     });
   });
 
+  test("keeps counts and flags whose names only look secret, and stores dates as dates", () => {
+    const expiresAt = new Date("2027-03-31T18:29:59.999Z");
+    expect(
+      redact({
+        ai: { active: false, count: { promptTokens: 0, completionTokens: 12000 } },
+        expiresAt,
+        token: { value: "t" },
+      }),
+    ).toEqual({
+      ai: { active: false, count: { promptTokens: 0, completionTokens: 12000 } },
+      expiresAt: "2027-03-31T18:29:59.999Z",
+      token: "[redacted]",
+    });
+  });
+
   test("passes primitives through", () => {
     expect(redact("x")).toBe("x");
     expect(redact(null)).toBeNull();

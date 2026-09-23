@@ -3,6 +3,7 @@ import { log } from "./logger.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { auditLogHook } from "./auditLog.js";
 import { getOrgIdAndRole } from "../modules/user/user.service.js";
+import { allowSuspendedThrough } from "../authz/authorize.js";
 
 /**
  * Verifies that the session is valid and sets the userId on the request object.
@@ -44,6 +45,8 @@ export const checkSession = async (request: FastifyRequest, reply: FastifyReply)
 
     const user = { userId, role, orgId, email };
     request.user = user;
+    // Same gate as the root authorize hook, for the routes that still guard themselves.
+    if (orgId && !(await allowSuspendedThrough(request, reply, orgId))) return;
     // Log audit info
     await auditLogHook(request, reply);
   } catch (err) {

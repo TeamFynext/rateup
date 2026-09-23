@@ -3,6 +3,12 @@ import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../utils/logger.js";
 import { auditLogHook } from "../utils/auditLog.js";
 import { getOrgIdAndRole } from "../modules/user/user.service.js";
+import {
+  isOrgSuspended,
+  isSuspensionExemptRoute,
+  ORG_SUSPENDED_CODE,
+  ORG_SUSPENDED_MESSAGE,
+} from "../modules/org/orgSuspension.js";
 import { loadActor } from "./actor.js";
 import type { Permission } from "./permissions.js";
 import { roleKeyToLegacy } from "./roles.js";
@@ -47,6 +53,7 @@ export async function attachSessionActor(
       role = roleKeyToLegacy(actor.roleKey!);
     }
     request.user = { userId, role, orgId, email };
+    if (orgId && !(await allowSuspendedThrough(request, reply, orgId))) return false;
     await auditLogHook(request, reply);
     return true;
   } catch (err) {
@@ -54,6 +61,28 @@ export async function attachSessionActor(
     reply.code(401).send({ message: "Not authorized" });
     return false;
   }
+}
+
+/**
+ * Refuses a request from an org RateUp staff have suspended, so that a suspension takes
+ * hold everywhere at once rather than route by route. A handful of routes stay open — see
+ * isSuspensionExemptRoute — so the customer's app can load and say what has happened.
+ *
+ * Returns false after replying 403.
+ */
+export async function allowSuspendedThrough(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  orgId: string,
+): Promise<boolean> {
+  if (isSuspensionExemptRoute(request.routeOptions?.url ?? request.url)) return true;
+  if (!(await isOrgSuspended(orgId))) return true;
+  reply.code(403).send({
+    message: ORG_SUSPENDED_MESSAGE,
+    code: ORG_SUSPENDED_CODE,
+    displayMessageInClient: true,
+  });
+  return false;
 }
 
 /** `/api/<module>/...` → `<module>`, the unit AUTHZ_AUDIT_ONLY is expressed in. */

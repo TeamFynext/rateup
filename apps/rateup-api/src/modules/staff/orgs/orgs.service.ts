@@ -68,6 +68,9 @@ export async function orgListWhere(
     case "paused":
       and.push({ isPaused: true });
       break;
+    case "suspended":
+      and.push({ suspendedAt: { not: null } });
+      break;
     case "paid":
       and.push({
         Subscription: { is: { expiresAt: { gt: now }, basePlan: { is: { price: { gt: 0 } } } } },
@@ -109,6 +112,8 @@ const orgRowSelect = {
   logo: true,
   createdAt: true,
   isPaused: true,
+  suspendedAt: true,
+  suspendedReason: true,
   owner: { select: { id: true, name: true, email: true } },
   Subscription: {
     select: {
@@ -132,6 +137,9 @@ export interface OrgRow {
   logo: string | null;
   createdAt: Date;
   pausedByCustomer: boolean;
+  /** Switched off by RateUp staff. `pausedByCustomer` is the customer's own pause. */
+  suspendedAt: Date | null;
+  suspendedReason: string | null;
   owner: { id: string; name: string | null; email: string };
   plan: { id: string; name: string; paid: boolean } | null;
   status: SubscriptionStatus;
@@ -158,6 +166,8 @@ function toOrgRow(org: OrgRowRecord, lastActive: Date | undefined, now: Date): O
     logo: org.logo,
     createdAt: org.createdAt,
     pausedByCustomer: Boolean(org.isPaused),
+    suspendedAt: org.suspendedAt,
+    suspendedReason: org.suspendedReason,
     owner: org.owner,
     plan: plan
       ? { id: plan.id, name: plan.displayName ?? plan.name, paid: Number(plan.price ?? 0) > 0 }
@@ -200,13 +210,15 @@ export async function listOrgs(query: OrgListQuery, now = new Date()): Promise<P
 export async function listPlanOptions() {
   const plans = await prisma.rateupPlan.findMany({
     where: { planType: "BASE" },
-    select: { id: true, name: true, displayName: true, price: true },
+    select: { id: true, name: true, displayName: true, price: true, features: true },
     orderBy: [{ price: { sort: "asc", nulls: "first" } }, { name: "asc" }],
   });
   return plans.map((plan) => ({
     id: plan.id,
     name: plan.displayName ?? plan.name,
     paid: Number(plan.price ?? 0) > 0,
+    // For the plan picker's before / after comparison.
+    features: plan.features,
   }));
 }
 

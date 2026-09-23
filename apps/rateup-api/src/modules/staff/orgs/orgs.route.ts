@@ -14,6 +14,46 @@ import {
   listOrgs,
   listPlanOptions,
 } from "./orgs.service.js";
+import {
+  addonGrantSchema,
+  addonParamSchema,
+  expiryChangeSchema,
+  featureOverrideSchema,
+  planChangeSchema,
+  reasonOnlySchema,
+  type AddonGrantInput,
+  type AddonParam,
+  type ExpiryChangeInput,
+  type FeatureOverrideInput,
+  type PlanChangeInput,
+  type ReasonOnlyInput,
+} from "./subscription.schema.js";
+import {
+  changeOrgExpiry,
+  changeOrgPlan,
+  getOrgSubscription,
+  grantAddonPacks,
+  overrideOrgFeatures,
+  revokeAddonPack,
+} from "./subscription.service.js";
+import {
+  noteParamSchema,
+  noteSchema,
+  noteUpdateSchema,
+  reasonOnlyBodySchema,
+  type NoteInput,
+  type NoteParam,
+  type NoteUpdateInput,
+  type ReasonOnlyInput as SuspendInput,
+} from "./suspension.schema.js";
+import {
+  addOrgNote,
+  deleteOrgNote,
+  editOrgNote,
+  listOrgNotes,
+  suspendOrg,
+  unsuspendOrg,
+} from "./suspension.service.js";
 
 const messageStatsQuerySchema = z.object({
   from: z.coerce.date().optional(),
@@ -64,5 +104,80 @@ export async function staffOrgRoutes(server: FastifyInstance) {
     "/orgs/:id/activity",
     { schema: { params: idParamSchema, querystring: activityQuerySchema } },
     async (request) => getOrgActivity(request.params.id, request.query),
+  );
+
+  server.get<{ Params: IdParam }>("/orgs/:id/subscription", byId, async (request) => ({
+    data: await getOrgSubscription(request.params.id),
+  }));
+
+  // Subscription changes. Every body carries a reason, stored on the audit row.
+  server.put<{ Params: IdParam; Body: PlanChangeInput }>(
+    "/orgs/:id/subscription/plan",
+    { schema: { params: idParamSchema, body: planChangeSchema } },
+    async (request) => ({ data: await changeOrgPlan(request, request.params.id, request.body) }),
+  );
+  server.put<{ Params: IdParam; Body: ExpiryChangeInput }>(
+    "/orgs/:id/subscription/expiry",
+    { schema: { params: idParamSchema, body: expiryChangeSchema } },
+    async (request) => ({
+      data: await changeOrgExpiry(request, request.params.id, request.body),
+    }),
+  );
+  server.put<{ Params: IdParam; Body: FeatureOverrideInput }>(
+    "/orgs/:id/subscription/overrides",
+    { schema: { params: idParamSchema, body: featureOverrideSchema } },
+    async (request) => ({
+      data: await overrideOrgFeatures(request, request.params.id, request.body),
+    }),
+  );
+  server.post<{ Params: IdParam; Body: AddonGrantInput }>(
+    "/orgs/:id/addons",
+    { schema: { params: idParamSchema, body: addonGrantSchema } },
+    async (request) => ({
+      data: await grantAddonPacks(request, request.params.id, request.body),
+    }),
+  );
+  server.post<{ Params: AddonParam; Body: ReasonOnlyInput }>(
+    "/orgs/:id/addons/:addonId/revoke",
+    { schema: { params: addonParamSchema, body: reasonOnlySchema } },
+    async (request) => ({
+      data: await revokeAddonPack(request, request.params.id, request.params.addonId, request.body),
+    }),
+  );
+
+  // Suspension: the customer's sessions, API key and outbound sends all stop.
+  server.post<{ Params: IdParam; Body: SuspendInput }>(
+    "/orgs/:id/suspend",
+    { schema: { params: idParamSchema, body: reasonOnlyBodySchema } },
+    async (request) => ({ data: await suspendOrg(request, request.params.id, request.body) }),
+  );
+  server.post<{ Params: IdParam; Body: SuspendInput }>(
+    "/orgs/:id/unsuspend",
+    { schema: { params: idParamSchema, body: reasonOnlyBodySchema } },
+    async (request) => ({ data: await unsuspendOrg(request, request.params.id, request.body) }),
+  );
+
+  // Staff notes on the account. Never shown to the customer.
+  server.get<{ Params: IdParam }>("/orgs/:id/notes", byId, async (request) => ({
+    data: await listOrgNotes(request.params.id),
+  }));
+  server.post<{ Params: IdParam; Body: NoteInput }>(
+    "/orgs/:id/notes",
+    { schema: { params: idParamSchema, body: noteSchema } },
+    async (request) => ({ data: await addOrgNote(request, request.params.id, request.body) }),
+  );
+  server.patch<{ Params: NoteParam; Body: NoteUpdateInput }>(
+    "/orgs/:id/notes/:noteId",
+    { schema: { params: noteParamSchema, body: noteUpdateSchema } },
+    async (request) => ({
+      data: await editOrgNote(request, request.params.id, request.params.noteId, request.body),
+    }),
+  );
+  server.delete<{ Params: NoteParam }>(
+    "/orgs/:id/notes/:noteId",
+    { schema: { params: noteParamSchema } },
+    async (request) => ({
+      data: await deleteOrgNote(request, request.params.id, request.params.noteId),
+    }),
   );
 }
