@@ -6,7 +6,6 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
 
-import { uploadFile } from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/SaveChangesBtn/uploadFile.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -19,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { uploadToCdn } from "@/utils/file-upload/upload.ts";
 
 const ENTER_URL = "Enter Image Url";
 const UPLOAD_IMAGE = "Upload Image";
@@ -114,7 +114,7 @@ function InsertImage({ editor }: { editor: Editor | null }) {
         }
       } else if (chooseImageDDState === UPLOAD_IMAGE) {
         setIsUploadingFile(true);
-        const { url } = await uploadFile("src", uploadImageFileInputValue!);
+        const url = await uploadToCdn(uploadImageFileInputValue!);
         if (editor) {
           editor
             .chain()

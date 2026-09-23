@@ -11,7 +11,6 @@ import {
   IconChartBar,
   IconChartInfographic,
   IconCircleCheck,
-  IconCirclePlus,
   IconCreditCard,
   IconCrown,
   IconDashboard,
@@ -21,7 +20,7 @@ import {
   IconGift,
   IconHash,
   IconInbox,
-  IconLinkPlus,
+  IconLayoutList,
   IconLogs,
   IconMessage,
   IconMessages,
@@ -714,25 +713,20 @@ export function useNavMain({
       ...(hasTeamFeature(TeamFeature.QrStudio)
         ? [
             {
-              title: t("QR Studio"),
-              url: "/dashboard/qrCreator",
+              title: t("QR & Links"),
+              url: "/dashboard/qr-codes",
               icon: IconQrcode,
               items: [
                 {
-                  title: t("QR Creator"),
-                  url: "/dashboard/qrCreator",
-                  icon: IconCirclePlus,
+                  title: t("QR codes"),
+                  url: "/dashboard/qr-codes",
+                  icon: IconQrcode,
                 },
                 {
-                  title: t("Access Links"),
-                  url: "/dashboard/quickAccessLinks",
-                  icon: IconLinkPlus,
+                  title: t("Link pages"),
+                  url: "/dashboard/link-pages",
+                  icon: IconLayoutList,
                 },
-                // {
-                //   title: t("Landing Pages"),
-                //   url: "/dashboard/landingPages",
-                //   icon: IconWallpaper,
-                // },
               ],
             },
           ]

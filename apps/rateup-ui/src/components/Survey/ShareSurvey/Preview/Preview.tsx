@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { rateupIcon } from "@/utils/constants";
 
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";
-import type { QrLogoPanelState } from "../ShareQR/LogoTabPanel/index.tsx";
 
 import styles from "./Preview.module.css";
 
@@ -21,7 +21,7 @@ function Preview({
 }: {
   url: string;
   surveyTitle: string;
-  logoTabPanelState: QrLogoPanelState;
+  logoTabPanelState: QrDesign;
   isSurveyPublished?: boolean;
   customAttrForDownloadedQrFileName?: string;
 }) {

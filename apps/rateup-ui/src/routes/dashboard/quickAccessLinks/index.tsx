@@ -1,11 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import LinktreePage from "@/components/Linktree/index.tsx";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/quickAccessLinks/")({
-  component: Linktree,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/link-pages" });
+  },
 });
-
-function Linktree() {
-  return <LinktreePage />;
-}

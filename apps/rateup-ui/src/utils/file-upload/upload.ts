@@ -131,3 +131,13 @@ export const getLabel = (data: File | string, label: string) => {
   else if (data && typeof data === "string" && data.length > 0) return `Update ${label}`;
   else return `Select a ${label}`;
 };
+
+/** Uploads and returns the public CloudFront URL, or `null` when the upload failed. */
+export async function uploadToCdn(file: File | Blob): Promise<string | null> {
+  try {
+    const key = await uploadFile(file);
+    return `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${key}`;
+  } catch {
+    return null;
+  }
+}
