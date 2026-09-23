@@ -1,4 +1,6 @@
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useId, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -144,5 +146,34 @@ export function ActionDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Closes the dialog with a confirmation toast. */
+export function done(message: string, onClose: () => void) {
+  toast.success(message);
+  onClose();
+}
+
+/** A warning or aside inside a dialog: what else the change touches. */
+export function Notice({
+  children,
+  tone = "warning",
+}: {
+  children: ReactNode;
+  tone?: "warning" | "info";
+}) {
+  return (
+    <p
+      className={cn(
+        "flex items-start gap-2 rounded-2xl px-4 py-3 text-xs",
+        tone === "warning" ? "bg-tone-peach text-foreground/75" : "bg-muted text-muted-foreground",
+      )}
+    >
+      {tone === "warning" && (
+        <IconAlertTriangle className="mt-px size-4 shrink-0 text-tone-peach-accent" stroke={1.75} />
+      )}
+      <span>{children}</span>
+    </p>
   );
 }

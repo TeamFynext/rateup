@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./client";
 import type { IsoDate, Page } from "./types";
@@ -43,3 +43,22 @@ export const userListQueryOptions = (params: UserListParams) =>
     queryFn: ({ signal }) => listUsers(params, signal),
     placeholderData: keepPreviousData,
   });
+
+/**
+ * Pause or resume one person's account. The customer app sends a paused user to its
+ * "account paused" screen. Refreshes the user list and every org (their members tabs).
+ */
+export function useSetUserPaused() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string; paused: boolean; reason: string }) =>
+      api.put(`/users/${id}/pause`, body),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["staff", "users"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "orgs"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "access", "audit"] }),
+      ]);
+    },
+  });
+}

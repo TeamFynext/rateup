@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./client";
 import type { IsoDate, Page } from "./types";
@@ -64,3 +64,39 @@ export const auditActionsQueryOptions = queryOptions({
   queryFn: async () =>
     (await api.get<{ data: { action: string; count: number }[] }>("/audit/actions")).data.data,
 });
+
+/**
+ * Owner-only changes to who can sign in. Each refreshes the member list and the audit log,
+ * which every one of them writes to.
+ */
+function useAccessMutation<TInput, TResult = unknown>(send: (input: TInput) => Promise<TResult>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["staff", "access"] }),
+  });
+}
+
+export const useAddStaff = () =>
+  useAccessMutation((input: { email: string; name?: string; isOwner: boolean; reason: string }) =>
+    api.post("/staff-users", input),
+  );
+
+export const useChangeStaffRole = () =>
+  useAccessMutation(({ id, ...input }: { id: string; isOwner: boolean; reason: string }) =>
+    api.patch(`/staff-users/${id}`, input),
+  );
+
+export const useDeactivateStaff = () =>
+  useAccessMutation(({ id, reason }: { id: string; reason: string }) =>
+    api.post(`/staff-users/${id}/deactivate`, { reason }),
+  );
+
+export const useRevokeStaffSessions = () =>
+  useAccessMutation(async ({ id, reason }: { id: string; reason: string }) => {
+    const { data } = await api.post<{ data: { sessionsEnded: number } }>(
+      `/staff-users/${id}/revoke-sessions`,
+      { reason },
+    );
+    return data.data;
+  });

@@ -4,7 +4,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { orgNotesQueryOptions, orgSubscriptionQueryOptions } from "@/api/org-actions.api";
+import {
+  orgDeletionQueryOptions,
+  orgNotesQueryOptions,
+  orgSubscriptionQueryOptions,
+} from "@/api/org-actions.api";
 import type { OrgSummary } from "@/api/orgs.api";
 import {
   planOptionsQueryOptions,
@@ -27,6 +31,7 @@ import { OrgManageMenu } from "@/components/org/actions/org-manage-menu";
 import { OrgActivityTab } from "@/components/org/org-activity-tab";
 import { OrgBillingTab } from "@/components/org/org-billing-tab";
 import { OrgChannelsTab } from "@/components/org/org-channels-tab";
+import { OrgDangerTab } from "@/components/org/org-danger-tab";
 import { OrgMembersTab } from "@/components/org/org-members-tab";
 import { OrgMessagesTab, presetRange } from "@/components/org/org-messages-tab";
 import { OrgOverviewTab } from "@/components/org/org-overview-tab";
@@ -44,6 +49,7 @@ const TABS = [
   "messages",
   "channels",
   "activity",
+  "danger",
 ] as const;
 type OrgTab = (typeof TABS)[number];
 const TAB_LABELS: Record<OrgTab, string> = {
@@ -54,6 +60,7 @@ const TAB_LABELS: Record<OrgTab, string> = {
   messages: "Messages",
   channels: "Channels",
   activity: "Activity",
+  danger: "Danger zone",
 };
 
 export const Route = createFileRoute("/_app/orgs/$orgId")({
@@ -222,6 +229,8 @@ function prefetchTab(queryClient: QueryClient, tab: OrgTab, orgId: string) {
       return void warm(orgChannelsQueryOptions(orgId));
     case "activity":
       return void warm(orgActivityQueryOptions(orgId, "customer", 1));
+    case "danger":
+      return void warm(orgDeletionQueryOptions(orgId));
   }
 }
 
@@ -262,5 +271,7 @@ function tabContent(tab: OrgTab, org: OrgSummary, onAction: (action: OrgAction) 
       return <OrgChannelsTab orgId={org.id} />;
     case "activity":
       return <OrgActivityTab orgId={org.id} />;
+    case "danger":
+      return <OrgDangerTab org={org} />;
   }
 }

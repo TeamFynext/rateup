@@ -8,6 +8,7 @@ import {
   type RazorpayPlan,
   type RazorpaySubscription,
 } from "@/api/billing.api";
+import { GatewayRowMenu, SyncButton } from "@/components/billing/gateway-actions";
 import {
   Mono,
   OrgLink,
@@ -35,7 +36,11 @@ function RazorpayPage() {
   const navigate = useNavigate({ from: Route.fullPath });
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Razorpay" description="Gateway plans and live subscriptions." />
+      <PageHeader
+        title="Razorpay"
+        description="Gateway plans and live subscriptions."
+        actions={<SyncButton gateway="razorpay" />}
+      />
       <PageTabs<Tab>
         value={tab}
         onChange={(next) =>
@@ -84,6 +89,12 @@ const planColumns: Column<RazorpayPlan>[] = [
     header: "Created",
     hideBelow: "lg",
     cell: (plan) => <span className="text-muted-foreground">{formatDate(plan.createdAt)}</span>,
+  },
+  {
+    key: "actions",
+    header: "",
+    align: "right",
+    cell: (plan) => <GatewayRowMenu gateway="razorpay" row={plan} />,
   },
 ];
 

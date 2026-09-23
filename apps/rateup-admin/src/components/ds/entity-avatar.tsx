@@ -1,8 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/initials";
-import { cn } from "@/lib/utils";
+import { cn, isOwnImage } from "@/lib/utils";
 
-/** An org's logo or a user's photo, falling back to initials on the muted tile. */
+/**
+ * Initials on the muted tile. An org's logo or a user's photo is shown only when it is
+ * served from the console itself; outside images are blocked by the CSP by design.
+ */
 export function EntityAvatar({
   name,
   src,
@@ -14,7 +17,7 @@ export function EntityAvatar({
 }) {
   return (
     <Avatar className={cn("size-10", className)}>
-      {src && <AvatarImage src={src} alt="" />}
+      {isOwnImage(src) && <AvatarImage src={src} alt="" />}
       <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
         {getInitials(name) || "?"}
       </AvatarFallback>

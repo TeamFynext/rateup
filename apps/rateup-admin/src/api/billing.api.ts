@@ -1,6 +1,7 @@
-import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./client";
+import type { SubscriptionFeatures } from "./org-actions.api";
 import type { IsoDate, Page } from "./types";
 
 export type GatewayPlanStatus = "NULL" | "LIVE" | "ACTIVE" | "INACTIVE";
@@ -227,3 +228,85 @@ export const subscriptionListQueryOptions = (params: SubscriptionListParams) =>
     queryFn: ({ signal }) => get<Page<SubscriptionRow>>("/billing/subscriptions", params, signal),
     placeholderData: keepPreviousData,
   });
+
+/** What a tier's editor sends. Absent fields are left alone on update. */
+export interface TierInput {
+  name: string;
+  displayName: string;
+  planType: "BASE" | "ADDON";
+  badge: string | null;
+  description: string[];
+  displayWidgetId: string | null;
+  features: SubscriptionFeatures | null;
+  price: number | null;
+  currency: "INR" | "USD" | null;
+  monthlyPrice: number | null;
+  yearlyPrice: number | null;
+  usdMonthlyPrice: number | null;
+  usdYearlyPrice: number | null;
+  paymentPlanId: string | null;
+  monthlyPaymentPlanId: string | null;
+  yearlyPaymentPlanId: string | null;
+  usdMonthlyPaymentPlanId: string | null;
+  usdYearlyPaymentPlanId: string | null;
+  stripeId: string | null;
+}
+
+/**
+ * Catalog writes. Each refreshes every billing query (a tier and the gateway rows it
+ * links are shown on three pages), the org lists (plan pills) and the audit log.
+ */
+function useCatalogMutation<TInput, TResult = unknown>(send: (input: TInput) => Promise<TResult>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["staff", "billing"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "orgs"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "access", "audit"] }),
+      ]);
+    },
+  });
+}
+
+export const useCreateTier = () =>
+  useCatalogMutation((input: TierInput & { reason: string }) => api.post("/billing/plans", input));
+
+export const useUpdateTier = () =>
+  useCatalogMutation(({ id, ...input }: Partial<TierInput> & { id: string; reason: string }) =>
+    api.put(`/billing/plans/${id}`, input),
+  );
+
+export const useDeleteTier = () =>
+  useCatalogMutation(({ id, reason }: { id: string; reason: string }) =>
+    api.delete(`/billing/plans/${id}`, { data: { reason } }),
+  );
+
+export interface SyncResult {
+  created: number;
+  deactivated?: number;
+  skipped?: number;
+  seen?: number;
+  total?: number;
+}
+
+export const useSyncGateway = (gateway: "razorpay" | "stripe") =>
+  useCatalogMutation(async ({ reason }: { reason: string }) => {
+    const { data } = await api.post<{ data: SyncResult }>(`/billing/${gateway}/sync`, { reason });
+    return data.data;
+  });
+
+const gatewayPath = (gateway: "razorpay" | "stripe", id: string) =>
+  gateway === "razorpay" ? `/billing/razorpay/plans/${id}` : `/billing/stripe/products/${id}`;
+
+export const useSetGatewayStatus = (gateway: "razorpay" | "stripe") =>
+  useCatalogMutation(
+    ({ id, status, reason }: { id: string; status: GatewayPlanStatus; reason: string }) =>
+      api.put(`${gatewayPath(gateway, id)}/status`, { status, reason }),
+  );
+
+export const useDeleteGatewayRow = (gateway: "razorpay" | "stripe") =>
+  useCatalogMutation(({ id, reason }: { id: string; reason: string }) =>
+    api.delete(gatewayPath(gateway, id), { data: { reason } }),
+  );

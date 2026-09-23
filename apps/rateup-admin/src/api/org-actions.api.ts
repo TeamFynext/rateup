@@ -60,7 +60,7 @@ export interface PlanChange {
  * One hook per org action. Each refreshes everything under the org (its header, usage,
  * billing and activity all move) plus the lists and overview that summarise it.
  */
-function useOrgMutation<TInput>(send: (input: TInput) => Promise<unknown>) {
+function useOrgMutation<TInput, TResult = unknown>(send: (input: TInput) => Promise<TResult>) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: send,
@@ -132,3 +132,50 @@ export const useEditOrgNote = (orgId: string) =>
 
 export const useDeleteOrgNote = (orgId: string) =>
   useOrgMutation((noteId: string) => api.delete(`/orgs/${orgId}/notes/${noteId}`));
+
+/** What deleting an org would take with it. */
+export interface OrgDeletionPreview {
+  name: string;
+  members: number;
+  teams: number;
+  usersDeleted: { id: string; email: string; name: string | null }[];
+  usersKept: { id: string; email: string; name: string | null }[];
+  liveSubscriptions: { id: string; subscriptionId: string | null; subscriptionStatus: string }[];
+}
+
+export const orgDeletionQueryOptions = (orgId: string) =>
+  queryOptions({
+    queryKey: ["staff", "orgs", orgId, "deletion"],
+    queryFn: async () =>
+      (await api.get<{ data: OrgDeletionPreview }>(`/orgs/${orgId}/deletion`)).data.data,
+  });
+
+export const useSendDeletionWarning = (orgId: string) =>
+  useOrgMutation(async (input: { reason: string }) => {
+    const { data } = await api.post<{ data: { sentTo: string } }>(
+      `/orgs/${orgId}/deletion-warning`,
+      input,
+    );
+    return data.data;
+  });
+
+/**
+ * Deletes the org. Only the lists are refreshed afterwards: the org's own queries would
+ * refetch a 404, so the caller removes them and navigates away.
+ */
+export function useDeleteOrg(orgId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { confirm: string; reason: string }) =>
+      api.delete(`/orgs/${orgId}`, { data: input }),
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: ["staff", "orgs", orgId] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["staff", "orgs", "list"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "overview"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "users"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "access", "audit"] }),
+      ]);
+    },
+  });
+}

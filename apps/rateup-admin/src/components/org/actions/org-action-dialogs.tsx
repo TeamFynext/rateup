@@ -1,11 +1,9 @@
-import { IconAlertTriangle, IconMinus, IconPlus } from "@tabler/icons-react";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useState, type ReactNode } from "react";
-import { toast } from "sonner";
 
 import {
-  UNLIMITED_COUNT,
   orgSubscriptionQueryOptions,
   useAddOrgNote,
   useChangeExpiry,
@@ -22,10 +20,9 @@ import {
   type SubscriptionFeatures,
 } from "@/api/org-actions.api";
 import { planOptionsQueryOptions } from "@/api/orgs.query";
-import { ActionDialog } from "@/components/ds/action-dialog";
+import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 import { ListSkeleton } from "@/components/ds/query-states";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -40,6 +37,7 @@ import { cn } from "@/lib/utils";
 
 import { endOfDayIso, ExpiryField, isFutureDay, toDateInput } from "./expiry-field";
 import { completeFeatures, formatLimit, isUnlimited, LIMITS, SWITCHES } from "./features";
+import { FeaturesEditor } from "./features-editor";
 
 export type OrgAction =
   | { kind: "plan" }
@@ -148,33 +146,6 @@ function initialExpiry(subscription: OrgSubscription | null) {
   const current = subscription?.expiresAt;
   if (current && dayjs(current).isAfter(dayjs())) return toDateInput(current);
   return toDateInput(dayjs().add(1, "month").toDate());
-}
-
-function done(message: string, onClose: () => void) {
-  toast.success(message);
-  onClose();
-}
-
-function Notice({
-  children,
-  tone = "warning",
-}: {
-  children: ReactNode;
-  tone?: "warning" | "info";
-}) {
-  return (
-    <p
-      className={cn(
-        "flex items-start gap-2 rounded-2xl px-4 py-3 text-xs",
-        tone === "warning" ? "bg-tone-peach text-foreground/75" : "bg-muted text-muted-foreground",
-      )}
-    >
-      {tone === "warning" && (
-        <IconAlertTriangle className="mt-px size-4 shrink-0 text-tone-peach-accent" stroke={1.75} />
-      )}
-      <span>{children}</span>
-    </p>
-  );
 }
 
 function GatewayNotice({ subscription }: { subscription: OrgSubscription | null }) {
@@ -398,79 +369,7 @@ function EditLimitsDialog({ orgId, onClose, subscription }: DialogProps) {
       }
     >
       <GatewayNotice subscription={subscription} />
-      <div className="grid gap-5 sm:grid-cols-2">
-        {LIMITS.map((limit) => {
-          const value = limit.get(draft) ?? 0;
-          const unlimited = isUnlimited(value);
-          return (
-            <div key={limit.key} className="flex flex-col gap-2">
-              <Label htmlFor={`limit-${limit.key}`}>
-                {limit.label}
-                {"hint" in limit && (
-                  <span className="font-normal text-muted-foreground"> {limit.hint}</span>
-                )}
-              </Label>
-              <Input
-                id={`limit-${limit.key}`}
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={UNLIMITED_COUNT - 1}
-                disabled={unlimited}
-                value={unlimited ? "" : value}
-                placeholder={unlimited ? "Unlimited" : undefined}
-                onChange={(event) => {
-                  const next = Math.max(0, Math.floor(Number(event.target.value) || 0));
-                  update((features) => limit.set(features, Math.min(next, UNLIMITED_COUNT - 1)));
-                }}
-                className="h-11 rounded-xl tabular"
-              />
-              <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                <PlanHint
-                  plan={formatLimit(limit.get(planFeatures))}
-                  differs={!!planFeatures && limit.get(planFeatures) !== limit.get(draft)}
-                />
-                <label className="flex items-center gap-2">
-                  <Checkbox
-                    checked={unlimited}
-                    onCheckedChange={(checked) =>
-                      update((features) =>
-                        limit.set(
-                          features,
-                          checked === true
-                            ? UNLIMITED_COUNT
-                            : Math.min(limit.get(planFeatures) ?? 0, UNLIMITED_COUNT - 1),
-                        ),
-                      )
-                    }
-                  />
-                  Unlimited
-                </label>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex flex-col divide-y rounded-2xl border">
-        {SWITCHES.map((gate) => (
-          <label key={gate.key} className="flex items-center justify-between gap-4 px-4 py-3">
-            <span className="text-sm">
-              {gate.label}
-              <span className="block text-xs">
-                <PlanHint
-                  plan={gate.get(planFeatures) ? "on" : "off"}
-                  differs={!!planFeatures && !!gate.get(planFeatures) !== !!gate.get(draft)}
-                />
-              </span>
-            </span>
-            <Switch
-              checked={!!gate.get(draft)}
-              onCheckedChange={(checked) => update((features) => gate.set(features, checked))}
-            />
-          </label>
-        ))}
-      </div>
+      <FeaturesEditor draft={draft} onChange={update} reference={planFeatures} />
 
       {planFeatures && (
         <button
@@ -482,16 +381,6 @@ function EditLimitsDialog({ orgId, onClose, subscription }: DialogProps) {
         </button>
       )}
     </ActionDialog>
-  );
-}
-
-/** The plan's own value under a field, marked when this org's differs from it. */
-function PlanHint({ plan, differs }: { plan: string; differs: boolean }) {
-  return (
-    <span className={differs ? "font-medium text-tone-peach-accent" : "text-muted-foreground"}>
-      Plan: {plan}
-      {differs && " · overridden"}
-    </span>
   );
 }
 

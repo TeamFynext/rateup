@@ -1,0 +1,27 @@
+# Cloudflare Pages response headers for admin.rateup.app (and its previews).
+#
+# The console loads nothing from anyone else: scripts, styles and fonts are bundled, the
+# API is same-origin through functions/api/staff, and avatars fall back to initials rather
+# than fetch Google photos or CloudFront logos (see isOwnImage in src/lib/utils.ts). The
+# only non-file image is the Share QR page's data: PNG.
+#
+# style-src keeps 'unsafe-inline' for the style="" attributes and the <style> the toast
+# library injects; scripts get no such allowance.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  X-Robots-Tag: noindex, nofollow
+
+# Hashed build output never changes under the same name.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The page itself must always be fresh, or a deploy is not picked up.
+/index.html
+  Cache-Control: no-cache

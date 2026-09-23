@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getInitials } from "@/lib/initials";
-import { cn } from "@/lib/utils";
+import { cn, isOwnImage } from "@/lib/utils";
 
 import { activeGroup, NAV_GROUPS } from "./nav";
 
@@ -106,7 +106,7 @@ export function StaffAvatar({ className }: { className?: string }) {
   const name = staff.name || staff.email;
   return (
     <Avatar className={cn("size-10", className)}>
-      {staff.avatarUrl && <AvatarImage src={staff.avatarUrl} alt="" />}
+      {isOwnImage(staff.avatarUrl) && <AvatarImage src={staff.avatarUrl} alt="" />}
       <AvatarFallback className="bg-rail-foreground/15 text-xs font-medium text-rail-foreground">
         {getInitials(name)}
       </AvatarFallback>

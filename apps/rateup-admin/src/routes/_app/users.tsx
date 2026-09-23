@@ -1,5 +1,7 @@
+import { IconDotsVertical } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { z } from "zod";
 
 import { USER_SORTS, userListQueryOptions, type UserRow, type UserSort } from "@/api/users.api";
@@ -11,12 +13,19 @@ import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-stat
 import { SearchField } from "@/components/ds/search-field";
 import { PageHeader } from "@/components/shell/page-header";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserPauseDialog } from "@/components/users/user-pause-dialog";
 import { formatDate, formatNumber, formatRelative } from "@/lib/format";
 
 const PAGE_SIZE = 25;
@@ -158,6 +167,7 @@ function UserStatus({ user }: { user: UserRow }) {
  */
 function UserItem({ user }: { user: UserRow }) {
   const moreOrgs = user.orgCount - user.orgs.length;
+  const [pausing, setPausing] = useState(false);
   return (
     <li className="flex flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:gap-6">
       <div className="flex min-w-0 items-center gap-3 lg:w-80 lg:shrink-0">
@@ -192,10 +202,31 @@ function UserItem({ user }: { user: UserRow }) {
         {moreOrgs > 0 && <span className="text-xs text-muted-foreground">+{moreOrgs} more</span>}
       </div>
 
-      <p className="pl-13 text-xs text-muted-foreground lg:w-48 lg:shrink-0 lg:pl-0 lg:text-right">
-        {user.lastLoginAt ? `Signed in ${formatRelative(user.lastLoginAt)}` : "Never signed in"}
-        <span className="block">Joined {formatDate(user.createdAt)}</span>
-      </p>
+      <div className="flex items-center gap-3 pl-13 lg:shrink-0 lg:pl-0">
+        <p className="text-xs text-muted-foreground lg:w-48 lg:text-right">
+          {user.lastLoginAt ? `Signed in ${formatRelative(user.lastLoginAt)}` : "Never signed in"}
+          <span className="block">Joined {formatDate(user.createdAt)}</span>
+        </p>
+        {user.active && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label={`Actions for ${user.name ?? user.email}`}
+              className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <IconDotsVertical className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-auto min-w-40 p-1.5">
+              <DropdownMenuItem
+                className={user.paused ? undefined : "text-negative data-highlighted:text-negative"}
+                onClick={() => setPausing(true)}
+              >
+                {user.paused ? "Resume account" : "Pause account"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+      {pausing && <UserPauseDialog user={user} onClose={() => setPausing(false)} />}
     </li>
   );
 }

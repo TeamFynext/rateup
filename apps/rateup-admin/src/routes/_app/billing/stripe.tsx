@@ -8,6 +8,7 @@ import {
   type StripeProduct,
   type StripeSubscription,
 } from "@/api/billing.api";
+import { GatewayRowMenu, SyncButton } from "@/components/billing/gateway-actions";
 import {
   Mono,
   OrgLink,
@@ -36,7 +37,11 @@ function StripePage() {
   const navigate = useNavigate({ from: Route.fullPath });
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Stripe" description="Synced products and live subscriptions." />
+      <PageHeader
+        title="Stripe"
+        description="Synced products and live subscriptions."
+        actions={<SyncButton gateway="stripe" />}
+      />
       <PageTabs<Tab>
         value={tab}
         onChange={(next) =>
@@ -104,6 +109,12 @@ const productColumns: Column<StripeProduct>[] = [
     cell: (product) => (
       <span className="text-muted-foreground">{formatDate(product.createdAt)}</span>
     ),
+  },
+  {
+    key: "actions",
+    header: "",
+    align: "right",
+    cell: (product) => <GatewayRowMenu gateway="stripe" row={product} />,
   },
 ];
 

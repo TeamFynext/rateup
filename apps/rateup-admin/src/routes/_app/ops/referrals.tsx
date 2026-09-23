@@ -1,77 +1,100 @@
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { referralsQueryOptions, type Referral } from "@/api/ops.api";
 import { CopyButton } from "@/components/ds/copy-button";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import { StatCard } from "@/components/ds/stat-card";
+import { AddReferralDialog, DeleteReferralDialog } from "@/components/ops/ops-dialogs";
 import { PageHeader } from "@/components/shell/page-header";
+import { Button } from "@/components/ui/button";
 import { formatDate, formatNumber } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/ops/referrals")({
   component: ReferralsPage,
 });
 
-const COLUMNS: Column<Referral>[] = [
-  {
-    key: "partner",
-    header: "Partner",
-    primary: true,
-    cell: (referral) => (
-      <span className="block min-w-0">
-        <span className="block truncate font-medium">{referral.name}</span>
-        <span className="block truncate text-xs text-muted-foreground">{referral.email}</span>
-      </span>
-    ),
-  },
-  {
-    key: "code",
-    header: "Code",
-    cell: (referral) => (
-      <CopyButton
-        value={referral.link ?? referral.code}
-        label={referral.code}
-        className="text-sm"
-      />
-    ),
-  },
-  {
-    key: "visits",
-    header: "Visits",
-    align: "right",
-    cell: (referral) => <span className="tabular">{formatNumber(referral.visits)}</span>,
-  },
-  {
-    key: "signups",
-    header: "Signups",
-    align: "right",
-    cell: (referral) => (
-      <span className="font-medium tabular">{formatNumber(referral.signups)}</span>
-    ),
-  },
-  {
-    key: "conversion",
-    header: "Conversion",
-    align: "right",
-    cell: (referral) => (
-      <span className="text-muted-foreground tabular">
-        {referral.visits ? `${Math.round((referral.signups / referral.visits) * 100)}%` : "—"}
-      </span>
-    ),
-  },
-  {
-    key: "created",
-    header: "Added",
-    hideBelow: "lg",
-    cell: (referral) => (
-      <span className="text-muted-foreground">{formatDate(referral.createdAt)}</span>
-    ),
-  },
-];
+function columns(onDelete: (referral: Referral) => void): Column<Referral>[] {
+  return [
+    {
+      key: "partner",
+      header: "Partner",
+      primary: true,
+      cell: (referral) => (
+        <span className="block min-w-0">
+          <span className="block truncate font-medium">{referral.name}</span>
+          <span className="block truncate text-xs text-muted-foreground">{referral.email}</span>
+        </span>
+      ),
+    },
+    {
+      key: "code",
+      header: "Code",
+      cell: (referral) => (
+        <CopyButton
+          value={referral.link ?? referral.code}
+          label={referral.code}
+          className="text-sm"
+        />
+      ),
+    },
+    {
+      key: "visits",
+      header: "Visits",
+      align: "right",
+      cell: (referral) => <span className="tabular">{formatNumber(referral.visits)}</span>,
+    },
+    {
+      key: "signups",
+      header: "Signups",
+      align: "right",
+      cell: (referral) => (
+        <span className="font-medium tabular">{formatNumber(referral.signups)}</span>
+      ),
+    },
+    {
+      key: "conversion",
+      header: "Conversion",
+      align: "right",
+      cell: (referral) => (
+        <span className="text-muted-foreground tabular">
+          {referral.visits ? `${Math.round((referral.signups / referral.visits) * 100)}%` : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "created",
+      header: "Added",
+      hideBelow: "lg",
+      cell: (referral) => (
+        <span className="text-muted-foreground">{formatDate(referral.createdAt)}</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      cell: (referral) => (
+        <button
+          type="button"
+          aria-label={`Remove ${referral.name}`}
+          onClick={() => onDelete(referral)}
+          className="grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-negative/10 hover:text-negative"
+        >
+          <IconTrash className="size-4" />
+        </button>
+      ),
+    },
+  ];
+}
 
 function ReferralsPage() {
   const query = useQuery(referralsQueryOptions);
+  const [adding, setAdding] = useState(false);
+  const [deleting, setDeleting] = useState<Referral | null>(null);
   const totals = (query.data ?? []).reduce(
     (sum, referral) => ({
       visits: sum.visits + referral.visits,
@@ -85,6 +108,12 @@ function ReferralsPage() {
       <PageHeader
         title="Referrals"
         description="Referral partners, their links and what they brought in. Copying a code copies its link."
+        actions={
+          <Button className="h-11 rounded-xl px-4" onClick={() => setAdding(true)}>
+            <IconPlus />
+            Add partner
+          </Button>
+        }
       />
       {query.isPending ? (
         <ListSkeleton />
@@ -104,9 +133,15 @@ function ReferralsPage() {
               className="col-span-2 lg:col-span-1"
             />
           </div>
-          <ResponsiveTable rows={query.data} columns={COLUMNS} rowKey={(referral) => referral.id} />
+          <ResponsiveTable
+            rows={query.data}
+            columns={columns(setDeleting)}
+            rowKey={(referral) => referral.id}
+          />
         </>
       )}
+      {adding && <AddReferralDialog onClose={() => setAdding(false)} />}
+      {deleting && <DeleteReferralDialog referral={deleting} onClose={() => setDeleting(null)} />}
     </div>
   );
 }
