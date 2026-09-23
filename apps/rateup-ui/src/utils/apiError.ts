@@ -18,6 +18,8 @@ export interface ApiErrorData {
   message?: string;
   error?: string;
   displayMessageInClient?: boolean;
+  /** A machine-readable refusal, e.g. "ORG_SUSPENDED" when RateUp staff suspended the org. */
+  code?: string;
   reason?: AccessDenialReason;
   /** The subscription gates that were closed, for a "subscription" denial. */
   missingFeatures?: string[];

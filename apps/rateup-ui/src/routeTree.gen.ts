@@ -181,6 +181,7 @@ import { Route as DashboardWhatsappTemplatesIndexRouteImport } from './routes/da
 import { Route as authLoginCallbackAppleIndexRouteImport } from './routes/(auth)/login/callback/apple/index'
 import { Route as authLoginCallbackGoogleIndexRouteImport } from './routes/(auth)/login/callback/google/index'
 import { Route as authLoginCallbackPausedIndexRouteImport } from './routes/(auth)/login/callback/paused/index'
+import { Route as authLoginCallbackSuspendedIndexRouteImport } from './routes/(auth)/login/callback/suspended/index'
 import { Route as marketingBlogAuthorSlugIndexRouteImport } from './routes/(marketing)/blog/author/$slug/index'
 import { Route as marketingBlogTagSlugIndexRouteImport } from './routes/(marketing)/blog/tag/$slug/index'
 import { Route as marketingToolsNpsSurveyTemplatesSlugIndexRouteImport } from './routes/(marketing)/tools/nps-survey-templates/$slug/index'
@@ -1173,6 +1174,12 @@ const authLoginCallbackPausedIndexRoute =
     path: '/login/callback/paused/',
     getParentRoute: () => authRouteRoute,
   } as any)
+const authLoginCallbackSuspendedIndexRoute =
+  authLoginCallbackSuspendedIndexRouteImport.update({
+    id: '/login/callback/suspended/',
+    path: '/login/callback/suspended/',
+    getParentRoute: () => authRouteRoute,
+  } as any)
 const marketingBlogAuthorSlugIndexRoute =
   marketingBlogAuthorSlugIndexRouteImport.update({
     id: '/author/$slug/',
@@ -1494,6 +1501,7 @@ export interface FileRoutesByFullPath {
   '/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
   '/login/callback/google/': typeof authLoginCallbackGoogleIndexRoute
   '/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
+  '/login/callback/suspended/': typeof authLoginCallbackSuspendedIndexRoute
   '/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
   '/tools/nps-survey-templates/$slug/': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
@@ -1685,6 +1693,7 @@ export interface FileRoutesByTo {
   '/login/callback/apple': typeof authLoginCallbackAppleIndexRoute
   '/login/callback/google': typeof authLoginCallbackGoogleIndexRoute
   '/login/callback/paused': typeof authLoginCallbackPausedIndexRoute
+  '/login/callback/suspended': typeof authLoginCallbackSuspendedIndexRoute
   '/blog/author/$slug': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug': typeof marketingBlogTagSlugIndexRoute
   '/tools/nps-survey-templates/$slug': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
@@ -1885,6 +1894,7 @@ export interface FileRoutesById {
   '/(auth)/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
   '/(auth)/login/callback/google/': typeof authLoginCallbackGoogleIndexRoute
   '/(auth)/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
+  '/(auth)/login/callback/suspended/': typeof authLoginCallbackSuspendedIndexRoute
   '/(marketing)/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/(marketing)/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
   '/(marketing)/tools/nps-survey-templates/$slug/': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
@@ -2083,6 +2093,7 @@ export interface FileRouteTypes {
     | '/login/callback/apple/'
     | '/login/callback/google/'
     | '/login/callback/paused/'
+    | '/login/callback/suspended/'
     | '/blog/author/$slug/'
     | '/blog/tag/$slug/'
     | '/tools/nps-survey-templates/$slug/'
@@ -2274,6 +2285,7 @@ export interface FileRouteTypes {
     | '/login/callback/apple'
     | '/login/callback/google'
     | '/login/callback/paused'
+    | '/login/callback/suspended'
     | '/blog/author/$slug'
     | '/blog/tag/$slug'
     | '/tools/nps-survey-templates/$slug'
@@ -2473,6 +2485,7 @@ export interface FileRouteTypes {
     | '/(auth)/login/callback/apple/'
     | '/(auth)/login/callback/google/'
     | '/(auth)/login/callback/paused/'
+    | '/(auth)/login/callback/suspended/'
     | '/(marketing)/blog/author/$slug/'
     | '/(marketing)/blog/tag/$slug/'
     | '/(marketing)/tools/nps-survey-templates/$slug/'
@@ -3720,6 +3733,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginCallbackPausedIndexRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/(auth)/login/callback/suspended/': {
+      id: '/(auth)/login/callback/suspended/'
+      path: '/login/callback/suspended'
+      fullPath: '/login/callback/suspended/'
+      preLoaderRoute: typeof authLoginCallbackSuspendedIndexRouteImport
+      parentRoute: typeof authRouteRoute
+    }
     '/(marketing)/blog/author/$slug/': {
       id: '/(marketing)/blog/author/$slug/'
       path: '/author/$slug'
@@ -3911,6 +3931,7 @@ interface authRouteRouteChildren {
   authLoginCallbackAppleIndexRoute: typeof authLoginCallbackAppleIndexRoute
   authLoginCallbackGoogleIndexRoute: typeof authLoginCallbackGoogleIndexRoute
   authLoginCallbackPausedIndexRoute: typeof authLoginCallbackPausedIndexRoute
+  authLoginCallbackSuspendedIndexRoute: typeof authLoginCallbackSuspendedIndexRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
@@ -3926,6 +3947,7 @@ const authRouteRouteChildren: authRouteRouteChildren = {
   authLoginCallbackAppleIndexRoute: authLoginCallbackAppleIndexRoute,
   authLoginCallbackGoogleIndexRoute: authLoginCallbackGoogleIndexRoute,
   authLoginCallbackPausedIndexRoute: authLoginCallbackPausedIndexRoute,
+  authLoginCallbackSuspendedIndexRoute: authLoginCallbackSuspendedIndexRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
