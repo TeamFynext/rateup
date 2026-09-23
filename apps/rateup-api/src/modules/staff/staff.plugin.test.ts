@@ -8,7 +8,7 @@ const db = vi.hoisted(() => ({
     create: vi.fn(),
   },
   staffUser: { findUnique: vi.fn(), update: vi.fn() },
-  staffAuditLog: { create: vi.fn() },
+  staffAuditLog: { create: vi.fn(), update: vi.fn() },
 }));
 const redis = vi.hoisted(() => ({ incr: vi.fn(), expire: vi.fn() }));
 
@@ -28,6 +28,11 @@ vi.mock("../maintenance/maintenance.tasks.js", () => ({
   MAINTENANCE_TASKS: [],
   findTask: vi.fn(),
 }));
+vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
+  generateInboxResponse: vi.fn(),
+}));
+vi.mock("../response/response.service.js", () => ({ generateResponse: vi.fn() }));
+vi.mock("../referrals/referrals.service.js", () => ({ createReferral: vi.fn() }));
 
 import Fastify, { type FastifyInstance, type RouteOptions } from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
@@ -450,4 +455,71 @@ test("a maintenance preview needs a session and the CSRF header, like any POST",
   expect((await app.inject({ method: "POST", url, headers: proxied })).statusCode).toBe(401);
   const noCsrf = await app.inject({ method: "POST", url, headers: withSession, payload: {} });
   expect(noCsrf.statusCode).toBe(403);
+});
+
+describe("applying a maintenance task", () => {
+  const url = "/api/staff/ops/maintenance/tasks/seed-plans/apply";
+  const mutating = { ...withSession, "x-staff-csrf": "1", "content-type": "application/json" };
+  const body = { confirm: "seed-plans", reason: "Seeding the new catalogue" };
+
+  test("a Google sign-in older than 15 minutes is sent back to sign in again", async () => {
+    db.staffSession.findUnique.mockResolvedValue(
+      liveSession({ authenticatedAt: new Date(Date.now() - 16 * 60_000) }),
+    );
+    const { app } = await buildApp();
+    const res = await app.inject({ method: "POST", url, headers: mutating, payload: body });
+    expect(res.statusCode).toBe(401);
+    expect(res.json().code).toBe("REAUTH_REQUIRED");
+  });
+
+  test("the task id must be typed back exactly", async () => {
+    const { findTask } = await import("../maintenance/maintenance.tasks.js");
+    vi.mocked(findTask).mockReturnValue({
+      id: "seed-plans",
+      title: "Seed plans",
+      description: "",
+      destructive: true,
+      run: async () => ({ summary: "ok" }),
+    });
+    const { app } = await buildApp();
+    const wrong = await app.inject({
+      method: "POST",
+      url,
+      headers: mutating,
+      payload: { ...body, confirm: "seed-plan" },
+    });
+    expect(wrong.statusCode).toBe(422);
+    expect(wrong.json().code).toBe("CONFIRM_MISMATCH");
+    // Only the plugin's fallback row for a refused mutation; the task never started.
+    const actions = db.staffAuditLog.create.mock.calls.map((call) => call[0].data.action);
+    expect(actions).not.toContain("maintenance.apply");
+  });
+
+  test("a fresh sign-in, the right id and a reason run the task for real", async () => {
+    const { findTask } = await import("../maintenance/maintenance.tasks.js");
+    const run = vi.fn(async ({ apply, log }: { apply: boolean; log: (m: string) => void }) => {
+      log(`writing: ${apply}`);
+      return { summary: "3 plans written" };
+    });
+    vi.mocked(findTask).mockReturnValue({
+      id: "seed-plans",
+      title: "Seed plans",
+      description: "",
+      destructive: true,
+      run,
+    });
+    db.staffAuditLog.update.mockResolvedValue({});
+    const { app } = await buildApp();
+    const res = await app.inject({ method: "POST", url, headers: mutating, payload: body });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data).toMatchObject({ applied: true, summary: "3 plans written" });
+    expect(run.mock.calls[0][0].apply).toBe(true);
+    expect(db.staffAuditLog.create.mock.calls[0][0].data).toMatchObject({
+      action: "maintenance.apply",
+      reason: body.reason,
+    });
+    expect(db.staffAuditLog.update.mock.calls[0][0].data.after).toMatchObject({
+      status: "finished",
+    });
+  });
 });

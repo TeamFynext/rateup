@@ -2,6 +2,15 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { listOrders } from "../billing/billing.service.js";
 import { idParamSchema, pageQuerySchema, type IdParam } from "../staff.schema.js";
+import {
+  deleteOrgAsStaff,
+  deleteOrgSchema,
+  deletionWarningSchema,
+  previewOrgDeletion,
+  warnOrgDeletion,
+  type DeleteOrgInput,
+  type DeletionWarningInput,
+} from "./deletion.service.js";
 import { orgListQuerySchema, type OrgListQuery } from "./orgs.schema.js";
 import {
   getOrgActivity,
@@ -178,6 +187,25 @@ export async function staffOrgRoutes(server: FastifyInstance) {
     { schema: { params: noteParamSchema } },
     async (request) => ({
       data: await deleteOrgNote(request, request.params.id, request.params.noteId),
+    }),
+  );
+
+  // Deletion. The preview is a read; the delete needs a fresh Google sign-in and the name.
+  server.get<{ Params: IdParam }>("/orgs/:id/deletion", byId, async (request) => ({
+    data: await previewOrgDeletion(request.params.id),
+  }));
+  server.post<{ Params: IdParam; Body: DeletionWarningInput }>(
+    "/orgs/:id/deletion-warning",
+    { schema: { params: idParamSchema, body: deletionWarningSchema } },
+    async (request) => ({
+      data: await warnOrgDeletion(request, request.params.id, request.body),
+    }),
+  );
+  server.delete<{ Params: IdParam; Body: DeleteOrgInput }>(
+    "/orgs/:id",
+    { schema: { params: idParamSchema, body: deleteOrgSchema } },
+    async (request) => ({
+      data: await deleteOrgAsStaff(request, request.params.id, request.body),
     }),
   );
 }

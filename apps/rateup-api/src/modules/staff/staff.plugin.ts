@@ -142,5 +142,5 @@ export async function registerStaffApi(
   await server.register(staffUserRoutes);
   await server.register(staffBillingRoutes);
   await server.register(staffOpsRoutes);
-  await server.register(staffAccessRoutes);
+  await server.register(staffAccessRoutes(config));
 }

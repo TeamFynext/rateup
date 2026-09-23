@@ -2,8 +2,30 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import type { StaffConfig } from "../staff.config.js";
+import {
+  asUuid,
+  idParamSchema,
+  pageArgs,
+  pageQuerySchema,
+  searchTextSchema,
+  type IdParam,
+} from "../staff.schema.js";
 import { SESSION_IDLE_MS } from "../staff.session.js";
-import { asUuid, pageArgs, pageQuerySchema, searchTextSchema } from "../staff.schema.js";
+import {
+  staffAddSchema,
+  staffReasonSchema,
+  staffUpdateSchema,
+  type StaffAddInput,
+  type StaffReasonInput,
+  type StaffUpdateInput,
+} from "./access.schema.js";
+import {
+  addStaffMember,
+  deactivateStaffMember,
+  revokeStaffSessions,
+  updateStaffMember,
+} from "./access.service.js";
 
 export const auditQuerySchema = pageQuerySchema.extend({
   /** Staff email, action, org name, or a pasted org / user / staff id. */
@@ -50,7 +72,7 @@ export async function listAudit(query: AuditQuery) {
   return { page: query.page, pageSize: query.pageSize, total, data: rows };
 }
 
-export async function staffAccessRoutes(server: FastifyInstance) {
+export const staffAccessRoutes = (config: StaffConfig) => async (server: FastifyInstance) => {
   /** Who can sign in to the console, and who is signed in right now. */
   server.get("/staff-users", async () => {
     const now = new Date();
@@ -86,6 +108,35 @@ export async function staffAccessRoutes(server: FastifyInstance) {
     };
   });
 
+  // Owners only. Every change is audited and a staff member can never edit their own row.
+  const byId = { schema: { params: idParamSchema } };
+  server.post<{ Body: StaffAddInput }>(
+    "/staff-users",
+    { schema: { body: staffAddSchema } },
+    async (request) => ({ data: await addStaffMember(request, request.body, config.googleHd) }),
+  );
+  server.patch<{ Params: IdParam; Body: StaffUpdateInput }>(
+    "/staff-users/:id",
+    { schema: { params: idParamSchema, body: staffUpdateSchema } },
+    async (request) => ({
+      data: await updateStaffMember(request, request.params.id, request.body),
+    }),
+  );
+  server.post<{ Params: IdParam; Body: StaffReasonInput }>(
+    "/staff-users/:id/deactivate",
+    { schema: { ...byId.schema, body: staffReasonSchema } },
+    async (request) => ({
+      data: await deactivateStaffMember(request, request.params.id, request.body),
+    }),
+  );
+  server.post<{ Params: IdParam; Body: StaffReasonInput }>(
+    "/staff-users/:id/revoke-sessions",
+    { schema: { ...byId.schema, body: staffReasonSchema } },
+    async (request) => ({
+      data: await revokeStaffSessions(request, request.params.id, request.body),
+    }),
+  );
+
   server.get<{ Querystring: AuditQuery }>(
     "/audit",
     { schema: { querystring: auditQuerySchema } },
@@ -101,4 +152,4 @@ export async function staffAccessRoutes(server: FastifyInstance) {
     });
     return { data: rows.map((row) => ({ action: row.action, count: row._count._all })) };
   });
-}
+};

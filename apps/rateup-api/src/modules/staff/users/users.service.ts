@@ -1,6 +1,10 @@
+import type { FastifyRequest } from "fastify";
 import { z } from "zod";
 import type { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
+import { reasonSchema } from "../orgs/subscription.schema.js";
+import { StaffHttpError } from "../staff.errors.js";
+import { recordStaffAction } from "../staffAudit.js";
 import { usersMatchingDigits } from "../staff.lookup.js";
 import {
   asPhoneDigits,
@@ -117,4 +121,57 @@ export async function listUsers(query: UserListQuery) {
       })),
     })),
   };
+}
+
+export const userPauseSchema = z.object({ paused: z.boolean(), reason: reasonSchema });
+export type UserPauseInput = z.infer<typeof userPauseSchema>;
+
+/**
+ * Pauses (or resumes) one person's account across every org they belong to. The customer
+ * app already knows this flag: a paused user is sent to its "account paused" screen, and
+ * `pausedBy: "rateup"` is what makes that screen say it was the platform, not their org
+ * admin. Their org's own admin can pause them too (`pausedBy: "org"`); resuming from here
+ * clears either.
+ */
+export async function setUserPaused(
+  request: FastifyRequest,
+  userId: string,
+  input: UserPauseInput,
+) {
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isPaused: true,
+        pausedBy: true,
+        deletedAt: true,
+      },
+    });
+    if (!user || user.deletedAt) {
+      throw new StaffHttpError(404, "USER_NOT_FOUND", "User not found.");
+    }
+    if (input.paused && user.isPaused) {
+      throw new StaffHttpError(409, "ALREADY_PAUSED", "This user is already paused.");
+    }
+    if (!input.paused && !user.isPaused) {
+      throw new StaffHttpError(409, "NOT_PAUSED", "This user is not paused.");
+    }
+
+    const updated = await tx.user.update({
+      where: { id: user.id },
+      data: { isPaused: input.paused, pausedBy: input.paused ? "rateup" : null },
+      select: { id: true, isPaused: true, pausedBy: true },
+    });
+    await recordStaffAction(tx, request, {
+      action: input.paused ? "user.pause" : "user.unpause",
+      targetUserId: user.id,
+      reason: input.reason,
+      before: { email: user.email, isPaused: Boolean(user.isPaused), pausedBy: user.pausedBy },
+      after: { email: user.email, isPaused: updated.isPaused, pausedBy: updated.pausedBy },
+    });
+    return { paused: Boolean(updated.isPaused) };
+  });
 }
