@@ -2,13 +2,22 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const db = vi.hoisted(() => ({
   org: { findMany: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
+  orgMember: { findMany: vi.fn() },
+  team: { findMany: vi.fn() },
+  invitation: { findMany: vi.fn() },
   $queryRaw: vi.fn(),
 }));
 vi.mock("../../../utils/prisma.js", () => ({ default: db }));
 
 import { asPhoneDigits, asUuid } from "../staff.schema.js";
-import { orgListQuerySchema } from "./orgs.schema.js";
-import { listOrgs, orgListWhere, subscriptionStatus } from "./orgs.service.js";
+import { orgListQuerySchema, orgUsageQuerySchema } from "./orgs.schema.js";
+import {
+  dailyConversations,
+  getOrgMembers,
+  listOrgs,
+  orgListWhere,
+  subscriptionStatus,
+} from "./orgs.service.js";
 
 const NOW = new Date("2026-09-22T10:00:00Z");
 const ORG_ID = "0a5b8a7e-2f7c-4d2e-9a51-3c1f0e6b9d24";
@@ -148,5 +157,74 @@ describe("listOrgs", () => {
     db.org.count.mockResolvedValue(1);
     const page = await listOrgs(orgListQuerySchema.parse({}), NOW);
     expect(page.data[0].conversations).toEqual({ used: 40, max: null });
+  });
+});
+
+describe("getOrgMembers", () => {
+  const member = (id: string, role: string, roleKey: string | null) => ({
+    id: `m-${id}`,
+    createdAt: new Date("2026-01-01"),
+    role,
+    roleKey,
+    user: {
+      id,
+      name: id,
+      email: `${id}@acme.test`,
+      phone: null,
+      profilePhoto: null,
+      active: true,
+      isPaused: null,
+      lastLoggedInAt: null,
+      teamMember: [],
+    },
+  });
+
+  test("returns the role key, falling back to the legacy role when it is unset or unknown", async () => {
+    db.org.findUnique.mockResolvedValue({ ownerId: "owner" });
+    db.orgMember.findMany.mockResolvedValue([
+      member("owner", "SUPER_ADMIN", null),
+      member("admin", "SUPER_ADMIN", null),
+      member("mgr", "MEMBER", "MANAGER"),
+      member("staff", "MEMBER", "NOT_A_ROLE"),
+    ]);
+    db.team.findMany.mockResolvedValue([]);
+    db.invitation.findMany.mockResolvedValue([]);
+
+    const { members } = await getOrgMembers(ORG_ID);
+    expect(members.map((m) => [m.roleKey, m.role])).toEqual([
+      ["OWNER", expect.any(String)],
+      ["ADMIN", expect.any(String)],
+      ["MANAGER", expect.any(String)],
+      ["STAFF", expect.any(String)],
+    ]);
+  });
+});
+
+describe("usage days", () => {
+  test("defaults to 30 and accepts only 30 or 90", () => {
+    expect(orgUsageQuerySchema.parse({})).toEqual({ days: 30 });
+    expect(orgUsageQuerySchema.parse({ days: "90" })).toEqual({ days: 90 });
+    expect(orgUsageQuerySchema.safeParse({ days: "60" }).success).toBe(false);
+  });
+});
+
+describe("dailyConversations", () => {
+  test.each([
+    [30, "2026-08-24"],
+    [90, "2026-06-25"],
+  ])("%i days are zero-filled, oldest first, ending today (UTC)", async (days, first) => {
+    db.$queryRaw.mockResolvedValue([
+      { day: "2026-09-22", count: 4 },
+      { day: first, count: 2 },
+    ]);
+
+    const series = await dailyConversations(ORG_ID, days, NOW);
+
+    expect(series).toHaveLength(days);
+    expect(series[0]).toEqual({ date: first, conversations: 2 });
+    expect(series.at(-1)).toEqual({ date: "2026-09-22", conversations: 4 });
+    expect(series.slice(1, -1).every((d) => d.conversations === 0)).toBe(true);
+    // The lower bound passed to the query is midnight UTC of the first day.
+    expect(db.$queryRaw.mock.calls[0]).toContainEqual(new Date(`${first}T00:00:00Z`));
   });
 });

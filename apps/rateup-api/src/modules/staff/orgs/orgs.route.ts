@@ -11,7 +11,12 @@ import {
   type DeleteOrgInput,
   type DeletionWarningInput,
 } from "./deletion.service.js";
-import { orgListQuerySchema, type OrgListQuery } from "./orgs.schema.js";
+import {
+  orgListQuerySchema,
+  orgUsageQuerySchema,
+  type OrgListQuery,
+  type OrgUsageQuery,
+} from "./orgs.schema.js";
 import {
   getOrgActivity,
   getOrgChannels,
@@ -90,9 +95,11 @@ export async function staffOrgRoutes(server: FastifyInstance) {
   server.get<{ Params: IdParam }>("/orgs/:id/members", byId, async (request) => ({
     data: await getOrgMembers(request.params.id),
   }));
-  server.get<{ Params: IdParam }>("/orgs/:id/usage", byId, async (request) => ({
-    data: await getOrgUsage(request.params.id),
-  }));
+  server.get<{ Params: IdParam; Querystring: OrgUsageQuery }>(
+    "/orgs/:id/usage",
+    { schema: { params: idParamSchema, querystring: orgUsageQuerySchema } },
+    async (request) => ({ data: await getOrgUsage(request.params.id, request.query.days) }),
+  );
   server.get<{ Params: IdParam }>("/orgs/:id/channels", byId, async (request) => ({
     data: await getOrgChannels(request.params.id),
   }));

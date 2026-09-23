@@ -33,3 +33,14 @@ export const orgListQuerySchema = pageQuerySchema.extend({
   order: z.enum(["asc", "desc"]).default("desc"),
 });
 export type OrgListQuery = z.infer<typeof orgListQuerySchema>;
+
+export const USAGE_DAYS = [30, 90] as const;
+export type UsageDays = (typeof USAGE_DAYS)[number];
+
+export const orgUsageQuerySchema = z.object({
+  days: z.coerce
+    .number()
+    .refine((n): n is UsageDays => (USAGE_DAYS as readonly number[]).includes(n))
+    .default(30),
+});
+export type OrgUsageQuery = z.infer<typeof orgUsageQuerySchema>;

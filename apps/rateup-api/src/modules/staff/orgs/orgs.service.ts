@@ -9,7 +9,7 @@ import { checkPlanLimit, planAllowance, PLAN_LIMITS } from "../../subscription/p
 import { StaffHttpError } from "../staff.errors.js";
 import { channelsMatchingDigits, lastActiveByOrg } from "../staff.lookup.js";
 import { asPhoneDigits, asUuid, pageArgs, type Page } from "../staff.schema.js";
-import type { OrgListQuery } from "./orgs.schema.js";
+import type { OrgListQuery, UsageDays } from "./orgs.schema.js";
 
 const DAY_MS = 24 * 60 * 60_000;
 
@@ -353,6 +353,7 @@ export async function getOrgMembers(orgId: string) {
         id: member.id,
         joinedAt: member.createdAt,
         role: ROLES[roleKey].label,
+        roleKey,
         isOwner,
         user: {
           id: member.user.id,
@@ -372,33 +373,59 @@ export async function getOrgMembers(orgId: string) {
   };
 }
 
+export type DailyConversations = { date: string; conversations: number }[];
+
+/** Metered conversations opened per UTC day over the last `days` days, today included. */
+export async function dailyConversations(
+  orgId: string,
+  days: number,
+  now = new Date(),
+): Promise<DailyConversations> {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const start = new Date(today - (days - 1) * DAY_MS);
+  // "openedAt" is a timestamp without time zone holding UTC, so date_trunc buckets by UTC day.
+  const rows = await prisma.$queryRaw<{ day: string; count: number }[]>`
+    SELECT to_char(date_trunc('day', "openedAt"), 'YYYY-MM-DD') AS day, COUNT(*)::int AS count
+    FROM "MeteredConversation"
+    WHERE "orgId" = ${orgId}::uuid AND "openedAt" >= ${start}
+    GROUP BY 1`;
+  const counts = new Map(rows.map((row) => [row.day, Number(row.count)]));
+  return Array.from({ length: days }, (_, i) => {
+    const date = new Date(start.getTime() + i * DAY_MS).toISOString().slice(0, 10);
+    return { date, conversations: counts.get(date) ?? 0 };
+  });
+}
+
 /** The four plan limits as the gates see them, plus the raw counters behind them. */
-export async function getOrgUsage(orgId: string) {
+export async function getOrgUsage(orgId: string, days: UsageDays = 30, now = new Date()) {
   await assertOrgExists(orgId);
-  const [teams, users, conversations, formResponses, budget, usage, packs] = await Promise.all([
-    checkPlanLimit(orgId, "teams"),
-    checkPlanLimit(orgId, "users"),
-    checkPlanLimit(orgId, "conversations"),
-    checkPlanLimit(orgId, "formResponses"),
-    getConversationBudget(orgId),
-    prisma.usageStats.findUnique({ where: { orgId } }),
-    prisma.subscriptionAddon.findMany({
-      where: { orgId, expiresAt: { gt: new Date() } },
-      orderBy: { expiresAt: "asc" },
-      select: {
-        id: true,
-        quantity: true,
-        expiresAt: true,
-        createdAt: true,
-        paymentRef: true,
-        addon: { select: { name: true, displayName: true } },
-      },
-    }),
-  ]);
+  const [teams, users, conversations, formResponses, budget, usage, packs, daily] =
+    await Promise.all([
+      checkPlanLimit(orgId, "teams"),
+      checkPlanLimit(orgId, "users"),
+      checkPlanLimit(orgId, "conversations"),
+      checkPlanLimit(orgId, "formResponses"),
+      getConversationBudget(orgId),
+      prisma.usageStats.findUnique({ where: { orgId } }),
+      prisma.subscriptionAddon.findMany({
+        where: { orgId, expiresAt: { gt: new Date() } },
+        orderBy: { expiresAt: "asc" },
+        select: {
+          id: true,
+          quantity: true,
+          expiresAt: true,
+          createdAt: true,
+          paymentRef: true,
+          addon: { select: { name: true, displayName: true } },
+        },
+      }),
+      dailyConversations(orgId, days, now),
+    ]);
 
   return {
     limits: { teams, users, conversations, formResponses },
     conversationPeriod: budget.isAnnual ? "annual" : "monthly",
+    daily,
     packs: packs.map((pack) => ({
       id: pack.id,
       name: pack.addon.displayName ?? pack.addon.name,
