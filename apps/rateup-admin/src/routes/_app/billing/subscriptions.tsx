@@ -127,7 +127,11 @@ function SubscriptionsPage() {
     }),
   );
   const update = (patch: Partial<SubscriptionSearch>) =>
-    void navigate({ search: (prev) => ({ ...prev, ...patch, page: patch.page }) });
+    void navigate({
+      search: (prev) => ({ ...prev, ...patch, page: patch.page }),
+      // Filtering narrows what is already on screen; the Pager handles its own scrolling.
+      resetScroll: false,
+    });
   const planName = (id: string) =>
     id === ALL_PLANS ? "All plans" : (plans.data?.find((plan) => plan.id === id)?.name ?? "Plan");
 

@@ -3,9 +3,17 @@ import { CopyButton } from "@/components/ds/copy-button";
 import { DetailList } from "@/components/ds/detail-list";
 import { Panel, SectionTitle } from "@/components/ds/panel";
 import { StatCard } from "@/components/ds/stat-card";
+import type { OrgAction } from "@/components/org/actions/org-action-dialogs";
+import { OrgNotesPanel } from "@/components/org/org-notes-panel";
 import { formatDate, formatDateTime, formatNumber, isEffectivelyNever } from "@/lib/format";
 
-export function OrgOverviewTab({ org }: { org: OrgSummary }) {
+export function OrgOverviewTab({
+  org,
+  onAction,
+}: {
+  org: OrgSummary;
+  onAction: (action: OrgAction) => void;
+}) {
   const subscription = org.subscription;
   const expires = subscription?.expiresAt;
 
@@ -93,6 +101,8 @@ export function OrgOverviewTab({ org }: { org: OrgSummary }) {
             ]}
           />
         </Panel>
+
+        <OrgNotesPanel orgId={org.id} onAction={onAction} className="xl:col-span-2" />
       </div>
     </div>
   );

@@ -49,6 +49,7 @@ function AppLayout() {
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useSearchHotkey(openSearch);
   const scrolled = useScrolled();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   usePageTitle();
 
   return (
@@ -65,7 +66,12 @@ function AppLayout() {
         >
           <TopBar onSearch={openSearch} />
         </div>
-        <main className="mt-4 flex-1 md:mt-8">
+        {/* Keyed on the path so each page fades in; a tab or filter only changes the search
+            params, which leaves the key alone and so does not re-run the animation. */}
+        <main
+          key={pathname}
+          className="mt-4 flex-1 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200 md:mt-8"
+        >
           <Outlet />
         </main>
       </div>

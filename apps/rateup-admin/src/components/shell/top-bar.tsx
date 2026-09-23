@@ -8,6 +8,7 @@ import { useTheme } from "@/components/theme/theme-provider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
+import { RateUpStar, Wordmark } from "./brand";
 import { activeGroup, isItemActive, NAV_GROUPS } from "./nav";
 import { StaffAvatar } from "./rail";
 
@@ -22,15 +23,6 @@ export function Sparkle({ className }: { className?: string }) {
         d="M12 1.5c.4 5.6 4.9 10.1 10.5 10.5-5.6.4-10.1 4.9-10.5 10.5-.4-5.6-4.9-10.1-10.5-10.5C7.1 11.6 11.6 7.1 12 1.5Z"
       />
     </svg>
-  );
-}
-
-export function Wordmark() {
-  return (
-    <Link to="/" className="flex items-baseline gap-2 text-foreground">
-      <span className="text-[22px] font-semibold tracking-tight">RateUp</span>
-      <span className="text-sm font-medium text-muted-foreground">Admin</span>
-    </Link>
   );
 }
 
@@ -138,9 +130,12 @@ function MobileNav({
         className="flex w-72 flex-col gap-0 bg-rail p-0 text-rail-foreground"
       >
         <SheetHeader className="px-6 pt-6 pb-6">
-          <SheetTitle className="flex items-baseline gap-2 text-rail-foreground">
-            <span className="text-xl font-semibold tracking-tight">RateUp</span>
-            <span className="text-sm font-medium text-rail-foreground/50">Admin</span>
+          <SheetTitle className="flex items-center gap-2.5 text-rail-foreground">
+            <RateUpStar className="size-6" />
+            <span className="flex items-baseline gap-2">
+              <span className="text-xl font-semibold tracking-tight">RateUp</span>
+              <span className="text-sm font-medium text-rail-foreground/50">Admin</span>
+            </span>
           </SheetTitle>
         </SheetHeader>
 

@@ -70,7 +70,11 @@ function UsersPage() {
   );
 
   const update = (patch: Partial<UserSearch>) =>
-    void navigate({ search: (prev) => ({ ...prev, ...patch, page: patch.page }) });
+    void navigate({
+      search: (prev) => ({ ...prev, ...patch, page: patch.page }),
+      // Filtering narrows what is already on screen; the Pager handles its own scrolling.
+      resetScroll: false,
+    });
 
   return (
     <div className="flex flex-col gap-8">

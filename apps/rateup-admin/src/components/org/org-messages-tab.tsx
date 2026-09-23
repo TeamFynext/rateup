@@ -21,7 +21,7 @@ const PRESETS: FilterChip<Preset>[] = [
 
 const DAY = "YYYY-MM-DD";
 
-function presetRange(days: number) {
+export function presetRange(days: number) {
   return {
     from: dayjs()
       .subtract(days - 1, "day")

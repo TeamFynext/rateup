@@ -39,7 +39,12 @@ function RazorpayPage() {
       <PageTabs<Tab>
         value={tab}
         onChange={(next) =>
-          void navigate({ search: { tab: next === "plans" ? undefined : next }, replace: true })
+          void navigate({
+            search: { tab: next === "plans" ? undefined : next },
+            replace: true,
+            // A tab is not a new page; jumping to the top would lose the reader's place.
+            resetScroll: false,
+          })
         }
         tabs={[
           { value: "plans", label: "Plans", content: <PlansTab /> },

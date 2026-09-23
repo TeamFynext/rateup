@@ -5,7 +5,7 @@ import { orgMembersQueryOptions } from "@/api/orgs.query";
 import { EntityAvatar } from "@/components/ds/entity-avatar";
 import { SectionTitle } from "@/components/ds/panel";
 import { Pill } from "@/components/ds/pill";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
+import { EmptyState, ErrorState, PanelSkeleton } from "@/components/ds/query-states";
 import { formatDate, formatRelative } from "@/lib/format";
 
 function MemberStatus({ member }: { member: OrgMember }) {
@@ -17,7 +17,7 @@ function MemberStatus({ member }: { member: OrgMember }) {
 export function OrgMembersTab({ orgId }: { orgId: string }) {
   const query = useQuery(orgMembersQueryOptions(orgId));
 
-  if (query.isPending) return <ListSkeleton rows={4} />;
+  if (query.isPending) return <PanelSkeleton panels={2} />;
   if (query.isError) return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
 
   const { members, teams, invitations } = query.data;

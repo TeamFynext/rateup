@@ -68,7 +68,11 @@ function OrganisationsPage() {
 
   /** Any filter change goes back to page one. */
   const update = (patch: Partial<OrgSearch>) =>
-    void navigate({ search: (prev) => ({ ...prev, ...patch, page: patch.page }) });
+    void navigate({
+      search: (prev) => ({ ...prev, ...patch, page: patch.page }),
+      // Filtering narrows what is already on screen; the Pager handles its own scrolling.
+      resetScroll: false,
+    });
 
   const planName = (id: string) =>
     id === ALL_PLANS ? "All plans" : (plans.data?.find((plan) => plan.id === id)?.name ?? "Plan");
@@ -200,6 +204,7 @@ function OrgTable({ rows }: { rows: OrgRow[] }) {
                   <span className="min-w-0">
                     <span className="flex items-center gap-2">
                       <span className="truncate font-medium">{row.name}</span>
+                      {row.suspendedAt && <Pill tone="negative">Suspended</Pill>}
                       {row.pausedByCustomer && <Pill tone="warning">Paused</Pill>}
                     </span>
                     <span className="block max-w-64 truncate text-xs text-muted-foreground">
@@ -255,6 +260,7 @@ function OrgCards({ rows }: { rows: OrgRow[] }) {
             <div className="flex flex-wrap gap-2">
               <PlanPill plan={row.plan} />
               <SubscriptionPill status={row.status} expiresAt={row.expiresAt} />
+              {row.suspendedAt && <Pill tone="negative">Suspended</Pill>}
               {row.pausedByCustomer && <Pill tone="warning">Paused</Pill>}
             </div>
             <UsageBar

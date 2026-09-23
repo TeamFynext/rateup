@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { startGoogleLogin } from "@/api/auth.api";
 import { meQueryOptions } from "@/api/auth.query";
+import { RateUpLogo } from "@/components/shell/brand";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -47,8 +48,8 @@ function LoginPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <div className="flex w-full max-w-105 flex-col gap-10 rounded-3xl border bg-card p-8 sm:p-10">
         <div className="flex items-center justify-between">
-          <span className="flex items-baseline gap-2">
-            <span className="text-[22px] font-semibold tracking-tight">RateUp</span>
+          <span className="flex items-center gap-3">
+            <RateUpLogo className="h-13" />
             <span className="text-sm font-medium text-muted-foreground">Admin</span>
           </span>
           <span className="flex size-10 items-center justify-center rounded-2xl bg-rail text-rail-foreground">

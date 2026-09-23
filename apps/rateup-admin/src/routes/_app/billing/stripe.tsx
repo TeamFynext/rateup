@@ -40,7 +40,11 @@ function StripePage() {
       <PageTabs<Tab>
         value={tab}
         onChange={(next) =>
-          void navigate({ search: { tab: next === "products" ? undefined : next }, replace: true })
+          void navigate({
+            search: { tab: next === "products" ? undefined : next },
+            replace: true,
+            resetScroll: false,
+          })
         }
         tabs={[
           { value: "products", label: "Products", content: <ProductsTab /> },

@@ -11,6 +11,7 @@ export const ORG_VIEWS = {
   },
   expired: { label: "Expired", params: { status: "expired" } },
   new: { label: "New this week", params: { createdWithinDays: 7 } },
+  suspended: { label: "Suspended by us", params: { status: "suspended" } },
   paused: { label: "Paused by customer", params: { status: "paused" } },
   no_plan: { label: "No plan", params: { status: "no_plan" } },
 } as const satisfies Record<string, { label: string; params: OrgListParams }>;

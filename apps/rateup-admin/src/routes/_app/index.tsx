@@ -68,6 +68,7 @@ function Overview() {
               void navigate({
                 search: { months: next === DEFAULT_MONTHS ? undefined : next },
                 replace: true,
+                resetScroll: false,
               });
             }}
           >

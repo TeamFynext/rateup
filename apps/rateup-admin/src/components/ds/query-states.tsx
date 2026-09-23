@@ -1,5 +1,5 @@
 import { IconAlertTriangle, IconMoodEmpty } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,12 +65,46 @@ export function EmptyState({
   );
 }
 
+/**
+ * Whether to show a placeholder yet. A query answered from the cache, or from a local API,
+ * comes back in a few dozen milliseconds, and a skeleton that appears and vanishes inside
+ * that reads as a flicker — worse than showing nothing at all for a moment.
+ */
+export function useShowPlaceholder(delayMs = 160): boolean {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShow(true), delayMs);
+    return () => clearTimeout(timer);
+  }, [delayMs]);
+  return show;
+}
+
 /** Placeholder rows shaped like the list they stand in for. */
 export function ListSkeleton({ rows = 6 }: { rows?: number }) {
+  const show = useShowPlaceholder();
+  if (!show) return <div className="h-16" />;
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in-0">
       {Array.from({ length: rows }, (_, index) => (
         <Skeleton key={index} className="h-16 w-full rounded-2xl" />
+      ))}
+    </div>
+  );
+}
+
+/** Placeholder for a tab built of panels, so the shape does not change when it loads. */
+export function PanelSkeleton({ panels = 2, className }: { panels?: number; className?: string }) {
+  const show = useShowPlaceholder();
+  if (!show) return <div className="h-48" />;
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-6 motion-safe:animate-in motion-safe:fade-in-0 xl:grid-cols-2",
+        className,
+      )}
+    >
+      {Array.from({ length: panels }, (_, index) => (
+        <Skeleton key={index} className="h-64 w-full rounded-3xl" />
       ))}
     </div>
   );

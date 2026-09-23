@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { orgUsageQueryOptions } from "@/api/orgs.query";
 import { Panel, SectionTitle } from "@/components/ds/panel";
 import { Pill } from "@/components/ds/pill";
-import { ErrorState, ListSkeleton } from "@/components/ds/query-states";
+import { ErrorState, PanelSkeleton } from "@/components/ds/query-states";
 import { StatFigure } from "@/components/ds/stat-figure";
 import { UsageMeter } from "@/components/ds/usage-meter";
 import { formatCompact, formatDate, formatRelative } from "@/lib/format";
@@ -11,7 +11,7 @@ import { formatCompact, formatDate, formatRelative } from "@/lib/format";
 export function OrgUsageTab({ orgId }: { orgId: string }) {
   const query = useQuery(orgUsageQueryOptions(orgId));
 
-  if (query.isPending) return <ListSkeleton rows={3} />;
+  if (query.isPending) return <PanelSkeleton panels={2} />;
   if (query.isError) return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
 
   const { limits, packs, counters, conversationPeriod } = query.data;

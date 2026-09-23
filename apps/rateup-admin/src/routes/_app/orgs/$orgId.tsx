@@ -1,22 +1,37 @@
-import { IconArrowLeft } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { IconArrowLeft, IconBan } from "@tabler/icons-react";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { z } from "zod";
 
+import { orgNotesQueryOptions, orgSubscriptionQueryOptions } from "@/api/org-actions.api";
 import type { OrgSummary } from "@/api/orgs.api";
-import { orgQueryOptions } from "@/api/orgs.query";
+import {
+  planOptionsQueryOptions,
+  orgActivityQueryOptions,
+  orgChannelsQueryOptions,
+  orgInvoicesQueryOptions,
+  orgMembersQueryOptions,
+  orgMessageStatsQueryOptions,
+  orgOrdersQueryOptions,
+  orgQueryOptions,
+  orgUsageQueryOptions,
+} from "@/api/orgs.query";
 import { CopyButton } from "@/components/ds/copy-button";
 import { EntityAvatar } from "@/components/ds/entity-avatar";
 import { PageTabs } from "@/components/ds/page-tabs";
 import { PlanPill, Pill, SubscriptionPill } from "@/components/ds/pill";
 import { ErrorState } from "@/components/ds/query-states";
+import { OrgActionDialogs, type OrgAction } from "@/components/org/actions/org-action-dialogs";
+import { OrgManageMenu } from "@/components/org/actions/org-manage-menu";
 import { OrgActivityTab } from "@/components/org/org-activity-tab";
 import { OrgBillingTab } from "@/components/org/org-billing-tab";
 import { OrgChannelsTab } from "@/components/org/org-channels-tab";
 import { OrgMembersTab } from "@/components/org/org-members-tab";
-import { OrgMessagesTab } from "@/components/org/org-messages-tab";
+import { OrgMessagesTab, presetRange } from "@/components/org/org-messages-tab";
 import { OrgOverviewTab } from "@/components/org/org-overview-tab";
 import { OrgUsageTab } from "@/components/org/org-usage-tab";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getApiErrorData } from "@/lib/apiError";
 import { formatDate, formatRelative } from "@/lib/format";
@@ -35,7 +50,7 @@ const TAB_LABELS: Record<OrgTab, string> = {
   overview: "Overview",
   members: "Members & teams",
   usage: "Usage",
-  billing: "Billing",
+  billing: "Plan & billing",
   messages: "Messages",
   channels: "Channels",
   activity: "Activity",
@@ -66,6 +81,8 @@ function OrgDetail() {
   const { tab = "overview" } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const query = useQuery(orgQueryOptions(orgId));
+  const queryClient = useQueryClient();
+  const [action, setAction] = useState<OrgAction | null>(null);
 
   if (query.isPending) {
     return (
@@ -118,28 +135,43 @@ function OrgDetail() {
             <div className="flex flex-wrap gap-2">
               <PlanPill plan={org.plan} />
               <SubscriptionPill status={org.status} expiresAt={org.expiresAt} />
+              {org.suspendedAt && <Pill tone="negative">Suspended</Pill>}
               {org.pausedByCustomer && <Pill tone="warning">Paused by customer</Pill>}
             </div>
           </div>
         </div>
 
-        <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-3 lg:text-right">
-          <div className="col-span-2 min-w-0 sm:col-span-1">
-            <dt className="text-xs text-muted-foreground">Owner</dt>
-            <dd className="truncate font-medium">{org.owner.email}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Created</dt>
-            <dd className="font-medium tabular">{formatDate(org.createdAt)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Last active</dt>
-            <dd className="font-medium">
-              {org.lastActiveAt ? formatRelative(org.lastActiveAt) : "Never"}
-            </dd>
-          </div>
-        </dl>
+        <div className="flex flex-col items-start gap-5 lg:items-end">
+          <OrgManageMenu
+            onAction={setAction}
+            suspended={!!org.suspendedAt}
+            onPrefetch={() => {
+              void queryClient.prefetchQuery(orgSubscriptionQueryOptions(org.id));
+              void queryClient.prefetchQuery(planOptionsQueryOptions);
+            }}
+          />
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-3 lg:text-right">
+            <div className="col-span-2 min-w-0 sm:col-span-1">
+              <dt className="text-xs text-muted-foreground">Owner</dt>
+              <dd className="truncate font-medium">{org.owner.email}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Created</dt>
+              <dd className="font-medium tabular">{formatDate(org.createdAt)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Last active</dt>
+              <dd className="font-medium">
+                {org.lastActiveAt ? formatRelative(org.lastActiveAt) : "Never"}
+              </dd>
+            </div>
+          </dl>
+        </div>
       </header>
+
+      {org.suspendedAt && (
+        <SuspendedBanner org={org} onRestore={() => setAction({ kind: "unsuspend" })} />
+      )}
 
       <PageTabs<OrgTab>
         value={tab}
@@ -147,28 +179,83 @@ function OrgDetail() {
           void navigate({
             search: { tab: value === "overview" ? undefined : value },
             replace: true,
+            // A tab is not a new page; jumping to the top would lose the reader's place.
+            resetScroll: false,
           })
         }
         tabs={TABS.map((key) => ({
           value: key,
           label: TAB_LABELS[key],
-          content: tabContent(key, org),
+          content: tabContent(key, org, setAction),
+          prefetch: () => prefetchTab(queryClient, key, org.id),
         }))}
       />
+
+      <OrgActionDialogs orgId={org.id} org={org} action={action} onClose={() => setAction(null)} />
     </div>
   );
 }
 
-function tabContent(tab: OrgTab, org: OrgSummary) {
+/**
+ * What each tab opens with, fetched when its trigger is hovered or focused. By the time the
+ * tab is clicked the data is usually in the cache, so it appears filled instead of passing
+ * through a skeleton. Anything paged or filtered inside a tab loads on its own as before.
+ */
+function prefetchTab(queryClient: QueryClient, tab: OrgTab, orgId: string) {
+  const warm = queryClient.prefetchQuery.bind(queryClient);
   switch (tab) {
     case "overview":
-      return <OrgOverviewTab org={org} />;
+      return void warm(orgNotesQueryOptions(orgId));
+    case "members":
+      return void warm(orgMembersQueryOptions(orgId));
+    case "usage":
+      return void warm(orgUsageQueryOptions(orgId));
+    case "billing":
+      void warm(orgSubscriptionQueryOptions(orgId));
+      void warm(orgUsageQueryOptions(orgId));
+      void warm(orgOrdersQueryOptions(orgId, 1));
+      // Read live from Razorpay, so it is the slowest of them and the most worth warming.
+      return void warm(orgInvoicesQueryOptions(orgId));
+    case "messages":
+      return void warm(orgMessageStatsQueryOptions(orgId, presetRange(30)));
+    case "channels":
+      return void warm(orgChannelsQueryOptions(orgId));
+    case "activity":
+      return void warm(orgActivityQueryOptions(orgId, "customer", 1));
+  }
+}
+
+/** Red across the top of a suspended org, with the way out of it. */
+function SuspendedBanner({ org, onRestore }: { org: OrgSummary; onRestore: () => void }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-3xl bg-negative/10 px-5 py-4 sm:flex-row sm:items-center sm:gap-5 sm:px-6">
+      <IconBan className="size-5 shrink-0 text-negative" stroke={1.75} />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-negative">
+          Suspended {formatRelative(org.suspendedAt)}
+        </p>
+        <p className="text-sm text-foreground/70">
+          {org.suspendedReason ? `“${org.suspendedReason}”` : "No reason was recorded."} Nobody here
+          can sign in, send a message or use the API.
+        </p>
+      </div>
+      <Button variant="outline" className="h-10 shrink-0 rounded-xl px-4" onClick={onRestore}>
+        Restore access
+      </Button>
+    </div>
+  );
+}
+
+function tabContent(tab: OrgTab, org: OrgSummary, onAction: (action: OrgAction) => void) {
+  switch (tab) {
+    case "overview":
+      return <OrgOverviewTab org={org} onAction={onAction} />;
     case "members":
       return <OrgMembersTab orgId={org.id} />;
     case "usage":
       return <OrgUsageTab orgId={org.id} />;
     case "billing":
-      return <OrgBillingTab orgId={org.id} />;
+      return <OrgBillingTab orgId={org.id} onAction={onAction} />;
     case "messages":
       return <OrgMessagesTab orgId={org.id} />;
     case "channels":

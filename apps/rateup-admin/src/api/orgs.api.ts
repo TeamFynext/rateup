@@ -1,8 +1,16 @@
 import type { OrderRow } from "./billing.api";
 import { api } from "./client";
+import type { SubscriptionFeatures } from "./org-actions.api";
 import type { IsoDate, Page } from "./types";
 
-export const ORG_STATUSES = ["active", "expired", "no_plan", "paused", "paid"] as const;
+export const ORG_STATUSES = [
+  "active",
+  "expired",
+  "no_plan",
+  "paused",
+  "paid",
+  "suspended",
+] as const;
 export type OrgStatusFilter = (typeof ORG_STATUSES)[number];
 export const ORG_SORTS = ["created", "name", "expires", "conversations"] as const;
 export type OrgSort = (typeof ORG_SORTS)[number];
@@ -27,6 +35,9 @@ export interface OrgRow {
   logo: string | null;
   createdAt: IsoDate;
   pausedByCustomer: boolean;
+  /** Switched off by RateUp staff; the customer cannot lift this one. */
+  suspendedAt: IsoDate | null;
+  suspendedReason: string | null;
   owner: { id: string; name: string | null; email: string };
   plan: { id: string; name: string; paid: boolean } | null;
   status: SubscriptionStatus;
@@ -41,6 +52,8 @@ export interface PlanOption {
   id: string;
   name: string;
   paid: boolean;
+  /** The tier's features, for the plan picker's before / after comparison. */
+  features: Partial<SubscriptionFeatures> | null;
 }
 
 export interface OrgSummary extends OrgRow {
