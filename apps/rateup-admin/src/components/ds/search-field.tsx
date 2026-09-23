@@ -40,7 +40,7 @@ export function SearchField({
   return (
     <label
       className={cn(
-        "flex h-11 w-full items-center gap-2.5 rounded-xl border bg-background px-3.5 text-sm transition-colors focus-within:border-foreground/40",
+        "flex h-9 w-full items-center gap-2.5 rounded-lg border bg-background px-3.5 text-sm transition-colors focus-within:border-foreground/40",
         className,
       )}
     >

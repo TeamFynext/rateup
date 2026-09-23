@@ -3,33 +3,34 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export type StatTone = "peach" | "mint" | "sky" | "slate" | "ink";
+export type StatTone = "peach" | "mint" | "sky" | "slate" | "brand";
 
-const TONES: Record<StatTone, { card: string; arrow: string; sub: string }> = {
-  peach: { card: "bg-tone-peach", arrow: "text-tone-peach-accent", sub: "text-foreground/45" },
-  mint: { card: "bg-tone-mint", arrow: "text-tone-mint-accent", sub: "text-foreground/45" },
-  sky: { card: "bg-tone-sky", arrow: "text-tone-sky-accent", sub: "text-foreground/45" },
-  slate: { card: "bg-tone-slate", arrow: "text-tone-slate-accent", sub: "text-foreground/45" },
-  ink: {
-    card: "bg-primary text-primary-foreground",
-    arrow: "text-primary-foreground",
-    sub: "text-primary-foreground/60",
+/** A tinted strip down the tile's left edge; the tile itself stays a plain card. */
+const TONES: Record<StatTone, { card: string; accent: string; sub: string }> = {
+  peach: { card: "bg-card", accent: "bg-tone-peach-accent", sub: "text-muted-foreground" },
+  mint: { card: "bg-card", accent: "bg-tone-mint-accent", sub: "text-muted-foreground" },
+  sky: { card: "bg-card", accent: "bg-tone-sky-accent", sub: "text-muted-foreground" },
+  slate: { card: "bg-card", accent: "bg-tone-slate-accent/40", sub: "text-muted-foreground" },
+  brand: {
+    card: "bg-primary text-primary-foreground ring-0",
+    accent: "bg-primary-foreground/40",
+    sub: "text-primary-foreground/70",
   },
 };
 
 interface StatCardProps {
   value: ReactNode;
   label: ReactNode;
-  /** The small line under the label, e.g. "10% increase from last week". */
+  /** The small line under the figure, e.g. "10% increase from last week". */
   sub?: ReactNode;
   tone?: StatTone;
   trend?: "up" | "down";
-  /** A round badge hanging off the top-right corner, as on the reference's featured card. */
+  /** Shown top-right in place of the trend arrow. */
   badge?: ReactNode;
   className?: string;
 }
 
-/** The pastel KPI tile: a large figure, a bold label, a muted comparison line. */
+/** The KPI tile, after rateup-ui's `StatTile`: uppercase label, large figure, muted line. */
 export function StatCard({
   value,
   label,
@@ -45,22 +46,25 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "relative flex min-h-[134px] flex-col items-center justify-center rounded-3xl px-5 py-6 text-center",
+        "relative flex min-w-0 flex-col gap-2 overflow-hidden rounded-xl py-4 pr-4 pl-5 shadow-xs ring-1 ring-foreground/10",
         styles.card,
         className,
       )}
     >
-      {trend && !badge && (
-        <Arrow className={cn("absolute top-4 right-4 size-4", styles.arrow)} stroke={1.75} />
-      )}
-      {badge && (
-        <span className="absolute -top-2.5 -right-2.5 flex size-10 items-center justify-center rounded-full border-[5px] border-background bg-background text-foreground ring-1 ring-foreground">
-          {badge}
-        </span>
-      )}
-      <div className="text-[34px] leading-none font-medium tracking-tight tabular">{value}</div>
-      <div className="mt-3 text-[13px] font-semibold">{label}</div>
-      {sub && <div className={cn("mt-1.5 text-xs", styles.sub)}>{sub}</div>}
+      <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1", styles.accent)} />
+      <div className="flex items-start justify-between gap-2">
+        <div
+          className={cn(
+            "truncate text-xs font-medium tracking-wide uppercase",
+            tone === "brand" ? "text-primary-foreground/80" : "text-muted-foreground",
+          )}
+        >
+          {label}
+        </div>
+        {badge ?? (trend && <Arrow className={cn("size-4 shrink-0", styles.sub)} stroke={1.75} />)}
+      </div>
+      <div className="text-2xl leading-none font-semibold tabular">{value}</div>
+      {sub && <div className={cn("text-xs", styles.sub)}>{sub}</div>}
     </div>
   );
 }

@@ -79,7 +79,7 @@ export function ActionDialog({
     >
       <DialogContent
         className={cn(
-          "flex max-h-[calc(100dvh-2rem)] flex-col gap-0 rounded-3xl p-0",
+          "flex max-h-[calc(100dvh-2rem)] flex-col gap-0 rounded-xl p-0",
           wide ? "sm:max-w-2xl" : "sm:max-w-lg",
         )}
       >
@@ -114,10 +114,7 @@ export function ActionDialog({
               </div>
             ) : null}
             {error != null && (
-              <p
-                role="alert"
-                className="rounded-2xl bg-negative/10 px-4 py-3 text-sm text-negative"
-              >
+              <p role="alert" className="rounded-lg bg-negative/10 px-4 py-3 text-sm text-negative">
                 {getApiErrorMessage(error, "That didn't work.")}
               </p>
             )}
@@ -127,7 +124,7 @@ export function ActionDialog({
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-xl px-4"
+              className="h-9 rounded-lg px-4"
               disabled={pending}
               onClick={() => onOpenChange(false)}
             >
@@ -136,7 +133,7 @@ export function ActionDialog({
             <Button
               type="submit"
               variant={destructive ? "destructive" : "default"}
-              className="h-11 rounded-xl px-5"
+              className="h-9 rounded-lg px-5"
               disabled={!ready}
             >
               {pending && <Spinner />}
@@ -166,7 +163,7 @@ export function Notice({
   return (
     <p
       className={cn(
-        "flex items-start gap-2 rounded-2xl px-4 py-3 text-xs",
+        "flex items-start gap-2 rounded-lg px-4 py-3 text-xs",
         tone === "warning" ? "bg-tone-peach text-foreground/75" : "bg-muted text-muted-foreground",
       )}
     >

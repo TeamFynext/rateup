@@ -5,11 +5,11 @@ import { useState } from "react";
 
 import { referralsQueryOptions, type Referral } from "@/api/ops.api";
 import { CopyButton } from "@/components/ds/copy-button";
+import { PageHeading } from "@/components/ds/page-heading";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import { StatCard } from "@/components/ds/stat-card";
 import { AddReferralDialog, DeleteReferralDialog } from "@/components/ops/ops-dialogs";
-import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatNumber } from "@/lib/format";
 
@@ -105,11 +105,11 @@ function ReferralsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Referrals"
         description="Referral partners, their links and what they brought in. Copying a code copies its link."
         actions={
-          <Button className="h-11 rounded-xl px-4" onClick={() => setAdding(true)}>
+          <Button className="h-9 rounded-lg px-4" onClick={() => setAdding(true)}>
             <IconPlus />
             Add partner
           </Button>

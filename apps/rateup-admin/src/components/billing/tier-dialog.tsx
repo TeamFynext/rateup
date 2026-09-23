@@ -185,7 +185,7 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
             id={ids.name}
             value={draft.name}
             onChange={(event) => set("name", event.target.value)}
-            className="h-11 rounded-xl"
+            className="h-9 rounded-lg"
             autoFocus={!plan}
           />
         </Field>
@@ -194,7 +194,7 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
             id={ids.displayName}
             value={draft.displayName}
             onChange={(event) => set("displayName", event.target.value)}
-            className="h-11 rounded-xl"
+            className="h-9 rounded-lg"
           />
         </Field>
         <Field id="tier-type" label="Kind">
@@ -202,7 +202,7 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
             value={draft.planType}
             onValueChange={(value) => set("planType", value as Draft["planType"])}
           >
-            <SelectTrigger id="tier-type" className="h-11 w-full rounded-xl">
+            <SelectTrigger id="tier-type" className="h-9 w-full rounded-lg">
               <SelectValue>
                 {(value: Draft["planType"]) =>
                   value === "ADDON" ? "Add-on pack" : "Tier (base plan)"
@@ -220,7 +220,7 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
             id={ids.badge}
             value={draft.badge}
             onChange={(event) => set("badge", event.target.value)}
-            className="h-11 rounded-xl"
+            className="h-9 rounded-lg"
           />
         </Field>
       </div>
@@ -249,7 +249,7 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
                 min={0}
                 value={draft[price.key] as string}
                 onChange={(event) => set(price.key, event.target.value as never)}
-                className="h-11 rounded-xl tabular"
+                className="h-9 rounded-lg tabular"
               />
             </Field>
           ))}
@@ -313,7 +313,7 @@ export function TierDialog({ plan, onClose }: { plan?: RateupPlan; onClose: () =
           id={ids.widget}
           value={draft.displayWidgetId}
           onChange={(event) => set("displayWidgetId", event.target.value)}
-          className="h-11 rounded-xl font-mono"
+          className="h-9 rounded-lg font-mono"
         />
       </Field>
       {draft.displayWidgetId.trim() && (
@@ -395,7 +395,7 @@ function GatewaySelect({
 }) {
   return (
     <Select value={value} onValueChange={(next) => onChange(next ?? NONE)}>
-      <SelectTrigger id={id} className="h-11 w-full rounded-xl">
+      <SelectTrigger id={id} className="h-9 w-full rounded-lg">
         <SelectValue placeholder={loading ? "Loading…" : "None"}>
           {(current: string) => {
             if (current === NONE) return "None";

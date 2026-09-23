@@ -115,10 +115,11 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
                   key={user.id}
                   value={`user-${user.id}`}
                   onSelect={() => {
-                    // One org: that's who they are to support. Several: the users list shows them all.
+                    // One org: that's who they are to support. Several: the directory matches
+                    // member emails, so searching theirs lists exactly their orgs.
                     if (user.orgs.length === 1) return openOrg(user.orgs[0].id);
                     close();
-                    void navigate({ to: "/users", search: { q: user.email } });
+                    void navigate({ to: "/orgs", search: { q: user.email } });
                   }}
                 >
                   <IconUser />

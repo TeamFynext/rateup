@@ -5,9 +5,13 @@ import type { OrgChannel } from "@/api/orgs.api";
 import { orgChannelsQueryOptions } from "@/api/orgs.query";
 import { CopyButton } from "@/components/ds/copy-button";
 import { DetailList } from "@/components/ds/detail-list";
+import { SectionHeading } from "@/components/ds/page-heading";
+import { Panel } from "@/components/ds/panel";
 import { Pill } from "@/components/ds/pill";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
+import { ErrorState } from "@/components/ds/query-states";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /** The same settings row carries WhatsApp, and optionally the Facebook page and Instagram. */
 function channelTitle(channel: OrgChannel) {
@@ -19,13 +23,13 @@ function channelTitle(channel: OrgChannel) {
 function ChannelCard({ channel }: { channel: OrgChannel }) {
   const active = channel.status === "ACTIVE";
   return (
-    <li className="flex min-w-0 flex-col gap-6 rounded-3xl border p-6">
+    <li className="flex min-w-0 flex-col gap-4 py-4 first:pt-0 last:pb-0">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-tone-mint text-tone-mint-accent">
           <IconBrandWhatsapp className="size-5" stroke={1.5} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{channelTitle(channel)}</p>
+          <p className="truncate text-sm font-medium">{channelTitle(channel)}</p>
           <p className="truncate text-xs text-muted-foreground tabular">
             {channel.phone ?? "No number"} · {channel.type}
           </p>
@@ -33,6 +37,7 @@ function ChannelCard({ channel }: { channel: OrgChannel }) {
         <Pill tone={active ? "positive" : "muted"}>{active ? "Active" : channel.status}</Pill>
       </div>
       <DetailList
+        className="gap-y-3 sm:grid-cols-3"
         items={[
           { label: "WABA id", value: channel.wabaId && <CopyButton value={channel.wabaId} /> },
           {
@@ -67,25 +72,30 @@ function ChannelCard({ channel }: { channel: OrgChannel }) {
   );
 }
 
-export function OrgChannelsTab({ orgId }: { orgId: string }) {
+/** Every connected channel, compact enough to sit on the org overview. */
+export function OrgChannelsPanel({ orgId, className }: { orgId: string; className?: string }) {
   const query = useQuery(orgChannelsQueryOptions(orgId));
 
-  if (query.isPending) return <ListSkeleton rows={2} />;
-  if (query.isError) return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
-  if (query.data.length === 0) {
-    return (
-      <EmptyState
-        title="No channels connected"
-        description="This organisation hasn't connected WhatsApp, Instagram or Messenger."
-      />
-    );
-  }
-
   return (
-    <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
-      {query.data.map((channel) => (
-        <ChannelCard key={channel.id} channel={channel} />
-      ))}
-    </ul>
+    <Panel className={cn("flex flex-col gap-4", className)}>
+      <SectionHeading>
+        Channels{query.data && query.data.length > 0 ? ` · ${query.data.length}` : ""}
+      </SectionHeading>
+      {query.isPending ? (
+        <Skeleton className="h-24 w-full rounded-lg" />
+      ) : query.isError ? (
+        <ErrorState error={query.error} onRetry={() => void query.refetch()} className="py-8" />
+      ) : query.data.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No WhatsApp, Instagram or Messenger channel connected.
+        </p>
+      ) : (
+        <ul className="flex flex-col divide-y">
+          {query.data.map((channel) => (
+            <ChannelCard key={channel.id} channel={channel} />
+          ))}
+        </ul>
+      )}
+    </Panel>
   );
 }

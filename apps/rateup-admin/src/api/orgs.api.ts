@@ -1,3 +1,5 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import type { OrderRow } from "./billing.api";
 import { api } from "./client";
 import type { SubscriptionFeatures } from "./org-actions.api";
@@ -84,7 +86,10 @@ export interface OrgSummary extends OrgRow {
 export interface OrgMember {
   id: string;
   joinedAt: IsoDate;
+  /** The role's display label; group and filter by `roleKey`. */
   role: string;
+  /** rateup-api `src/authz/roles.ts` key, e.g. "OWNER", "ADMIN", "AGENT". */
+  roleKey: string;
   isOwner: boolean;
   user: {
     id: string;
@@ -127,7 +132,11 @@ export interface PlanLimitStatus {
   exceeded: boolean;
 }
 
+export type UsageDays = 30 | 90;
+
 export interface OrgUsage {
+  /** One entry per UTC day, oldest first, zero-filled. */
+  daily: { date: string; conversations: number }[];
   limits: {
     teams: PlanLimitStatus;
     users: PlanLimitStatus;
@@ -197,8 +206,10 @@ export async function getOrgMembers(orgId: string) {
   return data.data;
 }
 
-export async function getOrgUsage(orgId: string) {
-  const { data } = await api.get<{ data: OrgUsage }>(`/orgs/${orgId}/usage`);
+export async function getOrgUsage(orgId: string, days: UsageDays) {
+  const { data } = await api.get<{ data: OrgUsage }>(`/orgs/${orgId}/usage`, {
+    params: { days },
+  });
   return data.data;
 }
 
@@ -262,4 +273,22 @@ export async function getOrgActivity(orgId: string, source: ActivitySource, page
     params: { source, page, pageSize: 20 },
   });
   return data;
+}
+
+/**
+ * Pause or resume one member's account (platform-wide: it is the person, not the membership).
+ * The customer app sends a paused user to its "account paused" screen.
+ */
+export function useSetUserPaused() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string; paused: boolean; reason: string }) =>
+      api.put(`/users/${id}/pause`, body),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["staff", "orgs"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff", "access", "audit"] }),
+      ]);
+    },
+  });
 }

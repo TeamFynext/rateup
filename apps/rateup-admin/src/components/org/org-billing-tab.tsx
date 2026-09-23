@@ -13,12 +13,14 @@ import { Mono, SubscriptionStatusPill } from "@/components/billing/gateway-cells
 import { LiveNote } from "@/components/billing/live-note";
 import { orderColumns } from "@/components/billing/order-columns";
 import { DetailList } from "@/components/ds/detail-list";
+import { SectionHeading } from "@/components/ds/page-heading";
 import { Pager } from "@/components/ds/pager";
-import { Panel, SectionTitle } from "@/components/ds/panel";
+import { Panel } from "@/components/ds/panel";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import type { OrgAction } from "@/components/org/actions/org-action-dialogs";
+import { FeaturesSummary } from "@/components/org/features-summary";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatMoney, formatRelative, isEffectivelyNever } from "@/lib/format";
 
@@ -100,7 +102,7 @@ export function OrgBillingTab({
       </div>
 
       <section className="flex flex-col gap-5">
-        <SectionTitle>Orders</SectionTitle>
+        <SectionHeading>Orders</SectionHeading>
         {orders.isPending ? (
           <ListSkeleton rows={3} />
         ) : orders.isError ? (
@@ -128,7 +130,7 @@ export function OrgBillingTab({
       </section>
 
       <section className="flex flex-col gap-5">
-        <SectionTitle>Invoices</SectionTitle>
+        <SectionHeading>Invoices</SectionHeading>
         <LiveNote>
           Read live from Razorpay. Stripe and Shopify invoices are not shown here.
         </LiveNote>
@@ -150,7 +152,7 @@ export function OrgBillingTab({
   );
 }
 
-const actionButton = "h-10 rounded-xl px-4";
+const actionButton = "h-9 rounded-lg px-4";
 
 function SubscriptionPanel({
   orgId,
@@ -164,7 +166,7 @@ function SubscriptionPanel({
 
   return (
     <Panel className="flex flex-col gap-6">
-      <SectionTitle>Subscription</SectionTitle>
+      <SectionHeading>Subscription</SectionHeading>
       {query.isPending ? (
         <ListSkeleton rows={2} />
       ) : query.isError ? (
@@ -200,6 +202,7 @@ function SubscriptionPanel({
           ]}
         />
       )}
+      {subscription && <FeaturesSummary subscription={subscription} className="border-t pt-5" />}
       <div className="mt-auto flex flex-wrap gap-2">
         <Button className={actionButton} onClick={() => onAction({ kind: "plan" })}>
           Change plan
@@ -232,7 +235,7 @@ function PacksPanel({ orgId, onAction }: { orgId: string; onAction: (action: Org
 
   return (
     <Panel className="flex flex-col gap-6">
-      <SectionTitle
+      <SectionHeading
         action={
           <Button
             variant="outline"
@@ -245,7 +248,7 @@ function PacksPanel({ orgId, onAction }: { orgId: string; onAction: (action: Org
         }
       >
         Conversation packs
-      </SectionTitle>
+      </SectionHeading>
       {query.isPending ? (
         <ListSkeleton rows={2} />
       ) : query.isError ? (

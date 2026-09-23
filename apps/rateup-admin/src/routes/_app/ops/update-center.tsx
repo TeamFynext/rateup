@@ -13,10 +13,10 @@ import {
 } from "@/api/ops.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 import { JsonBlock } from "@/components/ds/json-block";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { StepUpPrompt } from "@/components/ds/step-up";
-import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,11 +36,11 @@ function UpdateCenterPage() {
   const [resume] = useState(() => takeIntent(PAGE, "apply"));
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Update center"
         description="Maintenance tasks. Preview shows exactly what a task would change and writes nothing; Apply runs it for real."
       />
-      <p className="flex items-start gap-2 rounded-2xl bg-tone-peach px-4 py-3 text-xs text-foreground/70">
+      <p className="flex items-start gap-2 rounded-lg bg-tone-peach px-4 py-3 text-xs text-foreground/70">
         <IconAlertTriangle className="mt-px size-4 shrink-0 text-tone-peach-accent" stroke={1.75} />
         <span>
           Always preview first. Applying needs a Google sign-in from the last 15 minutes, the task
@@ -70,7 +70,7 @@ function TaskCard({ task, resume }: { task: MaintenanceTask; resume: boolean }) 
   const [applying, setApplying] = useState(resume);
 
   return (
-    <li className="flex min-w-0 flex-col gap-5 rounded-3xl border p-6">
+    <li className="flex min-w-0 flex-col gap-5 rounded-xl border p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-2">
           <p className="flex flex-wrap items-center gap-2">
@@ -83,14 +83,14 @@ function TaskCard({ task, resume }: { task: MaintenanceTask; resume: boolean }) 
         <div className="flex shrink-0 gap-2">
           <Button
             variant="outline"
-            className="h-11 rounded-xl px-4"
+            className="h-9 rounded-lg px-4"
             disabled={preview.isPending}
             onClick={() => preview.mutate(task.id, { onSuccess: (data) => setResult(data) })}
           >
             {preview.isPending ? <Spinner /> : <IconPlayerPlay />}
             Preview
           </Button>
-          <Button className="h-11 rounded-xl px-4" onClick={() => setApplying(true)}>
+          <Button className="h-9 rounded-lg px-4" onClick={() => setApplying(true)}>
             <IconBolt />
             Apply
           </Button>
@@ -98,7 +98,7 @@ function TaskCard({ task, resume }: { task: MaintenanceTask; resume: boolean }) 
       </div>
 
       {preview.isError && (
-        <p className="rounded-2xl bg-negative/10 px-4 py-3 text-sm text-negative">
+        <p className="rounded-lg bg-negative/10 px-4 py-3 text-sm text-negative">
           {getApiErrorMessage(preview.error, "The preview failed.")}
         </p>
       )}
@@ -112,7 +112,7 @@ function TaskCard({ task, resume }: { task: MaintenanceTask; resume: boolean }) 
             </Pill>
           </p>
           {result.lines.length > 0 && (
-            <pre className="max-h-80 overflow-auto rounded-2xl bg-muted p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+            <pre className="max-h-80 overflow-auto rounded-lg bg-muted p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap">
               {result.lines.join("\n")}
             </pre>
           )}
@@ -195,7 +195,7 @@ function ApplyDialog({
               spellCheck={false}
               value={confirm}
               onChange={(event) => setConfirm(event.target.value)}
-              className="h-11 rounded-xl font-mono"
+              className="h-9 rounded-lg font-mono"
             />
           </div>
         </>

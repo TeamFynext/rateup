@@ -2,7 +2,8 @@ import { IconDotsVertical, IconPin, IconPinnedFilled, IconPlus } from "@tabler/i
 import { useQuery } from "@tanstack/react-query";
 
 import { orgNotesQueryOptions, useEditOrgNote, type OrgNote } from "@/api/org-actions.api";
-import { Panel, SectionTitle } from "@/components/ds/panel";
+import { SectionHeading } from "@/components/ds/page-heading";
+import { Panel } from "@/components/ds/panel";
 import { ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import type { OrgAction } from "@/components/org/actions/org-action-dialogs";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export function OrgNotesPanel({
   return (
     <Panel className={className}>
       <div className="flex flex-col gap-6">
-        <SectionTitle
+        <SectionHeading
           action={
             <Button
               variant="outline"
@@ -47,7 +48,7 @@ export function OrgNotesPanel({
           }
         >
           Staff notes
-        </SectionTitle>
+        </SectionHeading>
 
         {query.isPending ? (
           <ListSkeleton rows={2} />

@@ -17,11 +17,11 @@ import {
   TierLink,
 } from "@/components/billing/gateway-cells";
 import { LiveNote } from "@/components/billing/live-note";
+import { PageHeading } from "@/components/ds/page-heading";
 import { PageTabs } from "@/components/ds/page-tabs";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
-import { PageHeader } from "@/components/shell/page-header";
 import { formatDate, formatMoney, humanize } from "@/lib/format";
 
 const TABS = ["products", "subscriptions"] as const;
@@ -37,7 +37,7 @@ function StripePage() {
   const navigate = useNavigate({ from: Route.fullPath });
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Stripe"
         description="Synced products and live subscriptions."
         actions={<SyncButton gateway="stripe" />}

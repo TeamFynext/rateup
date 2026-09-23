@@ -7,32 +7,31 @@ same-origin proxy. Plan: `i-want-to-redesign-glittery-pony.md`.
 Commands: `npm run dev` (port 4000), `npm run typecheck`, `npm run lint`, `npm run build`,
 `npx oxfmt`. `VITE_STAFF_MOCK=true` in `.env.local` signs in as a fake staff user (dev only).
 
-## Design language: follow this, not rateup-ui
+## Design language: RateUp Design System V2
 
-The reference is `docs/design-reference.png`. Every screen follows it; rateup-ui's navy design
-system does not apply here. Tokens live in `src/styles/theme.css` (light + dark).
+The console uses the same system as rateup-ui (`rateup-ui/src/styles/foundation.css`). Tokens
+live in `src/styles/theme.css` (light + dark) and mirror foundation.css; change both together.
 
-- **Frame**: full-bleed white (`bg-background`), no grey backdrop or floating canvas: the grey
-  around the reference image is only its presentation backdrop. An ink-black icon rail pinned on
-  the left (`bg-rail`, `rounded-3xl`, inset `md:p-3`), generous whitespace (`px-12` on desktop).
-- **Theme**: light is the default; dark is opt-in from the account menu or the rail toggle.
-- **Navigation**: the rail holds one icon per section (Customers, Billing, Operations, Staff) plus
-  search, theme and account. The top bar shows the wordmark and the active section's pages as
-  UPPERCASE links (13px, `tracking-[0.04em]`); the active one is bold with the ✦ `Sparkle`.
-  Both read `components/shell/nav.ts`. On phones the menu sheet is the rail: the same four
-  sections plus theme and account, never the full page list. Page headings, the browser tab
-  and the menu link all use the nav item's `title` (`ComingSoon` reads it by path).
-- **Colour**: monochrome. Ink (`primary`) is the accent: black buttons, black highlight tiles,
-  black featured stat card. Colour only comes from the pastel stat tones (`tone-peach`,
-  `tone-mint`, `tone-sky`, `tone-slate`, each with an `-accent` for its arrow), `positive` /
-  `negative` for trends, and the pink/purple/blue chart dots (`chart-3..5`).
-- **Type**: Inter throughout. Page titles `text-[26px] font-medium tracking-tight`; section
-  titles `text-lg font-semibold`; big KPI figures `text-[34px] font-medium`; secondary figures
-  `text-[22px] font-light`; labels small and muted. Numbers use `tabular`.
-- **Shape**: large, soft radii: cards and panels `rounded-3xl`, controls `rounded-xl` /
-  `rounded-2xl`, pills `rounded-full`. Hairline borders (`border`), no heavy shadows.
-- **Building blocks** (`src/components/ds/`): `StatCard` (pastel KPI tile, `tone="ink"` for the
-  featured one), `Panel` + `SectionTitle`, `BlockChart` (stacked rounded tiles, ink cap with the
-  value, striped cap for a partial period), `StatFigure` / `StatFigureRow` (the figures under a
-  chart), `SegmentedBar`. Use these before inventing new ones; new ones go in the same folder.
-- Lists (top performers style): avatar, name over a muted sub-line, figures right-aligned.
+- **Shell** (`components/shell/`): a navy icon rail (`bg-rail`, idle `text-rail-foreground/55`,
+  active `bg-rail-foreground/14`), then a white nav panel (`w-72`, `bg-sidebar`), then the page
+  (`max-w-280`). `nav.ts` is the one source: each rail section declares its `panel`, either
+  its page links, `"orgs"` (the organisation directory), or `"none"` (full width, Overview).
+  Phones get `MobileHeader` + a sheet listing every section and page.
+- **Organisations**: the directory (`components/org/org-directory.tsx`) _is_ the navigation. Its
+  filters are URL search params validated on the `/orgs` layout route, so they survive moving
+  between orgs; `/orgs` itself is an empty state on desktop and the directory on phones.
+  An org page's Overview tab shows the whole account; the other tabs are the full versions.
+- **Colour**: brand navy `primary` (#1C518E) is the accent; `accent` (blue-50) is the soft
+  selected state. Admin-only names map onto DS V2: `tone-{sky,mint,peach,slate}` are the
+  blue/green/amber/neutral -50 tints with their ink in `-accent`, `positive` is green,
+  `negative` is `destructive`. Charts use the `chart-1..4` navy ramp with amber `chart-5` as
+  the single contrast. No raw `gray-*`/`red-*`/`bg-white` classes.
+- **Type**: Instrument Sans for UI (`font-sans`), Figtree for display (`font-display`). Page
+  titles use `PageHeading` / `PAGE_TITLE` and section titles `SectionHeading`
+  (`components/ds/page-heading.tsx`, ported from rateup-ui); no new title sizes.
+- **Shape**: cards are `rounded-xl bg-card ring-1 ring-foreground/10 shadow-xs` (`Panel`),
+  controls `h-9 rounded-lg`, badges `rounded-md` (`Pill`). No `rounded-3xl` slabs.
+- **Building blocks** (`src/components/ds/`): `Panel`, `PageHeading`/`SectionHeading`,
+  `StatCard` (after rateup-ui's `StatTile`; `tone="brand"` for the featured one), `UsageMeter`,
+  `BlockChart` (single-series columns), `StatFigure`, `Pill`, `FilterChips`, `SegmentedBar`.
+  Use these before inventing new ones; new ones go in the same folder.

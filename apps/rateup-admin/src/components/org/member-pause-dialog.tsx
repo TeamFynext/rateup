@@ -1,8 +1,14 @@
-import { useSetUserPaused, type UserRow } from "@/api/users.api";
+import { useSetUserPaused, type OrgMember } from "@/api/orgs.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 
 /** Pause or resume a person's account. Which one depends on where they are now. */
-export function UserPauseDialog({ user, onClose }: { user: UserRow; onClose: () => void }) {
+export function MemberPauseDialog({
+  user,
+  onClose,
+}: {
+  user: OrgMember["user"];
+  onClose: () => void;
+}) {
   const mutation = useSetUserPaused();
   const who = user.name ?? user.email;
   const pausing = !user.paused;

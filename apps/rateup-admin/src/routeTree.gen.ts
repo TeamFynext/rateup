@@ -13,15 +13,14 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
+import { Route as AppOrgsRouteImport } from './routes/_app/orgs'
 import { Route as AppStaffRouteImport } from './routes/_app/staff'
-import { Route as AppUsersRouteImport } from './routes/_app/users'
 import { Route as AppBillingOrdersRouteImport } from './routes/_app/billing/orders'
 import { Route as AppBillingPlansRouteImport } from './routes/_app/billing/plans'
 import { Route as AppBillingRazorpayRouteImport } from './routes/_app/billing/razorpay'
 import { Route as AppBillingStripeRouteImport } from './routes/_app/billing/stripe'
 import { Route as AppBillingSubscriptionsRouteImport } from './routes/_app/billing/subscriptions'
 import { Route as AppOpsReferralsRouteImport } from './routes/_app/ops/referrals'
-import { Route as AppOpsShareQrRouteImport } from './routes/_app/ops/share-qr'
 import { Route as AppOpsShopifyRouteImport } from './routes/_app/ops/shopify'
 import { Route as AppOpsTestDataRouteImport } from './routes/_app/ops/test-data'
 import { Route as AppOpsUpdateCenterRouteImport } from './routes/_app/ops/update-center'
@@ -47,14 +46,14 @@ const AppAuditRoute = AppAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOrgsRoute = AppOrgsRouteImport.update({
+  id: '/orgs',
+  path: '/orgs',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStaffRoute = AppStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppUsersRoute = AppUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBillingOrdersRoute = AppBillingOrdersRouteImport.update({
@@ -87,11 +86,6 @@ const AppOpsReferralsRoute = AppOpsReferralsRouteImport.update({
   path: '/ops/referrals',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOpsShareQrRoute = AppOpsShareQrRouteImport.update({
-  id: '/ops/share-qr',
-  path: '/ops/share-qr',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppOpsShopifyRoute = AppOpsShopifyRouteImport.update({
   id: '/ops/shopify',
   path: '/ops/shopify',
@@ -108,29 +102,28 @@ const AppOpsUpdateCenterRoute = AppOpsUpdateCenterRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppOrgsIndexRoute = AppOrgsIndexRouteImport.update({
-  id: '/orgs/',
-  path: '/orgs/',
-  getParentRoute: () => AppRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppOrgsRoute,
 } as any)
 const AppOrgsOrgIdRoute = AppOrgsOrgIdRouteImport.update({
-  id: '/orgs/$orgId',
-  path: '/orgs/$orgId',
-  getParentRoute: () => AppRoute,
+  id: '/$orgId',
+  path: '/$orgId',
+  getParentRoute: () => AppOrgsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/audit': typeof AppAuditRoute
+  '/orgs': typeof AppOrgsRouteWithChildren
   '/staff': typeof AppStaffRoute
-  '/users': typeof AppUsersRoute
   '/billing/orders': typeof AppBillingOrdersRoute
   '/billing/plans': typeof AppBillingPlansRoute
   '/billing/razorpay': typeof AppBillingRazorpayRoute
   '/billing/stripe': typeof AppBillingStripeRoute
   '/billing/subscriptions': typeof AppBillingSubscriptionsRoute
   '/ops/referrals': typeof AppOpsReferralsRoute
-  '/ops/share-qr': typeof AppOpsShareQrRoute
   '/ops/shopify': typeof AppOpsShopifyRoute
   '/ops/test-data': typeof AppOpsTestDataRoute
   '/ops/update-center': typeof AppOpsUpdateCenterRoute
@@ -141,7 +134,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/audit': typeof AppAuditRoute
   '/staff': typeof AppStaffRoute
-  '/users': typeof AppUsersRoute
   '/': typeof AppIndexRoute
   '/billing/orders': typeof AppBillingOrdersRoute
   '/billing/plans': typeof AppBillingPlansRoute
@@ -149,7 +141,6 @@ export interface FileRoutesByTo {
   '/billing/stripe': typeof AppBillingStripeRoute
   '/billing/subscriptions': typeof AppBillingSubscriptionsRoute
   '/ops/referrals': typeof AppOpsReferralsRoute
-  '/ops/share-qr': typeof AppOpsShareQrRoute
   '/ops/shopify': typeof AppOpsShopifyRoute
   '/ops/test-data': typeof AppOpsTestDataRoute
   '/ops/update-center': typeof AppOpsUpdateCenterRoute
@@ -161,8 +152,8 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/audit': typeof AppAuditRoute
+  '/_app/orgs': typeof AppOrgsRouteWithChildren
   '/_app/staff': typeof AppStaffRoute
-  '/_app/users': typeof AppUsersRoute
   '/_app/': typeof AppIndexRoute
   '/_app/billing/orders': typeof AppBillingOrdersRoute
   '/_app/billing/plans': typeof AppBillingPlansRoute
@@ -170,7 +161,6 @@ export interface FileRoutesById {
   '/_app/billing/stripe': typeof AppBillingStripeRoute
   '/_app/billing/subscriptions': typeof AppBillingSubscriptionsRoute
   '/_app/ops/referrals': typeof AppOpsReferralsRoute
-  '/_app/ops/share-qr': typeof AppOpsShareQrRoute
   '/_app/ops/shopify': typeof AppOpsShopifyRoute
   '/_app/ops/test-data': typeof AppOpsTestDataRoute
   '/_app/ops/update-center': typeof AppOpsUpdateCenterRoute
@@ -183,15 +173,14 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/audit'
+    | '/orgs'
     | '/staff'
-    | '/users'
     | '/billing/orders'
     | '/billing/plans'
     | '/billing/razorpay'
     | '/billing/stripe'
     | '/billing/subscriptions'
     | '/ops/referrals'
-    | '/ops/share-qr'
     | '/ops/shopify'
     | '/ops/test-data'
     | '/ops/update-center'
@@ -202,7 +191,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/audit'
     | '/staff'
-    | '/users'
     | '/'
     | '/billing/orders'
     | '/billing/plans'
@@ -210,7 +198,6 @@ export interface FileRouteTypes {
     | '/billing/stripe'
     | '/billing/subscriptions'
     | '/ops/referrals'
-    | '/ops/share-qr'
     | '/ops/shopify'
     | '/ops/test-data'
     | '/ops/update-center'
@@ -221,8 +208,8 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/audit'
+    | '/_app/orgs'
     | '/_app/staff'
-    | '/_app/users'
     | '/_app/'
     | '/_app/billing/orders'
     | '/_app/billing/plans'
@@ -230,7 +217,6 @@ export interface FileRouteTypes {
     | '/_app/billing/stripe'
     | '/_app/billing/subscriptions'
     | '/_app/ops/referrals'
-    | '/_app/ops/share-qr'
     | '/_app/ops/shopify'
     | '/_app/ops/test-data'
     | '/_app/ops/update-center'
@@ -273,18 +259,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAuditRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/orgs': {
+      id: '/_app/orgs'
+      path: '/orgs'
+      fullPath: '/orgs'
+      preLoaderRoute: typeof AppOrgsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/staff': {
       id: '/_app/staff'
       path: '/staff'
       fullPath: '/staff'
       preLoaderRoute: typeof AppStaffRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/users': {
-      id: '/_app/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof AppUsersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/billing/orders': {
@@ -329,13 +315,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpsReferralsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/ops/share-qr': {
-      id: '/_app/ops/share-qr'
-      path: '/ops/share-qr'
-      fullPath: '/ops/share-qr'
-      preLoaderRoute: typeof AppOpsShareQrRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/ops/shopify': {
       id: '/_app/ops/shopify'
       path: '/ops/shopify'
@@ -359,25 +338,38 @@ declare module '@tanstack/react-router' {
     }
     '/_app/orgs/': {
       id: '/_app/orgs/'
-      path: '/orgs'
+      path: '/'
       fullPath: '/orgs/'
       preLoaderRoute: typeof AppOrgsIndexRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppOrgsRoute
     }
     '/_app/orgs/$orgId': {
       id: '/_app/orgs/$orgId'
-      path: '/orgs/$orgId'
+      path: '/$orgId'
       fullPath: '/orgs/$orgId'
       preLoaderRoute: typeof AppOrgsOrgIdRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppOrgsRoute
     }
   }
 }
 
+interface AppOrgsRouteChildren {
+  AppOrgsOrgIdRoute: typeof AppOrgsOrgIdRoute
+  AppOrgsIndexRoute: typeof AppOrgsIndexRoute
+}
+
+const AppOrgsRouteChildren: AppOrgsRouteChildren = {
+  AppOrgsOrgIdRoute: AppOrgsOrgIdRoute,
+  AppOrgsIndexRoute: AppOrgsIndexRoute,
+}
+
+const AppOrgsRouteWithChildren =
+  AppOrgsRoute._addFileChildren(AppOrgsRouteChildren)
+
 interface AppRouteChildren {
   AppAuditRoute: typeof AppAuditRoute
+  AppOrgsRoute: typeof AppOrgsRouteWithChildren
   AppStaffRoute: typeof AppStaffRoute
-  AppUsersRoute: typeof AppUsersRoute
   AppIndexRoute: typeof AppIndexRoute
   AppBillingOrdersRoute: typeof AppBillingOrdersRoute
   AppBillingPlansRoute: typeof AppBillingPlansRoute
@@ -385,18 +377,15 @@ interface AppRouteChildren {
   AppBillingStripeRoute: typeof AppBillingStripeRoute
   AppBillingSubscriptionsRoute: typeof AppBillingSubscriptionsRoute
   AppOpsReferralsRoute: typeof AppOpsReferralsRoute
-  AppOpsShareQrRoute: typeof AppOpsShareQrRoute
   AppOpsShopifyRoute: typeof AppOpsShopifyRoute
   AppOpsTestDataRoute: typeof AppOpsTestDataRoute
   AppOpsUpdateCenterRoute: typeof AppOpsUpdateCenterRoute
-  AppOrgsOrgIdRoute: typeof AppOrgsOrgIdRoute
-  AppOrgsIndexRoute: typeof AppOrgsIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAuditRoute: AppAuditRoute,
+  AppOrgsRoute: AppOrgsRouteWithChildren,
   AppStaffRoute: AppStaffRoute,
-  AppUsersRoute: AppUsersRoute,
   AppIndexRoute: AppIndexRoute,
   AppBillingOrdersRoute: AppBillingOrdersRoute,
   AppBillingPlansRoute: AppBillingPlansRoute,
@@ -404,12 +393,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppBillingStripeRoute: AppBillingStripeRoute,
   AppBillingSubscriptionsRoute: AppBillingSubscriptionsRoute,
   AppOpsReferralsRoute: AppOpsReferralsRoute,
-  AppOpsShareQrRoute: AppOpsShareQrRoute,
   AppOpsShopifyRoute: AppOpsShopifyRoute,
   AppOpsTestDataRoute: AppOpsTestDataRoute,
   AppOpsUpdateCenterRoute: AppOpsUpdateCenterRoute,
-  AppOrgsOrgIdRoute: AppOrgsOrgIdRoute,
-  AppOrgsIndexRoute: AppOrgsIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

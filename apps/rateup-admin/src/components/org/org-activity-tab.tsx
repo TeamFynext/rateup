@@ -44,7 +44,7 @@ export function OrgActivityTab({ orgId }: { orgId: string }) {
         />
       ) : (
         <div className="flex flex-col gap-4">
-          <ul className="flex flex-col divide-y rounded-3xl border">
+          <ul className="flex flex-col divide-y rounded-xl border">
             {query.data.data.map((entry) => (
               <li
                 key={entry.id}

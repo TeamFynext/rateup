@@ -7,8 +7,6 @@ interface ImportMetaEnv {
   readonly VITE_STAFF_MOCK?: string;
   /** The Workspace domain staff sign in with; only used for the hint in the add dialog. */
   readonly VITE_STAFF_DOMAIN?: string;
-  /** The customer app; Share QR mints public survey links on it. */
-  readonly VITE_CUSTOMER_APP_URL?: string;
 }
 
 interface ImportMeta {

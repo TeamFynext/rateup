@@ -17,10 +17,10 @@ import {
   TierLink,
 } from "@/components/billing/gateway-cells";
 import { LiveNote } from "@/components/billing/live-note";
+import { PageHeading } from "@/components/ds/page-heading";
 import { PageTabs } from "@/components/ds/page-tabs";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
-import { PageHeader } from "@/components/shell/page-header";
 import { formatDate, formatMoney } from "@/lib/format";
 
 const TABS = ["plans", "subscriptions"] as const;
@@ -36,7 +36,7 @@ function RazorpayPage() {
   const navigate = useNavigate({ from: Route.fullPath });
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Razorpay"
         description="Gateway plans and live subscriptions."
         actions={<SyncButton gateway="razorpay" />}

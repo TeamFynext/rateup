@@ -20,10 +20,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { getInitials } from "@/lib/initials";
 import { cn, isOwnImage } from "@/lib/utils";
 
+import { EnvPill, RateUpStar } from "./brand";
 import { activeGroup, NAV_GROUPS } from "./nav";
 
 const railButton =
-  "flex size-11 items-center justify-center rounded-2xl text-rail-foreground/80 transition-colors hover:bg-rail-foreground/10 hover:text-rail-foreground [&_svg]:size-[22px]";
+  "flex size-10 items-center justify-center rounded-lg text-rail-foreground/55 transition-colors hover:bg-rail-foreground/10 hover:text-rail-foreground [&_svg]:size-5";
 
 function RailTip({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -36,7 +37,7 @@ function RailTip({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** The ink-black icon column: search, one icon per nav group, then theme and account. */
+/** The navy icon column, as in rateup-ui: mark, search, one icon per section, theme, account. */
 export function Rail({ onSearch }: { onSearch: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const current = activeGroup(pathname);
@@ -44,15 +45,24 @@ export function Rail({ onSearch }: { onSearch: () => void }) {
   return (
     <nav
       aria-label="Sections"
-      className="sticky top-3 hidden h-[calc(100svh-1.5rem)] w-[72px] shrink-0 flex-col items-center rounded-3xl bg-rail py-6 md:flex"
+      className="sticky top-0 z-40 hidden h-svh w-15 shrink-0 flex-col items-center border-r border-rail-foreground/10 bg-rail py-4 md:flex"
     >
+      <Link
+        to="/"
+        aria-label="RateUp Admin, home"
+        className="mb-4 flex flex-col items-center gap-1.5"
+      >
+        <RateUpStar className="size-7" />
+        <EnvPill className="max-w-13 px-1 text-center text-[9px] leading-tight" />
+      </Link>
+
       <RailTip label="Search  (Ctrl K)">
         <button type="button" className={railButton} onClick={onSearch} aria-label="Search">
           <IconSearch />
         </button>
       </RailTip>
 
-      <div className="mt-6 flex flex-col items-center gap-2">
+      <div className="mt-3 flex flex-col items-center gap-1.5 border-t border-rail-foreground/10 pt-3">
         {NAV_GROUPS.map((group) => {
           const active = group.id === current.id;
           return (
@@ -61,10 +71,7 @@ export function Rail({ onSearch }: { onSearch: () => void }) {
                 to={group.items[0].to}
                 aria-label={group.title}
                 aria-current={active ? "page" : undefined}
-                className={cn(
-                  railButton,
-                  active && "bg-rail-foreground text-rail hover:bg-rail-foreground hover:text-rail",
-                )}
+                className={cn(railButton, active && "bg-rail-foreground/14 text-rail-foreground")}
               >
                 <group.icon />
               </Link>
@@ -73,7 +80,7 @@ export function Rail({ onSearch }: { onSearch: () => void }) {
         })}
       </div>
 
-      <div className="mt-auto flex flex-col items-center gap-3">
+      <div className="mt-auto flex flex-col items-center gap-2">
         <ThemeButton />
         <AccountMenu />
       </div>
@@ -105,7 +112,7 @@ export function StaffAvatar({ className }: { className?: string }) {
   const staff = useStaff();
   const name = staff.name || staff.email;
   return (
-    <Avatar className={cn("size-10", className)}>
+    <Avatar className={cn("size-9", className)}>
       {isOwnImage(staff.avatarUrl) && <AvatarImage src={staff.avatarUrl} alt="" />}
       <AvatarFallback className="bg-rail-foreground/15 text-xs font-medium text-rail-foreground">
         {getInitials(name)}

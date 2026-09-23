@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { isStaffMock } from "@/api/auth.api";
 import { cn } from "@/lib/utils";
 
 /*
@@ -65,5 +66,25 @@ export function Wordmark({ className }: { className?: string }) {
         <span className="text-sm font-medium text-muted-foreground">Admin</span>
       </span>
     </Link>
+  );
+}
+
+const APP_ENV = import.meta.env.VITE_APP_ENV ?? import.meta.env.MODE;
+const SHORT_ENV: Record<string, string> = { development: "dev", production: "prod" };
+const ENV_LABEL = SHORT_ENV[APP_ENV] ?? APP_ENV;
+
+/** Which deployment this is; red in production, where a mistake reaches customers. */
+export function EnvPill({ className }: { className?: string }) {
+  const isProd = APP_ENV === "production";
+  return (
+    <span
+      className={cn(
+        "rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
+        isProd ? "bg-destructive text-white" : "bg-chart-5/20 text-chart-5",
+        className,
+      )}
+    >
+      {isStaffMock ? `${ENV_LABEL} · mock` : ENV_LABEL}
+    </span>
   );
 }

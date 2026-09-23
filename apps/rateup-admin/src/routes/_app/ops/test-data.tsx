@@ -7,7 +7,7 @@ import { surveyTargetsQueryOptions, useFakeInbox, useFakeResponses } from "@/api
 import type { SearchOrg } from "@/api/search.api";
 import { ActionDialog, done, Notice } from "@/components/ds/action-dialog";
 import { OrgPicker } from "@/components/ds/org-picker";
-import { PageHeader } from "@/components/shell/page-header";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,12 +30,12 @@ function TestDataPage() {
   const [dialog, setDialog] = useState<"responses" | "inbox" | null>(null);
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Test data"
         description="Fake survey responses and WhatsApp chats for a chosen organisation, on staging and local only."
       />
       {IS_PRODUCTION && (
-        <p className="flex items-start gap-2 rounded-2xl bg-negative/10 px-4 py-3 text-sm text-negative">
+        <p className="flex items-start gap-2 rounded-lg bg-negative/10 px-4 py-3 text-sm text-negative">
           <IconAlertTriangle className="mt-px size-4 shrink-0" stroke={1.75} />
           This is production. The API refuses to generate test data here.
         </p>
@@ -79,9 +79,9 @@ function Tool({
   onClick: () => void;
 }) {
   return (
-    <li className="flex flex-col gap-5 rounded-3xl border p-6">
+    <li className="flex flex-col gap-5 rounded-xl border p-6">
       <div className="flex items-start gap-4">
-        <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-muted">
+        <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-muted">
           <Icon className="size-5" stroke={1.75} />
         </div>
         <div className="min-w-0 space-y-1">
@@ -91,7 +91,7 @@ function Tool({
       </div>
       <Button
         variant={tone === "warning" ? "outline" : "default"}
-        className="h-11 w-fit rounded-xl px-4"
+        className="h-9 w-fit rounded-lg px-4"
         disabled={IS_PRODUCTION}
         onClick={onClick}
       >
@@ -146,7 +146,7 @@ function ResponsesDialog({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col gap-2">
           <Label htmlFor="survey-target">Survey and team</Label>
           <Select value={target} onValueChange={(value) => setTarget(value ?? "")}>
-            <SelectTrigger id="survey-target" className="h-11 w-full rounded-xl">
+            <SelectTrigger id="survey-target" className="h-9 w-full rounded-lg">
               <SelectValue
                 placeholder={
                   targets.isPending
@@ -185,7 +185,7 @@ function ResponsesDialog({ onClose }: { onClose: () => void }) {
           max={500}
           value={batch}
           onChange={(event) => setBatch(event.target.value)}
-          className="h-11 w-40 rounded-xl tabular"
+          className="h-9 w-40 rounded-lg tabular"
         />
         <p className="text-xs text-muted-foreground">Up to 500 in one go.</p>
       </div>
@@ -236,7 +236,7 @@ function InboxDialog({ onClose }: { onClose: () => void }) {
             max={50}
             value={contacts}
             onChange={(event) => setContacts(event.target.value)}
-            className="h-11 rounded-xl tabular"
+            className="h-9 rounded-lg tabular"
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -249,7 +249,7 @@ function InboxDialog({ onClose }: { onClose: () => void }) {
             max={20}
             value={perContact}
             onChange={(event) => setPerContact(event.target.value)}
-            className="h-11 rounded-xl tabular"
+            className="h-9 rounded-lg tabular"
           />
         </div>
       </div>

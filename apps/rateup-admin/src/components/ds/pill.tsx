@@ -4,18 +4,18 @@ import type { SubscriptionStatus } from "@/api/orgs.api";
 import { daysUntil, isEffectivelyNever } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export type PillTone = "ink" | "muted" | "positive" | "negative" | "warning" | "outline";
+export type PillTone = "brand" | "muted" | "positive" | "negative" | "warning" | "outline";
 
 const TONES: Record<PillTone, string> = {
-  ink: "bg-primary text-primary-foreground",
-  muted: "bg-muted text-muted-foreground",
-  positive: "bg-positive/10 text-positive",
+  brand: "bg-accent text-accent-foreground",
+  muted: "bg-secondary text-secondary-foreground",
+  positive: "bg-tone-mint text-tone-mint-accent",
   negative: "bg-negative/10 text-negative",
   warning: "bg-tone-peach text-tone-peach-accent",
   outline: "border text-foreground",
 };
 
-/** The reference's small rounded status label. */
+/** A small rounded status label. */
 export function Pill({
   tone = "muted",
   className,
@@ -28,7 +28,7 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex h-6 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-medium whitespace-nowrap",
+        "inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-medium whitespace-nowrap",
         TONES[tone],
         className,
       )}
@@ -62,5 +62,5 @@ export function SubscriptionPill({
 
 export function PlanPill({ plan }: { plan: { name: string; paid: boolean } | null }) {
   if (!plan) return <span className="text-muted-foreground">—</span>;
-  return <Pill tone={plan.paid ? "ink" : "muted"}>{plan.name}</Pill>;
+  return <Pill tone={plan.paid ? "brand" : "muted"}>{plan.name}</Pill>;
 }

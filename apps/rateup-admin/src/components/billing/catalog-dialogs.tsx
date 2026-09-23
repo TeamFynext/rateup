@@ -104,7 +104,7 @@ export function GatewayStatusDialog({
       <div className="flex flex-col gap-2">
         <Label htmlFor="gateway-status">Status</Label>
         <Select value={status} onValueChange={(value) => setStatus(value as GatewayPlanStatus)}>
-          <SelectTrigger id="gateway-status" className="h-11 w-full rounded-xl">
+          <SelectTrigger id="gateway-status" className="h-9 w-full rounded-lg">
             <SelectValue>
               {(value: GatewayPlanStatus) =>
                 STATUSES.find((option) => option.value === value)?.label ?? humanize(value)

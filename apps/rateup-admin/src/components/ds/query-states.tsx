@@ -19,7 +19,7 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-4 rounded-3xl border border-dashed px-6 py-14 text-center",
+        "flex flex-col items-center gap-4 rounded-xl border border-dashed px-6 py-14 text-center",
         className,
       )}
     >
@@ -51,7 +51,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-3xl border border-dashed px-6 py-14 text-center",
+        "flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-14 text-center",
         className,
       )}
     >
@@ -86,7 +86,7 @@ export function ListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <div className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in-0">
       {Array.from({ length: rows }, (_, index) => (
-        <Skeleton key={index} className="h-16 w-full rounded-2xl" />
+        <Skeleton key={index} className="h-16 w-full rounded-lg" />
       ))}
     </div>
   );
@@ -104,7 +104,7 @@ export function PanelSkeleton({ panels = 2, className }: { panels?: number; clas
       )}
     >
       {Array.from({ length: panels }, (_, index) => (
-        <Skeleton key={index} className="h-64 w-full rounded-3xl" />
+        <Skeleton key={index} className="h-64 w-full rounded-xl" />
       ))}
     </div>
   );

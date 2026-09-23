@@ -7,9 +7,9 @@ import { rateupPlansQueryOptions, type GatewayPlan, type RateupPlan } from "@/ap
 import { DeleteTierDialog } from "@/components/billing/catalog-dialogs";
 import { TierDialog } from "@/components/billing/tier-dialog";
 import { JsonBlock } from "@/components/ds/json-block";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
-import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -38,11 +38,11 @@ function PlansPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <PageHeader
+      <PageHeading
         title="Plans"
         description="The catalogue: every tier and add-on, what it costs and where it sells."
         actions={
-          <Button className="h-11 rounded-xl px-4" onClick={() => setAction({ kind: "new" })}>
+          <Button className="h-9 rounded-lg px-4" onClick={() => setAction({ kind: "new" })}>
             <IconPlus />
             New plan
           </Button>
@@ -130,14 +130,14 @@ function PlanCard({
 }) {
   const linked = GATEWAY_SLOTS.filter((slot) => plan.razorpay[slot.key]);
   return (
-    <li className="flex min-w-0 flex-col gap-5 rounded-3xl border p-6">
+    <li className="flex min-w-0 flex-col gap-5 rounded-xl border p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-2">
             <span className="truncate text-[17px] font-semibold tracking-tight">
               {plan.displayName ?? plan.name}
             </span>
-            {plan.badge && <Pill tone="ink">{plan.badge}</Pill>}
+            {plan.badge && <Pill tone="brand">{plan.badge}</Pill>}
             {plan.displayWidgetId && <Pill tone="outline">On pricing widget</Pill>}
           </p>
           <p className="mt-1 text-sm text-muted-foreground tabular">{priceLine(plan)}</p>
@@ -149,7 +149,7 @@ function PlanCard({
             className="text-right"
             title="Organisations on this plan"
           >
-            <span className="block text-[22px] leading-none font-light tabular">
+            <span className="block text-xl leading-none font-semibold tabular">
               {formatNumber(plan.planType === "ADDON" ? plan.packsSold : plan.orgs)}
             </span>
             <span className="text-xs text-muted-foreground">

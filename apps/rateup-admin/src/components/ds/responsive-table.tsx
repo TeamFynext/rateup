@@ -45,7 +45,7 @@ export function ResponsiveTable<T>({
 
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-3xl border md:block">
+      <div className="hidden overflow-x-auto rounded-xl border md:block">
         <table className="w-full text-sm" style={{ minWidth }}>
           <thead>
             <tr className="border-b text-left text-xs text-muted-foreground">
@@ -125,12 +125,12 @@ export function ResponsiveTable<T>({
               {link ? (
                 <Link
                   {...link}
-                  className="flex flex-col gap-4 rounded-3xl border p-5 transition-colors active:bg-muted/50"
+                  className="flex flex-col gap-4 rounded-xl border p-5 transition-colors active:bg-muted/50"
                 >
                   {body}
                 </Link>
               ) : (
-                <div className="flex flex-col gap-4 rounded-3xl border p-5">{body}</div>
+                <div className="flex flex-col gap-4 rounded-xl border p-5">{body}</div>
               )}
             </li>
           );

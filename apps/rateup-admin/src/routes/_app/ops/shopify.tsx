@@ -5,11 +5,11 @@ import { useState } from "react";
 
 import { shopifyStoresQueryOptions, type ShopifyStore } from "@/api/ops.api";
 import { OrgLink } from "@/components/billing/gateway-cells";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import { UnlinkShopifyDialog } from "@/components/ops/ops-dialogs";
-import { PageHeader } from "@/components/shell/page-header";
 import { formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/ops/shopify")({
@@ -85,7 +85,7 @@ function ShopifyPage() {
   const [unlinking, setUnlinking] = useState<ShopifyStore | null>(null);
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Shopify" description="Stores that have installed the RateUp app." />
+      <PageHeading title="Shopify" description="Stores that have installed the RateUp app." />
       {query.isPending ? (
         <ListSkeleton />
       ) : query.isError ? (

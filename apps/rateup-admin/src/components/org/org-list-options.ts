@@ -1,5 +1,6 @@
+import { z } from "zod";
+
 import type { OrgListParams } from "@/api/orgs.api";
-import type { FilterChip } from "@/components/ds/filter-chips";
 
 /** The saved filters above the organisations list, each one a set of API parameters. */
 export const ORG_VIEWS = {
@@ -19,11 +20,6 @@ export const ORG_VIEWS = {
 export type OrgView = keyof typeof ORG_VIEWS;
 export const ORG_VIEW_KEYS = Object.keys(ORG_VIEWS) as [OrgView, ...OrgView[]];
 
-export const ORG_VIEW_CHIPS: FilterChip<OrgView>[] = ORG_VIEW_KEYS.map((key) => ({
-  value: key,
-  label: ORG_VIEWS[key].label,
-}));
-
 /** The sort menu; each entry is one API sort + direction. */
 export const ORG_SORT_OPTIONS = {
   newest: { label: "Newest first", sort: "created", order: "desc" },
@@ -38,3 +34,15 @@ export const ORG_SORT_OPTIONS = {
 
 export type OrgSortKey = keyof typeof ORG_SORT_OPTIONS;
 export const ORG_SORT_KEYS = Object.keys(ORG_SORT_OPTIONS) as [OrgSortKey, ...OrgSortKey[]];
+
+/**
+ * The directory's filters, validated on `/orgs`: the parent of the list and every org page,
+ * so they survive clicking from one organisation to the next.
+ */
+export const orgDirectorySearchSchema = z.object({
+  q: z.string().optional().catch(undefined),
+  view: z.enum(ORG_VIEW_KEYS).optional().catch(undefined),
+  plan: z.string().optional().catch(undefined),
+  sort: z.enum(ORG_SORT_KEYS).optional().catch(undefined),
+});
+export type OrgDirectorySearch = z.infer<typeof orgDirectorySearchSchema>;

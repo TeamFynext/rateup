@@ -31,7 +31,7 @@ export function OrgPicker({
     return (
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium">{label}</span>
-        <div className="flex h-11 items-center gap-3 rounded-xl border px-3">
+        <div className="flex h-9 items-center gap-3 rounded-lg border px-3">
           <EntityAvatar name={value.name} src={value.logo} className="size-7" />
           <span className="min-w-0 flex-1 truncate text-sm">
             <span className="font-medium">{value.name}</span>
@@ -63,7 +63,7 @@ export function OrgPicker({
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Name, owner email or id"
           autoComplete="off"
-          className="h-11 w-full rounded-xl border bg-transparent pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="h-9 w-full rounded-lg border bg-transparent pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         />
       </div>
       {searching && (

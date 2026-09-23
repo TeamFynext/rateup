@@ -13,11 +13,11 @@ export interface PageTab<T extends string> {
 /** How long the outgoing tab's height is held before easing to the new one. */
 const HOLD_MS = 260;
 
-/** Clearance for the sticky top bar, so the tab row is not tucked under it. */
-const STICKY_BAR_ALLOWANCE = 88;
+/** Clearance for the sticky phone header, so the tab row is not tucked under it. */
+const STICKY_BAR_ALLOWANCE = 72;
 
 /**
- * The console's section tabs: uppercase line tabs under a hairline, as in the top bar. On
+ * The console's section tabs: line tabs under a hairline. On
  * a phone the row scrolls sideways instead of wrapping. Only the active tab is mounted, so
  * each tab's query runs when it is opened.
  *
@@ -71,7 +71,7 @@ export function PageTabs<T extends string>({
   }, [value]);
 
   return (
-    <Tabs value={value} onValueChange={(next) => onChange(next as T)} className="gap-8">
+    <Tabs value={value} onValueChange={(next) => onChange(next as T)} className="gap-6">
       <div className="-mx-4 overflow-x-auto border-b px-4 scrollbar-none sm:mx-0 sm:px-0">
         <TabsList variant="line" className="h-11 gap-6 p-0">
           {tabs.map((tab) => (
@@ -80,7 +80,7 @@ export function PageTabs<T extends string>({
               value={tab.value}
               onPointerEnter={tab.prefetch}
               onFocus={tab.prefetch}
-              className="h-full flex-none px-0 text-[13px] font-medium tracking-[0.04em] uppercase data-active:font-semibold"
+              className="h-full flex-none px-0 text-sm font-medium text-muted-foreground data-active:text-foreground"
             >
               {tab.label}
             </TabsTrigger>

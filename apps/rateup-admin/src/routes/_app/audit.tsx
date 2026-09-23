@@ -10,11 +10,11 @@ import {
   type AuditEntry,
 } from "@/api/access.api";
 import { JsonBlock } from "@/components/ds/json-block";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Pager } from "@/components/ds/pager";
 import { Pill, type PillTone } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { SearchField } from "@/components/ds/search-field";
-import { PageHeader } from "@/components/shell/page-header";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select,
@@ -73,7 +73,7 @@ function AuditPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Audit log"
         description={
           list.data
@@ -95,7 +95,7 @@ function AuditPage() {
               update({ action: !value || value === ALL ? undefined : value })
             }
           >
-            <SelectTrigger className="h-11 w-full rounded-xl px-4 text-[13px] font-medium shadow-none lg:w-52">
+            <SelectTrigger className="h-9 w-full rounded-lg px-4 text-[13px] font-medium shadow-none lg:w-52">
               <SelectValue>
                 {(value: string) => (value === ALL ? "All actions" : value)}
               </SelectValue>
@@ -115,7 +115,7 @@ function AuditPage() {
               update({ staff: !value || value === ALL ? undefined : value })
             }
           >
-            <SelectTrigger className="h-11 w-full rounded-xl px-4 text-[13px] font-medium shadow-none lg:w-56">
+            <SelectTrigger className="h-9 w-full rounded-lg px-4 text-[13px] font-medium shadow-none lg:w-56">
               <SelectValue>{(value: string) => staffLabel(value)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -138,7 +138,7 @@ function AuditPage() {
         <EmptyState title="Nothing logged yet" description="Try a different search or filter." />
       ) : (
         <div className="flex flex-col gap-4">
-          <ul className="flex flex-col divide-y rounded-3xl border">
+          <ul className="flex flex-col divide-y rounded-xl border">
             {list.data.data.map((entry) => (
               <AuditItem key={entry.id} entry={entry} />
             ))}

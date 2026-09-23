@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { orgMessageStatsQueryOptions } from "@/api/orgs.query";
 import { FilterChips, type FilterChip } from "@/components/ds/filter-chips";
+import { SectionHeading } from "@/components/ds/page-heading";
 import { Panel } from "@/components/ds/panel";
 import { ErrorState } from "@/components/ds/query-states";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +22,7 @@ const PRESETS: FilterChip<Preset>[] = [
 
 const DAY = "YYYY-MM-DD";
 
-export function presetRange(days: number) {
+function presetRange(days: number) {
   return {
     from: dayjs()
       .subtract(days - 1, "day")
@@ -31,10 +32,10 @@ export function presetRange(days: number) {
 }
 
 const dateInput =
-  "h-11 w-full rounded-xl border bg-background px-3.5 text-sm tabular outline-none focus:border-foreground/40";
+  "h-9 w-full rounded-md border bg-card px-3 text-sm tabular outline-none focus:border-ring";
 
 /** Template messages the org sent over a period: what Meta bills them for. */
-export function OrgMessagesTab({ orgId }: { orgId: string }) {
+export function OrgTemplateMessages({ orgId }: { orgId: string }) {
   const [preset, setPreset] = useState<Preset>("30");
   const [custom, setCustom] = useState(presetRange(30));
   const range = preset === "custom" ? custom : presetRange(Number(preset));
@@ -42,7 +43,8 @@ export function OrgMessagesTab({ orgId }: { orgId: string }) {
   const query = useQuery({ ...orgMessageStatsQueryOptions(orgId, range), enabled: valid });
 
   return (
-    <div className="flex flex-col gap-6">
+    <Panel className="flex flex-col gap-5">
+      <SectionHeading>Template messages sent</SectionHeading>
       <FilterChips chips={PRESETS} value={preset} onChange={setPreset} />
       {preset === "custom" && (
         <div className="grid grid-cols-2 gap-3 sm:max-w-md">
@@ -73,21 +75,20 @@ export function OrgMessagesTab({ orgId }: { orgId: string }) {
       {!valid ? (
         <p className="text-sm text-negative">Pick a start before the end, a year apart at most.</p>
       ) : query.isPending ? (
-        <Skeleton className="h-44 w-full rounded-3xl" />
+        <Skeleton className="h-20 w-full rounded-lg" />
       ) : query.isError ? (
         <ErrorState error={query.error} onRetry={() => void query.refetch()} />
       ) : (
-        <Panel className="flex flex-col gap-3">
-          <p className="text-[13px] font-semibold">Template messages sent</p>
-          <p className="text-[44px] leading-none font-medium tracking-tight tabular">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-3xl leading-none font-semibold tabular">
             {formatNumber(query.data.templateMessages)}
           </p>
           <p className="text-xs text-muted-foreground">
             {formatDate(range.from)} – {formatDate(range.to)}
             {query.isPlaceholderData && " · Updating…"}
           </p>
-        </Panel>
+        </div>
       )}
-    </div>
+    </Panel>
   );
 }

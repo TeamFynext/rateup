@@ -8,7 +8,7 @@ interface StatFigureProps {
   label: ReactNode;
   /** A coloured dot before the label, tying the figure to a chart series. */
   dotClassName?: string;
-  /** Colours the value and adds the arrow: the reference's "+24% ↗". */
+  /** Colours the value and adds an arrow, as in "+24% ↗". */
   trend?: "up" | "down";
 }
 
@@ -19,7 +19,7 @@ export function StatFigure({ value, label, dotClassName, trend }: StatFigureProp
     <div className="min-w-0">
       <div
         className={cn(
-          "flex items-center gap-1.5 text-[22px] leading-none font-light tracking-tight tabular",
+          "flex items-center gap-1.5 text-xl leading-none font-semibold tabular",
           trend === "up" && "text-positive",
           trend === "down" && "text-negative",
         )}

@@ -38,10 +38,10 @@ export function FilterChips<T extends string>({
             aria-checked={active}
             onClick={() => onChange(chip.value)}
             className={cn(
-              "h-9 shrink-0 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap transition-colors",
+              "h-8 shrink-0 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors",
               active
-                ? "border-primary bg-primary text-primary-foreground"
-                : "bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                ? "border-primary/30 bg-accent text-accent-foreground"
+                : "bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
             )}
           >
             {chip.label}

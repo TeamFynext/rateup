@@ -8,10 +8,10 @@ import type { StaffUser } from "@/api/auth.api";
 import { useStaff } from "@/api/auth.query";
 import { StaffDialogs, type StaffAction } from "@/components/access/staff-dialogs";
 import { EntityAvatar } from "@/components/ds/entity-avatar";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Pill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
-import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -60,7 +60,7 @@ function columns(me: StaffUser, onAction: (action: StaffAction) => void): Column
       key: "role",
       header: "Role",
       cell: (member) => (
-        <Pill tone={member.isOwner ? "ink" : "muted"}>{member.isOwner ? "Owner" : "Staff"}</Pill>
+        <Pill tone={member.isOwner ? "brand" : "muted"}>{member.isOwner ? "Owner" : "Staff"}</Pill>
       ),
     },
     { key: "status", header: "Status", cell: (member) => <MemberStatus member={member} /> },
@@ -162,7 +162,7 @@ function StaffMembersPage() {
   const [action, setAction] = useState<StaffAction | null>(null);
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Staff members"
         description={
           me.isOwner
@@ -171,7 +171,7 @@ function StaffMembersPage() {
         }
         actions={
           me.isOwner && (
-            <Button className="h-11 rounded-xl px-4" onClick={() => setAction({ kind: "add" })}>
+            <Button className="h-9 rounded-lg px-4" onClick={() => setAction({ kind: "add" })}>
               <IconPlus />
               Add staff member
             </Button>

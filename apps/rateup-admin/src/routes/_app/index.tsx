@@ -8,12 +8,13 @@ import type { Overview as OverviewData } from "@/api/overview.api";
 import { overviewQueryOptions } from "@/api/overview.query";
 import { BlockChart } from "@/components/ds/block-chart";
 import { EntityAvatar } from "@/components/ds/entity-avatar";
-import { Panel, SectionTitle } from "@/components/ds/panel";
+import { SectionHeading } from "@/components/ds/page-heading";
+import { PageHeading } from "@/components/ds/page-heading";
+import { Panel } from "@/components/ds/panel";
 import { ErrorState } from "@/components/ds/query-states";
 import { SegmentedBar, type Segment } from "@/components/ds/segmented-bar";
 import { StatCard } from "@/components/ds/stat-card";
 import { StatFigure, StatFigureRow } from "@/components/ds/stat-figure";
-import { PageHeader } from "@/components/shell/page-header";
 import {
   Select,
   SelectContent,
@@ -58,7 +59,7 @@ function Overview() {
 
   return (
     <div className="flex flex-col gap-10">
-      <PageHeader
+      <PageHeading
         title="Overview"
         actions={
           <Select
@@ -72,7 +73,7 @@ function Overview() {
               });
             }}
           >
-            <SelectTrigger className="h-11 min-w-44 rounded-xl px-4 text-[13px] font-medium shadow-none">
+            <SelectTrigger className="h-9 min-w-44 rounded-lg px-4 text-[13px] font-medium shadow-none">
               <SelectValue>{(value: string) => `Last ${value} months`}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -102,12 +103,12 @@ function OverviewSkeleton() {
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5 xl:gap-5">
         {Array.from({ length: 5 }, (_, index) => (
-          <Skeleton key={index} className="h-33.5 rounded-3xl" />
+          <Skeleton key={index} className="h-33.5 rounded-xl" />
         ))}
       </div>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <Skeleton className="h-96 rounded-3xl" />
-        <Skeleton className="h-96 rounded-3xl" />
+        <Skeleton className="h-96 rounded-xl" />
+        <Skeleton className="h-96 rounded-xl" />
       </div>
     </div>
   );
@@ -172,7 +173,7 @@ function OverviewBody({ data }: { data: OverviewData }) {
           label="Paid organisations"
           sub={totals.arpa ? `${formatRupees(totals.arpa)} a month each` : undefined}
         />
-        <Link to="/orgs" search={{ view: "expiring" }} className="rounded-3xl">
+        <Link to="/orgs" search={{ view: "expiring" }} className="rounded-xl">
           <StatCard
             tone="slate"
             value={formatNumber(data.expiringSoon.total)}
@@ -182,7 +183,7 @@ function OverviewBody({ data }: { data: OverviewData }) {
           />
         </Link>
         <StatCard
-          tone="ink"
+          tone="brand"
           value={formatRupeesCompact(totals.mrr)}
           label="Monthly recurring revenue"
           sub={`${formatRupeesCompact(revenueThisMonth)} collected this month`}
@@ -193,7 +194,7 @@ function OverviewBody({ data }: { data: OverviewData }) {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Panel className="flex flex-col gap-8">
-          <SectionTitle>Organisation signups</SectionTitle>
+          <SectionHeading>Organisation signups</SectionHeading>
           <BlockChart
             data={data.signups.orgs.slice(-blockColumns).map((point, index, series) => ({
               label: monthLabel(point.month, withYear),
@@ -215,7 +216,7 @@ function OverviewBody({ data }: { data: OverviewData }) {
         </Panel>
 
         <Panel className="flex flex-col gap-8">
-          <SectionTitle>Revenue</SectionTitle>
+          <SectionHeading>Revenue</SectionHeading>
           <div className="h-55 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -253,7 +254,7 @@ function OverviewBody({ data }: { data: OverviewData }) {
                     ) : null
                   }
                 />
-                <Bar dataKey="value" fill="var(--primary)" radius={[8, 8, 8, 8]} maxBarSize={36} />
+                <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={36} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -288,7 +289,7 @@ function OverviewBody({ data }: { data: OverviewData }) {
 function TopOrganisations({ rows }: { rows: OverviewData["topOrgsByConversations"] }) {
   return (
     <section className="flex flex-col gap-6">
-      <SectionTitle
+      <SectionHeading
         action={
           <Link
             to="/orgs"
@@ -300,7 +301,7 @@ function TopOrganisations({ rows }: { rows: OverviewData["topOrgsByConversations
         }
       >
         Most conversations this month
-      </SectionTitle>
+      </SectionHeading>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">No conversations yet this month.</p>
       ) : (
@@ -310,7 +311,7 @@ function TopOrganisations({ rows }: { rows: OverviewData["topOrgsByConversations
               <Link
                 to="/orgs/$orgId"
                 params={{ orgId: row.orgId }}
-                className="flex items-center gap-4 rounded-2xl"
+                className="flex items-center gap-4 rounded-lg"
               >
                 <EntityAvatar name={row.org} />
                 <p className="min-w-0 flex-1 truncate text-[15px] font-medium">{row.org}</p>
@@ -330,7 +331,7 @@ function TopOrganisations({ rows }: { rows: OverviewData["topOrgsByConversations
 function ExpiringSoon({ data }: { data: OverviewData["expiringSoon"] }) {
   return (
     <section className="flex flex-col gap-6">
-      <SectionTitle
+      <SectionHeading
         action={
           <Link
             to="/orgs"
@@ -342,7 +343,7 @@ function ExpiringSoon({ data }: { data: OverviewData["expiringSoon"] }) {
         }
       >
         Expiring soon
-      </SectionTitle>
+      </SectionHeading>
       {data.orgs.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Nothing expires in the next {data.windowDays} days.

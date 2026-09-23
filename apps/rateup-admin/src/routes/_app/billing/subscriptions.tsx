@@ -7,12 +7,12 @@ import { planOptionsQueryOptions } from "@/api/orgs.query";
 import { Mono } from "@/components/billing/gateway-cells";
 import { EntityAvatar } from "@/components/ds/entity-avatar";
 import { FilterChips, type FilterChip } from "@/components/ds/filter-chips";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Pager } from "@/components/ds/pager";
 import { PlanPill, SubscriptionPill } from "@/components/ds/pill";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable, type Column } from "@/components/ds/responsive-table";
 import { SearchField } from "@/components/ds/search-field";
-import { PageHeader } from "@/components/shell/page-header";
 import {
   Select,
   SelectContent,
@@ -137,7 +137,7 @@ function SubscriptionsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Subscriptions"
         description={
           list.data
@@ -160,7 +160,7 @@ function SubscriptionsPage() {
                 update({ plan: !value || value === ALL_PLANS ? undefined : value })
               }
             >
-              <SelectTrigger className="h-11 w-full rounded-xl px-4 text-[13px] font-medium shadow-none lg:w-44">
+              <SelectTrigger className="h-9 w-full rounded-lg px-4 text-[13px] font-medium shadow-none lg:w-44">
                 <SelectValue>{(value: string) => planName(value)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -178,7 +178,7 @@ function SubscriptionsPage() {
                 update({ sort: value === "expires" ? undefined : (value as SortKey) })
               }
             >
-              <SelectTrigger className="h-11 w-full rounded-xl px-4 text-[13px] font-medium shadow-none lg:w-48">
+              <SelectTrigger className="h-9 w-full rounded-lg px-4 text-[13px] font-medium shadow-none lg:w-48">
                 <SelectValue>{(value: SortKey) => SORTS[value]?.label}</SelectValue>
               </SelectTrigger>
               <SelectContent>

@@ -24,7 +24,7 @@ export function SyncButton({ gateway }: { gateway: Gateway }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="outline" className="h-11 rounded-xl px-4" onClick={() => setOpen(true)}>
+      <Button variant="outline" className="h-9 rounded-lg px-4" onClick={() => setOpen(true)}>
         <IconRefresh />
         Sync from {gateway === "razorpay" ? "Razorpay" : "Stripe"}
       </Button>

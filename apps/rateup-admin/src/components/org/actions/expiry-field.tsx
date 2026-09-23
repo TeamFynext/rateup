@@ -50,7 +50,7 @@ export function ExpiryField({
         value={value}
         min={toDateInput(dayjs().add(1, "day").toDate())}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 rounded-xl"
+        className="h-9 rounded-lg"
       />
       <div className="flex flex-wrap gap-2">
         {presets.map((preset) => {

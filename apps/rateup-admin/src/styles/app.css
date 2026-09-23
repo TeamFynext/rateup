@@ -1,9 +1,10 @@
 /*
- * The console's single stylesheet: Tailwind, the self-hosted font, then the design tokens in
- * theme.css (see docs/design-reference.png for the design language they encode).
+ * The console's single stylesheet: Tailwind, the self-hosted fonts, then the Design System V2
+ * tokens in theme.css.
  */
 @import "tailwindcss";
 
-@import "@fontsource-variable/inter";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/figtree";
 
 @import "./theme.css";

@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
  */
 export function StepUpPrompt({ onBeforeLeave }: { onBeforeLeave?: () => void }) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-2xl bg-muted px-5 py-6 text-center">
-      <div className="grid size-11 place-items-center rounded-2xl bg-background">
+    <div className="flex flex-col items-center gap-4 rounded-lg bg-muted px-5 py-6 text-center">
+      <div className="grid size-11 place-items-center rounded-lg bg-background">
         <IconShieldLock className="size-5" stroke={1.75} />
       </div>
       <div className="space-y-1">
@@ -21,7 +21,7 @@ export function StepUpPrompt({ onBeforeLeave }: { onBeforeLeave?: () => void }) 
         </p>
       </div>
       <Button
-        className="h-11 rounded-xl px-5"
+        className="h-9 rounded-lg px-5"
         onClick={() => {
           onBeforeLeave?.();
           const { pathname, search } = window.location;

@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import {
   getOrg,
@@ -13,13 +13,17 @@ import {
   listPlanOptions,
   type ActivitySource,
   type OrgListParams,
+  type UsageDays,
 } from "./orgs.api";
 
-export const orgListQueryOptions = (params: OrgListParams) =>
-  queryOptions({
-    queryKey: ["staff", "orgs", "list", params],
-    queryFn: ({ signal }) => listOrgs(params, signal),
-    // The table keeps its rows while the next page or filter loads, instead of flashing empty.
+/** The sidebar directory: the same list, loaded a page at a time as it scrolls. */
+export const orgDirectoryQueryOptions = (params: Omit<OrgListParams, "page">) =>
+  infiniteQueryOptions({
+    queryKey: ["staff", "orgs", "directory", params],
+    queryFn: ({ pageParam, signal }) => listOrgs({ ...params, page: pageParam }, signal),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page * last.pageSize < last.total ? last.page + 1 : undefined,
     placeholderData: keepPreviousData,
   });
 
@@ -38,8 +42,12 @@ export const orgMembersQueryOptions = (orgId: string) =>
     queryFn: () => getOrgMembers(orgId),
   });
 
-export const orgUsageQueryOptions = (orgId: string) =>
-  queryOptions({ queryKey: ["staff", "orgs", orgId, "usage"], queryFn: () => getOrgUsage(orgId) });
+export const orgUsageQueryOptions = (orgId: string, days: UsageDays = 30) =>
+  queryOptions({
+    queryKey: ["staff", "orgs", orgId, "usage", days],
+    queryFn: () => getOrgUsage(orgId, days),
+    placeholderData: keepPreviousData,
+  });
 
 export const orgChannelsQueryOptions = (orgId: string) =>
   queryOptions({

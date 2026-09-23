@@ -2,13 +2,14 @@ import {
   IconAdjustmentsHorizontal,
   IconBan,
   IconCalendarEvent,
-  IconChevronDown,
+  IconDots,
   IconLockOpen,
   IconNote,
   IconPackage,
   IconSwitchHorizontal,
 } from "@tabler/icons-react";
 
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +22,7 @@ import {
 
 import type { OrgAction } from "./org-action-dialogs";
 
-/** The org header's quick actions. Each opens its dialog; nothing happens from the menu itself. */
+/** The org header's actions: the three used most as buttons, the rest behind "More". */
 export function OrgManageMenu({
   onAction,
   suspended,
@@ -33,58 +34,60 @@ export function OrgManageMenu({
   onPrefetch?: () => void;
 }) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        onPointerEnter={onPrefetch}
-        onFocus={onPrefetch}
-        className="inline-flex h-11 items-center gap-2 rounded-xl bg-foreground px-4 text-sm font-medium text-background outline-none transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:ring-ring/50"
-      >
-        Manage
-        <IconChevronDown className="size-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8} className="w-auto min-w-56 p-1.5">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Subscription</DropdownMenuLabel>
-          <DropdownMenuItem className="py-2" onClick={() => onAction({ kind: "plan" })}>
-            <IconSwitchHorizontal />
-            Change plan
-          </DropdownMenuItem>
-          <DropdownMenuItem className="py-2" onClick={() => onAction({ kind: "expiry" })}>
-            <IconCalendarEvent />
-            Change expiry
-          </DropdownMenuItem>
-          <DropdownMenuItem className="py-2" onClick={() => onAction({ kind: "limits" })}>
-            <IconAdjustmentsHorizontal />
-            Edit limits
-          </DropdownMenuItem>
-          <DropdownMenuItem className="py-2" onClick={() => onAction({ kind: "grant-packs" })}>
-            <IconPackage />
-            Grant conversation packs
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Account</DropdownMenuLabel>
-          <DropdownMenuItem className="py-2" onClick={() => onAction({ kind: "note" })}>
-            <IconNote />
-            Add a note
-          </DropdownMenuItem>
-          {suspended ? (
-            <DropdownMenuItem className="py-2" onClick={() => onAction({ kind: "unsuspend" })}>
-              <IconLockOpen />
-              Restore access
+    <div
+      className="flex flex-wrap items-center gap-2"
+      onPointerEnter={onPrefetch}
+      onFocus={onPrefetch}
+    >
+      <Button onClick={() => onAction({ kind: "plan" })}>
+        <IconSwitchHorizontal />
+        Change plan
+      </Button>
+      <Button variant="outline" onClick={() => onAction({ kind: "grant-packs" })}>
+        <IconPackage />
+        Grant packs
+      </Button>
+      <Button variant="outline" onClick={() => onAction({ kind: "note" })}>
+        <IconNote />
+        Add note
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button variant="outline" size="icon" aria-label="More actions">
+              <IconDots />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" sideOffset={6} className="w-auto min-w-52">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Subscription</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onAction({ kind: "expiry" })}>
+              <IconCalendarEvent />
+              Change expiry
             </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              className="py-2 text-negative data-highlighted:text-negative"
-              onClick={() => onAction({ kind: "suspend" })}
-            >
-              <IconBan />
-              Suspend
+            <DropdownMenuItem onClick={() => onAction({ kind: "limits" })}>
+              <IconAdjustmentsHorizontal />
+              Edit limits
             </DropdownMenuItem>
-          )}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Account</DropdownMenuLabel>
+            {suspended ? (
+              <DropdownMenuItem onClick={() => onAction({ kind: "unsuspend" })}>
+                <IconLockOpen />
+                Restore access
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem variant="destructive" onClick={() => onAction({ kind: "suspend" })}>
+                <IconBan />
+                Suspend
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

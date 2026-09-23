@@ -87,7 +87,7 @@ function AddDialog({ onClose }: { onClose: () => void }) {
           placeholder={`name@${STAFF_DOMAIN}`}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="h-11 rounded-xl"
+          className="h-9 rounded-lg"
         />
         {address.length > 0 && !onDomain && (
           <p className="text-xs text-muted-foreground">
@@ -105,10 +105,10 @@ function AddDialog({ onClose }: { onClose: () => void }) {
           placeholder="Filled from Google on their first sign-in if left blank"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className="h-11 rounded-xl"
+          className="h-9 rounded-lg"
         />
       </div>
-      <label htmlFor={ownerId} className="flex items-start gap-3 rounded-2xl border px-4 py-3">
+      <label htmlFor={ownerId} className="flex items-start gap-3 rounded-lg border px-4 py-3">
         <Checkbox
           id={ownerId}
           checked={isOwner}

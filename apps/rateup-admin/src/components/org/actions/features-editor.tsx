@@ -49,7 +49,7 @@ export function FeaturesEditor({
                   const next = Math.max(0, Math.floor(Number(event.target.value) || 0));
                   onChange((features) => limit.set(features, Math.min(next, UNLIMITED_COUNT - 1)));
                 }}
-                className="h-11 rounded-xl tabular"
+                className="h-9 rounded-lg tabular"
               />
               <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
                 {reference ? (
@@ -83,7 +83,7 @@ export function FeaturesEditor({
         })}
       </div>
 
-      <div className="flex flex-col divide-y rounded-2xl border">
+      <div className="flex flex-col divide-y rounded-lg border">
         {SWITCHES.map((gate) => (
           <label key={gate.key} className="flex items-center justify-between gap-4 px-4 py-3">
             <span className="text-sm">

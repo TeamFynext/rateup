@@ -87,16 +87,16 @@ function Row({
     <section
       className={
         destructive
-          ? "flex flex-col gap-4 rounded-3xl border border-negative/30 p-6 sm:flex-row sm:items-center sm:justify-between"
-          : "flex flex-col gap-4 rounded-3xl border p-6 sm:flex-row sm:items-center sm:justify-between"
+          ? "flex flex-col gap-4 rounded-xl border border-negative/30 p-6 sm:flex-row sm:items-center sm:justify-between"
+          : "flex flex-col gap-4 rounded-xl border p-6 sm:flex-row sm:items-center sm:justify-between"
       }
     >
       <div className="flex min-w-0 items-start gap-4">
         <div
           className={
             destructive
-              ? "grid size-11 shrink-0 place-items-center rounded-2xl bg-negative/10 text-negative"
-              : "grid size-11 shrink-0 place-items-center rounded-2xl bg-muted"
+              ? "grid size-11 shrink-0 place-items-center rounded-lg bg-negative/10 text-negative"
+              : "grid size-11 shrink-0 place-items-center rounded-lg bg-muted"
           }
         >
           <Icon className="size-5" stroke={1.75} />
@@ -108,7 +108,7 @@ function Row({
       </div>
       <Button
         variant={destructive ? "destructive" : "outline"}
-        className="h-11 shrink-0 rounded-xl px-4"
+        className="h-9 shrink-0 rounded-lg px-4"
         onClick={onClick}
       >
         {action}
@@ -197,7 +197,7 @@ function DeleteDialog({
               subscription first.
             </Notice>
           )}
-          <dl className="grid grid-cols-2 gap-3 rounded-2xl bg-muted p-4 text-sm">
+          <dl className="grid grid-cols-2 gap-3 rounded-lg bg-muted p-4 text-sm">
             <div>
               <dt className="text-xs text-muted-foreground">Members</dt>
               <dd className="font-medium tabular">{formatNumber(preview.members)}</dd>
@@ -227,7 +227,7 @@ function DeleteDialog({
               spellCheck={false}
               value={confirm}
               onChange={(event) => setConfirm(event.target.value)}
-              className="h-11 rounded-xl"
+              className="h-9 rounded-lg"
             />
           </div>
         </>

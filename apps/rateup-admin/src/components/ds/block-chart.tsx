@@ -3,79 +3,81 @@ import { cn } from "@/lib/utils";
 export interface BlockDatum {
   label: string;
   value: number;
-  /** Shown on the top block; defaults to a compact form of `value`. */
+  /** Shown above the bar; defaults to a compact form of `value`. */
   display?: string;
-  /** Striped top block, for a period still in progress. */
+  /** Striped bar, for a period still in progress. */
   partial?: boolean;
 }
 
 const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 
 /**
- * The reference's stacked-tile bar chart: each column is a pile of rounded outlined tiles,
- * capped by an ink tile carrying the value. Heights are relative to the largest value; a
- * zero is one faint empty tile, so a quiet month reads as a gap rather than as data.
+ * A light column chart with the value over each bar. Heights are relative to the largest
+ * value; a zero is a faint baseline stub, so a quiet period reads as a gap rather than data.
  */
 export function BlockChart({
   data,
-  maxBlocks = 5,
+  height = 176,
+  showValues = true,
   className,
 }: {
   data: BlockDatum[];
-  maxBlocks?: number;
+  /** Plot height in px, excluding the labels. */
+  height?: number;
+  /** Dense series (e.g. 90 days) read better without a figure over every bar. */
+  showValues?: boolean;
   className?: string;
 }) {
   const max = Math.max(1, ...data.map((d) => d.value));
 
   return (
     <div
-      className={cn("grid w-full gap-x-2", className)}
+      className={cn(
+        "grid w-full items-end",
+        data.length > 40 ? "gap-x-px" : "gap-x-1.5",
+        className,
+      )}
       style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}
     >
-      {data.map((d) => (
-        <div key={d.label} className="truncate text-center text-[11px] text-muted-foreground">
-          {d.label}
-        </div>
-      ))}
       {data.map((d) => {
-        const blocks = d.value > 0 ? Math.max(1, Math.round((d.value / max) * maxBlocks)) : 1;
         const label = d.display ?? compact.format(d.value).toLowerCase();
         return (
           <div
             key={d.label}
-            className="mt-6 flex flex-col-reverse items-center gap-1.5"
-            style={{ minHeight: `${maxBlocks * 2.75}rem` }}
+            className="flex flex-col items-center justify-end gap-1.5"
+            style={{ height }}
             title={`${d.label}: ${d.value.toLocaleString()}${d.partial ? " so far" : ""}`}
           >
-            {d.value === 0 ? (
-              <div className="h-10 w-full max-w-12 rounded-xl border-[1.5px] border-dashed border-foreground/20" />
-            ) : (
-              Array.from({ length: blocks }, (_, index) => {
-                const isTop = index === blocks - 1;
-                return (
-                  <div
-                    key={index}
-                    className={cn(
-                      "flex h-10 w-full max-w-12 items-center justify-center rounded-xl border-[1.5px] text-[13px] font-medium",
-                      isTop && !d.partial && "border-primary bg-primary text-primary-foreground",
-                      // In progress: striped, with the count so far on a solid chip.
-                      isTop &&
-                        d.partial &&
-                        "border-primary bg-[repeating-linear-gradient(135deg,var(--primary)_0_3px,transparent_3px_7px)]",
-                      !isTop && "border-foreground/85 bg-background",
-                    )}
-                  >
-                    {isTop && !d.partial && label}
-                    {isTop && d.partial && (
-                      <span className="rounded-md bg-background px-1 text-foreground">{label}</span>
-                    )}
-                  </div>
-                );
-              })
+            {showValues && d.value > 0 && (
+              <span className="text-[11px] font-medium tabular text-muted-foreground">{label}</span>
             )}
+            <div
+              className={cn(
+                "w-full max-w-10 rounded-t-md",
+                d.value === 0 && "h-1 bg-border",
+                d.value > 0 && !d.partial && "bg-chart-2",
+                d.value > 0 &&
+                  d.partial &&
+                  "bg-[repeating-linear-gradient(135deg,var(--chart-2)_0_3px,transparent_3px_7px)] ring-1 ring-chart-2 ring-inset",
+              )}
+              style={d.value > 0 ? { height: `${Math.max(4, (d.value / max) * 85)}%` } : undefined}
+            />
           </div>
         );
       })}
+      {data.map((d, index) => (
+        <div
+          key={d.label}
+          className="mt-2 text-center text-[11px] whitespace-nowrap text-muted-foreground"
+          // Dense series label every few columns so the axis stays legible.
+          style={{
+            visibility:
+              data.length > 16 && index % Math.ceil(data.length / 8) !== 0 ? "hidden" : undefined,
+          }}
+        >
+          {d.label}
+        </div>
+      ))}
     </div>
   );
 }

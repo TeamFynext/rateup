@@ -43,7 +43,7 @@ export function AddReferralDialog({ onClose }: { onClose: () => void }) {
           autoFocus
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className="h-11 rounded-xl"
+          className="h-9 rounded-lg"
         />
       </div>
       <div className="flex flex-col gap-2">
@@ -53,7 +53,7 @@ export function AddReferralDialog({ onClose }: { onClose: () => void }) {
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="h-11 rounded-xl"
+          className="h-9 rounded-lg"
         />
         <p className="text-xs text-muted-foreground">
           How you reach them; never shown to customers.

@@ -195,7 +195,7 @@ function ChangePlanDialog({ orgId, onClose, subscription }: DialogProps) {
         <div className="flex flex-col gap-2">
           <Label>New plan</Label>
           <Select value={planId} onValueChange={(value) => setPlanId(value ?? "")}>
-            <SelectTrigger className="h-11 w-full rounded-xl px-4 shadow-none">
+            <SelectTrigger className="h-9 w-full rounded-lg px-4 shadow-none">
               <SelectValue>
                 {(value: string) => (value ? planName(value) : "Choose a plan")}
               </SelectValue>
@@ -277,7 +277,7 @@ function FeatureComparison({
   ];
 
   return (
-    <div className="overflow-hidden rounded-2xl border">
+    <div className="overflow-hidden rounded-lg border">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-left text-xs text-muted-foreground">
@@ -586,7 +586,7 @@ function NoteDialog({
           : add.mutate({ body, pinned }, { onSuccess: () => done("Note added.", onClose) })
       }
     >
-      <label className="flex items-center justify-between gap-4 rounded-2xl border px-4 py-3">
+      <label className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
         <span className="text-sm">
           Pin to the top
           <span className="block text-xs text-muted-foreground">

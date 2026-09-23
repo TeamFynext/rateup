@@ -5,11 +5,11 @@ import { z } from "zod";
 import { orderListQueryOptions, type Gateway, type OrderStatus } from "@/api/billing.api";
 import { orderColumns } from "@/components/billing/order-columns";
 import { FilterChips, type FilterChip } from "@/components/ds/filter-chips";
+import { PageHeading } from "@/components/ds/page-heading";
 import { Pager } from "@/components/ds/pager";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ds/query-states";
 import { ResponsiveTable } from "@/components/ds/responsive-table";
 import { SearchField } from "@/components/ds/search-field";
-import { PageHeader } from "@/components/shell/page-header";
 import {
   Select,
   SelectContent,
@@ -71,7 +71,7 @@ function OrdersPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeading
         title="Orders"
         description={
           list.data
@@ -93,7 +93,7 @@ function OrdersPage() {
               update({ gateway: value === "all" ? undefined : (value as OrderSearch["gateway"]) })
             }
           >
-            <SelectTrigger className="h-11 w-full rounded-xl px-4 text-[13px] font-medium shadow-none lg:ml-auto lg:w-48">
+            <SelectTrigger className="h-9 w-full rounded-lg px-4 text-[13px] font-medium shadow-none lg:ml-auto lg:w-48">
               <SelectValue>
                 {(value: (typeof GATEWAYS)[number]) => GATEWAY_LABELS[value]}
               </SelectValue>
