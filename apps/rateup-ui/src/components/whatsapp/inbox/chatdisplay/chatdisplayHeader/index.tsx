@@ -13,7 +13,7 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
+import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { cn } from "@/lib/utils.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
@@ -104,12 +104,14 @@ export default function WaInboxChatDisplayHeader({
             <IconArrowLeft className="size-5" />
           </button>
           <div className="relative shrink-0">
-            <ContactAvatar
+            <CreativeAvatar
               name={displayName}
-              src={contact?.profilePic}
               size="md"
               isOnline={!isSessionExpired}
               showOnlineStatus={!isSessionExpired}
+              onlineStatusPosition="topLeft"
+              showRing={true}
+              src={contact?.profilePic}
             />
             <div
               className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 shadow-sm ${
