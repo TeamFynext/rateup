@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, API_URL } from "./client";
 
 export interface StaffUser {
   id: string;
@@ -30,7 +30,8 @@ export async function logout(): Promise<void> {
 
 /**
  * Google sign-in is a full-page redirect through the API (the OIDC state lives in a cookie set
- * there), so this navigates rather than calling axios. `reauth` forces a fresh Google login for
+ * there), so this navigates rather than calling axios. The API sends the browser back to this
+ * console's `returnTo` when it is done. `reauth` forces a fresh Google login for
  * step-up on sensitive actions.
  */
 export function startGoogleLogin({
@@ -39,5 +40,5 @@ export function startGoogleLogin({
 }: { returnTo?: string; reauth?: boolean } = {}) {
   const params = new URLSearchParams({ returnTo });
   if (reauth) params.set("reauth", "1");
-  window.location.assign(`/api/staff/auth/google/start?${params}`);
+  window.location.assign(`${API_URL}/api/staff/auth/google/start?${params}`);
 }

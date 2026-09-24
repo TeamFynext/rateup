@@ -1,46 +1,34 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-
-  return {
-    resolve: {
-      tsconfigPaths: true,
-    },
-    css: {
-      transformer: "lightningcss",
-    },
-    // Local stand-in for the Cloudflare Pages Function: same-origin `/api/staff/*`, with the proxy
-    // secret injected here so it never reaches the browser bundle (no `VITE_` prefix).
-    server: {
-      port: 4000,
-      strictPort: true,
-      proxy: {
-        "/api/staff": {
-          target: env.API_ORIGIN || "http://localhost:3001",
-          changeOrigin: true,
-          headers: env.STAFF_PROXY_SECRET ? { "X-Staff-Proxy-Secret": env.STAFF_PROXY_SECRET } : {},
-        },
-      },
-    },
-    build: {
-      rolldownOptions: {
-        output: {
-          minify: {
-            compress: {
-              dropConsole: true,
-            },
+export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
+  css: {
+    transformer: "lightningcss",
+  },
+  // The API's STAFF_CONSOLE_ORIGIN is http://localhost:4000 locally, so the port is fixed.
+  server: {
+    port: 4000,
+    strictPort: true,
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        minify: {
+          compress: {
+            dropConsole: true,
           },
         },
       },
     },
-    plugins: [
-      tanstackRouter({ target: "react", autoCodeSplitting: true }),
-      tailwindcss(),
-      viteReact(),
-    ],
-  };
+  },
+  plugins: [
+    tanstackRouter({ target: "react", autoCodeSplitting: true }),
+    tailwindcss(),
+    viteReact(),
+  ],
 });

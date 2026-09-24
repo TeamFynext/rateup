@@ -2,12 +2,16 @@ import axios from "axios";
 
 import { getApiErrorData } from "@/lib/apiError";
 
+/** The API's origin, e.g. https://api.rateup.app. Same variable as rateup-ui. */
+export const API_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+
 /**
- * Every console request goes same-origin to `/api/staff/*`. In production a Cloudflare Pages
- * Function forwards it to rateup-api; in dev the Vite proxy does (see vite.config.ts).
+ * Every console request goes straight to rateup-api's `/api/staff/*`, like rateup-ui. The API
+ * allows this origin through CORS and keeps the staff session in its own cookie, hence
+ * `withCredentials`.
  */
 export const api = axios.create({
-  baseURL: "/api/staff",
+  baseURL: `${API_URL}/api/staff`,
   withCredentials: true,
   headers: {
     // Required by the API on every non-GET; harmless on GETs, so it is always sent.

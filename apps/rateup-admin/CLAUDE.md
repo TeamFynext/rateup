@@ -1,8 +1,8 @@
 # rateup-admin
 
 RateUp Admin, the staff console: a static Vite + React SPA (TanStack Router file routes, TanStack
-Query, Tailwind 4, shadcn on Base UI) talking to rateup-api's `/api/staff` through a
-same-origin proxy. Plan: `i-want-to-redesign-glittery-pony.md`.
+Query, Tailwind 4, shadcn on Base UI) calling rateup-api's `/api/staff` directly
+(`VITE_API_URL`, like rateup-ui). Plan: `i-want-to-redesign-glittery-pony.md`.
 
 Commands: `npm run dev` (port 4000), `npm run typecheck`, `npm run lint`, `npm run build`,
 `npx oxfmt`. `VITE_STAFF_MOCK=true` in `.env.local` signs in as a fake staff user (dev only).
