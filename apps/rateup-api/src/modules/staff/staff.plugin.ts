@@ -53,6 +53,9 @@ export async function staffPlugin(server: FastifyInstance) {
     return;
   }
   assertStaffConfig(config);
+  if (!config.cfAccessEnforced && process.env.NODE_ENV === "production") {
+    log.warn("staff console running WITHOUT Cloudflare Access (STAFF_CF_ACCESS_ENFORCE=false)");
+  }
   await registerStaffApi(server, config);
 }
 
