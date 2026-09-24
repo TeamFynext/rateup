@@ -35,6 +35,8 @@ export type ExternalErrorCode =
   | "unauthorized"
   | "subscription_required"
   | "subscription_expired"
+  /// RateUp staff have suspended the account (src/modules/staff).
+  | "org_suspended"
   // 404
   | "org_not_found"
   | "program_not_found"

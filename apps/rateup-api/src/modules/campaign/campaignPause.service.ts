@@ -63,6 +63,8 @@ export const CAMPAIGN_PAUSE_MESSAGES: Record<CampaignPauseReason, string> = {
     "Paused: your plan's conversation allowance is used up. Upgrade your plan or wait for it to reset, then resume the campaign.",
   [CampaignPauseReason.PAYMENT_METHOD]:
     "Paused: Meta rejected the payment method on your WhatsApp Business account. Fix billing in Meta Business Suite, then resume the campaign.",
+  [CampaignPauseReason.ACCOUNT_SUSPENDED]:
+    "Paused: this account is suspended. Please contact RateUp support to restore it.",
 };
 
 /** The pause a failed send calls for, if any. Null for every per-recipient failure. */
@@ -143,4 +145,35 @@ export async function clearCampaignPause(campaignId: string): Promise<void> {
     where: { id: campaignId, pauseReason: { not: null } },
     data: { pauseReason: null, pausedAt: null },
   });
+}
+
+/**
+ * Stops every campaign an org has in flight, for a suspension.
+ *
+ * The send gate already refuses each individual message, but a campaign left ACTIVE would
+ * keep grinding through its recipients failing every one, and would show the customer a
+ * campaign that looks alive. Pausing leaves it resumable once the account is restored.
+ */
+export async function pauseOrgCampaignsForSuspension(orgId: string): Promise<number> {
+  const live = await prisma.campaign.findMany({
+    where: { team: { orgId }, status: { in: [...PAUSABLE] } },
+    select: { id: true },
+  });
+
+  let paused = 0;
+  for (const campaign of live) {
+    // One campaign failing to pause must not strand the rest; the send gate still refuses
+    // its messages either way.
+    try {
+      if (await pauseCampaignForAccountIssue(campaign.id, CampaignPauseReason.ACCOUNT_SUSPENDED)) {
+        paused++;
+      }
+    } catch (err) {
+      log.error(
+        { err, campaignId: campaign.id, orgId },
+        "Could not pause a campaign on suspension",
+      );
+    }
+  }
+  return paused;
 }

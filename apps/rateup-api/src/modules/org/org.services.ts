@@ -14,6 +14,7 @@ import {
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session/index.js";
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
+import { log } from "../../utils/logger.js";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken.js";
 import { seedDefaultStages } from "./org.defaultStages.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
@@ -466,76 +467,69 @@ export async function getAllOrgs() {
 
 //Delete org and everything related
 
-export async function deleteOrg(orgId: string): Promise<string> {
-  console.log("..........................deleting org............." + orgId);
+export interface DeleteOrgResult {
+  orgName: string;
+  /** Members whose only org this was: their User row and sign-in are gone. */
+  usersDeleted: string[];
+  /** Members who belong to another org too: only their membership here went. */
+  usersKept: string[];
+}
 
-  try {
-    const org = await prisma.org.findUnique({
-      where: { id: orgId },
-      select: { name: true },
+/**
+ * Members of an org, split by whether this org is the only one they belong to. Deleting
+ * the org must not take a person's account with it while they still work in another one.
+ */
+export async function orgMemberFate(orgId: string) {
+  const members = await prisma.orgMember.findMany({
+    where: { orgId },
+    select: {
+      userId: true,
+      user: { select: { _count: { select: { orgMember: true } } } },
+    },
+  });
+  const onlyHere = members.filter((m) => m.user._count.orgMember <= 1).map((m) => m.userId);
+  const elsewhere = members.filter((m) => m.user._count.orgMember > 1).map((m) => m.userId);
+  return { onlyHere, elsewhere };
+}
+
+/**
+ * Deletes an org and everything that cascades from it. Orders are kept, detached, with the
+ * org's name on them for the books. A member's account is deleted only if this was their
+ * only org; anyone who is also in another org keeps their account and loses just this
+ * membership (the org delete cascades it). Throws on any failure: a caller must never
+ * mistake a failed delete for a successful one.
+ */
+export async function deleteOrg(orgId: string): Promise<DeleteOrgResult> {
+  const org = await prisma.org.findUnique({ where: { id: orgId }, select: { name: true } });
+  if (!org) throw new Error(`Organization with ID ${orgId} not found.`);
+
+  const { onlyHere, elsewhere } = await orgMemberFate(orgId);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.order.updateMany({
+      where: { orgId },
+      data: { orgId: null, deletedOrgInfo: org.name },
     });
+    // Only for accounts about to go; a kept user's name stays on the orders they placed.
+    await tx.order.updateMany({
+      where: { createdById: { in: onlyHere } },
+      data: { createdById: null },
+    });
+    await tx.org.delete({ where: { id: orgId } });
+    await tx.user.deleteMany({ where: { id: { in: onlyHere } } });
+  });
 
-    if (!org) {
-      throw new Error(`Organization with ID ${orgId} not found.`);
+  // After the commit: a SuperTokens user without a User row can no longer do anything,
+  // so a failure here leaves a dead login, not a live one. Logged, not thrown.
+  for (const userId of onlyHere) {
+    try {
+      await deleteSuperTokenUserForId(userId);
+    } catch (err) {
+      log.error({ err, userId, orgId }, "Deleted the org but not this member's sign-in");
     }
-
-    const orgName = org.name;
-
-    const members = await prisma.orgMember.findMany({
-      where: { orgId: orgId },
-      select: {
-        userId: true,
-      },
-    });
-
-    const memberList = members.map((m) => m.userId);
-    // Start a transaction
-    const result = await prisma.$transaction(async (prisma): Promise<null> => {
-      await prisma.order.updateMany({
-        where: { orgId: orgId },
-        data: {
-          orgId: null,
-          deletedOrgInfo: orgName,
-        },
-      });
-
-      await prisma.order.updateMany({
-        where: { createdById: { in: memberList } },
-        data: { createdById: null },
-      });
-
-      // Delete the organization
-      await prisma.org.delete({
-        where: {
-          id: orgId,
-        },
-      });
-
-      // Delete users (some invited users missing org relation)
-      await prisma.user.deleteMany({
-        where: {
-          id: {
-            in: memberList,
-          },
-        },
-      });
-
-      // Return a promise that resolves to null to indicate success within the transaction
-      return null;
-    });
-
-    // Only proceed to delete super tokens if the transaction was successful
-    if (result === null) {
-      for (const m of memberList) {
-        await deleteSuperTokenUserForId(m);
-      }
-    }
-
-    return "Success";
-  } catch (error) {
-    console.error("Error deleting organization:", error);
-    return "Error occurred while deleting organization.";
   }
+
+  return { orgName: org.name, usersDeleted: onlyHere, usersKept: elsewhere };
 }
 
 export async function getOrgStats(orgId: string) {

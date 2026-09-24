@@ -1,5 +1,5 @@
 import "fastify";
-import type { TeamFeature } from "../../generated/prisma/client.js";
+import type { StaffSession, StaffUser, TeamFeature } from "../../generated/prisma/client.js";
 import type { Permission } from "../authz/permissions.js";
 
 declare module "fastify" {
@@ -15,9 +15,25 @@ declare module "fastify" {
      * the route registry refuses to boot (AUTHZ_STRICT=1) when neither is present.
      * `public`: no session. `session`: any signed-in user, even one with no membership yet.
      * `token`: an API access token (external v1).
+     * `staff`: the staff console (src/modules/staff); its plugin's own hooks authenticate, never SuperTokens.
      */
-    access?: "public" | "session" | "token";
+    access?: "public" | "session" | "token" | "staff";
     /** Permission(s) the actor needs; any one of a list suffices. Implies a session. */
     permission?: Permission | Permission[];
+    /**
+     * A staff route reachable without a staff session: only the Google sign-in hops. Every
+     * other guard of the staff plugin still runs. See STAFF_PUBLIC_ROUTES in staff.plugin.ts.
+     */
+    staffPublic?: boolean;
+  }
+
+  interface FastifyRequest {
+    /** The signed-in staff member; set by the staff plugin's requireStaff hook. */
+    staff?: StaffUser;
+    staffSession?: StaffSession;
+    /** Email from the verified Cloudflare Access JWT; unset when Access enforcement is off. */
+    cfAccessEmail?: string;
+    /** Set once a staff audit row exists for this request, so the fallback row is skipped. */
+    staffAuditRecorded?: boolean;
   }
 }

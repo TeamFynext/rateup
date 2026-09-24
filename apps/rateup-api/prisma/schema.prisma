@@ -220,6 +220,40 @@ model Org {
   inboxMentions           InboxMention[]
   conversationTags        ConversationTag[]
   pipelines               Pipeline[]
+
+  /// Suspended by RateUp staff (src/modules/staff). Deliberately NOT `isPaused`: the
+  /// customer's own admin and a Shopify uninstall both set that one, so reusing it would
+  /// let a customer lift their own suspension — and would leave staff unable to tell the
+  /// two apart. Null means not suspended.
+  suspendedAt        DateTime?
+  /// Why, in staff's words. Not shown to the customer; the audit row carries it too.
+  suspendedReason    String?
+  /// The StaffUser who suspended. No FK: a staff member can be deleted, the record stays.
+  suspendedByStaffId String?   @db.Uuid
+  staffNotes         OrgNote[]
+
+  @@index([suspendedAt])
+}
+
+/// A note staff keep on an org: context for whoever picks the account up next.
+/// Never shown to the customer.
+model OrgNote {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org         Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId       String    @db.Uuid
+  /// No FK to StaffUser: the note survives the author being removed from the allowlist.
+  staffUserId String?   @db.Uuid
+  /// Kept beside the id so an old note still says who wrote it.
+  staffEmail  String
+  body        String
+  /// Pinned notes show on the org's Overview tab.
+  pinned      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  /// Soft delete: a note staff removed stays readable in the audit trail.
+  deletedAt   DateTime?
+
+  @@index([orgId, pinned, createdAt])
 }
 
 model UsageStats {
@@ -3602,4 +3636,76 @@ model LeadTask {
   updatedAt DateTime @updatedAt
 
   @@index([leadId, completedAt, dueAt])
+}
+
+// ---------------------------------------------------------------------------------------
+// Staff console (src/modules/staff). RateUp employees who operate the platform. Not `User`s:
+// they sign in with Google Workspace, never through SuperTokens, and belong to no org.
+// ---------------------------------------------------------------------------------------
+
+/// The allowlist. A Google login is refused unless its email is here and active.
+model StaffUser {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  /// Google's stable subject id, bound on first login.
+  googleSub     String?   @unique
+  active        Boolean   @default(true)
+  /// Owners manage the allowlist; there is no other staff role yet.
+  isOwner       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  createdById   String?   @db.Uuid
+  lastLoginAt   DateTime?
+  deactivatedAt DateTime?
+
+  sessions  StaffSession[]
+  auditLogs StaffAuditLog[]
+}
+
+/// A console session. Only a sha256 of the cookie value is stored.
+model StaffSession {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tokenHash       String    @unique
+  staffUserId     String    @db.Uuid
+  staffUser       StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  /// When Google last authenticated the person; step-up checks this, not createdAt.
+  authenticatedAt DateTime
+  lastSeenAt      DateTime
+  /// Absolute expiry; the idle timeout is judged from lastSeenAt.
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  ip              String?
+  userAgent       String?
+
+  @@index([staffUserId])
+  @@index([expiresAt])
+}
+
+/// Every staff login and action. No FK to Org, so a row outlives the org it names.
+model StaffAuditLog {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Null for a refused login by someone who is not on the allowlist.
+  staffUserId   String?    @db.Uuid
+  staffUser     StaffUser? @relation(fields: [staffUserId], references: [id], onDelete: SetNull)
+  staffEmail    String
+  action        String
+  method        String
+  route         String
+  targetOrgId   String?    @db.Uuid
+  targetOrgName String?
+  targetUserId  String?    @db.Uuid
+  reason        String?
+  before        Json?
+  after         Json?
+  /// The request body with secrets redacted.
+  body          Json?
+  ip            String?
+  userAgent     String?
+  createdAt     DateTime   @default(now())
+
+  @@index([targetOrgId, createdAt])
+  @@index([staffUserId, createdAt])
+  @@index([createdAt])
 }

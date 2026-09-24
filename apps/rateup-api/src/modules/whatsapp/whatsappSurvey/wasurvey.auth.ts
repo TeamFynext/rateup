@@ -4,6 +4,11 @@ import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { Role } from "../../../../generated/prisma/client.js";
 import { buildActor } from "../../../authz/actor.js";
 import { checkPlanLimit } from "../../subscription/planLimits.js";
+import {
+  isOrgSuspended,
+  ORG_SUSPENDED_CODE,
+  ORG_SUSPENDED_MESSAGE,
+} from "../../org/orgSuspension.js";
 
 export async function getWhatsappSurveyVerifySubscriptionHandler(
   request: FastifyRequest<{
@@ -29,10 +34,28 @@ export class ConversationLimitError extends Error {
   }
 }
 
-// Guards an OUTBOUND send: throws ConversationLimitError when the org is over its
-// conversation allowance. Never call this on the inbound path — receiving customer
-// messages and creating/counting conversations must never be blocked.
+// Thrown when RateUp staff have suspended the account (src/modules/staff). Separate from
+// the limit error because it is a different problem with a different answer: nothing the
+// customer can buy fixes it.
+export class OrgSuspendedError extends Error {
+  statusCode = 403;
+  code = ORG_SUSPENDED_CODE;
+  constructor(message = ORG_SUSPENDED_MESSAGE) {
+    super(message);
+    this.name = "OrgSuspendedError";
+  }
+}
+
+// Guards an OUTBOUND send: throws when the org is suspended, or over its conversation
+// allowance. Never call this on the inbound path — receiving customer messages and
+// creating/counting conversations must never be blocked.
+//
+// Suspension is checked here as well as at the session and API-key gates, because a send
+// can also come from a queue or a cron job, where no request was ever authorised.
 export async function assertWithinConversationLimit(orgId: string) {
+  if (await isOrgSuspended(orgId)) {
+    throw new OrgSuspendedError();
+  }
   const withinLimit = await checkConversationLimitAvailable(orgId);
   if (!withinLimit) {
     throw new ConversationLimitError();
