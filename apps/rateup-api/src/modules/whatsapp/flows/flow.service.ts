@@ -5,6 +5,7 @@ import { callMetaApi } from "../wa_axios.js";
 import { graphUrl } from "../../../utils/meta.js";
 import {
   convertHeaderToNewQuestion,
+  flowFieldNames,
   generateFlowMessageData,
   generateQuestionResponsesFromFlowResponse,
   getFlowFormElementNameFromQuestionId,
@@ -935,7 +936,8 @@ export const handleDecryptedFlowRequest = async (
     const questions = survey.questions as unknown as Question[];
 
     if (action === "data_exchange") {
-      const run = await resolveFlowRun(flow_token, dbFlow.orgId);
+      // A flow Meta AI sent carries Meta's token; its answers still belong here.
+      const run = await resolveFlowRun(flow_token, dbFlow.orgId, { surveyId: dbFlow.surveyId });
       if (!run) {
         throw unusableRequest(
           `No flow run found for flow_token: ${flow_token}`,
@@ -989,10 +991,11 @@ export const handleDecryptedFlowRequest = async (
       // The v2 parser yields `response: undefined` for an unanswered optional
       // field; that shape was always written straight into the session's Json
       // column, so keep accepting it rather than dropping the entry.
-      const collected = await recordFlowResponses(
-        run,
-        currentScreenResponses as WaFlowQuestionResponse[],
-      );
+      // A Meta AI run keeps nothing between screens: every run shares the token
+      // "unused", and each request already carries the answers so far.
+      const collected = run.agent
+        ? (currentScreenResponses as WaFlowQuestionResponse[])
+        : await recordFlowResponses(run, currentScreenResponses as WaFlowQuestionResponse[]);
       const currentRun: FlowRun = { ...run, responses: collected };
 
       // handle the request based on the current screen
@@ -1171,6 +1174,8 @@ export interface FlowRun {
   surveyTeamMap: NonNullable<Awaited<ReturnType<typeof getSurveyTeamMapWithFlow>>>;
   /** v1 answers carry `type`; v2 flow answers legitimately omit it. */
   responses: WaFlowQuestionResponse[];
+  /** Sent by Meta AI rather than RateUp; see `agentFlowRun`. */
+  agent?: boolean;
 }
 
 /**
@@ -1178,9 +1183,20 @@ export interface FlowRun {
  * endpoint URL, so it is trusted; a token claiming a different org is rejected
  * rather than followed.
  */
-export async function resolveFlowRun(flowToken: string, orgId: string): Promise<FlowRun | null> {
+export async function resolveFlowRun(
+  flowToken: string,
+  orgId: string,
+  /**
+   * The survey the flow belongs to, for a flow RateUp did not send. Meta AI's
+   * rich replies carry Meta's own flow_token, which is not one of our signed
+   * tokens, so the run is rebuilt from the flow instead.
+   */
+  agentFallback?: { surveyId: string; phone?: string },
+): Promise<FlowRun | null> {
   const context = verifyFlowToken(flowToken);
-  if (!context) return null;
+  if (!context) {
+    return agentFallback ? agentFlowRun(flowToken, orgId, agentFallback) : null;
+  }
   if (context.orgId !== orgId) {
     log.error(
       { tokenOrgId: context.orgId, orgId },
@@ -1208,6 +1224,66 @@ export async function resolveFlowRun(flowToken: string, orgId: string): Promise<
   };
 }
 
+/**
+ * A run for a flow Meta AI sent. The token carries no survey, team or phone, so
+ * the answers go to the survey's first team. Nothing is held for it between
+ * screens: every Meta AI run shares the same token.
+ */
+async function agentFlowRun(
+  flowToken: string,
+  orgId: string,
+  { surveyId, phone = "" }: { surveyId: string; phone?: string },
+): Promise<FlowRun | null> {
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+    where: { surveyId, survey: { orgId } },
+    orderBy: { id: "asc" },
+    include: { survey: { include: { WaFlow: true } }, team: true },
+  });
+  if (!surveyTeamMap) {
+    log.error({ surveyId }, "Meta AI sent a survey flow that is not assigned to any team");
+    return null;
+  }
+  return {
+    // Namespaced so clearing it can never touch a RateUp run's state.
+    flowToken: `metaai:${flowToken}`,
+    phone,
+    orgId,
+    surveyTeamMapId: surveyTeamMap.id,
+    language: "en",
+    surveyTeamMap,
+    responses: [],
+    agent: true,
+  };
+}
+
+/**
+ * The survey behind a flow Meta AI sent, found through the message the reply
+ * answers: Meta AI's flow message, stored from its echo, names the Meta flow id.
+ */
+async function surveyOfAgentFlowReply(orgId: string, waMessage: WaMessageBody) {
+  const value = waMessage?.entry?.[0]?.changes?.[0]?.value as
+    | { messages?: { context?: { id?: string } }[] }
+    | undefined;
+  const repliedTo = value?.messages?.[0]?.context?.id;
+  if (!repliedTo) return null;
+  const sent = await prisma.waMessage.findFirst({
+    where: { messageId: repliedTo, contact: { orgId } },
+    select: { messageBody: true },
+  });
+  type Sent = { interactive?: { action?: { parameters?: { flow_id?: string | number } } } };
+  // Stored wrapped by direction, `{ send: {...} }`; a bare body is read as is.
+  // Meta AI sends it as a `galaxy_message` interactive, flow_id in parameters.
+  const stored = sent?.messageBody as { send?: Sent; receive?: Sent } & Sent;
+  const body = stored?.send ?? stored?.receive ?? stored;
+  const flowId = body?.interactive?.action?.parameters?.flow_id;
+  if (!flowId) return null;
+  const flow = await prisma.waFlow.findFirst({
+    where: { flowId: String(flowId), orgId },
+    select: { surveyId: true },
+  });
+  return flow?.surveyId ?? null;
+}
+
 /** Records this screen's answers against the run and returns the full set so far. */
 async function recordFlowResponses(
   run: FlowRun,
@@ -1227,6 +1303,24 @@ interface handleFlowEndProps {
 }
 async function handleFlowEnd({ run, decryptedBody }: handleFlowEndProps) {
   const { version, flow_token } = decryptedBody;
+  if (run.agent) {
+    // Meta AI's token names no customer, so the answers are handed back in the
+    // closing nfm_reply — which does — and saved there. The request carries
+    // every screen's answers (see transformFlowAndLogicJumps); only real fields
+    // are passed on, since a v2 reply reads every key as an answer.
+    const waFlow = run.surveyTeamMap.survey.WaFlow;
+    const fields = waFlow ? flowFieldNames(waFlow.json) : new Set<string>();
+    const answers = Object.fromEntries(
+      Object.entries(decryptedBody.data ?? {}).filter(
+        ([name, value]) => fields.has(name) && value !== undefined && value !== "",
+      ),
+    );
+    return {
+      version,
+      screen: "SUCCESS",
+      data: { extension_message_response: { params: { flow_token, ...answers } } },
+    };
+  }
   const uniqueResponses = removeDuplicateResponses(run.responses);
   const saved = await saveResponses({
     ...run,
@@ -1290,7 +1384,19 @@ async function handleFlowEnd({ run, decryptedBody }: handleFlowEndProps) {
   };
 }
 
-export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageBody) {
+export async function handleStaticFlowReply(
+  orgId: string,
+  waMessage: WaMessageBody,
+  {
+    agentHeld = false,
+  }: {
+    /**
+     * Meta AI holds the thread. The answers are saved, but nothing is sent: a
+     * review link or a next automation step would take the chat off the agent.
+     */
+    agentHeld?: boolean;
+  } = {},
+) {
   const { from, flowResponse } = parseMessage(waMessage);
   if (!flowResponse) {
     log.trace("Flow reply carried no response payload. Ignoring...");
@@ -1304,7 +1410,11 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
   // The token Meta echoes back identifies the run; it falls back to the sender's
   // phone for flows sent before signed tokens shipped.
   const flowToken = (flowResponse["flow_token"] as string | undefined) ?? from;
-  const run = await resolveFlowRun(flowToken, orgId);
+  let run = await resolveFlowRun(flowToken, orgId);
+  if (!run) {
+    const surveyId = await surveyOfAgentFlowReply(orgId, waMessage);
+    if (surveyId) run = await resolveFlowRun(flowToken, orgId, { surveyId, phone: from });
+  }
   if (!run) {
     log.error("No flow run found for %s", from);
     return;
@@ -1320,19 +1430,32 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
     return;
   }
 
+  // A Meta AI flow that finished on our endpoint returns its answers as the
+  // SUCCESS params, which Meta nests under wa_flow_response_params.
+  // Typed as a flat answer map, but this one key arrives as an object.
+  const nested: unknown = flowResponse["wa_flow_response_params"];
+  const payload =
+    run.agent && nested && typeof nested === "object" && !Array.isArray(nested)
+      ? { ...flowResponse, ...nested }
+      : flowResponse;
   const questionResponses = generateQuestionResponsesFromFlowResponse({
     flow,
-    flowResponses: flowResponse,
+    flowResponses: payload as typeof flowResponse,
     surveyTeamMapId: run.surveyTeamMap.id,
   });
 
   // A static flow submits every answer in this one payload, so the collected
   // set is replaced rather than appended to.
   const uniqueResponses = removeDuplicateResponses(questionResponses);
+  // Every Meta AI run shares the token "unused", so its duplicate guard is the
+  // reply's own message id: unique per submission, and the same on a retry.
+  const replyId = (
+    waMessage?.entry?.[0]?.changes?.[0]?.value as { messages?: { id?: string }[] } | undefined
+  )?.messages?.[0]?.id;
   const saved = await saveResponses({
     ...run,
     responses: uniqueResponses,
-    idempotencyKey: run.flowToken,
+    idempotencyKey: run.agent && replyId ? `metaai:${replyId}` : run.flowToken,
   });
 
   const versionCheck = run.surveyTeamMap.survey.WaFlow.version === 1;
@@ -1347,6 +1470,11 @@ export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageB
         screens: run.surveyTeamMap.survey.WaFlow.json.screens,
         responses: uniqueResponses,
       });
+
+  if (agentHeld) {
+    await endFlowRun(run);
+    return;
+  }
 
   if (run.feedbackRequestId) {
     // See handleFlowEnd: the feedback module owns the review CTA for its own runs.

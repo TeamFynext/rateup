@@ -750,7 +750,14 @@ async function whatsappMessageHandler(
     userName,
     (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]?.id,
   );
-  if (options.storeOnly) return;
+  if (options.storeOnly) {
+    // A survey flow Meta AI sent: the answers are data, not a reply, so they
+    // are saved even though nothing else runs for this thread.
+    if (type === "nfm_reply") {
+      await handleStaticFlowReply(orgId, waMessage, { agentHeld: true });
+    }
+    return;
+  }
   if (type === WaMessageTypes.order) {
     if (!messageObj) {
       log.error("handleWaMessages did not return a message; skipping catalog order handling");

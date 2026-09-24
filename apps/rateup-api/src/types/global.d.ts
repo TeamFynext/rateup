@@ -1482,6 +1482,8 @@ declare global {
       expires_at_path?: string;
       expires_at_type?: "absolute" | "relative_seconds";
     };
+    /** Meta's agent_budget list, as last read or saved. */
+    type PMetaAgentBudgets = import("../modules/metaAgent/metaAgent.schema.js").AgentBudget[];
     /** Non-secret mTLS metadata Meta echoes back after a certificate upsert. */
     type PMetaAgentMtlsConfig = {
       has_certificate: boolean;

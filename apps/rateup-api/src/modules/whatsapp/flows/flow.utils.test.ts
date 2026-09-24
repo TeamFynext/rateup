@@ -36,6 +36,8 @@ import {
   removeEmptyStrings,
   removeIdFromFlowJson,
   sanitizeScreenData,
+  flowFieldNames,
+  transformFlowAndLogicJumps,
   waFlowFormElementIterator,
 } from "./flow.utils.js";
 
@@ -693,5 +695,63 @@ describe("convertHeaderToNewQuestion", () => {
     convertHeaderToNewQuestion(original);
 
     expect(original.screens[0].layout.children[0].header).toBe("Your name");
+  });
+});
+
+describe("screen-level logic jumps (v2)", () => {
+  const footer = () => ({ type: "Footer", label: "Next", "on-click-action": {} });
+  // Screen ONE was transformed first, so its conditional field already sits in
+  // an "If" by the time screen TWO's payload is built.
+  const flow = () =>
+    ({
+      screens: [
+        {
+          id: "ONE",
+          layout: {
+            children: [
+              { type: "RadioButtonsGroup", name: "rating" },
+              { type: "If", then: [{ type: "TextInput", name: "why" }], else: [] },
+              footer(),
+            ],
+          },
+        },
+        {
+          id: "TWO",
+          layout: { children: [{ type: "TextArea", name: "comments" }, footer()] },
+        },
+        { id: "THREE", layout: { children: [{ type: "TextInput", name: "email" }, footer()] } },
+      ],
+    }) as any;
+  const jumpTo = { action: "THREE" };
+
+  test("a jumping screen sends every earlier screen's answers with its own", () => {
+    // A flow Meta AI sends has no token of ours, so the request itself has to
+    // carry the answers so far — nothing is held per customer in between.
+    const out = flow();
+    transformFlowAndLogicJumps(out, { TWO: [jumpTo] } as any);
+    const action = out.screens[1].layout.children.find((c: any) => c.type === "Footer")[
+      "on-click-action"
+    ];
+    expect(action).toEqual({
+      name: "data_exchange",
+      payload: {
+        rating: "${screen.ONE.form.rating}",
+        why: "${screen.ONE.form.why}",
+        comments: "${form.comments}",
+      },
+    });
+  });
+
+  test("the first screen has nothing earlier to carry", () => {
+    const out = flow();
+    transformFlowAndLogicJumps(out, { ONE: [jumpTo] } as any);
+    const action = out.screens[0].layout.children.find((c: any) => c.type === "Footer")[
+      "on-click-action"
+    ];
+    expect(action.payload).toEqual({ rating: "${form.rating}" });
+  });
+
+  test("the flow's fields include those inside an If, never the footer", () => {
+    expect([...flowFieldNames(flow())]).toEqual(["rating", "why", "comments", "email"]);
   });
 });

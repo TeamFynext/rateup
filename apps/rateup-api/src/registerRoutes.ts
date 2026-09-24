@@ -62,6 +62,7 @@ import { webhookRoutes } from "./modules/webhook/webhook.route.js";
 import { referralRoutes } from "./modules/referrals/referrals.route.js";
 import { metaAgentRoutes } from "./modules/metaAgent/metaAgent.route.js";
 import { metaAgentWebhookRoutes } from "./modules/metaAgent/metaAgent.webhook.route.js";
+import { rateupToolsRoutes } from "./modules/metaAgent/rateupTools/rateupTools.route.js";
 import { maintenanceRoutes } from "./modules/maintenance/maintenance.route.js";
 import { adminRoutes } from "./modules/admin/admin.route.js";
 
@@ -138,6 +139,8 @@ const routeConfigs = [
   { plugin: referralRoutes, prefix: "/api/referrals" },
   { plugin: metaAgentRoutes, prefix: "/api/meta-agent" },
   { plugin: metaAgentWebhookRoutes, prefix: "/api/meta-agent/webhook" },
+  // Called by Meta, with the key the built-in RateUp connector was installed with.
+  { plugin: rateupToolsRoutes, prefix: "/api/public/meta-agent-tools" },
 ];
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
