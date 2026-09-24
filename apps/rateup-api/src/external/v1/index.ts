@@ -9,6 +9,7 @@ import { externalCampaignRoutes } from "./campaigns/campaign.external.route.js";
 import { externalWaTemplateRoutes } from "./wa-templates/wa_templates.external.route.js";
 import { externalLoyaltyRoutes } from "./loyalty/loyalty.external.route.js";
 import { assertApiAccessToken } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
+import { isOrgSuspended, ORG_SUSPENDED_MESSAGE } from "../../modules/org/orgSuspension.js";
 import { Role } from "../../../generated/prisma/client.js";
 import { rateLimit } from "../../utils/rateLimit.js";
 import { ExternalApiError, externalErrorHandler } from "./errors.js";
@@ -72,6 +73,12 @@ export async function externalV1Routes(server: FastifyInstance) {
     }
 
     await assertApiAccessToken(request);
+
+    // A suspended account's API key stops working too; otherwise an integration would keep
+    // running everything the console just switched off.
+    if (await isOrgSuspended(orgId)) {
+      throw new ExternalApiError(403, "org_suspended", ORG_SUSPENDED_MESSAGE);
+    }
   });
 
   server.register(externalSurveyRoutes, { prefix: "/surveys" });

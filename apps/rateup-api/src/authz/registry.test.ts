@@ -6,6 +6,7 @@ import {
   classifyRoute,
   declareAccess,
   describeRoute,
+  isMisplacedStaffRoute,
   registerAuthzRouteRegistry,
 } from "./registry.js";
 
@@ -152,5 +153,15 @@ describe("declareAccess", () => {
     expect(head.config).toEqual({ permission: "inbox.read", access: "session" });
     expect(post.config).toEqual({ permission: "inbox.reply", access: "session" });
     expect(own.config).toEqual({ permission: "inbox.assign" });
+  });
+});
+
+describe("access: staff", () => {
+  // It makes authorize() stand aside, so outside the staff plugin it would be an open door.
+  test("is only valid under /api/staff/", () => {
+    expect(isMisplacedStaffRoute(route("/api/staff/auth/me", { access: "staff" }))).toBe(false);
+    expect(isMisplacedStaffRoute(route("/api/org/all", { access: "staff" }))).toBe(true);
+    expect(isMisplacedStaffRoute(route("/api/staffing", { access: "staff" }))).toBe(true);
+    expect(isMisplacedStaffRoute(route("/api/org/all", { access: "session" }))).toBe(false);
   });
 });

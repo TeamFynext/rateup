@@ -14,6 +14,8 @@ import { declareAccess } from "../../authz/registry.js";
 export async function subscriptionRoutes(server: FastifyInstance) {
   declareAccess(server, { access: "session" });
 
+  // Every route but GET / answers for orgs other than the caller's (all of them, or the one in
+  // the URL), so each of them is the root org's alone.
   server.get("/", getUserSubscriptionHandler);
   server.get(
     "/all",
@@ -40,20 +42,11 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     },
     updateSubscriptionHandler,
   );
-
-  server.put<{ Params: ByOrgIdParams; Body: updateSubscriptionInput }>(
-    "/menu/:orgId",
-    {
-      schema: {
-        params: byOrgIdParams,
-        body: updateSubscriptionInputSchema,
-      },
-    },
-    updateSubscriptionHandler,
-  );
-
   server.get<{ Params: ByOrgIdParams; Querystring: { dateRange?: string } }>(
     "/message-stats/:orgId",
+    {
+      preHandler: assertRootOrg,
+    },
     getMessageStatsHandler,
   );
 }

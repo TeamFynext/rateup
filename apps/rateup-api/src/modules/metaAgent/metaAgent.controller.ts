@@ -2,9 +2,13 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
 import { MetaAgentApiError } from "./metaAgent.client.js";
 import * as service from "./metaAgent.service.js";
+import * as rateupConnector from "./rateupTools/rateupConnector.service.js";
+import type { InstallRateupConnectorBody } from "./rateupTools/rateupConnector.service.js";
 import { MetaAgentValidationError } from "./metaAgent.service.js";
 import {
+  AgentBudgetsBody,
   AgentEventBody,
+  AgentEventInsightsQuery,
   AgentInboxSettingsBody,
   AgentSettingsBody,
   AgentTestBody,
@@ -17,6 +21,8 @@ import {
   ConnectorLogsQuery,
   ConnectorToolBody,
   ConnectorToolRunBody,
+  ConversationInsightsQuery,
+  ConversationTurnsQuery,
   EvalDetailsQuery,
   EvalRunBody,
   EvalRunQuery,
@@ -25,6 +31,7 @@ import {
   OnboardingBody,
   SkillBody,
   ThreadControlBody,
+  ToolCallInsightsQuery,
   UiSkillBody,
   UiSkillUpdateBody,
   UpsertApiKeyBody,
@@ -42,7 +49,8 @@ function statusFromMeta(status: number | undefined): number {
   // A create that collides with something already there.
   if (status === 409) return 409;
   // Our credentials, Meta's throttle or Meta being down: upstream problems, all
-  // of which are 502 from here.
+  // of which are 502 from here. (A throttle is still told apart by the UI
+  // through `upstreamStatus`.)
   return 502;
 }
 
@@ -57,6 +65,7 @@ function handleError(reply: FastifyReply, error: unknown) {
       detail: error.detail,
       // Named explicitly so a client can tell an upstream refusal from ours.
       upstreamStatus: error.status,
+      fbtraceId: error.fbtraceId,
     });
   }
   log.error({ err: error }, "Meta Business Agent handler error");
@@ -87,7 +96,7 @@ export const checkAgentEligibilityHandler = wrap<
 
 export const onboardAgentHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: OnboardingBody }>
->((req, orgId) => service.onboardAgent(orgId, req.params.whatsappSettingsId, req.body.channel));
+>((req, orgId) => service.onboardAgent(orgId, req.params.whatsappSettingsId, req.body));
 
 export const deleteAgentHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
   (req, orgId) => service.deleteAgent(orgId, req.params.whatsappSettingsId),
@@ -432,3 +441,48 @@ export const updateInboxSettingsHandler = wrap<
 export const setThreadControlHandler = wrap<
   FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: ThreadControlBody }>
 >((req, orgId) => service.setThreadControl(orgId, req.params.whatsappSettingsId, req.body));
+
+// ---- configure: budget ----
+export const getAgentBudgetsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
+  (req, orgId) => service.getAgentBudgets(orgId, req.params.whatsappSettingsId),
+);
+
+export const updateAgentBudgetsHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: AgentBudgetsBody }>
+>((req, orgId) => service.updateAgentBudgets(orgId, req.params.whatsappSettingsId, req.body));
+
+export const syncAgentBudgetsHandler = wrap<FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>>(
+  (req, orgId) => service.syncAgentBudgets(orgId, req.params.whatsappSettingsId),
+);
+
+// ---- insights ----
+export const getConversationInsightsHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: ConversationInsightsQuery }>
+>((req, orgId) => service.getConversationInsights(orgId, req.params.whatsappSettingsId, req.query));
+
+export const getToolCallInsightsHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: ToolCallInsightsQuery }>
+>((req, orgId) => service.getToolCallInsights(orgId, req.params.whatsappSettingsId, req.query));
+
+export const getAgentEventInsightsHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: AgentEventInsightsQuery }>
+>((req, orgId) => service.getAgentEventInsights(orgId, req.params.whatsappSettingsId, req.query));
+
+export const getConversationTurnsHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Querystring: ConversationTurnsQuery }>
+>((req, orgId) => service.getConversationTurns(orgId, req.params.whatsappSettingsId, req.query));
+
+// ---- configure: built-in RateUp connector ----
+export const getRateupConnectorHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>
+>((req, orgId) => rateupConnector.getRateupConnector(orgId, req.params.whatsappSettingsId));
+
+export const installRateupConnectorHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams; Body: InstallRateupConnectorBody }>
+>((req, orgId) =>
+  rateupConnector.installRateupConnector(orgId, req.params.whatsappSettingsId, req.body.tools),
+);
+
+export const uninstallRateupConnectorHandler = wrap<
+  FastifyRequest<{ Params: ByWhatsappSettingsIdParams }>
+>((req, orgId) => rateupConnector.uninstallRateupConnector(orgId, req.params.whatsappSettingsId));

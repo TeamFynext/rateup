@@ -1,6 +1,10 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
-import { FreePlanSubscriptionFeatures, getFreeSubscriptionFeatures } from "./subscription.data.js";
+import {
+  FreePlanSubscriptionFeatures,
+  getFreeSubscriptionFeatures,
+  withContractedCaps,
+} from "./subscription.data.js";
 import { updateSubscriptionInput } from "./subscription.schema.js";
 import { PaymentPlanType, Prisma } from "../../../generated/prisma/client.js";
 import { createStats } from "../stats/stats.service.js";
@@ -330,6 +334,39 @@ export async function updateSubscription(orgId: string, updatedData: updateSubsc
       isAnnualMessageLimit: updatedData?.basePlanId?.length
         ? false
         : updatedData.isAnnualMessageLimit,
+    },
+  });
+}
+
+/**
+ * Puts an org on a catalog tier by hand, the way gateway activation does: the tier's own
+ * features are copied onto the subscription, so nobody hand-writes a features blob to
+ * change a plan. A contracted cap (an Enterprise deal's ceiling) is carried across unless
+ * the caller says otherwise, because re-applying the catalog must not quietly lift it.
+ */
+export async function applyPlanToOrg(
+  db: typeof prisma | Prisma.TransactionClient,
+  orgId: string,
+  plan: { id: string; features: unknown },
+  options: { expiresAt: Date; preserveContractedCaps: boolean; currentFeatures: unknown },
+) {
+  const tierFeatures = (plan.features ?? {}) as LegacySubscriptionFeatures;
+  const features = options.preserveContractedCaps
+    ? withContractedCaps(tierFeatures, options.currentFeatures)
+    : tierFeatures;
+
+  return db.subscription.upsert({
+    where: { orgId },
+    // An org that never got a subscription row (signup failed half-way) can still be fixed.
+    create: { orgId, basePlanId: plan.id, features, expiresAt: options.expiresAt },
+    update: {
+      basePlanId: plan.id,
+      features,
+      expiresAt: options.expiresAt,
+      // A different allowance, so the next limit alert should be free to fire.
+      lastLimitAlertSentAt: null,
+      // Matches updateSubscription: a plan change resets the allowance to monthly.
+      isAnnualMessageLimit: false,
     },
   });
 }

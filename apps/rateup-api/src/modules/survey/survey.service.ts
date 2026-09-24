@@ -668,6 +668,8 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       teams: {
         select: {
           id: true,
+          // The public /ws/:shortId link, which the Meta agent's survey button uses.
+          shortUrlId: true,
           _count: {
             select: {
               responses: true,
@@ -702,6 +704,7 @@ export async function getSurveysSummmaryByUserId(userId: string) {
     const teams: {
       id: string;
       mapId: string;
+      shortUrlId: string | null;
       teamName: string;
       surveyStats: (typeof survey.teams)[number]["surveyStats"];
     }[] = [];
@@ -715,6 +718,7 @@ export async function getSurveysSummmaryByUserId(userId: string) {
       teams.push({
         id: team.team.id,
         mapId: team.id,
+        shortUrlId: team.shortUrlId,
         teamName: team.team.name,
         surveyStats: team.surveyStats,
       });

@@ -43,6 +43,8 @@ Every route under `/api` declares who may reach it, and the root hooks in `src/r
 
 Non-user principals (API key, Zapier, the widget socket, the public flow callback) set `request.principal` and get an actor from it (`src/authz/principal.ts`); an API key's `scopes` narrow it.
 
+**Staff console** (`/api/staff`, `src/modules/staff/`, UI in the `rateup-admin` repo) is a separate auth world: RateUp employees sign in with Google Workspace against the `StaffUser` allowlist, never SuperTokens. Its routes carry `access: "staff"`, which `authorize` stands aside for; `staff.plugin.ts` runs its own `onRequest` chain for every route inside it (proxy secret → Cloudflare Access JWT → Origin → rate limit → staff session → CSRF), so a new staff route registered in that plugin inherits all of it. `access: "staff"` outside `/api/staff/` refuses to boot. Mutations record `StaffAuditLog` rows via `recordStaffAction(tx, request, …)`; a fallback row catches any that don't. Destructive actions call `assertRecentAuth(request.staffSession)` for step-up. The console is off unless `STAFF_PROXY_SECRET` is set (see `.env.example`); the first owner comes from `npm run staff:add -- <email> --owner`.
+
 Authentication is **SuperTokens** (EmailPassword + Google/Apple ThirdParty + Passwordless SMS), all configured in `src/config.ts`. Sign-up/sign-in overrides there create the app-side user record and stamp `orgId` onto the session.
 
 ## Database (Prisma)

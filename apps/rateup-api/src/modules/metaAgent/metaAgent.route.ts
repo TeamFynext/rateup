@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
+import fastifyMultipart from "@fastify/multipart";
 import * as ctrl from "./metaAgent.controller.js";
 import {
+  type AgentBudgetsBody,
   type ByConnectorIdParams,
   type ByConnectorToolIdParams,
   type ByIdParams,
@@ -11,7 +13,9 @@ import {
   type UpsertApiKeyBody,
   type UpsertCertificateBody,
   type UpsertOAuthBody,
+  agentBudgetsBodySchema,
   agentEventBodySchema,
+  agentEventInsightsQuerySchema,
   agentInboxSettingsBodySchema,
   agentSettingsBodySchema,
   agentTestBodySchema,
@@ -26,6 +30,8 @@ import {
   connectorLogsQuerySchema,
   connectorToolBodySchema,
   connectorToolRunBodySchema,
+  conversationInsightsQuerySchema,
+  conversationTurnsQuerySchema,
   evalDetailsQuerySchema,
   evalRunBodySchema,
   evalRunQuerySchema,
@@ -34,19 +40,31 @@ import {
   onboardingBodySchema,
   skillBodySchema,
   threadControlBodySchema,
+  toolCallInsightsQuerySchema,
   uiSkillBodySchema,
   uiSkillUpdateBodySchema,
   upsertApiKeyBodySchema,
   upsertCertificateBodySchema,
   upsertOAuthBodySchema,
   websiteBodySchema,
+  KNOWLEDGE_FILE_MAX_BYTES,
 } from "./metaAgent.schema.js";
 import { declareAccess } from "../../authz/registry.js";
+import {
+  type InstallRateupConnectorBody,
+  installRateupConnectorBodySchema,
+} from "./rateupTools/rateupConnector.service.js";
 
 export async function metaAgentRoutes(server: FastifyInstance) {
   declareAccess(server, { read: "meta_agent.read", write: "meta_agent.use" });
 
   const p = "/:whatsappSettingsId";
+
+  // Knowledge files are sent on to Meta, whose cap is 100,000,000 bytes.
+  server.register(fastifyMultipart, {
+    limits: { fileSize: KNOWLEDGE_FILE_MAX_BYTES, files: 1 },
+    throwFileSizeLimit: true,
+  });
 
   server.get(
     p,
@@ -177,7 +195,11 @@ export async function metaAgentRoutes(server: FastifyInstance) {
   );
   server.post(
     `${p}/knowledge/files`,
-    { schema: { params: byWhatsappSettingsIdParamSchema } },
+    {
+      // The server-wide body limit is ~31 MB; leave room for the multipart framing.
+      bodyLimit: KNOWLEDGE_FILE_MAX_BYTES + 1024 * 1024,
+      schema: { params: byWhatsappSettingsIdParamSchema },
+    },
     ctrl.uploadFileHandler,
   );
   server.delete(
@@ -337,6 +359,30 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     ctrl.syncConnectorsHandler,
   );
 
+  // configure: the built-in RateUp connector. Installing hands Meta a key to
+  // RateUp's own tool endpoints, so it is gated with the other credential writes.
+  server.get(
+    `${p}/rateup-connector`,
+    { schema: { params: byWhatsappSettingsIdParamSchema } },
+    ctrl.getRateupConnectorHandler,
+  );
+  server.post<{ Params: ByWhatsappSettingsIdParams; Body: InstallRateupConnectorBody }>(
+    `${p}/rateup-connector`,
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byWhatsappSettingsIdParamSchema, body: installRateupConnectorBodySchema },
+    },
+    ctrl.installRateupConnectorHandler,
+  );
+  server.delete<{ Params: ByWhatsappSettingsIdParams }>(
+    `${p}/rateup-connector`,
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byWhatsappSettingsIdParamSchema },
+    },
+    ctrl.uninstallRateupConnectorHandler,
+  );
+
   // configure: connector tools
   server.get(
     `${p}/connectors/:connectorId/tools`,
@@ -381,6 +427,66 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     `${p}/connectors/:connectorId/tools/sync`,
     { schema: { params: byConnectorIdParamSchema } },
     ctrl.syncConnectorToolsHandler,
+  );
+
+  // configure: budget. A usage cap decides when customers stop getting AI
+  // replies, so changing one sits with the other agent-wide controls.
+  server.get(
+    `${p}/budget`,
+    { schema: { params: byWhatsappSettingsIdParamSchema } },
+    ctrl.getAgentBudgetsHandler,
+  );
+  server.put<{ Params: ByWhatsappSettingsIdParams; Body: AgentBudgetsBody }>(
+    `${p}/budget`,
+    {
+      config: { permission: "meta_agent.manage" },
+      schema: { params: byWhatsappSettingsIdParamSchema, body: agentBudgetsBodySchema },
+    },
+    ctrl.updateAgentBudgetsHandler,
+  );
+  server.post(
+    `${p}/budget/sync`,
+    { schema: { params: byWhatsappSettingsIdParamSchema } },
+    ctrl.syncAgentBudgetsHandler,
+  );
+
+  // insights (transient, read on request from the UI, never on load)
+  server.get(
+    `${p}/insights/conversations`,
+    {
+      schema: {
+        params: byWhatsappSettingsIdParamSchema,
+        querystring: conversationInsightsQuerySchema,
+      },
+    },
+    ctrl.getConversationInsightsHandler,
+  );
+  server.get(
+    `${p}/insights/tool-calls`,
+    {
+      schema: { params: byWhatsappSettingsIdParamSchema, querystring: toolCallInsightsQuerySchema },
+    },
+    ctrl.getToolCallInsightsHandler,
+  );
+  server.get(
+    `${p}/insights/agent-events`,
+    {
+      schema: {
+        params: byWhatsappSettingsIdParamSchema,
+        querystring: agentEventInsightsQuerySchema,
+      },
+    },
+    ctrl.getAgentEventInsightsHandler,
+  );
+  server.get(
+    `${p}/insights/turns`,
+    {
+      schema: {
+        params: byWhatsappSettingsIdParamSchema,
+        querystring: conversationTurnsQuerySchema,
+      },
+    },
+    ctrl.getConversationTurnsHandler,
   );
 
   // operate: eval (transient, already action-triggered from the UI)

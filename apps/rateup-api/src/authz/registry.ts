@@ -44,12 +44,25 @@ export function classifyRoute(route: RouteOptions): "declared" | "tagged" | "und
   return "undeclared";
 }
 
+export function isMisplacedStaffRoute(route: RouteOptions): boolean {
+  return route.config?.access === "staff" && !route.url.startsWith("/api/staff/");
+}
+
 export function registerAuthzRouteRegistry(server: FastifyInstance) {
   const routes: RouteOptions[] = [];
   server.addHook("onRoute", (route) => {
     routes.push(route);
   });
   server.addHook("onReady", async () => {
+    // `staff` makes `authorize` stand aside, so outside the staff plugin (whose own hooks
+    // authenticate) it would be an open door. Refused in every environment, not only strict.
+    const misplacedStaff = routes.filter(isMisplacedStaffRoute).map(describeRoute);
+    if (misplacedStaff.length > 0) {
+      throw new Error(
+        `access "staff" is only valid under /api/staff/:\n  ${misplacedStaff.join("\n  ")}`,
+      );
+    }
+
     const undeclared = routes.filter((r) => classifyRoute(r) === "undeclared").map(describeRoute);
     if (undeclared.length === 0) return;
     if (isStrict()) {
@@ -69,7 +82,7 @@ export interface AccessDefaults {
    * Applied to every route of this plugin (and its children) that declares nothing itself.
    * `token`: the plugin's own preHandler verifies an API key (external v1, Zapier, support webhook).
    */
-  access?: "public" | "session" | "token";
+  access?: "public" | "session" | "token" | "staff";
   /** Permission for GET/HEAD routes that declare nothing themselves. Implies a session. */
   read?: Permission;
   /** Permission for every other method's routes that declare nothing themselves. Implies a session. */

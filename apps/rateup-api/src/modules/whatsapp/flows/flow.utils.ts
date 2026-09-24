@@ -985,6 +985,24 @@ export function convertHeaderToNewQuestion(flow: WaFlowJson): WaFlowJson {
  * elements, and adds the routing model / data-api version when any screen needs
  * a data exchange.
  */
+/**
+ * Every answerable field on a screen, by name — including those an "If" holds
+ * in its branches, since a logic jump moves fields there.
+ */
+export function screenFieldNames(children: WaFlowForm[] | undefined = []): string[] {
+  return children.flatMap((child) => {
+    if (child.type === "Footer") return [];
+    const branches = child as { then?: WaFlowForm[]; else?: WaFlowForm[] };
+    const own = child.name ? [child.name] : [];
+    return [...own, ...screenFieldNames([...(branches.then ?? []), ...(branches.else ?? [])])];
+  });
+}
+
+/** Every answerable field in a flow. */
+export function flowFieldNames(flow: WaFlowJson): Set<string> {
+  return new Set(flow.screens.flatMap((screen) => screenFieldNames(screen.layout.children)));
+}
+
 export function transformFlowAndLogicJumps(
   transformedFlow: WaFlowJson,
   logicJump: PrismaJson.PWaFlowLogicJumps,
@@ -1000,9 +1018,21 @@ export function transformFlowAndLogicJumps(
 
   let flag = false;
   Object.entries(logicJump).forEach(([key, value]) => {
-    const screen = transformedFlow?.screens?.find((s) => s.id === key);
+    const screenIndex = transformedFlow?.screens?.findIndex((s) => s.id === key) ?? -1;
+    const screen = transformedFlow?.screens?.[screenIndex];
     if (!screen?.layout?.children) return;
     const screenChildren = screen.layout.children;
+    // Earlier screens' answers ride along too. A flow Meta AI sends carries no
+    // token of ours, so this request is the only place a run's answers so far
+    // can come from — nothing about the customer is held between screens.
+    const earlierScreensPayload = transformedFlow.screens
+      .slice(0, screenIndex)
+      .reduce<Record<string, string>>((acc, earlier) => {
+        for (const name of screenFieldNames(earlier.layout.children)) {
+          acc[name] = `\${screen.${earlier.id}.form.${name}}`;
+        }
+        return acc;
+      }, {});
     const currentScreenPayload = screenChildren.reduce<Record<string, string>>((prev, fe) => {
       if (fe.name) {
         return {
@@ -1011,7 +1041,7 @@ export function transformFlowAndLogicJumps(
         };
       }
       return prev;
-    }, {});
+    }, earlierScreensPayload);
 
     for (const element of value as Array<{
       action?: string;

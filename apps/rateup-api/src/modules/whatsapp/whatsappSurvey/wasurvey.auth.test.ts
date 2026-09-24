@@ -12,12 +12,23 @@ vi.mock("../../../utils/prisma.js", () => ({
   },
 }));
 
+// The gate also refuses a suspended account; that lookup has its own tests in
+// modules/org/orgSuspension.test.ts.
+vi.mock("../../org/orgSuspension.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../org/orgSuspension.js")>();
+  return { ...actual, isOrgSuspended: vi.fn() };
+});
+
 import prisma from "../../../utils/prisma.js";
+import { isOrgSuspended } from "../../org/orgSuspension.js";
 import {
   assertWithinConversationLimit,
   checkConversationLimitAvailable,
   ConversationLimitError,
+  OrgSuspendedError,
 } from "./wasurvey.auth.js";
+
+const suspendedMock = isOrgSuspended as unknown as ReturnType<typeof vi.fn>;
 
 const usageMock = prisma.usageStats.findUnique as unknown as ReturnType<typeof vi.fn>;
 const subMock = prisma.subscription.findUnique as unknown as ReturnType<typeof vi.fn>;
@@ -50,6 +61,7 @@ function seed({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  suspendedMock.mockResolvedValue(false);
 });
 
 describe("ConversationLimitError", () => {
@@ -101,6 +113,12 @@ describe("assertWithinConversationLimit", () => {
   test("resolves silently when within the allowance", async () => {
     seed({ monthly: 10, max: 500 });
     await expect(assertWithinConversationLimit("org")).resolves.toBeUndefined();
+  });
+
+  test("refuses a suspended account before the allowance is even read", async () => {
+    seed({ monthly: 10, max: 500 });
+    suspendedMock.mockResolvedValue(true);
+    await expect(assertWithinConversationLimit("org")).rejects.toBeInstanceOf(OrgSuspendedError);
   });
 
   test("throws ConversationLimitError when over the allowance", async () => {
