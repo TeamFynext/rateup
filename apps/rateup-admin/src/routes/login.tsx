@@ -50,7 +50,7 @@ function LoginPage() {
       <div className="flex w-full max-w-105 flex-col gap-10 rounded-xl border bg-card p-8 sm:p-10">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-3">
-            <RateUpLogo className="h-13" />
+            <RateUpLogo className="h-7" />
             <span className="text-sm font-medium text-muted-foreground">Admin</span>
           </span>
           <span className="flex size-10 items-center justify-center rounded-lg bg-rail text-rail-foreground">

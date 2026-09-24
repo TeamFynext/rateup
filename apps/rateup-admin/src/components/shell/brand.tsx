@@ -28,27 +28,29 @@ export function RateUpStar({ className }: { className?: string }) {
 }
 
 /**
- * The full lockup: the star over "RateUp" in brand navy. That navy is unreadable on a dark
- * background, and tinting it turns the star yellow and the type electric blue — the one
- * thing a logo may not do. So dark mode shows the star beside the name instead, which is
- * the same mark in the colours it was drawn in.
+ * The horizontal lockup, the same `rateup.png` / `rateup-white.png` the rateup.app navbar
+ * shows (rateup-ui's `RateupLockup`), with the white one in dark mode.
+ *
+ * Both PNGs are 2500×992 but the lockup only covers x 289–2214, y 298–759; the rest is
+ * transparent. The frame takes the lockup's own ratio and the image is scaled and offset to
+ * fill it, so `className` sizes what is visible. Re-measure if either asset is replaced.
  */
 export function RateUpLogo({ className }: { className?: string }) {
+  const img = "absolute top-[-64.5%] left-[-15%] h-auto w-[129.8%] max-w-none select-none";
   return (
-    <>
+    <span
+      role="img"
+      aria-label="RateUp"
+      className={cn("relative block aspect-[1926/462] h-8 flex-none overflow-hidden", className)}
+    >
+      <img src="/rateup.png" alt="" className={cn(img, "dark:hidden")} draggable={false} />
       <img
-        src="/logo.svg"
-        alt="RateUp"
-        width={110}
-        height={62}
-        className={cn("h-12 w-auto select-none dark:hidden", className)}
+        src="/rateup-white.png"
+        alt=""
+        className={cn(img, "hidden dark:block")}
         draggable={false}
       />
-      <span className="hidden items-center gap-2.5 dark:flex">
-        <RateUpStar className="size-9" />
-        <span className="text-[26px] font-semibold tracking-tight">RateUp</span>
-      </span>
-    </>
+    </span>
   );
 }
 
