@@ -293,8 +293,10 @@ describe("getShopifyIntegrationByShop", () => {
 // ===========================================================================
 
 describe("registerWebhookByTopic", () => {
+  const created = { data: { webhookSubscriptionCreate: { userErrors: [] } } };
+
   test("points Shopify at this API's public webhook route", async () => {
-    const client = { request: vi.fn(async (_query: string, _opts?: any) => ({ data: {} })) };
+    const client = { request: vi.fn(async (_query: string, _opts?: any) => created) };
     const shopify = (await import("./shopify.config.js")).default as any;
     shopify.clients.Graphql = class {
       request = client.request;
@@ -304,11 +306,13 @@ describe("registerWebhookByTopic", () => {
 
     const vars = client.request.mock.calls[0][1].variables;
     expect(vars.topic).toBe("ORDERS_CREATE");
-    expect(vars.webhookSubscription.callbackUrl).toContain(WEBHOOK_API_ROUTE);
+    // `callbackUrl` was removed from WebhookSubscriptionInput; 2026-07 takes `uri`.
+    expect(vars.webhookSubscription.callbackUrl).toBeUndefined();
+    expect(vars.webhookSubscription.uri).toContain(WEBHOOK_API_ROUTE);
   });
 
   test("registers the callback URL with no trailing space", async () => {
-    const client = { request: vi.fn(async (_query: string, _opts?: any) => ({ data: {} })) };
+    const client = { request: vi.fn(async (_query: string, _opts?: any) => created) };
     const shopify = (await import("./shopify.config.js")).default as any;
     shopify.clients.Graphql = class {
       request = client.request;
@@ -316,8 +320,53 @@ describe("registerWebhookByTopic", () => {
 
     await registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP } as unknown as Session);
 
-    const url = client.request.mock.calls[0][1].variables.webhookSubscription.callbackUrl;
+    const url = client.request.mock.calls[0][1].variables.webhookSubscription.uri;
     expect(url).toBe(`${process.env.API_URL}${WEBHOOK_API_ROUTE}`);
+  });
+
+  test("an existing subscription at the same address counts as registered", async () => {
+    const client = {
+      request: vi.fn(async () => ({
+        data: {
+          webhookSubscriptionCreate: {
+            userErrors: [
+              {
+                field: ["webhookSubscription", "callbackUrl"],
+                message: "Address for this topic has already been taken",
+              },
+            ],
+          },
+        },
+      })),
+    };
+    const shopify = (await import("./shopify.config.js")).default as any;
+    shopify.clients.Graphql = class {
+      request = client.request;
+    };
+
+    await expect(
+      registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP } as unknown as Session),
+    ).resolves.toBeUndefined();
+  });
+
+  test("throws on userErrors instead of reporting success", async () => {
+    const client = {
+      request: vi.fn(async () => ({
+        data: {
+          webhookSubscriptionCreate: {
+            userErrors: [{ field: ["topic"], message: "Access denied for orders/create" }],
+          },
+        },
+      })),
+    };
+    const shopify = (await import("./shopify.config.js")).default as any;
+    shopify.clients.Graphql = class {
+      request = client.request;
+    };
+
+    await expect(
+      registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP } as unknown as Session),
+    ).rejects.toThrow("Access denied for orders/create");
   });
 });
 

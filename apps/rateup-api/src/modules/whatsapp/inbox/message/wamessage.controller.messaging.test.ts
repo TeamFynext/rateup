@@ -84,7 +84,11 @@ vi.mock("../../../../../generated/prisma/client.js", () => ({
     WEBCHAT: "WEBCHAT",
     INTERNAL: "INTERNAL",
   },
+  MetaAgentThreadOwner: { AI: "AI", STAFF: "STAFF" },
   Prisma: {},
+}));
+vi.mock("../../../metaAgent/metaAgent.threadOwner.js", () => ({
+  setMetaAgentThreadOwner: vi.fn(),
 }));
 
 import {
@@ -129,6 +133,7 @@ import {
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
+import { setMetaAgentThreadOwner } from "../../../metaAgent/metaAgent.threadOwner.js";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 import { addZapierTriggerToQueue } from "../../../integrations/external/zapier/zapier.service.js";
@@ -180,6 +185,7 @@ const m = {
   setSubjectIfBlank: setConversationSubjectIfBlank as unknown as Mock,
   updateConversation: updateConversation as unknown as Mock,
   sendViaWs: sendViaWstoOrgHandler as unknown as Mock,
+  setThreadOwner: setMetaAgentThreadOwner as unknown as Mock,
   igDetails: getIgUserDetailsFromMeta as unknown as Mock,
   fbDetails: getFacebookUserDetailsFromMeta as unknown as Mock,
   zapier: addZapierTriggerToQueue as unknown as Mock,
@@ -617,6 +623,49 @@ describe("handleWaMessages - outbound bookkeeping", () => {
 
     expect(m.getTemplate).toHaveBeenCalledWith("order_update", "org-1");
     expect(m.addNewWaMessage.mock.calls[0][6]).toEqual([{ a: 1 }]);
+  });
+});
+
+describe("handleWaMessages - taking a thread over from Meta AI", () => {
+  const onMetaAi = () =>
+    m.byPhone.mockResolvedValue({
+      contact: { ...CONTACT, metaAgentThreadOwner: "AI" },
+      conversation: { ...CONVERSATION },
+    });
+
+  test("a staff reply hands the thread to staff and says so in the broadcast", async () => {
+    onMetaAi();
+    m.setThreadOwner.mockResolvedValue(true);
+
+    await callHandleWaMessages({ type: "send", userId: "user-1" });
+
+    expect(m.setThreadOwner).toHaveBeenCalledWith({
+      orgId: "org-1",
+      phone: "15550001",
+      owner: "STAFF",
+      reason: "staff_reply",
+      at: expect.any(Date),
+    });
+    const [, event] = m.sendViaWs.mock.calls[0];
+    expect(event.inbox.contact.metaAgentThreadOwner).toBe("STAFF");
+  });
+
+  test.each([
+    ["an automated send", { type: "send" as const, userId: "user-1", isAutomated: true }],
+    ["a send with no user", { type: "send" as const, userId: undefined }],
+    ["an inbound message", { type: "receive" as const, userId: undefined }],
+  ])("%s leaves the thread with Meta AI", async (_name, overrides) => {
+    onMetaAi();
+
+    await callHandleWaMessages(overrides);
+
+    expect(m.setThreadOwner).not.toHaveBeenCalled();
+  });
+
+  test("does nothing for a contact Meta AI is not answering", async () => {
+    await callHandleWaMessages({ type: "send", userId: "user-1" });
+
+    expect(m.setThreadOwner).not.toHaveBeenCalled();
   });
 });
 

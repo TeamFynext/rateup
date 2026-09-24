@@ -2,6 +2,7 @@ import "@shopify/shopify-api/adapters/node";
 import { DeliveryMethod, WebhookHandler } from "@shopify/shopify-api";
 import { log } from "../../../utils/logger.js";
 import { webhookQueue } from "../../../workers/bullmq/queues/index.js";
+import { updateShopifySessionScope } from "./shopify.session.js";
 
 //callbackhandlers only working if added in same file. find out why?
 async function draftOrderCreateHandler(
@@ -205,9 +206,23 @@ export async function appSubscriptionUpdateHandler(
   await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
+export async function appScopesUpdateHandler(
+  topic: string,
+  shop: string,
+  webhookRequestBody: string,
+  _webhookId: string,
+  _apiVersion?: string,
+  _context?: unknown,
+) {
+  log.info(`handling webhook ${topic} for ${shop} shop`);
+  const { current } = JSON.parse(webhookRequestBody) as { current?: string[] };
+  if (Array.isArray(current)) await updateShopifySessionScope(shop, current);
+}
+
 //callbackroutes
 export const WEBHOOK_API_ROUTE = "/api/public/integrations/shopify/webhooks";
 
+/** Per-shop topics, subscribed through the Admin API when the merchant enables them. */
 export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
   ORDERS_CREATE: [
     {
@@ -260,7 +275,20 @@ export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
   ],
 };
 
+/**
+ * App-level topics. These are subscribed once for every shop through the
+ * [webhooks] section of shopify.app.toml (`shopify app deploy`), not per shop
+ * through the Admin API; they are listed here so `webhooks.process` can
+ * dispatch them. The compliance topics can only be subscribed that way.
+ */
 export const mandatoryWebhookHandlers: Record<string, WebhookHandler[]> = {
+  APP_SCOPES_UPDATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: appScopesUpdateHandler,
+    },
+  ],
   APP_SUBSCRIPTIONS_UPDATE: [
     {
       deliveryMethod: DeliveryMethod.Http,

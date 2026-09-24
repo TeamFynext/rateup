@@ -23,7 +23,7 @@ import {
   WaTemplateSendComponent,
 } from "./whatsapp.types.js";
 import { RouteShorthandOptionsWithHandler } from "fastify";
-import { Session } from "@shopify/shopify-api";
+import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
 import z from "zod";
 import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service.js";
 
@@ -218,7 +218,7 @@ declare global {
     credential: GoogleSheetCredential;
   };
   interface ShopifyCredential {
-    session: Session;
+    session: StoredShopifySession;
     isWebhookRegistered: boolean;
     shopifySurveys: ShopifySurvey[];
   }
@@ -1623,7 +1623,7 @@ export interface FlowLogicJump {
 }
 
 export interface orgWsMessage {
-  type: "inbox" | "message_deleted";
+  type: "inbox" | "message_deleted" | "meta_agent_thread";
   inbox?: {
     /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
     contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
@@ -1639,6 +1639,14 @@ export interface orgWsMessage {
     deletedAt: string;
     /** Identifies the message inside the inbox row's last-message preview. */
     waCreatedAt?: string | null;
+  };
+  /** Who now holds a contact's thread under Meta AI thread control. */
+  meta_agent_thread?: {
+    contactId: string;
+    owner: "AI" | "STAFF";
+    /** Meta's handover `metadata`, e.g. `customer_request`. */
+    reason: string | null;
+    at: string;
   };
 }
 

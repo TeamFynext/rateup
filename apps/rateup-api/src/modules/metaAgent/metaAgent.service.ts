@@ -1,9 +1,11 @@
-import { Prisma } from "../../../generated/prisma/client.js";
+import { MetaAgentThreadOwner, Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { aes_decrypt } from "../../../utils/encryption/encryption.utils.js";
 import { callMetaAgentApi } from "./metaAgent.client.js";
+import { setMetaAgentThreadOwner } from "./metaAgent.threadOwner.js";
 import {
   AgentEventBody,
+  AgentInboxSettingsBody,
   AgentSettingsBody,
   AgentTestBody,
   BusinessInfoBody,
@@ -230,7 +232,26 @@ export async function getAgentSettings(orgId: string, whatsappSettingsId: string
     ai_audience: agent.aiAudience ?? "EVERYONE",
     never_say_phrases: agent.neverSayPhrases,
     settingsSyncedAt: agent.settingsSyncedAt,
+    // Ours, not Meta's — see `updateInboxSettings`.
+    releaseOnTicketClose: agent.releaseOnTicketClose,
   };
+}
+
+/**
+ * Settings that only change how Rateup's inbox drives the agent. Kept off
+ * `updateAgentSettings`, whose body is forwarded to Meta verbatim.
+ */
+export async function updateInboxSettings(
+  orgId: string,
+  whatsappSettingsId: string,
+  body: AgentInboxSettingsBody,
+) {
+  const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
+  await prisma.metaBusinessAgent.update({
+    where: { id: agent.id },
+    data: { releaseOnTicketClose: body.releaseOnTicketClose },
+  });
+  return getAgentSettings(orgId, whatsappSettingsId);
 }
 
 export async function updateAgentSettings(
@@ -1320,9 +1341,11 @@ export async function setThreadControl(
   orgId: string,
   whatsappSettingsId: string,
   body: ThreadControlBody,
+  /** Recorded as the handover reason on a release; the inbox shows it. */
+  releaseReason = "released",
 ) {
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
-  return callMetaAgentApi(
+  const result = await callMetaAgentApi(
     `/business/whatsapp/phone_numbers/${entityId}/thread_control`,
     "POST",
     accessToken,
@@ -1331,4 +1354,15 @@ export async function setThreadControl(
     // The thread-control endpoint is versioned separately from the agent APIs.
     { "X-API-Version": "1.0.0" },
   );
+  // Meta sends no handover to the app that let go, so a release is recorded
+  // here. Contacts are stored by bare digits; `to` arrives in E.164.
+  if (body.action === "release") {
+    await setMetaAgentThreadOwner({
+      orgId,
+      phone: body.to.replace(/\D/g, ""),
+      owner: MetaAgentThreadOwner.AI,
+      reason: releaseReason,
+    });
+  }
+  return result;
 }

@@ -29,6 +29,9 @@ export const SCHEDULED_JOBS = [
   { id: "campaignSettle", pattern: "*/5 * * * *", tz: "Etc/UTC" },
   { id: "hourlyJobs", pattern: "0 * * * *" },
   { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
+  // Cycles legacy non-expiring Shopify tokens (rejected from 2027-01-01) and keeps
+  // idle shops' 90-day refresh tokens from lapsing; in-use tokens renew on demand.
+  { id: "shopifyTokenRenewal", pattern: "40 2 * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },
   // Expired partner-API replay records. They hold nothing but a stored response and are
   // only useful for 24 hours; the durable idempotency guarantee is the ledger's own key.

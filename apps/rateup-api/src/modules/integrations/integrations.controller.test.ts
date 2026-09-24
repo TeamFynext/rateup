@@ -100,6 +100,25 @@ describe("the integration listings", () => {
     expect(svc.getAllIntegrationsByOrgId).toHaveBeenCalledWith(ORG);
   });
 
+  test("the listing strips the Shopify token pair but keeps the shop", async () => {
+    svc.getAllIntegrationsByOrgId.mockResolvedValueOnce([
+      {
+        name: "shopify",
+        credential: {
+          session: { shop: "demo.myshopify.com", accessToken: "shpat_x", refreshToken: "shprt_x" },
+          shopifySurveys: [],
+        },
+      },
+    ]);
+    const rep = reply();
+
+    await getAllIntegrationsByOrgHandler({ user: { orgId: ORG } } as never, rep);
+
+    const [shopify] = answer(rep).body;
+    expect(shopify.credential.session).toEqual({ shop: "demo.myshopify.com" });
+    expect(shopify.credential.shopifySurveys).toEqual([]);
+  });
+
   test("the statuses view only reports connectedness, not credentials", async () => {
     svc.getAllIntegrationsByOrgId.mockResolvedValueOnce([
       { name: "zapier", credential: { accessToken: "hash" } },

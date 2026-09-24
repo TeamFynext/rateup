@@ -202,6 +202,14 @@ export enum WaEvent {
   READ = "read",
   LEADGEN = "leadgen",
   SMBMessageEchoes = "smb_message_echoes",
+  /**
+   * Traffic on a thread another app holds — in practice the Meta Business Agent
+   * (Meta AI). The customer's messages, the agent's replies and their statuses
+   * all arrive nested under `value.standby` instead of `value` itself.
+   */
+  Standby = "standby",
+  /** A thread changed hands between the Meta Business Agent and a person. */
+  MessagingHandovers = "messaging_handovers",
   ACCOUNT_UPDATE = "account_update",
   PhoneNumberNameUpdate = "phone_number_name_update",
 }

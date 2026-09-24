@@ -775,7 +775,10 @@ export async function filterChats(
           -- was cached forever and a ticket closed since first load kept its old
           -- status client-side. Contact has no updatedAt column; the ticket's own
           -- is what changes when it moves.
-          COALESCE(conv."updatedAt", conv."createdAt") AS "updatedAt",
+          --
+          -- Who holds the thread under Meta AI thread control lives on the contact,
+          -- so its change time counts too, or a handover never refreshed the row.
+          GREATEST(COALESCE(conv."updatedAt", conv."createdAt"), c."metaAgentThreadOwnerAt") AS "updatedAt",
           conv."createdAt"         AS "ticketCreatedAt",
           conv."closedAt"          AS "ticketClosedAt",
           conv."reopenCount"       AS "ticketReopenCount",
@@ -793,6 +796,32 @@ export async function filterChats(
           c."blockedOnWhatsApp",
           c."isSpam",
           c."spamMarkedAt",
+          c."metaAgentThreadOwner",
+          c."metaAgentThreadOwnerAt",
+          c."metaAgentHandoverReason",
+          -- Whether Meta AI has been part of this customer's conversation — its
+          -- replies are stored with Meta's originator=bizai tag — on a number
+          -- that still has the agent. Lets the inbox offer a hand-back before any
+          -- handover has been seen, without offering one on every chat of that number.
+          (
+            EXISTS (
+              SELECT 1
+              FROM "MetaBusinessAgent" mba
+              JOIN "WhatsappSettings" mws ON mws.id = mba."whatsappSettingsId"
+              WHERE mba."orgId" = c."orgId"
+                AND mba.status = 'ONBOARDED'
+                AND (
+                  c."lastReceivedMetadata"->>'phone_number_id' IS NULL
+                  OR mws."phoneId" = c."lastReceivedMetadata"->>'phone_number_id'
+                )
+            )
+            AND EXISTS (
+              SELECT 1
+              FROM "WaMessage" aiw
+              WHERE aiw."contactId" = c.id
+                AND aiw."messageBody"->'send'->>'biz_opaque_callback_data' LIKE '%"originator":"bizai"%'
+            )
+          ) AS "metaAgentInvolved",
           conv."isFavorite",
           c."source",
           c."igsId",

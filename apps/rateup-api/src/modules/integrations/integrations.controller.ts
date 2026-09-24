@@ -27,6 +27,21 @@ import {
 import { IntegratedApps } from "../../types/enums.js";
 import { parsePhoneNumber } from "libphonenumber-js";
 
+/**
+ * Strips the Shopify token pair before an integration leaves the API. The UI
+ * reads only the shop domain; the tokens (the refresh token mints new access
+ * tokens for 90 days) never need to reach a browser.
+ */
+function redactIntegration<T extends { name: string; credential: unknown } | null>(
+  integration: T,
+): T {
+  if (integration?.name !== IntegratedApps.shopify) return integration;
+  const credential = integration.credential as { session?: Record<string, unknown> } | null;
+  if (!credential?.session) return integration;
+  const { accessToken: _a, refreshToken: _r, ...session } = credential.session;
+  return { ...integration, credential: { ...credential, session } };
+}
+
 export const getAllIntegrationsByOrgHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -34,7 +49,7 @@ export const getAllIntegrationsByOrgHandler = async (
   try {
     const { orgId } = request.user;
     const data = await getAllIntegrationsByOrgId(orgId);
-    reply.send(data);
+    reply.send(data.map(redactIntegration));
   } catch {
     log.error("Error fetching all integrations");
     return reply.code(500).send({ error: "Something went wrong" });
@@ -67,7 +82,7 @@ export const getIntegrationByNameHandler = async (
     const { orgId } = request.user;
     const name = request.params.name;
     const data = await getIntegrationByName(orgId, name);
-    reply.code(200).send(data);
+    reply.code(200).send(redactIntegration(data));
   } catch {
     log.error("Error fetching integration by name");
     return reply.code(500).send({ error: "Something went wrong" });
@@ -180,7 +195,7 @@ export const updateIntegrationByNameHandler = async (
       request.params.name,
       request.body,
     );
-    reply.send(data);
+    reply.send(redactIntegration(data));
   } catch (error) {
     console.error(error);
     log.error({ err: error }, "Error updating integration by name");

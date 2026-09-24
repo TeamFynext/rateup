@@ -26,6 +26,10 @@ vi.mock("../../../utils/prisma.js", () => ({
 
 vi.mock("../../stats/stats.service.js", () => ({ incrementConversationCount: vi.fn() }));
 
+vi.mock("../../metaAgent/metaAgent.autoRelease.js", () => ({
+  releaseThreadsOnTicketClose: vi.fn(),
+}));
+
 vi.mock("../../whatsapp/inbox/inboxStats/inboxStats.service.js", () => ({
   mapStatusToField: vi.fn((status: string) => (status ? `${status.toLowerCase()}Count` : null)),
   transitionInboxStat: vi.fn(),
@@ -33,6 +37,7 @@ vi.mock("../../whatsapp/inbox/inboxStats/inboxStats.service.js", () => ({
 
 import prisma from "../../../utils/prisma.js";
 import { incrementConversationCount } from "../../stats/stats.service.js";
+import { releaseThreadsOnTicketClose } from "../../metaAgent/metaAgent.autoRelease.js";
 import { transitionInboxStat } from "../../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { CloseReason, WaMessageAssignStatus } from "../../../types/enums.js";
 import {
@@ -272,6 +277,19 @@ describe("setInboxStatus", () => {
     const data = db.contact.update.mock.calls[0][0].data;
     expect(data.closedAt).toBeInstanceOf(Date);
     expect(data.closedBy).toBe(USER);
+  });
+
+  test("hands the thread back to Meta AI when the ticket closes, not on a live move", async () => {
+    db.contact.findUnique.mockResolvedValue(before);
+    db.contact.update.mockResolvedValue({ ...before, waMessageAssignStatus: "RESOLVED" });
+
+    await setInboxStatus("c1", WaMessageAssignStatus.RESOLVED, USER_ACTOR);
+    expect(releaseThreadsOnTicketClose).toHaveBeenCalledWith(ORG, ["c1"]);
+
+    vi.mocked(releaseThreadsOnTicketClose).mockClear();
+    db.contact.update.mockResolvedValue({ ...before, waMessageAssignStatus: "ASSIGNED" });
+    await setInboxStatus("c1", WaMessageAssignStatus.ASSIGNED, USER_ACTOR);
+    expect(releaseThreadsOnTicketClose).not.toHaveBeenCalled();
   });
 
   test("clears the close stamp when moving back to a live status", async () => {

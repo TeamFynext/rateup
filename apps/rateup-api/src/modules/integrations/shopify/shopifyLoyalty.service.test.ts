@@ -12,6 +12,7 @@ vi.mock("../../loyalty/accounts/pointsReversal.service.js", () => ({
   reversePurchasePoints: vi.fn(),
 }));
 vi.mock("../../loyalty/program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn() }));
+vi.mock("../../loyalty/redemptions/redemption.service.js", () => ({ applyRedemption: vi.fn() }));
 
 import { ShopifyEvents } from "../../../types/enums.js";
 import { awardPoints } from "../../loyalty/accounts/account.service.js";
@@ -19,8 +20,11 @@ import { resolveProgramMember } from "../../loyalty/accounts/memberLookup.js";
 import { reversePurchasePoints } from "../../loyalty/accounts/pointsReversal.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { shopifyLoyaltyQueue } from "../../../workers/bullmq/queues/webhook.queue.js";
+import { applyRedemption } from "../../loyalty/redemptions/redemption.service.js";
+import { LoyaltyError } from "../../loyalty/loyalty.errors.js";
 import {
   enqueueShopifyOrderLoyalty,
+  extractDiscountCodes,
   extractOrderIdentity,
   extractPurchaseAmount,
   processShopifyOrderLoyalty,
@@ -145,7 +149,10 @@ describe("enqueueing", () => {
     await enqueueShopifyOrderLoyalty(job() as never);
 
     const [, , opts] = (shopifyLoyaltyQueue.add as Mock).mock.calls[0];
-    expect(opts.jobId).toBe(`loyalty:${SHOP}:ORDERS_PAID:5551`);
+    expect(opts.jobId).toBe(`loyalty-${SHOP}-ORDERS_PAID-5551`);
+    // BullMQ 6 throws "Custom Id cannot contain :" at add() time, which failed
+    // the whole order webhook job.
+    expect(opts.jobId).not.toContain(":");
     expect(opts.attempts).toBe(5);
   });
 });
@@ -260,5 +267,61 @@ describe("cancelling", () => {
 
     expect(outcome).toBe("ignored");
     expect(reversePurchasePoints).not.toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
+// Vouchers applied at Shopify checkout
+// ===========================================================================
+
+describe("vouchers used at Shopify checkout", () => {
+  test("extracts the applied codes from the order", () => {
+    expect(
+      extractDiscountCodes(
+        body({ discount_codes: [{ code: " RU-RQLHC2KGXV ", amount: "10.00" }, { code: "" }] }),
+      ),
+    ).toEqual(["RU-RQLHC2KGXV"]);
+    expect(extractDiscountCodes(body({ discount_codes: null }))).toEqual([]);
+  });
+
+  test("marks the voucher used, the same way the cashier button does", async () => {
+    await processShopifyOrderLoyalty(
+      job({ topic: ShopifyEvents.ORDERS_CREATE, discountCodes: ["RU-RQLHC2KGXV"] }),
+    );
+
+    expect(applyRedemption).toHaveBeenCalledWith(
+      { redemptionCode: "RU-RQLHC2KGXV", appliedBy: "shopify", notes: "Shopify order 5551" },
+      "org-1",
+    );
+  });
+
+  test("still marks it used when Shopify orders earn no points", async () => {
+    (getLoyaltyProgramByOrg as Mock).mockResolvedValue({
+      id: "prog-1",
+      status: "active",
+      enableShopifyOrderPoints: false,
+    });
+
+    await processShopifyOrderLoyalty(job({ discountCodes: ["RU-RQLHC2KGXV"] }));
+
+    expect(applyRedemption).toHaveBeenCalled();
+  });
+
+  test("a code that isn't a RateUp voucher, or is already used, doesn't cost the points", async () => {
+    (applyRedemption as Mock).mockRejectedValue(
+      new LoyaltyError("VOUCHER_ALREADY_USED", "Redemption already applied"),
+    );
+
+    const outcome = await processShopifyOrderLoyalty(job({ discountCodes: ["SUMMER10"] }));
+
+    expect(outcome).toBe("awarded");
+  });
+
+  test("a cancellation does not touch vouchers", async () => {
+    await processShopifyOrderLoyalty(
+      job({ topic: ShopifyEvents.ORDERS_CANCELLED, discountCodes: ["RU-RQLHC2KGXV"] }),
+    );
+
+    expect(applyRedemption).not.toHaveBeenCalled();
   });
 });

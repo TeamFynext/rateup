@@ -353,6 +353,16 @@ export const updateIntegrationByName = async (
     orgId: _ignoredOrgId,
     ...rest
   } = data as UpdateIntgrationInput & { orgId?: string };
+  if (name === IntegratedApps.shopify && rest.credential) {
+    // Shopify rotates the token pair on every refresh and retires the old one,
+    // so a credential read before a refresh and written back after it would
+    // restore a dead token. Only saveShopifySession writes the session; this
+    // replaces the rest of the credential and carries the stored session over,
+    // in one statement.
+    const { session: _ignoredSession, ...credential } = rest.credential;
+    delete rest.credential;
+    await prisma.$executeRaw`UPDATE "Integration" SET credential = ${JSON.stringify(credential)}::jsonb || CASE WHEN credential->'session' IS NULL THEN '{}'::jsonb ELSE jsonb_build_object('session', credential->'session') END WHERE "orgId" = ${orgId}::uuid AND name = ${name}`;
+  }
   const integration = await prisma.integration.update({
     where: {
       orgid_integration_name_unique: {

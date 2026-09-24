@@ -19,6 +19,7 @@ import {
   transitionInboxStat,
 } from "../../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { incrementConversationCount } from "../../stats/stats.service.js";
+import { releaseThreadsOnTicketClose } from "../../metaAgent/metaAgent.autoRelease.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -207,6 +208,11 @@ export async function setInboxStatus(
   // It is maintained after commit, the same way every other writer treats it.
   const { before, contact } = result;
   const statusChanged = before.waMessageAssignStatus !== contact.waMessageAssignStatus;
+
+  // A closed ticket ends the escalation — see releaseThreadsOnTicketClose.
+  if (terminal && statusChanged) {
+    await releaseThreadsOnTicketClose(contact.orgId, [contactId]);
+  }
   if (statusChanged && before.lastReceivedMessageTimeStamp && !contact.blockedOnWhatsApp) {
     await transitionInboxStat(
       contact.orgId,
@@ -1335,6 +1341,7 @@ export async function getStaffDetailedConversationAnalytics(
         name: string;
         status: string;
         email: string;
+        profilePhoto: string | null;
         totalAssignedConversations: number;
         totalClosedConversations: number;
         totalMessagesHandled: number;
@@ -1615,6 +1622,7 @@ SELECT
   'name', u."name",
     'status', om."status",
     'email', u."email",
+    'profilePhoto', u."profilePhoto",
     'totalAssignedConversations', COALESCE((SELECT total_assigned FROM assigned_stats), 0),
     'totalClosedConversations', COALESCE((SELECT total_closed FROM closed_stats), 0),
     'totalMessagesHandled', COALESCE((SELECT total_messages_range FROM message_stats), 0),
@@ -1832,6 +1840,7 @@ export async function getTeamDetailedMetrics(
         | {
             userId: string;
             name: string;
+            profilePhoto: string | null;
             onlineStatus: string | null;
             averageResponseTime: number | null;
             staffActiveChats: number;
@@ -1908,6 +1917,7 @@ export async function getTeamDetailedMetrics(
       SELECT json_agg(json_build_object(
         'userId', ms."userId",
         'name', ms."name",
+        'profilePhoto', ms."profilePhoto",
         'onlineStatus', ms."onlineStatus",
         'averageResponseTime', ms."avgResponseTime",
         'staffActiveChats', ms."staffActiveChats",
@@ -1916,6 +1926,7 @@ export async function getTeamDetailedMetrics(
       FROM (
         SELECT tm."userId",
           u."name",
+          u."profilePhoto",
           om."status" AS "onlineStatus",
           AVG(EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt"))) FILTER (WHERE vc."firstRespondedAt" IS NOT NULL) AS "avgResponseTime",
           COUNT(DISTINCT cau."conversationId") FILTER (WHERE NOT (vc."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})))::INT AS "staffActiveChats",
@@ -1931,7 +1942,7 @@ export async function getTeamDetailedMetrics(
         LEFT JOIN "Conversation" vc ON vc.id = cau."conversationId" AND vc."orgId" = ${orgId}::uuid
         LEFT JOIN "WaMessage" wm ON wm."conversationId" = vc.id AND wm."sendBy" = tm."userId"
         WHERE tm."teamId" = ${teamId}::uuid
-        GROUP BY tm."userId", u."name", om."status"
+        GROUP BY tm."userId", u."name", u."profilePhoto", om."status"
       ) ms
     ) AS "members"
   FROM team_convos tc;

@@ -411,6 +411,11 @@ model MetaBusinessAgent {
   neverSayPhrases         String[]  @default([])
   settingsSyncedAt        DateTime?
 
+  /// Local only, never sent to Meta: when a ticket is closed or resolved while
+  /// staff hold the thread, hand it back to the agent. Without it, Meta AI stays
+  /// silent for that customer until someone releases the thread by hand.
+  releaseOnTicketClose    Boolean   @default(true)
+
   // agent_config/business_info, cached locally
   /// [PMetaAgentBusinessInfo]
   businessInfo         Json?
@@ -964,6 +969,15 @@ model Contact {
   spamMarkedAt                 DateTime?
   /// User id of whoever marked it; no FK relation, Contact already owns one to User.
   spamMarkedBy                 String?                   @db.Uuid
+  /// Who holds this customer's WhatsApp thread when the Meta Business Agent
+  /// (Meta AI) is set up: the agent, or staff after an escalation. Null means
+  /// nothing has told us yet — no handover or standby traffic seen. One value per
+  /// contact because Meta's thread control outlives any single ticket.
+  metaAgentThreadOwner         MetaAgentThreadOwner?
+  /// When `metaAgentThreadOwner` last changed; also orders out-of-order webhooks.
+  metaAgentThreadOwnerAt       DateTime?
+  /// Meta's `metadata` on the handover (e.g. `customer_request`), as sent.
+  metaAgentHandoverReason      String?
   waCatalogOrders              WaCatalogOrder[]
   igsId                        String? //Instagram Scoped User ID
   profilePic                   String?
@@ -3067,6 +3081,14 @@ model ConversationAssignedUserTeamMap {
   @@index([userId, lastAssignedAt, lastRemovedAt])
   // Team overview and team metrics start from a team and fan out to its conversations.
   @@index([teamId, conversationId])
+}
+
+/// Holder of a customer's WhatsApp thread under Meta Business Agent thread control.
+enum MetaAgentThreadOwner {
+  /// Meta AI is answering; the customer's messages arrive as `standby`.
+  AI
+  /// Handed to a person (escalation, or our app took the thread by replying).
+  STAFF
 }
 
 /// Storage vocabulary for inbox status. Mirrored between `Contact.waMessageAssignStatus`

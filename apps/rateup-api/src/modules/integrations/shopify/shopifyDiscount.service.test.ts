@@ -15,6 +15,10 @@ vi.mock("./shopify.config.js", () => ({
   },
 }));
 vi.mock("./shopify.service.js", () => ({ getShopifyInfo: vi.fn() }));
+// Token renewal has its own tests; here the stored session is used as is.
+vi.mock("./shopify.session.js", () => ({
+  getActiveShopifySession: vi.fn(async (integration: any) => integration.credential.session),
+}));
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     loyaltyRedemption: { findUnique: vi.fn(), update: vi.fn() },

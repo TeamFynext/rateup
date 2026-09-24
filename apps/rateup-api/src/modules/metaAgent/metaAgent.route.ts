@@ -12,6 +12,7 @@ import {
   type UpsertCertificateBody,
   type UpsertOAuthBody,
   agentEventBodySchema,
+  agentInboxSettingsBodySchema,
   agentSettingsBodySchema,
   agentTestBodySchema,
   allowlistEntryBodySchema,
@@ -107,6 +108,11 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     `${p}/settings`,
     { schema: { params: byWhatsappSettingsIdParamSchema, body: agentSettingsBodySchema } },
     ctrl.updateAgentSettingsHandler,
+  );
+  server.put(
+    `${p}/settings/inbox`,
+    { schema: { params: byWhatsappSettingsIdParamSchema, body: agentInboxSettingsBodySchema } },
+    ctrl.updateInboxSettingsHandler,
   );
   server.post(
     `${p}/settings/sync`,
@@ -424,10 +430,14 @@ export async function metaAgentRoutes(server: FastifyInstance) {
     ctrl.testAgentHandler,
   );
 
-  // operate: thread control
+  // operate: thread control. Handing a conversation back to Meta AI is also an
+  // inbox action, taken from the chat header by agents without agent access.
   server.post(
     `${p}/thread-control`,
-    { schema: { params: byWhatsappSettingsIdParamSchema, body: threadControlBodySchema } },
+    {
+      config: { permission: ["meta_agent.use", "inbox.reply"] },
+      schema: { params: byWhatsappSettingsIdParamSchema, body: threadControlBodySchema },
+    },
     ctrl.setThreadControlHandler,
   );
 }

@@ -212,13 +212,26 @@ describe("getAIResponseForQuery", () => {
     expect(http.post).not.toHaveBeenCalled();
   });
 
-  test("refuses on the completion allowance as well as the prompt one", async () => {
+  // Billing shows one "AI tokens" meter, so the allowance is one pool: input and
+  // output together against the plan's two budgets added up.
+  test("refuses once input and output together reach the allowance", async () => {
     db.usageStats.findUnique.mockResolvedValue({
-      aiPromptTokensCount: 0,
-      aiCompletionTokensCount: 9_000_000,
+      aiPromptTokensCount: 100_000,
+      aiCompletionTokensCount: 50_000,
     });
 
     await expect(getAIResponseForQuery(input, JWT)).rejects.toThrow(AiAllowanceError);
+  });
+
+  test("does not refuse when one half is over but the pool still has room", async () => {
+    db.usageStats.findUnique.mockResolvedValue({
+      aiPromptTokensCount: 0,
+      aiCompletionTokensCount: 60_000,
+    });
+
+    await getAIResponseForQuery(input, JWT);
+
+    expect(http.post).toHaveBeenCalled();
   });
 
   // A plan storing something other than a number is left to the remote service —
