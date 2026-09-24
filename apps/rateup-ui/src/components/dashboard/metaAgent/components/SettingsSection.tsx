@@ -38,6 +38,7 @@ import { settingsFormSchema, type SettingsFormValues } from "../metaAgent.schema
 import { AllowlistPanel } from "./AllowlistPanel";
 import { FormField } from "./shared/FormField";
 import { PanelCard } from "./shared/PanelCard";
+import { UsageCapsPanel } from "./UsageCapsPanel";
 
 const INTERVAL_ITEMS = [
   { value: "0", label: "Off" },
@@ -55,9 +56,16 @@ const AUDIENCE_ITEMS = [
   { value: "ALLOWLISTED_ONLY", label: "Allowlisted numbers only" },
 ] as const;
 
+const HANDOFF_MESSAGE_ITEMS = [
+  { value: "DEFAULT", label: "Meta's standard message" },
+  { value: "AGENT", label: "Written by the agent" },
+  { value: "CUSTOM", label: "My own message" },
+] as const;
+
 const toForm = (data?: AgentSettings): SettingsFormValues => ({
   rolloutEnabled: data?.rollout?.enabled ?? false,
   handoffEnabled: data?.handoff?.enabled ?? false,
+  handoffMessageSelection: data?.handoff?.message_selection ?? "DEFAULT",
   handoffMessage: data?.handoff?.message ?? "",
   followupEnabled: data?.followup?.enabled ?? false,
   followupInterval: data?.followup?.followup_interval_in_seconds ?? 0,
@@ -80,14 +88,20 @@ export function SettingsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
     if (data) form.reset(toForm(data));
   }, [data, form]);
 
-  const handoffEnabled = form.watch("handoffEnabled");
+  const handoffMessageSelection = form.watch("handoffMessageSelection");
+  const aiAudience = form.watch("aiAudience");
   const followupEnabled = form.watch("followupEnabled");
   const rolloutEnabled = form.watch("rolloutEnabled");
 
   const onSubmit = (values: SettingsFormValues) =>
     update.mutate({
       rollout: { enabled: values.rolloutEnabled },
-      handoff: { enabled: values.handoffEnabled, message: values.handoffMessage },
+      handoff: {
+        enabled: values.handoffEnabled,
+        message_selection: values.handoffMessageSelection,
+        // Sent only when it is the one in use; Meta keeps whatever it had otherwise.
+        ...(values.handoffMessageSelection === "CUSTOM" ? { message: values.handoffMessage } : {}),
+      },
       followup: {
         enabled: values.followupEnabled,
         followup_interval_in_seconds: values.followupInterval,
@@ -130,7 +144,8 @@ export function SettingsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
                   <IconInfoCircle />
                   <AlertDescription>
                     The agent is currently off. Everything below is saved, but nothing takes effect
-                    until rollout is enabled.
+                    until rollout is enabled. Turning it back on only affects conversations that
+                    start afterwards.
                   </AlertDescription>
                 </Alert>
               )}
@@ -140,14 +155,41 @@ export function SettingsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
               <FormField
                 control={form.control}
                 name="handoffEnabled"
-                label="Custom handoff message"
+                label="Release the conversation after a handoff"
                 orientation="horizontal"
-                description="Off means Meta sends its own translated message when handing over to a human."
+                description="When the agent hands a customer to your team, it also gives up the conversation so your team can reply. Off keeps the agent in control after it sends the handoff message."
               >
                 {(field) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
               </FormField>
 
-              {handoffEnabled && (
+              <FormField
+                control={form.control}
+                name="handoffMessageSelection"
+                label="Handoff message"
+                description="What the customer is told when the agent hands them over."
+              >
+                {(field, controlProps) => (
+                  <Select
+                    name={field.name}
+                    value={field.value}
+                    onValueChange={(value) => field.onChange(value ?? "DEFAULT")}
+                    items={HANDOFF_MESSAGE_ITEMS}
+                  >
+                    <SelectTrigger {...controlProps} className="w-full sm:w-72">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HANDOFF_MESSAGE_ITEMS.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </FormField>
+
+              {handoffMessageSelection === "CUSTOM" && (
                 <FormField
                   control={form.control}
                   name="handoffMessage"
@@ -231,7 +273,11 @@ export function SettingsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
                 name="aiAudience"
                 label="AI audience"
                 required
-                description="Allowlisted-only is the safe way to pilot: only numbers on the allowlist below get the agent."
+                description={
+                  aiAudience === "EVERYONE"
+                    ? "Answering everyone needs a payment method on your Meta Business Agent account; Meta refuses to switch it on without one. The allowlist below is ignored."
+                    : "The safe way to pilot: only numbers on the allowlist below get the agent, and no payment method is needed yet."
+                }
               >
                 {(field, controlProps) => (
                   <Select
@@ -284,6 +330,7 @@ export function SettingsSection({ waSettingsId }: Readonly<{ waSettingsId: strin
       </PanelCard>
       <InboxHandoverPanel waSettingsId={waSettingsId} />
       <AllowlistPanel waSettingsId={waSettingsId} />
+      <UsageCapsPanel waSettingsId={waSettingsId} />
     </div>
   );
 }

@@ -213,7 +213,6 @@ export const ShareFlow = ({
         />
         <ShareQR
           url={shareUrl || import.meta.env.VITE_FRONTEND_URL}
-          sx={{ borderRadius: "0.5rem" }}
           title={survey.title}
           isPublished={!disableShare}
           id={surveyId}

@@ -12,8 +12,8 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetShareSettings } from "@/backend/surveyShareSettings/surveyShareSettings.query";
-import type { QrLogoPanelState } from "@/components/Survey/ShareSurvey/ShareQR/LogoTabPanel/index.tsx";
-import { initialLogoTabPanelState } from "@/components/Survey/ShareSurvey/ShareQR/LogoTabPanel/LogoTabPanelReducer.tsx";
+import type { QrDesign } from "@/components/common/qr-designer/qrDesign.ts";
+import { DEFAULT_QR_DESIGN } from "@/components/common/qr-designer/qrDesign.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import Heading from "../../../styled/Heading/Heading.tsx";
@@ -126,10 +126,10 @@ function TagManager({
 
   const shareSettings = useGetShareSettings("surveyShareSettings", "survey", surveyId);
 
-  const settingsData: QrLogoPanelState = shareSettings.data
+  const settingsData: QrDesign = shareSettings.data
     ? shareSettings.data
     : {
-        ...initialLogoTabPanelState,
+        ...DEFAULT_QR_DESIGN,
         logoSize: 50,
         logoBorderRadius: 50,
       };

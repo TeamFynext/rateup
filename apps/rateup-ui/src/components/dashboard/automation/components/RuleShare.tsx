@@ -126,6 +126,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
                     : "Share WhatsApp Link"
               }
               isPublished={true}
+              flat
             />
           </div>
         )}

@@ -37,10 +37,11 @@ describe("buildMetaAgentNavItems", () => {
       "/dashboard/meta-agent/connectors",
       "/dashboard/meta-agent/operate",
       "/dashboard/meta-agent/settings",
+      "/dashboard/meta-agent/insights",
     ]);
   });
 
-  test("ticks finished steps, and leaves testing without a marker", () => {
+  test("ticks finished steps, and leaves testing and insights without a marker", () => {
     const byUrl = Object.fromEntries(
       rows(buildMetaAgentNavItems({ t, status })).map((row) => [row.url, row.done]),
     );
@@ -48,6 +49,7 @@ describe("buildMetaAgentNavItems", () => {
     expect(byUrl["/dashboard/meta-agent/knowledge"]).toBe(true);
     expect(byUrl["/dashboard/meta-agent/skills"]).toBe(false);
     expect(byUrl["/dashboard/meta-agent/operate"]).toBeUndefined();
+    expect(byUrl["/dashboard/meta-agent/insights"]).toBeUndefined();
   });
 
   test("draws no ticks while the status is unknown", () => {

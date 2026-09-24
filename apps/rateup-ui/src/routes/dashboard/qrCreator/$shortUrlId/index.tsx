@@ -1,11 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import GeneratedQrPageComp from "@/components/GenerateQr/GeneratedQrPage/index.tsx";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/qrCreator/$shortUrlId/")({
-  component: GeneratedQrPage,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/dashboard/qr-codes/$shortUrlId", params });
+  },
 });
-
-function GeneratedQrPage() {
-  return <GeneratedQrPageComp />;
-}

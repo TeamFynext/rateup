@@ -4,14 +4,25 @@ import { axiosClient } from "../apiClient";
 
 const url = "/generateQr";
 
+/** A dynamic QR code: a short link that redirects to `link` and counts scans. */
+export interface GeneratedQr {
+  id: string;
+  name: string;
+  shortUrlId: string;
+  link: string;
+  noOfScans: number;
+  createdAt: string;
+  shareSettings?: { qrColor?: string; qrBgColor?: string } | null;
+}
+
 async function getAllGeneratedQrs() {
-  const res = await axiosClient.get(url);
+  const res = await axiosClient.get<GeneratedQr[]>(url);
   return res.data;
 }
 
 function getQrWithShortUrlId(shortUrlId: string) {
   return async () => {
-    const res = await axiosClient.get(`${url}/${shortUrlId}`);
+    const res = await axiosClient.get<GeneratedQr>(`${url}/${shortUrlId}`);
     return res.data;
   };
 }
@@ -24,7 +35,7 @@ function getQrWithShortUrlIdPublic(shortUrlId: string) {
 }
 
 async function createQr(data: RequestPayload) {
-  const res = await axiosClient.post(url, data);
+  const res = await axiosClient.post<GeneratedQr>(url, data);
   return res.data;
 }
 

@@ -16,9 +16,10 @@ describe("getAgentSetupProgress", () => {
   test("a fresh agent has nothing done and every counted step left", () => {
     const progress = getAgentSetupProgress(fresh);
     expect(progress.done).toBe(0);
-    // Testing has no finished state, so six of the seven steps are counted.
+    // Testing and insights have no finished state, so six of the eight are counted.
     expect(progress.total).toBe(6);
     expect(progress.status.operate).toBeNull();
+    expect(progress.status.insights).toBeNull();
     expect(progress.minsLeft).toBe(2 + 5 + 3 + 3 + 5 + 1);
     expect(progress.pct).toBe(0);
     expect(progress.live).toBe(false);

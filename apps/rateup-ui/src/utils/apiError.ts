@@ -91,3 +91,13 @@ export function isPlanDenial(error: unknown): boolean {
   const reason = getAccessDenialReason(error);
   return reason === "subscription" || reason === "subscription_expired";
 }
+
+/** The record asked for does not exist, or is not this organisation's. Retrying won't help. */
+export function isNotFound(error: unknown): boolean {
+  return asApiError(error).response?.status === 404;
+}
+
+/** A react-query `retry` that gives up at once on a 404 and retries anything else twice. */
+export function retryUnlessNotFound(failureCount: number, error: unknown): boolean {
+  return !isNotFound(error) && failureCount < 2;
+}

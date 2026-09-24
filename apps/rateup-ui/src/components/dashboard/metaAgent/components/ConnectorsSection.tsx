@@ -42,6 +42,7 @@ import { ConnectorCredentials } from "./connectors/ConnectorCredentials";
 import { ConnectorDialog } from "./connectors/ConnectorDialog";
 import { ConnectorLogsPanel } from "./connectors/ConnectorLogsPanel";
 import { ConnectorToolsPanel } from "./connectors/ConnectorToolsPanel";
+import { RateupConnectorPanel } from "./connectors/RateupConnectorPanel";
 import { PanelCard } from "./shared/PanelCard";
 
 const STATUS: Record<
@@ -55,6 +56,15 @@ const STATUS: Record<
 };
 
 export function ConnectorsSection({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
+  return (
+    <div className="flex flex-col gap-4">
+      <RateupConnectorPanel waSettingsId={waSettingsId} />
+      <ConnectorList waSettingsId={waSettingsId} />
+    </div>
+  );
+}
+
+function ConnectorList({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
   const { data: connectors, isLoading } = useConnectors(waSettingsId);
   const deleteConnector = useDeleteConnector(waSettingsId);
   const sync = useSyncConnectors(waSettingsId);
@@ -66,6 +76,8 @@ export function ConnectorsSection({ waSettingsId }: Readonly<{ waSettingsId: str
   // The dialog holds a snapshot; re-reading from the list keeps credentials and
   // tool counts current while it is open.
   const managed = managing ? (connectors?.find((c) => c.id === managing.id) ?? managing) : null;
+  // RateUp owns the built-in connector's key and tools; only its logs are yours to read.
+  const managedBuiltIn = !!managed?.builtIn;
 
   return (
     <PanelCard
@@ -104,6 +116,7 @@ export function ConnectorsSection({ waSettingsId }: Readonly<{ waSettingsId: str
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-medium">{connector.name}</span>
+                      {connector.builtIn && <Badge variant="secondary">Built in</Badge>}
                       <Badge variant={status.variant}>{status.label}</Badge>
                       {!!connector._count?.tools && (
                         <Badge variant="outline">
@@ -128,21 +141,23 @@ export function ConnectorsSection({ waSettingsId }: Readonly<{ waSettingsId: str
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setTab("tools");
+                      setTab(connector.builtIn ? "logs" : "tools");
                       setManaging(connector);
                     }}
                   >
                     <IconSettings data-icon="inline-start" />
                     Manage
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Edit ${connector.name}`}
-                    onClick={() => setEditing(connector)}
-                  >
-                    <IconPencil />
-                  </Button>
+                  {!connector.builtIn && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Edit ${connector.name}`}
+                      onClick={() => setEditing(connector)}
+                    >
+                      <IconPencil />
+                    </Button>
+                  )}
                   <AlertDialog>
                     <AlertDialogTrigger
                       render={
@@ -203,16 +218,20 @@ export function ConnectorsSection({ waSettingsId }: Readonly<{ waSettingsId: str
           {managed && (
             <Tabs value={tab} onValueChange={(value) => setTab(String(value ?? "tools"))}>
               <TabsList>
-                <TabsTrigger value="tools">Tools</TabsTrigger>
-                <TabsTrigger value="credentials">Credentials</TabsTrigger>
+                {!managedBuiltIn && <TabsTrigger value="tools">Tools</TabsTrigger>}
+                {!managedBuiltIn && <TabsTrigger value="credentials">Credentials</TabsTrigger>}
                 <TabsTrigger value="logs">Error logs</TabsTrigger>
               </TabsList>
-              <TabsContent value="tools">
-                <ConnectorToolsPanel waSettingsId={waSettingsId} connectorId={managed.id} />
-              </TabsContent>
-              <TabsContent value="credentials">
-                <ConnectorCredentials waSettingsId={waSettingsId} connector={managed} />
-              </TabsContent>
+              {!managedBuiltIn && (
+                <>
+                  <TabsContent value="tools">
+                    <ConnectorToolsPanel waSettingsId={waSettingsId} connectorId={managed.id} />
+                  </TabsContent>
+                  <TabsContent value="credentials">
+                    <ConnectorCredentials waSettingsId={waSettingsId} connector={managed} />
+                  </TabsContent>
+                </>
+              )}
               <TabsContent value="logs">
                 {/* Tab panels stay mounted, so the logs tab has to ask for its
                     own visibility — this is the one panel here that reads

@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { IconCircleX, IconPlus } from "@tabler/icons-react";
 import { useForm } from "react-hook-form";
 
+import { ALLOWLIST_MAX_ENTRIES } from "@/backend/metaAgent/metaAgent.api";
 import {
   useAddAllowlistEntry,
   useAllowlist,
@@ -29,6 +30,8 @@ export function AllowlistPanel({ waSettingsId }: Readonly<{ waSettingsId: string
     defaultValues: { phone: "" },
   });
 
+  const full = (allowlist?.length ?? 0) >= ALLOWLIST_MAX_ENTRIES;
+
   const onSubmit = (values: AllowlistFormValues) =>
     addEntry.mutate(values.phone, { onSuccess: () => form.reset() });
 
@@ -47,7 +50,11 @@ export function AllowlistPanel({ waSettingsId }: Readonly<{ waSettingsId: string
             name="phone"
             label="Consumer phone number"
             required
-            description="E.164 format, including the country code."
+            description={
+              full
+                ? `The allowlist is full: Meta allows ${ALLOWLIST_MAX_ENTRIES} numbers. Remove one to add another.`
+                : `E.164 format, including the country code. Up to ${ALLOWLIST_MAX_ENTRIES} numbers.`
+            }
           >
             {(field, controlProps) => (
               <div className="flex flex-wrap items-start gap-2">
@@ -63,7 +70,12 @@ export function AllowlistPanel({ waSettingsId }: Readonly<{ waSettingsId: string
                   onBlur={field.onBlur}
                   className="w-full max-w-72"
                 />
-                <Button type="submit" variant="outline" loading={addEntry.isPending}>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={full}
+                  loading={addEntry.isPending}
+                >
                   <IconPlus data-icon="inline-start" />
                   Add
                 </Button>
