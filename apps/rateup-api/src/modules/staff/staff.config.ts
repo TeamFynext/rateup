@@ -28,12 +28,22 @@ export interface StaffConfig {
    * another site). A plain-http localhost gets none of that; localhost ports are same-site.
    */
   secureCookies: boolean;
+  /**
+   * Local development only: every request from the same machine is treated as this staff
+   * member, with no Google sign-in. Empty means off. See isDevBypassEnabled for the
+   * conditions under which it is honoured at all; production refuses to boot with it set.
+   */
+  devBypassEmail: string;
+  /** NODE_ENV at the time the config was read. */
+  production: boolean;
 }
 
 export function staffConfig(): StaffConfig {
   const consoleOrigin = (process.env.STAFF_CONSOLE_ORIGIN ?? "").replace(/\/+$/, "");
   const apiOrigin = (process.env.API_URL ?? "").replace(/\/+$/, "");
   return {
+    devBypassEmail: (process.env.STAFF_DEV_BYPASS_EMAIL ?? "").trim().toLowerCase(),
+    production: process.env.NODE_ENV === "production",
     googleClientId: process.env.STAFF_GOOGLE_CLIENT_ID ?? "",
     googleClientSecret: process.env.STAFF_GOOGLE_CLIENT_SECRET ?? "",
     googleHd: (process.env.STAFF_GOOGLE_HD ?? "rateup.app").toLowerCase(),
@@ -74,6 +84,49 @@ export function assertStaffConfig(config: StaffConfig = staffConfig()): void {
   }
   if (config.cookieSecret.length < 32) {
     throw new Error("STAFF_COOKIE_SECRET must be at least 32 characters");
+  }
+  assertDevBypassConfig(config);
+}
+
+const LOCAL_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i;
+
+/** A console served from this machine over plain http: the only place the bypass may run. */
+export function isLocalConsoleOrigin(origin: string): boolean {
+  return LOCAL_ORIGIN.test(origin);
+}
+
+/**
+ * Whether STAFF_DEV_BYPASS_EMAIL is in force. Every condition must hold, so the variable
+ * on its own can never open anything: not production, a localhost console, and no
+ * Cloudflare Access (whose email check the bypass would otherwise have to skip). The guard
+ * additionally requires the TCP peer to be loopback.
+ */
+export function isDevBypassEnabled(config: StaffConfig): boolean {
+  return (
+    config.devBypassEmail !== "" &&
+    !config.production &&
+    !config.cfAccessEnforced &&
+    isLocalConsoleOrigin(config.consoleOrigin)
+  );
+}
+
+/**
+ * A bypass that is set but cannot be honoured is a misconfiguration, and in production it
+ * is a dangerous one: the API refuses to start rather than silently ignore it.
+ */
+export function assertDevBypassConfig(config: StaffConfig): void {
+  if (!config.devBypassEmail) return;
+  if (config.production) {
+    throw new Error("STAFF_DEV_BYPASS_EMAIL must not be set when NODE_ENV=production");
+  }
+  if (!isLocalConsoleOrigin(config.consoleOrigin)) {
+    throw new Error(
+      "STAFF_DEV_BYPASS_EMAIL only works with a localhost STAFF_CONSOLE_ORIGIN " +
+        `(got ${config.consoleOrigin || "nothing"})`,
+    );
+  }
+  if (config.cfAccessEnforced) {
+    throw new Error("STAFF_DEV_BYPASS_EMAIL needs STAFF_CF_ACCESS_ENFORCE=false");
   }
 }
 

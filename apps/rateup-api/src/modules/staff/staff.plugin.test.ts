@@ -55,6 +55,8 @@ const baseConfig: StaffConfig = {
   cfAccessAud: "aud-123",
   cfAccessEnforced: false,
   secureCookies: true,
+  devBypassEmail: "",
+  production: false,
 };
 
 const { privateKey, publicKey } = await generateKeyPair("RS256");
@@ -140,6 +142,7 @@ describe("staff session", () => {
       name: "Ann",
       avatarUrl: null,
       isOwner: true,
+      devBypass: false,
     });
     expect(db.staffSession.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { tokenHash: hashSessionToken(TOKEN) } }),
@@ -507,6 +510,84 @@ describe("applying a maintenance task", () => {
     });
     expect(db.staffAuditLog.update.mock.calls[0][0].data.after).toMatchObject({
       status: "finished",
+    });
+  });
+});
+
+describe("local development bypass (STAFF_DEV_BYPASS_EMAIL)", () => {
+  const local = {
+    consoleOrigin: "http://localhost:4000",
+    apiOrigin: "http://localhost:3001",
+    secureCookies: false,
+    devBypassEmail: "dev@rateup.app",
+    production: false,
+  };
+  const devStaff = {
+    id: "staff-dev",
+    email: "dev@rateup.app",
+    name: "Dev",
+    avatarUrl: null,
+    isOwner: true,
+    active: true,
+  };
+
+  test("a loopback request with no cookie is signed in as the bypass user", async () => {
+    db.staffUser.findUnique.mockResolvedValue(devStaff);
+    const { app } = await buildApp(local);
+    const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers: noSession });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data).toMatchObject({ email: "dev@rateup.app", devBypass: true });
+    expect(db.staffUser.findUnique).toHaveBeenCalledWith({ where: { email: "dev@rateup.app" } });
+    expect(db.staffSession.findUnique).not.toHaveBeenCalled();
+  });
+
+  test("a peer that is not loopback still needs a session, whatever X-Forwarded-For says", async () => {
+    db.staffUser.findUnique.mockResolvedValue(devStaff);
+    const { app } = await buildApp(local);
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/me",
+      remoteAddress: "203.0.113.9",
+      headers: { "x-forwarded-for": "127.0.0.1" },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(db.staffUser.findUnique).not.toHaveBeenCalled();
+  });
+
+  test("a bypass email that is not an active staff member admits nobody", async () => {
+    db.staffUser.findUnique.mockResolvedValue({ ...devStaff, active: false });
+    const { app } = await buildApp(local);
+    const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers: noSession });
+    expect(res.statusCode).toBe(401);
+  });
+
+  test.each([
+    ["in production", { production: true }],
+    ["with a non-localhost console", { consoleOrigin: "https://admin.rateup.app" }],
+    ["with Cloudflare Access enforced", { cfAccessEnforced: true }],
+  ])("is ignored %s", async (_label, override) => {
+    db.staffUser.findUnique.mockResolvedValue(devStaff);
+    const { app } = await buildApp({ ...local, ...override });
+    const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers: noSession });
+    expect(res.statusCode).not.toBe(200);
+    expect(db.staffUser.findUnique).not.toHaveBeenCalled();
+  });
+
+  test("a mutation through the bypass is audited as the bypass user", async () => {
+    db.staffUser.findUnique.mockResolvedValue(devStaff);
+    const { app } = await buildApp(local);
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/staff/auth/logout",
+      headers: { "x-staff-csrf": "1" },
+    });
+    expect(res.statusCode).toBe(200);
+    // Nothing to revoke: there is no session row behind a bypassed request.
+    expect(db.staffSession.updateMany).not.toHaveBeenCalled();
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(db.staffAuditLog.create.mock.calls[0][0].data).toMatchObject({
+      staffUserId: "staff-dev",
+      staffEmail: "dev@rateup.app",
     });
   });
 });

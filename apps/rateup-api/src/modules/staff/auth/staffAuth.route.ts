@@ -224,11 +224,16 @@ export function staffAuthRoutes(config: StaffConfig) {
           name: staff.name,
           avatarUrl: staff.avatarUrl,
           isOwner: staff.isOwner,
+          // Local development only (STAFF_DEV_BYPASS_EMAIL); never true off localhost.
+          devBypass: request.staffDevBypass === true,
         },
       };
     });
 
     server.post("/auth/logout", async (request, reply) => {
+      // A bypassed request has no session row to revoke, and the next request is signed in
+      // again regardless; there is nothing to sign out of.
+      if (request.staffDevBypass) return { success: true };
       await revokeStaffSession(request.staffSession!.id);
       await recordStaffAuthEvent(request, {
         action: "staff.logout",
