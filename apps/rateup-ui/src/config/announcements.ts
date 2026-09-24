@@ -40,6 +40,36 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-23-meta-agent-rateup-connector",
+    title: "Your AI agent can use RateUp data",
+    summary:
+      "Install the RateUp connector in one click and your AI agent can check a customer's loyalty points and rewards, and label, move or route their conversation to the right team.",
+    publishedAt: "2026-09-23",
+    kinds: ["new"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/connectors", label: "Open connectors" },
+  },
+  {
+    id: "2026-09-23-meta-agent-insights",
+    title: "AI agent insights and usage caps",
+    summary:
+      "A new Insights page shows how many conversations your AI agent handled, which chats are waiting on your team, and how your tools performed. On Go live you can now cap the agent's usage so costs stay predictable.",
+    publishedAt: "2026-09-23",
+    kinds: ["new"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/insights", label: "Open insights" },
+  },
+  {
+    id: "2026-09-23-meta-agent-handoff-message",
+    title: "Choose your AI agent's handoff message",
+    summary:
+      "When the agent hands a customer to your team, it can now use Meta's standard line, write its own, or send yours. Releasing the conversation to your team is now a separate switch.",
+    publishedAt: "2026-09-23",
+    kinds: ["improvement"],
+    area: "AI Agent",
+    link: { to: "/dashboard/meta-agent/settings", label: "Open Go live" },
+  },
+  {
     id: "2026-09-23-qr-codes-link-pages",
     title: "QR codes and link pages, redesigned",
     summary:

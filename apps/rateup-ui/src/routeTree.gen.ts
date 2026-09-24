@@ -70,6 +70,7 @@ import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/
 import { Route as DashboardLinkPagesIndexRouteImport } from './routes/dashboard/link-pages/index'
 import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/meta-agent/index'
 import { Route as DashboardMetaAgentConnectorsRouteImport } from './routes/dashboard/meta-agent/connectors'
+import { Route as DashboardMetaAgentInsightsRouteImport } from './routes/dashboard/meta-agent/insights'
 import { Route as DashboardMetaAgentKnowledgeRouteImport } from './routes/dashboard/meta-agent/knowledge'
 import { Route as DashboardMetaAgentOperateRouteImport } from './routes/dashboard/meta-agent/operate'
 import { Route as DashboardMetaAgentOverviewRouteImport } from './routes/dashboard/meta-agent/overview'
@@ -521,6 +522,12 @@ const DashboardMetaAgentConnectorsRoute =
   DashboardMetaAgentConnectorsRouteImport.update({
     id: '/connectors',
     path: '/connectors',
+    getParentRoute: () => DashboardMetaAgentRouteRoute,
+  } as any)
+const DashboardMetaAgentInsightsRoute =
+  DashboardMetaAgentInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
     getParentRoute: () => DashboardMetaAgentRouteRoute,
   } as any)
 const DashboardMetaAgentKnowledgeRoute =
@@ -1385,6 +1392,7 @@ export interface FileRoutesByFullPath {
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
   '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
@@ -1582,6 +1590,7 @@ export interface FileRoutesByTo {
   '/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
   '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
@@ -1788,6 +1797,7 @@ export interface FileRoutesById {
   '/(marketing)/tools/sitemap.xml': typeof marketingToolsSitemapDotxmlRoute
   '/dashboard/campaign/new': typeof DashboardCampaignNewRoute
   '/dashboard/meta-agent/connectors': typeof DashboardMetaAgentConnectorsRoute
+  '/dashboard/meta-agent/insights': typeof DashboardMetaAgentInsightsRoute
   '/dashboard/meta-agent/knowledge': typeof DashboardMetaAgentKnowledgeRoute
   '/dashboard/meta-agent/operate': typeof DashboardMetaAgentOperateRoute
   '/dashboard/meta-agent/overview': typeof DashboardMetaAgentOverviewRoute
@@ -1992,6 +2002,7 @@ export interface FileRouteTypes {
     | '/tools/sitemap.xml'
     | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
     | '/dashboard/meta-agent/overview'
@@ -2189,6 +2200,7 @@ export interface FileRouteTypes {
     | '/tools/sitemap.xml'
     | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
     | '/dashboard/meta-agent/overview'
@@ -2394,6 +2406,7 @@ export interface FileRouteTypes {
     | '/(marketing)/tools/sitemap.xml'
     | '/dashboard/campaign/new'
     | '/dashboard/meta-agent/connectors'
+    | '/dashboard/meta-agent/insights'
     | '/dashboard/meta-agent/knowledge'
     | '/dashboard/meta-agent/operate'
     | '/dashboard/meta-agent/overview'
@@ -3017,6 +3030,13 @@ declare module '@tanstack/react-router' {
       path: '/connectors'
       fullPath: '/dashboard/meta-agent/connectors'
       preLoaderRoute: typeof DashboardMetaAgentConnectorsRouteImport
+      parentRoute: typeof DashboardMetaAgentRouteRoute
+    }
+    '/dashboard/meta-agent/insights': {
+      id: '/dashboard/meta-agent/insights'
+      path: '/insights'
+      fullPath: '/dashboard/meta-agent/insights'
+      preLoaderRoute: typeof DashboardMetaAgentInsightsRouteImport
       parentRoute: typeof DashboardMetaAgentRouteRoute
     }
     '/dashboard/meta-agent/knowledge': {
@@ -4365,6 +4385,7 @@ const DashboardLoyaltyRouteRouteWithChildren =
 
 interface DashboardMetaAgentRouteRouteChildren {
   DashboardMetaAgentConnectorsRoute: typeof DashboardMetaAgentConnectorsRoute
+  DashboardMetaAgentInsightsRoute: typeof DashboardMetaAgentInsightsRoute
   DashboardMetaAgentKnowledgeRoute: typeof DashboardMetaAgentKnowledgeRoute
   DashboardMetaAgentOperateRoute: typeof DashboardMetaAgentOperateRoute
   DashboardMetaAgentOverviewRoute: typeof DashboardMetaAgentOverviewRoute
@@ -4377,6 +4398,7 @@ interface DashboardMetaAgentRouteRouteChildren {
 const DashboardMetaAgentRouteRouteChildren: DashboardMetaAgentRouteRouteChildren =
   {
     DashboardMetaAgentConnectorsRoute: DashboardMetaAgentConnectorsRoute,
+    DashboardMetaAgentInsightsRoute: DashboardMetaAgentInsightsRoute,
     DashboardMetaAgentKnowledgeRoute: DashboardMetaAgentKnowledgeRoute,
     DashboardMetaAgentOperateRoute: DashboardMetaAgentOperateRoute,
     DashboardMetaAgentOverviewRoute: DashboardMetaAgentOverviewRoute,

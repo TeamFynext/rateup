@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getApiErrorMessage } from "@/utils/apiError";
+import { getApiErrorData, getApiErrorMessage } from "@/utils/apiError";
 
 import {
   addAllowlistEntry,
+  type AgentBudget,
   type AgentEventInput,
   type AgentSettings,
   type ApiKeyConfig,
@@ -30,14 +31,24 @@ import {
   deleteUiSkill,
   deleteWebsite,
   type FaqInput,
+  getAgentBudgets,
+  getAgentEventInsights,
   getAgentEventStatus,
   getAgentSettings,
   getBusinessInfo,
   getConnectorLogs,
+  getConversationInsights,
+  getConversationTurns,
   getEvalDetails,
   getEvalRunStatus,
   getEvalSummary,
   getMetaBusinessAgent,
+  getRateupConnector,
+  installRateupConnector,
+  type RateupConnectorToolName,
+  uninstallRateupConnector,
+  getToolCallInsights,
+  type InsightsRange,
   listAllowlist,
   listConnectors,
   listConnectorTools,
@@ -56,6 +67,7 @@ import {
   setThreadControl,
   submitAgentEvent,
   submitEvalRun,
+  syncAgentBudgets,
   syncAgentSettings,
   syncAllowlist,
   syncBusinessInfo,
@@ -69,6 +81,7 @@ import {
   testAgent,
   type UiSkillInput,
   type UiSkillUpdateInput,
+  updateAgentBudgets,
   updateAgentInboxSettings,
   updateAgentSettings,
   updateBusinessInfo,
@@ -91,10 +104,23 @@ const key = (resource: string, waSettingsId: string, ...rest: unknown[]) => [
   ...rest,
 ];
 
+/** What the API adds to an error that came from Meta rather than from us. */
+interface MetaAgentErrorData {
+  upstreamStatus?: number;
+  fbtraceId?: string;
+}
+
 // The API relays Meta's own `detail` for a rejected payload, which names the
-// offending field — far more useful than a generic failure line.
-const onErr = (fallback: string) => (error: unknown) =>
-  toast.error(getApiErrorMessage(error, fallback));
+// offending field — far more useful than a generic failure line. Meta's trace
+// id rides along as the toast's description: it is what Meta support asks for.
+const onErr = (fallback: string) => (error: unknown) => {
+  const data = getApiErrorData(error) as MetaAgentErrorData | undefined;
+  const message =
+    data?.upstreamStatus === 429
+      ? "Meta's rate limit for this was reached. Wait a while and try again."
+      : getApiErrorMessage(error, fallback);
+  toast.error(message, data?.fbtraceId ? { description: `Meta trace id: ${data.fbtraceId}` } : {});
+};
 
 // ---- agent record ----
 export const useMetaBusinessAgent = (waSettingsId: string) =>
@@ -120,7 +146,8 @@ export const useCheckAgentEligibility = (waSettingsId: string) => {
 export const useOnboardAgent = (waSettingsId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (channel?: MetaAgentChannel) => onboardAgent(waSettingsId, channel),
+    mutationFn: (options: { channel?: MetaAgentChannel; catalogId?: string } = {}) =>
+      onboardAgent(waSettingsId, options),
     onSuccess: (data) => {
       qc.setQueryData(key("agent", waSettingsId), data);
       toast.success("Agent onboarding started");
@@ -590,6 +617,8 @@ export const useDeleteConnector = (waSettingsId: string) => {
     mutationFn: (connectorId: string) => deleteConnector(waSettingsId, connectorId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
+      // It may have been the built-in one.
+      qc.invalidateQueries({ queryKey: key("rateupConnector", waSettingsId) });
       toast.success("Connector deleted");
     },
     onError: onErr("Failed to delete connector"),
@@ -798,9 +827,94 @@ export const useSetThreadControl = (waSettingsId: string) =>
   useMutation({
     mutationFn: ({ action, to }: { action: "pass" | "release"; to: string }) =>
       setThreadControl(waSettingsId, action, to),
-    onSuccess: (_data, variables) =>
-      toast.success(
-        variables.action === "pass" ? "Control passed to AI agent" : "Control released",
-      ),
+    onSuccess: () => toast.success("Conversation handed back to Meta AI"),
     onError: onErr("Failed to update thread control"),
   });
+
+// ---- configure: budget ----
+export const useAgentBudgets = (waSettingsId: string) =>
+  useQuery({
+    queryKey: key("budget", waSettingsId),
+    queryFn: () => getAgentBudgets(waSettingsId),
+    enabled: !!waSettingsId,
+  });
+
+export const useUpdateAgentBudgets = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (budgets: AgentBudget[]) => updateAgentBudgets(waSettingsId, budgets),
+    onSuccess: (data) => {
+      qc.setQueryData(key("budget", waSettingsId), data);
+      toast.success(data.budgets.length ? "Usage caps saved" : "Usage caps removed");
+    },
+    onError: onErr("Failed to save usage caps"),
+  });
+};
+
+export const useSyncAgentBudgets = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => syncAgentBudgets(waSettingsId),
+    onSuccess: (data) => {
+      qc.setQueryData(key("budget", waSettingsId), data);
+      toast.success("Usage caps synced from Meta");
+    },
+    onError: onErr("Failed to sync usage caps"),
+  });
+};
+
+// ---- insights (always button-triggered: never read from Meta on page load) ----
+export const useLoadInsights = (waSettingsId: string) =>
+  useMutation({
+    mutationFn: async (range: InsightsRange) => {
+      // Meta caps tool-call and event ranges at 30 days, conversations at 90.
+      const [conversations, toolCalls, events] = await Promise.all([
+        getConversationInsights(waSettingsId, range),
+        getToolCallInsights(waSettingsId, range),
+        getAgentEventInsights(waSettingsId, range),
+      ]);
+      return { conversations: conversations.data?.[0] ?? {}, toolCalls, events };
+    },
+    onError: onErr("Failed to load insights"),
+  });
+
+export const useConversationTurns = (waSettingsId: string) =>
+  useMutation({
+    mutationFn: (query: { user: string; after?: string }) =>
+      getConversationTurns(waSettingsId, { ...query, limit: 25 }),
+    onError: onErr("Failed to load conversation turns"),
+  });
+
+// ---- the built-in RateUp connector ----
+export const useRateupConnector = (waSettingsId: string) =>
+  useQuery({
+    queryKey: key("rateupConnector", waSettingsId),
+    queryFn: () => getRateupConnector(waSettingsId),
+    enabled: !!waSettingsId,
+  });
+
+export const useInstallRateupConnector = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (tools: RateupConnectorToolName[]) => installRateupConnector(waSettingsId, tools),
+    onSuccess: (data) => {
+      qc.setQueryData(key("rateupConnector", waSettingsId), data);
+      qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
+      toast.success("RateUp connector installed");
+    },
+    onError: onErr("Failed to install the RateUp connector"),
+  });
+};
+
+export const useUninstallRateupConnector = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => uninstallRateupConnector(waSettingsId),
+    onSuccess: (data) => {
+      qc.setQueryData(key("rateupConnector", waSettingsId), data);
+      qc.invalidateQueries({ queryKey: key("connectors", waSettingsId) });
+      toast.success("RateUp connector removed");
+    },
+    onError: onErr("Failed to remove the RateUp connector"),
+  });
+};

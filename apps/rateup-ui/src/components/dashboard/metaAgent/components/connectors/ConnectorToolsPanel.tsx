@@ -3,7 +3,11 @@ import { IconPencil, IconPlayerPlay, IconPlus, IconRefresh, IconTrash } from "@t
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import type { ConnectorTool, RequestDefinition } from "@/backend/metaAgent/metaAgent.api";
+import {
+  BINDING_MACROS,
+  type ConnectorTool,
+  type RequestDefinition,
+} from "@/backend/metaAgent/metaAgent.api";
 import {
   useConnectorTools,
   useCreateConnectorTool,
@@ -234,6 +238,8 @@ function ToolDialog({
       description: values.description,
       request_definition,
       user_auth_required: values.user_auth_required,
+      // Not editable here, but a save must not drop what the tool already has.
+      ...(tool?.userAuthActionConfig ? { user_auth_action_config: tool.userAuthActionConfig } : {}),
     };
     const done = { onSuccess: () => onOpenChange(false) };
     if (tool) updateTool.mutate({ toolId: tool.id, data: payload }, done);
@@ -343,7 +349,7 @@ function ToolDialog({
               control={form.control}
               name="queryParameters"
               label="Query parameters"
-              description='Add "binding" to pin a value: {"kind":"macro","macro":"WHATSAPP_PHONE_NUMBER"}'
+              description={`Add "binding" to pin a value: {"kind":"macro","macro":"WHATSAPP_PHONE_NUMBER"}. Use WHATSAPP_PHONE_NUMBER_NATIONAL for an API that wants the local number without the country code. Macros: ${BINDING_MACROS.join(", ")}.`}
             >
               {(field, controlProps) => (
                 <Textarea {...field} {...controlProps} rows={4} className="font-mono text-xs" />

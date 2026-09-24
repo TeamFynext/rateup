@@ -1,5 +1,6 @@
 import {
   IconBook,
+  IconChartBar,
   IconLayoutGrid,
   IconPlayerPlay,
   IconPlug,
@@ -27,6 +28,7 @@ export const AGENT_STEPS = [
   "connectors",
   "operate",
   "settings",
+  "insights",
 ] as const;
 
 export type AgentStep = (typeof AGENT_STEPS)[number];
@@ -122,6 +124,17 @@ export const AGENT_STEP_META: Record<AgentStep, AgentStepMeta> = {
     group: "launch",
     to: "/dashboard/meta-agent/settings",
   },
+  insights: {
+    label: "Insights",
+    description:
+      "How the agent is doing once it is live: conversations handled, handoffs waiting, and how your tools and events perform.",
+    icon: IconChartBar,
+    tone: "blue",
+    tint: "accent",
+    minutes: 1,
+    group: "launch",
+    to: "/dashboard/meta-agent/insights",
+  },
 };
 
 /** What the guide knows about the agent, read from the queries every section already makes. */
@@ -151,6 +164,8 @@ export function getAgentStepStatus(input: AgentSetupInput): AgentStepStatus {
     connectors: input.connectorCount > 0,
     operate: null,
     settings: input.onboarded && input.rolloutEnabled,
+    // Something to come back to once live, not a step to finish.
+    insights: null,
   };
 }
 
