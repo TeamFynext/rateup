@@ -6,6 +6,8 @@ export interface StaffUser {
   name: string | null;
   isOwner: boolean;
   avatarUrl?: string | null;
+  /** Local development only: the API signed this machine in without Google (STAFF_DEV_BYPASS_EMAIL). */
+  devBypass?: boolean;
 }
 
 const MOCK_STAFF: StaffUser = {
