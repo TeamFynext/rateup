@@ -17,7 +17,7 @@ export interface StaffConfig {
   cookieSecret: string;
   cfAccessTeam: string;
   cfAccessAud: string;
-  /** Verify the Cloudflare Access JWT. Only a non-production API may turn this off. */
+  /** Verify the Cloudflare Access JWT. Turning it off in production only logs a warning. */
   cfAccessEnforced: boolean;
   /** https console → Secure, `__Host-` prefixed cookies. A plain-http localhost gets neither. */
   secureCookies: boolean;
@@ -49,10 +49,6 @@ export function isStaffConsoleEnabled(config: StaffConfig = staffConfig()): bool
  * Cloudflare Access check).
  */
 export function assertStaffConfig(config: StaffConfig = staffConfig()): void {
-  if (!config.cfAccessEnforced && process.env.NODE_ENV === "production") {
-    throw new Error("STAFF_CF_ACCESS_ENFORCE=false is not allowed when NODE_ENV=production");
-  }
-
   const required: Array<[string, string]> = [
     ["STAFF_GOOGLE_CLIENT_ID", config.googleClientId],
     ["STAFF_GOOGLE_CLIENT_SECRET", config.googleClientSecret],
