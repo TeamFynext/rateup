@@ -49,13 +49,21 @@ export type ByIdParams = z.infer<typeof byIdParamSchema>;
 
 // ---- onboard ----
 export const onboardingBodySchema = z.object({
+  // Ours: recorded on the agent row, never sent. Meta's onboarding body has no
+  // channel field; the entity id already says what it is.
   channel: channelEnum.default("whatsapp"),
+  // Commerce Manager's numeric catalog id. Omitted leaves the number's existing
+  // catalog association as it is.
+  catalog_id: z.string().trim().regex(/^\d+$/, "A catalog id is a number").optional(),
 });
 export type OnboardingBody = z.infer<typeof onboardingBodySchema>;
 
 export const allowlistEntryBodySchema = z.object({
   consumer_phone_number: e164,
 });
+
+/** Meta's cap on a WhatsApp number's allowlist; the 21st add is a 400. */
+export const ALLOWLIST_MAX_ENTRIES = 20;
 export type AllowlistEntryBody = z.infer<typeof allowlistEntryBodySchema>;
 
 // ---- agent settings ----
@@ -71,13 +79,20 @@ export const followupIntervalEnum = z.union([
   z.literal(86400),
 ]);
 
+export const handoffMessageSelectionEnum = z.enum(["DEFAULT", "AGENT", "CUSTOM"]);
+
 export const agentSettingsBodySchema = z
   .object({
     rollout: z.object({ enabled: z.boolean() }).optional(),
     handoff: z
       .object({
+        // Whether the agent releases thread control after its handoff message.
+        // Not "use a custom message" — that is message_selection.
         enabled: z.boolean(),
         message: z.string().trim().max(1024).optional(),
+        // CUSTOM sends `message`; AGENT has the agent write one per conversation;
+        // DEFAULT is Meta's fixed, translated line.
+        message_selection: handoffMessageSelectionEnum.optional(),
       })
       .optional(),
     followup: z
@@ -103,10 +118,13 @@ export const agentSettingsBodySchema = z
     path: ["followup", "message"],
     error: "A follow-up message is required when follow-ups are enabled",
   })
-  .refine((body) => !body.handoff?.enabled || !!body.handoff.message?.length, {
-    path: ["handoff", "message"],
-    error: "A handoff message is required when a custom handoff message is enabled",
-  });
+  .refine(
+    (body) => body.handoff?.message_selection !== "CUSTOM" || !!body.handoff.message?.length,
+    {
+      path: ["handoff", "message"],
+      error: "Write the handoff message, or choose another message source",
+    },
+  );
 export type AgentSettingsBody = z.infer<typeof agentSettingsBodySchema>;
 
 /** Rateup-side agent behaviour; never forwarded to Meta. */
@@ -167,7 +185,10 @@ export const skillBodySchema = z.object({
     .trim()
     .min(1, "A title is required")
     .max(64, "Titles are limited to 64 characters")
-    .regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers and hyphens only"),
+    .regex(
+      /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+      "Use lowercase letters, numbers and hyphens, and don't start or end with a hyphen",
+    ),
   description: z
     .string()
     .trim()
@@ -178,7 +199,6 @@ export const skillBodySchema = z.object({
     .trim()
     .min(1, "Instructions are required")
     .max(20000, "Instructions are limited to 20,000 characters"),
-  metadata: z.record(z.string(), z.string()).optional(),
 });
 export type SkillBody = z.infer<typeof skillBodySchema>;
 
@@ -190,6 +210,7 @@ export const uiSkillComponentTypeEnum = z.enum([
   "flow",
   "image",
   "interactive_list",
+  "interactive_reply_buttons",
   "location",
   "location_request",
 ]);
@@ -221,6 +242,11 @@ export const uiSkillBodySchema = z
   .refine((body) => body.component_type !== "flow" || !!body.flow_id, {
     path: ["flow_id"],
     error: "A flow id is required for flow components",
+  })
+  // Meta rejects a flow_id on every other component type.
+  .refine((body) => body.component_type === "flow" || !body.flow_id, {
+    path: ["flow_id"],
+    error: "A flow id only applies to flow components",
   });
 export type UiSkillBody = z.infer<typeof uiSkillBodySchema>;
 
@@ -233,6 +259,7 @@ export const uiSkillUpdateBodySchema = z.object({
 export type UiSkillUpdateBody = z.infer<typeof uiSkillUpdateBodySchema>;
 
 // ---- connectors ----
+/** Every auth type Meta may report on a connector it holds. */
 export const connectorAuthTypeEnum = z.enum([
   "OAUTH2_CLIENT_CREDENTIALS",
   "OAUTH2",
@@ -243,25 +270,18 @@ export const connectorAuthTypeEnum = z.enum([
 ]);
 export type ConnectorAuthType = z.infer<typeof connectorAuthTypeEnum>;
 
+/** The subset Meta accepts on create and update today. */
+export const connectorWritableAuthTypeEnum = z.enum([
+  "OAUTH2_CLIENT_CREDENTIALS",
+  "API_KEY",
+  "NONE",
+]);
+
 export const userAuthInjectionConfigSchema = z.object({
   location: z.enum(["body", "headers", "path", "query"]),
   field_name: z.string().trim().min(1, "A field name is required").max(128),
   prefix: z.string().max(32),
 });
-
-export const connectorBodySchema = z.object({
-  name: z.string().trim().min(1, "A name is required").max(128),
-  description: z
-    .string()
-    .trim()
-    .min(1, "The agent uses this description to decide when to call the connector")
-    .max(1024),
-  base_url: httpsUrl,
-  auth_type: connectorAuthTypeEnum,
-  user_auth_injection_config: userAuthInjectionConfigSchema.optional(),
-  requires_certificate: z.boolean().optional(),
-});
-export type ConnectorBody = z.infer<typeof connectorBodySchema>;
 
 export const connectorLogsQuerySchema = z
   .object({
@@ -269,8 +289,9 @@ export const connectorLogsQuerySchema = z
     end_time: z.coerce.number().int().positive().optional(),
     limit: z.coerce.number().int().min(1).max(1000).optional(),
     tool_id: z.string().trim().optional(),
-    include_stats: z.coerce.boolean().optional(),
-    summary_only: z.coerce.boolean().optional(),
+    // Query values arrive as strings, and z.coerce.boolean() reads "false" as true.
+    include_stats: z.stringbool().optional(),
+    summary_only: z.stringbool().optional(),
     top_n: z.coerce.number().int().min(1).max(50).optional(),
   })
   // Meta only keeps 7 days and rejects a wider window; catching it here saves a
@@ -279,6 +300,11 @@ export const connectorLogsQuerySchema = z
     (query) =>
       !query.start_time || !query.end_time || query.end_time - query.start_time <= 7 * 24 * 60 * 60,
     { path: ["start_time"], error: "The time range cannot exceed 7 days" },
+  )
+  // Meta keeps a week of logs and rejects a start before it.
+  .refine(
+    (query) => !query.start_time || query.start_time >= Date.now() / 1000 - 7 * 24 * 60 * 60,
+    { path: ["start_time"], error: "Logs are only kept for 7 days" },
   );
 export type ConnectorLogsQuery = z.infer<typeof connectorLogsQuerySchema>;
 
@@ -289,52 +315,93 @@ const apiKeyParamSchema = z.object({
   prefix: z.string().max(32).optional(),
 });
 
-export const upsertApiKeyBodySchema = z
+/** Where Meta puts an API key; shared by connector create and upsertApiKey. */
+const apiKeyAuthConfigSchema = z
   .object({
-    api_key_config: z.object({
-      headers: z.array(apiKeyParamSchema).optional(),
-      query_params: z.array(apiKeyParamSchema).optional(),
-      body_params: z.array(apiKeyParamSchema).optional(),
-    }),
+    headers: z.array(apiKeyParamSchema).optional(),
+    query_params: z.array(apiKeyParamSchema).optional(),
+    body_params: z.array(apiKeyParamSchema).optional(),
+  })
+  .refine(
+    (config) =>
+      !!(config.headers?.length || config.query_params?.length || config.body_params?.length),
+    { error: "Provide at least one header, query parameter or body field" },
+  );
+
+export const upsertApiKeyBodySchema = z.object({ api_key_config: apiKeyAuthConfigSchema });
+export type UpsertApiKeyBody = z.infer<typeof upsertApiKeyBodySchema>;
+
+const oauthClientCredentialsSchema = z.object({
+  token_url: httpsUrl,
+  scopes_to_request: z.array(z.string().trim().min(1)).min(1, "At least one scope is required"),
+  client_id: z.string().trim().min(1, "A client id is required"),
+  client_secret: z.string().min(1, "A client secret is required"),
+  token_request_content_type: z
+    .enum(["application/x-www-form-urlencoded", "application/json"])
+    .optional(),
+});
+
+export const upsertOAuthBodySchema = z.object({ oauth_config: oauthClientCredentialsSchema });
+export type UpsertOAuthBody = z.infer<typeof upsertOAuthBodySchema>;
+
+export const connectorBodySchema = z
+  .object({
+    name: z.string().trim().min(1, "A name is required").max(128),
+    description: z
+      .string()
+      .trim()
+      .min(1, "The agent uses this description to decide when to call the connector")
+      .max(1024),
+    base_url: httpsUrl,
+    auth_type: connectorWritableAuthTypeEnum,
+    // Meta rejects an API_KEY or OAuth connector created without its credentials
+    // ("The request is not valid for this connector"), so they go with the create.
+    // Forwarded to Meta only; never stored here.
+    auth_config: z
+      .object({
+        api_key: apiKeyAuthConfigSchema.optional(),
+        oauth2_client_credentials: oauthClientCredentialsSchema.optional(),
+      })
+      .optional(),
+    user_auth_injection_config: userAuthInjectionConfigSchema.optional(),
+    requires_certificate: z.boolean().optional(),
+  })
+  // Each type takes its own half of auth_config and nothing else.
+  .refine((body) => body.auth_type === "API_KEY" || !body.auth_config?.api_key, {
+    path: ["auth_config", "api_key"],
+    error: "An API key only applies to an API key connector",
   })
   .refine(
     (body) =>
-      !!(
-        body.api_key_config.headers?.length ||
-        body.api_key_config.query_params?.length ||
-        body.api_key_config.body_params?.length
-      ),
+      body.auth_type === "OAUTH2_CLIENT_CREDENTIALS" ||
+      !body.auth_config?.oauth2_client_credentials,
     {
-      path: ["api_key_config"],
-      error: "Provide at least one header, query parameter or body field",
+      path: ["auth_config", "oauth2_client_credentials"],
+      error: "OAuth credentials only apply to an OAuth connector",
     },
   );
-export type UpsertApiKeyBody = z.infer<typeof upsertApiKeyBodySchema>;
+export type ConnectorBody = z.infer<typeof connectorBodySchema>;
 
-export const upsertOAuthBodySchema = z.object({
-  oauth_config: z.object({
-    token_url: httpsUrl,
-    scopes_to_request: z.array(z.string().trim().min(1)).min(1, "At least one scope is required"),
-    client_id: z.string().trim().min(1, "A client id is required"),
-    client_secret: z.string().min(1, "A client secret is required"),
-    token_request_content_type: z
-      .enum(["application/x-www-form-urlencoded", "application/json"])
-      .optional(),
-  }),
-});
-export type UpsertOAuthBody = z.infer<typeof upsertOAuthBodySchema>;
-
-const pemBlock = (label: string) =>
+const pemBlock = (label: string, headers: string[]) =>
   z
     .string()
     .trim()
     .min(1, `${label} is required`)
-    .refine((value) => value.includes("-----BEGIN"), `${label} must be PEM-encoded`);
+    .refine(
+      (value) => headers.some((header) => value.startsWith(header)),
+      `${label} must be PEM-encoded and start with ${headers.join(" or ")}`,
+    );
+
+const PEM_CERTIFICATE = ["-----BEGIN CERTIFICATE-----"];
 
 export const upsertCertificateBodySchema = z.object({
-  client_certificate: pemBlock("A client certificate"),
-  client_key: pemBlock("A client key"),
-  ca_certificate: pemBlock("A CA certificate").optional(),
+  client_certificate: pemBlock("A client certificate", PEM_CERTIFICATE),
+  client_key: pemBlock("A client key", [
+    "-----BEGIN PRIVATE KEY-----",
+    "-----BEGIN RSA PRIVATE KEY-----",
+    "-----BEGIN EC PRIVATE KEY-----",
+  ]),
+  ca_certificate: pemBlock("A CA certificate", PEM_CERTIFICATE).optional(),
 });
 export type UpsertCertificateBody = z.infer<typeof upsertCertificateBodySchema>;
 
@@ -357,6 +424,24 @@ export type ByConnectorToolIdParams = z.infer<typeof byConnectorToolIdParamSchem
  * from the conversation. `value` is only meaningful for `default`, `macro` only
  * for `macro` — so each is required exactly where it applies.
  */
+/**
+ * Values Meta fills in from the conversation at call time. NATIONAL drops the
+ * country code but keeps a trunk prefix (+60123456789 → 0123456789), for APIs
+ * that reject E.164.
+ */
+export const bindingMacroEnum = z.enum([
+  "WHATSAPP_PHONE_NUMBER",
+  "WHATSAPP_PHONE_NUMBER_NATIONAL",
+  "WHATSAPP_IDENTITY_HASH",
+  "WHATSAPP_CURRENT_STATUS_ID",
+  "WHATSAPP_BSUID",
+  "WHATSAPP_CONVERSATION_ID",
+  "WHATSAPP_MESSAGE_ID",
+  "USER_MESSAGE",
+  "INSTAGRAM_IGSID",
+  "INSTAGRAM_CONVERSATION_ID",
+]);
+
 export const parameterBindingSchema = z
   .discriminatedUnion("kind", [
     z.object({
@@ -365,11 +450,7 @@ export const parameterBindingSchema = z
     }),
     z.object({
       kind: z.literal("macro"),
-      macro: z.enum([
-        "WHATSAPP_PHONE_NUMBER",
-        "WHATSAPP_IDENTITY_HASH",
-        "WHATSAPP_CURRENT_STATUS_ID",
-      ]),
+      macro: bindingMacroEnum,
     }),
   ])
   .optional();
@@ -380,6 +461,7 @@ export const parameterNodeSchema = z.object({
   required: z.boolean().optional(),
   binding: parameterBindingSchema,
 });
+export type ParameterNode = z.infer<typeof parameterNodeSchema>;
 
 /**
  * A JSON body field. Objects nest through `properties`, arrays describe their
@@ -394,15 +476,55 @@ export type BodyNode = {
   binding?: z.infer<typeof parameterBindingSchema>;
 };
 
+/**
+ * Meta's reference types a child node as "a string representation of the
+ * BodyNode", and a tool read back from Meta can carry it that way. We send
+ * objects (as Meta's own guides do) and accept either, so a synced tool stays
+ * editable.
+ */
+const parseNodeString = (value: unknown) => {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
 export const bodyNodeSchema: z.ZodType<BodyNode> = z.lazy(() =>
-  z.object({
-    type: z.enum(["object", "array", "string", "integer", "number", "boolean"]),
-    description: z.string().trim().max(1024).optional(),
-    required: z.array(z.string().trim().min(1)).optional(),
-    properties: z.record(z.string(), bodyNodeSchema).optional(),
-    items: bodyNodeSchema.optional(),
-    binding: parameterBindingSchema,
-  }),
+  z
+    .object({
+      type: z.enum(["object", "array", "string", "integer", "number", "boolean"]),
+      description: z.string().trim().max(1024).optional(),
+      required: z.array(z.string().trim().min(1)).optional(),
+      properties: z.record(z.string(), z.preprocess(parseNodeString, bodyNodeSchema)).optional(),
+      items: z.preprocess(parseNodeString, bodyNodeSchema).optional(),
+      binding: parameterBindingSchema,
+    })
+    .superRefine((node, ctx) => {
+      const container = node.type === "object" || node.type === "array";
+      if (container && node.binding) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["binding"],
+          message: "Objects and arrays cannot be bound; bind their fields instead",
+        });
+      }
+      if (node.type !== "object" && (node.properties || node.required)) {
+        ctx.addIssue({
+          code: "custom",
+          path: [node.properties ? "properties" : "required"],
+          message: "Only object fields have properties",
+        });
+      }
+      if (node.type !== "array" && node.items) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["items"],
+          message: "Only array fields have items",
+        });
+      }
+    }),
 );
 
 export const requestDefinitionSchema = z
@@ -532,9 +654,97 @@ export type AgentTestBody = z.infer<typeof agentTestBodySchema>;
 
 // ---- operate: thread control ----
 export const threadControlBodySchema = z.object({
-  // Meta documents `pass` as reserved for future use; `release` is the only
-  // action the Cloud API acts on today.
+  // `release` and `pass` both hand the thread to Meta AI from here: release
+  // gives up control, pass names the agent as the new owner. (`take` exists at
+  // Meta but is reserved for the configured escalation partner.)
   action: z.enum(["pass", "release"]),
+  // Accepted in E.164; sent to Meta as bare digits, the only form it resolves.
   to: e164,
 });
 export type ThreadControlBody = z.infer<typeof threadControlBodySchema>;
+
+// ---- configure: budget ----
+export const budgetUnitTypeEnum = z.enum(["token", "ai_turn"]);
+export const budgetTimeWindowEnum = z.enum([
+  "one_day",
+  "seven_days",
+  "fourteen_days",
+  "thirty_days",
+]);
+
+export const agentBudgetSchema = z.object({
+  // Passed back to edit a budget in place; omitted for a new one.
+  budget_id: z.string().trim().min(1).optional(),
+  unit_type: budgetUnitTypeEnum,
+  time_window: budgetTimeWindowEnum,
+  max_budget: z.number().int().min(1, "A cap must be at least 1"),
+});
+export type AgentBudget = z.infer<typeof agentBudgetSchema>;
+
+/**
+ * The complete desired set: Meta replaces what it holds with this, so a budget
+ * left out is deleted and an empty list means unlimited.
+ */
+export const agentBudgetsBodySchema = z
+  .object({ budgets: z.array(agentBudgetSchema).max(8) })
+  // Meta rejects the whole request over a repeated pair; name the row instead.
+  .superRefine((body, ctx) => {
+    const seen = new Set<string>();
+    body.budgets.forEach((budget, index) => {
+      const key = `${budget.unit_type}:${budget.time_window}`;
+      if (seen.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["budgets", index, "time_window"],
+          message: "There is already a cap for this unit and window",
+        });
+      }
+      seen.add(key);
+    });
+  });
+export type AgentBudgetsBody = z.infer<typeof agentBudgetsBodySchema>;
+
+// ---- insights ----
+const isoDay = z.iso.date("Use a YYYY-MM-DD date");
+
+/** Both bounds inclusive, so a span of `maxDays` counts the first and last day. */
+const dayRange = (maxDays: number) =>
+  z
+    .object({ start_date: isoDay, end_date: isoDay })
+    .refine((range) => range.start_date <= range.end_date, {
+      path: ["end_date"],
+      error: "The end date must be on or after the start date",
+    })
+    .refine(
+      (range) =>
+        (Date.parse(range.end_date) - Date.parse(range.start_date)) / 86_400_000 + 1 <= maxDays,
+      { path: ["start_date"], error: `The range cannot exceed ${maxDays} days` },
+    );
+
+// Meta's optional `metrics` filter is left off: the page shows both of the two
+// metrics there are, which is Meta's default.
+export const conversationInsightsQuerySchema = dayRange(90);
+export type ConversationInsightsQuery = z.infer<typeof conversationInsightsQuerySchema>;
+
+export const toolCallInsightsQuerySchema = dayRange(30).and(
+  z.object({ tool_name: z.string().trim().min(1).optional() }),
+);
+export type ToolCallInsightsQuery = z.infer<typeof toolCallInsightsQuerySchema>;
+
+export const agentEventInsightsQuerySchema = dayRange(30).and(
+  z.object({ event_type: z.string().trim().min(1).optional() }),
+);
+export type AgentEventInsightsQuery = z.infer<typeof agentEventInsightsQuerySchema>;
+
+export const conversationTurnsQuerySchema = z.object({
+  // Digits-only phone, a BSUID (`US.2788620304833812`) or an agent_test
+  // conversation_id; Meta tells them apart. A `+` is stripped in the service,
+  // since Meta answers "Consumer not found" to anything but bare digits.
+  user: z.string().trim().min(1, "Enter a phone number or user id"),
+  start_timestamp_ms: z.coerce.number().int().nonnegative().optional(),
+  end_timestamp_ms: z.coerce.number().int().nonnegative().optional(),
+  after: z.string().trim().min(1).optional(),
+  before: z.string().trim().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+export type ConversationTurnsQuery = z.infer<typeof conversationTurnsQuerySchema>;

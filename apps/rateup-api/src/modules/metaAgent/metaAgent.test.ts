@@ -583,7 +583,7 @@ describe("the connector schema", () => {
     ).toBe(false);
   });
 
-  test("constrains the auth type to the six Meta documents", () => {
+  test("only accepts the three auth types Meta supports today", () => {
     const withAuth = (auth_type: string) =>
       connectorBodySchema.safeParse({
         name: "n",
@@ -592,17 +592,14 @@ describe("the connector schema", () => {
         auth_type,
       }).success;
 
-    for (const auth of [
-      "OAUTH2_CLIENT_CREDENTIALS",
-      "OAUTH2",
-      "API_KEY",
-      "BASIC",
-      "CUSTOM",
-      "NONE",
-    ]) {
+    for (const auth of ["OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "NONE"]) {
       expect(withAuth(auth)).toBe(true);
     }
-    expect(withAuth("MUTUAL_TLS")).toBe(false);
+    // Listed in Meta's enum, but "Currently, only OAUTH2_CLIENT_CREDENTIALS,
+    // API_KEY, and NONE are supported."
+    for (const auth of ["OAUTH2", "BASIC", "CUSTOM", "MUTUAL_TLS"]) {
+      expect(withAuth(auth)).toBe(false);
+    }
   });
 });
 
@@ -660,9 +657,22 @@ describe("the credential upsert schemas match Meta's own bodies", () => {
       upsertCertificateBodySchema.safeParse({ client_certificate: pem, client_key: "hunter2" })
         .success,
     ).toBe(false);
+    // A key has to be a key, not a second certificate.
     expect(
       upsertCertificateBodySchema.safeParse({ client_certificate: pem, client_key: pem }).success,
-    ).toBe(true);
+    ).toBe(false);
+    const key = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----";
+    for (const header of ["PRIVATE KEY", "RSA PRIVATE KEY", "EC PRIVATE KEY"]) {
+      expect(
+        upsertCertificateBodySchema.safeParse({
+          client_certificate: pem,
+          client_key: `-----BEGIN ${header}-----\nabc`,
+        }).success,
+      ).toBe(true);
+    }
+    expect(
+      upsertCertificateBodySchema.safeParse({ client_certificate: key, client_key: key }).success,
+    ).toBe(false);
   });
 });
 
@@ -832,14 +842,25 @@ describe("the operate schemas", () => {
   // Meta only keeps 7 days of connector logs and 400s on a wider window.
   test("the connector log window is capped at 7 days", () => {
     const day = 24 * 60 * 60;
+    const start = Math.floor(Date.now() / 1000) - 6 * day;
     expect(
-      connectorLogsQuerySchema.safeParse({ start_time: 1_000_000, end_time: 1_000_000 + 8 * day })
-        .success,
+      connectorLogsQuerySchema.safeParse({ start_time: start, end_time: start + 8 * day }).success,
     ).toBe(false);
     expect(
-      connectorLogsQuerySchema.safeParse({ start_time: 1_000_000, end_time: 1_000_000 + 6 * day })
-        .success,
+      connectorLogsQuerySchema.safeParse({ start_time: start, end_time: start + 5 * day }).success,
     ).toBe(true);
+  });
+
+  test("and cannot start before Meta's 7 days of retention", () => {
+    const eightDaysAgo = Math.floor(Date.now() / 1000) - 8 * 24 * 60 * 60;
+    expect(connectorLogsQuerySchema.safeParse({ start_time: eightDaysAgo }).success).toBe(false);
+  });
+
+  test("the log flags read the string false as false", () => {
+    // Query values arrive as strings; z.coerce.boolean() made "false" true.
+    const parsed = connectorLogsQuerySchema.parse({ summary_only: "false", include_stats: "true" });
+    expect(parsed.summary_only).toBe(false);
+    expect(parsed.include_stats).toBe(true);
   });
 });
 
@@ -849,6 +870,7 @@ describe("metaAgentRoutes", () => {
     const hooks: any[] = [];
     const srv: any = {
       addHook: vi.fn((name, fn) => hooks.push({ name, fn })),
+      register: vi.fn(),
       get: vi.fn((url, opts, handler) => routes.push({ method: "GET", url, opts, handler })),
       post: vi.fn((url, opts, handler) => routes.push({ method: "POST", url, opts, handler })),
       put: vi.fn((url, opts, handler) => routes.push({ method: "PUT", url, opts, handler })),
@@ -914,10 +936,14 @@ describe("metaAgentRoutes", () => {
       "POST /connectors/:id/upsertApiKey",
       "POST /connectors/:id/upsertOAuth",
       "POST /connectors/:id/upsertCertificate",
+      "POST /rateup-connector",
+      "DELETE /rateup-connector",
       "POST /connectors/:connectorId/tools",
       "PUT /connectors/:connectorId/tools/:toolId",
       "DELETE /connectors/:connectorId/tools/:toolId",
       "POST /connectors/:connectorId/tools/:toolId/run",
+      // A usage cap decides when customers stop getting AI replies.
+      "PUT /budget",
     ]);
   });
 

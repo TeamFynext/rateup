@@ -44,6 +44,11 @@ export type ExternalErrorCode =
   | "reward_not_found"
   | "voucher_not_found"
   | "not_found"
+  // …the Meta AI agent's built-in connector, which names things the agent typed
+  | "contact_not_found"
+  | "label_not_found"
+  | "stage_not_found"
+  | "team_not_found"
   // 409
   | "member_already_exists"
   | "reward_already_assigned"
@@ -60,6 +65,8 @@ export type ExternalErrorCode =
   | "program_not_active"
   | "member_not_active"
   | "invalid_amount"
+  | "no_pipeline"
+  | "team_empty"
   // 429 / 5xx
   | "rate_limited"
   | "internal_error";

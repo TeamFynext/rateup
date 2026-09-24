@@ -1010,7 +1010,8 @@ export function generateInternalMessageId() {
   return generateLocalMessageId();
 }
 
-async function executeAttachLabelAction(
+/** Also run by the Meta AI agent's built-in RateUp connector. */
+export async function executeAttachLabelAction(
   labelId: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
@@ -1070,7 +1071,8 @@ async function executeAssignUserAction(
   return true;
 }
 
-async function executeAssignTeamAction(
+/** Also run by the Meta AI agent's built-in RateUp connector. */
+export async function executeAssignTeamAction(
   teamId: string,
   context: RuleExecutionContext,
 ): Promise<boolean> {
@@ -1111,7 +1113,8 @@ async function executeAssignTeamAction(
  * lead already sitting on the named column, is a no-op the rule reports as
  * handled: neither is a failure worth retrying the message over.
  */
-async function executeAssignStageAction(
+/** Also run by the Meta AI agent's built-in RateUp connector. */
+export async function executeAssignStageAction(
   rawValue: unknown,
   context: {
     orgId: string;

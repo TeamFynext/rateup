@@ -1,23 +1,31 @@
 import { MetaAgentThreadOwner, Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { aes_decrypt } from "../../../utils/encryption/encryption.utils.js";
-import { callMetaAgentApi } from "./metaAgent.client.js";
+import { callMetaAgentApi, MetaAgentApiError } from "./metaAgent.client.js";
 import { setMetaAgentThreadOwner } from "./metaAgent.threadOwner.js";
+import { callMetaApi } from "../whatsapp/wa_axios.js";
 import {
+  AgentBudgetsBody,
   AgentEventBody,
+  AgentEventInsightsQuery,
   AgentInboxSettingsBody,
   AgentSettingsBody,
   AgentTestBody,
+  ALLOWLIST_MAX_ENTRIES,
   BusinessInfoBody,
   ConnectorBody,
   ConnectorLogsQuery,
   ConnectorToolBody,
+  ConversationInsightsQuery,
+  ConversationTurnsQuery,
   EvalRunBody,
   FaqBody,
+  OnboardingBody,
   KNOWLEDGE_FILE_EXTENSIONS,
   KNOWLEDGE_FILE_MAX_BYTES,
   SkillBody,
   ThreadControlBody,
+  ToolCallInsightsQuery,
   UiSkillBody,
   UiSkillUpdateBody,
   UpsertApiKeyBody,
@@ -44,7 +52,7 @@ export class MetaAgentValidationError extends Error {
 async function getEntityContext(orgId: string, whatsappSettingsId: string) {
   const settings = await prisma.whatsappSettings.findFirstOrThrow({
     where: { id: whatsappSettingsId, orgId },
-    select: { phoneId: true, accessToken: true, accessToken_iv: true },
+    select: { phoneId: true, wabaId: true, accessToken: true, accessToken_iv: true },
   });
   if (!settings.phoneId) {
     throw new MetaAgentValidationError("This WhatsApp channel has no phone number id configured");
@@ -56,7 +64,7 @@ async function getEntityContext(orgId: string, whatsappSettingsId: string) {
         settings.accessToken_iv,
       )
     : settings.accessToken;
-  return { entityId: settings.phoneId, accessToken };
+  return { entityId: settings.phoneId, wabaId: settings.wabaId, accessToken };
 }
 
 export async function getAgentRecord(orgId: string, whatsappSettingsId: string) {
@@ -95,20 +103,34 @@ export async function checkAgentEligibility(orgId: string, whatsappSettingsId: s
   });
 }
 
-export async function onboardAgent(orgId: string, whatsappSettingsId: string, channel: string) {
+export async function onboardAgent(
+  orgId: string,
+  whatsappSettingsId: string,
+  body: OnboardingBody,
+) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  // Meta requires a JSON body here even when it is empty; the channel is ours.
   const data = await callMetaAgentApi<{ agent_id: string }>(
     `/${entityId}/agent_onboarding`,
     "POST",
     accessToken,
-    undefined,
-    { channel },
+    body.catalog_id ? { catalog_id: body.catalog_id } : {},
   );
   return prisma.metaBusinessAgent.update({
     where: { id: agent.id },
-    data: { agentId: data.agent_id, channel, status: "ONBOARDED" },
+    data: { agentId: data.agent_id, channel: body.channel, status: "ONBOARDED" },
   });
+}
+
+/** A 404 on a delete means Meta no longer has it — the outcome we wanted. */
+async function deleteAtMeta(path: string, accessToken: string) {
+  try {
+    await callMetaAgentApi(path, "DELETE", accessToken);
+  } catch (error) {
+    if (error instanceof MetaAgentApiError && error.status === 404) return;
+    throw error;
+  }
 }
 
 /**
@@ -137,9 +159,13 @@ export async function deleteAgent(orgId: string, whatsappSettingsId: string) {
       data: {
         agentId: null,
         status: "NOT_ONBOARDED",
+        // Meta says eligibility can change, so a re-create checks again.
+        isEligible: null,
+        eligibilityCheckedAt: null,
         rolloutEnabled: null,
         handoffEnabled: null,
         handoffMessage: null,
+        handoffMessageSelection: null,
         followupEnabled: null,
         followupIntervalSeconds: null,
         followupMessage: null,
@@ -148,6 +174,9 @@ export async function deleteAgent(orgId: string, whatsappSettingsId: string) {
         settingsSyncedAt: null,
         businessInfo: Prisma.DbNull,
         businessInfoSyncedAt: null,
+        budgets: Prisma.DbNull,
+        budgetsSyncedAt: null,
+        rateupToolsKeyHash: null,
       },
     }),
   ]);
@@ -169,6 +198,20 @@ export async function addAllowlistEntry(
   consumerPhoneNumber: string,
 ) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
+  // Both are refused by Meta anyway; checking here spares a call against the
+  // allowlist's hourly limit and names the actual problem.
+  const existing = await prisma.metaAgentAllowlistEntry.findMany({
+    where: { agentId: agent.id },
+    select: { consumerPhoneNumber: true },
+  });
+  if (existing.some((entry) => entry.consumerPhoneNumber === consumerPhoneNumber)) {
+    throw new MetaAgentValidationError("That number is already on the allowlist");
+  }
+  if (existing.length >= ALLOWLIST_MAX_ENTRIES) {
+    throw new MetaAgentValidationError(
+      `The allowlist is full. Meta allows ${ALLOWLIST_MAX_ENTRIES} numbers; remove one first.`,
+    );
+  }
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
   const data = await callMetaAgentApi<{ id: string; consumer_phone_number: string }>(
     `/${entityId}/agent_config/allowlist`,
@@ -188,11 +231,7 @@ export async function removeAllowlistEntry(orgId: string, whatsappSettingsId: st
   });
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
   if (entry.metaId) {
-    await callMetaAgentApi(
-      `/${entityId}/agent_config/allowlist/${entry.metaId}`,
-      "DELETE",
-      accessToken,
-    );
+    await deleteAtMeta(`/${entityId}/agent_config/allowlist/${entry.metaId}`, accessToken);
   }
   await prisma.metaAgentAllowlistEntry.delete({ where: { id } });
 }
@@ -200,15 +239,19 @@ export async function removeAllowlistEntry(orgId: string, whatsappSettingsId: st
 export async function syncAllowlist(orgId: string, whatsappSettingsId: string) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
-  const data = await callMetaAgentApi<{ id: string; consumer_phone_number: string }[]>(
-    `/${entityId}/agent_config/allowlist`,
-    "GET",
-    accessToken,
+  const data = await callMetaAgentApi<
+    { id: string; consumer_phone_number?: string; consumer_instagram_username?: string }[]
+  >(`/${entityId}/agent_config/allowlist`, "GET", accessToken);
+  // An entry is a phone number or an Instagram username; only the first
+  // belongs on a WhatsApp number's list.
+  const phoneEntries = (data ?? []).filter(
+    (entry): entry is { id: string; consumer_phone_number: string } =>
+      !!entry.consumer_phone_number,
   );
   await prisma.$transaction([
     prisma.metaAgentAllowlistEntry.deleteMany({ where: { agentId: agent.id } }),
     prisma.metaAgentAllowlistEntry.createMany({
-      data: (data ?? []).map((entry) => ({
+      data: phoneEntries.map((entry) => ({
         agentId: agent.id,
         metaId: entry.id,
         consumerPhoneNumber: entry.consumer_phone_number,
@@ -223,7 +266,11 @@ export async function getAgentSettings(orgId: string, whatsappSettingsId: string
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   return {
     rollout: { enabled: agent.rolloutEnabled ?? false },
-    handoff: { enabled: agent.handoffEnabled ?? false, message: agent.handoffMessage ?? "" },
+    handoff: {
+      enabled: agent.handoffEnabled ?? false,
+      message: agent.handoffMessage ?? "",
+      message_selection: agent.handoffMessageSelection ?? "DEFAULT",
+    },
     followup: {
       enabled: agent.followupEnabled ?? false,
       followup_interval_in_seconds: agent.followupIntervalSeconds ?? 0,
@@ -261,7 +308,7 @@ export async function updateAgentSettings(
 ) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
-  await callMetaAgentApi(
+  const remote = await callMetaAgentApi<MetaAgentRemoteSettings | undefined>(
     `/${entityId}/agent_config/settings`,
     "PUT",
     accessToken,
@@ -271,13 +318,11 @@ export async function updateAgentSettings(
   await prisma.metaBusinessAgent.update({
     where: { id: agent.id },
     data: {
-      rolloutEnabled: body.rollout?.enabled,
-      handoffEnabled: body.handoff?.enabled,
-      handoffMessage: body.handoff?.message,
-      followupEnabled: body.followup?.enabled,
-      followupIntervalSeconds: body.followup?.followup_interval_in_seconds,
-      followupMessage: body.followup?.message,
-      aiAudience: body.ai_audience,
+      // Without an agent_id Meta creates-or-fetches, and names the one it used.
+      agentId: agent.agentId ?? remote?.agent_id ?? null,
+      // What Meta now holds, where it said; the request otherwise. The phrases
+      // are write-only at Meta, so they can only come from the request.
+      ...(remote ? remoteSettingsRow(remote) : requestSettingsRow(body)),
       neverSayPhrases: body.never_say_phrases,
       settingsSyncedAt: new Date(),
     },
@@ -285,21 +330,56 @@ export async function updateAgentSettings(
   return getAgentSettings(orgId, whatsappSettingsId);
 }
 
+function requestSettingsRow(body: AgentSettingsBody) {
+  return {
+    rolloutEnabled: body.rollout?.enabled,
+    handoffEnabled: body.handoff?.enabled,
+    handoffMessage: body.handoff?.message,
+    handoffMessageSelection: body.handoff?.message_selection,
+    followupEnabled: body.followup?.enabled,
+    followupIntervalSeconds: body.followup?.followup_interval_in_seconds,
+    followupMessage: body.followup?.message,
+    aiAudience: body.ai_audience,
+  };
+}
+
+/**
+ * Meta returns `handoff` and `followup` as null when they are not configured.
+ * That has to clear our copy, not leave the last saved values standing.
+ */
+function remoteSettingsRow(remote: MetaAgentRemoteSettings) {
+  return {
+    channel: remote.channel,
+    rolloutEnabled: remote.rollout?.enabled ?? null,
+    handoffEnabled: remote.handoff?.enabled ?? null,
+    handoffMessage: remote.handoff?.message ?? null,
+    handoffMessageSelection: remote.handoff?.message_selection ?? null,
+    followupEnabled: remote.followup?.enabled ?? null,
+    followupIntervalSeconds: remote.followup?.followup_interval_in_seconds ?? null,
+    followupMessage: remote.followup?.message ?? null,
+    aiAudience: remote.ai_audience ?? null,
+  };
+}
+
 /** The agent_config/settings payload as Meta's Graph API returns it. */
 interface MetaAgentRemoteSettings {
   agent_id?: string;
   channel?: string;
   rollout?: { enabled?: boolean };
-  handoff?: { enabled?: boolean; message?: string };
-  followup?: { enabled?: boolean; followup_interval_in_seconds?: number; message?: string };
-  ai_audience?: string;
-  never_say_phrases?: string[];
+  handoff?: { enabled?: boolean; message?: string; message_selection?: string } | null;
+  followup?: {
+    enabled?: boolean;
+    followup_interval_in_seconds?: number;
+    message?: string;
+  } | null;
+  ai_audience?: string | null;
 }
 
 export async function syncAgentSettings(orgId: string, whatsappSettingsId: string) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
-  // Meta returns the settings either bare or wrapped in a single-element array.
+  // Without an agent_id Meta returns every configuration for the entity, so
+  // pick ours rather than whichever came first. Tolerates a bare object too.
   const data = await callMetaAgentApi<MetaAgentRemoteSettings[] | MetaAgentRemoteSettings>(
     `/${entityId}/agent_config/settings`,
     "GET",
@@ -307,22 +387,28 @@ export async function syncAgentSettings(orgId: string, whatsappSettingsId: strin
     undefined,
     agentScope(agent.agentId),
   );
-  const remote = Array.isArray(data) ? data[0] : data;
+  const all = Array.isArray(data) ? data : data ? [data] : [];
+  const remote =
+    all.find((row) => agent.agentId && row.agent_id === agent.agentId) ??
+    all.find((row) => row.channel === agent.channel) ??
+    all[0];
+  if (!remote) {
+    await prisma.metaBusinessAgent.update({
+      where: { id: agent.id },
+      data: { settingsSyncedAt: new Date() },
+    });
+    return getAgentSettings(orgId, whatsappSettingsId);
+  }
   await prisma.metaBusinessAgent.update({
     where: { id: agent.id },
     data: {
       // A settings read is the one call that reports the agent id without an
       // onboarding round trip, so adopt it if we do not have one yet.
-      agentId: agent.agentId ?? remote?.agent_id ?? null,
-      channel: remote?.channel ?? agent.channel,
-      rolloutEnabled: remote?.rollout?.enabled,
-      handoffEnabled: remote?.handoff?.enabled,
-      handoffMessage: remote?.handoff?.message,
-      followupEnabled: remote?.followup?.enabled,
-      followupIntervalSeconds: remote?.followup?.followup_interval_in_seconds,
-      followupMessage: remote?.followup?.message,
-      aiAudience: remote?.ai_audience,
-      neverSayPhrases: remote?.never_say_phrases ?? [],
+      agentId: agent.agentId ?? remote.agent_id ?? null,
+      ...remoteSettingsRow(remote),
+      channel: remote.channel ?? agent.channel,
+      // never_say_phrases is write-only at Meta: absent from every read, so the
+      // copy we saved is left alone.
       settingsSyncedAt: new Date(),
     },
   });
@@ -435,7 +521,7 @@ export async function deleteFaq(orgId: string, whatsappSettingsId: string, id: s
   const faq = await prisma.metaAgentFaq.findFirstOrThrow({ where: { id, agentId: agent.id } });
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
   if (faq.metaId) {
-    await callMetaAgentApi(`/${entityId}/agent_config/faq/${faq.metaId}`, "DELETE", accessToken);
+    await deleteAtMeta(`/${entityId}/agent_config/faq/${faq.metaId}`, accessToken);
   }
   await prisma.metaAgentFaq.delete({ where: { id } });
 }
@@ -511,7 +597,7 @@ export async function deleteFile(orgId: string, whatsappSettingsId: string, id: 
   const file = await prisma.metaAgentFile.findFirstOrThrow({ where: { id, agentId: agent.id } });
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
   if (file.metaId) {
-    await callMetaAgentApi(`/${entityId}/agent_config/files/${file.metaId}`, "DELETE", accessToken);
+    await deleteAtMeta(`/${entityId}/agent_config/files/${file.metaId}`, accessToken);
   }
   await prisma.metaAgentFile.delete({ where: { id } });
 }
@@ -549,10 +635,16 @@ export async function listWebsites(orgId: string, whatsappSettingsId: string) {
 interface MetaRemoteWebsite {
   id: string;
   url: string;
+  /** not_started, pending, in_progress, completed, completed_no_data or failed. */
   crawl_status?: string;
+  /** Set only when crawl_status is failed: why, e.g. blocked by robots.txt. */
+  crawl_error?: string;
   pages_crawled?: number;
   last_crawled_at?: number;
+  created_at?: number;
 }
+
+const fromEpoch = (seconds?: number) => (seconds ? new Date(seconds * 1000) : null);
 
 export async function createWebsite(orgId: string, whatsappSettingsId: string, body: WebsiteBody) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
@@ -569,7 +661,9 @@ export async function createWebsite(orgId: string, whatsappSettingsId: string, b
       metaId: data.id,
       url: data.url,
       crawlStatus: data.crawl_status,
+      crawlError: data.crawl_error || null,
       pagesCrawled: data.pages_crawled,
+      lastCrawledAt: fromEpoch(data.last_crawled_at),
     },
   });
 }
@@ -598,8 +692,9 @@ export async function updateWebsite(
       url: body.url,
       // A new URL restarts the crawl, so the old counters no longer describe it.
       crawlStatus: remote?.crawl_status ?? "pending",
+      crawlError: remote?.crawl_error || null,
       pagesCrawled: remote?.pages_crawled ?? null,
-      lastCrawledAt: remote?.last_crawled_at ? new Date(remote.last_crawled_at * 1000) : null,
+      lastCrawledAt: fromEpoch(remote?.last_crawled_at),
     },
   });
 }
@@ -609,11 +704,7 @@ export async function deleteWebsite(orgId: string, whatsappSettingsId: string, i
   const site = await prisma.metaAgentWebsite.findFirstOrThrow({ where: { id, agentId: agent.id } });
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
   if (site.metaId) {
-    await callMetaAgentApi(
-      `/${entityId}/agent_config/websites/${site.metaId}`,
-      "DELETE",
-      accessToken,
-    );
+    await deleteAtMeta(`/${entityId}/agent_config/websites/${site.metaId}`, accessToken);
   }
   await prisma.metaAgentWebsite.delete({ where: { id } });
 }
@@ -634,8 +725,11 @@ export async function syncWebsites(orgId: string, whatsappSettingsId: string) {
         metaId: site.id,
         url: site.url,
         crawlStatus: site.crawl_status,
+        crawlError: site.crawl_error || null,
         pagesCrawled: site.pages_crawled,
-        lastCrawledAt: site.last_crawled_at ? new Date(site.last_crawled_at * 1000) : null,
+        lastCrawledAt: fromEpoch(site.last_crawled_at),
+        // Keeps the list in Meta's order rather than one shared sync timestamp.
+        ...(site.created_at ? { createdAt: fromEpoch(site.created_at)! } : {}),
       })),
     }),
   ]);
@@ -643,6 +737,23 @@ export async function syncWebsites(orgId: string, whatsappSettingsId: string) {
 }
 
 // ---- skills ----
+interface MetaRemoteSkill {
+  id: string;
+  title?: string;
+  description?: string;
+  skill: string;
+  channel?: string;
+  metadata?: Record<string, string>;
+  /** active once reviewed, pending_review while it runs, blocked if it failed. */
+  status?: string;
+  created_at?: number;
+}
+
+/** Meta's request has these three; metadata only ever comes back on a read. */
+function skillPayload(body: SkillBody) {
+  return { title: body.title, description: body.description, skill: body.skill };
+}
+
 export async function listSkills(orgId: string, whatsappSettingsId: string) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   return prisma.metaAgentSkill.findMany({
@@ -654,11 +765,11 @@ export async function listSkills(orgId: string, whatsappSettingsId: string) {
 export async function createSkill(orgId: string, whatsappSettingsId: string, body: SkillBody) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
-  const data = await callMetaAgentApi<{ id: string; channel?: string }>(
+  const data = await callMetaAgentApi<MetaRemoteSkill>(
     `/${entityId}/agent_config/skills`,
     "POST",
     accessToken,
-    body,
+    skillPayload(body),
     agentScope(agent.agentId),
   );
   return prisma.metaAgentSkill.create({
@@ -668,8 +779,9 @@ export async function createSkill(orgId: string, whatsappSettingsId: string, bod
       title: body.title,
       description: body.description,
       skill: body.skill,
-      metadata: body.metadata,
       channel: data.channel,
+      // Normally pending_review straight after a save.
+      status: data.status ?? null,
     },
   });
 }
@@ -683,12 +795,13 @@ export async function updateSkill(
   const agent = await requireAgentRecord(orgId, whatsappSettingsId);
   const skill = await prisma.metaAgentSkill.findFirstOrThrow({ where: { id, agentId: agent.id } });
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  let remote: MetaRemoteSkill | undefined;
   if (skill.metaId) {
-    await callMetaAgentApi(
+    remote = await callMetaAgentApi<MetaRemoteSkill>(
       `/${entityId}/agent_config/skills/${skill.metaId}`,
       "PUT",
       accessToken,
-      body,
+      skillPayload(body),
     );
   }
   return prisma.metaAgentSkill.update({
@@ -697,7 +810,8 @@ export async function updateSkill(
       title: body.title,
       description: body.description,
       skill: body.skill,
-      metadata: body.metadata,
+      // An edit sends the skill back through review.
+      status: remote?.status ?? (skill.metaId ? "pending_review" : skill.status),
     },
   });
 }
@@ -707,11 +821,7 @@ export async function deleteSkill(orgId: string, whatsappSettingsId: string, id:
   const skill = await prisma.metaAgentSkill.findFirstOrThrow({ where: { id, agentId: agent.id } });
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
   if (skill.metaId) {
-    await callMetaAgentApi(
-      `/${entityId}/agent_config/skills/${skill.metaId}`,
-      "DELETE",
-      accessToken,
-    );
+    await deleteAtMeta(`/${entityId}/agent_config/skills/${skill.metaId}`, accessToken);
   }
   await prisma.metaAgentSkill.delete({ where: { id } });
 }
@@ -719,16 +829,14 @@ export async function deleteSkill(orgId: string, whatsappSettingsId: string, id:
 export async function syncSkills(orgId: string, whatsappSettingsId: string) {
   const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
-  const data = await callMetaAgentApi<
-    {
-      id: string;
-      title?: string;
-      description?: string;
-      skill: string;
-      channel?: string;
-      metadata?: Record<string, string>;
-    }[]
-  >(`/${entityId}/agent_config/skills`, "GET", accessToken, undefined, agentScope(agent.agentId));
+  // Blocked skills are listed too, marked by status, so they can be found and fixed.
+  const data = await callMetaAgentApi<MetaRemoteSkill[]>(
+    `/${entityId}/agent_config/skills`,
+    "GET",
+    accessToken,
+    undefined,
+    agentScope(agent.agentId),
+  );
   await prisma.$transaction([
     prisma.metaAgentSkill.deleteMany({ where: { agentId: agent.id } }),
     prisma.metaAgentSkill.createMany({
@@ -741,6 +849,8 @@ export async function syncSkills(orgId: string, whatsappSettingsId: string) {
         skill: skill.skill,
         channel: skill.channel,
         metadata: skill.metadata,
+        status: skill.status ?? null,
+        ...(skill.created_at ? { createdAt: fromEpoch(skill.created_at)! } : {}),
       })),
     }),
   ]);
@@ -764,7 +874,7 @@ function uiSkillPayload(body: UiSkillBody) {
     component_type: body.component_type,
     status: body.status,
     instruction: body.instruction,
-    ...(body.flow_id ? { flow_id: Number(body.flow_id) } : {}),
+    ...(body.component_type === "flow" && body.flow_id ? { flow_id: Number(body.flow_id) } : {}),
   };
 }
 
@@ -796,7 +906,7 @@ export async function createUiSkill(orgId: string, whatsappSettingsId: string, b
       componentType: body.component_type,
       status: body.status,
       instruction: body.instruction,
-      flowId: body.flow_id,
+      flowId: body.component_type === "flow" ? body.flow_id : null,
     },
   });
 }
@@ -833,7 +943,7 @@ export async function deleteUiSkill(orgId: string, whatsappSettingsId: string, i
   });
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
   if (uiSkill.metaId) {
-    await callMetaAgentApi(`/${entityId}/agent-ui-skills/${uiSkill.metaId}`, "DELETE", accessToken);
+    await deleteAtMeta(`/${entityId}/agent-ui-skills/${uiSkill.metaId}`, accessToken);
   }
   await prisma.metaAgentUiSkill.delete({ where: { id } });
 }
@@ -945,6 +1055,7 @@ export async function updateConnector(
   body: ConnectorBody,
 ) {
   const { connector, entityId, accessToken } = await withConnector(orgId, whatsappSettingsId, id);
+  assertNotBuiltIn(connector);
   let remote: MetaRemoteConnector | undefined;
   if (connector.metaId) {
     remote = await callMetaAgentApi<MetaRemoteConnector>(
@@ -971,11 +1082,14 @@ export async function updateConnector(
 export async function deleteConnector(orgId: string, whatsappSettingsId: string, id: string) {
   const { connector, entityId, accessToken } = await withConnector(orgId, whatsappSettingsId, id);
   if (connector.metaId) {
-    await callMetaAgentApi(
-      `/${entityId}/agent_connectors/${connector.metaId}`,
-      "DELETE",
-      accessToken,
-    );
+    await deleteAtMeta(`/${entityId}/agent_connectors/${connector.metaId}`, accessToken);
+  }
+  // With the built-in connector gone, nothing should still be able to call its tools.
+  if (connector.builtIn) {
+    await prisma.metaBusinessAgent.update({
+      where: { id: connector.agentId },
+      data: { rateupToolsKeyHash: null },
+    });
   }
   await prisma.metaAgentConnector.delete({ where: { id } });
 }
@@ -988,7 +1102,7 @@ export async function getConnectorLogs(
 ) {
   const { connector, entityId, accessToken } = await withConnector(orgId, whatsappSettingsId, id);
   return callMetaAgentApi(
-    `/${entityId}/agent_connectors/${connector.metaId}/logs`,
+    `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/logs`,
     "GET",
     accessToken,
     undefined,
@@ -1005,6 +1119,31 @@ async function withConnector(orgId: string, whatsappSettingsId: string, id: stri
   return { connector, entityId, accessToken };
 }
 
+/**
+ * The Meta id every connector sub-path is built from. Without it the call would
+ * go to `/agent_connectors/null/...` and come back as a baffling 404.
+ */
+/**
+ * The built-in RateUp connector's key and tools are RateUp's to manage: an edit
+ * by hand would drift from the endpoints they call. Reinstalling rewrites them.
+ */
+function assertNotBuiltIn(connector: { builtIn: string | null }) {
+  if (connector.builtIn) {
+    throw new MetaAgentValidationError(
+      "The RateUp connector is managed by RateUp. Reinstall it to change its tools.",
+    );
+  }
+}
+
+function requireMetaId(row: { metaId: string | null }, what: string) {
+  if (!row.metaId) {
+    throw new MetaAgentValidationError(
+      `This ${what} is not registered with Meta yet. Sync connectors, then try again.`,
+    );
+  }
+  return row.metaId;
+}
+
 export async function upsertConnectorApiKey(
   orgId: string,
   whatsappSettingsId: string,
@@ -1012,8 +1151,9 @@ export async function upsertConnectorApiKey(
   body: UpsertApiKeyBody,
 ) {
   const { connector, entityId, accessToken } = await withConnector(orgId, whatsappSettingsId, id);
+  assertNotBuiltIn(connector);
   const data = await callMetaAgentApi<MetaRemoteConnector>(
-    `/${entityId}/agent_connectors/${connector.metaId}/upsertApiKey`,
+    `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/upsertApiKey`,
     "POST",
     accessToken,
     body,
@@ -1033,8 +1173,9 @@ export async function upsertConnectorOAuth(
   body: UpsertOAuthBody,
 ) {
   const { connector, entityId, accessToken } = await withConnector(orgId, whatsappSettingsId, id);
+  assertNotBuiltIn(connector);
   const data = await callMetaAgentApi<MetaRemoteConnector>(
-    `/${entityId}/agent_connectors/${connector.metaId}/upsertOAuth`,
+    `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/upsertOAuth`,
     "POST",
     accessToken,
     body,
@@ -1052,8 +1193,9 @@ export async function upsertConnectorCertificate(
   body: UpsertCertificateBody,
 ) {
   const { connector, entityId, accessToken } = await withConnector(orgId, whatsappSettingsId, id);
+  assertNotBuiltIn(connector);
   const data = await callMetaAgentApi<MetaRemoteConnector>(
-    `/${entityId}/agent_connectors/${connector.metaId}/upsertCertificate`,
+    `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/upsertCertificate`,
     "POST",
     accessToken,
     body,
@@ -1134,7 +1276,7 @@ export async function createConnectorTool(
     connectorId,
   );
   const data = await callMetaAgentApi<MetaRemoteConnectorTool>(
-    `/${entityId}/agent_connectors/${connector.metaId}/tools`,
+    `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/tools`,
     "POST",
     accessToken,
     body,
@@ -1164,12 +1306,13 @@ export async function updateConnectorTool(
     whatsappSettingsId,
     connectorId,
   );
+  assertNotBuiltIn(connector);
   const tool = await prisma.metaAgentConnectorTool.findFirstOrThrow({
     where: { id: toolId, connectorId },
   });
   if (tool.metaId) {
     await callMetaAgentApi(
-      `/${entityId}/agent_connectors/${connector.metaId}/tools/${tool.metaId}`,
+      `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/tools/${tool.metaId}`,
       "PUT",
       accessToken,
       body,
@@ -1198,13 +1341,13 @@ export async function deleteConnectorTool(
     whatsappSettingsId,
     connectorId,
   );
+  assertNotBuiltIn(connector);
   const tool = await prisma.metaAgentConnectorTool.findFirstOrThrow({
     where: { id: toolId, connectorId },
   });
   if (tool.metaId) {
-    await callMetaAgentApi(
-      `/${entityId}/agent_connectors/${connector.metaId}/tools/${tool.metaId}`,
-      "DELETE",
+    await deleteAtMeta(
+      `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/tools/${tool.metaId}`,
       accessToken,
     );
   }
@@ -1227,7 +1370,7 @@ export async function runConnectorTool(
     where: { id: toolId, connectorId },
   });
   return callMetaAgentApi<{ output: string; status: string }>(
-    `/${entityId}/agent_connectors/${connector.metaId}/tools/${tool.metaId}/run`,
+    `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/tools/${requireMetaId(tool, "tool")}/run`,
     "POST",
     accessToken,
     { input: input?.trim() ? input : "{}" },
@@ -1245,7 +1388,7 @@ export async function syncConnectorTools(
     connectorId,
   );
   const data = await callMetaAgentApi<MetaRemoteConnectorTool[]>(
-    `/${entityId}/agent_connectors/${connector.metaId}/tools`,
+    `/${entityId}/agent_connectors/${requireMetaId(connector, "connector")}/tools`,
     "GET",
     accessToken,
   );
@@ -1345,24 +1488,176 @@ export async function setThreadControl(
   releaseReason = "released",
 ) {
   const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  // Meta answers "Consumer not found" to `+15551234567`; it wants the digits.
+  const phone = body.to.replace(/\D/g, "");
   const result = await callMetaAgentApi(
     `/business/whatsapp/phone_numbers/${entityId}/thread_control`,
     "POST",
     accessToken,
-    { messaging_product: "whatsapp", action: body.action, to: body.to },
+    {
+      messaging_product: "whatsapp",
+      action: body.action,
+      to: phone,
+      // Without it a pass goes to the escalation partner, not to Meta AI.
+      ...(body.action === "pass" ? { control_pass: { target_role: "ai_agent" } } : {}),
+      // Forwarded verbatim in the receiving app's messaging_handovers webhook.
+      metadata: releaseReason,
+    },
     {},
     // The thread-control endpoint is versioned separately from the agent APIs.
     { "X-API-Version": "1.0.0" },
   );
-  // Meta sends no handover to the app that let go, so a release is recorded
-  // here. Contacts are stored by bare digits; `to` arrives in E.164.
-  if (body.action === "release") {
-    await setMetaAgentThreadOwner({
-      orgId,
-      phone: body.to.replace(/\D/g, ""),
-      owner: MetaAgentThreadOwner.AI,
-      reason: releaseReason,
-    });
-  }
+  // Meta sends no handover to the app that let go, so both hand-backs are
+  // recorded here. Contacts are stored by bare digits.
+  await setMetaAgentThreadOwner({
+    orgId,
+    phone,
+    owner: MetaAgentThreadOwner.AI,
+    reason: releaseReason,
+  });
   return result;
+}
+
+// ---- configure: budget ----
+export async function getAgentBudgets(orgId: string, whatsappSettingsId: string) {
+  const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
+  return { budgets: agent.budgets ?? [], budgetsSyncedAt: agent.budgetsSyncedAt };
+}
+
+/**
+ * agent_budget is the one agent endpoint addressed by the Business Manager
+ * rather than the phone number. Graph names it on the WABA; it is looked up once
+ * and kept on the agent row.
+ */
+async function resolveBusinessManagerId(
+  agent: { id: string; businessManagerId: string | null },
+  wabaId: string | null,
+  accessToken: string,
+) {
+  if (agent.businessManagerId) return agent.businessManagerId;
+  if (!wabaId) {
+    throw new MetaAgentValidationError("This WhatsApp channel has no WhatsApp Business Account id");
+  }
+  let business: { id?: string } | undefined;
+  try {
+    const res = await callMetaApi(
+      `/${wabaId}?fields=on_behalf_of_business_info,owner_business_info`,
+      "GET",
+      accessToken,
+    );
+    // The client's business for a partner-owned WABA; its owner otherwise.
+    business = res.data?.on_behalf_of_business_info ?? res.data?.owner_business_info;
+  } catch {
+    business = undefined;
+  }
+  if (!business?.id) {
+    throw new MetaAgentValidationError(
+      "Could not find the Business Manager that owns this WhatsApp account",
+    );
+  }
+  await prisma.metaBusinessAgent.update({
+    where: { id: agent.id },
+    data: { businessManagerId: business.id },
+  });
+  return business.id;
+}
+
+async function budgetContext(orgId: string, whatsappSettingsId: string) {
+  const agent = await getOrCreateAgentRecord(orgId, whatsappSettingsId);
+  const { wabaId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  const businessManagerId = await resolveBusinessManagerId(agent, wabaId, accessToken);
+  return { agent, businessManagerId, accessToken };
+}
+
+export async function updateAgentBudgets(
+  orgId: string,
+  whatsappSettingsId: string,
+  body: AgentBudgetsBody,
+) {
+  const { agent, businessManagerId, accessToken } = await budgetContext(orgId, whatsappSettingsId);
+  // A full replace: anything left out of `budgets` is deleted at Meta.
+  const data = await callMetaAgentApi<{ budgets?: PrismaJson.PMetaAgentBudgets }>(
+    `/${businessManagerId}/agent_budget`,
+    "POST",
+    accessToken,
+    body,
+  );
+  await prisma.metaBusinessAgent.update({
+    where: { id: agent.id },
+    data: { budgets: data?.budgets ?? body.budgets, budgetsSyncedAt: new Date() },
+  });
+  return getAgentBudgets(orgId, whatsappSettingsId);
+}
+
+export async function syncAgentBudgets(orgId: string, whatsappSettingsId: string) {
+  const { agent, businessManagerId, accessToken } = await budgetContext(orgId, whatsappSettingsId);
+  const data = await callMetaAgentApi<{ budgets?: PrismaJson.PMetaAgentBudgets }>(
+    `/${businessManagerId}/agent_budget`,
+    "GET",
+    accessToken,
+  );
+  await prisma.metaBusinessAgent.update({
+    where: { id: agent.id },
+    data: { budgets: data?.budgets ?? [], budgetsSyncedAt: new Date() },
+  });
+  return getAgentBudgets(orgId, whatsappSettingsId);
+}
+
+// ---- insights (transient, always action-triggered) ----
+export async function getConversationInsights(
+  orgId: string,
+  whatsappSettingsId: string,
+  query: ConversationInsightsQuery,
+) {
+  const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  return callMetaAgentApi(
+    `/${entityId}/insights/conversations`,
+    "GET",
+    accessToken,
+    undefined,
+    query,
+  );
+}
+
+export async function getToolCallInsights(
+  orgId: string,
+  whatsappSettingsId: string,
+  query: ToolCallInsightsQuery,
+) {
+  const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  return callMetaAgentApi(`/${entityId}/insights/tool_calls`, "GET", accessToken, undefined, query);
+}
+
+export async function getAgentEventInsights(
+  orgId: string,
+  whatsappSettingsId: string,
+  query: AgentEventInsightsQuery,
+) {
+  const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  return callMetaAgentApi(
+    `/${entityId}/insights/agent_events`,
+    "GET",
+    accessToken,
+    undefined,
+    query,
+  );
+}
+
+export async function getConversationTurns(
+  orgId: string,
+  whatsappSettingsId: string,
+  query: ConversationTurnsQuery,
+) {
+  const { entityId, accessToken } = await getEntityContext(orgId, whatsappSettingsId);
+  const { user, ...rest } = query;
+  // A phone number must be bare digits ("+1 555…" is "Consumer not found"). A
+  // BSUID (`US.123…`) or a test conversation id is passed through untouched.
+  const userId = /^[+\d\s()-]+$/.test(user) ? user.replace(/\D/g, "") : user;
+  return callMetaAgentApi(
+    `/${entityId}/insights/conversations/turns`,
+    "GET",
+    accessToken,
+    undefined,
+    { user_phone_number: userId, ...rest },
+  );
 }

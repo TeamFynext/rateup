@@ -28,7 +28,7 @@ import {
 import { createApprovalRequest } from "../../../modules/loyalty/approvals/approval.service.js";
 
 import { ExternalApiError } from "../errors.js";
-import { loadProgram } from "./guards.js";
+import { loadProgram, type ExternalProgram } from "./guards.js";
 import { resolveMember, normaliseRefPhone, type MemberRef } from "./memberRef.js";
 import {
   presentAssignedVoucher,
@@ -137,14 +137,22 @@ export async function lookupMemberHandler(
   reply: FastifyReply,
 ) {
   const program = await loadProgram(request);
-  const account = await resolveMember(program, request.user.orgId, request.query);
+  return reply.send(await memberSummary(program, request.user.orgId, request.query));
+}
+
+/**
+ * The lookup's payload, apart from the request. The Meta AI agent's built-in
+ * connector answers "how many points do I have" with the same thing.
+ */
+export async function memberSummary(program: ExternalProgram, orgId: string, ref: MemberRef) {
+  const account = await resolveMember(program, orgId, ref);
   const payload = await buildCashierCustomerPayload(program as never, account as never);
 
   const names = await tierNames(program.id);
   const rewards = (list: unknown[]) =>
     list.map((r) => presentReward(r as Record<string, unknown>, names));
 
-  return reply.send({
+  return {
     member: presentMember(account as unknown as Record<string, unknown>),
     availableRewards: rewards(payload.availableRewards ?? []),
     issuableRewards: rewards(payload.issuableRewards ?? []),
@@ -173,7 +181,16 @@ export async function lookupMemberHandler(
       pointsName: payload.program.pointsName ?? "points",
       signupBonus: Number(payload.program.signupBonus ?? 0),
     },
-  });
+  };
+}
+
+/** The active reward catalogue, as the partner API publishes it. */
+export async function rewardCatalogue(programId: string) {
+  const [rewards, names] = await Promise.all([
+    getActiveLoyaltyRewards(programId),
+    tierNames(programId),
+  ]);
+  return rewards.map((r) => presentReward(r as unknown as Record<string, unknown>, names));
 }
 
 export async function listMembersHandler(

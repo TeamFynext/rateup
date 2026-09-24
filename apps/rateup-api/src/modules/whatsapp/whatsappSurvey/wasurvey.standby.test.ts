@@ -38,6 +38,11 @@ vi.mock("../../loyalty/accounts/account.service.js", async (importOriginal) => (
 }));
 
 vi.mock("../../metaAgent/metaAgent.usage.js", () => ({ recordMetaAiTokenUsage }));
+const handleStaticFlowReply = vi.fn();
+vi.mock("../flows/flow.service.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  handleStaticFlowReply,
+}));
 const setMetaAgentThreadOwner = vi.fn();
 vi.mock("../../metaAgent/metaAgent.threadOwner.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -126,6 +131,33 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
       owner: "AI",
       at: new Date(1790056876 * 1000),
     });
+  });
+
+  test("saves a survey flow Meta AI sent, without anything of ours replying", async () => {
+    const webhook = standbyWebhook({
+      contacts: [{ profile: { name: "Alen Joy" }, wa_id: CUSTOMER }],
+      messages: [
+        {
+          from: CUSTOMER,
+          id: "wamid.flow-reply",
+          timestamp: "1790056876",
+          context: { id: "wamid.agent-flow" },
+          interactive: {
+            type: "nfm_reply",
+            nfm_reply: { name: "flow", body: "Sent", response_json: '{"flow_token":"meta"}' },
+          },
+          type: "interactive",
+        },
+      ],
+    });
+
+    // @ts-expect-error — a webhook request is only ever read for `body` here.
+    await whatsappEventHandler(webhook, reply());
+
+    expect(handleStaticFlowReply).toHaveBeenCalledWith("org-1", expect.anything(), {
+      agentHeld: true,
+    });
+    expect(getAiBotActiveStatus).not.toHaveBeenCalled();
   });
 
   test("stores the agent's reply as an automated send to the customer", async () => {

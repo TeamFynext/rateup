@@ -404,6 +404,7 @@ model MetaBusinessAgent {
   rolloutEnabled          Boolean?
   handoffEnabled          Boolean?
   handoffMessage          String?
+  handoffMessageSelection String? // DEFAULT, AGENT, CUSTOM
   followupEnabled         Boolean?
   followupIntervalSeconds Int?
   followupMessage         String?
@@ -415,6 +416,19 @@ model MetaBusinessAgent {
   /// staff hold the thread, hand it back to the agent. Without it, Meta AI stays
   /// silent for that customer until someone releases the thread by hand.
   releaseOnTicketClose    Boolean   @default(true)
+
+  /// The Business Manager that owns the agent. Only agent_budget is addressed by
+  /// it (every other agent endpoint takes the phone number id), so it is looked
+  /// up from the WABA the first time a budget is read or saved.
+  businessManagerId       String?
+  // agent_budget, cached locally, replaced wholesale at Meta on save
+  /// [PMetaAgentBudgets]
+  budgets                 Json?
+  budgetsSyncedAt         DateTime?
+
+  /// bcrypt hash of the key the built-in RateUp connector sends. Meta holds the
+  /// key itself; a reinstall rotates it.
+  rateupToolsKeyHash      String?
 
   // agent_config/business_info, cached locally
   /// [PMetaAgentBusinessInfo]
@@ -478,6 +492,8 @@ model MetaAgentWebsite {
   metaId        String?
   url           String
   crawlStatus   String?
+  /// Meta's readable reason when crawlStatus is failed; empty otherwise.
+  crawlError    String?
   pagesCrawled  Int?
   lastCrawledAt DateTime?
 
@@ -495,6 +511,9 @@ model MetaAgentSkill {
   description String
   skill       String
   channel     String? // channel Meta filed the skill under, returned on read
+  /// Meta's content review: active, pending_review or blocked. A blocked skill
+  /// is stored but never applied.
+  status      String?
   /// [PMetaAgentSkillMetadata]
   metadata    Json?
 
@@ -537,6 +556,9 @@ model MetaAgentConnector {
   // Meta returns connection_status as an object; the failure reason rides along
   // with the status and is the only thing that explains an ERROR to the user.
   connectionError     String?
+  /// Set on the connector RateUp installs for itself ("rateup"); its key and
+  /// tools are managed by RateUp, not edited by hand.
+  builtIn             String?
 
   /// [PMetaAgentUserAuthInjectionConfig]
   userAuthInjectionConfig Json?
