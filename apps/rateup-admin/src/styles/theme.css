@@ -1,0 +1,237 @@
+/*
+ * RateUp Design System V2 tokens, the same system rateup-ui uses: brand navy accent, a navy
+ * rail beside a white nav panel, Instrument Sans / Figtree. The admin-only names (`rail`,
+ * `tone-*`, `positive`, `negative`) map onto DS V2 values so call sites keep working.
+ *
+ * `components.json` points `npx shadcn add` here, so shadcn primitives pick these tokens up.
+ */
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Values mirror rateup-ui/src/styles/foundation.css (Design System V2); keep the two in step. */
+:root {
+  --radius: 0.625rem;
+
+  --background: #fcfcfd; /* --canvas */
+  --foreground: #1b2027; /* n-700: ink stops here, never black */
+  --card: #ffffff;
+  --card-foreground: #1b2027;
+  --popover: #ffffff;
+  --popover-foreground: #1b2027;
+  --primary: #1c518e; /* brand navy, blue-600 */
+  --primary-foreground: #ffffff;
+  --secondary: #eff1f5;
+  --secondary-foreground: #434a55;
+  --muted: #f7f8fa;
+  --muted-foreground: #6b7480;
+  --accent: #f1f6fc; /* blue-50 */
+  --accent-foreground: #164070; /* blue-700 */
+  --destructive: #c4342c;
+  --border: #e4e7ec;
+  --input: #e4e7ec;
+  --ring: #1c518e;
+
+  /* The navy rail; callers tint rail-foreground with opacity (/55 idle, /14 active). */
+  --rail: #0f2540;
+  --rail-foreground: #ffffff;
+
+  /* Stat tiles and soft badges: a -50 tint with its -600/700 ink. */
+  --tone-peach: #fff8ec;
+  --tone-peach-accent: #ae5d07;
+  --tone-mint: #edf9f1;
+  --tone-mint-accent: #177f45;
+  --tone-sky: #f1f6fc;
+  --tone-sky-accent: #1c518e;
+  --tone-slate: #eff1f5;
+  --tone-slate-accent: #1b2027;
+
+  --positive: #177f45;
+  --negative: var(--destructive);
+
+  --chart-1: #1c518e;
+  --chart-2: #2e68a8;
+  --chart-3: #5a8cc6;
+  --chart-4: #90b2dc;
+  --chart-5: #f8951d; /* amber: the one contrast slot */
+
+  /* The nav panel beside the rail is white; these describe it. */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #434a55;
+  --sidebar-primary: #1c518e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f6fc;
+  --sidebar-accent-foreground: #164070;
+  --sidebar-border: #e4e7ec;
+  --sidebar-ring: #1c518e;
+
+  --custom-shadow-base: 0 1px 3px rgba(11, 31, 72, 0.05);
+  --custom-shadow-hover: 0 8px 28px rgba(11, 31, 72, 0.1);
+}
+
+.dark {
+  --background: #0d131b;
+  --foreground: #edf0f4;
+  --card: #121922;
+  --card-foreground: #edf0f4;
+  --popover: #121922;
+  --popover-foreground: #edf0f4;
+  --primary: #5a8cc6; /* blue-400, so the accent still reads on navy */
+  --primary-foreground: #07131f;
+  --secondary: #1d252f;
+  --secondary-foreground: #edf0f4;
+  --muted: #161d27;
+  --muted-foreground: #8b95a3;
+  --accent: #1d252f;
+  --accent-foreground: #edf0f4;
+  --destructive: #f08078;
+  --border: #232c38;
+  --input: #374556;
+  --ring: #5a8cc6;
+
+  --rail: #091729; /* blue-950 */
+  --rail-foreground: #ffffff;
+
+  --tone-peach: #2a1f10;
+  --tone-peach-accent: #fbc05c;
+  --tone-mint: #10251a;
+  --tone-mint-accent: #7bd3a0;
+  --tone-sky: #13233a;
+  --tone-sky-accent: #90b2dc;
+  --tone-slate: #1d252f;
+  --tone-slate-accent: #edf0f4;
+
+  --positive: #1fa85b;
+  --negative: var(--destructive);
+
+  --chart-1: #90b2dc;
+  --chart-2: #5a8cc6;
+  --chart-3: #2e68a8;
+  --chart-4: #7fb0e6;
+  --chart-5: #f0b45c;
+
+  --sidebar: #0d131b;
+  --sidebar-foreground: #edf0f4;
+  --sidebar-primary: #5a8cc6;
+  --sidebar-primary-foreground: #07131f;
+  --sidebar-accent: #1d252f;
+  --sidebar-accent-foreground: #edf0f4;
+  --sidebar-border: #232c38;
+  --sidebar-ring: #5a8cc6;
+
+  --custom-shadow-base: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --custom-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+@theme inline {
+  /* Instrument Sans for body/UI, Figtree for display, as in rateup-ui. */
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --shadow-custom-base: var(--custom-shadow-base);
+  --shadow-custom-hover: var(--custom-shadow-hover);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
+
+  --color-tone-peach: var(--tone-peach);
+  --color-tone-peach-accent: var(--tone-peach-accent);
+  --color-tone-mint: var(--tone-mint);
+  --color-tone-mint-accent: var(--tone-mint-accent);
+  --color-tone-sky: var(--tone-sky);
+  --color-tone-sky-accent: var(--tone-sky-accent);
+  --color-tone-slate: var(--tone-slate);
+  --color-tone-slate-accent: var(--tone-slate-accent);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Design System V2 primitives (rateup-ui foundation.css). */
+  --color-ru-blue-50: #f1f6fc;
+  --color-ru-blue-100: #dfeaf7;
+  --color-ru-blue-200: #bdd2ec;
+  --color-ru-blue-300: #90b2dc;
+  --color-ru-blue-400: #5a8cc6;
+  --color-ru-blue-500: #2e68a8;
+  --color-ru-blue-600: #1c518e;
+  --color-ru-blue-700: #164070;
+  --color-ru-blue-800: #133355;
+  --color-ru-blue-900: #0f2540;
+  --color-ru-blue-950: #091729;
+  --color-ru-amber-50: #fff8ec;
+  --color-ru-amber-100: #feeccb;
+  --color-ru-amber-300: #fbc05c;
+  --color-ru-amber-500: #f8951d;
+  --color-ru-amber-700: #ae5d07;
+  --color-ru-green-50: #edf9f1;
+  --color-ru-green-500: #1fa85b;
+  --color-ru-green-700: #115f34;
+  --color-ru-n-50: #f7f8fa;
+  --color-ru-n-100: #eff1f5;
+  --color-ru-n-200: #e4e7ec;
+  --color-ru-n-400: #9ba3af;
+  --color-ru-n-500: #6b7480;
+  --color-ru-n-700: #1b2027;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+  /* Figures line up in tables and stat rows. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

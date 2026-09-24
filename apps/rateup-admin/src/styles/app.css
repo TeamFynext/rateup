@@ -1,10 +1,10 @@
 /*
- * The console's single stylesheet. `foundation.css` is copied verbatim from rateup-ui so tokens and
- * shadcn primitives stay interchangeable; `components.json` points at it for `npx shadcn add`.
+ * The console's single stylesheet: Tailwind, the self-hosted fonts, then the Design System V2
+ * tokens in theme.css.
  */
 @import "tailwindcss";
 
 @import "@fontsource-variable/instrument-sans";
 @import "@fontsource-variable/figtree";
 
-@import "./foundation.css";
+@import "./theme.css";
