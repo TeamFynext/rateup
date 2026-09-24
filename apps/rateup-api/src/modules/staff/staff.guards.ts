@@ -1,8 +1,7 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import type { FastifyRequest } from "fastify";
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
 import { sessionCookieName, type StaffConfig } from "./staff.config.js";
-import { forbidden, notFound, StaffHttpError, unauthenticated } from "./staff.errors.js";
+import { forbidden, StaffHttpError, unauthenticated } from "./staff.errors.js";
 import { findStaffSession, judgeSession, touchStaffSession } from "./staff.session.js";
 
 /*
@@ -16,26 +15,9 @@ function header(request: FastifyRequest, name: string): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function safeEqual(a: string, b: string): boolean {
-  // Hash first so the comparison is constant-time whatever the lengths.
-  const digest = (value: string) => createHash("sha256").update(value).digest();
-  return timingSafeEqual(digest(a), digest(b));
-}
-
-/**
- * The caller's address. The console's proxy forwards the browser's in X-Staff-Client-Ip;
- * it is only read after the proxy secret has matched, so a direct caller cannot pick it.
- */
+/** The caller's address. The browser calls the API directly, and `trustProxy` is set. */
 export function staffClientIp(request: FastifyRequest): string {
-  return header(request, "x-staff-client-ip") || request.ip || "unknown";
-}
-
-/** 1. Only the console's own proxy may reach /api/staff. Anyone else sees a 404. */
-export function proxySecretGuard(config: StaffConfig) {
-  return async (request: FastifyRequest) => {
-    const presented = header(request, "x-staff-proxy-secret");
-    if (!presented || !safeEqual(presented, config.proxySecret)) throw notFound();
-  };
+  return request.ip || "unknown";
 }
 
 const jwksByTeam = new Map<string, JWTVerifyGetKey>();
@@ -50,7 +32,7 @@ function cloudflareJwks(team: string): JWTVerifyGetKey {
 }
 
 /**
- * 2. The Cloudflare Access JWT the edge attaches to every request to the console host. Proves
+ * 1. The Cloudflare Access JWT the edge attaches to every request to the console host. Proves
  * the browser passed Access; its email must later equal the staff session's.
  */
 export function cfAccessGuard(config: StaffConfig, getKey?: JWTVerifyGetKey) {
@@ -71,7 +53,7 @@ export function cfAccessGuard(config: StaffConfig, getKey?: JWTVerifyGetKey) {
   };
 }
 
-/** 3. A browser request from anywhere but the console. Absent on top-level GET navigations. */
+/** 2. A browser request from anywhere but the console. Absent on top-level GET navigations. */
 export function originGuard(config: StaffConfig) {
   return async (request: FastifyRequest) => {
     const origin = header(request, "origin");
@@ -84,7 +66,7 @@ export function originGuard(config: StaffConfig) {
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /**
- * 5. Mutations must carry the console's custom header, which a cross-site form cannot send,
+ * 4. Mutations must carry the console's custom header, which a cross-site form cannot send,
  * and any body must be JSON.
  */
 export async function csrfGuard(request: FastifyRequest) {
@@ -101,7 +83,7 @@ export async function csrfGuard(request: FastifyRequest) {
 }
 
 /**
- * 6. A valid staff session, on every route but the Google sign-in hops. Sets `request.staff`
+ * 5. A valid staff session, on every route but the Google sign-in hops. Sets `request.staff`
  * and `request.staffSession`.
  */
 export function requireStaff(config: StaffConfig) {

@@ -41,15 +41,15 @@ import type { StaffConfig } from "./staff.config.js";
 import { hashSessionToken, SESSION_IDLE_MS } from "./staff.session.js";
 import { registerStaffApi, STAFF_PUBLIC_ROUTES } from "./staff.plugin.js";
 
-const SECRET = "proxy-secret-for-tests";
 const ORIGIN = "https://admin.rateup.app";
+const API_ORIGIN = "https://api.rateup.app";
 
 const baseConfig: StaffConfig = {
   googleClientId: "cid",
   googleClientSecret: "csecret",
   googleHd: "rateup.app",
   consoleOrigin: ORIGIN,
-  proxySecret: SECRET,
+  apiOrigin: API_ORIGIN,
   cookieSecret: "a-cookie-secret-that-is-at-least-32-chars",
   cfAccessTeam: "rateup",
   cfAccessAud: "aud-123",
@@ -114,8 +114,8 @@ function liveSession(overrides: Record<string, unknown> = {}) {
   };
 }
 
-const proxied = { "x-staff-proxy-secret": SECRET };
-const withSession = { ...proxied, cookie: `__Host-rateup_staff=${TOKEN}` };
+const noSession = {};
+const withSession = { cookie: `__Host-rateup_staff=${TOKEN}` };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -123,18 +123,6 @@ beforeEach(() => {
   db.staffSession.findUnique.mockResolvedValue(liveSession());
   db.staffSession.updateMany.mockResolvedValue({ count: 1 });
   db.staffAuditLog.create.mockResolvedValue({});
-});
-
-describe("proxy secret", () => {
-  test("without it the whole API looks like it does not exist", async () => {
-    const { app } = await buildApp();
-    for (const headers of [{}, { "x-staff-proxy-secret": "wrong" }]) {
-      const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers });
-      expect(res.statusCode).toBe(404);
-    }
-    // Refused before anything touched the session store.
-    expect(db.staffSession.findUnique).not.toHaveBeenCalled();
-  });
 });
 
 describe("staff session", () => {
@@ -160,7 +148,7 @@ describe("staff session", () => {
 
   test("no cookie → 401 UNAUTHENTICATED", async () => {
     const { app } = await buildApp();
-    const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers: proxied });
+    const res = await app.inject({ method: "GET", url: "/api/staff/auth/me", headers: noSession });
     expect(res.statusCode).toBe(401);
     expect(res.json().code).toBe("UNAUTHENTICATED");
   });
@@ -170,7 +158,7 @@ describe("staff session", () => {
     const res = await app.inject({
       method: "GET",
       url: "/api/staff/auth/me",
-      headers: { ...proxied, cookie: "sAccessToken=some-supertokens-jwt" },
+      headers: { cookie: "sAccessToken=some-supertokens-jwt" },
     });
     expect(res.statusCode).toBe(401);
   });
@@ -200,7 +188,7 @@ describe("staff session", () => {
     const res = await app.inject({
       method: "GET",
       url: "/api/staff/auth/me",
-      headers: { ...proxied, cookie: `rateup_staff=${TOKEN}` },
+      headers: { cookie: `rateup_staff=${TOKEN}` },
     });
     expect(res.statusCode).toBe(401);
   });
@@ -316,21 +304,20 @@ describe("Google sign-in start", () => {
     const res = await app.inject({
       method: "GET",
       url: "/api/staff/auth/google/start?returnTo=/orgs",
-      headers: proxied,
+      headers: noSession,
     });
     expect(res.statusCode).toBe(302);
     const location = new URL(res.headers.location as string);
     expect(location.host).toBe("accounts.google.com");
     expect(location.searchParams.get("redirect_uri")).toBe(
-      `${ORIGIN}/api/staff/auth/google/callback`,
+      `${API_ORIGIN}/api/staff/auth/google/callback`,
     );
     const cookie = res.cookies.find((c) => c.name === "__Host-staff_oidc");
     expect(cookie).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax", path: "/" });
     expect(db.staffSession.findUnique).not.toHaveBeenCalled();
   });
 
-  // The session cookie is SameSite=Strict, so Google's cross-site redirect to /callback never
-  // carries it. /start (a same-site navigation) is where the session being replaced is known.
+  // /start is a navigation from the console, so it is where the session being replaced is known.
   test("signing in again records the current session so the callback can revoke it", async () => {
     const { app } = await buildApp();
     const res = await app.inject({
@@ -351,10 +338,10 @@ describe("Google sign-in start", () => {
     const res = await app.inject({
       method: "GET",
       url: "/api/staff/auth/google/callback?code=abc&state=xyz",
-      headers: proxied,
+      headers: noSession,
     });
     expect(res.statusCode).toBe(302);
-    expect(res.headers.location).toBe("/login?error=expired");
+    expect(res.headers.location).toBe(`${ORIGIN}/login?error=expired`);
   });
 });
 
@@ -406,7 +393,7 @@ describe("read routes", () => {
   test("none of them answer without a staff session", async () => {
     const { app } = await buildApp();
     for (const url of reads) {
-      const res = await app.inject({ method: "GET", url, headers: proxied });
+      const res = await app.inject({ method: "GET", url, headers: noSession });
       expect(res.statusCode, url).toBe(401);
     }
   });
@@ -452,7 +439,7 @@ test("a subscription change without a reason is refused before anything is writt
 test("a maintenance preview needs a session and the CSRF header, like any POST", async () => {
   const { app } = await buildApp();
   const url = "/api/staff/ops/maintenance/tasks/seed-plans/preview";
-  expect((await app.inject({ method: "POST", url, headers: proxied })).statusCode).toBe(401);
+  expect((await app.inject({ method: "POST", url, headers: noSession })).statusCode).toBe(401);
   const noCsrf = await app.inject({ method: "POST", url, headers: withSession, payload: {} });
   expect(noCsrf.statusCode).toBe(403);
 });

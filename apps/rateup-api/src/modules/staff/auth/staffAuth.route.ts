@@ -48,13 +48,13 @@ interface OidcState {
   reauth: boolean;
   startedAt: number;
   /**
-   * Hash of the session this sign-in replaces, read at /start. The callback cannot read the
-   * session cookie itself: it is SameSite=Strict and Google's redirect back is cross-site.
+   * Hash of the session this sign-in replaces, read at /start: a top-level navigation from
+   * the console, which carries the session cookie (SameSite None, or Lax on localhost).
    */
   replaces?: string;
 }
 
-/** Only a path on the console itself, so `returnTo` cannot become an open redirect. */
+/** Only a path on the console itself (prefixed with its origin), never an open redirect. */
 export function safeReturnTo(value: string | undefined): string {
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
     return "/";
@@ -66,10 +66,14 @@ export function staffAuthRoutes(config: StaffConfig) {
   const sessionCookie = sessionCookieName(config);
   const oidcCookie = oidcCookieName(config);
   const baseCookie = { path: "/", httpOnly: true, secure: config.secureCookies };
+  // The console calls this API from its own origin, which may be another site (e.g. two
+  // *.up.railway.app hosts), so over https the session cookie must be SameSite=None.
+  // Cross-site writes are still refused by CORS, originGuard and the X-Staff-Csrf header.
+  const sessionSameSite = config.secureCookies ? ("none" as const) : ("lax" as const);
 
   function loginRedirect(reply: FastifyReply, reason: LoginDenial) {
     reply.clearCookie(oidcCookie, { path: "/" });
-    return reply.redirect(`/login?error=${reason}`, 302);
+    return reply.redirect(`${config.consoleOrigin}/login?error=${reason}`, 302);
   }
 
   function readOidcState(request: FastifyRequest): OidcState | null {
@@ -206,8 +210,8 @@ export function staffAuthRoutes(config: StaffConfig) {
         });
 
         reply.clearCookie(oidcCookie, { path: "/" });
-        reply.setCookie(sessionCookie, token, { ...baseCookie, sameSite: "strict" });
-        return reply.redirect(oidc.returnTo, 302);
+        reply.setCookie(sessionCookie, token, { ...baseCookie, sameSite: sessionSameSite });
+        return reply.redirect(`${config.consoleOrigin}${oidc.returnTo}`, 302);
       },
     );
 
@@ -231,7 +235,7 @@ export function staffAuthRoutes(config: StaffConfig) {
         staffEmail: request.staff!.email,
         staffUserId: request.staff!.id,
       });
-      reply.clearCookie(sessionCookie, { path: "/" });
+      reply.clearCookie(sessionCookie, { ...baseCookie, sameSite: sessionSameSite });
       return { success: true };
     });
   };

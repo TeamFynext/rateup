@@ -29,15 +29,18 @@ export async function registerPlugins(server: FastifyInstance) {
 
   // CORS. Exact origins only — see parseCorsWhitelist for why these are no longer
   // compiled to regexes.
-  const allowedOrigins: string[] = [process.env.ELECTION_APP_URL, process.env.FRONTEND_URL].filter(
-    (origin): origin is string => origin !== undefined,
-  );
+  // STAFF_CONSOLE_ORIGIN: rateup-admin calls /api/staff directly from its own origin.
+  const allowedOrigins: string[] = [
+    process.env.ELECTION_APP_URL,
+    process.env.FRONTEND_URL,
+    process.env.STAFF_CONSOLE_ORIGIN?.replace(/\/+$/, ""),
+  ].filter((origin): origin is string => !!origin);
   allowedOrigins.push(...parseCorsWhitelist(process.env.CORS_WHITELIST));
 
   await server.register(cors, {
     origin: allowedOrigins,
-    allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "X-Staff-Csrf", ...supertokens.getAllCORSHeaders()],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   });
 

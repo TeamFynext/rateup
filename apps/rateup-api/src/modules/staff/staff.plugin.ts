@@ -22,7 +22,6 @@ import {
   cfAccessGuard,
   csrfGuard,
   originGuard,
-  proxySecretGuard,
   requireStaff,
   staffClientIp,
 } from "./staff.guards.js";
@@ -49,7 +48,7 @@ const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export async function staffPlugin(server: FastifyInstance) {
   const config = staffConfig();
   if (!isStaffConsoleEnabled(config)) {
-    log.info("staff console disabled: STAFF_PROXY_SECRET is not set");
+    log.info("staff console disabled: STAFF_CONSOLE_ORIGIN is not set");
     return;
   }
   assertStaffConfig(config);
@@ -94,7 +93,6 @@ export async function registerStaffApi(
     throwOnLimit: limitError,
   });
 
-  server.addHook("onRequest", proxySecretGuard(config));
   server.addHook("onRequest", cfAccessGuard(config, options.cfAccessKey));
   server.addHook("onRequest", originGuard(config));
   server.addHook("onRequest", async (request, reply) => {
