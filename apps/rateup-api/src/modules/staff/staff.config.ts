@@ -1,46 +1,54 @@
 /**
  * Staff console settings, read at call time so tests (and a hot env change) are seen.
  *
- * The console is off unless STAFF_PROXY_SECRET is set: without it the plugin registers no
+ * The console is off unless STAFF_CONSOLE_ORIGIN is set: without it the plugin registers no
  * routes, so an API deployment that has not been set up for the console exposes nothing.
+ *
+ * The console calls the API directly (like rateup-ui), so the session cookie lives on the
+ * API's host and Google redirects back to the API, which then sends the browser on to the
+ * console.
  */
 export interface StaffConfig {
   googleClientId: string;
   googleClientSecret: string;
   /** Google Workspace domain (the `hd` claim) staff must sign in from. */
   googleHd: string;
-  /** e.g. https://admin.rateup.app. The Google redirect URI and the Origin check derive from it. */
+  /** e.g. https://admin.rateup.app. CORS, the Origin check and post-sign-in redirects use it. */
   consoleOrigin: string;
-  /** Shared with the console's same-origin proxy (Cloudflare Pages Function, or Vite in dev). */
-  proxySecret: string;
+  /** This API's public origin (API_URL). The Google redirect URI derives from it. */
+  apiOrigin: string;
   /** Signs the short-lived OIDC state cookie. */
   cookieSecret: string;
   cfAccessTeam: string;
   cfAccessAud: string;
   /** Verify the Cloudflare Access JWT. Turning it off in production only logs a warning. */
   cfAccessEnforced: boolean;
-  /** https console → Secure, `__Host-` prefixed cookies. A plain-http localhost gets neither. */
+  /**
+   * https API → Secure, `__Host-` prefixed, SameSite=None cookies (the console may be on
+   * another site). A plain-http localhost gets none of that; localhost ports are same-site.
+   */
   secureCookies: boolean;
 }
 
 export function staffConfig(): StaffConfig {
   const consoleOrigin = (process.env.STAFF_CONSOLE_ORIGIN ?? "").replace(/\/+$/, "");
+  const apiOrigin = (process.env.API_URL ?? "").replace(/\/+$/, "");
   return {
     googleClientId: process.env.STAFF_GOOGLE_CLIENT_ID ?? "",
     googleClientSecret: process.env.STAFF_GOOGLE_CLIENT_SECRET ?? "",
     googleHd: (process.env.STAFF_GOOGLE_HD ?? "rateup.app").toLowerCase(),
     consoleOrigin,
-    proxySecret: process.env.STAFF_PROXY_SECRET ?? "",
+    apiOrigin,
     cookieSecret: process.env.STAFF_COOKIE_SECRET ?? "",
     cfAccessTeam: process.env.CF_ACCESS_TEAM ?? "",
     cfAccessAud: process.env.CF_ACCESS_AUD ?? "",
     cfAccessEnforced: process.env.STAFF_CF_ACCESS_ENFORCE !== "false",
-    secureCookies: consoleOrigin.startsWith("https://"),
+    secureCookies: apiOrigin.startsWith("https://"),
   };
 }
 
 export function isStaffConsoleEnabled(config: StaffConfig = staffConfig()): boolean {
-  return config.proxySecret !== "";
+  return config.consoleOrigin !== "";
 }
 
 /**
@@ -52,7 +60,7 @@ export function assertStaffConfig(config: StaffConfig = staffConfig()): void {
   const required: Array<[string, string]> = [
     ["STAFF_GOOGLE_CLIENT_ID", config.googleClientId],
     ["STAFF_GOOGLE_CLIENT_SECRET", config.googleClientSecret],
-    ["STAFF_CONSOLE_ORIGIN", config.consoleOrigin],
+    ["API_URL", config.apiOrigin],
     ["STAFF_COOKIE_SECRET", config.cookieSecret],
   ];
   if (config.cfAccessEnforced) {
@@ -61,7 +69,7 @@ export function assertStaffConfig(config: StaffConfig = staffConfig()): void {
   const missing = required.filter(([, value]) => !value).map(([name]) => name);
   if (missing.length > 0) {
     throw new Error(
-      `Staff console is enabled (STAFF_PROXY_SECRET) but missing: ${missing.join(", ")}`,
+      `Staff console is enabled (STAFF_CONSOLE_ORIGIN) but missing: ${missing.join(", ")}`,
     );
   }
   if (config.cookieSecret.length < 32) {
@@ -78,5 +86,5 @@ export function oidcCookieName(config: StaffConfig): string {
 }
 
 export function googleRedirectUri(config: StaffConfig): string {
-  return `${config.consoleOrigin}/api/staff/auth/google/callback`;
+  return `${config.apiOrigin}/api/staff/auth/google/callback`;
 }
