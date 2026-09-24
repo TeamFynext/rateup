@@ -13,6 +13,7 @@ import { staffSearchRoutes } from "./search/search.route.js";
 import { staffUserRoutes } from "./users/users.route.js";
 import {
   assertStaffConfig,
+  isDevBypassEnabled,
   isStaffConsoleEnabled,
   staffConfig,
   type StaffConfig,
@@ -54,6 +55,12 @@ export async function staffPlugin(server: FastifyInstance) {
   assertStaffConfig(config);
   if (!config.cfAccessEnforced && process.env.NODE_ENV === "production") {
     log.warn("staff console running WITHOUT Cloudflare Access (STAFF_CF_ACCESS_ENFORCE=false)");
+  }
+  if (isDevBypassEnabled(config)) {
+    log.warn(
+      { email: config.devBypassEmail },
+      "staff console DEV BYPASS: loopback requests are signed in without Google (STAFF_DEV_BYPASS_EMAIL)",
+    );
   }
   await registerStaffApi(server, config);
 }
