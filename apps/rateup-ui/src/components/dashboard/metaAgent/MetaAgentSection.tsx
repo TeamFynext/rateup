@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { StepIconChip, StepTransition } from "../loyalty/onboarding/StepChrome.tsx";
 import { ConnectorsSection } from "./components/ConnectorsSection";
+import { InsightsSection } from "./components/InsightsSection";
 import { KnowledgeSection } from "./components/KnowledgeSection";
 import { OperateSection } from "./components/OperateSection";
 import { OverviewSection } from "./components/OverviewSection";
@@ -33,6 +34,7 @@ const SECTION_COMPONENTS: Record<
   connectors: ConnectorsSection,
   operate: OperateSection,
   settings: SettingsSection,
+  insights: InsightsSection,
 };
 
 export type MetaAgentSectionId = AgentStep;

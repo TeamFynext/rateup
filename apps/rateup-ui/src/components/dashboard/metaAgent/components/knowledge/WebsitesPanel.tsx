@@ -32,17 +32,23 @@ import { PanelCard } from "../shared/PanelCard";
 
 const STATUS_VARIANT: Record<CrawlStatus, "default" | "secondary" | "destructive" | "outline"> = {
   completed: "default",
+  completed_no_data: "secondary",
   in_progress: "secondary",
   pending: "outline",
+  not_started: "outline",
   failed: "destructive",
 };
 
 const STATUS_LABEL: Record<CrawlStatus, string> = {
   completed: "Crawled",
+  completed_no_data: "No content found",
   in_progress: "Crawling",
   pending: "Queued",
+  not_started: "Not started",
   failed: "Failed",
 };
+
+const isKnownStatus = (status: string): status is CrawlStatus => status in STATUS_LABEL;
 
 export function WebsitesPanel({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
   const { data: websites, isLoading } = useWebsites(waSettingsId);
@@ -108,16 +114,31 @@ export function WebsitesPanel({ waSettingsId }: Readonly<{ waSettingsId: string 
       <div className="divide-y">
         {websites?.map((site) => {
           const status = site.crawlStatus ?? "pending";
+          // A value Meta adds later still shows, as itself, rather than a blank chip.
+          const known = isKnownStatus(status);
           return (
             <div key={site.id} className="flex items-center justify-between gap-3 py-2.5">
-              <div className="flex min-w-0 items-center gap-2">
-                <IconGlobe className="shrink-0 text-muted-foreground" />
-                <span className="truncate text-sm">{site.url}</span>
-                <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
-                {!!site.pagesCrawled && (
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {site.pagesCrawled} pages
-                  </span>
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <IconGlobe className="shrink-0 text-muted-foreground" />
+                  <span className="truncate text-sm">{site.url}</span>
+                  <Badge variant={known ? STATUS_VARIANT[status] : "outline"}>
+                    {known ? STATUS_LABEL[status] : status}
+                  </Badge>
+                  {!!site.pagesCrawled && (
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {site.pagesCrawled} pages
+                    </span>
+                  )}
+                </div>
+                {status === "failed" && site.crawlError && (
+                  <p className="pl-6 text-xs text-destructive">{site.crawlError}</p>
+                )}
+                {status === "completed_no_data" && (
+                  <p className="pl-6 text-xs text-muted-foreground">
+                    The site was reached, but had nothing Meta could use. Try a page with FAQs or
+                    business details.
+                  </p>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-1">

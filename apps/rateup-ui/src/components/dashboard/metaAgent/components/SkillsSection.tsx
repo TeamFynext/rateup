@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconAlertTriangle, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -17,6 +17,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -81,9 +83,12 @@ export function SkillsSection({ waSettingsId }: Readonly<{ waSettingsId: string 
               <div className="flex items-center gap-1">
                 <AccordionTrigger className="py-3">
                   <span className="flex flex-col items-start gap-0.5">
-                    <code className="rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
-                      {skill.title}
-                    </code>
+                    <span className="flex items-center gap-2">
+                      <code className="rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+                        {skill.title}
+                      </code>
+                      <ReviewBadge status={skill.status} />
+                    </span>
                     <span className="text-xs font-normal text-muted-foreground">
                       {skill.description}
                     </span>
@@ -110,6 +115,16 @@ export function SkillsSection({ waSettingsId }: Readonly<{ waSettingsId: string 
                 </Button>
               </div>
               <AccordionContent>
+                {skill.status === "blocked" && (
+                  <Alert variant="destructive" className="mb-3">
+                    <IconAlertTriangle />
+                    <AlertDescription>
+                      Meta's review blocked this skill, so the agent never uses it. This usually
+                      means it asks for or mentions sensitive personal information, such as a date
+                      of birth or a national ID. Edit it to remove that, and it is reviewed again.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <pre className="max-h-64 overflow-auto rounded-md bg-muted/60 p-3 text-xs whitespace-pre-wrap">
                   {skill.skill}
                 </pre>
@@ -251,4 +266,11 @@ function SkillDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+/** Meta's content review on a skill; nothing is shown once it is active. */
+function ReviewBadge({ status }: Readonly<{ status?: Skill["status"] }>) {
+  if (status === "blocked") return <Badge variant="destructive">Blocked by review</Badge>;
+  if (status === "pending_review") return <Badge variant="outline">In review</Badge>;
+  return null;
 }

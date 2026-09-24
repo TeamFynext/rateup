@@ -43,6 +43,7 @@ const NAV_LABEL: Record<(typeof AGENT_STEPS)[number], string> = {
   connectors: "Connectors",
   operate: "Test",
   settings: "Go live",
+  insights: "Insights",
 };
 
 export function buildMetaAgentNavItems({ t, status }: MetaAgentNavInput): NavEntry[] {
@@ -51,7 +52,7 @@ export function buildMetaAgentNavItems({ t, status }: MetaAgentNavInput): NavEnt
       title: t(NAV_LABEL[step]),
       url: AGENT_STEP_META[step].to,
       icon: AGENT_STEP_META[step].icon,
-      // Testing has no finished state (`null`), so it carries no marker at all.
+      // Testing and insights have no finished state (`null`), so they carry no marker.
       done: status && status[step] !== null ? status[step] === true : undefined,
     }));
 

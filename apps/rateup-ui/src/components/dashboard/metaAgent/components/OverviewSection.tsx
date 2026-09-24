@@ -12,6 +12,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
 import {
   useCheckAgentEligibility,
@@ -232,9 +233,14 @@ function ConnectSteps({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
           ) : null
         }
         description={
-          onboarded
-            ? `Created on the ${agent?.channel} channel. Agent id ${agent?.agentId ?? "—"}.`
-            : "Creates the agent at Meta. Everything you set up next is attached to it."
+          onboarded ? (
+            <>
+              Created on the {agent?.channel} channel.{" "}
+              {agent?.agentId && <AgentIdReveal agentId={agent.agentId} />}
+            </>
+          ) : (
+            "Creates the agent at Meta. Everything you set up next is attached to it."
+          )
         }
         action={
           <Button
@@ -242,7 +248,8 @@ function ConnectSteps({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
             className="h-10 w-full"
             disabled={!eligible}
             loading={onboard.isPending}
-            onClick={() => onboard.mutate("whatsapp")}
+            // No catalog id: Meta keeps the catalog already linked to the number.
+            onClick={() => onboard.mutate({})}
           >
             {onboarded ? "Re-create agent" : "Create agent"}
           </Button>
@@ -284,6 +291,12 @@ function rowCopy(step: AgentStep, setup: AgentSetupProgress) {
       };
     case "operate":
       return { title: "Test the agent", detail: null, action: "Open test console" };
+    case "insights":
+      return {
+        title: "See how it is doing",
+        detail: setup.live ? null : "Most useful once the agent is live.",
+        action: "Open insights",
+      };
     case "settings":
       return {
         title: "Switch it on",
@@ -368,7 +381,8 @@ function DangerZone({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
         <CardTitle className="text-destructive">Delete the agent</CardTitle>
         <CardDescription>
           Removes the agent at Meta and clears every knowledge item, skill and connector mirrored
-          here. Eligibility is kept so you can create it again later.
+          here. Meta says eligibility can change, so the number is checked again before a new agent
+          is created.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -378,5 +392,23 @@ function DangerZone({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+/** The Meta agent id stays hidden until asked for; it is only needed for support. */
+function AgentIdReveal({ agentId }: Readonly<{ agentId: string }>) {
+  const [shown, setShown] = useState(false);
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {shown && <code className="rounded bg-muted px-1 py-0.5 text-xs">{agentId}</code>}
+      <button
+        type="button"
+        className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+        aria-expanded={shown}
+        onClick={() => setShown((value) => !value)}
+      >
+        {shown ? "Hide agent ID" : "Show agent ID"}
+      </button>
+    </span>
   );
 }

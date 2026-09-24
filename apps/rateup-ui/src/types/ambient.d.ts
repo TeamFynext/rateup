@@ -384,6 +384,8 @@ declare global {
     teams: {
       id: string;
       mapId: string;
+      /** The public `/ws/:shortId` link; null on surveys that predate short links. */
+      shortUrlId?: string | null;
       teamName: string;
       responses: {
         id: string;

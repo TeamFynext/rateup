@@ -44,7 +44,9 @@ export type AllowlistFormValues = z.infer<typeof allowlistFormSchema>;
 export const settingsFormSchema = z
   .object({
     rolloutEnabled: z.boolean(),
+    /** Meta's handoff.enabled: release thread control after the handoff message. */
     handoffEnabled: z.boolean(),
+    handoffMessageSelection: z.enum(["DEFAULT", "AGENT", "CUSTOM"]),
     handoffMessage: z.string().trim().max(1024, "Limited to 1024 characters"),
     followupEnabled: z.boolean(),
     followupInterval: z
@@ -57,10 +59,13 @@ export const settingsFormSchema = z
     aiAudience: z.enum(["EVERYONE", "ALLOWLISTED_ONLY"]),
     neverSayPhrases: z.array(z.string().trim().min(1).max(256)).max(50, "Up to 50 phrases"),
   })
-  .refine((values) => !values.handoffEnabled || values.handoffMessage.length > 0, {
-    path: ["handoffMessage"],
-    error: "A handoff message is required when a custom message is enabled",
-  })
+  .refine(
+    (values) => values.handoffMessageSelection !== "CUSTOM" || values.handoffMessage.length > 0,
+    {
+      path: ["handoffMessage"],
+      error: "Write the handoff message, or choose another message source",
+    },
+  )
   .refine((values) => !values.followupEnabled || values.followupInterval > 0, {
     path: ["followupInterval"],
     error: "Choose an interval, or turn follow-ups off",
@@ -106,7 +111,10 @@ export const skillFormSchema = z.object({
     .trim()
     .min(1, "A title is required")
     .max(64, "Limited to 64 characters")
-    .regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers and hyphens only"),
+    .regex(
+      /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+      "Use lowercase letters, numbers and hyphens, and don't start or end with a hyphen",
+    ),
   description: z
     .string()
     .trim()
@@ -149,6 +157,8 @@ export const uiSkillFormSchema = z
     path: ["flow_id"],
     error: "A flow id is a number",
   });
+// A flow id left over from switching away from "flow" is dropped on submit
+// rather than refused here: Meta rejects it on any other component type.
 export type UiSkillFormValues = z.infer<typeof uiSkillFormSchema>;
 
 // ---- connectors ----
@@ -300,3 +310,34 @@ export const agentEventFormSchema = z.object({
   ),
 });
 export type AgentEventFormValues = z.infer<typeof agentEventFormSchema>;
+
+// ---- budget ----
+export const budgetFormSchema = z
+  .object({
+    budgets: z.array(
+      z.object({
+        budget_id: z.string().optional(),
+        unit_type: z.enum(["token", "ai_turn"]),
+        time_window: z.enum(["one_day", "seven_days", "fourteen_days", "thirty_days"]),
+        max_budget: z
+          .number({ error: "Enter a whole number" })
+          .int("Enter a whole number")
+          .min(1, "A cap must be at least 1"),
+      }),
+    ),
+  })
+  .superRefine((values, ctx) => {
+    const seen = new Set<string>();
+    values.budgets.forEach((budget, index) => {
+      const pair = `${budget.unit_type}:${budget.time_window}`;
+      if (seen.has(pair)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["budgets", index, "time_window"],
+          message: "There is already a cap for this unit and window",
+        });
+      }
+      seen.add(pair);
+    });
+  });
+export type BudgetFormValues = z.infer<typeof budgetFormSchema>;

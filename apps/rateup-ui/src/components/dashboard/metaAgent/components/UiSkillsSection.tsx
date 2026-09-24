@@ -1,17 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  IconAlertTriangle,
   IconCarouselHorizontal,
   IconExternalLink,
   IconList,
   IconMapPin,
   IconMapPinShare,
+  IconMessageReply,
   IconPencil,
   IconPhoto,
   IconPlus,
   IconRoute,
   IconTrash,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import {
@@ -26,7 +28,9 @@ import {
   useUiSkills,
   useUpdateUiSkill,
 } from "@/backend/metaAgent/metaAgent.query";
+import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +55,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { FlowSelector } from "@/components/whatsapp/flows/FlowSelector/FlowSelector";
+import { FRONTEND_URL } from "@/utils/constants";
 
 import { uiSkillFormSchema, type UiSkillFormValues } from "../metaAgent.schemas";
 import { FormField } from "./shared/FormField";
@@ -86,6 +91,11 @@ const COMPONENTS: Record<
     blurb: "A tappable list of options in a bottom sheet.",
     icon: IconList,
   },
+  interactive_reply_buttons: {
+    label: "Reply buttons",
+    blurb: "Up to three tappable reply buttons under the message.",
+    icon: IconMessageReply,
+  },
   location: { label: "Location", blurb: "Shares a pin on the map.", icon: IconMapPin },
   location_request: {
     label: "Location request",
@@ -104,6 +114,175 @@ function useFlowName() {
     if (!flowId) return null;
     return flows?.find((flow) => String(flow.flowId) === String(flowId))?.name ?? `Flow ${flowId}`;
   };
+}
+
+/** Meta's cta_url: body text, a button label of 1–20 characters, and the URL. */
+/**
+ * A survey can be for anything — feedback, a booking request, a sign-up — so
+ * the draft names the survey and leaves "when" for the business to say.
+ */
+const surveyInstruction = (title: string, url: string) =>
+  `When a customer asks about ${title.trim()} or it would help them to fill it in, send a button with the body text "Please fill in our ${title.trim()} form. It only takes a minute.", the button label "Open form", and the URL ${url} exactly as written.`;
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/**
+ * A link WhatsApp cannot open: a button needs a public https address, so
+ * localhost, private hosts and plain http are dropped from the message.
+ */
+function unreachableLink(text: string): string | null {
+  for (const match of text.match(/https?:\/\/[^\s"')]+/g) ?? []) {
+    try {
+      const { protocol, hostname } = new URL(match);
+      const privateHost =
+        hostname === "localhost" ||
+        hostname.endsWith(".local") ||
+        /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.)/.test(hostname);
+      if (protocol !== "https:" || privateHost) return match;
+    } catch {
+      return match;
+    }
+  }
+  return null;
+}
+
+interface WebSurveyTeamLink {
+  mapId: string;
+  teamName: string;
+  url: string;
+}
+
+interface WebSurveyLinks {
+  id: string;
+  title: string;
+  slug: string;
+  teams: WebSurveyTeamLink[];
+}
+
+/** Every web survey with at least one team that has a public link. */
+function useWebSurveyLinks(): WebSurveyLinks[] {
+  const { data } = useAllSurveysSummary();
+  return useMemo(() => {
+    const origin = (FRONTEND_URL ?? "").replace(/\/+$/, "");
+    // A localhost link still fills in, so the flow can be tried in development;
+    // the form's link warning says WhatsApp will not open it.
+    if (!origin) return [];
+    return (data?.surveys ?? [])
+      .filter((survey) => survey.type === "web")
+      .map((survey) => ({
+        id: survey.id,
+        title: survey.title,
+        slug: `survey-${slugify(survey.title)}`.slice(0, 64).replace(/-+$/, ""),
+        teams: survey.teams
+          .filter((team) => !!team.shortUrlId)
+          .map((team) => ({
+            mapId: team.mapId,
+            teamName: team.teamName,
+            url: `${origin}/ws/${team.shortUrlId}`,
+          })),
+      }))
+      .filter((survey) => survey.teams.length > 0);
+  }, [data]);
+}
+
+/**
+ * Survey first, then the team whose link to use. A survey with one team skips
+ * the second step, since there is nothing to choose.
+ */
+function WebSurveyPicker({
+  surveys,
+  onPick,
+}: Readonly<{
+  surveys: WebSurveyLinks[];
+  onPick: (link: { slug: string; title: string; url: string }) => void;
+}>) {
+  const [surveyId, setSurveyId] = useState<string | null>(null);
+  const [mapId, setMapId] = useState<string | null>(null);
+  const survey = surveys.find((item) => item.id === surveyId);
+
+  if (!surveys.length) {
+    return (
+      <Field>
+        <FieldLabel>Web survey (optional)</FieldLabel>
+        <FieldDescription>
+          No web surveys with a share link yet. Create a web survey and assign it to a team, and it
+          can be sent from here as a button that opens it.
+        </FieldDescription>
+      </Field>
+    );
+  }
+
+  const surveyItems = surveys.map((item) => ({ value: item.id, label: item.title }));
+  const teamItems = (survey?.teams ?? []).map((team) => ({
+    value: team.mapId,
+    label: team.teamName,
+  }));
+
+  const pickTeam = (picked: WebSurveyLinks, team: WebSurveyTeamLink) => {
+    setMapId(team.mapId);
+    onPick({ slug: picked.slug, title: picked.title, url: team.url });
+  };
+
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <Field>
+        <FieldLabel htmlFor="ui-skill-survey">Web survey (optional)</FieldLabel>
+        <Select
+          items={surveyItems}
+          value={surveyId}
+          onValueChange={(value) => {
+            const picked = surveys.find((item) => item.id === value);
+            setSurveyId(picked?.id ?? null);
+            setMapId(null);
+            if (picked?.teams.length === 1) pickTeam(picked, picked.teams[0]);
+          }}
+        >
+          <SelectTrigger id="ui-skill-survey" className="w-full">
+            <SelectValue placeholder="Choose a web survey" />
+          </SelectTrigger>
+          <SelectContent>
+            {surveyItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field data-disabled={!survey || undefined}>
+        <FieldLabel htmlFor="ui-skill-survey-team">Team</FieldLabel>
+        <Select
+          items={teamItems}
+          value={mapId}
+          disabled={!survey}
+          onValueChange={(value) => {
+            const team = survey?.teams.find((item) => item.mapId === value);
+            if (survey && team) pickTeam(survey, team);
+          }}
+        >
+          <SelectTrigger id="ui-skill-survey-team" className="w-full">
+            <SelectValue placeholder={survey ? "Choose a team" : "Choose a survey first"} />
+          </SelectTrigger>
+          <SelectContent>
+            {teamItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <FieldDescription className="sm:col-span-2">
+        Fills in a button that opens the survey for that team — edit when to send it and the wording
+        to suit what the survey is for. The link is the same for every customer, as when a rule
+        sends it.
+      </FieldDescription>
+    </div>
+  );
 }
 
 export function UiSkillsSection({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
@@ -257,6 +436,8 @@ function UiSkillDialog({
   });
 
   const componentType = form.watch("component_type");
+  const surveyLinks = useWebSurveyLinks();
+  const badLink = unreachableLink(form.watch("instruction"));
   const isPending = createUiSkill.isPending || updateUiSkill.isPending;
 
   const onSubmit = (values: UiSkillFormValues) => {
@@ -283,7 +464,7 @@ function UiSkillDialog({
         component_type: values.component_type,
         status: values.status,
         instruction: values.instruction,
-        ...(values.flow_id ? { flow_id: values.flow_id } : {}),
+        ...(values.component_type === "flow" && values.flow_id ? { flow_id: values.flow_id } : {}),
       },
       done,
     );
@@ -401,6 +582,20 @@ function UiSkillDialog({
                 />
               ))}
 
+            {componentType === "cta_url" && !uiSkill && (
+              <WebSurveyPicker
+                surveys={surveyLinks}
+                onPick={(link) => {
+                  // Fills the form; everything stays editable before saving.
+                  form.setValue("title", link.slug, { shouldDirty: true, shouldValidate: true });
+                  form.setValue("instruction", surveyInstruction(link.title, link.url), {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="instruction"
@@ -417,6 +612,16 @@ function UiSkillDialog({
                 />
               )}
             </FormField>
+
+            {badLink && (
+              <Alert variant="destructive">
+                <IconAlertTriangle />
+                <AlertDescription>
+                  WhatsApp can&apos;t open {badLink}, so the button will be left out of the message.
+                  Use a public https link, such as your live survey link.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <FormField control={form.control} name="status" label="Status" orientation="horizontal">
               {(field) => (

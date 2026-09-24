@@ -1,7 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import type { Connector, ConnectorAuthType } from "@/backend/metaAgent/metaAgent.api";
+import type {
+  Connector,
+  ConnectorAuthType,
+  ConnectorWritableAuthType,
+} from "@/backend/metaAgent/metaAgent.api";
 import { CONNECTOR_AUTH_TYPES } from "@/backend/metaAgent/metaAgent.api";
 import { useCreateConnector, useUpdateConnector } from "@/backend/metaAgent/metaAgent.query";
 import { Button } from "@/components/ui/button";
@@ -34,6 +38,8 @@ const AUTH_LABELS: Record<ConnectorAuthType, { label: string; blurb: string }> =
     label: "API key",
     blurb: "Meta injects fixed header, query or body fields on every call.",
   },
+  // The next two and CUSTOM are in Meta's enum but not accepted yet; they are
+  // labelled only so a connector synced with one reads sensibly.
   BASIC: { label: "HTTP Basic", blurb: "A username and password pair." },
   OAUTH2: {
     label: "OAuth 2.0 (user)",
@@ -45,6 +51,11 @@ const AUTH_LABELS: Record<ConnectorAuthType, { label: string; blurb: string }> =
   },
   CUSTOM: { label: "Custom", blurb: "A scheme you drive yourself through tool definitions." },
 };
+
+const isWritableAuthType = (
+  value: ConnectorAuthType | undefined,
+): value is ConnectorWritableAuthType =>
+  (CONNECTOR_AUTH_TYPES as readonly string[]).includes(value ?? "");
 
 const AUTH_ITEMS = CONNECTOR_AUTH_TYPES.map((value) => ({
   value,
@@ -78,7 +89,9 @@ export function ConnectorDialog({
       name: connector?.name ?? "",
       description: connector?.description ?? "",
       base_url: connector?.baseUrl ?? "",
-      auth_type: connector?.authType ?? "API_KEY",
+      // A connector synced with a type Meta no longer accepts on save has to be
+      // moved to one it does.
+      auth_type: isWritableAuthType(connector?.authType) ? connector.authType : "API_KEY",
       requires_certificate: connector?.requiresCertificate ?? false,
       injectUserAuth: !!connector?.userAuthInjectionConfig,
       userAuthLocation: connector?.userAuthInjectionConfig?.location ?? "headers",

@@ -184,7 +184,7 @@ function ThreadControlCard({ waSettingsId }: Readonly<{ waSettingsId: string }>)
     <OperateCard
       icon={IconPhoneOutgoing}
       title="Thread control"
-      description="Hand a live conversation between the AI agent and your inbox."
+      description="Hand a conversation your team took over back to the AI agent."
     >
       <FieldGroup className="gap-3">
         <FormField
@@ -212,12 +212,21 @@ function ThreadControlCard({ waSettingsId }: Readonly<{ waSettingsId: string }>)
 
         <Alert>
           <AlertDescription>
-            Meta currently acts on <strong>release</strong> only — handing the thread back to your
-            app. Passing to the agent is reserved for a future version of their API.
+            Both hand a conversation your team holds back to Meta AI, which then answers the
+            customer again. <strong>Release</strong> gives up control; <strong>pass</strong> names
+            Meta AI as the new owner. Either only works while your team holds the conversation.
           </AlertDescription>
         </Alert>
 
         <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            loading={setThreadControl.isPending}
+            onClick={() => submit("release")}
+          >
+            <IconPhoneOff data-icon="inline-start" />
+            Release to Meta AI
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -225,15 +234,7 @@ function ThreadControlCard({ waSettingsId }: Readonly<{ waSettingsId: string }>)
             onClick={() => submit("pass")}
           >
             <IconPhoneOutgoing data-icon="inline-start" />
-            Pass to agent
-          </Button>
-          <Button
-            type="button"
-            loading={setThreadControl.isPending}
-            onClick={() => submit("release")}
-          >
-            <IconPhoneOff data-icon="inline-start" />
-            Release control
+            Pass to Meta AI
           </Button>
         </div>
       </FieldGroup>
@@ -440,6 +441,11 @@ function EvalRunCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
                         {category}
                       </Badge>
                     ))}
+                    {evalCase.scenario_version && (
+                      <Badge variant="secondary" className="text-xs">
+                        Suite {evalCase.scenario_version}
+                      </Badge>
+                    )}
                     {!!evalCase.max_turns && (
                       <span className="text-xs text-muted-foreground">
                         up to {evalCase.max_turns} turns
@@ -487,13 +493,18 @@ function EvalRunCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
             {run.error && (
               <p className="text-sm text-destructive">
                 {run.error.code}: {run.error.message}
+                {!!run.error.failed_case_ids?.length && (
+                  <span className="mt-1 block text-xs">
+                    Failed cases: {run.error.failed_case_ids.join(", ")}
+                  </span>
+                )}
               </p>
             )}
 
             {run.result && (
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-4 text-sm">
-                  {run.result.avg_conversation_score !== undefined && (
+                  {typeof run.result.avg_conversation_score === "number" && (
                     <span>
                       <span className="text-muted-foreground">Conversation score</span>
                       {""}
@@ -502,7 +513,7 @@ function EvalRunCard({ waSettingsId }: Readonly<{ waSettingsId: string }>) {
                       </strong>
                     </span>
                   )}
-                  {run.result.avg_turn_score !== undefined && (
+                  {typeof run.result.avg_turn_score === "number" && (
                     <span>
                       <span className="text-muted-foreground">Turn score</span>
                       {""}

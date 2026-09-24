@@ -40,9 +40,12 @@ export const checkAgentEligibility = async (waSettingsId: string) => {
 
 export const onboardAgent = async (
   waSettingsId: string,
-  channel: MetaAgentChannel = "whatsapp",
+  { channel = "whatsapp", catalogId }: { channel?: MetaAgentChannel; catalogId?: string } = {},
 ) => {
-  const res = await axiosClient.post(`${base(waSettingsId)}/onboarding`, { channel });
+  const res = await axiosClient.post(`${base(waSettingsId)}/onboarding`, {
+    channel,
+    ...(catalogId ? { catalog_id: catalogId } : {}),
+  });
   return res.data as MetaBusinessAgent;
 };
 
@@ -52,6 +55,9 @@ export const deleteAgent = async (waSettingsId: string) => {
 };
 
 // ---- allowlist ----
+/** Meta's cap on a WhatsApp number's allowlist. */
+export const ALLOWLIST_MAX_ENTRIES = 20;
+
 export interface AllowlistEntry {
   id: string;
   metaId?: string | null;
@@ -85,9 +91,16 @@ export const syncAllowlist = async (waSettingsId: string) => {
 export const FOLLOWUP_INTERVALS = [0, 300, 900, 1800, 3600, 7200, 28800, 86400] as const;
 export type FollowupInterval = (typeof FOLLOWUP_INTERVALS)[number];
 
+/**
+ * Where the customer-facing handoff line comes from: Meta's fixed line, one the
+ * agent writes per conversation, or the business's own `message`.
+ */
+export type HandoffMessageSelection = "DEFAULT" | "AGENT" | "CUSTOM";
+
 export interface AgentSettings {
   rollout?: { enabled?: boolean };
-  handoff?: { enabled?: boolean; message?: string };
+  /** `enabled`: the agent releases thread control after its handoff message. */
+  handoff?: { enabled?: boolean; message?: string; message_selection?: HandoffMessageSelection };
   followup?: { enabled?: boolean; followup_interval_in_seconds?: number; message?: string };
   ai_audience?: "EVERYONE" | "ALLOWLISTED_ONLY";
   never_say_phrases?: string[];
@@ -223,13 +236,22 @@ export const syncFiles = async (waSettingsId: string) => {
 };
 
 // ---- knowledge: websites ----
-export type CrawlStatus = "pending" | "in_progress" | "completed" | "failed";
+export type CrawlStatus =
+  | "not_started"
+  | "pending"
+  | "in_progress"
+  | "completed"
+  /** The crawl worked but the site had nothing Meta could extract. */
+  | "completed_no_data"
+  | "failed";
 
 export interface KnowledgeWebsite {
   id: string;
   metaId?: string | null;
   url: string;
   crawlStatus?: CrawlStatus | null;
+  /** Meta's reason, when crawlStatus is failed. */
+  crawlError?: string | null;
   pagesCrawled?: number | null;
   lastCrawledAt?: string | null;
   createdAt: string;
@@ -262,6 +284,9 @@ export const syncWebsites = async (waSettingsId: string) => {
 };
 
 // ---- skills ----
+/** Meta's automated content review. A blocked skill is kept but never applied. */
+export type SkillReviewStatus = "active" | "pending_review" | "blocked";
+
 export interface Skill {
   id: string;
   metaId?: string | null;
@@ -269,6 +294,7 @@ export interface Skill {
   description: string;
   skill: string;
   channel?: string | null;
+  status?: SkillReviewStatus | null;
   createdAt: string;
 }
 
@@ -306,6 +332,7 @@ export const UI_SKILL_COMPONENT_TYPES = [
   "flow",
   "image",
   "interactive_list",
+  "interactive_reply_buttons",
   "location",
   "location_request",
 ] as const;
@@ -366,15 +393,11 @@ export const syncUiSkills = async (waSettingsId: string) => {
 };
 
 // ---- connectors ----
-export const CONNECTOR_AUTH_TYPES = [
-  "NONE",
-  "API_KEY",
-  "BASIC",
-  "OAUTH2",
-  "OAUTH2_CLIENT_CREDENTIALS",
-  "CUSTOM",
-] as const;
-export type ConnectorAuthType = (typeof CONNECTOR_AUTH_TYPES)[number];
+/** What a connector can be created with: "Currently, only" these three. */
+export const CONNECTOR_AUTH_TYPES = ["NONE", "API_KEY", "OAUTH2_CLIENT_CREDENTIALS"] as const;
+export type ConnectorWritableAuthType = (typeof CONNECTOR_AUTH_TYPES)[number];
+/** Meta's full enum, which a connector synced from Meta may still carry. */
+export type ConnectorAuthType = ConnectorWritableAuthType | "BASIC" | "OAUTH2" | "CUSTOM";
 export type ConnectionStatus = "PENDING_OAUTH" | "ACTIVE" | "EXPIRED" | "ERROR";
 
 export interface UserAuthInjectionConfig {
@@ -402,6 +425,8 @@ export interface Connector {
   connectionError?: string | null;
   userAuthInjectionConfig?: UserAuthInjectionConfig | null;
   mtlsConfig?: MtlsConfig | null;
+  /** "rateup" on the connector RateUp installs for itself; managed, not hand-edited. */
+  builtIn?: string | null;
   createdAt: string;
   _count?: { tools: number };
 }
@@ -410,7 +435,7 @@ export interface ConnectorInput {
   name: string;
   description: string;
   base_url: string;
-  auth_type: ConnectorAuthType;
+  auth_type: ConnectorWritableAuthType;
   user_auth_injection_config?: UserAuthInjectionConfig;
   requires_certificate?: boolean;
 }
@@ -549,13 +574,97 @@ export const getConnectorLogs = async (
   return res.data as { data: ConnectorLogEntry[]; stats?: ConnectorLogStats };
 };
 
+// ---- the built-in RateUp connector ----
+export const RATEUP_CONNECTOR_TOOLS = [
+  {
+    name: "get_loyalty_status",
+    group: "loyalty",
+    label: "Loyalty status",
+    blurb: "Points balance, tier, rewards they can afford and vouchers ready to use.",
+  },
+  {
+    name: "list_loyalty_rewards",
+    group: "loyalty",
+    label: "Reward catalogue",
+    blurb: "Every reward and its points cost, even for someone who has not joined.",
+  },
+  {
+    name: "get_crm_options",
+    group: "crm",
+    label: "CRM options",
+    blurb: "Your labels, lead stages and teams, so the agent uses names that exist.",
+  },
+  {
+    name: "add_contact_label",
+    group: "crm",
+    label: "Add a label",
+    blurb: "Tag the customer with one of your existing labels.",
+  },
+  {
+    name: "set_lead_stage",
+    group: "crm",
+    label: "Move lead stage",
+    blurb: "Move the customer to a stage on your lead board.",
+  },
+  {
+    name: "assign_to_team",
+    group: "crm",
+    label: "Route to a team",
+    blurb: "Send the conversation to the right team before a handoff.",
+  },
+] as const;
+export type RateupConnectorToolName = (typeof RATEUP_CONNECTOR_TOOLS)[number]["name"];
+
+export type RateupConnectorState =
+  | { installed: false; tools: string[] }
+  | {
+      installed: true;
+      connectorId: string;
+      connectionStatus: ConnectionStatus;
+      tools: string[];
+    };
+
+export const getRateupConnector = async (waSettingsId: string) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/rateup-connector`);
+  return res.data as RateupConnectorState;
+};
+
+/** Installs, or reinstalls with a fresh key and exactly these tools. */
+export const installRateupConnector = async (
+  waSettingsId: string,
+  tools: RateupConnectorToolName[],
+) => {
+  const res = await axiosClient.post(`${base(waSettingsId)}/rateup-connector`, { tools });
+  return res.data as RateupConnectorState;
+};
+
+export const uninstallRateupConnector = async (waSettingsId: string) => {
+  const res = await axiosClient.delete(`${base(waSettingsId)}/rateup-connector`);
+  return res.data as RateupConnectorState;
+};
+
 // ---- connector tools ----
 export type ToolMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+
+/** Values Meta fills in from the conversation when the tool is called. */
+export const BINDING_MACROS = [
+  "WHATSAPP_PHONE_NUMBER",
+  "WHATSAPP_PHONE_NUMBER_NATIONAL",
+  "WHATSAPP_BSUID",
+  "WHATSAPP_IDENTITY_HASH",
+  "WHATSAPP_CURRENT_STATUS_ID",
+  "WHATSAPP_CONVERSATION_ID",
+  "WHATSAPP_MESSAGE_ID",
+  "USER_MESSAGE",
+  "INSTAGRAM_IGSID",
+  "INSTAGRAM_CONVERSATION_ID",
+] as const;
+export type BindingMacro = (typeof BINDING_MACROS)[number];
 
 export interface ParameterBinding {
   kind: "default" | "macro";
   value?: string;
-  macro?: "WHATSAPP_PHONE_NUMBER" | "WHATSAPP_IDENTITY_HASH" | "WHATSAPP_CURRENT_STATUS_ID";
+  macro?: BindingMacro;
 }
 
 export interface ParameterNode {
@@ -675,12 +784,14 @@ export interface EvalCase {
   categories?: string[];
   max_turns?: number;
   success_criteria?: string[];
+  /** The published scenario suite a case came from; null on older cases. */
+  scenario_version?: string | null;
 }
 
 export interface EvalRunResult {
   summary_id: string;
-  avg_conversation_score?: number;
-  avg_turn_score?: number;
+  avg_conversation_score?: number | null;
+  avg_turn_score?: number | null;
   summary: string;
   highlights?: string;
   top_failure_categories?: string;
@@ -780,6 +891,7 @@ export const testAgent = async (
 };
 
 // ---- operate: thread control ----
+/** Both hand the thread to Meta AI: release gives control up, pass names the agent. */
 export const setThreadControl = async (
   waSettingsId: string,
   action: "pass" | "release",
@@ -787,4 +899,125 @@ export const setThreadControl = async (
 ) => {
   const res = await axiosClient.post(`${base(waSettingsId)}/thread-control`, { action, to });
   return res.data as { messaging_product: string };
+};
+
+// ---- configure: budget ----
+export type BudgetUnitType = "token" | "ai_turn";
+export type BudgetTimeWindow = "one_day" | "seven_days" | "fourteen_days" | "thirty_days";
+
+export interface AgentBudget {
+  /** Meta's id; absent on a cap that has not been saved yet. */
+  budget_id?: string;
+  unit_type: BudgetUnitType;
+  time_window: BudgetTimeWindow;
+  max_budget: number;
+}
+
+export interface AgentBudgets {
+  budgets: AgentBudget[];
+  budgetsSyncedAt?: string | null;
+}
+
+export const getAgentBudgets = async (waSettingsId: string) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/budget`);
+  return res.data as AgentBudgets;
+};
+
+/** Replaces every cap: one left out is deleted, and none at all means unlimited. */
+export const updateAgentBudgets = async (waSettingsId: string, budgets: AgentBudget[]) => {
+  const res = await axiosClient.put(`${base(waSettingsId)}/budget`, { budgets });
+  return res.data as AgentBudgets;
+};
+
+export const syncAgentBudgets = async (waSettingsId: string) => {
+  const res = await axiosClient.post(`${base(waSettingsId)}/budget/sync`);
+  return res.data as AgentBudgets;
+};
+
+// ---- insights (transient, always button-triggered) ----
+export interface InsightsRange {
+  /** YYYY-MM-DD, both inclusive. */
+  start_date: string;
+  end_date: string;
+}
+
+export interface ConversationInsights {
+  /** Conversations the agent replied in during the range. */
+  ai_threads?: { count: number };
+  /** Handed to your team and awaiting a reply right now, whatever the range. */
+  ai_handoffs?: { count: number };
+}
+
+export const getConversationInsights = async (waSettingsId: string, range: InsightsRange) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/insights/conversations`, {
+    params: range,
+  });
+  return res.data as { data: ConversationInsights[] };
+};
+
+export interface ToolCallInsight {
+  tool_name: string;
+  thread_count: number;
+  avg_latency_ms?: number | null;
+  success_rate?: number | null;
+  error_rate?: number | null;
+  timeout_rate?: number | null;
+}
+
+export const getToolCallInsights = async (
+  waSettingsId: string,
+  query: InsightsRange & { tool_name?: string },
+) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/insights/tool-calls`, {
+    params: query,
+  });
+  return res.data as { data: ToolCallInsight[] };
+};
+
+export interface AgentEventInsight {
+  event_type: string;
+  received: number;
+  successfully_processed: number;
+  avg_e2e_latency_ms?: number | null;
+}
+
+export const getAgentEventInsights = async (
+  waSettingsId: string,
+  query: InsightsRange & { event_type?: string },
+) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/insights/agent-events`, {
+    params: query,
+  });
+  return res.data as { data: AgentEventInsight[]; avg_e2e_latency_ms?: number | null };
+};
+
+export interface ConversationTurnStep {
+  type: "LLM_CALL" | "TOOL_CALL";
+  latency_ms?: number;
+  status?: "SUCCESS" | "ERROR" | "TIMEOUT";
+  llm_output_preview?: string;
+  tool_name?: string;
+  tool_input?: string;
+  tool_output?: string;
+}
+
+export interface ConversationTurn {
+  turn_id: string;
+  message_id?: string;
+  e2e_latency_ms?: number;
+  /** Milliseconds since the epoch. */
+  timestamp?: number;
+  conversation_id: string;
+  steps: ConversationTurnStep[];
+}
+
+export const getConversationTurns = async (
+  waSettingsId: string,
+  query: { user: string; after?: string; limit?: number },
+) => {
+  const res = await axiosClient.get(`${base(waSettingsId)}/insights/turns`, { params: query });
+  return res.data as {
+    data: ConversationTurn[];
+    paging?: { cursors?: { before?: string; after?: string }; next?: string };
+  };
 };
