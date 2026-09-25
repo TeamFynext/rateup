@@ -103,7 +103,7 @@ export function presentProgram(program: AnyRow) {
       symbol: String(program.currencySymbol ?? ""),
     },
     defaultCountryCode: String(program.defaultCountryCode ?? ""),
-    signupBonus: num(program.signupBonus),
+    signupBonus: program.signupBonusEnabled === false ? 0 : num(program.signupBonus),
     tiersEnabled: Boolean(program.tiersEnabled),
     tierQualificationWindowMonths: (program.tierQualificationWindowMonths as number | null) ?? null,
   };

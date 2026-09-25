@@ -1,3 +1,4 @@
+import fastifyMultipart from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
 import {
   createLabelHandler,
@@ -7,6 +8,7 @@ import {
   deleteLostReasonHandler,
   deletePipelineHandler,
   getPipelineHandler,
+  getPipelineCreateLimitsHandler,
   getPipelineMembersHandler,
   getPipelineStatsHandler,
   getPipelineForecastHandler,
@@ -16,12 +18,17 @@ import {
   updateLabelHandler,
   updateLostReasonHandler,
   updatePipelineHandler,
+  importLeadsHandler,
+  importTemplateHandler,
+  exportLeadsHandler,
 } from "./pipeline.controller.js";
 import {
   createLabelRequestSchema,
   createLostReasonRequestSchema,
   createPipelineRequestSchema,
   idParamsSchema,
+  importTemplateQuerySchema,
+  exportLeadsQuerySchema,
   updateLabelRequestSchema,
   updateLostReasonRequestSchema,
   updatePipelineRequestSchema,
@@ -41,6 +48,12 @@ import { declareAccess } from "../../authz/registry.js";
 
 export async function pipelineRoutes(server: FastifyInstance) {
   declareAccess(server, { read: "pipelines.read", write: "pipelines.manage" });
+
+  // Multipart is registered per module, not app-wide; without it the import upload is a 415.
+  server.register(fastifyMultipart, {
+    limits: { fileSize: 1048576 * 10 },
+    throwFileSizeLimit: true,
+  });
 
   server.register(stageRoutes, { prefix: "stages" });
   server.register(leadRoutes, { prefix: "leads" });
@@ -82,6 +95,12 @@ export async function pipelineRoutes(server: FastifyInstance) {
   // Registered above the `/:id` routes so "team-defaults" is not read as an id.
   server.get("/team-defaults", getTeamPipelineDefaultsHandler);
 
+  server.get(
+    "/create-limits",
+    { config: { permission: "pipelines.manage" } },
+    getPipelineCreateLimitsHandler,
+  );
+
   server.put(
     "/team-defaults/:teamId",
     { schema: { params: teamIdParamSchema, body: updateTeamDefaultRequestSchema } },
@@ -111,6 +130,34 @@ export async function pipelineRoutes(server: FastifyInstance) {
       schema: { params: idParamsSchema },
     },
     deletePipelineHandler,
+  );
+
+  server.post(
+    "/:id/import",
+    {
+      preHandler: [verifyPipelineAccess],
+      schema: { params: idParamsSchema, consumes: ["multipart/form-data"] },
+    },
+    importLeadsHandler,
+  );
+
+  server.get(
+    "/:id/import-template",
+    {
+      preHandler: [verifyPipelineAccess],
+      schema: { params: idParamsSchema, querystring: importTemplateQuerySchema },
+    },
+    importTemplateHandler,
+  );
+
+  // What the board shows under the same filters, as a spreadsheet.
+  server.get(
+    "/:id/export",
+    {
+      preHandler: [verifyPipelineAccess],
+      schema: { params: idParamsSchema, querystring: exportLeadsQuerySchema },
+    },
+    exportLeadsHandler,
   );
 
   server.get(

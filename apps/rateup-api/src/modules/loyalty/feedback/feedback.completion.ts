@@ -7,6 +7,7 @@ import { replyLoyalty } from "../messaging/reply.js";
 import { buildReviewRedirectUrl } from "./feedback.redirect.js";
 import { extractOverallRating, type FlowAnswer } from "./feedback.evaluate.js";
 import { resolveTeamGoogleLink } from "./feedback.googleLink.js";
+import { notify } from "../../notification/notify.js";
 
 export { resolveTeamGoogleLink } from "./feedback.googleLink.js";
 
@@ -84,7 +85,23 @@ export async function onFeedbackFlowCompleted(input: FeedbackFlowCompletion): Pr
     return;
   }
 
-  if (!input.happy) return;
+  if (!input.happy) {
+    const account = await prisma.customerLoyaltyAccount.findUnique({
+      where: { id: request.accountId },
+      select: { contact: { select: { id: true, name: true, phone: true } } },
+    });
+    await notify({
+      event: "loyalty.feedback_negative",
+      orgId: input.orgId,
+      audience: { kind: "permitted", teamId: request.program.feedbackSetting?.teamId },
+      data: {
+        customerName: account?.contact.name ?? account?.contact.phone ?? "A customer",
+        ...(account && { contactId: account.contact.id }),
+        ...(overallRating != null && { rating: overallRating }),
+      },
+    });
+    return;
+  }
 
   const setting = request.program.feedbackSetting;
   const googleLink = setting ? resolveTeamGoogleLink(setting.team) : null;

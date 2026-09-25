@@ -6,7 +6,6 @@ const byQuickReplyIdParamSchema = z.object({
 
 const quickReplyCore = z.object({
   text: z.string(),
-  category: z.string(),
   topic: z.string(),
   key: z.string(),
 });

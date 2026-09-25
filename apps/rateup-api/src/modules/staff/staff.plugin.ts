@@ -55,6 +55,11 @@ export async function staffPlugin(server: FastifyInstance) {
   if (!config.cfAccessEnforced && process.env.NODE_ENV === "production") {
     log.warn("staff console running WITHOUT Cloudflare Access (STAFF_CF_ACCESS_ENFORCE=false)");
   }
+  if (config.development) {
+    log.warn(
+      "staff console NODE_ENV=development: Google sign-in accepts any domain (the staff list still applies)",
+    );
+  }
   await registerStaffApi(server, config);
 }
 

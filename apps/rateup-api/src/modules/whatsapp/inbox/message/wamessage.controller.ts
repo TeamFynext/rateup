@@ -99,6 +99,7 @@ import {
 import { recordMessageInWindow } from "../../metering/meteredConversation.service.js";
 import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
+import { notifyInboundMessage } from "./inboundNotify.js";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -436,6 +437,17 @@ export async function handleWaMessages(
       } catch (error) {
         log.error({ err: error, contactId: contact.id }, "Failed to mark a staff takeover");
       }
+    }
+
+    // WhatsApp notifies from its own webhook handler, after it has filtered out the bot's
+    // self-service traffic; every other channel's inbound message lands only here.
+    if (type === "receive" && sourcePlatform !== PlatformType.WHATSAPP && !failed) {
+      await notifyInboundMessage({
+        orgId,
+        contactId: contact.id,
+        contactName: contact.name ?? userName ?? from,
+        sourceIdentifier,
+      });
     }
 
     // Notify connected clients

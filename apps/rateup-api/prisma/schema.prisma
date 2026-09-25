@@ -973,6 +973,7 @@ model Contact {
   WaMessage                    WaMessage[]
   consent                      Boolean                   @default(true)
   email                        String?
+  address                      String?
   dob                          DateTime?
   gender                       Gender?
   external_id                  String?
@@ -2159,6 +2160,9 @@ model LoyaltyProgram {
   refereeBonus      Int     @default(0) // For new customer
   refereeBonusType  String  @default("points") // 'points' or 'gift'
   refereeRewardId   String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
+  /// Off keeps the amounts above for when it is switched back on; nothing is paid meanwhile.
+  signupBonusEnabled   Boolean @default(true)
+  referralBonusEnabled Boolean @default(true)
 
   // Tier Configuration
   tiersEnabled                  Boolean @default(true)
@@ -2788,6 +2792,8 @@ enum LoyaltyEventType {
   SIGNUP_ANNIVERSARY
   /// A contact's first message to the business, before they are a member; carries a Join button.
   NEW_CUSTOMER_WELCOME
+  /// Staff signed the customer up at the counter; the member's first message from the programme.
+  MEMBER_JOINED
 }
 
 model LoyaltyEventTrigger {
@@ -2855,7 +2861,6 @@ model WhatsappQuickReply {
   orgId     String   @db.Uuid
   org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   text      String
-  category  String   @default("General")
   topic     String   @default("General Inquiry")
   key       String?
   createdAt DateTime @default(now())
@@ -3021,14 +3026,29 @@ model Notification {
   data        Json
   source      String
   subSource   String
+  /// Catalogue key (src/modules/notification/notification.catalogue.ts). NULL on rows written
+  /// before the catalogue existed; those are identified by `subSource`.
+  event       String?
+  readAt      DateTime?
   createdAt   DateTime  @default(now())
+
+  @@index([orgMemberId, createdAt(sort: Desc)])
 }
 
+/// One member's notification preferences. Absent means every default in the catalogue.
 model NotificationSetting {
-  orgMemberId                 String    @unique @db.Uuid
-  orgMember                   OrgMember @relation(fields: [orgMemberId], references: [id], onDelete: Cascade)
-  waMessageAssignNotification Boolean   @default(false)
-  waMessageClosedNotification Boolean   @default(false)
+  orgMemberId String    @unique @db.Uuid
+  orgMember   OrgMember @relation(fields: [orgMemberId], references: [id], onDelete: Cascade)
+  /// Master switches; an event is delivered on a channel only when this and its own toggle are on.
+  inApp       Boolean   @default(true)
+  push        Boolean   @default(true)
+  email       Boolean   @default(true)
+  desktop     Boolean   @default(true)
+  sound       Boolean   @default(true)
+  /// `{ [eventKey]: { [channel]: boolean } }` — only the toggles the member changed from the
+  /// catalogue default, so a new default reaches everyone who never touched it.
+  overrides   Json      @default("{}")
+  updatedAt   DateTime  @default(now()) @updatedAt
 }
 
 model BookDemo {
@@ -3374,6 +3394,15 @@ enum LeadStatus {
   LOST
 }
 
+/// What a board is for. LEADS is the org's one sales funnel, the board the inbox,
+/// automations and CRM syncs read; the rest are working boards with none of that.
+enum PipelineType {
+  LEADS
+  SUPPORT
+  PROJECTS
+  CUSTOM
+}
+
 /// What landing in a stage does to a lead. Won and Lost stages close it and are
 /// left out of open counts; the board bands its columns by this.
 enum StageStatus {
@@ -3409,12 +3438,15 @@ enum LeadTaskType {
 }
 
 model Pipeline {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   description String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order       Int          @default(0)
+  /// Fixed at creation. At most one LEADS board per org: the partial unique index
+  /// `pipeline_one_leads_per_org` (raw SQL in its migration) enforces it.
+  type        PipelineType @default(LEADS)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   /// Flag leads idle past their stage's `rottingDays` as needing attention.
   rottingEnabled       Boolean @default(true)

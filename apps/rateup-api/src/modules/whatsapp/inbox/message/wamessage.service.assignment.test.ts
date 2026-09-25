@@ -54,9 +54,7 @@ vi.mock("../../../org/org.services.js", () => ({
   Role: { SUPER_ADMIN: "SUPER_ADMIN", ADMIN: "ADMIN", MEMBER: "MEMBER" },
 }));
 vi.mock("../../../team/team.service.js", () => ({ getTeamIdsByUserId: vi.fn(async () => []) }));
-vi.mock("../../../notification/notification.service.js", () => ({
-  getNotificationSettings: vi.fn(),
-}));
+vi.mock("../../../notification/notify.js", () => ({ notify: vi.fn() }));
 vi.mock("../../../integrations/external/zapier/zapier.service.js", () => ({
   addZapierTriggerToQueue: vi.fn(),
   ZapierTriggers: { CONTACT_ASSIGN: "CONTACT_ASSIGN" },
@@ -91,7 +89,7 @@ vi.mock("../../../../../generated/prisma/client.js", () => ({
 
 import prisma from "../../../../utils/prisma.js";
 import { updateContactById } from "../../../contact/contact.service.js";
-import { getNotificationSettings } from "../../../notification/notification.service.js";
+import { notify } from "../../../notification/notify.js";
 import { addZapierTriggerToQueue } from "../../../integrations/external/zapier/zapier.service.js";
 import {
   getConversationById,
@@ -101,7 +99,6 @@ import {
   setInboxStatus,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
-import { notificationQueue } from "../../../../workers/bullmq/queues/index.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import {
   assignWaMessageToUser,
@@ -151,9 +148,8 @@ const getConversationByIdMock = getConversationById as unknown as Mock;
 const openConversationMock = openConversationForContact as unknown as Mock;
 const updateAssigneesMock = updateConversationAssignees as unknown as Mock;
 const setInboxStatusMock = setInboxStatus as unknown as Mock;
-const notificationSettingsMock = getNotificationSettings as unknown as Mock;
+const notifyMock = notify as unknown as Mock;
 const zapierMock = addZapierTriggerToQueue as unknown as Mock;
-const queueAddMock = (notificationQueue as unknown as { add: Mock }).add;
 const resolveActorMock = resolveInboxActor as unknown as Mock;
 
 const CONTACT = { id: "contact-1", orgId: "org-1", name: "Ada" };
@@ -185,7 +181,6 @@ beforeEach(() => {
   updateContactMock.mockResolvedValue(CONTACT);
   getLastConversationMock.mockResolvedValue(OPEN_CONVERSATION);
   openConversationMock.mockResolvedValue({ ...OPEN_CONVERSATION, id: "conv-new" });
-  notificationSettingsMock.mockResolvedValue({ waMessageAssignNotification: true });
   resolveActorMock.mockReturnValue({ source: "user", userId: "user-1" });
 });
 
@@ -389,24 +384,25 @@ describe("assignWaMessageToUser - which ticket it lands on", () => {
 });
 
 describe("assignWaMessageToUser - telling people about it", () => {
-  test("notifies a newly assigned agent who wants notifications", async () => {
+  test("notifies a newly assigned agent, on behalf of the person who assigned them", async () => {
     await assignWaMessageToUser(
       { contactId: "contact-1", assignees: [assignee("user-9")] } as any,
       "org-1",
       "user-1",
     );
 
-    expect(queueAddMock).toHaveBeenCalledWith("notification", {
-      systemNotificationData: expect.objectContaining({
-        userId: "user-9",
+    expect(notifyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "inbox.assigned",
         orgId: "org-1",
-        subSource: "chat-assigned",
+        audience: { kind: "users", userIds: ["user-9"] },
+        actorUserId: "user-1",
       }),
-    });
+    );
   });
 
-  test("stays quiet for an agent who turned the notification off", async () => {
-    notificationSettingsMock.mockResolvedValue({ waMessageAssignNotification: false });
+  test("tells the person a conversation was taken away from", async () => {
+    db.waInboxAssign.findMany.mockResolvedValue([{ assignedUserId: "user-old", teamId: "team-1" }]);
 
     await assignWaMessageToUser(
       { contactId: "contact-1", assignees: [assignee("user-9")] } as any,
@@ -414,7 +410,13 @@ describe("assignWaMessageToUser - telling people about it", () => {
       "user-1",
     );
 
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(notifyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "inbox.unassigned",
+        audience: { kind: "users", userIds: ["user-old"] },
+        actorUserId: "user-1",
+      }),
+    );
   });
 
   test("raises the Zapier assignment trigger for the org", async () => {
@@ -839,9 +841,12 @@ describe("createInternalWaMessage - private notes", () => {
         },
       ],
     });
-    expect(queueAddMock).toHaveBeenCalledWith("notification", {
-      systemNotificationData: expect.objectContaining({ userId: "user-9", subSource: "mentioned" }),
-    });
+    expect(notifyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "inbox.mentioned",
+        audience: { kind: "users", userIds: ["user-9"] },
+      }),
+    );
   });
 
   test("writes no mention rows for a note that names nobody", async () => {
@@ -850,7 +855,7 @@ describe("createInternalWaMessage - private notes", () => {
     await createInternalWaMessage({ ...privateNote });
 
     expect(db.inboxMention.createMany).not.toHaveBeenCalled();
-    expect(queueAddMock).not.toHaveBeenCalled();
+    expect(notifyMock).not.toHaveBeenCalled();
   });
 
   test("refuses a private note with no org to notify within", async () => {

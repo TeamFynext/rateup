@@ -382,7 +382,7 @@ export class EarningRulesEngine {
       : "USER";
 
     for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
-      const candidate = `${namePart}-${randomCode(10)}`;
+      const candidate = `${namePart}-${randomCode(5)}`;
       const existing = await prisma.customerLoyaltyAccount.findUnique({
         where: { referralCode: candidate },
         select: { id: true },

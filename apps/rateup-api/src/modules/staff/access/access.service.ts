@@ -61,15 +61,16 @@ const snapshot = (staff: StaffUser) => ({
 /**
  * Adds someone to the allowlist, or brings back someone who was deactivated. Google sign-in
  * still decides whether they get in: the address must be on the Workspace domain, which the
- * schema does not check because the domain is configuration, not data.
+ * schema does not check because the domain is configuration, not data. A null domain
+ * (NODE_ENV=development only; see staffSignInDomain) accepts any address.
  */
 export async function addStaffMember(
   request: FastifyRequest,
   input: StaffAddInput,
-  domain: string,
+  domain: string | null,
 ) {
   assertOwner(request);
-  if (!input.email.endsWith(`@${domain}`)) {
+  if (domain !== null && !input.email.endsWith(`@${domain}`)) {
     throw new StaffHttpError(
       422,
       "WRONG_DOMAIN",

@@ -1,3 +1,4 @@
+import { Prisma } from "../../../generated/prisma/client.js";
 import type { Actor } from "../../authz/actor.js";
 import { pipelineInScope } from "../../authz/resourceScope.js";
 import { inScope } from "../../authz/scope.js";
@@ -11,67 +12,7 @@ import type {
   UpdatePipelineRequestSchema,
   UpdateTeamDefaultRequestSchema,
 } from "./pipeline.schema.js";
-
-/**
- * The funnel a new board starts with.
- *
- * A board is the org's own, so these are a starting point rather than a rule —
- * every field is editable in pipeline settings. Won and Lost are ordinary
- * columns carrying a closing status, which is what lets a lead be dragged into
- * either one instead of needing a separate drop zone.
- */
-export const DEFAULT_STAGES = [
-  {
-    name: "New Lead",
-    short: "New",
-    probability: 10,
-    rottingDays: 3,
-    status: "OPEN",
-    color: "#16A34A",
-  },
-  {
-    name: "Contacted",
-    short: "Contacted",
-    probability: 25,
-    rottingDays: 4,
-    status: "OPEN",
-    color: "#3FA46A",
-  },
-  {
-    name: "Qualified",
-    short: "Qualified",
-    probability: 45,
-    rottingDays: 5,
-    status: "OPEN",
-    color: "#FFB638",
-  },
-  {
-    name: "Demo / Proposal",
-    short: "Proposal",
-    probability: 65,
-    rottingDays: 7,
-    status: "OPEN",
-    color: "#F8951D",
-  },
-  {
-    name: "Negotiation",
-    short: "Negotiation",
-    probability: 80,
-    rottingDays: 5,
-    status: "OPEN",
-    color: "#D97A0F",
-  },
-  { name: "Won", short: "Won", probability: 100, rottingDays: 0, status: "WON", color: "#1C518E" },
-  { name: "Lost", short: "Lost", probability: 0, rottingDays: 0, status: "LOST", color: "#666864" },
-] as const;
-
-export const DEFAULT_LOST_REASONS = [
-  "Price too high",
-  "No response",
-  "Chose a competitor",
-  "Not the right fit",
-  "Timing — revisit later",
-];
+import { LEADS_PIPELINE_TYPE, OTHER_PIPELINE_LIMIT, PIPELINE_TYPE_SEEDS } from "./pipelineTypes.js";
 
 export class TeamAccessError extends Error {
   constructor(public readonly teamIds: string[]) {
@@ -80,17 +21,17 @@ export class TeamAccessError extends Error {
   }
 }
 
-/** One board per org while the feature beds in. Lift by raising this. */
-export const PIPELINE_LIMIT_PER_ORG = 1;
-
 export class PipelineLimitError extends Error {
   constructor(public readonly limit: number) {
-    super(
-      limit === 1
-        ? "Your organisation already has a pipeline"
-        : `Your organisation already has ${limit} pipelines`,
-    );
+    super(`Your organisation already has ${limit} boards besides its Leads pipeline`);
     this.name = "PipelineLimitError";
+  }
+}
+
+export class LeadsPipelineExistsError extends Error {
+  constructor() {
+    super("Your organisation already has a Leads pipeline");
+    this.name = "LeadsPipelineExistsError";
   }
 }
 
@@ -106,48 +47,77 @@ export async function isPipelineAccessible(pipelineId: string, actor: Actor | un
   return pipelineInScope(pipelineId, actor);
 }
 
+/**
+ * Org-wide facts the create dialog needs. `getPipelines` only lists boards on the actor's
+ * teams, so a team-scoped manager could not otherwise tell that the Leads board exists.
+ */
+export async function getPipelineCreateLimits(orgId: string) {
+  const [leads, others] = await Promise.all([
+    prisma.pipeline.count({ where: { orgId, type: LEADS_PIPELINE_TYPE } }),
+    prisma.pipeline.count({ where: { orgId, type: { not: LEADS_PIPELINE_TYPE } } }),
+  ]);
+  return { hasLeadsPipeline: leads > 0, otherCount: others, otherLimit: OTHER_PIPELINE_LIMIT };
+}
+
 export async function createPipeline(
   data: CreatePipelineRequestSchema & { orgId: string; userId: string; actor: Actor },
 ) {
   assertTeamsInScope(data.teamIds, data.actor);
 
-  return prisma.$transaction(async (tx) => {
-    // Checked inside the transaction so a slow create cannot be raced past a
-    // check made before it, though two simultaneous requests can still both
-    // pass under read-committed. A unique index is the real guarantee, and is
-    // deliberately not added: this is a temporary product limit, not a rule
-    // about the data.
-    const existing = await tx.pipeline.count({ where: { orgId: data.orgId } });
-    if (existing >= PIPELINE_LIMIT_PER_ORG) {
-      throw new PipelineLimitError(PIPELINE_LIMIT_PER_ORG);
-    }
+  const type = data.type ?? LEADS_PIPELINE_TYPE;
+  const seed = PIPELINE_TYPE_SEEDS[type];
 
-    const last = await tx.pipeline.findFirst({
-      where: { orgId: data.orgId },
-      orderBy: { order: "desc" },
-      select: { order: true },
-    });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      // The Leads count is a courtesy check; `pipeline_one_leads_per_org` is the guarantee
+      // (caught below). The cap on the others is a product limit, so a race past it is fine.
+      if (type === LEADS_PIPELINE_TYPE) {
+        const leads = await tx.pipeline.count({ where: { orgId: data.orgId, type } });
+        if (leads > 0) throw new LeadsPipelineExistsError();
+      } else {
+        const others = await tx.pipeline.count({
+          where: { orgId: data.orgId, type: { not: LEADS_PIPELINE_TYPE } },
+        });
+        if (others >= OTHER_PIPELINE_LIMIT) throw new PipelineLimitError(OTHER_PIPELINE_LIMIT);
+      }
 
-    return tx.pipeline.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        order: last ? last.order + 1 : 0,
-        orgId: data.orgId,
-        teams: {
-          createMany: {
-            skipDuplicates: true,
-            data: data.teamIds.map((teamId) => ({ teamId })),
+      const last = await tx.pipeline.findFirst({
+        where: { orgId: data.orgId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+
+      return tx.pipeline.create({
+        data: {
+          name: data.name,
+          description: data.description,
+          type,
+          order: last ? last.order + 1 : 0,
+          orgId: data.orgId,
+          teams: {
+            createMany: {
+              skipDuplicates: true,
+              data: data.teamIds.map((teamId) => ({ teamId })),
+            },
           },
+          stages: { create: seed.stages.map((stage, order) => ({ ...stage, order })) },
+          lostReasons: { create: seed.lostReasons.map((label, order) => ({ label, order })) },
         },
-        stages: { create: DEFAULT_STAGES.map((stage, order) => ({ ...stage, order })) },
-        lostReasons: {
-          create: DEFAULT_LOST_REASONS.map((label, order) => ({ label, order })),
-        },
-      },
-      include: { stages: { orderBy: { order: "asc" } } },
+        include: { stages: { orderBy: { order: "asc" } } },
+      });
     });
-  });
+  } catch (error) {
+    if (isLeadsIndexViolation(error)) throw new LeadsPipelineExistsError();
+    throw error;
+  }
+}
+
+/** A P2002 from `pipeline_one_leads_per_org`, as opposed to the `(orgId, name)` unique. */
+function isLeadsIndexViolation(error: unknown) {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+    return false;
+  }
+  return JSON.stringify(error.meta ?? {}).includes("pipeline_one_leads_per_org");
 }
 
 export async function getPipelines(actor: Actor, orgId: string) {

@@ -340,6 +340,35 @@ describe("sendLoyaltyEvent — the words", () => {
     });
   });
 
+  test("the member welcome goes out in its default words before anyone sets it up", async () => {
+    db.loyaltyEventTrigger.findUnique.mockResolvedValue(null);
+
+    await sendLoyaltyEvent(
+      ORG,
+      LoyaltyEventType.MEMBER_JOINED,
+      { accountId: "a1" },
+      {
+        name: "Ann",
+      },
+    );
+
+    const message = (channels.WHATSAPP.plan as Mock).mock.calls[0][1];
+    expect(message.text).toMatch(/^Hi Ann, welcome to our loyalty program!/);
+    expect(message.artefacts).toBeUndefined();
+  });
+
+  test("the member welcome stays off once the merchant switches it off", async () => {
+    db.loyaltyEventTrigger.findUnique.mockResolvedValue({
+      enabled: false,
+      body: null,
+      waTemplateId: "tmpl-j",
+    });
+
+    expect(
+      await sendLoyaltyEvent(ORG, LoyaltyEventType.MEMBER_JOINED, { accountId: "a1" }, {}),
+    ).toMatchObject({ skippedReason: "no_template" });
+  });
+
   test("the welcome carries a Join button labelled with the join keyword", async () => {
     db.loyaltyEventTrigger.findUnique.mockResolvedValue({
       enabled: true,

@@ -101,6 +101,10 @@ export const bulkUpdateLeadsRequestSchema = z
     { message: "Provide at least one field to update" },
   );
 
+export const bulkDeleteLeadsRequestSchema = z.object({
+  leadIds: z.array(z.uuid()).min(1).max(200),
+});
+
 export const createNoteRequestSchema = z.object({
   text: z.string().min(1).max(4000),
 });
@@ -124,6 +128,7 @@ export type CreateLeadRequestSchema = z.infer<typeof createLeadRequestSchema>;
 export type UpdateLeadRequestSchema = z.infer<typeof updateLeadRequestSchema>;
 export type CloseLeadRequestSchema = z.infer<typeof closeLeadRequestSchema>;
 export type BulkUpdateLeadsRequestSchema = z.infer<typeof bulkUpdateLeadsRequestSchema>;
+export type BulkDeleteLeadsRequestSchema = z.infer<typeof bulkDeleteLeadsRequestSchema>;
 export type CreateNoteRequestSchema = z.infer<typeof createNoteRequestSchema>;
 export type CreateTaskRequestSchema = z.infer<typeof createTaskRequestSchema>;
 export type UpdateTaskRequestSchema = z.infer<typeof updateTaskRequestSchema>;

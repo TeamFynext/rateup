@@ -4,6 +4,7 @@ import { log } from "../../../../utils/logger.js";
 import { recordIntegrationSyncActivity } from "../integrationActivity.js";
 import { getCachedGetLeadMeta, writeGetLeadId } from "./getlead.service.js";
 import { getGetLeadCredential } from "./getlead.types.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
 
 /**
  * Applying a status change GetLead pushed to us — the inbound half of the stage
@@ -90,7 +91,11 @@ function normalisePhone(phone?: string) {
 }
 
 async function findLeadForDelivery(orgId: string, data: GetLeadDeliveryData) {
-  const leadInclude = { select: { id: true, stageId: true, contactId: true, pipelineId: true } };
+  // GetLead maps onto the Leads board only, where a contact has at most one lead.
+  const leadInclude = {
+    where: { pipeline: { type: LEADS_PIPELINE_TYPE } },
+    select: { id: true, stageId: true, contactId: true, pipelineId: true },
+  } as const;
 
   if (data.lead_id) {
     const byContact = await prisma.contact.findFirst({
@@ -105,10 +110,10 @@ async function findLeadForDelivery(orgId: string, data: GetLeadDeliveryData) {
 
     const byLead = await prisma.lead.findFirst({
       where: {
-        pipeline: { orgId },
+        pipeline: { orgId, type: LEADS_PIPELINE_TYPE },
         integrationIds: { path: ["getlead", "lead", "id"], equals: data.lead_id },
       },
-      ...leadInclude,
+      select: leadInclude.select,
     });
     if (byLead) return byLead;
   }
@@ -151,7 +156,7 @@ export type InboundOutcome =
  */
 async function ownedStage(stageId: string, orgId: string) {
   const stage = await prisma.pipelineStage.findFirst({
-    where: { id: stageId, pipeline: { orgId } },
+    where: { id: stageId, pipeline: { orgId, type: LEADS_PIPELINE_TYPE } },
     select: { pipelineId: true },
   });
   if (!stage) {

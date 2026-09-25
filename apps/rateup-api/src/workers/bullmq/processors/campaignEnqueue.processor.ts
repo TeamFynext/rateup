@@ -25,6 +25,7 @@ import {
   failCampaignSend,
   startCampaignSend,
 } from "../../../modules/campaign/campaignSend.service.js";
+import { notifyCampaignStopped } from "../../../modules/campaign/campaignNotify.js";
 
 /**
  * A reason worth putting in front of the sender.
@@ -125,6 +126,11 @@ export const campaignEnqueueWorker = new Worker(
           true,
           "No recipients matched this send, so nothing was sent.",
         );
+        await notifyCampaignStopped(
+          campaignId,
+          "campaign.failed",
+          "No recipients matched this send, so nothing was sent.",
+        );
         return;
       }
 
@@ -183,6 +189,11 @@ export const campaignEnqueueWorker = new Worker(
         null,
         true,
         `The campaign could not be queued for sending: ${reason}`,
+      );
+      await notifyCampaignStopped(
+        campaignId,
+        "campaign.failed",
+        "It could not be queued for sending.",
       );
     }
   },

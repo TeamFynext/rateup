@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { updateContactSchema } from "./contact.schema.js";
+import { contactCoreSchema, updateContactSchema } from "./contact.schema.js";
 
 /**
  * The contact form posts `""` for any field the user emptied. These fields land in columns that
@@ -33,19 +33,36 @@ describe("updateContactSchema", () => {
   test("carries the contact-form fields through instead of stripping them", () => {
     const parsed = updateContactSchema.parse({
       email: "ann@example.com",
+      address: "12 MG Road, Kochi",
       dob: "1990-04-02T00:00:00.000Z",
       external_id: "crm-7",
     });
 
     expect(parsed.email).toBe("ann@example.com");
+    expect(parsed.address).toBe("12 MG Road, Kochi");
     expect(parsed.dob).toEqual(new Date("1990-04-02T00:00:00.000Z"));
     expect(parsed.external_id).toBe("crm-7");
   });
 
-  test("normalises a blank email or external_id to null", () => {
-    const parsed = updateContactSchema.parse({ email: "", external_id: "" });
+  test("normalises a blank email, address or external_id to null", () => {
+    const parsed = updateContactSchema.parse({ email: "", address: "", external_id: "" });
 
     expect(parsed.email).toBeNull();
+    expect(parsed.address).toBeNull();
     expect(parsed.external_id).toBeNull();
+  });
+});
+
+describe("contactCoreSchema", () => {
+  test("accepts a JSON date of birth and an address on create", () => {
+    const parsed = contactCoreSchema.parse({
+      name: "Ann",
+      source: "manual",
+      dob: "1990-04-02T00:00:00.000Z",
+      address: "12 MG Road, Kochi",
+    });
+
+    expect(parsed.dob).toEqual(new Date("1990-04-02T00:00:00.000Z"));
+    expect(parsed.address).toBe("12 MG Road, Kochi");
   });
 });

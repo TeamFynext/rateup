@@ -32,6 +32,7 @@ const PROGRAM = {
   brandColor: "#1C518E",
   heroImageUrl: null,
   signupBonus: 100,
+  signupBonusEnabled: true,
   status: "active",
   whatsappSettingsId: null,
 };
@@ -63,6 +64,15 @@ describe("getPublicLoyaltyProgramInfo", () => {
       whatsappNumber: null,
     });
     expect(info).not.toHaveProperty("whatsappSettingsId");
+  });
+
+  test("advertises no joining bonus while it is switched off", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue({ ...PROGRAM, signupBonusEnabled: false });
+
+    const info = await getPublicLoyaltyProgramInfo("org-1");
+
+    expect(info?.signupBonus).toBe(0);
+    expect(info).not.toHaveProperty("signupBonusEnabled");
   });
 
   test("returns the business's live WhatsApp number as digits", async () => {

@@ -25,20 +25,6 @@ export async function addToken(expoToken: string, userId: string, orgId: string)
   });
 }
 
-export async function getTokensByOrgId(orgId: string): Promise<string[]> {
-  if (!orgId) {
-    throw new Error("Missing orgId");
-  }
-
-  const tokens = await prisma.expoPushToken.findMany({
-    where: { orgId },
-    select: {
-      expoToken: true,
-    },
-  });
-  return tokens.map((token) => token.expoToken);
-}
-
 export async function getTokensByUserId(userId: string, orgId: string): Promise<string[]> {
   if (!userId || !orgId) {
     throw new Error("Missing userId or orgId");
@@ -48,50 +34,6 @@ export async function getTokensByUserId(userId: string, orgId: string): Promise<
     where: { userId, orgId },
     select: { expoToken: true },
   });
-  return tokens.map((token) => token.expoToken);
-}
-
-/**
- * The devices that should be told about new activity on a contact.
- *
- * Assignment is the audience: `WaInboxAssign` rows are deleted on unassign, so a
- * row means "currently handling this contact", and it is the same source the app
- * uses to decide who may reply — so nobody is notified about a conversation they
- * cannot answer.
- *
- * Falls back to the whole org when nobody is assigned. An unassigned contact is
- * usually a *new* customer, and that first message is the one that must not be
- * missed; a silent queue nobody is watching is worse than a broad notification.
- */
-export async function getTokensForContactAudience(
-  orgId: string,
-  contactId?: string | null,
-): Promise<string[]> {
-  if (!orgId) {
-    throw new Error("Missing orgId");
-  }
-
-  if (!contactId) {
-    return getTokensByOrgId(orgId);
-  }
-
-  const assignees = await prisma.waInboxAssign.findMany({
-    where: { contactId },
-    select: { assignedUserId: true },
-  });
-
-  if (assignees.length === 0) {
-    return getTokensByOrgId(orgId);
-  }
-
-  const tokens = await prisma.expoPushToken.findMany({
-    // Scoped by orgId as well as user: a token row is per (user, org), and an
-    // assignee who also belongs to another org must not be pushed on that org's
-    // device registration.
-    where: { orgId, userId: { in: assignees.map((a) => a.assignedUserId) } },
-    select: { expoToken: true },
-  });
-
   return tokens.map((token) => token.expoToken);
 }
 

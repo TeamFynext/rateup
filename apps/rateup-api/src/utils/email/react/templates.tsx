@@ -12,12 +12,12 @@ import BookDemoConfirmationEmail, {
 import BookDemoRequestEmail, {
   type BookDemoRequestEmailProps,
 } from "../../../emails/book-demo-request.js";
-import CampaignCompletedEmail from "../../../emails/campaign-completed.js";
 import ContactFormEmail, { type ContactFormEmailProps } from "../../../emails/contact-form.js";
 import SupportWidgetEmail, {
   type SupportWidgetEmailProps,
 } from "../../../emails/support-widget.js";
 import GeneralEmail, { type GeneralEmailProps } from "../../../emails/general.js";
+import NotificationEmail, { type NotificationEmailProps } from "../../../emails/notification.js";
 import OrgDeletionReminderEmail, {
   type OrgDeletionReminderEmailProps,
 } from "../../../emails/org-deletion-reminder.js";
@@ -235,14 +235,13 @@ export async function renderOrgSignupEmailBodies(
   return { html: await renderEmail(element), text: await renderEmailText(element) };
 }
 
-export async function renderCampaignCompletedEmailBodies(props: {
-  campaignName: string;
-  campaignId: string;
-}) {
+export async function renderNotificationEmailBodies(
+  props: Omit<NotificationEmailProps, "settingsLink">,
+) {
   const element = (
-    <CampaignCompletedEmail
-      campaignName={props.campaignName}
-      campaignLink={`${FRONTEND_URL}/dashboard/campaign/${props.campaignId}`}
+    <NotificationEmail
+      {...props}
+      settingsLink={`${FRONTEND_URL}/dashboard/settings/notifications`}
     />
   );
 

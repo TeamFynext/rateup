@@ -15,10 +15,8 @@ import { log } from "../../shared/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { processParticipant } from "../../shared/modules/messageDispatch/messageDispatch.service.js";
 import { WaFailureClass } from "../../../utils/waRetryableErrors.js";
-import { renderCampaignCompletedEmailBodies } from "../../../utils/email/react/templates.js";
-import { getUsersByTeamId } from "../../shared/team/index.js";
+import { notify } from "../../../modules/notification/notify.js";
 import { campaignSendJobsKey, getCampaignById } from "../../shared/whatsapp/index.js";
-import { notificationQueue } from "../queues/notification.queue.js";
 import { completeCampaignSend } from "../../../modules/campaign/campaignSend.service.js";
 import { scheduleNextRetry } from "../../../modules/campaign/campaignRetry.service.js";
 import { finishCampaignIfSettled } from "../../../modules/campaign/campaignSettle.service.js";
@@ -158,32 +156,13 @@ async function settleJob(job: Job) {
     await finishCampaignIfSettled(job.data.campaignId);
 
     if (job?.data?.teamId) {
-      const users = await getUsersByTeamId(job.data.teamId);
       const campaign = await getCampaignById(job.data.campaignId);
-      const emailForClient = await renderCampaignCompletedEmailBodies({
-        campaignName: campaign.name,
-        campaignId: campaign.id,
+      await notify({
+        event: "campaign.completed",
+        orgId: job.data.orgId,
+        audience: { kind: "team", teamId: job.data.teamId },
+        data: { campaignId: campaign.id, campaignName: campaign.name },
       });
-      for (const user of users) {
-        await notificationQueue.add("notification", {
-          emailData: {
-            to: user.email,
-            subject: `RateUp - ${campaign.name} Completed`,
-            html: emailForClient.html,
-            text: emailForClient.text,
-          },
-          systemNotificationData: {
-            userId: user.id,
-            orgId: job?.data?.orgId,
-            source: "campaign",
-            subSource: "campaign-completed",
-            data: {
-              campaignId: campaign.id,
-              campaignName: campaign.name,
-            },
-          },
-        });
-      }
     }
     log.info(`Campaign ${job.data.campaignId} send ${campaignSendId} finished`);
   } catch (error) {

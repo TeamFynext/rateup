@@ -6,6 +6,7 @@ import {
   googleRedirectUri,
   oidcCookieName,
   sessionCookieName,
+  staffSignInDomain,
   type StaffConfig,
 } from "../staff.config.js";
 import { staffClientIp } from "../staff.guards.js";
@@ -120,7 +121,7 @@ export function staffAuthRoutes(config: StaffConfig) {
             state: oidc.state,
             nonce: oidc.nonce,
             codeChallenge: challenge,
-            hostedDomain: config.googleHd,
+            hostedDomain: staffSignInDomain(config),
             reauth: oidc.reauth,
           }),
           302,
@@ -156,7 +157,7 @@ export function staffAuthRoutes(config: StaffConfig) {
 
         const checked = checkGoogleClaims(claims, {
           nonce: oidc.nonce,
-          hostedDomain: config.googleHd,
+          hostedDomain: staffSignInDomain(config),
           cfAccessEmail: config.cfAccessEnforced ? request.cfAccessEmail : undefined,
           reauthStartedAt: oidc.reauth ? oidc.startedAt : undefined,
         });

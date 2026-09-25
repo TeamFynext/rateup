@@ -118,6 +118,8 @@ interface ProgramFixture {
   refereeBonus: number;
   refereeBonusType: string;
   refereeRewardId: string | null;
+  signupBonusEnabled: boolean;
+  referralBonusEnabled: boolean;
 }
 
 function program(over: Record<string, unknown> = {}) {
@@ -130,6 +132,8 @@ function program(over: Record<string, unknown> = {}) {
     refereeBonus: 0,
     refereeBonusType: "points",
     refereeRewardId: null,
+    signupBonusEnabled: true,
+    referralBonusEnabled: true,
   };
   return { ...base, ...over };
 }
@@ -427,6 +431,20 @@ describe("createCustomerAccount — the signup bonus", () => {
     expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
   });
 
+  test("pays nothing for joining while the bonus is switched off", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(
+      program({ signupBonus: 500, signupBonusEnabled: false }),
+    );
+
+    await createCustomerAccount(signupInput, PROGRAM, ORG);
+
+    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data).toMatchObject({
+      currentPoints: 0,
+      lifetimePoints: 0,
+    });
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+  });
+
   test("announces the signup bonus to the customer", async () => {
     db.loyaltyProgram.findUnique.mockResolvedValue(program({ signupBonus: 500 }));
 
@@ -445,6 +463,27 @@ describe("createCustomerAccount — the signup bonus", () => {
 
     expect((replyText as Mock).mock.calls).toHaveLength(2);
     expect((replyText as Mock).mock.calls[1][1]).toBe("https://wa.me/join");
+  });
+});
+
+describe("createCustomerAccount — the staff welcome", () => {
+  test("welcomes a member staff signed up, before announcing their points", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(program({ signupBonus: 500 }));
+
+    await createCustomerAccount(signupInput, PROGRAM, ORG, undefined, { sendWelcome: true });
+
+    expect(sentEvent(LoyaltyEventType.MEMBER_JOINED)).toMatchObject({
+      orgId: ORG,
+      data: { name: "Ann" },
+    });
+    const events = (sendLoyaltyEvent as Mock).mock.calls.map((args) => args[1]);
+    expect(events).toEqual([LoyaltyEventType.MEMBER_JOINED, LoyaltyEventType.POINTS_ISSUED]);
+  });
+
+  test("sends no welcome unless asked", async () => {
+    await createCustomerAccount(signupInput, PROGRAM, ORG);
+
+    expect(sentEvent(LoyaltyEventType.MEMBER_JOINED)).toBeUndefined();
   });
 });
 
@@ -506,6 +545,26 @@ describe("createCustomerAccount — referrals", () => {
       where: { id: "acct-referrer" },
       data: { currentPoints: { increment: 50 }, lifetimePoints: { increment: 50 } },
     });
+  });
+
+  test("pays neither side while referral bonuses are switched off", async () => {
+    db.loyaltyProgram.findUnique.mockResolvedValue(
+      program({
+        referralBonus: 50,
+        refereeBonusType: "gift",
+        refereeRewardId: "gift-1",
+        referralBonusEnabled: false,
+      }),
+    );
+    db.customerLoyaltyAccount.findFirst.mockResolvedValue(referrer);
+
+    await createCustomerAccount({ ...signupInput, referCode: "REF-1" }, PROGRAM, ORG);
+
+    expect(db.customerLoyaltyAccount.update).not.toHaveBeenCalled();
+    expect(db.loyaltyTransaction.create).not.toHaveBeenCalled();
+    expect(db.customerLoyaltyAccount.create.mock.calls[0][0].data.referredById).toBe(
+      "acct-referrer",
+    );
   });
 
   test("records the referrer's bonus in the ledger", async () => {

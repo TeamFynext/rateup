@@ -29,7 +29,7 @@ import {
   getAssignedUserForContact,
 } from "../whatsapp/inbox/message/wamessage.service.js";
 import { getChatbotDetails } from "../chatbot/chatbot.service.js";
-import { getNotificationSettings } from "../notification/notification.service.js";
+import { notify } from "../notification/notify.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -47,7 +47,7 @@ import {
   checkAndExecuteRuleByTriggerEvent,
   resolveContactChannel,
 } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import { integrationTriggerQueue, notificationQueue } from "../../workers/bullmq/queues/index.js";
+import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
 import {
   mapStatusToField,
   transitionInboxStat,
@@ -76,7 +76,12 @@ function toContactCustomFieldValueInput(
   return { contactId, fieldId: field.id, value: field.value };
 }
 
-export async function createContact(contact: ContactCore & { orgId: string }, userId?: string) {
+export async function createContact(
+  contact: ContactCore & { orgId: string },
+  userId?: string,
+  /** `quiet`: a bulk import — skip the automation rule, Zap and CRM pushes that fire per contact. */
+  options: { quiet?: boolean } = {},
+) {
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
@@ -118,6 +123,7 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
       `;
     await assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId, userId);
   }
+  if (options.quiet) return user;
   await checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
     phone: contact?.phone,
@@ -442,7 +448,7 @@ export async function getContactFullDetailsById(contactId: string, orgId: string
           closedAt: true,
           createdAt: true,
           stage: { select: { id: true, name: true, color: true, status: true } },
-          pipeline: { select: { id: true, name: true } },
+          pipeline: { select: { id: true, name: true, type: true } },
           owner: { select: { id: true, name: true } },
           assignees: { select: { assignee: { select: { id: true, name: true } } } },
         },
@@ -657,10 +663,10 @@ export async function getContactsByOrgId(orgId: string, query?: PaginationQuery)
         name: true,
       },
     },
-    // The contacts table's Stage column. One board per org today, so one lead is
-    // the whole answer; `take` keeps this a bounded join rather than pulling a
-    // contact's entire lead history into a 500-row page.
+    // The contacts table's Stage column: the Leads board only, where a contact has at
+    // most one lead. `take` keeps this a bounded join on a 500-row page.
     leads: {
+      where: { pipeline: { type: "LEADS" as const } },
       select: {
         id: true,
         stageId: true,
@@ -834,6 +840,7 @@ export async function updateContactById(
             }
           : {}),
         email: contact.email,
+        address: contact.address,
         dob: contact.dob,
         external_id: contact.external_id,
         notes: contact.notes,
@@ -1074,26 +1081,13 @@ export async function updateContactById(
     );
     const assignedUsers = await getAssignedUserForContact(updatedContact.id);
     await deleteAssignedUsersforContact(updatedContact.id);
-    for (const assignee of assignedUsers) {
-      const notificationSetting = await getNotificationSettings(
-        assignee.assignedUserId,
-        updatedContact.orgId,
-      );
-      if (notificationSetting?.waMessageClosedNotification) {
-        await notificationQueue.add("notification", {
-          systemNotificationData: {
-            userId: assignee.assignedUserId,
-            orgId: updatedContact.orgId,
-            source: "whatsapp",
-            subSource: "chat-closed",
-            data: {
-              contactId: updatedContact.id,
-              contactName: updatedContact.name,
-            },
-          },
-        });
-      }
-    }
+    await notify({
+      event: "inbox.closed",
+      orgId: updatedContact.orgId,
+      audience: { kind: "users", userIds: assignedUsers.map((a) => a.assignedUserId) },
+      data: { contactId: updatedContact.id, contactName: updatedContact.name ?? "" },
+      actorUserId: userId,
+    });
     if (contact?.waMessageAssignStatus) {
       await createInternalWaMessage({
         trigerredByUser: userId || "RateUp",
@@ -2145,29 +2139,13 @@ export async function bulkUpdateWaMessageAssignStatus(
 
       await deleteAssignedUsersforContact(contact.id);
 
-      await Promise.all(
-        assignedUsers.map(async (assignee) => {
-          const notificationSetting = await getNotificationSettings(
-            assignee.assignedUserId,
-            contact.orgId,
-          );
-
-          if (notificationSetting?.waMessageClosedNotification) {
-            await notificationQueue.add("notification", {
-              systemNotificationData: {
-                userId: assignee.assignedUserId,
-                orgId: contact.orgId,
-                source: "whatsapp",
-                subSource: "chat-closed",
-                data: {
-                  contactId: contact.id,
-                  contactName: contact.name,
-                },
-              },
-            });
-          }
-        }),
-      );
+      await notify({
+        event: "inbox.closed",
+        orgId: contact.orgId,
+        audience: { kind: "users", userIds: assignedUsers.map((a) => a.assignedUserId) },
+        data: { contactId: contact.id, contactName: contact.name ?? "" },
+        actorUserId: userId,
+      });
 
       if (waMessageAssignStatus) {
         await createInternalWaMessage({

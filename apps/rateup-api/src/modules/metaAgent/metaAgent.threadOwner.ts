@@ -2,6 +2,7 @@ import { MetaAgentThreadOwner } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
 import { sendViaWstoOrgHandler } from "../org/ws/org.ws.controller.js";
+import { notify } from "../notification/notify.js";
 
 /**
  * Who is answering a customer when the Meta Business Agent (Meta AI) is set up.
@@ -110,7 +111,7 @@ export async function setMetaAgentThreadOwner(input: {
 
   const contact = await prisma.contact.findUnique({
     where: { contact_phone_org_id_unique: { phone, orgId } },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!contact) return true;
 
@@ -128,5 +129,22 @@ export async function setMetaAgentThreadOwner(input: {
     },
     "main",
   );
+
+  // A staff reply takes the thread itself, so only Meta's own handover asks for a person.
+  if (owner === MetaAgentThreadOwner.STAFF && reason !== "staff_reply") {
+    const assignees = await prisma.waInboxAssign.findMany({
+      where: { contactId: contact.id },
+      select: { assignedUserId: true },
+    });
+    await notify({
+      event: "inbox.handover",
+      orgId,
+      audience:
+        assignees.length > 0
+          ? { kind: "users", userIds: assignees.map((a) => a.assignedUserId) }
+          : { kind: "inboxQueue", sourceIdentifier: null },
+      data: { contactId: contact.id, contactName: contact.name ?? phone },
+    });
+  }
   return true;
 }

@@ -2,9 +2,8 @@ import { callMetaApi } from "../../whatsapp/wa_axios.js";
 import crypto from "crypto";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import { recipientsWhere } from "../../../authz/recipients.js";
 import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
-import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
+import { notify } from "../../notification/notify.js";
 
 /** Meta nests the useful text under `response.data.error.message`; fall back to the Error. */
 function metaConversionErrorMessage(error: unknown): string {
@@ -133,33 +132,16 @@ export async function sendWonConversionEvent(contact: ConversionContact, stageNa
   } catch (error) {
     log.error({ err: error }, "Failed to send Meta Conversions API event");
 
-    try {
-      const admins = await prisma.orgMember.findMany({
-        where: {
-          orgId: contact.orgId,
-          ...recipientsWhere("notify.integrations"),
-        },
-        select: { userId: true },
-      });
-
-      for (const admin of admins) {
-        await notificationQueue.add("notification", {
-          systemNotificationData: {
-            userId: admin.userId,
-            orgId: contact.orgId,
-            source: "system",
-            subSource: "capi-error",
-            data: {
-              contactId: contact.id,
-              contactName: contact.name,
-              error: metaConversionErrorMessage(error),
-            },
-          },
-        });
-      }
-    } catch (notifError) {
-      log.error(notifError, "Failed to send CAPI error notification");
-    }
+    await notify({
+      event: "integration.error",
+      orgId: contact.orgId,
+      audience: { kind: "permitted" },
+      data: {
+        integration: "Meta Conversions API",
+        error: metaConversionErrorMessage(error),
+        contactName: contact.name ?? "",
+      },
+    });
 
     return null;
   }

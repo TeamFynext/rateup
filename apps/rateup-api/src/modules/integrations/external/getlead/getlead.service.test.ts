@@ -147,7 +147,10 @@ describe("saveGetLeadSettings — tenant isolation", () => {
 
     expect(integration.upsert).toHaveBeenCalled();
     // Scoped by org, not merely by stage id.
-    expect(pipelineStage.count.mock.calls[0][0].where.pipeline).toEqual({ orgId: "org-1" });
+    expect(pipelineStage.count.mock.calls[0][0].where.pipeline).toEqual({
+      orgId: "org-1",
+      type: "LEADS",
+    });
   });
 });
 

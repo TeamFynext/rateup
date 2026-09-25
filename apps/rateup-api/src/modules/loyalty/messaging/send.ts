@@ -161,9 +161,11 @@ export async function sendLoyaltyEvent(
     });
     // A message the merchant switched off stays off; only a reward's own template can
     // still speak for it, as it always could.
-    const on = trigger?.enabled === true;
-    const waTemplateId = on ? trigger.waTemplateId : (options.rewardWaTemplateId ?? null);
-    const body = on ? (trigger.body ?? definition.defaultBody) : null;
+    const on = trigger ? trigger.enabled : definition.defaultOn === true;
+    const waTemplateId = on
+      ? (trigger?.waTemplateId ?? null)
+      : (options.rewardWaTemplateId ?? null);
+    const body = on ? (trigger?.body ?? definition.defaultBody) : null;
     if (!waTemplateId && body === null) return skipped("no_template");
 
     const joinKeyword = definition.joinButton

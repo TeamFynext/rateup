@@ -41,6 +41,7 @@ export async function resolveContactForLead(
   phone: string,
   name: string,
   email?: string | null,
+  options: { quiet?: boolean } = {},
 ): Promise<{ contactId: string; created: boolean } | null> {
   const digits = leadPhoneDigits(phone);
   if (!digits || digits.length < 7) return null;
@@ -64,15 +65,19 @@ export async function resolveContactForLead(
 
   try {
     const { createContact } = await import("../../contact/contact.service.js");
-    const contact = await createContact({
-      orgId,
-      name,
-      phone: digits,
-      ...(email && { email }),
-      // Free text on a contact, unlike `Lead.source`, so it can say where it
-      // came from rather than which platform it arrived on.
-      source: "Pipeline lead",
-    });
+    const contact = await createContact(
+      {
+        orgId,
+        name,
+        phone: digits,
+        ...(email && { email }),
+        // Free text on a contact, unlike `Lead.source`, so it can say where it
+        // came from rather than which platform it arrived on.
+        source: "Pipeline lead",
+      },
+      undefined,
+      options,
+    );
     return { contactId: contact.id, created: true };
   } catch (error) {
     // A lead the user asked for must not be lost because the contact book, or

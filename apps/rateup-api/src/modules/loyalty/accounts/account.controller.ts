@@ -35,6 +35,7 @@ import { computeQualifyingSpend } from "../tiers/qualifyingSpend.js";
 import { normalisePhone } from "../util.js";
 import { parseCardCode } from "./cardCode.js";
 import { sendMemberCard } from "./memberCard.service.js";
+import { effectiveBonuses } from "../program/bonuses.js";
 
 export async function createPublicCustomerAccountHandler(
   request: FastifyRequest<{ Body: CustomerLoyaltyAccountInput }>,
@@ -99,6 +100,7 @@ export async function createCustomerAccountHandler(
     // Staff at the counter saw the contact's stored details in the form; what they typed wins.
     const result = await createCustomerAccount(request.body, program.id, orgId, undefined, {
       trustedDetails: true,
+      sendWelcome: true,
     });
     reply.code(201).send(result);
   } catch (e) {
@@ -402,7 +404,7 @@ export async function buildCashierCustomerPayload(
     program: {
       currencySymbol: program.currencySymbol,
       pointsName: program.currencyName,
-      signupBonus: program.signupBonus,
+      signupBonus: effectiveBonuses(program).signupBonus,
     },
   };
 }

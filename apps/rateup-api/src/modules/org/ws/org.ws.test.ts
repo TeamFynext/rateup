@@ -143,6 +143,26 @@ describe("handleWebSocketConnection", () => {
     expect(published.orgId).toBe(VICTIM_ORG);
   });
 
+  test("a broadcast naming users reaches only those users' dashboard sockets", async () => {
+    const OTHER = "44444444-4444-4444-4444-444444444444";
+    const mine = socket();
+    await handleWebSocketConnection(mine, req());
+    const theirs = socket();
+    await handleWebSocketConnection(theirs, req({ userId: OTHER }));
+    const widget = socket();
+    await handleWebSocketConnection(widget, req({ userId: undefined, query: { role: "fab" } }));
+
+    deliver(
+      WS_CHANNEL,
+      JSON.stringify({ orgId: OWN_ORG, data: { type: "notification" }, userIds: [USER] }),
+    );
+
+    expect(mine.send).toHaveBeenCalledOnce();
+    expect(theirs.send).not.toHaveBeenCalled();
+    expect(widget.send).not.toHaveBeenCalled();
+    for (const s of [mine, theirs, widget]) s.fire("close");
+  });
+
   test("refuses a connection with no session org", async () => {
     const s = socket();
 

@@ -1625,7 +1625,7 @@ export interface FlowLogicJump {
 }
 
 export interface orgWsMessage {
-  type: "inbox" | "message_deleted" | "meta_agent_thread";
+  type: "inbox" | "message_deleted" | "meta_agent_thread" | "notification";
   inbox?: {
     /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
     contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
@@ -1649,6 +1649,20 @@ export interface orgWsMessage {
     /** Meta's handover `metadata`, e.g. `customer_request`. */
     reason: string | null;
     at: string;
+  };
+  /** One member's notification, sent only to their own dashboard sockets. */
+  notification?: {
+    /** The bell row, or null for a live-only event (a new message). */
+    id: string | null;
+    event: string;
+    data: Record<string, unknown>;
+    title: string;
+    body: string;
+    path: string;
+    toast: boolean;
+    desktop: boolean;
+    sound: boolean;
+    createdAt: string;
   };
 }
 

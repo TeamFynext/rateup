@@ -30,6 +30,9 @@ export interface GivebackProgramSource {
   signupBonus: number;
   referralBonus: number;
   refereeBonus: number;
+  /** Absent reads as on, like the column default. */
+  signupBonusEnabled?: boolean;
+  referralBonusEnabled?: boolean;
 }
 export interface GivebackRuleSource {
   id?: string;
@@ -81,9 +84,9 @@ export function buildGivebackInput(
       ...(tier.color ? { color: tier.color } : {}),
     })),
     bonuses: {
-      signupBonus: program.signupBonus,
-      referralBonus: program.referralBonus,
-      refereeBonus: program.refereeBonus,
+      signupBonus: program.signupBonusEnabled === false ? 0 : program.signupBonus,
+      referralBonus: program.referralBonusEnabled === false ? 0 : program.referralBonus,
+      refereeBonus: program.referralBonusEnabled === false ? 0 : program.refereeBonus,
     },
   };
 }

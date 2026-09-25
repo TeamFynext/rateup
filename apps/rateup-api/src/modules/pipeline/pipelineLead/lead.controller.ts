@@ -6,6 +6,7 @@ import {
   createNote,
   createTask,
   deleteLead,
+  deleteLeads,
   deleteNote,
   deleteTask,
   getLeadById,
@@ -22,6 +23,7 @@ import {
   bulkSetContactStage,
 } from "./lead.service.js";
 import type {
+  BulkDeleteLeadsRequestSchema,
   BulkUpdateLeadsRequestSchema,
   ListLeadsQuerySchema,
   CloseLeadRequestSchema,
@@ -156,6 +158,18 @@ export async function deleteLeadHandler(
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error deleting lead" });
+  }
+}
+
+export async function bulkDeleteLeadsHandler(
+  request: FastifyRequest<{ Body: BulkDeleteLeadsRequestSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    return reply.code(200).send(await deleteLeads(request.body.leadIds));
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error deleting leads" });
   }
 }
 

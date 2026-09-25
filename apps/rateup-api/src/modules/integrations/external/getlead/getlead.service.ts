@@ -27,6 +27,7 @@ import {
   toGetLeadPhone,
   type GetLeadSource,
 } from "./getlead.utils.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
 
 /** Rateup events forwarded to GetLead, gated per-org by `triggerSubscriptions`. */
 export enum GetLeadTriggers {
@@ -495,7 +496,7 @@ export async function saveGetLeadSettings(
     const owned = await prisma.pipelineStage.count({
       where: {
         id: { in: patch.stageMappings.map((m) => m.stageId) },
-        pipeline: { orgId },
+        pipeline: { orgId, type: LEADS_PIPELINE_TYPE },
       },
     });
     const distinct = new Set(patch.stageMappings.map((m) => m.stageId)).size;

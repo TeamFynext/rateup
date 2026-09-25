@@ -31,6 +31,7 @@ import { CampaignPauseReason, CampaignStatus } from "../../types/enums.js";
 import { campaignSendPausedKey } from "../../workers/shared/campaignSendKeys.js";
 import { cancelPendingCampaignJobs } from "./campaignCancel.service.js";
 import { cancelCampaignSends, LIVE_SEND_STATUSES } from "./campaignSend.service.js";
+import { notifyCampaignStopped } from "./campaignNotify.js";
 
 /** Meta's "error related to your payment method". */
 export const WA_PAYMENT_METHOD_ERROR_CODE = 131042;
@@ -104,6 +105,11 @@ export async function pauseCampaignForAccountIssue(
   if (count === 0) return false;
 
   log.warn({ campaignId, reason }, "Campaign paused — the account cannot send");
+  await notifyCampaignStopped(
+    campaignId,
+    "campaign.paused",
+    CAMPAIGN_PAUSE_MESSAGES[reason].replace(/^Paused: /, ""),
+  );
 
   try {
     // Flag first, cancel second: the cancel walk can take seconds on a large

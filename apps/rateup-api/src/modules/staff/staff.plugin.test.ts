@@ -55,6 +55,7 @@ const baseConfig: StaffConfig = {
   cfAccessAud: "aud-123",
   cfAccessEnforced: false,
   secureCookies: true,
+  development: false,
 };
 
 const { privateKey, publicKey } = await generateKeyPair("RS256");
@@ -315,6 +316,18 @@ describe("Google sign-in start", () => {
     const cookie = res.cookies.find((c) => c.name === "__Host-staff_oidc");
     expect(cookie).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax", path: "/" });
     expect(db.staffSession.findUnique).not.toHaveBeenCalled();
+    expect(location.searchParams.get("hd")).toBe("rateup.app");
+  });
+
+  test("with NODE_ENV=development the account picker is not limited to the Workspace", async () => {
+    const { app } = await buildApp({ development: true });
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/staff/auth/google/start",
+      headers: noSession,
+    });
+    expect(res.statusCode).toBe(302);
+    expect(new URL(res.headers.location as string).searchParams.has("hd")).toBe(false);
   });
 
   // /start is a navigation from the console, so it is where the session being replaced is known.

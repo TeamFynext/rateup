@@ -11,11 +11,19 @@
 export interface StaffConfig {
   googleClientId: string;
   googleClientSecret: string;
-  /** Google Workspace domain (the `hd` claim) staff must sign in from. */
+  /**
+   * Google Workspace domain (the `hd` claim) staff must sign in from. Not applied with
+   * NODE_ENV=development; see staffSignInDomain.
+   */
   googleHd: string;
   /** e.g. https://admin.rateup.app. CORS, the Origin check and post-sign-in redirects use it. */
   consoleOrigin: string;
-  /** This API's public origin (API_URL). The Google redirect URI derives from it. */
+  /**
+   * The origin the console calls this API on: STAFF_API_ORIGIN, else API_URL. The Google
+   * redirect URI derives from it, and it must be the host the console's cookies live on.
+   * Set STAFF_API_ORIGIN locally when API_URL is a tunnel for webhooks but the console calls
+   * http://localhost:3001.
+   */
   apiOrigin: string;
   /** Signs the short-lived OIDC state cookie. */
   cookieSecret: string;
@@ -28,12 +36,18 @@ export interface StaffConfig {
    * another site). A plain-http localhost gets none of that; localhost ports are same-site.
    */
   secureCookies: boolean;
+  /**
+   * NODE_ENV was exactly "development" when the config was read. Production does not set
+   * NODE_ENV at all, so anything else (including unset) counts as not local.
+   */
+  development: boolean;
 }
 
 export function staffConfig(): StaffConfig {
   const consoleOrigin = (process.env.STAFF_CONSOLE_ORIGIN ?? "").replace(/\/+$/, "");
-  const apiOrigin = (process.env.API_URL ?? "").replace(/\/+$/, "");
+  const apiOrigin = (process.env.STAFF_API_ORIGIN || process.env.API_URL || "").replace(/\/+$/, "");
   return {
+    development: process.env.NODE_ENV === "development",
     googleClientId: process.env.STAFF_GOOGLE_CLIENT_ID ?? "",
     googleClientSecret: process.env.STAFF_GOOGLE_CLIENT_SECRET ?? "",
     googleHd: (process.env.STAFF_GOOGLE_HD ?? "rateup.app").toLowerCase(),
@@ -60,7 +74,7 @@ export function assertStaffConfig(config: StaffConfig = staffConfig()): void {
   const required: Array<[string, string]> = [
     ["STAFF_GOOGLE_CLIENT_ID", config.googleClientId],
     ["STAFF_GOOGLE_CLIENT_SECRET", config.googleClientSecret],
-    ["API_URL", config.apiOrigin],
+    ["STAFF_API_ORIGIN or API_URL", config.apiOrigin],
     ["STAFF_COOKIE_SECRET", config.cookieSecret],
   ];
   if (config.cfAccessEnforced) {
@@ -75,6 +89,16 @@ export function assertStaffConfig(config: StaffConfig = staffConfig()): void {
   if (config.cookieSecret.length < 32) {
     throw new Error("STAFF_COOKIE_SECRET must be at least 32 characters");
   }
+}
+
+/**
+ * The Google Workspace domain staff must sign in from and be added with, or null for any
+ * verified Google account. Null only with NODE_ENV=development, so a local console can be
+ * used with a personal address (still only one on the staff list). Production does not set
+ * NODE_ENV, so it always gets STAFF_GOOGLE_HD.
+ */
+export function staffSignInDomain(config: StaffConfig): string | null {
+  return config.development ? null : config.googleHd;
 }
 
 export function sessionCookieName(config: StaffConfig): string {

@@ -22,6 +22,8 @@ import type {
 import { resolveContactForLead } from "./lead.contact.js";
 import { decodeLeadCursor, encodeLeadCursor } from "./lead.cursor.js";
 import { leadWhere } from "./lead.filters.js";
+import { LEADS_PIPELINE_TYPE } from "../pipelineTypes.js";
+import { notify } from "../../notification/notify.js";
 
 /** Everything the board, list, forecast and insights views read off a lead. */
 export const leadListInclude = {
@@ -128,9 +130,39 @@ async function replaceAssignees(tx: Prisma.TransactionClient, leadId: string, ne
   });
 
   return {
+    addedIds,
     addedNames: added.map((user) => user.name ?? "Someone"),
     removedNames: removed.map((row) => row.assignee.name ?? "Someone"),
   };
+}
+
+/** Tell people they were put on a lead, or on one of its tasks. Never the person who did it. */
+async function notifyLeadAssignment(
+  leadId: string,
+  userIds: string[],
+  actorUserId: string | null,
+  taskTitle?: string,
+) {
+  if (userIds.length === 0) return;
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+    select: { id: true, name: true, pipelineId: true, pipeline: { select: { orgId: true } } },
+  });
+  if (!lead) return;
+  const ref = { leadId: lead.id, leadName: lead.name, pipelineId: lead.pipelineId };
+  const audience = { kind: "users" as const, userIds };
+  const orgId = lead.pipeline.orgId;
+  if (taskTitle === undefined) {
+    await notify({ event: "pipeline.lead_assigned", orgId, audience, data: ref, actorUserId });
+  } else {
+    await notify({
+      event: "pipeline.task_assigned",
+      orgId,
+      audience,
+      data: { ...ref, taskTitle },
+      actorUserId,
+    });
+  }
 }
 
 /** A cursor this server did not mint. The handler answers 400 rather than 500. */
@@ -300,6 +332,12 @@ export async function createLead(
      * constraint still has the last word.
      */
     contactLeadChecked?: boolean;
+    /**
+     * An import: record the lead and nothing else. No CRM push, Conversions API event,
+     * Zap or automation rule — for the lead or for a contact it creates — which would
+     * otherwise fire once per row of a spreadsheet.
+     */
+    quiet?: boolean;
   },
 ) {
   const stage = await prisma.pipelineStage.findUniqueOrThrow({
@@ -311,7 +349,13 @@ export async function createLead(
   // contact even though the caller named none.
   const resolved =
     !data.contactId && data.phone && data.linkContact !== false
-      ? await resolveContactForLead(stage.pipeline.orgId, data.phone, data.name, data.email ?? null)
+      ? await resolveContactForLead(
+          stage.pipeline.orgId,
+          data.phone,
+          data.name,
+          data.email ?? null,
+          { quiet: data.quiet },
+        )
       : null;
   const contactId = data.contactId ?? resolved?.contactId ?? null;
 
@@ -406,6 +450,10 @@ export async function createLead(
       throw error;
     });
 
+  if (data.quiet) return created;
+
+  await notifyLeadAssignment(created.id, data.assigneeIds ?? [], data.userId);
+
   // A lead opening straight onto a mapped column is as much a stage change as a
   // move is, so the CRMs hear about it the same way.
   if (data.syncIntegrations !== false)
@@ -420,7 +468,8 @@ export async function createLead(
 }
 
 export async function updateLead(id: string, data: UpdateLeadRequestSchema, userId: string) {
-  return prisma.$transaction(async (tx) => {
+  let addedAssignees: string[] = [];
+  const updated = await prisma.$transaction(async (tx) => {
     // The join rows are rewritten before the lead is read back, so the returned
     // lead already carries the new assignee list.
     const assigneeChange =
@@ -451,13 +500,17 @@ export async function updateLead(id: string, data: UpdateLeadRequestSchema, user
     });
 
     if (assigneeChange) {
+      const { addedIds, ...details } = assigneeChange;
+      addedAssignees = addedIds;
       await tx.leadActivity.create({
-        data: { leadId: id, userId, type: "ASSIGNEES_CHANGED", details: assigneeChange },
+        data: { leadId: id, userId, type: "ASSIGNEES_CHANGED", details },
       });
     }
 
     return serialiseLead(lead);
   });
+  await notifyLeadAssignment(id, addedAssignees, userId);
+  return updated;
 }
 
 export async function moveLead(
@@ -574,7 +627,7 @@ async function fireStageUpdatedZap(lead: {
         name: true,
         status: true,
         pipelineId: true,
-        pipeline: { select: { orgId: true, name: true } },
+        pipeline: { select: { orgId: true, name: true, type: true } },
       },
     });
     if (!stage) return;
@@ -587,6 +640,7 @@ async function fireStageUpdatedZap(lead: {
           leadId: lead.id,
           pipelineId: stage.pipelineId,
           pipelineName: stage.pipeline.name,
+          pipelineType: stage.pipeline.type,
           stageId: lead.stageId,
           stageName: stage.name,
           stageStatus: stage.status,
@@ -598,6 +652,14 @@ async function fireStageUpdatedZap(lead: {
     // The move is already recorded; a Zap that could not be queued must not undo it.
     console.error("Failed to queue the Contact Stage Updated Zapier trigger", error);
   }
+}
+
+async function isOnLeadsBoard(stageId: string) {
+  const stage = await prisma.pipelineStage.findUnique({
+    where: { id: stageId },
+    select: { pipeline: { select: { type: true } } },
+  });
+  return stage?.pipeline.type === LEADS_PIPELINE_TYPE;
 }
 
 /**
@@ -624,6 +686,9 @@ async function fireStageUpdatedRules(lead: { contactId: string | null; stageId: 
   if (!lead.contactId) return;
 
   try {
+    // Rules match the contact's stage, which only the Leads board holds.
+    if (!(await isOnLeadsBoard(lead.stageId))) return;
+
     const contact = await prisma.contact.findUnique({
       where: { id: lead.contactId },
       select: { id: true, orgId: true, phone: true, igsId: true, psid: true },
@@ -686,9 +751,10 @@ async function syncLeadStageToIntegrations(
   try {
     const stage = await prisma.pipelineStage.findUnique({
       where: { id: lead.stageId },
-      select: { name: true, pipeline: { select: { orgId: true } } },
+      select: { name: true, pipeline: { select: { orgId: true, type: true } } },
     });
-    if (!stage) return;
+    // CRM stage mappings and the Conversions API are about the sales funnel alone.
+    if (stage?.pipeline.type !== LEADS_PIPELINE_TYPE) return;
 
     const orgId = stage.pipeline.orgId;
 
@@ -799,9 +865,10 @@ async function reportLeadWon(lead: {
   try {
     const stage = await prisma.pipelineStage.findUnique({
       where: { id: lead.stageId },
-      select: { name: true, pipeline: { select: { orgId: true } } },
+      select: { name: true, pipeline: { select: { orgId: true, type: true } } },
     });
-    if (!stage) return;
+    // CRM stage mappings and the Conversions API are about the sales funnel alone.
+    if (stage?.pipeline.type !== LEADS_PIPELINE_TYPE) return;
 
     const contact = lead.contactId
       ? await prisma.contact.findUnique({
@@ -835,18 +902,15 @@ async function reportLeadWon(lead: {
 }
 
 /**
- * The board a contact's stage lives on. One pipeline per org today, so this is
- * simply that one — but every caller goes through here, so lifting
- * `PIPELINE_LIMIT_PER_ORG` later is one function rather than twenty call sites.
+ * The board a contact's stage lives on: the org's Leads pipeline, never one of its other
+ * boards. Every inbox, automation and CRM caller goes through here.
  *
- * Returns null when the org has no board. Callers must treat that as "skip",
- * never as an error: an org that has not opened a pipeline must still be able
- * to edit its contacts.
+ * Returns null when the org has no Leads board. Callers must treat that as "skip", never
+ * as an error: an org that has not opened one must still be able to edit its contacts.
  */
 export async function resolvePipelineForContact(orgId: string) {
   const pipeline = await prisma.pipeline.findFirst({
-    where: { orgId },
-    orderBy: { order: "asc" },
+    where: { orgId, type: LEADS_PIPELINE_TYPE },
     select: { id: true },
   });
   return pipeline?.id ?? null;
@@ -1261,6 +1325,11 @@ export async function deleteLead(id: string) {
   return prisma.lead.delete({ where: { id } });
 }
 
+export async function deleteLeads(leadIds: string[]) {
+  const { count } = await prisma.lead.deleteMany({ where: { id: { in: leadIds } } });
+  return { deleted: count };
+}
+
 export async function bulkUpdateLeads(data: BulkUpdateLeadsRequestSchema, userId: string) {
   if (data.stageId) {
     for (const leadId of data.leadIds) {
@@ -1279,14 +1348,16 @@ export async function bulkUpdateLeads(data: BulkUpdateLeadsRequestSchema, userId
   // exactly as a single-lead edit would.
   if (data.assigneeIds !== undefined) {
     for (const leadId of data.leadIds) {
-      await prisma.$transaction(async (tx) => {
+      const added = await prisma.$transaction(async (tx) => {
         const change = await replaceAssignees(tx, leadId, data.assigneeIds ?? []);
-        if (change) {
-          await tx.leadActivity.create({
-            data: { leadId, userId, type: "ASSIGNEES_CHANGED", details: change },
-          });
-        }
+        if (!change) return [];
+        const { addedIds, ...details } = change;
+        await tx.leadActivity.create({
+          data: { leadId, userId, type: "ASSIGNEES_CHANGED", details },
+        });
+        return addedIds;
       });
+      await notifyLeadAssignment(leadId, added, userId);
     }
   }
 
@@ -1332,11 +1403,15 @@ export async function createTask(leadId: string, data: CreateTaskRequestSchema, 
       data: { leadId, userId, type: "TASK_ADDED", details: { taskTitle: data.title } },
     }),
   ]);
+  if (task.assigneeId) await notifyLeadAssignment(leadId, [task.assigneeId], userId, task.title);
   return task;
 }
 
 export async function updateTask(id: string, data: UpdateTaskRequestSchema, userId: string) {
-  return prisma.$transaction(async (tx) => {
+  const before = data.assigneeId
+    ? await prisma.leadTask.findUnique({ where: { id }, select: { assigneeId: true } })
+    : null;
+  const task = await prisma.$transaction(async (tx) => {
     const task = await tx.leadTask.update({
       where: { id },
       data: {
@@ -1365,6 +1440,10 @@ export async function updateTask(id: string, data: UpdateTaskRequestSchema, user
 
     return task;
   });
+  if (task.assigneeId && before && before.assigneeId !== task.assigneeId) {
+    await notifyLeadAssignment(task.leadId, [task.assigneeId], userId, task.title);
+  }
+  return task;
 }
 
 export async function deleteTask(id: string) {

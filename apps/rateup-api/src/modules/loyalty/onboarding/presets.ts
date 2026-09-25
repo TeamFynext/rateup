@@ -173,6 +173,12 @@ function commonEventTemplates(): PresetEventTemplate[] {
       body: LOYALTY_EVENT_CATALOG[LoyaltyEventType.BIRTHDAY].defaultBody,
       params: ["customer name"],
     },
+    {
+      eventType: LoyaltyEventType.MEMBER_JOINED,
+      templateName: LOYALTY_EVENT_TEMPLATE_NAMES[LoyaltyEventType.MEMBER_JOINED],
+      body: LOYALTY_EVENT_CATALOG[LoyaltyEventType.MEMBER_JOINED].defaultBody,
+      params: ["customer name"],
+    },
   ];
 }
 

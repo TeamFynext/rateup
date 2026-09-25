@@ -359,6 +359,14 @@ describe("filterChats - narrowing and sorting", () => {
     expect(params).toContain("%adasmith%");
   });
 
+  test("searches every contact, including those with no conversation yet", async () => {
+    const { sql } = await runFilter({ searchTerm: "ada" });
+
+    expect(sql).toContain(`FROM "Contact" c`);
+    expect(sql).toContain(`LEFT JOIN "Conversation" conv ON conv."contactId" = c.id`);
+    expect(sql).not.toContain("LEFT JOIN LATERAL");
+  });
+
   test("skips the tab filters entirely while searching", async () => {
     const { sql } = await runFilter({ searchTerm: "ada", waMessageAssignStatus: "New" });
 
@@ -420,6 +428,15 @@ describe("filterChats - narrowing and sorting", () => {
     const { sql } = await runFilter({ sortBy: "newest_wa_created" });
 
     expect(sql).toContain(`conv."lastCustomerMessageAt"`);
+  });
+
+  test("orders the page on the same customer clock it was picked by", async () => {
+    const { sql } = await runFilter({ sortBy: "newest_wa_created" });
+    const clock = `COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp")`;
+
+    expect(sql).toContain(`ORDER BY ${clock} DESC`);
+    expect(sql).toContain(`${clock} AS "conversationLastCustomerMessageAt"`);
+    expect(sql).toContain(`ORDER BY fc."conversationLastCustomerMessageAt" DESC`);
   });
 
   test("pages twenty tickets at a time", async () => {
@@ -491,6 +508,13 @@ describe("exportWhatsapChats", () => {
     expect(sql).toContain(`c."orgId" = $1::uuid`);
     expect(sql).toContain(`ORDER BY\n      wm."createdAt" ASC`);
     expect(db.$queryRawUnsafe.mock.calls[0][1]).toBe("org-1");
+  });
+
+  test("exports each message once, not once per group or campaign the contact is in", async () => {
+    const sql = await runExport({});
+
+    expect(sql).not.toContain(`"ContactGroupMap"`);
+    expect(sql).not.toContain(`"CampaignParticipant"`);
   });
 
   const boundParams = () => db.$queryRawUnsafe.mock.calls[0].slice(1);

@@ -6,6 +6,7 @@ import {
   getNotifications,
   getNotificationsCount,
   getNotificationSettings,
+  markAllNotificationsRead,
   updateNotificationSettings,
 } from "./notification.service.js";
 import { NotificationIdParamSchema, NotificationSettingSchema } from "./notification.schema.js";
@@ -37,8 +38,7 @@ export async function updateNotificationSettingHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { userId, orgId } = request.user;
-    const res = await updateNotificationSettings(userId!, orgId, request.body);
+    const res = await updateNotificationSettings(request.actor!, request.body);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -48,12 +48,11 @@ export async function updateNotificationSettingHandler(
 
 export async function getNotificationSettingHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { userId, orgId } = request.user;
-    const res = await getNotificationSettings(userId!, orgId);
+    const res = await getNotificationSettings(request.actor!);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ message: "Error updating notification settings" });
+    reply.code(500).send({ message: "Error getting notification settings" });
   }
 }
 
@@ -62,8 +61,8 @@ export async function deleteNotificationByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { notificationId } = request.params;
-    const res = await deleteNotificationById(notificationId);
+    const { userId, orgId } = request.user;
+    const res = await deleteNotificationById(request.params.notificationId, userId!, orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -79,5 +78,19 @@ export async function deleteAllNotificationsHandler(request: FastifyRequest, rep
   } catch (e) {
     log.error(e);
     reply.code(500).send({ message: "Error deleting notification" });
+  }
+}
+
+export async function markAllNotificationsReadHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { userId, orgId } = request.user;
+    await markAllNotificationsRead(userId!, orgId);
+    reply.code(204).send();
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ message: "Error marking notifications read" });
   }
 }

@@ -42,6 +42,7 @@ import type {
   ZohoUser,
 } from "./zoho.types.js";
 import type { Integration } from "../../../../../generated/prisma/client.js";
+import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
 
 export enum ZohoTriggers {
   CONTACT_CREATE = "contact_created",
@@ -1627,7 +1628,7 @@ async function applyInboundStageToLead(
 ): Promise<boolean> {
   const lead = await prisma.lead.findFirst({
     where: {
-      pipeline: { orgId },
+      pipeline: { orgId, type: LEADS_PIPELINE_TYPE },
       integrationIds: { path: ["bigin", "deal", "id"], equals: biginDealId },
     },
     select: { id: true, stageId: true },

@@ -75,10 +75,17 @@ export async function readSpreadsheetObjects(
   return reader(buffer, options) as Promise<{ data: Record<string, unknown>[] }>;
 }
 
-/** Raw rows (array of arrays), for files without a usable header row. */
-export async function readSpreadsheetRows(buffer: Buffer, mimetype: string): Promise<unknown[][]> {
+/**
+ * Raw rows (array of arrays), for files without a usable header row. `keepEmptyRows`
+ * leaves blank rows in place, so an index still matches the row a person sees.
+ */
+export async function readSpreadsheetRows(
+  buffer: Buffer,
+  mimetype: string,
+  { keepEmptyRows = false }: { keepEmptyRows?: boolean } = {},
+): Promise<unknown[][]> {
   if (detectSpreadsheetFormat(mimetype) === "csv") {
-    return parseCsv(buffer.toString("utf-8"), { skipEmptyRows: true });
+    return parseCsv(buffer.toString("utf-8"), { skipEmptyRows: !keepEmptyRows });
   }
   // xlsx vs ods is auto-detected from content here — no need to branch on mimetype.
   const wb = await read(buffer);

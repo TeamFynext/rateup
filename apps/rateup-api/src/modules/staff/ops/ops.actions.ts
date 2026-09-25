@@ -89,15 +89,16 @@ export async function removeShopifyIntegration(
   });
 }
 
-/* Test data. Never in production: the responses are fake and the inbox generator sends
- * real WhatsApp messages to real contacts through the org's own number. */
+/* Test data. Only with NODE_ENV=development: the responses are fake and the inbox generator
+ * sends real WhatsApp messages to real contacts through the org's own number. Production does
+ * not set NODE_ENV at all, so an unset or any other value is refused. */
 
 function assertNotProduction() {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV !== "development") {
     throw new StaffHttpError(
       403,
       "NOT_IN_PRODUCTION",
-      "Test data cannot be generated in production.",
+      "Test data can only be generated in local development.",
     );
   }
 }

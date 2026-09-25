@@ -14,14 +14,14 @@ vi.mock("../../../utils/prisma.js", () => ({
 
 vi.mock("../../whatsapp/wa_axios.js", () => ({ callMetaApi: vi.fn() }));
 vi.mock("../../whatsapp/settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
-vi.mock("../../../workers/bullmq/queues/index.js", () => ({ notificationQueue: { add: vi.fn() } }));
+vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
 
 import crypto from "node:crypto";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../../whatsapp/wa_axios.js";
 import { getWaSettings } from "../../whatsapp/settings/wa_settings.service.js";
-import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
+import { notify } from "../../notification/notify.js";
 import { sendWonConversionEvent, triggerConversionsApiForContact } from "./conversions.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -58,7 +58,6 @@ beforeEach(() => {
     conversionData: null,
   });
   (callMetaApi as unknown as Mock).mockResolvedValue({ status: 200, data: { events_received: 1 } });
-  (notificationQueue.add as unknown as Mock).mockResolvedValue({ id: "job-1" });
 });
 
 afterEach(() => {
@@ -272,7 +271,7 @@ describe("the response handling", () => {
       ),
     ).toBe(false);
     expect(log.error).toHaveBeenCalled();
-    expect(notificationQueue.add).toHaveBeenCalled();
+    expect(notify).toHaveBeenCalled();
   });
 
   test("an expired token reaches the same failure path", async () => {
@@ -299,46 +298,30 @@ describe("the response handling", () => {
 // ===========================================================================
 
 describe("the error notification", () => {
-  test("notifies every admin when the call actually throws", async () => {
+  test("goes to everyone who receives integration alerts when the call throws", async () => {
     (callMetaApi as unknown as Mock).mockRejectedValueOnce(new Error("ECONNRESET"));
-    db.orgMember.findMany.mockResolvedValueOnce([{ userId: "u-1" }, { userId: "u-2" }]);
 
     const res = await triggerConversionsApiForContact(contact, "lc-1");
 
     expect(res).toBeNull();
-    expect(notificationQueue.add).toHaveBeenCalledTimes(2);
+    expect(notify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "integration.error",
+        orgId: ORG,
+        audience: { kind: "permitted" },
+      }),
+    );
   });
 
-  test("targets only the org's admins and owners", async () => {
-    (callMetaApi as unknown as Mock).mockRejectedValueOnce(new Error("boom"));
-
-    await triggerConversionsApiForContact(contact, "lc-1");
-
-    expect(db.orgMember.findMany.mock.calls[0][0].where).toEqual({
-      orgId: ORG,
-      OR: [
-        {
-          role: { in: ["SUPER_ADMIN", "ADMIN"] },
-          NOT: { permissionDenies: { has: "notify.integrations" } },
-        },
-        { permissionGrants: { has: "notify.integrations" } },
-      ],
-    });
-  });
-
-  // NOTE: the notification carries the contact's name, so the operator can act
-  // on it — but it is stored in the notification payload rather than referenced.
   test("carries the failing contact and the underlying message", async () => {
     (callMetaApi as unknown as Mock).mockRejectedValueOnce({
       response: { data: { error: { message: "Unsupported post request" } } },
     });
-    db.orgMember.findMany.mockResolvedValueOnce([{ userId: "u-1" }]);
 
     await triggerConversionsApiForContact(contact, "lc-1");
 
-    const job = (notificationQueue.add as unknown as Mock).mock.calls[0][1];
-    expect(job.systemNotificationData.data).toEqual({
-      contactId: "c-1",
+    expect((notify as unknown as Mock).mock.calls[0][0].data).toEqual({
+      integration: "Meta Conversions API",
       contactName: "Ann Smith",
       error: "Unsupported post request",
     });
@@ -346,27 +329,9 @@ describe("the error notification", () => {
 
   test("falls back to a fixed string when the throw carries no message", async () => {
     (callMetaApi as unknown as Mock).mockRejectedValueOnce({});
-    db.orgMember.findMany.mockResolvedValueOnce([{ userId: "u-1" }]);
 
     await triggerConversionsApiForContact(contact, "lc-1");
 
-    expect(
-      (notificationQueue.add as unknown as Mock).mock.calls[0][1].systemNotificationData.data.error,
-    ).toBe("Unknown error");
-  });
-
-  test("never rethrows into the caller", async () => {
-    (callMetaApi as unknown as Mock).mockRejectedValueOnce(new Error("boom"));
-    db.orgMember.findMany.mockRejectedValueOnce(new Error("db down too"));
-
-    await expect(triggerConversionsApiForContact(contact, "lc-1")).resolves.toBeNull();
-  });
-
-  test("queues nothing when the org has no admins", async () => {
-    (callMetaApi as unknown as Mock).mockRejectedValueOnce(new Error("boom"));
-
-    await triggerConversionsApiForContact(contact, "lc-1");
-
-    expect(notificationQueue.add).not.toHaveBeenCalled();
+    expect((notify as unknown as Mock).mock.calls[0][0].data.error).toBe("Unknown error");
   });
 });

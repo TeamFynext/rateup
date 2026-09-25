@@ -17,6 +17,8 @@ const loyaltyProgramFields = {
   refereeBonus: z.number(),
   refereeBonusType: z.enum(["points", "gift"]),
   refereeRewardId: z.uuid().optional().nullable(),
+  signupBonusEnabled: z.boolean(),
+  referralBonusEnabled: z.boolean(),
   tiersEnabled: z.boolean(),
   tierResetPeriod: z.enum(["never", "yearly", "monthly"]).optional().nullable(),
   /** Trailing months of spend that decide a member's tier; null = lifetime spend. */
@@ -68,6 +70,8 @@ export const loyaltyProgramSchema = z.object({
   referralBonusType: loyaltyProgramFields.referralBonusType.default("points"),
   refereeBonus: loyaltyProgramFields.refereeBonus.default(0),
   refereeBonusType: loyaltyProgramFields.refereeBonusType.default("points"),
+  signupBonusEnabled: loyaltyProgramFields.signupBonusEnabled.default(true),
+  referralBonusEnabled: loyaltyProgramFields.referralBonusEnabled.default(true),
   tiersEnabled: loyaltyProgramFields.tiersEnabled.default(true),
   pointsActivityAlerts: loyaltyProgramFields.pointsActivityAlerts.default(true),
   autoApproveAdjustments: loyaltyProgramFields.autoApproveAdjustments.default(false),

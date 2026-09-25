@@ -125,7 +125,7 @@ import {
   verifyAutomationTriggerLimit,
 } from "../automatedReply/wa_automatedReply.service.js";
 import { handleWaOrderfromCatalog } from "../catalog/catalog.service.js";
-import { getTokensForContactAudience } from "../../mobileNotification/mobile.service.js";
+import { notifyInboundMessage } from "../inbox/message/inboundNotify.js";
 import {
   assignWaMessageToUser,
   getAssignedUsersCountForContactByTeam,
@@ -145,10 +145,11 @@ import { replySystem, type InboundReplyContext } from "../../loyalty/messaging/r
 import { sendNewCustomerWelcomeIfDue } from "../../loyalty/newCustomerWelcome.js";
 import { sendMemberCardIfDue } from "../../loyalty/accounts/memberCard.service.js";
 import { LoyaltyTemplateTypes } from "../../../types/enums.js";
-import { notificationQueue, pausedAutomationQueue } from "../../../workers/bullmq/queues/index.js";
+import { pausedAutomationQueue } from "../../../workers/bullmq/queues/index.js";
 import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
 import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
+import { notify } from "../../notification/notify.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -592,7 +593,22 @@ async function handleAccountUpdateEvent(body: WaMessageBody) {
     (value.restriction_info && value.restriction_info.length > 0)
   ) {
     log.warn(`WABA ID ${wabaId} account restricted or banned. Marking as DISCONNECTED.`);
+    // Read before the update: Meta repeats this event, and only the first one is news.
+    const newlyDisconnected = wabaId
+      ? await prisma.whatsappSettings.findMany({
+          where: { wabaId, status: { not: WhatsappSettingsStatus.DISCONNECTED } },
+          select: { orgId: true, phone: true, phoneDisplayName: true },
+        })
+      : [];
     await updateWaSettingsStatusByWabaId(wabaId, WhatsappSettingsStatus.DISCONNECTED);
+    for (const channel of newlyDisconnected) {
+      await notify({
+        event: "whatsapp.account_restricted",
+        orgId: channel.orgId,
+        audience: { kind: "permitted" },
+        data: { channelName: channel.phoneDisplayName || channel.phone || "Your WhatsApp number" },
+      });
+    }
   } else {
     // Other account updates might not imply disconnection, but we log them.
     log.info(`Account update received for WABA ID ${wabaId}: %o`, value);
@@ -636,8 +652,24 @@ async function templateStatusChangeHandler(changeValue: WaTemplateStatusChange) 
       log.error("Invalid status change value");
       return false;
     }
+    const previousStatus = waTemplate.status;
     waTemplate.status = changeValue.event;
     await updateTemplateInDb(dbTemplate.id, dbTemplate.orgId, waTemplate);
+    const decided =
+      changeValue.event === WaTemplateStatus.APPROVED ||
+      changeValue.event === WaTemplateStatus.REJECTED;
+    if (decided && previousStatus !== changeValue.event) {
+      await notify({
+        event: "whatsapp.template_status",
+        orgId: dbTemplate.orgId,
+        audience: { kind: "permitted" },
+        data: {
+          templateId: dbTemplate.id,
+          templateName: waTemplate.name ?? "",
+          status: changeValue.event,
+        },
+      });
+    }
     return true;
   }
 }
@@ -859,22 +891,12 @@ async function whatsappMessageHandler(
   // is excluded here rather than by an early return because its handler runs at
   // the foot of this function, not as a return.
   if (!loyaltyWaCommand) {
-    // Assigned users only, falling back to the org when the contact is
-    // unassigned — see `getTokensForContactAudience`.
-    const expoTokens = await getTokensForContactAudience(orgId, messageObj?.contactId);
-    if (expoTokens.length > 0) {
-      await notificationQueue.add("notification", {
-        pushNotificationData: {
-          expoTokens,
-          title: "RateUp",
-          body: `New message from ${userName}`,
-          data: {
-            type: "wa_message",
-            ...(messageObj?.contactId ? { contactId: messageObj.contactId } : {}),
-          },
-        },
-      });
-    }
+    await notifyInboundMessage({
+      orgId,
+      contactId: messageObj?.contactId,
+      contactName: userName,
+      sourceIdentifier,
+    });
   }
 
   const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);

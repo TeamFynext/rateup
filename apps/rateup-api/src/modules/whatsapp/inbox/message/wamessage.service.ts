@@ -48,7 +48,7 @@ import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../../constants
 import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.service.js";
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
-import { getNotificationSettings } from "../../../notification/notification.service.js";
+import { notify } from "../../../notification/notify.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -64,7 +64,7 @@ import {
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
 import { isTerminalInboxStatus, NOT_SPAM_EVENT } from "../../constants.js";
-import { notificationQueue, sendMessageQueue } from "../../../../workers/bullmq/queues/index.js";
+import { sendMessageQueue } from "../../../../workers/bullmq/queues/index.js";
 import dayjs from "dayjs";
 import { HttpError } from "../../../../utils/http.js";
 import type {
@@ -783,7 +783,9 @@ export async function filterChats(
           conv."closedAt"          AS "ticketClosedAt",
           conv."reopenCount"       AS "ticketReopenCount",
           COALESCE(conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp")         AS "conversationLastMessageAt",
-          COALESCE(conv."lastCustomerMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp") AS "conversationLastCustomerMessageAt",
+          -- Same expression as the customer-message ORDER BY above, so the page is ordered
+          -- the way it was picked; a ticket the customer never wrote in falls back to activity.
+          COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp") AS "conversationLastCustomerMessageAt",
           c.id,
           c."name",
           c."phone",
@@ -861,7 +863,12 @@ export async function filterChats(
           ORDER BY COALESCE(cv."lastMessageAt", cv."createdAt") DESC
           LIMIT 1
         ) conv ON TRUE`
-            : `FROM "Conversation" conv
+            : isSearchMode
+              ? // One row per ticket as usual, plus a ticketless row for a contact who has
+                // never had a conversation, so search finds every contact.
+                `FROM "Contact" c
+        LEFT JOIN "Conversation" conv ON conv."contactId" = c.id`
+              : `FROM "Conversation" conv
         INNER JOIN "Contact" c ON c.id = conv."contactId"`
         }
         LEFT JOIN "User" cu ON cu.id = conv."closedBy"
@@ -954,9 +961,8 @@ export async function filterChats(
       -- twenty rows already chosen rather than joined into
       -- \`filtered_conversations\`, so it never runs over the whole filtered set.
       --
-      -- A contact can hold more than one lead; the oldest wins, which is the same
-      -- one \`getContactStage\` reports and the same first-by-order board the
-      -- writers resolve.
+      -- Only the Leads board, the one \`getContactStage\` reports; a contact has at
+      -- most one lead there, so DISTINCT ON is a guard rather than a choice.
       contact_lead_stages AS (
         SELECT DISTINCT ON (lead."contactId")
           lead."contactId",
@@ -964,6 +970,7 @@ export async function filterChats(
           ps."color" AS "stageColor"
         FROM "Lead" lead
         INNER JOIN "PipelineStage" ps ON ps.id = lead."stageId"
+        INNER JOIN "Pipeline" p ON p.id = lead."pipelineId" AND p."type" = 'LEADS'
         WHERE lead."contactId" IN (SELECT id FROM filtered_conversations)
         ORDER BY lead."contactId", lead."createdAt" ASC
       )
@@ -1197,12 +1204,6 @@ export async function exportWhatsapChats(
       "WaMessage" wm 
     JOIN 
       "Contact" c ON wm."contactId" = c.id
-    LEFT JOIN 
-        "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
-    LEFT JOIN 
-        "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
-    LEFT JOIN 
-        "CampaignParticipant" cpt ON cpt."contactId" = c."id"
     WHERE
       c."orgId" = $1::uuid ${extendedWhereClause()}
     ORDER BY
@@ -1392,23 +1393,24 @@ export async function assignWaMessageToUser(
       await updateConversationAssignees(conversation.id, { assignees: updatedAssignees }, userId);
     }
 
-    for (const user of newUsers) {
-      const notificationSetting = await getNotificationSettings(user.userId, updatedContact.orgId);
-      if (notificationSetting && notificationSetting.waMessageAssignNotification) {
-        await notificationQueue.add("notification", {
-          systemNotificationData: {
-            userId: user.userId,
-            orgId: updatedContact.orgId,
-            source: "whatsapp",
-            subSource: "chat-assigned",
-            data: {
-              contactId: updatedContact.id,
-              contactName: updatedContact.name,
-            },
-          },
-        });
-      }
-    }
+    const contactRef = {
+      contactId: updatedContact.id,
+      contactName: updatedContact.name ?? "",
+    };
+    await notify({
+      event: "inbox.assigned",
+      orgId: updatedContact.orgId,
+      audience: { kind: "users", userIds: newUsers.map((u) => u.userId) },
+      data: contactRef,
+      actorUserId: userId,
+    });
+    await notify({
+      event: "inbox.unassigned",
+      orgId: updatedContact.orgId,
+      audience: { kind: "users", userIds: revokedUsers.map((u) => u.assignedUserId) },
+      data: contactRef,
+      actorUserId: userId,
+    });
 
     //Change zapier schema
     await addZapierTriggerToQueue(
@@ -2484,11 +2486,6 @@ export async function createInternalWaMessage({
     });
 
     if (mentionedUserDetails.length > 0) {
-      const notificationData = {
-        contactId: contact.id,
-        contactName: contact.name,
-      };
-
       // Inbox Tickets v2: persist an indexable mention signal so the "@Mentions"
       // inbox filter can query it (the notification queue alone isn't queryable).
       await prisma.inboxMention.createMany({
@@ -2501,19 +2498,17 @@ export async function createInternalWaMessage({
         })),
       });
 
-      await Promise.all(
-        mentionedUserDetails.map((user) =>
-          notificationQueue.add("notification", {
-            systemNotificationData: {
-              userId: user.id,
-              orgId: orgId,
-              source: "whatsapp",
-              subSource: "mentioned",
-              data: notificationData,
-            },
-          }),
-        ),
-      );
+      await notify({
+        event: "inbox.mentioned",
+        orgId: orgId!,
+        audience: { kind: "users", userIds: mentionedUserDetails.map((user) => user.id) },
+        data: {
+          contactId: contact.id,
+          contactName: contact.name ?? "",
+          ...(triggeredByUserDetails?.id && { byName: triggeredByUserDetails.name }),
+        },
+        actorUserId: triggeredByUserDetails?.id,
+      });
     }
     return wamessage;
   }

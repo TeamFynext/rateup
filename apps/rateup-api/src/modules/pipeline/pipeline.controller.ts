@@ -11,6 +11,8 @@ import {
   getTeamPipelineDefaults,
   updateTeamPipelineDefault,
   getPipelines,
+  getPipelineCreateLimits,
+  LeadsPipelineExistsError,
   PipelineLimitError,
   TeamAccessError,
   updateLabel,
@@ -19,6 +21,14 @@ import {
 } from "./pipeline.service.js";
 import { getPipelineStats } from "./pipeline.stats.js";
 import { getPipelineForecast } from "./pipeline.forecast.js";
+import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema.js";
+import {
+  buildImportTemplate,
+  importLeads,
+  LeadImportFileError,
+} from "./pipelineLead/lead.import.js";
+import { buildLeadExport, exportFilename } from "./pipelineLead/lead.export.js";
+import { getSpreadsheetContentType } from "../../utils/spreadsheet.js";
 import type {
   CreateLabelRequestSchema,
   CreateLostReasonRequestSchema,
@@ -27,6 +37,8 @@ import type {
   UpdateLostReasonRequestSchema,
   UpdatePipelineRequestSchema,
   UpdateTeamDefaultRequestSchema,
+  ImportTemplateQuerySchema,
+  ExportLeadsQuerySchema,
 } from "./pipeline.schema.js";
 
 export async function createPipelineHandler(
@@ -48,6 +60,9 @@ export async function createPipelineHandler(
     if (error instanceof PipelineLimitError) {
       return reply.code(409).send({ message: error.message, limit: error.limit });
     }
+    if (error instanceof LeadsPipelineExistsError) {
+      return reply.code(409).send({ message: error.message, code: "leads_exists" });
+    }
     request.log.error(error);
     return reply.code(500).send({ message: "Error creating pipeline" });
   }
@@ -60,6 +75,15 @@ export async function getPipelinesHandler(request: FastifyRequest, reply: Fastif
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error retrieving pipelines" });
+  }
+}
+
+export async function getPipelineCreateLimitsHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    return reply.code(200).send(await getPipelineCreateLimits(request.user.orgId));
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error retrieving pipeline limits" });
   }
 }
 
@@ -252,5 +276,78 @@ export async function deleteLabelHandler(
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error deleting label" });
+  }
+}
+
+export async function importLeadsHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const file = await request.file();
+    if (!file) return reply.code(400).send({ message: "No file uploaded", code: "NO_FILE" });
+    if (!dataExtractFileMimeTypes.includes(file.mimetype)) {
+      return reply.code(400).send({ message: "Upload a CSV or Excel file", code: "BAD_TYPE" });
+    }
+    const result = await importLeads({
+      pipelineId: request.params.id,
+      userId: request.userId,
+      buffer: await file.toBuffer(),
+      mimetype: file.mimetype,
+    });
+    return reply.code(200).send(result);
+  } catch (error) {
+    if (error instanceof LeadImportFileError) {
+      return reply.code(400).send({ message: error.message, code: error.code });
+    }
+    if ((error as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE") {
+      return reply.code(413).send({ message: "The file is larger than 10 MB", code: "TOO_LARGE" });
+    }
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error importing leads" });
+  }
+}
+
+export async function exportLeadsHandler(
+  request: FastifyRequest<{ Params: { id: string }; Querystring: ExportLeadsQuerySchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { buffer, pipelineName } = await buildLeadExport(
+      request.params.id,
+      request.query,
+      request.userId,
+    );
+    return reply
+      .header("Content-Type", getSpreadsheetContentType(request.query.format))
+      .header(
+        "Content-Disposition",
+        `attachment; filename="${exportFilename(pipelineName, request.query.format)}"`,
+      )
+      .send(buffer);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error exporting the pipeline" });
+  }
+}
+
+export async function importTemplateHandler(
+  request: FastifyRequest<{ Params: { id: string }; Querystring: ImportTemplateQuerySchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const format = request.query.format;
+    const body = await buildImportTemplate(request.params.id, format);
+    reply.header(
+      "Content-Type",
+      format === "csv"
+        ? "text/csv; charset=utf-8"
+        : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    reply.header("Content-Disposition", `attachment; filename="pipeline-import.${format}"`);
+    return reply.send(body);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error building the import template" });
   }
 }
