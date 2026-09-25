@@ -1,16 +1,28 @@
-import { IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconSearch,
+  IconTrash,
+  IconUpload,
+  IconUsersPlus,
+  IconX,
+} from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import {
   useAddNewContactFromCSVMutation,
+  useAddNewContactMutation,
   useRemoveContactsFromGroup,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
-import AddCustomerModal from "@/components/Contacts/AddCustomerModal.tsx";
+import AddExistingContacts from "@/components/Contacts/AddExistingContacts.tsx";
+import CreateOrEditContactModal from "@/components/Contacts/CreatOrEditContactModal.tsx";
+import ImportContactsDialog from "@/components/Contacts/ImportContactsDialog.tsx";
 import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
 import {
   Dialog,
   DialogContent,
@@ -19,8 +31,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 
 interface DataTableToolbarProps<TData, _TValue> {
   table: Table<TData>;
@@ -29,10 +39,16 @@ interface DataTableToolbarProps<TData, _TValue> {
 export function DataTableToolbar<TData, TValue>({
   table,
 }: Readonly<DataTableToolbarProps<TData, TValue>>) {
-  const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
+  const { t } = useTranslation();
+  const [openDialog, setOpenDialog] = useState<"existing" | "new" | "import" | null>(null);
+  const closeDialog = (open: boolean) => {
+    if (!open) setOpenDialog(null);
+  };
 
   const { groupDetails, filter, setFilter } = useGroupTableStore();
   const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id ?? "");
+  const addNewContact = useAddNewContactMutation(groupDetails?.id ?? "");
+  const importIntoGroup = useAddNewContactFromCSVMutation(groupDetails?.id ?? "");
   const selectedMembers = Object.keys(table.getState().rowSelection);
   function handleRemoveMembers() {
     if (!selectedMembers.length) return;
@@ -50,83 +66,87 @@ export function DataTableToolbar<TData, TValue>({
     );
   }
   return (
-    <div className="shrink-0 p-3 bg-linear-to-r from-gray-50 to-white border-b shadow-sm">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg">Group Members</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {selectedMembers.length > 0
-              ? `${selectedMembers.length} member${selectedMembers.length > 1 ? "s" : ""} selected`
-              : "Search and manage your group members"}
-          </p>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            {selectedMembers.length > 0 ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRemoveMembers}
-                  className="gap-2 h-8 text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-                >
-                  <IconTrash className="w-3.5 h-3.5" />
-                  <span className="text-sm">Remove ({selectedMembers.length})</span>
-                </Button>
-                {removeContactsMutation.isPending && <Spinner />}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.setRowSelection({})}
-                  className="gap-2 h-8"
-                >
-                  <span className="text-sm">Clear</span>
-                </Button>
-                <Separator orientation="vertical" className="h-6 mx-1" />
-              </>
-            ) : null}
-            <Button
-              size="sm"
-              onClick={() => setIsOpenedAddModal(true)}
-              className="gap-2 h-8 shadow-md"
-            >
-              <IconPlus className="w-3.5 h-3.5" />
-              <span className="text-sm">Add Members</span>
-            </Button>
-            <div className="relative w-80">
-              <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search by name or phone..."
-                value={filter.searchTerm}
-                onChange={(e) => setFilter({ searchTerm: e.currentTarget.value })}
-                className="pl-10 h-8 border-border focus:ring-2 focus:ring-primary/20 placeholder:text-sm"
-              />
-              {filter.searchTerm && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={() => setFilter({ searchTerm: "" })}
-                >
-                  <IconX className="w-3.5 h-3.5" />
-                </Button>
-              )}
-            </div>
+    <Card className="mb-4 p-2">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t("Search by name or phone...")}
+              value={filter.searchTerm}
+              onChange={(e) => setFilter({ searchTerm: e.currentTarget.value })}
+              className="border-none bg-muted pl-10 pr-9 placeholder:text-sm"
+            />
+            {/* Centred with margins: Button's `active:translate-y-px` would override a
+                `-translate-y-1/2` on press and move it out from under the cursor. */}
+            {filter.searchTerm && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                aria-label={t("Clear search")}
+                className="absolute inset-y-0 right-1.5 my-auto"
+                onClick={() => setFilter({ searchTerm: "" })}
+              >
+                <IconX />
+              </Button>
+            )}
           </div>
+          <Button size="sm" onClick={() => setOpenDialog("existing")}>
+            <IconUsersPlus data-icon="inline-start" />
+            {t("Add existing")}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setOpenDialog("new")}>
+            <IconPlus data-icon="inline-start" />
+            {t("New contact")}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setOpenDialog("import")}>
+            <IconUpload data-icon="inline-start" />
+            {t("Import")}
+          </Button>
           <DataTableViewOptions table={table} />
         </div>
+        {selectedMembers.length > 0 && (
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {t("{count} Selected", { count: selectedMembers.length })}
+            </span>
+            <Button
+              variant="outline"
+              className="hover:text-destructive"
+              onClick={handleRemoveMembers}
+              loading={removeContactsMutation.isPending}
+            >
+              <IconTrash />
+              <span>{t("Remove from group")}</span>
+            </Button>
+            <Button variant="ghost" onClick={() => table.setRowSelection({})}>
+              {t("Clear selection")}
+            </Button>
+          </div>
+        )}
       </div>
-      <AddContactToGroupDialog
-        opened={isOpenedAddModal}
-        setOpened={setIsOpenedAddModal}
+      <AddExistingContactsDialog
+        opened={openDialog === "existing"}
+        setOpened={closeDialog}
         group={groupDetails!}
       />
-    </div>
+      <CreateOrEditContactModal
+        opened={openDialog === "new"}
+        setOpened={closeDialog}
+        createNewContactMutation={addNewContact}
+      />
+      <ImportContactsDialog
+        opened={openDialog === "import"}
+        setOpened={closeDialog}
+        importMutation={importIntoGroup}
+        description={t("Upload a CSV or Excel file. Each row becomes a contact in this group.")}
+      />
+    </Card>
   );
 }
 
-const AddContactToGroupDialog = ({
+const AddExistingContactsDialog = ({
   opened,
   setOpened,
   group,
@@ -135,30 +155,21 @@ const AddContactToGroupDialog = ({
   setOpened: (open: boolean) => void;
   group: ContactGroupwithContacts;
 }) => {
-  function close() {
-    setOpened(false);
-  }
-  const createNewContactsFromCSV = useAddNewContactFromCSVMutation(group?.id);
+  const { t } = useTranslation();
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      {/* The body is a whole contact form or a paginated table, so the dialog's `sm:max-w-md`
-          default is far too narrow and its content is taller than the viewport. The second grid
-          row is the shrinkable one, which is what lets the body scroll instead of the page. */}
-      <DialogContent className="max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-3xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add Members</DialogTitle>
-          <DialogDescription>Select contacts to add to this group</DialogDescription>
+          <DialogTitle>{t("Add existing contacts")}</DialogTitle>
+          <DialogDescription>
+            {t("Tick the contacts to add to {group}.", { group: group?.name ?? "" })}
+          </DialogDescription>
         </DialogHeader>
-        {/* Negative margin so the scrollbar sits at the dialog's edge, padding so focus rings
-            and the table card's shadow are not clipped by the scroll container. */}
-        <div className="-mx-6 min-h-0 overflow-y-auto overscroll-contain px-6 py-1">
-          <AddCustomerModal
-            close={close}
-            groupId={group?.id}
-            existingContactIds={group?.contacts?.map((c) => c.id)}
-            createNewContactsFromCSV={createNewContactsFromCSV}
-          />
-        </div>
+        <AddExistingContacts
+          close={() => setOpened(false)}
+          groupId={group?.id}
+          existingContactIds={group?.contacts?.map((c) => c.id) ?? []}
+        />
       </DialogContent>
     </Dialog>
   );

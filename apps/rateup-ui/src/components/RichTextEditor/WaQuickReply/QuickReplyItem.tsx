@@ -47,13 +47,6 @@ const QuickReplyItem = ({
           </span>
         )}
 
-        {/* Category Badge */}
-        {reply.category && (
-          <span className="shrink-0 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-350 px-2.5 py-0.5 rounded-full text-xs font-semibold select-none">
-            {reply.category}
-          </span>
-        )}
-
         {/* Topic Badge */}
         {reply.topic && (
           <span className="shrink-0 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-350 px-2.5 py-0.5 rounded-full text-xs font-semibold select-none">

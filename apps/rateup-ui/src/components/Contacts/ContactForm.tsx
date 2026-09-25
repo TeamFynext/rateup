@@ -1,5 +1,5 @@
 import { IconChevronDown } from "@tabler/icons-react";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -83,7 +83,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
     switch (customField.type) {
       case "multivalue":
         return (
-          <Field className="flex flex-col gap-1" data-invalid={!!fieldError}>
+          <Field key={fieldId} className="flex flex-col gap-1" data-invalid={!!fieldError}>
             <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
             <Select
               required={commonProps.required}
@@ -116,7 +116,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
       case "text":
       default:
         return (
-          <Field className="flex flex-col gap-1" data-invalid={!!fieldError}>
+          <Field key={fieldId} className="flex flex-col gap-1" data-invalid={!!fieldError}>
             <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
             <Input
               id={`${uid}-${fieldId}`}
@@ -143,87 +143,161 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
       </div>
     );
 
+  const renderedCustomFields = contactType?.map((fieldId) => renderCustomField(fieldId)) ?? [];
+  const hasCustomFields = renderedCustomFields.some(Boolean);
+
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <Controller
-        name="name"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field className="col-span-2 flex flex-col gap-1" data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{translations("Full Name")}*</FieldLabel>
-            <Input
-              {...field}
-              id={field.name}
-              placeholder={translations("Enter full name")}
-              required
-              autoComplete="name"
-              aria-invalid={fieldState.invalid}
-              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
-              className="bg-accent border-none placeholder:text-sm"
-            />
-            {fieldState.invalid && (
-              <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
-            )}
-          </Field>
-        )}
-      />
-      <Controller
-        name="phone"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{translations("Phone Number")}*</FieldLabel>
-            <PhoneInput
-              name={field.name}
-              defaultCountry="IN"
-              international
-              countryCallingCodeEditable={false}
-              placeholder={translations("Enter phone number")}
-              value={field.value ?? ""}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              aria-invalid={fieldState.invalid}
-              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
-              className="w-full"
-            />
-            {fieldState.invalid && (
-              <FieldError id={`${field.name}-error`}>*{fieldState.error?.message}</FieldError>
-            )}
-          </Field>
-        )}
-      />
-      <Controller
-        name="email"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{translations("Email")}</FieldLabel>
-            <Input
-              {...field}
-              id={field.name}
-              placeholder={translations("email@example.com")}
-              type="email"
-              autoComplete="email"
-              aria-invalid={fieldState.invalid}
-              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
-              className="bg-accent border-none placeholder:text-sm"
-            />
-            {fieldState.invalid && (
-              <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
-            )}
-          </Field>
-        )}
-      />
+    <div className="flex flex-col gap-6">
+      <FormSection title={translations("Contact details")}>
+        <Controller
+          name="name"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{translations("Full Name")}*</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                placeholder={translations("Enter full name")}
+                required
+                autoComplete="name"
+                aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
+                className="bg-accent border-none placeholder:text-sm"
+              />
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+              )}
+            </Field>
+          )}
+        />
+        <Controller
+          name="phone"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{translations("Phone Number")}*</FieldLabel>
+              <PhoneInput
+                name={field.name}
+                defaultCountry="IN"
+                international
+                countryCallingCodeEditable={false}
+                placeholder={translations("Enter phone number")}
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
+                className="w-full"
+              />
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`}>*{fieldState.error?.message}</FieldError>
+              )}
+            </Field>
+          )}
+        />
+        <Controller
+          name="email"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{translations("Email")}</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                placeholder={translations("email@example.com")}
+                type="email"
+                autoComplete="email"
+                aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
+                className="bg-accent border-none placeholder:text-sm"
+              />
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+              )}
+            </Field>
+          )}
+        />
+        <Controller
+          name="dob"
+          control={form.control}
+          render={({ field }) => {
+            const selected = field.value ? new Date(field.value) : undefined;
+            return (
+              <Field className="flex flex-col gap-1">
+                <FieldTitle>{translations("Date of Birth")}</FieldTitle>
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between font-normal bg-accent border-none"
+                      />
+                    }
+                  >
+                    <span className={selected ? undefined : "text-muted-foreground"}>
+                      {selected ? selected.toLocaleDateString() : translations("Select date")}
+                    </span>
+                    <IconChevronDown />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selected}
+                      defaultMonth={selected}
+                      captionLayout="dropdown"
+                      onSelect={(date) => field.onChange(date ?? null)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </Field>
+            );
+          }}
+        />
+        <Controller
+          name="external_id"
+          control={form.control}
+          render={({ field }) => (
+            <Field className="flex flex-col gap-1">
+              <FieldLabel htmlFor={field.name}>{translations("External ID")}</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                placeholder={translations("Enter External ID")}
+                className="bg-accent border-none placeholder:text-sm"
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          name="address"
+          control={form.control}
+          render={({ field }) => (
+            <Field className="sm:col-span-2 flex flex-col gap-1">
+              <FieldLabel htmlFor={field.name}>{translations("Address")}</FieldLabel>
+              <Textarea
+                {...field}
+                id={field.name}
+                rows={2}
+                autoComplete="street-address"
+                placeholder={translations("Street, city, state, postal code")}
+                className="min-h-16 border-none bg-accent placeholder:text-sm"
+              />
+            </Field>
+          )}
+        />
+      </FormSection>
+
       {type !== ContactGroupType.LOYALTY && (
-        <>
+        <FormSection title={translations("Assignment")}>
           <Controller
             name="labels"
             control={form.control}
             render={({ field }) => (
               <Field className="flex flex-col gap-1">
-                <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Labels")}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-labels`}>{translations("Labels")}</FieldLabel>
                 <MultiSelect
-                  id={`${uid}-field-3`}
+                  id={`${uid}-labels`}
                   options={
                     labels?.map((label: { id: string; name: string }) => ({
                       value: label.id,
@@ -239,9 +313,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               </Field>
             )}
           />
-          {/* The pipeline column replaces the lifecycle stage here. The whole field
-              is dropped when the org has no board, rather than showing a label
-              with an empty control under it. Picking a stage opens a lead for the
+          {/* Dropped when the org has no board. Picking a stage opens a lead for the
               contact once it saves; leaving it empty opens none. */}
           {stages.length > 0 && (
             <Controller
@@ -285,66 +357,25 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               </Field>
             )}
           />
-        </>
+        </FormSection>
       )}
-      {type === ContactGroupType.LOYALTY && (
-        <>
-          <Controller
-            name="dob"
-            control={form.control}
-            render={({ field }) => (
-              <Field className="flex flex-col gap-1">
-                <FieldTitle>{translations("Date of Birth")}</FieldTitle>
-                <Popover>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant="outline"
-                        id="date"
-                        className="w-48 justify-between font-normal bg-accent border-none"
-                      />
-                    }
-                  >
-                    {String(field.value ?? "") || "Select date"}
-                    <IconChevronDown />
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value as Date}
-                      captionLayout="dropdown"
-                      onSelect={(date) => field.onChange(date)}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </Field>
-            )}
-          />
-          <Controller
-            name="external_id"
-            control={form.control}
-            render={({ field }) => (
-              <Field className="flex flex-col gap-1">
-                <FieldLabel htmlFor={field.name}>{translations("External ID")}</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  placeholder={translations("Enter External ID")}
-                  className="bg-accent border-none placeholder:text-sm"
-                />
-              </Field>
-            )}
-          />
-        </>
+
+      {hasCustomFields && (
+        <FormSection title={translations("Custom fields")}>{renderedCustomFields}</FormSection>
       )}
-      {contactType?.map((fieldId) => renderCustomField(fieldId))}
+
       {type !== ContactGroupType.LOYALTY && (
         <Controller
           name="notes"
           control={form.control}
           render={({ field }) => (
-            <Field className="col-span-2 flex flex-col gap-1">
-              <FieldLabel htmlFor={field.name}>{translations("notes")}</FieldLabel>
+            <Field className="flex flex-col gap-1">
+              <FieldLabel
+                htmlFor={field.name}
+                className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              >
+                {translations("notes")}
+              </FieldLabel>
               <Textarea
                 {...field}
                 id={field.name}
@@ -358,5 +389,12 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
     </div>
   );
 };
+
+const FormSection = ({ title, children }: { title: string; children: ReactNode }) => (
+  <section className="flex flex-col gap-3">
+    <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</h3>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
+  </section>
+);
 
 export default ContactForm;

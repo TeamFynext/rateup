@@ -12,25 +12,45 @@ import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx"
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
+import { useChatFilterStore } from "@/store/chat-filter.store.ts";
+import { useConversationHistoryRequest } from "@/store/conversation-history.store.ts";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
   /** Declares the search params this route reads, so links to it type-check. */
-  validateSearch: (search: Record<string, unknown>): { tab?: string; contactId?: string } => ({
+  validateSearch: (search: Record<string, unknown>): InboxSearch => ({
     tab: typeof search.tab === "string" ? search.tab : undefined,
     contactId: typeof search.contactId === "string" ? search.contactId : undefined,
+    // Opens the thread's past-conversations strip; only meaningful with `contactId`.
+    history: search.history === true || search.history === "true" ? true : undefined,
+    // Searches the list for the contact, so it shows in the list pane as well as the thread.
+    reveal: search.reveal === true || search.reveal === "true" ? true : undefined,
   }),
   component: WhatsAppInbox,
 });
 
+interface InboxSearch {
+  tab?: string;
+  contactId?: string;
+  history?: boolean;
+  reveal?: boolean;
+}
+
+/** What the list search matches a contact on: the phone is unique, the name is the fallback. */
+const listSearchTermFor = (contact: { phone?: string | null; name?: string | null }) =>
+  contact.phone || contact.name || "";
+
 function WhatsAppInbox() {
-  const searchParams: { tab?: string; contactId?: string } = useSearch({
+  const searchParams: InboxSearch = useSearch({
     from: Route.id,
   });
   const tab = searchParams.tab;
   const contactId = searchParams.contactId;
+  const history = searchParams.history;
+  const reveal = searchParams.reveal;
   const navigate = useNavigate();
+  const requestHistoryFor = useConversationHistoryRequest((state) => state.requestFor);
 
   const { selectedContact, setSelectedContact, contactsById } = useContactsStore();
   // Rows are keyed by ticket (conversation) id, so a `?contactId=` deep link has
@@ -41,43 +61,38 @@ function WhatsAppInbox() {
   const { data: fetchedContact } = useContactById(contactId && !rowForContactId ? contactId : "");
 
   useEffect(() => {
-    if (contactId) {
-      if (selectedContact?.id !== contactId) {
-        const contactFromStore = rowForContactId;
-        let consumed = false;
-        if (contactFromStore) {
-          setSelectedContact(contactFromStore);
-          consumed = true;
-        } else if (fetchedContact) {
-          // A contact fetched by id carries no list-side `updatedAt`; the store
-          // registers it as a synthesized row, which is what this path wants.
-          setSelectedContact(fetchedContact as ContactWithUpdatedAt);
-          consumed = true;
-        }
-        if (consumed) {
-          navigate({
-            to: "/dashboard/inbox",
-            search: { tab } as never,
-            replace: true,
-          });
-        }
-      } else {
-        // The chat is already selected, just consume the parameter to clear it from the URL
-        navigate({
-          to: "/dashboard/inbox",
-          search: { tab } as never,
-          replace: true,
-        });
-      }
+    if (!contactId) return;
+    const alreadySelected = selectedContact?.id === contactId ? selectedContact : null;
+    // A contact fetched by id carries no list-side `updatedAt`; the store
+    // registers it as a synthesized row, which is what this path wants.
+    const resolved =
+      alreadySelected ?? rowForContactId ?? (fetchedContact as ContactWithUpdatedAt | undefined);
+    if (!resolved) return;
+
+    if (!alreadySelected) setSelectedContact(resolved);
+    if (history) requestHistoryFor(contactId);
+    if (reveal) {
+      const { filter, setFilter } = useChatFilterStore.getState();
+      const searchTerm = listSearchTermFor(resolved);
+      if (searchTerm) setFilter({ ...filter, searchTerm });
     }
+    // Consume the parameters so a refresh or back-navigation does not re-apply them.
+    navigate({
+      to: "/dashboard/inbox",
+      search: { tab } as never,
+      replace: true,
+    });
   }, [
     contactId,
     fetchedContact,
-    contactsById,
-    selectedContact?.id,
+    rowForContactId,
+    selectedContact,
     setSelectedContact,
     navigate,
     tab,
+    history,
+    reveal,
+    requestHistoryFor,
   ]);
 
   useEffect(() => {
@@ -95,10 +110,10 @@ function WhatsAppInbox() {
         // without it threw the link away, and the thread only opened on a
         // second click, once the contact was in cache to be resolved
         // synchronously.
-        search: { tab: "open", ...(contactId && { contactId }) } as never,
+        search: { tab: "open", ...(contactId && { contactId, history, reveal }) } as never,
       });
     }
-  }, [tab, contactId]);
+  }, [tab, contactId, history, reveal]);
 
   return (
     <div className="h-full min-h-0">

@@ -89,11 +89,7 @@ export const useChatSocket = () => {
                   sourcePlatform: message.sourcePlatform,
                   waCreatedAt: message.waCreatedAt,
                 },
-                ...(message.messageBody.exchangeProcess === "receive"
-                  ? {
-                      lastReceivedMessageTimeStamp: message.waCreatedAt,
-                    }
-                  : {}),
+                ...conversationClocksFor(message),
               }));
             } else if (
               // Spam is contact-grained and exclusive to the Spam tab: a spam
@@ -117,11 +113,7 @@ export const useChatSocket = () => {
                       sourcePlatform: message.sourcePlatform,
                       waCreatedAt: message.waCreatedAt,
                     },
-                    ...(message.messageBody.exchangeProcess === "receive"
-                      ? {
-                          lastReceivedMessageTimeStamp: message.waCreatedAt,
-                        }
-                      : {}),
+                    ...conversationClocksFor(message),
                     updatedAt: new Date().toISOString(),
                   },
                 ],
@@ -305,4 +297,24 @@ function handleLiveNotification(
   }
 
   if (notification.sound && (shownOnDesktop || toasted)) playSound();
+}
+
+/**
+ * The row's sort clocks after a live message, bumped the way `createMessage` in rateup-api
+ * bumps the conversation: any non-internal message is activity, and an inbound one is also
+ * the customer's last message. The list sorts on these, so they must move with the thread.
+ */
+function conversationClocksFor(message: {
+  waCreatedAt: string;
+  sourcePlatform?: string | null;
+  messageBody?: { exchangeProcess?: string } | null;
+}) {
+  const exchange = message.messageBody?.exchangeProcess;
+  if (message.sourcePlatform === "INTERNAL" || exchange === "privateNote") return {};
+  if (exchange !== "receive") return { conversationLastMessageAt: message.waCreatedAt };
+  return {
+    conversationLastMessageAt: message.waCreatedAt,
+    conversationLastCustomerMessageAt: message.waCreatedAt,
+    lastReceivedMessageTimeStamp: message.waCreatedAt,
+  };
 }

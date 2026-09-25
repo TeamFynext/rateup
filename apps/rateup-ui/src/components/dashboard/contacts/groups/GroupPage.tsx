@@ -1,14 +1,4 @@
-// Extracted verbatim from the `/dashboard/contacts/groups/` route so the route file carries routing
-// config only. Behaviour is unchanged.
-
-import {
-  IconDotsVertical,
-  IconEdit,
-  IconFolder,
-  IconPlus,
-  IconTrash,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconDotsVertical, IconEdit, IconFolder, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -161,25 +151,6 @@ export function GroupPage() {
   );
 }
 
-const GROUP_COLORS = [
-  "bg-ru-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border-blue-300",
-  "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400 border-green-300",
-  "bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border-purple-300",
-  "bg-pink-100 dark:bg-pink-950/50 text-pink-700 dark:text-pink-400 border-pink-300",
-  "bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border-orange-300",
-  "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-300",
-  "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border-indigo-300",
-  "bg-destructive/10 text-destructive border-destructive/40",
-];
-
-function getColorClass(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (str.codePointAt(i) ?? 0) + ((hash << 5) - hash);
-  }
-  return GROUP_COLORS[Math.abs(hash) % GROUP_COLORS.length];
-}
-
 interface ContactGroupCardProps {
   group: ContactGroup;
   handleEdit: (group: ContactGroup) => void;
@@ -188,43 +159,62 @@ interface ContactGroupCardProps {
 
 function ContactGroupCard({ group, handleEdit, handleDelete }: ContactGroupCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <ActionCard
       title={
-        <div className="flex items-center gap-2">
-          <div className={`p-1.5 rounded-lg ${getColorClass(group.name)}`}>
-            {group.icon ? (
-              <Avatar className="w-5 h-5">
-                <AvatarImage src={getFileUrlFromKey(group.icon)} />
-              </Avatar>
-            ) : (
-              <IconFolder className="w-5 h-5" />
-            )}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <GroupIconTile icon={group.icon} />
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-medium">{group.name}</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {t("{count, plural, one {# member} other {# members}}", {
+                count: group._count.contacts,
+              })}
+            </span>
           </div>
-          {group.name}
         </div>
       }
+      titleTooltip={group.name}
       actions={<GroupCardMenu group={group} handleEdit={handleEdit} handleDelete={handleDelete} />}
-      content={
-        <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-1">
-            <IconUsers className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{group._count.contacts}</span>
-          </div>
-        </div>
-      }
       createdAt={group.createdAt}
-      footer={
-        <Badge variant="outline" className="text-xs">
-          {group.team.name}
-        </Badge>
+      footerLeft={
+        group.team?.name ? (
+          <Badge variant="secondary" className="max-w-40 truncate">
+            {group.team.name}
+          </Badge>
+        ) : null
       }
       onClick={() => navigate({ to: `/dashboard/contacts/groups/${group.id}` })}
     />
   );
 }
 
+/** The group's uploaded icon, or a folder glyph on the brand tint. Shared with the detail page. */
+export function GroupIconTile({
+  icon,
+  className = "size-9 rounded-xl",
+}: {
+  icon?: string | null;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex shrink-0 items-center justify-center overflow-hidden bg-primary/10 text-primary ${className}`}
+    >
+      {icon ? (
+        <Avatar className="size-full rounded-none">
+          <AvatarImage src={getFileUrlFromKey(icon)} className="object-cover" />
+        </Avatar>
+      ) : (
+        <IconFolder className="size-1/2" />
+      )}
+    </div>
+  );
+}
+
 function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProps) {
+  const { t } = useTranslation();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -236,7 +226,7 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
           a width of its own "Edit Group" and "Delete Group" wrap onto two lines each. */}
       <DropdownMenuContent align="end" className="w-auto min-w-40">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={(e) => {
@@ -245,17 +235,17 @@ function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProp
             }}
           >
             <IconEdit className="w-4 h-4 mr-2" />
-            Edit Group
+            {t("Edit Group")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
               handleDelete(group);
             }}
-            className="text-destructive"
+            variant="destructive"
           >
-            <IconTrash className="w-4 h-4 mr-2 text-destructive" />
-            Delete Group
+            <IconTrash className="w-4 h-4 mr-2" />
+            {t("Delete Group")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

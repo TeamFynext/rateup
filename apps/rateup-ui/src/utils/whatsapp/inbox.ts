@@ -488,3 +488,32 @@ export function isMetaAiMessage(message: Pick<WaGetMessagesBody, "messageBody">)
     return false;
   }
 }
+
+/** The row fields the inbox list sorts on. */
+interface SortableInboxRow {
+  conversationLastMessageAt?: string | null;
+  conversationLastCustomerMessageAt?: string | null;
+  lastReceivedMessageTimeStamp?: string | null;
+}
+
+/**
+ * The time a row sorts on under the list's `sortBy` (read from its filter key). Mirrors the
+ * ORDER BY in `filterChats` (rateup-api): `*_wa_created` is the customer's last message, the
+ * rest the ticket's last activity in either direction.
+ */
+export function inboxRowSortTime(row: SortableInboxRow | undefined, filterKey: string): number {
+  const stamp = filterKey.includes("_wa_created")
+    ? (row?.conversationLastCustomerMessageAt ??
+      row?.conversationLastMessageAt ??
+      row?.lastReceivedMessageTimeStamp)
+    : (row?.conversationLastMessageAt ?? row?.lastReceivedMessageTimeStamp);
+  return stamp ? new Date(stamp).getTime() : 0;
+}
+
+/** Newest first unless the key asks for oldest; undated rows go last either way, as NULLS LAST does. */
+export const compareInboxRowTimes =
+  (filterKey: string) =>
+  (a: { time: number }, b: { time: number }): number => {
+    if (!a.time || !b.time) return (b.time ? 1 : 0) - (a.time ? 1 : 0);
+    return filterKey.includes("sortBy:oldest") ? a.time - b.time : b.time - a.time;
+  };

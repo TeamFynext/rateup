@@ -1,11 +1,4 @@
-import {
-  IconDotsVertical,
-  IconEdit,
-  IconEye,
-  IconInbox,
-  IconSend,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconDotsVertical, IconEdit, IconEye, IconInbox, IconTrash } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,8 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
+import { contactRowToInitialValues } from "./contact-form-schema.ts";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
-import SendMessageModal from "./SendMessageModal.tsx";
 
 const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: string }) => {
   const { t: translations } = useTranslation();
@@ -42,18 +35,10 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
     deleteContact();
   };
   const deleteMutation = useContactDeleteMutation(groupId);
-  const [isSendMessageOpen, setIsSendMessageOpen] = useState(false);
   const deleteContact = () => {
     deleteMutation.mutate(contact?.id);
   };
-  const { ContactLabelMap, contactGroups, waInboxAssign, ...rest } = contact;
-  const initialValues = {
-    ...rest,
-    labels: ContactLabelMap ? ContactLabelMap.map((c) => c.label?.id) : [],
-    contactGroupIds:
-      contactGroups?.map((g: { contactGroup?: { id?: string } }) => g?.contactGroup?.id) || [],
-    assignedUserIds: waInboxAssign?.map((a) => a.assignedUser?.id) || [],
-  };
+  const initialValues = contactRowToInitialValues(contact);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" />}>
@@ -74,14 +59,15 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
           <IconEdit className="w-4 h-4 mr-2" />
           {translations("Edit")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setIsSendMessageOpen(true)}>
-          <IconSend className="w-4 h-4 mr-2" />
-          {translations("Send Message")}
-        </DropdownMenuItem>
         {/* The inbox resolves `?contactId=` to the contact's thread and selects it, whichever
             tab is showing, then strips the parameter back out of the URL. */}
         <DropdownMenuItem
-          render={<Link to="/dashboard/inbox" search={{ tab: "open", contactId: contact.id }} />}
+          render={
+            <Link
+              to="/dashboard/inbox"
+              search={{ tab: "open", contactId: contact.id, reveal: true }}
+            />
+          }
         >
           <IconInbox className="w-4 h-4 mr-2" />
           {translations("Open in Inbox")}
@@ -101,11 +87,6 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
         opened={openedEditModal}
         setOpened={setOpenedEditModal}
         initialValues={initialValues}
-      />
-      <SendMessageModal
-        opened={isSendMessageOpen}
-        setOpened={setIsSendMessageOpen}
-        selectedContact={contact}
       />
     </DropdownMenu>
   );

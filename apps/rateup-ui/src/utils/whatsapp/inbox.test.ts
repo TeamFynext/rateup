@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { MessagePlatform } from "@/types/enums.ts";
 
-import { getContactChannelSource, getContactDisplayPhone, isMetaAiMessage } from "./inbox.ts";
+import {
+  compareInboxRowTimes,
+  getContactChannelSource,
+  getContactDisplayPhone,
+  inboxRowSortTime,
+  isMetaAiMessage,
+} from "./inbox.ts";
 
 describe("getContactChannelSource", () => {
   it("reads platform and account off the same message", () => {
@@ -82,5 +88,41 @@ describe("isMetaAiMessage", () => {
     expect(isMetaAiMessage(sent())).toBe(false);
     expect(isMetaAiMessage(sent('{"originator":"someone-else"}'))).toBe(false);
     expect(isMetaAiMessage(sent("not json"))).toBe(false);
+  });
+});
+
+describe("inbox row sorting", () => {
+  const row = {
+    conversationLastMessageAt: "2026-09-25T10:00:00.000Z",
+    conversationLastCustomerMessageAt: "2026-09-25T08:00:00.000Z",
+  };
+  const sort = (rows: Array<typeof row & { id: string }>, key: string) =>
+    rows
+      .map((r) => ({ id: r.id, time: inboxRowSortTime(r, key) }))
+      .sort(compareInboxRowTimes(key))
+      .map((r) => r.id);
+
+  it("sorts on last activity by default and on the customer's message for *_wa_created", () => {
+    expect(inboxRowSortTime(row, "sortBy:newest")).toBe(Date.parse(row.conversationLastMessageAt));
+    expect(inboxRowSortTime(row, "sortBy:newest_wa_created")).toBe(
+      Date.parse(row.conversationLastCustomerMessageAt),
+    );
+  });
+
+  it("falls back to last activity when the customer has not written yet", () => {
+    const agentOnly = { conversationLastMessageAt: "2026-09-25T10:00:00.000Z" };
+    expect(inboxRowSortTime(agentOnly, "sortBy:oldest_wa_created")).toBe(
+      Date.parse(agentOnly.conversationLastMessageAt),
+    );
+  });
+
+  it("orders newest or oldest first and keeps undated rows last", () => {
+    const rows = [
+      { ...row, id: "mid", conversationLastMessageAt: "2026-09-25T09:00:00.000Z" },
+      { ...row, id: "undated", conversationLastMessageAt: null as unknown as string },
+      { ...row, id: "late", conversationLastMessageAt: "2026-09-25T11:00:00.000Z" },
+    ];
+    expect(sort(rows, "sortBy:newest")).toEqual(["late", "mid", "undated"]);
+    expect(sort(rows, "sortBy:oldest")).toEqual(["mid", "late", "undated"]);
   });
 });

@@ -1,5 +1,6 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import { contactKeys } from "@/backend/campaign/contacts/contacts.keys.ts";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import * as api from "./pipeline.api";
 import { pipelineKeys } from "./pipeline.keys";
@@ -720,6 +722,38 @@ export function useImportLeadsMutation() {
       t("{total, plural, one {# card added} other {# cards added}}", { total: result.created }),
     errorFallback: (t) => t("Could not import the file"),
     toastId: "pipeline-import",
+  });
+}
+
+/** Downloads the board. Not `usePipelineMutation`: an export changes nothing to refetch. */
+export function useExportPipelineMutation() {
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: async (variables: {
+      pipelineId: string;
+      pipelineName: string;
+      params: LeadListParams;
+      format: api.PipelineExportFormat;
+    }) => {
+      const blob = await api.exportPipeline(variables);
+      const slug =
+        variables.pipelineName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") || "pipeline";
+      downloadBlob(blob, `${slug}-${dayjs().format("YYYY-MM-DD")}.${variables.format}`);
+    },
+    onMutate: () => {
+      toast.loading(t("Preparing the export…"), { id: "pipeline-export" });
+    },
+    onSuccess: () => {
+      toast.success(t("Pipeline exported"), { id: "pipeline-export" });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, t("Could not export the pipeline")), {
+        id: "pipeline-export",
+      });
+    },
   });
 }
 

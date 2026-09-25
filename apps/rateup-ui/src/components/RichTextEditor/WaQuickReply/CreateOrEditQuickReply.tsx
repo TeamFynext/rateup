@@ -69,7 +69,6 @@ const CreateOrEditQuickReply = ({
     resolver: zodResolver(quickReplySchema),
     defaultValues: {
       text: "",
-      category: "General",
       topic: "General Inquiry",
       key: "",
     },
@@ -154,28 +153,6 @@ const CreateOrEditQuickReply = ({
                     <FieldDescription className="text-xs">
                       {t(
                         "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup",
-                      )}
-                    </FieldDescription>
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-              <Controller
-                name="category"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="category">{t("Category")}</FieldLabel>
-                    <Input
-                      {...field}
-                      id="category"
-                      placeholder="Enter category"
-                      autoComplete="off"
-                      className="placeholder:text-sm text-sm"
-                    />
-                    <FieldDescription className="text-xs">
-                      {t(
-                        "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'",
                       )}
                     </FieldDescription>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

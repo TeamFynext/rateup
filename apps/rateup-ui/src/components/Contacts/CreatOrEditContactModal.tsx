@@ -19,7 +19,6 @@ import type { RequestPayload } from "@/types/api.ts";
 import { ContactGroupType } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
-import { Checkbox } from "../ui/checkbox.tsx";
 import { ContactAvatar } from "../ui/contact-avatar.tsx";
 import {
   Dialog,
@@ -30,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
+import { FieldError } from "../ui/field.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import {
   buildContactSchema,
@@ -78,12 +77,15 @@ const CreateOrEditContactModal = ({
   initialValues,
   type = ContactGroupType.NORMAL,
   createNewContactMutation,
+  onSaved,
 }: {
   opened: boolean;
   setOpened: (value: boolean) => void;
   initialValues?: ContactInitialValues;
   type?: ContactGroupType;
   createNewContactMutation?: CreateContactsMutation;
+  /** After an edit saves, with what was written — for a screen holding its own copy. */
+  onSaved?: (contact: { id: string; name: string; phone: string; email: string }) => void;
 }) => {
   const { t } = useTranslation();
   const { customFields = [] } = useCustomFieldsContext();
@@ -96,12 +98,14 @@ const CreateOrEditContactModal = ({
   const stages = usePipelineStages();
   const assignStage = useAssignContactStageMutation();
   const { data: contactStage } = useContactStageQuery(initialValues?.id, stages.length > 0);
+  // Every custom field is shown here, so all of them are always "selected".
+  const withAllCustomFields = (values: ContactFormValues): ContactFormValues => ({
+    ...values,
+    contactType: customFields.map((field) => field.slug),
+  });
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
-    defaultValues: {
-      ...toFormValues(initialValues, customFields),
-      contactType: customFields?.map((field) => field.slug) || [],
-    },
+    defaultValues: withAllCustomFields(toFormValues(initialValues, customFields)),
   });
 
   /**
@@ -133,6 +137,12 @@ const CreateOrEditContactModal = ({
         {
           onSuccess: () => {
             applyStage(initialValues.id, values.stageId);
+            onSaved?.({
+              id: initialValues.id!,
+              name: contactData.name,
+              phone: contactData.phone,
+              email: contactData.email,
+            });
             setOpened(false);
             form.reset();
           },
@@ -163,15 +173,18 @@ const CreateOrEditContactModal = ({
     });
   });
 
+  // Callers rebuild `initialValues` on every render, so it is left out of the deps: resetting
+  // on its identity would wipe the user's edits whenever the contacts list refetches.
   useEffect(() => {
-    if (initialValues) {
-      form.reset(toFormValues(initialValues, customFields));
-    }
-  }, [initialValues, customFields, form]);
-
-  useEffect(() => {
-    form.setValue("contactType", customFields?.map((field) => field.slug) || []);
-  }, [customFields, form]);
+    if (!opened) return;
+    form.reset(
+      withAllCustomFields({
+        ...toFormValues(initialValues, customFields),
+        stageId: contactStage?.stageId ?? "",
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, initialValues?.id, customFields, form]);
 
   // The board is fetched after the form mounts, so the current column is seeded
   // here rather than in `defaultValues`.
@@ -179,7 +192,6 @@ const CreateOrEditContactModal = ({
     form.setValue("stageId", contactStage?.stageId ?? "");
   }, [contactStage?.stageId, form]);
 
-  const contactType = form.watch("contactType");
   const { errors, isSubmitted } = form.formState;
   const errorMessages = useMemo(() => [...new Set(collectErrorMessages(errors))], [errors]);
   const showErrorSummary = isSubmitted && errorMessages.length > 0;
@@ -188,7 +200,7 @@ const CreateOrEditContactModal = ({
     <Dialog open={opened} onOpenChange={setOpened}>
       {/* Below `sm` the dialog keeps DialogContent's responsive max-width; a hard min-width here
           would overflow a 320px viewport. */}
-      <DialogContent className="sm:min-w-125">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {!initialValues && (
@@ -219,36 +231,7 @@ const CreateOrEditContactModal = ({
             </div>
           </div>
         )}
-        <Field className="max-h-[400px] overflow-y-auto p-1">
-          {customFields?.length > 0 && (
-            <Field className="border self-end p-1 w-fit">
-              {customFields.map((field) => (
-                <Field
-                  key={field.id}
-                  orientation="horizontal"
-                  className="rounded-lg p-1 w-fit px-2"
-                >
-                  <Checkbox
-                    checked={contactType?.includes(field?.slug)}
-                    id={field.slug}
-                    className="rounded-xl"
-                    onCheckedChange={(checked) => {
-                      form.setValue(
-                        "contactType",
-                        checked
-                          ? [...contactType, field.slug]
-                          : contactType.filter((slug) => field.slug !== slug),
-                        { shouldDirty: true },
-                      );
-                    }}
-                  />
-                  <FieldLabel htmlFor={field.slug} className="text-sm font-normal">
-                    {field.name}
-                  </FieldLabel>
-                </Field>
-              ))}
-            </Field>
-          )}
+        <div className="-mx-6 flex max-h-[65vh] flex-col gap-4 overflow-y-auto px-6 py-1">
           {showErrorSummary && (
             <FieldError className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
               <p className="font-medium">{t("Fix the following before saving:")}</p>
@@ -260,7 +243,7 @@ const CreateOrEditContactModal = ({
             </FieldError>
           )}
           <ContactForm form={form} customFields={customFields} type={type} />
-        </Field>
+        </div>
         <DialogFooter>
           <DialogClose render={<Button variant="secondary" onClick={() => form.reset()} />}>
             <span className="text-sm font-normal">{t("Cancel")}</span>

@@ -250,6 +250,27 @@ export async function importLeads({ pipelineId, file }: { pipelineId: string; fi
   return data;
 }
 
+export type PipelineExportFormat = "xlsx" | "ods";
+
+/** The leads the board's current filters show, as a spreadsheet the importer can read back. */
+export async function exportPipeline({
+  pipelineId,
+  params,
+  format,
+}: {
+  pipelineId: string;
+  params: LeadListParams;
+  format: PipelineExportFormat;
+}) {
+  const { data } = await axiosClient.get<Blob>(`${PIPELINE_URL}/${pipelineId}/export`, {
+    params: { ...params, format },
+    responseType: "blob",
+    // A large board is built in one response; the default timeout would cut it off.
+    timeout: 0,
+  });
+  return data;
+}
+
 export async function fetchImportTemplate(pipelineId: string, format: "csv" | "xlsx") {
   const { data } = await axiosClient.get<Blob>(`${PIPELINE_URL}/${pipelineId}/import-template`, {
     params: { format },

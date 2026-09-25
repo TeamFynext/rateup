@@ -1,5 +1,6 @@
 import {
   IconArrowsShuffle,
+  IconBan,
   IconCamera,
   IconCheck,
   IconChevronDown,
@@ -30,7 +31,6 @@ import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.ap
 import {
   useAssignContactLabelsToContactId,
   useContactLabels,
-  useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import {
   useClearContactStageMutation,
@@ -48,10 +48,12 @@ import {
 } from "@/backend/whatsapp/inbox/conversationTag/conversationTag.query.ts";
 import { getRowKey, type ResolutionResult } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
+  useBlockWhatsAppUser,
   useEditConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { ContactDetailDialog } from "@/components/Contacts/ContactDetailedView.tsx";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -67,6 +69,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -78,7 +81,11 @@ import {
   TeamFeature,
   WaMessageAssignStatus,
 } from "@/types/enums.ts";
-import { getContactChannelSource, getContactDisplayPhone } from "@/utils/whatsapp/inbox.ts";
+import {
+  getContactChannelSource,
+  getContactDisplayPhone,
+  isInboxSessionExpired,
+} from "@/utils/whatsapp/inbox.ts";
 
 import { useDeleteTicket } from "../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../util.tsx";
@@ -225,8 +232,29 @@ export default function TicketPanel({
   const teams = teamRes?.data ?? [];
   const { data: waSettings } = useWaSettings();
 
-  const editContactMutation = useEditContactMutation(undefined);
   const spamMutation = useSetContactSpam();
+  const blockMutation = useBlockWhatsAppUser();
+  const confirm = useConfirm();
+  // WhatsApp only accepts a block inside the 24h customer-service window.
+  const canBlock =
+    !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) && !contact?.blockedOnWhatsApp;
+
+  async function blockContact() {
+    if (!contact?.phone) return;
+    const ok = await confirm({
+      title: t("Block {name}", { name: contact.name || contact.phone }),
+      description: t(
+        "They will not be able to message you, and you will not be able to message them.",
+      ),
+      confirmText: t("Block"),
+      cancelText: t("Cancel"),
+    });
+    if (!ok) return;
+    blockMutation.mutate(
+      { phoneNumbersList: [contact.phone] },
+      { onSuccess: () => setSelectedContact({ ...contact, blockedOnWhatsApp: true }) },
+    );
+  }
   const { canDelete, deleteTicket, isPending: isDeletingTicket } = useDeleteTicket(contact);
   const assignLabels = useAssignContactLabelsToContactId();
   const assignTags = useAssignConversationTags();
@@ -236,8 +264,7 @@ export default function TicketPanel({
   const [assignExpanded, setAssignExpanded] = useState(false);
   const [labelPickerOpen, setLabelPickerOpen] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
-  const [editingName, setEditingName] = useState(false);
-  const [nameDraft, setNameDraft] = useState("");
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState(false);
   const [subjectDraft, setSubjectDraft] = useState("");
   const [descriptionDraft, setDescriptionDraft] = useState("");
@@ -262,7 +289,7 @@ export default function TicketPanel({
 
   // Every editor closes when the selected ticket changes.
   useEffect(() => {
-    setEditingName(false);
+    setIsContactDialogOpen(false);
     setEditingTicket(false);
     setLabelPickerOpen(false);
     setTagPickerOpen(false);
@@ -372,21 +399,6 @@ export default function TicketPanel({
     );
   };
 
-  const saveName = () => {
-    const name = nameDraft.trim();
-    if (!contact?.id || !name) return;
-    editContactMutation.mutate(
-      { contactId: contact.id, data: { name } },
-      {
-        onSuccess: () => {
-          updateContactById(contact.id, (c) => ({ ...c, name }));
-          setSelectedContact({ ...contact, name });
-          setEditingName(false);
-        },
-      },
-    );
-  };
-
   const saveTicket = () => {
     if (!contact?.conversationId) return;
     editConversation.mutate(
@@ -456,7 +468,7 @@ export default function TicketPanel({
       )}
     >
       {/* ---- Header ---- */}
-      <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
         <div className="flex min-w-0 items-center gap-2">
           <IconTicket className="size-4 shrink-0 text-primary" />
           <span className="truncate text-[14px] font-extrabold text-foreground">
@@ -857,84 +869,47 @@ export default function TicketPanel({
       </Section>
 
       {/* ---- Contact ---- */}
-      <Section label={t("Contact")}>
-        {editingName ? (
-          <form
-            className="flex flex-col gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              saveName();
-            }}
+      <Section
+        label={t("Contact")}
+        action={
+          <button
+            type="button"
+            onClick={() => setIsContactDialogOpen(true)}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-semibold text-primary transition-colors hover:bg-muted"
           >
-            <Input
-              autoFocus
-              value={nameDraft}
-              onChange={(e) => setNameDraft(e.target.value)}
-              aria-label={t("Name")}
-              className="h-8 text-[13px]"
+            <IconUser className="size-3.5" />
+            {t("View contact")}
+          </button>
+        }
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative shrink-0">
+            <CreativeAvatar
+              name={contact?.name || contact?.whatsappUserName || undefined}
+              size="md"
             />
-            <div className="flex gap-1.5">
-              <Button
-                type="submit"
-                size="sm"
-                className="h-7 text-[11px]"
-                loading={editContactMutation.isPending}
-              >
-                {t("Save")}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 text-[11px]"
-                onClick={() => setEditingName(false)}
-              >
-                {t("Cancel")}
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="flex items-center gap-3">
-            <div className="relative shrink-0">
-              <CreativeAvatar
-                name={contact?.name || contact?.whatsappUserName || undefined}
-                size="md"
-              />
-              <span
-                className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full ring-2 ring-background"
-                style={{ background: channel.color }}
-                title={channel.label}
-              >
-                <ChannelIcon className="size-2.5 text-white" />
+            <span
+              className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full ring-2 ring-background"
+              style={{ background: channel.color }}
+              title={channel.label}
+            >
+              <ChannelIcon className="size-2.5 text-white" />
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <span className="truncate text-[15px] font-bold text-foreground">
+                {contact?.name || contact?.whatsappUserName || "—"}
               </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 items-center gap-1">
-                <span className="truncate text-[15px] font-bold text-foreground">
-                  {contact?.name || contact?.whatsappUserName || "—"}
-                </span>
-                <button
-                  type="button"
-                  title={t("Edit name")}
-                  aria-label={t("Edit name")}
-                  onClick={() => {
-                    setNameDraft(contact?.name || "");
-                    setEditingName(true);
-                  }}
-                  className={ICON_BUTTON}
-                >
-                  <IconPencil className="size-3.5" />
-                </button>
+            {displayPhone && (
+              <div className="flex items-center gap-1 truncate text-[13px] text-muted-foreground">
+                <IconPhone className="size-3.5 shrink-0" />
+                {displayPhone}
               </div>
-              {displayPhone && (
-                <div className="flex items-center gap-1 truncate text-[13px] text-muted-foreground">
-                  <IconPhone className="size-3.5 shrink-0" />
-                  {displayPhone}
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         <dl className="mt-3 flex divide-x divide-border rounded-lg bg-muted py-2">
           {contact?.createdAt && (
@@ -1022,6 +997,20 @@ export default function TicketPanel({
           {contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
         </Button>
 
+        {canBlock && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => void blockContact()}
+            loading={blockMutation.isPending}
+            className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <IconBan className="size-3.75" />
+            {t("Block contact")}
+          </Button>
+        )}
+
         {/* Deleting is ticket-grained, unlike spam above it: it takes this one
             ticket and its messages and leaves the contact alone. Admin-only,
             matching the endpoint's own gate. */}
@@ -1074,6 +1063,24 @@ export default function TicketPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {contact?.id && (
+        <ContactDetailDialog
+          contact={{
+            id: contact.id,
+            name: contact.name ?? undefined,
+            phone: contact.phone ?? undefined,
+            profilePic: contact.profilePic ?? undefined,
+          }}
+          open={isContactDialogOpen}
+          onOpenChange={setIsContactDialogOpen}
+          showInboxLink={false}
+          onSaved={({ name, phone, email }) => {
+            // The list keeps a row until its ticket changes, and a contact edit is not one.
+            updateContactById(contact.id, (c) => ({ ...c, name, phone, email }));
+            setSelectedContact({ ...contact, name, phone, email });
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -13,7 +13,7 @@ export const CLOSED_STATUSES: string[] = [
   WaMessageAssignStatus.UNRESOLVED,
 ];
 
-export type DerivedStatusId = "new" | "assigned" | "closed";
+export type DerivedStatusId = "new" | "assigned" | "closed" | "unresolved";
 
 /** Base pill chrome shared by the status pills; combine with a `DerivedStatus.className`.
  *  The dot is a `<span className="size-[5px] rounded-full bg-current" />` child. */
@@ -35,6 +35,11 @@ const DERIVED: Record<DerivedStatusId, DerivedStatus> = {
   },
   assigned: { id: "assigned", label: "Assigned", className: "bg-primary/10 text-primary" },
   closed: { id: "closed", label: "Closed", className: "bg-green-600/10 text-green-600" },
+  unresolved: {
+    id: "unresolved",
+    label: "Unresolved",
+    className: "bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400",
+  },
 };
 
 /**
@@ -48,12 +53,15 @@ export function deriveStatus(contact: {
   assignedUsers?: unknown[];
 }): DerivedStatus {
   const status = contact?.conversationStatus ?? contact?.waMessageAssignStatus ?? null;
+  // Unresolved is the one closed outcome worth telling apart at a glance.
+  if (status === WaMessageAssignStatus.UNRESOLVED) return DERIVED.unresolved;
   if (status && CLOSED_STATUSES.includes(status)) return DERIVED.closed;
   return contact?.assignedUsers?.length ? DERIVED.assigned : DERIVED.new;
 }
 
 export function isTicketClosed(contact: Partial<ContactWithUpdatedAt>): boolean {
-  return deriveStatus(contact as ContactWithUpdatedAt).id === "closed";
+  const { id } = deriveStatus(contact as ContactWithUpdatedAt);
+  return id === "closed" || id === "unresolved";
 }
 
 export interface CloseResultOption {

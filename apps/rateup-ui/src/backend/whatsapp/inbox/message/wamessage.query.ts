@@ -5,6 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { toast } from "sonner";
 
 import { contactKeys } from "@/backend/campaign/contacts/contacts.keys";
@@ -122,22 +123,23 @@ export const useFilteredContacts = (filterData: string, isEnabled: boolean) => {
 export const useExportWaChats = () => {
   return useMutation({
     mutationFn: exportWaChats,
-    onSettled: (data) => {
+    // Not onSettled: that also fires on failure, which would download an empty file and
+    // overwrite the error toast, which shares this id.
+    onSuccess: (data) => {
       const blob = new Blob([data]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `export.xlsx`;
+      a.download = `conversations-${dayjs().format("YYYY-MM-DD")}.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("Chats exported successfully", {
+      toast.success("Conversations exported", {
         id: "export-chats",
       });
     },
     onError: (error) => {
-      console.error("Error exporting chats", error);
       toast.error(error?.message || "Error exporting chats", {
         id: "export-chats",
       });

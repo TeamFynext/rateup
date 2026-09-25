@@ -449,6 +449,7 @@ const WaInboxChatSelect = () => {
   // "Select all" stops at the cap; the header checkbox reads as checked once the
   // selection holds everything it is allowed to.
   const selectAllCount = Math.min(contactIds.length, INBOX_BULK_SELECTION_LIMIT);
+  const hasSelection = selectedChats.length > 0;
   const toggleSelectAll = () => {
     if (selectedChats.length >= selectAllCount) {
       setSelectedChats([]);
@@ -591,7 +592,6 @@ const WaInboxChatSelect = () => {
           </p>
         ) : (
           <div ref={parentRef} className="List min-h-0 w-full flex-1 overflow-auto">
-            <div className="border-t border-border" />
             {isSelectionMode && bulkProgress && (
               <div className="h-12 px-3 border-b flex items-center">
                 <Progress
@@ -610,30 +610,37 @@ const WaInboxChatSelect = () => {
                 </Progress>
               </div>
             )}
-            {isSelectionMode && !bulkProgress && selectedChats.length > 0 && (
+            {/* Shown from the moment selection mode is on, so "select all" is reachable
+                before any row is ticked; the actions wait for a selection. */}
+            {isSelectionMode && !bulkProgress && (
               <div className="h-12 px-3 border-b flex items-center justify-between transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={selectedChats.length >= selectAllCount}
+                      checked={selectAllCount > 0 && selectedChats.length >= selectAllCount}
+                      disabled={selectAllCount === 0}
                       onChange={toggleSelectAll}
                       className="w-4 h-4 rounded text-foreground focus:ring-primary"
                     />
 
                     <span className="text-sm font-medium text-foreground">
-                      {selectedChats.length} selected
+                      {hasSelection
+                        ? translations("{count} selected", { count: selectedChats.length })
+                        : translations("Select all")}
                     </span>
-                  </div>
+                  </label>
 
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setSelectedChats([])}
-                  >
-                    {translations("Clear")}
-                  </Button>
+                  {hasSelection && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setSelectedChats([])}
+                    >
+                      {translations("Clear")}
+                    </Button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -647,6 +654,7 @@ const WaInboxChatSelect = () => {
                             <Button
                               size="sm"
                               className="h-8 w-8 p-0"
+                              disabled={!hasSelection}
                               onClick={() => setShowBulkAssignDialog(true)}
                             />
                           }
@@ -670,6 +678,7 @@ const WaInboxChatSelect = () => {
                               size="sm"
                               variant="outline"
                               className="h-8 w-8 p-0"
+                              disabled={!hasSelection}
                               onClick={() => setOpenConfirmHandleClose(true)}
                             />
                           }
@@ -695,6 +704,7 @@ const WaInboxChatSelect = () => {
                               size="sm"
                               variant="outline"
                               loading={bulkDeleteMutation.isPending}
+                              disabled={!hasSelection}
                               className="h-8 w-8 p-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                               onClick={() => {
                                 handleBulkDelete();

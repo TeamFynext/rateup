@@ -29,6 +29,7 @@ import {
   IconRobotFace,
   IconRocket,
   IconSend,
+  IconMessageCog,
   IconSettings,
   IconShield,
   IconShieldExclamation,
@@ -145,6 +146,8 @@ export interface NavEntry {
    * element does not survive.
    */
   done?: boolean;
+  /** Rendered in the panel's footer, below the scrolling rows, rather than in order. */
+  pinToFooter?: boolean;
   /** Meter at the foot of this section's panel. Same reason it is data, not markup. */
   progress?: NavProgress;
   /**
@@ -476,47 +479,12 @@ export function useNavMain({
                   ],
                 },
                 {
-                  title: "Settings",
-                  icon: IconSettings,
+                  title: t("Inbox settings"),
+                  icon: IconMessageCog,
                   url: "/dashboard/inbox?tab=settings",
+                  pinToFooter: true,
                 },
               ],
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.AiChatbot)
-        ? [
-            {
-              title: "Meta AI Agent",
-              url: "/dashboard/meta-agent",
-              icon: IconRobotFace,
-              // Each area of the agent is its own route, so the sidebar is the
-              // navigation for them — with the setup guide's done ticks and meter
-              // (see `metaAgent/metaAgent.nav.ts`).
-              progress: buildMetaAgentNavProgress(metaAgentNav),
-              items: buildMetaAgentNavItems(metaAgentNav),
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Pipeline)
-        ? [
-            {
-              title: t("Pipeline"),
-              url: "/dashboard/pipeline",
-              icon: IconFilterBolt,
-              // Views and facets are built next to the pipeline's own
-              // derivations so the sidebar counts and the board agree.
-              items: buildPipelineNavItems(pipelineNav),
-              progress: buildPipelineNavProgress(pipelineNav),
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Campaigns)
-        ? [
-            {
-              title: t("Campaign"),
-              url: "/dashboard/campaign",
-              icon: IconSend,
             },
           ]
         : []),
@@ -553,40 +521,25 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.Contacts)
+      ...(hasTeamFeature(TeamFeature.Pipeline)
         ? [
             {
-              title: t("Contacts"),
-              url: "/dashboard/contacts",
-              icon: IconUsers,
-              items: [
-                {
-                  title: t("All Contacts"),
-                  url: "/dashboard/contacts",
-                  icon: IconUsers,
-                },
-                {
-                  title: t("Groups"),
-                  url: "/dashboard/contacts/groups",
-                  icon: IconFolder,
-                },
-                {
-                  title: t("Custom Fields"),
-                  url: "/dashboard/contacts/custom-fields",
-                  icon: IconFileSpreadsheet,
-                },
-                {
-                  title: t("Labels"),
-                  url: "/dashboard/contacts/labels",
-                  icon: IconTag,
-                },
-                // Lifecycle is no longer listed here: pipeline stages have taken
-                // over the places it was read from. The page and the route are
-                // still there for the surfaces that have not moved yet — the
-                // inbox chip, automation conditions, Zapier and the Zoho CRM
-                // mapping — so it stays reachable at
-                // `/dashboard/contacts/lifecycle` until those are migrated.
-              ],
+              title: t("Pipeline"),
+              url: "/dashboard/pipeline",
+              icon: IconFilterBolt,
+              // Views and facets are built next to the pipeline's own
+              // derivations so the sidebar counts and the board agree.
+              items: buildPipelineNavItems(pipelineNav),
+              progress: buildPipelineNavProgress(pipelineNav),
+            },
+          ]
+        : []),
+      ...(hasTeamFeature(TeamFeature.Campaigns)
+        ? [
+            {
+              title: t("Campaign"),
+              url: "/dashboard/campaign",
+              icon: IconSend,
             },
           ]
         : []),
@@ -596,6 +549,20 @@ export function useNavMain({
               title: t("Automation"),
               url: "/dashboard/automation",
               icon: IconBolt,
+            },
+          ]
+        : []),
+      ...(hasTeamFeature(TeamFeature.AiChatbot)
+        ? [
+            {
+              title: "Meta AI Agent",
+              url: "/dashboard/meta-agent",
+              icon: IconRobotFace,
+              // Each area of the agent is its own route, so the sidebar is the
+              // navigation for them — with the setup guide's done ticks and meter
+              // (see `metaAgent/metaAgent.nav.ts`).
+              progress: buildMetaAgentNavProgress(metaAgentNav),
+              items: buildMetaAgentNavItems(metaAgentNav),
             },
           ]
         : []),
@@ -740,6 +707,43 @@ export function useNavMain({
                   url: "/dashboard/link-pages",
                   icon: IconLayoutList,
                 },
+              ],
+            },
+          ]
+        : []),
+      ...(hasTeamFeature(TeamFeature.Contacts)
+        ? [
+            {
+              title: t("Contacts"),
+              url: "/dashboard/contacts",
+              icon: IconUsers,
+              items: [
+                {
+                  title: t("All Contacts"),
+                  url: "/dashboard/contacts",
+                  icon: IconUsers,
+                },
+                {
+                  title: t("Groups"),
+                  url: "/dashboard/contacts/groups",
+                  icon: IconFolder,
+                },
+                {
+                  title: t("Custom Fields"),
+                  url: "/dashboard/contacts/custom-fields",
+                  icon: IconFileSpreadsheet,
+                },
+                {
+                  title: t("Labels"),
+                  url: "/dashboard/contacts/labels",
+                  icon: IconTag,
+                },
+                // Lifecycle is no longer listed here: pipeline stages have taken
+                // over the places it was read from. The page and the route are
+                // still there for the surfaces that have not moved yet — the
+                // inbox chip, automation conditions, Zapier and the Zoho CRM
+                // mapping — so it stays reachable at
+                // `/dashboard/contacts/lifecycle` until those are migrated.
               ],
             },
           ]

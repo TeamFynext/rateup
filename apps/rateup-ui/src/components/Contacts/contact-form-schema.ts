@@ -17,6 +17,7 @@ export interface ContactFormValues {
   name: string;
   phone: string;
   email: string;
+  address: string;
   dob: Date | string | null;
   source: string;
   contactType: string[];
@@ -38,6 +39,7 @@ export const contactFormDefaults: ContactFormValues = {
   name: "",
   phone: "",
   email: "",
+  address: "",
   dob: null,
   source: importMethod.MANUAL,
   contactType: [],
@@ -58,7 +60,7 @@ export const contactFormDefaults: ContactFormValues = {
  * Prefilled form values. Callers pass either a saved contact being edited (`id` present) or a
  * draft assembled elsewhere — the inbox's "add this sender" flow supplies only a few fields.
  *
- * Most columns are nullable on `Contact` in the API (name, phone, source, email, external_id,
+ * Most columns are nullable on `Contact` in the API (name, phone, source, email, address, external_id,
  * lifecycleId, notes), so every text field is `string | null` here — see {@link toFormValues}.
  */
 export interface ContactInitialValues {
@@ -66,6 +68,7 @@ export interface ContactInitialValues {
   name?: string | null;
   phone?: string | null;
   email?: string | null;
+  address?: string | null;
   dob?: Date | string | null;
   source?: string | null;
   profilePic?: string | null;
@@ -128,6 +131,7 @@ export const toFormValues = (
     name: initialValues.name ?? "",
     phone: toPhoneValue(initialValues.phone),
     email: initialValues.email ?? "",
+    address: initialValues.address ?? "",
     dob: initialValues.dob ?? null,
     source: initialValues.source ?? contactFormDefaults.source,
     external_id: initialValues.external_id ?? "",
@@ -140,6 +144,27 @@ export const toFormValues = (
     contactType: initialValues.contactType ?? contactFormDefaults.contactType,
     updateExisting: initialValues.updateExisting ?? contactFormDefaults.updateExisting,
     customFields: toCustomFieldValues(initialValues.customFields, customFields),
+  };
+};
+
+/** A contact with its joins as the table row and the details endpoint both spell them. */
+type ContactWithJoins = Omit<
+  ContactInitialValues,
+  "labels" | "contactGroupIds" | "assignedUserIds"
+> & {
+  ContactLabelMap?: Array<{ label?: { id?: string } }>;
+  contactGroups?: Array<{ contactGroup?: { id?: string } }>;
+  waInboxAssign?: Array<{ assignedUser?: { id?: string } }>;
+};
+
+/** A contact as the edit modal's `initialValues`: its joins flattened to id lists. */
+export const contactRowToInitialValues = (contact: ContactWithJoins): ContactInitialValues => {
+  const { ContactLabelMap, contactGroups, waInboxAssign, ...rest } = contact;
+  return {
+    ...rest,
+    labels: ContactLabelMap?.map((entry) => entry.label?.id) ?? [],
+    contactGroupIds: contactGroups?.map((entry) => entry.contactGroup?.id) ?? [],
+    assignedUserIds: waInboxAssign?.map((entry) => entry.assignedUser?.id) ?? [],
   };
 };
 
@@ -159,6 +184,7 @@ export const buildContactSchema = (t: TFunction, customFields: CustomFieldData[]
       name: z.string(),
       phone: z.string(),
       email: z.string(),
+      address: z.string(),
       dob: z.custom<Date | string | null>(),
       source: z.string(),
       contactType: z.array(z.string()),
@@ -194,6 +220,10 @@ export const buildContactSchema = (t: TFunction, customFields: CustomFieldData[]
         } else if (!isValidPhoneNumber(values.phone)) {
           ctx.addIssue({ code: "custom", path: ["phone"], message: t("Invalid phone number") });
         }
+      }
+
+      if (values.email && !EMAIL_PATTERN.test(values.email)) {
+        ctx.addIssue({ code: "custom", path: ["email"], message: t("Invalid email format.") });
       }
 
       values.customFields?.forEach((entry, index) => {

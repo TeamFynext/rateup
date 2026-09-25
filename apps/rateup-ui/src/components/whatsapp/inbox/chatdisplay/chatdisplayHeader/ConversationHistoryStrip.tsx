@@ -1,9 +1,10 @@
 import { IconArrowRight, IconChevronDown, IconChevronUp, IconHistory } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { ContactConversation } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
 import { useConversationsByContact } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
+import { useConversationHistoryRequest } from "@/store/conversation-history.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
@@ -35,6 +36,14 @@ export default function ConversationHistoryStrip({
   const [open, setOpen] = useState(false);
   const contactsById = useContactsStore((s) => s.contactsById);
   const setSelectedContact = useContactsStore((s) => s.setSelectedContact);
+  const requestedContactId = useConversationHistoryRequest((s) => s.contactId);
+  const clearRequest = useConversationHistoryRequest((s) => s.requestFor);
+
+  useEffect(() => {
+    if (!requestedContactId || requestedContactId !== contact?.id) return;
+    setOpen(true);
+    clearRequest(null);
+  }, [requestedContactId, contact?.id, clearRequest]);
 
   const { data: conversations } = useConversationsByContact(contact?.id, !!contact?.id);
 

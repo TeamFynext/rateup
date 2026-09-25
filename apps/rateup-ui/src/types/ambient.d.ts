@@ -689,6 +689,7 @@ declare global {
     phone: string;
     other?: string;
     email: string;
+    address?: string | null;
     dob?: Date;
     source: string;
     createdAt: Date;
@@ -796,6 +797,7 @@ declare global {
     name: string | null;
     phone: string | null;
     email: string | null;
+    address: string | null;
     source: string | null;
     dob: string | null;
     other: string | null;

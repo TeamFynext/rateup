@@ -34,6 +34,7 @@ import type { PipelineView } from "@/store/pipeline.store.ts";
 
 import { VIEW_TABS } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel, viewTabLabel } from "./pipeline.labels.ts";
+import { PipelineExportMenu } from "./PipelineExportMenu.tsx";
 import { usePipelineTypeConfig } from "./pipelineTypes.ts";
 import { LeadAvatar } from "./shared/LeadAvatar.tsx";
 import type { PipelineData } from "./usePipelineData.ts";
@@ -236,6 +237,15 @@ export function PipelineHeader({ data, onAddLead, onImport }: Readonly<PipelineH
           </div>
         ) : null}
 
+        {pipeline ? (
+          <PipelineExportMenu
+            pipelineId={pipeline.id}
+            pipelineName={pipeline.name}
+            params={data.params}
+            filtered={facets.length > 0 || !!data.params.search}
+          />
+        ) : null}
+
         {onImport ? (
           <Button variant="outline" size="sm" onClick={onImport} className="gap-1.5">
             <IconUpload className="size-4" />
@@ -292,7 +302,7 @@ export function PipelineHeader({ data, onAddLead, onImport }: Readonly<PipelineH
       ) : null}
 
       {/* Scrolls sideways on phones, where five tabs are wider than the screen. */}
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div className="-mx-4 overflow-x-auto overflow-y-hidden px-4 sm:mx-0 sm:px-0">
         <Tabs value={view.view} onValueChange={(value) => setView({ view: value as PipelineView })}>
           <TabsList aria-label={t("Pipeline views")}>
             {VIEW_TABS.filter(({ id }) => id !== "forecast" || typeConfig.features.forecast).map(
