@@ -14,8 +14,31 @@ const axiosClient = axios.create({
 const shouldSkipLocalErrorToast = (error: unknown) =>
   !!getApiErrorData(error)?.displayMessageInClient;
 
+/** Where an ORG_SUSPENDED answer sends the app (routes/(auth)/login/callback/suspended). */
+const SUSPENDED_PATH = "/login/callback/suspended";
+
+/**
+ * RateUp staff suspended this organisation: every request is refused with 403
+ * ORG_SUSPENDED until they restore it, so there is nothing useful to show but the
+ * suspended screen. A full navigation rather than the router, which this module cannot
+ * import; it also drops every cached query that belonged to the suspended session.
+ */
+function redirectIfSuspended(error: unknown): boolean {
+  if (globalThis.window === undefined) return false;
+  const { response } = asApiError(error);
+  if (response?.status !== 403 || getApiErrorData(error)?.code !== "ORG_SUSPENDED") return false;
+  if (!window.location.pathname.startsWith(SUSPENDED_PATH)) {
+    window.location.assign(SUSPENDED_PATH);
+  }
+  return true;
+}
+
 const interceptorErrorHandler = (error: unknown) => {
   const { response, request } = asApiError(error);
+
+  if (redirectIfSuspended(error)) {
+    return Promise.reject({ ...asApiError(error), message: "This account is suspended." });
+  }
 
   if (globalThis.window !== undefined && shouldSkipLocalErrorToast(error)) {
     const errorData = getApiErrorData(error);
