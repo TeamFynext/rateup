@@ -45,6 +45,8 @@ const state: OnboardingState = {
     signupBonus: 50,
     referralBonus: 100,
     refereeBonus: 50,
+    signupBonusEnabled: true,
+    referralBonusEnabled: true,
     tiersEnabled: true,
     averageOrderValue: 240,
     createdAt: new Date(),

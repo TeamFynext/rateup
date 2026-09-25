@@ -19,16 +19,20 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCan } from "@/hooks/usePermission.ts";
 
 import { BoardView } from "./board/BoardView.tsx";
 import { CreatePipelineDialog } from "./CreatePipelineDialog.tsx";
 import { ForecastView } from "./forecast/ForecastView.tsx";
+import { ImportLeadsDialog } from "./ImportLeadsDialog.tsx";
 import { InsightsView } from "./insights/InsightsView.tsx";
 import { AddLeadDialog } from "./lead/AddLeadDialog.tsx";
 import { CloseLeadDialog, type CloseLeadTarget } from "./lead/CloseLeadDialog.tsx";
 import { LeadDetailModal } from "./lead/LeadDetailModal.tsx";
+import { useDeleteLeads } from "./lead/useDeleteLeads.ts";
 import { ListView } from "./list/ListView.tsx";
 import { PipelineHeader } from "./PipelineHeader.tsx";
+import { usePipelineTypeConfig } from "./pipelineTypes.ts";
 import { SettingsView } from "./settings/SettingsView.tsx";
 import { usePipelineData } from "./usePipelineData.ts";
 
@@ -55,15 +59,19 @@ export function PipelinePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const data = usePipelineData();
+  const typeConfig = usePipelineTypeConfig(data.pipeline);
   const queryClient = useQueryClient();
   const { pipeline, view, setView, members } = data;
 
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const canManage = useCan("pipelines.manage");
   const [addStageId, setAddStageId] = useState<string | undefined>();
   const [closeTarget, setCloseTarget] = useState<CloseLeadTarget | null>(null);
 
   const moveLead = useMoveLeadMutation(pipeline?.id);
   const bulkUpdate = useBulkUpdateLeadsMutation();
+  const { canDelete, deleteLeads } = useDeleteLeads();
 
   const openLead = useCallback((leadId: string) => setView({ leadId }), [setView]);
 
@@ -102,13 +110,14 @@ export function PipelinePage() {
       // column was never loaded — a closed one, most often — still reaches the
       // dialog rather than skipping it and closing without a reason.
       const lead = known ?? findCachedLead(queryClient, leadId);
-      if (stage.status !== "OPEN" && lead) {
+      // Only a sales board asks: other types have no lost reasons, so a drop is just a move.
+      if (stage.status !== "OPEN" && lead && typeConfig.type === "LEADS") {
         setCloseTarget({ lead, status: stage.status, stageId: stage.id });
         return;
       }
       moveLead.mutate({ leadId, fromStageId, stageId: stage.id, stageName: stage.name });
     },
-    [queryClient, moveLead],
+    [queryClient, moveLead, typeConfig.type],
   );
 
   // Only the view swaps out while loading: the header owns the pipeline switcher
@@ -158,7 +167,9 @@ export function PipelinePage() {
       );
     }
 
-    switch (view.view) {
+    // A Forecast tab remembered from the Leads board has nothing to show on another type.
+    const shown = view.view === "forecast" && !typeConfig.features.forecast ? "board" : view.view;
+    switch (shown) {
       case "board":
         return (
           <BoardView
@@ -176,6 +187,7 @@ export function PipelinePage() {
             onOpenLead={openLead}
             onBulkMove={(leadIds, stage) => bulkUpdate.mutate({ leadIds, stageId: stage.id })}
             onBulkAssign={(leadIds, assigneeIds) => bulkUpdate.mutate({ leadIds, assigneeIds })}
+            onBulkDelete={canDelete ? deleteLeads : undefined}
           />
         );
       case "forecast":
@@ -195,6 +207,7 @@ export function PipelinePage() {
           instead of scrolling inside the view. */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <PipelineHeader
+          onImport={canManage ? () => setImportOpen(true) : undefined}
           data={data}
           onAddLead={() => {
             setAddStageId(undefined);
@@ -230,6 +243,8 @@ export function PipelinePage() {
         pipeline={pipeline}
         onClose={() => setCloseTarget(null)}
       />
+
+      <ImportLeadsDialog open={importOpen} onOpenChange={setImportOpen} pipeline={pipeline} />
 
       <CreatePipelineDialog
         open={view.createPipelineOpen}

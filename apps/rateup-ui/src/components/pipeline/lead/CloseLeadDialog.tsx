@@ -17,6 +17,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
+import { usePipelineTypeConfig } from "../pipelineTypes.ts";
+
 export interface CloseLeadTarget {
   lead: Lead;
   status: "WON" | "LOST";
@@ -42,6 +44,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
   const [reasonId, setReasonId] = useState<string | null>(null);
   const [note, setNote] = useState("");
 
+  const typeConfig = usePipelineTypeConfig(pipeline);
   const isLost = target?.status === "LOST";
   const reasons = pipeline?.lostReasons ?? [];
   const firstReasonId = reasons[0]?.id ?? null;
@@ -63,7 +66,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
         input: {
           status: target.status,
           stageId: target.stageId,
-          lostReasonId: isLost ? reasonId : null,
+          lostReasonId: isLost && typeConfig.features.lostReasons ? reasonId : null,
           note: note.trim() || undefined,
         },
       },
@@ -88,7 +91,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
             </span>
             <div className="min-w-0">
               <DialogTitle className="font-display text-xl leading-tight font-bold tracking-[-0.01em]">
-                {isLost ? t("Mark as lost") : t("Mark as won")}
+                {isLost ? typeConfig.markLost : typeConfig.markWon}
               </DialogTitle>
               <DialogDescription>
                 {target?.lead.name}
@@ -98,7 +101,7 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
           </div>
         </DialogHeader>
 
-        {isLost ? (
+        {isLost && !typeConfig.features.lostReasons ? null : isLost ? (
           <div>
             <div className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-[0.06em] uppercase">
               {t("Lost reason")}
@@ -136,7 +139,11 @@ export function CloseLeadDialog({ target, pipeline, onClose }: Readonly<CloseLea
           <div className="flex items-center gap-2.5 rounded-lg bg-green-600/10 p-3 text-green-700 dark:text-green-500">
             <IconSparkles className="size-4 shrink-0" />
             <span className="text-xs font-medium">
-              {t("The lead moves to the won column and stops counting as open.")}
+              {typeConfig.type === "LEADS"
+                ? t("The lead moves to the won column and stops counting as open.")
+                : t("It moves to the {column} column and stops counting as open.", {
+                    column: typeConfig.wonLabel,
+                  })}
             </span>
           </div>
         )}

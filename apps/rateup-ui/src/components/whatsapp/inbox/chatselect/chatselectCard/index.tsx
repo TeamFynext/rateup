@@ -1,9 +1,5 @@
 import {
-  IconAlertCircle,
-  IconArchive,
   IconAt,
-  IconCircle,
-  IconCircleCheck,
   IconHash,
   IconRosetteDiscountCheck,
   IconShieldExclamation,
@@ -37,7 +33,7 @@ import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
-import { INBOX_BULK_SELECTION_LIMIT, WaMessageClosedStatus } from "@/utils/constants.ts";
+import { INBOX_BULK_SELECTION_LIMIT } from "@/utils/constants.ts";
 import {
   formatDateWithRelativeTime,
   formatToRelativeTime,
@@ -52,36 +48,12 @@ import {
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox.ts";
 
-import { STATUS_PILL_BASE } from "../../chatdisplay/chatdisplayHeader/ticket.ts";
+import {
+  deriveStatus,
+  isTicketClosed,
+  STATUS_PILL_BASE,
+} from "../../chatdisplay/chatdisplayHeader/ticket.ts";
 import { generateInternalMessageId, getSoucePlatformIconAndColor } from "../../util.tsx";
-
-/**
- * Inbox Tickets v2 — the lifecycle status shown on a row is DERIVED, never stored:
- *   closed  → the ticket is in any of the closed states (CLOSED/SPAM/RESOLVED/UNRESOLVED)
- *   assigned → somebody owns it
- *   new      → nobody owns it yet
- */
-type DerivedStatus = "new" | "assigned" | "closed";
-
-export function getDerivedStatus(contact: ContactWithUpdatedAt): DerivedStatus {
-  const status = (contact?.conversationStatus ??
-    contact?.waMessageAssignStatus) as WaMessageAssignStatus;
-  if (WaMessageClosedStatus.includes(status)) return "closed";
-  return contact?.assignedUsers?.length ? "assigned" : "new";
-}
-
-const STATUS_LABEL: Record<DerivedStatus, string> = {
-  new: "New",
-  assigned: "Assigned",
-  closed: "Closed",
-};
-
-// Tailwind bg + text for the status pill (the dot inherits via `bg-current`).
-const STATUS_PILL_COLORS: Record<DerivedStatus, string> = {
-  new: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
-  assigned: "bg-primary/10 text-primary",
-  closed: "bg-green-600/10 text-green-600",
-};
 
 interface WaInboxChatSelectCardProps {
   contact: ContactWithUpdatedAt;
@@ -144,8 +116,8 @@ export default function WaInboxChatSelectCard({
 
   const compact = useInboxViewStore((s) => s.compact);
 
-  const status = getDerivedStatus(contact);
-  const isClosed = status === "closed";
+  const status = deriveStatus(contact);
+  const isClosed = isTicketClosed(contact);
   const isUnassigned = !isClosed && !contact?.assignedUsers?.length;
   // The design's `fresh`: an open ticket whose newest message landed in the last
   // 24h. Only fresh rows are highlighted — an unassigned one gets the cream fill,
@@ -419,9 +391,9 @@ export default function WaInboxChatSelectCard({
           {isClosed ? (
             <CustomTooltip
               trigger={
-                <span className={cn(STATUS_PILL_BASE, STATUS_PILL_COLORS.closed)}>
+                <span className={cn(STATUS_PILL_BASE, status.className)}>
                   <span className="size-1.25 rounded-full bg-current" />
-                  {translations(STATUS_LABEL.closed)}
+                  {translations(status.label)}
                 </span>
               }
               content={
@@ -435,9 +407,9 @@ export default function WaInboxChatSelectCard({
               }
             />
           ) : (
-            <span className={cn(STATUS_PILL_BASE, STATUS_PILL_COLORS[status])}>
+            <span className={cn(STATUS_PILL_BASE, status.className)}>
               <span className="size-1.25 rounded-full bg-current" />
-              {translations(STATUS_LABEL[status])}
+              {translations(status.label)}
             </span>
           )}
 
@@ -584,29 +556,4 @@ export default function WaInboxChatSelectCard({
       </div>
     </div>
   );
-}
-
-export function getContactClosedIcon(status: string) {
-  switch (status) {
-    case WaMessageAssignStatus.CLOSED:
-      return {
-        icon: IconArchive,
-        color: "text-blue-500 dark:text-blue-600",
-      };
-    case WaMessageAssignStatus.RESOLVED:
-      return {
-        icon: IconCircleCheck,
-        color: "text-green-500 dark:text-green-600",
-      };
-    case WaMessageAssignStatus.UNRESOLVED:
-      return {
-        icon: IconCircle,
-        color: "text-orange-500 dark:text-orange-600",
-      };
-    case WaMessageAssignStatus.SPAM:
-      return {
-        icon: IconAlertCircle,
-        color: "text-destructive ",
-      };
-  }
 }

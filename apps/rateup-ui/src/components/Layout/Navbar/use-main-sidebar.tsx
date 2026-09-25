@@ -28,6 +28,7 @@ import { useAgentSetup } from "@/components/dashboard/metaAgent/setup/useAgentSe
 import type { SetupNavInput } from "@/components/dashboard/setup/setup.nav.ts";
 import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import type { PipelineNavInput } from "@/components/pipeline/pipeline.nav.tsx";
+import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
 import i18n from "@/i18n.ts";
@@ -127,7 +128,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const isPipeline = pathname?.includes("/dashboard/pipeline");
   const { data: pipelines = [] } = usePipelinesQuery(Boolean(isPipeline));
   const activePipelineId =
-    (typeof search?.p === "string" ? search.p : undefined) ?? pipelines[0]?.id;
+    (typeof search?.p === "string" ? search.p : undefined) ??
+    (findLeadsPipeline(pipelines) ?? pipelines[0])?.id;
   const { data: activePipeline } = usePipelineQuery(isPipeline ? activePipelineId : undefined);
   const { data: pipelineStats } = usePipelineStatsQuery(isPipeline ? activePipelineId : undefined);
 

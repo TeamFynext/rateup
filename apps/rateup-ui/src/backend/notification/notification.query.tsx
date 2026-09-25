@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { notificationKeys } from "@/backend/notification/notification.keys";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 import {
   deleteAllNotifications,
@@ -9,6 +11,9 @@ import {
   getNotifications,
   getNotificationsCount,
   getNotificationSettings,
+  markAllNotificationsRead,
+  type NotificationSettings,
+  type NotificationSettingsPatch,
   updateNotificationSettings,
 } from "./notification.api";
 
@@ -36,76 +41,87 @@ export const useNotificationSettings = (enabled = true) => {
   });
 };
 
+/** Apply a patch to the cached settings, so a switch moves the moment it is clicked. */
+function applyPatch(
+  current: NotificationSettings,
+  patch: NotificationSettingsPatch,
+): NotificationSettings {
+  return {
+    channels: { ...current.channels, ...patch.channels },
+    sound: patch.sound ?? current.sound,
+    events: current.events.map((event) => ({
+      ...event,
+      channels: { ...event.channels, ...patch.events?.[event.key] },
+    })),
+  };
+}
+
+const settingsMutationKey = ["notification-settings"] as const;
+
+/**
+ * Toggles run one at a time (shared scope). Only the last pending one writes the server's
+ * answer back; an earlier response would flip later optimistic switches back.
+ */
 export const useUpdateNotificationSettings = () => {
   const qc = useQueryClient();
+  const { t } = useTranslation();
+  // The settling mutation is still pending inside its own callbacks, so it counts itself.
+  const isLastPending = () => qc.isMutating({ mutationKey: settingsMutationKey }) <= 1;
   return useMutation({
-    mutationFn: (data: {
-      waMessageAssignNotification?: boolean;
-      waMessageClosedNotification?: boolean;
-    }) => {
-      toast.loading("Hold on...updating settings", {
-        id: "notification",
-      });
-      return updateNotificationSettings(data);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: notificationKeys.settings() });
-      toast.success("Notification settings saved", {
-        id: "notification",
-      });
+    mutationKey: settingsMutationKey,
+    scope: { id: "notification-settings" },
+    mutationFn: updateNotificationSettings,
+    onMutate: async (patch) => {
+      await qc.cancelQueries({ queryKey: notificationKeys.settings() });
+      const current = qc.getQueryData<NotificationSettings>(notificationKeys.settings());
+      if (current) qc.setQueryData(notificationKeys.settings(), applyPatch(current, patch));
     },
     onError: (error) => {
-      toast.error(error?.message || "failed", {
-        id: "notification",
-      });
+      if (isLastPending()) void qc.invalidateQueries({ queryKey: notificationKeys.settings() });
+      toast.error(getApiErrorMessage(error, t("Could not save your notification settings")));
+    },
+    onSuccess: (settings) => {
+      if (isLastPending()) qc.setQueryData(notificationKeys.settings(), settings);
+    },
+  });
+};
+
+export const useMarkAllNotificationsRead = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: () => {
+      qc.setQueryData(notificationKeys.count(), 0);
     },
   });
 };
 
 export const useDeleteNotification = () => {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
-    mutationFn: (notificationId: string) => {
-      toast.loading("Hold on...deleting", {
-        id: "notification",
-      });
-      return deleteNotification(notificationId);
-    },
+    mutationFn: (notificationId: string) => deleteNotification(notificationId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: notificationKeys.all() });
       qc.invalidateQueries({ queryKey: notificationKeys.count() });
-      toast.success("Notification settings saved", {
-        id: "notification",
-      });
     },
     onError: (error) => {
-      toast.error(error?.message || "failed", {
-        id: "notification",
-      });
+      toast.error(getApiErrorMessage(error, t("Could not dismiss the notification")));
     },
   });
 };
 
 export const useDeleteAllNotifications = () => {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
-    mutationFn: () => {
-      toast.loading("Hold on...deleting", {
-        id: "notification",
-      });
-      return deleteAllNotifications();
-    },
+    mutationFn: deleteAllNotifications,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: notificationKeys.all() });
       qc.invalidateQueries({ queryKey: notificationKeys.count() });
-      toast.success("Notification settings saved", {
-        id: "notification",
-      });
     },
     onError: (error) => {
-      toast.error(error?.message || "failed", {
-        id: "notification",
-      });
+      toast.error(getApiErrorMessage(error, t("Could not clear your notifications")));
     },
   });
 };

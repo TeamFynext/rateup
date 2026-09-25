@@ -89,7 +89,7 @@ export function AutomaticMessagesTab() {
       const tone = templateStatusTone({
         status: template?.data?.status,
         hasTemplate: Boolean(template),
-        enabled: trigger?.enabled,
+        enabled: trigger?.enabled ?? definition.defaultOn,
       });
       if (tone === "live") counts.live += 1;
       else if (tone === "pending") counts.pending += 1;
@@ -207,7 +207,7 @@ export function AutomaticMessagesTab() {
       <section className="flex flex-col gap-3">
         <SectionHeading
           title={t("New customers")}
-          hint={t("The first reply someone gets when they message you and are not a member yet.")}
+          hint={t("What someone gets before they join, and the moment staff sign them up.")}
         />
         {catalog.filter((d) => d.group === "welcome").map((d) => card(d))}
       </section>

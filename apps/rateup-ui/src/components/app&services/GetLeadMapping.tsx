@@ -13,6 +13,7 @@ import {
   useSaveGetLeadTriggersMutation,
 } from "@/backend/appsIntegration/getlead/getlead.query";
 import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
+import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label.tsx";
@@ -72,7 +73,7 @@ export function GetLeadMapping({ meta }: Props) {
 
   // The board to map. Most orgs have one; a picker for several is beyond what
   // this screen needs, so the first is used and named.
-  const pipelineId = pipelines?.[0]?.id;
+  const pipelineId = findLeadsPipeline(pipelines)?.id;
   const { data: pipeline } = usePipelineQuery(pipelineId);
 
   const { data: settings, isPending } = useGetLeadSettings(true);

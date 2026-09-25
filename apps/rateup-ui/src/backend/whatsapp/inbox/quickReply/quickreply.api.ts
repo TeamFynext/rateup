@@ -17,7 +17,6 @@ export async function getWaQuickReplies() {
 export interface CreateQuickReplyInput {
   text: unknown;
   key: string;
-  category: string;
   topic: string;
 }
 
@@ -30,7 +29,6 @@ export interface QuickReply {
   id: string;
   key: string;
   text: string;
-  category: string;
   topic: string;
   message?: string;
   priority?: number;

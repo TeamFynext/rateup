@@ -26,7 +26,6 @@ export const WaQuickReply = ({
     ? quickReplies.filter(
         (r: QuickReply) =>
           (r.key && r.key.toLowerCase().includes(searchQuery?.toLowerCase())) ||
-          r.category.toLowerCase().includes(searchQuery?.toLowerCase()) ||
           r.topic.toLowerCase().includes(searchQuery?.toLowerCase()),
       )
     : quickReplies;

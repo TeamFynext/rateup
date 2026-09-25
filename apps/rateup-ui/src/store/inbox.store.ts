@@ -11,7 +11,11 @@ import { getRowKey, markWaMessagesAsRead } from "@/backend/whatsapp/inbox/messag
 import type { User } from "@/context/UserContext.tsx";
 import type { ChatFilter } from "@/store/chat-filter.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
-import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
+import {
+  compareInboxRowTimes,
+  inboxRowSortTime,
+  isInboxSessionExpired,
+} from "@/utils/whatsapp/inbox.ts";
 
 import {
   clearAllContactsFromDB,
@@ -360,25 +364,11 @@ export const useContactsStore = create<ContactsStoreState>()(
             const allIds = Array.from(contactIdsSet);
 
             sortedList = allIds
-              .map((id) => {
-                const c = state.contactsById.get(id);
-                const sortByWaCreated =
-                  currentFilterKey.includes("sortBy:newest_wa_created") ||
-                  currentFilterKey.includes("sortBy:oldest_wa_created");
-                const createdAt = sortByWaCreated
-                  ? (c?.lastMessage?.waCreatedAt ?? 0)
-                  : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
-                return { id, createdAt };
-              })
-              .sort((a, b) => {
-                const oldestSort =
-                  currentFilterKey.includes("sortBy:oldest") ||
-                  currentFilterKey.includes("sortBy:oldest_wa_created");
-                const timeA = new Date(a.createdAt).getTime();
-                const timeB = new Date(b.createdAt).getTime();
-
-                return oldestSort ? timeA - timeB : timeB - timeA;
-              })
+              .map((id) => ({
+                id,
+                time: inboxRowSortTime(state.contactsById.get(id), currentFilterKey),
+              }))
+              .sort(compareInboxRowTimes(currentFilterKey))
               .map((c) => c.id);
             state.contactsByFilter[currentFilterKey] = sortedList;
             state.isLoading = false;
@@ -493,26 +483,11 @@ export const useContactsStore = create<ContactsStoreState>()(
                 ? currentList.filter((id) => id !== rowKey)
                 : currentList;
               const sortedList = baseList
-                .map((id) => {
-                  const c = draft.contactsById.get(id);
-                  const sortByWaCreated =
-                    currentFilterKey.includes("sortBy:newest_wa_created") ||
-                    currentFilterKey.includes("sortBy:oldest_wa_created");
-                  const createdAt = sortByWaCreated
-                    ? (c?.lastMessage?.waCreatedAt ?? 0)
-                    : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
-
-                  return { id, createdAt };
-                })
-                .sort((a, b) => {
-                  const oldestSort =
-                    currentFilterKey.includes("sortBy:oldest") ||
-                    currentFilterKey.includes("sortBy:oldest_wa_created");
-                  const timeA = new Date(a.createdAt).getTime();
-                  const timeB = new Date(b.createdAt).getTime();
-
-                  return oldestSort ? timeA - timeB : timeB - timeA;
-                })
+                .map((id) => ({
+                  id,
+                  time: inboxRowSortTime(draft.contactsById.get(id), currentFilterKey),
+                }))
+                .sort(compareInboxRowTimes(currentFilterKey))
                 .map((c) => c.id);
               draft.contactsByFilter[currentFilterKey] = sortedList;
               updateIdb.push({ key: currentFilterKey, contactIds: sortedList });
@@ -605,26 +580,11 @@ export const useContactsStore = create<ContactsStoreState>()(
                   }
                   if (!changed && !isMessageUpdated) return;
                   const sortedList = newList
-                    .map((id) => {
-                      const c = draft.contactsById.get(id);
-                      const sortByWaCreated =
-                        filterKey.includes("sortBy:newest_wa_created") ||
-                        filterKey.includes("sortBy:oldest_wa_created");
-                      const createdAt = sortByWaCreated
-                        ? (c?.lastMessage?.waCreatedAt ?? 0)
-                        : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
-
-                      return { id, createdAt };
-                    })
-                    .sort((a, b) => {
-                      const oldestSort =
-                        filterKey.includes("sortBy:oldest") ||
-                        filterKey.includes("sortBy:oldest_wa_created");
-                      const timeA = new Date(a.createdAt).getTime();
-                      const timeB = new Date(b.createdAt).getTime();
-
-                      return oldestSort ? timeA - timeB : timeB - timeA;
-                    })
+                    .map((id) => ({
+                      id,
+                      time: inboxRowSortTime(draft.contactsById.get(id), filterKey),
+                    }))
+                    .sort(compareInboxRowTimes(filterKey))
                     .map((c) => c.id);
                   draft.contactsByFilter[filterKey] = sortedList;
                   updateIdb.push({ key: filterKey, contactIds: sortedList });
@@ -675,26 +635,11 @@ export const useContactsStore = create<ContactsStoreState>()(
                   }
                   if (!changed && !isMessageUpdated) return;
                   const sortedList = newList
-                    .map((id) => {
-                      const c = draft.contactsById.get(id);
-                      const sortByWaCreated =
-                        filterKey.includes("sortBy:newest_wa_created") ||
-                        filterKey.includes("sortBy:oldest_wa_created");
-                      const createdAt = sortByWaCreated
-                        ? (c?.lastMessage?.waCreatedAt ?? 0)
-                        : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
-
-                      return { id, createdAt };
-                    })
-                    .sort((a, b) => {
-                      const oldestSort =
-                        filterKey.includes("sortBy:oldest") ||
-                        filterKey.includes("sortBy:oldest_wa_created");
-                      const timeA = new Date(a.createdAt).getTime();
-                      const timeB = new Date(b.createdAt).getTime();
-
-                      return oldestSort ? timeA - timeB : timeB - timeA;
-                    })
+                    .map((id) => ({
+                      id,
+                      time: inboxRowSortTime(draft.contactsById.get(id), filterKey),
+                    }))
+                    .sort(compareInboxRowTimes(filterKey))
                     .map((c) => c.id);
                   draft.contactsByFilter[filterKey] = sortedList;
                   updateIdb.push({ key: filterKey, contactIds: sortedList });
@@ -736,26 +681,11 @@ export const useContactsStore = create<ContactsStoreState>()(
 
                   if (!changed && !isMessageUpdated) return;
                   const sortedList = newList
-                    .map((id) => {
-                      const c = draft.contactsById.get(id);
-                      const sortByWaCreated =
-                        filterKey.includes("sortBy:newest_wa_created") ||
-                        filterKey.includes("sortBy:oldest_wa_created");
-                      const createdAt = sortByWaCreated
-                        ? (c?.lastMessage?.waCreatedAt ?? 0)
-                        : (c?.conversationLastMessageAt ?? c?.lastReceivedMessageTimeStamp ?? 0);
-
-                      return { id, createdAt };
-                    })
-                    .sort((a, b) => {
-                      const oldestSort =
-                        filterKey.includes("sortBy:oldest") ||
-                        filterKey.includes("sortBy:oldest_wa_created");
-                      const timeA = new Date(a.createdAt).getTime();
-                      const timeB = new Date(b.createdAt).getTime();
-
-                      return oldestSort ? timeA - timeB : timeB - timeA;
-                    })
+                    .map((id) => ({
+                      id,
+                      time: inboxRowSortTime(draft.contactsById.get(id), filterKey),
+                    }))
+                    .sort(compareInboxRowTimes(filterKey))
                     .map((c) => c.id);
                   draft.contactsByFilter[filterKey] = sortedList;
                   updateIdb.push({ key: filterKey, contactIds: sortedList });

@@ -1,10 +1,18 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { LiveNotification } from "@/backend/notification/notification.api";
+import { notificationKeys } from "@/backend/notification/notification.keys";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import {
+  isNotificationEvent,
+  notificationMessage,
+} from "@/components/dashboard/settings/notifications/notificationCopy.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
 import {
   resolveIncomingRowKey,
@@ -13,6 +21,8 @@ import {
   useMessagesStore,
 } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
+import { claimAcrossTabs } from "@/utils/crossTabClaim";
+import { showDesktopNotification } from "@/utils/desktopNotifications";
 
 export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -23,6 +33,10 @@ export const useChatSocket = () => {
   // else the handler needs is read from `getState()` at event time.
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  const { t } = useTranslation();
+  const tRef = useRef(t);
+  tRef.current = t;
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!browserId) return;
@@ -76,11 +90,7 @@ export const useChatSocket = () => {
                   sourcePlatform: message.sourcePlatform,
                   waCreatedAt: message.waCreatedAt,
                 },
-                ...(message.messageBody.exchangeProcess === "receive"
-                  ? {
-                      lastReceivedMessageTimeStamp: message.waCreatedAt,
-                    }
-                  : {}),
+                ...conversationClocksFor(message),
               }));
             } else if (
               // Spam is contact-grained and exclusive to the Spam tab: a spam
@@ -104,11 +114,7 @@ export const useChatSocket = () => {
                       sourcePlatform: message.sourcePlatform,
                       waCreatedAt: message.waCreatedAt,
                     },
-                    ...(message.messageBody.exchangeProcess === "receive"
-                      ? {
-                          lastReceivedMessageTimeStamp: message.waCreatedAt,
-                        }
-                      : {}),
+                    ...conversationClocksFor(message),
                     updatedAt: new Date().toISOString(),
                   },
                 ],
@@ -203,11 +209,18 @@ export const useChatSocket = () => {
               }));
             }
             break;
+          case "notification":
+            if (data?.notification) {
+              handleLiveNotification(data.notification, {
+                t: tRef.current,
+                navigate: navigateRef.current,
+                queryClient,
+              });
+            }
+            break;
           default:
             break;
         }
-
-        handleNotificationWithSound({ message: data, navigate: navigateRef.current });
       };
 
       ws.onclose = () => {
@@ -235,52 +248,83 @@ export const useChatSocket = () => {
   }, [browserId]);
 };
 
-/** The inbox-notification slice of the socket payload this handler reads. */
-interface ChatSocketMessage {
-  type?: string;
-  inbox?: {
-    contact?: { id?: string; name?: string };
-    message?: {
-      messageId?: string;
-      messageBody?: { exchangeProcess?: string };
-    };
-  };
-}
-
-const handleNotificationWithSound = ({
-  message,
-  navigate,
-}: {
-  message: ChatSocketMessage | null | undefined;
-  navigate: ReturnType<typeof useNavigate>;
-}) => {
-  const pathnamesMap = {
-    inbox: "/dashboard/inbox",
-  };
-  if (
-    !message ||
-    !message.type ||
-    message.type !== "inbox" ||
-    window.location.pathname === pathnamesMap.inbox ||
-    message?.inbox?.message?.messageBody?.exchangeProcess !== "receive"
-  )
-    return;
-
-  const audio = new Audio("/sounds/noti.wav");
-
-  toast.info(`You have a new message from ${message?.inbox?.contact?.name}`, {
-    id: message?.inbox?.message?.messageId,
-    icon: <IconBrandWhatsapp size={18} />,
-    action: {
-      label: "View",
-      onClick: () => {
-        navigate({
-          to: `${pathnamesMap.inbox}?contactId=${message?.inbox?.contact?.id}`,
-        });
-      },
-    },
-  });
-  audio.play().catch((e) => {
+const playSound = () => {
+  new Audio("/sounds/noti.wav").play().catch((e) => {
     console.warn("Audio playback failed:", e);
   });
 };
+
+/** Gives a visible tab time to claim a notification's sound and popup before hidden tabs try. */
+const HIDDEN_TAB_CLAIM_DELAY_MS = 400;
+
+/**
+ * One of this member's notifications, already filtered by their settings on the server. Every
+ * open tab receives it; the sound and desktop popup fire in one tab only (a visible one if any).
+ * A desktop notification stands in for the toast while hidden, where a toast would expire unseen.
+ */
+function handleLiveNotification(
+  notification: LiveNotification,
+  {
+    t,
+    navigate,
+    queryClient,
+  }: { t: TFunction; navigate: ReturnType<typeof useNavigate>; queryClient: QueryClient },
+) {
+  if (notification.id) {
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.all() });
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.count() });
+  }
+  if (!isNotificationEvent(notification.event)) return;
+
+  const message = notificationMessage(t, notification.event, notification.data);
+  const open = () => void navigate({ href: notification.path });
+  const isNewMessage = notification.event.startsWith("inbox.message.");
+  const onInbox = window.location.pathname.startsWith("/dashboard/inbox");
+  const tag = notification.id ?? `${notification.event}:${notification.data?.contactId ?? ""}`;
+  // The inbox shows a new message by itself; a toast on top of it is noise.
+  const wantsToast = notification.toast && !(isNewMessage && onInbox);
+  const showToast = () =>
+    toast.info(message, {
+      id: notification.id ?? undefined,
+      action: { label: t("View"), onClick: open },
+    });
+
+  if (document.visibilityState === "visible") {
+    if (wantsToast) showToast();
+    void claimAcrossTabs(tag).then((claimed) => {
+      if (claimed && wantsToast && notification.sound) playSound();
+    });
+    return;
+  }
+
+  void (async () => {
+    await new Promise((resolve) => setTimeout(resolve, HIDDEN_TAB_CLAIM_DELAY_MS));
+    if (!(await claimAcrossTabs(tag))) return;
+    const shownOnDesktop =
+      notification.desktop &&
+      showDesktopNotification({ title: "RateUp", body: message, tag, onClick: open });
+    const toasted = !shownOnDesktop && wantsToast;
+    if (toasted) showToast();
+    if (notification.sound && (shownOnDesktop || toasted)) playSound();
+  })();
+}
+
+/**
+ * The row's sort clocks after a live message, bumped the way `createMessage` in rateup-api
+ * bumps the conversation: any non-internal message is activity, and an inbound one is also
+ * the customer's last message. The list sorts on these, so they must move with the thread.
+ */
+function conversationClocksFor(message: {
+  waCreatedAt: string;
+  sourcePlatform?: string | null;
+  messageBody?: { exchangeProcess?: string } | null;
+}) {
+  const exchange = message.messageBody?.exchangeProcess;
+  if (message.sourcePlatform === "INTERNAL" || exchange === "privateNote") return {};
+  if (exchange !== "receive") return { conversationLastMessageAt: message.waCreatedAt };
+  return {
+    conversationLastMessageAt: message.waCreatedAt,
+    conversationLastCustomerMessageAt: message.waCreatedAt,
+    lastReceivedMessageTimeStamp: message.waCreatedAt,
+  };
+}

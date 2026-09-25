@@ -10,6 +10,7 @@ import type {
   LeadDetail,
   LeadNote,
   LeadTask,
+  PipelineCreateLimits,
   PipelineDetail,
   PipelineLabel,
   PipelineLostReason,
@@ -36,6 +37,11 @@ const PIPELINE_URL = "/pipelines";
 
 export async function fetchPipelines() {
   const { data } = await axiosClient.get<PipelineSummary[]>(PIPELINE_URL);
+  return data;
+}
+
+export async function fetchPipelineCreateLimits() {
+  const { data } = await axiosClient.get<PipelineCreateLimits>(`${PIPELINE_URL}/create-limits`);
   return data;
 }
 
@@ -210,6 +216,72 @@ export async function reopenLead(leadId: string) {
 
 export async function bulkUpdateLeads(input: BulkUpdateLeadsInput) {
   const { data } = await axiosClient.put<Lead[]>(`${PIPELINE_URL}/leads/bulk`, input);
+  return data;
+}
+
+export async function bulkDeleteLeads(leadIds: string[]) {
+  const { data } = await axiosClient.post<{ deleted: number }>(
+    `${PIPELINE_URL}/leads/bulk/delete`,
+    { leadIds },
+  );
+  return data;
+}
+
+/** Why a row was left out; mirrors `ImportSkipReason` in rateup-api's `lead.import.ts`. */
+export type LeadImportSkipReason =
+  | "MISSING_NAME"
+  | "INVALID_PHONE"
+  | "INVALID_EMAIL"
+  | "UNKNOWN_STAGE"
+  | "UNKNOWN_SOURCE"
+  | "UNKNOWN_ASSIGNEE"
+  | "INVALID_DATE"
+  | "ALREADY_ON_BOARD"
+  | "FAILED";
+
+export interface LeadImportResult {
+  created: number;
+  skipped: Array<{ row: number; name: string; reason: LeadImportSkipReason; value?: string }>;
+}
+
+export async function importLeads({ pipelineId, file }: { pipelineId: string; file: File }) {
+  const form = new FormData();
+  form.append("file", file);
+  // Each row is a full lead create on the server, so a large file takes a while.
+  const { data } = await axiosClient.post<LeadImportResult>(
+    `${PIPELINE_URL}/${pipelineId}/import`,
+    form,
+    { timeout: 180_000 },
+  );
+  return data;
+}
+
+export type PipelineExportFormat = "xlsx" | "ods";
+
+/** The leads the board's current filters show, as a spreadsheet the importer can read back. */
+export async function exportPipeline({
+  pipelineId,
+  params,
+  format,
+}: {
+  pipelineId: string;
+  params: LeadListParams;
+  format: PipelineExportFormat;
+}) {
+  const { data } = await axiosClient.get<Blob>(`${PIPELINE_URL}/${pipelineId}/export`, {
+    params: { ...params, format },
+    responseType: "blob",
+    // A large board is built in one response; the default timeout would cut it off.
+    timeout: 0,
+  });
+  return data;
+}
+
+export async function fetchImportTemplate(pipelineId: string, format: "csv" | "xlsx") {
+  const { data } = await axiosClient.get<Blob>(`${PIPELINE_URL}/${pipelineId}/import-template`, {
+    params: { format },
+    responseType: "blob",
+  });
   return data;
 }
 

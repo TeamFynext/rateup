@@ -170,6 +170,7 @@ import { Route as DashboardSettingsIntegrationsIndexRouteImport } from './routes
 import { Route as DashboardSettingsMembersIndexRouteImport } from './routes/dashboard/settings/members/index'
 import { Route as DashboardSettingsMembersMemberIdRouteImport } from './routes/dashboard/settings/members/$memberId'
 import { Route as DashboardSettingsMembersRolesRouteImport } from './routes/dashboard/settings/members/roles'
+import { Route as DashboardSettingsNotificationsIndexRouteImport } from './routes/dashboard/settings/notifications/index'
 import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/dashboard/settings/security/index'
 import { Route as DashboardSettingsTeamIndexRouteImport } from './routes/dashboard/settings/team/index'
 import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashboard/settings/users/index'
@@ -186,6 +187,7 @@ import { Route as DashboardWhatsappTemplatesIndexRouteImport } from './routes/da
 import { Route as authLoginCallbackAppleIndexRouteImport } from './routes/(auth)/login/callback/apple/index'
 import { Route as authLoginCallbackGoogleIndexRouteImport } from './routes/(auth)/login/callback/google/index'
 import { Route as authLoginCallbackPausedIndexRouteImport } from './routes/(auth)/login/callback/paused/index'
+import { Route as authLoginCallbackSuspendedIndexRouteImport } from './routes/(auth)/login/callback/suspended/index'
 import { Route as marketingBlogAuthorSlugIndexRouteImport } from './routes/(marketing)/blog/author/$slug/index'
 import { Route as marketingBlogTagSlugIndexRouteImport } from './routes/(marketing)/blog/tag/$slug/index'
 import { Route as marketingToolsNpsSurveyTemplatesSlugIndexRouteImport } from './routes/(marketing)/tools/nps-survey-templates/$slug/index'
@@ -1112,6 +1114,12 @@ const DashboardSettingsMembersRolesRoute =
     path: '/settings/members/roles',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsNotificationsIndexRoute =
+  DashboardSettingsNotificationsIndexRouteImport.update({
+    id: '/settings/notifications/',
+    path: '/settings/notifications/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardSettingsSecurityIndexRoute =
   DashboardSettingsSecurityIndexRouteImport.update({
     id: '/settings/security/',
@@ -1206,6 +1214,12 @@ const authLoginCallbackPausedIndexRoute =
   authLoginCallbackPausedIndexRouteImport.update({
     id: '/login/callback/paused/',
     path: '/login/callback/paused/',
+    getParentRoute: () => authRouteRoute,
+  } as any)
+const authLoginCallbackSuspendedIndexRoute =
+  authLoginCallbackSuspendedIndexRouteImport.update({
+    id: '/login/callback/suspended/',
+    path: '/login/callback/suspended/',
     getParentRoute: () => authRouteRoute,
   } as any)
 const marketingBlogAuthorSlugIndexRoute =
@@ -1530,6 +1544,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
+  '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
@@ -1546,6 +1561,7 @@ export interface FileRoutesByFullPath {
   '/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
   '/login/callback/google/': typeof authLoginCallbackGoogleIndexRoute
   '/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
+  '/login/callback/suspended/': typeof authLoginCallbackSuspendedIndexRoute
   '/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
   '/tools/nps-survey-templates/$slug/': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
@@ -1728,6 +1744,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/channels': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members': typeof DashboardSettingsMembersIndexRoute
+  '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsIndexRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users': typeof DashboardSettingsUsersIndexRoute
@@ -1744,6 +1761,7 @@ export interface FileRoutesByTo {
   '/login/callback/apple': typeof authLoginCallbackAppleIndexRoute
   '/login/callback/google': typeof authLoginCallbackGoogleIndexRoute
   '/login/callback/paused': typeof authLoginCallbackPausedIndexRoute
+  '/login/callback/suspended': typeof authLoginCallbackSuspendedIndexRoute
   '/blog/author/$slug': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug': typeof marketingBlogTagSlugIndexRoute
   '/tools/nps-survey-templates/$slug': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
@@ -1935,6 +1953,7 @@ export interface FileRoutesById {
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
+  '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
@@ -1951,6 +1970,7 @@ export interface FileRoutesById {
   '/(auth)/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
   '/(auth)/login/callback/google/': typeof authLoginCallbackGoogleIndexRoute
   '/(auth)/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
+  '/(auth)/login/callback/suspended/': typeof authLoginCallbackSuspendedIndexRoute
   '/(marketing)/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/(marketing)/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
   '/(marketing)/tools/nps-survey-templates/$slug/': typeof marketingToolsNpsSurveyTemplatesSlugIndexRoute
@@ -2140,6 +2160,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
+    | '/dashboard/settings/notifications/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
@@ -2156,6 +2177,7 @@ export interface FileRouteTypes {
     | '/login/callback/apple/'
     | '/login/callback/google/'
     | '/login/callback/paused/'
+    | '/login/callback/suspended/'
     | '/blog/author/$slug/'
     | '/blog/tag/$slug/'
     | '/tools/nps-survey-templates/$slug/'
@@ -2338,6 +2360,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels'
     | '/dashboard/settings/integrations'
     | '/dashboard/settings/members'
+    | '/dashboard/settings/notifications'
     | '/dashboard/settings/security'
     | '/dashboard/settings/team'
     | '/dashboard/settings/users'
@@ -2354,6 +2377,7 @@ export interface FileRouteTypes {
     | '/login/callback/apple'
     | '/login/callback/google'
     | '/login/callback/paused'
+    | '/login/callback/suspended'
     | '/blog/author/$slug'
     | '/blog/tag/$slug'
     | '/tools/nps-survey-templates/$slug'
@@ -2544,6 +2568,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
+    | '/dashboard/settings/notifications/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
@@ -2560,6 +2585,7 @@ export interface FileRouteTypes {
     | '/(auth)/login/callback/apple/'
     | '/(auth)/login/callback/google/'
     | '/(auth)/login/callback/paused/'
+    | '/(auth)/login/callback/suspended/'
     | '/(marketing)/blog/author/$slug/'
     | '/(marketing)/blog/tag/$slug/'
     | '/(marketing)/tools/nps-survey-templates/$slug/'
@@ -3732,6 +3758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsMembersRolesRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/settings/notifications/': {
+      id: '/dashboard/settings/notifications/'
+      path: '/settings/notifications'
+      fullPath: '/dashboard/settings/notifications/'
+      preLoaderRoute: typeof DashboardSettingsNotificationsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/settings/security/': {
       id: '/dashboard/settings/security/'
       path: '/settings/security'
@@ -3842,6 +3875,13 @@ declare module '@tanstack/react-router' {
       path: '/login/callback/paused'
       fullPath: '/login/callback/paused/'
       preLoaderRoute: typeof authLoginCallbackPausedIndexRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/login/callback/suspended/': {
+      id: '/(auth)/login/callback/suspended/'
+      path: '/login/callback/suspended'
+      fullPath: '/login/callback/suspended/'
+      preLoaderRoute: typeof authLoginCallbackSuspendedIndexRouteImport
       parentRoute: typeof authRouteRoute
     }
     '/(marketing)/blog/author/$slug/': {
@@ -4049,6 +4089,7 @@ interface authRouteRouteChildren {
   authLoginCallbackAppleIndexRoute: typeof authLoginCallbackAppleIndexRoute
   authLoginCallbackGoogleIndexRoute: typeof authLoginCallbackGoogleIndexRoute
   authLoginCallbackPausedIndexRoute: typeof authLoginCallbackPausedIndexRoute
+  authLoginCallbackSuspendedIndexRoute: typeof authLoginCallbackSuspendedIndexRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
@@ -4064,6 +4105,7 @@ const authRouteRouteChildren: authRouteRouteChildren = {
   authLoginCallbackAppleIndexRoute: authLoginCallbackAppleIndexRoute,
   authLoginCallbackGoogleIndexRoute: authLoginCallbackGoogleIndexRoute,
   authLoginCallbackPausedIndexRoute: authLoginCallbackPausedIndexRoute,
+  authLoginCallbackSuspendedIndexRoute: authLoginCallbackSuspendedIndexRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
@@ -4456,6 +4498,7 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsChannelsIndexRoute: typeof DashboardSettingsChannelsIndexRoute
   DashboardSettingsIntegrationsIndexRoute: typeof DashboardSettingsIntegrationsIndexRoute
   DashboardSettingsMembersIndexRoute: typeof DashboardSettingsMembersIndexRoute
+  DashboardSettingsNotificationsIndexRoute: typeof DashboardSettingsNotificationsIndexRoute
   DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsTeamIndexRoute: typeof DashboardSettingsTeamIndexRoute
   DashboardSettingsUsersIndexRoute: typeof DashboardSettingsUsersIndexRoute
@@ -4532,6 +4575,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsIntegrationsIndexRoute:
     DashboardSettingsIntegrationsIndexRoute,
   DashboardSettingsMembersIndexRoute: DashboardSettingsMembersIndexRoute,
+  DashboardSettingsNotificationsIndexRoute:
+    DashboardSettingsNotificationsIndexRoute,
   DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsTeamIndexRoute: DashboardSettingsTeamIndexRoute,
   DashboardSettingsUsersIndexRoute: DashboardSettingsUsersIndexRoute,

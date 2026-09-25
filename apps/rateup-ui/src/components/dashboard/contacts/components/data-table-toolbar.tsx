@@ -7,7 +7,6 @@ import {
   IconDownload,
   IconFolder,
   IconGlobe,
-  IconInfoCircle,
   IconPlus,
   IconSearch,
   IconStack2,
@@ -18,7 +17,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -26,35 +25,24 @@ import {
   useContactLabels,
   useDeleteManyContactsMutation,
   useExportContactsMutation,
-  useImportCSVContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import AddToGroupModal from "@/components/Contacts/AddToGroupModal.tsx";
 import ApplyLifecycletoContactsModal from "@/components/Contacts/ApplyLifecycletoContactsModal.tsx";
 import AssignStageToContactsModal from "@/components/Contacts/AssignStageToContactsModal.tsx";
-import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import CreateOrEditContactModal from "@/components/Contacts/CreatOrEditContactModal.tsx";
+import ImportContactsDialog from "@/components/Contacts/ImportContactsDialog.tsx";
 import LabelContactModal from "@/components/Contacts/LabelContactModal.tsx";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Select,
@@ -64,15 +52,9 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
-import type { CustomField } from "@/context/CustomFieldsContext.tsx";
-import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { TeamFeature } from "@/types/enums.ts";
-import { getApiErrorData } from "@/utils/apiError.ts";
-import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { useContactTableStore } from "../store/contact-table-store.ts";
 
@@ -296,7 +278,7 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
               <IconUpload className="w-4 h-4 mr-2" />
               <span className="font-medium text-sm">{t("Import")}</span>
             </Button>
-            <ImportContactModal opened={openImportModal} setOpened={setOpenImportModal} />
+            <ImportContactsDialog opened={openImportModal} setOpened={setOpenImportModal} />
             {isFiltered && (
               <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
                 Reset
@@ -412,180 +394,5 @@ const ExportContacts = ({ table }: { table: Table<ContactsData> }) => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-};
-
-const ImportContactModal = ({
-  opened,
-  setOpened,
-}: {
-  opened: boolean;
-  setOpened: (open: boolean) => void;
-}) => {
-  const { t } = useTranslation();
-
-  const handleDownloadDemo = () => {
-    // Example: download a text file (you can replace this with any file URL)
-    const fileUrl = getFileUrlFromKey("/File/contact/demo.csv", false);
-    const link = document.createElement("a");
-    link.href = fileUrl ?? "";
-    link.download = "example.pdf"; // Suggested filename
-    link.click();
-  };
-  const [csvfile, setCsvfile] = useState<File | null>(null);
-  const [updateExisting, setUpdateExisting] = useState(false);
-  const [hasHeaderRow, setHasHeaderRow] = useState(true);
-  const importCSVContactMutation = useImportCSVContactMutation();
-  const [error, setError] = useState<string | null>(null);
-  const [fields, setFields] = useState<CustomField[]>([]);
-  const { customFields } = useCustomFieldsContext();
-
-  useEffect(() => {
-    if (csvfile) {
-      const fileExtension = csvfile.name.split(".").pop()?.toLowerCase();
-      if (!["csv", "xlsx", "ods"].includes(fileExtension ?? "")) {
-        setError(t("Please upload a valid CSV, XLSX, or ODS file."));
-      } else {
-        setError(null);
-      }
-    }
-  }, [csvfile, t]);
-  function handleImportContacts() {
-    if (!csvfile) {
-      setError(t("Please select a CSV file to import."));
-      return;
-    }
-    const formData = new FormData();
-    formData.append("update", updateExisting ? "true" : "false");
-    formData.append("hasHeaderRow", hasHeaderRow ? "true" : "false");
-    formData.append("file", csvfile);
-    fields.forEach((item, index) => {
-      formData.append(`tags[${index}]`, item.slug);
-    });
-    importCSVContactMutation.mutate(formData, {
-      onSettled: () => {
-        setCsvfile(null);
-      },
-      onSuccess: () => {
-        toast.success("Contact imported successfully");
-        setOpened(false);
-      },
-      onError: (error) => {
-        const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
-        if (!isValidationError) {
-          toast.error(error?.message || "Importing failed");
-        }
-        setOpened(false);
-      },
-    });
-  }
-
-  function reset() {
-    setCsvfile(null);
-    setUpdateExisting(false);
-    setHasHeaderRow(true);
-    setError(null);
-  }
-
-  useEffect(() => {
-    setFields(customFields);
-  }, [customFields]);
-
-  return (
-    <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="text-md">{t("Import Contacts")}</DialogTitle>
-          <DialogDescription>
-            {t("Import contacts from a CSV file to add them to your contact list.")}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <p className="text-sm">{t("Custom Fields")}</p>
-          <Field>
-            {customFields.map((field) => (
-              <Field
-                key={field.id}
-                orientation="horizontal"
-                className="rounded-lg bg-ru-blue-100 dark:bg-blue-950/50 p-1 w-fit px-2"
-              >
-                <Checkbox
-                  checked={fields.some((p) => p.id === field.id)}
-                  id={field.id}
-                  className="rounded-xl data-[state=unchecked]:bg-muted"
-                  onCheckedChange={(checked) => {
-                    setFields((prev) =>
-                      checked ? [...prev, field] : prev.filter((p) => p.id !== field.id),
-                    );
-                  }}
-                />
-                <FieldLabel htmlFor={field.id} className="text-sm font-normal">
-                  {field.name}
-                </FieldLabel>
-              </Field>
-            ))}
-          </Field>
-
-          <blockquote className="border-l-4 border-blue-500 bg-ru-blue-50 dark:bg-blue-950/40 p-4 flex flex-col gap-2">
-            <div className="flex gap-2 text-blue-700 dark:text-blue-400 text-sm">
-              <IconInfoCircle />
-              {t(
-                "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
-              )}
-            </div>
-
-            <Button variant="secondary" onClick={handleDownloadDemo}>
-              <IconUpload />
-              <span className="font-medium text-sm">{t("Download Demo Csv File")}</span>
-            </Button>
-          </blockquote>
-          <Field orientation="horizontal" className="gap-2 mt-4">
-            <Switch
-              id="update-existing-data"
-              className="data-[state=unchecked]:bg-muted-foreground"
-              checked={updateExisting}
-              onCheckedChange={setUpdateExisting}
-            />
-            <FieldLabel htmlFor="update-existing-data">
-              {t("Update the existing data while importing")}
-            </FieldLabel>
-          </Field>
-          <Field orientation="horizontal" className="gap-2 mt-4">
-            <Switch
-              id="has-header-row"
-              className="data-[state=unchecked]:bg-muted-foreground"
-              checked={hasHeaderRow}
-              onCheckedChange={setHasHeaderRow}
-            />
-            <FieldLabel htmlFor="has-header-row">
-              {t("First row contains column headers (name, phone, ...)")}
-            </FieldLabel>
-          </Field>
-          <div className="grid items-center gap-3 mt-4">
-            <Input
-              id="contact-csv"
-              type="file"
-              accept=".csv,.xlsx,.ods"
-              onChange={(e) => setCsvfile(e.target.files?.[0] || null)}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex justify-end gap-2 mt-6 text-sm">
-            <DialogClose render={<Button variant="secondary" onClick={reset} />}>
-              {t("Cancel")}
-            </DialogClose>
-
-            <Button onClick={handleImportContacts}>
-              {importCSVContactMutation.isPending && <Spinner />}
-              {t("Import")}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-      <ContactImportErrorModal
-        body={getApiErrorData(importCSVContactMutation?.error)}
-        isError={importCSVContactMutation.isError}
-      />
-    </Dialog>
   );
 };

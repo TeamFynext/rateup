@@ -74,17 +74,28 @@ export interface PipelineLabel {
   pipelineId: string;
 }
 
+/** What a board is for; fixed at creation. Mirrors `PipelineType` in rateup-api. */
+export type PipelineType = "LEADS" | "SUPPORT" | "PROJECTS" | "CUSTOM";
+
 /** The pipeline switcher's row — name plus a live open-lead count. */
 export interface PipelineSummary {
   id: string;
   name: string;
   description: string | null;
   order: number;
+  type: PipelineType;
   rottingEnabled: boolean;
   autoAssignEnabled: boolean;
   nudgeEnabled: boolean;
   teamIds: string[];
   openLeadCount: number;
+}
+
+/** Org-wide, unlike the pipeline list, which holds only boards on the viewer's teams. */
+export interface PipelineCreateLimits {
+  hasLeadsPipeline: boolean;
+  otherCount: number;
+  otherLimit: number;
 }
 
 /** One pipeline with everything the board chrome needs, but without its leads. */
@@ -298,6 +309,7 @@ export interface ForecastBucket {
 
 export interface CreatePipelineInput {
   name: string;
+  type: PipelineType;
   description?: string;
   teamIds: string[];
 }

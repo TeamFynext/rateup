@@ -5,6 +5,7 @@
 // which are just exported from a module that happens to be named `global`.
 
 import type { LoyaltyRewardValue } from "@/backend/loyalty/reward.api";
+import type { PipelineType } from "@/backend/pipeline/pipeline.types.ts";
 import type { QuestionFormFeatures } from "@/backend/surveys/questions/questions.types.ts";
 import type { SurveyThemePage } from "@/backend/surveyTheme/surveyTheme.types";
 // Any modification to this file should be reflected in the backend
@@ -689,6 +690,7 @@ declare global {
     phone: string;
     other?: string;
     email: string;
+    address?: string | null;
     dob?: Date;
     source: string;
     createdAt: Date;
@@ -796,6 +798,7 @@ declare global {
     name: string | null;
     phone: string | null;
     email: string | null;
+    address: string | null;
     source: string | null;
     dob: string | null;
     other: string | null;
@@ -856,7 +859,7 @@ declare global {
       closedAt: string | null;
       createdAt: string;
       stage?: { id: string; name: string; color?: string | null; status: string };
-      pipeline?: { id: string; name: string };
+      pipeline?: { id: string; name: string; type: PipelineType };
       owner?: { id: string; name: string | null } | null;
       assignees: Array<{ assignee?: { id: string; name: string | null } }>;
     }>;

@@ -17,6 +17,7 @@ import {
 } from "../../ui/select.tsx";
 import { stageStatusLabel } from "../pipeline.labels.ts";
 import { groupStagesIntoBands } from "../pipeline.utils.ts";
+import { findLeadsPipeline } from "../pipelineTypes.ts";
 import { StageDot } from "./atoms.tsx";
 
 /**
@@ -34,9 +35,9 @@ export function usePipelineStages() {
   const hasPipeline = allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline);
 
   const { data: pipelines = [] } = usePipelinesQuery(hasPipeline);
-  // One board per org today (`PIPELINE_LIMIT_PER_ORG`), and the server resolves
-  // the same first-by-order board when it writes. Revisit together.
-  const { data: board } = usePipelineQuery(hasPipeline ? pipelines[0]?.id : undefined);
+  // The Leads board, the one the server resolves a contact's stage on.
+  const leads = findLeadsPipeline(pipelines);
+  const { data: board } = usePipelineQuery(hasPipeline ? leads?.id : undefined);
   return board?.stages ?? [];
 }
 

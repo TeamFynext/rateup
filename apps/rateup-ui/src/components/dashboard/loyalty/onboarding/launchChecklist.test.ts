@@ -29,6 +29,8 @@ const program = {
   signupBonus: 0,
   referralBonus: 0,
   refereeBonus: 0,
+  signupBonusEnabled: true,
+  referralBonusEnabled: true,
   tiersEnabled: true,
   logoUrl: "https://x/logo.png",
   createdAt: new Date(),

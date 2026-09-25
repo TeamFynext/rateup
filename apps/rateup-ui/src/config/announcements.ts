@@ -40,6 +40,46 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-09-25-loyalty-counter-welcome",
+    title: "A WhatsApp welcome for counter sign-ups",
+    summary:
+      "Customers you enrol at the counter now get a WhatsApp welcome message, which you can turn off in Loyalty → Messages. You can also switch the joining and referral bonuses on or off.",
+    publishedAt: "2026-09-25",
+    kinds: ["new", "improvement"],
+    area: "Loyalty",
+    link: { to: "/dashboard/loyalty/messages", label: "Open Messages" },
+  },
+  {
+    id: "2026-09-25-notification-settings",
+    title: "Choose your own notifications",
+    summary:
+      "Pick what RateUp tells you about and where: in the app, on your phone, by email or as desktop alerts. Find it under Settings → Notifications.",
+    publishedAt: "2026-09-25",
+    kinds: ["new"],
+    area: "Settings",
+    link: { to: "/dashboard/settings/notifications", label: "Open settings" },
+  },
+  {
+    id: "2026-09-25-pipeline-import",
+    title: "Import cards from a spreadsheet",
+    summary:
+      "Bring leads, tickets or tasks into any pipeline from a CSV or Excel file. Download the board's template, fill it in and upload it.",
+    publishedAt: "2026-09-25",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipeline" },
+  },
+  {
+    id: "2026-09-25-pipeline-types",
+    title: "More boards in Pipeline",
+    summary:
+      "Add Support, Projects or Custom boards alongside your Leads pipeline, each with its own columns. The inbox and automations keep using your Leads pipeline.",
+    publishedAt: "2026-09-25",
+    kinds: ["new"],
+    area: "Pipeline",
+    link: { to: "/dashboard/pipeline" },
+  },
+  {
     id: "2026-09-23-meta-agent-rateup-connector",
     title: "Your AI agent can use RateUp data",
     summary:

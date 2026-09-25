@@ -111,14 +111,6 @@ export function RewardsPage() {
         }
       />
 
-      {program && (
-        <BonusesStrip
-          program={program}
-          gifts={all.filter((r) => r.rewardType === "assigned")}
-          pointsName={economics.pointsName}
-        />
-      )}
-
       {hasPointRewards && (
         <GivebackPanel
           result={calculateGiveback(programmeGiveback)}
@@ -126,6 +118,14 @@ export function RewardsPage() {
           currencyCode={programmeGiveback.currencyCode}
           pointsName={programmeGiveback.pointsName}
           averageOrderValue={programmeGiveback.averageOrderValue}
+        />
+      )}
+
+      {program && (
+        <BonusesStrip
+          program={program}
+          gifts={all.filter((r) => r.rewardType === "assigned")}
+          pointsName={economics.pointsName}
         />
       )}
 

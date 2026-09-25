@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { IntlMessageFormat } from "intl-messageformat";
+
 const DICT_DIR = join(process.cwd(), "src/locales");
 
 const TARGETS = [
@@ -11,6 +13,11 @@ const TARGETS = [
 ];
 
 const PLACEHOLDER_REGEX = /(\{\{[^{}]+\}\}|\{[^{}]+\}|%\d*\$?[sd]|:[a-zA-Z_]\w*)/g;
+// In an ICU plural/select only the syntax is frozen — the `{n, plural,` head, the selectors, `#`
+// and the closing braces — so the branch text still gets translated.
+const ICU_HEAD = /\{\s*\w+\s*,\s*(?:plural|selectordinal|select)\s*,/;
+const ICU_SYNTAX_REGEX =
+  /(\{\s*\w+\s*,\s*(?:plural|selectordinal|select)\s*,(?:\s*offset:\d+)?|\s*(?:zero|one|two|few|many|other|=\d+)\s*\{|\{[^{}]+\}|\}|#)/g;
 const SPLIT_TOKEN = "\n__SPLIT__\n";
 const MAX_BATCH_CHARS = 1200;
 
@@ -50,9 +57,20 @@ function collectEmptyStringLeaves(
   return out;
 }
 
+/** i18next-icu renders a value that fails to parse verbatim, so English is the better fallback. */
+function isValidIcu(message: string, lang: string) {
+  try {
+    new IntlMessageFormat(message, lang, undefined, { ignoreTag: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function protectPlaceholders(text: string): ProtectedText {
   const placeholders: string[] = [];
-  const protectedText = String(text).replaceAll(PLACEHOLDER_REGEX, (match) => {
+  const pattern = ICU_HEAD.test(text) ? ICU_SYNTAX_REGEX : PLACEHOLDER_REGEX;
+  const protectedText = String(text).replaceAll(pattern, (match) => {
     const token = `__PH${placeholders.length}__`;
     placeholders.push(match);
     return token;
@@ -172,7 +190,8 @@ async function main() {
     // Update value field from translated key text.
     leavesToTranslate.forEach(({ path }) => {
       const key = path[path.length - 1];
-      const value = translatedMap.get(key) || key;
+      const translated = translatedMap.get(key);
+      const value = translated && isValidIcu(translated, target.lang) ? translated : key;
       setValueAtPath(existing, path, value);
     });
 

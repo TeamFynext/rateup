@@ -13,6 +13,7 @@ import type {
   LeadListParams,
   PipelineStage,
   PipelineStats,
+  PipelineType,
 } from "@/backend/pipeline/pipeline.types.ts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { STATUS_BAND } from "../pipeline.constants.tsx";
 import { stageStatusHint, stageStatusLabel } from "../pipeline.labels.ts";
 import { groupStagesIntoBands } from "../pipeline.utils.ts";
+import { usePipelineTypeConfig } from "../pipelineTypes.ts";
 import { StageFill } from "../shared/atoms.tsx";
 import { useHorizontalWheelScroll } from "../shared/useHorizontalWheelScroll.ts";
 import type { PipelineData } from "../usePipelineData.ts";
@@ -136,6 +138,7 @@ const StageColumn = memo(function StageColumn({
   stageStats,
   widestCount,
   rottingEnabled,
+  pipelineType,
   onOpenLead,
   onOpenConversation,
   onQuickAdd,
@@ -147,6 +150,7 @@ const StageColumn = memo(function StageColumn({
   stageStats: StageStats | undefined;
   widestCount: number;
   rottingEnabled: boolean;
+  pipelineType: PipelineType;
   onOpenLead: (leadId: string) => void;
   onOpenConversation: (lead: Lead) => void;
   onQuickAdd: (stageId: string) => void;
@@ -247,6 +251,7 @@ const StageColumn = memo(function StageColumn({
             key={lead.id}
             lead={lead}
             rottingEnabled={rottingEnabled}
+            pipelineType={pipelineType}
             onOpen={onOpenLead}
             onOpenConversation={onOpenConversation}
           />
@@ -308,6 +313,7 @@ export function BoardView({
 }: Readonly<BoardViewProps>) {
   const { t } = useTranslation();
   const { pipeline, params, stats } = data;
+  const typeConfig = usePipelineTypeConfig(pipeline);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useHorizontalWheelScroll(scrollRef);
@@ -386,14 +392,14 @@ export function BoardView({
                     bandStyle.text,
                   )}
                 >
-                  {stageStatusLabel(t, band.status)}
+                  {stageStatusLabel(t, band.status, pipeline?.type)}
                 </span>
                 <span className={cn("text-[11px] font-bold opacity-75", bandStyle.text)}>
-                  {t("{total} leads", { total: bandCount })}
+                  {typeConfig.cardTotal(bandCount)}
                 </span>
                 <span className="flex-1" />
                 <span className="text-muted-foreground text-[10px]">
-                  {stageStatusHint(t, band.status)}
+                  {stageStatusHint(t, band.status, pipeline?.type)}
                 </span>
               </div>
 
@@ -407,6 +413,7 @@ export function BoardView({
                     stageStats={statsByStage.get(stage.id)}
                     widestCount={widestCount}
                     rottingEnabled={pipeline.rottingEnabled}
+                    pipelineType={pipeline.type}
                     onOpenLead={onOpenLead}
                     onOpenConversation={onOpenConversation}
                     onQuickAdd={onQuickAdd}

@@ -21,7 +21,6 @@ import { useTranslation } from "react-i18next";
 
 import {
   useCreateLeadNoteMutation,
-  useDeleteLeadMutation,
   useDeleteLeadNoteMutation,
   useLeadQuery,
   useReopenLeadMutation,
@@ -54,11 +53,13 @@ import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
 import { channelLabel, sourceLabel } from "../pipeline.labels.ts";
 import { daysIdle, isRotting, leadAgeDays } from "../pipeline.utils.ts";
+import { usePipelineTypeConfig } from "../pipelineTypes.ts";
 import { FieldLabel } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
 import { LeadAssigneePicker } from "./LeadAssigneePicker.tsx";
 import { LeadStageStepper } from "./LeadStageStepper.tsx";
 import { NextActivityPanel } from "./NextActivityPanel.tsx";
+import { useDeleteLeads } from "./useDeleteLeads.ts";
 
 const ACTIVITY_ICON: Record<string, Icon> = {
   CREATED: IconPlus,
@@ -260,7 +261,8 @@ export function LeadDetailModal({
   const createNote = useCreateLeadNoteMutation();
   const deleteNote = useDeleteLeadNoteMutation();
   const reopenLead = useReopenLeadMutation();
-  const deleteLead = useDeleteLeadMutation();
+  const { canDelete, deleteLead } = useDeleteLeads();
+  const typeConfig = usePipelineTypeConfig(pipeline);
 
   const rotting = lead ? isRotting(lead, pipeline?.rottingEnabled ?? false) : false;
 
@@ -299,7 +301,8 @@ export function LeadDetailModal({
                       lead.company,
                     ]
                       .filter(Boolean)
-                      .join(" · ") || sourceLabel(t, lead.source)}
+                      .join(" · ") ||
+                      (typeConfig.features.source ? sourceLabel(t, lead.source) : null)}
                   </DialogDescription>
                 </div>
                 <DialogClose
@@ -334,7 +337,7 @@ export function LeadDetailModal({
                   disabled={lead.status === "WON"}
                 >
                   <IconCircleCheck className="size-3.5" />
-                  {t("Won")}
+                  {typeConfig.wonLabel}
                 </Button>
                 <Button
                   size="sm"
@@ -344,7 +347,7 @@ export function LeadDetailModal({
                   disabled={lead.status === "LOST"}
                 >
                   <IconCircleX className="size-3.5" />
-                  {t("Lost")}
+                  {typeConfig.lostLabel}
                 </Button>
 
                 <span className="flex-1" />
@@ -368,15 +371,17 @@ export function LeadDetailModal({
                       onClick={() => reopenLead.mutate(lead.id)}
                     >
                       <IconArrowBackUp />
-                      {t("Reopen lead")}
+                      {typeConfig.type === "LEADS" ? t("Reopen lead") : t("Reopen")}
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => deleteLead.mutate(lead.id, { onSuccess: onClose })}
-                    >
-                      <IconTrash />
-                      {t("Delete lead")}
-                    </DropdownMenuItem>
+                    {canDelete && (
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => void deleteLead(lead, onClose)}
+                      >
+                        <IconTrash />
+                        {typeConfig.type === "LEADS" ? t("Delete lead") : t("Delete")}
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -433,15 +438,19 @@ export function LeadDetailModal({
                       does not remount the row when the language changes. */}
                   {[
                     { key: "team", label: t("Team"), value: lead.team?.name ?? t("No team") },
-                    { key: "source", label: t("Source"), value: sourceLabel(t, lead.source) },
-                    {
-                      key: "channel",
-                      label: t("Channel"),
-                      value: channelLabel(t, lead.channel),
-                    },
+                    ...(typeConfig.features.source
+                      ? [
+                          { key: "source", label: t("Source"), value: sourceLabel(t, lead.source) },
+                          {
+                            key: "channel",
+                            label: t("Channel"),
+                            value: channelLabel(t, lead.channel),
+                          },
+                        ]
+                      : []),
                     {
                       key: "age",
-                      label: t("Lead age"),
+                      label: typeConfig.type === "LEADS" ? t("Lead age") : t("Age"),
                       value: t("{days} days", { days: leadAgeDays(lead) }),
                     },
                     {
@@ -452,13 +461,17 @@ export function LeadDetailModal({
                         : t("{days} days", { days: daysIdle(lead) }),
                       tone: rotting ? "text-destructive" : undefined,
                     },
-                    {
-                      key: "expectedClose",
-                      label: t("Expected close"),
-                      value: lead.expectedCloseAt
-                        ? dayjs(lead.expectedCloseAt).format("D MMM YYYY")
-                        : t("Not set"),
-                    },
+                    ...(typeConfig.features.forecast
+                      ? [
+                          {
+                            key: "expectedClose",
+                            label: t("Expected close"),
+                            value: lead.expectedCloseAt
+                              ? dayjs(lead.expectedCloseAt).format("D MMM YYYY")
+                              : t("Not set"),
+                          },
+                        ]
+                      : []),
                     {
                       // `contactId` is the link; the name is just how it reads.
                       key: "contact",

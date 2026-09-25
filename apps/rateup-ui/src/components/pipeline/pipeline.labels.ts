@@ -16,9 +16,12 @@ import type {
   LeadChannel,
   LeadSource,
   LeadTaskType,
+  PipelineType,
   StageStatus,
 } from "@/backend/pipeline/pipeline.types.ts";
 import type { LeadFilter, PipelineView } from "@/store/pipeline.store.ts";
+
+import { pipelineTypeConfig } from "./pipelineTypes.ts";
 
 /** How the lead reached the board. */
 export function sourceLabel(t: TFunction, source: LeadSource): string {
@@ -87,10 +90,14 @@ export function viewTabLabel(t: TFunction, view: PipelineView): string {
 }
 
 /** The sidebar's saved-view rows. */
-export function leadFilterLabel(t: TFunction, filter: LeadFilter): string {
+export function leadFilterLabel(
+  t: TFunction,
+  filter: LeadFilter,
+  type: PipelineType = "LEADS",
+): string {
   switch (filter) {
     case "open":
-      return t("All leads on board");
+      return type === "LEADS" ? t("All leads on board") : t("Everything on board");
     case "mine":
       return t("Mine");
     case "rotting":
@@ -98,32 +105,40 @@ export function leadFilterLabel(t: TFunction, filter: LeadFilter): string {
     case "noactivity":
       return t("No next activity");
     case "won":
-      return t("Won");
+      return pipelineTypeConfig(t, type).wonLabel;
     case "lost":
-      return t("Lost");
+      return pipelineTypeConfig(t, type).lostLabel;
   }
 }
 
 /** A column's status, as the board bands and the settings picker name it. */
-export function stageStatusLabel(t: TFunction, status: StageStatus): string {
+export function stageStatusLabel(
+  t: TFunction,
+  status: StageStatus,
+  type: PipelineType = "LEADS",
+): string {
   switch (status) {
     case "OPEN":
       return t("Open");
     case "WON":
-      return t("Won");
+      return pipelineTypeConfig(t, type).wonLabel;
     case "LOST":
-      return t("Lost");
+      return pipelineTypeConfig(t, type).lostLabel;
   }
 }
 
 /** The one-line explanation under each band heading, from the design. */
-export function stageStatusHint(t: TFunction, status: StageStatus): string {
+export function stageStatusHint(
+  t: TFunction,
+  status: StageStatus,
+  type: PipelineType = "LEADS",
+): string {
   switch (status) {
     case "OPEN":
       return t("still being worked");
     case "WON":
-      return t("closed as customer");
+      return type === "LEADS" ? t("closed as customer") : t("finished");
     case "LOST":
-      return t("closed, no deal");
+      return type === "LEADS" ? t("closed, no deal") : t("closed without finishing");
   }
 }

@@ -1,55 +1,47 @@
 import { IconBell, IconSettings } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import type { ComponentProps, Dispatch, SetStateAction } from "react";
+import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import type { ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 
+import { getNotifications } from "@/backend/notification/notification.api";
 import { notificationKeys } from "@/backend/notification/notification.keys";
 import {
   useDeleteAllNotifications,
+  useMarkAllNotificationsRead,
   useNotifications,
   useNotificationsCount,
-  useNotificationSettings,
 } from "@/backend/notification/notification.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.tsx";
 
 import NotificationList from "./NotificationList.tsx";
-import NotificationSettings from "./NotificationSettings.tsx";
-
-enum NotificationTabs {
-  notifications = "notifications",
-  notificationSettings = "notificationSettings",
-}
 
 const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const qc = useQueryClient();
-  const [tab, setTab] = useState(NotificationTabs.notifications);
-  const { data, isLoading, refetch } = useNotifications(tab === NotificationTabs.notifications);
+  const { data, isLoading, refetch } = useNotifications(opened);
   const deleteAll = useDeleteAllNotifications();
-  const { isLoading: isLoadingSettings, refetch: refetchSettings } = useNotificationSettings(
-    tab === NotificationTabs.notificationSettings,
-  );
-  const { data: notificationCount, isLoading: isLoadingCount, isFetched } = useNotificationsCount();
+  const markRead = useMarkAllNotificationsRead();
+  const { data: unread, isLoading: isLoadingCount, isFetched } = useNotificationsCount();
 
-  const NotificationDrawerComp = useMemo(() => {
-    switch (tab) {
-      case NotificationTabs.notifications:
-        return (
-          <NotificationList close={() => setOpened(false)} data={data} isLoading={isLoading} />
-        );
-      case NotificationTabs.notificationSettings:
-        return <NotificationSettings />;
-      default:
-        return null;
-    }
-  }, [close, data, isLoading, tab]);
+  const [unreadAtOpen, setUnreadAtOpen] = useState<ReadonlySet<string>>(new Set());
+  // Rows marked read by this opening keep their dot until the sheet opens again.
+  const rows = data?.map((row) => (unreadAtOpen.has(row.id) ? { ...row, readAt: null } : row));
 
-  const handleOpen = () => {
-    qc.invalidateQueries({ queryKey: notificationKeys.all() });
-    qc.invalidateQueries({ queryKey: notificationKeys.count() });
+  const handleOpen = async () => {
     setOpened(true);
+    // Fetched before marking read, so this opening still knows which rows are new.
+    const list = await qc
+      .fetchQuery({ queryKey: notificationKeys.all(), queryFn: getNotifications })
+      .catch(() => null);
+    if (!list) return;
+    const unreadIds = new Set(list.filter((row) => !row.readAt).map((row) => row.id));
+    setUnreadAtOpen(unreadIds);
+    if (unreadIds.size) markRead.mutate();
   };
 
   return (
@@ -58,7 +50,7 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
         open={opened}
         onOpenChange={(nextOpen) => {
           if (nextOpen) {
-            handleOpen();
+            void handleOpen();
             return;
           }
           setOpened(false);
@@ -66,26 +58,33 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
       >
         <SheetContent>
           <SheetHeader className="flex-row items-center justify-between gap-1 border-b pb-3 pr-10">
-            <SheetTitle>
-              {tab === NotificationTabs.notifications ? "Notifications" : "Notification Settings"}
-            </SheetTitle>
+            <SheetTitle>{t("Notifications")}</SheetTitle>
             <div className="flex items-center gap-2">
-              {tab === NotificationTabs.notifications ? (
-                <RefreshButton isLoading={isLoading} onClick={() => refetch()} />
-              ) : (
-                <RefreshButton isLoading={isLoadingSettings} onClick={() => refetchSettings()} />
-              )}
-              {tab === NotificationTabs.notifications && (
-                <Button size="sm" variant="outline" onClick={() => deleteAll.mutate()}>
-                  Clear all
-                </Button>
-              )}
+              <RefreshButton isLoading={isLoading} onClick={() => refetch()} />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => deleteAll.mutate()}
+                disabled={!data?.length}
+              >
+                {t("Clear all")}
+              </Button>
             </div>
           </SheetHeader>
 
           <div className="flex h-[calc(100dvh-80px)] flex-col justify-between">
-            {NotificationDrawerComp}
-            <NotificationDrawerFooter tab={tab} setTab={setTab} />
+            <NotificationList close={() => setOpened(false)} data={rows} isLoading={isLoading} />
+            <div className="border-t pt-3">
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+                render={<Link to="/dashboard/settings/notifications" />}
+                onClick={() => setOpened(false)}
+              >
+                <IconSettings className="size-4" />
+                {t("Notification settings")}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -93,8 +92,8 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
       <div className="relative mx-auto">
         <Button
           size="icon-sm"
-          aria-label="Open notifications"
-          onClick={handleOpen}
+          aria-label={t("Open notifications")}
+          onClick={() => void handleOpen()}
           variant="secondary"
           className="h-8 w-8"
         >
@@ -105,44 +104,13 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
           <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-destructive animate-pulse" />
         )}
 
-        {isFetched && Boolean(notificationCount) && (
+        {isFetched && Boolean(unread) && (
           <span className="absolute -top-2 -right-2 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground text-white">
-            {Number(notificationCount) > 99 ? "99+" : notificationCount}
+            {Number(unread) > 99 ? "99+" : unread}
           </span>
         )}
       </div>
     </>
-  );
-};
-
-const NotificationDrawerFooter = ({
-  tab,
-  setTab,
-}: {
-  tab: NotificationTabs;
-  setTab: Dispatch<SetStateAction<NotificationTabs>>;
-}) => {
-  return (
-    <div className="border-t pt-3">
-      <Button
-        variant="ghost"
-        className="w-full justify-start gap-2"
-        onClick={() =>
-          setTab(
-            tab === NotificationTabs.notifications
-              ? NotificationTabs.notificationSettings
-              : NotificationTabs.notifications,
-          )
-        }
-      >
-        {tab === NotificationTabs.notifications ? (
-          <IconSettings className="size-4" />
-        ) : (
-          <IconBell className="size-4" />
-        )}
-        {tab === NotificationTabs.notifications ? "Notification settings" : "Notifications"}
-      </Button>
-    </div>
   );
 };
 

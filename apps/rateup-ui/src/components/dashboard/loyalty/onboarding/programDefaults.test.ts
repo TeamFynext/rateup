@@ -91,6 +91,8 @@ const saved: OnboardingState = {
     signupBonus: 25,
     referralBonus: 0,
     refereeBonus: 0,
+    signupBonusEnabled: true,
+    referralBonusEnabled: true,
     tiersEnabled: false,
     averageOrderValue: 300,
     createdAt: new Date(),

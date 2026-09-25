@@ -359,7 +359,9 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
       const created =
         (response as { data?: { id?: string; contactId?: string; currentPoints?: number } }).data ??
         {};
-      const bonus = created.currentPoints ?? program.signupBonus ?? 0;
+      const bonus =
+        created.currentPoints ??
+        (program.signupBonusEnabled === false ? 0 : (program.signupBonus ?? 0));
       record({
         id: created.id ?? phone,
         contactId: created.contactId ?? "",
@@ -521,7 +523,7 @@ export function CashierPage({ standalone = false }: Readonly<{ standalone?: bool
         <NewCustomerForm
           prefill={prefill}
           defaultCountry={program.defaultCountryCode ?? "IN"}
-          signupBonus={program.signupBonus ?? 0}
+          signupBonus={program.signupBonusEnabled === false ? 0 : (program.signupBonus ?? 0)}
           pointsName={pointsName}
           isSaving={createCustomer.isPending}
           programActive={program.status === "active"}

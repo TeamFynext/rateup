@@ -1,179 +1,150 @@
-import { IconAlertTriangle, IconBrandWhatsappFilled, IconSend, IconX } from "@tabler/icons-react";
-import { Link } from "@tanstack/react-router";
-import { useCallback } from "react";
+import {
+  IconAlertTriangle,
+  IconBell,
+  IconCreditCard,
+  IconGift,
+  IconLayoutKanban,
+  IconMessages,
+  IconPlugConnected,
+  IconSpeakerphone,
+  IconX,
+} from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
+import type { MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { AppNotification } from "@/backend/notification/notification.api";
 import { useDeleteNotification } from "@/backend/notification/notification.query";
-import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import NothingFound from "@/components/NothingFound/NothingFound.tsx";
+import {
+  notificationEvent,
+  notificationMessage,
+  notificationPath,
+} from "@/components/dashboard/settings/notifications/notificationCopy.ts";
 import { Button } from "@/components/ui/button.tsx";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { cn } from "@/lib/utils";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
+
+/** `source` is the catalogue category, or on older rows the channel it came from. */
+function SourceIcon({ source }: Readonly<{ source: string }>) {
+  const className = "mt-0.5 size-4 shrink-0 text-muted-foreground";
+  switch (source) {
+    case "inbox":
+    case "whatsapp":
+      return <IconMessages className={className} />;
+    case "pipelines":
+      return <IconLayoutKanban className={className} />;
+    case "campaigns":
+    case "campaign":
+      return <IconSpeakerphone className={className} />;
+    case "loyalty":
+      return <IconGift className={className} />;
+    case "channels":
+    case "system":
+      return <IconPlugConnected className={className} />;
+    case "billing":
+    case "subscription":
+      return <IconCreditCard className={cn(className, "text-amber-700 dark:text-amber-500")} />;
+    default:
+      return <IconAlertTriangle className={className} />;
+  }
+}
 
 const NotificationList = ({
   close,
   data,
   isLoading,
-}: {
+}: Readonly<{
   close: () => void;
   data: AppNotification[] | undefined;
   isLoading: boolean;
-}) => {
+}>) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const deleteNotificationMut = useDeleteNotification();
 
-  const getNotificationIcon = useCallback((source: string) => {
-    switch (source) {
-      case "whatsapp":
-        return <IconBrandWhatsappFilled className="size-4 text-foreground" />;
-      case "campaign":
-        return <IconSend className="size-4 text-foreground" />;
-      case "system":
-        return <IconAlertTriangle className="size-4 text-destructive" />;
-      case "subscription":
-        return <IconAlertTriangle className="size-4 text-amber-500" />;
-      default:
-        return null;
-    }
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-2 px-2">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
 
-  const getNotificationMessageComp = useCallback((notification: AppNotification) => {
-    const { subSource, data } = notification;
-    switch (subSource) {
-      case "chat-assigned":
-        return (
-          <div className="flex flex-col gap-2">
-            <p className="w-70 text-sm text-muted-foreground">
-              A chat from <span className="font-medium text-foreground">{data?.contactName}</span>
-              {""}
-              has been assigned to you.
-              <Link
-                to="/dashboard/inbox"
-                search={{ tab: "mine", contactId: data?.contactId }}
-                onClick={close}
-                className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
-              >
-                Show chat
-              </Link>
-            </p>
-          </div>
-        );
-      case "chat-closed":
-        return (
-          <div className="flex flex-col gap-2">
-            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              Chat from <span className="font-medium text-foreground">{data?.contactName}</span> has
-              been closed.
-              <Link
-                to="/dashboard/inbox"
-                search={{ tab: "closed", contactId: data?.contactId }}
-                onClick={close}
-                className="ml-1 inline font-medium text-primary hover:underline"
-              >
-                Show chat
-              </Link>
-            </p>
-          </div>
-        );
-      case "mentioned":
-        return (
-          <div className="flex flex-col gap-2">
-            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              You were mentioned in a chat from{""}
-              <span className="font-medium text-foreground">{data?.contactName}</span>
-              {""}
-              <Link
-                to="/dashboard/inbox"
-                search={{ tab: "mine", contactId: data?.contactId }}
-                onClick={close}
-                className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
-              >
-                Show chat
-              </Link>
-            </p>
-          </div>
-        );
-      case "campaign-completed":
-        return (
-          <div className="flex flex-col gap-2">
-            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              Your campaign "{data?.campaignName}" completed.
-              <Link
-                to="/dashboard/campaign/$campaignId"
-                params={{ campaignId: String(data?.campaignId ?? "") }}
-                onClick={close}
-                className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
-              >
-                Show campaign
-              </Link>
-            </p>
-          </div>
-        );
-      case "capi-error":
-        return (
-          <div className="flex flex-col gap-2">
-            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              Meta CAPI failed for{" "}
-              <span className="font-medium text-foreground">{data?.contactName}</span>. Error:{" "}
-              <span className="font-medium text-destructive">{data?.error}</span>
-            </p>
-          </div>
-        );
-      case "conversation-limit-reached":
-        return (
-          <div className="flex flex-col gap-2">
-            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              {data?.message ?? "You've reached your conversation limit."}
-              <Link
-                to="/dashboard/settings/billing"
-                onClick={close}
-                className="ml-1 inline font-medium text-primary hover:underline"
-              >
-                Upgrade plan
-              </Link>
-            </p>
-          </div>
-        );
-    }
-  }, []);
-  if (isLoading) return <RateupLoader />;
-  if (data?.length === 0) return <NothingFound text="No notifications found" />;
+  if (!data?.length) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <IconBell />
+          </EmptyMedia>
+          <EmptyTitle>{t("You're all caught up")}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  const open = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    // Modified clicks keep the browser's own behaviour, so the link still opens in a new tab.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    close();
+    void navigate({ href: path });
+  };
 
   return (
-    <div className="h-full flex flex-col gap-4">
-      <ScrollArea className="h-[calc(100vh-180px)] px-2">
-        <div className="flex flex-col gap-1">
-          {data?.map((notification) => (
-            <div key={notification?.id} className="rounded-lg border border-border bg-muted/40 p-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2">
-                  {getNotificationIcon(notification?.source)}
-
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      {getNotificationMessageComp(notification)}
-                    </div>
-
-                    <p className="text-xs text-muted-foreground">
-                      {formatToRelativeTime(notification?.createdAt)}
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => deleteNotificationMut.mutate(notification?.id)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label="Dismiss notification"
+    <ScrollArea className="h-[calc(100dvh-180px)] px-2">
+      <ul className="flex flex-col gap-1">
+        {data.map((notification) => {
+          const event = notificationEvent(notification);
+          if (!event) return null;
+          const path = notificationPath(event, notification.data);
+          const unread = !notification.readAt;
+          return (
+            <li
+              key={notification.id}
+              className={cn(
+                "flex items-start gap-2 rounded-lg border border-border p-2",
+                unread ? "bg-primary/5" : "bg-muted/40",
+              )}
+            >
+              <SourceIcon source={notification.source} />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <a
+                  href={path}
+                  onClick={(e) => open(e, path)}
+                  className="text-sm leading-relaxed text-foreground hover:underline"
                 >
-                  <IconX className="h-3.5 w-3.5" />
-                </Button>
+                  {notificationMessage(t, event, notification.data)}
+                </a>
+                <p className="text-xs text-muted-foreground">
+                  {formatToRelativeTime(notification.createdAt)}
+                </p>
               </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
-    </div>
+              {unread ? (
+                <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary">
+                  <span className="sr-only">{t("Unread")}</span>
+                </span>
+              ) : null}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => deleteNotificationMut.mutate(notification.id)}
+                className="size-6 text-muted-foreground"
+                aria-label={t("Dismiss notification")}
+              >
+                <IconX className="size-3.5" />
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+    </ScrollArea>
   );
 };
 

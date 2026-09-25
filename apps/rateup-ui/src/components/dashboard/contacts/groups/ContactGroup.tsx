@@ -1,25 +1,12 @@
-// Extracted verbatim from the `/dashboard/contacts/groups/$groupId/` route so the route file carries routing
-// config only. Behaviour is unchanged.
-
-import {
-  IconCheck,
-  IconEdit,
-  IconFolder,
-  IconTrash,
-  IconUpload,
-  IconUsers,
-  IconX,
-} from "@tabler/icons-react";
+import { IconCheck, IconEdit, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
-import { Image } from "@unpic/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import {
-  useAddNewContactFromCSVMutation,
   useContactGroupById,
   useDeleteGroupMutation,
   useEditContactGroupMutation,
@@ -27,18 +14,16 @@ import {
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
-import { pressable } from "@/components/common/pressable.ts";
 import { ContactDetailHost } from "@/components/Contacts/ContactDetailedView.tsx";
-import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant.tsx";
 import { contactColumn } from "@/components/Contacts/utils/utils.tsx";
 import { DataTableToolbar } from "@/components/dashboard/contacts/groups/$groupId/data-table-toolbar.tsx";
+import { GroupIconTile } from "@/components/dashboard/contacts/groups/GroupPage.tsx";
 import type { GroupTableFilter } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card } from "@/components/ui/card.tsx";
 import {
   Dialog,
   DialogContent,
@@ -48,15 +33,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { getInitials } from "@/components/ui/utils.ts";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
-import { getApiErrorData } from "@/utils/apiError.ts";
+import { cn } from "@/lib/utils.ts";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
-import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
+import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload.ts";
 
 export function ContactGroup() {
   const { t } = useTranslation();
@@ -77,7 +61,6 @@ export function ContactGroup() {
 
   const { customFields } = useCustomFieldsContext();
   const { filter, setGroupDetails } = useGroupTableStore();
-  const createNewContactsFromCSV = useAddNewContactFromCSVMutation(groupId?.toString());
   const [groupName, setGroupName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const {
@@ -196,134 +179,103 @@ export function ContactGroup() {
 
   if (groupByIderror) return <ErrorComponent refetch={refetchgroupById} />;
 
+  const memberCount = groupDetails?._count?.contacts ?? 0;
+
   return (
-    <div className="flex flex-col gap-3 h-full">
-      <Card className="border-0 shadow-lg bg-linear-to-br from-white via-white to-ru-blue-50/30 shrink-0 p-4">
-        <div className="flex items-center justify-between gap-8">
-          <div className="relative flex items-center gap-5 flex-1">
-            <div className="relative shrink-0 group">
-              <div
-                className="w-16 h-16 rounded-2xl bg-linear-to-br from-ru-amber-500 via-orange-400 to-ru-amber-500/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-primary"
-                {...pressable(() => setShowEditIconDialog(true), t("Change the group icon"))}
+    <div className="flex h-full flex-col gap-4">
+      <BackLink
+        to="/dashboard/contacts/groups"
+        label={t("Groups")}
+        onClick={() => void router.invalidate()}
+      />
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowEditIconDialog(true)}
+            aria-label={t("Change the group icon")}
+            className="group/icon relative shrink-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <GroupIconTile icon={groupDetails?.icon} className="size-12 rounded-xl" />
+            <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 opacity-0 transition-opacity group-hover/icon:opacity-100 group-focus-visible/icon:opacity-100">
+              <IconUpload className="size-4 text-white" />
+            </span>
+          </button>
+          <div className="flex min-w-0 flex-col gap-1">
+            {isLoading ? (
+              <Skeleton className="h-8 w-48" />
+            ) : isEditingName ? (
+              <form
+                className="flex items-center gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSaveGroupName();
+                }}
               >
-                {groupDetails?.icon ? (
-                  <Image
-                    src={getFileUrlFromKey(groupDetails?.icon ?? "") ?? ""}
-                    alt={groupDetails.name}
-                    className="object-cover"
-                    layout="fullWidth"
-                    aspectRatio={1}
-                    objectFit="cover"
-                  />
-                ) : (
-                  <IconFolder />
-                )}
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <IconUpload className="w-5 h-5 text-white" />
-                </div>
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-linear-to-br from-primary to-ru-blue-700 flex items-center justify-center shadow-md ring-4 ring-background">
-                <IconUsers className="w-3.5 h-3.5 text-white" />
-              </div>
-            </div>
-
-            {/* Group Info with Inline Editing */}
-            <div className="flex items-center gap-3 flex-1">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  {isEditingName ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSaveGroupName();
-                          if (e.key === "Escape") handleCancelEditName();
-                        }}
-                        className="h-9 text-xl border-2 border-primary focus:ring-1 focus:ring-primary/20 w-64"
-                        autoFocus
-                      />
-                      <Button
-                        size="sm"
-                        onClick={handleSaveGroupName}
-                        className="h-9 w-9 p-0 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700"
-                      >
-                        {editContactGroupMutation.isPending ? (
-                          <Spinner className="w-4 h-4" />
-                        ) : (
-                          <IconCheck className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCancelEditName}
-                        className="h-9 w-9 p-0 hover:bg-muted"
-                      >
-                        <IconX className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <h1 className={PAGE_TITLE}>{groupDetails?.name}</h1>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setGroupName(groupDetails?.name ?? "");
-                          setIsEditingName(true);
-                        }}
-                        className="h-8 w-8 p-0 hover:bg-ru-blue-50 dark:hover:bg-blue-950/40 text-primary"
-                      >
-                        <IconEdit className="w-3.5 h-3.5" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-                {!isEditingName && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      Manage group members and settings
-                    </p>
-                    <span className="text-xs text-muted-foreground">Team: </span>
-                    <Badge className="mt-1"> {groupDetails?.team?.name}</Badge>
-                  </div>
-                )}
-              </div>
-
-              {!isEditingName && (
-                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-linear-to-br from-ru-blue-50 to-indigo-50 border border-ru-blue-100 dark:border-blue-900 shrink-0 ml-auto">
-                  <div className="text-3xl bg-linear-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
-                    {groupDetails?._count?.contacts || 0}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Total Members</div>
-                </div>
+                <Input
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") handleCancelEditName();
+                  }}
+                  aria-label={t("Group name")}
+                  className="h-9 w-64 text-base"
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  aria-label={t("Save")}
+                  loading={editContactGroupMutation.isPending}
+                >
+                  <IconCheck />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  aria-label={t("Cancel")}
+                  onClick={handleCancelEditName}
+                >
+                  <IconX />
+                </Button>
+              </form>
+            ) : (
+              <h1 className={cn(PAGE_TITLE, "truncate")}>{groupDetails?.name}</h1>
+            )}
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              <span>
+                {t("{count, plural, one {# member} other {# members}}", { count: memberCount })}
+              </span>
+              {groupDetails?.team?.name && (
+                <>
+                  <span aria-hidden>·</span>
+                  <Badge variant="secondary">{groupDetails.team.name}</Badge>
+                </>
               )}
-            </div>
+            </p>
           </div>
-
-          {!isEditingName && (
-            <div className="flex gap-2 shrink-0">
-              <BackLink
-                to="/dashboard/contacts/groups"
-                label={t("Groups")}
-                onClick={() => void router.invalidate()}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeleteGroup()}
-                className="h-9 gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-all"
-              >
-                <IconTrash className="w-3.5 h-3.5" />
-                Delete Group
-              </Button>
-            </div>
-          )}
         </div>
-      </Card>
-      <div className="grow min-h-0 overflow-auto border-0 shadow-lg bg-card">
+        {!isEditingName && (
+          <div className="flex shrink-0 gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setGroupName(groupDetails?.name ?? "");
+                setIsEditingName(true);
+              }}
+            >
+              <IconEdit data-icon="inline-start" />
+              {t("Rename")}
+            </Button>
+            <Button variant="destructive" onClick={() => void handleDeleteGroup()}>
+              <IconTrash data-icon="inline-start" />
+              {t("Delete Group")}
+            </Button>
+          </div>
+        )}
+      </div>
+      <div className="min-h-0 grow">
         <DataTable
           columns={column}
           data={groupDetails?.contacts || []}
@@ -344,10 +296,6 @@ export function ContactGroup() {
         setOpened={setShowEditIconDialog}
         group={groupDetails!}
       />
-      <ContactImportErrorModal
-        body={getApiErrorData(createNewContactsFromCSV?.error)}
-        isError={createNewContactsFromCSV.isError}
-      />
       <ContactDetailHost />
     </div>
   );
@@ -363,6 +311,7 @@ function ContactGroupIconEditDialog({
   // Only these three fields are read here.
   group: Pick<ContactGroup, "id" | "icon" | "name">;
 }) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editContactGroupMutation = useEditContactGroupMutation(group?.id);
 
@@ -394,48 +343,28 @@ function ContactGroupIconEditDialog({
       },
       {
         onSuccess: async () => {
-          toast.success("Icon removed successfully");
+          toast.success("Icon updated successfully");
           setOpened(false);
           deleteUploadedFiles({ fileKeyArray: [{ Key: oldIcon }] });
         },
         onError: (error) => {
-          toast.error(error?.message || "Error removing icon");
+          toast.error(error?.message || "Error updating icon");
         },
       },
     );
   }
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent className="border-0 shadow-2xl max-w-md">
+      <DialogContent>
         <DialogHeader>
-          <div className="w-14 h-14 rounded-full bg-linear-to-br from-orange-100 to-orange-200 flex items-center justify-center mb-4">
-            <IconFolder className="w-7 h-7 text-ru-amber-500" />
-          </div>
-          <DialogTitle className="text-2xl">Edit Group Icon</DialogTitle>
-          <DialogDescription className="text-base">
-            Upload a custom icon for your group or remove the existing one
+          <DialogTitle>{t("Group icon")}</DialogTitle>
+          <DialogDescription>
+            {t("Upload a square image, at least 200×200 pixels, or remove the current one.")}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-6">
-          {/* Current Icon Preview */}
-          <div className="flex justify-center mb-6">
-            <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-ru-amber-500 via-orange-400 to-ru-amber-500/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 overflow-hidden">
-              {group?.icon ? (
-                <Image
-                  src={getFileUrlFromKey(group?.icon ?? "") ?? ""}
-                  alt={group?.name}
-                  className="w-full h-full object-cover"
-                  width={200}
-                  height={200}
-                />
-              ) : (
-                <span className="text-white text-4xl">{getInitials(group?.name)}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
+        <div className="flex flex-col items-center gap-5">
+          <GroupIconTile icon={group?.icon} className="size-28 rounded-2xl" />
+          <div className="flex w-full flex-col gap-2">
             <input
               ref={fileInputRef}
               type="file"
@@ -445,30 +374,22 @@ function ContactGroupIconEditDialog({
             />
             <Button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full h-12 gap-3 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700"
+              loading={editContactGroupMutation.isPending}
             >
-              <IconUpload className="w-5 h-5" />
-              Upload New Icon
+              <IconUpload data-icon="inline-start" />
+              {t("Upload new icon")}
             </Button>
             {group?.icon && (
-              <Button
-                variant="outline"
-                onClick={handleRemoveIcon}
-                className="w-full h-12 gap-3 text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-              >
-                <IconX className="w-5 h-5" />
-                Remove Icon
+              <Button variant="destructive" onClick={() => void handleRemoveIcon()}>
+                <IconX data-icon="inline-start" />
+                {t("Remove icon")}
               </Button>
             )}
           </div>
-
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Recommended: Square image, at least 200x200 pixels
-          </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpened(false)} className="h-10">
-            Close
+          <Button variant="outline" onClick={() => setOpened(false)}>
+            {t("Close")}
           </Button>
         </DialogFooter>
       </DialogContent>

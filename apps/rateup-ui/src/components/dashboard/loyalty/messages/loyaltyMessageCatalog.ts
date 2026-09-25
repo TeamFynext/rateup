@@ -61,6 +61,8 @@ export interface LoyaltyEventDefinition extends LoyaltyMessageBase {
    * keyword) and registers whoever taps it — so the body stays editable inline.
    */
   joinButton?: boolean;
+  /** The API sends it in its starter words until a trigger row exists; mirrors `defaultOn` there. */
+  defaultOn?: boolean;
 }
 
 export interface LoyaltyKeywordDefinition extends LoyaltyMessageBase {
@@ -226,6 +228,20 @@ export function loyaltyEventCatalog(t: TFunction): LoyaltyEventDefinition[] {
       body: "Hi {{1}}, thanks for getting in touch! Join our loyalty program to earn points on every visit. Tap the button below to join.",
       example: ["Anjali"],
       joinButton: true,
+    },
+    {
+      kind: "event",
+      eventType: LoyaltyEventType.MEMBER_JOINED,
+      group: "welcome",
+      label: t("Welcome a new member"),
+      description: t(
+        "Sent when staff sign a customer up at the counter. Plain text if they have an open chat, this template otherwise.",
+      ),
+      params: [name],
+      templateName: "loyalty_member_joined",
+      body: "Hi {{1}}, welcome to our loyalty program! You will earn points on every visit, and we will message you here when you have a reward to claim.",
+      example: ["Anjali"],
+      defaultOn: true,
     },
   ];
 }

@@ -1,5 +1,6 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import { contactKeys } from "@/backend/campaign/contacts/contacts.keys.ts";
 import { useContactsStore } from "@/store/inbox.store.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
+import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import * as api from "./pipeline.api";
 import { pipelineKeys } from "./pipeline.keys";
@@ -52,10 +54,13 @@ function syncInboxStageChips(
   const ids = contactIds.filter((id): id is string => Boolean(id));
   if (ids.length === 0) return;
 
-  const stage = stageId ? findCachedStage(queryClient, stageId) : null;
+  const cached = stageId ? findCachedStage(queryClient, stageId) : null;
   // Clearing is meaningful, but writing a null chip because the board simply is
   // not in cache would blank a chip the list is drawing correctly.
-  if (stageId && !stage) return;
+  if (stageId && !cached) return;
+  // The chip is the contact's Leads stage; a card on any other board leaves it alone.
+  if (cached && cached.boardType !== "LEADS") return;
+  const stage = cached?.stage ?? null;
 
   const { updateContactById } = useContactsStore.getState();
   for (const contactId of ids) {
@@ -74,7 +79,7 @@ function findCachedStage(queryClient: QueryClient, stageId: string) {
   });
   for (const [, board] of boards) {
     const stage = board?.stages.find((candidate) => candidate.id === stageId);
-    if (stage) return stage;
+    if (board && stage) return { stage, boardType: board.type };
   }
   return null;
 }
@@ -91,6 +96,25 @@ function contactIdsForLeads(queryClient: QueryClient, leadIds: string[]) {
     if (leadIds.includes(lead.id)) found.push(lead.contactId);
   }
   return found;
+}
+
+/** Like `contactIdsForLeads`, limited to leads on the Leads board, the only one the chip shows. */
+function leadsBoardContactIds(queryClient: QueryClient, leadIds: string[]) {
+  const found: Array<string | null> = [];
+  for (const lead of cachedLeads(queryClient)) {
+    if (!leadIds.includes(lead.id)) continue;
+    if (findCachedStage(queryClient, lead.stageId)?.boardType === "LEADS")
+      found.push(lead.contactId);
+  }
+  return found;
+}
+
+/** Deleting a Leads-board card takes the contact off the board: clear its chip everywhere. */
+function clearChipsForDeletedLeads(queryClient: QueryClient, leadIds: string[]) {
+  const contactIds = leadsBoardContactIds(queryClient, leadIds);
+  if (contactIds.length === 0) return;
+  syncInboxStageChips(queryClient, contactIds, null);
+  queryClient.invalidateQueries({ queryKey: contactKeys.all() });
 }
 
 /**
@@ -482,6 +506,8 @@ export function useDeleteLeadMutation() {
     success: (t) => t("Lead deleted"),
     errorFallback: (t) => t("Could not delete the lead"),
     toastId: "pipeline-lead-delete",
+    afterSuccess: (queryClient, _result, leadId) =>
+      clearChipsForDeletedLeads(queryClient, [leadId]),
   });
 }
 
@@ -577,7 +603,7 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
       };
 
       const moving = findCachedLead(queryClient, leadId);
-      const target = findCachedStage(queryClient, stageId);
+      const target = findCachedStage(queryClient, stageId)?.stage;
       // Nothing to move optimistically — let the server's answer stand.
       if (!moving || !target) return previous;
 
@@ -707,6 +733,59 @@ export function useReopenLeadMutation() {
     success: (t) => t("Lead reopened"),
     errorFallback: (t) => t("Could not reopen the lead"),
     toastId: "pipeline-lead-reopen",
+  });
+}
+
+export function useImportLeadsMutation() {
+  return usePipelineMutation<{ pipelineId: string; file: File }, api.LeadImportResult>({
+    mutationFn: api.importLeads,
+    success: (t, result) =>
+      t("{total, plural, one {# card added} other {# cards added}}", { total: result.created }),
+    errorFallback: (t) => t("Could not import the file"),
+    toastId: "pipeline-import",
+  });
+}
+
+/** Downloads the board. Not `usePipelineMutation`: an export changes nothing to refetch. */
+export function useExportPipelineMutation() {
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: async (variables: {
+      pipelineId: string;
+      pipelineName: string;
+      params: LeadListParams;
+      format: api.PipelineExportFormat;
+    }) => {
+      const blob = await api.exportPipeline(variables);
+      const slug =
+        variables.pipelineName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") || "pipeline";
+      downloadBlob(blob, `${slug}-${dayjs().format("YYYY-MM-DD")}.${variables.format}`);
+    },
+    onMutate: () => {
+      toast.loading(t("Preparing the export…"), { id: "pipeline-export" });
+    },
+    onSuccess: () => {
+      toast.success(t("Pipeline exported"), { id: "pipeline-export" });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, t("Could not export the pipeline")), {
+        id: "pipeline-export",
+      });
+    },
+  });
+}
+
+export function useBulkDeleteLeadsMutation() {
+  return usePipelineMutation<string[], { deleted: number }>({
+    mutationFn: api.bulkDeleteLeads,
+    success: (t, result) => t("{total} leads deleted", { total: result.deleted }),
+    errorFallback: (t) => t("Could not delete the selected leads"),
+    toastId: "pipeline-lead-bulk-delete",
+    afterSuccess: (queryClient, _result, leadIds) =>
+      clearChipsForDeletedLeads(queryClient, leadIds),
   });
 }
 
@@ -874,5 +953,14 @@ export function useClearContactStageMutation(contactId: string | undefined) {
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Could not remove from the board"));
     },
+  });
+}
+
+/** Under the root key, so creating or deleting a board refreshes it. */
+export function usePipelineCreateLimitsQuery(enabled = true) {
+  return useQuery({
+    queryKey: [...pipelineKeys.all(), "create-limits"],
+    queryFn: api.fetchPipelineCreateLimits,
+    enabled,
   });
 }

@@ -1,7 +1,8 @@
 import {
   IconBan,
   IconCheck,
-  IconDotsVertical,
+  IconChevronDown,
+  IconCircleX,
   IconRotate,
   IconShieldExclamation,
   IconShieldOff,
@@ -19,7 +20,6 @@ import {
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Button } from "@/components/ui/button.tsx";
-import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,6 @@ import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inb
 import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
-import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
 import { useDeleteTicket } from "../../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
@@ -46,15 +45,6 @@ import { isTicketClosed, resolutionResultLabel } from "./ticket.ts";
  * resolution result — `applyStatus` still accepts one so the close-with-result
  * taxonomy can be reintroduced without reworking the mutation.
  */
-const CLOSE_STATUSES: { status: WaMessageAssignStatus; label: string; tooltip?: string }[] = [
-  { status: WaMessageAssignStatus.RESOLVED, label: "Mark as Resolved" },
-  { status: WaMessageAssignStatus.CLOSED, label: "Mark as Closed" },
-  {
-    status: WaMessageAssignStatus.UNRESOLVED,
-    label: "Mark as Unresolved",
-    tooltip: "All the assignees will be removed as closed and resolved",
-  },
-];
 
 interface CloseTicketMenuProps {
   contact: ContactWithUpdatedAt;
@@ -64,9 +54,8 @@ interface CloseTicketMenuProps {
  * The Close dropdown (the original status actions) or, once the ticket is closed,
  * the Reopen button.
  *
- * "Block contact" sits inside the Close dropdown as it originally did; the
- * overflow menu exists only for the closed state, where there is no dropdown to
- * host it — previously the whole control unmounted and block became unreachable.
+ * Once a ticket is closed there is no dropdown here: block, spam and delete for
+ * a closed ticket live in the ticket panel.
  *
  * Spam sits with Block, not with the close statuses: it is a *contact* action
  * ("this person is spam"), not a way of finishing one ticket. A contact already
@@ -254,7 +243,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     });
   }
 
-  /** The contact-level actions, shared by the Close dropdown and the overflow menu. */
+  /** The contact-level actions under the Close dropdown's arrow. */
   const contactActions = (
     <DropdownMenuGroup>
       {!isSpam && (
@@ -289,23 +278,6 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     </>
   ) : null;
 
-  const overflow =
-    canBlock || !isSpam || canDelete ? (
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button variant="ghost" size="icon" className="size-8" aria-label="More actions" />
-          }
-        >
-          <IconDotsVertical className="size-4 text-muted-foreground" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {contactActions}
-          {deleteAction}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ) : null;
-
   // A spam contact has no Close/Reopen: their tickets are all closed and only the
   // Spam tab can list them, so the one action that moves them forward is "Not spam".
   if (isSpam) {
@@ -321,7 +293,6 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           <IconShieldOff className="size-3.5" />
           <span className="text-xs font-bold">Not spam</span>
         </Button>
-        {overflow}
       </>
     );
   }
@@ -332,60 +303,56 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
       <>
         <Button
           size="sm"
-          className="h-8 shrink-0 gap-1.5 border-transparent bg-primary text-primary-foreground shadow-none"
+          className="shrink-0"
           loading={reopenMutation.isPending}
           onClick={handleReopen}
         >
-          <IconRotate className="size-3.5" />
-          <span className="text-xs font-bold">Reopen</span>
+          <IconRotate data-icon="inline-start" />
+          Reopen
         </Button>
-        {overflow}
       </>
     );
   }
 
+  // Closing is one click and counts as resolved; the chevron holds the exception
+  // (unresolved) and the contact actions.
   return (
-    <>
+    <div className="flex shrink-0">
+      <Button
+        size="sm"
+        className="rounded-r-none"
+        loading={editContactMutation.isPending}
+        onClick={() => applyStatus(WaMessageAssignStatus.RESOLVED, null)}
+      >
+        <IconCheck data-icon="inline-start" />
+        Close
+      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
             <Button
               size="sm"
-              className="h-8 shrink-0 gap-1.5 border-transparent bg-green-600 text-white shadow-none"
-              loading={editContactMutation.isPending}
+              aria-label="More ways to close"
+              className="rounded-l-none border-l border-l-primary-foreground/25 px-1.5"
+              disabled={editContactMutation.isPending}
             />
           }
         >
-          <IconCheck className="size-3.5" />
-          <span className="text-xs font-bold">Close</span>
+          <IconChevronDown />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {/* The original status actions. These set the inbox status directly and
-              carry no resolution result — "Mark as Unresolved" is only reachable
-              here. Spam is NOT among them: it is a contact action, below. */}
-          {/* Base UI requires menu items — and especially labels — to sit inside a
-              group; a bare DropdownMenuLabel throws "MenuGroupContext is missing". */}
+        <DropdownMenuContent align="end" className="w-56">
+          {/* Base UI requires menu items to sit inside a group. */}
           <DropdownMenuGroup>
-            {CLOSE_STATUSES.map(({ status, label, tooltip }) => {
-              const closedStatusIcon = getContactClosedIcon(status);
-              const Icon = closedStatusIcon?.icon;
-              return (
-                <DropdownMenuItem
-                  key={status}
-                  disabled={
-                    editContactMutation.isPending || contact?.waMessageAssignStatus === status
-                  }
-                  onClick={() => applyStatus(status, null)}
-                >
-                  {Icon && <Icon className={closedStatusIcon?.color} />}
-                  {tooltip ? (
-                    <CustomTooltip trigger={<p>{label}</p>} content={<p>{tooltip}</p>} />
-                  ) : (
-                    label
-                  )}
-                </DropdownMenuItem>
-              );
-            })}
+            <DropdownMenuItem
+              onClick={() => applyStatus(WaMessageAssignStatus.UNRESOLVED, null)}
+              className="items-start"
+            >
+              <IconCircleX className="mt-0.5 text-amber-600 dark:text-amber-500" />
+              <span className="flex flex-col">
+                <span>Close as unresolved</span>
+                <span className="text-xs text-muted-foreground">Also removes the assignees</span>
+              </span>
+            </DropdownMenuItem>
           </DropdownMenuGroup>
 
           <DropdownMenuSeparator />
@@ -393,6 +360,6 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           {deleteAction}
         </DropdownMenuContent>
       </DropdownMenu>
-    </>
+    </div>
   );
 }

@@ -140,7 +140,7 @@ export function FilterSelect({
             : [...rest, { id: "filterGroupName", value: values.join(",") }];
         });
       }}
-      placeholder={translations("Filter contacts")}
+      placeholder={translations("Filter by group")}
     />
   );
 }

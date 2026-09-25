@@ -10,11 +10,12 @@ import {
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { Lead } from "@/backend/pipeline/pipeline.types.ts";
+import type { Lead, PipelineType } from "@/backend/pipeline/pipeline.types.ts";
 import { cn } from "@/lib/utils";
 
 import { TASK_TYPE_ICON } from "../pipeline.constants.tsx";
 import { daysIdle, daysInStage, isOverdue, isRotting } from "../pipeline.utils.ts";
+import { pipelineTypeConfig } from "../pipelineTypes.ts";
 import { AssigneeStack } from "../shared/AssigneeStack.tsx";
 import { LeadLabelChip } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
@@ -39,6 +40,7 @@ export function isLeadDragData(
 interface LeadCardProps {
   lead: Lead;
   rottingEnabled: boolean;
+  pipelineType: PipelineType;
   onOpen: (leadId: string) => void;
   onOpenConversation: (lead: Lead) => void;
 }
@@ -54,10 +56,12 @@ interface LeadCardProps {
 export const LeadCard = memo(function LeadCard({
   lead,
   rottingEnabled,
+  pipelineType,
   onOpen,
   onOpenConversation,
 }: Readonly<LeadCardProps>) {
   const { t } = useTranslation();
+  const typeConfig = pipelineTypeConfig(t, pipelineType);
   const ref = useRef<HTMLDivElement | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -101,12 +105,18 @@ export const LeadCard = memo(function LeadCard({
       )}
     >
       <div className="flex items-start gap-2.25">
-        <LeadAvatar name={lead.name} source={lead.source} size="lg" />
+        <LeadAvatar
+          name={lead.name}
+          source={typeConfig.features.source ? lead.source : undefined}
+          size="lg"
+        />
         <div className="min-w-0 flex-1">
           <div className="text-foreground truncate text-[13.5px] font-medium">{lead.name}</div>
-          <div className="text-muted-foreground truncate text-[11px]">
-            {lead.company ?? t("Direct customer")}
-          </div>
+          {typeConfig.features.company || lead.company ? (
+            <div className="text-muted-foreground truncate text-[11px]">
+              {lead.company ?? t("Direct customer")}
+            </div>
+          ) : null}
         </div>
         {/* Only a lead raised against a contact has a conversation to open. */}
         {lead.contactId ? (
@@ -156,7 +166,9 @@ export const LeadCard = memo(function LeadCard({
         {lead.status === "WON" ? (
           <>
             <IconRosetteDiscountCheck className="size-3" />
-            <span className="truncate">{t("Won · closed")}</span>
+            <span className="truncate">
+              {t("{status} · closed", { status: typeConfig.wonLabel })}
+            </span>
           </>
         ) : (
           <>

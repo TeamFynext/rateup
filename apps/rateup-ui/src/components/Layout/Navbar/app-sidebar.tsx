@@ -768,6 +768,8 @@ export default function AppSidebar({
     () => getMostSpecificChildRoute(activeItem?.items ?? [], fullPathname),
     [activeItem?.items, fullPathname],
   );
+  const panelRows = activeItem?.items?.filter((item) => !item.pinToFooter) ?? [];
+  const pinnedRows = activeItem?.items?.filter((item) => item.pinToFooter) ?? [];
 
   return (
     <>
@@ -863,7 +865,7 @@ export default function AppSidebar({
             <SidebarGroup className="p-0">
               <SidebarGroupContent>
                 <SidebarMenu className="gap-1">
-                  {activeItem.items?.map((item, index, siblings) => {
+                  {panelRows.map((item, index, siblings) => {
                     // A panel child is a section when it holds rows rather than
                     // being one: it has `items` and no route of its own. Its
                     // `group` is only the heading, so a section can go unlabelled.
@@ -871,8 +873,8 @@ export default function AppSidebar({
                     // One rule per boundary, always drawn by the lower neighbour —
                     // drawing one on each side doubled it up in between, and again
                     // in the collapsed rail. A boundary is where a section starts,
-                    // or where loose rows resume after one (Pipeline settings, the
-                    // inbox's Settings). Consecutive loose rows stay unbroken.
+                    // or where loose rows resume after one (Pipeline settings).
+                    // Consecutive loose rows stay unbroken.
                     const dividedAbove =
                       index > 0 && (isSection || isNavSection(siblings[index - 1]));
 
@@ -906,6 +908,23 @@ export default function AppSidebar({
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
+
+          {pinnedRows.length > 0 && (
+            <SidebarFooter className="border-t bg-background p-2">
+              <SidebarMenu className="gap-1">
+                {pinnedRows.map((item) => (
+                  <NavItem
+                    key={item.title ?? item.url}
+                    item={item}
+                    fullPathname={fullPathname}
+                    onRouteGuard={handleRouteGuard}
+                    sidebarComponentMap={sidebarComponentMap}
+                    activeSubPath={activePanelItemPath}
+                  />
+                ))}
+              </SidebarMenu>
+            </SidebarFooter>
+          )}
 
           {activeItem?.progress && <NavPanelProgress progress={activeItem.progress} />}
 

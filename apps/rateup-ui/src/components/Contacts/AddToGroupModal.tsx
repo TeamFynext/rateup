@@ -28,7 +28,7 @@ const AddToGroupModal = ({
   opened: boolean;
   setOpened: (open: boolean) => void;
   selectedContactIds: string[];
-  contact?: ContactsData | null;
+  contact?: { name?: string | null; phone?: string | null } | null;
   onSuccess?: (() => void) | null;
 }) => {
   const uid = useId();
@@ -69,9 +69,9 @@ const AddToGroupModal = ({
         {selectedContactIds?.length === 1 && contact ? (
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor={`${uid}-name`}>Name</FieldLabel>
-            <Input id={`${uid}-name`} readOnly defaultValue={contact.name} />
+            <Input id={`${uid}-name`} readOnly defaultValue={contact.name ?? ""} />
             <FieldLabel htmlFor={`${uid}-phone`}>Phone</FieldLabel>
-            <Input id={`${uid}-phone`} readOnly defaultValue={contact.phone} />
+            <Input id={`${uid}-phone`} readOnly defaultValue={contact.phone ?? ""} />
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

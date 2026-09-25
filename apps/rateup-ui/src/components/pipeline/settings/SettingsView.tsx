@@ -37,6 +37,7 @@ import {
 import type {
   PipelineDetail,
   PipelineStage,
+  PipelineType,
   StageStatus,
 } from "@/backend/pipeline/pipeline.types.ts";
 import { useTeamsByUser } from "@/backend/team/team.query.tsx";
@@ -59,6 +60,7 @@ import { cn } from "@/lib/utils.ts";
 
 import { STAGE_COLOR_CHOICES, STAGE_STATUSES, STATUS_BAND } from "../pipeline.constants.tsx";
 import { stageStatusLabel } from "../pipeline.labels.ts";
+import { pipelineTypeConfig } from "../pipelineTypes.ts";
 import { StageDot } from "../shared/atoms.tsx";
 import { ConversionsApiSection } from "./ConversionsApiSection.tsx";
 import { DeletePipelineDialog } from "./DeletePipelineDialog.tsx";
@@ -97,8 +99,8 @@ function automationToggles(t: TFunction): AutomationToggle[] {
   return [
     {
       key: "rottingEnabled",
-      name: t("Flag stalled leads"),
-      description: t("Highlight leads idle past their stage's rotting window."),
+      name: t("Flag stalled cards"),
+      description: t("Highlight cards idle past their stage's rotting window."),
       icon: IconAlertTriangle,
       tone: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
     },
@@ -252,6 +254,7 @@ function StageRow({
   canReorder,
   onNudge,
   otherStages,
+  pipelineType,
 }: Readonly<{
   stage: PipelineStage;
   index: number;
@@ -262,8 +265,10 @@ function StageRow({
   canReorder: boolean;
   onNudge: (index: number, direction: -1 | 1) => void;
   otherStages: PipelineStage[];
+  pipelineType: PipelineType;
 }>) {
   const { t } = useTranslation();
+  const typeConfig = pipelineTypeConfig(t, pipelineType);
   const updateStage = useUpdateStageMutation();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [name, setName] = useState(stage.name);
@@ -453,7 +458,7 @@ function StageRow({
           aria-label={t("Lead stage name")}
         />
         <span className="text-muted-foreground text-[11px]">
-          {t("{total} leads", { total: stage.openLeadCount })}
+          {typeConfig.cardTotal(stage.openLeadCount)}
         </span>
       </div>
 
@@ -461,7 +466,7 @@ function StageRow({
         <Select
           items={STAGE_STATUSES.map((status) => ({
             value: status,
-            label: stageStatusLabel(t, status),
+            label: stageStatusLabel(t, status, pipelineType),
           }))}
           value={stage.status}
           onValueChange={(value) =>
@@ -490,24 +495,26 @@ function StageRow({
           <SelectContent>
             {STAGE_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
-                {stageStatusLabel(t, status)}
+                {stageStatusLabel(t, status, pipelineType)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <div className="flex w-24 items-center gap-1.5">
-        <Input
-          value={probability}
-          onChange={(event) => setProbability(event.target.value)}
-          onBlur={() => commitNumber("probability", probability, 100)}
-          className="h-8 w-14 text-right"
-          inputMode="numeric"
-          aria-label={t("Win probability")}
-        />
-        <span className="text-muted-foreground text-xs">%</span>
-      </div>
+      {typeConfig.features.probability ? (
+        <div className="flex w-24 items-center gap-1.5">
+          <Input
+            value={probability}
+            onChange={(event) => setProbability(event.target.value)}
+            onBlur={() => commitNumber("probability", probability, 100)}
+            className="h-8 w-14 text-right"
+            inputMode="numeric"
+            aria-label={t("Win probability")}
+          />
+          <span className="text-muted-foreground text-xs">%</span>
+        </div>
+      ) : null}
 
       <div className="flex w-28 items-center gap-1.5">
         <Input
@@ -630,6 +637,8 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
   // tuning: a member can retune their own funnel without being able to hand the
   // board to another team or destroy it and every lead on it.
   const isOrgAdmin = can("pipelines.admin");
+  const typeConfig = pipelineTypeConfig(t, pipeline.type);
+  const isLeads = typeConfig.type === "LEADS";
 
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
@@ -638,7 +647,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
             most visits to this screen are here to change. */}
         <section>
           <div className="mb-1 flex items-center justify-between">
-            <SectionTitle>{t("Lead stages")}</SectionTitle>
+            <SectionTitle>{isLeads ? t("Lead stages") : t("Stages")}</SectionTitle>
             <Button
               size="sm"
               className="gap-1.5"
@@ -655,13 +664,18 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
               }
             >
               <IconPlus className="size-4" />
-              {t("Add lead stage")}
+              {isLeads ? t("Add lead stage") : t("Add stage")}
             </Button>
           </div>
           <p className="text-muted-foreground mb-3.5 text-xs">
-            {t(
-              "These are your board's own columns, numbered left to right as they appear on it. Drag a row by its handle to move it, or focus a handle and use the arrow keys. Status decides what happens when a lead lands here — Won and Lost columns close the lead and are left out of open counts.",
-            )}
+            {isLeads
+              ? t(
+                  "These are your board's own columns, numbered left to right as they appear on it. Drag a row by its handle to move it, or focus a handle and use the arrow keys. Status decides what happens when a lead lands here — Won and Lost columns close the lead and are left out of open counts.",
+                )
+              : t(
+                  "These are your board's own columns, numbered left to right as they appear on it. Drag a row by its handle to move it, or focus a handle and use the arrow keys. Status decides what happens when a card lands here — {won} and {lost} columns close it and are left out of open counts.",
+                  { won: typeConfig.wonLabel, lost: typeConfig.lostLabel },
+                )}
           </p>
 
           <Card className="gap-0 overflow-hidden p-0 shadow-xs">
@@ -675,14 +689,16 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
                 </span>
               )}
               <span className="text-muted-foreground min-w-52 flex-1 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
-                {t("Lead stage")}
+                {isLeads ? t("Lead stage") : t("Stage")}
               </span>
               <span className="text-muted-foreground w-44 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
                 {t("Status")}
               </span>
-              <span className="text-muted-foreground w-24 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
-                {t("Probability")}
-              </span>
+              {typeConfig.features.probability ? (
+                <span className="text-muted-foreground w-24 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
+                  {t("Probability")}
+                </span>
+              ) : null}
               <span className="text-muted-foreground w-28 text-[11.5px] font-semibold tracking-[0.04em] uppercase">
                 {t("Rotting after")}
               </span>
@@ -699,6 +715,7 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
                 canReorder={pipeline.stages.length > 1}
                 onNudge={nudgeStage}
                 otherStages={pipeline.stages.filter((candidate) => candidate.id !== stage.id)}
+                pipelineType={pipeline.type}
               />
             ))}
           </Card>
@@ -707,81 +724,83 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
         {/* One column all the way down. Side-by-side sections had to reconcile
             heights they have no reason to share, which is what left the ragged
             gaps; stacked, each is simply as tall as its content. */}
-        <section>
-          <SectionTitle>{t("Lost reasons")}</SectionTitle>
-          <SectionNote>{t("Reps pick one when marking a lead lost.")}</SectionNote>
+        {typeConfig.features.lostReasons ? (
+          <section>
+            <SectionTitle>{t("Lost reasons")}</SectionTitle>
+            <SectionNote>{t("Reps pick one when marking a lead lost.")}</SectionNote>
 
-          <Card className="gap-0 overflow-hidden p-0 shadow-xs">
-            {pipeline.lostReasons.map((reason) => (
-              <div
-                key={reason.id}
-                className="border-border/60 flex items-center gap-3 border-b p-3.5"
-              >
-                <span className="text-foreground flex-1 text-[13.5px] font-medium">
-                  {reason.label}
-                </span>
-                <span className="text-muted-foreground text-[11px]">{reason.leadCount}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive size-7"
-                  onClick={() => deleteLostReason.mutate(reason.id)}
-                  aria-label={t("Delete {reason}", { reason: reason.label })}
+            <Card className="gap-0 overflow-hidden p-0 shadow-xs">
+              {pipeline.lostReasons.map((reason) => (
+                <div
+                  key={reason.id}
+                  className="border-border/60 flex items-center gap-3 border-b p-3.5"
                 >
-                  <IconTrash className="size-3.5" />
-                </Button>
-              </div>
-            ))}
+                  <span className="text-foreground flex-1 text-[13.5px] font-medium">
+                    {reason.label}
+                  </span>
+                  <span className="text-muted-foreground text-[11px]">{reason.leadCount}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive size-7"
+                    onClick={() => deleteLostReason.mutate(reason.id)}
+                    aria-label={t("Delete {reason}", { reason: reason.label })}
+                  >
+                    <IconTrash className="size-3.5" />
+                  </Button>
+                </div>
+              ))}
 
-            {/* A quiet "+ Add reason" row until it is wanted, rather than an
+              {/* A quiet "+ Add reason" row until it is wanted, rather than an
                   input and a button sitting permanently under the list. */}
-            {addingReason ? (
-              <form
-                className="flex items-center gap-2 p-3"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  const label = newReason.trim();
-                  if (!label) return;
-                  createLostReason.mutate(
-                    { pipelineId: pipeline.id, label },
-                    {
-                      onSuccess: () => {
-                        setNewReason("");
-                        setAddingReason(false);
+              {addingReason ? (
+                <form
+                  className="flex items-center gap-2 p-3"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const label = newReason.trim();
+                    if (!label) return;
+                    createLostReason.mutate(
+                      { pipelineId: pipeline.id, label },
+                      {
+                        onSuccess: () => {
+                          setNewReason("");
+                          setAddingReason(false);
+                        },
                       },
-                    },
-                  );
-                }}
-              >
-                <Input
-                  autoFocus
-                  value={newReason}
-                  onChange={(event) => setNewReason(event.target.value)}
-                  placeholder={t("e.g. Went with a rival")}
-                  className="h-8"
-                  aria-label={t("New lost reason")}
-                  onKeyDown={(event) => {
-                    if (event.key !== "Escape") return;
-                    setNewReason("");
-                    setAddingReason(false);
+                    );
                   }}
-                />
-                <Button type="submit" size="sm" variant="secondary" disabled={!newReason.trim()}>
-                  {t("Add")}
-                </Button>
-              </form>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setAddingReason(true)}
-                className="text-primary hover:bg-muted flex items-center gap-2 px-4 py-3 text-[13px] font-medium transition-colors"
-              >
-                <IconPlus className="size-4" />
-                {t("Add reason")}
-              </button>
-            )}
-          </Card>
-        </section>
+                >
+                  <Input
+                    autoFocus
+                    value={newReason}
+                    onChange={(event) => setNewReason(event.target.value)}
+                    placeholder={t("e.g. Went with a rival")}
+                    className="h-8"
+                    aria-label={t("New lost reason")}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Escape") return;
+                      setNewReason("");
+                      setAddingReason(false);
+                    }}
+                  />
+                  <Button type="submit" size="sm" variant="secondary" disabled={!newReason.trim()}>
+                    {t("Add")}
+                  </Button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAddingReason(true)}
+                  className="text-primary hover:bg-muted flex items-center gap-2 px-4 py-3 text-[13px] font-medium transition-colors"
+                >
+                  <IconPlus className="size-4" />
+                  {t("Add reason")}
+                </button>
+              )}
+            </Card>
+          </section>
+        ) : null}
 
         {/* Admin-only: handing the board to another team is an org-level call, not
             board tuning, so a member can retune their own funnel without it. */}
@@ -838,13 +857,15 @@ export function SettingsView({ pipeline }: Readonly<{ pipeline: PipelineDetail |
         {/* Reporting a win to Meta. It belongs to the board rather than to the
             lifecycle now, because a lead reaching a Won column is what fires the
             event. Sits directly above the danger zone. */}
-        <section>
-          <h2 className="font-display text-[15px] font-semibold">{t("Conversion tracking")}</h2>
-          <SectionNote>
-            {t("Send a conversion event to Meta when a lead is won on this board.")}
-          </SectionNote>
-          <ConversionsApiSection />
-        </section>
+        {typeConfig.features.conversionsApi ? (
+          <section>
+            <h2 className="font-display text-[15px] font-semibold">{t("Conversion tracking")}</h2>
+            <SectionNote>
+              {t("Send a conversion event to Meta when a lead is won on this board.")}
+            </SectionNote>
+            <ConversionsApiSection />
+          </section>
+        ) : null}
 
         {/* Admin-only: deleting the board. Stays last — it is the one action that
             cannot be undone, so it should not sit above routine tuning. */}

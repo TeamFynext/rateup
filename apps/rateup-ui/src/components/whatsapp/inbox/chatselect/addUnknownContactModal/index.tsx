@@ -239,11 +239,9 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
           )}
 
           <div className="w-full flex items-center justify-end gap-4 mt-2">
-            <Button type="submit" disabled={loading || !isValid} className="min-w-[12vw]">
+            <Button type="submit" disabled={!isValid} loading={loading}>
               <IconBrandWhatsapp data-icon="inline-start" />
-              <span className="font-semibold">
-                {loading ? translations("Please wait..") : translations("Start Conversation")}
-              </span>
+              {translations("Add & start conversation")}
             </Button>
           </div>
         </FieldGroup>

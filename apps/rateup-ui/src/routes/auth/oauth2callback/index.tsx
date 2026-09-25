@@ -15,16 +15,21 @@ function AuthCallBack() {
   const searchParams = useSearch({ strict: false });
   const code = searchParams.code;
   const error = searchParams.error;
-  const [callbackRoute, setCallBackRoute] = useState("/dashboard/settings");
+  const [callbackRoute, setCallBackRoute] = useState(
+    "/dashboard/settings/integrations/googlesheet",
+  );
 
   const [isLoading, setIsLoading] = useState(true);
   const mut = useCreateAuthToken();
 
   useEffect(() => {
-    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
+    const route =
+      localStorage.getItem("google-callback-route") ??
+      "/dashboard/settings/integrations/googlesheet";
+    setCallBackRoute(route);
     if (error) {
       navigate({
-        to: callbackRoute,
+        to: route,
       });
     } else if (code) {
       mut.mutate(
@@ -32,7 +37,6 @@ function AuthCallBack() {
         {
           onSuccess: () => {
             setIsLoading(false);
-            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route") ?? "null"));
           },
         },
       );
@@ -56,7 +60,9 @@ function AuthCallBack() {
                   to: callbackRoute,
                 });
               }}
-            />
+            >
+              Go Back
+            </Button>
           </div>
         </Card>
       )}

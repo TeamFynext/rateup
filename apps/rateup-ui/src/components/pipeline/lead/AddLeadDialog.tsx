@@ -38,6 +38,7 @@ import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { SOURCE_META } from "../pipeline.constants.tsx";
 import { sourceLabel } from "../pipeline.labels.ts";
+import { usePipelineTypeConfig } from "../pipelineTypes.ts";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
 import { ContactPicker, type PickedContact } from "./ContactPicker.tsx";
 
@@ -124,6 +125,7 @@ export function AddLeadDialog({
 }: Readonly<AddLeadDialogProps>) {
   const { t } = useTranslation();
   const createLead = useCreateLeadMutation();
+  const typeConfig = usePipelineTypeConfig(pipeline);
 
   const [mode, setMode] = useState<CustomerMode>("manual");
   const [manual, setManual] = useState<ManualCustomer>(EMPTY_MANUAL);
@@ -214,9 +216,13 @@ export function AddLeadDialog({
       pipelineId: pipeline.id,
       stageId,
       ...customer,
-      source,
+      // Other board types do not track where a card came from.
+      source: typeConfig.features.source ? source : "MANUAL",
       channel:
-        source === "WHATSAPP" || source === "INSTAGRAM" || source === "MESSENGER" ? source : "NONE",
+        typeConfig.features.source &&
+        (source === "WHATSAPP" || source === "INSTAGRAM" || source === "MESSENGER")
+          ? source
+          : "NONE",
       assigneeIds,
     };
 
@@ -281,10 +287,12 @@ export function AddLeadDialog({
       <DialogContent className="rounded-2xl sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="font-display text-xl leading-tight font-bold tracking-[-0.01em]">
-            {t("Add lead")}
+            {typeConfig.addCard}
           </DialogTitle>
           <DialogDescription>
-            {t("New leads land on the board straight away, in the column you pick.")}
+            {typeConfig.type === "LEADS"
+              ? t("New leads land on the board straight away, in the column you pick.")
+              : t("It lands on the board straight away, in the column you pick.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -336,15 +344,17 @@ export function AddLeadDialog({
                 </Field>
               </div>
 
-              <Field className="flex flex-col gap-1">
-                <FieldLabel htmlFor="add-lead-company">{t("Business / company")}</FieldLabel>
-                <Input
-                  id="add-lead-company"
-                  placeholder={t("Optional")}
-                  value={manual.company}
-                  onChange={(event) => editManual({ company: event.target.value })}
-                />
-              </Field>
+              {typeConfig.features.company ? (
+                <Field className="flex flex-col gap-1">
+                  <FieldLabel htmlFor="add-lead-company">{t("Business / company")}</FieldLabel>
+                  <Input
+                    id="add-lead-company"
+                    placeholder={t("Optional")}
+                    value={manual.company}
+                    onChange={(event) => editManual({ company: event.target.value })}
+                  />
+                </Field>
+              ) : null}
 
               <Field className="flex flex-col gap-1" data-invalid={Boolean(manualErrors.phone)}>
                 <FieldLabel htmlFor="add-lead-phone">{t("WhatsApp number")}</FieldLabel>
@@ -448,21 +458,23 @@ export function AddLeadDialog({
             />
           </div>
 
-          <div className="sm:col-span-2">
-            <Label className="mb-2 block">{t("Source")}</Label>
-            <ChipGroup
-              options={SOURCES.map((candidate) => {
-                const SourceIcon = SOURCE_META[candidate].icon;
-                return {
-                  value: candidate,
-                  label: sourceLabel(t, candidate),
-                  icon: <SourceIcon className="size-3.5" />,
-                };
-              })}
-              value={source}
-              onChange={setSource}
-            />
-          </div>
+          {typeConfig.features.source ? (
+            <div className="sm:col-span-2">
+              <Label className="mb-2 block">{t("Source")}</Label>
+              <ChipGroup
+                options={SOURCES.map((candidate) => {
+                  const SourceIcon = SOURCE_META[candidate].icon;
+                  return {
+                    value: candidate,
+                    label: sourceLabel(t, candidate),
+                    icon: <SourceIcon className="size-3.5" />,
+                  };
+                })}
+                value={source}
+                onChange={setSource}
+              />
+            </div>
+          ) : null}
 
           {members.length > 0 ? (
             <div className="sm:col-span-2">
@@ -517,7 +529,7 @@ export function AddLeadDialog({
             {t("Cancel")}
           </Button>
           <Button onClick={submit} disabled={!customerReady || !stageId || saving}>
-            {t("Add lead")}
+            {typeConfig.addCard}
           </Button>
         </DialogFooter>
       </DialogContent>
