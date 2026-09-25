@@ -35,7 +35,5 @@ declare module "fastify" {
     cfAccessEmail?: string;
     /** Set once a staff audit row exists for this request, so the fallback row is skipped. */
     staffAuditRecorded?: boolean;
-    /** Local development only: the request was admitted by STAFF_DEV_BYPASS_EMAIL, not a cookie. */
-    staffDevBypass?: boolean;
   }
 }

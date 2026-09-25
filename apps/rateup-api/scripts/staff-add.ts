@@ -7,6 +7,9 @@
  *   npm run staff:add -- someone@rateup.app --owner    # can manage the staff list
  *   npm run staff:add -- someone@rateup.app --name "Some One"
  *
+ * With NODE_ENV=development any domain is accepted, and Google sign-in then takes it too:
+ *   npm run staff:add -- you@gmail.com --owner
+ *
  * Against a deployed database: `railway run npm run staff:add -- …`.
  */
 import "dotenv/config";
@@ -30,7 +33,11 @@ async function main() {
   if (!email || !/^[^@\s]+@[^@\s]+$/.test(email)) {
     throw new Error('Usage: npm run staff:add -- <email> [--owner] [--name "Full Name"]');
   }
-  if (!email.endsWith(`@${domain}`)) {
+  // Locally, any address may be added; Google sign-in accepts any domain there too
+  // (staffSignInDomain). Only an explicit NODE_ENV=development opens this: production does
+  // not set NODE_ENV at all.
+  const development = process.env.NODE_ENV === "development";
+  if (!development && !email.endsWith(`@${domain}`)) {
     throw new Error(`${email} is not a @${domain} address; Google sign-in would refuse it.`);
   }
 

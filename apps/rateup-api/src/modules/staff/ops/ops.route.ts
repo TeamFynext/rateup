@@ -185,7 +185,7 @@ export async function staffOpsRoutes(server: FastifyInstance) {
     }),
   );
 
-  // Test data: refused in production by the service, whatever the console shows.
+  // Test data: refused outside NODE_ENV=development by the service, whatever the console shows.
   server.get<{ Querystring: TestDataOrgQuery }>(
     "/ops/test-data/surveys",
     { schema: { querystring: testDataOrgQuerySchema } },

@@ -70,6 +70,15 @@ describe("addStaffMember", () => {
     expect(db.$transaction).not.toHaveBeenCalled();
   });
 
+  test("with no domain (NODE_ENV=development) any address may be added", async () => {
+    db.staffUser.findUnique.mockResolvedValue(null);
+    db.staffUser.create.mockResolvedValue(row({ email: "bob@gmail.com" }));
+    await addStaffMember(owner, { email: "bob@gmail.com", isOwner: false, ...reason }, null);
+    expect(db.staffUser.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ email: "bob@gmail.com" }),
+    });
+  });
+
   test("creates the row, recording who added them", async () => {
     db.staffUser.findUnique.mockResolvedValue(null);
     db.staffUser.create.mockResolvedValue(row({ isOwner: true }));

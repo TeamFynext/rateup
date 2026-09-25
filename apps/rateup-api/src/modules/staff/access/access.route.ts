@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import type { StaffConfig } from "../staff.config.js";
+import { staffSignInDomain, type StaffConfig } from "../staff.config.js";
 import {
   asUuid,
   idParamSchema,
@@ -113,7 +113,9 @@ export const staffAccessRoutes = (config: StaffConfig) => async (server: Fastify
   server.post<{ Body: StaffAddInput }>(
     "/staff-users",
     { schema: { body: staffAddSchema } },
-    async (request) => ({ data: await addStaffMember(request, request.body, config.googleHd) }),
+    async (request) => ({
+      data: await addStaffMember(request, request.body, staffSignInDomain(config)),
+    }),
   );
   server.patch<{ Params: IdParam; Body: StaffUpdateInput }>(
     "/staff-users/:id",

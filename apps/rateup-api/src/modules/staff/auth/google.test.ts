@@ -32,6 +32,23 @@ describe("checkGoogleClaims", () => {
     expect(checkGoogleClaims({ ...base, ...override }, expected)).toEqual({ ok: false, reason });
   });
 
+  describe("with no domain (NODE_ENV=development)", () => {
+    const anyDomain = { ...expected, hostedDomain: null };
+
+    test("admits a verified personal gmail account", () => {
+      const gmail = { ...base, hd: undefined, email: "Ann@gmail.com" };
+      expect(checkGoogleClaims(gmail, anyDomain)).toMatchObject({
+        ok: true,
+        identity: { email: "ann@gmail.com" },
+      });
+    });
+
+    test("still refuses an unverified email", () => {
+      const unverified = { ...base, hd: undefined, email: "ann@gmail.com", email_verified: false };
+      expect(checkGoogleClaims(unverified, anyDomain)).toEqual({ ok: false, reason: "domain" });
+    });
+  });
+
   test("the Google account must be the Cloudflare Access account", () => {
     expect(checkGoogleClaims(base, { ...expected, cfAccessEmail: "bob@rateup.app" })).toEqual({
       ok: false,
@@ -73,6 +90,11 @@ describe("buildGoogleAuthUrl", () => {
     expect(url.searchParams.get("hd")).toBe("rateup.app");
     expect(url.searchParams.get("prompt")).toBe("select_account");
     expect(url.searchParams.has("max_age")).toBe(false);
+  });
+
+  test("with no domain the account picker is not limited", () => {
+    const url = new URL(buildGoogleAuthUrl({ ...params, hostedDomain: null, reauth: false }));
+    expect(url.searchParams.has("hd")).toBe(false);
   });
 
   test("step-up forces a fresh password prompt", () => {
