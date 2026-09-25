@@ -334,7 +334,8 @@ export async function createLead(
     contactLeadChecked?: boolean;
     /**
      * An import: record the lead and nothing else. No CRM push, Conversions API event,
-     * Zap or automation rule, which would otherwise fire once per row of a spreadsheet.
+     * Zap or automation rule — for the lead or for a contact it creates — which would
+     * otherwise fire once per row of a spreadsheet.
      */
     quiet?: boolean;
   },
@@ -348,7 +349,13 @@ export async function createLead(
   // contact even though the caller named none.
   const resolved =
     !data.contactId && data.phone && data.linkContact !== false
-      ? await resolveContactForLead(stage.pipeline.orgId, data.phone, data.name, data.email ?? null)
+      ? await resolveContactForLead(
+          stage.pipeline.orgId,
+          data.phone,
+          data.name,
+          data.email ?? null,
+          { quiet: data.quiet },
+        )
       : null;
   const contactId = data.contactId ?? resolved?.contactId ?? null;
 

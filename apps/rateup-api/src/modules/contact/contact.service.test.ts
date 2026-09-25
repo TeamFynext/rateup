@@ -135,6 +135,8 @@ import {
 } from "./contactGroup/contactGroup.service.js";
 import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
 import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { addZohoContactToQueue } from "../integrations/external/zoho/zoho.utils.js";
 import {
   assignWaMessageToUser,
   createInternalWaMessage,
@@ -370,6 +372,18 @@ describe("createContact", () => {
 
     const jobs = integrationTriggerQueue.add as unknown as Mock;
     expect(jobs.mock.calls[0][1].data.Lead_Status).toBe("Qualified");
+  });
+
+  test("a quiet create (lead import) fires no automation, Zap or CRM push", async () => {
+    db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG, lifecycleId: "lc-1" });
+
+    await createContact({ ...base, lifecycleId: "lc-1" }, undefined, { quiet: true });
+
+    expect(db.contact.create).toHaveBeenCalled();
+    expect(checkAndExecuteRuleByTriggerEvent).not.toHaveBeenCalled();
+    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+    expect(addZohoContactToQueue).not.toHaveBeenCalled();
+    expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
   });
 
   test("waits for the group membership write", async () => {

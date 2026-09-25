@@ -11,6 +11,8 @@ import { renderNotification } from "./notification.render.js";
 import type { NotificationJobData } from "./notification.service.js";
 import type { NotifyAudience, NotifyJobData } from "./notify.js";
 
+const ADMIT_BATCH = 20;
+
 interface ResolvedAudience {
   userIds: string[] | "everyone";
   /** Narrows the candidates further once each one's actor is loaded. */
@@ -107,10 +109,22 @@ export async function dispatchNotification(job: NotifyJobData): Promise<Notifica
   const pushUserIds: string[] = [];
   const emailTo: string[] = [];
 
+  const admitted = new Set<string>();
+  // Each check loads an actor and maybe a channel scope; an "everyone" audience is the whole
+  // org, so they run in bounded batches rather than one after another or all at once.
+  for (let i = 0; i < members.length; i += ADMIT_BATCH) {
+    await Promise.all(
+      members.slice(i, i + ADMIT_BATCH).map(async ({ userId }) => {
+        const actor = await loadActor(userId, orgId);
+        if (!actor?.can(definition.permission)) return;
+        if (audience.admits && !(await audience.admits(actor))) return;
+        admitted.add(userId);
+      }),
+    );
+  }
+
   for (const member of members) {
-    const actor = await loadActor(member.userId, orgId);
-    if (!actor?.can(definition.permission)) continue;
-    if (audience.admits && !(await audience.admits(actor))) continue;
+    if (!admitted.has(member.userId)) continue;
 
     const prefs = preferencesFromRow(member.notificationSetting);
     const channels = deliveredChannels(prefs, event);

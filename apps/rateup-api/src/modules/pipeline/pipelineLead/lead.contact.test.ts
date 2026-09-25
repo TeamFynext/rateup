@@ -37,7 +37,15 @@ describe("the contact behind a manually added lead", () => {
         phone: "919876543210",
         email: "ritu@example.com",
       }),
+      undefined,
+      {},
     );
+  });
+
+  test("passes an import's quiet flag on, so the new contact fires no triggers", async () => {
+    await resolveContactForLead(ORG, "919876543210", "Ritu", null, { quiet: true });
+
+    expect(createContact).toHaveBeenCalledWith(expect.anything(), undefined, { quiet: true });
   });
 
   test("links the existing contact instead of duplicating them", async () => {

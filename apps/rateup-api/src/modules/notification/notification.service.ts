@@ -43,15 +43,6 @@ export async function markAllNotificationsRead(userId: string, orgId: string) {
   });
 }
 
-async function orgMemberId(userId: string, orgId: string) {
-  const member = await prisma.orgMember.findUnique({
-    where: { userId_orgId: { userId, orgId } },
-    select: { id: true },
-  });
-  if (!member) throw new Error(`No org member found for userId=${userId}, orgId=${orgId}`);
-  return member.id;
-}
-
 /**
  * The settings page's view: the master switches, and every event the member may receive with
  * the effective value of each channel it offers. Events they lack the permission for are left
@@ -79,20 +70,31 @@ export async function getNotificationSettings(actor: Actor) {
 
 export async function updateNotificationSettings(actor: Actor, data: NotificationSettingSchema) {
   if (!actor.userId) throw new Error("Notification settings belong to a signed-in user");
-  const id = await orgMemberId(actor.userId, actor.orgId);
-  const row = await prisma.notificationSetting.findUnique({ where: { orgMemberId: id } });
-  const current = preferencesFromRow(row);
-  const overrides = mergeOverrides(current.overrides, data.events ?? {});
-  const fields = {
-    ...current.channels,
-    ...data.channels,
-    sound: data.sound ?? current.sound,
-    overrides: overrides as Prisma.InputJsonObject,
-  };
-  await prisma.notificationSetting.upsert({
-    where: { orgMemberId: id },
-    create: { orgMemberId: id, ...fields },
-    update: fields,
+  const { userId, orgId } = actor;
+  await prisma.$transaction(async (tx) => {
+    // Locking the member row serialises concurrent saves, so each merges onto the last one's
+    // result — the settings row may not exist yet to lock. NO KEY UPDATE leaves the
+    // notification inserts that reference this member unblocked.
+    const [member] = await tx.$queryRaw<{ id: string }[]>`
+      SELECT "id" FROM "OrgMember"
+      WHERE "userId" = ${userId}::uuid AND "orgId" = ${orgId}::uuid
+      FOR NO KEY UPDATE`;
+    if (!member) throw new Error(`No org member found for userId=${userId}, orgId=${orgId}`);
+    const id = member.id;
+    const row = await tx.notificationSetting.findUnique({ where: { orgMemberId: id } });
+    const current = preferencesFromRow(row);
+    const overrides = mergeOverrides(current.overrides, data.events ?? {});
+    const fields = {
+      ...current.channels,
+      ...data.channels,
+      sound: data.sound ?? current.sound,
+      overrides: overrides as Prisma.InputJsonObject,
+    };
+    await tx.notificationSetting.upsert({
+      where: { orgMemberId: id },
+      create: { orgMemberId: id, ...fields },
+      update: fields,
+    });
   });
   return getNotificationSettings(actor);
 }

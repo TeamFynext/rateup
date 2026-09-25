@@ -76,7 +76,12 @@ function toContactCustomFieldValueInput(
   return { contactId, fieldId: field.id, value: field.value };
 }
 
-export async function createContact(contact: ContactCore & { orgId: string }, userId?: string) {
+export async function createContact(
+  contact: ContactCore & { orgId: string },
+  userId?: string,
+  /** `quiet`: a bulk import — skip the automation rule, Zap and CRM pushes that fire per contact. */
+  options: { quiet?: boolean } = {},
+) {
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
@@ -118,6 +123,7 @@ export async function createContact(contact: ContactCore & { orgId: string }, us
       `;
     await assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId, userId);
   }
+  if (options.quiet) return user;
   await checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
     phone: contact?.phone,
@@ -442,7 +448,7 @@ export async function getContactFullDetailsById(contactId: string, orgId: string
           closedAt: true,
           createdAt: true,
           stage: { select: { id: true, name: true, color: true, status: true } },
-          pipeline: { select: { id: true, name: true } },
+          pipeline: { select: { id: true, name: true, type: true } },
           owner: { select: { id: true, name: true } },
           assignees: { select: { assignee: { select: { id: true, name: true } } } },
         },

@@ -8,6 +8,7 @@ import {
   deleteLostReasonHandler,
   deletePipelineHandler,
   getPipelineHandler,
+  getPipelineCreateLimitsHandler,
   getPipelineMembersHandler,
   getPipelineStatsHandler,
   getPipelineForecastHandler,
@@ -93,6 +94,12 @@ export async function pipelineRoutes(server: FastifyInstance) {
 
   // Registered above the `/:id` routes so "team-defaults" is not read as an id.
   server.get("/team-defaults", getTeamPipelineDefaultsHandler);
+
+  server.get(
+    "/create-limits",
+    { config: { permission: "pipelines.manage" } },
+    getPipelineCreateLimitsHandler,
+  );
 
   server.put(
     "/team-defaults/:teamId",

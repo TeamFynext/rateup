@@ -11,6 +11,7 @@ import {
   getTeamPipelineDefaults,
   updateTeamPipelineDefault,
   getPipelines,
+  getPipelineCreateLimits,
   LeadsPipelineExistsError,
   PipelineLimitError,
   TeamAccessError,
@@ -74,6 +75,15 @@ export async function getPipelinesHandler(request: FastifyRequest, reply: Fastif
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error retrieving pipelines" });
+  }
+}
+
+export async function getPipelineCreateLimitsHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    return reply.code(200).send(await getPipelineCreateLimits(request.user.orgId));
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error retrieving pipeline limits" });
   }
 }
 

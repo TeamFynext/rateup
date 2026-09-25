@@ -47,6 +47,18 @@ export async function isPipelineAccessible(pipelineId: string, actor: Actor | un
   return pipelineInScope(pipelineId, actor);
 }
 
+/**
+ * Org-wide facts the create dialog needs. `getPipelines` only lists boards on the actor's
+ * teams, so a team-scoped manager could not otherwise tell that the Leads board exists.
+ */
+export async function getPipelineCreateLimits(orgId: string) {
+  const [leads, others] = await Promise.all([
+    prisma.pipeline.count({ where: { orgId, type: LEADS_PIPELINE_TYPE } }),
+    prisma.pipeline.count({ where: { orgId, type: { not: LEADS_PIPELINE_TYPE } } }),
+  ]);
+  return { hasLeadsPipeline: leads > 0, otherCount: others, otherLimit: OTHER_PIPELINE_LIMIT };
+}
+
 export async function createPipeline(
   data: CreatePipelineRequestSchema & { orgId: string; userId: string; actor: Actor },
 ) {
