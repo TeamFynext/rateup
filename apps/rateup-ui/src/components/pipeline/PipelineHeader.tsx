@@ -1,4 +1,11 @@
-import { IconAlertTriangle, IconPlus, IconSearch, IconUsers, IconX } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconPlus,
+  IconSearch,
+  IconUpload,
+  IconUsers,
+  IconX,
+} from "@tabler/icons-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -27,12 +34,15 @@ import type { PipelineView } from "@/store/pipeline.store.ts";
 
 import { VIEW_TABS } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel, viewTabLabel } from "./pipeline.labels.ts";
+import { usePipelineTypeConfig } from "./pipelineTypes.ts";
 import { LeadAvatar } from "./shared/LeadAvatar.tsx";
 import type { PipelineData } from "./usePipelineData.ts";
 
 interface PipelineHeaderProps {
   data: PipelineData;
   onAddLead: () => void;
+  /** Absent for anyone who may not add cards. */
+  onImport?: () => void;
 }
 
 /**
@@ -40,9 +50,10 @@ interface PipelineHeaderProps {
  * tabs. The attention chip is a shortcut into the rotting view, so the number
  * that warns you is also the control that shows you what it means.
  */
-export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps>) {
+export function PipelineHeader({ data, onAddLead, onImport }: Readonly<PipelineHeaderProps>) {
   const { t } = useTranslation();
   const { pipelines, pipeline, stats, members, view, setView } = data;
+  const typeConfig = usePipelineTypeConfig(pipeline);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Everything narrowing the board, named after what the user clicked rather
@@ -61,7 +72,7 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
     facets.push({
       id: "filter",
       label: t("View"),
-      value: leadFilterLabel(t, view.filter),
+      value: leadFilterLabel(t, view.filter, pipeline?.type),
       clear: () => setView({ filter: "open" }),
     });
   }
@@ -138,10 +149,7 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
 
         <Badge variant="secondary" className="gap-1.5">
           <IconUsers />
-          {t("{open} open · {total} leads", {
-            open: openCount,
-            total: stats?.totals.leads ?? 0,
-          })}
+          {typeConfig.counts(openCount, stats?.totals.leads ?? 0)}
         </Badge>
 
         {rottingCount > 0 ? (
@@ -168,7 +176,7 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
             ref={searchRef}
             value={view.search}
             onChange={(event) => setView({ search: event.target.value })}
-            placeholder={t("Search leads")}
+            placeholder={typeConfig.searchPlaceholder}
           />
           {/* Clearing is a facet reset like any other, so it belongs in the
               field rather than only in the filter chips — and the focus goes
@@ -228,10 +236,18 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
           </div>
         ) : null}
 
+        {onImport ? (
+          <Button variant="outline" size="sm" onClick={onImport} className="gap-1.5">
+            <IconUpload className="size-4" />
+            <span className="hidden sm:inline">{t("Import")}</span>
+            <span className="sr-only sm:hidden">{t("Import")}</span>
+          </Button>
+        ) : null}
+
         <Button size="sm" onClick={onAddLead} className="gap-1.5">
           <IconPlus className="size-4" />
-          <span className="hidden sm:inline">{t("Add lead")}</span>
-          <span className="sr-only sm:hidden">{t("Add lead")}</span>
+          <span className="hidden sm:inline">{typeConfig.addCard}</span>
+          <span className="sr-only sm:hidden">{typeConfig.addCard}</span>
         </Button>
       </div>
 
@@ -279,12 +295,14 @@ export function PipelineHeader({ data, onAddLead }: Readonly<PipelineHeaderProps
       <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <Tabs value={view.view} onValueChange={(value) => setView({ view: value as PipelineView })}>
           <TabsList aria-label={t("Pipeline views")}>
-            {VIEW_TABS.map(({ id, icon: Icon }) => (
-              <TabsTrigger key={id} value={id}>
-                <Icon />
-                {viewTabLabel(t, id)}
-              </TabsTrigger>
-            ))}
+            {VIEW_TABS.filter(({ id }) => id !== "forecast" || typeConfig.features.forecast).map(
+              ({ id, icon: Icon }) => (
+                <TabsTrigger key={id} value={id}>
+                  <Icon />
+                  {viewTabLabel(t, id)}
+                </TabsTrigger>
+              ),
+            )}
           </TabsList>
         </Tabs>
       </div>

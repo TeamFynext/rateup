@@ -81,11 +81,14 @@ export function EventMessageCard({
   // matched back to this message by name, and it can be switched on before anything has
   // written that link onto the trigger.
   const hasTemplate = Boolean(template);
+  const enabled = trigger?.enabled ?? definition.defaultOn === true;
+  // Without a template a default-on message still goes out as text inside an open chat.
+  const textOnly = !hasTemplate && enabled && definition.defaultOn === true;
   const richParts = templateHasRichParts(template, { ownButton: definition.joinButton });
   const editorId = `event-message-${definition.eventType}`;
 
   const startEditing = () => {
-    setDraft(body ?? definition.body);
+    setDraft(body ?? trigger?.body ?? definition.body);
     setEditing(true);
   };
 
@@ -109,16 +112,16 @@ export function EventMessageCard({
               <LoyaltyTemplateStatusBadge
                 status={template?.data?.status}
                 hasTemplate={hasTemplate}
-                enabled={trigger?.enabled}
+                enabled={enabled}
                 pendingSince={template?.createdAt}
               />
             </div>
             <p className="text-xs text-muted-foreground">{definition.description}</p>
           </div>
           <Switch
-            checked={Boolean(trigger?.enabled)}
+            checked={enabled}
             onCheckedChange={onToggle}
-            disabled={isSaving || !hasTemplate}
+            disabled={isSaving || (!hasTemplate && !definition.defaultOn)}
             aria-label={definition.label}
           />
         </div>
@@ -169,6 +172,15 @@ export function EventMessageCard({
             {definition.joinButton && (
               <JoinButtonPreview label={quickReplyLabelOf(template) ?? t("Join")} />
             )}
+          </div>
+        ) : textOnly ? (
+          <div className="flex flex-col gap-1">
+            <MessageBubble text={trigger?.body ?? definition.body} className="line-clamp-3" />
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "Sent as plain text to customers with an open chat. Submit it to Meta to reach everyone else.",
+              )}
+            </p>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

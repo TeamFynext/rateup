@@ -16,7 +16,6 @@ import {
   IconCircleCheck,
   IconCircleDot,
   IconCircleX,
-  IconGitBranch,
   IconPlus,
   IconUserCheck,
   IconUsersGroup,
@@ -35,8 +34,9 @@ import { cn } from "@/lib/utils.ts";
 import type { PipelineViewState } from "@/store/pipeline.store.ts";
 import type { LeadFilter } from "@/store/pipeline.store.ts";
 
-import { PIPELINE_LIMIT_PER_ORG, SOURCE_META, STATUS_BAND } from "./pipeline.constants.tsx";
+import { SOURCE_META, STATUS_BAND } from "./pipeline.constants.tsx";
 import { leadFilterLabel, sourceLabel } from "./pipeline.labels.ts";
+import { OTHER_PIPELINE_LIMIT, pipelineTypeConfig } from "./pipelineTypes.ts";
 
 const PIPELINE_PATH = "/dashboard/pipeline";
 
@@ -156,19 +156,26 @@ export function buildPipelineNavItems({
   // path would drop `?p=` and bounce you to the first pipeline.
   const boardHref = activePipelineId ? `${PIPELINE_PATH}?p=${activePipelineId}` : PIPELINE_PATH;
 
+  const typeConfig = pipelineTypeConfig(t, pipeline?.type ?? "LEADS");
+  const hasLeads = pipelines.some((row) => row.type === "LEADS");
+  const others = pipelines.filter((row) => row.type !== "LEADS").length;
+
   const pipelineRows: NavEntry[] = [
-    ...pipelines.map((row) => ({
-      title: row.name,
-      // The one row that is a real link: which board you are on is URL state.
-      url: `${PIPELINE_PATH}?p=${row.id}`,
-      icon: IconGitBranch,
-      count: row.openLeadCount,
-      variant: "inbox-tab",
-      isActive: row.id === activePipelineId,
-      // The open lead belongs to the board being left.
-      handleClick: () => setView({ leadId: null }),
-    })),
-    ...(pipelines.length < PIPELINE_LIMIT_PER_ORG
+    // The Leads board first: it is the one the inbox and automations read.
+    ...pipelines
+      .toSorted((a, b) => Number(b.type === "LEADS") - Number(a.type === "LEADS"))
+      .map((row) => ({
+        title: row.name,
+        // The one row that is a real link: which board you are on is URL state.
+        url: `${PIPELINE_PATH}?p=${row.id}`,
+        icon: pipelineTypeConfig(t, row.type).icon,
+        count: row.openLeadCount,
+        variant: "inbox-tab",
+        isActive: row.id === activePipelineId,
+        // The open lead belongs to the board being left.
+        handleClick: () => setView({ leadId: null }),
+      })),
+    ...(!hasLeads || others < OTHER_PIPELINE_LIMIT
       ? [
           {
             title: t("New pipeline"),
@@ -183,7 +190,7 @@ export function buildPipelineNavItems({
   ];
 
   const viewRows: NavEntry[] = FILTER_ROWS.map((row) => ({
-    title: leadFilterLabel(t, row.id),
+    title: leadFilterLabel(t, row.id, typeConfig.type),
     url: boardHref,
     icon: row.icon,
     count: countFor(row.id, stats),
@@ -216,20 +223,22 @@ export function buildPipelineNavItems({
     handleClick: () => toggleFacet("teamId", team.id),
   }));
 
-  const sourceRows: NavEntry[] = (stats?.sources ?? []).map((row) => ({
-    title: sourceLabel(t, row.source),
-    url: boardHref,
-    icon: SOURCE_DOT[row.source],
-    count: row.open,
-    variant: "inbox-tab",
-    isActive: view.source === row.source,
-    handleClick: () => toggleFacet("source", row.source),
-  }));
+  const sourceRows: NavEntry[] = (typeConfig.features.source ? (stats?.sources ?? []) : []).map(
+    (row) => ({
+      title: sourceLabel(t, row.source),
+      url: boardHref,
+      icon: SOURCE_DOT[row.source],
+      count: row.open,
+      variant: "inbox-tab",
+      isActive: view.source === row.source,
+      handleClick: () => toggleFacet("source", row.source),
+    }),
+  );
 
   return [
     ...section(t("Pipelines"), pipelineRows),
     ...section(t("Views"), viewRows),
-    ...section(t("Lead stages"), stageRows),
+    ...section(typeConfig.type === "LEADS" ? t("Lead stages") : t("Stages"), stageRows),
     ...section(t("Teams"), teamRows),
     ...section(t("Sources"), sourceRows),
     // Ungrouped, so it sits on its own below the last section — the sidebar

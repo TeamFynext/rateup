@@ -14,6 +14,8 @@ import { useDebounce } from "@/hooks/use-debounce.ts";
 import { Route } from "@/routes/dashboard/pipeline/index.tsx";
 import { usePipelineStore, type PipelineViewState } from "@/store/pipeline.store.ts";
 
+import { findLeadsPipeline } from "./pipelineTypes.ts";
+
 /** Below this a search filters nothing and cannot use the trigram index. */
 const MIN_SEARCH_LENGTH = 2;
 
@@ -44,8 +46,8 @@ export function usePipelineData() {
   const pipelinesQuery = usePipelinesQuery();
   const pipelines = useMemo(() => pipelinesQuery.data ?? [], [pipelinesQuery.data]);
 
-  // Without an explicit `?p=`, land on the first pipeline the user can see.
-  const activePipelineId = search.p ?? pipelines[0]?.id;
+  // Without an explicit `?p=`, land on the Leads board, else the first one the user can see.
+  const activePipelineId = search.p ?? (findLeadsPipeline(pipelines) ?? pipelines[0])?.id;
 
   const pipelineQuery = usePipelineQuery(activePipelineId);
   const membersQuery = usePipelineMembersQuery(activePipelineId);

@@ -74,12 +74,16 @@ export interface PipelineLabel {
   pipelineId: string;
 }
 
+/** What a board is for; fixed at creation. Mirrors `PipelineType` in rateup-api. */
+export type PipelineType = "LEADS" | "SUPPORT" | "PROJECTS" | "CUSTOM";
+
 /** The pipeline switcher's row — name plus a live open-lead count. */
 export interface PipelineSummary {
   id: string;
   name: string;
   description: string | null;
   order: number;
+  type: PipelineType;
   rottingEnabled: boolean;
   autoAssignEnabled: boolean;
   nudgeEnabled: boolean;
@@ -298,6 +302,7 @@ export interface ForecastBucket {
 
 export interface CreatePipelineInput {
   name: string;
+  type: PipelineType;
   description?: string;
   teamIds: string[];
 }

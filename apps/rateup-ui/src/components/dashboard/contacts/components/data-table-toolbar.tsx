@@ -5,9 +5,9 @@ import {
   IconBrandInstagram,
   IconBrandWhatsapp,
   IconDownload,
+  IconFileSpreadsheet,
   IconFolder,
   IconGlobe,
-  IconInfoCircle,
   IconPlus,
   IconSearch,
   IconStack2,
@@ -45,6 +45,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
@@ -56,6 +57,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -64,12 +66,12 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { CustomField } from "@/context/CustomFieldsContext.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import { TeamFeature } from "@/types/enums.ts";
 import { getApiErrorData } from "@/utils/apiError.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -425,11 +427,10 @@ const ImportContactModal = ({
   const { t } = useTranslation();
 
   const handleDownloadDemo = () => {
-    // Example: download a text file (you can replace this with any file URL)
     const fileUrl = getFileUrlFromKey("/File/contact/demo.csv", false);
     const link = document.createElement("a");
     link.href = fileUrl ?? "";
-    link.download = "example.pdf"; // Suggested filename
+    link.download = "contacts-import.csv";
     link.click();
   };
   const [csvfile, setCsvfile] = useState<File | null>(null);
@@ -492,95 +493,144 @@ const ImportContactModal = ({
   }, [customFields]);
 
   return (
-    <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent>
+    <Dialog
+      open={opened}
+      onOpenChange={(open) => {
+        if (!open) reset();
+        setOpened(open);
+      }}
+    >
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-md">{t("Import Contacts")}</DialogTitle>
-          <DialogDescription>
-            {t("Import contacts from a CSV file to add them to your contact list.")}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <p className="text-sm">{t("Custom Fields")}</p>
-          <Field>
-            {customFields.map((field) => (
-              <Field
-                key={field.id}
-                orientation="horizontal"
-                className="rounded-lg bg-ru-blue-100 dark:bg-blue-950/50 p-1 w-fit px-2"
-              >
-                <Checkbox
-                  checked={fields.some((p) => p.id === field.id)}
-                  id={field.id}
-                  className="rounded-xl data-[state=unchecked]:bg-muted"
-                  onCheckedChange={(checked) => {
-                    setFields((prev) =>
-                      checked ? [...prev, field] : prev.filter((p) => p.id !== field.id),
-                    );
-                  }}
-                />
-                <FieldLabel htmlFor={field.id} className="text-sm font-normal">
-                  {field.name}
-                </FieldLabel>
-              </Field>
-            ))}
-          </Field>
-
-          <blockquote className="border-l-4 border-blue-500 bg-ru-blue-50 dark:bg-blue-950/40 p-4 flex flex-col gap-2">
-            <div className="flex gap-2 text-blue-700 dark:text-blue-400 text-sm">
-              <IconInfoCircle />
-              {t(
-                "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
-              )}
+          <div className="flex items-start gap-3">
+            <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <IconFileSpreadsheet className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="font-display font-extrabold">
+                {t("Import contacts")}
+              </DialogTitle>
+              <DialogDescription>
+                {t("Upload a CSV or Excel file. Each row becomes a contact in your list.")}
+              </DialogDescription>
             </div>
+          </div>
+        </DialogHeader>
 
-            <Button variant="secondary" onClick={handleDownloadDemo}>
-              <IconUpload />
-              <span className="font-medium text-sm">{t("Download Demo Csv File")}</span>
-            </Button>
-          </blockquote>
-          <Field orientation="horizontal" className="gap-2 mt-4">
-            <Switch
-              id="update-existing-data"
-              className="data-[state=unchecked]:bg-muted-foreground"
-              checked={updateExisting}
-              onCheckedChange={setUpdateExisting}
-            />
-            <FieldLabel htmlFor="update-existing-data">
-              {t("Update the existing data while importing")}
-            </FieldLabel>
-          </Field>
-          <Field orientation="horizontal" className="gap-2 mt-4">
-            <Switch
-              id="has-header-row"
-              className="data-[state=unchecked]:bg-muted-foreground"
-              checked={hasHeaderRow}
-              onCheckedChange={setHasHeaderRow}
-            />
-            <FieldLabel htmlFor="has-header-row">
-              {t("First row contains column headers (name, phone, ...)")}
-            </FieldLabel>
-          </Field>
-          <div className="grid items-center gap-3 mt-4">
+        <div className="flex flex-col gap-4">
+          <div className="bg-muted flex flex-col gap-3 rounded-lg p-3.5">
+            <div>
+              <p className="text-sm font-medium">{t("Start from the template")}</p>
+              <p className="text-muted-foreground text-xs">
+                {t(
+                  "The file needs a name and a phone column. Add a column for each custom field you tick below.",
+                )}
+              </p>
+            </div>
+            <div>
+              <Button variant="outline" size="sm" onClick={handleDownloadDemo}>
+                <IconDownload data-icon="inline-start" />
+                {t("CSV template")}
+              </Button>
+            </div>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+              <dt className="font-medium">{t("name")}</dt>
+              <dd className="text-muted-foreground">{t("Required.")}</dd>
+              <dt className="font-medium">{t("phone")}</dt>
+              <dd className="text-muted-foreground">
+                {t("Required, with the country code, e.g. 919876543210.")}
+              </dd>
+            </dl>
+          </div>
+
+          {customFields.length > 0 && (
+            <div>
+              <p className="text-sm font-medium">{t("Custom fields")}</p>
+              <p className="text-muted-foreground mb-2 text-xs">
+                {t("Tick the ones your file has a column for.")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {customFields.map((field) => {
+                  const checked = fields.some((p) => p.id === field.id);
+                  return (
+                    <label
+                      key={field.id}
+                      htmlFor={field.id}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors",
+                        checked ? "border-primary bg-primary/5" : "border-border hover:bg-muted",
+                      )}
+                    >
+                      <Checkbox
+                        checked={checked}
+                        id={field.id}
+                        onCheckedChange={(next) => {
+                          setFields((prev) =>
+                            next ? [...prev, field] : prev.filter((p) => p.id !== field.id),
+                          );
+                        }}
+                      />
+                      {field.name}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            <Field orientation="horizontal" className="gap-2">
+              <Switch
+                id="update-existing-data"
+                checked={updateExisting}
+                onCheckedChange={setUpdateExisting}
+              />
+              <FieldLabel htmlFor="update-existing-data" className="font-normal">
+                {t("Update contacts that already exist")}
+              </FieldLabel>
+            </Field>
+            <Field orientation="horizontal" className="gap-2">
+              <Switch
+                id="has-header-row"
+                checked={hasHeaderRow}
+                onCheckedChange={setHasHeaderRow}
+              />
+              <FieldLabel htmlFor="has-header-row" className="font-normal">
+                {t("First row contains column headers (name, phone, ...)")}
+              </FieldLabel>
+            </Field>
+          </div>
+
+          <div>
+            <Label htmlFor="contact-csv">{t("File")}</Label>
             <Input
               id="contact-csv"
               type="file"
               accept=".csv,.xlsx,.ods"
+              className="mt-1.5"
               onChange={(e) => setCsvfile(e.target.files?.[0] || null)}
             />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex justify-end gap-2 mt-6 text-sm">
-            <DialogClose render={<Button variant="secondary" onClick={reset} />}>
-              {t("Cancel")}
-            </DialogClose>
-
-            <Button onClick={handleImportContacts}>
-              {importCSVContactMutation.isPending && <Spinner />}
-              {t("Import")}
-            </Button>
+            {error ? (
+              <p className="text-destructive mt-1.5 text-xs">{error}</p>
+            ) : (
+              <p className="text-muted-foreground mt-1.5 text-xs">{t("CSV, XLSX or ODS.")}</p>
+            )}
           </div>
         </div>
+
+        <DialogFooter>
+          <DialogClose render={<Button variant="ghost" onClick={reset} />}>
+            {t("Cancel")}
+          </DialogClose>
+          <Button
+            onClick={handleImportContacts}
+            disabled={!csvfile || Boolean(error)}
+            loading={importCSVContactMutation.isPending}
+          >
+            <IconUpload data-icon="inline-start" />
+            {t("Import")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
       <ContactImportErrorModal
         body={getApiErrorData(importCSVContactMutation?.error)}

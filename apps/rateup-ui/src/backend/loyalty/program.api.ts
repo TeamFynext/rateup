@@ -26,6 +26,9 @@ export interface LoyaltyProgram {
   refereeBonus: number;
   refereeBonusType?: "points" | "gift";
   refereeRewardId?: string;
+  /** Off keeps the amounts above; nothing is paid until it is switched back on. */
+  signupBonusEnabled: boolean;
+  referralBonusEnabled: boolean;
   newCustomerBonus?: number;
   tiersEnabled: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
@@ -82,6 +85,8 @@ export interface LoyaltyProgramInput {
   refereeBonus?: number;
   refereeBonusType?: "points" | "gift";
   refereeRewardId?: string;
+  signupBonusEnabled?: boolean;
+  referralBonusEnabled?: boolean;
   newCustomerBonus?: number;
   tiersEnabled?: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;

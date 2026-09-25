@@ -1,10 +1,17 @@
-import { IconSparkles, IconUserPlus } from "@tabler/icons-react";
+import {
+  IconDots,
+  IconPencil,
+  IconSparkles,
+  IconUserPlus,
+  type Icon as TablerIcon,
+} from "@tabler/icons-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyProgram } from "@/backend/loyalty/program.api";
 import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
 import type { LoyaltyReward } from "@/backend/loyalty/reward.api";
+import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -15,6 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
@@ -24,14 +37,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { formatPoints } from "../giveback/format.ts";
 
 type BonusKind = "points" | "gift";
+type BonusId = "joining" | "referral";
 
 /**
  * Points for joining and for referring: programme settings rather than catalog rows, so they
- * sit above the catalog and save on their own.
+ * save on their own. A bonus with nothing set up opens its editor when switched on, rather
+ * than going live paying nothing.
  */
 export function BonusesStrip({
   program,
@@ -39,7 +56,8 @@ export function BonusesStrip({
   pointsName,
 }: Readonly<{ program: LoyaltyProgram; gifts: readonly LoyaltyReward[]; pointsName: string }>) {
   const { t } = useTranslation();
-  const [editing, setEditing] = useState<"joining" | "referral" | null>(null);
+  const [editing, setEditing] = useState<{ bonus: BonusId; enableOnSave: boolean } | null>(null);
+  const toggle = useUpdateLoyaltyProgramMutation(program.id);
 
   const side = (type: BonusKind | undefined, points: number, rewardId: string | undefined) => {
     if (type === "gift") {
@@ -47,61 +65,88 @@ export function BonusesStrip({
     }
     return points > 0 ? formatPoints(points, pointsName) : t("nothing");
   };
-  const referralOn =
+  const joiningSetUp = program.signupBonus > 0;
+  const referralSetUp =
     program.referralBonus > 0 ||
     program.refereeBonus > 0 ||
     program.referralBonusType === "gift" ||
     program.refereeBonusType === "gift";
 
+  const onToggle = (bonus: BonusId, setUp: boolean, active: boolean) => {
+    if (active && !setUp) {
+      setEditing({ bonus, enableOnSave: true });
+      return;
+    }
+    toggle.mutate(
+      bonus === "joining" ? { signupBonusEnabled: active } : { referralBonusEnabled: active },
+    );
+  };
+
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <BonusCard
-          icon={<IconSparkles size={18} />}
+          icon={IconSparkles}
           title={t("Joining bonus")}
-          summary={
-            program.signupBonus > 0
-              ? t("{points} the moment someone joins", {
-                  points: formatPoints(program.signupBonus, pointsName),
-                })
-              : t("Off")
-          }
-          onEdit={() => setEditing("joining")}
-        />
+          description={t("Paid once, the moment a customer joins, however they joined.")}
+          active={program.signupBonusEnabled && joiningSetUp}
+          audience={t("New members")}
+          onToggle={(active) => onToggle("joining", joiningSetUp, active)}
+          onEdit={() => setEditing({ bonus: "joining", enableOnSave: false })}
+        >
+          {joiningSetUp ? (
+            <span className="font-display text-lg font-bold leading-none">
+              {formatPoints(program.signupBonus, pointsName)}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">{t("Not set up yet")}</span>
+          )}
+        </BonusCard>
         <BonusCard
-          icon={<IconUserPlus size={18} />}
+          icon={IconUserPlus}
           title={t("Referral bonus")}
-          summary={
-            referralOn
-              ? t("{referrer} for the referrer · {friend} for the friend", {
-                  referrer: side(
-                    program.referralBonusType,
-                    program.referralBonus,
-                    program.referralRewardId,
-                  ),
-                  friend: side(
-                    program.refereeBonusType,
-                    program.refereeBonus,
-                    program.refereeRewardId,
-                  ),
-                })
-              : t("Off")
-          }
-          onEdit={() => setEditing("referral")}
-        />
+          description={t(
+            'A customer types "refer" on WhatsApp to get their link and share it with a friend.',
+          )}
+          active={program.referralBonusEnabled && referralSetUp}
+          audience={t("Members and their friends")}
+          onToggle={(active) => onToggle("referral", referralSetUp, active)}
+          onEdit={() => setEditing({ bonus: "referral", enableOnSave: false })}
+        >
+          {referralSetUp ? (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
+              <dt className="text-muted-foreground">{t("The customer who shares")}</dt>
+              <dd className="truncate font-medium">
+                {side(program.referralBonusType, program.referralBonus, program.referralRewardId)}
+              </dd>
+              <dt className="text-muted-foreground">{t("The friend who joins")}</dt>
+              <dd className="truncate font-medium">
+                {side(program.refereeBonusType, program.refereeBonus, program.refereeRewardId)}
+              </dd>
+            </dl>
+          ) : (
+            <span className="text-xs text-muted-foreground">{t("Not set up yet")}</span>
+          )}
+        </BonusCard>
       </div>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="sm:max-w-lg">
-          {editing === "joining" && (
+          {editing?.bonus === "joining" && (
             <JoiningForm
               program={program}
               pointsName={pointsName}
+              enableOnSave={editing.enableOnSave}
               onDone={() => setEditing(null)}
             />
           )}
-          {editing === "referral" && (
-            <ReferralForm program={program} gifts={gifts} onDone={() => setEditing(null)} />
+          {editing?.bonus === "referral" && (
+            <ReferralForm
+              program={program}
+              gifts={gifts}
+              enableOnSave={editing.enableOnSave}
+              onDone={() => setEditing(null)}
+            />
           )}
         </DialogContent>
       </Dialog>
@@ -109,26 +154,92 @@ export function BonusesStrip({
   );
 }
 
+/** Laid out like `RewardTile`, so the bonuses read as part of the same catalogue. */
 function BonusCard({
-  icon,
+  icon: Icon,
   title,
-  summary,
+  description,
+  active,
+  audience,
+  onToggle,
   onEdit,
-}: Readonly<{ icon: ReactNode; title: string; summary: string; onEdit: () => void }>) {
+  children,
+}: Readonly<{
+  icon: TablerIcon;
+  title: string;
+  description: string;
+  active: boolean;
+  audience: string;
+  onToggle: (active: boolean) => void;
+  onEdit: () => void;
+  children: ReactNode;
+}>) {
   const { t } = useTranslation();
   return (
-    <Card>
-      <CardContent className="flex items-center gap-3 p-4">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">{title}</p>
-          <p className="truncate text-xs text-muted-foreground">{summary}</p>
+    <Card className={cn("h-full transition-colors", !active && "bg-muted/40")}>
+      <CardContent className="flex h-full flex-col gap-3 p-4">
+        <div className="flex items-start gap-3">
+          <span
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20",
+              !active && "opacity-60",
+            )}
+            aria-hidden="true"
+          >
+            <Icon size={20} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={onEdit}
+              className="line-clamp-2 text-left font-medium leading-snug text-foreground hover:underline"
+            >
+              {title}
+            </button>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <Badge variant="secondary" className="gap-1">
+                {t("Bonus")}
+              </Badge>
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("Actions for {name}", { name: title })}
+                />
+              }
+            >
+              <IconDots />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={onEdit}>
+                <IconPencil />
+                {t("Edit")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <Button variant="outline" size="sm" onClick={onEdit}>
-          {t("Edit")}
-        </Button>
+
+        <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p>
+
+        <div className="mt-auto flex flex-col gap-3">
+          {children}
+
+          <div className="flex items-center justify-between gap-3 border-t pt-3">
+            <span className="truncate text-xs text-muted-foreground">{audience}</span>
+            <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+              {active ? t("On") : t("Off")}
+              <Switch
+                checked={active}
+                onCheckedChange={onToggle}
+                aria-label={t("Pay the {name}", { name: title.toLowerCase() })}
+              />
+            </label>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -137,8 +248,14 @@ function BonusCard({
 function JoiningForm({
   program,
   pointsName,
+  enableOnSave,
   onDone,
-}: Readonly<{ program: LoyaltyProgram; pointsName: string; onDone: () => void }>) {
+}: Readonly<{
+  program: LoyaltyProgram;
+  pointsName: string;
+  enableOnSave: boolean;
+  onDone: () => void;
+}>) {
   const { t } = useTranslation();
   const [bonus, setBonus] = useState(program.signupBonus || 0);
   const save = useUpdateLoyaltyProgramMutation(program.id, onDone);
@@ -148,7 +265,7 @@ function JoiningForm({
       className="flex flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault();
-        save.mutate({ signupBonus: bonus });
+        save.mutate({ signupBonus: bonus, ...(enableOnSave && { signupBonusEnabled: bonus > 0 }) });
       }}
     >
       <DialogHeader>
@@ -193,8 +310,14 @@ interface SideState {
 function ReferralForm({
   program,
   gifts,
+  enableOnSave,
   onDone,
-}: Readonly<{ program: LoyaltyProgram; gifts: readonly LoyaltyReward[]; onDone: () => void }>) {
+}: Readonly<{
+  program: LoyaltyProgram;
+  gifts: readonly LoyaltyReward[];
+  enableOnSave: boolean;
+  onDone: () => void;
+}>) {
   const { t } = useTranslation();
   const [referrer, setReferrer] = useState<SideState>({
     type: program.referralBonusType ?? "points",
@@ -220,6 +343,7 @@ function ReferralForm({
           refereeBonus: friend.type === "points" ? friend.points : 0,
           refereeBonusType: friend.type,
           refereeRewardId: friend.type === "gift" ? friend.rewardId : undefined,
+          ...(enableOnSave && { referralBonusEnabled: true }),
         });
       }}
     >

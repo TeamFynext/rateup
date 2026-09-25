@@ -3,10 +3,10 @@ import {
   IconCamera,
   IconCheck,
   IconChevronDown,
-  IconChevronRight,
   IconChevronUp,
   IconCircleX,
   IconHash,
+  IconLayoutSidebarRightCollapse,
   IconLink,
   IconMessageCircle,
   IconMessages,
@@ -53,6 +53,7 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
+import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import {
@@ -83,6 +84,7 @@ import { useDeleteTicket } from "../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../util.tsx";
 import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
 import AssignUser from "./chatdisplayHeader/AssignUser.tsx";
+import { deriveStatus, STATUS_PILL_BASE } from "./chatdisplayHeader/ticket.ts";
 
 interface TicketPanelProps {
   contact: ContactWithUpdatedAt;
@@ -137,7 +139,7 @@ const STAGE_STATUS_ICON: Record<StageStatus, typeof IconSeeding> = {
   LOST: IconCircleX,
 };
 
-/** Shared section shell — 18px padding plus the design's hairline divider. */
+/** Shared section shell: compact padding plus the design's hairline divider. */
 function Section({
   label,
   action,
@@ -150,10 +152,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("border-b border-border p-4.5", className)}>
+    <div className={cn("border-b border-border px-4 py-3.5", className)}>
       {label && (
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="mb-2.5 flex min-h-5 items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
             {label}
           </span>
           {action}
@@ -167,10 +169,10 @@ function Section({
 /** Label / value row used by the Contact and Ticket Info sections. */
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="grid min-h-7 grid-cols-[6rem_minmax(0,1fr)] items-center gap-2">
       <span className="text-[13px] text-muted-foreground">{label}</span>
       <span
-        className="text-[13px] font-semibold truncate text-foreground"
+        className="truncate text-[13px] font-semibold text-foreground"
         title={typeof value === "string" ? value : undefined}
       >
         {value}
@@ -178,6 +180,17 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
+
+/** The small pencil / action buttons the sections share. */
+const ICON_BUTTON =
+  "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+
+/** Tag and label chips. */
+const CHIP =
+  "inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-semibold";
+
+const ADD_CHIP =
+  "inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
 
 export default function TicketPanel({
   contact,
@@ -197,7 +210,9 @@ export default function TicketPanel({
   const canSeePipeline = allowedFeatures === null || allowedFeatures.has(TeamFeature.Pipeline);
 
   const { data: pipelines = [] } = usePipelinesQuery(canSeePipeline);
-  const { data: board } = usePipelineQuery(canSeePipeline ? pipelines[0]?.id : undefined);
+  const { data: board } = usePipelineQuery(
+    canSeePipeline ? findLeadsPipeline(pipelines)?.id : undefined,
+  );
   const { data: contactStage } = useContactStageQuery(contact?.id, canSeePipeline);
   const setStage = useSetContactStageMutation(contact?.id);
   const clearStage = useClearContactStageMutation(contact?.id);
@@ -278,6 +293,13 @@ export default function TicketPanel({
   const connectedChannel = resolveChannel(waSettings, platform, channelIdentifier);
   const displayPhone = getContactDisplayPhone(contact);
   const resolutionResult: ResolutionResult | null = contact?.resolutionResult ?? null;
+  const status = deriveStatus(contact);
+
+  const startEditingTicket = () => {
+    setSubjectDraft(contact?.ticketSubject || "");
+    setDescriptionDraft(contact?.ticketDescription || "");
+    setEditingTicket(true);
+  };
 
   const copyTicketLink = async () => {
     const id = contact?.conversationId ?? contact?.id;
@@ -434,22 +456,21 @@ export default function TicketPanel({
       )}
     >
       {/* ---- Header ---- */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4.5">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
+        <div className="flex min-w-0 items-center gap-2">
           <IconTicket className="size-4 shrink-0 text-primary" />
-          <span className="text-[13px] font-extrabold truncate text-foreground">
+          <span className="truncate text-[14px] font-extrabold text-foreground">
             {t("Ticket")} {contact?.ticketNumber ? `#${contact.ticketNumber}` : "—"}
           </span>
+          <span className={cn(STATUS_PILL_BASE, status.className)}>{t(status.label)}</span>
         </div>
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex shrink-0 items-center gap-0.5">
           <button
             type="button"
             title={t("Copy link to ticket")}
+            aria-label={t("Copy link to ticket")}
             onClick={copyTicketLink}
-            className={cn(
-              "inline-flex items-center gap-1 cursor-pointer",
-              copied ? "text-green-600" : "text-muted-foreground",
-            )}
+            className={cn(ICON_BUTTON, "w-auto min-w-6 gap-1 px-1", copied && "text-green-600")}
           >
             {copied ? <IconCheck className="size-3.75" /> : <IconLink className="size-3.75" />}
             {copied && <span className="text-[10px] font-bold">{t("Copied")}</span>}
@@ -457,10 +478,11 @@ export default function TicketPanel({
           <button
             type="button"
             title={t("Collapse Panel")}
+            aria-label={t("Collapse Panel")}
             onClick={() => setIsOpen(false)}
-            className="flex cursor-pointer"
+            className={ICON_BUTTON}
           >
-            <IconChevronRight className="size-4 text-muted-foreground" />
+            <IconLayoutSidebarRightCollapse className="size-4" />
           </button>
         </div>
       </div>
@@ -472,7 +494,7 @@ export default function TicketPanel({
           <button
             type="button"
             onClick={() => setAssignExpanded((v) => !v)}
-            className="inline-flex items-center gap-1 text-[11px] font-bold cursor-pointer text-primary"
+            className="-mr-1.5 inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-bold text-primary transition-colors hover:bg-primary/10"
           >
             {assignExpanded ? t("Done") : t("Change")}
             {assignExpanded ? (
@@ -488,7 +510,7 @@ export default function TicketPanel({
             <>
               <CreativeAvatar name={primaryAssignee.name} size="sm" />
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-bold leading-tight truncate text-foreground">
+                <div className="truncate text-[14px] font-bold leading-tight text-foreground">
                   {primaryAssignee.name}
                   {assignedUsers.length > 1 && ` +${assignedUsers.length - 1}`}
                 </div>
@@ -502,7 +524,7 @@ export default function TicketPanel({
               <span className="size-8 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-border">
                 <IconUser className="size-3.75 text-muted-foreground" />
               </span>
-              <div className="flex-1 min-w-0 text-[13px] font-semibold text-muted-foreground">
+              <div className="flex-1 min-w-0 text-[14px] text-muted-foreground">
                 {t("Unassigned")}
               </div>
             </>
@@ -510,7 +532,7 @@ export default function TicketPanel({
         </div>
 
         {assignExpanded && (
-          <div className="mt-3.5 flex flex-col gap-2">
+          <div className="mt-3 flex flex-col gap-2">
             {/* The real multi-assignee flow — team + agent picking lives inside. */}
             <AssignUser contactId={contact?.id} variant="outline" />
             <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted">
@@ -535,14 +557,10 @@ export default function TicketPanel({
             <button
               type="button"
               title={t("Edit title and description")}
-              onClick={() => {
-                setSubjectDraft(contact?.ticketSubject || "");
-                setDescriptionDraft(contact?.ticketDescription || "");
-                setEditingTicket(true);
-              }}
-              className="cursor-pointer"
+              onClick={startEditingTicket}
+              className={cn(ICON_BUTTON, "-mr-1")}
             >
-              <IconPencil className="size-3.25 text-muted-foreground" />
+              <IconPencil className="size-3.5" />
             </button>
           )
         }
@@ -581,17 +599,28 @@ export default function TicketPanel({
               </Button>
             </div>
           </div>
-        ) : (
+        ) : contact?.ticketSubject || contact?.ticketDescription ? (
           <>
-            <div className="text-[13px] font-bold mb-1.5 text-foreground">
+            <div className="mb-1 text-[14px] font-bold text-foreground">
               {contact?.ticketSubject || t("Untitled ticket")}
             </div>
             {contact?.ticketDescription && (
-              <div className="text-[13px] leading-relaxed text-foreground">
+              <div className="text-[13px] leading-relaxed text-muted-foreground">
                 {contact.ticketDescription}
               </div>
             )}
           </>
+        ) : (
+          contact?.conversationId && (
+            <button
+              type="button"
+              onClick={startEditingTicket}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-[13px] font-bold text-primary transition-colors hover:bg-primary/5"
+            >
+              <IconPlus className="size-4" />
+              {t("Add title")}
+            </button>
+          )
         )}
       </Section>
 
@@ -601,9 +630,9 @@ export default function TicketPanel({
            grid grew to fill. The trigger reads as the current stage in that
            stage's own colour, and the picker under it is the whole board. */}
       {canSeePipeline && !!board?.stages.length && (
-        <div className="border-b border-border px-4.5 py-2.75">
+        <div className="border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2.5">
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
               {t("Lead stage")}
             </span>
 
@@ -614,18 +643,18 @@ export default function TicketPanel({
                 aria-expanded={stagePickerOpen}
                 onClick={() => setStagePickerOpen((open) => !open)}
                 disabled={setStage.isPending || clearStage.isPending}
-                className="flex w-full items-center justify-between gap-1.5 rounded-[7px] border border-border bg-background px-2 py-1.25 cursor-pointer"
+                className="flex w-full cursor-pointer items-center justify-between gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 transition-colors hover:bg-muted"
               >
                 {activeStage ? (
                   <span
                     className="inline-flex items-center gap-1.5 min-w-0"
                     style={{ color: activeStage.color ?? "var(--color-primary)" }}
                   >
-                    <ActiveStageIcon className="size-3.25 shrink-0" />
-                    <span className="truncate text-[11.5px] font-bold">{activeStage.name}</span>
+                    <ActiveStageIcon className="size-3.5 shrink-0" />
+                    <span className="truncate text-[13px] font-bold">{activeStage.name}</span>
                   </span>
                 ) : (
-                  <span className="truncate text-[11.5px] font-bold text-muted-foreground">
+                  <span className="truncate text-[13px] text-muted-foreground">
                     {t("Not on the board")}
                   </span>
                 )}
@@ -710,7 +739,7 @@ export default function TicketPanel({
             {conversationTags.map((tag) => (
               <span
                 key={tag.id}
-                className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border max-w-full"
+                className={cn(CHIP, "border")}
                 style={{ borderColor: tag.color ?? undefined, color: tag.color ?? undefined }}
               >
                 <IconHash className="size-2.5 shrink-0" />
@@ -722,16 +751,12 @@ export default function TicketPanel({
                   disabled={assignTags.isPending}
                   className="cursor-pointer shrink-0"
                 >
-                  <IconX className="size-2.75" />
+                  <IconX className="size-3" />
                 </button>
               </span>
             ))}
-            <button
-              type="button"
-              onClick={() => setTagPickerOpen((v) => !v)}
-              className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer border border-dashed border-border text-muted-foreground"
-            >
-              <IconPlus className="size-2.75" />
+            <button type="button" onClick={() => setTagPickerOpen((v) => !v)} className={ADD_CHIP}>
+              <IconPlus className="size-3" />
               {t("Add")}
             </button>
           </div>
@@ -780,7 +805,7 @@ export default function TicketPanel({
           {contactLabels.map((label) => (
             <span
               key={label.id}
-              className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full max-w-full"
+              className={CHIP}
               style={{ background: `${label.color}1a`, color: label.color }}
             >
               <span className="truncate">{label.name}</span>
@@ -790,16 +815,12 @@ export default function TicketPanel({
                 onClick={() => handleToggleLabel(label.id)}
                 className="cursor-pointer shrink-0"
               >
-                <IconX className="size-2.75" />
+                <IconX className="size-3" />
               </button>
             </span>
           ))}
-          <button
-            type="button"
-            onClick={() => setLabelPickerOpen((v) => !v)}
-            className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer border border-dashed border-border text-muted-foreground"
-          >
-            <IconPlus className="size-2.75" />
+          <button type="button" onClick={() => setLabelPickerOpen((v) => !v)} className={ADD_CHIP}>
+            <IconPlus className="size-3" />
             {t("Add")}
           </button>
         </div>
@@ -837,72 +858,100 @@ export default function TicketPanel({
 
       {/* ---- Contact ---- */}
       <Section label={t("Contact")}>
-        <div className="flex flex-col gap-2.5">
-          {editingName ? (
-            <div className="flex flex-col gap-2">
-              <span className="text-[11px] text-muted-foreground">{t("Name")}</span>
-              <Input
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                className="h-8 text-[13px]"
-              />
-              <div className="flex gap-1.5">
-                <Button size="sm" className="h-7 text-[11px]" onClick={saveName}>
-                  {t("Save")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-[11px]"
-                  onClick={() => setEditingName(false)}
-                >
-                  {t("Cancel")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-start gap-2.5">
-              <IconUser className="size-3.75 mt-px shrink-0 text-muted-foreground" />
-              <div className="flex-1 min-w-0">
-                <div className="text-[11px] text-muted-foreground">{t("Name")}</div>
-                <div className="text-[13px] font-semibold truncate text-foreground">
-                  {contact?.name || contact?.whatsappUserName || "—"}
-                </div>
-              </div>
-              <button
-                type="button"
-                title={t("Edit name")}
-                onClick={() => {
-                  setNameDraft(contact?.name || "");
-                  setEditingName(true);
-                }}
-                className="mt-0.5 cursor-pointer shrink-0"
+        {editingName ? (
+          <form
+            className="flex flex-col gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              saveName();
+            }}
+          >
+            <Input
+              autoFocus
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              aria-label={t("Name")}
+              className="h-8 text-[13px]"
+            />
+            <div className="flex gap-1.5">
+              <Button
+                type="submit"
+                size="sm"
+                className="h-7 text-[11px]"
+                loading={editContactMutation.isPending}
               >
-                <IconPencil className="size-3.25 text-muted-foreground" />
-              </button>
+                {t("Save")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                onClick={() => setEditingName(false)}
+              >
+                {t("Cancel")}
+              </Button>
             </div>
-          )}
-
-          {displayPhone && (
-            <div className="flex items-start gap-2.5">
-              <IconPhone className="size-3.75 mt-px shrink-0 text-muted-foreground" />
-              <div className="min-w-0">
-                <div className="text-[11px] text-muted-foreground">{t("Phone")}</div>
-                <div className="text-[13px] font-semibold truncate text-foreground">
+          </form>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="relative shrink-0">
+              <CreativeAvatar
+                name={contact?.name || contact?.whatsappUserName || undefined}
+                size="md"
+              />
+              <span
+                className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full ring-2 ring-background"
+                style={{ background: channel.color }}
+                title={channel.label}
+              >
+                <ChannelIcon className="size-2.5 text-white" />
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-1">
+                <span className="truncate text-[15px] font-bold text-foreground">
+                  {contact?.name || contact?.whatsappUserName || "—"}
+                </span>
+                <button
+                  type="button"
+                  title={t("Edit name")}
+                  aria-label={t("Edit name")}
+                  onClick={() => {
+                    setNameDraft(contact?.name || "");
+                    setEditingName(true);
+                  }}
+                  className={ICON_BUTTON}
+                >
+                  <IconPencil className="size-3.5" />
+                </button>
+              </div>
+              {displayPhone && (
+                <div className="flex items-center gap-1 truncate text-[13px] text-muted-foreground">
+                  <IconPhone className="size-3.5 shrink-0" />
                   {displayPhone}
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <dl className="mt-3 flex divide-x divide-border rounded-lg bg-muted py-2">
+          {contact?.createdAt && (
+            <div className="min-w-0 flex-1 px-3">
+              <dt className="text-[11px] text-muted-foreground">{t("Customer since")}</dt>
+              <dd className="truncate text-[13px] font-bold text-foreground">
+                {dayjs(contact.createdAt).format("MMM YYYY")}
+              </dd>
             </div>
           )}
-
-          {contact?.createdAt && (
-            <InfoRow
-              label={t("Customer since")}
-              value={dayjs(contact.createdAt).format("MMM YYYY")}
-            />
-          )}
-          <InfoRow label={t("Consent")} value={contact?.consent ? t("Given") : t("Not given")} />
-        </div>
+          <div className="min-w-0 flex-1 px-3">
+            <dt className="text-[11px] text-muted-foreground">{t("Consent")}</dt>
+            <dd className="truncate text-[13px] font-bold text-foreground">
+              {contact?.consent ? t("Given") : t("Not given")}
+            </dd>
+          </div>
+        </dl>
       </Section>
 
       {/* ---- Ticket Info ---- */}
@@ -913,10 +962,10 @@ export default function TicketPanel({
             value={
               <span className="inline-flex items-center gap-1.5">
                 <span
-                  className="size-4 rounded-[5px] flex items-center justify-center shrink-0"
+                  className="flex size-4.5 shrink-0 items-center justify-center rounded-[5px]"
                   style={{ background: channel.color }}
                 >
-                  <ChannelIcon className="size-2.5 text-white" />
+                  <ChannelIcon className="size-3 text-white" />
                 </span>
                 {channel.label}
               </span>
@@ -957,9 +1006,10 @@ export default function TicketPanel({
       </Section>
 
       {/* ---- Board ticket / spam (contact-level, so it toggles both ways) ---- */}
-      <div className="flex flex-col gap-2 p-4.5">
+      <div className="flex flex-col gap-2 p-4">
         <Button
           type="button"
+          size="sm"
           onClick={() => toggleSpam(!contact?.isSpam)}
           loading={spamMutation.isPending}
           variant={contact?.isSpam ? "outline" : "destructive"}
@@ -978,6 +1028,7 @@ export default function TicketPanel({
         {canDelete && (
           <Button
             type="button"
+            size="sm"
             variant="outline"
             onClick={() => deleteTicket()}
             disabled={isDeletingTicket}

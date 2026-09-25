@@ -1,10 +1,18 @@
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { LiveNotification } from "@/backend/notification/notification.api";
+import { notificationKeys } from "@/backend/notification/notification.keys";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import {
+  isNotificationEvent,
+  notificationMessage,
+} from "@/components/dashboard/settings/notifications/notificationCopy.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
 import {
   resolveIncomingRowKey,
@@ -13,6 +21,7 @@ import {
   useMessagesStore,
 } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
+import { showDesktopNotification } from "@/utils/desktopNotifications";
 
 export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -23,6 +32,10 @@ export const useChatSocket = () => {
   // else the handler needs is read from `getState()` at event time.
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  const { t } = useTranslation();
+  const tRef = useRef(t);
+  tRef.current = t;
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!browserId) return;
@@ -203,11 +216,18 @@ export const useChatSocket = () => {
               }));
             }
             break;
+          case "notification":
+            if (data?.notification) {
+              handleLiveNotification(data.notification, {
+                t: tRef.current,
+                navigate: navigateRef.current,
+                queryClient,
+              });
+            }
+            break;
           default:
             break;
         }
-
-        handleNotificationWithSound({ message: data, navigate: navigateRef.current });
       };
 
       ws.onclose = () => {
@@ -235,52 +255,54 @@ export const useChatSocket = () => {
   }, [browserId]);
 };
 
-/** The inbox-notification slice of the socket payload this handler reads. */
-interface ChatSocketMessage {
-  type?: string;
-  inbox?: {
-    contact?: { id?: string; name?: string };
-    message?: {
-      messageId?: string;
-      messageBody?: { exchangeProcess?: string };
-    };
-  };
-}
-
-const handleNotificationWithSound = ({
-  message,
-  navigate,
-}: {
-  message: ChatSocketMessage | null | undefined;
-  navigate: ReturnType<typeof useNavigate>;
-}) => {
-  const pathnamesMap = {
-    inbox: "/dashboard/inbox",
-  };
-  if (
-    !message ||
-    !message.type ||
-    message.type !== "inbox" ||
-    window.location.pathname === pathnamesMap.inbox ||
-    message?.inbox?.message?.messageBody?.exchangeProcess !== "receive"
-  )
-    return;
-
-  const audio = new Audio("/sounds/noti.wav");
-
-  toast.info(`You have a new message from ${message?.inbox?.contact?.name}`, {
-    id: message?.inbox?.message?.messageId,
-    icon: <IconBrandWhatsapp size={18} />,
-    action: {
-      label: "View",
-      onClick: () => {
-        navigate({
-          to: `${pathnamesMap.inbox}?contactId=${message?.inbox?.contact?.id}`,
-        });
-      },
-    },
-  });
-  audio.play().catch((e) => {
+const playSound = () => {
+  new Audio("/sounds/noti.wav").play().catch((e) => {
     console.warn("Audio playback failed:", e);
   });
 };
+
+/**
+ * One of this member's notifications, already filtered by their settings on the server. A
+ * desktop notification stands in for the toast while the tab is hidden, where a toast would
+ * expire unseen.
+ */
+function handleLiveNotification(
+  notification: LiveNotification,
+  {
+    t,
+    navigate,
+    queryClient,
+  }: { t: TFunction; navigate: ReturnType<typeof useNavigate>; queryClient: QueryClient },
+) {
+  if (notification.id) {
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.all() });
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.count() });
+  }
+  if (!isNotificationEvent(notification.event)) return;
+
+  const message = notificationMessage(t, notification.event, notification.data);
+  const open = () => void navigate({ href: notification.path });
+  const isNewMessage = notification.event.startsWith("inbox.message.");
+  const onInbox = window.location.pathname.startsWith("/dashboard/inbox");
+
+  const shownOnDesktop =
+    notification.desktop &&
+    document.visibilityState === "hidden" &&
+    showDesktopNotification({
+      title: "RateUp",
+      body: message,
+      tag: notification.id ?? `${notification.event}:${notification.data?.contactId ?? ""}`,
+      onClick: open,
+    });
+
+  // The inbox shows a new message by itself; a toast on top of it is noise.
+  const toasted = !shownOnDesktop && notification.toast && !(isNewMessage && onInbox);
+  if (toasted) {
+    toast.info(message, {
+      id: notification.id ?? undefined,
+      action: { label: t("View"), onClick: open },
+    });
+  }
+
+  if (notification.sound && (shownOnDesktop || toasted)) playSound();
+}

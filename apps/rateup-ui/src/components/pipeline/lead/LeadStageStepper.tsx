@@ -103,7 +103,7 @@ export function LeadStageStepper({ lead, pipeline, onMoveStage }: Readonly<LeadS
               stage.color ? { backgroundColor: `${stage.color}1f`, color: stage.color } : undefined
             }
           >
-            {stageStatusLabel(t, stage.status)}
+            {stageStatusLabel(t, stage.status, pipeline.type)}
           </span>
         ) : null}
       </div>

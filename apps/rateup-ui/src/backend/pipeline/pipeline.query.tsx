@@ -52,10 +52,13 @@ function syncInboxStageChips(
   const ids = contactIds.filter((id): id is string => Boolean(id));
   if (ids.length === 0) return;
 
-  const stage = stageId ? findCachedStage(queryClient, stageId) : null;
+  const cached = stageId ? findCachedStage(queryClient, stageId) : null;
   // Clearing is meaningful, but writing a null chip because the board simply is
   // not in cache would blank a chip the list is drawing correctly.
-  if (stageId && !stage) return;
+  if (stageId && !cached) return;
+  // The chip is the contact's Leads stage; a card on any other board leaves it alone.
+  if (cached && cached.boardType !== "LEADS") return;
+  const stage = cached?.stage ?? null;
 
   const { updateContactById } = useContactsStore.getState();
   for (const contactId of ids) {
@@ -74,7 +77,7 @@ function findCachedStage(queryClient: QueryClient, stageId: string) {
   });
   for (const [, board] of boards) {
     const stage = board?.stages.find((candidate) => candidate.id === stageId);
-    if (stage) return stage;
+    if (board && stage) return { stage, boardType: board.type };
   }
   return null;
 }
@@ -577,7 +580,7 @@ export function useMoveLeadMutation(pipelineId: string | undefined) {
       };
 
       const moving = findCachedLead(queryClient, leadId);
-      const target = findCachedStage(queryClient, stageId);
+      const target = findCachedStage(queryClient, stageId)?.stage;
       // Nothing to move optimistically — let the server's answer stand.
       if (!moving || !target) return previous;
 
@@ -707,6 +710,25 @@ export function useReopenLeadMutation() {
     success: (t) => t("Lead reopened"),
     errorFallback: (t) => t("Could not reopen the lead"),
     toastId: "pipeline-lead-reopen",
+  });
+}
+
+export function useImportLeadsMutation() {
+  return usePipelineMutation<{ pipelineId: string; file: File }, api.LeadImportResult>({
+    mutationFn: api.importLeads,
+    success: (t, result) =>
+      t("{total, plural, one {# card added} other {# cards added}}", { total: result.created }),
+    errorFallback: (t) => t("Could not import the file"),
+    toastId: "pipeline-import",
+  });
+}
+
+export function useBulkDeleteLeadsMutation() {
+  return usePipelineMutation<string[], { deleted: number }>({
+    mutationFn: api.bulkDeleteLeads,
+    success: (t, result) => t("{total} leads deleted", { total: result.deleted }),
+    errorFallback: (t) => t("Could not delete the selected leads"),
+    toastId: "pipeline-lead-bulk-delete",
   });
 }
 

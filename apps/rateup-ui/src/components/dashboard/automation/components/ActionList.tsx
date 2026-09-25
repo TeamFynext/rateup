@@ -13,6 +13,7 @@ import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/aut
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import VariableMapping from "@/components/shopify/VariableMapping.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -47,9 +48,9 @@ const ActionValueInput = ({
   const { data: labelsData } = useContactLabels();
   const { data: lifecyclesData } = useLifeCyclesQuery();
   const { data: pipelinesData = [] } = usePipelinesQuery();
-  // One board per org for now, so its columns are simply the first board's.
+  // Rules move a contact on the Leads board, the only one the server resolves them on.
   // `usePipelineQuery` is a no-op until that id exists.
-  const { data: boardDetail } = usePipelineQuery(pipelinesData[0]?.id);
+  const { data: boardDetail } = usePipelineQuery(findLeadsPipeline(pipelinesData)?.id);
   const { data: teamMembers } = useTeamsMembersOfOrg();
   const { data: teamsData } = useTeamsByUser();
   const { data: flowsData } = useWaFlowsFromDb();

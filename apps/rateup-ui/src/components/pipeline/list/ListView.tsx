@@ -5,6 +5,7 @@ import {
   IconMinus,
   IconRosetteDiscountCheck,
   IconLayoutRows,
+  IconTrash,
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
@@ -29,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { STATUS_BAND, TASK_TYPE_ICON } from "../pipeline.constants.tsx";
 import { stageStatusLabel } from "../pipeline.labels.ts";
 import { daysIdle, daysInStage, isOverdue, isRotting, leadAgeDays } from "../pipeline.utils.ts";
+import { pipelineTypeConfig, usePipelineTypeConfig } from "../pipelineTypes.ts";
 import { AssigneeStack } from "../shared/AssigneeStack.tsx";
 import { StageDot } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
@@ -39,6 +41,8 @@ interface ListViewProps {
   onOpenLead: (leadId: string) => void;
   onBulkMove: (leadIds: string[], stage: PipelineStage) => void;
   onBulkAssign: (leadIds: string[], assigneeIds: string[]) => void;
+  /** Absent for anyone who may not delete; resolves true once the delete is confirmed. */
+  onBulkDelete?: (leadIds: string[]) => Promise<boolean>;
 }
 
 /**
@@ -91,6 +95,7 @@ const LeadRow = memo(function LeadRow({
   onOpenLead: (leadId: string) => void;
 }>) {
   const { t } = useTranslation();
+  const typeConfig = pipelineTypeConfig(t, pipeline.type);
   const rotting = isRotting(lead, pipeline.rottingEnabled);
   const overdue = isOverdue(lead);
   const stage = pipeline.stages.find((candidate) => candidate.id === lead.stageId);
@@ -125,14 +130,19 @@ const LeadRow = memo(function LeadRow({
       </span>
 
       <span className="flex min-w-0 flex-1 items-center gap-2.5">
-        <LeadAvatar name={lead.name} source={lead.source} />
+        <LeadAvatar
+          name={lead.name}
+          source={typeConfig.features.source ? lead.source : undefined}
+        />
         <span className="min-w-0">
           <span className="text-foreground block truncate text-[13.5px] font-medium">
             {lead.name}
           </span>
-          <span className="text-muted-foreground block truncate text-[11px]">
-            {lead.company ?? t("Direct customer")}
-          </span>
+          {typeConfig.features.company || lead.company ? (
+            <span className="text-muted-foreground block truncate text-[11px]">
+              {lead.company ?? t("Direct customer")}
+            </span>
+          ) : null}
           {/* Stands in for the columns that fold away below `lg` — stage, next
               step and how long it has sat. */}
           <span className="text-muted-foreground mt-0.5 flex items-center gap-1.5 truncate text-[11px] lg:hidden">
@@ -142,8 +152,8 @@ const LeadRow = memo(function LeadRow({
             <span className={cn(overdue && "text-destructive font-semibold")}>
               {lead.status !== "OPEN"
                 ? lead.status === "WON"
-                  ? t("Won")
-                  : t("Lost")
+                  ? typeConfig.wonLabel
+                  : typeConfig.lostLabel
                 : (lead.nextTask?.title ?? t("No next step"))}
             </span>
             <span className="bg-border h-2.5 w-px" />
@@ -159,7 +169,7 @@ const LeadRow = memo(function LeadRow({
       <span className={cn("flex items-center gap-1.5", COLUMN.stage)}>
         <StageDot color={stage?.color ?? null} className="size-1.75" />
         <span className="text-foreground truncate text-xs font-semibold">
-          {lead.status === "LOST"
+          {lead.status === "LOST" && typeConfig.type === "LEADS"
             ? t("{stage} (lost)", { stage: lead.stage.name })
             : lead.stage.name}
         </span>
@@ -173,7 +183,7 @@ const LeadRow = memo(function LeadRow({
             STATUS_BAND[lead.stage.status].text,
           )}
         >
-          {stageStatusLabel(t, lead.stage.status)}
+          {stageStatusLabel(t, lead.stage.status, pipeline.type)}
         </span>
       </span>
 
@@ -410,10 +420,17 @@ function UngroupedList({
   );
 }
 
-export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonly<ListViewProps>) {
+export function ListView({
+  data,
+  onOpenLead,
+  onBulkMove,
+  onBulkAssign,
+  onBulkDelete,
+}: Readonly<ListViewProps>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { pipeline, params, stats, members } = data;
+  const typeConfig = usePipelineTypeConfig(pipeline);
   const [grouped, setGrouped] = useState(true);
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -484,8 +501,10 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
               onCheckedChange={(checked) => (checked ? selectAllLoaded() : setSelected([]))}
               aria-label={t("Select all loaded leads")}
             />
-            <HeaderCell className="min-w-0 flex-1">{t("Lead")}</HeaderCell>
-            <HeaderCell className={COLUMN.stage}>{t("Lead stage")}</HeaderCell>
+            <HeaderCell className="min-w-0 flex-1">{typeConfig.cardHeading}</HeaderCell>
+            <HeaderCell className={COLUMN.stage}>
+              {typeConfig.type === "LEADS" ? t("Lead stage") : t("Stage")}
+            </HeaderCell>
             <HeaderCell className={COLUMN.status}>{t("Status")}</HeaderCell>
             <HeaderCell className={COLUMN.assignees}>{t("Assignees")}</HeaderCell>
             <HeaderCell className={COLUMN.next}>{t("Next activity")}</HeaderCell>
@@ -598,6 +617,23 @@ export function ListView({ data, onOpenLead, onBulkMove, onBulkAssign }: Readonl
               {member.name?.split(" ")[0]}
             </Button>
           ))}
+
+          {onBulkDelete && (
+            <>
+              <span className="h-5 w-px bg-white/20" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto gap-1.5 rounded-lg px-2.75 py-1.75 text-xs font-semibold text-white/90 hover:bg-white/10 hover:text-white"
+                onClick={() =>
+                  void onBulkDelete(selected).then((deleted) => deleted && setSelected([]))
+                }
+              >
+                <IconTrash className="size-3.75" />
+                {t("Delete")}
+              </Button>
+            </>
+          )}
 
           <Button
             variant="ghost"

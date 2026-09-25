@@ -170,6 +170,7 @@ import { Route as DashboardSettingsIntegrationsIndexRouteImport } from './routes
 import { Route as DashboardSettingsMembersIndexRouteImport } from './routes/dashboard/settings/members/index'
 import { Route as DashboardSettingsMembersMemberIdRouteImport } from './routes/dashboard/settings/members/$memberId'
 import { Route as DashboardSettingsMembersRolesRouteImport } from './routes/dashboard/settings/members/roles'
+import { Route as DashboardSettingsNotificationsIndexRouteImport } from './routes/dashboard/settings/notifications/index'
 import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/dashboard/settings/security/index'
 import { Route as DashboardSettingsTeamIndexRouteImport } from './routes/dashboard/settings/team/index'
 import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashboard/settings/users/index'
@@ -1113,6 +1114,12 @@ const DashboardSettingsMembersRolesRoute =
     path: '/settings/members/roles',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsNotificationsIndexRoute =
+  DashboardSettingsNotificationsIndexRouteImport.update({
+    id: '/settings/notifications/',
+    path: '/settings/notifications/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardSettingsSecurityIndexRoute =
   DashboardSettingsSecurityIndexRouteImport.update({
     id: '/settings/security/',
@@ -1537,6 +1544,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
+  '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
@@ -1736,6 +1744,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/channels': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members': typeof DashboardSettingsMembersIndexRoute
+  '/dashboard/settings/notifications': typeof DashboardSettingsNotificationsIndexRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users': typeof DashboardSettingsUsersIndexRoute
@@ -1944,6 +1953,7 @@ export interface FileRoutesById {
   '/dashboard/settings/channels/': typeof DashboardSettingsChannelsIndexRoute
   '/dashboard/settings/integrations/': typeof DashboardSettingsIntegrationsIndexRoute
   '/dashboard/settings/members/': typeof DashboardSettingsMembersIndexRoute
+  '/dashboard/settings/notifications/': typeof DashboardSettingsNotificationsIndexRoute
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
@@ -2150,6 +2160,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
+    | '/dashboard/settings/notifications/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
@@ -2349,6 +2360,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels'
     | '/dashboard/settings/integrations'
     | '/dashboard/settings/members'
+    | '/dashboard/settings/notifications'
     | '/dashboard/settings/security'
     | '/dashboard/settings/team'
     | '/dashboard/settings/users'
@@ -2556,6 +2568,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/channels/'
     | '/dashboard/settings/integrations/'
     | '/dashboard/settings/members/'
+    | '/dashboard/settings/notifications/'
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
@@ -3745,6 +3758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsMembersRolesRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/settings/notifications/': {
+      id: '/dashboard/settings/notifications/'
+      path: '/settings/notifications'
+      fullPath: '/dashboard/settings/notifications/'
+      preLoaderRoute: typeof DashboardSettingsNotificationsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/settings/security/': {
       id: '/dashboard/settings/security/'
       path: '/settings/security'
@@ -4478,6 +4498,7 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsChannelsIndexRoute: typeof DashboardSettingsChannelsIndexRoute
   DashboardSettingsIntegrationsIndexRoute: typeof DashboardSettingsIntegrationsIndexRoute
   DashboardSettingsMembersIndexRoute: typeof DashboardSettingsMembersIndexRoute
+  DashboardSettingsNotificationsIndexRoute: typeof DashboardSettingsNotificationsIndexRoute
   DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsTeamIndexRoute: typeof DashboardSettingsTeamIndexRoute
   DashboardSettingsUsersIndexRoute: typeof DashboardSettingsUsersIndexRoute
@@ -4554,6 +4575,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsIntegrationsIndexRoute:
     DashboardSettingsIntegrationsIndexRoute,
   DashboardSettingsMembersIndexRoute: DashboardSettingsMembersIndexRoute,
+  DashboardSettingsNotificationsIndexRoute:
+    DashboardSettingsNotificationsIndexRoute,
   DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsTeamIndexRoute: DashboardSettingsTeamIndexRoute,
   DashboardSettingsUsersIndexRoute: DashboardSettingsUsersIndexRoute,

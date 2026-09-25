@@ -63,6 +63,8 @@ const withRule: OnboardingState = {
     signupBonus: 0,
     referralBonus: 0,
     refereeBonus: 0,
+    signupBonusEnabled: true,
+    referralBonusEnabled: true,
     tiersEnabled: false,
     averageOrderValue: "300.00" as unknown as number,
     createdAt: new Date(),

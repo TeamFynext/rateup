@@ -213,6 +213,51 @@ export async function bulkUpdateLeads(input: BulkUpdateLeadsInput) {
   return data;
 }
 
+export async function bulkDeleteLeads(leadIds: string[]) {
+  const { data } = await axiosClient.post<{ deleted: number }>(
+    `${PIPELINE_URL}/leads/bulk/delete`,
+    { leadIds },
+  );
+  return data;
+}
+
+/** Why a row was left out; mirrors `ImportSkipReason` in rateup-api's `lead.import.ts`. */
+export type LeadImportSkipReason =
+  | "MISSING_NAME"
+  | "INVALID_PHONE"
+  | "INVALID_EMAIL"
+  | "UNKNOWN_STAGE"
+  | "UNKNOWN_SOURCE"
+  | "UNKNOWN_ASSIGNEE"
+  | "INVALID_DATE"
+  | "ALREADY_ON_BOARD"
+  | "FAILED";
+
+export interface LeadImportResult {
+  created: number;
+  skipped: Array<{ row: number; name: string; reason: LeadImportSkipReason; value?: string }>;
+}
+
+export async function importLeads({ pipelineId, file }: { pipelineId: string; file: File }) {
+  const form = new FormData();
+  form.append("file", file);
+  // Each row is a full lead create on the server, so a large file takes a while.
+  const { data } = await axiosClient.post<LeadImportResult>(
+    `${PIPELINE_URL}/${pipelineId}/import`,
+    form,
+    { timeout: 180_000 },
+  );
+  return data;
+}
+
+export async function fetchImportTemplate(pipelineId: string, format: "csv" | "xlsx") {
+  const { data } = await axiosClient.get<Blob>(`${PIPELINE_URL}/${pipelineId}/import-template`, {
+    params: { format },
+    responseType: "blob",
+  });
+  return data;
+}
+
 // ------------------------------------------------------------- notes & tasks
 
 export async function createLeadNote(leadId: string, text: string) {

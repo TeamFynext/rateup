@@ -64,9 +64,9 @@ export function useProgrammeGiveback(): ProgrammeGiveback {
         color: tier.color,
       })),
       bonuses: {
-        signupBonus: program?.signupBonus ?? 0,
-        referralBonus: program?.referralBonus ?? 0,
-        refereeBonus: program?.refereeBonus ?? 0,
+        signupBonus: program?.signupBonusEnabled === false ? 0 : (program?.signupBonus ?? 0),
+        referralBonus: program?.referralBonusEnabled === false ? 0 : (program?.referralBonus ?? 0),
+        refereeBonus: program?.referralBonusEnabled === false ? 0 : (program?.refereeBonus ?? 0),
       },
       currencySymbol: program?.currencySymbol ?? "₹",
       currencyCode: program?.currencyCode ?? "INR",

@@ -2,6 +2,7 @@ import {
   IconActivity,
   IconAddressBook,
   IconAt,
+  IconBell,
   IconBolt,
   IconBrandFacebook,
   IconBrandInstagram,
@@ -247,7 +248,6 @@ export function useNavMain({
       //   icon: IconHome2,
       //   items: [],
       // },
-
       ...(hasTeamFeature(TeamFeature.Inbox)
         ? [
             {
@@ -484,6 +484,42 @@ export function useNavMain({
             },
           ]
         : []),
+      ...(hasTeamFeature(TeamFeature.AiChatbot)
+        ? [
+            {
+              title: "Meta AI Agent",
+              url: "/dashboard/meta-agent",
+              icon: IconRobotFace,
+              // Each area of the agent is its own route, so the sidebar is the
+              // navigation for them — with the setup guide's done ticks and meter
+              // (see `metaAgent/metaAgent.nav.ts`).
+              progress: buildMetaAgentNavProgress(metaAgentNav),
+              items: buildMetaAgentNavItems(metaAgentNav),
+            },
+          ]
+        : []),
+      ...(hasTeamFeature(TeamFeature.Pipeline)
+        ? [
+            {
+              title: t("Pipeline"),
+              url: "/dashboard/pipeline",
+              icon: IconFilterBolt,
+              // Views and facets are built next to the pipeline's own
+              // derivations so the sidebar counts and the board agree.
+              items: buildPipelineNavItems(pipelineNav),
+              progress: buildPipelineNavProgress(pipelineNav),
+            },
+          ]
+        : []),
+      ...(hasTeamFeature(TeamFeature.Campaigns)
+        ? [
+            {
+              title: t("Campaign"),
+              url: "/dashboard/campaign",
+              icon: IconSend,
+            },
+          ]
+        : []),
       ...(hasTeamFeature(TeamFeature.Analytics)
         ? [
             {
@@ -554,12 +590,65 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.Campaigns)
+      ...(hasTeamFeature(TeamFeature.Automation)
         ? [
             {
-              title: t("Campaign"),
-              url: "/dashboard/campaign",
-              icon: IconSend,
+              title: t("Automation"),
+              url: "/dashboard/automation",
+              icon: IconBolt,
+            },
+          ]
+        : []),
+      ...(hasTeamFeature(TeamFeature.Loyalty)
+        ? [
+            {
+              title: t("Loyalty"),
+              url: LOYALTY_PATHS.overview,
+              icon: IconGift,
+              // Ten rows: one defines the programme, the rest run it. See loyalty.nav.ts.
+              items: buildLoyaltyNavItems(loyaltyNav ?? { t, programState: null }),
+            },
+          ]
+        : []),
+      ...(true
+        ? [
+            {
+              title: t("Commerce"),
+              url: "/dashboard/commerce/overview",
+              icon: IconShoppingCartBolt,
+              items: [
+                {
+                  title: t("Overview"),
+                  url: "/dashboard/commerce/overview",
+                  icon: IconDashboard,
+                },
+                {
+                  title: t("Catalogs"),
+                  url: "/dashboard/commerce/catalogs",
+                  icon: IconBuildingStore,
+                },
+                {
+                  title: t("Orders"),
+                  url: "/dashboard/commerce/orders",
+                  icon: IconShoppingCart,
+                },
+                {
+                  title: t("Payments"),
+                  url: "/dashboard/commerce/payments",
+                  icon: IconCreditCard,
+                },
+                // TODO:commerce
+                // {
+                //   title: t("Coupons"),
+                //   url: "/dashboard/commerce/coupons",
+                //   icon: IconTicket,
+                // },
+                {
+                  title: t("Checkout Settings"),
+                  url: "/dashboard/commerce/settings",
+                  icon: IconSettings,
+                },
+              ],
             },
           ]
         : []),
@@ -614,77 +703,14 @@ export function useNavMain({
                 },
               ],
             },
-            ...(hasTeamFeature(TeamFeature.Chatbots)
-              ? [
-                  {
-                    title: t("Instagram"),
-                    url: "/dashboard/instagram",
-                    icon: IconBrandInstagram,
-                  },
-                ]
-              : []),
-            ...(hasTeamFeature(TeamFeature.Automation)
-              ? [
-                  {
-                    title: t("Automation"),
-                    url: "/dashboard/automation",
-                    icon: IconBolt,
-                  },
-                ]
-              : []),
           ]
         : []),
-
-      ...(true
+      ...(hasTeamFeature(TeamFeature.Chatbots)
         ? [
             {
-              title: t("Commerce"),
-              url: "/dashboard/commerce/overview",
-              icon: IconShoppingCartBolt,
-              items: [
-                {
-                  title: t("Overview"),
-                  url: "/dashboard/commerce/overview",
-                  icon: IconDashboard,
-                },
-                {
-                  title: t("Catalogs"),
-                  url: "/dashboard/commerce/catalogs",
-                  icon: IconBuildingStore,
-                },
-                {
-                  title: t("Orders"),
-                  url: "/dashboard/commerce/orders",
-                  icon: IconShoppingCart,
-                },
-                {
-                  title: t("Payments"),
-                  url: "/dashboard/commerce/payments",
-                  icon: IconCreditCard,
-                },
-                // TODO:commerce
-                // {
-                //   title: t("Coupons"),
-                //   url: "/dashboard/commerce/coupons",
-                //   icon: IconTicket,
-                // },
-                {
-                  title: t("Checkout Settings"),
-                  url: "/dashboard/commerce/settings",
-                  icon: IconSettings,
-                },
-              ],
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Loyalty)
-        ? [
-            {
-              title: t("Loyalty"),
-              url: LOYALTY_PATHS.overview,
-              icon: IconGift,
-              // Ten rows: one defines the programme, the rest run it. See loyalty.nav.ts.
-              items: buildLoyaltyNavItems(loyaltyNav ?? { t, programState: null }),
+              title: t("Instagram"),
+              url: "/dashboard/instagram",
+              icon: IconBrandInstagram,
             },
           ]
         : []),
@@ -694,19 +720,6 @@ export function useNavMain({
               title: t("Web Forms"),
               url: "/dashboard/surveys",
               icon: IconBrowser,
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.Pipeline)
-        ? [
-            {
-              title: t("Pipeline"),
-              url: "/dashboard/pipeline",
-              icon: IconFilterBolt,
-              // Views and facets are built next to the pipeline's own
-              // derivations so the sidebar counts and the board agree.
-              items: buildPipelineNavItems(pipelineNav),
-              progress: buildPipelineNavProgress(pipelineNav),
             },
           ]
         : []),
@@ -728,20 +741,6 @@ export function useNavMain({
                   icon: IconLayoutList,
                 },
               ],
-            },
-          ]
-        : []),
-      ...(hasTeamFeature(TeamFeature.AiChatbot)
-        ? [
-            {
-              title: "Meta AI Agent",
-              url: "/dashboard/meta-agent",
-              icon: IconRobotFace,
-              // Each area of the agent is its own route, so the sidebar is the
-              // navigation for them — with the setup guide's done ticks and meter
-              // (see `metaAgent/metaAgent.nav.ts`).
-              progress: buildMetaAgentNavProgress(metaAgentNav),
-              items: buildMetaAgentNavItems(metaAgentNav),
             },
           ]
         : []),
@@ -771,6 +770,11 @@ export function useNavMain({
                 title: t("Teams"),
                 url: "/dashboard/settings/team",
                 icon: IconUsers,
+              },
+              {
+                title: t("Notifications"),
+                url: "/dashboard/settings/notifications",
+                icon: IconBell,
               },
             ],
           },
