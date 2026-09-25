@@ -34,6 +34,8 @@ export interface LoyaltyEventDefinition {
   alertClass?: "points";
   /** Carries a Join button that registers whoever taps it. */
   joinButton?: boolean;
+  /** Sends with `defaultBody` until the programme saves a trigger row for it. */
+  defaultOn?: boolean;
 }
 
 export type EventData = Partial<Record<EventParamKey, string | number | null | undefined>>;
@@ -95,6 +97,12 @@ const definitions: Record<LoyaltyEventType, Omit<LoyaltyEventDefinition, "templa
     defaultBody:
       "Hi {{1}}, thanks for getting in touch! Join our loyalty program to earn points on every visit. Tap the button below to join.",
     joinButton: true,
+  },
+  [LoyaltyEventType.MEMBER_JOINED]: {
+    params: ["name"],
+    defaultBody:
+      "Hi {{1}}, welcome to our loyalty program! You will earn points on every visit, and we will message you here when you have a reward to claim.",
+    defaultOn: true,
   },
 };
 

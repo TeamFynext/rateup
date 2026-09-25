@@ -67,7 +67,7 @@ vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
 
 vi.mock("../chatbot/chatbot.service.js", () => ({ getChatbotDetails: vi.fn() }));
 
-vi.mock("../notification/notification.service.js", () => ({ getNotificationSettings: vi.fn() }));
+vi.mock("../notification/notify.js", () => ({ notify: vi.fn() }));
 
 vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
   addZapierTriggerToQueue: vi.fn(),
@@ -134,14 +134,14 @@ import {
   addNewContactsToGroup,
 } from "./contactGroup/contactGroup.service.js";
 import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
-import { integrationTriggerQueue, notificationQueue } from "../../workers/bullmq/queues/index.js";
+import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
 import {
   assignWaMessageToUser,
   createInternalWaMessage,
   deleteAssignedUsersforContact,
   getAssignedUserForContact,
 } from "../whatsapp/inbox/message/wamessage.service.js";
-import { getNotificationSettings } from "../notification/notification.service.js";
+import { notify } from "../notification/notify.js";
 import { mirrorConversationStatusTx } from "./conversation/conversation.service.js";
 import {
   decrementInboxStat,
@@ -229,7 +229,6 @@ beforeEach(() => {
   db.lifecycle.findUnique.mockResolvedValue(null);
   db.contactCustomField.findMany.mockResolvedValue([]);
   (getAssignedUserForContact as Mock).mockResolvedValue([]);
-  (getNotificationSettings as Mock).mockResolvedValue(null);
   (mirrorConversationStatusTx as Mock).mockResolvedValue(null);
 });
 
@@ -1331,10 +1330,9 @@ describe("updateContactById", () => {
     expect(pushCrmLeadStatus).not.toHaveBeenCalled();
   });
 
-  test("closing frees the assignees and notifies those who asked to hear about it", async () => {
+  test("closing frees the assignees and tells them, not the person who closed it", async () => {
     db.contact.update.mockResolvedValue(updated({ waMessageAssignStatus: "CLOSED" }));
     (getAssignedUserForContact as Mock).mockResolvedValue([{ assignedUserId: "u1" }]);
-    (getNotificationSettings as Mock).mockResolvedValue({ waMessageClosedNotification: true });
 
     await updateContactById(
       "c1",
@@ -1345,29 +1343,13 @@ describe("updateContactById", () => {
     );
 
     expect(deleteAssignedUsersforContact).toHaveBeenCalledWith("c1");
-    expect(notificationQueue.add).toHaveBeenCalledWith(
-      "notification",
+    expect(notify).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemNotificationData: expect.objectContaining({ userId: "u1", subSource: "chat-closed" }),
+        event: "inbox.closed",
+        audience: { kind: "users", userIds: ["u1"] },
+        actorUserId: USER,
       }),
     );
-  });
-
-  test("stays quiet for an assignee who turned close notifications off", async () => {
-    db.contact.update.mockResolvedValue(updated({ waMessageAssignStatus: "CLOSED" }));
-    (getAssignedUserForContact as Mock).mockResolvedValue([{ assignedUserId: "u1" }]);
-    (getNotificationSettings as Mock).mockResolvedValue({ waMessageClosedNotification: false });
-
-    await updateContactById(
-      "c1",
-      ORG,
-      { waMessageAssignStatus: WaMessageAssignStatus.CLOSED } as any,
-      USER,
-      existing,
-    );
-
-    expect(notificationQueue.add).not.toHaveBeenCalled();
-    expect(deleteAssignedUsersforContact).toHaveBeenCalled();
   });
 
   test("announces a close to zapier as a closed conversation", async () => {
@@ -2080,12 +2062,16 @@ describe("bulkUpdateWaMessageAssignStatus", () => {
   test("frees the assignees of every closed contact", async () => {
     db.contact.findMany.mockResolvedValue([contact()]);
     (getAssignedUserForContact as Mock).mockResolvedValue([{ assignedUserId: "u1" }]);
-    (getNotificationSettings as Mock).mockResolvedValue({ waMessageClosedNotification: true });
 
     await bulkUpdateWaMessageAssignStatus(["c1"], ORG, WaMessageAssignStatus.CLOSED, USER);
 
     expect(deleteAssignedUsersforContact).toHaveBeenCalledWith("c1");
-    expect(notificationQueue.add).toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "inbox.closed",
+        audience: { kind: "users", userIds: ["u1"] },
+      }),
+    );
   });
 
   test("leaves the assignees alone when the status is not terminal", async () => {

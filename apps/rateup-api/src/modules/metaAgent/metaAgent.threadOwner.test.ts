@@ -3,9 +3,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 const updateMany = vi.fn();
 const findUnique = vi.fn();
 const sendViaWstoOrgHandler = vi.fn();
+const assignees = vi.fn();
+const notify = vi.fn();
 
-vi.mock("../../utils/prisma.js", () => ({ default: { contact: { updateMany, findUnique } } }));
+vi.mock("../../utils/prisma.js", () => ({
+  default: { contact: { updateMany, findUnique }, waInboxAssign: { findMany: assignees } },
+}));
 vi.mock("../org/ws/org.ws.controller.js", () => ({ sendViaWstoOrgHandler }));
+vi.mock("../notification/notify.js", () => ({ notify }));
 
 const { resolveHandoverOwner, setMetaAgentThreadOwner } =
   await import("./metaAgent.threadOwner.js");
@@ -51,7 +56,8 @@ describe("setMetaAgentThreadOwner", () => {
 
   test("writes only a changed, not-older state and broadcasts it to the inbox", async () => {
     updateMany.mockResolvedValue({ count: 1 });
-    findUnique.mockResolvedValue({ id: "contact-1" });
+    findUnique.mockResolvedValue({ id: "contact-1", name: "Ann" });
+    assignees.mockResolvedValue([]);
 
     const changed = await setMetaAgentThreadOwner({
       orgId: "org-1",
@@ -90,6 +96,50 @@ describe("setMetaAgentThreadOwner", () => {
       },
       "main",
     );
+  });
+
+  test("a handover to a person asks the assignees for help", async () => {
+    updateMany.mockResolvedValue({ count: 1 });
+    findUnique.mockResolvedValue({ id: "contact-1", name: "Ann" });
+    assignees.mockResolvedValue([{ assignedUserId: "user-9" }]);
+
+    await setMetaAgentThreadOwner({ orgId: "org-1", phone: "919188346187", owner: "STAFF", at });
+
+    expect(notify).toHaveBeenCalledWith({
+      event: "inbox.handover",
+      orgId: "org-1",
+      audience: { kind: "users", userIds: ["user-9"] },
+      data: { contactId: "contact-1", contactName: "Ann" },
+    });
+  });
+
+  test("an unassigned handover goes to the queue", async () => {
+    updateMany.mockResolvedValue({ count: 1 });
+    findUnique.mockResolvedValue({ id: "contact-1", name: "Ann" });
+    assignees.mockResolvedValue([]);
+
+    await setMetaAgentThreadOwner({ orgId: "org-1", phone: "919188346187", owner: "STAFF", at });
+
+    expect(notify.mock.calls[0][0].audience).toEqual({
+      kind: "inboxQueue",
+      sourceIdentifier: null,
+    });
+  });
+
+  test("a staff reply taking the thread, or Meta AI taking it back, notifies nobody", async () => {
+    updateMany.mockResolvedValue({ count: 1 });
+    findUnique.mockResolvedValue({ id: "contact-1", name: "Ann" });
+
+    await setMetaAgentThreadOwner({
+      orgId: "org-1",
+      phone: "919188346187",
+      owner: "STAFF",
+      reason: "staff_reply",
+      at,
+    });
+    await setMetaAgentThreadOwner({ orgId: "org-1", phone: "919188346187", owner: "AI", at });
+
+    expect(notify).not.toHaveBeenCalled();
   });
 
   test("stays quiet when the contact already has that owner or a newer state", async () => {

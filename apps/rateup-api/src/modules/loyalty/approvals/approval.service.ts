@@ -31,6 +31,7 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
+import { notify } from "../../notification/notify.js";
 
 /**
  * Create a new approval request
@@ -68,6 +69,23 @@ export async function createApprovalRequest(data: CreateApprovalRequestInput) {
     });
 
     log.info(`Created approval request ${approval.id} for account ${data.accountId}`);
+    const program = await prisma.loyaltyProgram.findUnique({
+      where: { id: approval.account.programId },
+      select: { orgId: true },
+    });
+    if (program) {
+      await notify({
+        event: "loyalty.approval_requested",
+        orgId: program.orgId,
+        audience: { kind: "permitted" },
+        data: {
+          approvalId: approval.id,
+          customerName: approval.account.contact.name ?? approval.account.contact.phone ?? "",
+          requestType: approval.requestType,
+        },
+        actorUserId: data.requestedBy,
+      });
+    }
     return approval;
   } catch (error) {
     log.error({ err: error }, "Error creating approval request:");

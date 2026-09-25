@@ -73,6 +73,7 @@ vi.mock("../integrations/meta/conversions.service.js", () => ({
   sendWonConversionEvent: vi.fn(),
 }));
 
+import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
 import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
@@ -82,10 +83,11 @@ import {
   isPipelineAccessible,
   TeamAccessError,
   createPipeline,
-  DEFAULT_STAGES,
+  LeadsPipelineExistsError,
   PipelineLimitError,
   updatePipeline,
 } from "./pipeline.service.js";
+import { OTHER_PIPELINE_LIMIT, PIPELINE_TYPE_SEEDS } from "./pipelineTypes.js";
 import {
   verifyOwnerForDelete,
   verifyOwnerForTeamChange,
@@ -266,9 +268,9 @@ describe("creating a pipeline", () => {
     });
 
     const data = db.pipeline.create.mock.calls[0][0].data;
-    expect(data.stages.create).toHaveLength(DEFAULT_STAGES.length);
+    expect(data.stages.create).toHaveLength(PIPELINE_TYPE_SEEDS.LEADS.stages.length);
     expect(data.stages.create.map((stage: { name: string }) => stage.name)).toEqual(
-      DEFAULT_STAGES.map((stage) => stage.name),
+      PIPELINE_TYPE_SEEDS.LEADS.stages.map((stage) => stage.name),
     );
     // Order is positional, so a reordered template cannot silently scramble a board.
     expect(data.stages.create.map((stage: { order: number }) => stage.order)).toEqual([
@@ -303,9 +305,9 @@ describe("creating a pipeline", () => {
     expect(db.lifecycle.findMany).not.toHaveBeenCalled();
   });
 
-  // One board per org for now. The count is per-org, so another org having one
-  // must not block this one.
-  test("refuses a second pipeline in the same org", async () => {
+  // One Leads board per org. The count is per-org, so another org having one must not
+  // block this one.
+  test("refuses a second Leads pipeline in the same org", async () => {
     const actor = scoped(["own-team"]);
     db.pipeline.count.mockResolvedValue(1);
 
@@ -317,9 +319,72 @@ describe("creating a pipeline", () => {
         userId: USER,
         actor,
       }),
-    ).rejects.toBeInstanceOf(PipelineLimitError);
+    ).rejects.toBeInstanceOf(LeadsPipelineExistsError);
 
-    expect(db.pipeline.count.mock.calls[0][0]).toMatchObject({ where: { orgId: ORG } });
+    expect(db.pipeline.count.mock.calls[0][0]).toMatchObject({
+      where: { orgId: ORG, type: "LEADS" },
+    });
+    expect(db.pipeline.create).not.toHaveBeenCalled();
+  });
+
+  test("the unique index answers a Leads create that raced past the count", async () => {
+    const actor = scoped(["own-team"]);
+    db.pipeline.count.mockResolvedValue(0);
+    db.pipeline.findFirst.mockResolvedValue(null);
+    db.pipeline.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "7",
+        meta: { target: "pipeline_one_leads_per_org" },
+      }),
+    );
+
+    await expect(
+      createPipeline({ name: "Sales", teamIds: ["own-team"], orgId: ORG, userId: USER, actor }),
+    ).rejects.toBeInstanceOf(LeadsPipelineExistsError);
+  });
+
+  test("an org with a Leads board can still add a Support board", async () => {
+    const actor = scoped(["own-team"]);
+    db.pipeline.count.mockResolvedValue(0);
+    db.pipeline.findFirst.mockResolvedValue({ order: 0 });
+    db.pipeline.create.mockResolvedValue({ id: PIPELINE, stages: [] });
+
+    await createPipeline({
+      name: "Repairs",
+      type: "SUPPORT",
+      teamIds: ["own-team"],
+      orgId: ORG,
+      userId: USER,
+      actor,
+    });
+
+    expect(db.pipeline.count.mock.calls[0][0]).toMatchObject({
+      where: { orgId: ORG, type: { not: "LEADS" } },
+    });
+    const data = db.pipeline.create.mock.calls[0][0].data;
+    expect(data.type).toBe("SUPPORT");
+    expect(data.order).toBe(1);
+    expect(data.stages.create.map((stage: { name: string }) => stage.name)).toEqual(
+      PIPELINE_TYPE_SEEDS.SUPPORT.stages.map((stage) => stage.name),
+    );
+    expect(data.lostReasons.create).toEqual([]);
+  });
+
+  test("caps the boards besides Leads", async () => {
+    const actor = scoped(["own-team"]);
+    db.pipeline.count.mockResolvedValue(OTHER_PIPELINE_LIMIT);
+
+    await expect(
+      createPipeline({
+        name: "Eleventh",
+        type: "PROJECTS",
+        teamIds: ["own-team"],
+        orgId: ORG,
+        userId: USER,
+        actor,
+      }),
+    ).rejects.toBeInstanceOf(PipelineLimitError);
     expect(db.pipeline.create).not.toHaveBeenCalled();
   });
 });
@@ -971,12 +1036,48 @@ describe("assigning a contact to a stage", () => {
   });
 });
 
+describe("boards other than Leads", () => {
+  test("a move on a Support board syncs nothing, reports no win and runs no rules", async () => {
+    vi.mocked(sendWonConversionEvent).mockClear();
+    vi.mocked(pushCrmLeadStatus).mockClear();
+    vi.mocked(integrationTriggerQueue.add).mockClear();
+    db.lead.findUniqueOrThrow.mockResolvedValue({ stageId: "old-stage", stage: { name: "New" } });
+    db.pipelineStage.findUniqueOrThrow.mockResolvedValue({ name: "Resolved", status: "WON" });
+    db.lead.update.mockResolvedValue({
+      id: LEAD,
+      contactId: CONTACT,
+      stageId: STAGE,
+      pipelineId: PIPELINE,
+      name: "Aditi",
+      email: null,
+      phone: "+91",
+      source: "WHATSAPP",
+      labels: [],
+      assignees: [],
+      tasks: [],
+    });
+    db.pipelineStage.findUnique.mockResolvedValue({
+      name: "Resolved",
+      status: "WON",
+      pipelineId: PIPELINE,
+      pipeline: { orgId: "org-1", name: "Repairs", type: "SUPPORT" },
+    });
+    db.contact.findUnique.mockResolvedValue({ id: CONTACT, orgId: "org-1", phone: "+91" });
+
+    await moveLead(LEAD, STAGE, null);
+
+    expect(integrationTriggerQueue.add).not.toHaveBeenCalled();
+    expect(pushCrmLeadStatus).not.toHaveBeenCalled();
+    expect(sendWonConversionEvent).not.toHaveBeenCalled();
+  });
+});
+
 describe("reporting a win to the Conversions API", () => {
   beforeEach(() => {
     vi.mocked(sendWonConversionEvent).mockClear();
     db.pipelineStage.findUnique.mockResolvedValue({
       name: "Won",
-      pipeline: { orgId: "org-1" },
+      pipeline: { orgId: "org-1", type: "LEADS" },
     });
     db.contact.findUnique.mockResolvedValue({
       id: CONTACT,
@@ -1082,7 +1183,7 @@ describe("telling the CRMs a lead changed column", () => {
       name: "Qualified",
       status: "OPEN",
       pipelineId: PIPELINE,
-      pipeline: { orgId: "org-1", name: "Sales" },
+      pipeline: { orgId: "org-1", name: "Sales", type: "LEADS" },
     });
     db.lead.update.mockResolvedValue({
       id: LEAD,
@@ -1212,6 +1313,7 @@ describe("telling the CRMs a lead changed column", () => {
           leadId: LEAD,
           pipelineId: PIPELINE,
           pipelineName: "Sales",
+          pipelineType: "LEADS",
           stageId: STAGE,
           stageName: "Qualified",
           stageStatus: "OPEN",
@@ -1382,10 +1484,11 @@ describe("clearing a contact's stage", () => {
 });
 
 describe("resolving which board a contact's stage lives on", () => {
-  test("returns the org's board", async () => {
+  test("returns the org's Leads board, never one of its other boards", async () => {
     db.pipeline.findFirst.mockResolvedValue({ id: PIPELINE });
 
     expect(await resolvePipelineForContact(ORG)).toBe(PIPELINE);
+    expect(db.pipeline.findFirst.mock.calls[0][0].where).toEqual({ orgId: ORG, type: "LEADS" });
   });
 
   // An org that has never opened a board must still be able to edit contacts,

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { PipelineType } from "../../../generated/prisma/client.js";
+
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Expected a #rrggbb colour");
 
 export const idParamsSchema = z.object({
@@ -8,6 +10,7 @@ export const idParamsSchema = z.object({
 
 export const createPipelineRequestSchema = z.object({
   name: z.string().min(1).max(120),
+  type: z.enum(PipelineType).optional(),
   description: z.string().max(500).optional(),
   teamIds: z.array(z.uuid()).min(1),
 });
@@ -51,6 +54,11 @@ export const updateLabelRequestSchema = z.object({
   name: z.string().min(1).max(60).optional(),
   color: hexColor.optional(),
 });
+
+export const importTemplateQuerySchema = z.object({
+  format: z.enum(["csv", "xlsx"]).default("xlsx"),
+});
+export type ImportTemplateQuerySchema = z.infer<typeof importTemplateQuerySchema>;
 
 export type CreatePipelineRequestSchema = z.infer<typeof createPipelineRequestSchema>;
 export type UpdatePipelineRequestSchema = z.infer<typeof updatePipelineRequestSchema>;

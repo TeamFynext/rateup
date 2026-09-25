@@ -850,7 +850,7 @@ describe("generateReferralCode", () => {
 
   test("builds the code from the first six letters of the name", async () => {
     expect(await generateReferralCode("Alexander", "919000000001")).toMatch(
-      /^ALEXAN-[A-HJ-NP-Z2-9]{10}$/,
+      /^ALEXAN-[A-HJ-NP-Z2-9]{5}$/,
     );
   });
 

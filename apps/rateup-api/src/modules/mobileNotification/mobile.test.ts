@@ -13,7 +13,6 @@ vi.mock("../../utils/prisma.js", () => ({
       upsert: vi.fn(),
       deleteMany: vi.fn(),
     },
-    waInboxAssign: { findMany: vi.fn() },
   },
 }));
 
@@ -28,9 +27,7 @@ import prisma from "../../utils/prisma.js";
 import {
   addToken,
   deleteTokenByUserId,
-  getTokensByOrgId,
   getTokensByUserId,
-  getTokensForContactAudience,
   checkPushReceipts,
   sendPushNotification,
 } from "./mobile.service.js";
@@ -43,7 +40,6 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
   expoPushToken: Record<string, Mock>;
-  waInboxAssign: Record<string, Mock>;
 };
 
 const USER = "11111111-1111-1111-1111-111111111111";
@@ -51,7 +47,6 @@ const COLLEAGUE = "22222222-2222-2222-2222-222222222222";
 const ORG = "33333333-3333-3333-3333-333333333333";
 const TOKEN = "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]";
 const COLLEAGUE_TOKEN = "ExponentPushToken[yyyyyyyyyyyyyyyyyyyyyy]";
-const CONTACT = "44444444-4444-4444-4444-444444444444";
 
 function reply() {
   const rep: any = { status: vi.fn(() => rep), code: vi.fn(() => rep), send: vi.fn(() => rep) };
@@ -83,7 +78,6 @@ beforeEach(() => {
     orgId: ORG,
   });
   db.expoPushToken.deleteMany.mockResolvedValue({ count: 1 });
-  db.waInboxAssign.findMany.mockResolvedValue([]);
   (axios.post as unknown as Mock).mockResolvedValue({ status: 200, data: {} });
 });
 
@@ -91,26 +85,7 @@ beforeEach(() => {
 // The org-wide token listing
 // ===========================================================================
 
-describe("getTokensByOrgId", () => {
-  test("returns every token registered against the org", async () => {
-    db.expoPushToken.findMany.mockResolvedValueOnce([
-      { expoToken: TOKEN },
-      { expoToken: COLLEAGUE_TOKEN },
-    ]);
-
-    await expect(getTokensByOrgId(ORG)).resolves.toEqual([TOKEN, COLLEAGUE_TOKEN]);
-    expect(db.expoPushToken.findMany).toHaveBeenCalledWith({
-      where: { orgId: ORG },
-      select: { expoToken: true },
-    });
-  });
-
-  test("is still the org-wide read the senders use", async () => {
-    await getTokensByOrgId(ORG);
-
-    expect(JSON.stringify(db.expoPushToken.findMany.mock.calls[0][0].where)).not.toContain("user");
-  });
-
+describe("getTokensByUserId", () => {
   test("the per-user read narrows on both columns", async () => {
     db.expoPushToken.findMany.mockResolvedValueOnce([{ expoToken: TOKEN }]);
 
@@ -124,11 +99,6 @@ describe("getTokensByOrgId", () => {
   test("the per-user read refuses a missing id", async () => {
     await expect(getTokensByUserId("", ORG)).rejects.toThrow("Missing userId or orgId");
     await expect(getTokensByUserId(USER, "")).rejects.toThrow("Missing userId or orgId");
-    expect(db.expoPushToken.findMany).not.toHaveBeenCalled();
-  });
-
-  test("refuses an empty org id", async () => {
-    await expect(getTokensByOrgId("")).rejects.toThrow("Missing orgId");
     expect(db.expoPushToken.findMany).not.toHaveBeenCalled();
   });
 
@@ -157,65 +127,6 @@ describe("getTokensByOrgId", () => {
 // ===========================================================================
 // addToken — the check that nothing enforces
 // ===========================================================================
-
-// ===========================================================================
-// Who a new inbound message is announced to
-// ===========================================================================
-
-describe("getTokensForContactAudience", () => {
-  test("narrows to the assigned users' devices", async () => {
-    db.waInboxAssign.findMany.mockResolvedValueOnce([{ assignedUserId: USER }]);
-    db.expoPushToken.findMany.mockResolvedValueOnce([{ expoToken: TOKEN }]);
-
-    await expect(getTokensForContactAudience(ORG, CONTACT)).resolves.toEqual([TOKEN]);
-    expect(db.expoPushToken.findMany).toHaveBeenCalledWith({
-      where: { orgId: ORG, userId: { in: [USER] } },
-      select: { expoToken: true },
-    });
-  });
-
-  test("scopes the assigned read by org as well as user", async () => {
-    // A token row is per (user, org). An assignee who also belongs to another org
-    // must not be pushed on that org's registration.
-    db.waInboxAssign.findMany.mockResolvedValueOnce([{ assignedUserId: USER }]);
-
-    await getTokensForContactAudience(ORG, CONTACT);
-
-    expect(db.expoPushToken.findMany.mock.calls[0][0].where.orgId).toBe(ORG);
-  });
-
-  test("falls back to the whole org when nobody is assigned", async () => {
-    db.waInboxAssign.findMany.mockResolvedValueOnce([]);
-    db.expoPushToken.findMany.mockResolvedValueOnce([
-      { expoToken: TOKEN },
-      { expoToken: COLLEAGUE_TOKEN },
-    ]);
-
-    await expect(getTokensForContactAudience(ORG, CONTACT)).resolves.toEqual([
-      TOKEN,
-      COLLEAGUE_TOKEN,
-    ]);
-    // The org-wide read, not a `userId: { in: [] }` that would match nobody —
-    // an unassigned contact is usually a new customer and is the message that
-    // most needs to reach someone.
-    expect(db.expoPushToken.findMany).toHaveBeenCalledWith({
-      where: { orgId: ORG },
-      select: { expoToken: true },
-    });
-  });
-
-  test("falls back to the whole org when the message has no contact", async () => {
-    db.expoPushToken.findMany.mockResolvedValueOnce([{ expoToken: TOKEN }]);
-
-    await expect(getTokensForContactAudience(ORG, undefined)).resolves.toEqual([TOKEN]);
-    expect(db.waInboxAssign.findMany).not.toHaveBeenCalled();
-  });
-
-  test("refuses a missing org", async () => {
-    await expect(getTokensForContactAudience("", CONTACT)).rejects.toThrow("Missing orgId");
-    expect(db.waInboxAssign.findMany).not.toHaveBeenCalled();
-  });
-});
 
 describe("addToken", () => {
   test("returns the existing row rather than creating a second", async () => {

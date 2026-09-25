@@ -33,6 +33,7 @@ import {
 } from "./campaignSend.service.js";
 import { cancelPendingCampaignJobs } from "./campaignCancel.service.js";
 import { CampaignSendTrigger } from "../../../generated/prisma/enums.js";
+import { notifyCampaignStopped } from "./campaignNotify.js";
 
 export interface WaMessageStats {
   read?: boolean;
@@ -516,6 +517,7 @@ export async function sendCampaign(
       status: CampaignStatus.FAILED,
       errorMessage: enqueued.message,
     });
+    await notifyCampaignStopped(campaignId, "campaign.failed", enqueued.message);
     throw new Error(enqueued.message);
   }
   log.trace({ campaignId, campaignSendId: send.id }, "Scheduled campaign handed to the queue");

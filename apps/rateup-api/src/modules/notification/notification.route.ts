@@ -5,6 +5,7 @@ import {
   getNotificationsCountHandler,
   getNotificationSettingHandler,
   getNotificationsHandler,
+  markAllNotificationsReadHandler,
   updateNotificationSettingHandler,
 } from "./notification.controller.js";
 import { notificationSettingSchema, notificationIdParamSchema } from "./notification.schema.js";
@@ -14,6 +15,7 @@ export async function notificationRoutes(server: FastifyInstance) {
   declareAccess(server, { access: "session" });
   server.get("/", getNotificationsHandler);
   server.get("/count", getNotificationsCountHandler);
+  server.post("/read", markAllNotificationsReadHandler);
   server.put(
     "/settings",
     {

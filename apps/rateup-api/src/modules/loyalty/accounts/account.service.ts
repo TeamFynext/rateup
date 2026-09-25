@@ -23,6 +23,7 @@ import { renderReplyText } from "../richText.js";
 import { scheduleFeedbackRequest } from "../feedback/feedback.scheduler.js";
 import { log } from "../../../utils/logger.js";
 import { ensureMemberCard, sendMemberCard } from "./memberCard.service.js";
+import { effectiveBonuses } from "../program/bonuses.js";
 
 export async function findAccountByReferralCode(programId: string, referralCode: string) {
   return await prisma.customerLoyaltyAccount.findFirst({
@@ -53,6 +54,11 @@ export interface CreateCustomerAccountOptions {
    * open form must not be able to rename someone else's contact.
    */
   trustedDetails?: boolean;
+  /**
+   * Send the `MEMBER_JOINED` welcome. For staff enrolment only: the WhatsApp paths answer
+   * with the join reply instead, and the public form must not message a number nobody proved.
+   */
+  sendWelcome?: boolean;
 }
 
 export async function createCustomerAccount(
@@ -176,14 +182,15 @@ export async function createCustomerAccount(
 
   // What this signup is worth, frozen now. The immediate path pays it straight away; the
   // held path stores it and pays the same figures later, whatever the programme says then.
+  const bonuses = program ? effectiveBonuses(program) : null;
   const snapshot: LoyaltyPendingBonuses = {
-    signupBonus: program?.signupBonus || 0,
-    refereeBonus: program?.refereeBonus || 0,
-    refereeBonusType: program?.refereeBonusType || "points",
-    refereeRewardId: program?.refereeRewardId || null,
-    referralBonus: program?.referralBonus || 0,
-    referralBonusType: program?.referralBonusType || "points",
-    referralRewardId: program?.referralRewardId || null,
+    signupBonus: bonuses?.signupBonus || 0,
+    refereeBonus: bonuses?.refereeBonus || 0,
+    refereeBonusType: bonuses?.refereeBonusType || "points",
+    refereeRewardId: bonuses?.refereeRewardId || null,
+    referralBonus: bonuses?.referralBonus || 0,
+    referralBonusType: bonuses?.referralBonusType || "points",
+    referralRewardId: bonuses?.referralRewardId || null,
     referredById: referredBy?.id ?? null,
   };
   const hold = options.holdBonuses === true;
@@ -211,6 +218,16 @@ export async function createCustomerAccount(
       contact: true,
     },
   });
+
+  // Before the bonus so the member reads the welcome first and the points message second.
+  if (options.sendWelcome) {
+    await sendLoyaltyEvent(
+      orgId,
+      LoyaltyEventType.MEMBER_JOINED,
+      { accountId: account.id },
+      { name: account.contact?.name || "Customer" },
+    );
+  }
 
   if (!hold) {
     await creditNewMember(prisma, account, snapshot, openingPoints, orgId);

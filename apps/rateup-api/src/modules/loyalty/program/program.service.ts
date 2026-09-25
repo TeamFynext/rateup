@@ -30,6 +30,8 @@ export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: str
       refereeBonus: data.refereeBonus,
       refereeBonusType: data.refereeBonusType,
       refereeRewardId: data.refereeRewardId,
+      signupBonusEnabled: data.signupBonusEnabled,
+      referralBonusEnabled: data.referralBonusEnabled,
       tiersEnabled: data.tiersEnabled,
       tierResetPeriod: data.tierResetPeriod,
       pointsActivityAlerts: data.pointsActivityAlerts,
@@ -89,13 +91,14 @@ export async function getPublicLoyaltyProgramInfo(orgId: string) {
       brandColor: true,
       heroImageUrl: true,
       signupBonus: true,
+      signupBonusEnabled: true,
       status: true,
       whatsappSettingsId: true,
     },
   });
   if (!program) return null;
 
-  const { whatsappSettingsId, ...publicFields } = program;
+  const { whatsappSettingsId, signupBonusEnabled, ...publicFields } = program;
   // The channel the programme is wired to when it names one; otherwise any live number.
   const settings =
     (whatsappSettingsId
@@ -111,6 +114,7 @@ export async function getPublicLoyaltyProgramInfo(orgId: string) {
 
   return {
     ...publicFields,
+    signupBonus: signupBonusEnabled ? publicFields.signupBonus : 0,
     whatsappNumber: settings?.phone ? settings.phone.replace(/\D/g, "") : null,
   };
 }

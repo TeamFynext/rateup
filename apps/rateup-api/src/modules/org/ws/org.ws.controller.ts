@@ -40,6 +40,8 @@ type RoleTaggedSocket = WebSocket & {
    * Present means "deliver only this contact's messages"; absent (the dashboard) means all.
    */
   contactId?: string;
+  /** The signed-in user; a broadcast naming `userIds` reaches only their sockets. */
+  userId?: string;
 };
 
 const activeConnections = new Map<string, Map<string, RoleTaggedSocket>>();
@@ -101,13 +103,15 @@ subscriber.on("message", (channel, message) => {
   if (channel !== WS_CHANNEL) return;
   try {
     const parsedMessage = JSON.parse(message);
-    const { orgId, data, roleFilter } = parsedMessage;
+    const { orgId, data, roleFilter, userIds } = parsedMessage;
     const connections = activeConnections.get(orgId);
     if (!connections) return;
     const forContact = data?.inbox?.contact?.id;
+    const forUsers: Set<string> | null = Array.isArray(userIds) ? new Set(userIds) : null;
     for (const client of connections.values()) {
       if (client.readyState !== 1) continue;
       if (roleFilter && client.role !== roleFilter) continue;
+      if (forUsers && (!client.userId || !forUsers.has(client.userId))) continue;
       // A socket that named a contact hears about that contact and nothing else.
       if (client.contactId && client.contactId !== forContact) continue;
       client.send(JSON.stringify(data));
@@ -150,6 +154,7 @@ export async function handleWebSocketConnection(
 
   // Store role alongside connection
   connection.role = role;
+  if (role === "main" && userId) connection.userId = userId;
   // Widget sockets name the conversation they are showing; see RoleTaggedSocket.
   const requestedContactId = request.query?.contactId;
   if (role === "fab" && requestedContactId) connection.contactId = requestedContactId;

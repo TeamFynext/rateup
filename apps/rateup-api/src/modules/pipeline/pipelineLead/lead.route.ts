@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  bulkDeleteLeadsHandler,
   bulkUpdateLeadsHandler,
   closeLeadHandler,
   createLeadHandler,
@@ -20,6 +21,7 @@ import {
   bulkSetContactStageHandler,
 } from "./lead.controller.js";
 import {
+  bulkDeleteLeadsRequestSchema,
   bulkUpdateLeadsRequestSchema,
   closeLeadRequestSchema,
   createLeadRequestSchema,
@@ -99,6 +101,18 @@ export async function leadRoutes(server: FastifyInstance) {
     bulkUpdateLeadsHandler,
   );
 
+  // Deleting erases a lead's notes, tasks and history with it, so it is admin-only like
+  // deleting a board; everyone else closes a lead as lost instead.
+  server.post(
+    "/bulk/delete",
+    {
+      config: { permission: "pipelines.admin" },
+      preHandler: [verifyLeadsBulkAccess],
+      schema: { body: bulkDeleteLeadsRequestSchema },
+    },
+    bulkDeleteLeadsHandler,
+  );
+
   server.get(
     "/:id",
     { preHandler: [verifyLeadAccess], schema: { params: idParamsSchema } },
@@ -116,7 +130,11 @@ export async function leadRoutes(server: FastifyInstance) {
 
   server.delete(
     "/:id",
-    { preHandler: [verifyLeadAccess], schema: { params: idParamsSchema } },
+    {
+      config: { permission: "pipelines.admin" },
+      preHandler: [verifyLeadAccess],
+      schema: { params: idParamsSchema },
+    },
     deleteLeadHandler,
   );
 

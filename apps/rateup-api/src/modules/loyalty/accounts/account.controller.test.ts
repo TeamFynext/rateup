@@ -103,6 +103,7 @@ describe("createCustomerAccountHandler", () => {
     // Staff typed these details with the stored ones in front of them, so they overwrite.
     expect(createCustomerAccount).toHaveBeenCalledWith(body, PROGRAM, ORG, undefined, {
       trustedDetails: true,
+      sendWelcome: true,
     });
     expect(answer(rep)).toEqual({ code: 201, body: { id: "acct-1" } });
   });
@@ -186,7 +187,7 @@ describe("createCustomerAccountHandler", () => {
     expect(publicCall[0]).toMatchObject({ phone: "919000000001" });
     expect(publicCall[4]).toEqual({ holdBonuses: true });
     expect(staffCall[3]).toBeUndefined();
-    expect(staffCall[4]).toEqual({ trustedDetails: true });
+    expect(staffCall[4]).toEqual({ trustedDetails: true, sendWelcome: true });
   });
 
   test("the public handler refuses a number that is not real for the programme's country", async () => {
@@ -602,6 +603,7 @@ describe("getCustomerAccountByPhoneHandler", () => {
       currencySymbol: "₹",
       currencyName: "Beans",
       signupBonus: 50,
+      signupBonusEnabled: true,
       tiers: [
         { id: "tier-2", name: "Gold", threshold: "15000", pointsMultiplier: "1.5", color: "#fc0" },
         {

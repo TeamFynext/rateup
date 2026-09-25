@@ -3,8 +3,12 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     loyaltyFeedbackRequest: { findUnique: vi.fn(), updateMany: vi.fn() },
+    customerLoyaltyAccount: {
+      findUnique: vi.fn(async () => ({ contact: { id: "c-1", name: "Ann", phone: "15550001" } })),
+    },
   },
 }));
+vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
@@ -17,6 +21,7 @@ process.env.FLOW_TOKEN_SECRET = "test-secret";
 process.env.API_URL = "https://api.example.test";
 
 import prisma from "../../../utils/prisma.js";
+import { notify } from "../../notification/notify.js";
 import { getWaSettingsById } from "../../whatsapp/settings/wa_settings.service.js";
 import { replyLoyalty } from "../messaging/reply.js";
 
@@ -41,9 +46,11 @@ const SCREENS = buildFeedbackFlowJson(getFeedbackDraft("restaurant")!).screens;
 function request(overrides: Record<string, unknown> = {}) {
   return {
     id: "req-1",
+    accountId: "acct-1",
     program: {
       orgId: "org-1",
       feedbackSetting: {
+        teamId: "team-1",
         team: { googleLink: "https://g.page/r/kettle/review", reviewPageLinks: null },
         reward: { name: "Free coffee", status: "ACTIVE" },
       },
@@ -157,7 +164,7 @@ describe("onFeedbackFlowCompleted", () => {
     expect(replied().message.text).not.toContain("Free coffee");
   });
 
-  test("unhappy feedback is recorded and nothing is sent", async () => {
+  test("unhappy feedback is recorded, sends the customer nothing and alerts the team", async () => {
     await onFeedbackFlowCompleted(completion(false));
 
     expect(db.loyaltyFeedbackRequest.updateMany).toHaveBeenCalledWith(
@@ -166,6 +173,17 @@ describe("onFeedbackFlowCompleted", () => {
       }),
     );
     expect(replyLoyalty).not.toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledWith({
+      event: "loyalty.feedback_negative",
+      orgId: "org-1",
+      audience: { kind: "permitted", teamId: "team-1" },
+      data: { customerName: "Ann", contactId: "c-1", rating: 2 },
+    });
+  });
+
+  test("happy feedback raises no alert", async () => {
+    await onFeedbackFlowCompleted(completion(true));
+    expect(notify).not.toHaveBeenCalled();
   });
 
   test("a retried completion finds the row closed and sends nothing twice", async () => {

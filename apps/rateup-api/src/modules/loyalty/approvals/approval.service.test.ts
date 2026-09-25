@@ -12,6 +12,7 @@ vi.mock("../../../utils/prisma.js", () => ({
       count: vi.fn(),
     },
     customerLoyaltyAccount: { findUnique: vi.fn(), update: vi.fn() },
+    loyaltyProgram: { findUnique: vi.fn() },
     loyaltyRedemption: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     loyaltyTransaction: { create: vi.fn() },
     $transaction: vi.fn(),
@@ -23,9 +24,11 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 vi.mock("../messaging/send.js", () => ({ sendLoyaltyEvent: vi.fn() }));
+vi.mock("../../notification/notify.js", () => ({ notify: vi.fn() }));
 
 import prisma from "../../../utils/prisma.js";
 import { sendLoyaltyEvent } from "../messaging/send.js";
+import { notify } from "../../notification/notify.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import {
   approveApprovalRequest,
@@ -50,6 +53,7 @@ type Mock = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
   approvalRequest: Record<string, Mock>;
   customerLoyaltyAccount: Record<string, Mock>;
+  loyaltyProgram: Record<string, Mock>;
   loyaltyRedemption: Record<string, Mock>;
   loyaltyTransaction: Record<string, Mock>;
   $transaction: Mock;
@@ -105,7 +109,12 @@ function tx() {
 beforeEach(() => {
   vi.clearAllMocks();
   db.$transaction.mockImplementation((fn: any) => (typeof fn === "function" ? fn(tx()) : fn));
-  db.approvalRequest.create.mockResolvedValue({ id: "apr-1" });
+  db.approvalRequest.create.mockResolvedValue({
+    id: "apr-1",
+    requestType: "POINTS_ADJUSTMENT",
+    account: { programId: PROGRAM, contact: { name: "Ann", phone: "+911" } },
+  });
+  db.loyaltyProgram.findUnique.mockResolvedValue({ orgId: "org-1" });
   db.approvalRequest.findFirst.mockResolvedValue(approval());
   db.approvalRequest.findMany.mockResolvedValue([]);
   db.approvalRequest.update.mockResolvedValue({ id: "apr-1", status: "APPROVED" });
@@ -149,6 +158,22 @@ describe("createApprovalRequest", () => {
       requestedByType: "CUSTOMER",
       requestData: {},
       expiresAt: null,
+    });
+  });
+
+  test("asks everyone who can approve, except the staff member who raised it", async () => {
+    await createApprovalRequest({
+      requestType: "POINTS_ADJUSTMENT",
+      accountId: "acct-1",
+      requestedBy: "user-1",
+    } as any);
+
+    expect(notify).toHaveBeenCalledWith({
+      event: "loyalty.approval_requested",
+      orgId: "org-1",
+      audience: { kind: "permitted" },
+      data: { approvalId: "apr-1", customerName: "Ann", requestType: "POINTS_ADJUSTMENT" },
+      actorUserId: "user-1",
     });
   });
 

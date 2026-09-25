@@ -76,6 +76,7 @@ import type {
   ShopifyProductVariantsData,
   ShopifyWebhookBody,
 } from "./shopify.types.js";
+import { notify } from "../../notification/notify.js";
 
 export async function getShopifyAuthUrl(
   rawRequest: IncomingMessage,
@@ -1366,9 +1367,18 @@ export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
     await updateShopifyIntegrationByShop(shop, { active: false });
     return;
   }
-  if (dayjs(shopifyInfo.org.createdAt).isBefore(dayjs(shopifyInfo.createdAt)))
+  if (dayjs(shopifyInfo.org.createdAt).isBefore(dayjs(shopifyInfo.createdAt))) {
     await updateShopifyIntegrationByShop(shop, { active: false });
-  else {
+    await notify({
+      event: "integration.error",
+      orgId: shopifyInfo.orgId,
+      audience: { kind: "permitted" },
+      data: {
+        integration: "Shopify",
+        error: `The RateUp app was uninstalled from ${shop}. Reinstall it to keep syncing orders.`,
+      },
+    });
+  } else {
     await pauseOrg(shopifyInfo.orgId, { isPaused: true });
   }
 }
