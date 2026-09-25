@@ -6,6 +6,7 @@ import {
   googleRedirectUri,
   oidcCookieName,
   sessionCookieName,
+  staffSignInDomain,
   type StaffConfig,
 } from "../staff.config.js";
 import { staffClientIp } from "../staff.guards.js";
@@ -120,7 +121,7 @@ export function staffAuthRoutes(config: StaffConfig) {
             state: oidc.state,
             nonce: oidc.nonce,
             codeChallenge: challenge,
-            hostedDomain: config.googleHd,
+            hostedDomain: staffSignInDomain(config),
             reauth: oidc.reauth,
           }),
           302,
@@ -156,7 +157,7 @@ export function staffAuthRoutes(config: StaffConfig) {
 
         const checked = checkGoogleClaims(claims, {
           nonce: oidc.nonce,
-          hostedDomain: config.googleHd,
+          hostedDomain: staffSignInDomain(config),
           cfAccessEmail: config.cfAccessEnforced ? request.cfAccessEmail : undefined,
           reauthStartedAt: oidc.reauth ? oidc.startedAt : undefined,
         });
@@ -224,16 +225,11 @@ export function staffAuthRoutes(config: StaffConfig) {
           name: staff.name,
           avatarUrl: staff.avatarUrl,
           isOwner: staff.isOwner,
-          // Local development only (STAFF_DEV_BYPASS_EMAIL); never true off localhost.
-          devBypass: request.staffDevBypass === true,
         },
       };
     });
 
     server.post("/auth/logout", async (request, reply) => {
-      // A bypassed request has no session row to revoke, and the next request is signed in
-      // again regardless; there is nothing to sign out of.
-      if (request.staffDevBypass) return { success: true };
       await revokeStaffSession(request.staffSession!.id);
       await recordStaffAuthEvent(request, {
         action: "staff.logout",

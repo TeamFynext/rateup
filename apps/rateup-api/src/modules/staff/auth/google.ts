@@ -31,7 +31,8 @@ export function buildGoogleAuthUrl(params: {
   state: string;
   nonce: string;
   codeChallenge: string;
-  hostedDomain: string;
+  /** Null (NODE_ENV=development only) offers every Google account, not just the Workspace's. */
+  hostedDomain: string | null;
   /** Step-up: force Google to ask for the password again, and report when it did. */
   reauth: boolean;
 }): string {
@@ -46,7 +47,7 @@ export function buildGoogleAuthUrl(params: {
     code_challenge: params.codeChallenge,
     code_challenge_method: "S256",
     // Only a hint for the account picker; the `hd` claim is what is enforced.
-    hd: params.hostedDomain,
+    ...(params.hostedDomain ? { hd: params.hostedDomain } : {}),
     ...(params.reauth ? { prompt: "login", max_age: "0" } : { prompt: "select_account" }),
   }).toString();
   return url.toString();
@@ -109,7 +110,8 @@ export function checkGoogleClaims(
   claims: JWTPayload,
   expected: {
     nonce: string;
-    hostedDomain: string;
+    /** Null (NODE_ENV=development only): any verified Google account, gmail.com included. */
+    hostedDomain: string | null;
     /** From Cloudflare Access; undefined when enforcement is off. */
     cfAccessEmail?: string;
     /** Step-up only: the flow's start time; Google's auth_time must not predate it. */
@@ -121,7 +123,11 @@ export function checkGoogleClaims(
   const email = typeof claims.email === "string" ? claims.email.toLowerCase() : "";
   if (!email || claims.email_verified !== true) return { ok: false, reason: "domain" };
   // `hd` is only present for Workspace accounts, so a gmail.com login lacks it entirely.
-  if (claims.hd !== expected.hostedDomain || !email.endsWith(`@${expected.hostedDomain}`)) {
+  const { hostedDomain } = expected;
+  if (
+    hostedDomain !== null &&
+    (claims.hd !== hostedDomain || !email.endsWith(`@${hostedDomain}`))
+  ) {
     return { ok: false, reason: "domain" };
   }
   if (expected.cfAccessEmail !== undefined && email !== expected.cfAccessEmail) {

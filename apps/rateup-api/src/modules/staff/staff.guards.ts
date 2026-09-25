@@ -1,8 +1,6 @@
 import type { FastifyRequest } from "fastify";
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
-import type { StaffSession } from "../../../generated/prisma/client.js";
-import prisma from "../../utils/prisma.js";
-import { isDevBypassEnabled, sessionCookieName, type StaffConfig } from "./staff.config.js";
+import { sessionCookieName, type StaffConfig } from "./staff.config.js";
 import { forbidden, StaffHttpError, unauthenticated } from "./staff.errors.js";
 import { findStaffSession, judgeSession, touchStaffSession } from "./staff.session.js";
 
@@ -90,11 +88,8 @@ export async function csrfGuard(request: FastifyRequest) {
  */
 export function requireStaff(config: StaffConfig) {
   const cookieName = sessionCookieName(config);
-  const devBypass = isDevBypassEnabled(config);
   return async (request: FastifyRequest) => {
     if (request.routeOptions.config?.staffPublic) return;
-
-    if (devBypass && (await admitDevBypass(request, config.devBypassEmail))) return;
 
     const token = request.cookies?.[cookieName];
     if (!token) throw unauthenticated();
@@ -113,51 +108,4 @@ export function requireStaff(config: StaffConfig) {
     request.staffSession = session;
     request.staff = session.staffUser;
   };
-}
-
-/*
- * Local development bypass. Only reachable when isDevBypassEnabled(config) held at boot
- * (not production, localhost console, no Cloudflare Access) AND the TCP peer of this very
- * request is loopback. The socket address is used, not `request.ip`: with trustProxy on,
- * `request.ip` comes from X-Forwarded-For, which any client can write.
- */
-
-const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
-
-export function isLoopbackPeer(request: FastifyRequest): boolean {
-  const address = request.socket?.remoteAddress;
-  return typeof address === "string" && LOOPBACK.has(address);
-}
-
-/** The id the console and audit rows see for a bypassed request; no StaffSession row exists. */
-export const DEV_BYPASS_SESSION_ID = "00000000-0000-0000-0000-000000000000";
-
-/**
- * Treats the request as the bypass staff member. They must still be on the allowlist and
- * active, so the bypass grants nothing the person could not get by signing in. Returns false
- * (fall through to the cookie check) when the peer is not loopback or the user is missing.
- */
-async function admitDevBypass(request: FastifyRequest, email: string): Promise<boolean> {
-  if (!isLoopbackPeer(request)) return false;
-  const staff = await prisma.staffUser.findUnique({ where: { email } });
-  if (!staff || !staff.active) return false;
-
-  const now = new Date();
-  const session: StaffSession = {
-    id: DEV_BYPASS_SESSION_ID,
-    tokenHash: "",
-    staffUserId: staff.id,
-    createdAt: now,
-    // Fresh on every request, so step-up actions (delete org, apply maintenance) work locally.
-    authenticatedAt: now,
-    lastSeenAt: now,
-    expiresAt: now,
-    revokedAt: null,
-    ip: staffClientIp(request),
-    userAgent: request.headers["user-agent"]?.slice(0, 512) ?? null,
-  };
-  request.staff = staff;
-  request.staffSession = session;
-  request.staffDevBypass = true;
-  return true;
 }
