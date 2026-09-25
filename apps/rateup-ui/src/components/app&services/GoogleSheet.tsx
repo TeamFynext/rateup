@@ -31,10 +31,11 @@ export function GoogleSheet() {
   const [, setCallBackRoute] = useState<string>(() => {
     try {
       return (
-        localStorage.getItem("google-callback-route") ?? "/dashboard/apps&services/googlesheet"
+        localStorage.getItem("google-callback-route") ??
+        "/dashboard/settings/integrations/googlesheet"
       );
     } catch {
-      return "/dashboard/apps&services/googlesheet";
+      return "/dashboard/settings/integrations/googlesheet";
     }
   });
   const persistCallbackRoute = (value: string) => {
@@ -62,7 +63,7 @@ export function GoogleSheet() {
   const syncedEmail = googleAccessToken?.credential?.userEmail;
 
   const connect = () => {
-    persistCallbackRoute("/dashboard/apps&services/googlesheet");
+    persistCallbackRoute("/dashboard/settings/integrations/googlesheet");
     window.open(authUrl);
   };
 
