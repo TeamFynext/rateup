@@ -33,7 +33,6 @@ export interface GatewayRowRef {
 
 export function DeleteTierDialog({ plan, onClose }: { plan: RateupPlan; onClose: () => void }) {
   const mutation = useDeleteTier();
-  const blocked = plan.orgs > 0 || plan.packsSold > 0;
   return (
     <ActionDialog
       open
@@ -42,7 +41,11 @@ export function DeleteTierDialog({ plan, onClose }: { plan: RateupPlan; onClose:
       title={`Delete ${plan.displayName ?? plan.name}`}
       description="Gone from the catalogue for good. Gateway plans it sold through stay, unlinked."
       submitLabel="Delete plan"
-      canSubmit={!blocked}
+      blocked={
+        plan.orgs > 0
+          ? `${plan.orgs} organisation(s) are still on this plan`
+          : plan.packsSold > 0 && `${plan.packsSold} pack(s) of it have been sold`
+      }
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
@@ -91,7 +94,7 @@ export function GatewayStatusDialog({
       title={`${row.name} · status`}
       description={`Whether this ${GATEWAY_NAME[gateway]} ${ROW_NOUN[gateway]} can be bought. The price and the ${ROW_NOUN[gateway]} itself live at ${GATEWAY_NAME[gateway]}.`}
       submitLabel="Save status"
-      canSubmit={status !== row.status}
+      blocked={status === row.status && "Choose a different status"}
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
@@ -149,7 +152,11 @@ export function DeleteGatewayDialog({
       title={`Remove ${row.name}`}
       description={`Removes the local copy only; the ${ROW_NOUN[gateway]} still exists at ${GATEWAY_NAME[gateway]} and the next sync brings it back.`}
       submitLabel="Remove"
-      canSubmit={!row.tier && !onSale}
+      blocked={
+        row.tier
+          ? `Linked to ${row.tier.name}; unlink it first`
+          : onSale && "Still on sale; take it off sale first"
+      }
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>

@@ -1,8 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { isStaffMock } from "@/api/auth.api";
-import { meQueryOptions } from "@/api/auth.query";
 import { cn } from "@/lib/utils";
 
 /*
@@ -79,14 +77,11 @@ const ENV_LABEL = SHORT_ENV[APP_ENV] ?? APP_ENV;
 
 /**
  * Which deployment this is; red in production, where a mistake reaches customers. Also says
- * when the API signed this machine in without Google (its STAFF_DEV_BYPASS_EMAIL), so a
- * local session is never mistaken for a real one. Read from the cache only: the login page
- * renders this before anyone is signed in.
+ * when the console is signed in as a fake staff user (VITE_STAFF_MOCK).
  */
 export function EnvPill({ className }: { className?: string }) {
   const isProd = APP_ENV === "production";
-  const { data: staff } = useQuery({ ...meQueryOptions, enabled: false });
-  const suffix = isStaffMock ? " · mock" : staff?.devBypass ? " · no sign-in" : "";
+  const suffix = isStaffMock ? " · mock" : "";
   return (
     <span
       className={cn(

@@ -163,7 +163,10 @@ function ApplyDialog({
       title={`Apply ${task.title}`}
       description={task.description}
       submitLabel="Apply for real"
-      canSubmit={confirm.trim() === task.id && !stepUp}
+      blocked={
+        (stepUp && "Sign in with Google again first") ||
+        (confirm.trim() !== task.id && `Type "${task.id}" to confirm`)
+      }
       pending={apply.isPending}
       error={stepUp ? null : apply.error}
       onSubmit={(reason) =>
