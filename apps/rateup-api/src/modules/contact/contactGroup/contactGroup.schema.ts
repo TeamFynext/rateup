@@ -87,7 +87,7 @@ export type AddExistingContactsToGroupInput = z.infer<typeof addExistingContacts
 export type AddExistingContactsToMultipleGroupsInput = z.infer<
   typeof addExistingContactsToMultipleGroupsInputSchema
 >;
-export type AddNewContactsToGroupInput = z.input<typeof addNewContactsToGroupInputSchema>;
+export type AddNewContactsToGroupInput = z.infer<typeof addNewContactsToGroupInputSchema>;
 export type ByContactGroupIdParams = z.infer<typeof byContactGroupIdParamsSchema>;
 export type UpdateContactGroupInput = z.infer<typeof updateContactGroupInputSchema>;
 export type CreateContactGroupInput = z.infer<typeof createContactGroupInputSchema>;

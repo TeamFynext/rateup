@@ -783,7 +783,9 @@ export async function filterChats(
           conv."closedAt"          AS "ticketClosedAt",
           conv."reopenCount"       AS "ticketReopenCount",
           COALESCE(conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp")         AS "conversationLastMessageAt",
-          COALESCE(conv."lastCustomerMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp") AS "conversationLastCustomerMessageAt",
+          -- Same expression as the customer-message ORDER BY above, so the page is ordered
+          -- the way it was picked; a ticket the customer never wrote in falls back to activity.
+          COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp") AS "conversationLastCustomerMessageAt",
           c.id,
           c."name",
           c."phone",
@@ -861,7 +863,12 @@ export async function filterChats(
           ORDER BY COALESCE(cv."lastMessageAt", cv."createdAt") DESC
           LIMIT 1
         ) conv ON TRUE`
-            : `FROM "Conversation" conv
+            : isSearchMode
+              ? // One row per ticket as usual, plus a ticketless row for a contact who has
+                // never had a conversation, so search finds every contact.
+                `FROM "Contact" c
+        LEFT JOIN "Conversation" conv ON conv."contactId" = c.id`
+              : `FROM "Conversation" conv
         INNER JOIN "Contact" c ON c.id = conv."contactId"`
         }
         LEFT JOIN "User" cu ON cu.id = conv."closedBy"
@@ -1197,12 +1204,6 @@ export async function exportWhatsapChats(
       "WaMessage" wm 
     JOIN 
       "Contact" c ON wm."contactId" = c.id
-    LEFT JOIN 
-        "ContactGroupMap" cgm ON cgm."contactId" = c."id" 
-    LEFT JOIN 
-        "ContactGroup" cg ON cg.id = cgm."contactGroupId" 
-    LEFT JOIN 
-        "CampaignParticipant" cpt ON cpt."contactId" = c."id"
     WHERE
       c."orgId" = $1::uuid ${extendedWhereClause()}
     ORDER BY

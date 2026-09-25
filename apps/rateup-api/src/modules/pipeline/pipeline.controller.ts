@@ -26,6 +26,8 @@ import {
   importLeads,
   LeadImportFileError,
 } from "./pipelineLead/lead.import.js";
+import { buildLeadExport, exportFilename } from "./pipelineLead/lead.export.js";
+import { getSpreadsheetContentType } from "../../utils/spreadsheet.js";
 import type {
   CreateLabelRequestSchema,
   CreateLostReasonRequestSchema,
@@ -35,6 +37,7 @@ import type {
   UpdatePipelineRequestSchema,
   UpdateTeamDefaultRequestSchema,
   ImportTemplateQuerySchema,
+  ExportLeadsQuerySchema,
 } from "./pipeline.schema.js";
 
 export async function createPipelineHandler(
@@ -292,6 +295,29 @@ export async function importLeadsHandler(
     }
     request.log.error(error);
     return reply.code(500).send({ message: "Error importing leads" });
+  }
+}
+
+export async function exportLeadsHandler(
+  request: FastifyRequest<{ Params: { id: string }; Querystring: ExportLeadsQuerySchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { buffer, pipelineName } = await buildLeadExport(
+      request.params.id,
+      request.query,
+      request.userId,
+    );
+    return reply
+      .header("Content-Type", getSpreadsheetContentType(request.query.format))
+      .header(
+        "Content-Disposition",
+        `attachment; filename="${exportFilename(pipelineName, request.query.format)}"`,
+      )
+      .send(buffer);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error exporting the pipeline" });
   }
 }
 

@@ -834,6 +834,7 @@ export async function updateContactById(
             }
           : {}),
         email: contact.email,
+        address: contact.address,
         dob: contact.dob,
         external_id: contact.external_id,
         notes: contact.notes,

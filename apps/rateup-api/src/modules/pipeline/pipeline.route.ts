@@ -19,6 +19,7 @@ import {
   updatePipelineHandler,
   importLeadsHandler,
   importTemplateHandler,
+  exportLeadsHandler,
 } from "./pipeline.controller.js";
 import {
   createLabelRequestSchema,
@@ -26,6 +27,7 @@ import {
   createPipelineRequestSchema,
   idParamsSchema,
   importTemplateQuerySchema,
+  exportLeadsQuerySchema,
   updateLabelRequestSchema,
   updateLostReasonRequestSchema,
   updatePipelineRequestSchema,
@@ -139,6 +141,16 @@ export async function pipelineRoutes(server: FastifyInstance) {
       schema: { params: idParamsSchema, querystring: importTemplateQuerySchema },
     },
     importTemplateHandler,
+  );
+
+  // What the board shows under the same filters, as a spreadsheet.
+  server.get(
+    "/:id/export",
+    {
+      preHandler: [verifyPipelineAccess],
+      schema: { params: idParamsSchema, querystring: exportLeadsQuerySchema },
+    },
+    exportLeadsHandler,
   );
 
   server.get(

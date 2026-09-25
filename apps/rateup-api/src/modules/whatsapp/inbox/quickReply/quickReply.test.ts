@@ -19,6 +19,7 @@ vi.mock("../../../../utils/logger.js", () => ({
 
 import prisma from "../../../../utils/prisma.js";
 import { log } from "../../../../utils/logger.js";
+import { quickReplyCore } from "./quickReply.schema.js";
 import {
   createWaQuickReply,
   deleteWaQuickReplyById,
@@ -44,7 +45,6 @@ const QUICK_REPLY = {
   id: "qr-1",
   orgId: "org-1",
   text: "Thanks for reaching out!",
-  category: "Greetings",
   topic: "Welcome",
   key: "/hi",
 };
@@ -78,7 +78,6 @@ function makeRequest(overrides: Record<string, unknown> = {}) {
 
 const NEW_QUICK_REPLY = {
   text: "Thanks for reaching out!",
-  category: "Greetings",
   topic: "Welcome",
   key: "/hi",
 };
@@ -284,14 +283,13 @@ describe("updateWaQuickReplyByIdHandler", () => {
     await updateWaQuickReplyByIdHandler(
       makeRequest({
         params: { quickReplyId: "qr-1" },
-        body: { text: "New", category: "Closing", topic: "Bye", key: "/bye" },
+        body: { text: "New", topic: "Bye", key: "/bye" },
       }),
       makeReply(),
     );
 
     expect(db.update.mock.calls[0][0].data).toEqual({
       text: "New",
-      category: "Closing",
       topic: "Bye",
       key: "/bye",
     });
@@ -357,5 +355,18 @@ describe("cross-org access to a reply by id", () => {
 
     expect(db.update).not.toHaveBeenCalled();
     expect(reply.code).toHaveBeenCalledWith(404);
+  });
+});
+
+describe("quickReplyCore", () => {
+  test("drops a category an older client still sends", () => {
+    const parsed = quickReplyCore.parse({
+      text: "Hi",
+      topic: "Welcome",
+      key: "/hi",
+      category: "Old",
+    });
+
+    expect(parsed).toEqual({ text: "Hi", topic: "Welcome", key: "/hi" });
   });
 });

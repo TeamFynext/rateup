@@ -973,6 +973,7 @@ model Contact {
   WaMessage                    WaMessage[]
   consent                      Boolean                   @default(true)
   email                        String?
+  address                      String?
   dob                          DateTime?
   gender                       Gender?
   external_id                  String?
@@ -2860,7 +2861,6 @@ model WhatsappQuickReply {
   orgId     String   @db.Uuid
   org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   text      String
-  category  String   @default("General")
   topic     String   @default("General Inquiry")
   key       String?
   createdAt DateTime @default(now())

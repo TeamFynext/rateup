@@ -43,7 +43,8 @@ const contactCoreSchema = z.object({
     .optional(),
   source: z.string(),
   email: z.string().optional(),
-  dob: z.date().optional().nullable(),
+  address: clearableText,
+  dob: clearableDate,
   external_id: z.string().optional(),
   aiWaChat: z.boolean().optional(),
   igsId: z.string().optional(),
@@ -85,6 +86,7 @@ const updateContactSchema = z.object({
   messageId: z.string().optional(), // for internal messages
   // Editable on the contact form, so they have to survive validation to reach the update.
   email: clearableText,
+  address: clearableText,
   dob: clearableDate,
   external_id: clearableText,
   lastReceivedMessageTimeStamp: z.string().optional(),
