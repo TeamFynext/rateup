@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 
+import { getNotifications } from "@/backend/notification/notification.api";
 import { notificationKeys } from "@/backend/notification/notification.keys";
 import {
   useDeleteAllNotifications,
@@ -27,11 +28,20 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
   const markRead = useMarkAllNotificationsRead();
   const { data: unread, isLoading: isLoadingCount, isFetched } = useNotificationsCount();
 
+  const [unreadAtOpen, setUnreadAtOpen] = useState<ReadonlySet<string>>(new Set());
+  // Rows marked read by this opening keep their dot until the sheet opens again.
+  const rows = data?.map((row) => (unreadAtOpen.has(row.id) ? { ...row, readAt: null } : row));
+
   const handleOpen = async () => {
     setOpened(true);
-    // Fetched before marking, so this opening still shows which rows are new.
-    await qc.invalidateQueries({ queryKey: notificationKeys.all() });
-    if (unread) markRead.mutate();
+    // Fetched before marking read, so this opening still knows which rows are new.
+    const list = await qc
+      .fetchQuery({ queryKey: notificationKeys.all(), queryFn: getNotifications })
+      .catch(() => null);
+    if (!list) return;
+    const unreadIds = new Set(list.filter((row) => !row.readAt).map((row) => row.id));
+    setUnreadAtOpen(unreadIds);
+    if (unreadIds.size) markRead.mutate();
   };
 
   return (
@@ -63,7 +73,7 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
           </SheetHeader>
 
           <div className="flex h-[calc(100dvh-80px)] flex-col justify-between">
-            <NotificationList close={() => setOpened(false)} data={data} isLoading={isLoading} />
+            <NotificationList close={() => setOpened(false)} data={rows} isLoading={isLoading} />
             <div className="border-t pt-3">
               <Button
                 variant="ghost"

@@ -91,6 +91,13 @@ export interface PipelineSummary {
   openLeadCount: number;
 }
 
+/** Org-wide, unlike the pipeline list, which holds only boards on the viewer's teams. */
+export interface PipelineCreateLimits {
+  hasLeadsPipeline: boolean;
+  otherCount: number;
+  otherLimit: number;
+}
+
 /** One pipeline with everything the board chrome needs, but without its leads. */
 export interface PipelineDetail extends Omit<PipelineSummary, "openLeadCount"> {
   stages: PipelineStage[];

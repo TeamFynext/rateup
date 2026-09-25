@@ -98,6 +98,25 @@ function contactIdsForLeads(queryClient: QueryClient, leadIds: string[]) {
   return found;
 }
 
+/** Like `contactIdsForLeads`, limited to leads on the Leads board, the only one the chip shows. */
+function leadsBoardContactIds(queryClient: QueryClient, leadIds: string[]) {
+  const found: Array<string | null> = [];
+  for (const lead of cachedLeads(queryClient)) {
+    if (!leadIds.includes(lead.id)) continue;
+    if (findCachedStage(queryClient, lead.stageId)?.boardType === "LEADS")
+      found.push(lead.contactId);
+  }
+  return found;
+}
+
+/** Deleting a Leads-board card takes the contact off the board: clear its chip everywhere. */
+function clearChipsForDeletedLeads(queryClient: QueryClient, leadIds: string[]) {
+  const contactIds = leadsBoardContactIds(queryClient, leadIds);
+  if (contactIds.length === 0) return;
+  syncInboxStageChips(queryClient, contactIds, null);
+  queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+}
+
 /**
  * Every lead currently in the cache, across each column and each filter.
  *
@@ -487,6 +506,8 @@ export function useDeleteLeadMutation() {
     success: (t) => t("Lead deleted"),
     errorFallback: (t) => t("Could not delete the lead"),
     toastId: "pipeline-lead-delete",
+    afterSuccess: (queryClient, _result, leadId) =>
+      clearChipsForDeletedLeads(queryClient, [leadId]),
   });
 }
 
@@ -763,6 +784,8 @@ export function useBulkDeleteLeadsMutation() {
     success: (t, result) => t("{total} leads deleted", { total: result.deleted }),
     errorFallback: (t) => t("Could not delete the selected leads"),
     toastId: "pipeline-lead-bulk-delete",
+    afterSuccess: (queryClient, _result, leadIds) =>
+      clearChipsForDeletedLeads(queryClient, leadIds),
   });
 }
 
@@ -930,5 +953,14 @@ export function useClearContactStageMutation(contactId: string | undefined) {
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Could not remove from the board"));
     },
+  });
+}
+
+/** Under the root key, so creating or deleting a board refreshes it. */
+export function usePipelineCreateLimitsQuery(enabled = true) {
+  return useQuery({
+    queryKey: [...pipelineKeys.all(), "create-limits"],
+    queryFn: api.fetchPipelineCreateLimits,
+    enabled,
   });
 }

@@ -56,23 +56,32 @@ function applyPatch(
   };
 }
 
+const settingsMutationKey = ["notification-settings"] as const;
+
+/**
+ * Toggles run one at a time (shared scope). Only the last pending one writes the server's
+ * answer back; an earlier response would flip later optimistic switches back.
+ */
 export const useUpdateNotificationSettings = () => {
   const qc = useQueryClient();
   const { t } = useTranslation();
+  // The settling mutation is still pending inside its own callbacks, so it counts itself.
+  const isLastPending = () => qc.isMutating({ mutationKey: settingsMutationKey }) <= 1;
   return useMutation({
+    mutationKey: settingsMutationKey,
+    scope: { id: "notification-settings" },
     mutationFn: updateNotificationSettings,
     onMutate: async (patch) => {
       await qc.cancelQueries({ queryKey: notificationKeys.settings() });
-      const previous = qc.getQueryData<NotificationSettings>(notificationKeys.settings());
-      if (previous) qc.setQueryData(notificationKeys.settings(), applyPatch(previous, patch));
-      return { previous };
+      const current = qc.getQueryData<NotificationSettings>(notificationKeys.settings());
+      if (current) qc.setQueryData(notificationKeys.settings(), applyPatch(current, patch));
     },
-    onError: (error, _patch, context) => {
-      if (context?.previous) qc.setQueryData(notificationKeys.settings(), context.previous);
+    onError: (error) => {
+      if (isLastPending()) void qc.invalidateQueries({ queryKey: notificationKeys.settings() });
       toast.error(getApiErrorMessage(error, t("Could not save your notification settings")));
     },
     onSuccess: (settings) => {
-      qc.setQueryData(notificationKeys.settings(), settings);
+      if (isLastPending()) qc.setQueryData(notificationKeys.settings(), settings);
     },
   });
 };

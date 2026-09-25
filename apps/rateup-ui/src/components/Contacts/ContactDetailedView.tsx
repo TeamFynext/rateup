@@ -164,6 +164,12 @@ const ContactDetailedView = ({
   const [selectedGroup, setSelectedGroup] = useState<GroupRef | null>(null);
   const [editNotes, setEditNotes] = useState(false);
   const [notes, setNotes] = useState(selectedContact.notes ?? "");
+  // Reopening starts from the saved notes, not a draft abandoned on the last close.
+  const [wasOpened, setWasOpened] = useState(opened);
+  if (opened !== wasOpened) {
+    setWasOpened(opened);
+    if (opened) setEditNotes(false);
+  }
   const removeContacts = useRemoveContactsFromGroup(selectedGroup?.id ?? "");
   const updateContact = useEditContactMutation();
   const confirm = useConfirm();
@@ -234,8 +240,8 @@ const ContactDetailedView = ({
   const campaigns = details?.campaignParticipants ?? [];
   const groups = details?.contactGroups ?? selectedContact.contactGroups ?? [];
   const savedNotes = details?.notes ?? selectedContact.notes ?? "";
-  // One board per org, so the first lead is the whole pipeline answer.
-  const lead = details?.leads?.[0];
+  // A contact can sit on several boards; the stage shown here is the one Leads board's.
+  const lead = details?.leads?.find((candidate) => candidate.pipeline?.type === "LEADS");
   const inboxStatus = details?.waMessageAssignStatus ?? selectedContact.waMessageAssignStatus;
   const lifecycleName = details?.Lifecycle?.name ?? selectedContact.Lifecycle?.name;
   const hasConsent = details?.consent ?? selectedContact.consent;
@@ -658,6 +664,7 @@ export const ContactDetailDialog = ({
   return (
     <>
       <ContactDetailedView
+        key={contact.id}
         opened={open}
         setOpened={onOpenChange}
         selectedContact={contact}

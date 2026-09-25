@@ -21,6 +21,7 @@ import {
   useMessagesStore,
 } from "@/store/inbox.store.ts";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
+import { claimAcrossTabs } from "@/utils/crossTabClaim";
 import { showDesktopNotification } from "@/utils/desktopNotifications";
 
 export const useChatSocket = () => {
@@ -253,10 +254,13 @@ const playSound = () => {
   });
 };
 
+/** Gives a visible tab time to claim a notification's sound and popup before hidden tabs try. */
+const HIDDEN_TAB_CLAIM_DELAY_MS = 400;
+
 /**
- * One of this member's notifications, already filtered by their settings on the server. A
- * desktop notification stands in for the toast while the tab is hidden, where a toast would
- * expire unseen.
+ * One of this member's notifications, already filtered by their settings on the server. Every
+ * open tab receives it; the sound and desktop popup fire in one tab only (a visible one if any).
+ * A desktop notification stands in for the toast while hidden, where a toast would expire unseen.
  */
 function handleLiveNotification(
   notification: LiveNotification,
@@ -276,27 +280,33 @@ function handleLiveNotification(
   const open = () => void navigate({ href: notification.path });
   const isNewMessage = notification.event.startsWith("inbox.message.");
   const onInbox = window.location.pathname.startsWith("/dashboard/inbox");
-
-  const shownOnDesktop =
-    notification.desktop &&
-    document.visibilityState === "hidden" &&
-    showDesktopNotification({
-      title: "RateUp",
-      body: message,
-      tag: notification.id ?? `${notification.event}:${notification.data?.contactId ?? ""}`,
-      onClick: open,
-    });
-
+  const tag = notification.id ?? `${notification.event}:${notification.data?.contactId ?? ""}`;
   // The inbox shows a new message by itself; a toast on top of it is noise.
-  const toasted = !shownOnDesktop && notification.toast && !(isNewMessage && onInbox);
-  if (toasted) {
+  const wantsToast = notification.toast && !(isNewMessage && onInbox);
+  const showToast = () =>
     toast.info(message, {
       id: notification.id ?? undefined,
       action: { label: t("View"), onClick: open },
     });
+
+  if (document.visibilityState === "visible") {
+    if (wantsToast) showToast();
+    void claimAcrossTabs(tag).then((claimed) => {
+      if (claimed && wantsToast && notification.sound) playSound();
+    });
+    return;
   }
 
-  if (notification.sound && (shownOnDesktop || toasted)) playSound();
+  void (async () => {
+    await new Promise((resolve) => setTimeout(resolve, HIDDEN_TAB_CLAIM_DELAY_MS));
+    if (!(await claimAcrossTabs(tag))) return;
+    const shownOnDesktop =
+      notification.desktop &&
+      showDesktopNotification({ title: "RateUp", body: message, tag, onClick: open });
+    const toasted = !shownOnDesktop && wantsToast;
+    if (toasted) showToast();
+    if (notification.sound && (shownOnDesktop || toasted)) playSound();
+  })();
 }
 
 /**

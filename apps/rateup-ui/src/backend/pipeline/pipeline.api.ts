@@ -10,6 +10,7 @@ import type {
   LeadDetail,
   LeadNote,
   LeadTask,
+  PipelineCreateLimits,
   PipelineDetail,
   PipelineLabel,
   PipelineLostReason,
@@ -36,6 +37,11 @@ const PIPELINE_URL = "/pipelines";
 
 export async function fetchPipelines() {
   const { data } = await axiosClient.get<PipelineSummary[]>(PIPELINE_URL);
+  return data;
+}
+
+export async function fetchPipelineCreateLimits() {
+  const { data } = await axiosClient.get<PipelineCreateLimits>(`${PIPELINE_URL}/create-limits`);
   return data;
 }
 

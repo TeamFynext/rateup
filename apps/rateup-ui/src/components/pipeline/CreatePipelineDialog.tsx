@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import {
   useCreatePipelineMutation,
-  usePipelinesQuery,
+  usePipelineCreateLimitsQuery,
 } from "@/backend/pipeline/pipeline.query.tsx";
 import type { PipelineType } from "@/backend/pipeline/pipeline.types.ts";
 import { useTeamsByUser } from "@/backend/team/team.query.tsx";
@@ -24,12 +24,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-import {
-  findLeadsPipeline,
-  OTHER_PIPELINE_LIMIT,
-  PIPELINE_TYPE_ORDER,
-  pipelineTypeConfig,
-} from "./pipelineTypes.ts";
+import { OTHER_PIPELINE_LIMIT, PIPELINE_TYPE_ORDER, pipelineTypeConfig } from "./pipelineTypes.ts";
 
 interface CreatePipelineDialogProps {
   open: boolean;
@@ -51,11 +46,11 @@ export function CreatePipelineDialog({
   const createPipeline = useCreatePipelineMutation();
   const { data: teamsResponse } = useTeamsByUser();
   const teams = teamsResponse?.data ?? [];
-  const { data: pipelines } = usePipelinesQuery(open);
-  const hasLeads = Boolean(findLeadsPipeline(pipelines));
-  const othersFull =
-    (pipelines ?? []).filter((pipeline) => pipeline.type !== "LEADS").length >=
-    OTHER_PIPELINE_LIMIT;
+  // Org-wide counts: the pipeline list omits boards on teams this user is not on.
+  const { data: limits } = usePipelineCreateLimitsQuery(open);
+  const otherLimit = limits?.otherLimit ?? OTHER_PIPELINE_LIMIT;
+  const hasLeads = limits?.hasLeadsPipeline ?? false;
+  const othersFull = (limits?.otherCount ?? 0) >= otherLimit;
   const unavailable = (type: PipelineType) => (type === "LEADS" ? hasLeads : othersFull);
   const firstAvailable = PIPELINE_TYPE_ORDER.find((type) => !unavailable(type)) ?? "CUSTOM";
 
@@ -72,13 +67,14 @@ export function CreatePipelineDialog({
     setTeamIds(teams.length === 1 ? [teams[0].id] : []);
   }, [open, teams]);
 
-  // Once the org's boards load, land on a type that can still be created.
+  // Once the limits load, land on a type that can still be created.
   useEffect(() => {
     if (open) setType(firstAvailable);
   }, [open, firstAvailable]);
 
   const chosen = pipelineTypeConfig(t, type);
-  const canSubmit = name.trim().length > 0 && teamIds.length > 0 && !unavailable(type);
+  const canSubmit =
+    Boolean(limits) && name.trim().length > 0 && teamIds.length > 0 && !unavailable(type);
 
   const submit = () => {
     if (!canSubmit) return;
@@ -145,7 +141,7 @@ export function CreatePipelineDialog({
                           ? option === "LEADS"
                             ? t("Your organisation already has a Leads pipeline.")
                             : t("You already have {total} boards besides Leads.", {
-                                total: OTHER_PIPELINE_LIMIT,
+                                total: otherLimit,
                               })
                           : config.description}
                       </span>

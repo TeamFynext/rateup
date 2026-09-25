@@ -33,7 +33,24 @@ function redirectIfSuspended(error: unknown): boolean {
   return true;
 }
 
-const interceptorErrorHandler = (error: unknown) => {
+/**
+ * A `responseType: "blob"` request (exports, templates) gets its JSON error body as a Blob too,
+ * which would hide the server's message and the ORG_SUSPENDED code from the handling below.
+ */
+async function parseBlobErrorBody(error: unknown): Promise<void> {
+  const response = asApiError(error).response;
+  const data: unknown = response?.data;
+  if (!response || typeof Blob === "undefined" || !(data instanceof Blob)) return;
+  if (!data.type.includes("json")) return;
+  try {
+    response.data = JSON.parse(await data.text());
+  } catch {
+    // An unparseable body keeps the generic message.
+  }
+}
+
+const interceptorErrorHandler = async (error: unknown) => {
+  await parseBlobErrorBody(error);
   const { response, request } = asApiError(error);
 
   if (redirectIfSuspended(error)) {

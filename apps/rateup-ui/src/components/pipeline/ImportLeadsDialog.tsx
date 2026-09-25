@@ -2,6 +2,7 @@ import { IconDownload, IconFileSpreadsheet, IconUpload } from "@tabler/icons-rea
 import type { TFunction } from "i18next";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { fetchImportTemplate, type LeadImportResult } from "@/backend/pipeline/pipeline.api.ts";
 import type { LeadImportSkipReason } from "@/backend/pipeline/pipeline.api.ts";
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { usePipelineTypeConfig } from "./pipelineTypes.ts";
@@ -62,6 +64,8 @@ export function ImportLeadsDialog({
         await fetchImportTemplate(pipeline.id, format),
         `${pipeline.name} import.${format}`,
       );
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("Could not download the template")));
     } finally {
       setDownloading(null);
     }
@@ -155,7 +159,13 @@ export function ImportLeadsDialog({
         <DialogFooter>
           {result ? (
             <>
-              <Button variant="ghost" onClick={() => setResult(null)}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setFile(null);
+                  setResult(null);
+                }}
+              >
                 {t("Import another file")}
               </Button>
               <Button onClick={() => onOpenChange(false)}>{t("Done")}</Button>

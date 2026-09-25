@@ -230,7 +230,7 @@ export function notificationMessage(
             contact,
             error: str(data.error),
           })
-        : t("{integration}: {error}", {
+        : t("{integration} failed — {error}", {
             integration: str(data.integration),
             error: str(data.error),
           });

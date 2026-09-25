@@ -34,11 +34,12 @@ function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }
   const code = searchParams.code;
   const error = searchParams.error;
 
-  const [callbackRoute, setCallBackRoute] = useState("/dashboard/settings");
   const { t: translations } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const mut = useCreateAuthToken();
   const session = useCheckSession();
+  const backToShopify = () =>
+    navigate({ to: "/dashboard/settings/integrations/$id", params: { id: "shopify" } });
 
   useEffect(() => {
     if (!session) {
@@ -46,12 +47,8 @@ function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }
         to: "/login",
       });
     }
-    const route = localStorage.getItem("google-callback-route") ?? "/dashboard/settings";
-    setCallBackRoute(route);
     if (error) {
-      navigate({
-        to: route,
-      });
+      void backToShopify();
     } else if (code) {
       mut.mutate(
         { code: code },
@@ -77,15 +74,7 @@ function AuthCallBack({ searchParams }: { searchParams: Record<string, string> }
             {translations("Your accout has been synced with RateUp")}
           </h2>
           <div className="mt-8 flex justify-center">
-            <Button
-              onClick={() => {
-                navigate({
-                  to: callbackRoute,
-                });
-              }}
-            >
-              {translations("Go Back")}
-            </Button>
+            <Button onClick={() => void backToShopify()}>{translations("Go Back")}</Button>
           </div>
         </Card>
       )}
