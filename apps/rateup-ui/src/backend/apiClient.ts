@@ -94,6 +94,23 @@ const interceptorErrorHandler = async (error: unknown) => {
 
 axiosClient.interceptors.response.use((response) => response, interceptorErrorHandler);
 
+/**
+ * For calls the API answers only after Meta does — the Meta AI agent's. One
+ * action can be several Meta requests in a row (installing the RateUp
+ * connector creates it and then each tool), which the 8s default cuts off
+ * while the work is still going through. Same base, headers and error
+ * handling; only the patience differs.
+ */
+const axiosSlowClient = axios.create({
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  timeout: 180_000,
+  headers: {
+    Accept: "application/json",
+  },
+});
+
+axiosSlowClient.interceptors.response.use((response) => response, interceptorErrorHandler);
+
 const axiosClientIP = axios.create({
   baseURL: `${import.meta.env.VITE_API_IP}/api`,
   timeout: 8000,
@@ -104,4 +121,4 @@ const axiosClientIP = axios.create({
 
 axiosClientIP.interceptors.response.use((_) => _, interceptorErrorHandler);
 
-export { axiosClient, axiosClientIP, shouldSkipLocalErrorToast };
+export { axiosClient, axiosClientIP, axiosSlowClient, shouldSkipLocalErrorToast };
