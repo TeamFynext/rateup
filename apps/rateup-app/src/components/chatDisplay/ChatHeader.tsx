@@ -1,13 +1,5 @@
 import { useColorScheme } from "nativewind";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Pressable,
-  Modal,
-  Dimensions,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, Pressable, Modal, Dimensions, ActivityIndicator } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import {
@@ -88,7 +80,7 @@ const MoreOptions = ({
             alignItems: "flex-start",
           }}
         >
-          <TouchableOpacity
+          <Pressable
             style={{ padding: 12, width: "100%" }}
             onPress={() => {
               onClose();
@@ -113,12 +105,12 @@ const MoreOptions = ({
                 Edit
               </Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
 
           <AssignToUser contactId={contactId} iconSize={18} fontSize={15} plain />
 
           {waAssignStatus !== "CLOSED" ? (
-            <TouchableOpacity
+            <Pressable
               style={{ padding: 12, width: "100%" }}
               onPress={() => {
                 onClose();
@@ -140,7 +132,7 @@ const MoreOptions = ({
                   Close
                 </Text>
               </View>
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
         </View>
       </Pressable>
@@ -318,7 +310,7 @@ const ConfirmationModal = ({
 
           <View style={{ paddingTop: 8, paddingHorizontal: 12, paddingBottom: 22 }}>
             {CLOSE_RESULTS.map((r) => (
-              <TouchableOpacity
+              <Pressable
                 key={r.status}
                 onPress={() => handleCloseChat(r.status)}
                 disabled={editContactMutation.isPending}
@@ -364,7 +356,7 @@ const ConfirmationModal = ({
                 ) : (
                   <ChevronRight size={17} color={t.fg4} />
                 )}
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -458,7 +450,7 @@ const ChatHeader = ({
           paddingHorizontal: 12,
         }}
       >
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
           style={{
             width: 34,
@@ -468,13 +460,12 @@ const ChatHeader = ({
           }}
         >
           <ArrowLeft size={21} color={t.fg1} />
-        </TouchableOpacity>
+        </Pressable>
 
         {/* Avatar + name open the contact screen, matching the WhatsApp gesture
             of tapping the thread header. Wrapped together rather than made two
             separate targets so the whole block is one comfortable hit area. */}
-        <TouchableOpacity
-          activeOpacity={0.6}
+        <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open contact info"
           onPress={() =>
@@ -568,7 +559,7 @@ const ChatHeader = ({
               </>
             )}
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         <View
           style={{
@@ -580,7 +571,7 @@ const ChatHeader = ({
               `--fg-4` when not. Hidden on rows that arrived without a ticket —
               the flag lives on the conversation, so there is nothing to set. */}
           {conversationId ? (
-            <TouchableOpacity
+            <Pressable
               onPress={() =>
                 toggleFavorite.mutate({
                   contactId: id,
@@ -608,10 +599,10 @@ const ChatHeader = ({
                   fill={isFavorite ? t.warm : "transparent"}
                 />
               )}
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
           <AssignToUser contactId={id} iconOnly iconSize={19} iconColor={t.fg3} />
-          <TouchableOpacity
+          <Pressable
             onPress={() => setOptionsVisible(true)}
             style={{
               width: 34,
@@ -621,7 +612,7 @@ const ChatHeader = ({
             }}
           >
             <MoreVertical size={19} color={t.fg3} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 

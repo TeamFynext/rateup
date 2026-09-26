@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, View, Pressable, TouchableOpacity } from "react-native";
+import { Modal, View, Pressable } from "react-native";
 import Image from "@/components/common/Image";
 import { X } from "lucide-react-native";
 
@@ -20,9 +20,9 @@ const ImageResponse = ({ info, onClose }: ImageResponseProps) => {
 
   return (
     <>
-      <TouchableOpacity onPress={() => setFullscreenVisible(true)} className="flex">
+      <Pressable onPress={() => setFullscreenVisible(true)} className="flex">
         <Image source={{ uri: imageUrl }} className="h-48 w-48 rounded-lg" contentFit="cover" />
-      </TouchableOpacity>
+      </Pressable>
 
       <Modal
         visible={fullscreenVisible}

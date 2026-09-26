@@ -1,13 +1,5 @@
 import { useColorScheme } from "nativewind";
-import {
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Pressable,
-  TouchableOpacity,
-  Platform,
-  ScrollView,
-} from "react-native";
+import { View, Text, KeyboardAvoidingView, Pressable, Platform, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
 import { useChatFilterData } from "@/api/inbox/contacts/contacts.query";
@@ -192,7 +184,7 @@ const FiltersScreen = () => {
                 Filters
               </Text>
             </View>
-            <TouchableOpacity
+            <Pressable
               onPress={handleClearAll}
               className="bg-gray-100 dark:bg-zinc-800 px-4 py-2 rounded-full"
             >
@@ -202,7 +194,7 @@ const FiltersScreen = () => {
               >
                 Reset
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <ScrollView

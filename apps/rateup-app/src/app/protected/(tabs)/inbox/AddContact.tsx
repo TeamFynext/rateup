@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   FlatList,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -77,14 +76,14 @@ export default function AddContactScreen() {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
+    <Pressable
       onPress={() => handleSelectCountry(item)}
       className="flex-row items-center px-3 py-3 bg-white dark:bg-slate-900"
     >
       <Text className="text-black dark:text-white mr-2">{item.flag}</Text>
       <Text className="text-black dark:text-white mr-2">{item.name}</Text>
       <Text className="text-black dark:text-white text-sm">{item.dial_code}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (
