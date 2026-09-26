@@ -19,6 +19,7 @@ import { useAllOrgs } from "@/backend/org/org.query";
 import { DataTableToolbar } from "@/components/admin/orgs/data-table-toolbar.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -60,7 +61,7 @@ export function OrgDisplay() {
     thisMonth: 0,
   });
 
-  const columns: ColumnDef<OrgTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, OrgTableData>[] = [
     {
       accessorKey: "id",
       header: "ID",

@@ -1,9 +1,10 @@
 import { IconPlus, IconSearch } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable, RowData } from "@tanstack/react-table";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -16,11 +17,13 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
 }
 
-export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar<TData extends RowData>({
+  table,
+}: Readonly<DataTableToolbarProps<TData>>) {
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
   const { t } = useTranslation();
   return (

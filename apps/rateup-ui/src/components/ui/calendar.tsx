@@ -5,6 +5,14 @@ import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from "re
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/**
+ * The locale's BCP 47 code. react-day-picker types `Locale` off date-fns's, which date-fns 4.4 no
+ * longer exports from `date-fns/locale`, so `code` is missing from the type though present at runtime.
+ */
+function localeCode(locale?: Partial<Locale>): string | undefined {
+  return locale && "code" in locale && typeof locale.code === "string" ? locale.code : undefined;
+}
+
 function Calendar({
   className,
   classNames,
@@ -32,7 +40,7 @@ function Calendar({
       captionLayout={captionLayout}
       locale={locale}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date) => date.toLocaleString(localeCode(locale), { month: "short" }),
         ...formatters,
       }}
       classNames={{
@@ -146,7 +154,7 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
-  locale: _locale,
+  locale,
   ...props
 }: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
   const defaultClassNames = getDefaultClassNames();
@@ -160,7 +168,7 @@ function CalendarDayButton({
     <Button
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString()}
+      data-day={day.date.toLocaleDateString(localeCode(locale))}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

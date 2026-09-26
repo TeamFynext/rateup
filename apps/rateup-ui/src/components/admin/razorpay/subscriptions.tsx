@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { usePaymentSubcription } from "@/backend/payment/payment.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -33,7 +34,7 @@ const RazorpaySubscriptions = () => {
   const { data: subscriptions, isFetched, isLoading } = usePaymentSubcription();
   const { t: translations } = useTranslation();
 
-  const columns: ColumnDef<SubscriptionTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, SubscriptionTableData>[] = [
     {
       accessorKey: "id",
       header: "Razorpay Subscription ID",

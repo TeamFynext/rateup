@@ -21,6 +21,7 @@ import { DataTableToolbar } from "@/components/dashboard/contacts/groups/$groupI
 import { GroupIconTile } from "@/components/dashboard/contacts/groups/GroupPage.tsx";
 import type { GroupTableFilter } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -83,7 +84,7 @@ export function ContactGroup() {
     setGroupDetails(groupDetails ?? null);
   }, [groupDetails]);
 
-  const column: ColumnDef<ContactsData>[] = [
+  const column: ColumnDef<DataTableFeatures, ContactsData>[] = [
     ...contactColumn(customFields ?? []),
     {
       header: "Action",

@@ -1,6 +1,6 @@
 import { IconChevronRight, IconSearch, IconUser, IconUsersGroup } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import type { ColumnDef, Table } from "@tanstack/react-table";
+import type { ColumnDef, ReactTable, RowData } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,7 @@ import {
   useGetStaffPerformanceonConversation,
   useGetTeamOverview,
 } from "@/backend/conversation/conversation.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -62,14 +63,16 @@ function WeekChange({ text, better }: Readonly<{ text: string; better: boolean }
   );
 }
 
-function SearchToolbar<TData>({ table }: Readonly<{ table: Table<TData> }>) {
+function SearchToolbar<TData extends RowData>({
+  table,
+}: Readonly<{ table: ReactTable<DataTableFeatures, TData> }>) {
   const { t } = useTranslation();
   return (
     <div className="relative mb-3 max-w-xs">
       <IconSearch className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         placeholder={t("Search by name")}
-        value={String(table.getState().globalFilter ?? "")}
+        value={String(table.state.globalFilter ?? "")}
         onChange={(event) => table.setGlobalFilter(event.target.value)}
         className="h-8 ps-9"
       />
@@ -104,7 +107,7 @@ function AgentsTable({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
     [query.data],
   );
 
-  const columns = useMemo<ColumnDef<AgentRow>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, AgentRow>[]>(
     () => [
       {
         accessorKey: "name",
@@ -241,7 +244,7 @@ function TeamsTable({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
     [query.data],
   );
 
-  const columns = useMemo<ColumnDef<TeamRow>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, TeamRow>[]>(
     () => [
       {
         accessorKey: "name",

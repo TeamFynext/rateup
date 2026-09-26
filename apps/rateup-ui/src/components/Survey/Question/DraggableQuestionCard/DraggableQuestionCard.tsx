@@ -1,7 +1,7 @@
 import { Draggable } from "@hello-pangea/dnd";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import cx from "clsx";
+import { cn } from "cn";
 import React, { useContext, useState } from "react";
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -84,7 +84,7 @@ export function DraggableQuestionCard({
         {(provided, snapshot) => (
           <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
             <div
-              className={cx(
+              className={cn(
                 "relative flex cursor-pointer items-center gap-[9px] border-l-[3px] border-l-transparent bg-card px-3 py-[11px] transition-all duration-[120ms] not-data-[select=true]:hover:bg-muted data-[select=true]:border-l-primary data-[select=true]:bg-accent",
                 {
                   "rounded-lg shadow-custom-hover": snapshot.isDragging,

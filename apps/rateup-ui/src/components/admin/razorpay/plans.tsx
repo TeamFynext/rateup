@@ -20,6 +20,7 @@ import {
 } from "@/backend/payment/payment.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -99,7 +100,7 @@ const RazorpayPlans = () => {
     });
   };
 
-  const columns: ColumnDef<PlanTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, PlanTableData>[] = [
     {
       accessorKey: "id",
       header: "Razorpay Plan ID",

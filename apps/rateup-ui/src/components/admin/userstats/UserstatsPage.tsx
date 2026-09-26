@@ -25,6 +25,7 @@ import { DataTableToolbar } from "@/components/admin/userstats/data-table-toolba
 import UserModal from "@/components/admin/userstats/UserModal.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -77,7 +78,7 @@ export function UserstatsPage() {
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
   const confirm = useConfirm();
 
-  const columns: ColumnDef<UserTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, UserTableData>[] = [
     {
       accessorKey: "id",
       header: createSortableHeader("Email ID"),

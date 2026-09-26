@@ -1,18 +1,21 @@
 import { IconRefresh, IconX } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable, RowData } from "@tanstack/react-table";
 
 import { useSyncStripeProducts } from "@/backend/payment/stripe/stripe.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
 }
 
-export function ProductsDataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
+export function ProductsDataTableToolbar<TData extends RowData>({
+  table,
+}: Readonly<DataTableToolbarProps<TData>>) {
   const syncStripeProductMutate = useSyncStripeProducts();
-  const isFiltered = table.getState().columnFilters.length > 0;
+  const isFiltered = table.state.columnFilters.length > 0;
 
   return (
     <div className="flex items-center justify-between">

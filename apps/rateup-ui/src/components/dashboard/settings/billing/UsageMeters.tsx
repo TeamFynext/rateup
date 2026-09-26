@@ -149,7 +149,7 @@ export function UsageMeters({
             label={t("AI tokens")}
             used={aiTokensUsed(stats)}
             max={aiAllowance(features)}
-            hint={t("Your AI chatbot and Meta AI replies share this allowance.")}
+            hint={t("Survey summaries and Meta AI replies share this allowance.")}
           />
         )}
 

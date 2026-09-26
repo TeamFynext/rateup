@@ -10,6 +10,7 @@ import {
   type FeedbackRequestStatus,
 } from "@/backend/loyalty/feedback.api.ts";
 import { useFeedbackRequests } from "@/backend/loyalty/feedback.query.ts";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
@@ -51,7 +52,7 @@ export function FeedbackRequestsTable({
   const { t } = useTranslation();
   const { data, isPending } = useFeedbackRequests(requestsQueryFor(search));
 
-  const columns = useMemo<ColumnDef<FeedbackRequestRow>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, FeedbackRequestRow>[]>(
     () => [
       {
         id: "customer",

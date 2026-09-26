@@ -10,6 +10,7 @@ import {
   useExportWaMessageLogs,
   useWaMessageLogs,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -92,7 +93,7 @@ export function MessageLogs({ filters }: Readonly<{ filters: AnalyticsFilters }>
     };
   }
 
-  const columns = useMemo<ColumnDef<WaMessageLogRow>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, WaMessageLogRow>[]>(
     () => [
       {
         accessorKey: "createdAt",

@@ -18,6 +18,7 @@ import { usePaymentOrders } from "@/backend/payment/payment.query";
 import { DataTableToolbar } from "@/components/admin/orders/data-table-toolbar.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -56,7 +57,7 @@ export function OrdersPage() {
     thisMonth: 0,
   });
 
-  const columns: ColumnDef<OrderTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, OrderTableData>[] = [
     {
       accessorKey: "id",
       header: "Razorpay Order ID",

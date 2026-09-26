@@ -1,18 +1,21 @@
 import { IconRefresh, IconX } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable, RowData } from "@tanstack/react-table";
 
 import { usePlanSyncMutation } from "@/backend/payment/payment.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
 }
 
-export function PlansDataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
+export function PlansDataTableToolbar<TData extends RowData>({
+  table,
+}: Readonly<DataTableToolbarProps<TData>>) {
   const syncPlans = usePlanSyncMutation();
-  const isFiltered = table.getState().columnFilters.length > 0;
+  const isFiltered = table.state.columnFilters.length > 0;
 
   return (
     <div className="flex items-center justify-between">

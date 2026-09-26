@@ -16,7 +16,6 @@ const PLATFORM_COMPONENT_SUPPORT: Record<string, AutomationPlatform[]> = {
   pauseNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
   startNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
   assignNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
-  aibotNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
 
   // WhatsApp only
   buttonNode: [AutomationPlatform.WHATSAPP],

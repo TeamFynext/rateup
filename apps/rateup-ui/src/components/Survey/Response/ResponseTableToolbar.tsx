@@ -5,7 +5,7 @@ import {
   IconTableExport,
   IconUsers,
 } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable, RowData } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import type { Range } from "react-date-range";
@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
@@ -37,8 +38,8 @@ import RefreshButton from "../../Button/RefreshButton.tsx";
 import { MultiSelect } from "../../ui/multi-select.tsx";
 import { useResponseFilterStore } from "./store.ts";
 
-interface ResponseTableToolbarProps<TData> {
-  table: Table<TData>;
+interface ResponseTableToolbarProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
   CFData?: Array<{ id: string; name: string }>;
   campaignIds: string[];
   setCampaignIds: (ids: string[]) => void;
@@ -55,7 +56,7 @@ interface ResponseTableToolbarProps<TData> {
   responseCount: number;
 }
 
-export function ResponseTableToolbar<TData>({
+export function ResponseTableToolbar<TData extends RowData>({
   table,
   CFData,
   campaignIds,

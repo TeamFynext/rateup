@@ -9,6 +9,7 @@ import type {
 } from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -43,7 +44,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
       : [];
   }, [orders]);
 
-  const columns: ColumnDef<CatalogOrderRow>[] = [
+  const columns: ColumnDef<DataTableFeatures, CatalogOrderRow>[] = [
     {
       header: () => "Created At",
       accessorKey: "createdAt",
@@ -151,7 +152,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
 
   type ProductRow = (typeof productItems)[0];
 
-  const productColumns: ColumnDef<ProductRow>[] = [
+  const productColumns: ColumnDef<DataTableFeatures, ProductRow>[] = [
     {
       id: "retailerId",
       header: createSortableHeader("Retailer ID"),

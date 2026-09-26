@@ -20,6 +20,7 @@ import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.q
 import { teamKeys } from "@/backend/org/org.keys";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { type StatChange, StatTile } from "@/components/common/StatTile.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -105,7 +106,7 @@ export function TeamPage() {
     [data],
   );
 
-  const columns = useMemo<ColumnDef<MemberRow>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, MemberRow>[]>(
     () => [
       {
         accessorKey: "name",

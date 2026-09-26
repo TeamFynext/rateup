@@ -2,31 +2,27 @@ import type {
   Column,
   ColumnDef,
   ColumnFiltersState,
+  ColumnVisibilityState,
   PaginationState,
+  ReactTable,
+  RowData,
   SortingState,
-  VisibilityState,
 } from "@tanstack/react-table";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { useTable } from "@tanstack/react-table";
 import * as React from "react";
 
 import { TableBodySkeleton, TableHeadSkeleton } from "../animation/skeleton/Table.Skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 import { DataTableColumnHeader } from "./data-table-column-header.tsx";
+import { type DataTableFeatures, features } from "./data-table-features.ts";
 import { DataTablePagination } from "./data-table-pagination.tsx";
 
-export interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+export interface DataTableProps<TData extends RowData> {
+  // Columns carry different value types; `any` here is TanStack's own type for a mixed column
+  // list (what `createColumnHelper().columns()` returns), since `ColumnDef` is invariant in it.
+  columns: ColumnDef<DataTableFeatures, TData, any>[];
   data: TData[];
-  DataTableToolbar?: (props: DataTableToolbarProps<TData, TValue>) => React.ReactElement;
+  DataTableToolbar?: (props: DataTableToolbarProps<TData, unknown>) => React.ReactElement;
   onRowClick?: (row: TData) => void;
   serverSide?: {
     pagination: PaginationState;
@@ -38,14 +34,14 @@ export interface DataTableProps<TData, TValue> {
     onColumnFiltersChange?: (updater: React.SetStateAction<ColumnFiltersState>) => void;
   };
   isPending?: boolean;
-  defaultColumnVisibility?: VisibilityState;
+  defaultColumnVisibility?: ColumnVisibilityState;
 }
 
-export interface DataTableToolbarProps<TData, _TValue> {
-  table: ReturnType<typeof useReactTable<TData>>;
+export interface DataTableToolbarProps<TData extends RowData, _TValue> {
+  table: ReactTable<DataTableFeatures, TData>;
 }
 
-export function DataTable<TData extends { id?: string | number }, TValue>({
+export function DataTable<TData extends RowData & { id?: string | number }>({
   columns,
   data,
   DataTableToolbar,
@@ -53,16 +49,17 @@ export function DataTable<TData extends { id?: string | number }, TValue>({
   isPending,
   serverSide = undefined,
   defaultColumnVisibility = {},
-}: Readonly<DataTableProps<TData, TValue>>) {
+}: Readonly<DataTableProps<TData>>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(defaultColumnVisibility);
+    React.useState<ColumnVisibilityState>(defaultColumnVisibility);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const isServerSide = serverSide !== undefined;
 
-  const table = useReactTable({
+  const table = useTable({
+    features,
     data,
     columns,
     state: {
@@ -78,6 +75,7 @@ export function DataTable<TData extends { id?: string | number }, TValue>({
     ...(serverSide?.rowCount ? { rowCount: serverSide?.rowCount } : undefined),
     initialState: {
       pagination: {
+        pageIndex: 0,
         pageSize: 25,
       },
       columnVisibility: defaultColumnVisibility,
@@ -97,13 +95,6 @@ export function DataTable<TData extends { id?: string | number }, TValue>({
       ? serverSide.onColumnFiltersChange
       : setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    ...(serverSide?.pagination ? {} : { getPaginationRowModel: getPaginationRowModel() }),
-    ...(serverSide?.sorting ? {} : { getSortedRowModel: getSortedRowModel() }),
-    ...(serverSide?.columnFilters ? {} : { getFilteredRowModel: getFilteredRowModel() }),
-
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     getRowId: (row) => String(row.id),
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
@@ -129,7 +120,7 @@ export function DataTable<TData extends { id?: string | number }, TValue>({
       >
         {row.getVisibleCells().map((cell) => (
           <TableCell key={cell.id}>
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            <table.FlexRender cell={cell} />
           </TableCell>
         ))}
       </TableRow>
@@ -158,9 +149,7 @@ export function DataTable<TData extends { id?: string | number }, TValue>({
                   {headerGroup.headers.map((header) => {
                     return (
                       <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                       </TableHead>
                     );
                   })}
@@ -177,7 +166,11 @@ export function DataTable<TData extends { id?: string | number }, TValue>({
 }
 
 export const createSortableHeader = (title: string) => {
-  const SortableHeader = <TData, TValue>({ column }: { column: Column<TData, TValue> }) => {
+  const SortableHeader = <TData extends RowData, TValue>({
+    column,
+  }: {
+    column: Column<DataTableFeatures, TData, TValue>;
+  }) => {
     return <DataTableColumnHeader column={column} title={title} />;
   };
 

@@ -16,6 +16,7 @@ import {
   useCreateReferralMutation,
   useDeleteReferralMutation,
 } from "@/backend/referrals/referrals.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -246,7 +247,7 @@ export function ReferralsPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const columns: ColumnDef<IReferral>[] = useMemo(
+  const columns: ColumnDef<DataTableFeatures, IReferral>[] = useMemo(
     () => [
       {
         accessorKey: "name",

@@ -25,6 +25,7 @@ import { DataTableToolbar } from "@/components/admin/rateup/data-table-toolbar.t
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import RateupPlanModal from "@/components/Modal/RateupPlanModal.tsx";
 import type { RateupPlanFormValues } from "@/components/Modal/RateupPlanModal.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -69,7 +70,7 @@ export function RateupPlan() {
 
   const rateupPaymentsPlanDelete = useRateupPaymentsPlanDeleteMutation();
 
-  const columns: ColumnDef<RateupPlanTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, RateupPlanTableData>[] = [
     {
       accessorKey: "id",
       header: "ID",

@@ -1,5 +1,5 @@
 import { IconArrowDown, IconArrowUp, IconEyeOff, IconSelector } from "@tabler/icons-react";
-import type { Column } from "@tanstack/react-table";
+import type { Column, RowData } from "@tanstack/react-table";
 
 import { cn } from "@/lib/utils.ts";
 
@@ -11,14 +11,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
+import type { DataTableFeatures } from "./data-table-features.ts";
 
-interface DataTableColumnHeaderProps<TData, TValue> {
-  column: Column<TData, TValue>;
+interface DataTableColumnHeaderProps<TData extends RowData, TValue> {
+  column: Column<DataTableFeatures, TData, TValue>;
   title: string;
   className?: string;
 }
 
-export function DataTableColumnHeader<TData, TValue>({
+export function DataTableColumnHeader<TData extends RowData, TValue>({
   column,
   title,
   className,
