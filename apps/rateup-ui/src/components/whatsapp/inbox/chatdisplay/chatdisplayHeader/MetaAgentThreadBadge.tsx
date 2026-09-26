@@ -22,6 +22,11 @@ const REASON_LABELS: Record<string, string> = {
   staff_reply: "A teammate replied from the inbox",
   released: "Handed back to Meta AI",
   ticket_closed: "Handed back when the ticket closed",
+  // Any message RateUp sends takes the conversation off Meta AI, not only a
+  // person's reply — WhatsApp gives it to whoever sends.
+  automation: "An automation sent a message",
+  campaign: "A campaign message was sent",
+  api_send: "A message was sent through the API",
 };
 
 const digits = (value: string | null | undefined) => (value ?? "").replace(/\D/g, "");
