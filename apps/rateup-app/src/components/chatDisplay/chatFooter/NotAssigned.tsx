@@ -1,7 +1,7 @@
 import { useLoggedInUser } from "@/api/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { CircleUser } from "lucide-react-native";
-import { View, Text, TouchableOpacity, ActivityIndicator, useColorScheme } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, useColorScheme } from "react-native";
 import { Colors } from "@/constants/colors";
 import { useAssignInboxToUser } from "@/api/inbox/messages/message.query";
 import AssignToUser from "./AssignToUser";
@@ -98,7 +98,7 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
         borderTopColor: isDark ? Colors.dark.border : Colors.light.border,
       }}
     >
-      <TouchableOpacity onPress={handleAssignToMe} disabled={busy}>
+      <Pressable onPress={handleAssignToMe} disabled={busy}>
         <View
           style={{
             borderRadius: 12,
@@ -135,7 +135,7 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
             </>
           )}
         </View>
-      </TouchableOpacity>
+      </Pressable>
       <AssignToUser contactId={contactId} color />
     </View>
   );

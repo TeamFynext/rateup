@@ -1,13 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  Pressable,
-  useColorScheme,
-} from "react-native";
+import { View, Text, Pressable, Modal, FlatList, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTeamsByUser } from "@/api/teams/teams.query";
 import { useFlowFilterStore } from "@/utils/store";
@@ -25,7 +17,7 @@ const Button = ({
   onPress: () => void;
   isDark: boolean;
 }) => (
-  <TouchableOpacity
+  <Pressable
     className={`px-4 py-3 rounded-xl border ${
       active
         ? "bg-rateUpLightGreen border-rateUpGreen"
@@ -42,7 +34,7 @@ const Button = ({
     >
       {label}
     </Text>
-  </TouchableOpacity>
+  </Pressable>
 );
 
 const FlowFilter = () => {
@@ -86,23 +78,23 @@ const FlowFilter = () => {
           <Text className="text-black dark:text-white text-2xl font-bold">Filter</Text>
         </View>
 
-        <TouchableOpacity
+        <Pressable
           onPress={resetFilters}
           className="rounded-full px-4 py-2 items-center justify-center bg-gray-200 dark:bg-slate-800"
         >
           <Text className="text-black dark:text-white font-semibold">Reset</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Team Selector */}
       <Text className="mb-2 text-sm text-gray-700 dark:text-gray-300">Teams</Text>
 
-      <TouchableOpacity
+      <Pressable
         className="border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-4 bg-white dark:bg-slate-900 mb-5"
         onPress={() => setModalVisible(true)}
       >
         <Text className="text-gray-800 dark:text-white">{selectedTeamName}</Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Status Filter */}
       <View className="flex-row justify-between mb-4">
@@ -152,12 +144,12 @@ const FlowFilter = () => {
       </View>
 
       {/* Show Results */}
-      <TouchableOpacity
+      <Pressable
         onPress={() => router.back()}
         className="bg-rateUpGreen rounded-2xl py-4 mt-auto mb-6 items-center justify-center"
       >
         <Text className="text-white font-semibold text-base">Show results</Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Team Selector Modal */}
       <Modal
@@ -176,7 +168,7 @@ const FlowFilter = () => {
               data={teamList}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <TouchableOpacity
+                <Pressable
                   className="py-4 border-b border-gray-100 dark:border-slate-800"
                   onPress={() => {
                     setTeamId(item.id);
@@ -192,16 +184,16 @@ const FlowFilter = () => {
                   >
                     {item.name}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
             />
 
-            <TouchableOpacity
+            <Pressable
               className="mt-4 py-4 bg-gray-100 dark:bg-slate-800 rounded-2xl items-center"
               onPress={() => setModalVisible(false)}
             >
               <Text className="text-gray-600 dark:text-gray-300 font-medium">Cancel</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </Modal>

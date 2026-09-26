@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   FlatList,
-  TouchableOpacity,
   ActivityIndicator,
   useWindowDimensions,
   useColorScheme,
@@ -111,7 +110,7 @@ export default function EditContacts() {
   }, [contactId]);
 
   const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
+    <Pressable
       onPress={() => handleSelectCountry(item)}
       style={{ backgroundColor: isDark ? Colors.dark.surface : "white" }}
       className="flex-row items-center px-3 py-3"
@@ -125,7 +124,7 @@ export default function EditContacts() {
       <Text style={{ color: isDark ? Colors.dark.textMuted : "#7A8289" }} className="text-sm">
         {item.dial_code}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (
