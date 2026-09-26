@@ -276,7 +276,6 @@ export enum ReplyComponentType {
   Template = "Template",
   Image = "Image",
   List = "List",
-  AiBot = "AiBot",
 }
 
 /**

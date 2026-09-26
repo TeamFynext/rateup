@@ -55,7 +55,7 @@ import { uploadFile } from "../../../utils/upload/s3Upload.js";
 import axios from "axios";
 import { generateWebchatMessageId } from "../../../utils/messageId.js";
 
-import { findRecentAutomation, logAutomationAction } from "./automation-logger.utils.js";
+import { logAutomationAction } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
@@ -791,67 +791,6 @@ export const handleMessageStatusUpdate = async (
     ],
   });
 };
-
-export async function setAiBotActiveStatus(
-  phone: string,
-  orgId: string,
-  isActive: boolean,
-  chatbotId: string,
-) {
-  await prisma.contact.updateMany({
-    where: {
-      phone: phone,
-      orgId: orgId,
-    },
-    data: {
-      isAiBotActive: isActive,
-      chatbotId: chatbotId,
-    },
-  });
-}
-
-export async function getAiBotActiveStatus(phone: string, orgId: string) {
-  const contact = await prisma.contact.findFirst({
-    where: {
-      phone: phone,
-      orgId: orgId,
-    },
-  });
-  return {
-    isAiBotActive: contact?.isAiBotActive,
-    chatbotId: contact?.chatbotId ?? null,
-  };
-}
-
-export async function aibotNodeCompletion(phone: string, orgId: string) {
-  const progress = await findRecentAutomation(phone, orgId);
-  const automation = progress?.waAutomatedReply;
-  if (automation) {
-    const matchData = automation.matchData;
-    const nextEdge = matchData?.json?.edges?.find((edge) => edge.target === progress.currentNode);
-
-    if (!nextEdge) return;
-
-    const nextNode = matchData?.json?.nodes?.find((node) => node.id === nextEdge.source);
-
-    const automationLog = await logAutomationAction({
-      phone,
-      nodeId: progress.currentNode ?? "",
-      automationId: automation.id,
-      orgId,
-    });
-
-    if (nextNode) {
-      await processNextNode(
-        phone,
-        automation,
-        progress.currentNode ?? "",
-        orgId,
-        automationLog?.id ?? "",
-      );
-    }
-  }
-}
 
 export async function handleLeadGen(body: WaMessageBody) {
   log.info("Handling Leadgen webhook");

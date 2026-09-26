@@ -6,7 +6,6 @@ const handleWaMessages = vi.fn();
 const getWaSettingsByPhoneId = vi.fn();
 const getWaMessageByMessageId = vi.fn();
 const handleMessageStatusUpdate = vi.fn();
-const getAiBotActiveStatus = vi.fn();
 const enqueueWebhookDispatch = vi.fn();
 const releasePendingSignupBonusByPhone = vi.fn();
 const recordMetaAiTokenUsage = vi.fn();
@@ -26,7 +25,6 @@ vi.mock("../inbox/message/wamessage.service.js", async (importOriginal) => ({
 vi.mock("./wasurvey.service.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   handleMessageStatusUpdate,
-  getAiBotActiveStatus,
 }));
 vi.mock("../../webhook/webhook.service.js", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -122,7 +120,6 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
     expect(orgId).toBe("org-1");
     expect(messageId).toBe("wamid.inbound-1");
     // The agent is answering; nothing of ours may reply as well.
-    expect(getAiBotActiveStatus).not.toHaveBeenCalled();
     expect(releasePendingSignupBonusByPhone).not.toHaveBeenCalled();
     // …and the inbox is told the AI holds the thread, as of the message's time.
     expect(setMetaAgentThreadOwner).toHaveBeenCalledWith({
@@ -158,7 +155,6 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
     expect(handleStaticFlowReply).toHaveBeenCalledWith("org-1", expect.anything(), {
       agentHeld: true,
     });
-    expect(getAiBotActiveStatus).not.toHaveBeenCalled();
   });
 
   test("stores the agent's reply as an automated send to the customer", async () => {

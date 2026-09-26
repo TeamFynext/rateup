@@ -65,8 +65,6 @@ vi.mock("../whatsapp/inbox/message/wamessage.service.js", () => ({
   getAssignedUserForContact: vi.fn(),
 }));
 
-vi.mock("../chatbot/chatbot.service.js", () => ({ getChatbotDetails: vi.fn() }));
-
 vi.mock("../notification/notify.js", () => ({ notify: vi.fn() }));
 
 vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
@@ -127,7 +125,6 @@ vi.mock("../integrations/external/zoho/zoho.utils.js", () => ({
 
 import prisma from "../../utils/prisma.js";
 import { releaseThreadsOnTicketClose } from "../metaAgent/metaAgent.autoRelease.js";
-import { getChatbotDetails } from "../chatbot/chatbot.service.js";
 import { readSpreadsheetObjects, readSpreadsheetRows } from "../../utils/spreadsheet.js";
 import {
   addExistingContactsToMultipleGroups,
@@ -213,7 +210,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   // clearAllMocks keeps implementations but drops queued *Once values; every
   // mock is re-armed here so one test's leftovers cannot reach the next.
-  (getChatbotDetails as Mock).mockResolvedValue(null);
   db.$transaction.mockImplementation(runTransaction);
   db.$queryRaw.mockResolvedValue([]);
   db.contact.create.mockResolvedValue({ id: "c1", orgId: ORG, phone: "919000000001" });
@@ -286,22 +282,6 @@ describe("createContact", () => {
     expect(data).not.toHaveProperty("labels");
     expect(data).not.toHaveProperty("contactGroupIds");
     expect(data).not.toHaveProperty("assignedUserIds");
-  });
-
-  test("turns on the AI chat flag when the org's chatbot answers every chat", async () => {
-    (getChatbotDetails as Mock).mockResolvedValue({ enableAllWaChat: true });
-
-    await createContact({ ...base, lifecycleId: "" });
-
-    expect(db.contact.create.mock.calls[0][0].data.aiWaChat).toBe(true);
-  });
-
-  test("leaves the AI chat flag alone when the chatbot is off", async () => {
-    (getChatbotDetails as Mock).mockResolvedValue({ enableAllWaChat: false });
-
-    await createContact({ ...base, lifecycleId: "" });
-
-    expect(db.contact.create.mock.calls[0][0].data.aiWaChat).toBeUndefined();
   });
 
   test("writes the requested labels against the new contact", async () => {
@@ -468,8 +448,7 @@ describe("getOrcreateContact", () => {
 // ===========================================================================
 
 describe("createMultipleContacts", () => {
-  test("stamps org and AI-chat flag onto every row and strips relation inputs", async () => {
-    (getChatbotDetails as Mock).mockResolvedValue({ enableAllWaChat: true });
+  test("stamps the org onto every row and strips relation inputs", async () => {
     db.contact.createManyAndReturn.mockResolvedValue([]);
 
     await createMultipleContacts(
@@ -478,7 +457,8 @@ describe("createMultipleContacts", () => {
     );
 
     const [row] = db.contact.createManyAndReturn.mock.calls[0][0].data;
-    expect(row).toMatchObject({ orgId: ORG, aiWaChat: true });
+    expect(row).toMatchObject({ orgId: ORG });
+    expect(row).not.toHaveProperty("aiWaChat");
     expect(row.labels).toBeUndefined();
     expect(row.customFields).toBeUndefined();
     expect(row.contactGroupIds).toBeUndefined();
@@ -1696,7 +1676,6 @@ describe("updateMulitplceContacts", () => {
     );
 
     expect(db.contact.upsert.mock.calls[0][0].update).toEqual({
-      aiWaChat: false,
       name: "Ann",
       email: "a@b.c",
       source: "CSV IMPORT",
@@ -1856,7 +1835,6 @@ describe("getOrCreateContactByPhone", () => {
     expect(db.contact.create.mock.calls[0][0].data).toMatchObject({
       phone: "9190001",
       orgId: ORG,
-      aiWaChat: false,
     });
   });
 

@@ -5,19 +5,19 @@
       "source": "mcollina/skills",
       "sourceType": "github",
       "skillPath": "skills/fastify/SKILL.md",
-      "computedHash": "b3a771fa66bc5d8dac0af14e99e51fca2ff4a9add56f09d986778528bdf72c4c"
+      "computedHash": "cd479b552b22493a73eabcef8804f956847c8d3d9d0aaf051ccb01d22dc3247e"
     },
     "shopify-dev": {
       "source": "Shopify/shopify-ai-toolkit",
       "sourceType": "github",
-      "skillPath": "skills/shopify-dev/SKILL.md",
-      "computedHash": "8036a37a698dfef04e7589f45f2ca2ef8c540fe267c2c75fb03c82e52547e4eb"
+      "skillPath": "deprecated/shopify-dev/SKILL.md",
+      "computedHash": "6b6437be47ed5694dcf02b0ae5c9f770a4cfa8f7149ba07a75e0e88ec73ae736"
     },
     "shopify-use-shopify-cli": {
       "source": "Shopify/shopify-ai-toolkit",
       "sourceType": "github",
-      "skillPath": "skills/shopify-use-shopify-cli/SKILL.md",
-      "computedHash": "96bb8dcfd9be314a8d0e5eb4bc5a433ba65dc732d9e6827b8d6c0e67cf8ea984"
+      "skillPath": "deprecated/shopify-use-shopify-cli/SKILL.md",
+      "computedHash": "d24dbffc88f9e53e6a7b09476efaf8ebfa70fcfe8d1a9e9237d148dc20fb42f3"
     }
   }
 }

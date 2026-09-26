@@ -21,7 +21,6 @@ export type Node =
   | AddressNodeData
   | ContactsNodeData
   | FlowNodeData
-  | AiBotNodeData
   | AssignNodeData
   | LeadgenNodeData
   | CatalogNodeData;
@@ -274,15 +273,6 @@ export interface FlowNodeData extends BaseNodeData {
     name: string;
   };
 }
-export interface AiBotNodeData extends BaseNodeData {
-  body: string;
-  // chatbotId?: string;
-  chatbot: {
-    id: string;
-    name: string;
-  };
-}
-
 export interface AssignNodeData extends BaseNodeData {
   assign: {
     choice: "manual" | "all";
@@ -356,7 +346,6 @@ export interface NodeTypeMap {
   addressNode: AddressNodeData;
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
-  aibotNode: AiBotNodeData;
   assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
   catalogNode: CatalogNodeData;
@@ -388,7 +377,6 @@ export type NodeData =
   | AddressNodeData
   | ContactsNodeData
   | FlowNodeData
-  | AiBotNodeData
   | AssignNodeData
   | CatalogNodeData;
 
