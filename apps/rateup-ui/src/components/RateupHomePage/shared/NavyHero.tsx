@@ -10,8 +10,12 @@ export const HERO_H1 =
 export const HERO_SUB =
   "mx-auto mb-8 font-display text-[clamp(1.3125rem,2.9vw,1.8125rem)]/[1.35] font-semibold tracking-[-0.02em] text-white/72 sm:mb-10";
 
-/** The navy line-field hero band the homepage and the product landings open on. */
-export function NavyHero({ children }: Readonly<{ children: ReactNode }>) {
+/** The navy hero band the homepage and the product landings open on. `background` fills the band
+    behind the copy; it defaults to the homepage's line field. */
+export function NavyHero({
+  children,
+  background = <HeroBackground className="-z-10" />,
+}: Readonly<{ children: ReactNode; background?: ReactNode }>) {
   /* The negative top margin pulls the band up under the sticky nav — a floating pill in a
      header that paints no background of its own — so the navy runs to the top of the page and
      reads behind the pill. The padding-top adds that height back.
@@ -22,7 +26,7 @@ export function NavyHero({ children }: Readonly<{ children: ReactNode }>) {
      from `sm`. Revisit these two if the navbar's height changes. */
   return (
     <section className="relative isolate -mt-20 flex min-h-[min(92svh,52rem)] flex-col justify-center overflow-hidden bg-[linear-gradient(160deg,var(--color-ru-blue-800)_0%,var(--color-ru-blue-900)_46%,var(--color-ru-blue-950)_100%)] px-5 pt-27 pb-20 sm:-mt-25.5 sm:pt-37.5 sm:pb-28">
-      <HeroBackground className="-z-10" />
+      {background}
       <div className="mx-auto max-w-230 text-center">{children}</div>
     </section>
   );

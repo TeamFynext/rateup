@@ -1,15 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import {
-  ArrowRight,
-  BookDemoCta,
-  CheckIcon,
-  Eyebrow,
-  HERO_UNDER_NAV,
-  HERO_WASH,
-  WhatsAppCta,
-} from "@/components/RateupHomePage/shared/home-ui";
+import { ArrowRight, Eyebrow } from "@/components/RateupHomePage/shared/home-ui";
 
 /**
  * Section kit for the keyword landing pages (`/products/whatsapp-broadcast`,
@@ -17,61 +9,9 @@ import {
  *
  * The older product pages each carry a bespoke design and their own CSS module. Three more of
  * those would be three more designs to keep in step, so these pages compose the homepage's own
- * primitives from `home-ui` instead — same hero wash, same eyebrow, same closing band — and this
+ * primitives from `home-ui` instead — same eyebrow, same closing band — and this
  * file holds only the arrangements those pages repeat.
  */
-
-/** Bulleted proof chips under a hero headline. */
-function HeroPoints({ points }: Readonly<{ points: readonly string[] }>) {
-  return (
-    <ul className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2.5">
-      {points.map((point) => (
-        <li key={point} className="flex items-center gap-2 text-[15.5px] text-ru-n-600">
-          <span className="flex size-5 flex-none items-center justify-center rounded-full bg-ru-green-50 text-ru-green-600">
-            <CheckIcon className="size-3" />
-          </span>
-          {point}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export function LandingHero({
-  eyebrow,
-  eyebrowIcon,
-  title,
-  children,
-  points,
-}: Readonly<{
-  eyebrow: string;
-  eyebrowIcon: ReactNode;
-  /** The page's single H1. Keep the focus keyword in it. */
-  title: ReactNode;
-  children: ReactNode;
-  points?: readonly string[];
-}>) {
-  return (
-    <section className={`${HERO_WASH} ${HERO_UNDER_NAV} pb-14 sm:pb-22`}>
-      <div className="mx-auto max-w-280 px-5 text-center">
-        <Eyebrow className="mb-6" icon={eyebrowIcon}>
-          {eyebrow}
-        </Eyebrow>
-        <h1 className="mx-auto max-w-[20ch] font-display text-[clamp(2.125rem,5.6vw,3.875rem)]/[1.05] font-bold tracking-[-0.035em] text-balance text-ru-n-700">
-          {title}
-        </h1>
-        <p className="mx-auto mt-5 max-w-[58ch] text-[clamp(1.0625rem,2.1vw,1.28125rem)]/[1.6] text-pretty text-ru-n-500">
-          {children}
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <BookDemoCta className="max-sm:w-full max-sm:justify-center" />
-          <WhatsAppCta className="max-sm:w-full max-sm:justify-center" />
-        </div>
-        {points && <HeroPoints points={points} />}
-      </div>
-    </section>
-  );
-}
 
 /** A page band: eyebrow, H2, optional lead, then whatever the section renders. */
 export function Band({

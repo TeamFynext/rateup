@@ -101,9 +101,9 @@ const pageMetadata = {
     sitemap: { priority: "0.6", changefreq: "yearly" },
   },
   "/products/whatsapp-loyalty": {
-    title: "Best Whatsapp Loyalty Program Software by RateUp",
+    title: "WhatsApp Loyalty Program Software | RateUp",
     description:
-      "RateUp's WhatsApp Loyalty Program rewards customers with points, tiers & referrals - no app required. Start free and increase your customer retention.",
+      "Run a points, VIP tier and referral programme inside WhatsApp — no app for customers to download. QR sign-up, a cashier app and automatic reminders. Start free.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
   "/products/omnichannel-inbox": {
@@ -112,10 +112,28 @@ const pageMetadata = {
       "WhatsApp, Instagram & Messenger chats in one unified inbox. RateUp Omnichannel inbox helps your team stop juggling tabs and reply faster. Start free.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
-  "/products/whatsapp-feedback": {
-    title: "WhatsApp Customer Feedback & Survey Automation Tool - RateUp",
+  "/products/pipeline": {
+    title: "WhatsApp CRM Pipeline for Leads & Support | RateUp",
     description:
-      "Collect customer feedback on WhatsApp - RateUp's WhatsApp Flows meet customers where they already are - boosting feedback by up to 35%. Start free.",
+      "Turn WhatsApp, Instagram and Messenger chats into leads on a drag-and-drop pipeline. Owners, next steps, stale-lead alerts, insights and a win forecast. Start free.",
+    ogTitle: "WhatsApp CRM Pipeline for Leads & Support",
+    ogDescription:
+      "Every enquiry becomes a lead with an owner, a next step and a stage — set right from the inbox.",
+    sitemap: { priority: "0.8", changefreq: "monthly" },
+  },
+  "/products/meta-ai-agent": {
+    title: "Meta AI Agent for WhatsApp Business | RateUp",
+    description:
+      "Run Meta's AI agent on your WhatsApp number from RateUp. Teach it your FAQs, documents and website, connect your APIs, and hand over to your team in one inbox.",
+    ogTitle: "Meta AI Agent for WhatsApp Business",
+    ogDescription:
+      "Meta's AI agent answers on your WhatsApp number and hands over to your team in the RateUp inbox.",
+    sitemap: { priority: "0.8", changefreq: "monthly" },
+  },
+  "/products/whatsapp-feedback": {
+    title: "WhatsApp Customer Feedback After Every Visit | RateUp",
+    description:
+      "Ask every customer for feedback on WhatsApp after their visit, as a form inside the chat. Happy customers go on to Google; unhappy ones alert your team. Start free.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
   // Targets "WhatsApp survey / NPS survey" only. /products/whatsapp-feedback owns the
@@ -143,9 +161,9 @@ const pageMetadata = {
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
   "/products/ai-automation": {
-    title: "AI Chat Automation for WhatsApp & Instagram - RateUp",
+    title: "WhatsApp & Instagram Chat Flows and Automation - RateUp",
     description:
-      "Automate customer journeys with RateUp AI. Build no-code chat flows for WhatsApp and Instagram that qualify leads, answer FAQs and convert around the clock.",
+      "Automate customer journeys with no-code chat flows and inbox automation rules for WhatsApp and Instagram — greet, tag, route and follow up without lifting a finger.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
   // Deliberately targets "shared team inbox / collaboration" so it does not compete with
@@ -290,10 +308,10 @@ const pageMetadata = {
   "/products/whatsapp-broadcast": {
     title: "WhatsApp Broadcast Software on the Official API | RateUp",
     description:
-      "Send WhatsApp broadcasts to thousands of customers with approved templates, daily send limits and delivery reports. Official Business API. Start free.",
+      "Send WhatsApp broadcasts to thousands of customers with approved templates, scheduling, daily send limits, automatic retries and delivery reports. Official Business API.",
     ogTitle: "WhatsApp Broadcast Software on the Official API",
     ogDescription:
-      "Broadcast to your whole list from a verified number — approved templates, daily send limits, drip stages and delivery reports.",
+      "Broadcast to your whole list from a verified number — approved templates, drip stages, retries and a report on every message.",
     sitemap: { priority: "0.9", changefreq: "monthly" },
   },
 
@@ -321,7 +339,7 @@ const pageMetadata = {
 
 export type PagePath = keyof typeof pageMetadata;
 
-export const SITEMAP_LASTMOD = "2026-09-05";
+export const SITEMAP_LASTMOD = "2026-09-25";
 
 /** Registry entries that belong in `/sitemap.xml`, in registry order. */
 export function sitemapEntries(): { path: PagePath; entry: SitemapEntry }[] {

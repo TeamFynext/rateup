@@ -1,8 +1,7 @@
-import HeroBackground from "@/components/RateupHomePage/shared/hero-bg/HeroBackground";
-import { ClosingCta } from "@/components/RateupHomePage/shared/home-ui";
-
+import ProductClosing from "../shared/ProductClosing";
+import ProductFaq from "../shared/ProductFaq";
 import Analytics from "./Analytics";
-import Faq from "./Faq";
+import { INBOX_FAQS } from "./content";
 import Features from "./Features";
 import Hero from "./Hero";
 import InboxShowcase from "./InboxShowcase";
@@ -20,16 +19,11 @@ export default function InboxPage() {
       <Features />
       <Analytics />
       <Integrations />
-      <Faq />
-      <ClosingCta
-        id="demo"
-        eyebrow="Trusted by 100+ brands across 30+ countries"
-        title="Ready to give every conversation an owner?"
-        decoration={<HeroBackground className="opacity-45" />}
-      >
+      <ProductFaq faqs={INBOX_FAQS} />
+      <ProductClosing title="Ready to give every conversation an owner?">
         Book a 20-minute demo, or message us on WhatsApp — the same channel your customers will be
         using.
-      </ClosingCta>
+      </ProductClosing>
     </>
   );
 }

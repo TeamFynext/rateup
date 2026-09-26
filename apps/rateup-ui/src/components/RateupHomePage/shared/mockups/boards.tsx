@@ -172,8 +172,8 @@ export function PipelineBoard() {
         ))}
       </div>
       <div className="mt-3 flex items-baseline justify-between border-t border-ru-n-200 pt-2.5">
-        <span className="text-[12px] text-ru-n-400">Forecast this month</span>
-        <span className="font-display text-[15px] font-bold text-ru-n-700">₹4.2L</span>
+        <span className="text-[12px] text-ru-n-400">Expected wins this month</span>
+        <span className="font-display text-[15px] font-bold text-ru-n-700">12</span>
       </div>
     </Inset>
   );

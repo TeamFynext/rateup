@@ -509,12 +509,12 @@ export default function Capabilities() {
             </p>
             <p>
               Set follow-up messages, restrict it to an audience allowlist, and list the phrases it
-              must never say. See what else it can do on{" "}
+              must never say. See everything it can do on the{" "}
               <Link
-                to="/products/ai-automation"
+                to="/products/meta-ai-agent"
                 className="font-medium text-ru-blue-600 underline underline-offset-2 hover:text-ru-blue-700"
               >
-                AI automation
+                Meta AI Agent page
               </Link>
               .
             </p>

@@ -1,219 +1,128 @@
-/**
- * Copy and data for the `/products/whatsapp-loyalty` landing page.
- *
- * The FAQ array is the reason this sits apart from the markup: the route builds the page's
- * `FAQPage` JSON-LD from the same six questions the accordion renders.
- *
- * Testimonials and headline figures are the ones the page already published — the design marks
- * them "placeholder", but that refers to its own grey wordmarks, not the copy, which matches what
- * was live. Nothing here is invented.
- */
+/* Copy for the WhatsApp Loyalty landing page. Everything here describes something the loyalty
+   programme really does — check `components/dashboard/loyalty`, `rateup-api/src/modules/loyalty`
+   and `rateup-app/src/components/loyalty` before adding a claim. Loyalty messages go out on
+   WhatsApp only. */
 
-export interface LoyaltyFaq {
-  question: string;
-  answer: string;
-}
+import type { ProductFaqItem } from "../shared/ProductFaq";
 
-export const LOYALTY_FAQS: readonly LoyaltyFaq[] = [
+export const LOYALTY_DESCRIPTION =
+  "RateUp runs a points, VIP tier and referral programme inside WhatsApp. Customers join by scanning a QR code at the counter, collect points on every purchase, check their balance by texting a keyword, and get birthday, win-back and expiry reminders automatically — with no app to download.";
+
+/** Feeds the JSON-LD `featureList` and the Markdown twin. */
+export const LOYALTY_FEATURES = [
+  "Points on spend, with multipliers, bonus points and tier-only rules",
+  "Up to three VIP tiers based on spend, over a rolling window or lifetime",
+  "Rewards bought with points, coupons and gifts, with stock and tier limits",
+  "Referral codes and links with a bonus for both sides",
+  "Join by QR code, keyword, web sign-up or at the counter",
+  "QR member card sent on WhatsApp",
+  "Keyword replies: JOIN, POINTS, REWARDS, REFER, CARD, STOP",
+  "Birthday, anniversary, win-back, VIP-at-risk and expiry reminders",
+  "Web cashier, and a staff app that scans member cards and works offline",
+  "Overview of members, points issued and redeemed, points liability and repeat visits",
+  "Shopify, WooCommerce and REST API for POS systems",
+] as const;
+
+export const LOYALTY_FAQS: readonly ProductFaqItem[] = [
   {
     question: "Do customers need to download an app?",
     answer:
-      "No — that is the whole point. Enrolment, points, tiers, rewards and redemption all happen inside WhatsApp. There is nothing for your customers to install, sign up for, or remember.",
+      "No. The whole programme lives in WhatsApp. Customers join, check their points, see their rewards and get their member card in the chat they already use.",
   },
   {
-    question: "Do I need the WhatsApp Business API?",
+    question: "How do customers join?",
     answer:
-      "Yes, and we provision it for you during onboarding. You keep your own number, your own display name and your own quality rating — RateUp is an official Meta Business Partner.",
+      "The easiest way is the QR poster at your counter: scanning it opens WhatsApp with the join keyword ready to send. They can also sign up on your web registration page, be registered by staff at the cashier, or tap Join on the welcome message a first-time contact receives.",
   },
   {
-    question: "How quickly can we launch?",
+    question: "Does it run on our own WhatsApp number?",
     answer:
-      "Most businesses are live in under an afternoon. Connect your WhatsApp Business account, define points and rewards, sync your store, and you are running — no developers required.",
+      "Yes. Everything goes out from your own WhatsApp Business number through the official WhatsApp Business API, with your verified business name on every message.",
   },
   {
-    question: "How do we track points and rewards?",
+    question: "How does it work at the counter?",
     answer:
-      "Everything sits in your RateUp dashboard: real-time customer profiles, points balances, tier status, referral activity and engagement history — one record per phone number.",
+      "Staff use the web cashier or the RateUp app. Look a member up by name or phone — or, in the app, scan the QR card on their phone — enter the bill and the points are added. If the connection drops, the app queues purchases and sends them once it's back online.",
   },
   {
-    question: "What if we already run a loyalty program?",
+    question: "How do VIP tiers work?",
     answer:
-      "You can migrate existing members and balances into RateUp, or run both in parallel. Integrations with Shopify, WooCommerce, POS and CRM keep customer and order data in sync automatically.",
+      "You can set up to three tiers based on how much a member spends, each with its own points multiplier and perks. Count spend over a rolling window of up to twelve months, so members move up and down, or over their lifetime so nobody is ever moved down.",
   },
   {
-    question: "What does it cost?",
+    question: "Do points expire?",
     answer:
-      "A flat $31/month covers every feature and unlimited agent seats. Meta's own per-conversation charges are billed through at cost, with no markup.",
+      "Only if you want them to. Switch on expiry after a number of months, and RateUp reminds members before their points expire.",
+  },
+  {
+    question: "Does it connect to our store or POS?",
+    answer:
+      "Shopify orders award points on payment and reverse them on cancellation, and rewards sync to Shopify as discount codes. WooCommerce stores are supported too, and any POS can award points, redeem rewards and look up members through the REST API.",
   },
 ];
 
-export const LOYALTY_STEPS = [
+export const PROBLEMS = [
   {
-    n: "01",
-    title: "Connect WhatsApp",
-    body: "We provision the Business API on your own number, display name and quality rating.",
-    tone: "accent",
+    title: "Stamp cards get lost",
+    body: "Paper cards sit in wallets, go through the wash, and tell you nothing about who your regulars are.",
+    icon: "card",
   },
   {
-    n: "02",
-    title: "Set your rewards",
-    body: "Points per order or per rupee, tiers, expiry rules and the referral bonus — all in one screen.",
-    tone: "warm",
+    title: "Nobody installs your app",
+    body: "Asking customers to download one more app at the till is the fastest way to end a loyalty programme before it starts.",
+    icon: "app",
   },
   {
-    n: "03",
-    title: "Sync your store",
-    body: "Orders flow in from Shopify, WooCommerce or your POS. Every buyer becomes a member automatically.",
-    tone: "accent",
-  },
-  {
-    n: "04",
-    title: "Let it run",
-    body: "Points land in the thread, rewards get redeemed, and the second order arrives at no ad cost.",
-    tone: "accent",
+    title: "No way to bring them back",
+    body: "You know a regular has gone quiet. You just have no way to reach them with a reason to come back.",
+    icon: "quiet",
   },
 ] as const;
 
-export const LOYALTY_TABS = [
-  "profiles",
-  "segments",
-  "campaigns",
-  "referrals",
-  "analytics",
-] as const;
-
-export type LoyaltyTab = (typeof LOYALTY_TABS)[number];
-
-export const TAB_COPY: Record<
-  LoyaltyTab,
-  { heading: string; body: string; pills: readonly string[] }
-> = {
-  profiles: {
-    heading: "Real-time customer profiles",
-    body: "One record per phone number, updated the moment something happens. Conversation history, order activity, loyalty balance, tier and a churn score that tells you who's slipping away.",
-    pills: ["Order timeline", "Points & tier", "Churn score", "Referral tree"],
-  },
-  segments: {
-    heading: "Smart customer segments",
-    body: "Group customers by spend, tier, city and activity automatically — then send the right reward to the right audience without ever building a list by hand.",
-    pills: ["Behavioural", "Auto-updating", "Tier-based", "Location"],
-  },
-  campaigns: {
-    heading: "Campaigns that get opened",
-    body: "Approved WhatsApp templates, sent to any segment in minutes. Double-point weekends, tier upgrades, win-backs — with delivery and click tracking on every send.",
-    pills: ["Personalised", "Scheduled", "92% open rate", "Click tracking"],
-  },
-  referrals: {
-    heading: "Referrals that run themselves",
-    body: "Every customer gets a tracked link. Both sides are rewarded in the thread, the leaderboard keeps them competing, and you never reconcile a spreadsheet again.",
-    pills: ["Auto-tracked", "Two-sided rewards", "Leaderboard", "Fraud checks"],
-  },
-  analytics: {
-    heading: "Analytics you can act on",
-    body: "Points issued, redemption rate, retention lift and revenue impact — by product, branch and agent. Sentiment you can act on the same day, not next quarter.",
-    pills: ["Real-time", "Redemption rate", "Retention lift", "Revenue impact"],
-  },
-};
-
-/** Mock data for the panel's screens. Colours are `ru-*` ramp values used as data, not classes. */
-export const REFERRALS = [
-  { name: "Rohan Kumar", points: "680", colour: "#1C518E" },
-  { name: "Liam Miller", points: "240", colour: "#177F45" },
-  { name: "Olivia Evans", points: "300", colour: "#5A8CC6" },
-  { name: "Beckett Hayes", points: "880", colour: "#2E68A8" },
-  { name: "Aria Mathew", points: "420", colour: "#164070" },
-] as const;
-
-export const SEGMENTS = [
+export const SETUP_STEPS = [
   {
-    name: "VIP champions",
-    desc: "Top 5% by lifetime spend",
-    colour: "#1C518E",
-    count: "1,240",
-    pct: 92,
+    title: "Profile",
+    body: "Name the programme and its points, pick your currency, logo and colour.",
   },
   {
-    name: "Loyal regulars",
-    desc: "Purchased 3+ times",
-    colour: "#177F45",
-    count: "3,580",
-    pct: 74,
+    title: "Earning",
+    body: "Points per amount spent, plus sign-up and referral bonuses.",
   },
   {
-    name: "New members",
-    desc: "Joined in last 30 days",
-    colour: "#F8951D",
-    count: "2,110",
-    pct: 58,
-  },
-  { name: "At risk", desc: "No activity in 60 days", colour: "#C4342C", count: "640", pct: 34 },
-  { name: "Win-back", desc: "Lapsed, high past value", colour: "#5A8CC6", count: "430", pct: 22 },
-] as const;
-
-export const LEADERS = [
-  { name: "Beckett Hayes", referred: 18, points: "8,800", colour: "#1C518E" },
-  { name: "Olivia Evans", referred: 14, points: "6,400", colour: "#5A8CC6" },
-  { name: "Aria Mathew", referred: 11, points: "5,100", colour: "#177F45" },
-  { name: "Noah Bennett", referred: 9, points: "4,200", colour: "#2E68A8" },
-  { name: "Rohan Kumar", referred: 7, points: "3,300", colour: "#164070" },
-] as const;
-
-export const WEEK_BARS = [
-  ["Mon", 48],
-  ["Tue", 66],
-  ["Wed", 54],
-  ["Thu", 82],
-  ["Fri", 100],
-  ["Sat", 90],
-  ["Sun", 72],
-] as const;
-
-/** The quotes already published on this page, in the design's card layout. */
-export const TESTIMONIALS = [
-  {
-    badge: "+47% repeat purchases",
-    quote:
-      "We moved our whole post-purchase flow to WhatsApp and repeat orders went up in the first month. Support stopped drowning.",
-    name: "Sanjith",
-    role: "Head of IT · Bhima Jewellery",
-    colour: "#1C518E",
+    title: "VIP tiers",
+    body: "Up to three spend-based tiers, each with a multiplier and perks.",
   },
   {
-    badge: "10-minute setup",
-    quote:
-      "The loyalty program took an afternoon to set up. Customers just reply to a message — no app, no card, no login.",
-    name: "Akhil",
-    role: "Marketing Manager · myG",
-    colour: "#177F45",
+    title: "Rewards",
+    body: "What points buy: discounts, free items and gifts.",
   },
   {
-    badge: "3× engagement",
-    quote:
-      "Engagement tripled overnight. Customers open every message and redeem the same day — something email never did for us.",
-    name: "Priya Nair",
-    role: "Founder · Bloom Beauty",
-    colour: "#5A8CC6",
+    title: "Messages",
+    body: "Keyword replies and the notifications members receive.",
   },
   {
-    badge: "+62% referrals",
-    quote:
-      "The referral program runs itself. Loyal customers bring in new ones and both sides get rewarded automatically.",
-    name: "David Park",
-    role: "Head of Growth · Kettle&Co",
-    colour: "#164070",
+    title: "Launch",
+    body: "Print the QR poster for your counter and switch the programme on.",
   },
 ] as const;
 
-export const LOYALTY_STATS = [
-  { value: "2,500+", label: "Loyalty campaigns automated" },
-  { value: "1.2M+", label: "Rewards delivered" },
-  { value: "45%", label: "Higher customer retention", warm: true },
-  { value: "92%", label: "Message open rate" },
+/* Illustrative figures for the overview mock. Counts only: a retention or revenue uplift here
+   would read as a promise. */
+export const OVERVIEW_TILES = [
+  { value: "2,418", label: "Members" },
+  { value: "86,200", label: "Points issued" },
+  { value: "31,450", label: "Points redeemed" },
+  { value: "54,750", label: "Outstanding points" },
 ] as const;
 
-export const initials = (name: string) =>
-  name
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2);
+export const TIERS = [
+  { name: "Member", count: 1742, width: "w-full", tone: "bg-ru-n-400" },
+  { name: "Silver", count: 521, width: "w-[30%]", tone: "bg-ru-blue-400" },
+  { name: "Gold", count: 155, width: "w-[9%]", tone: "bg-ru-amber-400" },
+] as const;
+
+export const TOP_REWARDS = [
+  { name: "Free coffee", redeemed: 412 },
+  { name: "₹100 off", redeemed: 238 },
+  { name: "Birthday dessert", redeemed: 96 },
+] as const;

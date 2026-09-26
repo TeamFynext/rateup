@@ -2,8 +2,10 @@ import {
   IconApi,
   IconDeviceDesktop,
   IconInbox,
+  IconLayoutKanban,
   IconMessageCircle,
   IconPlug,
+  IconRobot,
   IconSpeakerphone,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
@@ -35,25 +37,37 @@ const components: {
     icon: <IconSpeakerphone className="size-6 text-ru-n-600" />,
     title: "WhatsApp Broadcast",
     to: "/products/whatsapp-broadcast",
-    description: "Segmented campaigns to thousands, on the official API.",
+    description: "Campaigns to thousands, on the official API.",
   },
   {
     icon: <IconMessageCircle className="size-6 text-ru-n-600" />,
-    title: "Whatsapp Loyalty",
+    title: "WhatsApp Loyalty",
     to: "/products/whatsapp-loyalty",
-    description: "Engage where your customers are most active.",
+    description: "Points, VIP tiers and rewards inside WhatsApp.",
   },
   {
     icon: <IconDeviceDesktop className="size-6 text-ru-n-600" />,
-    title: "Whatsapp Feedback",
+    title: "WhatsApp Feedback",
     to: "/products/whatsapp-feedback",
-    description: "Collect and analyze customer insights easily.",
+    description: "Ask every customer after the visit, in the chat.",
   },
   {
     icon: <IconInbox className="size-6 text-ru-n-600" />,
     title: "Omnichannel Inbox",
     to: "/products/omnichannel-inbox",
     description: "All your customer messages flow into one unified workspace.",
+  },
+  {
+    icon: <IconLayoutKanban className="size-6 text-ru-n-600" />,
+    title: "Pipeline",
+    to: "/products/pipeline",
+    description: "Turn conversations into leads on a board.",
+  },
+  {
+    icon: <IconRobot className="size-6 text-ru-n-600" />,
+    title: "Meta AI Agent",
+    to: "/products/meta-ai-agent",
+    description: "Meta's AI agent on your WhatsApp number.",
   },
   {
     icon: <IconPlug className="size-6 text-ru-n-600" />,
@@ -90,7 +104,7 @@ export default function DropDownNavItems({
             Product
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[320px] gap-2">
+            <ul className="grid w-[320px] gap-2 lg:w-[640px] lg:grid-cols-2">
               {components.map((component) => (
                 <ListItem
                   key={component.title}

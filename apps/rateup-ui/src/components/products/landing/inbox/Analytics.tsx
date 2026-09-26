@@ -1,8 +1,8 @@
 import { CountUp, useReveal } from "@/components/RateupHomePage/shared/home-ui";
 import { Avatar } from "@/components/RateupHomePage/shared/mockups/kit";
 
+import { BAND, SectionHead } from "../shared/section";
 import { AGENT_ROWS } from "./content";
-import { BAND, SectionHead } from "./parts";
 
 const TILES = [
   { value: "1,038", label: "Conversations handled" },
