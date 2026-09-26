@@ -1,4 +1,5 @@
-import { axiosClient } from "../apiClient";
+// Every call here waits on Meta, so none of them uses the 8s default.
+import { axiosSlowClient as axiosClient } from "../apiClient";
 
 const BASE_URL = "/meta-agent";
 const base = (waSettingsId: string) => `${BASE_URL}/${waSettingsId}`;

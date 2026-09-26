@@ -24,8 +24,14 @@ const GROUPS = [
   { id: "crm", label: "CRM" },
 ] as const;
 
-const ALL_TOOLS: RateupConnectorToolName[] = RATEUP_CONNECTOR_TOOLS.map((tool) => tool.name);
-/** The CRM writes take names the agent reads from the options tool. */
+/**
+ * The options lookup is plumbing, not a choice: the CRM actions need it to know
+ * your label, stage and team names, so it is installed with them — here and,
+ * whatever this page sends, on the server — and never shown.
+ */
+const HIDDEN_TOOL: RateupConnectorToolName = "get_crm_options";
+const VISIBLE_TOOLS = RATEUP_CONNECTOR_TOOLS.filter((tool) => tool.name !== HIDDEN_TOOL);
+const ALL_TOOLS: RateupConnectorToolName[] = VISIBLE_TOOLS.map((tool) => tool.name);
 const CRM_WRITES: RateupConnectorToolName[] = [
   "add_contact_label",
   "set_lead_stage",
@@ -54,15 +60,15 @@ export function RateupConnectorPanel({ waSettingsId }: Readonly<{ waSettingsId: 
   }, [data]);
 
   const toggle = (name: RateupConnectorToolName, on: boolean) =>
-    setSelected((current) => {
-      const next = on ? [...new Set([...current, name])] : current.filter((n) => n !== name);
-      // The CRM writes are useless without the names to write.
-      const needsOptions = next.some((n) => CRM_WRITES.includes(n));
-      return needsOptions && !next.includes("get_crm_options")
-        ? [...next, "get_crm_options"]
-        : next;
-    });
-  const optionsLocked = selected.some((n) => CRM_WRITES.includes(n));
+    setSelected((current) =>
+      on ? [...new Set([...current, name])] : current.filter((n) => n !== name),
+    );
+  const toInstall = selected.some((n) => CRM_WRITES.includes(n))
+    ? [...selected, HIDDEN_TOOL]
+    : selected;
+  const installedCount = data?.installed
+    ? data.tools.filter((tool) => tool !== HIDDEN_TOOL).length
+    : 0;
 
   const onRemove = async () => {
     const ok = await confirm({
@@ -89,7 +95,7 @@ export function RateupConnectorPanel({ waSettingsId }: Readonly<{ waSettingsId: 
                 Installed
               </Badge>
               <span className="text-muted-foreground">
-                {data.tools.length} tool{data.tools.length === 1 ? "" : "s"} available to the agent
+                {installedCount} tool{installedCount === 1 ? "" : "s"} available to the agent
               </span>
             </div>
           )}
@@ -98,29 +104,23 @@ export function RateupConnectorPanel({ waSettingsId }: Readonly<{ waSettingsId: 
             {GROUPS.map((group) => (
               <fieldset key={group.id} className="flex flex-col gap-2">
                 <legend className="mb-1 text-sm font-medium">{group.label}</legend>
-                {RATEUP_CONNECTOR_TOOLS.filter((tool) => tool.group === group.id).map((tool) => {
-                  const locked = tool.name === "get_crm_options" && optionsLocked;
-                  return (
-                    <label
-                      key={tool.name}
-                      className="flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 has-disabled:cursor-default"
-                    >
-                      <Checkbox
-                        className="mt-0.5"
-                        checked={selected.includes(tool.name)}
-                        disabled={!canManage || locked}
-                        onCheckedChange={(on) => toggle(tool.name, on === true)}
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-sm">{tool.label}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {locked ? "Needed by the CRM actions you picked. " : ""}
-                          {tool.blurb}
-                        </span>
-                      </span>
-                    </label>
-                  );
-                })}
+                {VISIBLE_TOOLS.filter((tool) => tool.group === group.id).map((tool) => (
+                  <label
+                    key={tool.name}
+                    className="flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 has-disabled:cursor-default"
+                  >
+                    <Checkbox
+                      className="mt-0.5"
+                      checked={selected.includes(tool.name)}
+                      disabled={!canManage}
+                      onCheckedChange={(on) => toggle(tool.name, on === true)}
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm">{tool.label}</span>
+                      <span className="block text-xs text-muted-foreground">{tool.blurb}</span>
+                    </span>
+                  </label>
+                ))}
               </fieldset>
             ))}
           </div>
@@ -157,7 +157,7 @@ export function RateupConnectorPanel({ waSettingsId }: Readonly<{ waSettingsId: 
               <Button
                 disabled={!canManage || !selected.length}
                 loading={install.isPending}
-                onClick={() => install.mutate(selected)}
+                onClick={() => install.mutate(toInstall)}
               >
                 {data?.installed ? (
                   <IconRefresh data-icon="inline-start" />

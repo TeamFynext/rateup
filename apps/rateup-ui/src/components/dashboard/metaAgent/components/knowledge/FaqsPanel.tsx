@@ -166,8 +166,8 @@ function FaqDialog({
             self-contained.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <FieldGroup className="gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <FieldGroup className="-mx-6 max-h-[50vh] gap-4 overflow-y-auto px-6 py-1">
             <FormField
               control={form.control}
               name="question"
@@ -195,15 +195,15 @@ function FaqDialog({
                 />
               )}
             </FormField>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" loading={isPending}>
-                {faq ? "Save changes" : "Create FAQ"}
-              </Button>
-            </DialogFooter>
           </FieldGroup>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={isPending}>
+              {faq ? "Save changes" : "Create FAQ"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

@@ -197,8 +197,8 @@ function SkillDialog({
             decide what it then does.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <FieldGroup className="gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <FieldGroup className="-mx-6  max-h-[50vh] gap-4 overflow-y-auto px-6 py-1">
             <FormField
               control={form.control}
               name="title"
@@ -252,16 +252,15 @@ function SkillDialog({
                 />
               )}
             </FormField>
-
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" loading={isPending}>
-                {skill ? "Save changes" : "Create skill"}
-              </Button>
-            </DialogFooter>
           </FieldGroup>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={isPending}>
+              {skill ? "Save changes" : "Create skill"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

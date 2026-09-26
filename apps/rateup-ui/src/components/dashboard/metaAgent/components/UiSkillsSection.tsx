@@ -493,8 +493,8 @@ function UiSkillDialog({
               : "Pick a component and describe the moment the agent should reach for it."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <FieldGroup className="gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <FieldGroup className="-mx-6 max-h-[50vh] gap-4 overflow-y-auto px-6 py-1">
             <FormField
               control={form.control}
               name="title"
@@ -631,16 +631,15 @@ function UiSkillDialog({
                 />
               )}
             </FormField>
-
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" loading={isPending}>
-                {uiSkill ? "Save changes" : "Create UI skill"}
-              </Button>
-            </DialogFooter>
           </FieldGroup>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={isPending}>
+              {uiSkill ? "Save changes" : "Create UI skill"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
