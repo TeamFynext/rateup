@@ -122,7 +122,7 @@ function ResponsesDialog({ onClose }: { onClose: () => void }) {
       title="Generate survey responses"
       description="Answers are random but valid for the survey's questions."
       submitLabel={`Generate ${formatNumber(size)}`}
-      canSubmit={!!org && target.length > 0}
+      blocked={(!org && "Choose an organisation") || (!target && "Choose a survey and team")}
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
@@ -211,7 +211,7 @@ function InboxDialog({ onClose }: { onClose: () => void }) {
       title="Generate WhatsApp chats"
       description="Random messages to and from the organisation's existing contacts, queued through its own WhatsApp number."
       submitLabel={`Queue ${formatNumber(nContacts * nPer)} messages`}
-      canSubmit={!!org}
+      blocked={!org && "Choose an organisation"}
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>

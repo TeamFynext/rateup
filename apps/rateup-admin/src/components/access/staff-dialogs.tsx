@@ -21,6 +21,11 @@ export type StaffAction =
 
 /** The console's own domain: the API refuses any other address, and so does Google. */
 const STAFF_DOMAIN = import.meta.env.VITE_STAFF_DOMAIN ?? "rateup.app";
+/**
+ * `vite dev`: any address, for a local API with NODE_ENV=development, which accepts any domain.
+ * The API still decides; a dev console pointed at a deployed API gets its WRONG_DOMAIN error.
+ */
+const ANY_DOMAIN = import.meta.env.DEV;
 
 const who = (member: StaffMember) => member.name ?? member.email;
 
@@ -58,16 +63,25 @@ function AddDialog({ onClose }: { onClose: () => void }) {
   const nameId = useId();
   const ownerId = useId();
   const address = email.trim().toLowerCase();
-  const onDomain = address.endsWith(`@${STAFF_DOMAIN}`) && address.indexOf("@") > 0;
+  const onDomain = ANY_DOMAIN
+    ? /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)
+    : address.endsWith(`@${STAFF_DOMAIN}`) && address.indexOf("@") > 0;
 
   return (
     <ActionDialog
       open
       onOpenChange={onClose}
       title="Add a staff member"
-      description={`They sign in with their @${STAFF_DOMAIN} Google account. Nothing is emailed; tell them the console's address.`}
+      description={`They sign in with their ${ANY_DOMAIN ? "" : `@${STAFF_DOMAIN} `}Google account. Nothing is emailed; tell them the console's address.`}
       submitLabel="Add"
-      canSubmit={onDomain}
+      blocked={
+        !onDomain &&
+        (!address
+          ? "Enter their email"
+          : ANY_DOMAIN
+            ? "Enter a valid email"
+            : `Use a @${STAFF_DOMAIN} address`)
+      }
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
@@ -89,7 +103,7 @@ function AddDialog({ onClose }: { onClose: () => void }) {
           onChange={(event) => setEmail(event.target.value)}
           className="h-9 rounded-lg"
         />
-        {address.length > 0 && !onDomain && (
+        {!ANY_DOMAIN && address.length > 0 && !onDomain && (
           <p className="text-xs text-muted-foreground">
             Only @{STAFF_DOMAIN} addresses can sign in.
           </p>

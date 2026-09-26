@@ -101,7 +101,7 @@ export function OrgActionDialogs({
           onOpenChange={onClose}
           title="Loading…"
           submitLabel="Save"
-          canSubmit={false}
+          blocked="Loading…"
           pending={false}
           error={subscription.error}
           onSubmit={() => {}}
@@ -175,7 +175,9 @@ function ChangePlanDialog({ orgId, onClose, subscription }: DialogProps) {
       title="Change plan"
       description={`On ${subscription?.plan?.name ?? "no plan"} now. The new plan's limits and features replace the current ones.`}
       submitLabel="Change plan"
-      canSubmit={!!chosen && isFutureDay(expiry)}
+      blocked={
+        (!chosen && "Choose a new plan") || (!isFutureDay(expiry) && "Expiry must be a future date")
+      }
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
@@ -323,7 +325,10 @@ function ChangeExpiryDialog({ orgId, onClose, subscription }: DialogProps) {
           : undefined
       }
       submitLabel="Save expiry"
-      canSubmit={isFutureDay(expiry) && !!subscription}
+      blocked={
+        (!subscription && "No subscription to change") ||
+        (!isFutureDay(expiry) && "Expiry must be a future date")
+      }
       pending={mutation.isPending}
       error={mutation.error ?? (!subscription ? { message: "No subscription to change." } : null)}
       onSubmit={(reason) =>
@@ -358,7 +363,7 @@ function EditLimitsDialog({ orgId, onClose, subscription }: DialogProps) {
       title="Edit limits"
       description={`Overrides for this org only. The ${subscription?.plan?.name ?? "plan"} default is shown under each one.`}
       submitLabel="Save limits"
-      canSubmit={!!subscription}
+      blocked={!subscription && "No subscription to change"}
       pending={mutation.isPending}
       error={mutation.error ?? (!subscription ? { message: "No subscription to change." } : null)}
       onSubmit={(reason) =>
@@ -398,7 +403,7 @@ function GrantPacksDialog({ orgId, onClose, subscription }: DialogProps) {
       title="Grant conversation packs"
       description={`Free extra conversations on top of the plan, for ${PACK_DAYS} days. Nothing is charged.`}
       submitLabel={`Grant ${quantity} ${quantity === 1 ? "pack" : "packs"}`}
-      canSubmit={metered}
+      blocked={!metered && "This plan's conversations are not metered"}
       pending={mutation.isPending}
       error={mutation.error}
       onSubmit={(reason) =>
