@@ -315,6 +315,7 @@ export interface LoyaltyProgram {
   defaultCountryCode?: string | null;
   averageOrderValue?: number | null;
   signupBonus: number;
+  signupBonusEnabled?: boolean;
   tiersEnabled: boolean;
   whatsappNotifications?: boolean;
   pointsActivityAlerts?: boolean;

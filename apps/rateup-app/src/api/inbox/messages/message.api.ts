@@ -24,6 +24,38 @@ export async function assignInboxToUser(data: {
   return (await axios.post(`/api/wa/inbox/message/assign`, data)).data;
 }
 
+/**
+ * Set a chat's single owner. `userId` names them; `teamId` alone lets the API pick
+ * one member of that team in turn; neither unassigns. The API picks the team a
+ * named person is recorded under. Mirrors `assignOwner` in rateup-ui.
+ */
+export async function assignOwner(data: {
+  contactId: string;
+  userId?: string | null;
+  teamId?: string | null;
+  messageId: string;
+}): Promise<{ assignees: { userId: string; teamId: string }[] }> {
+  return (await axios.post(`/api/wa/inbox/message/assign/owner`, data)).data;
+}
+
+/** One `assignee` for every chat, or a `teamId` whose members take the chats in turn. */
+export async function bulkAssign(
+  data: { contactIds: string[] } & (
+    | { assignee: { userId: string; teamId: string } }
+    | { teamId: string }
+  ),
+): Promise<{
+  assignedCount: number;
+  failedCount: number;
+  results: {
+    contactId: string;
+    success: boolean;
+    result?: { assignees: { userId: string; teamId: string }[] };
+  }[];
+}> {
+  return (await axios.post(`/api/wa/inbox/message/assign-bulk`, data)).data;
+}
+
 export async function getAssignedUserForContact(contactId: any) {
   return (await axios.get(`/api/wa/inbox/message/assign/${contactId}`)).data;
 }

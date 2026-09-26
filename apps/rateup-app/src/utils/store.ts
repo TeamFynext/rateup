@@ -341,6 +341,11 @@ type WaMedia = {
   name: string;
   key: string;
   uploading?: boolean;
+  /**
+   * The file belongs to something saved (a quick reply), not to this draft, so
+   * removing it from the draft must not delete it from storage.
+   */
+  shared?: boolean;
 };
 
 interface MediaStore {
@@ -358,7 +363,8 @@ export const useMediaStore = create<MediaStore>((set) => ({
   selectedMedia: null,
   setSelectedMedia: (value) => set(() => ({ selectedMedia: value })),
   removeMedia: async (key) => {
-    await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+    const entry = useMediaStore.getState().media.find((m) => m.key === key);
+    if (!entry?.shared) await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
     set((state) => {
       const medias = state.media.filter((m) => m.key !== key);
       return { media: medias };

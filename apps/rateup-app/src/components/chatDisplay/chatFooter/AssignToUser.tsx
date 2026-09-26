@@ -1,31 +1,23 @@
 import { Toast } from "@/components/common/Notice";
 import { usePermissions } from "@/hooks/usePermissions";
-import {
-  useAssignInboxToUser,
-  useGetAssignedUserForContact,
-} from "@/api/inbox/messages/message.query";
-import { useTeamsByUser, useTeamsMembersOfOrg } from "@/api/teams/teams.query";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  InteractionManager,
-  Modal,
-  ScrollView,
-  useColorScheme,
-  Pressable, // Import ActivityIndicator
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useLoggedInUser } from "@/api/api";
+import { useAssignOwner, useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
+import { useTeamsMembersOfOrg } from "@/api/teams/teams.query";
+import { useState } from "react";
+import { Text, TouchableOpacity, useColorScheme } from "react-native";
 import { TeamMembersData } from "@/context/type";
-import { generateInternalMessageId, namePreview } from "@/utils/chatbox_utils";
-import { Check, UserCheck, Users } from "lucide-react-native";
-import { useQueryClient } from "@tanstack/react-query";
+import { generateInternalMessageId } from "@/utils/chatbox_utils";
+import { UserCheck } from "lucide-react-native";
 import { useChatAssignStatusStore } from "@/utils/store";
 import { useContactsStore } from "@/store/inboxStore";
 import { Colors } from "@/constants/colors";
+import AssigneeSheet, { type AssigneePick } from "./AssigneeSheet";
 
+/**
+ * One owner per chat: tap a person and it is done. People are listed once however
+ * many teams they are in; a team row hands the chat to one member in turn. Mirrors
+ * `AssigneePicker` in rateup-ui.
+ */
 export default function AssignToUser({
   contactId,
   color,
@@ -46,147 +38,68 @@ export default function AssignToUser({
 }) {
   const { can } = usePermissions();
   const [visible, setVisible] = useState(false);
-  const assignMut = useAssignInboxToUser(contactId);
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  // Inline, not a toast: a toast cannot render above this sheet's native Modal.
+  const [error, setError] = useState<string | null>(null);
+  const assign = useAssignOwner();
   const setWaAssignStatus = useChatAssignStatusStore((state) => state.setWaAssignStatus);
-  const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
+  const { data: me } = useLoggedInUser();
   const { data: teamMembers } = useTeamsMembersOfOrg();
-  const { data: assignedUsers, isLoading: isAssignedLoading } =
-    useGetAssignedUserForContact(contactId);
-  const queryClient = useQueryClient();
+  const { data: assignedUsers } = useGetAssignedUserForContact(contactId);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const buttonBgColor = color ? Colors.brand.blue : isDark ? Colors.dark.surface : "white";
   const textColor = color ? "white" : isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
 
-  const membersByTeam = useMemo(() => {
-    if (!teamMembers?.data) return {};
+  const ownerId: string | undefined = assignedUsers?.[0]?.assignedUserId;
+  const hasAssignees = (assignedUsers?.length ?? 0) > 0;
 
-    const map: Record<string, TeamMembersData[]> = {};
+  const nameOf = (userId: string) =>
+    (teamMembers?.data as TeamMembersData[] | undefined)?.find((m) => m.id === userId)?.name ?? "";
 
-    for (const member of teamMembers.data) {
-      for (const team of member.teams) {
-        if (!map[team.team_id]) {
-          map[team.team_id] = [];
-        }
-        map[team.team_id].push(member);
-      }
+  function choose(pick: AssigneePick) {
+    if (assign.isPending) return;
+    let userId: string | null = null;
+    let teamId: string | null = null;
+    if (pick.kind === "me") userId = me?.userId ?? null;
+    if (pick.kind === "person") userId = pick.member.id;
+    if (pick.kind === "team") teamId = pick.teamId;
+    if (userId && userId === ownerId && assignedUsers?.length === 1) {
+      setVisible(false);
+      return;
     }
 
-    return map;
-  }, [teamMembers]);
-
-  const initialAssignees = useMemo(() => {
-    if (!assignedUsers) return [];
-    return assignedUsers.map((a: any) => ({
-      userId: a.assignedUserId,
-      teamId: a.teamId,
-    }));
-  }, [assignedUsers]);
-
-  const [assignedStaff, setAssignedStaff] = useState<Assignee[]>(initialAssignees);
-
-  // Building the team/member tree is the expensive part, and RN's Modal mounts
-  // its children only once `visible` flips — so doing it in the same frame as
-  // the tap stalls the slide animation. Render the sheet chrome immediately and
-  // the list once the animation has settled.
-  //
-  // Whether the list is shown is `visible && settled`, derived: a closed sheet is never
-  // ready, so that half needs no effect to maintain, and only the "has the animation
-  // finished" half is actually state.
-  const [contentSettled, setContentSettled] = useState(false);
-  const contentReady = visible && contentSettled;
-
-  // Read through a ref so a late-resolving query can't clobber a selection the
-  // user is part-way through making.
-  //
-  // Synced in an effect rather than assigned during render: a render can be thrown away
-  // or replayed, and a write from one that never commits would leave the ref holding a
-  // value the screen never showed. This effect is declared *before* the one below so it
-  // always runs first, which is what keeps `.current` fresh at the point it is read.
-  const initialAssigneesRef = useRef(initialAssignees);
-  useEffect(() => {
-    initialAssigneesRef.current = initialAssignees;
-  }, [initialAssignees]);
-
-  useEffect(() => {
-    if (!visible) return;
-    // Re-seed from the server each time it opens. `useState(initialAssignees)`
-    // only ever saw the first render's value — before the query resolved — so
-    // the sheet opened with nothing selected and assigning wiped the existing
-    // assignees.
-    setAssignedStaff(initialAssigneesRef.current);
-    const task = InteractionManager.runAfterInteractions(() => setContentSettled(true));
-    // Cleared on close, so the next open defers the list again rather than
-    // painting the whole tree in the frame the sheet starts sliding.
-    return () => {
-      task.cancel();
-      setContentSettled(false);
-    };
-  }, [visible]);
-
-  const toggleMember = useCallback((userId: string, teamId: string) => {
-    setAssignedStaff((prev) => {
-      const exists = prev.find((a) => a.userId === userId);
-      if (exists && exists.teamId === teamId) {
-        return prev.filter((a) => a.userId !== userId);
-      }
-      return [...prev.filter((a) => a.userId !== userId), { userId, teamId }];
-    });
-  }, []);
-
-  const handleAssign = async () => {
-    const id = generateInternalMessageId();
-    assignMut.mutate(
+    setError(null);
+    setPendingKey(pick.key);
+    assign.mutate(
+      { contactId, userId, teamId, messageId: generateInternalMessageId() },
       {
-        contactId: contactId,
-        assignees: assignedStaff,
-        messageId: id,
-      },
-      {
-        onSuccess: () => {
-          // Closed here rather than on tap, so the sheet stays up showing its
-          // spinner while the request is in flight.
-          setVisible(false);
-          setWaAssignStatus("ASSIGNED");
-          Toast.show({
-            type: "success",
-            text1: "Assigned Successfully",
-          });
-
-          // Same as "Assign to me": the list reads from the contacts store, so
-          // it has to be told directly.
+        onSuccess: (result) => {
+          const owners = (result?.assignees ?? []).map((a) => ({
+            id: a.userId,
+            teamId: a.teamId,
+            name: nameOf(a.userId),
+          }));
+          setWaAssignStatus(owners.length ? "ASSIGNED" : "UNASSIGNED");
+          // The inbox list renders from the contacts store, not react-query.
           useContactsStore.getState().updateContactById(contactId, (c: any) => ({
             ...c,
-            waMessageAssignStatus: "ASSIGNED",
-            assignedUsers: assignedStaff.map((a: any) => ({
-              id: a.userId,
-              teamId: a.teamId,
-              name: a.name ?? "",
-            })),
+            waMessageAssignStatus: owners.length ? "ASSIGNED" : "UNASSIGNED",
+            assignedUsers: owners,
           }));
-
-          queryClient.invalidateQueries({
-            queryKey: ["assigned-contact", contactId],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["wa-messages", contactId],
-          });
-          queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-          queryClient.invalidateQueries({
-            queryKey: ["assignedInboxUser", contactId],
-          });
-          queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
-        },
-        onError: (error: any) => {
+          setVisible(false);
           Toast.show({
-            type: "error",
-            text1: "Could not assign",
-            text2: error?.response?.data?.message ?? error?.message ?? "Please try again.",
+            type: "success",
+            text1: owners.length ? `Assigned to ${owners[0].name}` : "Unassigned",
           });
         },
+        onError: (err: any) => {
+          setError(err?.response?.data?.message ?? err?.message ?? "Please try again.");
+        },
+        onSettled: () => setPendingKey(null),
       },
     );
-  };
+  }
 
   // Hooks above run unconditionally; only the render is gated.
   if (!can("inbox.assign")) return null;
@@ -236,249 +149,19 @@ export default function AssignToUser({
         </TouchableOpacity>
       )}
 
-      <Modal
+      <AssigneeSheet
         visible={visible}
-        transparent
-        animationType="slide"
-        // Lets the slide run on the Android render thread instead of the JS one.
-        hardwareAccelerated
-        statusBarTranslucent
-        onRequestClose={() => setVisible(false)}
-      >
-        <Pressable className="flex-1" onPress={() => setVisible(false)}>
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }} />
-        </Pressable>
-
-        <SafeAreaView
-          style={{
-            backgroundColor: isDark ? Colors.dark.surface : "#fff",
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 24,
-            maxHeight: "70%",
-            borderWidth: 1,
-            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
-          }}
-        >
-          <View
-            style={{
-              width: 48,
-              height: 6,
-              backgroundColor: isDark ? "rgba(255,255,255,0.2)" : "#d1d5db",
-              borderRadius: 999,
-              alignSelf: "center",
-              marginBottom: 16,
-            }}
-          />
-
-          <Text
-            style={{
-              fontFamily: "InstrumentSans_700Bold",
-              fontSize: 18,
-              color: isDark ? "#fff" : Colors.light.textPrimary,
-              marginBottom: 16,
-            }}
-          >
-            Assign chat
-          </Text>
-
-          {!contentReady ? (
-            // Reserves the sheet's height so it doesn't resize a frame later.
-            <View
-              style={{
-                minHeight: 220,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ActivityIndicator size="small" color={Colors.brand.blue} />
-            </View>
-          ) : (
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 16 }}
-              style={{ minHeight: 220 }}
-            >
-              {teamRes?.data?.map((team: any) => {
-                const teamStaff = membersByTeam[team.id] ?? [];
-                if (teamsLoading || isAssignedLoading) {
-                  return (
-                    <View
-                      key={team.id}
-                      style={{
-                        flex: 1,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        paddingVertical: 20,
-                      }}
-                    >
-                      <ActivityIndicator size="small" color={Colors.brand.blue} />
-                    </View>
-                  );
-                }
-                return (
-                  <View key={team.id} style={{ marginBottom: 16 }}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 6,
-                        marginBottom: 8,
-                      }}
-                    >
-                      <Users
-                        size={14}
-                        color={isDark ? Colors.dark.textSubtle : Colors.light.textSubtle}
-                      />
-                      <Text
-                        style={{
-                          fontFamily: "InstrumentSans_700Bold",
-                          fontSize: 14,
-                          color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-                        }}
-                      >
-                        {team.name}
-                      </Text>
-                    </View>
-
-                    {teamStaff.map((member) => (
-                      <MemberRow
-                        key={member.id}
-                        member={member}
-                        teamId={team.id}
-                        isDark={isDark}
-                        isSelected={assignedStaff.some(
-                          (a) => a.userId === member.id && a.teamId === team.id,
-                        )}
-                        onToggle={toggleMember}
-                      />
-                    ))}
-                  </View>
-                );
-              })}
-            </ScrollView>
-          )}
-
-          <TouchableOpacity
-            onPress={handleAssign}
-            disabled={assignMut.isPending}
-            style={{
-              marginTop: 16,
-              backgroundColor: Colors.brand.blue,
-              paddingVertical: 12,
-              borderRadius: 12,
-              minHeight: 45,
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: assignMut.isPending ? 0.7 : 1,
-              shadowColor: Colors.brand.blue,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isDark ? 0.4 : 0.2,
-              shadowRadius: 8,
-              elevation: 4,
-            }}
-          >
-            {assignMut.isPending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text
-                style={{
-                  color: "#fff",
-                  textAlign: "center",
-                  fontFamily: "InstrumentSans_700Bold",
-                  fontSize: 15,
-                }}
-              >
-                Assign
-              </Text>
-            )}
-          </TouchableOpacity>
-        </SafeAreaView>
-      </Modal>
+        onClose={() => {
+          setVisible(false);
+          setError(null);
+        }}
+        title="Assign chat"
+        ownerId={ownerId}
+        canUnassign={hasAssignees}
+        onChoose={choose}
+        pendingKey={pendingKey}
+        error={error}
+      />
     </>
   );
 }
-
-type Assignee = {
-  userId: string;
-  teamId: string;
-};
-
-/**
- * Memoised so toggling one teammate re-renders that row instead of every row in
- * every team — the whole tree used to re-render on each tap.
- */
-const MemberRow = memo(function MemberRow({
-  member,
-  teamId,
-  isDark,
-  isSelected,
-  onToggle,
-}: Readonly<{
-  member: any;
-  teamId: string;
-  isDark: boolean;
-  isSelected: boolean;
-  onToggle: (userId: string, teamId: string) => void;
-}>) {
-  return (
-    <Pressable
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingVertical: 8,
-      }}
-      onPress={() => onToggle(member.id, teamId)}
-    >
-      <View style={{ marginLeft: 8 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: Colors.brand.blue,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 12,
-                fontFamily: "InstrumentSans_700Bold",
-              }}
-            >
-              {namePreview(member?.name)}
-            </Text>
-          </View>
-          <View>
-            <Text
-              style={{
-                fontFamily: "InstrumentSans_600SemiBold",
-                fontSize: 14,
-                color: isDark ? "#fff" : Colors.light.textPrimary,
-              }}
-            >
-              {member.name}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "InstrumentSans_400Regular",
-                fontSize: 11,
-                color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
-              }}
-            >
-              {member.status === "online" ? "Online" : "Offline"}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {isSelected && <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />}
-    </Pressable>
-  );
-});

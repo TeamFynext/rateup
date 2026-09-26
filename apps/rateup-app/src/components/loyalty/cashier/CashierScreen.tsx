@@ -52,6 +52,7 @@ import { buildWhatsAppPreview } from "./logic/message-preview";
 import { isUnreachable, responseStatus } from "./logic/network";
 import { pendingDeltaFor, queueSummary, refusalFor, type OutboxItem } from "./logic/outbox";
 import { estimateEarn } from "./logic/points-estimate";
+import { signupBonusFor } from "./logic/signupBonus";
 import {
   provisionalEarnReceipt,
   provisionalMarkUsedReceipt,
@@ -661,7 +662,7 @@ export default function CashierScreen() {
       const created =
         (response as { data?: { id?: string; contactId?: string; currentPoints?: number } }).data ??
         response;
-      const bonus = created.currentPoints ?? program.signupBonus ?? 0;
+      const bonus = created.currentPoints ?? signupBonusFor(program);
       record({
         id: created.id ?? values.phone,
         contactId: created.contactId ?? "",
@@ -902,7 +903,7 @@ export default function CashierScreen() {
         <NewCustomerForm
           prefill={prefill}
           defaultCountry={program.defaultCountryCode ?? "IN"}
-          signupBonus={program.signupBonus ?? 0}
+          signupBonus={signupBonusFor(program)}
           pointsName={pointsName}
           isSaving={createCustomer.isPending}
           programActive={program.status === "active"}
