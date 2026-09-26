@@ -99,7 +99,9 @@ import { Route as marketingPricingShopifyIndexRouteImport } from './routes/(mark
 import { Route as marketingProductsAiAutomationIndexRouteImport } from './routes/(marketing)/products/ai-automation/index'
 import { Route as marketingProductsAiReviewIndexRouteImport } from './routes/(marketing)/products/ai-review/index'
 import { Route as marketingProductsInboxIndexRouteImport } from './routes/(marketing)/products/inbox/index'
+import { Route as marketingProductsMetaAiAgentIndexRouteImport } from './routes/(marketing)/products/meta-ai-agent/index'
 import { Route as marketingProductsOmnichannelInboxIndexRouteImport } from './routes/(marketing)/products/omnichannel-inbox/index'
+import { Route as marketingProductsPipelineIndexRouteImport } from './routes/(marketing)/products/pipeline/index'
 import { Route as marketingProductsQrStudioIndexRouteImport } from './routes/(marketing)/products/qr-studio/index'
 import { Route as marketingProductsQrIndexRouteImport } from './routes/(marketing)/products/qr/index'
 import { Route as marketingProductsTestimonialGatewayIndexRouteImport } from './routes/(marketing)/products/testimonial-gateway/index'
@@ -691,10 +693,22 @@ const marketingProductsInboxIndexRoute =
     path: '/products/inbox/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
+const marketingProductsMetaAiAgentIndexRoute =
+  marketingProductsMetaAiAgentIndexRouteImport.update({
+    id: '/products/meta-ai-agent/',
+    path: '/products/meta-ai-agent/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
 const marketingProductsOmnichannelInboxIndexRoute =
   marketingProductsOmnichannelInboxIndexRouteImport.update({
     id: '/products/omnichannel-inbox/',
     path: '/products/omnichannel-inbox/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
+const marketingProductsPipelineIndexRoute =
+  marketingProductsPipelineIndexRouteImport.update({
+    id: '/products/pipeline/',
+    path: '/products/pipeline/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
 const marketingProductsQrStudioIndexRoute =
@@ -1477,7 +1491,9 @@ export interface FileRoutesByFullPath {
   '/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
   '/products/inbox/': typeof marketingProductsInboxIndexRoute
+  '/products/meta-ai-agent/': typeof marketingProductsMetaAiAgentIndexRoute
   '/products/omnichannel-inbox/': typeof marketingProductsOmnichannelInboxIndexRoute
+  '/products/pipeline/': typeof marketingProductsPipelineIndexRoute
   '/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/products/qr/': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
@@ -1677,7 +1693,9 @@ export interface FileRoutesByTo {
   '/products/ai-automation': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review': typeof marketingProductsAiReviewIndexRoute
   '/products/inbox': typeof marketingProductsInboxIndexRoute
+  '/products/meta-ai-agent': typeof marketingProductsMetaAiAgentIndexRoute
   '/products/omnichannel-inbox': typeof marketingProductsOmnichannelInboxIndexRoute
+  '/products/pipeline': typeof marketingProductsPipelineIndexRoute
   '/products/qr-studio': typeof marketingProductsQrStudioIndexRoute
   '/products/qr': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway': typeof marketingProductsTestimonialGatewayIndexRoute
@@ -1886,7 +1904,9 @@ export interface FileRoutesById {
   '/(marketing)/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/(marketing)/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
   '/(marketing)/products/inbox/': typeof marketingProductsInboxIndexRoute
+  '/(marketing)/products/meta-ai-agent/': typeof marketingProductsMetaAiAgentIndexRoute
   '/(marketing)/products/omnichannel-inbox/': typeof marketingProductsOmnichannelInboxIndexRoute
+  '/(marketing)/products/pipeline/': typeof marketingProductsPipelineIndexRoute
   '/(marketing)/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/(marketing)/products/qr/': typeof marketingProductsQrIndexRoute
   '/(marketing)/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
@@ -2093,7 +2113,9 @@ export interface FileRouteTypes {
     | '/products/ai-automation/'
     | '/products/ai-review/'
     | '/products/inbox/'
+    | '/products/meta-ai-agent/'
     | '/products/omnichannel-inbox/'
+    | '/products/pipeline/'
     | '/products/qr-studio/'
     | '/products/qr/'
     | '/products/testimonial-gateway/'
@@ -2293,7 +2315,9 @@ export interface FileRouteTypes {
     | '/products/ai-automation'
     | '/products/ai-review'
     | '/products/inbox'
+    | '/products/meta-ai-agent'
     | '/products/omnichannel-inbox'
+    | '/products/pipeline'
     | '/products/qr-studio'
     | '/products/qr'
     | '/products/testimonial-gateway'
@@ -2501,7 +2525,9 @@ export interface FileRouteTypes {
     | '/(marketing)/products/ai-automation/'
     | '/(marketing)/products/ai-review/'
     | '/(marketing)/products/inbox/'
+    | '/(marketing)/products/meta-ai-agent/'
     | '/(marketing)/products/omnichannel-inbox/'
+    | '/(marketing)/products/pipeline/'
     | '/(marketing)/products/qr-studio/'
     | '/(marketing)/products/qr/'
     | '/(marketing)/products/testimonial-gateway/'
@@ -3261,11 +3287,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingProductsInboxIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
+    '/(marketing)/products/meta-ai-agent/': {
+      id: '/(marketing)/products/meta-ai-agent/'
+      path: '/products/meta-ai-agent'
+      fullPath: '/products/meta-ai-agent/'
+      preLoaderRoute: typeof marketingProductsMetaAiAgentIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(marketing)/products/omnichannel-inbox/': {
       id: '/(marketing)/products/omnichannel-inbox/'
       path: '/products/omnichannel-inbox'
       fullPath: '/products/omnichannel-inbox/'
       preLoaderRoute: typeof marketingProductsOmnichannelInboxIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/products/pipeline/': {
+      id: '/(marketing)/products/pipeline/'
+      path: '/products/pipeline'
+      fullPath: '/products/pipeline/'
+      preLoaderRoute: typeof marketingProductsPipelineIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
     '/(marketing)/products/qr-studio/': {
@@ -4155,7 +4195,9 @@ interface marketingRouteRouteChildren {
   marketingProductsAiAutomationIndexRoute: typeof marketingProductsAiAutomationIndexRoute
   marketingProductsAiReviewIndexRoute: typeof marketingProductsAiReviewIndexRoute
   marketingProductsInboxIndexRoute: typeof marketingProductsInboxIndexRoute
+  marketingProductsMetaAiAgentIndexRoute: typeof marketingProductsMetaAiAgentIndexRoute
   marketingProductsOmnichannelInboxIndexRoute: typeof marketingProductsOmnichannelInboxIndexRoute
+  marketingProductsPipelineIndexRoute: typeof marketingProductsPipelineIndexRoute
   marketingProductsQrStudioIndexRoute: typeof marketingProductsQrStudioIndexRoute
   marketingProductsQrIndexRoute: typeof marketingProductsQrIndexRoute
   marketingProductsTestimonialGatewayIndexRoute: typeof marketingProductsTestimonialGatewayIndexRoute
@@ -4196,8 +4238,11 @@ const marketingRouteRouteChildren: marketingRouteRouteChildren = {
     marketingProductsAiAutomationIndexRoute,
   marketingProductsAiReviewIndexRoute: marketingProductsAiReviewIndexRoute,
   marketingProductsInboxIndexRoute: marketingProductsInboxIndexRoute,
+  marketingProductsMetaAiAgentIndexRoute:
+    marketingProductsMetaAiAgentIndexRoute,
   marketingProductsOmnichannelInboxIndexRoute:
     marketingProductsOmnichannelInboxIndexRoute,
+  marketingProductsPipelineIndexRoute: marketingProductsPipelineIndexRoute,
   marketingProductsQrStudioIndexRoute: marketingProductsQrStudioIndexRoute,
   marketingProductsQrIndexRoute: marketingProductsQrIndexRoute,
   marketingProductsTestimonialGatewayIndexRoute:

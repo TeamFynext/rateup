@@ -1,13 +1,10 @@
 /* Copy for the inbox landing page. Everything here describes something the dashboard inbox
    really does — check `components/whatsapp/inbox` before adding a claim. */
 
-export interface InboxFaq {
-  question: string;
-  answer: string;
-}
+import type { ProductFaqItem } from "../shared/ProductFaq";
 
 /** Feeds both the accordion and the route's `FAQPage` JSON-LD. */
-export const INBOX_FAQS: readonly InboxFaq[] = [
+export const INBOX_FAQS: readonly ProductFaqItem[] = [
   {
     question: "Which channels does the RateUp inbox support?",
     answer:

@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 
-import { useReveal } from "@/components/RateupHomePage/shared/home-ui";
-
+import ProblemCards from "../shared/ProblemCards";
 import { PROBLEMS } from "./content";
-import { BAND, Glyph, SectionHead } from "./parts";
 
 const ICONS: Record<(typeof PROBLEMS)[number]["icon"], ReactNode> = {
   owner: (
@@ -23,45 +21,11 @@ const ICONS: Record<(typeof PROBLEMS)[number]["icon"], ReactNode> = {
 };
 
 export default function Problem() {
-  const [ref, shown] = useReveal<HTMLDivElement>(0.2);
-
   return (
-    <section className="bg-white">
-      <div className={BAND}>
-        <SectionHead
-          eyebrow="Sound familiar?"
-          icon={
-            <>
-              <path d="M12 3 2.5 20h19L12 3Z" />
-              <path d="M12 10v4M12 17.2v.1" />
-            </>
-          }
-          title="A shared login is not a support system."
-        >
-          Three people on one WhatsApp number, DMs nobody owns, and no way to show what got
-          resolved.
-        </SectionHead>
-
-        <div ref={ref} className="grid gap-4 md:grid-cols-3">
-          {PROBLEMS.map((problem, i) => (
-            <div
-              key={problem.title}
-              style={{ animationDelay: `${i * 110}ms` }}
-              className={`flex flex-col gap-3 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-6.5 motion-reduce:animate-none ${
-                shown ? "animate-ru-rise" : "opacity-0"
-              }`}
-            >
-              <span className="flex size-10 items-center justify-center rounded-[10px] border border-ru-amber-200 bg-ru-amber-50 text-ru-amber-700">
-                <Glyph>{ICONS[problem.icon]}</Glyph>
-              </span>
-              <h3 className="font-display text-[19px] font-bold tracking-[-0.018em] text-ru-n-700">
-                {problem.title}
-              </h3>
-              <p className="text-[15.5px]/[1.55] text-ru-n-500">{problem.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    <ProblemCards
+      title="A shared login is not a support system."
+      lead="Three people on one WhatsApp number, DMs nobody owns, and no way to show what got resolved."
+      problems={PROBLEMS.map((problem) => ({ ...problem, icon: ICONS[problem.icon] }))}
+    />
   );
 }

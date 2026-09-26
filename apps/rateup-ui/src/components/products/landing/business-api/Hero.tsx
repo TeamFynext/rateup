@@ -1,15 +1,20 @@
 import { Link } from "@tanstack/react-router";
 
 import { BOOK_DEMO_ROUTE } from "@/components/RateupHomePage/helper/BookDemoLink";
+import HeroCanvas from "@/components/RateupHomePage/shared/hero-bg/HeroCanvas";
+import { tileLattice } from "@/components/RateupHomePage/shared/hero-bg/scenes/tileLattice";
 import { CheckIcon } from "@/components/RateupHomePage/shared/home-ui";
 
 import PhoneMock from "./PhoneMock";
 
 const PROOF = ["Free plan, no card", "Three required steps", "Keep your number"] as const;
 
+const lattice = () => tileLattice({ ground: "light" });
+
 export default function Hero() {
   return (
-    <section className="bg-background">
+    <section className="relative isolate overflow-hidden bg-background">
+      <HeroCanvas scene={lattice} className="-z-10" />
       <div className="mx-auto grid max-w-280 grid-cols-1 items-center gap-13 px-5 pt-[clamp(3rem,6vw,5.5rem)] pb-[clamp(2.75rem,5vw,4.5rem)] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         <div>
           <div className="mb-6 inline-flex items-center gap-2.25 rounded-full border border-ru-n-200 bg-white py-1.25 pr-3.5 pl-1.5 shadow-xs">

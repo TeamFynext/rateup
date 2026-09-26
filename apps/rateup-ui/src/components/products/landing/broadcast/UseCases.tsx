@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { BAND, SectionHead } from "../shared/section";
+
 /** Who broadcasts, and what they send. Each card links into the cluster where one exists. */
 
 interface UseCase {
@@ -28,7 +30,8 @@ const USE_CASES: readonly UseCase[] = [
     title: "D2C ecommerce",
     body: (
       <>
-        Restock alerts and abandoned checkout recovery, triggered straight from your store with the{" "}
+        New-collection launches to your list, while order updates and abandoned-checkout reminders
+        run on their own through the{" "}
         <Link
           to="/integrations/shopify"
           className="font-medium text-ru-blue-600 underline underline-offset-2 hover:text-ru-blue-700"
@@ -72,7 +75,7 @@ const USE_CASES: readonly UseCase[] = [
   },
   {
     title: "Clinics & services",
-    body: "Appointment reminders that cut no-shows, and follow-up messages sent days after a visit.",
+    body: "Health camp and new-service announcements, and a drip that follows up days after a visit.",
     tile: "border-ru-blue-200 bg-ru-blue-100 text-ru-blue-700",
     icon: (
       <>
@@ -88,16 +91,23 @@ const USE_CASES: readonly UseCase[] = [
 
 export default function UseCases() {
   return (
-    <section className="border-y border-ru-n-100 bg-ru-n-50 py-[clamp(3rem,7vw,5.5rem)]">
-      <div className="mx-auto flex max-w-280 flex-col gap-9 px-5">
-        <h2 className="max-w-[24ch] font-display text-[clamp(1.625rem,3.6vw,2.25rem)]/[1.12] font-bold tracking-[-0.028em] text-pretty text-ru-n-700">
-          Built for teams that send to thousands, not dozens.
-        </h2>
+    <section className="bg-white">
+      <div className={BAND}>
+        <SectionHead
+          eyebrow="Who broadcasts"
+          icon={
+            <>
+              <circle cx="9" cy="8" r="3.4" />
+              <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.4 3.4 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6" />
+            </>
+          }
+          title="Built for teams that send to thousands, not dozens."
+        />
         <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-5">
           {USE_CASES.map((useCase) => (
             <div
               key={useCase.title}
-              className="flex flex-col gap-3.5 rounded-xl bg-white p-8 shadow-xs ring-1 ring-ru-n-200 ring-inset"
+              className="flex flex-col gap-3.5 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-6.5"
             >
               <span
                 className={`flex size-10 items-center justify-center rounded-lg border ${useCase.tile}`}
@@ -115,10 +125,10 @@ export default function UseCases() {
                   {useCase.icon}
                 </svg>
               </span>
-              <h3 className="font-display text-base/[1.35] font-medium tracking-[-0.01em] text-ru-n-700">
+              <h3 className="font-display text-[19px] font-bold tracking-[-0.018em] text-ru-n-700">
                 {useCase.title}
               </h3>
-              <p className="text-sm/[1.6] text-ru-n-500">{useCase.body}</p>
+              <p className="text-[15.5px]/[1.55] text-ru-n-500">{useCase.body}</p>
             </div>
           ))}
         </div>

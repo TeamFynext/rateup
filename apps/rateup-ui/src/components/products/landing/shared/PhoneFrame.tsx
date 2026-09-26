@@ -13,6 +13,18 @@ import type { ReactNode } from "react";
  * message bubbles, nothing else.
  */
 
+/** The customer's own message: right-hand, brand blue. */
+export const PHONE_OUT =
+  "flex-none max-w-[80%] self-end rounded-2xl rounded-br-xs bg-ru-blue-600 px-3.25 py-2.5 text-sm/[1.5] text-white animate-ru-msg-in motion-reduce:animate-none";
+
+/** The business's message: left-hand, white. */
+export const PHONE_IN =
+  "flex-none max-w-[88%] self-start rounded-2xl rounded-bl-xs border border-ru-n-200 bg-white px-3.25 py-2.5 text-sm/[1.5] text-ru-n-600 animate-ru-msg-in motion-reduce:animate-none";
+
+/** A centred system line, e.g. a handover. */
+export const PHONE_SYSTEM =
+  "flex-none self-center rounded-full border border-ru-n-200 bg-white px-3 py-1 text-[11.5px] font-medium text-ru-n-500 animate-ru-msg-in motion-reduce:animate-none";
+
 /** Delivery ticks. Read receipts are blue; sent and delivered are grey. */
 export function Ticks({ tone }: Readonly<{ tone: "sent" | "delivered" | "read" }>) {
   return (

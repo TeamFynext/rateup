@@ -160,6 +160,12 @@ export default function HomePageFooter() {
             <Link to="/products/whatsapp-feedback" className={LINK}>
               WhatsApp Feedback
             </Link>
+            <Link to="/products/pipeline" className={LINK}>
+              Pipeline
+            </Link>
+            <Link to="/products/meta-ai-agent" className={LINK}>
+              Meta AI Agent
+            </Link>
           </FooterCol>
 
           <FooterCol title="Company">

@@ -1,11 +1,15 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-import { CAMPAIGN_TABS } from "./content";
-import type { CampaignTab } from "./content";
+import { BAND, SectionHead } from "../shared/section";
+
+/** The decisions a campaign takes, in the order the tab strip shows them. */
+const CAMPAIGN_TABS = ["AUDIENCE", "TEMPLATES", "SCHEDULING", "RELIABILITY", "REPORTING"] as const;
+
+type CampaignTab = (typeof CAMPAIGN_TABS)[number];
 
 /**
- * The product tour: four tabs, one per decision a campaign takes, each pairing an explanation
+ * The product tour: one tab per decision a campaign takes, each pairing an explanation
  * with a mock of the screen that takes it.
  *
  * All four panels are in the DOM and toggled with `hidden`, not mounted on demand — the copy in
@@ -14,10 +18,11 @@ import type { CampaignTab } from "./content";
  */
 
 const TAB_LABEL: Record<CampaignTab, string> = {
-  AUDIENCE: "AUDIENCE",
-  TEMPLATES: "TEMPLATES",
-  SCHEDULING: "SCHEDULING",
-  REPORTING: "REPORTING",
+  AUDIENCE: "Audience",
+  TEMPLATES: "Templates",
+  SCHEDULING: "Scheduling",
+  RELIABILITY: "Retries & pauses",
+  REPORTING: "Reporting",
 };
 
 function Tag({ children }: Readonly<{ children: ReactNode }>) {
@@ -152,21 +157,18 @@ export default function CampaignTabs() {
   const [active, setActive] = useState<CampaignTab>("AUDIENCE");
 
   return (
-    <section className="py-[clamp(3rem,7vw,5.5rem)]">
-      <div className="mx-auto flex max-w-280 flex-col gap-8 px-5">
-        <div className="flex flex-col gap-3.5">
-          <span className="text-[11.5px] font-semibold tracking-[0.1em] text-ru-blue-500 uppercase">
-            How a RateUp campaign works
-          </span>
-          <h2 className="max-w-[26ch] font-display text-[clamp(1.625rem,3.6vw,2.25rem)]/[1.12] font-bold tracking-[-0.028em] text-pretty text-ru-n-700">
-            Every WhatsApp campaign takes four decisions, and RateUp holds all four.
-          </h2>
-        </div>
+    <section id="features" className="border-y border-ru-n-100 bg-ru-n-50">
+      <div className={`${BAND} flex flex-col gap-8`}>
+        <SectionHead
+          eyebrow="How a campaign works"
+          icon={<path d="M4 12h13M13 6l6 6-6 6" />}
+          title="Every campaign takes five decisions. RateUp holds all five."
+        />
 
         <div
           role="tablist"
           aria-label="Campaign steps"
-          className="inline-flex h-9 w-fit max-w-full gap-0.5 overflow-x-auto rounded-lg bg-ru-n-50 p-0.75"
+          className="mx-auto inline-flex h-10 w-fit max-w-full gap-0.5 overflow-x-auto rounded-lg border border-ru-n-200 bg-white p-0.75"
         >
           {CAMPAIGN_TABS.map((tab) => (
             <button
@@ -178,7 +180,7 @@ export default function CampaignTabs() {
               aria-controls={`broadcast-panel-${tab}`}
               onClick={() => setActive(tab)}
               className={`h-full cursor-pointer rounded-md px-3 text-[13.5px] font-medium whitespace-nowrap transition-colors ${
-                active === tab ? "bg-white text-ru-n-700 shadow-xs" : "text-ru-n-500"
+                active === tab ? "bg-ru-blue-50 text-ru-blue-700" : "text-ru-n-500"
               }`}
             >
               {TAB_LABEL[tab]}
@@ -195,8 +197,8 @@ export default function CampaignTabs() {
           <Panel
             hidden={false}
             title="Pick who gets it in three ways"
-            body="Add individual contacts, pull in a saved contact group, or re-target a previous campaign by message status — delivered, read, failed or pending. Import contacts from CSV, XLSX or ODS, and keep a per-campaign consent gate on so you only message people who opted in."
-            tags={["Contact groups", "CSV/XLSX import", "Re-target by status", "Consent gate"]}
+            body="Add individual contacts, pull in a saved contact group, or reuse the audience of a past campaign — everyone who completed it, didn't, is still pending or failed. Import contacts from CSV, and keep “only send to contacts who opted in” on."
+            tags={["Contact groups", "CSV import", "Past campaigns", "Opt-in only"]}
           >
             <MockCard>
               <CardTitle>Audience</CardTitle>
@@ -212,7 +214,7 @@ export default function CampaignTabs() {
                   }
                 />
                 <Row
-                  label="diwali-list.xlsx"
+                  label="diwali-list.csv"
                   value="2,980"
                   icon={
                     <>
@@ -225,7 +227,7 @@ export default function CampaignTabs() {
                 />
                 <Row
                   highlight
-                  label="Re-target: Onam teaser · read"
+                  label="Onam teaser · not completed"
                   value="1,000"
                   icon={
                     <>
@@ -243,10 +245,8 @@ export default function CampaignTabs() {
               </div>
               <div className="flex items-center justify-between gap-3 rounded-lg bg-ru-n-50 p-3.5">
                 <span className="flex flex-col gap-0.5">
-                  <span className="text-sm text-ru-n-700">
-                    Only send messages to contacts who have given consent
-                  </span>
-                  <span className="text-[13px] text-ru-n-400">Recommended on</span>
+                  <span className="text-sm text-ru-n-700">Only send to contacts who opted in</span>
+                  <span className="text-[13px] text-ru-n-400">Recommended</span>
                 </span>
                 {/* A picture of a switch, not a control — the page has nothing to toggle. */}
                 <span
@@ -269,8 +269,8 @@ export default function CampaignTabs() {
           <Panel
             hidden={false}
             title="Approved templates, personalised per contact"
-            body="Choose any Meta-approved template — Marketing, Utility or Authentication — then map its body variables to Name or any custom field. Buttons cover quick reply, call phone number, copy offer code, visit website, WhatsApp Flow, a RateUp web survey, view catalog, and single- or multi-product catalog."
-            tags={["Marketing & Utility", "Dynamic variables", "Flow buttons", "Catalog buttons"]}
+            body="Choose any Meta-approved template — Marketing, Utility or Authentication — then map its body variables to Name or any custom field. Headers carry an image, video or document; carousels are supported; buttons cover website links, copy offer code, quick reply, WhatsApp Flows, a RateUp survey link, and catalog or multi-product views."
+            tags={["Per-contact variables", "Media headers", "Carousels", "Flow & catalog buttons"]}
           >
             <MockCard>
               <div className="flex items-center justify-between gap-3">
@@ -337,8 +337,8 @@ export default function CampaignTabs() {
           <Panel
             hidden={false}
             title="Send now, schedule later, or drip over weeks"
-            body="Send Now, or Schedule Later with a date and time. Set a daily send limit and RateUp spreads the campaign across days for you. Drip campaigns run multiple stages, each with its own template, delay in minutes, hours, days, weeks or months, and its own send-at time — start and pause whenever you need."
-            tags={["Send now", "Schedule", "Daily limit", "Drip stages"]}
+            body="Send now, or schedule a date and time in the timezone you choose. Set a daily send limit and RateUp spreads the campaign across days for you. Drip campaigns run several stages, each with its own template and a delay in minutes, hours or days. Send a test to yourself before anyone else sees it."
+            tags={["Send now", "Schedule in any timezone", "Daily limit", "Drip stages"]}
           >
             <MockCard>
               <CardTitle>Schedule</CardTitle>
@@ -380,9 +380,9 @@ export default function CampaignTabs() {
                   </Badge>
                 </span>
                 {[
-                  { n: "1", name: "onam_teaser", when: "Day 0 · 10:00", done: true },
-                  { n: "2", name: "onam_collection_v3", when: "+3 days · 9:00", done: true },
-                  { n: "3", name: "last_call_offer", when: "+1 week · 18:30", done: false },
+                  { n: "1", name: "onam_teaser", when: "Start", done: true },
+                  { n: "2", name: "onam_collection_v3", when: "+3 days", done: true },
+                  { n: "3", name: "last_call_offer", when: "+2 days", done: false },
                 ].map((stage) => (
                   <div
                     key={stage.n}
@@ -406,6 +406,60 @@ export default function CampaignTabs() {
 
         <div
           role="tabpanel"
+          id="broadcast-panel-RELIABILITY"
+          aria-labelledby="broadcast-tab-RELIABILITY"
+          hidden={active !== "RELIABILITY"}
+        >
+          <Panel
+            hidden={false}
+            title="Recover what Meta holds back, pause before you overspend"
+            body="When Meta holds a marketing message back because the contact has had too many recently, automatic retries send it again once the cap lifts — on smart timing or once a day, up to three attempts, never in your quiet hours. If your conversation allowance runs out or Meta rejects your payment method, the campaign pauses itself; resume on the original schedule, now, or at a new time."
+            tags={["Smart retries", "Quiet hours", "Auto-pause", "Resume options"]}
+          >
+            <MockCard>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle>Retry blocked messages</CardTitle>
+                <Badge tone="success" dot>
+                  On
+                </Badge>
+              </div>
+              <div className="flex flex-col gap-2">
+                {[
+                  { label: "Strategy", value: "Smart retries" },
+                  { label: "Max attempts", value: "3" },
+                  { label: "Retry window", value: "5 days" },
+                  { label: "Quiet hours", value: "21:00 – 09:00" },
+                ].map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-center justify-between rounded-lg bg-ru-n-50 px-3.5 py-2.75 text-sm"
+                  >
+                    <span className="text-ru-n-600">{row.label}</span>
+                    <span className="font-medium text-ru-n-700">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col gap-2 rounded-lg border border-ru-amber-200 bg-ru-amber-50 p-3.5">
+                <span className="text-sm font-medium text-ru-amber-700">
+                  Paused · conversation allowance used up
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {["Keep original schedule", "Send now", "Pick a new time"].map((label) => (
+                    <span
+                      key={label}
+                      className="inline-flex h-7.5 items-center rounded-md border border-ru-n-200 bg-white px-2.5 text-[13px] font-medium text-ru-n-600"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </MockCard>
+          </Panel>
+        </div>
+
+        <div
+          role="tabpanel"
           id="broadcast-panel-REPORTING"
           aria-labelledby="broadcast-tab-REPORTING"
           hidden={active !== "REPORTING"}
@@ -413,20 +467,20 @@ export default function CampaignTabs() {
           <Panel
             hidden={false}
             title="Know what happened to every message"
-            body="Campaign Performance shows sent, delivered, read, pending and failed. Resend to failed or pending contacts only, download the delivery report as Excel or ODS with a Stats sheet and a Participants sheet, and get an email plus in-app notification when the campaign completes. Before sending, a preflight check reads your plan's conversation allowance and warns you with the exact shortfall."
-            tags={["Delivery report", "Resend failed", "Preflight check", "Completion alert"]}
+            body="See every recipient move from attempted to delivered, read and replied, with failures grouped by Meta's reason. Tick recipients by status and resend to them, download the delivery report as Excel or ODS, and get notified when the campaign completes. Before you send, RateUp checks the audience against your plan's conversation allowance and warns you how many might be missed."
+            tags={["Delivery funnel", "Failure reasons", "Resend by status", "Allowance check"]}
           >
             <MockCard>
               <div className="flex items-center justify-between gap-3">
                 <CardTitle>Campaign Performance</CardTitle>
                 <Badge tone="accent">Completed</Badge>
               </div>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {[
-                  { v: "12,400", l: "Sent", cls: "bg-ru-n-50 text-ru-n-700" },
+                  { v: "12,400", l: "Attempted", cls: "bg-ru-n-50 text-ru-n-700" },
                   { v: "12,061", l: "Delivered", cls: "bg-ru-green-50 text-ru-green-600" },
                   { v: "11,819", l: "Read", cls: "bg-ru-blue-50 text-ru-blue-600" },
-                  { v: "96", l: "Pending", cls: "bg-ru-n-50 text-ru-n-500" },
+                  { v: "512", l: "Replied", cls: "bg-ru-n-50 text-ru-n-600" },
                   {
                     v: "243",
                     l: "Failed",
@@ -437,7 +491,7 @@ export default function CampaignTabs() {
                     key={cell.l}
                     className={`flex flex-col gap-1 rounded-md px-2.5 py-3 ${cell.cls}`}
                   >
-                    <span className="font-display text-[17px] font-bold tabular-nums">
+                    <span className="font-display text-[15px] font-bold tabular-nums sm:text-[17px]">
                       {cell.v}
                     </span>
                     <span className="text-[11.5px] text-ru-n-400">{cell.l}</span>
@@ -477,7 +531,7 @@ export default function CampaignTabs() {
                     This campaign may not reach everyone
                   </span>
                   <span className="text-[13px] text-ru-n-500">
-                    Preflight check: your plan is 1,180 marketing conversations short this month.
+                    Up to 1,180 recipients may be missed with this month's conversations left.
                   </span>
                 </span>
               </div>

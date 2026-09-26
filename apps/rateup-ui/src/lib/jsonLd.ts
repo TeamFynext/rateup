@@ -65,3 +65,56 @@ export function webPage(path: string, name: string, description: string): JsonLd
 export function graph(...nodes: JsonLdObject[]): JsonLdObject {
   return { "@context": "https://schema.org", "@graph": nodes };
 }
+
+/**
+ * The graph a product landing emits: SoftwareApplication, FAQ, breadcrumb and WebPage.
+ *
+ * No `aggregateRating`: Google's review-snippet policy requires the reviews to be visible on the
+ * page itself. The offer points at `/pricing` because plan prices come from the API.
+ */
+export function productPage({
+  path,
+  name,
+  title,
+  description,
+  subCategory,
+  featureList,
+  faqs,
+}: Readonly<{
+  path: string;
+  /** The product's name in the breadcrumb and `SoftwareApplication`, e.g. "WhatsApp Loyalty". */
+  name: string;
+  /** The `WebPage` name; the page's `<title>` without the brand suffix. */
+  title: string;
+  description: string;
+  subCategory: string;
+  featureList: readonly string[];
+  faqs: readonly { question: string; answer: string }[];
+}>): JsonLdObject {
+  return graph(
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${BASE_URL}${path}#software`,
+      name: `RateUp ${name}`,
+      url: `${BASE_URL}${path}`,
+      description,
+      applicationCategory: "BusinessApplication",
+      applicationSubCategory: subCategory,
+      operatingSystem: "Web, Android, iOS",
+      featureList,
+      offers: {
+        "@type": "Offer",
+        url: `${BASE_URL}/pricing`,
+        availability: "https://schema.org/InStock",
+      },
+      publisher,
+    },
+    faqPage(faqs),
+    breadcrumbList([
+      { name: "Home", path: "/" },
+      { name: "Products", path: "/products/whatsapp-business-api" },
+      { name, path },
+    ]),
+    webPage(path, title, description),
+  );
+}

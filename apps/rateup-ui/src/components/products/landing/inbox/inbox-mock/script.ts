@@ -1,5 +1,7 @@
 import type { Channel } from "@/components/RateupHomePage/shared/mockups/kit";
 
+import type { Script, ScriptStep } from "../../shared/useScript";
+
 export interface Msg {
   id: string;
   kind: "in" | "out" | "auto" | "note" | "system";
@@ -141,7 +143,7 @@ const onMeera = (rows: readonly Row[], change: (row: Row) => Row): readonly Row[
 const read = (row: Row): Row => ({ ...row, unread: undefined });
 const close = (row: Row): Row => ({ ...row, status: "Closed", unread: undefined });
 
-export const INITIAL: MockState = {
+const INITIAL: MockState = {
   step: 0,
   messages: THREAD.slice(0, 2),
   rows: ROWS,
@@ -150,8 +152,7 @@ export const INITIAL: MockState = {
   closed: false,
 };
 
-/** What the server, a no-JS reader and `prefers-reduced-motion` get: the finished story. */
-export const FINAL: MockState = {
+const FINAL: MockState = {
   step: 0,
   messages: THREAD.slice(-VISIBLE),
   rows: onMeera([ROWS[0], ARRIVAL, ...ROWS.slice(1)], close),
@@ -160,13 +161,7 @@ export const FINAL: MockState = {
   closed: true,
 };
 
-interface Step {
-  /** How long the state before this step is held. */
-  delay: number;
-  apply: (s: MockState) => MockState;
-}
-
-export const SCRIPT: readonly Step[] = [
+const STEPS: readonly ScriptStep<MockState>[] = [
   { delay: 1500, apply: (s) => ({ ...s, typing: "agent" }) },
   { delay: 1900, apply: (s) => ({ ...s, typing: null, messages: say(3) }) },
   { delay: 1700, apply: (s) => ({ ...s, typing: "customer" }) },
@@ -202,7 +197,4 @@ export const SCRIPT: readonly Step[] = [
   { delay: 4200, apply: () => INITIAL },
 ];
 
-export function advance(state: MockState): MockState {
-  const next = SCRIPT[state.step].apply(state);
-  return next === INITIAL ? INITIAL : { ...next, step: state.step + 1 };
-}
+export const INBOX_SCRIPT: Script<MockState> = { initial: INITIAL, final: FINAL, steps: STEPS };
