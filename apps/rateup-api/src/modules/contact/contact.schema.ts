@@ -46,7 +46,6 @@ const contactCoreSchema = z.object({
   address: clearableText,
   dob: clearableDate,
   external_id: z.string().optional(),
-  aiWaChat: z.boolean().optional(),
   igsId: z.string().optional(),
   psid: z.string().optional(),
   labels: z.array(z.uuid()).optional(),
@@ -78,7 +77,6 @@ const updateContactSchema = z.object({
       }),
     )
     .optional(),
-  aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.enum(WaMessageAssignStatus).optional(),
   // Nullable as well as optional: closing without picking a result sends an
   // explicit null, and reopening sends null to clear the previous one.

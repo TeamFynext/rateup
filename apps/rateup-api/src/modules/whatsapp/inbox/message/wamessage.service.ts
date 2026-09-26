@@ -790,7 +790,6 @@ export async function filterChats(
           c."name",
           c."phone",
           c."other",
-          c."aiWaChat",
           c."waMessageAssignStatus",
           c."lastReceivedMessageTimeStamp",
           c."consent",

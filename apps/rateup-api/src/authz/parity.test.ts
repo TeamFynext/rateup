@@ -72,17 +72,6 @@ export const PARITY_TABLE: Site[] = [
     roles: SA,
     permission: "integrations.manage",
   },
-  // chatbot/chatbot.rout.ts (the ten adminOnly builder routes)
-  { site: "POST /api/chatbot/embed-doc", roles: SA, permission: "chatbots.manage" },
-  { site: "POST /api/chatbot/embed-doc/file", roles: SA, permission: "chatbots.manage" },
-  { site: "DELETE /api/chatbot/delete-source", roles: SA, permission: "chatbots.manage" },
-  { site: "DELETE /api/chatbot/delete-many-sources", roles: SA, permission: "chatbots.manage" },
-  { site: "POST /api/chatbot/chatbot", roles: SA, permission: "chatbots.manage" },
-  { site: "PUT /api/chatbot/chatbot/:chatbotId", roles: SA, permission: "chatbots.manage" },
-  { site: "GET /api/chatbot/chatbot/:chatbotId", roles: SA, permission: "chatbots.manage" },
-  { site: "GET /api/chatbot/chathistory/:chatbotId", roles: SA, permission: "chatbots.manage" },
-  { site: "GET /api/chatbot/chatbots", roles: SA, permission: "chatbots.manage" },
-  { site: "DELETE /api/chatbot/chatbot/:chatbotId", roles: SA, permission: "chatbots.manage" },
   // metaAgent/metaAgent.route.ts (adminOnly)
   {
     site: "DELETE /api/meta-agent/:whatsappSettingsId/agent",
@@ -189,7 +178,7 @@ export const PARITY_TABLE: Site[] = [
 
 describe("legacy guard parity", () => {
   test("the table covers every guarded route family", () => {
-    expect(PARITY_TABLE.length).toBeGreaterThanOrEqual(65);
+    expect(PARITY_TABLE.length).toBeGreaterThanOrEqual(55);
     expect(new Set(PARITY_TABLE.map((s) => s.site)).size).toBe(PARITY_TABLE.length);
   });
 

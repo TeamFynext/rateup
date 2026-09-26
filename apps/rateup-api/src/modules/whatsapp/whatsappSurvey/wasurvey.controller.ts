@@ -17,13 +17,10 @@ import {
   parseWaJoinMessage,
 } from "./wasurvey.utils.js";
 import {
-  aibotNodeCompletion,
-  getAiBotActiveStatus,
   handleLeadGen,
   handleMessageStatusUpdate,
   sendMessage,
   sendTextMessage,
-  setAiBotActiveStatus,
 } from "./wasurvey.service.js";
 import {
   CampaignParticipantStatus,
@@ -93,11 +90,7 @@ import {
 } from "../../../../generated/prisma/client.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils.js";
-import {
-  getContactByPhoneNumberAndOrgId,
-  getOrCreateContactByPhone,
-  handleContactConsent,
-} from "../../contact/contact.service.js";
+import { getOrCreateContactByPhone, handleContactConsent } from "../../contact/contact.service.js";
 import { getOrgById } from "../../org/org.services.js";
 import { checkConversationLimitAvailable } from "./wasurvey.auth.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
@@ -107,8 +100,6 @@ import {
   handleLoyaltyRedeemInteraction,
   handleLoyaltyWaCommand,
 } from "../../loyalty/settings/settings.service.js";
-import { createJWT } from "../../../utils/jwt.js";
-import { getAIResponseForQuery, getChatbotDetails } from "../../chatbot/chatbot.service.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
 import { NodeTypeMap, TypedNode } from "./node-types.js";
 import type {
@@ -120,6 +111,7 @@ import type {
   TemplateComponentParameter,
 } from "./node-types.js";
 import { logAutomationAction, findRecentAutomation } from "./automation-logger.utils.js";
+import { moveAutomationPosition } from "./automationProgress.js";
 import {
   getAutomatedReplyById,
   verifyAutomationTriggerLimit,
@@ -903,33 +895,6 @@ async function whatsappMessageHandler(
     });
   }
 
-  const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);
-  if (isAiBotActive) {
-    try {
-      // Process AI chatbot interaction
-      if (!chatbotId) {
-        log.warn(`Active AI bot found but no chatbot ID for phone: ${from} in org: ${orgId}`);
-        await setAiBotActiveStatus(from, orgId, false, "");
-        return;
-      }
-      const chatbot = await getChatbotDetails(orgId, chatbotId, true);
-      if (chatbot) {
-        await handleAiWaChat(chatbot, message, orgId, from, chatbotId);
-        return;
-      } else {
-        log.warn(`Active AI bot found but no chatbot details for ID: ${chatbotId}`);
-        await setAiBotActiveStatus(from, orgId, false, "");
-      }
-    } catch (error) {
-      log.error({ err: error }, "Error handling AI bot interaction");
-      await sendTextMessage(
-        { phone: from, orgId },
-        null,
-        "Sorry, I'm having trouble processing your request right now.",
-      );
-    }
-  }
-
   if (loyaltyWaCommand) {
     await handleLoyaltyWaCommand(loyaltyReply, loyaltyWaCommand, sourceIdentifier);
   } else if (parseStartMessage(message)) {
@@ -1033,87 +998,6 @@ export async function handleWaJoinRegistration({
     sourceIdentifier,
     { reply },
   );
-}
-
-const pendingConfirmationMap = new Map<string, boolean>();
-async function handleAiWaChat(
-  chatbot: Awaited<ReturnType<typeof getChatbotDetails>>,
-  message: string,
-  orgId: string,
-  phone: string,
-  chatbotId: string,
-) {
-  try {
-    if (!chatbot) {
-      log.error("handleAiWaChat called without a chatbot, phone: %s, orgId: %s", phone, orgId);
-      return;
-    }
-    let query = "";
-    const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
-    if (!contact) {
-      log.error("Contact not found for phone: %s, orgId: %s", phone, orgId);
-      return;
-    }
-    if (chatbot.enableAllWaChat && !contact.aiWaChat) {
-      log.trace("Ai chat is disabled for phone: %s", phone);
-      return;
-    }
-    const jwtToken = await createJWT({
-      userId: contact.id,
-      orgId,
-      role: "Contact",
-    });
-
-    if (chatbot.enableAllWaChat) {
-      query = message;
-    } else {
-      query = message.slice(chatbot?.waCommand?.length);
-    }
-
-    if (pendingConfirmationMap.get(phone)) {
-      const lowerMessage = query?.trim()?.toLowerCase();
-
-      if (lowerMessage === "yes") {
-        await setAiBotActiveStatus(phone, orgId, false, "");
-        await sendTextMessage({ phone: phone, orgId }, null, "You have exited the AI chatbot.");
-        pendingConfirmationMap.delete(phone); // done
-        aibotNodeCompletion(phone, orgId);
-        return;
-      } else if (lowerMessage === "no") {
-        await sendTextMessage({ phone: phone, orgId }, null, "Okay, continuing the conversation!");
-        pendingConfirmationMap.delete(phone); // still exit confirmation mode
-        return;
-      } else {
-        await sendTextMessage({ phone: phone, orgId }, null, "Please reply with 'Yes' or 'No'.");
-        return;
-      }
-    }
-
-    const response = await getAIResponseForQuery(
-      {
-        query,
-        userId: contact.id,
-        orgId,
-        chatbotId,
-        customPrompt: chatbot.waPrompt ?? undefined,
-      },
-      jwtToken,
-    );
-
-    if (response.trim() === "AiBotExitTriggered") {
-      const confirmationMessage = "Are you done with the conversation? Please reply 'Yes' or 'No'.";
-
-      await sendTextMessage({ phone, orgId }, null, confirmationMessage);
-
-      await pendingConfirmationMap.set(phone, true);
-    } else {
-      if (response) await sendTextMessage({ phone, orgId }, null, response);
-      else await sendTextMessage({ phone, orgId }, null, "Unable to reply. Something went wrong!");
-    }
-  } catch (e) {
-    log.error(e);
-    await sendTextMessage({ phone, orgId }, null, "Unable to reply. Something went wrong!");
-  }
 }
 
 async function handleSubscriptionStatus(orgId: string, phone: string, message: string) {
@@ -1401,6 +1285,7 @@ export async function processNextNode(
             where: { phone: userPhone, waAutomatedReplyId: automation.id },
             data: { currentNode: nextEdge.target },
           });
+          await moveAutomationPosition(orgId, userPhone, automation.id, nextEdge.target);
           await processNextNode(
             userPhone,
             automation,
@@ -1424,9 +1309,6 @@ export async function processNextNode(
           orgId,
           automation?.whatsappSettingsPhoneId ?? undefined,
         );
-        break;
-      case "aibotNode":
-        await handleAiBotNode(node, userPhone, orgId);
         break;
 
       case "templateNode":
@@ -1606,18 +1488,9 @@ export async function processNextNode(
     }
 
     // Find and process next node unless current node requires user input
-    let requiresUserInput = ["buttonNode", "flowNode", "listNode", "textInputNode"].includes(
+    const requiresUserInput = ["buttonNode", "flowNode", "listNode", "textInputNode"].includes(
       node?.type,
     );
-    // Special check for AI Bot Node
-    if (node?.type === "aibotNode") {
-      const isActive = await getAiBotActiveStatus(userPhone, orgId);
-      if (isActive) {
-        requiresUserInput = true; // Chat still happening → stop automation
-      } else {
-        requiresUserInput = false; // Chat finished → continue automation
-      }
-    }
     const nextEdges = automation.matchData?.json?.edges.filter((edge) => edge.source === nodeId);
 
     if (nextEdges) {
@@ -1626,6 +1499,7 @@ export async function processNextNode(
           where: { phone: userPhone, waAutomatedReplyId: automation.id },
           data: { currentNode: nextEdge.target },
         });
+        await moveAutomationPosition(orgId, userPhone, automation.id, nextEdge.target);
         if (!requiresUserInput) {
           await processNextNode(
             userPhone,
@@ -1696,22 +1570,6 @@ async function handleFlowNode(
     log.error({ err: error }, "Error handling flow node");
     throw error; // Let the caller handle this
   }
-}
-
-async function handleAiBotNode(
-  node: TypedNode & { data: { chatbot?: { id: string; name: string }; body?: string } },
-  userPhone: string,
-  orgId: string,
-) {
-  const data = node.data as NodeTypeMap["aibotNode"];
-
-  const chatbotId = data.chatbot.id;
-
-  const text = data.body ? parseToWhatsAppFormat(data.body) : "Default message";
-
-  if (text) await sendTextMessage({ phone: userPhone, orgId }, null, text);
-
-  await setAiBotActiveStatus(userPhone, orgId, true, chatbotId);
 }
 
 async function handleStartMessage(orgId: string, waMessage: WaMessageBody) {

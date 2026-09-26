@@ -28,7 +28,6 @@ import {
   deleteAssignedUsersforContact,
   getAssignedUserForContact,
 } from "../whatsapp/inbox/message/wamessage.service.js";
-import { getChatbotDetails } from "../chatbot/chatbot.service.js";
 import { notify } from "../notification/notify.js";
 import {
   addZapierTriggerToQueue,
@@ -85,8 +84,6 @@ export async function createContact(
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
-  const chatbot = await getChatbotDetails(contact.orgId);
-  if (chatbot?.enableAllWaChat) contact.aiWaChat = true;
   const { customFields, labels, contactGroupIds, assignedUserIds, lifecycleId, ...rest } = contact;
   const user = await prisma.contact.create({
     data: {
@@ -194,8 +191,6 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
     },
   });
   if (user) return user;
-  const chatbot = await getChatbotDetails(contact.orgId);
-  if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
   const {
     customFields,
     labels: _labels,
@@ -232,15 +227,12 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
 }
 
 export async function createMultipleContacts(contacts: createMultipleContactInput, orgId: string) {
-  const chatbot = await getChatbotDetails(orgId);
-  const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
   // These keys come in on the input DTO but are not Contact columns — they are persisted
   // separately below, so they are blanked out of the create payload.
   const omitted: undefined = undefined;
   const contactsData = contacts.map((contact) => ({
     ...contact,
     orgId,
-    aiWaChat,
     customFields: omitted,
     labels: omitted,
     contactGroupIds: omitted,
@@ -823,7 +815,6 @@ export async function updateContactById(
       data: {
         name: contact.name,
         phone: contact.phone,
-        aiWaChat: contact.aiWaChat,
         waMessageAssignStatus: nextStatus,
         lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp || undefined,
         ...(closing
@@ -1208,12 +1199,9 @@ export async function getOrCreateContactByPhone(
       }
       return { contact, conversation };
     } else {
-      const chatbot = await getChatbotDetails(orgId);
-      const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
       contact = await prisma.contact.create({
         data: {
           ...additionalData,
-          aiWaChat,
           phone: source ? undefined : phone,
           orgId,
         },
@@ -1300,12 +1288,9 @@ export async function getOrCreateContactByIgsId(
       });
       return { contact, conversation };
     } else {
-      const chatbot = await getChatbotDetails(orgId);
-      const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
       contact = await prisma.contact.create({
         data: {
           ...additionalData,
-          aiWaChat,
           igsId,
           orgId,
         },
@@ -1387,14 +1372,9 @@ export async function getOrCreateContactByPsid(
       return { contact, conversation };
     }
 
-    const chatbot = await getChatbotDetails(orgId);
-
-    const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-
     contact = await prisma.contact.create({
       data: {
         ...additionalData,
-        aiWaChat,
         psid,
         orgId,
       },
@@ -1693,9 +1673,6 @@ export async function getExistingContactCountByPhno(ids: string[], orgId: string
 }
 
 export async function updateMulitplceContacts(contacts: createMultipleContactInput, orgId: string) {
-  const chatbot = await getChatbotDetails(orgId);
-  const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
-
   for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
     const batch = contacts.slice(i, i + BATCH_SIZE);
 
@@ -1714,7 +1691,6 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
           },
         },
         update: {
-          aiWaChat,
           ...Object.fromEntries(
             Object.entries(contactData).filter(
               ([key, value]) => value !== undefined && key !== "phone" && key !== "orgId",
@@ -1723,7 +1699,6 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
         },
         create: {
           ...contactData,
-          aiWaChat,
           orgId,
         },
       });
