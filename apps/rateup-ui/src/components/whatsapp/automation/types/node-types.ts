@@ -203,15 +203,6 @@ export interface FlowNodeData extends BaseNodeData {
     name: string;
   };
 }
-// /////////////////////aibot node
-export interface AiBotNodeData extends BaseNodeData {
-  body: string;
-  chatbot: {
-    id: string;
-    name: string;
-  };
-}
-
 export interface AssignNodeData extends BaseNodeData {
   assign: {
     choice: "manual" | "all";
@@ -338,7 +329,6 @@ export interface NodeTypeMap {
   addressNode: AddressNodeData;
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
-  aibotNode: AiBotNodeData;
   assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
   catalogNode: CatalogNodeData;
@@ -456,7 +446,6 @@ export type NodeData =
   | AddressNodeData
   | ContactsNodeData
   | FlowNodeData
-  | AiBotNodeData
   | AssignNodeData
   | LeadgenNodeData
   | CatalogNodeData
@@ -868,25 +857,6 @@ export function validateNodeData(node: TypedNode): {
       }
       break;
     }
-    // // aibot node
-    case "aibotNode": {
-      const data = node.data as NodeTypeMap["aibotNode"];
-
-      if (!data.body || data.body === "") {
-        return {
-          valid: false,
-          message: `${node.data.label}: Message text is required.`,
-        };
-      }
-      if (!data.chatbot.id || data.chatbot.id === "") {
-        return {
-          valid: false,
-          message: `${node.data.label}: Chatbot selection is required.`,
-        };
-      }
-      break;
-    }
-
     case "contactsNode": {
       const data = node.data as NodeTypeMap["contactsNode"];
       if (!data.contacts || data.contacts.length === 0) {

@@ -30,6 +30,7 @@ import InfoButton from "@/components/Button/InfoButton.tsx";
 import { BackLink } from "@/components/common/back-link.tsx";
 import { PAGE_TITLE } from "@/components/common/page-heading.tsx";
 import { CustomerSummaryPanel } from "@/components/loyalty/cashier/CustomerSummaryPanel.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -87,9 +88,6 @@ interface CustomerDetails {
     email: string;
     dob: string | null;
     external_id: string | null;
-    aiWaChat: boolean;
-    isAiBotActive: boolean;
-    chatbotId: string;
     waMessageAssignStatus: string;
     lastReceivedMessageTimeStamp: string;
     whatsappUserName: string;
@@ -175,7 +173,7 @@ export function CustomerPage({ search }: Readonly<{ search: CustomersSearch }>) 
     return "bg-muted text-foreground hover:bg-muted border border-border";
   };
 
-  const columns: ColumnDef<CustomerDetails>[] = [
+  const columns: ColumnDef<DataTableFeatures, CustomerDetails>[] = [
     {
       accessorKey: "contact.name",
       id: "customerName",

@@ -19,6 +19,7 @@ import {
   useUpdateStripeProduct,
 } from "@/backend/payment/stripe/stripe.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -79,7 +80,7 @@ const StripeProducts = () => {
     deleteStripeProduct.mutate(productId);
   };
 
-  const columns: ColumnDef<ProductTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, ProductTableData>[] = [
     {
       accessorKey: "id",
       header: "Product ID",

@@ -15,6 +15,7 @@ import { DataTableToolbar } from "@/components/dashboard/contacts/components/dat
 import type { ContactTableFilter } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
@@ -64,7 +65,7 @@ export function ContactsPage() {
         // erased to `unknown` by ColumnDef, so narrow it back here.
         cell: (info) => <ContactMenu contact={info.getValue() as ContactsData} groupId={""} />,
         meta: { title: "Action" },
-      } satisfies ColumnDef<ContactsData, unknown>,
+      } satisfies ColumnDef<DataTableFeatures, ContactsData, unknown>,
     ],
     [customFields, user?.showLifecycle, pipelineStages.length],
   );

@@ -6,7 +6,7 @@ import {
   IconUsersPlus,
   IconX,
 } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable, RowData } from "@tanstack/react-table";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ import AddExistingContacts from "@/components/Contacts/AddExistingContacts.tsx";
 import CreateOrEditContactModal from "@/components/Contacts/CreatOrEditContactModal.tsx";
 import ImportContactsDialog from "@/components/Contacts/ImportContactsDialog.tsx";
 import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -32,11 +33,11 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-interface DataTableToolbarProps<TData, _TValue> {
-  table: Table<TData>;
+interface DataTableToolbarProps<TData extends RowData, _TValue> {
+  table: ReactTable<DataTableFeatures, TData>;
 }
 
-export function DataTableToolbar<TData, TValue>({
+export function DataTableToolbar<TData extends RowData, TValue>({
   table,
 }: Readonly<DataTableToolbarProps<TData, TValue>>) {
   const { t } = useTranslation();
@@ -49,7 +50,7 @@ export function DataTableToolbar<TData, TValue>({
   const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id ?? "");
   const addNewContact = useAddNewContactMutation(groupDetails?.id ?? "");
   const importIntoGroup = useAddNewContactFromCSVMutation(groupDetails?.id ?? "");
-  const selectedMembers = Object.keys(table.getState().rowSelection);
+  const selectedMembers = Object.keys(table.state.rowSelection);
   function handleRemoveMembers() {
     if (!selectedMembers.length) return;
     removeContactsMutation?.mutate(

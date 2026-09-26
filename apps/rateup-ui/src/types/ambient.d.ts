@@ -732,7 +732,6 @@ declare global {
     };
     contactGroups?: Array<{ contactGroup?: ContactGroup }>;
     campaignParticipants: Array<{ id?: string; campaignId?: string }>;
-    aiWaChat: boolean;
     /** Labels attached to the contact, as the contacts table renders them. */
     ContactLabelMap?: Array<{
       label?: {
@@ -811,9 +810,6 @@ declare global {
     isSpam: boolean;
     spamMarkedAt: string | null;
     waMessageAssignStatus: WaMessageAssignStatus;
-    aiWaChat: boolean;
-    isAiBotActive: boolean;
-    chatbotId: string | null;
     profilePic: string | null;
     igsId: string | null;
     psid: string | null;

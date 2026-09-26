@@ -254,31 +254,6 @@ export default function WaInboxChatDisplayHeader({
               <IconLayoutSidebarRight className="size-4 text-muted-foreground" />
             </Button>
           )}
-          {/* TODO: CHATBOT */}
-          {/* {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
-            <Popover>
-              <PopoverTrigger asChild className="hover:bg-accent p-1 rounded-md">
-                <Bot
-                  className={`h-7 w-7 ${contact.aiWaChat ?"text-blue-600" :"text-muted-foreground"} cursor-pointer`}
-                />
-              </PopoverTrigger>
-              <PopoverContent className="w-40 break-words">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Enable/Disable AI response for this contact
-                </p>
-                <Field orientation="horizontal" className="gap-2">
-                  <Switch
-                    checked={contact.aiWaChat}
-                    onCheckedChange={handleAiWaChat}
-                    id="ai-chat-switch"
-                  />
-                  <FieldLabel htmlFor="ai-chat-switchh" className="text-sm">
-                    AI Chat
-                  </FieldLabel>
-                </Field>
-              </PopoverContent>
-            </Popover>
-          )} */}
         </div>
       </div>
       <TicketSubBar contact={contact} />

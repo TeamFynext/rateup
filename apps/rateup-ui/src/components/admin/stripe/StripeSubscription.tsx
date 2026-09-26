@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 
 import { useGetAllStripeSubscriptions } from "@/backend/payment/stripe/stripe.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -34,7 +35,7 @@ const StripeSubscription = () => {
   const { t: translations } = useTranslation();
   const { data: subscriptions } = useGetAllStripeSubscriptions();
 
-  const columns: ColumnDef<SubscriptionTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, SubscriptionTableData>[] = [
     {
       accessorKey: "id",
       header: "Subscription ID",

@@ -10,6 +10,7 @@ import {
   useGetApprovalRequests,
   useRejectApprovalRequest,
 } from "@/backend/loyalty/approval/approval.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -47,7 +48,7 @@ export function PendingApprovalsTable({
     reviewerName: user?.userName ?? user?.email ?? "",
   };
 
-  const columns = useMemo<ColumnDef<ApprovalRequest>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, ApprovalRequest>[]>(
     () => [
       {
         id: "when",

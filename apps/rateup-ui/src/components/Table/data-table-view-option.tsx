@@ -1,5 +1,5 @@
 import { IconSettings2 } from "@tabler/icons-react";
-import type { Column, Table } from "@tanstack/react-table";
+import type { Column, ReactTable, RowData } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 
-export function DataTableViewOptions<TData>({
+import type { DataTableFeatures } from "./data-table-features.ts";
+
+export function DataTableViewOptions<TData extends RowData>({
   table,
 }: Readonly<{
-  table: Table<TData>;
+  table: ReactTable<DataTableFeatures, TData>;
 }>) {
   return (
     <DropdownMenu>
@@ -48,7 +50,9 @@ export function DataTableViewOptions<TData>({
   );
 }
 
-function getColumnLabel<TData, TValue>(column: Column<TData, TValue>) {
+function getColumnLabel<TData extends RowData, TValue>(
+  column: Column<DataTableFeatures, TData, TValue>,
+) {
   const header = column.columnDef.header;
 
   if (typeof header === "string") {

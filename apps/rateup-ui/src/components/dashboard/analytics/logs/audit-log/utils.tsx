@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { AuditLogData } from "@/backend/user/user.api";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -200,7 +201,7 @@ const TimestampCell = ({ timestamp }: { timestamp: string }) => (
 /** The activity log's columns. `user` and `createdAt` are the ids the API sorts by. */
 export function useAuditColumns() {
   const { t } = useTranslation();
-  return useMemo<ColumnDef<AuditLogData>[]>(
+  return useMemo<ColumnDef<DataTableFeatures, AuditLogData>[]>(
     () => [
       {
         accessorKey: "action",

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import type { ShopifyProduct } from "@/backend/appsIntegration/shopify/shopify.api";
 import type { WaTemplateListEntry } from "@/backend/whatsapp/whatsapp.api";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -119,7 +120,7 @@ const ShopifySchedules = ({
     ),
   }));
 
-  const columns: ColumnDef<ScheduleRowData>[] = [
+  const columns: ColumnDef<DataTableFeatures, ScheduleRowData>[] = [
     {
       id: "phone",
       header: createSortableHeader(translations("Customer Phone Number")),
@@ -279,7 +280,7 @@ const ScheduleHistoryModal = ({
 
   type HistoryRow = (typeof rows)[0];
 
-  const columns: ColumnDef<HistoryRow>[] = [
+  const columns: ColumnDef<DataTableFeatures, HistoryRow>[] = [
     {
       id: "createdAt",
       header: createSortableHeader("Created At"),
