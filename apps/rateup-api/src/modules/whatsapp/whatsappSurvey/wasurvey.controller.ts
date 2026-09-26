@@ -452,8 +452,11 @@ async function markStandbyThreadsAsAi(value: WaStandbyChangeValue) {
     const seen = latest.get(phone);
     if (!seen || seen < at) latest.set(phone, at);
   };
+  // Only the customer's messages say who holds the thread: Meta routes them
+  // to standby while the agent does. The agent's own replies do not — its last
+  // one is often the handoff line ("I'll ask a representative…"), sent as it
+  // passes the thread on, and reading that as "AI" undid the handover.
   for (const message of value.standby.messages ?? []) note(message.from, message.timestamp);
-  for (const echo of value.standby.message_echoes ?? []) note(echo.message?.to, echo.timestamp);
   if (latest.size === 0) return;
 
   const waSettings = await getWaSettingsByPhoneId(phoneId);
@@ -465,6 +468,7 @@ async function markStandbyThreadsAsAi(value: WaStandbyChangeValue) {
         phone,
         owner: MetaAgentThreadOwner.AI,
         at,
+        inferred: true,
       });
     } catch (error) {
       log.error({ err: error, phone }, "Failed to mark a standby thread as held by Meta AI");

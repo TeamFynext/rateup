@@ -68,6 +68,15 @@ function handleError(reply: FastifyReply, error: unknown) {
       fbtraceId: error.fbtraceId,
     });
   }
+  // Our own limit on a Meta call (see metaAgent.client.ts): Meta may still
+  // finish the change, so the reply says to check before trying again.
+  const code = (error as { code?: string } | null)?.code;
+  if (code === "ECONNABORTED" || code === "ETIMEDOUT") {
+    log.error({ err: error }, "Meta Business Agent API timed out");
+    return reply.code(504).send({
+      message: "Meta took too long to respond. Sync to check whether the change went through.",
+    });
+  }
   log.error({ err: error }, "Meta Business Agent handler error");
   return reply.code(500).send({ message: "Something went wrong" });
 }

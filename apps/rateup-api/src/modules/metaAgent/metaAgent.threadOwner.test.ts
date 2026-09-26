@@ -98,6 +98,25 @@ describe("setMetaAgentThreadOwner", () => {
     );
   });
 
+  test("a guess from standby traffic never beats a handover from the same second", async () => {
+    // The customer's message and the agent's handover share a timestamp; the
+    // handover is Meta's word, the standby message only suggests the AI.
+    updateMany.mockResolvedValue({ count: 0 });
+
+    const changed = await setMetaAgentThreadOwner({
+      orgId: "org-1",
+      phone: "919188346187",
+      owner: "AI",
+      at,
+      inferred: true,
+    });
+
+    expect(changed).toBe(false);
+    expect(updateMany.mock.calls[0][0].where.AND[1]).toEqual({
+      OR: [{ metaAgentThreadOwnerAt: null }, { metaAgentThreadOwnerAt: { lt: at } }],
+    });
+  });
+
   test("a handover to a person asks the assignees for help", async () => {
     updateMany.mockResolvedValue({ count: 1 });
     findUnique.mockResolvedValue({ id: "contact-1", name: "Ann" });

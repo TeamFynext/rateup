@@ -48,6 +48,7 @@ import {
   createTextMessage,
   parseToWhatsAppFormat,
 } from "../../whatsappSurvey/wasurvey.utils.js";
+import { isMetaAiOriginated } from "../../../metaAgent/metaAgent.origin.js";
 import {
   blockWhatsappUser,
   sendMessage,
@@ -404,15 +405,31 @@ export async function handleWaMessages(
         },
         orgId,
       );
-    // A person replying from the inbox takes the thread back from Meta AI —
-    // Meta hands control to whichever app sends. Only a real staff send counts:
-    // automations and campaigns are not someone taking over the conversation.
+    // Meta hands the thread to whichever app sends, so any message RateUp
+    // sends takes it off Meta AI — a staff reply, but equally an automation,
+    // campaign, template, flow or API send. Marking only staff replies left
+    // the inbox saying "Meta AI" while the agent had gone quiet. Not counted:
+    // Meta AI's own replies stored from their echo (tagged bizai), and echoes
+    // of messages typed in the WhatsApp Business app, which RateUp did not send.
+    const takeoverReason = campaign
+      ? "campaign"
+      : isAutomated
+        ? "automation"
+        : userId
+          ? "staff_reply"
+          : externalApi
+            ? "api_send"
+            : messageType !== "INBOX"
+              ? "automation"
+              : null;
+    const sentByMetaAi = isMetaAiOriginated(
+      (messageBody as { biz_opaque_callback_data?: unknown } | null)?.biz_opaque_callback_data,
+    );
     if (
       type === "send" &&
-      userId &&
+      takeoverReason &&
+      !sentByMetaAi &&
       !failed &&
-      !isAutomated &&
-      !campaign &&
       sourcePlatform === PlatformType.WHATSAPP &&
       contact.phone &&
       contact.metaAgentThreadOwner === MetaAgentThreadOwner.AI
@@ -423,7 +440,7 @@ export async function handleWaMessages(
           orgId,
           phone: contact.phone,
           owner: MetaAgentThreadOwner.STAFF,
-          reason: "staff_reply",
+          reason: takeoverReason,
           at: now,
         });
         if (changed) {
@@ -431,7 +448,7 @@ export async function handleWaMessages(
             ...contact,
             metaAgentThreadOwner: MetaAgentThreadOwner.STAFF,
             metaAgentThreadOwnerAt: now,
-            metaAgentHandoverReason: "staff_reply",
+            metaAgentHandoverReason: takeoverReason,
           };
         }
       } catch (error) {

@@ -531,6 +531,19 @@ describe("the error handler", () => {
     expect((await failWith(undefined as never, "unknown")).code).toBe(502);
   });
 
+  test("a Meta call that timed out is a 504 that says what to do", async () => {
+    const reply = { code: vi.fn(() => reply), send: vi.fn(() => reply) } as any;
+    const timedOut = Object.assign(new Error("timeout of 45000ms exceeded"), {
+      code: "ECONNABORTED",
+    });
+    vi.mocked(prisma.metaBusinessAgent.findFirst).mockRejectedValueOnce(timedOut);
+    await listFaqsHandler(
+      { user: { orgId: "org-1" }, params: { whatsappSettingsId: "ws-1" } } as any,
+      reply,
+    );
+    expect(reply.code).toHaveBeenLastCalledWith(504);
+  });
+
   test("anything else answers a fixed 500", async () => {
     db.metaAgentFaq.findMany.mockRejectedValueOnce(new Error("db down"));
     const rep = reply();

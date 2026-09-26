@@ -179,6 +179,12 @@ describe("the tool definitions", () => {
     }
   });
 
+  test("the options lookup comes with any CRM action, and not otherwise", () => {
+    const tools = (list: string[]) => installRateupConnectorBodySchema.parse({ tools: list }).tools;
+    expect(tools(["assign_to_team"])).toEqual(["assign_to_team", "get_crm_options"]);
+    expect(tools(["get_loyalty_status"])).toEqual(["get_loyalty_status"]);
+  });
+
   test("an install needs at least one tool and drops repeats", () => {
     expect(installRateupConnectorBodySchema.safeParse({ tools: [] }).success).toBe(false);
     expect(

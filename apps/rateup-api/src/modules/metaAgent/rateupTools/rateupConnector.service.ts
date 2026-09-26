@@ -133,12 +133,21 @@ export const RATEUP_TOOLS = {
 export type RateupToolName = keyof typeof RATEUP_TOOLS;
 export const RATEUP_TOOL_NAMES = Object.keys(RATEUP_TOOLS) as RateupToolName[];
 
+/** The CRM actions take names only get_crm_options tells the agent. */
+const CRM_WRITES: RateupToolName[] = ["add_contact_label", "set_lead_stage", "assign_to_team"];
+
 export const installRateupConnectorBodySchema = z.object({
   tools: z
     .array(z.enum(RATEUP_TOOL_NAMES as [RateupToolName, ...RateupToolName[]]))
     .min(1, "Choose at least one tool")
-    // Duplicates would create the same tool twice at Meta.
-    .transform((tools) => [...new Set(tools)]),
+    // Duplicates would create the same tool twice at Meta. The options lookup
+    // is never offered on its own: it comes with any CRM action, which cannot
+    // work without it.
+    .transform((tools) => {
+      const chosen = new Set(tools);
+      if (tools.some((tool) => CRM_WRITES.includes(tool))) chosen.add("get_crm_options");
+      return [...chosen];
+    }),
 });
 export type InstallRateupConnectorBody = z.infer<typeof installRateupConnectorBodySchema>;
 

@@ -86,6 +86,12 @@ export async function setMetaAgentThreadOwner(input: {
   owner: MetaAgentThreadOwner;
   reason?: string | null;
   at?: Date;
+  /**
+   * Guessed from traffic rather than reported by Meta (standby messages).
+   * A guess never overrides a report from the same moment: when the agent
+   * hands over, the customer's message and the handover share a timestamp.
+   */
+  inferred?: boolean;
 }): Promise<boolean> {
   const { orgId, phone, owner } = input;
   const at = input.at ?? new Date();
@@ -98,7 +104,12 @@ export async function setMetaAgentThreadOwner(input: {
       phone,
       AND: [
         { OR: [{ metaAgentThreadOwner: null }, { metaAgentThreadOwner: { not: owner } }] },
-        { OR: [{ metaAgentThreadOwnerAt: null }, { metaAgentThreadOwnerAt: { lte: at } }] },
+        {
+          OR: [
+            { metaAgentThreadOwnerAt: null },
+            { metaAgentThreadOwnerAt: input.inferred ? { lt: at } : { lte: at } },
+          ],
+        },
       ],
     },
     data: {
