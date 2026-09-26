@@ -651,9 +651,32 @@ describe("handleWaMessages - taking a thread over from Meta AI", () => {
     expect(event.inbox.contact.metaAgentThreadOwner).toBe("STAFF");
   });
 
+  // Meta hands the thread to whichever app sends, so any RateUp send takes it
+  // off Meta AI — not only a person's. Leaving automations out is what made
+  // the inbox say "Meta AI" while the agent had gone quiet.
   test.each([
-    ["an automated send", { type: "send" as const, userId: "user-1", isAutomated: true }],
-    ["a send with no user", { type: "send" as const, userId: undefined }],
+    ["an automated send", { type: "send" as const, isAutomated: true }, "automation"],
+    ["a template or flow send", { type: "send" as const, messageType: "TEMPLATE" }, "automation"],
+  ])("%s takes the thread off Meta AI too", async (_name, overrides, reason) => {
+    onMetaAi();
+
+    await callHandleWaMessages(overrides);
+
+    expect(m.setThreadOwner).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: "STAFF", reason }),
+    );
+  });
+
+  test.each([
+    [
+      "Meta AI's own reply, stored from its echo",
+      {
+        type: "send" as const,
+        isAutomated: true,
+        messageBody: { type: "text", biz_opaque_callback_data: '{"originator":"bizai"}' },
+      },
+    ],
+    ["an echo of a message typed in the WhatsApp Business app", { type: "send" as const }],
     ["an inbound message", { type: "receive" as const, userId: undefined }],
   ])("%s leaves the thread with Meta AI", async (_name, overrides) => {
     onMetaAi();
