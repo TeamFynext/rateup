@@ -130,6 +130,7 @@ describe("standby webhooks (Meta Business Agent threads)", () => {
       phone: CUSTOMER,
       owner: "AI",
       at: new Date(1790056876 * 1000),
+      inferred: true,
     });
   });
 

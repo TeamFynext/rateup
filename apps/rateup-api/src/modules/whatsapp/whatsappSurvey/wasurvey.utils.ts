@@ -42,24 +42,7 @@ dayjs.extend(customParseFormat);
 
 export const ratingEmoji = "⭐️";
 
-/**
- * Whether a send was written by the Meta Business Agent (Meta AI) rather than a
- * person or our own automation. Meta tags the agent's sends — the echo and every
- * status for it — with `biz_opaque_callback_data` of `{"originator":"bizai",…}`.
- */
-export function isMetaAiOriginated(bizOpaqueCallbackData: unknown): boolean {
-  if (typeof bizOpaqueCallbackData !== "string" || !bizOpaqueCallbackData) return false;
-  try {
-    const parsed: unknown = JSON.parse(bizOpaqueCallbackData);
-    return (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      (parsed as { originator?: unknown }).originator === "bizai"
-    );
-  } catch {
-    return false;
-  }
-}
+export { isMetaAiOriginated } from "../../metaAgent/metaAgent.origin.js";
 
 export function getEventType(data: WaMessageBody) {
   if (data.object === "whatsapp_business_account") {

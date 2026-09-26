@@ -3,6 +3,8 @@ import { log } from "../../utils/logger.js";
 
 import { META_AGENT_API_HOST, META_AGENT_API_VERSION } from "../../utils/meta.js";
 
+const META_AGENT_TIMEOUT_MS = 45_000;
+
 export class MetaAgentApiError extends Error {
   status: number;
   title?: string;
@@ -44,6 +46,10 @@ export async function callMetaAgentApi<T = any>(
       ...extraHeaders,
     },
     validateStatus: () => true,
+    // Axios waits forever by default. A call Meta never answers should fail on
+    // its own, and well inside the dashboard's 3-minute patience for the
+    // several calls one action can make.
+    timeout: META_AGENT_TIMEOUT_MS,
   };
   log.trace("Calling Meta Business Agent API: %s %s", config.method, config.url);
   const res = await axios(config);
