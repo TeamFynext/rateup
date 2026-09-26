@@ -13,7 +13,7 @@ Scalable API backend for the [Rateup](https://rateup.app) platform.
 - **Authorization:** CASL
 - **Payments:** Stripe, Razorpay
 - **Storage:** AWS S3
-- **Email:** SendGrid, Nodemailer
+- **Email:** AWS SES (Nodemailer)
 - **Validation:** Zod 4
 - **API Docs:** Swagger + Scalar
 

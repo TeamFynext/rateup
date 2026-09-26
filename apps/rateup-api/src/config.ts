@@ -44,7 +44,6 @@ export const appConfig = {
     appleTeamId: process.env.APPLE_TEAM_ID || "",
     appleIosClientId: process.env.APPLE_IOS_CLIENT_ID || "",
   },
-  cookieDomain: process.env.COOKIE_DOMAIN || "",
 };
 
 // SuperTokens configuration
@@ -310,7 +309,7 @@ export const SuperTokensConfig: TypeInput = {
 
     Session.init({
       // TODO: add this when app router pages is ssr
-      // cookieDomain: appConfig.cookieDomain,
+      // cookieDomain: <domain>,
       // olderCookieDomain: "",
       // cookieSecure: true,
       override: {
