@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, useColorScheme } from "react-native";
+import { View, Text, Pressable, ScrollView, useColorScheme } from "react-native";
 import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -53,9 +53,9 @@ const Flow2Response = () => {
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
       {/* Header */}
       <View className="flex-row items-center gap-5 p-4">
-        <TouchableOpacity onPress={() => router.back()} className="flex-row items-center">
+        <Pressable onPress={() => router.back()} className="flex-row items-center">
           <ArrowLeft color={isDark ? "white" : "black"} />
-        </TouchableOpacity>
+        </Pressable>
 
         <View className="flex-row items-center gap-3">
           <View className="w-14 h-14 rounded-full bg-rateUpLightGreen items-center justify-center">

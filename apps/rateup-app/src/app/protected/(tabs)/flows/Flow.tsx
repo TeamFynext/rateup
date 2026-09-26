@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState, useCallback } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from "react-native";
+import { View, Text, ActivityIndicator, Pressable, RefreshControl } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useWaFlowsFromDb } from "@/api/whatsapp/flow/flow.query";
 import FlowSearchBar from "@/components/flow/FlowSearchBar";
@@ -114,7 +114,7 @@ const Flow = () => {
       .padStart(2, "0")}/${createdAt.getFullYear()}`;
 
     return (
-      <TouchableOpacity
+      <Pressable
         className="bg-white dark:bg-slate-900 rounded-xl px-4 py-3 mb-3 shadow-md"
         onPress={() =>
           router.push({
@@ -138,7 +138,7 @@ const Flow = () => {
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 

@@ -6,7 +6,6 @@ import {
   FlatList,
   Dimensions,
   Pressable,
-  TouchableOpacity,
   useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -160,7 +159,7 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
           gap: 12,
         }}
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <Pressable
             onPress={() => {
               setData([item]);
 
@@ -175,7 +174,7 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
             }}
           >
             <ContactCard item={item} />
-          </TouchableOpacity>
+          </Pressable>
         )}
       />
     </View>

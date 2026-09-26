@@ -9,13 +9,13 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   InteractionManager,
   Modal,
   ScrollView,
   useColorScheme,
-  Pressable, // Import ActivityIndicator
+  // Import ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TeamMembersData } from "@/context/type";
@@ -194,11 +194,11 @@ export default function AssignToUser({
   return (
     <>
       {iconOnly ? (
-        <TouchableOpacity onPress={() => setVisible(true)} style={{ padding: 4 }}>
+        <Pressable onPress={() => setVisible(true)} style={{ padding: 4 }}>
           <UserCheck color={iconColor || textColor} size={iconSize} />
-        </TouchableOpacity>
+        </Pressable>
       ) : (
-        <TouchableOpacity
+        <Pressable
           onPress={() => setVisible(true)}
           style={
             plain
@@ -233,7 +233,7 @@ export default function AssignToUser({
           >
             Assign
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
 
       <Modal
@@ -361,7 +361,7 @@ export default function AssignToUser({
             </ScrollView>
           )}
 
-          <TouchableOpacity
+          <Pressable
             onPress={handleAssign}
             disabled={assignMut.isPending}
             style={{
@@ -394,7 +394,7 @@ export default function AssignToUser({
                 Assign
               </Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </SafeAreaView>
       </Modal>
     </>

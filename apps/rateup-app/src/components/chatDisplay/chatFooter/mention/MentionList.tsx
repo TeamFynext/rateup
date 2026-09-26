@@ -1,4 +1,4 @@
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, Pressable, View } from "react-native";
 
 import { Colors } from "@/constants/colors";
 import { namePreview } from "@/utils/chatbox_utils";
@@ -64,10 +64,9 @@ export default function MentionList({
         contentContainerStyle={{ paddingVertical: 4 }}
       >
         {users.map((user) => (
-          <TouchableOpacity
+          <Pressable
             key={user.id}
             onPress={() => onSelect(user)}
-            activeOpacity={0.7}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -101,7 +100,7 @@ export default function MentionList({
             >
               {user.name}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </ScrollView>
     </View>
