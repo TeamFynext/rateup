@@ -9,6 +9,7 @@ import type {
   TransactionFilter,
 } from "@/backend/loyalty/redemption/redemption.api";
 import { useGetTransactions } from "@/backend/loyalty/redemption/redemption.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 
@@ -46,7 +47,7 @@ export function ActivityLedgerTable({
   const { t } = useTranslation();
   const { data, isPending } = useGetTransactions(filters);
 
-  const columns = useMemo<ColumnDef<LoyaltyLedgerRow>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, LoyaltyLedgerRow>[]>(
     () => [
       {
         id: "when",

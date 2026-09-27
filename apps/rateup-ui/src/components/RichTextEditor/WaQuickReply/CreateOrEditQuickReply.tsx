@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconTypography } from "@tabler/icons-react";
 import { EditorContent } from "@tiptap/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -32,22 +32,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 
 import { isJSONString } from ".";
 import InsertEmoji from "../InsertEmoji/index.tsx";
 import { WaTextCharacterCount } from "../wa-editor/character-count.tsx";
 import { useWaEditor } from "../wa-editor/use-wa-editor.ts";
+import QuickReplyMediaField from "./QuickReplyMediaField.tsx";
 import { quickReplySchema } from "./WaQuickReplySettings.tsx";
 
 const CreateOrEditQuickReply = ({
@@ -71,8 +66,22 @@ const CreateOrEditQuickReply = ({
       text: "",
       topic: "General Inquiry",
       key: "",
+      media: [],
     },
   });
+  // Files uploaded since the dialog opened. Until a save hands them to the reply they
+  // are nobody's, so closing without saving deletes them.
+  const unsavedUploads = useRef(new Set<string>());
+  function discardUnsavedUploads() {
+    const keys = [...unsavedUploads.current];
+    unsavedUploads.current.clear();
+    if (keys.length) void deleteUploadedFiles({ fileKeyArray: keys.map((Key) => ({ Key })) });
+  }
+  function close() {
+    discardUnsavedUploads();
+    form.reset();
+    setOpen(false);
+  }
   const textEditor = useWaEditor({
     content: form.getValues("text"),
     onChange: (value) => form.setValue("text", value, { shouldDirty: true, shouldValidate: true }),
@@ -84,6 +93,7 @@ const CreateOrEditQuickReply = ({
       const initialValues = {
         ...defaultValues,
         key: defaultValues.key || "",
+        media: defaultValues.media ?? [],
         text: !isJSONString(defaultValues.text)
           ? defaultValues.text
           : JSON.parse(defaultValues.text),
@@ -93,12 +103,18 @@ const CreateOrEditQuickReply = ({
   }, [reply, isEdit, form]);
 
   const onSubmit = form.handleSubmit((values) => {
-    const payload = { ...values, text: JSON.stringify(values.text) };
+    if (textEditor?.isEmpty && values.media.length === 0) {
+      form.setError("text", { message: t("Add a message or an attachment") });
+      return;
+    }
+    const payload = { ...values, text: textEditor?.isEmpty ? "" : JSON.stringify(values.text) };
+    const saved = () => unsavedUploads.current.clear();
     if (isEdit) {
       update.mutate(
         { id: reply?.id ?? "", data: payload },
         {
           onSuccess: () => {
+            saved();
             toast.success("Quick reply Updated");
             setOpen(false);
           },
@@ -114,6 +130,7 @@ const CreateOrEditQuickReply = ({
     }
     create.mutate(payload, {
       onSuccess: () => {
+        saved();
         setOpen(false);
         toast.success("Quick reply added successfully");
       },
@@ -127,34 +144,41 @@ const CreateOrEditQuickReply = ({
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <form>
-        <DialogContent className="sm:max-w-md md:max-w-3xl md:min-w-2xl min-h-[500px]">
-          <DialogHeader>
-            <DialogTitle>{isEdit ? t("Edit Quick Reply") : t("Add Quick Reply")} </DialogTitle>
-            <DialogDescription>{t("Click save when you are done.")}</DialogDescription>
-          </DialogHeader>
-          <div className="overflow-auto h-[500px]">
-            <FieldGroup className="flex flex-col gap-4 p-1">
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) setOpen(true);
+        else close();
+      }}
+    >
+      <DialogContent className="flex max-h-[90vh] flex-col gap-4 sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? t("Edit quick reply") : t("Add quick reply")}</DialogTitle>
+          <DialogDescription>
+            {t("Type / and its key in the inbox composer to use it.")}
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Scrolls only when the screen is too short; the footer stays put. */}
+        <form
+          id="quick-reply-form"
+          onSubmit={onSubmit}
+          className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1"
+        >
+          <FieldGroup className="gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <Controller
                 name="key"
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="key" className="text-sm font-normal">
-                      {t("Key")}
-                    </FieldLabel>
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="quick-reply-key">{t("Key")}</FieldLabel>
                     <Input
                       {...field}
-                      id="key"
-                      placeholder="Enter key"
-                      className="placeholder:text-sm"
+                      id="quick-reply-key"
+                      placeholder="welcome"
+                      autoComplete="off"
                     />
-                    <FieldDescription className="text-xs">
-                      {t(
-                        "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup",
-                      )}
-                    </FieldDescription>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
@@ -163,98 +187,107 @@ const CreateOrEditQuickReply = ({
                 name="topic"
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-rhf-demo-description">{t("Topic")}</FieldLabel>
-                    <Input {...field} id="topic" placeholder="Enter topic" autoComplete="off" />
-                    <FieldDescription className="text-xs">
-                      {t(
-                        "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference",
-                      )}
-                    </FieldDescription>
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-              <Controller
-                name="text"
-                control={form.control}
-                // The tiptap editor owns this value; only the error state is read here.
-                render={({ fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="text">{t("Reply Text")}</FieldLabel>
-                    <div className="flex-1">
-                      <ToolbarProvider editor={textEditor!}>
-                        <TooltipProvider>
-                          <EditorContent
-                            editor={textEditor}
-                            style={{
-                              backgroundColor: "var(--accent)",
-                              borderRadius: "5px",
-                              maxHeight: "300px",
-                              minHeight: "120px",
-                            }}
-                            className="overflow-y-auto rounded-xl"
-                          />
-                          <div className="flex items-center justify-end space-x-1 px-2 pt-1">
-                            <WaTextCharacterCount editor={textEditor} max={1024} />
-                          </div>
-                          <div className="flex flex-wrap p-2">
-                            <div className="mt-1 flex items-center">
-                              <InsertEmoji editor={textEditor} />
-                            </div>
-                            <Popover>
-                              <PopoverTrigger>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  title="Format"
-                                >
-                                  <IconTypography className="h-5 w-5" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-full">
-                                <div className="flex flex-nowrap gap-1">
-                                  <div className="flex items-center">
-                                    <BoldToolbar />
-                                    <ItalicToolbar />
-                                    <StrikeThroughToolbar />
-                                    <CodeToolbar />
-                                  </div>
-                                  <div className="flex items-center">
-                                    <BlockquoteToolbar />
-                                    <BulletListToolbar />
-                                    <OrderedListToolbar />
-                                  </div>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                            <div className="flex items-center">
-                              <UndoToolbar />
-                              <RedoToolbar />
-                            </div>
-                          </div>
-                        </TooltipProvider>
-                      </ToolbarProvider>
-                    </div>
+                    <FieldLabel htmlFor="quick-reply-topic">{t("Topic")}</FieldLabel>
+                    <Input
+                      {...field}
+                      id="quick-reply-topic"
+                      placeholder={t("e.g. Pricing")}
+                      autoComplete="off"
+                    />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
-            </FieldGroup>
-          </div>
+            </div>
 
-          <DialogFooter className="mt-2 mr-4">
-            <DialogClose render={<Button variant="secondary" onClick={() => form.reset()} />}>
-              <span className="text-sm">{t("Cancel")}</span>
-            </DialogClose>
-            <Button type="submit" onClick={onSubmit} size="sm">
-              {update.isPending || create.isPending ? <Spinner /> : null}
-              <span className="text-sm">{t("Save Changes")}</span>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </form>
+            <Controller
+              name="text"
+              control={form.control}
+              // The tiptap editor owns this value; only the error state is read here.
+              render={({ fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>{t("Message")}</FieldLabel>
+                  <div className="overflow-hidden rounded-lg border border-border bg-accent">
+                    <ToolbarProvider editor={textEditor!}>
+                      <TooltipProvider>
+                        <EditorContent
+                          editor={textEditor}
+                          className="max-h-48 overflow-y-auto [&_.ProseMirror]:min-h-24 [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2 [&_.ProseMirror]:outline-none"
+                        />
+                        <div className="flex items-center gap-0.5 border-t border-border px-1.5 py-1">
+                          <InsertEmoji editor={textEditor} />
+                          <Popover>
+                            <PopoverTrigger
+                              render={
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label={t("Format")}
+                                />
+                              }
+                            >
+                              <IconTypography />
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-1">
+                              <div className="flex items-center gap-0.5">
+                                <BoldToolbar />
+                                <ItalicToolbar />
+                                <StrikeThroughToolbar />
+                                <CodeToolbar />
+                                <BlockquoteToolbar />
+                                <BulletListToolbar />
+                                <OrderedListToolbar />
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <UndoToolbar />
+                          <RedoToolbar />
+                          <span className="ms-auto">
+                            <WaTextCharacterCount editor={textEditor} max={1024} />
+                          </span>
+                        </div>
+                      </TooltipProvider>
+                    </ToolbarProvider>
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="media"
+              control={form.control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>{t("Attachments")}</FieldLabel>
+                  <QuickReplyMediaField
+                    value={field.value}
+                    onChange={field.onChange}
+                    onUploaded={(key) => unsavedUploads.current.add(key)}
+                    onRemoveUnsaved={(key) => {
+                      if (!unsavedUploads.current.delete(key)) return;
+                      void deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+                    }}
+                  />
+                </Field>
+              )}
+            />
+          </FieldGroup>
+        </form>
+
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>{t("Cancel")}</DialogClose>
+          <Button
+            type="submit"
+            form="quick-reply-form"
+            loading={update.isPending || create.isPending}
+          >
+            {isEdit ? t("Save") : t("Add quick reply")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };

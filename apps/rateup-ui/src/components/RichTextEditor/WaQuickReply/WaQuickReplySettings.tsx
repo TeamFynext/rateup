@@ -5,7 +5,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
 
-import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
+import type {
+  QuickReply,
+  QuickReplyMedia,
+} from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import {
   useDeleteReply,
   useGetWaQuickReplies,
@@ -114,6 +117,7 @@ export const quickReplySchema = z.object({
   text: z.custom<Content>(),
   key: z.string().min(1, { message: "key is required" }),
   topic: z.string(),
+  media: z.array(z.custom<QuickReplyMedia>()).max(5),
 });
 
 export default WaQuickReplySettings;

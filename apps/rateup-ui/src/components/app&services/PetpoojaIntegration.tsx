@@ -25,6 +25,7 @@ import {
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
@@ -304,7 +305,7 @@ function WaTemplateSentHistory({ integration }: { integration: AppIntegration })
 
   type HistoryRow = NonNullable<typeof rows>[0];
 
-  const columns: ColumnDef<HistoryRow>[] = [
+  const columns: ColumnDef<DataTableFeatures, HistoryRow>[] = [
     {
       id: "phone",
       header: createSortableHeader("Phone Number"),

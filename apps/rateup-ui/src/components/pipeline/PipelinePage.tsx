@@ -86,12 +86,12 @@ export function PipelinePage() {
   const openConversation = useCallback(
     (lead: Lead) => {
       if (!lead.contactId) return;
-      // With the tab named, as every other link into the inbox does: the route
-      // rewrites a tab-less URL on mount, and that rewrite used to race the
-      // deep link.
+      // Same deep link as the contacts view's "View in inbox". `reveal` narrows the
+      // list to this contact and `history` loads their closed threads, without
+      // which a contact with no open conversation opens onto an empty pane.
       void navigate({
         to: "/dashboard/inbox",
-        search: { tab: "open", contactId: lead.contactId },
+        search: { tab: "open", contactId: lead.contactId, history: true, reveal: true },
       });
     },
     [navigate],

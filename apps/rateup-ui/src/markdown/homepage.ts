@@ -175,16 +175,21 @@ Convert physical customer touchpoints into digital engagement opportunities.
 
 ---
 
-# AI Agents for Customer Engagement
+# Meta AI Agent
 
-Automate customer interactions using AI-powered agents that handle conversations, support requests, and engagement workflows in real time.
+Run Meta's AI agent on your WhatsApp Business number from RateUp: it answers from your business details, FAQs, documents and website, uses your own APIs and RateUp's loyalty and CRM tools, and hands over to your team in the RateUp inbox. (/products/meta-ai-agent)
 
 ### Highlights
-- 10-minute setup
-- No coding required
-- 24/7 AI assistance
-- Automated customer communication
-- Intelligent engagement workflows
+- Guided setup, starting with Meta's eligibility check
+- Knowledge, skills, rich replies and connectors
+- Allowlist pilots, never-say phrases and usage caps
+- Handover to your team, and hand-back when a ticket closes
+
+---
+
+# Pipeline
+
+Turn WhatsApp, Instagram and Messenger conversations into leads on a drag-and-drop board, with owners, next steps, stale-lead alerts, insights and a forecast of expected wins. (/products/pipeline)
 
 ---
 

@@ -70,6 +70,7 @@ export const CAPABILITIES: readonly Capability[] = [
   {
     label: "Meta AI Agents",
     body: "An AI agent that answers from your own knowledge base and works through connected tools.",
+    to: "/products/meta-ai-agent",
     icon: (
       <>
         <rect x="4" y="7" width="16" height="11.5" rx="3.2" />
@@ -83,6 +84,7 @@ export const CAPABILITIES: readonly Capability[] = [
   {
     label: "Lead Pipelines",
     body: "A drag-and-drop pipeline that turns conversations into leads, stages and a forecast.",
+    to: "/products/pipeline",
     icon: <path d="M3.6 5h16.8l-6.3 7.1v6L10 20v-7.9L3.6 5Z" />,
   },
   {

@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -831,13 +830,10 @@ const WaInboxChatSelect = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Assign {selectedChats.length} Chat
-              {selectedChats.length > 1 ? "s" : ""}
+              {translations("Assign {count, plural, one {# chat} other {# chats}}", {
+                count: selectedChats.length,
+              })}
             </DialogTitle>
-
-            <DialogDescription>
-              {translations("Select a team member to assign the selected conversations")}
-            </DialogDescription>
           </DialogHeader>
           <BulkAssignUser
             filterData={filterData ?? ""}

@@ -86,15 +86,6 @@ export function PipelineHeader({ data, onAddLead, onImport }: Readonly<PipelineH
       clear: () => setView({ stageId: null }),
     });
   }
-  if (view.teamId) {
-    const team = stats?.teams.find((row) => row.id === view.teamId);
-    facets.push({
-      id: "teamId",
-      label: t("Team"),
-      value: team?.name ?? view.teamId,
-      clear: () => setView({ teamId: null }),
-    });
-  }
   if (view.source) {
     facets.push({
       id: "source",

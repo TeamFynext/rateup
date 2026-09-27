@@ -51,9 +51,9 @@ const JOBS: readonly { to: string; title: string; body: string; icon: ReactNode 
     ),
   },
   {
-    to: "/products/ai-automation",
-    title: "AI automation",
-    body: "Triggers, chatbots and the Meta AI agent answering before anyone opens the app.",
+    to: "/products/meta-ai-agent",
+    title: "Meta AI Agent",
+    body: "Meta's AI agent answering from your knowledge, and handing over to your team when it should.",
     icon: (
       <>
         <path d="M12 2v3" />

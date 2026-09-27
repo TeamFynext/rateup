@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -80,7 +81,7 @@ export const useSurveyResponseColumns = ({
   const { t: translations } = useTranslation();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   // The definitions are assembled per question, so their accessor shapes differ.
-  const column: ColumnDef<ResponseRow, StoredResponse>[] = useMemo(
+  const column: ColumnDef<DataTableFeatures, ResponseRow, StoredResponse>[] = useMemo(
     () => [
       {
         header: translations("Created At"),

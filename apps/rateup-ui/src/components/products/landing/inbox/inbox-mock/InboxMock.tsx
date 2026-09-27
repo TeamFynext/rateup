@@ -1,8 +1,9 @@
+import { useScript } from "../../shared/useScript";
 import ListPane from "./ListPane";
 import NavPane from "./NavPane";
+import { INBOX_SCRIPT } from "./script";
 import SidePane from "./SidePane";
 import ThreadPane from "./ThreadPane";
-import { useInboxScript } from "./useInboxScript";
 
 /**
  * The inbox, playing one conversation from first message to a closed ticket.
@@ -11,7 +12,7 @@ import { useInboxScript } from "./useInboxScript";
  * animation and the session chip, and the queue is the first feature card below.
  */
 export default function InboxMock() {
-  const [ref, state] = useInboxScript<HTMLDivElement>();
+  const [ref, state] = useScript(INBOX_SCRIPT);
 
   return (
     <div

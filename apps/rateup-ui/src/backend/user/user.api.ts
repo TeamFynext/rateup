@@ -207,7 +207,19 @@ export interface IPaginatedResponse<_T> {
   pagination: IPagination;
 }
 
-export async function getAuditLogs(params: { pagination: PaginationState; sorting: SortingState }) {
+export interface AuditLogFilters {
+  from?: Date;
+  to?: Date;
+  userId?: string;
+  /** A feature key from `getAuditLogFeatures`, e.g. `contact` or `wa/inbox`. */
+  feature?: string;
+}
+
+export async function getAuditLogs(params: {
+  pagination: PaginationState;
+  sorting: SortingState;
+  filters?: AuditLogFilters;
+}) {
   const sortParams =
     params?.sorting?.length > 0
       ? {
@@ -221,7 +233,16 @@ export async function getAuditLogs(params: { pagination: PaginationState; sortin
       page: params?.pagination.pageIndex + 1,
       limit: params?.pagination.pageSize,
       ...sortParams,
+      from: params.filters?.from?.toISOString(),
+      to: params.filters?.to?.toISOString(),
+      userId: params.filters?.userId,
+      feature: params.filters?.feature,
     },
   });
   return response.data;
+}
+
+/** The features that appear in the org's activity log, busiest first. */
+export async function getAuditLogFeatures() {
+  return (await axiosClient.get<{ key: string; count: number }[]>(`user/audit-logs/features`)).data;
 }

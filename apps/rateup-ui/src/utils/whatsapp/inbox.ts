@@ -158,6 +158,51 @@ function isCommentContent(
   return typeof content === "object" && content !== null && "commentId" in content;
 }
 
+interface EventPerson {
+  id: string;
+  name: string;
+}
+
+/** "Sara", "Sara and Leo", "Sara, Leo and Ana". */
+function joinNames(people: EventPerson[]): string {
+  if (people.length <= 1) return people[0]?.name ?? "";
+  const last = people[people.length - 1].name;
+  return `${people
+    .slice(0, -1)
+    .map((p) => p.name)
+    .join(", ")} and ${last}`;
+}
+
+/**
+ * The sentence an assignment event is saved with, for the optimistic copy shown before the
+ * server's row arrives. Mirrors the user-actor branches of `internalEventSentence` in
+ * rateup-api; keep the two in step.
+ */
+export function assignEventSentence(
+  actor: EventPerson,
+  status: string,
+  added: EventPerson[],
+  removed: EventPerson[] = [],
+): string {
+  const who = actor.name;
+  const selfOnly = (people: EventPerson[]) => people.length === 1 && people[0].id === actor.id;
+
+  if (status === "REASSIGNED" && added.length && removed.length) {
+    return `${who} moved this chat from ${joinNames(removed)} to ${joinNames(added)}`;
+  }
+  if (added.length) {
+    return selfOnly(added)
+      ? `${who} took this chat`
+      : `${who} assigned this chat to ${joinNames(added)}`;
+  }
+  if (removed.length) {
+    return selfOnly(removed)
+      ? `${who} left this chat`
+      : `${who} removed ${joinNames(removed)} from this chat`;
+  }
+  return `${who} assigned this chat`;
+}
+
 export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMessageReturn {
   const { messageBody, waCreatedAt } = message;
 
@@ -323,9 +368,12 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
         const isClosedType = WaMessageClosedStatus.includes(
           internal?.assignStatus as WaMessageAssignStatus,
         );
+        const actor = internal?.triggeredByUser?.name;
         messageContent = isClosedType
-          ? `${internal?.triggeredByUser?.name} ${internal!.text.body}`
-          : `${internal!.text.body} by ${internal?.triggeredByUser?.name}`;
+          ? `${actor} ${internal!.text.body}`
+          : internal!.text.body === `Chat assigned to ${actor}`
+            ? `${actor} took this chat`
+            : `${internal!.text.body} by ${actor}`;
       }
     }
     if (messageBody?.exchangeProcess === "privateNote") {

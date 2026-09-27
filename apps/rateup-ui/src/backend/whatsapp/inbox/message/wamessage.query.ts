@@ -23,6 +23,7 @@ import type { AssignInboxResult } from "./wamessage.api";
 import type { WaMessageLogFilter } from "./wamessage.api";
 import {
   assignInboxToUser,
+  assignOwner,
   blockWhatsAppUser,
   bulkAssignInboxToUser,
   createPrivateMessage,
@@ -201,6 +202,22 @@ export const useAssignInboxToUer = (_contactId: string, filterData: string) => {
     },
     onError: (e) => {
       toast.warning(e?.message || "Something went wrong");
+    },
+  });
+};
+
+/** Toasts are the caller's: it knows whose name to put in them. */
+export const useAssignOwner = (filterData: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: assignOwner,
+    onSuccess: (result, variables) => {
+      followAssignmentToItsTicket(result, variables.contactId);
+      qc.invalidateQueries({ queryKey: whatsappKeys.assignedInboxUser() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: notificationKeys.all() });
+      qc.invalidateQueries({ queryKey: notificationKeys.count() });
     },
   });
 };

@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { AuditLogData } from "@/backend/user/user.api";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -101,6 +102,26 @@ const formatActionMessage = (method: string, route: string): string => {
 
   return id ? `${type} ${id} ${actionLabel}` : `${type} ${actionLabel}`;
 };
+
+// Filter option names for route features; anything else is title-cased from its path.
+const FEATURE_LABELS: Record<string, string> = {
+  contact: "Contacts",
+  "contact-group": "Contact groups",
+  pipeline: "Pipeline",
+  loyalty: "Loyalty",
+  survey: "Surveys",
+  user: "Users",
+  org: "Organization",
+  team: "Teams",
+  "wa/inbox": "Inbox",
+  "wa/template": "WhatsApp templates",
+  "wa/campaign": "Campaigns",
+  "wa/settings": "Channels",
+};
+
+/** A feature key from the log (`contact`, `wa/inbox`) as a filter option name. */
+export const featureLabel = (key: string): string =>
+  FEATURE_LABELS[key] ?? formatResourceType(key.replace(/^wa\//, ""));
 
 const formatTimestamp = (timestamp: string): string => {
   return dayjs(timestamp).format("YYYY-MM-DD HH:mm:ss");
@@ -200,7 +221,7 @@ const TimestampCell = ({ timestamp }: { timestamp: string }) => (
 /** The activity log's columns. `user` and `createdAt` are the ids the API sorts by. */
 export function useAuditColumns() {
   const { t } = useTranslation();
-  return useMemo<ColumnDef<AuditLogData>[]>(
+  return useMemo<ColumnDef<DataTableFeatures, AuditLogData>[]>(
     () => [
       {
         accessorKey: "action",

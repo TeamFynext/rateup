@@ -9,6 +9,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 
+import { useAssignPickerRequest } from "../assign/assignEvent.ts";
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
 import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
@@ -148,6 +149,33 @@ export default function WaInboxChatDisplay() {
       window.removeEventListener("drop", handleDrop);
     };
   }, []);
+
+  const requestAssignPicker = useAssignPickerRequest((s) => s.request);
+  const hasContact = Boolean(contact);
+  useEffect(() => {
+    if (!hasContact) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "a" || event.metaKey || event.ctrlKey || event.altKey || event.repeat) {
+        return;
+      }
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+      ) {
+        return;
+      }
+      // A dialog or menu owns the keyboard while it is open.
+      if (document.querySelector('[role="dialog"], [role="menu"], [role="listbox"]')) return;
+      event.preventDefault();
+      // The picker lives in the details panel, which is a column from xl and a sheet below.
+      if (globalThis.matchMedia("(min-width: 1280px)").matches) setShowCustomerInfo(true);
+      else setShowDetailsOverlay(true);
+      requestAssignPicker();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [hasContact, requestAssignPicker]);
 
   useEffect(() => {
     const resetDragging = () => setIsDragging(false);

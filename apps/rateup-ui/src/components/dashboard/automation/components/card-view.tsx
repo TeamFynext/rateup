@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CardGrid } from "@/components/common/generic-card.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -38,7 +39,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
     onDelete(id);
   };
 
-  const columns = useMemo<ColumnDef<Rule>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, Rule>[]>(
     () => [
       {
         accessorKey: "name",

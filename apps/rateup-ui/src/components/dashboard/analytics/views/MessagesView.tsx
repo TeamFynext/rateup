@@ -8,6 +8,7 @@ import {
   useGetTeamApiOverview,
   useGetTemplateOverview,
 } from "@/backend/apiAnalytics/apianalytics.query";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -71,7 +72,7 @@ function TemplatesCard({ filters }: Readonly<{ filters: AnalyticsFilters }>) {
   );
   const categories = query.data?.categoryOverview?.byCategory ?? [];
 
-  const columns = useMemo<ColumnDef<TemplateRow>[]>(
+  const columns = useMemo<ColumnDef<DataTableFeatures, TemplateRow>[]>(
     () => [
       {
         accessorKey: "name",

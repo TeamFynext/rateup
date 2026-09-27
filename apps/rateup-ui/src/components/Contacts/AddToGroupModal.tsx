@@ -1,98 +1,88 @@
-import { useId, useState } from "react";
-import { toast } from "sonner";
+import { IconFolder } from "@tabler/icons-react";
 
-import { useAddExistingContactMutation } from "@/backend/campaign/contactGroup/contactGroup.query";
-
-import { Button } from "../ui/button.tsx";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog.tsx";
-import { FieldLabel, FieldTitle } from "../ui/field.tsx";
-import { Input } from "../ui/input.tsx";
-import { Spinner } from "../ui/spinner.tsx";
-import ContactGroupSelector from "./ContactGroupSelector.tsx";
+  useAddExistingContactMutation,
+  useContactGroup,
+} from "@/backend/campaign/contactGroup/contactGroup.query";
 
+import {
+  Combobox,
+  ComboboxChipsInput,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+} from "../ui/combobox.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
+import { Skeleton } from "../ui/skeleton.tsx";
+
+/**
+ * Bulk "Add to group" from the contacts table: the same searchable list as the
+ * inbox's tag picker, rendered in place. A click adds the selection and closes.
+ */
 const AddToGroupModal = ({
   opened,
   setOpened,
   selectedContactIds,
-  contact = null,
   onSuccess = null,
 }: {
   opened: boolean;
   setOpened: (open: boolean) => void;
   selectedContactIds: string[];
-  contact?: { name?: string | null; phone?: string | null } | null;
   onSuccess?: (() => void) | null;
 }) => {
-  const uid = useId();
-  const [contactGroupId, setContactGroupId] = useState("");
-  const addExistingContactsMutation = useAddExistingContactMutation(contactGroupId);
-  const handleAddExistingContacts = async () => {
-    if (!contactGroupId.length) {
-      return toast.error("Please select a group");
-    }
-    addExistingContactsMutation.mutate(
-      {
-        customerList: selectedContactIds,
-        groupId: contactGroupId,
-      },
-      {
-        onSuccess: () => {
-          toast.success("contact added to group");
-          if (onSuccess) {
-            onSuccess();
-          }
-          setOpened(false);
-        },
-        onError: (error) => {
-          toast.error(error?.message || "error adding contact to group");
-          setOpened(false);
-        },
-      },
-    );
-  };
+  const { data: groups = [], isPending } = useContactGroup();
+  const addToGroup = useAddExistingContactMutation();
+  const items = groups.map((g) => ({ id: g.id, label: g.name }));
+  const count = selectedContactIds.length;
 
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent>
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Add contacts to Group</DialogTitle>
-          <DialogDescription>Select Group to add the contacts</DialogDescription>
+          <DialogTitle>
+            Add {count} contact{count === 1 ? "" : "s"} to a group
+          </DialogTitle>
         </DialogHeader>
-        {selectedContactIds?.length === 1 && contact ? (
-          <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor={`${uid}-name`}>Name</FieldLabel>
-            <Input id={`${uid}-name`} readOnly defaultValue={contact.name ?? ""} />
-            <FieldLabel htmlFor={`${uid}-phone`}>Phone</FieldLabel>
-            <Input id={`${uid}-phone`} readOnly defaultValue={contact.phone ?? ""} />
-          </div>
+        {isPending ? (
+          <Skeleton className="h-48 w-full rounded-md" />
         ) : (
-          <p className="text-sm text-muted-foreground">
-            {selectedContactIds.length} Contacts selected
-          </p>
+          <Combobox<{ id: string; label: string }>
+            items={items}
+            value={null}
+            onValueChange={(item) => {
+              if (!item || addToGroup.isPending) return;
+              addToGroup.mutate(
+                { customerList: selectedContactIds, groupId: item.id },
+                {
+                  onSuccess: () => {
+                    onSuccess?.();
+                    setOpened(false);
+                  },
+                },
+              );
+            }}
+            inline
+            open
+            autoHighlight
+          >
+            <div className="overflow-hidden rounded-md bg-popover text-popover-foreground ring-1 ring-foreground/10">
+              <ComboboxChipsInput
+                autoFocus
+                placeholder="Search groups"
+                className="h-9 w-full shrink-0 border-b border-border px-3 text-sm"
+              />
+              <ComboboxEmpty>{items.length ? "No matches" : "No groups yet"}</ComboboxEmpty>
+              <ComboboxList className="max-h-72">
+                {(item: { id: string; label: string }) => (
+                  <ComboboxItem key={item.id} value={item} disabled={addToGroup.isPending}>
+                    <IconFolder className="text-muted-foreground" />
+                    <span className="truncate">{item.label}</span>
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </div>
+          </Combobox>
         )}
-        <FieldTitle>Group</FieldTitle>
-        <ContactGroupSelector
-          value={contactGroupId}
-          onChange={setContactGroupId}
-          className="w-full"
-        />
-        <DialogFooter>
-          <DialogClose>
-            <Button variant="secondary">Cancel</Button>
-          </DialogClose>
-          <Button onClick={handleAddExistingContacts}>
-            {addExistingContactsMutation.isPending && <Spinner />}
-            Save
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

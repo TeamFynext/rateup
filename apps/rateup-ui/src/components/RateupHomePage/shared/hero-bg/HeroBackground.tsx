@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 
 import {
   LOOP_S,
@@ -12,8 +12,8 @@ import {
   glowOffset,
   pathD,
 } from "./lineField";
+import { useHeroLoop } from "./useHeroLoop";
 
-const FRAME_MS = 33;
 /* Fraction of the authored pace. The piece was cut as a 12s loop for a preview; behind a
    headline that reads as busy, so the page runs it at 40% — one lap every 30s. */
 const SPEED = 0.4;
@@ -45,70 +45,31 @@ export default function HeroBackground({ className = "" }: Readonly<{ className?
   const pathRefs = useRef<Array<SVGPathElement | null>>([]);
   const dotRefs = useRef<Array<SVGGElement | null>>([]);
 
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
+  const elapsedRef = useRef(0);
+  const narrowRef = useRef<MediaQueryList | null>(null);
 
-    const reduced = globalThis.matchMedia("(prefers-reduced-motion: reduce)");
-    const narrow = globalThis.matchMedia("(max-width: 639px)");
-
-    let raf = 0;
-    let last = 0;
-    let elapsed = 0;
-    let visible = false;
-
-    const draw = (T: number) => {
-      const sparse = narrow.matches;
-      const lines = buildLines(T);
-      lines.forEach((line, i) => {
-        if (sparse && i % 2 === 1) return;
-        pathRefs.current[i]?.setAttribute("d", pathD(line));
-      });
-      buildDots(lines, T).forEach((dot, i) => {
-        if (sparse && dot.line % 2 === 1) return;
-        const el = dotRefs.current[i];
-        if (!el) return;
-        el.setAttribute("transform", dotTransform(dot));
-        el.setAttribute("opacity", dotOpacity(dot));
-      });
-      if (glowRef.current) glowRef.current.style.transform = glowTransform(T);
-    };
-
-    const frame = (now: number) => {
-      raf = requestAnimationFrame(frame);
-      const dt = now - last;
-      if (dt < FRAME_MS) return;
-      last = now;
-      /* rAF stops in a hidden tab, so the first frame back reports the whole absence as one
-         step. Clamping it keeps the field from lurching forward on return. */
-      elapsed += (Math.min(dt, FRAME_MS * 2) / 1000) * SPEED;
-      draw((STATIC_T + elapsed) % LOOP_S);
-    };
-
-    const sync = () => {
-      const shouldRun = visible && !reduced.matches;
-      if (shouldRun && !raf) {
-        last = performance.now();
-        raf = requestAnimationFrame(frame);
-      } else if (!shouldRun && raf) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
-    };
-
-    const io = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      sync();
+  const draw = (T: number) => {
+    narrowRef.current ??= globalThis.matchMedia("(max-width: 639px)");
+    const sparse = narrowRef.current.matches;
+    const lines = buildLines(T);
+    lines.forEach((line, i) => {
+      if (sparse && i % 2 === 1) return;
+      pathRefs.current[i]?.setAttribute("d", pathD(line));
     });
-    io.observe(root);
-    reduced.addEventListener("change", sync);
+    buildDots(lines, T).forEach((dot, i) => {
+      if (sparse && dot.line % 2 === 1) return;
+      const el = dotRefs.current[i];
+      if (!el) return;
+      el.setAttribute("transform", dotTransform(dot));
+      el.setAttribute("opacity", dotOpacity(dot));
+    });
+    if (glowRef.current) glowRef.current.style.transform = glowTransform(T);
+  };
 
-    return () => {
-      io.disconnect();
-      reduced.removeEventListener("change", sync);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
+  useHeroLoop(rootRef, (dt) => {
+    elapsedRef.current += dt * SPEED;
+    draw((STATIC_T + elapsedRef.current) % LOOP_S);
+  });
 
   const lineGradient = `${id}-line`;
   const glowGradient = `${id}-glow`;

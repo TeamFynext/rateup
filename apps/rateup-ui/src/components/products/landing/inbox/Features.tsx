@@ -1,9 +1,11 @@
-import { CheckIcon } from "@/components/RateupHomePage/shared/home-ui";
+import { Link } from "@tanstack/react-router";
+
 import { InboxList, PipelineBoard } from "@/components/RateupHomePage/shared/mockups/boards";
 import { MockCard } from "@/components/RateupHomePage/shared/mockups/kit";
 
+import AlsoList from "../shared/AlsoList";
+import { BAND, SectionHead } from "../shared/section";
 import { AssignMini, NotesMini, RulesMini, SessionMini } from "./feature-mocks";
-import { BAND, SectionHead } from "./parts";
 
 const ALSO = [
   "iOS and Android apps with push notifications",
@@ -71,6 +73,12 @@ export default function Features() {
             body="Move a contact through your pipeline while you answer them. Labels stay with the person; tags stay with the conversation."
           >
             <PipelineBoard />
+            <Link
+              to="/products/pipeline"
+              className="text-[14.5px] font-semibold text-ru-blue-600 hover:text-ru-blue-700"
+            >
+              About Pipeline →
+            </Link>
           </MockCard>
 
           <MockCard
@@ -97,14 +105,7 @@ export default function Features() {
           </MockCard>
         </div>
 
-        <ul className="mt-8 grid list-none gap-x-6 gap-y-2.5 rounded-2xl border border-ru-n-200 bg-ru-n-50 p-5.5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
-          {ALSO.map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-[15px] text-ru-n-600">
-              <CheckIcon className="mt-1 size-3.5 flex-none text-ru-green-600" />
-              {item}
-            </li>
-          ))}
-        </ul>
+        <AlsoList items={ALSO} />
       </div>
     </section>
   );

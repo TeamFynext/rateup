@@ -26,6 +26,7 @@ export const pipelineKeys = {
   listLeads: (pipelineId: string | undefined, params: LeadListParams) =>
     ["pipeline", "leads", pipelineId, "list", params] as const,
   lead: (leadId: string | undefined) => ["pipeline", "lead", leadId] as const,
+  sharedLead: (shortUrlId: string | undefined) => ["pipeline", "shared-lead", shortUrlId] as const,
   /** Counts and rollups for the whole pipeline; no filters in the key. */
   stats: (pipelineId: string | undefined) => ["pipeline", "stats", pipelineId] as const,
   forecast: (pipelineId: string | undefined) => ["pipeline", "forecast", pipelineId] as const,
@@ -48,7 +49,6 @@ export function normaliseLeadParams(input: LeadListParams): LeadListParams {
 
   if (input.search) params.search = input.search;
   if (input.stageId) params.stageId = input.stageId;
-  if (input.teamId) params.teamId = input.teamId;
   if (input.source) params.source = input.source;
   if (input.assigneeId) params.assigneeId = input.assigneeId;
 
@@ -59,6 +59,6 @@ export function normaliseLeadParams(input: LeadListParams): LeadListParams {
 export function hasActiveLeadFilters(params: LeadListParams): boolean {
   return (
     params.filter !== "open" ||
-    Boolean(params.search ?? params.stageId ?? params.teamId ?? params.source ?? params.assigneeId)
+    Boolean(params.search ?? params.stageId ?? params.source ?? params.assigneeId)
   );
 }

@@ -1,9 +1,18 @@
 import { Link } from "@tanstack/react-router";
 
+import HeroCanvas from "@/components/RateupHomePage/shared/hero-bg/HeroCanvas";
+import { syncRails } from "@/components/RateupHomePage/shared/hero-bg/scenes/syncRails";
 import { ArrowRight, ClosingCta } from "@/components/RateupHomePage/shared/home-ui";
+import {
+  HERO_H1,
+  HERO_SUB,
+  HeroActions,
+  NavyHero,
+} from "@/components/RateupHomePage/shared/NavyHero";
 import { INTEGRATIONS, integrationPath } from "@/config/integrations";
 
-import { Band, LandingHero, RelatedLinks } from "./sections";
+import { Band, RelatedLinks } from "./sections";
+import ShowcaseSheet from "./shared/ShowcaseSheet";
 
 /**
  * `/integrations` — the hub for the integration cluster.
@@ -48,25 +57,28 @@ const RELATED = [
   },
 ] as const;
 
+const partnerRails = () => syncRails(INTEGRATIONS);
+
 export default function IntegrationsPage() {
   return (
     <>
-      <LandingHero
-        eyebrow="Integrations"
-        eyebrowIcon={PlugIcon}
-        title="Plug RateUp into the stack you already run"
-        points={["Two-way sync", "Live the same day", "REST API and webhooks"]}
-      >
-        Orders, customers and loyalty points move both ways between RateUp and your store, POS and
-        CRM — so campaigns are segmented by what people actually bought and points post without
-        anyone typing them in.
-      </LandingHero>
+      <NavyHero background={<HeroCanvas scene={partnerRails} className="-z-10" />}>
+        <h1 className={HERO_H1}>
+          Plug RateUp into <span className="text-ru-blue-300">the stack you already run.</span>
+        </h1>
+        <p className={`max-w-[42ch] ${HERO_SUB}`}>
+          Orders, customers and loyalty points move both ways between RateUp and your store, POS and
+          CRM — so points post without anyone typing them in.
+        </p>
+        <HeroActions />
+      </NavyHero>
 
-      <Band
+      <ShowcaseSheet
         eyebrow="Connectors"
-        eyebrowIcon={PlugIcon}
+        icon={PlugIcon}
         title="Native connectors for the systems most of our customers run."
         lead="Everything else connects through Zapier, outbound webhooks or the REST API."
+        caption={null}
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3.5">
           {INTEGRATIONS.map((integration) => {
@@ -121,7 +133,7 @@ export default function IntegrationsPage() {
             );
           })}
         </div>
-      </Band>
+      </ShowcaseSheet>
 
       <Band tone="muted" title="What the sync is for">
         <RelatedLinks links={RELATED} />

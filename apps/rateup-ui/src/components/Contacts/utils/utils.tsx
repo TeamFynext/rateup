@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -47,7 +48,7 @@ const ContactNameCell = ({ contact }: { contact: ContactsData }) => {
   );
 };
 
-const selectCheckBox: ColumnDef<ContactsData>[] = [
+const selectCheckBox: ColumnDef<DataTableFeatures, ContactsData>[] = [
   {
     id: "select",
     accessorKey: "select",
@@ -70,7 +71,13 @@ const selectCheckBox: ColumnDef<ContactsData>[] = [
   },
 ];
 
-const HeaderWithSort = ({ column, title }: { column: Column<ContactsData>; title: string }) => {
+const HeaderWithSort = ({
+  column,
+  title,
+}: {
+  column: Column<DataTableFeatures, ContactsData>;
+  title: string;
+}) => {
   return (
     <div className="flex gap-2 items-center">
       <span>{title}</span>
@@ -81,7 +88,7 @@ const HeaderWithSort = ({ column, title }: { column: Column<ContactsData>; title
   );
 };
 
-const contactDetailsColumn: ColumnDef<ContactsData>[] = [
+const contactDetailsColumn: ColumnDef<DataTableFeatures, ContactsData>[] = [
   {
     header: ({ column }) => <HeaderWithSort column={column} title={"Name"} />,
     accessorKey: "name",
@@ -139,7 +146,7 @@ export const contactColumn = (
   showLifecycle = false,
   /** True once the org has a board — the Stage column replaces Lifecycle Stage. */
   showStage = false,
-): ColumnDef<ContactsData>[] => {
+): ColumnDef<DataTableFeatures, ContactsData>[] => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
@@ -230,7 +237,7 @@ export const contactColumn = (
             },
             enableSorting: false,
             meta: { title: "Lead stage" },
-          } satisfies ColumnDef<ContactsData>,
+          } satisfies ColumnDef<DataTableFeatures, ContactsData>,
         ]
       : showLifecycle
         ? [
@@ -240,7 +247,7 @@ export const contactColumn = (
               cell: (info) => info.getValue(),
               enableSorting: false,
               meta: { title: "Lifecycle Stage" },
-            } satisfies ColumnDef<ContactsData>,
+            } satisfies ColumnDef<DataTableFeatures, ContactsData>,
           ]
         : []),
     ...(contactTags?.length > 0
@@ -258,7 +265,7 @@ export const contactColumn = (
 
                 enableSorting: false,
                 meta: { title: data?.name },
-              }) satisfies ColumnDef<ContactsData>,
+              }) satisfies ColumnDef<DataTableFeatures, ContactsData>,
           )
       : []),
     {

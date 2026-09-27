@@ -7,7 +7,7 @@ import {
 } from "@/components/RateupHomePage/shared/channel-marks";
 import { IntegrationTiles } from "@/components/RateupHomePage/shared/Integrations";
 
-import { BAND, SectionHead } from "./parts";
+import { BAND, SectionHead } from "../shared/section";
 
 const CHANNELS: ReadonlyArray<{ name: string; body: string; tile: string; mark: ReactNode }> = [
   {

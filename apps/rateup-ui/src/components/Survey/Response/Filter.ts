@@ -1,11 +1,21 @@
 import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import { rankings, rankItem } from "@tanstack/match-sorter-utils";
-import type { FilterFn } from "@tanstack/react-table";
+import type { Row, RowData } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { QuestionType } from "@/types/enums.ts";
 
-export const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) => {
+/** The toolbar search text, or the picked choices for a smiley question. */
+type FuzzyFilterValue = string | Array<{ value?: string }>;
+
+/** Generic over the row so the survey and WhatsApp response tables can share it. */
+export const fuzzyFilter = <TData extends RowData>(
+  row: Row<DataTableFeatures, TData>,
+  columnId: string,
+  value: FuzzyFilterValue,
+  addMeta?: (meta: { itemRank?: RankingInfo }) => void,
+): boolean => {
   if (!value) return false;
   const cellValue = row.getValue(columnId);
   const responseType = columnId.split("_,_")?.[1] as QuestionType;
@@ -30,18 +40,19 @@ export const fuzzyFilter: FilterFn<unknown> = (row, columnId, value, addMeta) =>
     formatedResponse = asRecordValues(cellValue).join(" , ");
   } else formatedResponse = String(cellValue ?? "");
 
-  let itemRank = rankItem(formatedResponse, value);
+  // `rankItem` coerces its query to a string itself; keep that for the smiley choice list.
+  let itemRank = rankItem(formatedResponse, String(value));
 
-  if (responseType === QuestionType.Smiley && value?.length > 0) {
+  if (responseType === QuestionType.Smiley && Array.isArray(value) && value.length > 0) {
     const temp: RankingInfo[] = [];
-    value?.map((data: { value?: string }) => {
+    value.map((data) => {
       temp?.push(rankItem(formatedResponse, data?.value ?? ""));
     });
     temp?.map((data) => {
       if (data.passed) itemRank = data;
     });
   }
-  addMeta({
+  addMeta?.({
     itemRank,
   });
 

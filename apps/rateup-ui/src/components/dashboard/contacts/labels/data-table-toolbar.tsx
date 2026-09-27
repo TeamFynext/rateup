@@ -1,19 +1,20 @@
 import { IconPlus, IconSearch, IconX } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable, RowData } from "@tanstack/react-table";
 
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
   onCreateClick: () => void;
 }
 
-export function DataTableToolbar<TData>({
+export function DataTableToolbar<TData extends RowData>({
   table,
   onCreateClick,
 }: Readonly<DataTableToolbarProps<TData>>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
+  const isFiltered = table.state.columnFilters.length > 0;
 
   return (
     <div className="flex items-center justify-between mb-4">

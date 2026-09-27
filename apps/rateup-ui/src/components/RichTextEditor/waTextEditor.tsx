@@ -398,8 +398,9 @@ function WaTextEditor({
           </div>
           <div className="overflow-auto min-w-40 min-h-20 max-h-50">
             <WaQuickReply
-              handleSelectQuickReply={(value) => {
+              handleSelectQuickReply={(reply) => {
                 if (editor) {
+                  const value = reply.text ?? "";
                   const parsedValue = !isJSONString(value)
                     ? parseFromWhatsAppFormat(value)
                     : JSON.parse(value);
@@ -416,7 +417,15 @@ function WaTextEditor({
                       .run();
                   }
 
-                  editor.chain().focus().insertContent(parsedValue).run();
+                  if (value) editor.chain().focus().insertContent(parsedValue).run();
+                  // Attachments only exist in the inbox composer. `shared`: the files
+                  // are the quick reply's, so dropping one from this draft keeps it.
+                  if (inbox) {
+                    const inDraft = new Set(media.map((m) => m.key));
+                    for (const item of reply.media ?? []) {
+                      if (!inDraft.has(item.key)) addMedia({ ...item, shared: true });
+                    }
+                  }
                   setShowQuickReplies(false);
                   setSearchTerm("");
                 }

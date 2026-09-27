@@ -16,7 +16,7 @@ import {
   IconUserPlus,
   IconUsers,
 } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
+import type { ReactTable } from "@tanstack/react-table";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ import ImportContactsDialog from "@/components/Contacts/ImportContactsDialog.tsx
 import LabelContactModal from "@/components/Contacts/LabelContactModal.tsx";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { StageSelector, usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -59,7 +60,7 @@ import { TeamFeature } from "@/types/enums.ts";
 import { useContactTableStore } from "../store/contact-table-store.ts";
 
 interface DataTableToolbarProps {
-  table: Table<ContactsData>;
+  table: ReactTable<DataTableFeatures, ContactsData>;
 }
 
 const SourceSelector = ({
@@ -162,7 +163,7 @@ const LabelSelector = ({
 };
 
 export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
+  const isFiltered = table.state.columnFilters.length > 0;
   const { filter, setFilter } = useContactTableStore();
   const { t } = useTranslation();
 
@@ -197,7 +198,7 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
       return;
     }
 
-    const selectedIds = Object.keys(table.getState().rowSelection);
+    const selectedIds = Object.keys(table.state.rowSelection);
     deleteManyContactsMutation?.mutate(selectedIds, {
       onSuccess: () => {
         toast.success("contact deleted successfully");
@@ -289,10 +290,10 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
             <DataTableViewOptions table={table} />
           </div>
         </div>
-        {Object.keys(table.getState().rowSelection).length > 0 && (
+        {Object.keys(table.state.rowSelection).length > 0 && (
           <div className="flex items-center gap-2 justify-center">
             <span className="text-sm text-muted-foreground">
-              {Object.keys(table.getState().rowSelection).length} Selected
+              {Object.keys(table.state.rowSelection).length} Selected
             </span>
             <Button
               variant="outline"
@@ -337,24 +338,24 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
       />
       <AddToGroupModal
         opened={openAddtoGroupModal}
-        selectedContactIds={Object.keys(table.getState().rowSelection)}
+        selectedContactIds={Object.keys(table.state.rowSelection)}
         setOpened={setOpenAddtoGroupModal}
         onSuccess={resetRowSelection}
       />
       <LabelContactModal
-        contactIds={Object.keys(table.getState().rowSelection)}
+        contactIds={Object.keys(table.state.rowSelection)}
         opened={openLabelContactModal}
         setOpened={setOpenLabelContactModal}
         onSuccess={resetRowSelection}
       />
       <ApplyLifecycletoContactsModal
-        contactIds={Object.keys(table.getState().rowSelection)}
+        contactIds={Object.keys(table.state.rowSelection)}
         opened={openLifecycleContactModal}
         setOpened={setOpenLifecycleContactModal}
         onSuccess={resetRowSelection}
       />
       <AssignStageToContactsModal
-        contactIds={Object.keys(table.getState().rowSelection)}
+        contactIds={Object.keys(table.state.rowSelection)}
         opened={openStageContactModal}
         setOpened={setOpenStageContactModal}
         onSuccess={resetRowSelection}
@@ -363,7 +364,7 @@ export function DataTableToolbar({ table }: Readonly<DataTableToolbarProps>) {
   );
 }
 
-const ExportContacts = ({ table }: { table: Table<ContactsData> }) => {
+const ExportContacts = ({ table }: { table: ReactTable<DataTableFeatures, ContactsData> }) => {
   const exportMut = useExportContactsMutation();
   const leafColumns = table
     .getAllLeafColumns()

@@ -1,4 +1,4 @@
-import { IconBolt } from "@tabler/icons-react";
+import { IconBolt, IconPaperclip } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
@@ -14,7 +14,7 @@ export const WaQuickReply = ({
   handleSelectQuickReply,
   searchQuery,
 }: {
-  handleSelectQuickReply: (value: string) => void;
+  handleSelectQuickReply: (reply: QuickReply) => void;
   searchQuery?: string;
 }) => {
   const waQuickReplies = useGetWaQuickReplies();
@@ -40,14 +40,20 @@ export const WaQuickReply = ({
               <div
                 key={reply.id}
                 className="flex items-center gap-1 border p-2 rounded-sm bg-gray-100 dark:bg-transparent cursor-pointer"
-                {...pressable(() => handleSelectQuickReply(reply?.text ?? ""))}
+                {...pressable(() => handleSelectQuickReply(reply))}
               >
                 <IconBolt className="text-primary w-3 h-3" />
-                <span className="text-xs">
+                <span className="min-w-0 flex-1 truncate text-xs">
                   {reply?.key && reply.key.length > 50
                     ? `${reply.key.slice(0, 60)}...`
                     : reply?.key}
                 </span>
+                {reply.media?.length ? (
+                  <IconPaperclip
+                    className="size-3 shrink-0 text-muted-foreground"
+                    aria-label={t("Has attachments")}
+                  />
+                ) : null}
               </div>
             );
           })}

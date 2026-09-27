@@ -18,6 +18,7 @@ import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/sho
 import { DataTableToolbar } from "@/components/admin/shopify/data-table-toolbar.tsx";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -39,7 +40,7 @@ export function ShopifyPage() {
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
 
-  const columns: ColumnDef<ShopifyTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, ShopifyTableData>[] = [
     {
       accessorKey: "id",
       header: "ID",

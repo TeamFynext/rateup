@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { DataTableColumnHeader } from "@/components/Table/data-table-column-header.tsx";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 
 import { DataTableRowActions } from "./data-table-row-actions.tsx";
 
@@ -11,7 +12,7 @@ import { DataTableRowActions } from "./data-table-row-actions.tsx";
  * behind one, so row selection had nothing to drive. Add the column back alongside the action,
  * not before it.
  */
-export const columns: ColumnDef<CustomFieldData>[] = [
+export const columns: ColumnDef<DataTableFeatures, CustomFieldData>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,

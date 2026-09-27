@@ -147,54 +147,6 @@
   --footer-bg: #071a33;
 }
 
-/* WhatsApp Feedback Theme (WhatsApp Green / Emerald) */
-.themeFeedback {
-  composes: theme;
-  --cyan: #25d366;
-  --cyan-2: #3d7a68;
-  --blue: #2a6254;
-
-  --primary-rgb: 37, 211, 102;
-  --primary-dark-rgb: 61, 122, 104;
-  --primary-darker-rgb: 42, 98, 84;
-  --primary-shadow-rgb: 42, 98, 84;
-  --cyan-rgb: 37, 211, 102;
-  --light-blue-rgb: 184, 208, 202;
-
-  --grad-cyan-start: #b8d0ca;
-  --grad-cyan-middle: #3d7a68;
-  --grad-cyan-end: #2a6254;
-
-  --btn-primary-start: #3d7a68;
-  --btn-primary-end: #2a6254;
-  --btn-primary-shadow: rgba(42, 98, 84, 0.45);
-  --btn-primary-hover-shadow: rgba(42, 98, 84, 0.6);
-  --btn-primary-active-shadow: rgba(42, 98, 84, 0.5);
-
-  /* Light navbar and light footer like original */
-  --nav-bg: rgba(255, 255, 255, 0.82);
-  --nav-border: rgba(236, 236, 234, 0.7);
-  --nav-link-color: #1e293b;
-  --nav-link-hover: #2a6254;
-  --nav-btn-ghost-border: var(--border);
-  --nav-btn-ghost-text: var(--foreground);
-  --nav-btn-ghost-border-hover: var(--muted-foreground);
-  --nav-logo-color: #1e293b;
-
-  --btn-primary-chip-bg: #102820;
-  --btn-demo-bg: #b8d0ca;
-  --btn-demo-border: transparent;
-  --btn-demo-text: #0f2820;
-  --btn-demo-hover-bg: #a6c2bb;
-
-  --footer-bg: #000000;
-  --footer-border: rgba(255, 255, 255, 0.08);
-  --footer-text: rgba(255, 255, 255, 0.74);
-  --footer-text-secondary: rgba(255, 255, 255, 0.52);
-  --footer-link-hover: #25d366;
-  --footer-heading: #ffffff;
-}
-
 /* WhatsApp Loyalty Theme (Gold/Amber/Orange) */
 .themeLoyalty {
   composes: theme;

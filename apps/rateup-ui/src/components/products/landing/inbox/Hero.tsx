@@ -1,3 +1,5 @@
+import HeroCanvas from "@/components/RateupHomePage/shared/hero-bg/HeroCanvas";
+import { confluence } from "@/components/RateupHomePage/shared/hero-bg/scenes/confluence";
 import {
   HERO_H1,
   HERO_SUB,
@@ -7,7 +9,7 @@ import {
 
 export default function Hero() {
   return (
-    <NavyHero>
+    <NavyHero background={<HeroCanvas scene={confluence} className="-z-10" />}>
       <h1 className={HERO_H1}>
         Every customer conversation, <span className="text-ru-blue-300">in one place.</span>
       </h1>

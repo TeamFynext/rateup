@@ -23,6 +23,7 @@ import { FeatureBadge } from "@/components/adminPanel/Subscription/FeatureBadge.
 import { SubscriptionEditorModal } from "@/components/adminPanel/Subscription/SubscriptionEditorModal.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { pressable } from "@/components/common/pressable.ts";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
@@ -69,7 +70,7 @@ export function SubscriptionPage() {
 
   const confirm = useConfirm();
 
-  const columns: ColumnDef<SubscriptionTableData>[] = [
+  const columns: ColumnDef<DataTableFeatures, SubscriptionTableData>[] = [
     {
       accessorKey: "orgId",
       header: "Org ID",

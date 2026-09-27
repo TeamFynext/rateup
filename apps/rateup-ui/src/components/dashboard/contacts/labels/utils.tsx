@@ -2,6 +2,7 @@ import { IconDots, IconPencil, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { ContactLabelOption } from "@/backend/campaign/contacts/contacts.api";
+import type { DataTableFeatures } from "@/components/Table/data-table-features.ts";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -62,7 +63,10 @@ const ActionsCell = ({
   </DropdownMenu>
 );
 
-export const createColumns = ({ onEdit, onDelete }: ColumnsProps): ColumnDef<ContactLabel>[] => [
+export const createColumns = ({
+  onEdit,
+  onDelete,
+}: ColumnsProps): ColumnDef<DataTableFeatures, ContactLabel>[] => [
   {
     accessorKey: "name",
     header: createSortableHeader("Label"),

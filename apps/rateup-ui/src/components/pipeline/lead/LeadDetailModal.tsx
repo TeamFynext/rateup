@@ -4,6 +4,7 @@ import {
   IconCircleCheck,
   IconCircleX,
   IconDots,
+  IconLink,
   IconMessage2,
   IconPlugConnectedX,
   IconPlus,
@@ -18,13 +19,9 @@ import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
-import {
-  useCreateLeadNoteMutation,
-  useDeleteLeadNoteMutation,
-  useLeadQuery,
-  useReopenLeadMutation,
-} from "@/backend/pipeline/pipeline.query.tsx";
+import { useLeadQuery, useReopenLeadMutation } from "@/backend/pipeline/pipeline.query.tsx";
 import type {
   Lead,
   LeadActivity,
@@ -32,6 +29,7 @@ import type {
   PipelineStage,
   PipelineUser,
 } from "@/backend/pipeline/pipeline.types.ts";
+import { useUserInfo } from "@/backend/user/user.query.tsx";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,19 +45,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { appInfo } from "@/config/appInfo.ts";
 import { cn } from "@/lib/utils";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
 import { channelLabel, sourceLabel } from "../pipeline.labels.ts";
-import { daysIdle, isRotting, leadAgeDays } from "../pipeline.utils.ts";
 import { usePipelineTypeConfig } from "../pipelineTypes.ts";
 import { FieldLabel } from "../shared/atoms.tsx";
 import { LeadAvatar } from "../shared/LeadAvatar.tsx";
 import { LeadAssigneePicker } from "./LeadAssigneePicker.tsx";
+import { LeadNotes } from "./LeadNotes.tsx";
 import { LeadStageStepper } from "./LeadStageStepper.tsx";
 import { NextActivityPanel } from "./NextActivityPanel.tsx";
 import { useDeleteLeads } from "./useDeleteLeads.ts";
+import { CardContact, CardDescription, CardDueDate } from "./WorkCardFields.tsx";
 
 const ACTIVITY_ICON: Record<string, Icon> = {
   CREATED: IconPlus,
@@ -239,11 +239,10 @@ interface LeadDetailModalProps {
  * timeline and its notes. Opened from every view, so it takes only a lead id and
  * fetches the detail itself rather than depending on which list it came from.
  *
- * A centred modal rather than a side drawer: the lead's fields and its history
- * are read together, and a 520px column forced them behind tabs, so answering
- * "where is this lead and what happened last?" cost a tab switch. Side by side
- * from `lg` up, both columns scroll on their own; below that they stack in one
- * scroll, which is also the whole layout on a phone.
+ * Fields sit beside Notes/Activity tabs so the fields never hide behind a tab;
+ * the Notes tab names the latest activity, so "what happened last?" needs no
+ * switch. Side by side from `lg` up, each column scrolls on its own; below that
+ * they stack in one scroll, which is also the whole layout on a phone.
  */
 export function LeadDetailModal({
   leadId,
@@ -256,20 +255,33 @@ export function LeadDetailModal({
   onOpenConversation,
 }: Readonly<LeadDetailModalProps>) {
   const { t } = useTranslation();
-  const [noteDraft, setNoteDraft] = useState("");
+  // Keyed to the lead so opening the next one starts back on Notes.
+  const [tabState, setTabState] = useState<{ leadId?: string; tab: string }>({ tab: "notes" });
+  const tab = tabState.leadId === leadId ? tabState.tab : "notes";
+  const setTab = (next: string) => setTabState({ leadId, tab: next });
   const { data: lead, isPending } = useLeadQuery(leadId);
-  const createNote = useCreateLeadNoteMutation();
-  const deleteNote = useDeleteLeadNoteMutation();
+  const { data: userInfo } = useUserInfo();
+  const currentUserId =
+    userInfo && "data" in userInfo ? (userInfo.data as UserData).userId : undefined;
   const reopenLead = useReopenLeadMutation();
   const { canDelete, deleteLead } = useDeleteLeads();
   const typeConfig = usePipelineTypeConfig(pipeline);
 
-  const rotting = lead ? isRotting(lead, pipeline?.rottingEnabled ?? false) : false;
+  const TypeIcon = typeConfig.icon;
 
-  const saveNote = () => {
-    const text = noteDraft.trim();
-    if (!text || !leadId) return;
-    createNote.mutate({ leadId, text }, { onSuccess: () => setNoteDraft("") });
+  // A phone gets the system share sheet; a desktop, the clipboard.
+  const shareLead = async (shortUrlId: string) => {
+    const url = `${appInfo.websiteDomain}/pl/${shortUrlId}`;
+    if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+      await navigator.share({ title: lead?.name, url }).catch(() => undefined);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("Link copied"), { id: "pipeline-lead-share" });
+    } catch {
+      toast.error(t("Could not copy the link"), { id: "pipeline-lead-share" });
+    }
   };
 
   return (
@@ -287,57 +299,57 @@ export function LeadDetailModal({
           </div>
         ) : (
           <>
-            <div className="border-border shrink-0 border-b px-6 pt-5 pb-4">
-              <div className="flex items-start gap-3">
+            <div className="border-border flex shrink-0 items-center gap-3 border-b px-6 py-4">
+              {typeConfig.cardIsCustomer ? (
                 <LeadAvatar name={lead.name} channel={lead.channel} size="xl" />
-                <div className="min-w-0 flex-1">
-                  <DialogTitle className="font-display truncate text-xl leading-tight font-bold tracking-[-0.01em]">
-                    {lead.name}
-                  </DialogTitle>
-                  <DialogDescription className="mt-0.5 truncate text-sm">
-                    {[
-                      lead.channel === "NONE" ? null : channelLabel(t, lead.channel),
-                      lead.phone,
-                      lead.company,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") ||
+              ) : (
+                <span className="bg-muted text-muted-foreground flex size-11 shrink-0 items-center justify-center rounded-xl">
+                  <TypeIcon className="size-5" />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="font-display truncate text-xl leading-tight font-bold tracking-[-0.01em]">
+                  {lead.name}
+                </DialogTitle>
+                <DialogDescription className="mt-0.5 truncate text-sm">
+                  {!typeConfig.cardIsCustomer
+                    ? (lead.contact?.name ?? typeConfig.cardHeading)
+                    : [
+                        lead.channel === "NONE" ? null : channelLabel(t, lead.channel),
+                        lead.phone,
+                        lead.company,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") ||
                       (typeConfig.features.source ? sourceLabel(t, lead.source) : null)}
-                  </DialogDescription>
-                </div>
-                <DialogClose
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="text-muted-foreground -mt-1 shrink-0"
-                      aria-label={t("Close")}
-                    >
-                      <IconX className="size-4.5" />
-                    </Button>
-                  }
-                />
+                </DialogDescription>
               </div>
 
-              <div className="mt-3.5 flex items-center gap-2">
-                <Button
-                  size="sm"
-                  className="h-9 gap-1.5 text-xs"
-                  onClick={() => onOpenConversation(lead)}
-                  disabled={!lead.contactId}
-                >
-                  <IconMessage2 className="size-3.5" />
-                  {t("Open conversation")}
-                </Button>
+              {/* Labels drop below `sm` so the name keeps room on a phone; the
+                  aria-labels carry them there. */}
+              <div className="flex shrink-0 items-center gap-1.5">
+                {typeConfig.cardIsCustomer || lead.contactId ? (
+                  <Button
+                    size="sm"
+                    className="h-9 gap-1.5 text-xs"
+                    onClick={() => onOpenConversation(lead)}
+                    disabled={!lead.contactId}
+                    aria-label={t("Open conversation")}
+                  >
+                    <IconMessage2 className="size-3.5" />
+                    <span className="hidden sm:inline">{t("Open conversation")}</span>
+                  </Button>
+                ) : null}
                 <Button
                   size="sm"
                   variant="outline"
                   className="h-9 gap-1.5 text-xs font-medium text-green-700 dark:text-green-500"
                   onClick={() => onMarkWon(lead)}
                   disabled={lead.status === "WON"}
+                  aria-label={typeConfig.wonLabel}
                 >
                   <IconCircleCheck className="size-3.5" />
-                  {typeConfig.wonLabel}
+                  <span className="hidden sm:inline">{typeConfig.wonLabel}</span>
                 </Button>
                 <Button
                   size="sm"
@@ -345,12 +357,24 @@ export function LeadDetailModal({
                   className="hover:bg-muted h-9 gap-1.5 text-xs font-medium"
                   onClick={() => onMarkLost(lead)}
                   disabled={lead.status === "LOST"}
+                  aria-label={typeConfig.lostLabel}
                 >
                   <IconCircleX className="size-3.5" />
-                  {typeConfig.lostLabel}
+                  <span className="hidden sm:inline">{typeConfig.lostLabel}</span>
                 </Button>
 
-                <span className="flex-1" />
+                {lead.shortUrlId ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground size-9"
+                    onClick={() => lead.shortUrlId && void shareLead(lead.shortUrlId)}
+                    aria-label={t("Copy link to this card")}
+                    title={t("Copy link to this card")}
+                  >
+                    <IconLink className="size-4.5" />
+                  </Button>
+                ) : null}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger
@@ -384,6 +408,19 @@ export function LeadDetailModal({
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <DialogClose
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground size-9"
+                      aria-label={t("Close")}
+                    >
+                      <IconX className="size-4.5" />
+                    </Button>
+                  }
+                />
               </div>
             </div>
 
@@ -400,6 +437,7 @@ export function LeadDetailModal({
                 reading the timeline never scrolls the fields out of view. */}
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
               <div className="border-border bg-muted shrink-0 border-b px-5.5 pt-5 pb-6 lg:w-93 lg:overflow-y-auto lg:border-r lg:border-b-0">
+                {typeConfig.cardIsCustomer ? null : <CardDescription lead={lead} />}
                 <FieldLabel>{t("Details")}</FieldLabel>
                 <div className="mt-3 grid grid-cols-2 gap-x-4.5 gap-y-3.5">
                   {/* Assignees are the one field worth editing here, so they are
@@ -437,7 +475,6 @@ export function LeadDetailModal({
                   {/* `key` is the field's own id rather than its label, so React
                       does not remount the row when the language changes. */}
                   {[
-                    { key: "team", label: t("Team"), value: lead.team?.name ?? t("No team") },
                     ...(typeConfig.features.source
                       ? [
                           { key: "source", label: t("Source"), value: sourceLabel(t, lead.source) },
@@ -448,19 +485,6 @@ export function LeadDetailModal({
                           },
                         ]
                       : []),
-                    {
-                      key: "age",
-                      label: typeConfig.type === "LEADS" ? t("Lead age") : t("Age"),
-                      value: t("{days} days", { days: leadAgeDays(lead) }),
-                    },
-                    {
-                      key: "idle",
-                      label: t("Idle"),
-                      value: rotting
-                        ? t("{days} days — stalled", { days: daysIdle(lead) })
-                        : t("{days} days", { days: daysIdle(lead) }),
-                      tone: rotting ? "text-destructive" : undefined,
-                    },
                     ...(typeConfig.features.forecast
                       ? [
                           {
@@ -472,13 +496,17 @@ export function LeadDetailModal({
                           },
                         ]
                       : []),
-                    {
-                      // `contactId` is the link; the name is just how it reads.
-                      key: "contact",
-                      label: t("Contact"),
-                      value: lead.contact?.name ?? t("Not linked"),
-                      tone: lead.contactId ? undefined : "text-amber-700 dark:text-amber-500",
-                    },
+                    ...(typeConfig.cardIsCustomer
+                      ? [
+                          {
+                            // `contactId` is the link; the name is just how it reads.
+                            key: "contact",
+                            label: t("Contact"),
+                            value: lead.contact?.name ?? t("Not linked"),
+                            tone: lead.contactId ? undefined : "text-amber-700 dark:text-amber-500",
+                          },
+                        ]
+                      : []),
                   ].map((field) => (
                     <div key={field.key} className="min-w-0">
                       <FieldLabel>{field.label}</FieldLabel>
@@ -492,74 +520,55 @@ export function LeadDetailModal({
                       </div>
                     </div>
                   ))}
+                  {typeConfig.cardIsCustomer ? null : (
+                    <>
+                      <CardDueDate lead={lead} />
+                      <CardContact lead={lead} />
+                    </>
+                  )}
                 </div>
 
                 <NextActivityPanel lead={lead} />
               </div>
 
-              <div className="min-h-0 flex-1 px-6 pt-5 pb-6 lg:overflow-y-auto">
-                <div className="border-border rounded-xl border p-3">
-                  <Textarea
-                    value={noteDraft}
-                    onChange={(event) => setNoteDraft(event.target.value)}
-                    placeholder={t("Add a note about this lead…")}
-                    className="min-h-12 resize-y border-none p-0 shadow-none focus-visible:ring-0"
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={saveNote}
-                      disabled={!noteDraft.trim() || createNote.isPending}
+              <Tabs
+                value={tab}
+                onValueChange={(value) => setTab(String(value))}
+                className="min-h-0 flex-1 gap-0 lg:overflow-hidden"
+              >
+                <div className="border-border shrink-0 border-b px-6">
+                  <TabsList variant="line" className="h-11">
+                    <TabsTrigger value="notes">
+                      {t("Notes ({total})", { total: lead.notes.length })}
+                    </TabsTrigger>
+                    <TabsTrigger value="activity">{t("Activity")}</TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="notes" className="min-h-0 px-6 pt-4 pb-6 lg:overflow-y-auto">
+                  {lead.activities[0] ? (
+                    <button
+                      type="button"
+                      onClick={() => setTab("activity")}
+                      className="text-muted-foreground hover:text-foreground mb-3 flex w-full min-w-0 items-center gap-1.5 text-left text-xs"
                     >
-                      {t("Save note")}
-                    </Button>
-                  </div>
-                </div>
+                      <span className="shrink-0 font-semibold">{t("Last activity")}</span>
+                      <span className="truncate">
+                        {describeActivity(t, lead.activities[0]).title} ·{" "}
+                        {formatToRelativeTime(lead.activities[0].createdAt)}
+                      </span>
+                    </button>
+                  ) : null}
+                  <LeadNotes
+                    key={lead.id}
+                    leadId={lead.id}
+                    notes={lead.notes}
+                    currentUserId={currentUserId}
+                  />
+                </TabsContent>
 
-                <div className="mt-4.5">
-                  <FieldLabel>{t("Notes ({total})", { total: lead.notes.length })}</FieldLabel>
-                  {lead.notes.length === 0 ? (
-                    <p className="text-muted-foreground mt-2 text-xs">
-                      {t("No notes yet — anything the team types here stays with the lead.")}
-                    </p>
-                  ) : (
-                    <div className="mt-2 flex flex-col gap-3">
-                      {lead.notes.map((note) => (
-                        <div
-                          key={note.id}
-                          className="rounded-xl border border-amber-200 bg-amber-50 p-3.25 dark:border-amber-900/40 dark:bg-amber-950/20"
-                        >
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-foreground text-[13px] font-medium">
-                              {note.author?.name ?? t("Someone")}
-                            </span>
-                            <span className="text-muted-foreground text-[11.5px]">
-                              {dayjs(note.createdAt).format("D MMM, h:mm A")}
-                            </span>
-                            <span className="flex-1" />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-muted-foreground hover:text-destructive size-6"
-                              onClick={() => deleteNote.mutate(note.id)}
-                              aria-label={t("Delete note")}
-                            >
-                              <IconTrash className="size-3.5" />
-                            </Button>
-                          </div>
-                          <p className="text-muted-foreground mt-1.25 text-[13.5px] leading-normal whitespace-pre-wrap">
-                            {note.text}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-5.5">
-                  <FieldLabel>{t("Activity")}</FieldLabel>
-                  <div className="mt-3">
+                <TabsContent value="activity" className="min-h-0 px-6 pt-5 pb-6 lg:overflow-y-auto">
+                  <div>
                     {lead.activities.length === 0 ? (
                       <p className="text-muted-foreground text-sm">
                         {t("Nothing has happened yet.")}
@@ -603,8 +612,8 @@ export function LeadDetailModal({
                       })
                     )}
                   </div>
-                </div>
-              </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </>
         )}
