@@ -130,3 +130,18 @@ export {
   pauseUserSchema,
   userStatusSchema,
 };
+
+export const auditLogQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  sortBy: z.enum(["user", "createdAt"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  userId: z.uuid().optional(),
+  feature: z
+    .string()
+    .regex(/^(wa\/)?[\w-]+$/)
+    .optional(),
+});
+export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;

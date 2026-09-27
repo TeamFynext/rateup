@@ -46,7 +46,6 @@ const contactCoreSchema = z.object({
   address: clearableText,
   dob: clearableDate,
   external_id: z.string().optional(),
-  aiWaChat: z.boolean().optional(),
   igsId: z.string().optional(),
   psid: z.string().optional(),
   labels: z.array(z.uuid()).optional(),
@@ -78,8 +77,10 @@ const updateContactSchema = z.object({
       }),
     )
     .optional(),
-  aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.enum(WaMessageAssignStatus).optional(),
+  // The ticket a status change is for. A contact can hold several; without this the
+  // newest one is changed, which is not the one on screen when an older ticket is open.
+  conversationId: z.uuid().optional(),
   // Nullable as well as optional: closing without picking a result sends an
   // explicit null, and reopening sends null to clear the previous one.
   resolutionResult: z.enum(ResolutionResult).nullish(), // close-with-result taxonomy

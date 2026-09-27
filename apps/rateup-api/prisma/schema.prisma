@@ -2863,6 +2863,9 @@ model WhatsappQuickReply {
   text      String
   topic     String   @default("General Inquiry")
   key       String?
+  /// Attachments sent with the text: `{ type: image|audio|video, url, key, name }[]`.
+  /// The S3 objects belong to this reply and are deleted with it.
+  media     Json     @default("[]")
   createdAt DateTime @default(now())
 }
 
@@ -3079,7 +3082,9 @@ model AuditLog {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([orgId])
+  // Team activity filters an org's log by date, newest first. The org-only index this
+  // replaces is this one's prefix, so it would only add write cost.
+  @@index([orgId, createdAt])
 }
 
 model BusinessHour {
@@ -3551,7 +3556,11 @@ model LeadLabelMap {
 
 model Lead {
   id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// The card's share link (`/pl/<shortUrlId>`), minted like a web survey's.
+  shortUrlId String? @unique
   name    String
+  /// What the work is; used by the non-Leads boards, whose cards lead with a title.
+  description String? @db.Text
   /// Business the lead represents; blank for walk-in customers.
   company String?
   phone   String?

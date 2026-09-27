@@ -5,9 +5,9 @@ import { leadWhere, rottingSql } from "./lead.filters.js";
 import type { ListLeadsQuerySchema } from "./lead.schema.js";
 
 const PIPELINE = "33333333-3333-4333-8333-333333333333";
+const ASSIGNEE = "88888888-8888-4888-8888-888888888888";
 const STAGE = "44444444-4444-4444-8444-444444444444";
 const USER = "11111111-1111-1111-1111-111111111111";
-const TEAM = "88888888-8888-4888-8888-888888888888";
 
 function query(patch: Partial<ListLeadsQuerySchema> = {}): ListLeadsQuerySchema {
   return { pipelineId: PIPELINE, limit: 50, filter: "open", ...patch };
@@ -76,9 +76,12 @@ describe("leadWhere", () => {
   });
 
   test("facets stack, each as a bound parameter", () => {
-    const where = leadWhere(query({ stageId: STAGE, teamId: TEAM, source: "WHATSAPP" }), ctx);
+    const where = leadWhere(
+      query({ stageId: STAGE, assigneeId: ASSIGNEE, source: "WHATSAPP" }),
+      ctx,
+    );
 
-    expect(where.values).toEqual(expect.arrayContaining([PIPELINE, STAGE, TEAM, "WHATSAPP"]));
+    expect(where.values).toEqual(expect.arrayContaining([PIPELINE, STAGE, ASSIGNEE, "WHATSAPP"]));
     expect(where.sql.match(/AND/g)?.length).toBeGreaterThanOrEqual(3);
   });
 

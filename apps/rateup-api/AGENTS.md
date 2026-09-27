@@ -226,7 +226,7 @@ its Kafka consumer became `kafka/consumers/status.consumer.ts`, and its `src/uti
 - **Authorization:** permission catalogue + system roles in `src/authz/` — every `/api` route declares `config.permission` or `config.access` (see CLAUDE.md "Request auth & authorization layering")
 - **Payments:** Stripe, Razorpay
 - **Storage:** AWS S3
-- **Email:** SendGrid, Nodemailer
+- **Email:** AWS SES (Nodemailer)
 - **Validation:** Zod 4
 - **API Docs:** Swagger + Scalar
 
@@ -251,7 +251,7 @@ generated/              # Generated Prisma client
 
 ### Feature Modules
 
-Modules are organized by domain: `ai`, `campaign`, `chatbot`, `contact`, `dashboard`, `email`, `integrations`, `landingPage`, `lifecycle`, `loyalty`, `menu`, `notification`, `org`, `payment`, `question`, `referrals`, `response`, `services`, `stats`, `subscription`, `survey`, `team`, `testimonial`, `user`, `webhook`, `whatsapp`, and more.
+Modules are organized by domain: `campaign`, `contact`, `dashboard`, `email`, `integrations`, `landingPage`, `lifecycle`, `loyalty`, `menu`, `notification`, `org`, `payment`, `question`, `referrals`, `response`, `services`, `stats`, `subscription`, `survey`, `team`, `testimonial`, `user`, `webhook`, `whatsapp`, and more.
 
 ## Key Conventions
 

@@ -133,7 +133,6 @@ dist
 .pnp.*
 
 .idea
-nlp_auth.json
 *.temp.test.ts
 
 # docker

@@ -1,54 +1,79 @@
 import { Prisma, WaAutomationProgressStatus } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
+import { getAutomationPosition, setAutomationPosition } from "./automationProgress.js";
+
+const automationSelect = {
+  matchData: true,
+  id: true,
+  whatsappSettingsPhoneId: true,
+} satisfies Prisma.WaAutomatedReplySelect;
+
+export interface RecentAutomation {
+  /** The log row the position came from, when there is one. */
+  id: string | null;
+  currentNode: string | null;
+  waAutomatedReplyId: string | null;
+  waAutomatedReply: Prisma.WaAutomatedReplyGetPayload<{ select: typeof automationSelect }> | null;
+}
 
 /**
- * Finds the most recent active automation for a user
- * @param phone User's phone number
- * @param orgId Organization ID
- * @param options Optional query parameters
- * @returns The most recent active automation or null
+ * The automation a contact is currently in, and the node they are at.
+ *
+ * Read from the Redis position (`automationProgress.ts`). `timeWindow` ignores a
+ * position whose last logged step is older than that.
  */
 export async function findRecentAutomation(
   phone: string,
   orgId: string,
   options: {
-    includeCompleted?: boolean;
     timeWindow?: number; // in milliseconds
   } = {},
-) {
+): Promise<RecentAutomation | null> {
   const { timeWindow } = options;
 
-  const whereClause: Prisma.WaAutomatedReplyMessageWhereInput = {
-    phone,
-    orgId,
+  const position = await getAutomationPosition(orgId, phone);
+  if (!position) return findRecentAutomationFromLog(phone, orgId, timeWindow);
+  if (timeWindow && position.loggedAt < Date.now() - timeWindow) return null;
+
+  // Scoped by org, and gone if the automation was deleted since.
+  const waAutomatedReply = await prisma.waAutomatedReply.findFirst({
+    where: { id: position.automationId, orgId },
+    select: automationSelect,
+  });
+  if (!waAutomatedReply) return null;
+
+  return {
+    id: position.logId,
+    currentNode: position.currentNode,
+    waAutomatedReplyId: position.automationId,
+    waAutomatedReply,
   };
+}
 
-  //   // Add status filter if we don't want completed automations
-  //   if (!includeCompleted) {
-  //     whereClause.status = {
-  //       not: "completed",
-  //     };
-  //   }
-
-  // Add time window filter if specified
-  if (timeWindow) {
-    whereClause.createdAt = {
-      gte: new Date(Date.now() - timeWindow),
-    };
-  }
-
+/**
+ * The pre-Redis lookup: the contact's newest log row. Only answers for contacts
+ * who were part-way through an automation when positions moved to Redis
+ * (2026-09-26); every step logged since then writes a position. Remove once
+ * POSITION_TTL_SECONDS has passed since that deploy.
+ */
+async function findRecentAutomationFromLog(
+  phone: string,
+  orgId: string,
+  timeWindow: number | undefined,
+): Promise<RecentAutomation | null> {
   return await prisma.waAutomatedReplyMessage.findFirst({
-    where: whereClause,
+    where: {
+      phone,
+      orgId,
+      ...(timeWindow ? { createdAt: { gte: new Date(Date.now() - timeWindow) } } : {}),
+    },
     orderBy: { createdAt: "desc" },
-    include: {
-      waAutomatedReply: {
-        select: {
-          matchData: true,
-          id: true,
-          whatsappSettingsPhoneId: true,
-        },
-      },
+    select: {
+      id: true,
+      currentNode: true,
+      waAutomatedReplyId: true,
+      waAutomatedReply: { select: automationSelect },
     },
   });
 }
@@ -86,7 +111,13 @@ export async function logAutomationAction({
       data.status = status;
     }
 
-    return await prisma.waAutomatedReplyMessage.create({ data });
+    const row = await prisma.waAutomatedReplyMessage.create({ data });
+    await setAutomationPosition(orgId, phone, {
+      automationId,
+      currentNode: nodeId,
+      logId: row.id,
+    });
+    return row;
   } catch (error) {
     log.error({ err: error }, "Error logging automation action");
     return null;
@@ -105,7 +136,7 @@ export async function logFlowCompletion({
   phone: string;
   orgId: string;
   flowId: string;
-  recentActivity?: Awaited<ReturnType<typeof findRecentAutomation>>;
+  recentActivity?: RecentAutomation | null;
 }) {
   // If no recent activity, find the most recent one
   if (!recentActivity) {

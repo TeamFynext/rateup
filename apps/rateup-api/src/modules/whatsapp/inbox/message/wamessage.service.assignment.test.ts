@@ -20,9 +20,14 @@ vi.mock("../../../../utils/prisma.js", () => {
       },
       orgMember: { findUnique: vi.fn() },
       userAssignedCount: { upsert: vi.fn() },
-      conversation: { updateMany: vi.fn() },
+      conversation: { updateMany: vi.fn(), findFirst: vi.fn() },
       conversationAssignedUserTeamMap: { findMany: vi.fn() },
-      contact: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+      contact: {
+        findFirst: vi.fn(),
+        findUnique: vi.fn(),
+        findUniqueOrThrow: vi.fn(),
+        update: vi.fn(),
+      },
       inboxMention: { updateMany: vi.fn(), createMany: vi.fn() },
       user: { findUnique: vi.fn(), findMany: vi.fn() },
       $transaction: vi.fn(async (cb: (client: unknown) => Promise<unknown>) => cb(tx)),
@@ -63,6 +68,7 @@ vi.mock("@faker-js/faker", () => ({ faker: {} }));
 vi.mock("../../../contact/conversation/conversation.service.js", () => ({
   getConversationById: vi.fn(),
   getLastCreatedConversationForContact: vi.fn(),
+  mirrorConversationStatusTx: vi.fn(),
   openConversationForContact: vi.fn(),
   resolveClosedByUserId: vi.fn(() => "user-1"),
   resolveInboxActor: vi.fn(() => ({ source: "user", userId: "user-1" })),
@@ -94,6 +100,7 @@ import { addZapierTriggerToQueue } from "../../../integrations/external/zapier/z
 import {
   getConversationById,
   getLastCreatedConversationForContact,
+  mirrorConversationStatusTx,
   openConversationForContact,
   resolveInboxActor,
   setInboxStatus,
@@ -132,9 +139,9 @@ const db = prisma as unknown as {
   };
   orgMember: { findUnique: Mock };
   userAssignedCount: { upsert: Mock };
-  conversation: { updateMany: Mock };
+  conversation: { updateMany: Mock; findFirst: Mock };
   conversationAssignedUserTeamMap: { findMany: Mock };
-  contact: { findFirst: Mock; findUnique: Mock; update: Mock };
+  contact: { findFirst: Mock; findUnique: Mock; findUniqueOrThrow: Mock; update: Mock };
   inboxMention: { updateMany: Mock; createMany: Mock };
   user: { findUnique: Mock; findMany: Mock };
   $transaction: Mock;
@@ -173,6 +180,7 @@ beforeEach(() => {
   db.conversation.updateMany.mockResolvedValue({ count: 1 });
   db.conversationAssignedUserTeamMap.findMany.mockResolvedValue([]);
   db.contact.findUnique.mockResolvedValue(CONTACT);
+  db.contact.findUniqueOrThrow.mockResolvedValue(CONTACT);
   db.contact.findFirst.mockResolvedValue({ id: "contact-1", isSpam: false });
   db.user.findUnique.mockResolvedValue({ id: "user-1", name: "Grace" });
   db.user.findMany.mockResolvedValue([{ id: "user-9", name: "Ada" }]);
@@ -182,6 +190,7 @@ beforeEach(() => {
   getLastConversationMock.mockResolvedValue(OPEN_CONVERSATION);
   openConversationMock.mockResolvedValue({ ...OPEN_CONVERSATION, id: "conv-new" });
   resolveActorMock.mockReturnValue({ source: "user", userId: "user-1" });
+  setInboxStatusMock.mockResolvedValue({ contact: CONTACT });
 });
 
 describe("assignWaMessageToUser - adding people", () => {
@@ -210,6 +219,7 @@ describe("assignWaMessageToUser - adding people", () => {
 
     expect(updateContactMock).toHaveBeenCalledWith("contact-1", "org-1", {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      conversationId: "conv-1",
     });
   });
 
@@ -370,6 +380,89 @@ describe("assignWaMessageToUser - which ticket it lands on", () => {
     expect(result.conversation!.id).toBe("conv-new");
   });
 
+  test("assigns the named ticket when it is still open, not the newest one", async () => {
+    db.conversation.findFirst.mockResolvedValue({
+      id: "conv-older",
+      number: 5,
+      status: WaMessageAssignStatus.ASSIGNED,
+    });
+
+    const result = await assignWaMessageToUser(
+      {
+        contactId: "contact-1",
+        assignees: [assignee("user-9")],
+        conversationId: "conv-older",
+      } as any,
+      "org-1",
+      "user-1",
+    );
+
+    expect(openConversationMock).not.toHaveBeenCalled();
+    expect(updateAssigneesMock).toHaveBeenCalledWith(
+      "conv-older",
+      { assignees: [assignee("user-9")] },
+      "user-1",
+    );
+    expect(result.conversation!.id).toBe("conv-older");
+  });
+
+  test("falls back to the newest ticket when the named one is closed", async () => {
+    db.conversation.findFirst.mockResolvedValue({
+      id: "conv-older",
+      status: WaMessageAssignStatus.CLOSED,
+    });
+
+    const result = await assignWaMessageToUser(
+      {
+        contactId: "contact-1",
+        assignees: [assignee("user-9")],
+        conversationId: "conv-older",
+      } as any,
+      "org-1",
+      "user-1",
+    );
+
+    expect(openConversationMock).not.toHaveBeenCalled();
+    expect(result.conversation!.id).toBe("conv-1");
+  });
+
+  test("unassigning an older ticket leaves the newest one's owner alone", async () => {
+    // Contact-level rows mirror the newest ticket (conv-1), owned by user-b.
+    db.waInboxAssign.findMany.mockResolvedValue([{ assignedUserId: "user-b", teamId: "team-1" }]);
+    db.conversation.findFirst.mockResolvedValue({
+      id: "conv-older",
+      number: 3,
+      status: WaMessageAssignStatus.ASSIGNED,
+    });
+    db.conversationAssignedUserTeamMap.findMany.mockResolvedValue([
+      { userId: "user-a", teamId: "team-1" },
+    ]);
+
+    await assignWaMessageToUser(
+      { contactId: "contact-1", assignees: [], conversationId: "conv-older" } as any,
+      "org-1",
+      "user-1",
+    );
+
+    expect(db.waInboxAssign.deleteMany).not.toHaveBeenCalled();
+    expect(setInboxStatusMock).not.toHaveBeenCalled();
+    expect(updateAssigneesMock).toHaveBeenCalledWith("conv-older", { assignees: [] }, "user-1");
+    expect(mirrorConversationStatusTx).toHaveBeenCalledWith(
+      tx,
+      "contact-1",
+      WaMessageAssignStatus.UNASSIGNED,
+      { source: "user", userId: "user-1" },
+      { conversationId: "conv-older" },
+    );
+    expect(db.waMessage.create.mock.calls[0][0].data.conversationId).toBe("conv-older");
+    expect(notifyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "inbox.unassigned",
+        audience: { kind: "users", userIds: ["user-a"] },
+      }),
+    );
+  });
+
   test("opens a ticket when the contact has never had one", async () => {
     getLastConversationMock.mockResolvedValue(null);
 
@@ -446,6 +539,7 @@ describe("reopenConversation", () => {
     expect(db.waInboxAssign.createMany).toHaveBeenCalled();
     expect(updateContactMock).toHaveBeenCalledWith("contact-1", "org-1", {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      conversationId: expect.any(String),
     });
   });
 
@@ -868,5 +962,52 @@ describe("createInternalWaMessage - private notes", () => {
     db.contact.findUnique.mockResolvedValue(null);
 
     await expect(createInternalWaMessage({ ...privateNote })).rejects.toThrow("Contact not found");
+  });
+});
+
+describe("assignWaMessageToUser - unassigning everyone", () => {
+  beforeEach(() => {
+    db.waInboxAssign.findMany.mockResolvedValue([{ assignedUserId: "user-9", teamId: "team-1" }]);
+  });
+
+  test("puts the ticket back in the unassigned state and clears its assignees", async () => {
+    await assignWaMessageToUser(
+      { contactId: "contact-1", assignees: [] } as any,
+      "org-1",
+      "user-1",
+    );
+
+    expect(setInboxStatusMock).toHaveBeenCalledWith(
+      "contact-1",
+      WaMessageAssignStatus.UNASSIGNED,
+      { source: "user", userId: "user-1" },
+      { conversationId: "conv-1" },
+    );
+    expect(updateAssigneesMock).toHaveBeenCalledWith("conv-1", { assignees: [] }, "user-1");
+    expect(updateContactMock).not.toHaveBeenCalled();
+    expect(db.waInboxAssign.deleteMany).toHaveBeenCalledWith({
+      where: { contactId: "contact-1", assignedUserId: { notIn: [] } },
+    });
+  });
+
+  test("never opens a successor ticket", async () => {
+    getLastConversationMock.mockResolvedValue(null);
+
+    await assignWaMessageToUser(
+      { contactId: "contact-1", assignees: [] } as any,
+      "org-1",
+      "user-1",
+    );
+
+    expect(openConversationMock).not.toHaveBeenCalled();
+  });
+
+  test("refuses a closed ticket, which closing already unassigned", async () => {
+    getLastConversationMock.mockResolvedValue({ ...OPEN_CONVERSATION, status: "RESOLVED" });
+
+    await expect(
+      assignWaMessageToUser({ contactId: "contact-1", assignees: [] } as any, "org-1", "user-1"),
+    ).rejects.toMatchObject({ statusCode: 409 });
+    expect(setInboxStatusMock).not.toHaveBeenCalled();
   });
 });

@@ -11,6 +11,9 @@ import {
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session/index.js";
 import { Role } from "../../../generated/prisma/client.js";
+import { auditLogWhere, type AuditLogFilters } from "./auditLog.filters.js";
+
+export { listAuditLogFeatures } from "./auditLog.filters.js";
 import supertokens from "supertokens-node";
 import { log } from "../../utils/logger.js";
 import { createFreePlanSubscription } from "../subscription/subscription.service.js";
@@ -731,7 +734,9 @@ export async function auditLog(
   limit: number = 25,
   sortBy?: string,
   sortOrder?: "asc" | "desc",
+  filters: AuditLogFilters = {},
 ) {
+  const where = auditLogWhere(orgId, filters);
   const skip = (page - 1) * limit;
   let orderBy = {};
 
@@ -749,9 +754,7 @@ export async function auditLog(
 
   const [logs, total] = await prisma.$transaction([
     prisma.auditLog.findMany({
-      where: {
-        orgId,
-      },
+      where,
       include: {
         user: {
           select: {
@@ -763,11 +766,7 @@ export async function auditLog(
       skip,
       take: limit,
     }),
-    prisma.auditLog.count({
-      where: {
-        orgId,
-      },
-    }),
+    prisma.auditLog.count({ where }),
   ]);
 
   return {

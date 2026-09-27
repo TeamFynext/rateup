@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { isPipelineAccessible } from "../pipeline.service.js";
 import {
+  getLeadByShortUrlId,
   getPipelineIdByLeadId,
   getPipelineIdByNoteId,
   getPipelineIdByTaskId,
@@ -21,6 +22,10 @@ function guard(resolve: (id: string) => Promise<string | undefined>, notFound: s
 }
 
 export const verifyLeadAccess = guard(getPipelineIdByLeadId, "Lead not found");
+export const verifyLeadShareAccess = guard(
+  async (shortUrlId) => (await getLeadByShortUrlId(shortUrlId))?.pipelineId,
+  "Lead not found",
+);
 export const verifyNoteAccess = guard(getPipelineIdByNoteId, "Note not found");
 export const verifyTaskAccess = guard(getPipelineIdByTaskId, "Task not found");
 

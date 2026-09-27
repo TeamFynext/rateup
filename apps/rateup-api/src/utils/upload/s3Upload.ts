@@ -54,11 +54,7 @@ export const getAWSObject = async (key: string) => {
   }
 };
 
-export const getFileUrlFromKey = (key: string, s3Upload = true, unsplashImage = false) => {
-  if (unsplashImage) {
-    return `${process.env.UNSPLASH_URL?.replace(/\/+$/, "")}/${key.replace(/^\/+/, "")}`;
-  }
-
+export const getFileUrlFromKey = (key: string, s3Upload = true) => {
   if (s3Upload) {
     const baseUrl = process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL?.replace(/\/+$/, "") || "";
     const cleanKey = key.replace(/^\/+/, ""); // remove leading slashes

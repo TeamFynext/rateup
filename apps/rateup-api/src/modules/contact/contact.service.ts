@@ -28,7 +28,6 @@ import {
   deleteAssignedUsersforContact,
   getAssignedUserForContact,
 } from "../whatsapp/inbox/message/wamessage.service.js";
-import { getChatbotDetails } from "../chatbot/chatbot.service.js";
 import { notify } from "../notification/notify.js";
 import {
   addZapierTriggerToQueue,
@@ -85,8 +84,6 @@ export async function createContact(
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
-  const chatbot = await getChatbotDetails(contact.orgId);
-  if (chatbot?.enableAllWaChat) contact.aiWaChat = true;
   const { customFields, labels, contactGroupIds, assignedUserIds, lifecycleId, ...rest } = contact;
   const user = await prisma.contact.create({
     data: {
@@ -194,8 +191,6 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
     },
   });
   if (user) return user;
-  const chatbot = await getChatbotDetails(contact.orgId);
-  if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
   const {
     customFields,
     labels: _labels,
@@ -232,15 +227,12 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
 }
 
 export async function createMultipleContacts(contacts: createMultipleContactInput, orgId: string) {
-  const chatbot = await getChatbotDetails(orgId);
-  const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
   // These keys come in on the input DTO but are not Contact columns — they are persisted
   // separately below, so they are blanked out of the create payload.
   const omitted: undefined = undefined;
   const contactsData = contacts.map((contact) => ({
     ...contact,
     orgId,
-    aiWaChat,
     customFields: omitted,
     labels: omitted,
     contactGroupIds: omitted,
@@ -806,9 +798,33 @@ export async function updateContactById(
    */
   const markingSpam = contact.waMessageAssignStatus === WaMessageAssignStatus.SPAM;
   const nextStatus = markingSpam ? WaMessageAssignStatus.CLOSED : contact.waMessageAssignStatus;
+
+  const targetTicket = contact.conversationId
+    ? await prisma.conversation.findFirst({
+        where: { id: contact.conversationId, contactId },
+        select: { id: true, status: true },
+      })
+    : null;
+  if (contact.conversationId && !targetTicket) {
+    throw new ContactNotFoundError(`Conversation ${contact.conversationId} not found`);
+  }
+  const newestTicket = targetTicket
+    ? await prisma.conversation.findFirst({
+        where: { contactId },
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+      })
+    : null;
+  // The contact-level status mirrors its newest ticket, so closing an older one
+  // leaves it alone; and whether anything changed is judged on the ticket itself.
+  const contactStatus =
+    !targetTicket || targetTicket.id === newestTicket?.id ? nextStatus : undefined;
   const statusChanged =
-    nextStatus !== undefined && contactRecord.waMessageAssignStatus !== nextStatus;
-  const closing = statusChanged && WaMessageClosedStatus.includes(nextStatus);
+    contactStatus !== undefined && contactRecord.waMessageAssignStatus !== contactStatus;
+  const ticketStatusChanged = targetTicket
+    ? nextStatus !== undefined && targetTicket.status !== nextStatus
+    : statusChanged;
+  const closing = statusChanged && WaMessageClosedStatus.includes(nextStatus!);
   const transitionActor: InboxActor = actor ?? resolveInboxActor(userId);
   const now = new Date();
 
@@ -823,8 +839,7 @@ export async function updateContactById(
       data: {
         name: contact.name,
         phone: contact.phone,
-        aiWaChat: contact.aiWaChat,
-        waMessageAssignStatus: nextStatus,
+        waMessageAssignStatus: contactStatus,
         lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp || undefined,
         ...(closing
           ? {
@@ -860,8 +875,9 @@ export async function updateContactById(
       },
     });
 
-    if (statusChanged) {
-      await mirrorConversationStatusTx(tx, contactId, nextStatus, transitionActor, {
+    if (ticketStatusChanged) {
+      await mirrorConversationStatusTx(tx, contactId, nextStatus!, transitionActor, {
+        conversationId: targetTicket?.id,
         now,
         ...(markingSpam ? { closeReason: CloseReason.SPAM } : {}),
         resolutionResult: contact.resolutionResult ?? null,
@@ -1088,19 +1104,18 @@ export async function updateContactById(
       data: { contactId: updatedContact.id, contactName: updatedContact.name ?? "" },
       actorUserId: userId,
     });
-    if (contact?.waMessageAssignStatus) {
-      await createInternalWaMessage({
-        trigerredByUser: userId || "RateUp",
-        contactId: updatedContact.id,
-        // The thread records the *event* the caller asked for: a spam mark reads as
-        // spam even though the ticket underneath it is stored as CLOSED.
-        waMessageAssignStatus: markingSpam
-          ? WaMessageAssignStatus.SPAM
-          : updatedContact.waMessageAssignStatus,
-        messageId: contact.messageId ?? crypto.randomUUID(),
-      });
-    }
     // The conversation was already mirrored inside the transaction above.
+  }
+  if (ticketStatusChanged && WaMessageClosedStatus.includes(nextStatus!)) {
+    await createInternalWaMessage({
+      trigerredByUser: userId || "RateUp",
+      contactId: updatedContact.id,
+      conversationId: targetTicket?.id,
+      // The thread records the *event* the caller asked for: a spam mark reads as
+      // spam even though the ticket underneath it is stored as CLOSED.
+      waMessageAssignStatus: markingSpam ? WaMessageAssignStatus.SPAM : nextStatus,
+      messageId: contact.messageId ?? crypto.randomUUID(),
+    });
   }
   return updatedContact;
 }
@@ -1208,12 +1223,9 @@ export async function getOrCreateContactByPhone(
       }
       return { contact, conversation };
     } else {
-      const chatbot = await getChatbotDetails(orgId);
-      const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
       contact = await prisma.contact.create({
         data: {
           ...additionalData,
-          aiWaChat,
           phone: source ? undefined : phone,
           orgId,
         },
@@ -1300,12 +1312,9 @@ export async function getOrCreateContactByIgsId(
       });
       return { contact, conversation };
     } else {
-      const chatbot = await getChatbotDetails(orgId);
-      const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
       contact = await prisma.contact.create({
         data: {
           ...additionalData,
-          aiWaChat,
           igsId,
           orgId,
         },
@@ -1387,14 +1396,9 @@ export async function getOrCreateContactByPsid(
       return { contact, conversation };
     }
 
-    const chatbot = await getChatbotDetails(orgId);
-
-    const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-
     contact = await prisma.contact.create({
       data: {
         ...additionalData,
-        aiWaChat,
         psid,
         orgId,
       },
@@ -1693,9 +1697,6 @@ export async function getExistingContactCountByPhno(ids: string[], orgId: string
 }
 
 export async function updateMulitplceContacts(contacts: createMultipleContactInput, orgId: string) {
-  const chatbot = await getChatbotDetails(orgId);
-  const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
-
   for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
     const batch = contacts.slice(i, i + BATCH_SIZE);
 
@@ -1714,7 +1715,6 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
           },
         },
         update: {
-          aiWaChat,
           ...Object.fromEntries(
             Object.entries(contactData).filter(
               ([key, value]) => value !== undefined && key !== "phone" && key !== "orgId",
@@ -1723,7 +1723,6 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
         },
         create: {
           ...contactData,
-          aiWaChat,
           orgId,
         },
       });

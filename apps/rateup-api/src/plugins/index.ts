@@ -31,7 +31,6 @@ export async function registerPlugins(server: FastifyInstance) {
   // compiled to regexes.
   // STAFF_CONSOLE_ORIGIN: rateup-admin calls /api/staff directly from its own origin.
   const allowedOrigins: string[] = [
-    process.env.ELECTION_APP_URL,
     process.env.FRONTEND_URL,
     process.env.STAFF_CONSOLE_ORIGIN?.replace(/\/+$/, ""),
   ].filter((origin): origin is string => !!origin);

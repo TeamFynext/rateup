@@ -3,6 +3,7 @@ import { ForbiddenError } from "../../authz/errors.js";
 import { assertMemberOfOrg, assertNotOwner } from "../../authz/ownership.js";
 import {
   auditLog,
+  listAuditLogFeatures,
   checkEmailExist,
   createUserSignup,
   getAllUsers,
@@ -27,6 +28,7 @@ import {
   updateUserLanguageSchema,
   userEmailCheckSchemaInput,
   UserStatusSchema,
+  type AuditLogQuery,
 } from "./user.schema.js";
 import supertokens from "supertokens-node";
 import Session from "supertokens-node/recipe/session/index.js";
@@ -559,21 +561,28 @@ export async function updateUserAvailabilityStatusHandler(
   }
 }
 
+export async function auditLogFeaturesHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    reply.send(await listAuditLogFeatures(request.user.orgId));
+  } catch (error) {
+    log.error({ err: error }, "Error fetching audit log features");
+    reply.code(500).send({ message: "Failed to fetch audit log features" });
+  }
+}
+
 export async function auditLogHandler(
-  request: FastifyRequest<{
-    Querystring: {
-      page?: number;
-      limit?: number;
-      sortBy?: string;
-      sortOrder?: "asc" | "desc";
-    };
-  }>,
+  request: FastifyRequest<{ Querystring: AuditLogQuery }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.user;
-    const { page = 1, limit = 25, sortBy, sortOrder } = request.query;
-    const logs = await auditLog(orgId, Number(page), Number(limit), sortBy, sortOrder);
+    const { page = 1, limit = 25, sortBy, sortOrder, from, to, userId, feature } = request.query;
+    const logs = await auditLog(orgId, page, limit, sortBy, sortOrder, {
+      from,
+      to,
+      userId,
+      feature,
+    });
     reply.send(logs);
   } catch (error) {
     log.error({ err: error }, "Error fetching audit logs");

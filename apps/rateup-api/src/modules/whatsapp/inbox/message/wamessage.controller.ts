@@ -8,6 +8,7 @@ import {
   waChatExportConstraints,
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
+  AssignOwnerBody,
   BlockUserBody,
   FavoriteContactBody,
   SpamContactBody,
@@ -101,6 +102,7 @@ import { recordMessageInWindow } from "../../metering/meteredConversation.servic
 import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 import { notifyInboundMessage } from "./inboundNotify.js";
+import { assignConversationOwner } from "./assignOwner.service.js";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -948,6 +950,22 @@ export async function assignWaMessageHandler(
   }
 }
 
+export async function assignConversationOwnerHandler(
+  request: FastifyRequest<{ Body: AssignOwnerBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    return reply.send(await assignConversationOwner(request.body, request.actor!));
+  } catch (error) {
+    const statusCode = (error as { statusCode?: unknown }).statusCode;
+    if (typeof statusCode === "number" && statusCode < 500) {
+      return reply.status(statusCode).send({ message: (error as Error).message });
+    }
+    log.error({ err: error }, "Error in assignConversationOwnerHandler");
+    return reply.status(500).send("Internal Server Error");
+  }
+}
+
 export async function getAssignedUserForContactHandler(
   request: FastifyRequest<{ Params: ByContactIdParams }>,
   reply: FastifyReply,
@@ -1129,7 +1147,7 @@ export async function bulkAssignWaMessageHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { contactIds, assignee, assignIfOnline, messageId } = request.body;
+    const { contactIds, assignee, teamId, assignIfOnline, messageId } = request.body;
 
     // Guarded per contact so one failure does not abandon the rest: the caller gets a
     // per-contact outcome and can tell which conversations were actually assigned.
@@ -1138,16 +1156,18 @@ export async function bulkAssignWaMessageHandler(
 
     for (const contactId of contactIds) {
       try {
-        const res = await assignWaMessageToUser(
-          {
-            contactId,
-            assignees: [assignee],
-            assignIfOnline: assignIfOnline ?? false,
-            messageId,
-          },
-          request.user.orgId,
-          request.userId,
-        );
+        const res = teamId
+          ? await assignConversationOwner({ contactId, teamId }, request.actor!)
+          : await assignWaMessageToUser(
+              {
+                contactId,
+                assignees: assignee ? [assignee] : [],
+                assignIfOnline: assignIfOnline ?? false,
+                messageId,
+              },
+              request.user.orgId,
+              request.userId,
+            );
 
         results.push({ contactId, success: true, result: res });
       } catch (e) {

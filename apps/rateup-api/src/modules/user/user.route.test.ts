@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 
 vi.mock("./user.controller.js", () => ({
+  auditLogFeaturesHandler: vi.fn(),
   auditLogHandler: vi.fn(),
   changeUserPasswordHandler: vi.fn(),
   createAppleUserHandler: vi.fn(),

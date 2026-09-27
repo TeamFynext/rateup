@@ -33,7 +33,7 @@ import { updateMonthlyStat } from "../stats/stats.service.js";
 import { hasFeature } from "../subscription/subscription.service.js";
 import { log } from "../../utils/logger.js";
 import { FastifyRequest } from "fastify";
-import { getTextSummaryByAI } from "../chatbot/chatbot.service.js";
+import { getTextSummaryByAI } from "./responseSummary.ai.js";
 import {
   getIntegrationByName,
   initializeAuthClient,

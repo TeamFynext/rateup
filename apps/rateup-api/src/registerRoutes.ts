@@ -30,8 +30,6 @@ import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic
 import { loyaltyRoutes } from "./modules/loyalty/loyalty.routes.js";
 import linktreeRoutes from "./modules/linktree/linktree.routes.js";
 import { statsRoutes } from "./modules/stats/stats.route.js";
-import { chatbotRoutes } from "./modules/chatbot/chatbot.rout.js";
-import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route.js";
 import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route.js";
 import { apiAccessTokenRoutes } from "./modules/apiAccessToken/apiAccessToken.route.js";
 import { externalV1Routes } from "./external/v1/index.js";
@@ -79,7 +77,6 @@ const routeConfigs = [
   { plugin: paymentPublicRoutes, prefix: "/api/public/payment" },
   { plugin: stripePublicRoutes, prefix: "/api/public/payment/stripe" },
   { plugin: testimonialPublicRoutes, prefix: "/api/public/testimonials" },
-  { plugin: chatbotPublicRoute, prefix: "/api/public/chatbot" },
   { plugin: integrationPublicRoutes, prefix: "/api/public/integrations" },
   { plugin: userPublicRoutes, prefix: "/api/public/user" },
   {
@@ -120,7 +117,6 @@ const routeConfigs = [
   { plugin: loyaltyRoutes, prefix: "/api/loyalty" },
   { plugin: linktreeRoutes, prefix: "/api/linktrees" },
   { plugin: statsRoutes, prefix: "/api/stats" },
-  { plugin: chatbotRoutes, prefix: "/api/chatbot" },
   { plugin: orgWsRoutes, prefix: "/api/org/ws" },
   { plugin: apiAccessTokenRoutes, prefix: "/api/api-access-token" },
   { plugin: externalV1Routes, prefix: "/api/external/v1/:orgId" },

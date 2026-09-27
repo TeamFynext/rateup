@@ -57,6 +57,7 @@ import { faker } from "@faker-js/faker";
 import {
   getConversationById,
   getLastCreatedConversationForContact,
+  mirrorConversationStatusTx,
   openConversationForContact,
   resolveClosedByUserId,
   resolveInboxActor,
@@ -790,7 +791,6 @@ export async function filterChats(
           c."name",
           c."phone",
           c."other",
-          c."aiWaChat",
           c."waMessageAssignStatus",
           c."lastReceivedMessageTimeStamp",
           c."consent",
@@ -1240,7 +1240,9 @@ export async function assignWaMessageToUser(
 
     const addedUsers = data.assignees.filter((a) => !existingUserIds.includes(a.userId));
 
-    const revokedUsers = existingUsers.filter((u) => !incomingUserIds.includes(u.assignedUserId));
+    let revokedUsers: { assignedUserId: string; teamId: string }[] = existingUsers.filter(
+      (u) => !incomingUserIds.includes(u.assignedUserId),
+    );
 
     const isReassignment = revokedUsers.length > 0 && addedUsers.length > 0;
 
@@ -1317,9 +1319,55 @@ export async function assignWaMessageToUser(
       skipDuplicates: true,
     });
 
+    // Assigning a contact whose last conversation is already closed starts a fresh
+    // engagement. Open a new conversation (mirroring the inbound-message reopen path)
+    // instead of resurrecting the finished one, so the closed record's closedAt /
+    // resolution-time metrics stay frozen and the reopen counter advances. It is
+    // opened before the events below so they are written to it, not the closed one.
+    // A named ticket that is still open is the one assigned. A closed one is not
+    // revived, so it falls through to the newest ticket, or a successor.
+    const named = data.conversationId
+      ? await prisma.conversation.findFirst({
+          where: { id: data.conversationId, contactId: data.contactId },
+        })
+      : null;
+    // An empty list unassigns: there is nothing to start, so no successor is opened.
+    const isUnassign = data.assignees.length === 0;
+    let conversation =
+      named && (isUnassign || !isTerminalInboxStatus(named.status))
+        ? named
+        : await getLastCreatedConversationForContact(data.contactId);
+    // Closing already revoked everyone; unassigning a closed ticket would only flip
+    // the contact back into the live inbox.
+    if (isUnassign && conversation && isTerminalInboxStatus(conversation.status)) {
+      throw new HttpError("This ticket is closed", 409);
+    }
+    // The contact-level rows and status mirror the newest ticket, so unassigning an
+    // older one clears that ticket alone and leaves whoever owns the newest in place.
+    const newest =
+      isUnassign && conversation
+        ? await getLastCreatedConversationForContact(data.contactId)
+        : null;
+    const olderTicket = Boolean(conversation && newest && newest.id !== conversation.id);
+    if (olderTicket && conversation) {
+      const onTicket = await prisma.conversationAssignedUserTeamMap.findMany({
+        where: { conversationId: conversation.id, lastRemovedAt: null },
+        select: { userId: true, teamId: true },
+      });
+      revokedUsers = onTicket.map((row) => ({ assignedUserId: row.userId, teamId: row.teamId }));
+    }
+    if (!isUnassign && (!conversation || isTerminalInboxStatus(conversation.status))) {
+      conversation = await openConversationForContact(
+        data.contactId,
+        orgId,
+        WaMessageAssignStatus.ASSIGNED,
+      );
+    }
+
     if (isReassignment) {
       await createInternalWaMessage({
         contactId: data.contactId,
+        conversationId: conversation?.id,
         waMessageAssignStatus: "REASSIGNED",
         assignedUsers: {
           removed: revokedUsers.map((u) => ({
@@ -1338,6 +1386,7 @@ export async function assignWaMessageToUser(
       if (newUsers.length) {
         await createInternalWaMessage({
           contactId: data.contactId,
+          conversationId: conversation?.id,
           waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
           assignedUsers: newUsers,
           trigerredByUser: userId ?? "RateUp",
@@ -1348,6 +1397,7 @@ export async function assignWaMessageToUser(
       if (revokedUsers.length) {
         await createInternalWaMessage({
           contactId: data.contactId,
+          conversationId: conversation?.id,
           waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
           assignedUsers: revokedUsers.map((u) => ({
             userId: u.assignedUserId,
@@ -1359,31 +1409,48 @@ export async function assignWaMessageToUser(
       }
     }
 
-    await prisma.waInboxAssign.deleteMany({
-      where: {
-        contactId: data.contactId,
-        assignedUserId: {
-          notIn: data.assignees.map((assignee) => assignee.userId),
+    if (!olderTicket) {
+      await prisma.waInboxAssign.deleteMany({
+        where: {
+          contactId: data.contactId,
+          assignedUserId: {
+            notIn: data.assignees.map((assignee) => assignee.userId),
+          },
         },
-      },
-    });
-
-    const updatedContact = await updateContactById(data.contactId, orgId, {
-      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-    });
-    // Assigning a contact whose last conversation is already closed starts a fresh
-    // engagement. Open a new conversation (mirroring the inbound-message reopen path)
-    // instead of resurrecting the finished one, so the closed record's closedAt /
-    // resolution-time metrics stay frozen and the reopen counter advances.
-    let conversation = await getLastCreatedConversationForContact(updatedContact.id);
-    if (!conversation || isTerminalInboxStatus(conversation.status)) {
-      conversation = await openConversationForContact(
-        updatedContact.id,
-        updatedContact.orgId,
-        WaMessageAssignStatus.ASSIGNED,
-      );
+      });
     }
-    if (conversation) {
+
+    let updatedContact;
+    if (olderTicket && conversation) {
+      const ticketId = conversation.id;
+      await updateConversationAssignees(ticketId, { assignees: [] }, userId);
+      await prisma.$transaction((tx) =>
+        mirrorConversationStatusTx(
+          tx,
+          data.contactId,
+          WaMessageAssignStatus.UNASSIGNED,
+          { source: userId ? "user" : "system", userId },
+          { conversationId: ticketId },
+        ),
+      );
+      updatedContact = await prisma.contact.findUniqueOrThrow({ where: { id: data.contactId } });
+    } else if (isUnassign) {
+      if (conversation) {
+        await updateConversationAssignees(conversation.id, { assignees: [] }, userId);
+      }
+      const { contact } = await setInboxStatus(
+        data.contactId,
+        WaMessageAssignStatus.UNASSIGNED,
+        { source: userId ? "user" : "system", userId },
+        { conversationId: conversation?.id },
+      );
+      updatedContact = contact;
+    } else {
+      if (!conversation) throw new HttpError("No ticket to assign", 500);
+      updatedContact = await updateContactById(data.contactId, orgId, {
+        waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+        conversationId: conversation.id,
+      });
       const updatedAssignees = [
         ...newUsers,
         ...data.assignees.filter(
@@ -2268,6 +2335,7 @@ export async function createInternalWaMessage({
   orgId,
   privateMessageText,
   messageId,
+  conversationId,
 }: {
   contactId: string;
   waMessageAssignStatus?: string;
@@ -2285,8 +2353,10 @@ export async function createInternalWaMessage({
   orgId?: string;
   privateMessageText?: string;
   messageId: string;
+  /** The ticket the event belongs to; defaults to the contact's newest. */
+  conversationId?: string;
 }) {
-  const conversation = await getLastCreatedConversationForContact(contactId);
+  const ticketId = conversationId ?? (await getLastCreatedConversationForContact(contactId))?.id;
 
   // `id` is null for the system/automation actor (it has no user row), and the
   // whole value stays null when a real user id was given but that user has no
@@ -2406,7 +2476,7 @@ export async function createInternalWaMessage({
       data: {
         contactId,
         messageId: messageId,
-        conversationId: conversation?.id,
+        conversationId: ticketId,
         sourcePlatform: PlatformType.INTERNAL,
         sourceIdentifier: "internal",
         sendBy: triggeredByUserDetails?.id,
@@ -2467,7 +2537,7 @@ export async function createInternalWaMessage({
     const wamessage = await prisma.waMessage.create({
       data: {
         contactId,
-        conversationId: conversation?.id,
+        conversationId: ticketId,
         sourcePlatform: PlatformType.INTERNAL,
         sendBy: triggeredByUserDetails?.id,
         waCreatedAt: new Date(),
@@ -2492,7 +2562,7 @@ export async function createInternalWaMessage({
         data: mentionedUserDetails.map((user) => ({
           orgId: orgId!,
           contactId: contact.id,
-          conversationId: conversation?.id ?? null,
+          conversationId: ticketId ?? null,
           mentionedUserId: user.id,
           messageId: wamessage.id,
         })),

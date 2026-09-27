@@ -1,6 +1,8 @@
 import prisma from "../../../../utils/prisma.js";
 import { QuickReplyBody, UpdateQuickReplyInput } from "./quickReply.schema.js";
 
+// A saved attachment's file is never deleted here: sending the reply puts the same
+// URL in the message, so the file outlives the reply for as long as that chat exists.
 export async function createWaQuickReply(data: QuickReplyBody, orgId: string) {
   return await prisma.whatsappQuickReply.create({
     data: {

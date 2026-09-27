@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   assignWaMessageHandler,
+  assignConversationOwnerHandler,
   blockWhatsappUserHandler,
   bulkAssignWaMessageHandler,
   clearConversationMentionsHandler,
@@ -27,6 +28,7 @@ import { byContactIdSchema } from "../../../contact/contact.schema.js";
 import {
   blockUserSchema,
   bulkWaMessageAssignBody,
+  assignOwnerBody,
   clearMentionsSchema,
   reopenConversationSchema,
   favoriteContactSchema,
@@ -123,6 +125,17 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     assignWaMessageHandler,
+  );
+
+  server.post(
+    "/assign/owner",
+    {
+      config: { permission: "inbox.assign" },
+      schema: {
+        body: assignOwnerBody,
+      },
+    },
+    assignConversationOwnerHandler,
   );
 
   server.post(
