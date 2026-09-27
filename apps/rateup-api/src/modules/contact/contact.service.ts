@@ -798,9 +798,33 @@ export async function updateContactById(
    */
   const markingSpam = contact.waMessageAssignStatus === WaMessageAssignStatus.SPAM;
   const nextStatus = markingSpam ? WaMessageAssignStatus.CLOSED : contact.waMessageAssignStatus;
+
+  const targetTicket = contact.conversationId
+    ? await prisma.conversation.findFirst({
+        where: { id: contact.conversationId, contactId },
+        select: { id: true, status: true },
+      })
+    : null;
+  if (contact.conversationId && !targetTicket) {
+    throw new ContactNotFoundError(`Conversation ${contact.conversationId} not found`);
+  }
+  const newestTicket = targetTicket
+    ? await prisma.conversation.findFirst({
+        where: { contactId },
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+      })
+    : null;
+  // The contact-level status mirrors its newest ticket, so closing an older one
+  // leaves it alone; and whether anything changed is judged on the ticket itself.
+  const contactStatus =
+    !targetTicket || targetTicket.id === newestTicket?.id ? nextStatus : undefined;
   const statusChanged =
-    nextStatus !== undefined && contactRecord.waMessageAssignStatus !== nextStatus;
-  const closing = statusChanged && WaMessageClosedStatus.includes(nextStatus);
+    contactStatus !== undefined && contactRecord.waMessageAssignStatus !== contactStatus;
+  const ticketStatusChanged = targetTicket
+    ? nextStatus !== undefined && targetTicket.status !== nextStatus
+    : statusChanged;
+  const closing = statusChanged && WaMessageClosedStatus.includes(nextStatus!);
   const transitionActor: InboxActor = actor ?? resolveInboxActor(userId);
   const now = new Date();
 
@@ -815,7 +839,7 @@ export async function updateContactById(
       data: {
         name: contact.name,
         phone: contact.phone,
-        waMessageAssignStatus: nextStatus,
+        waMessageAssignStatus: contactStatus,
         lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp || undefined,
         ...(closing
           ? {
@@ -851,8 +875,9 @@ export async function updateContactById(
       },
     });
 
-    if (statusChanged) {
-      await mirrorConversationStatusTx(tx, contactId, nextStatus, transitionActor, {
+    if (ticketStatusChanged) {
+      await mirrorConversationStatusTx(tx, contactId, nextStatus!, transitionActor, {
+        conversationId: targetTicket?.id,
         now,
         ...(markingSpam ? { closeReason: CloseReason.SPAM } : {}),
         resolutionResult: contact.resolutionResult ?? null,
@@ -1079,19 +1104,18 @@ export async function updateContactById(
       data: { contactId: updatedContact.id, contactName: updatedContact.name ?? "" },
       actorUserId: userId,
     });
-    if (contact?.waMessageAssignStatus) {
-      await createInternalWaMessage({
-        trigerredByUser: userId || "RateUp",
-        contactId: updatedContact.id,
-        // The thread records the *event* the caller asked for: a spam mark reads as
-        // spam even though the ticket underneath it is stored as CLOSED.
-        waMessageAssignStatus: markingSpam
-          ? WaMessageAssignStatus.SPAM
-          : updatedContact.waMessageAssignStatus,
-        messageId: contact.messageId ?? crypto.randomUUID(),
-      });
-    }
     // The conversation was already mirrored inside the transaction above.
+  }
+  if (ticketStatusChanged && WaMessageClosedStatus.includes(nextStatus!)) {
+    await createInternalWaMessage({
+      trigerredByUser: userId || "RateUp",
+      contactId: updatedContact.id,
+      conversationId: targetTicket?.id,
+      // The thread records the *event* the caller asked for: a spam mark reads as
+      // spam even though the ticket underneath it is stored as CLOSED.
+      waMessageAssignStatus: markingSpam ? WaMessageAssignStatus.SPAM : nextStatus,
+      messageId: contact.messageId ?? crypto.randomUUID(),
+    });
   }
   return updatedContact;
 }

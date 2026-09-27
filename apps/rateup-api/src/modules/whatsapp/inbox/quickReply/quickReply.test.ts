@@ -13,12 +13,15 @@ vi.mock("../../../../utils/prisma.js", () => ({
   excludeFields: vi.fn(),
 }));
 
+vi.mock("../../../../utils/upload/s3Upload.js", () => ({ deleteFile: vi.fn() }));
+
 vi.mock("../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
 
 import prisma from "../../../../utils/prisma.js";
 import { log } from "../../../../utils/logger.js";
+import { deleteFile } from "../../../../utils/upload/s3Upload.js";
 import { quickReplyCore } from "./quickReply.schema.js";
 import {
   createWaQuickReply,
@@ -36,6 +39,7 @@ import {
 } from "./quickReply.controller.js";
 
 type Mock = ReturnType<typeof vi.fn>;
+const deleteFileMock = deleteFile as unknown as Mock;
 
 // The handlers run against the real service, so these assertions reach through to the
 // query the module would actually issue.
@@ -367,6 +371,51 @@ describe("quickReplyCore", () => {
       category: "Old",
     });
 
-    expect(parsed).toEqual({ text: "Hi", topic: "Welcome", key: "/hi" });
+    expect(parsed).toEqual({ text: "Hi", topic: "Welcome", key: "/hi", media: [] });
+  });
+
+  test("accepts image, audio and video attachments, and nothing else", () => {
+    const item = { url: "https://cdn.example.com/a", key: "a", name: "a" };
+    for (const type of ["image", "audio", "video"]) {
+      expect(() =>
+        quickReplyCore.parse({ text: "", topic: "t", key: "k", media: [{ ...item, type }] }),
+      ).not.toThrow();
+    }
+    expect(() =>
+      quickReplyCore.parse({
+        text: "",
+        topic: "t",
+        key: "k",
+        media: [{ ...item, type: "document" }],
+      }),
+    ).toThrow();
+  });
+});
+
+describe("quick reply media files", () => {
+  const media = (key: string) => ({
+    type: "audio",
+    url: `https://cdn.example.com/${key}`,
+    key,
+    name: key,
+  });
+
+  // A sent message points at the same file, so removing it would break that chat.
+  test("deleting a reply keeps its attachments' files", async () => {
+    db.findFirst.mockResolvedValue({ id: "qr-1" });
+    db.delete.mockResolvedValue({ id: "qr-1", media: [media("a"), media("b")] });
+
+    await deleteWaQuickReplyById("qr-1", "org-1");
+
+    expect(deleteFileMock).not.toHaveBeenCalled();
+  });
+
+  test("an edit that drops an attachment keeps its file", async () => {
+    db.findFirst.mockResolvedValue({ id: "qr-1" });
+    db.update.mockResolvedValue({ id: "qr-1" });
+
+    await updateWaQuickReplyById("qr-1", "org-1", { media: [media("b"), media("c")] as never });
+
+    expect(deleteFileMock).not.toHaveBeenCalled();
   });
 });

@@ -30,13 +30,12 @@ const TOTALS: PipelineStats["totals"] = {
 };
 
 /**
- * The service fires its five queries through one `Promise.all`, so the mock
+ * The service fires its four queries through one `Promise.all`, so the mock
  * answers in the order they are written rather than by matching on SQL.
  */
 function respond({
   totals = [TOTALS],
   stages = [] as unknown[],
-  teams = [] as unknown[],
   sources = [] as unknown[],
   assignees = [] as unknown[],
 } = {}) {
@@ -44,7 +43,6 @@ function respond({
   db.$queryRaw
     .mockResolvedValueOnce(totals)
     .mockResolvedValueOnce(stages)
-    .mockResolvedValueOnce(teams)
     .mockResolvedValueOnce(sources)
     .mockResolvedValueOnce(assignees);
 }
@@ -54,11 +52,10 @@ beforeEach(() => {
 });
 
 describe("getPipelineStats", () => {
-  test("returns the five sections the board reads", async () => {
+  test("returns the four sections the board reads", async () => {
     const stage = { stageId: STAGE, total: 9, open: 6, avgDaysInStage: 4, rotting: 1 };
     respond({
       stages: [stage],
-      teams: [{ id: "t1", name: "Sales", color: "#f00", open: 3, total: 5 }],
       sources: [{ source: "WHATSAPP", open: 5, total: 8 }],
       assignees: [
         {
@@ -77,7 +74,6 @@ describe("getPipelineStats", () => {
 
     expect(stats.totals).toEqual(TOTALS);
     expect(stats.stages).toEqual([stage]);
-    expect(stats.teams[0].name).toBe("Sales");
     expect(stats.sources[0].source).toBe("WHATSAPP");
     expect(stats.assignees[0].assigneeId).toBe(USER);
   });

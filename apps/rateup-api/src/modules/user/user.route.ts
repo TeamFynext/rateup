@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { verifySession } from "supertokens-node/recipe/session/framework/fastify/index.js";
 import {
   auditLogHandler,
+  auditLogFeaturesHandler,
   changeUserPasswordHandler,
   createAppleUserHandler,
   createGoogleUserHandler,
@@ -29,6 +30,8 @@ import {
   userStatusSchema,
   PauseUserInput,
   UserStatusSchema,
+  auditLogQuerySchema,
+  type AuditLogQuery,
 } from "./user.schema.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
@@ -188,19 +191,22 @@ export async function userRoutes(server: FastifyInstance) {
     updateUserAvailabilityStatusHandler,
   );
 
-  server.get<{
-    Querystring: {
-      page?: number;
-      limit?: number;
-      sortBy?: string;
-      sortOrder?: "asc" | "desc";
-    };
-  }>(
+  server.get<{ Querystring: AuditLogQuery }>(
     "/audit-logs",
     {
       config: { permission: "org.audit.read" },
       preHandler: [checkSession],
+      schema: { querystring: auditLogQuerySchema },
     },
     auditLogHandler,
+  );
+
+  server.get(
+    "/audit-logs/features",
+    {
+      config: { permission: "org.audit.read" },
+      preHandler: [checkSession],
+    },
+    auditLogFeaturesHandler,
   );
 }

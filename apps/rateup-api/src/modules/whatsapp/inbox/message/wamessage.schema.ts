@@ -153,6 +153,19 @@ const waMessageAssignBody = z.object({
   assignees: z.array(z.object({ userId: z.string(), teamId: z.string() })),
   assignIfOnline: z.boolean().default(false),
   messageId: z.string().optional(), // for internal message
+  // The ticket on screen. Without it the contact's newest ticket is assigned, which is
+  // the wrong one when an older ticket is still open.
+  conversationId: z.uuid().nullish(),
+});
+
+/// One owner per ticket: `userId` names them, `teamId` alone round-robins within
+/// that team, and neither unassigns.
+const assignOwnerBody = z.object({
+  contactId: z.string(),
+  conversationId: z.uuid().nullish(),
+  userId: z.uuid().nullish(),
+  teamId: z.uuid().nullish(),
+  messageId: z.string().optional(),
 });
 
 const blockUserSchema = z.object({
@@ -180,15 +193,24 @@ const reopenConversationSchema = z.object({
   messageId: z.string().optional(), // for the internal "assigned" event
 });
 
-const bulkWaMessageAssignBody = z.object({
-  contactIds: z.array(z.string()),
-  assignee: z.object({
-    userId: z.string(),
-    teamId: z.string(),
-  }),
-  assignIfOnline: z.boolean().default(false),
-  messageId: z.string().optional(),
-});
+/// Either one `assignee` for every chat, or a `teamId` whose members take the chats
+/// in turn, one owner per chat.
+const bulkWaMessageAssignBody = z
+  .object({
+    contactIds: z.array(z.string()),
+    assignee: z
+      .object({
+        userId: z.string(),
+        teamId: z.string(),
+      })
+      .optional(),
+    teamId: z.uuid().optional(),
+    assignIfOnline: z.boolean().default(false),
+    messageId: z.string().optional(),
+  })
+  .refine((body) => Boolean(body.assignee) !== Boolean(body.teamId), {
+    message: "Send either an assignee or a teamId",
+  });
 
 const logsQuerySchema = z.object({
   dateKey: z.string().optional(),
@@ -211,6 +233,7 @@ export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
 export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
 export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
 export type WaMessageAssignBody = z.input<typeof waMessageAssignBody>;
+export type AssignOwnerBody = z.infer<typeof assignOwnerBody>;
 export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type FavoriteContactBody = z.infer<typeof favoriteContactSchema>;
@@ -238,5 +261,6 @@ export {
   reopenConversationSchema,
   generateInboxResponseBody,
   bulkWaMessageAssignBody,
+  assignOwnerBody,
   logsQuerySchema,
 };

@@ -665,11 +665,52 @@ describe("getLastCreatedConversationForContact / getActiveConversationForContact
 // ===========================================================================
 
 describe("updateConversationAssignees", () => {
-  test("does nothing at all for an empty assignee list", async () => {
+  test("an empty list revokes every active assignee and leaves the status to the caller", async () => {
+    db.conversationAssignedUserTeamMap.findMany.mockResolvedValue([
+      { userId: "u1", teamId: "t1", actionHistory: [] },
+      { userId: "u2", teamId: "t1", lastRemovedAt: new Date(), actionHistory: [] },
+    ]);
+
     await updateConversationAssignees("conv-1", { assignees: [] } as any, USER);
 
-    expect(db.conversationAssignedUserTeamMap.findMany).not.toHaveBeenCalled();
+    expect(db.conversationAssignedUserTeamMap.update).toHaveBeenCalledTimes(1);
+    const call = db.conversationAssignedUserTeamMap.update.mock.calls[0][0];
+    expect(call.where.userId_conversationId.userId).toBe("u1");
+    expect(call.data.actionHistory.at(-1).action).toBe("assignment-revoked");
     expect(db.conversation.update).not.toHaveBeenCalled();
+  });
+
+  test("reactivates someone who was removed earlier instead of creating a second row", async () => {
+    db.conversationAssignedUserTeamMap.findMany.mockResolvedValue([
+      { userId: "u1", teamId: "t1", lastRemovedAt: new Date(), actionHistory: [] },
+    ]);
+
+    await updateConversationAssignees(
+      "conv-1",
+      { assignees: [{ userId: "u1", teamId: "t2" }] } as any,
+      USER,
+    );
+
+    expect(db.conversationAssignedUserTeamMap.create).not.toHaveBeenCalled();
+    const call = db.conversationAssignedUserTeamMap.update.mock.calls[0][0];
+    expect(call.data).toMatchObject({ teamId: "t2", lastRemovedAt: null, lastAssignedBy: USER });
+    expect(call.data.actionHistory.at(-1).action).toBe("assigned");
+    // Nobody was active before, so this is the ticket's first assignment again.
+    expect(db.conversation.update.mock.calls[0][0].data.assignedAt).toBeInstanceOf(Date);
+  });
+
+  test("does not revoke someone who is already removed", async () => {
+    db.conversationAssignedUserTeamMap.findMany.mockResolvedValue([
+      { userId: "u-gone", teamId: "t1", lastRemovedAt: new Date(), actionHistory: [] },
+    ]);
+
+    await updateConversationAssignees(
+      "conv-1",
+      { assignees: [{ userId: "u1", teamId: "t1" }] } as any,
+      USER,
+    );
+
+    expect(db.conversationAssignedUserTeamMap.update).not.toHaveBeenCalled();
   });
 
   test("creates a map row for an assignee who is new to the ticket", async () => {

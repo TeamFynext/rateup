@@ -9,7 +9,9 @@ import {
   deleteLeadHandler,
   deleteNoteHandler,
   deleteTaskHandler,
+  updateNoteHandler,
   getLeadHandler,
+  getSharedLeadHandler,
   getLeadsHandler,
   moveLeadHandler,
   reopenLeadHandler,
@@ -29,6 +31,7 @@ import {
   createTaskRequestSchema,
   idParamsSchema,
   listLeadsQuerySchema,
+  shortUrlIdParamsSchema,
   moveLeadRequestSchema,
   updateLeadRequestSchema,
   updateTaskRequestSchema,
@@ -38,6 +41,7 @@ import {
 } from "./lead.schema.js";
 import {
   verifyLeadAccess,
+  verifyLeadShareAccess,
   verifyLeadsBulkAccess,
   verifyNoteAccess,
   verifyTaskAccess,
@@ -89,6 +93,13 @@ export async function leadRoutes(server: FastifyInstance) {
       schema: { body: createLeadRequestSchema },
     },
     createLeadHandler,
+  );
+
+  // A share link resolves to the card and its board; the modal fetches the rest.
+  server.get(
+    "/share/:id",
+    { preHandler: [verifyLeadShareAccess], schema: { params: shortUrlIdParamsSchema } },
+    getSharedLeadHandler,
   );
 
   // Registered before `/:id` so "bulk" is not read as a lead id.
@@ -169,6 +180,15 @@ export async function leadRoutes(server: FastifyInstance) {
       schema: { params: idParamsSchema, body: createNoteRequestSchema },
     },
     createNoteHandler,
+  );
+
+  server.put(
+    "/notes/:id",
+    {
+      preHandler: [verifyNoteAccess],
+      schema: { params: idParamsSchema, body: createNoteRequestSchema },
+    },
+    updateNoteHandler,
   );
 
   server.delete(

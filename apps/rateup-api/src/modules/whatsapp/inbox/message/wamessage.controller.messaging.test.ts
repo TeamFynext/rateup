@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("./assignOwner.service.js", () => ({ assignConversationOwner: vi.fn() }));
 vi.mock("./wamessage.service.js", () => ({
   addNewWaMessage: vi.fn(),
   assignWaMessageToUser: vi.fn(),

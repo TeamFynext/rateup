@@ -40,7 +40,6 @@ export interface PipelineStats {
     avgDaysInStage: number;
     rotting: number;
   }>;
-  teams: Array<{ id: string; name: string; color: string; open: number; total: number }>;
   sources: Array<{ source: LeadSource; open: number; total: number }>;
   assignees: Array<{
     /** Null on the unassigned bucket. */
@@ -57,7 +56,6 @@ export interface PipelineStats {
 
 type TotalsRow = PipelineStats["totals"];
 type StageRow = PipelineStats["stages"][number];
-type TeamRow = PipelineStats["teams"][number];
 type SourceRow = PipelineStats["sources"][number];
 type AssigneeRow = PipelineStats["assignees"][number];
 
@@ -72,7 +70,7 @@ export async function getPipelineStats(pipelineId: string, userId: string): Prom
 
   // Every count is cast to `::int`: Postgres returns COUNT as bigint, which
   // Prisma hands back as a JS BigInt, which JSON.stringify refuses to serialise.
-  const [totalsRows, stages, teams, sources, assignees] = await Promise.all([
+  const [totalsRows, stages, sources, assignees] = await Promise.all([
     prisma.$queryRaw<TotalsRow[]>`
       SELECT
         COUNT(*)::int AS leads,
@@ -119,18 +117,6 @@ export async function getPipelineStats(pipelineId: string, userId: string): Prom
       LEFT JOIN "Lead" l ON l."stageId" = s.id
       WHERE s."pipelineId" = ${id}
       GROUP BY s.id
-    `,
-
-    prisma.$queryRaw<TeamRow[]>`
-      SELECT
-        t.id, t.name, t.color,
-        COUNT(*) FILTER (WHERE l.status = 'OPEN'::"LeadStatus")::int AS open,
-        COUNT(*)::int AS total
-      FROM "Lead" l
-      JOIN "Team" t ON t.id = l."teamId"
-      WHERE l."pipelineId" = ${id}
-      GROUP BY t.id, t.name, t.color
-      ORDER BY t.name
     `,
 
     prisma.$queryRaw<SourceRow[]>`
@@ -192,7 +178,6 @@ export async function getPipelineStats(pipelineId: string, userId: string): Prom
   return {
     totals,
     stages,
-    teams,
     sources,
     // The unassigned bucket is always selected, so a board where everything is
     // assigned would otherwise grow a permanent row of zeroes.
