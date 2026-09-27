@@ -105,6 +105,17 @@ export function useMention({
     return Array.from(ids);
   }, []);
 
+  /** Replaces `text[start, end)` and puts the caret after the inserted value. */
+  const replaceRange = useCallback(
+    (start: number, end: number, value: string) => {
+      const position = start + value.length;
+      pendingCaretRef.current = position;
+      setText(text.slice(0, start) + value + text.slice(end));
+      setCaret(position);
+    },
+    [text, setText],
+  );
+
   /** Mentions belong to the note being composed — drop them once it is sent. */
   const reset = useCallback(() => {
     pickedRef.current = [];
@@ -121,6 +132,9 @@ export function useMention({
     inputRef,
     handleChangeText,
     handleSelectionChange,
+    /** Where the caret is, for other `/`-style triggers in the same input. */
+    caret,
+    replaceRange,
     pick,
     getMentionedUserIds,
     reset,

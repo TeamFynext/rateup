@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   TextInput,
@@ -19,9 +19,22 @@ import { useCreatePrivateMessage, useSendNewWaMessage } from "@/api/inbox/messag
 import { uploadFile } from "@/utils/fileUpload";
 import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
 import VoiceRecorder from "./VoiceRecorder";
-import { ImageIcon, VideoIcon, MusicIcon, File, Paperclip, Plus, Send } from "lucide-react-native"; // Import Lucide icons
+import {
+  ImageIcon,
+  VideoIcon,
+  MusicIcon,
+  File,
+  Paperclip,
+  Plus,
+  Send,
+  Zap,
+} from "lucide-react-native";
 import TemplateSending from "./TemplateSending";
 import MentionList from "./mention/MentionList";
+import QuickReplyList from "./quickReply/QuickReplyList";
+import { useQuickReplies } from "@/api/inbox/quickReplies/quickReplies.query";
+import type { QuickReply } from "@/api/inbox/quickReplies/quickReplies.api";
+import { quickReplyToWhatsAppText } from "@/utils/quickReplyText";
 import { useMention } from "./mention/useMention";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { create } from "zustand";
@@ -45,6 +58,9 @@ type FormValues = {
   };
   location: any | null;
 };
+
+/** A `/` at the start of a word, and what has been typed after it. */
+const QUICK_REPLY_TRIGGER = /(?:^|\s)\/([^\s/]*)$/;
 
 const MessageSendPanel = ({
   contactId,
@@ -143,6 +159,48 @@ const MessageSendPanel = ({
     text: textBody ?? "",
     setText: (value) => setValue("text.body", value, { shouldDirty: true }),
   });
+
+  // `/` at the start of a word opens the quick replies, as on the web.
+  const { data: quickReplies = [], isLoading: quickRepliesLoading } = useQuickReplies();
+  const quickReplyQuery = useMemo(() => {
+    if (mention.isOpen) return null;
+    const match = QUICK_REPLY_TRIGGER.exec((textBody ?? "").slice(0, mention.caret));
+    return match ? match[1].toLowerCase() : null;
+  }, [textBody, mention.caret, mention.isOpen]);
+  const matchingQuickReplies = useMemo(
+    () =>
+      quickReplyQuery === null
+        ? []
+        : quickReplies.filter(
+            (r) =>
+              !quickReplyQuery ||
+              (r.key ?? "").toLowerCase().includes(quickReplyQuery) ||
+              r.topic.toLowerCase().includes(quickReplyQuery),
+          ),
+    [quickReplies, quickReplyQuery],
+  );
+
+  function pickQuickReply(reply: QuickReply) {
+    const text = textBody ?? "";
+    const match = QUICK_REPLY_TRIGGER.exec(text.slice(0, mention.caret));
+    if (match) {
+      const start = mention.caret - match[1].length - 1;
+      mention.replaceRange(start, mention.caret, quickReplyToWhatsAppText(reply.text));
+    }
+    // `shared`: the files are the quick reply's, so dropping one from this draft keeps it.
+    const inDraft = new Set(media.map((m) => m.key));
+    for (const item of reply.media ?? []) {
+      if (!inDraft.has(item.key)) addMedia({ ...item, uploading: false, shared: true });
+    }
+  }
+
+  function openQuickReplies() {
+    const text = textBody ?? "";
+    const caret = Math.min(mention.caret, text.length);
+    const needsSpace = caret > 0 && !/\s/.test(text[caret - 1]);
+    mention.replaceRange(caret, caret, needsSpace ? " /" : "/");
+    mention.inputRef.current?.focus();
+  }
 
   //@ts-ignore
   const isUploading = media.some((m) => m.uploading);
@@ -530,6 +588,14 @@ const MessageSendPanel = ({
           <View>
             {/* Teammate picker for `@` — above the composer, so it never covers
                 what is being typed. */}
+            {quickReplyQuery !== null && (
+              <QuickReplyList
+                replies={matchingQuickReplies}
+                isLoading={quickRepliesLoading}
+                onSelect={pickQuickReply}
+                isDark={isDark}
+              />
+            )}
             {mention.isOpen && (
               <MentionList users={mention.suggestions} onSelect={mention.pick} isDark={isDark} />
             )}
@@ -787,6 +853,17 @@ const MessageSendPanel = ({
                   onChangeText={mention.handleChangeText}
                   onSelectionChange={mention.handleSelectionChange}
                 />
+                <Pressable
+                  onPress={openQuickReplies}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel="Quick replies"
+                >
+                  <Zap
+                    size={17}
+                    color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
+                  />
+                </Pressable>
                 {!isPrivate && (
                   <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
                     <Paperclip

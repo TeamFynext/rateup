@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  BackHandler,
   View,
   Text,
   Platform,
@@ -16,11 +17,13 @@ import RefreshButton from "@/components/inbox/RefreshButton";
 import InboxSearchView from "@/components/inbox/InboxSearchView";
 import ScreenHeader, { HeaderIconButton } from "@/components/common/ScreenHeader";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
-import { ChevronsDownUp, ChevronsUpDown, Search } from "lucide-react-native";
+import { ChevronsDownUp, ChevronsUpDown, Search, UserCheck, X } from "lucide-react-native";
 import { useInboxCountStore } from "@/store/inboxCountStore";
 import { useInboxViewStore } from "@/store/inboxViewStore";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
+import { useInboxSelectionStore } from "@/store/inboxSelectionStore";
+import BulkAssignSheet from "@/components/inbox/BulkAssignSheet";
 
 /**
  * The design's inbox segment (`RateUp Mobile Inbox.dc.html`, the `segments`
@@ -123,6 +126,26 @@ export default function InboxLayout() {
     filterFromStore.assignedUserIds &&
     filterFromStore.assignedUserIds.includes(userId)
   );
+
+  const selectedIds = useInboxSelectionStore((s) => s.ids);
+  const clearSelection = useInboxSelectionStore((s) => s.clear);
+  const selecting = selectedIds.size > 0;
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
+
+  // A selection belongs to the list it was made in.
+  useEffect(() => {
+    clearSelection();
+  }, [activeTab, searchOpen, filterFromStore, clearSelection]);
+
+  // Android's back leaves selection mode before it leaves the screen.
+  useEffect(() => {
+    if (!selecting) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      clearSelection();
+      return true;
+    });
+    return () => sub.remove();
+  }, [selecting, clearSelection]);
 
   const renderInboxContent = () => {
     switch (activeTab) {
@@ -238,162 +261,199 @@ export default function InboxLayout() {
           <>
             {/* Header + segments — one `--bg-surface` bar, as the design has
                 them: title row, then the strip 12px below. */}
-            <ScreenHeader
-              title="Inbox"
-              actions={
-                <>
-                  {/* The design's compact-list toggle, first in the action row. */}
-                  <HeaderIconButton onPress={toggleCompact} active={compactList}>
-                    {compactList ? (
-                      <ChevronsUpDown size={20} color={t.brand} />
-                    ) : (
-                      <ChevronsDownUp size={20} color={t.fg2} />
-                    )}
-                  </HeaderIconButton>
-                  <HeaderIconButton onPress={() => setSearchOpen(true)}>
-                    <Search size={20} color={t.fg2} />
-                  </HeaderIconButton>
-                  <RefreshButton />
-                  <InboxButtons activeFilterCount={activeFilterCount} />
-                </>
-              }
-              below={
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={{ marginTop: 12 }}
-                  contentContainerStyle={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    gap: 8,
-                  }}
-                >
-                  <SegmentPill
-                    label="Open"
-                    focused={activeTab === "Open"}
-                    count={contactCounts.openCount}
-                    onPress={() => setActiveTab("Open")}
-                  />
-
-                  {activeTab === "Open" && (
-                    <View
+            {selecting ? (
+              <ScreenHeader
+                title={`${selectedIds.size} selected`}
+                actions={
+                  <>
+                    <Pressable
+                      onPress={() => setBulkAssignOpen(true)}
+                      accessibilityRole="button"
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        height: 32,
-                        backgroundColor: isDark ? Colors.dark.statusBg : Colors.light.surface,
-                        padding: 2,
+                        gap: 6,
+                        height: 34,
+                        paddingHorizontal: 14,
                         borderRadius: 9999,
-                        borderWidth: 1,
-                        borderColor: isDark ? Colors.dark.pillBorder : Colors.light.border,
+                        backgroundColor: t.brand,
                       }}
                     >
-                      <Pressable
-                        onPress={() => setFilter({ ...filterFromStore, assignedUserIds: [] })}
+                      <UserCheck size={16} color={t.onAccent} />
+                      <Text
                         style={{
-                          height: 26,
-                          justifyContent: "center",
-                          paddingHorizontal: 10,
-                          borderRadius: 9999,
-                          backgroundColor: !isMine
-                            ? isDark
-                              ? Colors.dark.pillBorder
-                              : Colors.light.card
-                            : "transparent",
+                          color: t.onAccent,
+                          fontFamily: "InstrumentSans_700Bold",
+                          fontSize: 14,
                         }}
                       >
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            fontFamily: "InstrumentSans_700Bold",
-                            color: !isMine
-                              ? isDark
-                                ? Colors.dark.textPrimary
-                                : Colors.light.textPrimary
-                              : isDark
-                                ? Colors.dark.pillText
-                                : Colors.light.pillText,
-                          }}
-                        >
-                          Everyone
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        onPress={() => {
-                          if (userId) {
-                            setFilter({
-                              ...filterFromStore,
-                              assignedUserIds: [userId],
-                            });
-                          }
-                        }}
+                        Assign
+                      </Text>
+                    </Pressable>
+                    <HeaderIconButton onPress={clearSelection}>
+                      <X size={20} color={t.fg2} />
+                    </HeaderIconButton>
+                  </>
+                }
+              />
+            ) : (
+              <ScreenHeader
+                title="Inbox"
+                actions={
+                  <>
+                    {/* The design's compact-list toggle, first in the action row. */}
+                    <HeaderIconButton onPress={toggleCompact} active={compactList}>
+                      {compactList ? (
+                        <ChevronsUpDown size={20} color={t.brand} />
+                      ) : (
+                        <ChevronsDownUp size={20} color={t.fg2} />
+                      )}
+                    </HeaderIconButton>
+                    <HeaderIconButton onPress={() => setSearchOpen(true)}>
+                      <Search size={20} color={t.fg2} />
+                    </HeaderIconButton>
+                    <RefreshButton />
+                    <InboxButtons activeFilterCount={activeFilterCount} />
+                  </>
+                }
+                below={
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginTop: 12 }}
+                    contentContainerStyle={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingHorizontal: 16,
+                      gap: 8,
+                    }}
+                  >
+                    <SegmentPill
+                      label="Open"
+                      focused={activeTab === "Open"}
+                      count={contactCounts.openCount}
+                      onPress={() => setActiveTab("Open")}
+                    />
+
+                    {activeTab === "Open" && (
+                      <View
                         style={{
-                          height: 26,
-                          justifyContent: "center",
-                          paddingHorizontal: 10,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          height: 32,
+                          backgroundColor: isDark ? Colors.dark.statusBg : Colors.light.surface,
+                          padding: 2,
                           borderRadius: 9999,
-                          backgroundColor: isMine
-                            ? isDark
-                              ? Colors.dark.pillBorder
-                              : Colors.light.card
-                            : "transparent",
+                          borderWidth: 1,
+                          borderColor: isDark ? Colors.dark.pillBorder : Colors.light.border,
                         }}
                       >
-                        <Text
+                        <Pressable
+                          onPress={() => setFilter({ ...filterFromStore, assignedUserIds: [] })}
                           style={{
-                            fontSize: 11,
-                            fontFamily: "InstrumentSans_700Bold",
-                            color: isMine
+                            height: 26,
+                            justifyContent: "center",
+                            paddingHorizontal: 10,
+                            borderRadius: 9999,
+                            backgroundColor: !isMine
                               ? isDark
-                                ? Colors.dark.textPrimary
-                                : Colors.light.textPrimary
-                              : isDark
-                                ? Colors.dark.pillText
-                                : Colors.light.pillText,
+                                ? Colors.dark.pillBorder
+                                : Colors.light.card
+                              : "transparent",
                           }}
                         >
-                          Mine
-                        </Text>
-                      </Pressable>
-                    </View>
-                  )}
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              fontFamily: "InstrumentSans_700Bold",
+                              color: !isMine
+                                ? isDark
+                                  ? Colors.dark.textPrimary
+                                  : Colors.light.textPrimary
+                                : isDark
+                                  ? Colors.dark.pillText
+                                  : Colors.light.pillText,
+                            }}
+                          >
+                            Everyone
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => {
+                            if (userId) {
+                              setFilter({
+                                ...filterFromStore,
+                                assignedUserIds: [userId],
+                              });
+                            }
+                          }}
+                          style={{
+                            height: 26,
+                            justifyContent: "center",
+                            paddingHorizontal: 10,
+                            borderRadius: 9999,
+                            backgroundColor: isMine
+                              ? isDark
+                                ? Colors.dark.pillBorder
+                                : Colors.light.card
+                              : "transparent",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              fontFamily: "InstrumentSans_700Bold",
+                              color: isMine
+                                ? isDark
+                                  ? Colors.dark.textPrimary
+                                  : Colors.light.textPrimary
+                                : isDark
+                                  ? Colors.dark.pillText
+                                  : Colors.light.pillText,
+                            }}
+                          >
+                            Mine
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
 
-                  <SegmentPill
-                    label="Closed"
-                    focused={activeTab === "Closed"}
-                    count={contactCounts.closedCount}
-                    onPress={() => setActiveTab("Closed")}
-                  />
+                    <SegmentPill
+                      label="Closed"
+                      focused={activeTab === "Closed"}
+                      count={contactCounts.closedCount}
+                      onPress={() => setActiveTab("Closed")}
+                    />
 
-                  <SegmentPill
-                    label="All"
-                    focused={activeTab === "All"}
-                    count={contactCounts.allCount}
-                    onPress={() => setActiveTab("All")}
-                  />
+                    <SegmentPill
+                      label="All"
+                      focused={activeTab === "All"}
+                      count={contactCounts.allCount}
+                      onPress={() => setActiveTab("All")}
+                    />
 
-                  <SegmentPill
-                    label="Mine"
-                    focused={activeTab === "Mine"}
-                    onPress={() => setActiveTab("Mine")}
-                  />
+                    <SegmentPill
+                      label="Mine"
+                      focused={activeTab === "Mine"}
+                      onPress={() => setActiveTab("Mine")}
+                    />
 
-                  <SegmentPill
-                    label="New"
-                    focused={activeTab === "New"}
-                    count={contactCounts.newCount}
-                    onPress={() => setActiveTab("New")}
-                  />
+                    <SegmentPill
+                      label="New"
+                      focused={activeTab === "New"}
+                      count={contactCounts.newCount}
+                      onPress={() => setActiveTab("New")}
+                    />
 
-                  <SegmentPill
-                    label="Favourites"
-                    focused={activeTab === "Favourites"}
-                    onPress={() => setActiveTab("Favourites")}
-                  />
-                </ScrollView>
-              }
-            />
+                    <SegmentPill
+                      label="Favourites"
+                      focused={activeTab === "Favourites"}
+                      onPress={() => setActiveTab("Favourites")}
+                    />
+                  </ScrollView>
+                }
+              />
+            )}
 
             <View className="flex-1" style={{ backgroundColor: listBgColor }}>
               <InboxContentWrapper
@@ -406,6 +466,15 @@ export default function InboxLayout() {
           </>
         )}
       </KeyboardAvoidingView>
+      <BulkAssignSheet
+        visible={bulkAssignOpen}
+        onClose={() => setBulkAssignOpen(false)}
+        contactIds={[...selectedIds]}
+        onDone={() => {
+          setBulkAssignOpen(false);
+          clearSelection();
+        }}
+      />
     </View>
   );
 }

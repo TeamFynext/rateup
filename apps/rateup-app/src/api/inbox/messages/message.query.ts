@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { MessagePlatform } from "@/constants/enums";
 import {
   assignInboxToUser,
+  assignOwner,
   createPrivateMessage,
   getAssignedUserForContact,
   getMessagesByContactId,
@@ -68,6 +69,23 @@ export const useAssignInboxToUser = (_contactId?: any) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
       qc.invalidateQueries({ queryKey: ["contacts"] });
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["notification"] });
+      qc.invalidateQueries({ queryKey: ["notificationCount"] });
+    },
+  });
+};
+
+export const useAssignOwner = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: assignOwner,
+    onSuccess: (_result, variables) => {
+      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({ queryKey: ["assigned-contact", variables.contactId] });
+      qc.invalidateQueries({ queryKey: ["wa-messages", variables.contactId] });
+      qc.invalidateQueries({ queryKey: ["contacts"] });
+      qc.invalidateQueries({ queryKey: ["contactCounts"] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
