@@ -39,26 +39,7 @@ export interface Announcement {
 }
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
-  {
-    id: "2026-09-27-pipeline-share-card",
-    title: "Share a pipeline card with a link",
-    summary:
-      "Use the link button on a card to copy a short link to it. Teammates on that board open the card straight from the link.",
-    publishedAt: "2026-09-27",
-    kinds: ["new"],
-    area: "Pipeline",
-    link: { to: "/dashboard/pipeline" },
-  },
-  {
-    id: "2026-09-27-pipeline-lead-details-tidy",
-    title: "A tidier lead details view",
-    summary:
-      "Stage progress in a lead's details is now a simple step track, and the activity history has its own tab next to Notes.",
-    publishedAt: "2026-09-27",
-    kinds: ["improvement"],
-    area: "Pipeline",
-    link: { to: "/dashboard/pipeline" },
-  },
+
   {
     id: "2026-09-26-quick-reply-media",
     title: "Quick replies with images, audio and video",
@@ -79,26 +60,7 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     area: "Inbox",
     link: { to: "/dashboard/inbox" },
   },
-  {
-    id: "2026-09-26-pipeline-work-cards",
-    title: "Tasks and tickets start with a title",
-    summary:
-      "On Support, Projects and Custom boards, a new card now starts with a title, with an optional description, due date and linked contact.",
-    publishedAt: "2026-09-26",
-    kinds: ["improvement"],
-    area: "Pipeline",
-    link: { to: "/dashboard/pipeline" },
-  },
-  {
-    id: "2026-09-25-loyalty-counter-welcome",
-    title: "A WhatsApp welcome for counter sign-ups",
-    summary:
-      "Customers you enrol at the counter now get a WhatsApp welcome message, which you can turn off in Loyalty → Messages. You can also switch the joining and referral bonuses on or off.",
-    publishedAt: "2026-09-25",
-    kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/messages", label: "Open Messages" },
-  },
+
   {
     id: "2026-09-25-notification-settings",
     title: "Choose your own notifications",
