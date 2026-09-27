@@ -315,6 +315,7 @@ export interface LoyaltyProgram {
   defaultCountryCode?: string | null;
   averageOrderValue?: number | null;
   signupBonus: number;
+  /** Off keeps `signupBonus` stored but pays nothing. */
   signupBonusEnabled?: boolean;
   tiersEnabled: boolean;
   whatsappNotifications?: boolean;

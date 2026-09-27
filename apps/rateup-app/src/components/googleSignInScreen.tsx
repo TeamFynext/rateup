@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { signInWithGoogle } from "../api/google_auth";
 import { useEffect, useState } from "react";
 import { configureGoogleSignIn } from "../config/googleConfig";
@@ -59,7 +59,7 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
 
   return (
     <View className="w-full flex items-center">
-      <TouchableOpacity
+      <Pressable
         className="bg-[#C4D7F5] py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-2"
         onPress={handleLogin}
         disabled={loading}
@@ -68,7 +68,7 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
         <Text className="text-[#004F98] font-medium text-[16px]">
           {loading ? "Please Wait..." : "Sign in with Google"}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 };

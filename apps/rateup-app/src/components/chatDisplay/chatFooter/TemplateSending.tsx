@@ -4,7 +4,7 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   ActivityIndicator,
   useColorScheme,
@@ -148,7 +148,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
         >
           Select Team
         </Text>
-        <TouchableOpacity
+        <Pressable
           disabled={teams.isLoading}
           style={{
             height: 42,
@@ -179,7 +179,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
             {selectedTeamName || "Select a team"}
           </Text>
           <ChevronDown size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
-        </TouchableOpacity>
+        </Pressable>
 
         <Modal
           transparent
@@ -212,7 +212,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                   renderItem={({ item }) => {
                     const isSelected = item.id === teamId;
                     return (
-                      <TouchableOpacity
+                      <Pressable
                         onPress={() => {
                           setTeamId(item.id);
                           setSelectedTeamName(item.name);
@@ -252,7 +252,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                             color={isDark ? Colors.accent.cyan : Colors.brand.blue}
                           />
                         )}
-                      </TouchableOpacity>
+                      </Pressable>
                     );
                   }}
                   ListEmptyComponent={
@@ -345,7 +345,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
           {filteredTemplates.map((template) => {
             const isSelected = selectedTemplateId === template.id;
             return (
-              <TouchableOpacity
+              <Pressable
                 key={template.id}
                 onPress={() => setSelectedTemplateId(template.id)}
                 style={{
@@ -398,7 +398,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
                 >
                   Language: {template.data.language}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -428,7 +428,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
 
       {/* Send button */}
       {hasTemplates && (
-        <TouchableOpacity
+        <Pressable
           style={{
             marginTop: 16,
             height: 46,
@@ -459,7 +459,7 @@ const TemplateSending = ({ onClose, contact }: { onClose: any; contact: any }) =
               Send Template
             </Text>
           )}
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );

@@ -1,6 +1,6 @@
 import { Toast } from "@/components/common/Notice";
 import React, { useEffect, useState } from "react";
-import { Linking, Platform, Text, TouchableOpacity, View } from "react-native";
+import { Linking, Platform, Text, Pressable, View } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
 import requestStoragePermission from "@/utils/permission";
 import { Download, Eye, File } from "lucide-react-native";
@@ -81,7 +81,7 @@ const DocumentResponse = ({ info }: { info: string }) => {
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={handlePress}
       className="flex-row items-center bg-gray-100 border border-gray-200 rounded-xl px-3 py-2"
     >
@@ -105,7 +105,7 @@ const DocumentResponse = ({ info }: { info: string }) => {
       <View className="flex">
         {fileExists ? <Eye size={18} color="#10b981" /> : <Download size={18} color="#3b82f6" />}
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

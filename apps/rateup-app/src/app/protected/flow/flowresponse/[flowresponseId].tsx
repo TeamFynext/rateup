@@ -1,4 +1,4 @@
-import { View, Text, FlatList, TouchableOpacity, useColorScheme } from "react-native";
+import { View, Text, FlatList, Pressable, useColorScheme } from "react-native";
 import React, { useMemo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -50,12 +50,9 @@ const ResponseId = () => {
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-950 px-4">
       {/* Header */}
       <View className="flex-row items-center gap-5 p-2">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="flex-row items-center space-x-3 mb-4"
-        >
+        <Pressable onPress={() => router.back()} className="flex-row items-center space-x-3 mb-4">
           <ArrowLeft color={isDark ? "white" : "black"} />
-        </TouchableOpacity>
+        </Pressable>
 
         {/* Avatar + Name */}
         <View className="flex-row items-center space-x-4 mb-6 gap-3">

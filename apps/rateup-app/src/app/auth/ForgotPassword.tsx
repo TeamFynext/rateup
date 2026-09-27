@@ -3,7 +3,7 @@ import { sendPasswordResetEmail } from "@/api/api";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Mail } from "lucide-react-native";
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Dimensions, useColorScheme } from "react-native";
+import { View, Text, TextInput, Pressable, Dimensions, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("window");
@@ -46,14 +46,14 @@ export default function ResetPasswordScreen() {
   return (
     <SafeAreaView className="flex-1 gap-20 bg-white dark:bg-black px-4 pt-6">
       {/* Header */}
-      <TouchableOpacity
+      <Pressable
         className="flex-row items-center mb-6 justify-start"
         onPress={() => router.replace("/auth/SignIn")}
       >
         <ArrowLeft color={isDark ? "white" : "black"} />
 
         <Text className="text-xl font-bold ml-2 text-black dark:text-white">Reset Password</Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Icon Section */}
       <View className="items-center justify-center" style={{ height: height * 0.2 }}>
@@ -80,7 +80,7 @@ export default function ResetPasswordScreen() {
           />
         </View>
 
-        <TouchableOpacity
+        <Pressable
           className={`py-3 rounded-md ${loading ? "bg-[#7AA5C8]" : "bg-[#004F98]"}`}
           onPress={handleResetPassword}
           disabled={loading}
@@ -88,7 +88,7 @@ export default function ResetPasswordScreen() {
           <Text className="text-white text-center font-bold text-xl">
             {loading ? "Sending..." : "Send Reset Link"}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </SafeAreaView>
   );

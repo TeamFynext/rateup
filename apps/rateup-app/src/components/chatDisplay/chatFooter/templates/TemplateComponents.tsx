@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   Linking,
   ActivityIndicator,
   Modal,
@@ -143,7 +143,7 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
       );
     case "DOCUMENT":
       return (
-        <TouchableOpacity
+        <Pressable
           onPress={() => Linking.openURL(getUrlIfParameterIsPresent())}
           style={{
             flexDirection: "row",
@@ -164,7 +164,7 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
           >
             View Document
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       );
     default:
       return null;
@@ -216,7 +216,7 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
       {props?.buttons?.map((button, i) => (
         <View key={i}>
           {i === 0 && <Divider />}
-          <TouchableOpacity
+          <Pressable
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -238,7 +238,7 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
             >
               {button?.text}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       ))}
     </View>
@@ -317,7 +317,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
         {label}
       </Text>
 
-      <TouchableOpacity
+      <Pressable
         style={{
           height: 42,
           flexDirection: "row",
@@ -347,7 +347,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
           {selectedLabel || "Select Account"}
         </Text>
         <ChevronDown size={16} color={isDark ? Colors.dark.inactive : Colors.light.inactive} />
-      </TouchableOpacity>
+      </Pressable>
 
       <Modal
         transparent
@@ -380,7 +380,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                 renderItem={({ item }) => {
                   const isSelected = item.value === value;
                   return (
-                    <TouchableOpacity
+                    <Pressable
                       onPress={() => {
                         // No label to set — it follows from `value`.
                         onChange?.(item.value);
@@ -416,7 +416,7 @@ export function AccountSelector({ value, onChange, label = "Account" }: AccountS
                       {isSelected && (
                         <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
                       )}
-                    </TouchableOpacity>
+                    </Pressable>
                   );
                 }}
                 ListEmptyComponent={

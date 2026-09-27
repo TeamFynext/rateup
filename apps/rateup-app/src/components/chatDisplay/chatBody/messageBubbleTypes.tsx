@@ -7,10 +7,9 @@ import {
   ActivityIndicator,
   Linking,
   Text,
-  TouchableOpacity,
+  Pressable,
   View,
   Modal,
-  Pressable,
   Platform,
   useColorScheme,
 } from "react-native";
@@ -69,7 +68,7 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
 
   return (
     <>
-      <TouchableOpacity onPress={openModal} activeOpacity={0.8}>
+      <Pressable onPress={openModal}>
         <View className="w-[220px] h-[280px] rounded-lg overflow-hidden bg-gray-100">
           <Image
             source={{ uri: imageUrl }}
@@ -83,14 +82,13 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
             </Text>
           )}
         </View>
-      </TouchableOpacity>
+      </Pressable>
 
       <Modal visible={isModalVisible} animationType="fade" transparent onRequestClose={closeModal}>
         <View className="flex-1 bg-black justify-center items-center">
           <Image source={{ uri: imageUrl }} className="w-full h-full" contentFit="contain" />
-          <TouchableOpacity
+          <Pressable
             onPress={closeModal}
-            activeOpacity={0.8}
             style={{
               position: "absolute",
               top: 50,
@@ -100,7 +98,7 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
             }}
           >
             <Text style={{ color: "white", fontSize: 28 }}>✕</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </Modal>
     </>
@@ -178,9 +176,8 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
       {isPending && <ActivityIndicator />}
       {/* Video Available */}
       {link || localPath ? (
-        <TouchableOpacity
+        <Pressable
           onPress={openModal}
-          activeOpacity={0.7}
           className="relative w-64 h-64 self-center rounded-xl overflow-hidden shadow-md"
         >
           <Video
@@ -193,10 +190,10 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           <View className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center bg-black/30">
             <Text className="text-white text-4xl font-bold">▶</Text>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       ) : (
         // Download Placeholder
-        <TouchableOpacity
+        <Pressable
           onPress={handleDownload}
           style={{
             width: 256,
@@ -222,7 +219,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           >
             Download video
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
       {/* Caption */}
       {caption ? <Text className="text-sm text-center">{caption}</Text> : null}
@@ -244,9 +241,8 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           />
 
           {/* Close button ABOVE video */}
-          <TouchableOpacity
+          <Pressable
             onPress={closeModal}
-            activeOpacity={0.8}
             style={{
               position: "absolute",
               top: 50,
@@ -256,7 +252,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
             }}
           >
             <Text style={{ color: "white", fontSize: 28 }}>✕</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </Modal>
     </View>
@@ -403,7 +399,7 @@ export function WaInboxAudio({
             </View>
 
             {/* Play / Pause Button */}
-            <TouchableOpacity
+            <Pressable
               onPress={play}
               className="p-2 rounded-full"
               style={{ backgroundColor: isDark ? Colors.dark.border : Colors.light.border }}
@@ -419,7 +415,7 @@ export function WaInboxAudio({
                   color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary}
                 />
               )}
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {/* Progress Bar + Time */}
@@ -468,7 +464,7 @@ export function WaInboxAudio({
           </View>
 
           {/* Download Button */}
-          <TouchableOpacity
+          <Pressable
             onPress={handleDownload}
             disabled={isPending}
             className="flex-1 flex-row justify-between items-center rounded-lg px-3 py-2"
@@ -493,7 +489,7 @@ export function WaInboxAudio({
             >
               {timestamp}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       )}
 
@@ -639,7 +635,7 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
       )}
 
       {!localPath ? (
-        <TouchableOpacity
+        <Pressable
           onPress={handleDownload}
           disabled={isPending}
           className="flex-row items-center space-x-4"
@@ -664,11 +660,10 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
               {filename}
             </Text>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       ) : (
-        <TouchableOpacity
+        <Pressable
           onPress={openDocument}
-          activeOpacity={0.7}
           className="flex-col justify-center items-center space-y-1"
         >
           <Text
@@ -683,7 +678,7 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
           >
             {filename}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
 
       {/* Optional caption */}
@@ -1040,7 +1035,7 @@ const WaInboxTemplateButtons = ({ buttons }: WaTemplateFetchBodyComponent) => {
       style={{ borderColor: isDark ? Colors.dark.border : Colors.light.border }}
     >
       {buttons.map((button, i) => (
-        <TouchableOpacity
+        <Pressable
           key={i}
           className="flex-row items-center py-3 border-b"
           style={{ borderColor: isDark ? Colors.dark.borderLight : Colors.light.border }}
@@ -1059,7 +1054,7 @@ const WaInboxTemplateButtons = ({ buttons }: WaTemplateFetchBodyComponent) => {
           >
             {button?.text}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       ))}
     </View>
   );

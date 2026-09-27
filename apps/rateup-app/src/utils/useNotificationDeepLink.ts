@@ -4,13 +4,19 @@ import { router } from "expo-router";
 
 type NotificationPayload = {
   type?: string;
+  /** A rateup-api notification catalogue key, on `type: "notification"` pushes. */
+  event?: string;
   contactId?: string;
 };
 
+/** The chat a tap should open. Only inbox events have one; anything else just opens the app. */
 function readPayload(response: Notifications.NotificationResponse | null) {
   const data = response?.notification?.request?.content?.data as NotificationPayload | undefined;
-  if (data?.type !== "wa_message") return null;
-  if (typeof data.contactId !== "string" || !data.contactId) return null;
+  const opensChat =
+    data?.type === "wa_message" ||
+    (data?.type === "notification" && data.event?.startsWith("inbox."));
+  if (!opensChat) return null;
+  if (typeof data?.contactId !== "string" || !data.contactId) return null;
   return data.contactId;
 }
 
