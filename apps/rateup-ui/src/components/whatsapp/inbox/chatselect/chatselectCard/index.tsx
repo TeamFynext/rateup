@@ -184,6 +184,7 @@ export default function WaInboxChatSelectCard({
         receive: undefined as WaInboxMessage["receive"],
         internal: {
           text: { body: `Chat assigned to ${user.userName}` },
+          summary: `${user.userName} took this chat`,
           assignedUsers: [] as WaInternalMessageBody["assignedUsers"],
           assignStatus: WaMessageAssignStatus.ASSIGNED,
           triggeredByUser: { id: user.userId, name: user.userName },
@@ -203,6 +204,7 @@ export default function WaInboxChatSelectCard({
       {
         messageId,
         contactId,
+        conversationId: contact.conversationId,
         assignees: [{ userId: user.userId, teamId: user.teams?.[0] }],
       },
       {

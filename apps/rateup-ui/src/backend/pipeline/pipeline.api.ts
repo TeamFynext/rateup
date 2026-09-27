@@ -287,8 +287,23 @@ export async function fetchImportTemplate(pipelineId: string, format: "csv" | "x
 
 // ------------------------------------------------------------- notes & tasks
 
+/** Resolves a share link's id to the card and its board. */
+export async function fetchSharedLead(shortUrlId: string) {
+  const { data } = await axiosClient.get<{ id: string; pipelineId: string }>(
+    `${PIPELINE_URL}/leads/share/${shortUrlId}`,
+  );
+  return data;
+}
+
 export async function createLeadNote(leadId: string, text: string) {
   const { data } = await axiosClient.post<LeadNote>(`${PIPELINE_URL}/leads/${leadId}/notes`, {
+    text,
+  });
+  return data;
+}
+
+export async function updateLeadNote(noteId: string, text: string) {
+  const { data } = await axiosClient.put<LeadNote>(`${PIPELINE_URL}/leads/notes/${noteId}`, {
     text,
   });
   return data;

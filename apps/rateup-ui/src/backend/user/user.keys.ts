@@ -19,4 +19,5 @@ export const userKeys = {
   /** Org-wide user listing (admin). */
   all: () => ["allUsers"] as const,
   auditLogs: (pagination: unknown) => ["user-audit-logs", pagination] as const,
+  auditLogFeatures: () => ["user-audit-logs", "features"] as const,
 } as const;

@@ -187,11 +187,11 @@ export const useEditContactGroupMutation = (groupId: string | undefined) => {
   });
 };
 
-export const useAddExistingContactMutation = (groupId: string) => {
+export const useAddExistingContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addExistingContactsToGroup,
-    onSuccess: () => {
+    onSuccess: (_data, { groupId }) => {
       queryClient.invalidateQueries({
         queryKey: contactGroupKeys.detail(groupId),
       });

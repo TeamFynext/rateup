@@ -417,7 +417,12 @@ export function CampaignParticipantsTab({
                       render={
                         <Link
                           to="/dashboard/inbox"
-                          search={{ tab: "open", contactId: row.contact.id }}
+                          search={{
+                            tab: "open",
+                            contactId: row.contact.id,
+                            history: true,
+                            reveal: true,
+                          }}
                         />
                       }
                     >

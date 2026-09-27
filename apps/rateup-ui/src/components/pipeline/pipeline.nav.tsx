@@ -18,7 +18,6 @@ import {
   IconCircleX,
   IconPlus,
   IconUserCheck,
-  IconUsersGroup,
   type Icon,
 } from "@tabler/icons-react";
 import type { TFunction } from "i18next";
@@ -78,7 +77,7 @@ const SOURCE_DOT: Record<LeadSource, NavIcon> = {
   MANUAL: sourceDot(SOURCE_META.MANUAL.fillClassName),
 };
 
-type FacetKey = "stageId" | "teamId" | "source" | "assigneeId";
+type FacetKey = "stageId" | "source" | "assigneeId";
 
 export interface PipelineNavInput {
   /** Passed in rather than hooked: this builds data, so it is not a component. */
@@ -213,16 +212,6 @@ export function buildPipelineNavItems({
     handleClick: () => toggleFacet("stageId", stage.id),
   }));
 
-  const teamRows: NavEntry[] = (stats?.teams ?? []).map((team) => ({
-    title: team.name,
-    url: boardHref,
-    icon: IconUsersGroup,
-    count: team.open,
-    variant: "inbox-tab",
-    isActive: view.teamId === team.id,
-    handleClick: () => toggleFacet("teamId", team.id),
-  }));
-
   const sourceRows: NavEntry[] = (typeConfig.features.source ? (stats?.sources ?? []) : []).map(
     (row) => ({
       title: sourceLabel(t, row.source),
@@ -239,7 +228,6 @@ export function buildPipelineNavItems({
     ...section(t("Pipelines"), pipelineRows),
     ...section(t("Views"), viewRows),
     ...section(typeConfig.type === "LEADS" ? t("Lead stages") : t("Stages"), stageRows),
-    ...section(t("Teams"), teamRows),
     ...section(t("Sources"), sourceRows),
     // Ungrouped, so it sits on its own below the last section — the sidebar
     // renders a bare entry without a heading.

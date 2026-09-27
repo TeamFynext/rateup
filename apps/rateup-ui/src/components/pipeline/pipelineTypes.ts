@@ -40,6 +40,14 @@ export interface PipelineTypeConfig {
   seedSummary: string;
   /** A card on this board, e.g. "Add lead" / "Add ticket". */
   addCard: string;
+  /**
+   * Leads cards are a customer; every other board's are a piece of work, so the
+   * create dialog leads with a title and makes the contact optional.
+   */
+  cardIsCustomer: boolean;
+  /** Whether the create dialog opens with its optional contact section expanded. */
+  contactOpenByDefault: boolean;
+  titlePlaceholder: string;
   /** The list view's first column heading. */
   cardHeading: string;
   searchPlaceholder: string;
@@ -78,6 +86,9 @@ export function pipelineTypeConfig(t: TFunction, type: PipelineType): PipelineTy
         description: t("Service requests, repairs and complaints, from new to resolved."),
         seedSummary: t("Starts with New, In progress, Waiting on customer, Resolved and Closed."),
         addCard: t("Add ticket"),
+        cardIsCustomer: false,
+        contactOpenByDefault: true,
+        titlePlaceholder: t("e.g. Order arrived damaged"),
         cardHeading: t("Ticket"),
         searchPlaceholder: t("Search tickets"),
         counts: (open, total) => t("{open} open · {total} tickets", { open, total }),
@@ -96,6 +107,9 @@ export function pipelineTypeConfig(t: TFunction, type: PipelineType): PipelineTy
         description: t("Client onboarding and project work, with tasks and due dates."),
         seedSummary: t("Starts with To do, In progress, Review, Done and Cancelled."),
         addCard: t("Add task"),
+        cardIsCustomer: false,
+        contactOpenByDefault: false,
+        titlePlaceholder: t("e.g. Set up the new menu"),
         cardHeading: t("Task"),
         searchPlaceholder: t("Search tasks"),
         counts: (open, total) => t("{open} open · {total} tasks", { open, total }),
@@ -114,6 +128,9 @@ export function pipelineTypeConfig(t: TFunction, type: PipelineType): PipelineTy
         description: t("A blank board for anything else. Name the columns yourself."),
         seedSummary: t("Starts with To do, Doing and Done."),
         addCard: t("Add card"),
+        cardIsCustomer: false,
+        contactOpenByDefault: false,
+        titlePlaceholder: t("e.g. Plan the launch event"),
         cardHeading: t("Card"),
         searchPlaceholder: t("Search cards"),
         counts: (open, total) => t("{open} open · {total} cards", { open, total }),
@@ -136,6 +153,9 @@ export function pipelineTypeConfig(t: TFunction, type: PipelineType): PipelineTy
           "Starts with a standard funnel — New Lead through to Won and Lost. Rename the columns, or change what each one does, afterwards in pipeline settings.",
         ),
         addCard: t("Add lead"),
+        cardIsCustomer: true,
+        contactOpenByDefault: true,
+        titlePlaceholder: t("Name"),
         cardHeading: t("Lead"),
         searchPlaceholder: t("Search leads"),
         counts: (open, total) => t("{open} open · {total} leads", { open, total }),

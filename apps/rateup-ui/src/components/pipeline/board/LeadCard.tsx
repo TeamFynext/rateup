@@ -1,12 +1,13 @@
 import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import {
+  IconCalendarDue,
   IconCalendarX,
   IconClock,
   IconMessage2,
   IconUnlink,
   IconRosetteDiscountCheck,
-  IconUsersGroup,
 } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -84,6 +85,11 @@ export const LeadCard = memo(function LeadCard({
   const rotting = isRotting(lead, rottingEnabled);
   const overdue = isOverdue(lead);
   const NextIcon = lead.nextTask ? TASK_TYPE_ICON[lead.nextTask.type] : IconCalendarX;
+  const TypeIcon = typeConfig.icon;
+  // On Leads `expectedCloseAt` is a forecast; elsewhere it is the card's due date.
+  const due =
+    !typeConfig.cardIsCustomer && lead.expectedCloseAt ? dayjs(lead.expectedCloseAt) : null;
+  const pastDue = Boolean(due && lead.status === "OPEN" && due.isBefore(dayjs()));
 
   return (
     <div
@@ -105,14 +111,26 @@ export const LeadCard = memo(function LeadCard({
       )}
     >
       <div className="flex items-start gap-2.25">
-        <LeadAvatar
-          name={lead.name}
-          source={typeConfig.features.source ? lead.source : undefined}
-          size="lg"
-        />
+        {typeConfig.cardIsCustomer ? (
+          <LeadAvatar
+            name={lead.name}
+            source={typeConfig.features.source ? lead.source : undefined}
+            size="lg"
+          />
+        ) : (
+          <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+            <TypeIcon className="size-4" />
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="text-foreground truncate text-[13.5px] font-medium">{lead.name}</div>
-          {typeConfig.features.company || lead.company ? (
+          {!typeConfig.cardIsCustomer ? (
+            lead.contact ? (
+              <div className="text-muted-foreground truncate text-[11px]">
+                {lead.contact.name ?? lead.contact.phone}
+              </div>
+            ) : null
+          ) : typeConfig.features.company || lead.company ? (
             <div className="text-muted-foreground truncate text-[11px]">
               {lead.company ?? t("Direct customer")}
             </div>
@@ -135,13 +153,25 @@ export const LeadCard = memo(function LeadCard({
           >
             <IconMessage2 className="size-4" />
           </button>
-        ) : (
+        ) : typeConfig.cardIsCustomer ? (
           <IconUnlink
             className="text-muted-foreground size-4 shrink-0"
             title={t("Not linked to a contact")}
           />
-        )}
+        ) : null}
       </div>
+
+      {due ? (
+        <div
+          className={cn(
+            "mt-2 inline-flex items-center gap-1 text-[11px] font-semibold",
+            pastDue ? "text-destructive" : "text-muted-foreground",
+          )}
+        >
+          <IconCalendarDue className="size-3" />
+          {t("Due {date}", { date: due.format("D MMM") })}
+        </div>
+      ) : null}
 
       {lead.labels.length > 0 ? (
         <div className="mt-2.25 flex flex-wrap gap-1.25">
@@ -181,12 +211,6 @@ export const LeadCard = memo(function LeadCard({
       </div>
 
       <div className="mt-2.25 flex items-center gap-1.75">
-        {lead.team ? (
-          <span className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium">
-            <IconUsersGroup className="size-2.5" />
-            {lead.team.name}
-          </span>
-        ) : null}
         <AssigneeStack assignees={lead.assignees} owner={lead.owner} />
         <span className="flex-1" />
         <span

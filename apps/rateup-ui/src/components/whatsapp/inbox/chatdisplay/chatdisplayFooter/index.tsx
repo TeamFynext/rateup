@@ -3,12 +3,14 @@ import {
   IconBolt,
   IconExclamationCircle,
   IconMessage,
+  IconMessagePlus,
   IconNote,
   IconSend,
   IconShieldExclamation,
   IconTypography,
   IconUserCheck,
   IconUserPlus,
+  IconUsers,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -24,7 +26,7 @@ import { useConversationLimit } from "@/backend/stats/stats.query";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
-  useAssignInboxToUer,
+  useAssignOwner,
   useCreatePrivateMessage,
   useSendNewWaMessage,
   useSetContactSpam,
@@ -52,17 +54,21 @@ import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.t
 import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import AssigneePicker from "@/components/whatsapp/inbox/assign/AssigneePicker.tsx";
+import { buildAssignEvent } from "@/components/whatsapp/inbox/assign/assignEvent.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inbox.store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 import {
@@ -73,7 +79,6 @@ import {
 
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore.ts";
 import { generateInternalMessageId } from "../../util.tsx";
-import AssignUser from "../chatdisplayHeader/AssignUser.tsx";
 import { isTicketClosed } from "../chatdisplayHeader/ticket.ts";
 import { useComposerTabStore } from "./composerTabStore.ts";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
@@ -625,7 +630,7 @@ export const WaInboxAssignUserFooter = ({
   const { t } = useTranslation();
   const { filterData } = useContactStore();
   const messagesStore = useMessagesStore();
-  const assignMut = useAssignInboxToUer(contactId ?? "", filterData ?? "");
+  const assignMut = useAssignOwner(filterData ?? "");
   const { updateContactById } = useContactsStore();
   const qc = useQueryClient();
 
@@ -633,56 +638,23 @@ export const WaInboxAssignUserFooter = ({
     if (!user) {
       return toast.error("Your account details haven't loaded yet.");
     }
-    const message = `Chat assigned to ${user.userName}`;
-    const id = generateInternalMessageId();
-    const newMessage: OptimisticMessage = {
-      id: id,
-      contactId: contactId,
-      waCreatedAt: new Date().toISOString(),
-      messageBody: {
-        send: null,
-        receive: null,
-        internal: {
-          text: {
-            body: message,
-          },
-          assignedUsers: [],
-          assignStatus: WaMessageAssignStatus.ASSIGNED,
-          triggeredByUser: {
-            id: user.userId,
-            name: user.userName,
-          },
-        },
-        exchangeProcess: "internal",
-      },
-      sourcePlatform: "INTERNAL",
-      sourceIdentifier: null,
-      sendBy: user.userId,
-      sender: {
-        name: user.userName,
-        profilePhoto: user?.profilePhoto,
-      },
-      stats: {
-        read: "",
-        sent: "",
-        failed: "",
-        delivered: "",
-      },
-      messageId: id,
-    };
+    const newMessage = buildAssignEvent({
+      contactId,
+      actor: { id: user.userId, name: user.userName, profilePhoto: user.profilePhoto },
+      added: [{ id: user.userId, name: user.userName }],
+      removed: [],
+    });
+    const id = newMessage.id;
     const rowKey = getRowKey(contact);
     messagesStore.addMessage(`${rowKey}_all`, newMessage);
     messagesStore.addMessage(`${rowKey}_internal`, newMessage);
+    // The API records me under the ticket's team when I am in it, not my first team.
     assignMut.mutate(
       {
         messageId: id,
         contactId,
-        assignees: [
-          {
-            userId: user.userId,
-            teamId: user.teams?.[0],
-          },
-        ],
+        conversationId: contact.conversationId,
+        userId: user.userId,
       },
       {
         onSuccess: (result) => {
@@ -700,19 +672,18 @@ export const WaInboxAssignUserFooter = ({
           updateContactById(assignedRowKey ?? contactId, (contact) => ({
             ...contact,
             waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-            assignedUsers: [
-              {
-                id: user.userId,
-                name: user?.userName,
-                teamId: user.teams?.[0],
-              },
-            ],
+            assignedUsers: (result?.assignees ?? []).map((a) => ({
+              id: a.userId,
+              name: user.userName,
+              teamId: a.teamId,
+            })),
           }));
           qc.invalidateQueries({ queryKey: whatsappKeys.messagesByContact(contactId) });
         },
-        onError: () => {
+        onError: (error) => {
           messagesStore.removeMessage(`${rowKey}_all`, id);
           messagesStore.removeMessage(`${rowKey}_internal`, id);
+          toast.error(getApiErrorMessage(error, t("Could not change the assignee")));
         },
       },
     );
@@ -723,6 +694,10 @@ export const WaInboxAssignUserFooter = ({
   // the timestamp — `closedAt` on the row is the contact's.
   const isClosed = isTicketClosed(contact);
   const closedAt = contact?.ticketClosedAt ?? contact?.closedAt;
+  const platform = getContactPlatform(contact);
+  const sessionOpen =
+    platform === MessagePlatform.WEBCHAT ||
+    !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
 
   return (
     <Alert
@@ -742,26 +717,45 @@ export const WaInboxAssignUserFooter = ({
                 by {closedUser?.name ?? "Unknown"} at {formatDateWithRelativeTime(closedAt)}
               </span>
             )}
-            . {t("Assign it to start the conversation again.")}
+            .{" "}
+            {sessionOpen
+              ? t("Their 24-hour window is still open, so you can message them straight away.")
+              : t("Start a new conversation with a template.")}
           </>
         ) : (
           t("This conversation is new and unassigned.")
         )}
       </AlertTitle>
 
+      {/* On a closed chat, assigning opens a fresh ticket rather than reviving the
+          old one (see `assignWaMessageToUser` in rateup-api), so it is named for that. */}
       <Button
         size="sm"
         className="h-8 shrink-0 gap-1.5 border-transparent bg-primary text-primary-foreground shadow-none"
         loading={assignMut.isPending}
         onClick={handleAssignToMe}
       >
-        <IconUserCheck className="size-3.5" />
-        <span className="text-xs font-bold">{t("Assign to me")}</span>
+        {isClosed ? (
+          <IconMessagePlus className="size-3.5" />
+        ) : (
+          <IconUserCheck className="size-3.5" />
+        )}
+        <span className="text-xs font-bold">
+          {isClosed ? t("New conversation") : t("Assign to me")}
+        </span>
       </Button>
 
-      {/* The teammate picker stays `AssignUser` — it owns the real multi-assignee
-          and team round-robin behaviour that the mockup's popover only sketches. */}
-      <AssignUser contactId={contactId} variant="outline" />
+      <AssigneePicker
+        contact={contact}
+        align="end"
+        triggerClassName={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "h-8 shrink-0 gap-1.5 text-xs font-bold",
+        )}
+      >
+        <IconUsers className="size-3.5" />
+        {t("Assign to…")}
+      </AssigneePicker>
     </Alert>
   );
 };
@@ -864,13 +858,18 @@ export interface OptimisticMessage extends WaGetMessagesBody {
   sendBy?: string;
 }
 
-interface WaMedia {
+export interface WaMedia {
   type: string;
   url: string;
   name: string;
   /** Absent until the file has been uploaded (e.g. a fresh voice note). */
   key?: string;
   isVoiceNote?: boolean;
+  /**
+   * The file belongs to something saved (a quick reply), not to this draft, so
+   * removing it from the draft must not delete it from storage.
+   */
+  shared?: boolean;
 }
 
 interface MediaStore {
@@ -891,7 +890,8 @@ export const useMediaStore = create<MediaStore>((set) => ({
   removeMediaSilently: (key) =>
     set((state) => ({ media: state.media.filter((m) => m.key !== key) })),
   removeMedia: async (key) => {
-    await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+    const entry = useMediaStore.getState().media.find((m) => m.key === key);
+    if (!entry?.shared) await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
     set((state) => {
       const medias = state.media.filter((m) => m.key !== key);
       return { media: medias };

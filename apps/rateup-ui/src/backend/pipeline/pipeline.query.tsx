@@ -269,6 +269,16 @@ export function useLeadQuery(leadId: string | undefined) {
   });
 }
 
+export function useSharedLeadQuery(shortUrlId: string | undefined) {
+  return useQuery({
+    queryKey: pipelineKeys.sharedLead(shortUrlId),
+    queryFn: () => api.fetchSharedLead(shortUrlId!),
+    enabled: Boolean(shortUrlId),
+    // A 403 or 404 is the answer, not a blip.
+    retry: false,
+  });
+}
+
 /** Teams and the board each one sends its contacts to. */
 export function useTeamPipelineDefaultsQuery(enabled = true) {
   return useQuery({
@@ -815,6 +825,14 @@ export function useCreateLeadNoteMutation() {
     success: (t) => t("Note saved"),
     errorFallback: (t) => t("Could not save the note"),
     toastId: "pipeline-note-create",
+  });
+}
+
+export function useUpdateLeadNoteMutation() {
+  return usePipelineMutation<{ noteId: string; text: string }, unknown>({
+    mutationFn: ({ noteId, text }) => api.updateLeadNote(noteId, text),
+    errorFallback: (t) => t("Could not update the note"),
+    toastId: "pipeline-note-update",
   });
 }
 

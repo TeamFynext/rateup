@@ -209,11 +209,14 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
           waMessageAssignStatus: status,
           resolutionResult,
           messageId: id,
+          // Without it the API changes the contact's newest ticket, which is not this
+          // one when an older ticket is still open.
+          conversationId: contact.conversationId ?? undefined,
         },
       },
       {
         onSuccess: () => {
-          updateContactById(contact.id, (existing) => ({
+          const patch = (existing: ContactWithUpdatedAt): ContactWithUpdatedAt => ({
             ...existing,
             waMessageAssignStatus: status,
             conversationStatus: status,
@@ -221,7 +224,15 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             closedAt: closed ? null : new Date().toISOString(),
             closedUser: closed ? null : { name: user?.userName ?? "", id: user?.userId ?? "" },
             assignedUsers: [],
-          }));
+          });
+          const rowKey = getRowKey(contact);
+          // A ticket just opened by an assign or reopen is on screen before the list
+          // has a row for it, so the thread is updated directly.
+          if (useContactsStore.getState().contactsById.has(rowKey)) {
+            updateContactById(rowKey, patch);
+          } else {
+            setSelectedContact(patch(contact));
+          }
         },
         onError: rollback,
       },

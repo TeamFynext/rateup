@@ -65,7 +65,7 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
           render={
             <Link
               to="/dashboard/inbox"
-              search={{ tab: "open", contactId: contact.id, reveal: true }}
+              search={{ tab: "open", contactId: contact.id, history: true, reveal: true }}
             />
           }
         >

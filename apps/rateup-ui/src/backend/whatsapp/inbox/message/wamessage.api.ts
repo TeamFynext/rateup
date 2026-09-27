@@ -269,8 +269,25 @@ export async function assignInboxToUser(data: {
   contactId: string;
   assignees: { userId: string; teamId: string }[];
   messageId: string; // for internal message
+  /** The ticket on screen; without it the API assigns the contact's newest ticket. */
+  conversationId?: string | null;
 }): Promise<AssignInboxResult> {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
+}
+
+/**
+ * Set a ticket's single owner. `userId` names them; `teamId` alone lets the API
+ * pick one member of that team in turn; neither unassigns. The API chooses the
+ * team a named person is recorded under, so callers never have to.
+ */
+export async function assignOwner(data: {
+  contactId: string;
+  conversationId?: string | null;
+  userId?: string | null;
+  teamId?: string | null;
+  messageId: string;
+}): Promise<AssignInboxResult> {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign/owner`, data)).data;
 }
 
 /**
@@ -291,10 +308,19 @@ export async function reopenConversation(data: {
   ).data;
 }
 
-export async function bulkAssignInboxToUser(data: {
-  contactIds: string[];
-  assignee: { userId: string; teamId: string };
-}) {
+export interface BulkAssignResult {
+  assignedCount: number;
+  failedCount: number;
+  results: { contactId: string; success: boolean; result?: AssignInboxResult }[];
+}
+
+/** One `assignee` for every chat, or a `teamId` whose members take the chats in turn. */
+export async function bulkAssignInboxToUser(
+  data: { contactIds: string[] } & (
+    | { assignee: { userId: string; teamId: string } }
+    | { teamId: string }
+  ),
+): Promise<BulkAssignResult> {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign-bulk`, data)).data;
 }
 

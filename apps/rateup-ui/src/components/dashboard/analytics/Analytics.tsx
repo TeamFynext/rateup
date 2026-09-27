@@ -79,7 +79,7 @@ export function Analytics() {
         filters={filters}
         onChange={setFilters}
         show={{
-          dateRange: !(tab === "logs" && log === "activity"),
+          dateRange: true,
           team: !(tab === "logs" && log === "activity"),
           channelType: tab === "overview" || tab === "messages",
         }}

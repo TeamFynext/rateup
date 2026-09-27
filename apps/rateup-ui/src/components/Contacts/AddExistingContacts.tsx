@@ -42,7 +42,7 @@ const AddExistingContacts = ({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const addExistingContacts = useAddExistingContactMutation(groupId);
+  const addExistingContacts = useAddExistingContactMutation();
   const { isPending, data } = useContacts(pagination, searchTerm, undefined, columnFilters);
   const { data: contactGroups } = useContactGroup();
 

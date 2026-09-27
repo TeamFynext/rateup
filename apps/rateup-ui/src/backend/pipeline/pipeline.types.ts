@@ -32,12 +32,6 @@ export interface PipelineUser {
   profilePhoto: string | null;
 }
 
-export interface PipelineTeamRef {
-  id: string;
-  name: string;
-  color: string;
-}
-
 export interface PipelineContactRef {
   id: string;
   name: string | null;
@@ -131,6 +125,7 @@ export interface LeadNote {
   authorId: string | null;
   author: PipelineUser | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface LeadActivity {
@@ -166,7 +161,10 @@ export interface LeadActivity {
 
 export interface Lead {
   id: string;
+  /** The card's share link id: `/pl/<shortUrlId>`. */
+  shortUrlId: string | null;
   name: string;
+  description: string | null;
   company: string | null;
   phone: string | null;
   email: string | null;
@@ -176,8 +174,6 @@ export interface Lead {
   pipelineId: string;
   stageId: string;
   stage: LeadStageRef;
-  teamId: string | null;
-  team: PipelineTeamRef | null;
   /** Everyone working this lead; empty means nobody has picked it up. */
   assignees: PipelineUser[];
   ownerId: string | null;
@@ -200,6 +196,8 @@ export interface Lead {
 
 /** A single lead read, which additionally carries its notes and timeline. */
 export interface LeadDetail extends Lead {
+  /** Every open activity, soonest first; `nextTask` is the first of them. */
+  openTasks: LeadTask[];
   notes: LeadNote[];
   activities: LeadActivity[];
 }
@@ -236,7 +234,6 @@ export interface LeadListParams {
   filter: LeadFilter;
   search?: string;
   stageId?: string;
-  teamId?: string;
   source?: LeadSource;
   assigneeId?: string;
 }
@@ -278,7 +275,6 @@ export interface PipelineStats {
     avgDaysInStage: number;
     rotting: number;
   }>;
-  teams: Array<{ id: string; name: string; color: string; open: number; total: number }>;
   sources: Array<{ source: LeadSource; open: number; total: number }>;
   assignees: Array<{
     /** Null on the unassigned bucket. */
@@ -339,12 +335,12 @@ export interface CreateLeadInput {
   pipelineId: string;
   stageId: string;
   name: string;
+  description?: string | null;
   company?: string | null;
   phone?: string | null;
   email?: string | null;
   source?: LeadSource;
   channel?: LeadChannel;
-  teamId?: string | null;
   assigneeIds?: string[];
   contactId?: string | null;
   expectedCloseAt?: string | null;
@@ -365,7 +361,6 @@ export interface BulkUpdateLeadsInput {
   leadIds: string[];
   stageId?: string;
   assigneeIds?: string[];
-  teamId?: string | null;
 }
 
 export interface CreateTaskInput {

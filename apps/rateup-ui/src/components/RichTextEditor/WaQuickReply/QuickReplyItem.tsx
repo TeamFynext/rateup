@@ -1,4 +1,4 @@
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconPaperclip, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
@@ -65,6 +65,12 @@ const QuickReplyItem = ({
         >
           {parseJsonToReact(json)}
         </div>
+        {reply.media?.length ? (
+          <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+            <IconPaperclip className="size-3.5" />
+            {reply.media.length}
+          </span>
+        ) : null}
       </div>
 
       {/* Hover Actions */}

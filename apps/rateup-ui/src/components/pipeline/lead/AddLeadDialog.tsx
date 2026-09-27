@@ -1,5 +1,6 @@
 import {
   IconAlertTriangle,
+  IconChevronDown,
   IconLink,
   IconLinkOff,
   IconRepeat,
@@ -7,6 +8,7 @@ import {
   IconUserSearch,
   IconWriting,
 } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -20,6 +22,7 @@ import type {
   PipelineUser,
 } from "@/backend/pipeline/pipeline.types.ts";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +35,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
+import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { asApiError, getApiErrorMessage } from "@/utils/apiError.ts";
@@ -107,6 +111,18 @@ interface ManualCustomer {
 
 const EMPTY_MANUAL: ManualCustomer = { name: "", company: "", phone: "" };
 
+type CardDetails = Pick<
+  CreateLeadInput,
+  | "contactId"
+  | "name"
+  | "phone"
+  | "email"
+  | "company"
+  | "description"
+  | "expectedCloseAt"
+  | "labelIds"
+>;
+
 interface AddLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -136,6 +152,13 @@ export function AddLeadDialog({
   const [stageId, setStageId] = useState<string | null>(null);
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [source, setSource] = useState<LeadSource>("WHATSAPP");
+  // A work card (every board but Leads) is a title first; the contact is optional.
+  const [title, setTitle] = useState("");
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [labelIds, setLabelIds] = useState<string[]>([]);
+  const [contactOpen, setContactOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   /**
    * Why the board refused this lead — in practice always the one refusal a user
@@ -156,9 +179,15 @@ export function AddLeadDialog({
     setStageId(defaultStageId ?? pipeline?.stages[0]?.id ?? null);
     setAssigneeIds([]);
     setSource("WHATSAPP");
+    setTitle("");
+    setTitleError(null);
+    setDescription("");
+    setDueDate(undefined);
+    setLabelIds([]);
+    setContactOpen(typeConfig.contactOpenByDefault);
     setSaving(false);
     setConflict(null);
-  }, [open, defaultStageId, pipeline]);
+  }, [open, defaultStageId, pipeline, typeConfig.contactOpenByDefault]);
 
   const stage = pipeline?.stages.find((candidate) => candidate.id === stageId);
 
@@ -188,6 +217,7 @@ export function AddLeadDialog({
   };
 
   const customerReady = mode === "existing" ? Boolean(contact) : Boolean(manual.name.trim());
+  const ready = typeConfig.cardIsCustomer ? customerReady : Boolean(title.trim());
 
   // Only look a number up once it is complete enough to mean one person.
   const lookupPhone =
@@ -204,9 +234,7 @@ export function AddLeadDialog({
     if (!manual.name.trim()) editManual({ name: found.name });
   };
 
-  const openLead = (
-    customer: Pick<CreateLeadInput, "contactId" | "name" | "phone" | "email" | "company">,
-  ) => {
+  const openLead = (details: CardDetails) => {
     if (!pipeline || !stageId) return;
 
     // A lead carries its own copy of the customer's details either way, so the
@@ -215,7 +243,7 @@ export function AddLeadDialog({
     const input: CreateLeadInput = {
       pipelineId: pipeline.id,
       stageId,
-      ...customer,
+      ...details,
       // Other board types do not track where a card came from.
       source: typeConfig.features.source ? source : "MANUAL",
       channel:
@@ -236,7 +264,14 @@ export function AddLeadDialog({
         // 409 only: anything else is a failure to save, which the toast already
         // reports and the form cannot help with.
         if (asApiError(error).response?.status === 409) {
-          setConflict(getApiErrorMessage(error, t("That customer is already on this board.")));
+          setConflict(
+            getApiErrorMessage(
+              error,
+              typeConfig.cardIsCustomer
+                ? t("That customer is already on this board.")
+                : t("That contact already has a card on this board."),
+            ),
+          );
         }
       },
     });
@@ -244,6 +279,24 @@ export function AddLeadDialog({
 
   const submit = () => {
     if (!pipeline || !stageId) return;
+
+    if (!typeConfig.cardIsCustomer) {
+      if (!title.trim()) {
+        setTitleError(t("Enter a title."));
+        return;
+      }
+      setSaving(true);
+      openLead({
+        name: title.trim(),
+        description: description.trim() || null,
+        expectedCloseAt: dueDate ? dayjs(dueDate).endOf("day").toISOString() : null,
+        labelIds,
+        contactId: contact?.id ?? null,
+        phone: contact?.phone ?? null,
+        email: contact?.email ?? null,
+      });
+      return;
+    }
 
     if (mode === "existing") {
       if (!contact) return;
@@ -297,145 +350,202 @@ export function AddLeadDialog({
         </DialogHeader>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex items-center justify-between gap-3 sm:col-span-2">
-            <Label>{t("Customer")}</Label>
-            <button
-              type="button"
-              onClick={() => switchMode(mode === "manual" ? "existing" : "manual")}
-              className="text-primary inline-flex items-center gap-1.5 text-xs font-semibold hover:underline"
-            >
-              {mode === "manual" ? (
-                <>
-                  <IconUserSearch className="size-3.5" />
-                  {t("Choose from contacts")}
-                </>
-              ) : (
-                <>
-                  <IconWriting className="size-3.5" />
-                  {t("Enter details manually")}
-                </>
-              )}
-            </button>
-          </div>
-
-          {mode === "existing" ? (
-            <div className="sm:col-span-2">
-              <ContactPicker
-                value={contact}
-                onChange={(picked) => {
-                  setContact(picked);
-                  setConflict(null);
-                }}
-              />
-            </div>
-          ) : (
+          {typeConfig.cardIsCustomer ? (
             <>
-              <div className="sm:col-span-2">
-                <Field className="flex flex-col gap-1" data-invalid={Boolean(manualErrors.name)}>
-                  <FieldLabel htmlFor="add-lead-name">{t("Contact name")}</FieldLabel>
-                  <Input
-                    id="add-lead-name"
-                    placeholder={t("Name")}
-                    value={manual.name}
-                    onChange={(event) => editManual({ name: event.target.value })}
-                    aria-invalid={Boolean(manualErrors.name)}
-                  />
-                  {manualErrors.name ? <FieldError>{manualErrors.name}</FieldError> : null}
-                </Field>
+              <div className="flex items-center justify-between gap-3 sm:col-span-2">
+                <Label>{t("Customer")}</Label>
+                <button
+                  type="button"
+                  onClick={() => switchMode(mode === "manual" ? "existing" : "manual")}
+                  className="text-primary inline-flex items-center gap-1.5 text-xs font-semibold hover:underline"
+                >
+                  {mode === "manual" ? (
+                    <>
+                      <IconUserSearch className="size-3.5" />
+                      {t("Choose from contacts")}
+                    </>
+                  ) : (
+                    <>
+                      <IconWriting className="size-3.5" />
+                      {t("Enter details manually")}
+                    </>
+                  )}
+                </button>
               </div>
 
-              {typeConfig.features.company ? (
-                <Field className="flex flex-col gap-1">
-                  <FieldLabel htmlFor="add-lead-company">{t("Business / company")}</FieldLabel>
-                  <Input
-                    id="add-lead-company"
-                    placeholder={t("Optional")}
-                    value={manual.company}
-                    onChange={(event) => editManual({ company: event.target.value })}
+              {mode === "existing" ? (
+                <div className="sm:col-span-2">
+                  <ContactPicker
+                    value={contact}
+                    onChange={(picked) => {
+                      setContact(picked);
+                      setConflict(null);
+                    }}
                   />
-                </Field>
-              ) : null}
+                </div>
+              ) : (
+                <>
+                  <div className="sm:col-span-2">
+                    <Field
+                      className="flex flex-col gap-1"
+                      data-invalid={Boolean(manualErrors.name)}
+                    >
+                      <FieldLabel htmlFor="add-lead-name">{t("Contact name")}</FieldLabel>
+                      <Input
+                        id="add-lead-name"
+                        placeholder={t("Name")}
+                        value={manual.name}
+                        onChange={(event) => editManual({ name: event.target.value })}
+                        aria-invalid={Boolean(manualErrors.name)}
+                      />
+                      {manualErrors.name ? <FieldError>{manualErrors.name}</FieldError> : null}
+                    </Field>
+                  </div>
 
-              <Field className="flex flex-col gap-1" data-invalid={Boolean(manualErrors.phone)}>
-                <FieldLabel htmlFor="add-lead-phone">{t("WhatsApp number")}</FieldLabel>
-                <PhoneInput
-                  id="add-lead-phone"
-                  defaultCountry="IN"
-                  international
-                  countryCallingCodeEditable={false}
-                  placeholder={t("Enter phone number")}
-                  value={manual.phone}
-                  onChange={(value) => editManual({ phone: value ?? "" })}
-                  aria-invalid={Boolean(manualErrors.phone)}
-                  className="w-full"
-                />
-                {manualErrors.phone ? <FieldError>{manualErrors.phone}</FieldError> : null}
-              </Field>
+                  {typeConfig.features.company ? (
+                    <Field className="flex flex-col gap-1">
+                      <FieldLabel htmlFor="add-lead-company">{t("Business / company")}</FieldLabel>
+                      <Input
+                        id="add-lead-company"
+                        placeholder={t("Optional")}
+                        value={manual.company}
+                        onChange={(event) => editManual({ company: event.target.value })}
+                      />
+                    </Field>
+                  ) : null}
 
-              {/* One fixed-height line, always rendered: this row changes on
+                  <Field className="flex flex-col gap-1" data-invalid={Boolean(manualErrors.phone)}>
+                    <FieldLabel htmlFor="add-lead-phone">{t("WhatsApp number")}</FieldLabel>
+                    <PhoneInput
+                      id="add-lead-phone"
+                      defaultCountry="IN"
+                      international
+                      countryCallingCodeEditable={false}
+                      placeholder={t("Enter phone number")}
+                      value={manual.phone}
+                      onChange={(value) => editManual({ phone: value ?? "" })}
+                      aria-invalid={Boolean(manualErrors.phone)}
+                      className="w-full"
+                    />
+                    {manualErrors.phone ? <FieldError>{manualErrors.phone}</FieldError> : null}
+                  </Field>
+
+                  {/* One fixed-height line, always rendered: this row changes on
                   every keystroke that completes a number, and as a block that
                   appears and disappears it resized the whole modal under the
                   user's cursor. */}
-              <div className="flex min-h-9 items-center gap-2 text-xs sm:col-span-2">
-                {linked ? (
-                  <>
-                    <IconLink className="text-primary size-3.5 shrink-0" />
-                    <span className="text-primary min-w-0 flex-1 truncate">
-                      {t("Linked to {name} — the lead opens their conversation in Inbox.", {
-                        name: linked.name,
-                      })}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setLinked(null)}
-                      className="text-muted-foreground inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
-                    >
-                      <IconLinkOff className="size-3.5" />
-                      {t("Unlink")}
-                    </button>
-                  </>
-                ) : match ? (
-                  <>
-                    <IconUserSearch className="size-3.5 shrink-0 text-amber-600 dark:text-amber-500" />
-                    <span className="min-w-0 flex-1 truncate text-amber-700 dark:text-amber-500">
-                      {t("{name} already has this number — the lead will be linked to them.", {
-                        name: match.name,
-                      })}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        linkTo({
-                          id: match.id,
-                          name: match.name,
-                          phone: match.phone || null,
-                          email: match.email || null,
-                        })
-                      }
-                      className="text-primary inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
-                    >
-                      <IconLink className="size-3.5" />
-                      {t("Use their details")}
-                    </button>
-                  </>
-                ) : settledPhone === lookupPhone && lookupPhone && !matching ? (
-                  <>
-                    <IconUserPlus className="text-muted-foreground size-3.5 shrink-0" />
-                    <span className="text-muted-foreground min-w-0 flex-1 truncate">
-                      {t("Nobody has this number yet — it will be added to your contacts.")}
-                    </span>
-                  </>
-                ) : (
-                  // The slot is never empty, so it reads as a hint about the
-                  // field above rather than as a hole the messages drop into.
-                  <>
-                    <IconUserSearch className="text-muted-foreground/70 size-3.5 shrink-0" />
-                    <span className="text-muted-foreground/70 min-w-0 flex-1 truncate">
-                      {t("A number links the lead to that contact, or adds them to your contacts.")}
-                    </span>
-                  </>
-                )}
-              </div>
+                  <div className="flex min-h-9 items-center gap-2 text-xs sm:col-span-2">
+                    {linked ? (
+                      <>
+                        <IconLink className="text-primary size-3.5 shrink-0" />
+                        <span className="text-primary min-w-0 flex-1 truncate">
+                          {t("Linked to {name} — the lead opens their conversation in Inbox.", {
+                            name: linked.name,
+                          })}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setLinked(null)}
+                          className="text-muted-foreground inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
+                        >
+                          <IconLinkOff className="size-3.5" />
+                          {t("Unlink")}
+                        </button>
+                      </>
+                    ) : match ? (
+                      <>
+                        <IconUserSearch className="size-3.5 shrink-0 text-amber-600 dark:text-amber-500" />
+                        <span className="min-w-0 flex-1 truncate text-amber-700 dark:text-amber-500">
+                          {t("{name} already has this number — the lead will be linked to them.", {
+                            name: match.name,
+                          })}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            linkTo({
+                              id: match.id,
+                              name: match.name,
+                              phone: match.phone || null,
+                              email: match.email || null,
+                            })
+                          }
+                          className="text-primary inline-flex shrink-0 items-center gap-1 font-semibold hover:underline"
+                        >
+                          <IconLink className="size-3.5" />
+                          {t("Use their details")}
+                        </button>
+                      </>
+                    ) : settledPhone === lookupPhone && lookupPhone && !matching ? (
+                      <>
+                        <IconUserPlus className="text-muted-foreground size-3.5 shrink-0" />
+                        <span className="text-muted-foreground min-w-0 flex-1 truncate">
+                          {t("Nobody has this number yet — it will be added to your contacts.")}
+                        </span>
+                      </>
+                    ) : (
+                      // The slot is never empty, so it reads as a hint about the
+                      // field above rather than as a hole the messages drop into.
+                      <>
+                        <IconUserSearch className="text-muted-foreground/70 size-3.5 shrink-0" />
+                        <span className="text-muted-foreground/70 min-w-0 flex-1 truncate">
+                          {t(
+                            "A number links the lead to that contact, or adds them to your contacts.",
+                          )}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <Field
+                className="flex flex-col gap-1 sm:col-span-2"
+                data-invalid={Boolean(titleError)}
+              >
+                <FieldLabel htmlFor="add-card-title">{t("Title")}</FieldLabel>
+                <Input
+                  id="add-card-title"
+                  autoFocus
+                  placeholder={typeConfig.titlePlaceholder}
+                  value={title}
+                  maxLength={160}
+                  onChange={(event) => {
+                    setTitle(event.target.value);
+                    setTitleError(null);
+                  }}
+                  aria-invalid={Boolean(titleError)}
+                />
+                {titleError ? <FieldError>{titleError}</FieldError> : null}
+              </Field>
+
+              <Field className="flex flex-col gap-1 sm:col-span-2">
+                <FieldLabel htmlFor="add-card-description">{t("Description")}</FieldLabel>
+                <Textarea
+                  id="add-card-description"
+                  placeholder={t("Optional")}
+                  value={description}
+                  maxLength={5000}
+                  onChange={(event) => setDescription(event.target.value)}
+                  className="min-h-20"
+                />
+              </Field>
+
+              <Field className="flex flex-col gap-1">
+                <FieldLabel htmlFor="add-card-due">{t("Due date")}</FieldLabel>
+                <DatePicker
+                  id="add-card-due"
+                  value={dueDate}
+                  onChange={setDueDate}
+                  placeholder={t("No due date")}
+                  disabled={{ before: new Date() }}
+                  startMonth={new Date()}
+                  endMonth={dayjs().add(5, "year").toDate()}
+                  className="w-full"
+                />
+              </Field>
             </>
           )}
 
@@ -447,7 +557,9 @@ export function AddLeadDialog({
           ) : null}
 
           <div className="sm:col-span-2">
-            <Label className="mb-2 block">{t("Lead stage")}</Label>
+            <Label className="mb-2 block">
+              {typeConfig.cardIsCustomer ? t("Lead stage") : t("Stage")}
+            </Label>
             <ChipGroup
               options={(pipeline?.stages ?? []).map((candidate) => ({
                 value: candidate.id,
@@ -512,13 +624,82 @@ export function AddLeadDialog({
             </div>
           ) : null}
 
+          {!typeConfig.cardIsCustomer && pipeline && pipeline.labels.length > 0 ? (
+            <div className="sm:col-span-2">
+              <Label className="mb-2 block">{t("Labels")}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {pipeline.labels.map((label) => {
+                  const on = labelIds.includes(label.id);
+                  return (
+                    <button
+                      key={label.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() =>
+                        setLabelIds((current) =>
+                          on ? current.filter((id) => id !== label.id) : [...current, label.id],
+                        )
+                      }
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.75 py-1.5 text-xs font-bold transition-colors",
+                        on
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      <span
+                        className="size-2 rounded-full"
+                        style={{ backgroundColor: label.color }}
+                      />
+                      {label.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {!typeConfig.cardIsCustomer ? (
+            <div className="sm:col-span-2">
+              <button
+                type="button"
+                aria-expanded={contactOpen}
+                onClick={() => setContactOpen((current) => !current)}
+                className="text-foreground inline-flex items-center gap-1.5 text-sm font-medium"
+              >
+                <IconChevronDown
+                  className={cn("size-4 transition-transform", !contactOpen && "-rotate-90")}
+                />
+                {t("Link a contact")}
+                <span className="text-muted-foreground font-normal">
+                  {!contactOpen && contact ? contact.name : t("(optional)")}
+                </span>
+              </button>
+              {contactOpen ? (
+                <div className="mt-2">
+                  <ContactPicker
+                    value={contact}
+                    onChange={(picked) => {
+                      setContact(picked);
+                      setConflict(null);
+                    }}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {stage && stage.status !== "OPEN" ? (
             <div className="bg-primary/8 text-primary flex items-center gap-2.5 rounded-md px-3.5 py-3 sm:col-span-2">
               <IconRepeat className="size-4 shrink-0" />
               <span className="text-xs">
-                {t("{stage} is a closing column — the lead opens already closed.", {
-                  stage: stage.name,
-                })}
+                {typeConfig.cardIsCustomer
+                  ? t("{stage} is a closing column — the lead opens already closed.", {
+                      stage: stage.name,
+                    })
+                  : t("{stage} is a closing column — the card opens already closed.", {
+                      stage: stage.name,
+                    })}
               </span>
             </div>
           ) : null}
@@ -528,7 +709,7 @@ export function AddLeadDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t("Cancel")}
           </Button>
-          <Button onClick={submit} disabled={!customerReady || !stageId || saving}>
+          <Button onClick={submit} disabled={!ready || !stageId || saving}>
             {typeConfig.addCard}
           </Button>
         </DialogFooter>

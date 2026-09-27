@@ -9,7 +9,7 @@ describe("normaliseLeadParams", () => {
   test("drops empty values so one filter is one cache key", () => {
     // React Query hashes the key by walking the object: `{ search: "" }` and
     // `{}` would otherwise be two keys, and two requests, for one filter.
-    expect(normaliseLeadParams({ filter: "open", search: "", teamId: undefined })).toEqual({
+    expect(normaliseLeadParams({ filter: "open", search: "", stageId: undefined })).toEqual({
       filter: "open",
     });
   });
@@ -20,7 +20,6 @@ describe("normaliseLeadParams", () => {
         filter: "mine",
         search: "acme",
         stageId: "s1",
-        teamId: "t1",
         source: "WHATSAPP",
         assigneeId: "u1",
       }),
@@ -28,15 +27,14 @@ describe("normaliseLeadParams", () => {
       filter: "mine",
       search: "acme",
       stageId: "s1",
-      teamId: "t1",
       source: "WHATSAPP",
       assigneeId: "u1",
     });
   });
 
   test("builds the same key whatever order the caller passed", () => {
-    const a = normaliseLeadParams({ filter: "open", teamId: "t1", search: "x" });
-    const b = normaliseLeadParams({ filter: "open", search: "x", teamId: "t1" });
+    const a = normaliseLeadParams({ filter: "open", stageId: "s1", search: "x" });
+    const b = normaliseLeadParams({ filter: "open", search: "x", stageId: "s1" });
 
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
@@ -72,7 +70,6 @@ const STATS: PipelineStats = {
     { stageId: "b", total: 2, open: 2, avgDaysInStage: 1, rotting: 0 },
     { stageId: "won", total: 4, open: 0, avgDaysInStage: 1, rotting: 0 },
   ],
-  teams: [],
   sources: [],
   assignees: [],
 };

@@ -20,6 +20,7 @@ import {
   checkEmailExist,
   createAppleUser,
   createGoogleUser,
+  getAuditLogFeatures,
   getAuditLogs,
   updateActiveStatus,
   updateMemberProfile,
@@ -278,6 +279,14 @@ export const useUpdateUserAvailabilityStatus = () => {
   });
   return { ...mutation, queryClient };
 };
+
+export function useAuditLogFeatures() {
+  return useQuery({
+    queryKey: userKeys.auditLogFeatures(),
+    queryFn: getAuditLogFeatures,
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 export function useUserAuditLogs(pagination: Parameters<typeof getAuditLogs>[0]) {
   return useQuery({
