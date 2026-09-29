@@ -20,6 +20,9 @@ export const shopifyVariablePresets = [
   { label: "Draft Order Invoice URL", value: "invoice_url" },
   { label: "Checkout Recovery Link", value: "abandoned_checkout_url" },
   { label: "Cancellation Date", value: "cancelled_at" },
+  { label: "Refund Amount", value: "refund_amount" },
+  { label: "Store Credit Amount", value: "store_credit_amount" },
+  { label: "Refund Note", value: "note" },
 ];
 
 export const contactVariablePresets = [

@@ -46,6 +46,15 @@ import { shopifyEventData } from "@/utils/constants.ts";
 
 import { Input } from "../ui/input.tsx";
 
+/**
+ * Rule events with no webhook of their own to subscribe: abandoned checkouts are polled,
+ * and store credit arrives on the "On refund issued" webhook.
+ */
+const UNSUBSCRIBABLE_EVENTS = new Set([
+  ShopifyEvents.ABANDONED_CHECKOUTS,
+  ShopifyEvents.STORE_CREDIT_ISSUED,
+]);
+
 const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) => {
   const confirm = useConfirm();
   const [showEvents, setShowEvents] = useState(false);
@@ -254,7 +263,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
                   {translations("Event subscriptions")}
                 </p>
                 {shopifyEventData.map((event) =>
-                  event.value === ShopifyEvents.ABANDONED_CHECKOUTS ? null : (
+                  UNSUBSCRIBABLE_EVENTS.has(event.value) ? null : (
                     <Field
                       key={event.value}
                       orientation="horizontal"

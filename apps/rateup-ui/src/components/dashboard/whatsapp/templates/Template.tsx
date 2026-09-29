@@ -191,6 +191,28 @@ const PREDEFINED_TEMPLATES: PredefinedTemplate[] = [
     buttons: [],
     example: ["10023", "Customer", "10023", "10023", "2026-06-18", "Customer request"],
   },
+  {
+    type: "Refund Processed",
+    templateType: TemplateType.GENERAL_NOTIFICATION,
+    name: "order_refund_processed",
+    body: "Your Refund Has Been Processed\n\nHello {{1}},\n\nWe've processed a refund of {{2}} {{3}} for your order {{4}}.\n\nIt will be credited back to your original payment method within 5–7 business days.\n\nThank you,\nSupport Team",
+    description: "Confirm a refund to the customer's original payment method",
+    category: "UTILITY",
+    format: "NONE",
+    buttons: [],
+    example: ["Customer", "INR", "499.00", "#10023"],
+  },
+  {
+    type: "Store Credit Issued",
+    templateType: TemplateType.GENERAL_NOTIFICATION,
+    name: "store_credit_issued",
+    body: "Store Credit Added to Your Account 💳\n\nHello {{1}},\n\nWe've added {{2}} {{3}} in store credit to your account for order {{4}}.\n\nYou can use it on your next purchase with us.\n\nThank you,\nSupport Team",
+    description: "Tell the customer a refund was added to their store credit",
+    category: "UTILITY",
+    format: "NONE",
+    buttons: [],
+    example: ["Customer", "INR", "499.00", "#10023"],
+  },
 ];
 
 const BRAND_CHIP = { color: "text-primary", bg: "bg-primary/10 border-primary/20" };
