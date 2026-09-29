@@ -85,9 +85,9 @@ interface ApprovalRules {
 }
 
 /**
- * Mirror this reward's redemption codes into the connected Shopify store as discount codes,
- * so the customer can use the code at the shop's checkout and not only at a cashier.
- * Consumed server-side by `integrations/shopify/shopifyDiscount.service.ts`.
+ * Mirror this reward's redemption codes into the connected store as discount codes, so the
+ * customer can use the code at the shop's checkout and not only at a cashier. The same shape
+ * under `shopify` and `woocommerce`; consumed server-side by `integrations/commerce/discounts.ts`.
  */
 export interface ShopifyDiscountRules {
   enabled?: boolean;
@@ -109,6 +109,7 @@ interface RedemptionRules {
   combination_rules?: CombinationRules;
   approval_rules?: ApprovalRules;
   shopify?: ShopifyDiscountRules;
+  woocommerce?: ShopifyDiscountRules;
 }
 
 // Status type matching backend

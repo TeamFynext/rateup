@@ -255,7 +255,10 @@ const ActionValueInput = ({
     const headerFormat = selectedTemplate?.data?.components?.find(
       (c) => c.type === WaTemplateComponentTypeUpperCase.HEADER,
     )?.format;
-    const canUseProductImage = triggerEvent === "SHOPIFY_EVENT" && headerFormat === "IMAGE";
+    // WooCommerce orders carry each line item's image; Shopify's is looked up by product.
+    const canUseProductImage =
+      (triggerEvent === "SHOPIFY_EVENT" || triggerEvent === "WOOCOMMERCE_EVENT") &&
+      headerFormat === "IMAGE";
 
     return (
       <div className="space-y-3 w-full">

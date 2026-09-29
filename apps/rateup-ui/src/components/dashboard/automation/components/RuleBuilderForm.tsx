@@ -17,6 +17,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Controller, FormProvider, useFieldArray, useWatch } from "react-hook-form";
 
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
+import { getWooProducts } from "@/backend/appsIntegration/woocommerce/woocommerce.api";
 import {
   useInstagramMediaPosts,
   useInstagramStories,
@@ -37,7 +38,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { cn } from "@/lib/utils.ts";
 import { ShopifyEvents } from "@/types/enums.ts";
-import { shopifyEventData } from "@/utils/constants.ts";
+import { shopifyEventData, wooEventData } from "@/utils/constants.ts";
 
 import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
@@ -118,6 +119,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
   const isMessageReceivedTrigger = triggerEvent === "MESSAGE_RECEIVED";
   const isShopifyTrigger = triggerEvent === "SHOPIFY_EVENT";
+  const isWooTrigger = triggerEvent === "WOOCOMMERCE_EVENT";
   const isInstagramCommentTrigger = triggerEvent === "INSTAGRAM_COMMENT";
   const isInstagramStoryTrigger = triggerEvent === "INSTAGRAM_STORY_MENTION";
   const isInstagramTrigger = isInstagramCommentTrigger || isInstagramStoryTrigger;
@@ -128,6 +130,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   });
   const shopifyProductIds =
     useWatch({ control: form.control, name: "options.shopifyProductIds" }) ?? [];
+  const wooProductIds = useWatch({ control: form.control, name: "options.wooProductIds" }) ?? [];
   const instagramScope =
     useWatch({ control: form.control, name: "options.instagramScope" }) ?? "ALL";
   const selectedPhoneIds =
@@ -167,6 +170,19 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
       );
     } finally {
       setLoadingProducts(false);
+    }
+  };
+
+  const [wooProductData, setWooProductData] = useState<{ label: string; value: string }[]>([]);
+  const [loadingWooProducts, setLoadingWooProducts] = useState(false);
+
+  const loadWooProducts = async () => {
+    setLoadingWooProducts(true);
+    try {
+      const products = await getWooProducts();
+      setWooProductData(products.map((product) => ({ label: product.name, value: product.id })));
+    } finally {
+      setLoadingWooProducts(false);
     }
   };
 
@@ -222,6 +238,8 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                             ]);
                             form.setValue("options.shopifyEvent", undefined);
                             form.setValue("options.shopifyProductIds", []);
+                            form.setValue("options.wooEvent", undefined);
+                            form.setValue("options.wooProductIds", []);
                             form.setValue("options.instagramScope", "ALL");
                             form.setValue("options.instagramPostIds", []);
                           }}
@@ -416,6 +434,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                           form={form}
                           filteredTriggerEvents={filteredTriggerEvents}
                           isShopifyTrigger={isShopifyTrigger}
+                          isWooTrigger={isWooTrigger}
                         />
                       )}
                       {s === "conditions" && (
@@ -440,6 +459,11 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                           productData={productData}
                           loadingProducts={loadingProducts}
                           loadShopifyProducts={loadShopifyProducts}
+                          isWooTrigger={isWooTrigger}
+                          wooProductIds={wooProductIds}
+                          wooProductData={wooProductData}
+                          loadingWooProducts={loadingWooProducts}
+                          loadWooProducts={loadWooProducts}
                           pColor={pColor}
                         />
                       )}
@@ -491,7 +515,8 @@ const TriggerPanel: React.FC<{
   form: UseFormReturn<CreateRuleInput, unknown, CreateRuleValues>;
   filteredTriggerEvents: { label: string; value: string }[];
   isShopifyTrigger: boolean;
-}> = ({ form, filteredTriggerEvents, isShopifyTrigger }) => (
+  isWooTrigger: boolean;
+}> = ({ form, filteredTriggerEvents, isShopifyTrigger, isWooTrigger }) => (
   <div className="space-y-4">
     <Controller
       control={form.control}
@@ -507,6 +532,10 @@ const TriggerPanel: React.FC<{
               if (value !== "SHOPIFY_EVENT") {
                 form.setValue("options.shopifyEvent", undefined);
                 form.setValue("options.shopifyProductIds", []);
+              }
+              if (value !== "WOOCOMMERCE_EVENT") {
+                form.setValue("options.wooEvent", undefined);
+                form.setValue("options.wooProductIds", []);
               }
               if (value !== "INSTAGRAM_COMMENT" && value !== "INSTAGRAM_STORY_MENTION") {
                 form.setValue("options.instagramScope", "ALL");
@@ -572,6 +601,31 @@ const TriggerPanel: React.FC<{
         )}
       />
     )}
+
+    {isWooTrigger && (
+      <Controller
+        control={form.control}
+        name="options.wooEvent"
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldTitle>WooCommerce order status</FieldTitle>
+            <Select onValueChange={field.onChange} value={field.value} items={wooEventData}>
+              <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
+                <SelectValue placeholder="Select order status" />
+              </SelectTrigger>
+              <SelectContent>
+                {wooEventData.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+    )}
   </div>
 );
 
@@ -597,6 +651,11 @@ const ConditionsPanel: React.FC<{
   productData: { label: string; value: string }[];
   loadingProducts: boolean;
   loadShopifyProducts: () => void;
+  isWooTrigger: boolean;
+  wooProductIds: string[];
+  wooProductData: { label: string; value: string }[];
+  loadingWooProducts: boolean;
+  loadWooProducts: () => void;
   pColor: typeof platformColor.WHATSAPP;
 }> = ({
   form,
@@ -619,6 +678,11 @@ const ConditionsPanel: React.FC<{
   productData,
   loadingProducts,
   loadShopifyProducts,
+  isWooTrigger,
+  wooProductIds,
+  wooProductData,
+  loadingWooProducts,
+  loadWooProducts,
 }) => (
   <div className="space-y-4">
     {groupFields.length > 1 && (
@@ -805,9 +869,100 @@ const ConditionsPanel: React.FC<{
       </div>
     )}
 
+    {/* WooCommerce-specific */}
+    {isWooTrigger && (
+      <div className="space-y-4">
+        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
+          WooCommerce rules fire when an order reaches the selected status. The message goes to the
+          phone number on the order.
+        </div>
+
+        <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
+          <span className="text-sm font-semibold block">Product Filter (optional)</span>
+          <p className="text-xs text-muted-foreground">
+            The rule triggers if the order contains any selected product.
+          </p>
+
+          {wooProductIds.map((_, index: number) => (
+            <div key={index} className="flex items-end gap-2 mt-2">
+              <Controller
+                control={form.control}
+                name={`options.wooProductIds.${index}`}
+                render={({ field, fieldState }) => (
+                  <Field className="flex-1" data-invalid={fieldState.invalid}>
+                    <FieldTitle>Product {index + 1}</FieldTitle>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                      items={wooProductData}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {wooProductData.map((prod) => (
+                          <SelectItem key={prod.value} value={prod.value}>
+                            {prod.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Button
+                aria-label="Delete"
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const next = wooProductIds.filter((_, i: number) => i !== index);
+                  form.setValue("options.wooProductIds", next);
+                }}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <IconTrash className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                form.setValue("options.wooProductIds", [...wooProductIds, ""]);
+                if (!wooProductData.length) loadWooProducts();
+              }}
+            >
+              <IconPlus className="w-4 h-4 mr-2" />
+              Add product
+            </Button>
+            <Button
+              aria-label="Refresh products"
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={loadWooProducts}
+              disabled={loadingWooProducts}
+              title="Refresh products"
+            >
+              {loadingWooProducts ? (
+                <IconLoader2 className="animate-spin h-4 w-4" />
+              ) : (
+                <IconRefresh size={18} />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* Standard condition blocks */}
     {!isInstagramStoryTrigger &&
       !isShopifyTrigger &&
+      !isWooTrigger &&
       groupFields.map((group, groupIndex: number) => (
         <div key={group.id} className="rounded-xl border p-4 bg-muted/20">
           <div className="flex items-center justify-between mb-3 pb-3 border-b">

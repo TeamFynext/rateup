@@ -3,6 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useId, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+// Hidden until WooCommerce and HubSpot launch — uncomment to show.
+// import { useWooStatus } from "@/backend/appsIntegration/woocommerce/woocommerce.query";
 import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import {
   useDeleteWaCatalog,
@@ -14,6 +16,7 @@ import {
   useSyncProductSets,
 } from "@/backend/whatsapp/catalog/productSet.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+// import { WooCommerceLogo } from "@/components/integrations/logos.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
@@ -28,7 +31,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal.tsx";
+import { ImportStoreProductsModal } from "@/components/whatsapp/catalog/products/ImportStoreProductsModal.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
@@ -240,6 +243,8 @@ const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
 const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) => {
   const catalogId = catalogData?.catalogId;
   const [shopifyImportOpened, { close: closeShopifyImport }] = useDisclosure(false);
+  // const [wooImportOpened, { open: openWooImport, close: closeWooImport }] = useDisclosure(false);
+  // const { data: wooStatus } = useWooStatus();
 
   return (
     <div className="flex flex-col gap-2 mt-4">
@@ -273,11 +278,37 @@ const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) =
       </div>
       */}
 
-      <ImportFromShopifyModal
+      {/* Hidden until WooCommerce and HubSpot launch — uncomment to show.
+      Shown only with a store connected; its products stay current through product.updated.
+      {wooStatus?.connected && (
+        <div className="flex justify-between items-center gap-3 p-3 border border-border rounded-lg bg-muted">
+          <div className="flex flex-col gap-1">
+            <p className="font-medium text-sm">Import from WooCommerce</p>
+            <p className="text-xs text-muted-foreground">
+              Pick products from your store to add to this catalog. Price, stock and details stay in
+              step when you change them in WooCommerce.
+            </p>
+          </div>
+          <Button className="w-fit shrink-0" onClick={openWooImport} disabled={!catalogId}>
+            <WooCommerceLogo className="size-4" />
+            Import from WooCommerce
+          </Button>
+        </div>
+      )}
+      */}
+
+      <ImportStoreProductsModal
         catalogId={catalogId}
+        source="shopify"
         opened={shopifyImportOpened}
         onClose={closeShopifyImport}
       />
+      {/* <ImportStoreProductsModal
+        catalogId={catalogId}
+        source="woocommerce"
+        opened={wooImportOpened}
+        onClose={closeWooImport}
+      /> */}
     </div>
   );
 };

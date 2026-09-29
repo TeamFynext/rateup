@@ -6,7 +6,11 @@ import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 
 import { Field, FieldLabel } from "../ui/field.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { contactVariablePresets, shopifyVariablePresets } from "./shopifyVariables.ts";
+import {
+  contactVariablePresets,
+  shopifyVariablePresets,
+  wooVariablePresets,
+} from "./shopifyVariables.ts";
 
 interface VariableMappingProps {
   waTemplateId: string;
@@ -19,17 +23,19 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
   const uid = useId();
   const { data: template, isLoading } = useWaTemplateById(waTemplateId);
   const isShopify = triggerEvent === "SHOPIFY_EVENT";
+  const isWoo = triggerEvent === "WOOCOMMERCE_EVENT";
   const { data: customFields } = useCustomFields();
 
   const variableOptions = useMemo(() => {
     if (isShopify) return shopifyVariablePresets;
+    if (isWoo) return wooVariablePresets;
     const customOptions =
       customFields?.map((cf) => ({
         label: `Custom: ${cf.name}`,
         value: `contact.custom.${cf.id}`,
       })) ?? [];
     return [...contactVariablePresets, ...customOptions];
-  }, [isShopify, customFields]);
+  }, [isShopify, isWoo, customFields]);
 
   const variables = useMemo(() => {
     if (!template?.data?.components) return [];
@@ -72,7 +78,9 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
         <p className="text-sm text-muted-foreground">
           {isShopify
             ? "Map your WhatsApp template variables to Shopify data."
-            : "Map your WhatsApp template variables to contact fields."}
+            : isWoo
+              ? "Map your WhatsApp template variables to WooCommerce order data."
+              : "Map your WhatsApp template variables to contact fields."}
         </p>
       </div>
       <Field className="grid sm:grid-cols-2">
@@ -92,7 +100,13 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
               >
                 <SelectTrigger id={`${uid}-variable-e-g-${i}`} className="h-9">
                   <SelectValue
-                    placeholder={isShopify ? "Select Shopify Field" : "Select Contact Field"}
+                    placeholder={
+                      isShopify
+                        ? "Select Shopify Field"
+                        : isWoo
+                          ? "Select WooCommerce Field"
+                          : "Select Contact Field"
+                    }
                   />
                 </SelectTrigger>
                 <SelectContent>

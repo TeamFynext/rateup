@@ -22,6 +22,25 @@ export const shopifyVariablePresets = [
   { label: "Cancellation Date", value: "cancelled_at" },
 ];
 
+/** Paths into a WooCommerce order (REST v3), plus the two the API computes. */
+export const wooVariablePresets = [
+  { label: "Order Number", value: "number" },
+  { label: "Customer Name", value: "customer_name" },
+  { label: "Customer First Name", value: "billing.first_name" },
+  { label: "Customer Last Name", value: "billing.last_name" },
+  { label: "Customer Email", value: "billing.email" },
+  { label: "Order Total", value: "total" },
+  { label: "Currency", value: "currency" },
+  { label: "Items", value: "items" },
+  { label: "Order Status", value: "status" },
+  { label: "Payment Method", value: "payment_method_title" },
+  { label: "Shipping Method", value: "shipping_lines.0.method_title" },
+  { label: "Order Date", value: "date_created" },
+  { label: "Shipping City", value: "shipping.city" },
+  { label: "Billing City", value: "billing.city" },
+  { label: "Customer Note", value: "customer_note" },
+];
+
 export const contactVariablePresets = [
   { label: "Contact Name", value: "contact.name" },
   { label: "Contact Email", value: "contact.email" },

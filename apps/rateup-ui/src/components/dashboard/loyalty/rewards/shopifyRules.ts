@@ -22,6 +22,27 @@ export function shopifyRulesFrom(data: ShopifyFormFields): ShopifyDiscountRules 
   };
 }
 
+/** The two WooCommerce fields, the same pair under their own names. */
+export interface WooFormFields {
+  wooDiscountEnabled?: boolean;
+  wooValidForDays?: number;
+}
+
+/** `redemptionRules.woocommerce`: each redemption code becomes a one-use WooCommerce coupon. */
+export function wooRulesFrom(data: WooFormFields): ShopifyDiscountRules {
+  return shopifyRulesFrom({
+    shopifyDiscountEnabled: data.wooDiscountEnabled,
+    shopifyValidForDays: data.wooValidForDays,
+  });
+}
+
+export function wooRulesToForm(rules: ShopifyDiscountRules | undefined): WooFormFields {
+  return {
+    wooDiscountEnabled: !!rules?.enabled,
+    wooValidForDays: rules?.valid_for_days || undefined,
+  };
+}
+
 /** The same rules back as form values, for the edit screen. */
 export function shopifyRulesToForm(rules: ShopifyDiscountRules | undefined): ShopifyFormFields {
   return {

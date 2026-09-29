@@ -8,7 +8,9 @@ import {
   deleteCatalogProducts,
   getCatalogProducts,
   getShopifyAvailableProducts,
+  getWooAvailableProducts,
   importShopifyProducts,
+  importWooProducts,
   syncCatalogProducts,
   syncShopifyProductsWithCatalog,
   updateCatalogProducts,
@@ -84,6 +86,27 @@ export const useImportShopifyProducts = (catalogId: string) => {
       qc.invalidateQueries({
         queryKey: ["shopify_available_products", catalogId],
       });
+    },
+  });
+};
+
+export const useWooAvailableProducts = (catalogId: string, enabled: boolean) => {
+  return useQuery({
+    queryFn: () => getWooAvailableProducts(catalogId),
+    queryKey: ["woo_available_products", catalogId],
+    enabled: !!catalogId && enabled,
+    staleTime: 0,
+    gcTime: 0,
+  });
+};
+
+export const useImportWooProducts = (catalogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (items: RequestPayload[]) => importWooProducts(catalogId, items),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
+      qc.invalidateQueries({ queryKey: ["woo_available_products", catalogId] });
     },
   });
 };

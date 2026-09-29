@@ -8,6 +8,12 @@ import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { useZohoPipelines, useZohoUsers } from "@/backend/appsIntegration/zoho/zoho.query";
 import RefreshButton from "@/components/Button/RefreshButton";
+import {
+  FieldMappingEditor,
+  type MappableField,
+  type MappableFieldType,
+} from "@/components/dashboard/settings/integrations/mapping/FieldMappingEditor.tsx";
+import { StageMappingEditor } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { Button } from "@/components/ui/button";
@@ -25,9 +31,21 @@ import {
   DialogTitle,
 } from "../../ui/dialog";
 import { Field, FieldDescription, FieldLabel } from "../../ui/field";
-import { Input } from "../../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { ZohoTriggers, getTriggerLabel, getTriggerDescription } from "./shared.tsx";
+
+/**
+ * Bigin's data types onto the ways the shared field editor fills a field. A date is stored
+ * as days from today. A picklist is typed, since Bigin's pipeline response carries no
+ * choices. Anything else has no input, as it never had.
+ */
+const BIGIN_FIELD_TYPES: Record<string, MappableFieldType | undefined> = {
+  date: "days",
+  text: "text",
+  email: "text",
+  phone: "text",
+  picklist: "picklist",
+};
 
 export const ZohoTriggerList = ({
   integration,
@@ -246,6 +264,7 @@ export const ZohoTriggerList = ({
       : []),
   ];
 
+  // Filled in by the push itself, so never offered here.
   const autoManagedFields = [
     "Deal_Name",
     "Stage",
@@ -254,6 +273,15 @@ export const ZohoTriggerList = ({
     "Contact_Name",
     "Lead_Source",
   ];
+
+  const requiredFields: MappableField[] = (selectedPipeline?.requiredFields ?? [])
+    .filter((field) => !autoManagedFields.includes(field.apiName))
+    .flatMap((field) => {
+      const type = field.dataType ? BIGIN_FIELD_TYPES[field.dataType] : undefined;
+      return field.apiName && type
+        ? [{ key: field.apiName, label: field.label ?? field.apiName, type }]
+        : [];
+    });
 
   return (
     <div className="space-y-6 w-full">
@@ -472,7 +500,7 @@ export const ZohoTriggerList = ({
             </div>
 
             {/* REQUIRED FIELDS */}
-            {(selectedPipeline?.requiredFields?.length ?? 0) > 0 && (
+            {requiredFields.length > 0 && (
               <div className="flex flex-col gap-4 rounded-lg border bg-muted/30 p-4">
                 <div>
                   <h3 className="font-display text-base font-medium">{t("Required fields")}</h3>
@@ -482,61 +510,13 @@ export const ZohoTriggerList = ({
                   </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  {(selectedPipeline?.requiredFields ?? [])
-                    .filter((field) => !autoManagedFields.includes(field.apiName))
-                    .map((field) => (
-                      <Field key={field.apiName}>
-                        <FieldLabel>{field.label}</FieldLabel>
-
-                        {field.dataType === "date" && (
-                          <Input
-                            type="number"
-                            min={0}
-                            placeholder={t("Enter number of days from today")}
-                            value={requiredFieldValues[field.apiName] || ""}
-                            onChange={(e) =>
-                              setRequiredFieldValues((prev) => ({
-                                ...prev,
-
-                                [field.apiName]: e.target.value,
-                              }))
-                            }
-                          />
-                        )}
-
-                        {(field.dataType === "text" ||
-                          field.dataType === "email" ||
-                          field.dataType === "phone") && (
-                          <Input
-                            value={requiredFieldValues[field.apiName] || ""}
-                            placeholder={t("Enter value")}
-                            onChange={(e) =>
-                              setRequiredFieldValues((prev) => ({
-                                ...prev,
-
-                                [field.apiName]: e.target.value,
-                              }))
-                            }
-                          />
-                        )}
-
-                        {field.dataType === "picklist" && (
-                          <Input
-                            placeholder={t("Enter value")}
-                            value={requiredFieldValues[field.apiName] || ""}
-                            onChange={(e) =>
-                              setRequiredFieldValues((prev) => ({
-                                ...prev,
-
-                                [field.apiName]: e.target.value,
-                              }))
-                            }
-                          />
-                        )}
-                      </Field>
-                    ))}
-                </div>
+                <FieldMappingEditor
+                  fields={requiredFields}
+                  value={requiredFieldValues}
+                  onChange={(key, value) =>
+                    setRequiredFieldValues((prev) => ({ ...prev, [key]: value }))
+                  }
+                />
               </div>
             )}
 
@@ -584,59 +564,42 @@ export const ZohoTriggerList = ({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-            {(() => {
-              const unmatchedStages = stages.filter(
-                (stage) =>
-                  !stageMappings.some(
-                    (mapping) => String(mapping.biginStageId) === String(stage.id),
+          <div className="max-h-[60vh] overflow-y-auto pr-2">
+            <StageMappingEditor
+              rows={pipelineStages.map((stage) => ({ id: stage.id, label: stage.name }))}
+              options={stages.map((stage) => ({ value: String(stage.id), label: stage.name }))}
+              value={Object.fromEntries(
+                stageMappings.map((mapping) => [
+                  mapping.stageId,
+                  mapping.biginStageId || undefined,
+                ]),
+              )}
+              onChange={(stageId, biginStageId) => {
+                const stage = stages.find((s) => String(s.id) === biginStageId);
+                setStageMappings((prev) =>
+                  prev.map((mapping) =>
+                    mapping.stageId === stageId
+                      ? {
+                          ...mapping,
+                          // Saved as "" when cleared, as it always was: the push reads an
+                          // empty id as "no stage for this column".
+                          biginStageId: stage?.id === undefined ? "" : String(stage.id),
+                          biginStageName: stage?.name ?? "",
+                        }
+                      : mapping,
                   ),
-              );
-
-              return (
-                <div className="rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
-                  {t("Unmatched stages left")}:{" "}
-                  <span className="font-semibold">{unmatchedStages.length}</span>
-                </div>
-              );
-            })()}
-            {stageMappings.map((mapping, index) => (
-              <div key={mapping.stageId} className="flex items-center gap-4 rounded-xl border p-4">
-                <div className="flex-1">
-                  <FieldLabel>{mapping.stageName}</FieldLabel>
-                </div>
-
-                <Select
-                  value={mapping.biginStageId}
-                  onValueChange={(value) => {
-                    const stage = stages.find((s) => String(s.id) === String(value));
-                    const updated = [...stageMappings];
-                    updated[index] = {
-                      ...mapping,
-                      biginStageId: stage?.id === undefined ? undefined : String(stage.id),
-                      biginStageName: stage?.name,
-                    };
-                    setStageMappings(updated);
-                  }}
-                  items={stages.map((stage) => ({
-                    value: String(stage.id),
-                    label: stage.name,
-                  }))}
-                >
-                  <SelectTrigger className="w-[240px]">
-                    <SelectValue placeholder="Select stage" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {stages.map((stage) => (
-                      <SelectItem key={stage.id} value={String(stage.id)}>
-                        {stage.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
+                );
+              }}
+              rowsLabel={t("Pipeline column")}
+              optionsLabel={t("Bigin stage")}
+              placeholder={t("Select stage")}
+              summary={(count, total) =>
+                t(
+                  "{count} of {total} columns have no Bigin stage. Moving a lead into one updates its deal in Bigin, but not the deal's stage.",
+                  { count, total },
+                )
+              }
+            />
           </div>
 
           <DialogFooter>

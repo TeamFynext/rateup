@@ -122,6 +122,24 @@ describe("coupons", () => {
     expect(payload.redemptionRules?.shopify).toEqual({ enabled: true });
   });
 
+  test("a WooCommerce-synced coupon stores no fixed code, and round-trips its switch", () => {
+    const payload = couponPayload(
+      couponSchema.parse({
+        ...BLANK_COUPON,
+        name: "10 off",
+        couponCode: "",
+        wooDiscountEnabled: true,
+      }),
+    );
+    expect(payload.rewardValue.code).toBeUndefined();
+    expect(payload.redemptionRules?.woocommerce).toEqual({ enabled: true });
+    expect(payload.redemptionRules?.shopify).toEqual({ enabled: false });
+    expect(
+      couponFormValues(reward({ rewardType: "coupon", redemptionRules: payload.redemptionRules }))
+        .wooDiscountEnabled,
+    ).toBe(true);
+  });
+
   test("validity dates round-trip as date keys", () => {
     const values = couponFormValues(
       reward({

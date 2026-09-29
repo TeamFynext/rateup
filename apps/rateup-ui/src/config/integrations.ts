@@ -41,6 +41,9 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     slug: "woocommerce",
     name: "WooCommerce",
     role: "Orders & customers",
+    // Hidden until WooCommerce and HubSpot launch — uncomment to show. (the launch copy)
+    // description:
+    //   "Connect your store in a few clicks: WhatsApp messages on order status changes, loyalty points on completed orders, rewards as checkout coupons, and your catalog on WhatsApp.",
     description:
       "Connect your WooCommerce store to sync orders and customers, trigger post-purchase feedback and award loyalty points on every paid order.",
     logo: `${imagesPath}/landing/logos/woo.png`,

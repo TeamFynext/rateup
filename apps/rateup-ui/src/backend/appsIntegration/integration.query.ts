@@ -12,10 +12,13 @@ import {
   deleteIntegration,
   deleteWaPaymentConfiguration,
   deleteZapierTriggerHook,
+  finishOAuthConnect,
   getAllIntegrations,
   getGoogleSheetAuthorizationUrl,
+  getIntegrationActivity,
   getIntegrationByType,
   getIntegrationStatuses,
+  getOAuthAuthorizeUrl,
   getWaPaymentConfigurationByName,
   getWaPaymentConfigurations,
   regenerateWaPaymentConfigurationOauth,
@@ -208,5 +211,38 @@ export const useIntegrationStatuses = () => {
   return useQuery({
     queryKey: ["integrationStatuses"],
     queryFn: getIntegrationStatuses,
+  });
+};
+
+/** The Sync activity panel's data: the integration's health and its recent lead entries. */
+export const useIntegrationActivity = (name: string, enabled = true) => {
+  return useQuery({
+    queryKey: [...integrationKeys.byType(name), "activity"],
+    queryFn: () => getIntegrationActivity(name),
+    enabled,
+  });
+};
+
+/** Fetches a signed authorize URL and leaves for the provider's consent screen. */
+export const useStartOAuthConnect = (name: string) => {
+  return useMutation({
+    mutationFn: () => getOAuthAuthorizeUrl(name),
+    onSuccess: ({ url }) => {
+      window.location.assign(url);
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Could not start connecting", { id: `oauth-start-${name}` });
+    },
+  });
+};
+
+export const useFinishOAuthConnect = (name: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { code: string; state: string }) => finishOAuthConnect(name, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: integrationKeys.byType(name) });
+      queryClient.invalidateQueries({ queryKey: ["integrationStatuses"] });
+    },
   });
 };

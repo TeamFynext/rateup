@@ -514,6 +514,8 @@ export enum IntegratedApps {
   zapier = "zapier",
   zoho = "zoho",
   getlead = "getlead",
+  woocommerce = "woocommerce",
+  hubspot = "hubspot",
 }
 export enum PhotoSource {
   cameraGallery = "camera_gallery",

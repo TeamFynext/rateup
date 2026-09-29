@@ -1,12 +1,14 @@
 import { z } from "zod";
 
 import { MessagePlatform, ShopifyEvents } from "@/types/enums.ts";
+import { wooEventData, type WooEvent } from "@/utils/constants.ts";
 
 /** The `value`s of an option list, as the non-empty tuple `z.enum` expects. */
 const optionValues = (options: readonly { value: string }[]) =>
   options.map((option) => option.value) as [string, ...string[]];
 
 const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents) as [ShopifyEvents, ...ShopifyEvents[]];
+const WOO_TRIGGER_EVENTS = wooEventData.map((event) => event.value) as [WooEvent, ...WooEvent[]];
 
 // Single source of truth for condition fields
 export const CONDITION_FIELDS = [
@@ -82,6 +84,12 @@ const TRIGGER_EVENTS = [
     value: "SHOPIFY_EVENT",
     platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
   },
+  // Hidden until WooCommerce and HubSpot launch — uncomment to show.
+  // {
+  //   label: "WooCommerce Event",
+  //   value: "WOOCOMMERCE_EVENT",
+  //   platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  // },
   {
     label: "Instagram Comment (Private Reply)",
     value: "INSTAGRAM_COMMENT",
@@ -300,6 +308,9 @@ const ruleOptionsSchema = z.object({
     }),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).default([]),
+  // WooCommerce-specific options
+  wooEvent: z.enum(WOO_TRIGGER_EVENTS).optional(),
+  wooProductIds: z.array(z.string()).default([]),
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).default("ALL"),
   instagramPostIds: z.array(z.string()).default([]),
@@ -340,6 +351,8 @@ const createRuleBaseSchema = z.object({
       businessHoursId: undefined,
     },
     shopifyProductIds: [],
+    wooEvent: undefined,
+    wooProductIds: [],
     instagramScope: "ALL",
     instagramPostIds: [],
   }),
@@ -361,6 +374,14 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
       code: "custom",
       path: ["options", "shopifyEvent"],
       message: "Select a Shopify event",
+    });
+  }
+
+  if (data.triggerEvent === "WOOCOMMERCE_EVENT" && !data.options?.wooEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "wooEvent"],
+      message: "Select a WooCommerce order status",
     });
   }
 

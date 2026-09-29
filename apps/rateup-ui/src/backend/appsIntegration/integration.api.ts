@@ -156,8 +156,67 @@ export async function getAllIntegrations() {
   return (await axiosClient.get(`${ROUTE_URL}all`)).data as AppIntegration[];
 }
 
+/** One row per known integration, connected or not. */
+export interface IntegrationStatus {
+  name: IntegratedApps;
+  isConnected: boolean;
+  /**
+   * Jobs whose final retry failed since the last success. Any at all means a sync was lost,
+   * so the list flags the card.
+   */
+  consecutiveFailures: number;
+  lastErrorAt: string | null;
+}
+
 export async function getIntegrationStatuses() {
-  return (await axiosClient.get(`${ROUTE_URL}statuses`)).data;
+  return (await axiosClient.get(`${ROUTE_URL}statuses`)).data as IntegrationStatus[];
+}
+
+export interface IntegrationHealth {
+  consecutiveFailures: number;
+  lastError: string | null;
+  lastErrorAt: string | null;
+}
+
+/** A sync entry an integration left on a lead's timeline. */
+export interface IntegrationActivityEntry {
+  id: string;
+  type: "INTEGRATION_SYNCED" | "INTEGRATION_SKIPPED" | "INTEGRATION_RECEIVED" | (string & {});
+  createdAt: string;
+  details: {
+    integrationName?: string;
+    externalId?: string;
+    externalCreated?: boolean;
+    inboundCreated?: boolean;
+    statusRejected?: boolean;
+    toStageName?: string;
+    statusName?: string;
+    skipReason?: string;
+    sourceLabel?: string;
+  } | null;
+  lead: { id: string; name: string; pipelineId: string };
+}
+
+export interface IntegrationActivity {
+  health: IntegrationHealth;
+  entries: IntegrationActivityEntry[];
+}
+
+export async function getIntegrationActivity(name: string) {
+  return (await axiosClient.get(`${ROUTE_URL}${name}/activity`)).data as IntegrationActivity;
+}
+
+/** Where to send the browser to start an OAuth connect; the state is signed server-side. */
+export async function getOAuthAuthorizeUrl(name: string) {
+  return (await axiosClient.get(`${ROUTE_URL}${name}/oauth/authorize-url`)).data as {
+    url: string;
+  };
+}
+
+export async function finishOAuthConnect(name: string, data: { code: string; state: string }) {
+  return (await axiosClient.post(`${ROUTE_URL}${name}/oauth/callback`, data)).data as {
+    success: true;
+  };
 }
 
 export async function deleteZapierTriggerHook(data: RequestPayload) {

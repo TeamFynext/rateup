@@ -330,6 +330,21 @@ export const WHATSAPP_TEMPLATE_LANGUAGE = [
   { label: "Zulu", value: "zu" },
 ];
 
+/**
+ * WooCommerce order statuses an automation rule can fire on. The value is WooCommerce's own
+ * status slug, which is what the API matches.
+ */
+export const wooEventData = [
+  { label: "Order processing (paid)", value: "processing" },
+  { label: "Order completed", value: "completed" },
+  { label: "Order on hold", value: "on-hold" },
+  { label: "Order cancelled", value: "cancelled" },
+  { label: "Order refunded", value: "refunded" },
+  { label: "Payment failed", value: "failed" },
+] as const;
+
+export type WooEvent = (typeof wooEventData)[number]["value"];
+
 export const shopifyEventData = [
   { label: "On Orders create", value: ShopifyEvents.ORDERS_CREATE },
   { label: "On Orders fulfilled", value: ShopifyEvents.ORDERS_FULFILLED },

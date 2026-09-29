@@ -335,6 +335,18 @@ const pageMetadata = {
       "Store webhooks become WhatsApp messages: order updates, checkout recovery, loyalty points on paid orders and a post-delivery feedback Flow.",
     sitemap: { priority: "0.8", changefreq: "monthly" },
   },
+  "/integrations/woocommerce": {
+    title: "WooCommerce WhatsApp Integration: Orders, Loyalty & Coupons | RateUp",
+    description:
+      "Connect WooCommerce to WhatsApp without a plugin. Order status messages, loyalty points on completed orders, rewards as one-use checkout coupons and a WhatsApp catalog that follows your store.",
+    ogTitle: "WooCommerce WhatsApp Integration: Orders, Loyalty & Coupons",
+    ogDescription:
+      "Order status changes become WhatsApp messages; completed orders earn loyalty points and rewards work as WooCommerce coupons.",
+    // Hidden until WooCommerce and HubSpot launch — uncomment to show. (restore the sitemap entry, drop noindex)
+    // sitemap: { priority: "0.8", changefreq: "monthly" },
+    sitemap: false,
+    noindex: true,
+  },
 } as const satisfies Record<string, PageMetadata>;
 
 export type PagePath = keyof typeof pageMetadata;

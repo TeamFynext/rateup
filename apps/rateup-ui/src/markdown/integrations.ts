@@ -1,3 +1,10 @@
+// Hidden until WooCommerce and HubSpot launch — uncomment to show. On launch, add "/integrations/woocommerce" to the list below and replace the
+// WooCommerce bullet with:
+// - **WooCommerce** — connect with your store address, no plugin. WhatsApp messages on order status
+//   changes (processing, completed, on hold, cancelled, refunded, failed), loyalty points on completed
+//   orders, rewards as one-use checkout coupons, new customers as contacts, and products in the
+//   WhatsApp catalog kept up to date. See /integrations/woocommerce
+//
 // Markdown variant of /integrations and /integrations/shopify, served to clients that ask for
 // `Accept: text/markdown` via `createMarkdownMiddleware`.
 
