@@ -28,6 +28,9 @@ export const SCHEDULED_JOBS = [
   // delivery webhooks land, so recognising a finished send still needs a sweep.
   { id: "campaignSettle", pattern: "*/5 * * * *", tz: "Etc/UTC" },
   { id: "hourlyJobs", pattern: "0 * * * *" },
+  // Abandoned-checkout automation rules. Shopify has no webhook for it, so this polls;
+  // a checkout qualifies after an hour idle, so a 15-minute tick sends within 60–75 min.
+  { id: "shopifyAbandonedCheckoutRules", pattern: "*/15 * * * *", tz: "Etc/UTC" },
   { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   // Cycles legacy non-expiring Shopify tokens (rejected from 2027-01-01) and keeps
   // idle shops' 90-day refresh tokens from lapsing; in-use tokens renew on demand.

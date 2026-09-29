@@ -16,6 +16,7 @@ export const ShopifyOrderWebhookTopicEventMap = [
     key: ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED,
     value: "fulfillment_orders/cancelled",
   },
+  { key: ShopifyEvents.REFUNDS_CREATE, value: "refunds/create" },
 ];
 
 export function getScheduledTime(sendAfter: ShopifySendAfter | undefined) {

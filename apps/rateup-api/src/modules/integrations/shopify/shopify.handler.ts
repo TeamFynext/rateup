@@ -155,6 +155,25 @@ export async function fulfillmentOrderCancelledHandler(
   await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
+export async function refundCreateHandler(
+  topic: string,
+  shop: string,
+  webhookRequestBody: string,
+  webhookId: string,
+  _apiVersion?: string,
+  _context?: unknown,
+) {
+  log.info(`handling webhook ${topic} for ${shop} shop`);
+  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
+}
+
 export async function customersDataRequestHandler(
   topic: string,
   shop: string,
@@ -271,6 +290,13 @@ export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: WEBHOOK_API_ROUTE,
       callback: fulfillmentOrderCancelledHandler,
+    },
+  ],
+  REFUNDS_CREATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: refundCreateHandler,
     },
   ],
 };

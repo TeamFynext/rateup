@@ -18,6 +18,7 @@ import { sendCampaignCronAction } from "../../../modules/campaign/campaign.servi
 import {
   sendShopifySurveyCronAction,
   sendTemplateForShopifyAbandonedCheckouts,
+  triggerShopifyAbandonedCheckoutRules,
 } from "../../../modules/integrations/shopify/shopify.service.js";
 import { renewShopifyTokensCronAction } from "../../../modules/integrations/shopify/shopify.session.js";
 import { refreshZohoTokensAndWebhooks } from "../../../modules/integrations/external/zoho/zoho.service.js";
@@ -78,6 +79,10 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
       "sendTemplateForShopifyAbandonedCheckouts",
       sendTemplateForShopifyAbandonedCheckouts,
     );
+  },
+
+  shopifyAbandonedCheckoutRules: async () => {
+    await safeRun("triggerShopifyAbandonedCheckoutRules", triggerShopifyAbandonedCheckoutRules);
   },
 
   shopifyTokenRenewal: async () => {

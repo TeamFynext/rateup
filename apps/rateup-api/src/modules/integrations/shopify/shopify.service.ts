@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma.js";
+import redisConnection from "../../../utils/redisConnection.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import shopify from "./shopify.config.js";
 import { getActiveShopifySession } from "./shopify.session.js";
@@ -1117,6 +1118,9 @@ export async function handleWebhook(webhook: ShopifyWebhookJobData) {
     case ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED:
       await handleShopifyOrderEvents(webhook);
       break;
+    case ShopifyEvents.REFUNDS_CREATE:
+      await handleShopifyRefundEvent(webhook);
+      break;
     case ShopifyEvents.APP_UNINSTALLED:
       await handleShopifyAppUnistalled(webhook);
       break;
@@ -1359,6 +1363,166 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
   });
 }
 
+/** The gateway Shopify records on the transaction when a refund goes to store credit. */
+const STORE_CREDIT_GATEWAY = "shopify_store_credit";
+
+/** The refunds/create fields read here; the rest is left to the index signature. */
+interface ShopifyRefundWebhookBody {
+  id?: number | string;
+  order_id?: number | string;
+  note?: string | null;
+  created_at?: string;
+  transactions?: { kind?: string; status?: string; gateway?: string; amount?: string }[];
+  refund_line_items?: {
+    quantity?: number;
+    line_item?: { product_id?: number | null; title?: string };
+  }[];
+}
+
+interface RefundOrderData {
+  order: {
+    name: string;
+    email: string | null;
+    phone: string | null;
+    currencyCode: string;
+    customer: {
+      firstName: string | null;
+      lastName: string | null;
+      defaultEmailAddress: { emailAddress: string } | null;
+      defaultPhoneNumber: { phoneNumber: string } | null;
+      defaultAddress: { phone: string | null } | null;
+    } | null;
+    billingAddress: { phone: string | null; city: string | null } | null;
+    shippingAddress: { phone: string | null; city: string | null } | null;
+  } | null;
+}
+
+/**
+ * refunds/create. One refund can send money back to the original payment method and to
+ * store credit at once, so it raises up to two rule events — REFUNDS_CREATE for the
+ * original-method part and STORE_CREDIT_ISSUED for the store credit part — each carrying
+ * only its own amount as `refund_amount`.
+ *
+ * The payload names the order but not the customer, so the order is looked up for the
+ * phone, name and currency the rules and their variables need.
+ */
+export async function handleShopifyRefundEvent(webhook: ShopifyWebhookJobData) {
+  const { shop } = webhook;
+  const body = webhook.body as ShopifyRefundWebhookBody;
+
+  // Summed in paise/cents so a split refund's two parts add up exactly.
+  let originalCents = 0;
+  let storeCreditCents = 0;
+  for (const transaction of body.transactions ?? []) {
+    if (transaction.kind !== "refund" || transaction.status !== "success") continue;
+    const cents = Math.round(Number(transaction.amount ?? 0) * 100);
+    if (transaction.gateway === STORE_CREDIT_GATEWAY) storeCreditCents += cents;
+    else originalCents += cents;
+  }
+  const events = [
+    { event: ShopifyEvents.REFUNDS_CREATE, cents: originalCents },
+    { event: ShopifyEvents.STORE_CREDIT_ISSUED, cents: storeCreditCents },
+  ].filter((e) => e.cents > 0);
+  // A restock-only refund moves no money, and there is nothing to tell the customer.
+  if (!events.length || !body.order_id) return;
+
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) {
+    log.trace(`No shopify session found`);
+    return;
+  }
+  if (!shopify) throw new Error("Shopify integration is not configured");
+  const client = new shopify.clients.Graphql({
+    session: await getActiveShopifySession(shopifyInfo),
+  });
+  const res: GraphQLClientResponse<RefundOrderData> = await client.request(
+    `query RefundOrder($id: ID!) {
+  order(id: $id) {
+    name
+    email
+    phone
+    currencyCode
+    customer {
+      firstName
+      lastName
+      defaultEmailAddress { emailAddress }
+      defaultPhoneNumber { phoneNumber }
+      defaultAddress { phone }
+    }
+    billingAddress { phone city }
+    shippingAddress { phone city }
+  }
+}`,
+    { variables: { id: `gid://shopify/Order/${body.order_id}` } },
+  );
+  const order = res.data?.order;
+  if (!order) {
+    log.info({ shop, orderId: body.order_id }, "Shopify refund's order not found");
+    return;
+  }
+
+  const customerPhone =
+    order.customer?.defaultPhoneNumber?.phoneNumber ||
+    order.phone ||
+    order.customer?.defaultAddress?.phone ||
+    order.billingAddress?.phone ||
+    order.shippingAddress?.phone;
+  if (!customerPhone) {
+    log.info(
+      { shop, orderId: body.order_id, refundId: body.id },
+      "Shopify refund's order carries no phone number; automation paths skipped",
+    );
+    return;
+  }
+
+  const email = order.customer?.defaultEmailAddress?.emailAddress ?? order.email;
+  const refundLineItems = body.refund_line_items ?? [];
+  const productIds = refundLineItems.flatMap((item) =>
+    item.line_item?.product_id ? [`gid://shopify/Product/${item.line_item.product_id}`] : [],
+  );
+  // The snake_case order shape rule variables are mapped against, so "Order Name",
+  // "Customer First Name" and "Currency" resolve as they do for order events.
+  const ruleBody = {
+    id: body.id,
+    order_id: body.order_id,
+    name: order.name,
+    note: body.note ?? "",
+    created_at: body.created_at,
+    currency: order.currencyCode,
+    store_credit_amount: (storeCreditCents / 100).toFixed(2),
+    email,
+    customer: order.customer
+      ? {
+          first_name: order.customer.firstName,
+          last_name: order.customer.lastName,
+          email,
+          phone: customerPhone,
+        }
+      : null,
+    billing_address: order.billingAddress,
+    shipping_address: order.shippingAddress,
+    line_items: refundLineItems.map((item) => ({
+      title: item.line_item?.title,
+      quantity: item.quantity,
+      product_id: item.line_item?.product_id,
+    })),
+  };
+
+  for (const { event, cents } of events) {
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
+      orgId: shopifyInfo.orgId,
+      phone: customerPhone,
+      shopifyEvent: event,
+      shopifyProductIds: productIds,
+      shopifyBody: {
+        ...ruleBody,
+        refund_amount: (cents / 100).toFixed(2),
+      } as unknown as ShopifyBody,
+      platform: "WHATSAPP",
+    });
+  }
+}
+
 export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
   const { shop } = webhook;
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
@@ -1399,7 +1563,13 @@ interface AbandonedCheckoutNode {
   createdAt: string;
   completedAt: string | null;
   billingAddress: { phone: string | null } | null;
-  customer: { defaultAddress: { phone: string | null } | null } | null;
+  // Only the rule query selects shippingAddress and defaultPhoneNumber; the legacy
+  // survey query leaves them out, so the phone lookup must treat them as optional.
+  shippingAddress?: { phone: string | null } | null;
+  customer: {
+    defaultAddress: { phone: string | null } | null;
+    defaultPhoneNumber?: { phoneNumber: string } | null;
+  } | null;
 }
 
 interface AbandonedCheckoutsData {
@@ -1614,6 +1784,200 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
     );
   } catch (e) {
     log.error(e);
+  }
+}
+
+/**
+ * How long a checkout must sit untouched before automation rules treat it as abandoned.
+ * Shopify lists a checkout as soon as the buyer enters contact details, so without this
+ * a rule would message someone who is still on the payment step.
+ */
+const ABANDONED_CHECKOUT_IDLE_MINUTES = 60;
+/**
+ * Checkouts idle for longer than this are left alone, so the first run after a merchant
+ * creates the rule does not message their whole backlog.
+ */
+const ABANDONED_CHECKOUT_LOOKBACK_HOURS = 24;
+/** Outlives the lookback, so a checkout already handled can never qualify again. */
+const ABANDONED_CHECKOUT_DEDUPE_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+interface RuleAbandonedCheckoutNode extends AbandonedCheckoutNode {
+  name: string;
+  updatedAt: string;
+  abandonedCheckoutUrl: string;
+  discountCodes: string[];
+  totalPriceSet: { shopMoney: { amount: string; currencyCode: string } };
+  subtotalPriceSet: { shopMoney: { amount: string } };
+  billingAddress: { phone: string | null; city: string | null } | null;
+  shippingAddress: { phone: string | null; city: string | null } | null;
+  customer: {
+    firstName: string | null;
+    lastName: string | null;
+    defaultEmailAddress: { emailAddress: string } | null;
+    defaultPhoneNumber: { phoneNumber: string } | null;
+    defaultAddress: { phone: string | null } | null;
+  } | null;
+  lineItems: { nodes: { title: string; quantity: number; product: { id: string } | null }[] };
+}
+
+/** Abandoned checkouts last touched inside the lookback window, newest first. */
+async function getRecentAbandonedCheckouts(
+  client: GraphqlClient,
+  since: Date,
+): Promise<RuleAbandonedCheckoutNode[]> {
+  const checkouts: RuleAbandonedCheckoutNode[] = [];
+  let cursor: string | null = null;
+  let hasNextPage = true;
+  while (hasNextPage) {
+    const res: GraphQLClientResponse<{
+      abandonedCheckouts: {
+        nodes: RuleAbandonedCheckoutNode[];
+        pageInfo: { endCursor: string | null; hasNextPage: boolean };
+      };
+    }> = await client.request(
+      `query recentAbandonedCheckouts($cursor: String, $query: String) {
+  abandonedCheckouts(first: 50, after: $cursor, query: $query, sortKey: CREATED_AT, reverse: true) {
+    nodes {
+      id
+      name
+      createdAt
+      updatedAt
+      completedAt
+      abandonedCheckoutUrl
+      discountCodes
+      totalPriceSet { shopMoney { amount currencyCode } }
+      subtotalPriceSet { shopMoney { amount } }
+      customer {
+        firstName
+        lastName
+        defaultEmailAddress { emailAddress }
+        defaultPhoneNumber { phoneNumber }
+        defaultAddress { phone }
+      }
+      billingAddress { phone city }
+      shippingAddress { phone city }
+      lineItems(first: 50) { nodes { title quantity product { id } } }
+    }
+    pageInfo { endCursor hasNextPage }
+  }
+}`,
+      { variables: { cursor, query: `updated_at:>='${since.toISOString()}'` } },
+    );
+    if (!res.data) throw new Error("Shopify abandonedCheckouts query returned no data");
+    checkouts.push(...res.data.abandonedCheckouts.nodes);
+    hasNextPage = res.data.abandonedCheckouts.pageInfo.hasNextPage;
+    cursor = res.data.abandonedCheckouts.pageInfo.endCursor;
+  }
+  return checkouts;
+}
+
+/**
+ * Reshapes a GraphQL abandoned checkout into the snake_case webhook shape that rule
+ * variables are mapped against (resolveShopifyPathValue), so "Customer First Name",
+ * "Total Price" and "Checkout Recovery Link" resolve the same way they do for orders.
+ */
+function toAbandonedCheckoutRuleBody(checkout: RuleAbandonedCheckoutNode): ShopifyWebhookBody {
+  const email = checkout.customer?.defaultEmailAddress?.emailAddress;
+  return {
+    id: checkout.id.split("/").pop(),
+    admin_graphql_api_id: checkout.id,
+    name: checkout.name,
+    created_at: checkout.createdAt,
+    updated_at: checkout.updatedAt,
+    abandoned_checkout_url: checkout.abandonedCheckoutUrl,
+    total_price: checkout.totalPriceSet.shopMoney.amount,
+    subtotal_price: checkout.subtotalPriceSet.shopMoney.amount,
+    currency: checkout.totalPriceSet.shopMoney.currencyCode,
+    discount_codes: checkout.discountCodes.map((code) => ({ code })),
+    email,
+    customer: checkout.customer
+      ? {
+          first_name: checkout.customer.firstName,
+          last_name: checkout.customer.lastName,
+          email,
+          phone: checkout.customer.defaultPhoneNumber?.phoneNumber,
+        }
+      : null,
+    billing_address: checkout.billingAddress,
+    shipping_address: checkout.shippingAddress,
+    line_items: checkout.lineItems.nodes.map((item) => ({
+      title: item.title,
+      quantity: item.quantity,
+      product_id: item.product?.id.split("/").pop(),
+    })),
+  };
+}
+
+/**
+ * Fires "On abandoned checkouts" automation rules. Shopify has no abandoned-checkout
+ * webhook, so this polls each org that has such a rule: a checkout qualifies once it has
+ * been idle for ABANDONED_CHECKOUT_IDLE_MINUTES, and fires at most once, claimed in
+ * Redis before the rule runs so an overlapping tick or a crash mid-send cannot message
+ * the customer twice.
+ *
+ * Separate from sendTemplateForShopifyAbandonedCheckouts, which serves the legacy
+ * per-integration template settings and never reached the rule engine.
+ */
+export async function triggerShopifyAbandonedCheckoutRules() {
+  const rules = await prisma.rule.findMany({
+    where: {
+      triggerEvent: TriggerEvent.SHOPIFY_EVENT,
+      isActive: true,
+      options: { path: ["shopifyEvent"], equals: ShopifyEvents.ABANDONED_CHECKOUTS },
+    },
+    select: { orgId: true },
+    distinct: ["orgId"],
+  });
+  if (!rules.length || !shopify) return;
+
+  const now = dayjs();
+  const since = now.subtract(ABANDONED_CHECKOUT_LOOKBACK_HOURS, "hour").toDate();
+  const idleCutoff = now.subtract(ABANDONED_CHECKOUT_IDLE_MINUTES, "minute");
+
+  // One org at a time: each is a paginated Admin API walk, and one store's failure
+  // (revoked token, uninstalled app) must not stop the others.
+  for (const { orgId } of rules) {
+    try {
+      const integration = (await prisma.integration.findFirst({
+        where: { orgId, name: IntegratedApps.shopify, active: true },
+      })) as unknown as ShopifyIntegration | null;
+      if (!integration?.credential?.session) continue;
+
+      const client = new shopify.clients.Graphql({
+        session: await getActiveShopifySession(integration),
+      });
+      const checkouts = await getRecentAbandonedCheckouts(client, since);
+
+      for (const checkout of checkouts) {
+        if (checkout.completedAt || dayjs(checkout.updatedAt).isAfter(idleCutoff)) continue;
+        const phone = validateAndParseCheckoutPhone(checkout);
+        if (!phone) continue;
+
+        const claimed = await redisConnection.set(
+          `shopify:abandoned-checkout-rule:${orgId}:${checkout.id}`,
+          "1",
+          "EX",
+          ABANDONED_CHECKOUT_DEDUPE_TTL_SECONDS,
+          "NX",
+        );
+        if (!claimed) continue;
+
+        await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
+          orgId,
+          phone,
+          shopifyEvent: ShopifyEvents.ABANDONED_CHECKOUTS,
+          shopifyProductIds: checkout.lineItems.nodes.flatMap((item) =>
+            item.product ? [item.product.id] : [],
+          ),
+          // Narrowed like the order path does: the rule context types its body as the
+          // orders/create sample, but reads it through resolveShopifyPathValue.
+          shopifyBody: toAbandonedCheckoutRuleBody(checkout) as unknown as ShopifyBody,
+          platform: "WHATSAPP",
+        });
+      }
+    } catch (e) {
+      log.error({ err: e, orgId }, "Shopify abandoned checkout rules failed for org");
+    }
   }
 }
 
@@ -2217,7 +2581,11 @@ function validateAndParseCheckoutPhone(checkout: AbandonedCheckoutNode) {
   // moment `checkout.customer` was ever null, aborting the whole
   // `Promise.all` in `sendTemplateForShopifyAbandonedCheckouts` for every org
   // being processed in that batch, not just the one with a missing phone.
-  const phoneNumber = checkout.customer?.defaultAddress?.phone || checkout.billingAddress?.phone;
+  const phoneNumber =
+    checkout.customer?.defaultPhoneNumber?.phoneNumber ||
+    checkout.customer?.defaultAddress?.phone ||
+    checkout.billingAddress?.phone ||
+    checkout.shippingAddress?.phone;
   if (!phoneNumber) {
     log.trace("No Phone Number found");
     return false;
