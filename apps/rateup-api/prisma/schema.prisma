@@ -141,6 +141,8 @@ model User {
   removedAssignees            ConversationAssignedUserTeamMap[] @relation("ConversationRemovedUser")
   assignedStafftoConversation ConversationAssignedUserTeamMap[] @relation("ConversationAssignedByUser")
   inboxMentions               InboxMention[]
+  inboxNotes                  InboxNote[]                       @relation("InboxNoteAuthor")
+  deletedInboxNotes           InboxNote[]                       @relation("InboxNoteDeletedBy")
   assignedLeads               LeadAssignee[]                    @relation("LeadAssignee")
   ownedLeads                  Lead[]                            @relation("LeadOwner")
   closedLeads                 Lead[]                            @relation("LeadClosedBy")
@@ -218,6 +220,7 @@ model Org {
   inboxAutomations        InboxAutomation[]
   inboxStats              InboxStats?
   inboxMentions           InboxMention[]
+  inboxNotes              InboxNote[]
   conversationTags        ConversationTag[]
   pipelines               Pipeline[]
 
@@ -1028,6 +1031,7 @@ model Contact {
   loyaltyAccounts             CustomerLoyaltyAccount[]
   leads                       Lead[]
   inboxMentions               InboxMention[]
+  inboxNotes                  InboxNote[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -3209,6 +3213,7 @@ model Conversation {
   /// Resolution quality set when the conversation is closed with a result.
   resolutionResult       ResolutionResult?
   inboxMentions          InboxMention[]
+  notes                  InboxNote[]
   /// Conversation-scoped tags. Distinct from `ContactLabel`, which sticks to the
   /// customer across every ticket they ever open.
   tags                   ConversationTagMap[]
@@ -3283,13 +3288,42 @@ model InboxMention {
   conversation    Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   mentionedUserId String        @db.Uuid
   mentionedUser   User          @relation(fields: [mentionedUserId], references: [id], onDelete: Cascade)
-  messageId       String?       @db.Uuid
+  noteId          String?       @db.Uuid
+  note            InboxNote?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
   createdAt       DateTime      @default(now())
   clearedAt       DateTime?
 
   @@index([orgId, mentionedUserId, clearedAt])
   @@index([contactId, mentionedUserId, clearedAt])
   @@index([conversationId])
+  @@index([noteId])
+}
+
+/// A private note agents leave on a ticket. Kept out of `WaMessage` so customer-traffic
+/// reads never have to exclude it; the thread read merges notes back in by time.
+model InboxNote {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId          String         @db.Uuid
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  conversationId String         @db.Uuid
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  contactId      String         @db.Uuid
+  contact        Contact        @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  authorId       String?        @db.Uuid
+  author         User?          @relation("InboxNoteAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  /// WhatsApp-formatted text (`*bold*`, `_italic_`), as the composer sends it.
+  body           String
+  /// The composer's temporary id, echoed back so its placeholder is replaced, not duplicated.
+  clientId       String?
+  createdAt      DateTime       @default(now())
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  deletedById    String?        @db.Uuid
+  deletedBy      User?          @relation("InboxNoteDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  mentions       InboxMention[]
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([contactId, createdAt(sort: Desc)])
 }
 
 enum WaMessageOrgTeamType {

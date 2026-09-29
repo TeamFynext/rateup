@@ -7,6 +7,8 @@ import {
   clearConversationMentionsHandler,
   reopenConversationHandler,
   createPrivateMessageHandler,
+  editPrivateNoteHandler,
+  deletePrivateNoteHandler,
   setContactFavoriteHandler,
   setContactSpamHandler,
   exportWhatsappChatsHandler,
@@ -35,6 +37,9 @@ import {
   spamContactSchema,
   generateInboxResponseBody,
   PaginateQuerySchema,
+  PrivateWaMessageBody,
+  privateNoteParams,
+  editPrivateNoteBody,
   waChatExportQuerySchema,
   waChatFilterQuerySchema,
   waMessageAssignBody,
@@ -154,9 +159,23 @@ export async function waMessageRoutes(server: FastifyInstance) {
     {
       schema: {
         params: byContactIdSchema,
+        body: PrivateWaMessageBody,
       },
     },
     createPrivateMessageHandler,
+  );
+
+  // The author edits; the author or an inbox manager deletes (checked in the service).
+  server.patch(
+    "/privatemessage/note/:noteId",
+    { schema: { params: privateNoteParams, body: editPrivateNoteBody } },
+    editPrivateNoteHandler,
+  );
+
+  server.delete(
+    "/privatemessage/note/:noteId",
+    { schema: { params: privateNoteParams } },
+    deletePrivateNoteHandler,
   );
 
   server.get(

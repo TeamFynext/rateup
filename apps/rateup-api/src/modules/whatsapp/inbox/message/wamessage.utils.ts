@@ -181,7 +181,3 @@ export function deriveConversationSubject(messageBody: WaInboxMessageBody): stri
   const type = message.type ?? message.attachments?.[0]?.type;
   return (type ? MESSAGE_TYPE_LABEL[type] : undefined) ?? null;
 }
-
-export function extractMentions(text: string): string[] {
-  return text.match(/(?<!\S)@[a-zA-Z0-9_.]+/g)?.map((mention) => mention.slice(1)) ?? [];
-}
