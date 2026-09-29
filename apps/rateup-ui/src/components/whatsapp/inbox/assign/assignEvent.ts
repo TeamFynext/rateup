@@ -17,7 +17,7 @@ interface Actor extends Person {
 
 /**
  * The thread line an assignment writes, added before the API answers. The API
- * writes the real one under the same id, so the two collapse into one row.
+ * stores the real one with this id as its `messageId`, which is what replaces it.
  */
 export function buildAssignEvent({
   contactId,

@@ -39,6 +39,16 @@ export interface Announcement {
 }
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
+  {
+    id: "2026-09-29-inbox-notes-in-thread",
+    title: "Internal notes sit in the conversation",
+    summary:
+      "Notes now appear in the chat alongside customer messages and can be edited or deleted. Typing @ and a teammate's name turns your draft into a note, and Enter sends while Shift + Enter adds a new line.",
+    publishedAt: "2026-09-29",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox" },
+  },
 
   {
     id: "2026-09-26-quick-reply-media",

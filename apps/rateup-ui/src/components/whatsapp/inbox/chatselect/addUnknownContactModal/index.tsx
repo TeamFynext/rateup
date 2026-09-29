@@ -82,14 +82,6 @@ const addContactSchema = z.object({
     if (!phone) return false;
     return isValidPhoneNumber(phone);
   }, "Invalid phone number"),
-  email: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine((val) => {
-      if (!val) return true;
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-    }, "Invalid email address"),
   countryCode: z.string(),
   stageId: z.string().optional(),
   source: z.string(),
@@ -117,7 +109,6 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
     defaultValues: {
       name: "",
       phone: "",
-      email: "",
       countryCode: "91",
       stageId: "",
       source: importMethod.MANUAL,
@@ -144,7 +135,6 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
     const payload: ICreateContact & { countryCode?: string } = {
       name: values.name,
       phone: phoneToSend,
-      email: values.email || undefined,
       countryCode: values.countryCode,
       source: values.source,
     };
@@ -186,40 +176,26 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
             <FieldError errors={[errors.name]} />
           </Field>
 
-          {/* two-column row: WhatsApp + Email */}
-          <div className="flex items-start justify-center gap-4">
-            <Field data-invalid={!!errors.phone} className="flex-1">
-              <FieldLabel htmlFor="whatsapp">
-                {translations("WhatsApp Number")} <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Controller
-                name="phone"
-                control={control}
-                render={({ field }) => (
-                  <PhoneInput
-                    id="whatsapp"
-                    international
-                    defaultCountry="IN"
-                    value={field.value}
-                    onChange={field.onChange}
-                    aria-invalid={!!errors.phone}
-                  />
-                )}
-              />
-              <FieldError errors={[errors.phone]} />
-            </Field>
-
-            <Field data-invalid={!!errors.email} className="flex-1">
-              <FieldLabel htmlFor="email">{translations("Email Address")}</FieldLabel>
-              <Input
-                id="email"
-                placeholder="contact@email.com"
-                aria-invalid={!!errors.email}
-                {...register("email")}
-              />
-              <FieldError errors={[errors.email]} />
-            </Field>
-          </div>
+          <Field data-invalid={!!errors.phone}>
+            <FieldLabel htmlFor="whatsapp">
+              {translations("WhatsApp Number")} <span className="text-destructive">*</span>
+            </FieldLabel>
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput
+                  id="whatsapp"
+                  international
+                  defaultCountry="IN"
+                  value={field.value}
+                  onChange={field.onChange}
+                  aria-invalid={!!errors.phone}
+                />
+              )}
+            />
+            <FieldError errors={[errors.phone]} />
+          </Field>
 
           {stages.length > 0 && (
             <Field>

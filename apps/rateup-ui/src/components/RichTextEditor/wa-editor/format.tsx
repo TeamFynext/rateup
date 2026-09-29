@@ -87,6 +87,9 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
         return node.content?.map(parseNode).join("") ?? "";
       case "mention":
         return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
+      // Shift+Enter in the inbox composer, where plain Enter sends. Mirrors rateup-api.
+      case "hardBreak":
+        return "\n";
       default:
         return "";
     }

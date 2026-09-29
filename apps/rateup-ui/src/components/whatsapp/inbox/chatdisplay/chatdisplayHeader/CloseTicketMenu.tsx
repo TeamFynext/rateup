@@ -4,9 +4,7 @@ import {
   IconChevronDown,
   IconCircleX,
   IconRotate,
-  IconShieldExclamation,
   IconShieldOff,
-  IconTrash,
 } from "@tabler/icons-react";
 
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
@@ -35,7 +33,6 @@ import useContactStore, { useContactsStore, useMessagesStore } from "@/store/inb
 import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
-import { useDeleteTicket } from "../../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import type { OptimisticMessage } from "../chatdisplayFooter/index.tsx";
 import { isTicketClosed, resolutionResultLabel } from "./ticket.ts";
@@ -54,13 +51,9 @@ interface CloseTicketMenuProps {
  * The Close dropdown (the original status actions) or, once the ticket is closed,
  * the Reopen button.
  *
- * Once a ticket is closed there is no dropdown here: block, spam and delete for
- * a closed ticket live in the ticket panel.
- *
- * Spam sits with Block, not with the close statuses: it is a *contact* action
- * ("this person is spam"), not a way of finishing one ticket. A contact already
- * marked spam gets a "Not spam" button in place of Close/Reopen, since reopening
- * a ticket that no tab but Spam can show would be a dead end.
+ * Marking spam and deleting the conversation live in the ticket panel only. A
+ * contact already marked spam gets a "Not spam" button in place of Close/Reopen,
+ * since reopening a ticket that no tab but Spam can show would be a dead end.
  */
 export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuProps>) {
   const editContactMutation = useEditContactMutation(undefined);
@@ -72,7 +65,6 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   const spamMutation = useSetContactSpam();
   const { filterData } = useContactStore();
   const reopenMutation = useReopenConversation(filterData ?? undefined);
-  const { canDelete, deleteTicket, isPending: isDeleting } = useDeleteTicket(contact);
 
   const closed = isTicketClosed(contact);
   const isSpam = !!contact?.isSpam;
@@ -254,41 +246,6 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     });
   }
 
-  /** The contact-level actions under the Close dropdown's arrow. */
-  const contactActions = (
-    <DropdownMenuGroup>
-      {!isSpam && (
-        <DropdownMenuItem onClick={() => handleSpam(true)} disabled={spamMutation.isPending}>
-          <IconShieldExclamation className="size-4 text-muted-foreground" />
-          Mark contact as spam
-        </DropdownMenuItem>
-      )}
-      {canBlock && (
-        <DropdownMenuItem onClick={handleBlock} className="text-destructive">
-          <IconBan className="size-4 text-destructive" />
-          Block contact
-        </DropdownMenuItem>
-      )}
-    </DropdownMenuGroup>
-  );
-
-  /**
-   * Deleting is a *ticket* action, so it sits in its own group below the contact
-   * ones rather than among them — and only for admins, who are the only ones the
-   * endpoint accepts.
-   */
-  const deleteAction = canDelete ? (
-    <>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
-        <DropdownMenuItem onClick={deleteTicket} disabled={isDeleting} className="text-destructive">
-          <IconTrash className="size-4 text-destructive" />
-          Delete conversation
-        </DropdownMenuItem>
-      </DropdownMenuGroup>
-    </>
-  ) : null;
-
   // A spam contact has no Close/Reopen: their tickets are all closed and only the
   // Spam tab can list them, so the one action that moves them forward is "Not spam".
   if (isSpam) {
@@ -326,7 +283,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   }
 
   // Closing is one click and counts as resolved; the chevron holds the exception
-  // (unresolved) and the contact actions.
+  // (unresolved) and blocking.
   return (
     <div className="flex shrink-0">
       <Button
@@ -366,9 +323,17 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             </DropdownMenuItem>
           </DropdownMenuGroup>
 
-          <DropdownMenuSeparator />
-          {contactActions}
-          {deleteAction}
+          {canBlock && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={handleBlock} className="text-destructive">
+                  <IconBan className="size-4 text-destructive" />
+                  Block contact
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
