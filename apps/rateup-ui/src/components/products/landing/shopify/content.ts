@@ -20,12 +20,12 @@ export const SHOPIFY_FAQS: readonly ShopifyFaq[] = [
   {
     question: "Which Shopify events can trigger a WhatsApp message?",
     answer:
-      "Orders create, orders paid, orders fulfilled, orders partially fulfilled, orders cancelled, fulfilled orders cancelled and draft orders created — plus abandoned checkouts, which are checked on a schedule. Each event can be switched on or off from Settings.",
+      "Orders create, orders paid, orders fulfilled, orders partially fulfilled, orders cancelled, fulfilled orders cancelled and draft orders created — plus abandoned checkouts, which are reminded about after a delay you choose. Each event can be switched on or off from Settings.",
   },
   {
     question: "Can I send abandoned cart messages on WhatsApp from Shopify?",
     answer:
-      "Yes. RateUp polls abandoned checkouts and sends your approved recovery template with the Checkout Recovery Link variable, so the customer returns to the same checkout. You can add a Copy offer code button to the template.",
+      "Yes. When a checkout sits untouched for the delay you set, RateUp sends your approved recovery template with the Checkout Recovery Link variable, so the customer returns to the same checkout. It stops if they complete the order first, and a second rule can send a follow-up. You can add a Copy offer code button to the template.",
   },
   {
     question: "Do loyalty points sync with Shopify orders?",
@@ -53,13 +53,13 @@ export const EVENT_ROWS: readonly (readonly [string, string, string])[] = [
   ["Orders cancelled", "Send an approved template; revoke loyalty points", "1 hour"],
   ["Fulfilled orders cancelled", "Send an approved template; revoke loyalty points", "2 hours"],
   ["Draft orders created", "Send an approved template", "5 hours"],
-  ["Abandoned checkouts", "Send the checkout recovery link — checked on a schedule", "5 hours"],
+  ["Abandoned checkouts", "Send the checkout recovery link after a delay you choose", "5 hours"],
 ];
 
 export const SHOPIFY_STATS = [
   {
     value: "8 store events",
-    label: "Order webhooks plus scheduled abandoned-checkout checks.",
+    label: "Order and checkout webhooks, including abandoned-cart reminders.",
   },
   {
     value: "20 Shopify fields",

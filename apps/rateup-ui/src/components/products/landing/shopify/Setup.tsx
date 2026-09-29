@@ -59,8 +59,8 @@ export function Events() {
           <Overline>Events</Overline>
           <H2>Every store event, one WhatsApp message</H2>
           <p className="text-base/[1.6] text-ru-n-500">
-            These are the events RateUp ships today. Abandoned checkouts are checked on a schedule;
-            the rest arrive as store webhooks.
+            These are the events RateUp ships today. Each arrives as a store webhook; a checkout
+            counts as abandoned once it has sat untouched for the delay you choose.
           </p>
         </div>
 

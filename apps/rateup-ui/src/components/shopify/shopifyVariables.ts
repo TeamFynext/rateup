@@ -19,6 +19,8 @@ export const shopifyVariablePresets = [
   { label: "Cancellation Reason", value: "cancel_reason" },
   { label: "Draft Order Invoice URL", value: "invoice_url" },
   { label: "Checkout Recovery Link", value: "abandoned_checkout_url" },
+  // The code alone, for a URL button approved with the tracked-link base (see VariableMapping).
+  { label: "Checkout Recovery Link — button code", value: "recovery_link_code" },
   { label: "Cancellation Date", value: "cancelled_at" },
   { label: "Refund Amount", value: "refund_amount" },
   { label: "Store Credit Amount", value: "store_credit_amount" },
