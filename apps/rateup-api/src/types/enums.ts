@@ -435,6 +435,11 @@ export enum IntegratedApps {
   zapier = "zapier",
   zoho = "zoho",
   getlead = "getlead",
+  // Registered ahead of their providers (integrations plan, Phases 1-3). The
+  // statuses endpoint lists them as not connected until an org connects one.
+  woocommerce = "woocommerce",
+  hubspot = "hubspot",
+  googlebusiness = "googlebusiness",
 }
 
 export enum PhotoSource {

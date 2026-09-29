@@ -20,7 +20,7 @@ import {
   sendTemplateForShopifyAbandonedCheckouts,
 } from "../../../modules/integrations/shopify/shopify.service.js";
 import { renewShopifyTokensCronAction } from "../../../modules/integrations/shopify/shopify.session.js";
-import { refreshZohoTokensAndWebhooks } from "../../../modules/integrations/external/zoho/zoho.service.js";
+import { refreshIntegrationCredentials } from "../../../modules/integrations/shared/credentialRefresh.js";
 import {
   processDripCampaigns,
   sendSchedulesWaMessages,
@@ -85,9 +85,9 @@ const HANDLERS: Record<ScheduledJobId, () => Promise<void>> = {
     await safeRun("renewShopifyTokensCronAction", renewShopifyTokensCronAction);
   },
 
-  zohoRefresh: async () => {
-    log.info("Running every 45min JOB --> Zoho token refresh and webhook registration");
-    await safeRun("refreshZohoTokensAndWebhooks", refreshZohoTokensAndWebhooks);
+  integrationCredentialRefresh: async () => {
+    log.info("Running every 45min JOB --> Integration credential refresh");
+    await safeRun("refreshIntegrationCredentials", refreshIntegrationCredentials);
   },
 
   midnightStatsReset: async () => {

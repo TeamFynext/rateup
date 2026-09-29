@@ -28,7 +28,9 @@ export const SCHEDULED_JOBS = [
   // delivery webhooks land, so recognising a finished send still needs a sweep.
   { id: "campaignSettle", pattern: "*/5 * * * *", tz: "Etc/UTC" },
   { id: "hourlyJobs", pattern: "0 * * * *" },
-  { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
+  // Every provider's `refreshCredential` — Zoho's token and webhook channels today.
+  // Was `zohoRefresh`; the stale scheduler is removed by `syncJobSchedulers`.
+  { id: "integrationCredentialRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   // Cycles legacy non-expiring Shopify tokens (rejected from 2027-01-01) and keeps
   // idle shops' 90-day refresh tokens from lapsing; in-use tokens renew on demand.
   { id: "shopifyTokenRenewal", pattern: "40 2 * * *", tz: "Etc/UTC" },

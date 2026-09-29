@@ -239,9 +239,10 @@ export interface ApprovalRules {
 }
 
 /**
- * Opt-in mirroring of this reward's redemption codes into the merchant's Shopify store, as
- * discount codes the customer can type (or auto-apply via the share link) at checkout.
- * Implemented in `integrations/shopify/shopifyDiscount.service.ts`.
+ * Opt-in mirroring of this reward's redemption codes into the merchant's store, as discount
+ * codes the customer can type (or, on Shopify, auto-apply via the share link) at checkout.
+ * The same shape for every store, under the store's key; the sync is
+ * `integrations/commerce/discounts.ts`.
  */
 export interface ShopifyDiscountRules {
   enabled?: boolean;
@@ -263,6 +264,7 @@ export interface LoyaltyRedemptionRules {
   combination_rules?: CombinationRules;
   approval?: ApprovalRules;
   shopify?: ShopifyDiscountRules;
+  woocommerce?: ShopifyDiscountRules;
 }
 
 // ============================================================================

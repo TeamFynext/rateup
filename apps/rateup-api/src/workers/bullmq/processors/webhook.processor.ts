@@ -8,9 +8,15 @@ import {
 } from "../../../modules/integrations/shopify/shopify.service.js";
 import { ShopifyEvents } from "../../../types/enums.js";
 import {
-  processShopifyOrderLoyalty,
+  toCommerceLoyaltyJob,
   type ShopifyLoyaltyJobData,
 } from "../../../modules/integrations/shopify/shopifyLoyalty.service.js";
+import {
+  commerceAwardKey,
+  processCommerceOrderLoyalty,
+  type CommerceLoyaltyJobData,
+} from "../../../modules/integrations/commerce/loyalty.js";
+import { getCommerceProvider } from "../../../modules/integrations/commerce/registry.js";
 import { LoyaltyError } from "../../../modules/loyalty/loyalty.errors.js";
 
 const workerConnection = baseRedis.duplicate();
@@ -103,6 +109,17 @@ log.info("Shopify survey worker initialized");
 const workerConnectionLoyalty = baseRedis.duplicate();
 
 /**
+ * A loyalty job in the commerce layer's shape. Jobs queued before the commerce
+ * layer carry Shopify's `{ shop, topic }` instead; one of those can still be
+ * retrying at the moment of a deploy, so both are read.
+ */
+function asCommerceJob(
+  data: CommerceLoyaltyJobData | ShopifyLoyaltyJobData,
+): CommerceLoyaltyJobData {
+  return "provider" in data ? data : toCommerceLoyaltyJob(data);
+}
+
+/**
  * Loyalty points for an order, separate from the webhook job so it can retry on its own.
  *
  * Retrying the outer webhook would re-send the customer's WhatsApp template every time;
@@ -111,28 +128,38 @@ const workerConnectionLoyalty = baseRedis.duplicate();
  */
 export const shopifyLoyaltyWorker = new Worker(
   "shopifyLoyaltyQueue",
-  async (job: Job<ShopifyLoyaltyJobData>) => {
+  async (job: Job<CommerceLoyaltyJobData | ShopifyLoyaltyJobData>) => {
+    const data = asCommerceJob(job.data);
+    const provider = getCommerceProvider(data.provider);
+    if (!provider) {
+      log.error(
+        { provider: data.provider, orderId: data.orderId },
+        "Loyalty job for an unknown store",
+      );
+      return;
+    }
     try {
-      return await processShopifyOrderLoyalty(job.data);
+      return await processCommerceOrderLoyalty(data, provider);
     } catch (error) {
       const context = {
         err: error,
-        shop: job.data.shop,
-        topic: job.data.topic,
-        orderId: job.data.orderId,
+        provider: data.provider,
+        storeId: data.storeId,
+        status: data.status,
+        orderId: data.orderId,
         // The support handle: this is the value to look for in
         // LoyaltyTransaction.idempotencyKey to see whether points actually landed.
-        key: `shopify:${job.data.shop}:${job.data.orderId}`,
+        key: commerceAwardKey(data.provider, data.storeId, data.orderId),
       };
 
       if (error instanceof LoyaltyError && !error.retryable) {
         // A settled fact — no such member, an amount that is not a number. Four more
         // attempts would reach the same conclusion four more times.
-        log.error(context, `Shopify loyalty job ${job.id} cannot succeed: ${error.code}`);
+        log.error(context, `${provider.label} loyalty job ${job.id} cannot succeed: ${error.code}`);
         return;
       }
 
-      log.error(context, `Shopify loyalty job ${job.id} failed; will retry`);
+      log.error(context, `${provider.label} loyalty job ${job.id} failed; will retry`);
       throw error;
     }
   },
@@ -145,14 +172,16 @@ export const shopifyLoyaltyWorker = new Worker(
 );
 
 shopifyLoyaltyWorker.on("failed", (job, err) => {
-  if (job && job.attemptsMade >= (job.opts.attempts ?? 1)) {
+  if (job?.data && job.attemptsMade >= (job.opts.attempts ?? 1)) {
+    const data = asCommerceJob(job.data);
     log.error(
       {
-        shop: job.data?.shop,
-        orderId: job.data?.orderId,
-        key: `shopify:${job.data?.shop}:${job.data?.orderId}`,
+        provider: data.provider,
+        storeId: data.storeId,
+        orderId: data.orderId,
+        key: commerceAwardKey(data.provider, data.storeId, data.orderId),
       },
-      `Shopify loyalty job ${job.id} exhausted its retries: ${err.message}`,
+      `Loyalty job ${job.id} exhausted its retries: ${err.message}`,
     );
   }
 });

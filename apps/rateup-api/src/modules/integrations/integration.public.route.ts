@@ -2,6 +2,8 @@ import { FastifyInstance } from "fastify";
 import { shopifyPublicRoutes } from "./shopify/shopify.public.route.js";
 import { getleadPublicRoutes } from "./external/getlead/getlead.public.route.js";
 import { petPoojaWebhookHandler } from "./integrations.controller.js";
+import { inboundWebhookRoutes } from "./shared/inboundWebhook.js";
+import { wooCommercePublicRoutes } from "./woocommerce/woocommerce.route.js";
 
 export async function integrationPublicRoutes(server: FastifyInstance) {
   server.register(shopifyPublicRoutes, { prefix: "/shopify" });
@@ -11,4 +13,10 @@ export async function integrationPublicRoutes(server: FastifyInstance) {
   server.register(getleadPublicRoutes, { prefix: "/getlead" });
 
   server.post("/petpooja", petPoojaWebhookHandler);
+
+  // The shared receiver for every provider built on the registry.
+  server.register(inboundWebhookRoutes, { prefix: "/webhooks" });
+
+  // WooCommerce POSTs the key it issued here, server to server; see woocommerce.connect.ts.
+  server.register(wooCommercePublicRoutes, { prefix: "/woocommerce" });
 }

@@ -8,6 +8,7 @@ import {
   RulePlatform,
   TriggerEvent,
 } from "../../../../generated/prisma/enums.js";
+import { WOO_TRIGGER_STATUSES } from "../../integrations/woocommerce/woocommerce.mapping.js";
 
 const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents).filter(
   (value) =>
@@ -44,6 +45,9 @@ export const ruleOptionsSchema = z.object({
     .optional(),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).optional(),
+  // WooCommerce-specific options
+  wooEvent: z.enum(WOO_TRIGGER_STATUSES).optional(),
+  wooProductIds: z.array(z.string()).optional(),
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).optional(),
   instagramPostIds: z.array(z.string()).optional(),
@@ -69,6 +73,13 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
       message: "Select a Shopify event",
     });
   }
+  if (data.triggerEvent === "WOOCOMMERCE_EVENT" && !data.options?.wooEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "wooEvent"],
+      message: "Select a WooCommerce order status",
+    });
+  }
 });
 
 export type CreateRuleInput = z.infer<typeof createRuleSchema>;
@@ -79,6 +90,13 @@ export const updateRuleSchema = createRuleBaseSchema.partial().superRefine((data
       code: "custom",
       path: ["options", "shopifyEvent"],
       message: "Select a Shopify event",
+    });
+  }
+  if (data.triggerEvent === "WOOCOMMERCE_EVENT" && !data.options?.wooEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "wooEvent"],
+      message: "Select a WooCommerce order status",
     });
   }
 });

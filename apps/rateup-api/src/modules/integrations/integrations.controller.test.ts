@@ -119,17 +119,38 @@ describe("the integration listings", () => {
     expect(shopify.credential.shopifySurveys).toEqual([]);
   });
 
-  test("the statuses view only reports connectedness, not credentials", async () => {
+  test("the statuses view reports connectedness and health, never credentials or error text", async () => {
+    const failedAt = new Date("2026-09-20T10:00:00Z");
     svc.getAllIntegrationsByOrgId.mockResolvedValueOnce([
-      { name: "zapier", credential: { accessToken: "hash" } },
+      {
+        name: "zapier",
+        credential: { accessToken: "hash" },
+        consecutiveFailures: 3,
+        lastError: "401 for token at-secret",
+        lastErrorAt: failedAt,
+      },
     ]);
     const rep = reply();
 
     await getIntegrationStatusesHandler({ user: { orgId: ORG } } as never, rep);
 
     const body = answer(rep).body;
-    expect(body.every((s: any) => Object.keys(s).join() === "name,isConnected")).toBe(true);
-    expect(body.find((s: any) => s.name === "zapier").isConnected).toBe(true);
+    expect(
+      body.every(
+        (s: any) => Object.keys(s).join() === "name,isConnected,consecutiveFailures,lastErrorAt",
+      ),
+    ).toBe(true);
+    expect(body.find((s: any) => s.name === "zapier")).toEqual({
+      name: "zapier",
+      isConnected: true,
+      consecutiveFailures: 3,
+      lastErrorAt: failedAt,
+    });
+    expect(body.find((s: any) => s.name === "zoho")).toMatchObject({
+      isConnected: false,
+      consecutiveFailures: 0,
+      lastErrorAt: null,
+    });
   });
 });
 
@@ -477,6 +498,23 @@ describe("route registration", () => {
       hooks[0].fn(probe);
       expect(probe.config.permission).toBe("integrations.manage");
     }
+  });
+
+  test("starting an OAuth connect needs manage even though it is a GET; the activity feed is a read", async () => {
+    const { srv, routes, hooks } = server();
+
+    await integrationsRoutes(srv);
+
+    const probe = (url: string, method: string) => {
+      const r = routes.find((x) => x.url === url && x.method === method);
+      expect(r, url).toBeDefined();
+      const route: any = { method, url, config: { ...r.opts?.config } };
+      hooks[0].fn(route);
+      return route.config.permission;
+    };
+    expect(probe("/:name/oauth/authorize-url", "GET")).toBe("integrations.manage");
+    expect(probe("/:name/oauth/callback", "POST")).toBe("integrations.manage");
+    expect(probe("/:name/activity", "GET")).toBe("integrations.read");
   });
 
   test("the zapier-hook route declares a body schema", async () => {

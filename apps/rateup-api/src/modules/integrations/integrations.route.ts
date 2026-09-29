@@ -6,7 +6,10 @@ import {
   deleteIntegrationByNameHandler,
   deleteWaPaymentConfigurationHandler,
   deleteZapierTriggerHookHandler,
+  finishOAuthConnectHandler,
   getAllIntegrationsByOrgHandler,
+  getIntegrationActivityHandler,
+  getOAuthAuthorizeUrlHandler,
   getGoogleAuthUrlForSheetHandler,
   getIntegrationByNameHandler,
   getRegenerateWaPaymentConfigOauthHandler,
@@ -21,18 +24,24 @@ import {
   updateIntgrationSchema,
   waPaymentCreateSchema,
   deleteZapierHookSchema,
+  oauthCallbackSchema,
   type DeleteZapierHookInput,
+  type OAuthCallbackInput,
   type IntegrationSchema,
   type ByNameParams,
   type UpdateIntgrationInput,
 } from "./integrations.schema.js";
 import { shopifyRoutes } from "./shopify/shopify.route.js";
+import { wooCommerceRoutes } from "./woocommerce/woocommerce.route.js";
+import { hubSpotRoutes } from "./hubspot/hubspot.route.js";
 import { declareAccess } from "../../authz/registry.js";
 
 export async function integrationsRoutes(server: FastifyInstance) {
   declareAccess(server, { read: "integrations.read", write: "integrations.manage" });
 
   server.register(shopifyRoutes, { prefix: "/shopify" });
+  server.register(wooCommerceRoutes, { prefix: "/woocommerce" });
+  server.register(hubSpotRoutes, { prefix: "/hubspot" });
 
   server.get("/", {}, getAllIntegrationsByOrgHandler);
   server.get(
@@ -45,6 +54,27 @@ export async function integrationsRoutes(server: FastifyInstance) {
     getIntegrationByNameHandler,
   );
   server.get("/statuses", {}, getIntegrationStatusesHandler);
+  server.get<{ Params: ByNameParams }>(
+    "/:name/activity",
+    { schema: { params: byNameSchema } },
+    getIntegrationActivityHandler,
+  );
+
+  // The shared OAuth connect (`shared/oauthConnect.ts`). The authorize URL is a
+  // GET but starts a credential write, so it asks for manage like the callback.
+  server.get<{ Params: ByNameParams }>(
+    "/:name/oauth/authorize-url",
+    {
+      config: { permission: "integrations.manage" },
+      schema: { params: byNameSchema },
+    },
+    getOAuthAuthorizeUrlHandler,
+  );
+  server.post<{ Params: ByNameParams; Body: OAuthCallbackInput }>(
+    "/:name/oauth/callback",
+    { schema: { params: byNameSchema, body: oauthCallbackSchema } },
+    finishOAuthConnectHandler,
+  );
   server.post<{ Body: IntegrationSchema }>(
     "/",
     {

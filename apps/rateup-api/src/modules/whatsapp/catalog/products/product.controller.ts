@@ -11,6 +11,11 @@ import {
   updateCatalogProducts,
 } from "./product.service.js";
 import { createShopifyProduct } from "../../../integrations/shopify/shopify.service.js";
+import { WooConnectError } from "../../../integrations/woocommerce/woocommerce.connect.js";
+import {
+  getWooProductsForCatalog,
+  importSelectedWooProducts,
+} from "../../../integrations/woocommerce/woocommerce.products.js";
 import {
   catalogItemBatchSchema,
   CatalogItemQueryFilter,
@@ -270,5 +275,43 @@ export async function syncShopifyProductsFromShopifyHandler(
     reply
       .code(500)
       .send({ message: e instanceof Error ? e.message : "Failed to sync from Shopify" });
+  }
+}
+
+/** The store refusing or not connected, said as the store's problem; anything else is ours. */
+function sendWooError(reply: FastifyReply, error: unknown, what: string) {
+  if (error instanceof WooConnectError) {
+    return reply.code(error.statusCode).send({ message: error.message });
+  }
+  log.error({ err: error }, `WooCommerce catalog ${what} failed`);
+  return reply.code(500).send({ message: `Could not ${what} WooCommerce products` });
+}
+
+export async function getWooAvailableProductsHandler(
+  request: FastifyRequest<{ Params: CatalogIdParam }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { catalogId } = request.params;
+    if (!(await getWaCatalog(catalogId, orgId))) return reply.code(404).send("No catalog found");
+    return reply.code(200).send(await getWooProductsForCatalog(orgId, catalogId));
+  } catch (e) {
+    return sendWooError(reply, e, "load");
+  }
+}
+
+export async function importWooProductsHandler(
+  request: FastifyRequest<{ Params: CatalogIdParam; Body: { items: CatalogProductCoreInput[] } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { catalogId } = request.params;
+    if (!(await getWaCatalog(catalogId, orgId))) return reply.code(404).send("No catalog found");
+    const result = await importSelectedWooProducts(orgId, catalogId, request.body?.items ?? []);
+    return reply.code(200).send(result);
+  } catch (e) {
+    return sendWooError(reply, e, "import");
   }
 }

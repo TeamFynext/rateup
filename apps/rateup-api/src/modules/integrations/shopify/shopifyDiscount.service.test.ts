@@ -33,8 +33,9 @@ import {
   buildDiscountValue,
   discountShareUrl,
   discountWindow,
-  syncRedemptionToShopify,
 } from "./shopifyDiscount.service.js";
+// The sync moved to the commerce layer; these cases drive it through Shopify.
+import { syncRedemptionDiscount as syncRedemptionToShopify } from "../commerce/discounts.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -45,8 +46,8 @@ const redemption = (over: Record<string, unknown> = {}) => ({
   redemptionCode: "RU-ABCDEFGHJK",
   createdAt: ISSUED,
   expiresAt: null,
-  shopifyDiscountId: null,
-  shopifyDiscountUrl: null,
+  storeDiscountId: null,
+  storeDiscountUrl: null,
   reward: {
     name: "10% off",
     rewardValue: { type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE, percentage: 10 },
@@ -285,8 +286,8 @@ describe("syncRedemptionToShopify", () => {
     expect(outcome.discountUrl).toBe("https://demo.myshopify.com/discount/RU-ABCDEFGHJK");
     expect(graphqlRequest).toHaveBeenCalledOnce();
     expect((prisma.loyaltyRedemption.update as Mock).mock.calls[0][0].data).toMatchObject({
-      shopifyDiscountId: "gid://shopify/DiscountCodeNode/1",
-      shopifyDiscountError: null,
+      storeDiscountId: "gid://shopify/DiscountCodeNode/1",
+      storeDiscountError: null,
     });
   });
 
@@ -308,8 +309,8 @@ describe("syncRedemptionToShopify", () => {
   test("never creates a second discount for a redemption already synced", async () => {
     (prisma.loyaltyRedemption.findUnique as Mock).mockResolvedValue(
       redemption({
-        shopifyDiscountId: "gid://shopify/DiscountCodeNode/9",
-        shopifyDiscountUrl: "https://demo.myshopify.com/discount/RU-ABCDEFGHJK",
+        storeDiscountId: "gid://shopify/DiscountCodeNode/9",
+        storeDiscountUrl: "https://demo.myshopify.com/discount/RU-ABCDEFGHJK",
       }),
     );
 
@@ -335,8 +336,8 @@ describe("syncRedemptionToShopify", () => {
     expect(outcome.status).toBe("failed");
     expect(outcome.discountUrl).toBeUndefined();
     expect((prisma.loyaltyRedemption.update as Mock).mock.calls[0][0].data).toMatchObject({
-      shopifyDiscountId: null,
-      shopifyDiscountError: "basicCodeDiscount.code: Code must be unique",
+      storeDiscountId: null,
+      storeDiscountError: "basicCodeDiscount.code: Code must be unique",
     });
   });
 

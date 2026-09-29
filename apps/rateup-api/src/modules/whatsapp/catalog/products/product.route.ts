@@ -5,7 +5,9 @@ import {
   deleteCatalogProductsHandler,
   getCatalogProductsHandler,
   getShopifyAvailableProductsHandler,
+  getWooAvailableProductsHandler,
   importShopifyProductsHandler,
+  importWooProductsHandler,
   syncCatalogProductsHandler,
   syncShopifyProductsFromShopifyHandler,
   updateCatalogProductsHandler,
@@ -80,6 +82,18 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
     "/shopify-create/:catalogId",
     { schema: { params: catalogIdParams } },
     createShopifyProductHandler,
+  );
+
+  server.get(
+    "/woocommerce-available/:catalogId",
+    { schema: { params: catalogIdParams } },
+    getWooAvailableProductsHandler,
+  );
+
+  server.post(
+    "/import-woocommerce/:catalogId",
+    { schema: { params: catalogIdParams } },
+    importWooProductsHandler,
   );
 
   server.post(

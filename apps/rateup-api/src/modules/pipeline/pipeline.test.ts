@@ -41,10 +41,28 @@ vi.mock("../../utils/prisma.js", () => ({
     contact: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     teamMember: { findMany: vi.fn() },
     team: { findMany: vi.fn(), updateMany: vi.fn() },
+    integration: { findMany: vi.fn() },
+    webhook: { findUnique: vi.fn() },
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),
   },
 }));
+
+// The lead service only emits integration events now. Each one is run through
+// the real fan-out and adapters inline, so the assertions below still check the
+// Bigin, GetLead and Zapier jobs that come out the other end — the same ones the
+// service used to enqueue itself. The org is treated as having Zoho and GetLead
+// connected.
+vi.mock("../integrations/events/emitIntegrationEvent.js", async () => {
+  const { processIntegrationEvent } =
+    await import("../integrations/events/integrationEvent.fanout.js");
+  return {
+    INTEGRATION_EVENT_JOB: "integration-event",
+    emitIntegrationEvent: vi.fn((orgId: string, event: any) =>
+      processIntegrationEvent({ orgId, event }),
+    ),
+  };
+});
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 
@@ -67,7 +85,17 @@ vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
 }));
 vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
   pushCrmLeadStatus: vi.fn(),
-  ZohoTriggers: { BIGIN_DEAL_CREATE: "bigin_deal_created" },
+  ZohoTriggers: {
+    CONTACT_CREATE: "contact_created",
+    CONTACT_UPDATE: "contact_updated",
+    CONTACT_DELETE: "contact_deleted",
+    LEAD_CREATE: "lead_created",
+    LEAD_UPDATE: "lead_updated",
+    BIGIN_CONTACT_CREATE: "bigin_contact_created",
+    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
+    BIGIN_CONTACT_DELETE: "bigin_contact_deleted",
+    BIGIN_DEAL_CREATE: "bigin_deal_created",
+  },
 }));
 vi.mock("../integrations/meta/conversions.service.js", () => ({
   sendWonConversionEvent: vi.fn(),
@@ -114,6 +142,36 @@ import { createStageRequestSchema } from "./pipelineStage/stage.schema.js";
 const db = prisma as unknown as Record<string, any>;
 
 const USER = "11111111-1111-1111-1111-111111111111";
+
+/**
+ * The org's connected integrations: Zoho and GetLead, every trigger switched on,
+ * so the providers' subscription filter lets every event through.
+ */
+const subscribed = (...fields: string[]) => ({
+  triggerSubscriptions: fields.map((subscribed_field) => ({ subscribed_field, active: true })),
+});
+const CONNECTED_INTEGRATIONS = [
+  {
+    name: "zoho",
+    active: true,
+    credential: subscribed(
+      "contact_created",
+      "contact_updated",
+      "contact_deleted",
+      "lead_created",
+      "lead_updated",
+      "bigin_contact_created",
+      "bigin_contact_updated",
+      "bigin_contact_deleted",
+      "bigin_deal_created",
+    ),
+  },
+  {
+    name: "getlead",
+    active: true,
+    credential: subscribed("getlead_lead_create", "getlead_lead_update"),
+  },
+];
 /** A team-scoped actor reaching exactly these teams. */
 const scoped = (teamIds: string[]) =>
   ({ orgId: ORG, userId: USER, scope: { all: false, teamIds, inbox: "all" } }) as any;
@@ -165,6 +223,8 @@ beforeEach(() => {
   db.leadAssignee.createMany.mockResolvedValue({ count: 0 });
   db.leadAssignee.deleteMany.mockResolvedValue({ count: 0 });
   db.user.findMany.mockResolvedValue([]);
+  db.integration.findMany.mockResolvedValue(CONNECTED_INTEGRATIONS);
+  db.webhook.findUnique.mockResolvedValue(null);
 });
 
 describe("pipeline access", () => {

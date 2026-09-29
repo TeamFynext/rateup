@@ -55,6 +55,7 @@ const loyaltyProgramFields = {
     })
     .optional(),
   enableShopifyOrderPoints: z.boolean(),
+  enableWooOrderPoints: z.boolean(),
   enablePointsExpiration: z.boolean(),
   pointsExpirationMonths: z.number(),
   referralMessageTemplate: z.any(),
@@ -79,6 +80,7 @@ export const loyaltyProgramSchema = z.object({
   whatsappNotifications: loyaltyProgramFields.whatsappNotifications.default(true),
   sendTextInSession: loyaltyProgramFields.sendTextInSession.default(true),
   enableShopifyOrderPoints: loyaltyProgramFields.enableShopifyOrderPoints.default(false),
+  enableWooOrderPoints: loyaltyProgramFields.enableWooOrderPoints.default(false),
   enablePointsExpiration: loyaltyProgramFields.enablePointsExpiration.default(false),
   pointsExpirationMonths: loyaltyProgramFields.pointsExpirationMonths.default(12),
 });

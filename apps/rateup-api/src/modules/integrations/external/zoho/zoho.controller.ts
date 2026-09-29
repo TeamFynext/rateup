@@ -18,6 +18,8 @@ import {
   syncZohoLeads,
 } from "./zoho.service.js";
 import axios from "axios";
+import { exchangeOAuthCode } from "../../shared/oauth2.js";
+import { ZOHO_OAUTH, type ZohoTokenResponse } from "./zoho.oauth.js";
 import { getZohoRecordById, registerZohoWebhook, unsubscribeZohoWebhook } from "./zoho.client.js";
 import { generateRandomAlphaId } from "../../../../utils/misc/random.utils.js";
 import { ZohoProduct } from "./zoho.client.js";
@@ -75,20 +77,12 @@ export async function zohoAuthenticationHandler(
     const redirect_uri = `${process.env.FRONTEND_URL}/dashboard/settings/integrations/zoho/callback`;
 
     // Exchange authorization code for tokens
-    const response = await axios.post("https://accounts.zoho.in/oauth/v2/token", null, {
-      params: {
-        grant_type: "authorization_code",
-        client_id: process.env.ZOHO_CLIENT_ID,
-        client_secret: process.env.ZOHO_CLIENT_SECRET,
-        redirect_uri,
-        code,
-      },
-    });
-
-    const { access_token, refresh_token, expires_in, api_domain, scope } = response.data;
+    const { raw } = await exchangeOAuthCode(ZOHO_OAUTH, { code, redirectUri: redirect_uri });
+    const { access_token, refresh_token, expires_in, api_domain, scope } =
+      raw as unknown as ZohoTokenResponse;
 
     if (!access_token) {
-      log.error("Zoho OAuth exchange failed => %o", response.data);
+      log.error("Zoho OAuth exchange failed => %o", raw);
 
       return reply.code(401).send({
         success: false,

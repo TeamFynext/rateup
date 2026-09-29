@@ -78,11 +78,12 @@ const approvalRulesSchema = z.object({
 });
 
 /**
- * Mirror this reward's redemption codes into the connected Shopify store as discount codes,
- * so the customer can use the code at checkout instead of only at a cashier. Unknown keys
- * are stripped by zod, so anything the dashboard wants to store must be declared here.
+ * Mirror this reward's redemption codes into the connected store (Shopify or WooCommerce) as
+ * discount codes, so the customer can use the code at checkout instead of only at a cashier.
+ * Unknown keys are stripped by zod, so anything the dashboard wants to store must be declared
+ * here.
  */
-const shopifyDiscountRulesSchema = z.object({
+const storeDiscountRulesSchema = z.object({
   enabled: z.boolean().optional(),
   valid_for_days: z.number().int().positive().optional().nullable(),
   combines_with: z
@@ -103,7 +104,8 @@ const redemptionRulesSchema = z.object({
   inventory: inventoryRestrictionsSchema.optional(),
   combination_rules: combinationRulesSchema.optional(),
   approval_rules: approvalRulesSchema.optional(),
-  shopify: shopifyDiscountRulesSchema.optional(),
+  shopify: storeDiscountRulesSchema.optional(),
+  woocommerce: storeDiscountRulesSchema.optional(),
 });
 
 /**

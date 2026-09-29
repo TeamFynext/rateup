@@ -7,23 +7,33 @@ import prisma from "../../../utils/prisma.js";
 export const outgoingWebhookWorker = new Worker(
   "outgoingWebhookQueue",
   async (job: Job<OutgoingWebhookJobData>) => {
-    const { phoneId, event, payload } = job.data;
+    const { event, payload } = job.data;
 
-    const webhook = await prisma.whatsappSettings.findUnique({
-      where: { phoneId },
-      select: {
-        org: {
+    // Message status jobs name the sending number; integration events name the org.
+    const webhook = job.data.orgId
+      ? {
+          org: {
+            Webhook: await prisma.webhook.findUnique({
+              where: { orgId: job.data.orgId },
+              select: { url: true, events: true },
+            }),
+          },
+        }
+      : await prisma.whatsappSettings.findUnique({
+          where: { phoneId: job.data.phoneId },
           select: {
-            Webhook: {
+            org: {
               select: {
-                url: true,
-                events: true,
+                Webhook: {
+                  select: {
+                    url: true,
+                    events: true,
+                  },
+                },
               },
             },
           },
-        },
-      },
-    });
+        });
 
     if (!webhook?.org?.Webhook?.events.includes(event)) return;
     log.debug({ url: webhook.org.Webhook.url, id: job?.id }, "Delivering outgoing webhook");

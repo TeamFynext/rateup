@@ -28,7 +28,8 @@
     "backfill:first-responded": "tsx scripts/backfill-first-responded-at.ts",
     "authz:migrate": "tsx scripts/migrate-authz-roles.ts",
     "staff:add": "tsx scripts/staff-add.ts",
-    "shopify:drop-shop-app-webhooks": "tsx scripts/shopify-drop-shop-app-webhooks.ts"
+    "shopify:drop-shop-app-webhooks": "tsx scripts/shopify-drop-shop-app-webhooks.ts",
+    "integrations:encrypt-credentials": "tsx scripts/encrypt-integration-credentials.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1141.0",

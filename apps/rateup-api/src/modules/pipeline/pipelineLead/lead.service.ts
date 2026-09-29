@@ -1,14 +1,7 @@
 import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service.js";
-import { GetLeadTriggers } from "../../integrations/external/getlead/getlead.service.js";
-import { addGetLeadSyncToQueue } from "../../integrations/external/getlead/getlead.queue.js";
-import { pushCrmLeadStatus, ZohoTriggers } from "../../integrations/external/zoho/zoho.service.js";
+import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 import type {
   BulkUpdateLeadsRequestSchema,
   CloseLeadRequestSchema,
@@ -455,14 +448,15 @@ export async function createLead(
   await notifyLeadAssignment(created.id, data.assigneeIds ?? [], data.userId);
 
   // A lead opening straight onto a mapped column is as much a stage change as a
-  // move is, so the CRMs hear about it the same way.
-  if (data.syncIntegrations !== false)
-    await syncLeadStageToIntegrations(created, GetLeadTriggers.LEAD_CREATE);
+  // move is — from nothing to something — so the integrations hear about it the
+  // same way.
+  await emitLeadStageEvent(created, {
+    type: "lead.created",
+    syncIntegrations: data.syncIntegrations !== false,
+  });
   // Opened directly onto a Won column — rare, but it is still the moment it was won.
   if (stage.status === "WON") await reportLeadWon(created);
-  // A contact that was not on the board and now sits in a column has changed
-  // stage as surely as one that was dragged — from nothing to something.
-  await announceStageChange(created);
+  await fireStageUpdatedRules(created);
 
   return created;
 }
@@ -532,7 +526,7 @@ export async function moveLead(
     // The id arrives from a client, an automation rule or a CRM webhook, and
     // nothing upstream checks it belongs here — `verifyLeadAccess` proves the
     // caller may touch the *lead*, and says nothing about the target column. An
-    // unscoped move was a cross-tenant write: `syncLeadStageToIntegrations`
+    // unscoped move was a cross-tenant write: `emitLeadStageEvent`
     // derives the org from the *stage's* pipeline, so a lead parked on another
     // org's column fans out to that org's CRM credentials, pushing this lead's
     // name, email and phone into their Zoho and GetLead.
@@ -581,45 +575,43 @@ export async function moveLead(
   // Outside the transaction: an integration being down must not roll back a move
   // the user already saw happen on the board.
   const { becameWon, ...lead } = moved;
-  if (syncIntegrations) await syncLeadStageToIntegrations(lead);
+  await emitLeadStageEvent(lead, { type: "lead.stage_changed", syncIntegrations });
   if (becameWon) await reportLeadWon(lead);
-  await announceStageChange(lead);
+  await fireStageUpdatedRules(lead);
 
   return lead;
 }
 
 /**
- * Everything outside the pipeline that wants to hear a lead changed column.
+ * Tells the integrations a lead landed in a column — on creation or on a move.
  *
- * The two listeners are independent and must stay that way: a Zap should still
- * fire for a contact with no phone number, which is the one thing that stops a
- * rule from running.
- */
-async function announceStageChange(lead: {
-  id: string;
-  contactId: string | null;
-  stageId: string;
-}) {
-  await fireStageUpdatedZap(lead);
-  await fireStageUpdatedRules(lead);
-}
-
-/**
- * Emits Zapier's **Contact Stage Updated** — the board's counterpart to
- * `contact_lifecycle_updated`, which fires from the contact write path and is
- * left exactly as it is. Zaps built on the lifecycle trigger keep working; this
- * is the trigger an org on the board has to build against instead.
+ * One event carries both halves that used to be separate: the CRM sync (Zoho's
+ * stage mapping, GetLead) and Zapier's **Contact Stage Updated**. Each adapter
+ * applies its own rules to it — the CRMs only follow the Leads board and skip a
+ * change an integration made (`origin`), so it is not echoed back; Zapier fires
+ * for any pipeline, for any origin, as long as there is a contact to key on.
  *
- * Keyed on the contact, like every other contact-shaped Zapier trigger: a
- * board-only lead has no contact for the Zap's later steps to look up.
+ * Failures are swallowed: an integration being unreachable must not fail the
+ * move that has already been committed and shown on the board.
  */
-async function fireStageUpdatedZap(lead: {
-  id: string;
-  contactId: string | null;
-  stageId: string;
-}) {
-  if (!lead.contactId) return;
-
+async function emitLeadStageEvent(
+  lead: {
+    id: string;
+    contactId: string | null;
+    stageId: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    source: LeadSource;
+  },
+  options: {
+    type: "lead.created" | "lead.stage_changed";
+    /** False when an inbound sync made this change — see `syncIntegrations` on {@link moveLead}. */
+    syncIntegrations: boolean;
+    /** Closed onto the column it already sat in: the CRMs re-push, nothing is reported as a move. */
+    resync?: boolean;
+  },
+) {
   try {
     const stage = await prisma.pipelineStage.findUnique({
       where: { id: lead.stageId },
@@ -632,25 +624,55 @@ async function fireStageUpdatedZap(lead: {
     });
     if (!stage) return;
 
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_STAGE_UPDATED,
-      {
-        [ZapierTriggers.CONTACT_STAGE_UPDATED]: {
-          contactId: lead.contactId,
-          leadId: lead.id,
-          pipelineId: stage.pipelineId,
-          pipelineName: stage.pipeline.name,
-          pipelineType: stage.pipeline.type,
-          stageId: lead.stageId,
-          stageName: stage.name,
-          stageStatus: stage.status,
-        },
+    // The contact is the better source when there is one: it holds the CRM ids,
+    // and its details are the ones the rest of the app keeps current. Only the
+    // CRMs read it, and they only follow the Leads board.
+    const contact =
+      lead.contactId && stage.pipeline.type === LEADS_PIPELINE_TYPE
+        ? await prisma.contact.findUnique({
+            where: { id: lead.contactId },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              source: true,
+              notes: true,
+              integrationIds: true,
+            },
+          })
+        : null;
+
+    const base = {
+      lead: {
+        id: lead.id,
+        contactId: lead.contactId,
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        source: lead.source,
       },
+      stage: {
+        id: lead.stageId,
+        name: stage.name,
+        status: stage.status,
+        pipelineId: stage.pipelineId,
+        pipelineName: stage.pipeline.name,
+        pipelineType: stage.pipeline.type,
+      },
+      contact,
+      origin: options.syncIntegrations ? ("rateup" as const) : ("integration" as const),
+    };
+
+    await emitIntegrationEvent(
       stage.pipeline.orgId,
+      options.type === "lead.created"
+        ? { type: "lead.created", ...base }
+        : { type: "lead.stage_changed", ...base, ...(options.resync && { resync: true as const }) },
     );
   } catch (error) {
-    // The move is already recorded; a Zap that could not be queued must not undo it.
-    console.error("Failed to queue the Contact Stage Updated Zapier trigger", error);
+    // The move itself already succeeded; this is best-effort fan-out.
+    console.error("Failed to emit the lead stage event", error);
   }
 }
 
@@ -677,6 +699,10 @@ async function isOnLeadsBoard(stageId: string) {
  * Outside the `syncIntegrations` guard on purpose, the same as
  * {@link reportLeadWon}: that flag stops a change Zoho pushed in from being
  * echoed back out, but a rule should still see a stage that Zoho set.
+ *
+ * Independent of {@link emitLeadStageEvent} and must stay that way: a Zap should
+ * still fire for a contact with no phone number, which is the one thing that
+ * stops a rule from running.
  *
  * Imported dynamically. `wa_automatedReply.utils` already imports this file for
  * `setContactStage`, so an eager import here closes the cycle — the same edge
@@ -707,135 +733,6 @@ async function fireStageUpdatedRules(lead: { contactId: string | null; stageId: 
   } catch (error) {
     // The move is already recorded; a rule that could not run must not undo it.
     console.error("Failed to run Stage Updated rules for a lead", error);
-  }
-}
-
-/**
- * Tells the CRMs a lead changed column.
- *
- * This is the outbound half of the Zoho stage mapping: the org's board is now
- * the thing that drives a Bigin deal stage and a CRM lead status, where the
- * contact's lifecycle used to. Both are keyed on the mapping the org configured
- * under "Pipeline Stage Mapping"; a column with no mapping simply syncs nothing.
- *
- * A lead with no contact behind it — one typed straight onto the board — still
- * syncs. It carries its own name, phone and email, which is everything Bigin
- * needs to open a deal and a contact; the only thing missing is somewhere in
- * Rateup to write the resulting ids back to, so `rateupContactId` is omitted and
- * the deal is created fresh each time rather than matched to an existing one.
- *
- * Skipped when the move came *from* an integration — see `syncIntegrations` on
- * {@link moveLead}.
- *
- * Failures are swallowed: a CRM being unreachable must not fail the move that
- * has already been committed and shown on the board.
- */
-async function syncLeadStageToIntegrations(
-  lead: {
-    id: string;
-    contactId: string | null;
-    stageId: string;
-    pipelineId: string;
-    name: string;
-    email: string | null;
-    phone: string | null;
-    source: LeadSource;
-  },
-  /**
-   * Which GetLead trigger this is. The push itself is an upsert either way, but
-   * the two are separate subscriptions an org can toggle independently, so a
-   * lead arriving on the board must not be reported as a stage change.
-   */
-  getleadTrigger: GetLeadTriggers = GetLeadTriggers.LEAD_UPDATE,
-) {
-  try {
-    const stage = await prisma.pipelineStage.findUnique({
-      where: { id: lead.stageId },
-      select: { name: true, pipeline: { select: { orgId: true, type: true } } },
-    });
-    // CRM stage mappings and the Conversions API are about the sales funnel alone.
-    if (stage?.pipeline.type !== LEADS_PIPELINE_TYPE) return;
-
-    const orgId = stage.pipeline.orgId;
-
-    // The contact is the better source when there is one: it holds the CRM ids,
-    // and its details are the ones the rest of the app keeps current.
-    const contact = lead.contactId
-      ? await prisma.contact.findUnique({
-          where: { id: lead.contactId },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            source: true,
-            notes: true,
-            integrationIds: true,
-          },
-        })
-      : null;
-
-    const integrationIds = contact
-      ? (contact.integrationIds as ContactIntegrationIds | null)
-      : null;
-
-    // Through the org's mapping, not the column's own name: `Lead_Status` is a
-    // Zoho picklist, so a board column named anything the org did not map is a
-    // value the CRM rejects.
-    if (integrationIds?.zoho?.lead?.id) {
-      await pushCrmLeadStatus(
-        orgId,
-        integrationIds.zoho.lead.id,
-        { stageId: lead.stageId, stageName: stage.name },
-        {},
-        // So the CRM push lands on this lead's timeline. A Zoho-CRM-only org
-        // never reaches the Bigin branch, so without this it would see nothing.
-        lead.id,
-      );
-    }
-
-    await integrationTriggerQueue.add("zoho-bigin-deal-update", {
-      integrationName: "zoho",
-      triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-      orgId,
-      data: {
-        name: contact?.name ?? lead.name,
-        source: contact?.source ?? lead.source,
-        email: contact?.email ?? lead.email,
-        phone: contact?.phone ?? lead.phone,
-        notes: contact?.notes ?? null,
-        stageId: lead.stageId,
-      },
-      // The lead is always named. The handler keeps the Bigin ids on the contact
-      // when there is one — that is where the lifecycle flow put them and where
-      // everything else looks — and falls back to the lead for board-only cards,
-      // so either way the same deal is matched and moved rather than recreated.
-      rateupLeadId: lead.id,
-      ...(contact && { rateupContactId: contact.id }),
-    });
-
-    // GetLead is outbound-only and keyed on the same board column, so it rides
-    // the same fan-out. It resolves its own status through the org's mapping and
-    // pushes nothing when a column is unmapped.
-    await addGetLeadSyncToQueue(
-      getleadTrigger,
-      orgId,
-      {
-        name: contact?.name ?? lead.name,
-        email: contact?.email ?? lead.email,
-        phone: contact?.phone ?? lead.phone,
-        notes: contact?.notes ?? null,
-        stageId: lead.stageId,
-        stageName: stage.name,
-        // Not pushed to GetLead — only so a phoneless lead's skip names the
-        // channel it came from. INSTAGRAM and MESSENGER leads never have one.
-        leadSource: lead.source,
-      },
-      { rateupLeadId: lead.id, ...(contact && { rateupContactId: contact.id }) },
-    );
-  } catch (error) {
-    // The move itself already succeeded; this is best-effort fan-out.
-    console.error("Failed to sync lead stage to integrations", error);
   }
 }
 
@@ -1292,12 +1189,17 @@ export async function closeLead(id: string, data: CloseLeadRequestSchema, userId
   // Winning or losing moves the lead into a closing column, which is a stage
   // change like any other — the CRM has to hear about it, or a deal dropped onto
   // Won on the board stays open in Bigin.
-  if (lead.stageId) await syncLeadStageToIntegrations(lead);
+  if (lead.stageId)
+    await emitLeadStageEvent(lead, {
+      type: "lead.stage_changed",
+      syncIntegrations: true,
+      resync: lead.stageId === fromStageId,
+    });
   if (becameWon) await reportLeadWon(lead);
   // Dropping a lead onto Won or Lost on the board routes here rather than
   // through `moveLead`, so without this the one move a user is most likely to
   // build a rule around would be the one move that never fired.
-  if (lead.stageId !== fromStageId) await announceStageChange(lead);
+  if (lead.stageId !== fromStageId) await fireStageUpdatedRules(lead);
 
   return lead;
 }

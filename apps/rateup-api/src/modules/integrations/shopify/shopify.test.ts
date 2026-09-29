@@ -88,14 +88,17 @@ vi.mock("../../whatsapp/messageTemplates/wa_templates.auth.js", () => ({
   verifyTemplateMessageLimit: vi.fn(),
 }));
 vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
-// The loyalty bridge is its own module now (`shopifyLoyalty.service.ts`, tested there);
-// from here it is just an enqueue, so only the queue needs standing in for.
-vi.mock("./shopifyLoyalty.service.js", async () => {
-  const actual = await vi.importActual<typeof import("./shopifyLoyalty.service.js")>(
-    "./shopifyLoyalty.service.js",
-  );
-  return { ...actual, enqueueShopifyOrderLoyalty: vi.fn() };
+// Loyalty is the commerce layer's now (`commerce/loyalty.ts`, driven through Shopify in
+// shopifyLoyalty.service.test.ts); from here it is just an enqueue.
+vi.mock("../commerce/loyalty.js", async () => {
+  const actual =
+    await vi.importActual<typeof import("../commerce/loyalty.js")>("../commerce/loyalty.js");
+  return { ...actual, enqueueCommerceOrderLoyalty: vi.fn() };
 });
+vi.mock("../events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvent: vi.fn(),
+  INTEGRATION_EVENT_JOB: "integration-event",
+}));
 
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma.js";
@@ -111,7 +114,7 @@ import {
   updateShopifyIntegrationByShop,
 } from "./shopify.service.js";
 import { updateShopifyIntegrationByShopHandler } from "./shopify.controller.js";
-import { enqueueShopifyOrderLoyalty } from "./shopifyLoyalty.service.js";
+import { enqueueCommerceOrderLoyalty as enqueueShopifyOrderLoyalty } from "../commerce/loyalty.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import webhookHandlers, {
   customersDataRequestHandler,

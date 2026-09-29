@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import { IntegratedApps } from "../../types/enums.js";
+import { encryptCredentialSecrets } from "./shared/credentialCrypto.js";
 import prisma from "../../utils/prisma.js";
 import type { Integration as PrismaIntegration } from "../../../generated/prisma/client.js";
 import { callWaAmeliaApi } from "./integration_axios.js";
@@ -361,7 +362,7 @@ export const updateIntegrationByName = async (
     // in one statement.
     const { session: _ignoredSession, ...credential } = rest.credential;
     delete rest.credential;
-    await prisma.$executeRaw`UPDATE "Integration" SET credential = ${JSON.stringify(credential)}::jsonb || CASE WHEN credential->'session' IS NULL THEN '{}'::jsonb ELSE jsonb_build_object('session', credential->'session') END WHERE "orgId" = ${orgId}::uuid AND name = ${name}`;
+    await prisma.$executeRaw`UPDATE "Integration" SET credential = ${JSON.stringify(encryptCredentialSecrets(credential))}::jsonb || CASE WHEN credential->'session' IS NULL THEN '{}'::jsonb ELSE jsonb_build_object('session', credential->'session') END WHERE "orgId" = ${orgId}::uuid AND name = ${name}`;
   }
   const integration = await prisma.integration.update({
     where: {
@@ -377,16 +378,29 @@ export const updateIntegrationByName = async (
   return { ...integration, apikey };
 };
 
-export const deleteIntegrationByName = (name: string, orgId: string) => {
-  return prisma.integration.delete({
-    where: {
-      orgid_integration_name_unique: {
-        name,
-        orgId,
-      },
-    },
-  });
-};
+export async function deleteIntegrationByName(name: string, orgId: string) {
+  const where = { orgid_integration_name_unique: { name, orgId } };
+
+  // A registry provider may have set things up on the remote side — webhook
+  // subscriptions, mostly — that would keep calling a receiver with no row
+  // behind it. Best-effort: a remote that is already gone must not block the
+  // org from disconnecting. Imported on use, because the registry pulls in
+  // every provider and some of those import this file.
+  const { getIntegrationProvider } = await import("./providers/registry.js");
+  const provider = getIntegrationProvider(name);
+  if (provider?.disconnect) {
+    const integration = await prisma.integration.findUnique({ where });
+    if (integration) {
+      try {
+        await provider.disconnect(integration);
+      } catch (error) {
+        log.warn({ err: error }, "%s remote cleanup failed on disconnect", provider.label);
+      }
+    }
+  }
+
+  return prisma.integration.delete({ where });
+}
 
 interface AmeliaApiRequest {
   url: string;

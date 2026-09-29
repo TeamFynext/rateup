@@ -14,6 +14,8 @@ import {
   ZohoProduct,
 } from "./zoho.client.js";
 import { isZohoTriggerEnabled } from "./zoho.utils.js";
+import { refreshOAuthToken } from "../../shared/oauth2.js";
+import { ZOHO_OAUTH, type ZohoTokenResponse } from "./zoho.oauth.js";
 import { recordIntegrationSyncActivity } from "../integrationActivity.js";
 import { IntegratedApps } from "../../../../types/enums.js";
 import {
@@ -816,34 +818,9 @@ export async function refreshZohoIntegrationCredential(integration: Integration)
   return updatedCredential;
 }
 
-export async function refreshZohoTokensAndWebhooks() {
-  const integrations = await prisma.integration.findMany({
-    where: {
-      name: "zoho",
-      active: true,
-    },
-  });
-
-  for (const integration of integrations) {
-    try {
-      await refreshZohoIntegrationCredential(integration);
-    } catch (err) {
-      log.error({ err, integrationId: integration.id }, "Zoho scheduled refresh failed");
-    }
-  }
-}
-
 async function refreshZohoToken(refreshToken: string) {
-  const response = await axios.post("https://accounts.zoho.in/oauth/v2/token", null, {
-    params: {
-      refresh_token: refreshToken,
-      client_id: process.env.ZOHO_CLIENT_ID,
-      client_secret: process.env.ZOHO_CLIENT_SECRET,
-      grant_type: "refresh_token",
-    },
-  });
-
-  return response.data;
+  const { raw } = await refreshOAuthToken(ZOHO_OAUTH, refreshToken);
+  return raw as unknown as ZohoTokenResponse;
 }
 
 export async function fetchZohoContacts(orgId: string, product: ZohoProduct = "crm") {

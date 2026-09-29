@@ -5,8 +5,7 @@ import { getActiveShopifySession } from "./shopify.session.js";
 import { GraphqlClient, GraphQLClientResponse, Session } from "@shopify/shopify-api";
 import type { IncomingMessage, ServerResponse } from "http";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { notificationQueue, shopifySurveyQueue } from "../../../workers/bullmq/queues/index.js";
-import crypto from "crypto";
+import { notificationQueue } from "../../../workers/bullmq/queues/index.js";
 import _get from "lodash/get.js";
 import { log } from "../../../utils/logger.js";
 import { sendMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
@@ -37,6 +36,7 @@ import {
 import { getIntegrationByName, updateIntegrationByName } from "../integrations.service.js";
 import { UpdateIntgrationInput } from "../integrations.schema.js";
 import { API_URL } from "../../../utils/constants/constants.js";
+import type { Integration as PrismaIntegration } from "../../../../generated/prisma/client.js";
 import {
   OrderStatus,
   Org,
@@ -52,10 +52,18 @@ import { WEBHOOK_API_ROUTE, defaultWebhookHandlers } from "./shopify.handler.js"
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
 import {
-  enqueueShopifyOrderLoyalty,
   extractDiscountCodes,
   extractPurchaseAmount,
+  SHOPIFY_ORDER_STATUS,
 } from "./shopifyLoyalty.service.js";
+import type { CommerceOrder, CommerceStore, CommerceSurvey } from "../commerce/commerce.types.js";
+import { onOrderEvent } from "../commerce/orders.js";
+import {
+  buildSurveyTemplateParameters,
+  processOrderSurveySchedule,
+  type OrderSurveyJobData,
+} from "../commerce/surveys.js";
+import { shopifyCommerce } from "./shopify.commerce.js";
 import { ShopifyBody, shopifyErrorDetail } from "./shopify.types.js";
 import { signFlowToken } from "../../whatsapp/flows/flowToken.js";
 import type {
@@ -177,130 +185,37 @@ export async function registerShopifyWebhook(session: Session) {
   }
 }
 
-export async function createScheduleOnShopifyEvent({
-  customerPhone,
-  event,
-  shopifyInfo,
-  productIds,
-  webhookId,
-  scheduleFromDate,
-  // amount,
-  body,
-}: {
-  customerPhone: string;
-  event: ShopifyEvents;
-  shopifyInfo: ShopifyIntegration;
-  productIds: string[];
-  webhookId?: string;
-  scheduleFromDate: Date;
-  // amount?: number;
-  body: ShopifyWebhookBody;
-}) {
-  log.info("Checking survey for shopify event %o", {
-    event,
-    webhookId,
-    customerPhone,
-  });
-  const phone = parsePhoneNumber(customerPhone, "IN");
-  if (phone.isValid() === false) {
-    log.trace("Invalid phone number");
-    return;
-  }
-  const shopifySurvey = shopifyInfo.credential.shopifySurveys?.find((s) => s.event === event);
-  if (!shopifySurvey || !shopifySurvey.active) {
-    log.trace(`No Survey schedule found`);
-    return;
-  }
-
-  if (webhookId && shopifySurvey.schedules?.some((s) => s.webhookId === webhookId)) {
-    log.trace(`Duplicate webhook event for ${webhookId}. Skipping...`);
-    return;
-  }
-
-  // Cross-event dedup: Shopify fires both orders/create and orders/paid for the
-  // same order. If another survey (different event) already scheduled the same
-  // template for the same order ID + customer phone, skip this one.
-  const orderId = body?.id;
-
-  if (orderId && shopifySurvey.waTemplateId) {
-    // const _phoneWithoutPlusTemp = phone.countryCallingCode + phone.nationalNumber;
-    // // We must reload shopifyInfo fresh from the DB to see if the other worker created a history
-    // const freshShopifyInfo = await prisma.integration.findUnique({
-    //   where: { id: shopifyInfo.id },
-    // });
-    // const _freshSurveys = (freshShopifyInfo?.credential as any)?.shopifySurveys ?? [];
-    // if (isDuplicateMessage) {
-    //   log.trace(
-    //     `Order ${orderId} already scheduled with template ${shopifySurvey.waTemplateId} for ${customerPhone}. Skipping duplicate execution of ${event}...`,
-    //   );
-    //   return;
-    // }
-  }
-
-  if (
-    shopifySurvey.isProductSpecific &&
-    (!shopifySurvey.productId || !productIds.includes(shopifySurvey.productId))
-  ) {
-    log.trace(`Specified product is not in the list`);
-    return;
-  }
-
-  const phoneWithoutPlus = phone.countryCallingCode + phone.nationalNumber;
-  if (!phoneWithoutPlus) {
-    log.trace(`No customer phone number found`);
-    return;
-  }
-
-  const schedules = [...(shopifySurvey.schedules || [])];
-  let actionStatus: ShopifySchedules["actionStatus"] = null;
-  let apiStatus: ShopifySchedules["apiStatus"] = null;
-
-  const scheduleId = crypto.randomUUID();
-  const scheduledTime = getScheduleTime(shopifySurvey.timeDelay, scheduleFromDate);
-  const scheduleObj = {
-    scheduleId,
-    scheduledAt: scheduledTime,
-    createdAt: new Date(),
-    status: shopifySurvey.waTemplateId ? "SCHEDULED" : null,
-  };
-  const data = {
-    ...scheduleObj,
-    phone: phoneWithoutPlus,
-    webhookId,
-    actionStatus,
-    history: [scheduleObj],
-    apiStatus,
-    body,
-  };
-  schedules.push(data);
-  shopifySurvey.schedules = schedules;
-  const newShopifySurveys = [...shopifyInfo.credential.shopifySurveys];
-  newShopifySurveys.forEach((s) => {
-    if (s.event === shopifySurvey.event) {
-      s.schedules = schedules;
-    }
-  });
-  await updateShopifyIntegrationByOrgId(shopifyInfo.orgId, {
+/**
+ * Writes the surveys back to the Shopify credential. Through
+ * `updateIntegrationByName`, which carries the stored session over rather than
+ * restoring a token pair a refresh has since retired.
+ */
+export async function saveShopifySurveys(
+  store: { orgId: string; integration: { credential: unknown } },
+  surveys: CommerceSurvey[],
+) {
+  await updateShopifyIntegrationByOrgId(store.orgId, {
     credential: {
-      ...shopifyInfo.credential,
-      shopifySurveys: newShopifySurveys,
+      ...(store.integration.credential as ShopifyCredential),
+      shopifySurveys: surveys as unknown as ShopifySurvey[],
     },
   });
+}
 
-  if (shopifySurvey.waTemplateId) {
-    const delayMs = Math.max(0, scheduledTime.getTime() - Date.now());
-    await shopifySurveyQueue.add(
-      "process-survey",
-      {
-        orgId: shopifyInfo.orgId,
-        integrationId: shopifyInfo.id,
-        event: shopifySurvey.event,
-        scheduleId,
-      },
-      { delay: delayMs, jobId: scheduleId },
-    );
-    log.info(`Enqueued Shopify survey ${scheduleId} to send in ${delayMs}ms`);
-  }
+/** The Shopify automation rule trigger, for an order that carries a phone number. */
+export async function runShopifyOrderAutomation(
+  store: CommerceStore,
+  order: CommerceOrder,
+  phone: string,
+) {
+  await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
+    orgId: store.orgId,
+    phone,
+    shopifyEvent: order.eventKey as ShopifyEvents,
+    shopifyProductIds: order.productIds,
+    shopifyBody: order.raw as unknown as ShopifyBody,
+    platform: "WHATSAPP",
+  });
 }
 
 export async function sendShopifySurveyCronAction() {
@@ -403,31 +318,11 @@ export async function sendShopifySurveyCronAction() {
         console.log("tobeSent", tobeSent);
         if (tobeSent) {
           try {
-            let parameterData = [];
-            if (config.variableMapping && sch.body) {
-              const bodyParameters = [];
-              const sortedMappings = [...config.variableMapping].sort(
-                (a, b) => a.templateParamIndex - b.templateParamIndex,
-              );
-              const maxIndex = Math.max(...sortedMappings.map((m) => m.templateParamIndex), -1);
-
-              if (maxIndex !== -1) {
-                for (let i = 0; i <= maxIndex; i++) {
-                  const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
-                  const value = mapping
-                    ? resolveShopifyPathValue(sch.body, mapping.shopifyPath)
-                    : "";
-                  bodyParameters.push({
-                    type: "text",
-                    text: String(value ?? ""),
-                  });
-                }
-                parameterData.push({
-                  type: "body",
-                  parameters: bodyParameters,
-                });
-              }
-            }
+            const parameterData = buildSurveyTemplateParameters(
+              config as unknown as CommerceSurvey,
+              sch.body as unknown as Record<string, unknown>,
+              (raw, path) => resolveShopifyPathValue(raw as ShopifyWebhookBody, path),
+            );
 
             const res = await sendTemplateToUserCore(
               orgId,
@@ -496,132 +391,10 @@ export async function deleteWebhookById(webhookId: string, client: GraphqlClient
   );
 }
 
-export async function processShopifySurveySchedule(jobData: {
-  orgId: string;
-  integrationId: string;
-  event: ShopifyEvents;
-  scheduleId: string;
-}) {
-  const { orgId, integrationId, event, scheduleId } = jobData;
-
-  const integration = (await prisma.integration.findUnique({
-    where: { id: integrationId },
-  })) as unknown as ShopifyIntegration;
-
-  if (!integration) {
-    log.error(`Integration ${integrationId} not found for schedule ${scheduleId}`);
-    return;
-  }
-
-  const shopifySurveys = integration.credential?.shopifySurveys;
-  if (!shopifySurveys || !shopifySurveys.length) {
-    log.trace("No surveys found");
-    return;
-  }
-
-  const surveyIndex = shopifySurveys.findIndex((s) => s.event === event);
-  if (surveyIndex === -1) {
-    log.trace(`Survey for event ${event} not found`);
-    return;
-  }
-
-  const survey = shopifySurveys[surveyIndex];
-  if (!survey.active || !survey.schedules) {
-    log.trace(`Survey ${event} not active or no schedules`);
-    return;
-  }
-
-  const scheduleIndex = survey.schedules.findIndex((s) => s.scheduleId === scheduleId);
-  if (scheduleIndex === -1) {
-    log.trace(`Schedule ${scheduleId} not found in survey ${event} `);
-    return;
-  }
-
-  const sch = survey.schedules[scheduleIndex];
-
-  if (sch.status !== "SCHEDULED") {
-    log.info(`Schedule ${scheduleId} is already processed with status ${sch.status}.Skipping.`);
-    return;
-  }
-
-  try {
-    let parameterData: { type: string; parameters: { type: string; text: string }[] }[] = [];
-    if (survey.variableMapping && sch.body) {
-      const bodyParameters: { type: string; text: string }[] = [];
-      const sortedMappings = [...survey.variableMapping].sort(
-        (a, b) => a.templateParamIndex - b.templateParamIndex,
-      );
-      const maxIndex = Math.max(...sortedMappings.map((m) => m.templateParamIndex), -1);
-
-      if (maxIndex !== -1) {
-        for (let i = 0; i <= maxIndex; i++) {
-          const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
-          const value = mapping ? resolveShopifyPathValue(sch.body, mapping.shopifyPath) : "";
-          bodyParameters.push({
-            type: "text",
-            text: String(value ?? ""),
-          });
-        }
-        parameterData.push({
-          type: "body",
-          parameters: bodyParameters,
-        });
-      }
-    }
-
-    const res = await sendTemplateToUserCore(
-      orgId,
-      survey.waTemplateId ?? "",
-      sch.phone,
-      parameterData,
-      survey.teamId,
-    );
-    // See the identical note in sendShopifySurveyCronAction: we never pass a
-    // timeDelay here, so only the `message` shape of the union return can ever
-    // come back at runtime.
-    if ("message" in res) {
-      sch.status = res.status ? "SENT" : `FAILED: ${res.message} `;
-      let messageSentAt = new Date();
-      if (res.status) {
-        const message = await prisma.waMessage.findFirst({
-          where: { messageId: res.message },
-        });
-        messageSentAt = message?.waCreatedAt || new Date();
-      }
-      sch.sentAt = messageSentAt;
-      sch.history.forEach((h) => {
-        if (h.scheduleId === sch.scheduleId || h.scheduledAt === sch.scheduledAt) {
-          h.status = sch.status;
-          h.sentAt = messageSentAt;
-        }
-      });
-    }
-
-    log.info(`Successfully processed schedule ${scheduleId}: status ${sch.status} `);
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : String(e);
-    log.error({ err: e }, `Error sending template for schedule ${scheduleId}`);
-    sch.status = `FAILED: ${errorMessage} `;
-    sch.history.forEach((h) => {
-      if (h.scheduleId === sch.scheduleId || h.scheduledAt === sch.scheduledAt) {
-        h.status = sch.status;
-      }
-    });
-  }
-
-  survey.schedules[scheduleIndex] = sch;
-  shopifySurveys[surveyIndex] = survey;
-
-  try {
-    await updateShopifyIntegrationByOrgId(orgId, {
-      credential: {
-        ...integration.credential,
-        shopifySurveys,
-      },
-    });
-  } catch (e) {
-    log.error({ e }, `error updating shopify integration for orgId => ${orgId}`);
-  }
+/** Sends one scheduled survey; see `commerce/surveys.ts`. What the survey worker runs. */
+export async function processShopifySurveySchedule(jobData: OrderSurveyJobData) {
+  const { getCommerceProvider } = await import("../commerce/registry.js");
+  await processOrderSurveySchedule(jobData, getCommerceProvider);
 }
 
 export async function sendWhatsAppTemplateToCustomer(
@@ -1309,54 +1082,28 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       ...(body.line_items?.map((product) => `gid://shopify/Product/${product.product_id}`) ?? []),
     );
   }
-  // Loyalty first, and deliberately above the phone guard: it can identify a customer by
-  // email, so it must not sit behind a check for a number the order may never have carried.
-  // Enqueueing is a Redis write, so putting it first costs the messaging paths nothing —
-  // and it means a throw further down can no longer swallow the points.
+  // Everything after this point — loyalty, the order.* event, the survey and the
+  // automation rules — is the commerce layer's, shared with every store.
   const orderId = body?.id != null ? String(body.id) : null;
-  if (orderId) {
-    await enqueueShopifyOrderLoyalty({
-      shop,
-      topic,
+  await onOrderEvent(
+    {
+      provider: shopifyCommerce,
+      storeId: shop,
       orgId: shopifyInfo.orgId,
+      integration: shopifyInfo as unknown as PrismaIntegration,
+    },
+    {
       orderId,
-      phone: customerPhone ?? null,
-      email: customerEmail ?? null,
+      status: SHOPIFY_ORDER_STATUS[topic] ?? "fulfillment_cancelled",
+      eventKey: topic,
+      customer: { phone: customerPhone ?? null, email: customerEmail ?? null },
       amount: extractPurchaseAmount(body),
+      productIds,
       discountCodes: extractDiscountCodes(body),
-    });
-  }
-
-  if (!customerPhone) {
-    // The survey and automation paths genuinely need a number — there is nowhere to send a
-    // WhatsApp message without one. Logged at info, not trace: "this order reached nobody"
-    // is something a shop needs to be able to find.
-    log.info(
-      { shop, topic, orderId, hasEmail: Boolean(customerEmail) },
-      "Shopify order carries no phone number; WhatsApp survey and automation paths skipped",
-    );
-    return;
-  }
-
-  await createScheduleOnShopifyEvent({
-    customerPhone,
-    event: topic,
-    shopifyInfo,
-    productIds,
-    webhookId,
-    scheduleFromDate: new Date(),
-    // amount: Number(body?.total_price),
-    body,
-  });
-
-  await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
-    orgId: shopifyInfo.orgId,
-    phone: customerPhone,
-    shopifyEvent: topic,
-    shopifyProductIds: productIds,
-    shopifyBody: body,
-    platform: "WHATSAPP",
-  });
+      deliveryId: webhookId,
+      raw: body as unknown as Record<string, unknown>,
+    },
+  );
 }
 
 export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
