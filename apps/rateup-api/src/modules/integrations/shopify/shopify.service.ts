@@ -1,7 +1,15 @@
 import prisma from "../../../utils/prisma.js";
-import redisConnection from "../../../utils/redisConnection.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import shopify from "./shopify.config.js";
+import {
+  type CheckoutWebhookBody,
+  type CustomerRedactBody,
+  handleCheckoutDeleted,
+  handleCheckoutWebhook,
+  markCheckoutRecovered,
+  redactShopifyCustomer,
+  redactShopifyShop,
+} from "./shopify.checkouts.service.js";
 import { getActiveShopifySession } from "./shopify.session.js";
 import { GraphqlClient, GraphQLClientResponse, Session } from "@shopify/shopify-api";
 import type { IncomingMessage, ServerResponse } from "http";
@@ -173,8 +181,34 @@ export async function registerShopifyWebhook(session: Session) {
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({ session });
   const registered = new Set((await getManagableWebhooks(client)).map((w) => w.topic));
+  // Every missing topic is tried: one the shop's scopes refuse must not block the rest.
+  const errors: string[] = [];
   for (const topic of Object.keys(defaultWebhookHandlers)) {
-    if (!registered.has(topic)) await registerWebhookByTopic(topic, session);
+    if (registered.has(topic)) continue;
+    try {
+      await registerWebhookByTopic(topic, session);
+    } catch (e) {
+      errors.push(e instanceof Error ? e.message : String(e));
+    }
+  }
+  if (errors.length) throw new Error(errors.join("; "));
+}
+
+/**
+ * Daily: subscribes every connected shop to topics added since it installed. Otherwise a
+ * new topic reaches only shops whose merchant presses "register webhooks" again.
+ */
+export async function syncShopifyWebhooks() {
+  const integrations = (await prisma.integration.findMany({
+    where: { name: IntegratedApps.shopify, active: true },
+  })) as unknown as ShopifyIntegration[];
+  for (const integration of integrations) {
+    if (!integration.credential?.session) continue;
+    try {
+      await registerShopifyWebhook(await getActiveShopifySession(integration));
+    } catch (e) {
+      log.error({ err: e, orgId: integration.orgId }, "Shopify webhook sync failed for shop");
+    }
   }
 }
 
@@ -304,184 +338,6 @@ export async function createScheduleOnShopifyEvent({
   }
 }
 
-export async function sendShopifySurveyCronAction() {
-  const currentTime = new Date();
-  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000);
-
-  const integrations = (await prisma.integration.findMany({
-    where: {
-      name: IntegratedApps.shopify,
-    },
-  })) as unknown as ShopifyIntegration[];
-
-  if (!integrations.length) {
-    log.trace("No shopify integration found");
-    return;
-  }
-
-  for (const integration of integrations) {
-    const {
-      credential: { shopifySurveys },
-      orgId,
-    } = integration;
-
-    if (!shopifySurveys || !shopifySurveys.length) {
-      log.trace("No config found");
-      continue;
-    }
-    const newShopifySurveys = [...shopifySurveys];
-    const callShopifyApi = newShopifySurveys.some(
-      (s) =>
-        s.event === ShopifyEvents.ABANDONED_CHECKOUTS &&
-        s.schedules &&
-        s.schedules.some(
-          (sch) =>
-            sch.status === "SCHEDULED" ||
-            (s.repeatInterval.value &&
-              dayjs().diff(dayjs(sch.sentAt), s.repeatInterval.unit) >= s.repeatInterval.value),
-        ),
-    );
-
-    let allCheckouts: AbandonedCheckoutNode[] | undefined;
-
-    if (callShopifyApi) {
-      try {
-        if (!shopify) throw new Error("Shopify integration is not configured");
-        const client = new shopify.clients.Graphql({
-          session: await getActiveShopifySession(integration),
-        });
-        allCheckouts = await getAbandonedCheckouts(client);
-      } catch (e) {
-        log.error({ err: e }, "Error getting abandoned checkouts");
-        continue;
-      }
-    }
-
-    for (const config of newShopifySurveys) {
-      const { event, schedules, repeatInterval, waTemplateId, teamId, active } = config;
-      if (!schedules || !schedules.length || !active) {
-        log.trace("No schedules found");
-        continue;
-      }
-      const newSchedules = [...schedules];
-      const isAbandonedEvent = event === ShopifyEvents.ABANDONED_CHECKOUTS;
-      if (!isAbandonedEvent) continue;
-      if (isAbandonedEvent && !callShopifyApi) continue;
-      for (const sch of newSchedules) {
-        let tobeSent = false;
-        const isCheckoutNotExist =
-          isAbandonedEvent && !allCheckouts?.find((c) => c.id === sch.checkoutId);
-        if (sch.status === "SCHEDULED" && new Date(sch.scheduledAt) <= fiveMinutesLater) {
-          if (isCheckoutNotExist) {
-            sch.status = "CHECKOUT DELETED";
-            sch.history.forEach((h) => {
-              if (h.scheduledAt === sch.scheduledAt) h.status = "CHECKOUT DELETED";
-            });
-          } else {
-            tobeSent = true;
-          }
-        } else {
-          if (isAbandonedEvent && !isCheckoutNotExist) {
-            if (
-              repeatInterval?.value &&
-              dayjs().diff(dayjs(sch.sentAt), repeatInterval?.unit) >= repeatInterval?.value
-            ) {
-              tobeSent = true;
-              //add new schedule history and update
-              const newSchedule: ScheduleObj = {
-                createdAt: new Date(),
-                scheduledAt: new Date(),
-                sentAt: null,
-                status: null,
-              };
-              sch.createdAt = newSchedule.createdAt;
-              sch.scheduledAt = newSchedule.scheduledAt;
-              sch.sentAt = newSchedule.sentAt;
-              sch.history = [...sch.history, newSchedule];
-            }
-          }
-        }
-        console.log("tobeSent", tobeSent);
-        if (tobeSent) {
-          try {
-            let parameterData = [];
-            if (config.variableMapping && sch.body) {
-              const bodyParameters = [];
-              const sortedMappings = [...config.variableMapping].sort(
-                (a, b) => a.templateParamIndex - b.templateParamIndex,
-              );
-              const maxIndex = Math.max(...sortedMappings.map((m) => m.templateParamIndex), -1);
-
-              if (maxIndex !== -1) {
-                for (let i = 0; i <= maxIndex; i++) {
-                  const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
-                  const value = mapping
-                    ? resolveShopifyPathValue(sch.body, mapping.shopifyPath)
-                    : "";
-                  bodyParameters.push({
-                    type: "text",
-                    text: String(value ?? ""),
-                  });
-                }
-                parameterData.push({
-                  type: "body",
-                  parameters: bodyParameters,
-                });
-              }
-            }
-
-            const res = await sendTemplateToUserCore(
-              orgId,
-              waTemplateId ?? "",
-              sch.phone,
-              parameterData,
-              teamId,
-            );
-            // sendTemplateToUserCore's declared return type is a union with the
-            // timeDelay-scheduled branch (which has no `.message`/boolean
-            // `.status`), but we never pass a timeDelay here so only the
-            // `message` shape can ever come back at runtime — narrow for TS.
-            if ("message" in res) {
-              sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
-              let messageSentAt: Date | null = null;
-              if (res.status) {
-                const message = await prisma.waMessage.findFirst({
-                  where: {
-                    messageId: res.message,
-                  },
-                });
-                messageSentAt = message?.waCreatedAt ?? null;
-              }
-              sch.sentAt = messageSentAt;
-              sch.history.forEach((h) => {
-                if (h.scheduledAt === sch.scheduledAt) {
-                  h.status = sch.status;
-                  h.sentAt = messageSentAt;
-                }
-              });
-            }
-          } catch (e) {
-            log.error({ err: e }, "error sending template");
-            continue;
-          }
-        }
-      }
-      config.schedules = newSchedules;
-    }
-    try {
-      await updateShopifyIntegrationByOrgId(orgId, {
-        credential: {
-          ...integration.credential,
-          shopifySurveys: newShopifySurveys,
-        },
-      });
-    } catch (e) {
-      log.error({ err: e, orgId }, "error updating shopify integration");
-      continue;
-    }
-  }
-}
-
 export async function deleteWebhookById(webhookId: string, client: GraphqlClient) {
   await client.request(
     `mutation webhookSubscriptionDelete($id: ID!) {
@@ -577,8 +433,7 @@ export async function processShopifySurveySchedule(jobData: {
       parameterData,
       survey.teamId,
     );
-    // See the identical note in sendShopifySurveyCronAction: we never pass a
-    // timeDelay here, so only the `message` shape of the union return can ever
+    // No timeDelay is passed, so only the `message` shape of the union return can
     // come back at runtime.
     if ("message" in res) {
       sch.status = res.status ? "SENT" : `FAILED: ${res.message} `;
@@ -1121,6 +976,20 @@ export async function handleWebhook(webhook: ShopifyWebhookJobData) {
     case ShopifyEvents.REFUNDS_CREATE:
       await handleShopifyRefundEvent(webhook);
       break;
+    // Each body is narrowed by the topic its case matches.
+    case ShopifyEvents.CHECKOUTS_CREATE:
+    case ShopifyEvents.CHECKOUTS_UPDATE:
+      await handleCheckoutWebhook(webhook.shop, webhook.body as unknown as CheckoutWebhookBody);
+      break;
+    case ShopifyEvents.CHECKOUTS_DELETE:
+      await handleCheckoutDeleted(webhook.shop, webhook.body);
+      break;
+    case ShopifyEvents.CUSTOMERS_REDACT:
+      await redactShopifyCustomer(webhook.shop, webhook.body as unknown as CustomerRedactBody);
+      break;
+    case ShopifyEvents.SHOP_REDACT:
+      await redactShopifyShop(webhook.shop);
+      break;
     case ShopifyEvents.APP_UNINSTALLED:
       await handleShopifyAppUnistalled(webhook);
       break;
@@ -1329,6 +1198,10 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       amount: extractPurchaseAmount(body),
       discountCodes: extractDiscountCodes(body),
     });
+  }
+
+  if (topic === ShopifyEvents.ORDERS_CREATE) {
+    await markCheckoutRecovered(shopifyInfo.orgId, body);
   }
 
   if (!customerPhone) {
@@ -1556,429 +1429,6 @@ export async function deleteShopifyIntegrationByShop(shop: string) {
       },
     },
   });
-}
-
-interface AbandonedCheckoutNode {
-  id: string;
-  createdAt: string;
-  completedAt: string | null;
-  billingAddress: { phone: string | null } | null;
-  // Only the rule query selects shippingAddress and defaultPhoneNumber; the legacy
-  // survey query leaves them out, so the phone lookup must treat them as optional.
-  shippingAddress?: { phone: string | null } | null;
-  customer: {
-    defaultAddress: { phone: string | null } | null;
-    defaultPhoneNumber?: { phoneNumber: string } | null;
-  } | null;
-}
-
-interface AbandonedCheckoutsData {
-  abandonedCheckouts: {
-    edges: { node: AbandonedCheckoutNode; cursor: string }[];
-    pageInfo: { endCursor: string | null; hasNextPage: boolean };
-  };
-}
-
-export async function getAbandonedCheckouts(
-  client: GraphqlClient,
-): Promise<AbandonedCheckoutNode[]> {
-  const allCheckouts: AbandonedCheckoutNode[] = [];
-  let hasNextPage = true;
-  let cursor: string | null = null;
-  while (hasNextPage) {
-    // BUG (fixed): the query used to ask for `edges { nodes { ... } }` — but
-    // `nodes` (plural) is a field of the *connection*
-    // (AbandonedCheckoutConnection), not of an individual edge
-    // (AbandonedCheckoutEdge, which only has `node`, singular). Shopify's
-    // GraphQL API rejects that field entirely, so this always failed and the
-    // abandoned-checkout survey/recovery feature could never return a single
-    // checkout. Also added `billingAddress`/`customer.defaultAddress` phone
-    // fields, which `validateAndParseCheckoutPhone` needs to find a phone
-    // number — the query never selected them, so that lookup could never
-    // succeed even once the edges/node bug above was fixed.
-    const data: GraphQLClientResponse<AbandonedCheckoutsData> = await client.request(
-      `query getAbandonedCheckouts($cursor: String) {
-      abandonedCheckouts(first: 50, after: $cursor){
-      edges {
-       node {
-         id
-         createdAt
-         completedAt
-         billingAddress {
-           phone
-         }
-         customer {
-           defaultAddress {
-             phone
-           }
-         }
-       }
-       cursor
-      }
-      pageInfo {
-       endCursor
-       hasNextPage
-      }
-      }
-  }`,
-      { variables: { cursor } },
-    );
-    if (!data.data) throw new Error("Shopify abandonedCheckouts query returned no data");
-    hasNextPage = data.data.abandonedCheckouts.pageInfo.hasNextPage;
-    cursor = data.data.abandonedCheckouts.pageInfo.endCursor;
-    allCheckouts.push(
-      ...data.data.abandonedCheckouts.edges.map((e) => e.node).filter((a) => !a.completedAt),
-    );
-  }
-  return allCheckouts;
-}
-
-export async function sendTemplateForShopifyAbandonedCheckouts() {
-  try {
-    const integrations = (await prisma.integration.findMany({
-      where: {
-        name: IntegratedApps.shopify,
-      },
-    })) as unknown as ShopifyIntegration[];
-
-    await Promise.all(
-      integrations.map(async (integration) => {
-        const { orgId, credential } = integration;
-        const abandonedCheckoutConfig = credential.shopifySurveys.find(
-          (s) => s.event === ShopifyEvents.ABANDONED_CHECKOUTS,
-        );
-        if (!abandonedCheckoutConfig) {
-          log.trace("No abandoned checkout template config found");
-          return false;
-        }
-        const { waTemplateId, teamId } = abandonedCheckoutConfig;
-        if (!shopify) throw new Error("Shopify integration is not configured");
-        const client = new shopify.clients.Graphql({
-          session: await getActiveShopifySession(integration),
-        });
-        const allCheckouts = await getAbandonedCheckouts(client);
-
-        if (!allCheckouts || !allCheckouts.length) {
-          log.trace("No abandoned checkouts found");
-          return false;
-        }
-        //checkouts created within one hour
-        const lastCheckouts = allCheckouts.filter(
-          (checkout) => dayjs().diff(checkout.createdAt, "hours") < 1,
-        );
-
-        if (!lastCheckouts.length) {
-          log.trace("No recent checkouts ");
-          if (!abandonedCheckoutConfig.repeatInterval.value) return false;
-        }
-
-        let sentNowCheckoutList: Array<{ phone: string; checkoutId: string }> = [];
-
-        const { timeDelay, schedules = [], repeatInterval } = abandonedCheckoutConfig;
-        const shopifySurveys = [...credential.shopifySurveys];
-
-        lastCheckouts.forEach((checkout) => {
-          const phone = validateAndParseCheckoutPhone(checkout);
-
-          if (!phone) {
-            log.trace("invalid phone number");
-            return false;
-          }
-          if (timeDelay) {
-            // BUG (fixed): `checkout` is the GraphQL abandoned-checkout node
-            // (camelCase `createdAt`), not a REST order/checkout payload —
-            // `checkout.created_at` was always undefined, so `getScheduleTime`
-            // silently scheduled off `undefined` instead of the checkout's
-            // real creation time.
-            const scheduledTime = getScheduleTime(timeDelay, new Date(checkout.createdAt));
-            const schedule = {
-              status: "SCHEDULED",
-              createdAt: new Date(),
-              scheduledAt: scheduledTime,
-            };
-            schedules.push({
-              ...schedule,
-              history: [schedule],
-              phone,
-              checkoutId: checkout.id.toString(),
-            });
-          } else {
-            sentNowCheckoutList.push({
-              phone,
-              checkoutId: checkout.id.toString(),
-            });
-          }
-        });
-        if (repeatInterval?.value) {
-          allCheckouts
-            .filter((checkout) =>
-              schedules.find(
-                (c) =>
-                  checkout.id === c.checkoutId &&
-                  dayjs().diff(dayjs(c.sentAt), repeatInterval?.unit) >= repeatInterval?.value,
-              ),
-            )
-            .forEach((checkout) => {
-              const phone = validateAndParseCheckoutPhone(checkout);
-              if (phone)
-                sentNowCheckoutList.push({
-                  phone,
-                  checkoutId: checkout.id.toString(),
-                });
-            });
-        }
-        await Promise.all(
-          sentNowCheckoutList.map(async (checkout) => {
-            const res = await sendTemplateToUserCore(
-              orgId,
-              waTemplateId ?? "",
-              checkout.phone,
-              [],
-              teamId,
-            );
-            if (!("message" in res)) return;
-
-            let messageSentAt = new Date();
-            if (res.status) {
-              const message = await prisma.waMessage.findFirst({
-                where: {
-                  messageId: res.message,
-                },
-              });
-              messageSentAt = message?.waCreatedAt ?? messageSentAt;
-            }
-            const schedule = {
-              status: res.status ? "SENT" : `FAILED: ${res.message}`,
-              createdAt: messageSentAt,
-              scheduledAt: messageSentAt,
-              sentAt: res.status ? messageSentAt : null,
-            };
-            const index = schedules.findIndex((s) => s.checkoutId === checkout.checkoutId);
-            if (index !== -1) {
-              const history = schedules[index].history ?? [];
-              history.push(schedule);
-              schedules[index] = {
-                ...schedule,
-                phone: checkout.phone,
-                history,
-              };
-            } else {
-              schedules.push({
-                ...schedule,
-                history: [schedule],
-                phone: checkout.phone,
-                checkoutId: checkout.checkoutId,
-              });
-            }
-          }),
-        );
-
-        shopifySurveys.forEach((s) => {
-          if (s.event === ShopifyEvents.ABANDONED_CHECKOUTS) s.schedules = schedules;
-        });
-
-        const _resp1 = await updateShopifyIntegrationByOrgId(orgId, {
-          credential: { ...credential, shopifySurveys },
-        });
-      }),
-    );
-  } catch (e) {
-    log.error(e);
-  }
-}
-
-/**
- * How long a checkout must sit untouched before automation rules treat it as abandoned.
- * Shopify lists a checkout as soon as the buyer enters contact details, so without this
- * a rule would message someone who is still on the payment step.
- */
-const ABANDONED_CHECKOUT_IDLE_MINUTES = 60;
-/**
- * Checkouts idle for longer than this are left alone, so the first run after a merchant
- * creates the rule does not message their whole backlog.
- */
-const ABANDONED_CHECKOUT_LOOKBACK_HOURS = 24;
-/** Outlives the lookback, so a checkout already handled can never qualify again. */
-const ABANDONED_CHECKOUT_DEDUPE_TTL_SECONDS = 7 * 24 * 60 * 60;
-
-interface RuleAbandonedCheckoutNode extends AbandonedCheckoutNode {
-  name: string;
-  updatedAt: string;
-  abandonedCheckoutUrl: string;
-  discountCodes: string[];
-  totalPriceSet: { shopMoney: { amount: string; currencyCode: string } };
-  subtotalPriceSet: { shopMoney: { amount: string } };
-  billingAddress: { phone: string | null; city: string | null } | null;
-  shippingAddress: { phone: string | null; city: string | null } | null;
-  customer: {
-    firstName: string | null;
-    lastName: string | null;
-    defaultEmailAddress: { emailAddress: string } | null;
-    defaultPhoneNumber: { phoneNumber: string } | null;
-    defaultAddress: { phone: string | null } | null;
-  } | null;
-  lineItems: { nodes: { title: string; quantity: number; product: { id: string } | null }[] };
-}
-
-/** Abandoned checkouts last touched inside the lookback window, newest first. */
-async function getRecentAbandonedCheckouts(
-  client: GraphqlClient,
-  since: Date,
-): Promise<RuleAbandonedCheckoutNode[]> {
-  const checkouts: RuleAbandonedCheckoutNode[] = [];
-  let cursor: string | null = null;
-  let hasNextPage = true;
-  while (hasNextPage) {
-    const res: GraphQLClientResponse<{
-      abandonedCheckouts: {
-        nodes: RuleAbandonedCheckoutNode[];
-        pageInfo: { endCursor: string | null; hasNextPage: boolean };
-      };
-    }> = await client.request(
-      `query recentAbandonedCheckouts($cursor: String, $query: String) {
-  abandonedCheckouts(first: 50, after: $cursor, query: $query, sortKey: CREATED_AT, reverse: true) {
-    nodes {
-      id
-      name
-      createdAt
-      updatedAt
-      completedAt
-      abandonedCheckoutUrl
-      discountCodes
-      totalPriceSet { shopMoney { amount currencyCode } }
-      subtotalPriceSet { shopMoney { amount } }
-      customer {
-        firstName
-        lastName
-        defaultEmailAddress { emailAddress }
-        defaultPhoneNumber { phoneNumber }
-        defaultAddress { phone }
-      }
-      billingAddress { phone city }
-      shippingAddress { phone city }
-      lineItems(first: 50) { nodes { title quantity product { id } } }
-    }
-    pageInfo { endCursor hasNextPage }
-  }
-}`,
-      { variables: { cursor, query: `updated_at:>='${since.toISOString()}'` } },
-    );
-    if (!res.data) throw new Error("Shopify abandonedCheckouts query returned no data");
-    checkouts.push(...res.data.abandonedCheckouts.nodes);
-    hasNextPage = res.data.abandonedCheckouts.pageInfo.hasNextPage;
-    cursor = res.data.abandonedCheckouts.pageInfo.endCursor;
-  }
-  return checkouts;
-}
-
-/**
- * Reshapes a GraphQL abandoned checkout into the snake_case webhook shape that rule
- * variables are mapped against (resolveShopifyPathValue), so "Customer First Name",
- * "Total Price" and "Checkout Recovery Link" resolve the same way they do for orders.
- */
-function toAbandonedCheckoutRuleBody(checkout: RuleAbandonedCheckoutNode): ShopifyWebhookBody {
-  const email = checkout.customer?.defaultEmailAddress?.emailAddress;
-  return {
-    id: checkout.id.split("/").pop(),
-    admin_graphql_api_id: checkout.id,
-    name: checkout.name,
-    created_at: checkout.createdAt,
-    updated_at: checkout.updatedAt,
-    abandoned_checkout_url: checkout.abandonedCheckoutUrl,
-    total_price: checkout.totalPriceSet.shopMoney.amount,
-    subtotal_price: checkout.subtotalPriceSet.shopMoney.amount,
-    currency: checkout.totalPriceSet.shopMoney.currencyCode,
-    discount_codes: checkout.discountCodes.map((code) => ({ code })),
-    email,
-    customer: checkout.customer
-      ? {
-          first_name: checkout.customer.firstName,
-          last_name: checkout.customer.lastName,
-          email,
-          phone: checkout.customer.defaultPhoneNumber?.phoneNumber,
-        }
-      : null,
-    billing_address: checkout.billingAddress,
-    shipping_address: checkout.shippingAddress,
-    line_items: checkout.lineItems.nodes.map((item) => ({
-      title: item.title,
-      quantity: item.quantity,
-      product_id: item.product?.id.split("/").pop(),
-    })),
-  };
-}
-
-/**
- * Fires "On abandoned checkouts" automation rules. Shopify has no abandoned-checkout
- * webhook, so this polls each org that has such a rule: a checkout qualifies once it has
- * been idle for ABANDONED_CHECKOUT_IDLE_MINUTES, and fires at most once, claimed in
- * Redis before the rule runs so an overlapping tick or a crash mid-send cannot message
- * the customer twice.
- *
- * Separate from sendTemplateForShopifyAbandonedCheckouts, which serves the legacy
- * per-integration template settings and never reached the rule engine.
- */
-export async function triggerShopifyAbandonedCheckoutRules() {
-  const rules = await prisma.rule.findMany({
-    where: {
-      triggerEvent: TriggerEvent.SHOPIFY_EVENT,
-      isActive: true,
-      options: { path: ["shopifyEvent"], equals: ShopifyEvents.ABANDONED_CHECKOUTS },
-    },
-    select: { orgId: true },
-    distinct: ["orgId"],
-  });
-  if (!rules.length || !shopify) return;
-
-  const now = dayjs();
-  const since = now.subtract(ABANDONED_CHECKOUT_LOOKBACK_HOURS, "hour").toDate();
-  const idleCutoff = now.subtract(ABANDONED_CHECKOUT_IDLE_MINUTES, "minute");
-
-  // One org at a time: each is a paginated Admin API walk, and one store's failure
-  // (revoked token, uninstalled app) must not stop the others.
-  for (const { orgId } of rules) {
-    try {
-      const integration = (await prisma.integration.findFirst({
-        where: { orgId, name: IntegratedApps.shopify, active: true },
-      })) as unknown as ShopifyIntegration | null;
-      if (!integration?.credential?.session) continue;
-
-      const client = new shopify.clients.Graphql({
-        session: await getActiveShopifySession(integration),
-      });
-      const checkouts = await getRecentAbandonedCheckouts(client, since);
-
-      for (const checkout of checkouts) {
-        if (checkout.completedAt || dayjs(checkout.updatedAt).isAfter(idleCutoff)) continue;
-        const phone = validateAndParseCheckoutPhone(checkout);
-        if (!phone) continue;
-
-        const claimed = await redisConnection.set(
-          `shopify:abandoned-checkout-rule:${orgId}:${checkout.id}`,
-          "1",
-          "EX",
-          ABANDONED_CHECKOUT_DEDUPE_TTL_SECONDS,
-          "NX",
-        );
-        if (!claimed) continue;
-
-        await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
-          orgId,
-          phone,
-          shopifyEvent: ShopifyEvents.ABANDONED_CHECKOUTS,
-          shopifyProductIds: checkout.lineItems.nodes.flatMap((item) =>
-            item.product ? [item.product.id] : [],
-          ),
-          // Narrowed like the order path does: the rule context types its body as the
-          // orders/create sample, but reads it through resolveShopifyPathValue.
-          shopifyBody: toAbandonedCheckoutRuleBody(checkout) as unknown as ShopifyBody,
-          platform: "WHATSAPP",
-        });
-      }
-    } catch (e) {
-      log.error({ err: e, orgId }, "Shopify abandoned checkout rules failed for org");
-    }
-  }
 }
 
 /**
@@ -2569,33 +2019,6 @@ export async function createShopifyDraftOrder(
   }
 
   return draftOrderData.data.draftOrderCreate.draftOrder;
-}
-
-function validateAndParseCheckoutPhone(checkout: AbandonedCheckoutNode) {
-  // BUG (fixed): this read `checkout.customer.phone` and
-  // `checkout.customer.default_address.phone` / `checkout.billing_address.phone`
-  // with no optional chaining, and none of those fields (nor a top-level
-  // `checkout.phone` — AbandonedCheckout has no such field) are ever present
-  // on the GraphQL abandoned-checkout node this function is actually called
-  // with. Every call threw ("Cannot read properties of undefined/null") the
-  // moment `checkout.customer` was ever null, aborting the whole
-  // `Promise.all` in `sendTemplateForShopifyAbandonedCheckouts` for every org
-  // being processed in that batch, not just the one with a missing phone.
-  const phoneNumber =
-    checkout.customer?.defaultPhoneNumber?.phoneNumber ||
-    checkout.customer?.defaultAddress?.phone ||
-    checkout.billingAddress?.phone ||
-    checkout.shippingAddress?.phone;
-  if (!phoneNumber) {
-    log.trace("No Phone Number found");
-    return false;
-  }
-  const phone = parsePhoneNumber(phoneNumber, "IN");
-  if (phone.isValid() === false) {
-    log.trace("Invalid Phone number");
-    return false;
-  }
-  return phone.number;
 }
 
 /**

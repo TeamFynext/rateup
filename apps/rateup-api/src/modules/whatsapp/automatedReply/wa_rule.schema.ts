@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { ShopifyEvents } from "../../../types/enums.js";
 import {
+  MAX_ABANDONED_DELAY_MINUTES,
+  MIN_ABANDONED_DELAY_MINUTES,
+} from "../../integrations/shopify/abandonedCheckout.constants.js";
+import {
   ActionType,
   ConditionField,
   ConditionOperator,
@@ -9,9 +13,18 @@ import {
   TriggerEvent,
 } from "../../../../generated/prisma/enums.js";
 
+/** Topics that only feed stored state; a rule cannot be triggered by them. */
+const NON_TRIGGER_EVENTS = new Set<string>([
+  ShopifyEvents.APP_UNINSTALLED,
+  ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE,
+  ShopifyEvents.CHECKOUTS_CREATE,
+  ShopifyEvents.CHECKOUTS_UPDATE,
+  ShopifyEvents.CHECKOUTS_DELETE,
+  ShopifyEvents.CUSTOMERS_REDACT,
+  ShopifyEvents.SHOP_REDACT,
+]);
 const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents).filter(
-  (value) =>
-    value !== ShopifyEvents.APP_UNINSTALLED && value !== ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE,
+  (value) => !NON_TRIGGER_EVENTS.has(value),
 ) as [string, ...string[]];
 
 export const ruleConditionSchema = z.object({
@@ -44,6 +57,15 @@ export const ruleOptionsSchema = z.object({
     .optional(),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).optional(),
+  // Abandoned checkouts: how long a checkout sits untouched before this rule reminds, and
+  // whether to message only buyers who accepted marketing at checkout.
+  abandonedCheckoutDelayMinutes: z
+    .number()
+    .int()
+    .min(MIN_ABANDONED_DELAY_MINUTES)
+    .max(MAX_ABANDONED_DELAY_MINUTES)
+    .optional(),
+  requireMarketingConsent: z.boolean().optional(),
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).optional(),
   instagramPostIds: z.array(z.string()).optional(),

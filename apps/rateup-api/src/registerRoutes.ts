@@ -54,6 +54,7 @@ import healthRoutes from "./routes/health.js";
 import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.public.route.js";
 import { loyaltyProgramPublicRoutes } from "./modules/loyalty/program/program.public.route.js";
 import { loyaltyFeedbackPublicRoutes } from "./modules/loyalty/feedback/feedback.public.route.js";
+import { shopifyLinkPublicRoutes } from "./modules/integrations/shopify/shopify.link.route.js";
 import { loyaltyCardPublicRoutes } from "./modules/loyalty/accounts/card.public.route.js";
 import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
 import { webhookRoutes } from "./modules/webhook/webhook.route.js";
@@ -85,6 +86,7 @@ const routeConfigs = [
   },
   { plugin: loyaltyProgramPublicRoutes, prefix: "/api/public/loyalty/programs" },
   { plugin: loyaltyFeedbackPublicRoutes, prefix: "/api/public/loyalty/feedback" },
+  { plugin: shopifyLinkPublicRoutes, prefix: "/api/public/r" },
   { plugin: loyaltyCardPublicRoutes, prefix: "/api/public/loyalty/cards" },
 
   // // Protected routes
