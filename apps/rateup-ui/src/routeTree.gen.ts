@@ -95,7 +95,9 @@ import { Route as authSignupSuccessIndexRouteImport } from './routes/(auth)/sign
 import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
 import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
+import { Route as marketingIntegrationsHubspotIndexRouteImport } from './routes/(marketing)/integrations/hubspot/index'
 import { Route as marketingIntegrationsShopifyIndexRouteImport } from './routes/(marketing)/integrations/shopify/index'
+import { Route as marketingIntegrationsWoocommerceIndexRouteImport } from './routes/(marketing)/integrations/woocommerce/index'
 import { Route as marketingPricingShopifyIndexRouteImport } from './routes/(marketing)/pricing/shopify/index'
 import { Route as marketingProductsAiAutomationIndexRouteImport } from './routes/(marketing)/products/ai-automation/index'
 import { Route as marketingProductsAiReviewIndexRouteImport } from './routes/(marketing)/products/ai-review/index'
@@ -215,6 +217,7 @@ import { Route as publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport } from
 import { Route as publicFacingPublicSurveySurveyIdEndIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/end/index'
 import { Route as publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/review-us-on-google/index'
 import { Route as publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport } from './routes/(public-facing)/public/wa/$surveyTeamMapId/redirect/index'
+import { Route as DashboardSettingsIntegrationsIdCallbackIndexRouteImport } from './routes/dashboard/settings/integrations/$id/callback/index'
 import { Route as DashboardSettingsIntegrationsZohoCallbackIndexRouteImport } from './routes/dashboard/settings/integrations/zoho/callback/index'
 import { Route as DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v1/$dbFlowId/index'
 import { Route as DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v2/$dbFlowId/index'
@@ -669,10 +672,22 @@ const marketingBlogTagSitemapDotxmlRoute =
     path: '/tag/sitemap.xml',
     getParentRoute: () => marketingBlogRouteRoute,
   } as any)
+const marketingIntegrationsHubspotIndexRoute =
+  marketingIntegrationsHubspotIndexRouteImport.update({
+    id: '/integrations/hubspot/',
+    path: '/integrations/hubspot/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
 const marketingIntegrationsShopifyIndexRoute =
   marketingIntegrationsShopifyIndexRouteImport.update({
     id: '/integrations/shopify/',
     path: '/integrations/shopify/',
+    getParentRoute: () => marketingRouteRoute,
+  } as any)
+const marketingIntegrationsWoocommerceIndexRoute =
+  marketingIntegrationsWoocommerceIndexRouteImport.update({
+    id: '/integrations/woocommerce/',
+    path: '/integrations/woocommerce/',
     getParentRoute: () => marketingRouteRoute,
   } as any)
 const marketingPricingShopifyIndexRoute =
@@ -1386,6 +1401,12 @@ const publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute =
     path: '/public/wa/$surveyTeamMapId/redirect/',
     getParentRoute: () => publicFacingRouteRoute,
   } as any)
+const DashboardSettingsIntegrationsIdCallbackIndexRoute =
+  DashboardSettingsIntegrationsIdCallbackIndexRouteImport.update({
+    id: '/settings/integrations/$id/callback/',
+    path: '/settings/integrations/$id/callback/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardSettingsIntegrationsZohoCallbackIndexRoute =
   DashboardSettingsIntegrationsZohoCallbackIndexRouteImport.update({
     id: '/settings/integrations/zoho/callback/',
@@ -1493,7 +1514,9 @@ export interface FileRoutesByFullPath {
   '/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/signup/success/': typeof authSignupSuccessIndexRoute
   '/blog/$slug/': typeof marketingBlogSlugIndexRoute
+  '/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
   '/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
+  '/integrations/woocommerce/': typeof marketingIntegrationsWoocommerceIndexRoute
   '/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
   '/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
@@ -1609,6 +1632,7 @@ export interface FileRoutesByFullPath {
   '/public/survey/$surveyId/end/': typeof publicFacingPublicSurveySurveyIdEndIndexRoute
   '/public/survey/$surveyId/review-us-on-google/': typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
   '/public/wa/$surveyTeamMapId/redirect/': typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
+  '/dashboard/settings/integrations/$id/callback/': typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   '/dashboard/settings/integrations/zoho/callback/': typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId/': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId/': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
@@ -1696,7 +1720,9 @@ export interface FileRoutesByTo {
   '/login/verify-phone-number': typeof authLoginVerifyPhoneNumberIndexRoute
   '/signup/success': typeof authSignupSuccessIndexRoute
   '/blog/$slug': typeof marketingBlogSlugIndexRoute
+  '/integrations/hubspot': typeof marketingIntegrationsHubspotIndexRoute
   '/integrations/shopify': typeof marketingIntegrationsShopifyIndexRoute
+  '/integrations/woocommerce': typeof marketingIntegrationsWoocommerceIndexRoute
   '/pricing/shopify': typeof marketingPricingShopifyIndexRoute
   '/products/ai-automation': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review': typeof marketingProductsAiReviewIndexRoute
@@ -1812,6 +1838,7 @@ export interface FileRoutesByTo {
   '/public/survey/$surveyId/end': typeof publicFacingPublicSurveySurveyIdEndIndexRoute
   '/public/survey/$surveyId/review-us-on-google': typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
   '/public/wa/$surveyTeamMapId/redirect': typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
+  '/dashboard/settings/integrations/$id/callback': typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   '/dashboard/settings/integrations/zoho/callback': typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
@@ -1908,7 +1935,9 @@ export interface FileRoutesById {
   '/(auth)/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/(auth)/signup/success/': typeof authSignupSuccessIndexRoute
   '/(marketing)/blog/$slug/': typeof marketingBlogSlugIndexRoute
+  '/(marketing)/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
   '/(marketing)/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
+  '/(marketing)/integrations/woocommerce/': typeof marketingIntegrationsWoocommerceIndexRoute
   '/(marketing)/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
   '/(marketing)/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/(marketing)/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
@@ -2024,6 +2053,7 @@ export interface FileRoutesById {
   '/(public-facing)/public/survey/$surveyId/end/': typeof publicFacingPublicSurveySurveyIdEndIndexRoute
   '/(public-facing)/public/survey/$surveyId/review-us-on-google/': typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
   '/(public-facing)/public/wa/$surveyTeamMapId/redirect/': typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
+  '/dashboard/settings/integrations/$id/callback/': typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   '/dashboard/settings/integrations/zoho/callback/': typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId/': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId/': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
@@ -2118,7 +2148,9 @@ export interface FileRouteTypes {
     | '/login/verify-phone-number/'
     | '/signup/success/'
     | '/blog/$slug/'
+    | '/integrations/hubspot/'
     | '/integrations/shopify/'
+    | '/integrations/woocommerce/'
     | '/pricing/shopify/'
     | '/products/ai-automation/'
     | '/products/ai-review/'
@@ -2234,6 +2266,7 @@ export interface FileRouteTypes {
     | '/public/survey/$surveyId/end/'
     | '/public/survey/$surveyId/review-us-on-google/'
     | '/public/wa/$surveyTeamMapId/redirect/'
+    | '/dashboard/settings/integrations/$id/callback/'
     | '/dashboard/settings/integrations/zoho/callback/'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId/'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId/'
@@ -2321,7 +2354,9 @@ export interface FileRouteTypes {
     | '/login/verify-phone-number'
     | '/signup/success'
     | '/blog/$slug'
+    | '/integrations/hubspot'
     | '/integrations/shopify'
+    | '/integrations/woocommerce'
     | '/pricing/shopify'
     | '/products/ai-automation'
     | '/products/ai-review'
@@ -2437,6 +2472,7 @@ export interface FileRouteTypes {
     | '/public/survey/$surveyId/end'
     | '/public/survey/$surveyId/review-us-on-google'
     | '/public/wa/$surveyTeamMapId/redirect'
+    | '/dashboard/settings/integrations/$id/callback'
     | '/dashboard/settings/integrations/zoho/callback'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId'
@@ -2532,7 +2568,9 @@ export interface FileRouteTypes {
     | '/(auth)/login/verify-phone-number/'
     | '/(auth)/signup/success/'
     | '/(marketing)/blog/$slug/'
+    | '/(marketing)/integrations/hubspot/'
     | '/(marketing)/integrations/shopify/'
+    | '/(marketing)/integrations/woocommerce/'
     | '/(marketing)/pricing/shopify/'
     | '/(marketing)/products/ai-automation/'
     | '/(marketing)/products/ai-review/'
@@ -2648,6 +2686,7 @@ export interface FileRouteTypes {
     | '/(public-facing)/public/survey/$surveyId/end/'
     | '/(public-facing)/public/survey/$surveyId/review-us-on-google/'
     | '/(public-facing)/public/wa/$surveyTeamMapId/redirect/'
+    | '/dashboard/settings/integrations/$id/callback/'
     | '/dashboard/settings/integrations/zoho/callback/'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId/'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId/'
@@ -3272,11 +3311,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingBlogTagSitemapDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
+    '/(marketing)/integrations/hubspot/': {
+      id: '/(marketing)/integrations/hubspot/'
+      path: '/integrations/hubspot'
+      fullPath: '/integrations/hubspot/'
+      preLoaderRoute: typeof marketingIntegrationsHubspotIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
     '/(marketing)/integrations/shopify/': {
       id: '/(marketing)/integrations/shopify/'
       path: '/integrations/shopify'
       fullPath: '/integrations/shopify/'
       preLoaderRoute: typeof marketingIntegrationsShopifyIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
+    }
+    '/(marketing)/integrations/woocommerce/': {
+      id: '/(marketing)/integrations/woocommerce/'
+      path: '/integrations/woocommerce'
+      fullPath: '/integrations/woocommerce/'
+      preLoaderRoute: typeof marketingIntegrationsWoocommerceIndexRouteImport
       parentRoute: typeof marketingRouteRoute
     }
     '/(marketing)/pricing/shopify/': {
@@ -4112,6 +4165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport
       parentRoute: typeof publicFacingRouteRoute
     }
+    '/dashboard/settings/integrations/$id/callback/': {
+      id: '/dashboard/settings/integrations/$id/callback/'
+      path: '/settings/integrations/$id/callback'
+      fullPath: '/dashboard/settings/integrations/$id/callback/'
+      preLoaderRoute: typeof DashboardSettingsIntegrationsIdCallbackIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/settings/integrations/zoho/callback/': {
       id: '/dashboard/settings/integrations/zoho/callback/'
       path: '/settings/integrations/zoho/callback'
@@ -4210,7 +4270,9 @@ interface marketingRouteRouteChildren {
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute
   marketingTermsOfServiceIndexRoute: typeof marketingTermsOfServiceIndexRoute
   marketingToolsIndexRoute: typeof marketingToolsIndexRoute
+  marketingIntegrationsHubspotIndexRoute: typeof marketingIntegrationsHubspotIndexRoute
   marketingIntegrationsShopifyIndexRoute: typeof marketingIntegrationsShopifyIndexRoute
+  marketingIntegrationsWoocommerceIndexRoute: typeof marketingIntegrationsWoocommerceIndexRoute
   marketingPricingShopifyIndexRoute: typeof marketingPricingShopifyIndexRoute
   marketingProductsAiAutomationIndexRoute: typeof marketingProductsAiAutomationIndexRoute
   marketingProductsAiReviewIndexRoute: typeof marketingProductsAiReviewIndexRoute
@@ -4251,8 +4313,12 @@ const marketingRouteRouteChildren: marketingRouteRouteChildren = {
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,
   marketingTermsOfServiceIndexRoute: marketingTermsOfServiceIndexRoute,
   marketingToolsIndexRoute: marketingToolsIndexRoute,
+  marketingIntegrationsHubspotIndexRoute:
+    marketingIntegrationsHubspotIndexRoute,
   marketingIntegrationsShopifyIndexRoute:
     marketingIntegrationsShopifyIndexRoute,
+  marketingIntegrationsWoocommerceIndexRoute:
+    marketingIntegrationsWoocommerceIndexRoute,
   marketingPricingShopifyIndexRoute: marketingPricingShopifyIndexRoute,
   marketingProductsAiAutomationIndexRoute:
     marketingProductsAiAutomationIndexRoute,
@@ -4585,6 +4651,7 @@ interface DashboardRouteRouteChildren {
   DashboardWhatsappCatalogCatalogIdIndexRoute: typeof DashboardWhatsappCatalogCatalogIdIndexRoute
   DashboardWhatsappFlowbotsFlowbotIdIndexRoute: typeof DashboardWhatsappFlowbotsFlowbotIdIndexRoute
   DashboardWhatsappTemplatesTemplateIdIndexRoute: typeof DashboardWhatsappTemplatesTemplateIdIndexRoute
+  DashboardSettingsIntegrationsIdCallbackIndexRoute: typeof DashboardSettingsIntegrationsIdCallbackIndexRoute
   DashboardSettingsIntegrationsZohoCallbackIndexRoute: typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   DashboardWhatsappFlowsV1DbFlowIdIndexRoute: typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   DashboardWhatsappFlowsV2DbFlowIdIndexRoute: typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
@@ -4672,6 +4739,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardWhatsappFlowbotsFlowbotIdIndexRoute,
   DashboardWhatsappTemplatesTemplateIdIndexRoute:
     DashboardWhatsappTemplatesTemplateIdIndexRoute,
+  DashboardSettingsIntegrationsIdCallbackIndexRoute:
+    DashboardSettingsIntegrationsIdCallbackIndexRoute,
   DashboardSettingsIntegrationsZohoCallbackIndexRoute:
     DashboardSettingsIntegrationsZohoCallbackIndexRoute,
   DashboardWhatsappFlowsV1DbFlowIdIndexRoute:

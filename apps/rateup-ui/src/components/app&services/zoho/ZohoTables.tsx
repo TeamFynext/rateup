@@ -14,6 +14,10 @@ import {
   useZohoLeads,
 } from "@/backend/appsIntegration/zoho/zoho.query";
 import { zohoKeys } from "@/backend/whatsapp/automation.keys";
+import {
+  isFullyMapped,
+  StageMappingEditor,
+} from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import { usePipelineStages } from "@/components/pipeline/shared/StageSelector.tsx";
 import { Button } from "@/components/ui/button";
@@ -29,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 
 export function ZohoContactsTable({ integration }: { integration: AppIntegration }) {
   const { user } = useUser();
@@ -103,6 +106,10 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
   const [leadStatusMappings, setLeadStatusMappings] = useState<
     Array<{ zohoLeadStatus: string; stageId?: string; stageName?: string }>
   >([]);
+  const stageOptions = pipelineStages.map((stage) => ({
+    value: String(stage.id),
+    label: stage.name,
+  }));
 
   async function handleSync() {
     if (!pipelineStages.length || !leads.length) return;
@@ -225,68 +232,33 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-            {(() => {
-              const unmatched = leadStatusMappings.filter((mapping) => !mapping.stageId);
-
-              return (
-                <div className="rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
-                  {t("Unmapped statuses left")}:{" "}
-                  <span className="font-semibold">{unmatched.length}</span>
-                </div>
-              );
-            })()}
-
-            {leadStatusMappings.map((mapping, index) => (
-              <div
-                key={mapping.zohoLeadStatus}
-                className="flex items-center gap-4 rounded-xl border p-4"
-              >
-                {/* LEFT = RATEUP PIPELINE COLUMN */}
-
-                <div className="flex-1">
-                  <Select
-                    value={mapping.stageId}
-                    onValueChange={(value) => {
-                      const stage = pipelineStages.find((s) => String(s.id) === String(value));
-
-                      const updated = [...leadStatusMappings];
-
-                      updated[index] = {
-                        ...mapping,
-
-                        stageId: stage?.id,
-
-                        stageName: stage?.name,
-                      };
-
-                      setLeadStatusMappings(updated);
-                    }}
-                    items={pipelineStages.map((stage) => ({
-                      value: String(stage.id),
-                      label: stage.name,
-                    }))}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("Select a lead stage")} />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {pipelineStages.map((stage) => (
-                        <SelectItem key={stage.id} value={String(stage.id)}>
-                          {stage.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* RIGHT = ZOHO LEAD STATUS */}
-
-                <div className="flex-1 rounded-xl border bg-muted/40 px-4 py-2 text-sm font-medium">
-                  {mapping.zohoLeadStatus}
-                </div>
-              </div>
-            ))}
+            <StageMappingEditor
+              rows={leadStatusMappings.map((mapping) => ({
+                id: mapping.zohoLeadStatus,
+                label: mapping.zohoLeadStatus,
+              }))}
+              options={stageOptions}
+              value={Object.fromEntries(
+                leadStatusMappings.map((mapping) => [
+                  mapping.zohoLeadStatus,
+                  mapping.stageId || undefined,
+                ]),
+              )}
+              onChange={(status, stageId) => {
+                const stage = pipelineStages.find((s) => String(s.id) === stageId);
+                setLeadStatusMappings((prev) =>
+                  prev.map((mapping) =>
+                    mapping.zohoLeadStatus === status
+                      ? { ...mapping, stageId: stage?.id, stageName: stage?.name }
+                      : mapping,
+                  ),
+                );
+              }}
+              rowsLabel={t("Zoho Lead Status")}
+              optionsLabel={t("Pipeline column")}
+              placeholder={t("Select a lead stage")}
+              summary={(count) => t("Unmapped statuses left: {count}", { count })}
+            />
           </div>
 
           <DialogFooter className="pt-4 border-t">
@@ -296,7 +268,18 @@ export function ZohoLeadsTable({ integration }: { integration: AppIntegration })
 
             <Button
               onClick={saveMappingsAndSync}
-              disabled={leadStatusMappings.some((m) => !m.stageId)}
+              disabled={
+                !isFullyMapped(
+                  leadStatusMappings.map((m) => ({
+                    id: m.zohoLeadStatus,
+                    label: m.zohoLeadStatus,
+                  })),
+                  stageOptions,
+                  Object.fromEntries(
+                    leadStatusMappings.map((m) => [m.zohoLeadStatus, m.stageId || undefined]),
+                  ),
+                )
+              }
             >
               {t("Save Mapping & Sync")}
             </Button>

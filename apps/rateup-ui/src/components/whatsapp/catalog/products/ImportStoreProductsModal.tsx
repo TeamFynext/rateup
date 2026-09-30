@@ -4,7 +4,9 @@ import { toast } from "sonner";
 
 import {
   useImportShopifyProducts,
+  useImportWooProducts,
   useShopifyAvailableProducts,
+  useWooAvailableProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -12,22 +14,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
-interface ImportFromShopifyModalProps {
+export type ProductImportSource = "shopify" | "woocommerce";
+
+const STORE_NAME: Record<ProductImportSource, string> = {
+  shopify: "Shopify",
+  woocommerce: "WooCommerce",
+};
+
+interface ImportStoreProductsModalProps {
   catalogId: string;
+  source: ProductImportSource;
   opened: boolean;
   onClose: () => void;
 }
 
-export function ImportFromShopifyModal({
+/** Picks products from a connected store and adds them to this catalog. */
+export function ImportStoreProductsModal({
   catalogId,
+  source,
   opened,
   onClose,
-}: ImportFromShopifyModalProps) {
+}: ImportStoreProductsModalProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const store = STORE_NAME[source];
 
-  const { data: products, isPending, isError } = useShopifyAvailableProducts(catalogId, opened);
+  // Both hooks run on every render; only the chosen store's query is enabled.
+  const shopifyProducts = useShopifyAvailableProducts(catalogId, opened && source === "shopify");
+  const wooProducts = useWooAvailableProducts(catalogId, opened && source === "woocommerce");
+  const {
+    data: products,
+    isPending,
+    isError,
+  } = source === "shopify" ? shopifyProducts : wooProducts;
 
-  const importMut = useImportShopifyProducts(catalogId);
+  const shopifyImport = useImportShopifyProducts(catalogId);
+  const wooImport = useImportWooProducts(catalogId);
+  const importMut = source === "shopify" ? shopifyImport : wooImport;
 
   // Reset selection when modal opens
   useEffect(() => {
@@ -60,22 +82,22 @@ export function ImportFromShopifyModal({
     toast.loading(
       `Importing ${selectedItems.length} product${selectedItems.length !== 1 ? "s" : ""}...`,
       {
-        id: "import-shopify-products",
+        id: "import-store-products",
       },
     );
     importMut.mutate(selectedItems, {
       onSuccess: (data) => {
         toast.success(
-          `Imported ${data.imported} product${data.imported !== 1 ? "s" : ""} from Shopify`,
+          `Imported ${data.imported} product${data.imported !== 1 ? "s" : ""} from ${store}`,
           {
-            id: "import-shopify-products",
+            id: "import-store-products",
           },
         );
         onClose();
       },
       onError: (error) => {
         toast.error(error?.message || "Import failed. Please try again.", {
-          id: "import-shopify-products",
+          id: "import-store-products",
         });
       },
     });
@@ -85,7 +107,7 @@ export function ImportFromShopifyModal({
     <Dialog open={opened} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Import from Shopify</DialogTitle>
+          <DialogTitle>Import from {store}</DialogTitle>
         </DialogHeader>
 
         {isPending ? (
@@ -94,11 +116,11 @@ export function ImportFromShopifyModal({
           </div>
         ) : isError ? (
           <p className="text-sm text-destructive">
-            Failed to load Shopify products. Make sure Shopify is connected.
+            Failed to load {store} products. Make sure {store} is connected.
           </p>
         ) : products?.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            All Shopify products are already imported.
+            All {store} products are already imported.
           </p>
         ) : (
           <div className="flex flex-col gap-3">
@@ -145,7 +167,7 @@ export function ImportFromShopifyModal({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{p.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {p.sale_price} {p.currencyCode} ·{" "}
+                        {p.sale_price ?? p.price} {p.currencyCode} ·{" "}
                         {p.availability === "in stock" ? "In stock" : "Out of stock"}
                       </p>
                     </div>

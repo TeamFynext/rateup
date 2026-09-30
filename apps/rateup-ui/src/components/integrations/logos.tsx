@@ -88,6 +88,53 @@ export function GetLeadLogo({ className }: LogoProps) {
   );
 }
 
+/**
+ * WooCommerce's purple speech bubble, drawn inline rather than served from the CDN like the
+ * other marks, until a PNG is uploaded there alongside them.
+ */
+export function WooCommerceLogo({ className }: LogoProps) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      role="img"
+      aria-label="WooCommerce"
+      className={cn("object-contain", className)}
+    >
+      <path
+        fill="#7F54B3"
+        d="M8 9h32a5 5 0 0 1 5 5v15a5 5 0 0 1-5 5H27l6 6-11-6H8a5 5 0 0 1-5-5V14a5 5 0 0 1 5-5Z"
+      />
+      <path
+        fill="none"
+        stroke="#fff"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="3"
+        d="m11 16 3 12 4-8 4 8 3-12M31 22a3.5 3.5 0 1 0 7 0 3.5 3.5 0 1 0-7 0"
+      />
+    </svg>
+  );
+}
+
+/** HubSpot's orange sprocket, simplified and drawn inline like the WooCommerce mark. */
+export function HubSpotLogo({ className }: LogoProps) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      role="img"
+      aria-label="HubSpot"
+      className={cn("object-contain", className)}
+    >
+      <g fill="none" stroke="#FF7A59" strokeLinecap="round" strokeWidth="4">
+        <circle cx="29" cy="29" r="8" />
+        <path d="M29 21V11M22.5 34.5 12 42M23 24 10 14" />
+      </g>
+      <circle cx="29" cy="9" r="4" fill="#FF7A59" />
+      <circle cx="9" cy="13" r="3.5" fill="#FF7A59" />
+    </svg>
+  );
+}
+
 export function RateupStar({ className, priority }: LogoProps) {
   return (
     <img

@@ -1,4 +1,4 @@
-import { IconAlertTriangle, IconLoader2 } from "@tabler/icons-react";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -13,6 +13,7 @@ import {
   useSaveGetLeadTriggersMutation,
 } from "@/backend/appsIntegration/getlead/getlead.query";
 import { usePipelineQuery, usePipelinesQuery } from "@/backend/pipeline/pipeline.query.tsx";
+import { StageMappingEditor } from "@/components/dashboard/settings/integrations/mapping/StageMappingEditor.tsx";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
@@ -118,16 +119,6 @@ export function GetLeadMapping({ meta }: Props) {
     [pipeline],
   );
 
-  // Base UI's Select renders the raw value unless the Root is given the
-  // value->label pairs; without `items` the trigger shows a ULID.
-  const statusItems = useMemo(
-    () => [
-      { value: UNMAPPED, label: t("Not synced") },
-      ...(meta?.statuses ?? []).map((s) => ({ value: s.id, label: s.name })),
-    ],
-    [meta, t],
-  );
-
   const sourceItems = useMemo(
     () => [
       { value: UNMAPPED, label: t("None") },
@@ -153,12 +144,19 @@ export function GetLeadMapping({ meta }: Props) {
   );
 
   // A column left unmapped is omitted rather than saved with an empty status:
-  // "absent" is what the push reads as "send no status".
+  // "absent" is what the push reads as "send no status". So is one mapped to a
+  // status since deleted in GetLead, which the editor shows as not synced —
+  // saving it would keep pushing a status GetLead no longer has. Until the
+  // statuses have loaded there is nothing to check against, so none is dropped.
   const stageMappings = useMemo<GetLeadStageMapping[]>(() => {
     const statusName = (id: string) => meta?.statuses.find((s) => s.id === id)?.name;
+    const statusExists = (id: string) => !meta || meta.statuses.some((s) => s.id === id);
 
     return stages
-      .filter((stage) => mappings[stage.id] && mappings[stage.id] !== UNMAPPED)
+      .filter(
+        (stage) =>
+          mappings[stage.id] && mappings[stage.id] !== UNMAPPED && statusExists(mappings[stage.id]),
+      )
       .map((stage) => ({
         stageId: stage.id,
         stageName: stage.name,
@@ -166,19 +164,6 @@ export function GetLeadMapping({ meta }: Props) {
         getleadStatusName: statusName(mappings[stage.id]),
       }));
   }, [stages, mappings, meta]);
-
-  /**
-   * Columns that will not move a lead's status in GetLead.
-   *
-   * Worth calling out rather than leaving to the Select's own "Not synced"
-   * label: unmapped is the state that silently does nothing, and it is also the
-   * default, so a board that was never mapped looks exactly like one that was
-   * mapped deliberately.
-   */
-  const unmappedStages = useMemo(
-    () => stages.filter((stage) => !mappings[stage.id] || mappings[stage.id] === UNMAPPED),
-    [stages, mappings],
-  );
 
   /**
    * Whether anything on screen differs from what is stored.
@@ -272,66 +257,36 @@ export function GetLeadMapping({ meta }: Props) {
           )}
         </p>
 
-        {/* Said once at the top as well as per row: with a long board the rows
-            that need attention are the ones scrolled past. */}
-        {unmappedStages.length > 0 && stages.length > 0 && (
-          <p className="text-destructive mb-3 flex items-start gap-1.5 text-sm">
-            <IconAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>
-              {t(
-                "{count} of {total} columns are not synced. Moving a lead into one of them updates its details in GetLead, but leaves its status alone.",
-                { count: unmappedStages.length, total: stages.length },
-              )}
-            </span>
-          </p>
-        )}
-
-        {stages.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("No pipeline columns found.")}</p>
-        ) : (
-          <div className="flex flex-col gap-2 max-w-150">
-            {stages.map((stage) => (
-              <div key={stage.id} className="grid grid-cols-2 items-center gap-3">
-                <div className="min-w-0">
-                  <Label className="truncate" title={stage.name}>
-                    {stage.name}
-                  </Label>
-                  {(!mappings[stage.id] || mappings[stage.id] === UNMAPPED) && (
-                    <p className="text-destructive mt-0.5 flex items-center gap-1 text-xs">
-                      <IconAlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                      {t("Not synced to any status")}
-                    </p>
-                  )}
-                </div>
-                <Select
-                  items={statusItems}
-                  onOpenChange={handleOpenChange}
-                  value={mappings[stage.id] ?? UNMAPPED}
-                  // Base UI hands back null when the value is cleared; treat that
-                  // as unmapped rather than storing a null the save would trip on.
-                  onValueChange={(value) =>
-                    setMappings((prev) => ({ ...prev, [stage.id]: value ?? UNMAPPED }))
-                  }
-                >
-                  {/* `w-full`: the trigger is `w-fit` by default, so each row
-                      would size to its own status name and the column would
-                      come out ragged. */}
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("Not synced")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UNMAPPED}>{t("Not synced")}</SelectItem>
-                    {meta?.statuses.map((status) => (
-                      <SelectItem key={status.id} value={status.id}>
-                        {status.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-          </div>
-        )}
+        <StageMappingEditor
+          rows={stages.map((stage) => ({ id: stage.id, label: stage.name }))}
+          options={(meta?.statuses ?? []).map((status) => ({
+            value: status.id,
+            label: status.name,
+          }))}
+          value={Object.fromEntries(
+            stages.map((stage) => [
+              stage.id,
+              mappings[stage.id] && mappings[stage.id] !== UNMAPPED
+                ? mappings[stage.id]
+                : undefined,
+            ]),
+          )}
+          onChange={(stageId, statusId) =>
+            setMappings((prev) => ({ ...prev, [stageId]: statusId ?? UNMAPPED }))
+          }
+          rowsLabel={t("Pipeline column")}
+          optionsLabel={t("GetLead status")}
+          unmappedLabel={t("Not synced")}
+          unmappedHint={t("Not synced to any status")}
+          summary={(count, total) =>
+            t(
+              "{count} of {total} columns are not synced. Moving a lead into one of them updates its details in GetLead, but leaves its status alone.",
+              { count, total },
+            )
+          }
+          onOptionsOpenChange={handleOpenChange}
+          empty={<p className="text-sm text-muted-foreground">{t("No pipeline columns found.")}</p>}
+        />
       </Card>
 
       <Card className="p-4">

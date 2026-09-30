@@ -103,6 +103,12 @@ const ProductItems = ({ catalogId }: { catalogId: string }) => {
                 <>
                   {/* Image */}
                   <div className="relative aspect-square bg-muted overflow-hidden">
+                    {product.retailer_id?.startsWith("wc_") && (
+                      <Badge className="absolute top-2 left-2 z-10 bg-[#7F54B3] hover:bg-[#7F54B3] gap-1">
+                        <IconShoppingBag size={11} />
+                        WooCommerce
+                      </Badge>
+                    )}
                     {product.shopifyVariantId && (
                       <Badge className="absolute top-2 left-2 z-10 bg-[#96bf48] hover:bg-[#96bf48] gap-1">
                         <IconShoppingBag size={11} />

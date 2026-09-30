@@ -45,6 +45,7 @@ const defaultValues = {
     instagramScope: "ALL",
     instagramPostIds: [],
     shopifyProductIds: [],
+    wooProductIds: [],
   },
 } satisfies Partial<CreateRuleValues>;
 
