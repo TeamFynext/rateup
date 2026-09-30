@@ -7,6 +7,7 @@ vi.mock("../../../../utils/prisma.js", () => ({
     conversation: { count: vi.fn() },
     inboxMention: { findMany: vi.fn() },
     waMessage: { findMany: vi.fn() },
+    inboxNote: { findMany: vi.fn(async () => []) },
     $queryRaw: vi.fn(),
     $queryRawUnsafe: vi.fn(),
   },
@@ -14,6 +15,12 @@ vi.mock("../../../../utils/prisma.js", () => ({
 }));
 
 vi.mock("../../wa_axios.js", () => ({ callMetaApi: vi.fn() }));
+vi.mock("../note/note.service.js", () => ({
+  getThreadNotes: vi.fn(async () => []),
+  findNoteTime: vi.fn(async () => null),
+  noteInclude: {},
+  noteToThreadItem: vi.fn((note) => note),
+}));
 vi.mock("../../settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
 vi.mock("../../settings/wa_channel_access.js", () => ({ getScopedSourceIdentifiers: vi.fn() }));
 vi.mock("axios", () => ({ default: { get: vi.fn() } }));

@@ -1,4 +1,5 @@
-import { registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema.js";
+import { AttributionQuery, registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema.js";
+import { getShopifyAttribution } from "./shopify.attribution.service.js";
 import {
   deleteAllWebhooks,
   deleteShopifyIntegrationByShop,
@@ -236,6 +237,15 @@ interface ShopifyProductsData {
     edges: { node: ShopifyProductNode; cursor: string }[];
     pageInfo: { hasNextPage: boolean; endCursor: string | null };
   };
+}
+
+/** What the org's cart reminders sent, recovered and earned in a period. */
+export async function getAttributionHandler(
+  request: FastifyRequest<{ Querystring: AttributionQuery }>,
+  reply: FastifyReply,
+) {
+  const { from, to } = request.query;
+  reply.send({ data: await getShopifyAttribution(request.user.orgId, from, to) });
 }
 
 export async function getProductsHandler(request: FastifyRequest, reply: FastifyReply) {

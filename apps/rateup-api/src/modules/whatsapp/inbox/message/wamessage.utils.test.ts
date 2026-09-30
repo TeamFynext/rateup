@@ -8,7 +8,6 @@ import { PlatformType } from "../../../../../generated/prisma/enums.js";
 import { downloadAndUpload } from "../../whatsappSurvey/wasurvey.utils.js";
 import {
   deriveConversationSubject,
-  extractMentions,
   handleWaReceivedImages,
   isSessionExpired,
   returnAppropriateTimeStamp,
@@ -343,35 +342,5 @@ describe("deriveConversationSubject - titles for messages with no words", () => 
 
   test("returns null for a media kind it has no label for", () => {
     expect(deriveConversationSubject(waReceive({ type: "unsupported_kind" }))).toBeNull();
-  });
-});
-
-describe("extractMentions", () => {
-  test("pulls a single mention without its @", () => {
-    expect(extractMentions("hey @alice can you look")).toEqual(["alice"]);
-  });
-
-  test("pulls every mention in order", () => {
-    expect(extractMentions("@alice and @bob please")).toEqual(["alice", "bob"]);
-  });
-
-  test("accepts dots, underscores and digits in a handle", () => {
-    expect(extractMentions("@alice.smith_2 ping")).toEqual(["alice.smith_2"]);
-  });
-
-  test("matches a mention at the very start and after a newline", () => {
-    expect(extractMentions("@alice\n@bob")).toEqual(["alice", "bob"]);
-  });
-
-  test("ignores an address embedded in an email", () => {
-    expect(extractMentions("mail alice@acme.com about it")).toEqual([]);
-  });
-
-  test("returns an empty list when nobody is mentioned", () => {
-    expect(extractMentions("no one here")).toEqual([]);
-  });
-
-  test("returns an empty list for empty text", () => {
-    expect(extractMentions("")).toEqual([]);
   });
 });

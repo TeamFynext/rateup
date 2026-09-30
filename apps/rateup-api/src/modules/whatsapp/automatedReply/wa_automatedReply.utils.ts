@@ -392,6 +392,8 @@ export interface RuleWithConditions {
     };
     shopifyEvent?: ShopifyEvents;
     shopifyProductIds?: string[];
+    abandonedCheckoutDelayMinutes?: number;
+    requireMarketingConsent?: boolean;
     instagramScope?: "ALL" | "SPECIFIC";
     instagramPostIds?: string[];
   } | null;
@@ -554,6 +556,15 @@ async function validateConditionGroup(
   }
 }
 
+const RULE_INCLUDE = {
+  groups: {
+    include: {
+      conditions: { include: { messageBodyLock: { include: { businessHour: true } } } },
+    },
+  },
+  actions: true,
+} as const;
+
 function ruleSendOncePerDayKey(ruleId: string, phone: string): string {
   return `rule:${ruleId}:sendOncePerDay:${phone}`;
 }
@@ -714,22 +725,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
         },
       }),
     },
-    include: {
-      groups: {
-        include: {
-          conditions: {
-            include: {
-              messageBodyLock: {
-                include: {
-                  businessHour: true,
-                },
-              },
-            },
-          },
-        },
-      },
-      actions: true,
-    },
+    include: RULE_INCLUDE,
   });
 
   if (!rules.length) {
@@ -881,14 +877,65 @@ export async function checkAndExecuteRuleByTriggerEvent(
   return undefined;
 }
 
+/** A rule has business hours configured and the current time falls outside them. */
+async function isOutsideRuleBusinessHours(rule: RuleWithConditions): Promise<boolean> {
+  const businessHoursId = rule.options?.businessHours?.enabled
+    ? rule.options.businessHours.businessHoursId
+    : undefined;
+  if (!businessHoursId) return false;
+  const businessHour = await prisma.businessHour.findUnique({ where: { id: businessHoursId } });
+  return (
+    Boolean(businessHour) && !validateTimeWindow(businessHour as automationProps["businessHour"])
+  );
+}
+
+export type ScheduledRuleOutcome =
+  | { status: "inactive" | "outside_business_hours" | "conditions_not_met" }
+  | { status: "ran"; executedActions: Awaited<ReturnType<typeof executeRuleActions>> };
+
+/**
+ * Runs one rule that was chosen ahead of time — a reminder scheduled for it — rather than
+ * matched against an event now. Its conditions and options still apply as they would on a
+ * live match; business hours are reported separately so the caller can wait for them.
+ */
+export async function executeScheduledRule(
+  ruleId: string,
+  context: RuleExecutionContext,
+): Promise<ScheduledRuleOutcome> {
+  const rule = (await prisma.rule.findFirst({
+    where: { id: ruleId, orgId: context.orgId },
+    include: RULE_INCLUDE,
+  })) as RuleWithConditions | null;
+  if (!rule?.isActive) return { status: "inactive" };
+  if (await isOutsideRuleBusinessHours(rule)) return { status: "outside_business_hours" };
+
+  const phone = context.phone ?? "";
+  if (!(await validateRuleConditions(rule, context.message ?? "", context.orgId, phone))) {
+    return { status: "conditions_not_met" };
+  }
+  const executedActions = await executeRuleActions(rule, context);
+  if (rule.options?.sendOncePerDay && phone) {
+    await redisConnection.set(ruleSendOncePerDayKey(rule.id, phone), "1", "EX", 24 * 60 * 60);
+  }
+  return { status: "ran", executedActions };
+}
+
 /**
  * Executes all actions for a matched rule
  */
+/** One action's outcome. `messageId` is the wamid of a template the action sent. */
+interface ActionResult {
+  actionId: string;
+  success: boolean;
+  error?: string;
+  messageId?: string;
+}
+
 async function executeRuleActions(
   rule: RuleWithConditions,
   context: RuleExecutionContext,
-): Promise<Array<{ actionId: string; success: boolean; error?: string }>> {
-  const results = [];
+): Promise<ActionResult[]> {
+  const results: ActionResult[] = [];
   const platform = rule.platform ?? "WHATSAPP";
   const actionContext = { ...context, platform };
 
@@ -932,9 +979,11 @@ async function executeRuleActions(
           success = await executeSendWebSurveyAction(action.value as string, actionContext);
           break;
 
-        case "SEND_TEMPLATE":
-          success = await executeSendTemplateAction(action.value as string, actionContext);
-          break;
+        case "SEND_TEMPLATE": {
+          const sent = await executeSendTemplateAction(action.value as string, actionContext);
+          results.push({ actionId: action.id, ...sent });
+          continue;
+        }
 
         case "SEND_FLOW":
           success = await executeSendFlowAction(action.value as string, actionContext);
@@ -1381,21 +1430,33 @@ async function executeSendTemplateAction(
         templateId: string;
         variableMapping?: { templateParamIndex: number; shopifyPath: string }[];
         useProductImageAsHeader?: boolean;
+        /** Path whose value becomes the suffix of the template's URL button. */
+        buttonUrlVariable?: string;
       },
   context: RuleExecutionContext,
-): Promise<boolean> {
-  const { templateId, variableMapping, useProductImageAsHeader } =
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const { templateId, variableMapping, useProductImageAsHeader, buttonUrlVariable } =
     typeof templateValue === "string"
-      ? { templateId: templateValue, variableMapping: [], useProductImageAsHeader: false }
+      ? {
+          templateId: templateValue,
+          variableMapping: [],
+          useProductImageAsHeader: false,
+          buttonUrlVariable: undefined,
+        }
       : {
           templateId: templateValue?.templateId,
           variableMapping: templateValue?.variableMapping ?? [],
           useProductImageAsHeader: templateValue?.useProductImageAsHeader ?? false,
+          buttonUrlVariable: templateValue?.buttonUrlVariable,
         };
 
-  if (!context.phone || !templateId || !context.orgId) return false;
+  if (!context.phone || !templateId || !context.orgId) {
+    return { success: false, error: "missing phone or template" };
+  }
 
-  const hasContactMappings = variableMapping.some((m) => m.shopifyPath.startsWith("contact."));
+  const hasContactMappings =
+    variableMapping.some((m) => m.shopifyPath.startsWith("contact.")) ||
+    Boolean(buttonUrlVariable?.startsWith("contact."));
   const contactData = hasContactMappings
     ? await getContactByPhoneNumberAndOrgId(context.phone, context.orgId)
     : null;
@@ -1425,7 +1486,11 @@ async function executeSendTemplateAction(
     }
   }
 
-  await sendTemplateToUserCore(
+  const buttonVariable = buttonUrlVariable
+    ? String(resolveVariablePath(buttonUrlVariable, context.shopifyBody, contactData) ?? "")
+    : undefined;
+
+  const result = await sendTemplateToUserCore(
     context.orgId,
     templateId,
     context.phone,
@@ -1435,9 +1500,16 @@ async function executeSendTemplateAction(
     undefined,
     undefined,
     undefined,
+    buttonVariable || undefined,
   );
 
-  return true;
+  // With no timeDelay the result is always the send's `{ status, message }`.
+  if ("message" in result && typeof result.message === "string") {
+    return result.status
+      ? { success: true, messageId: result.message }
+      : { success: false, error: result.message };
+  }
+  return { success: true };
 }
 
 function resolveVariablePath(

@@ -57,14 +57,21 @@ const NewWaMessageBody = z.object({
   platform: z.string(),
 });
 
+const privateNoteText = z.object({
+  // Plain text from the app, a Tiptap document from the web editor.
+  body: z.union([
+    z.string().trim().min(1),
+    z.looseObject({ type: z.literal("doc"), content: z.array(z.any()) }),
+  ]),
+});
+
+// Both clients post their whole composer state here; only these fields are read.
 const PrivateWaMessageBody = z.object({
-  type: z.enum(["text"]),
-  text: z.any(),
-  messageId: string().optional(),
-  platform: z.string(),
-  // Users @-mentioned in the note, resolved by id on the client (robust to names
-  // with spaces, which text extraction can't match).
-  mentionedUserIds: z.array(z.string()).optional(),
+  text: privateNoteText,
+  messageId: string().max(200).optional(),
+  conversationId: z.guid().optional(),
+  // Resolved by id on the client: names with spaces can't be matched in the text.
+  mentionedUserIds: z.array(z.guid()).max(50).optional(),
 });
 
 const PaginateQuerySchema = z.object({
@@ -226,6 +233,10 @@ const logsQuerySchema = z.object({
 
 export type NewWaMessageBody = z.infer<typeof NewWaMessageBody>;
 export type PrivateWaMessageBody = z.infer<typeof PrivateWaMessageBody>;
+export const privateNoteParams = z.object({ noteId: z.guid() });
+export const editPrivateNoteBody = z.object({ text: privateNoteText });
+export type PrivateNoteParams = z.infer<typeof privateNoteParams>;
+export type EditPrivateNoteBody = z.infer<typeof editPrivateNoteBody>;
 export type PaginateQuerySchema = z.infer<typeof PaginateQuerySchema>;
 export type WaChatFilterSchema = z.infer<typeof WaChatFilterSchema>;
 export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;

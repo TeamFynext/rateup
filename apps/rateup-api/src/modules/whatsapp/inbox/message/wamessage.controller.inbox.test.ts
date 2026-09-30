@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("../note/note.service.js", () => ({
+  createNote: vi.fn(),
+  editNote: vi.fn(),
+  deleteNote: vi.fn(),
+}));
 vi.mock("./assignOwner.service.js", () => ({ assignConversationOwner: vi.fn() }));
 vi.mock("./wamessage.service.js", () => ({
   addNewWaMessage: vi.fn(),
@@ -28,7 +33,6 @@ vi.mock("./wamessage.service.js", () => ({
 
 vi.mock("./wamessage.utils.js", () => ({
   deriveConversationSubject: vi.fn(),
-  extractMentions: vi.fn(() => []),
   handleWaReceivedImages: vi.fn(async (b: unknown) => b),
   returnAppropriateTimeStamp: vi.fn(async () => "2026-07-27T09:00:00Z"),
 }));

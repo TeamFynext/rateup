@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../../utils/prisma.js", () => ({
   default: {
-    waMessage: { create: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    waMessage: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     conversation: { update: vi.fn() },
     contact: { findMany: vi.fn() },
     waMessageOrgTeamMap: { create: vi.fn() },
@@ -47,6 +53,12 @@ vi.mock("../../../integrations/external/zapier/zapier.service.js", () => ({
   ZapierTriggers: { CONTACT_ASSIGN: "CONTACT_ASSIGN" },
 }));
 vi.mock("@faker-js/faker", () => ({ faker: {} }));
+vi.mock("../note/note.service.js", () => ({
+  getThreadNotes: vi.fn(async () => []),
+  findNoteTime: vi.fn(async () => null),
+  noteInclude: {},
+  noteToThreadItem: vi.fn(),
+}));
 vi.mock("../../../contact/conversation/conversation.service.js", () => ({
   getConversationById: vi.fn(),
   getLastCreatedConversationForContact: vi.fn(),
@@ -94,6 +106,7 @@ import {
 } from "../../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../../utils/logger.js";
 import { PlatformType } from "../../../../../generated/prisma/client.js";
+import { findNoteTime, getThreadNotes } from "../note/note.service.js";
 import {
   addNewWaMessage,
   createWaMessageOrgTeamMap,
@@ -111,7 +124,7 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
-  waMessage: { create: Mock; findMany: Mock; findFirst: Mock; update: Mock };
+  waMessage: { create: Mock; findMany: Mock; findFirst: Mock; findUnique: Mock; update: Mock };
   conversation: { update: Mock };
   contact: { findMany: Mock };
   waMessageOrgTeamMap: { create: Mock };
@@ -325,7 +338,7 @@ describe("getWaMessagesByContactId", () => {
   test("returns the newest 50 messages for a contact", async () => {
     db.waMessage.findMany.mockResolvedValue([{ id: "m1" }]);
 
-    const result = await getWaMessagesByContactId("contact-1", null);
+    const result = await getWaMessagesByContactId("contact-1", "org-1", null);
 
     const args = db.waMessage.findMany.mock.calls[0][0];
     expect(args.take).toBe(50);
@@ -335,7 +348,12 @@ describe("getWaMessagesByContactId", () => {
   });
 
   test("pages past the cursor when one is given", async () => {
-    await getWaMessagesByContactId("contact-1", "msg-50");
+    db.waMessage.findUnique.mockResolvedValue({
+      id: "msg-50",
+      waCreatedAt: new Date(),
+      createdAt: new Date(),
+    });
+    await getWaMessagesByContactId("contact-1", "org-1", "msg-50");
 
     const args = db.waMessage.findMany.mock.calls[0][0];
     expect(args.skip).toBe(1);
@@ -347,7 +365,7 @@ describe("getWaMessagesByContactId", () => {
       Array.from({ length: 50 }, (_, i) => ({ id: `m${i}` })),
     );
 
-    const result = await getWaMessagesByContactId("contact-1", null);
+    const result = await getWaMessagesByContactId("contact-1", "org-1", null);
 
     expect(result.hasNextPage).toBe(true);
     expect(result.nextCursor).toBe("m49");
@@ -371,7 +389,7 @@ describe("getWaMessagesByContactId", () => {
       { sourceIdentifier: "internal" },
     ]);
 
-    await getWaMessagesByContactId("contact-1", null, "15550001");
+    await getWaMessagesByContactId("contact-1", "org-1", null, "15550001");
 
     const [identifierCondition] = db.waMessage.findMany.mock.calls[1][0].where.AND;
     expect(identifierCondition.OR).toEqual([
@@ -383,7 +401,7 @@ describe("getWaMessagesByContactId", () => {
   test("resolves the thread's spellings from that contact's own messages", async () => {
     db.waMessage.findMany.mockResolvedValueOnce([]);
 
-    await getWaMessagesByContactId("contact-1", null, "15550001");
+    await getWaMessagesByContactId("contact-1", "org-1", null, "15550001");
 
     expect(db.waMessage.findMany.mock.calls[0][0]).toMatchObject({
       where: { contactId: "contact-1" },
@@ -395,21 +413,21 @@ describe("getWaMessagesByContactId", () => {
   test("matches no message when the contact never used that channel", async () => {
     db.waMessage.findMany.mockResolvedValueOnce([{ sourceIdentifier: "15559999" }]);
 
-    await getWaMessagesByContactId("contact-1", null, "15550001");
+    await getWaMessagesByContactId("contact-1", "org-1", null, "15550001");
 
     const [identifierCondition] = db.waMessage.findMany.mock.calls[1][0].where.AND;
     expect(identifierCondition.OR[0]).toEqual({ sourceIdentifier: { in: [] } });
   });
 
   test('treats the "all" channel as no channel filter', async () => {
-    await getWaMessagesByContactId("contact-1", null, "all");
+    await getWaMessagesByContactId("contact-1", "org-1", null, "all");
 
     expect(db.waMessage.findMany.mock.calls[0][0].where.AND[0]).toEqual({});
   });
 
   // Legacy messages predate the conversation backfill and carry a null conversationId.
   test("keeps un-backfilled messages visible when scoping to a ticket", async () => {
-    await getWaMessagesByContactId("contact-1", null, undefined, "conv-1");
+    await getWaMessagesByContactId("contact-1", "org-1", null, undefined, "conv-1");
 
     const [, conversationCondition] = db.waMessage.findMany.mock.calls[0][0].where.AND;
     expect(conversationCondition.OR).toEqual([
@@ -418,8 +436,70 @@ describe("getWaMessagesByContactId", () => {
     ]);
   });
 
+  test("only reads messages of the caller's org", async () => {
+    await getWaMessagesByContactId("contact-1", "org-1", null);
+
+    expect(db.waMessage.findMany.mock.calls[0][0].where.contact).toEqual({ orgId: "org-1" });
+  });
+
+  test("slots the page's notes between its messages by time", async () => {
+    const at = (m: number) => new Date(Date.UTC(2026, 8, 29, 10, m));
+    db.waMessage.findMany.mockResolvedValue([
+      { id: "m3", waCreatedAt: at(30) },
+      { id: "m1", waCreatedAt: at(10) },
+    ]);
+    (getThreadNotes as Mock).mockResolvedValue([
+      { id: "n4", createdAt: at(40) },
+      { id: "n2", createdAt: at(20) },
+      { id: "n0", createdAt: at(0) },
+    ]);
+
+    const result = await getWaMessagesByContactId("contact-1", "org-1", null);
+
+    expect(result.messages.map((m) => m.id)).toEqual(["n4", "m3", "n2", "m1", "n0"]);
+  });
+
+  // A full page has older messages still to come, so older notes wait for that page.
+  test("bounds notes to the time the page covers", async () => {
+    const oldest = new Date(Date.UTC(2026, 8, 1));
+    const cursorAt = new Date(Date.UTC(2026, 8, 20));
+    db.waMessage.findUnique.mockResolvedValue({
+      id: "c",
+      waCreatedAt: cursorAt,
+      createdAt: cursorAt,
+    });
+    db.waMessage.findMany.mockResolvedValue(
+      Array.from({ length: 50 }, (_, i) => ({
+        id: `m${i}`,
+        waCreatedAt: i === 49 ? oldest : cursorAt,
+      })),
+    );
+
+    await getWaMessagesByContactId("contact-1", "org-1", "c", undefined, "conv-1");
+
+    expect(getThreadNotes).toHaveBeenCalledWith({
+      contactId: "contact-1",
+      orgId: "org-1",
+      conversationId: "conv-1",
+      from: oldest,
+      before: cursorAt,
+    });
+  });
+
+  test("continues from a note id a client took as its cursor before notes moved", async () => {
+    const noteAt = new Date(Date.UTC(2026, 8, 20));
+    db.waMessage.findUnique.mockResolvedValue(null);
+    (findNoteTime as Mock).mockResolvedValue(noteAt);
+
+    await getWaMessagesByContactId("contact-1", "org-1", "note-1");
+
+    const args = db.waMessage.findMany.mock.calls[0][0];
+    expect(args.cursor).toBeUndefined();
+    expect(args.where.AND[1]).toEqual({ waCreatedAt: { lt: noteAt } });
+  });
+
   test("applies no ticket filter when none is named", async () => {
-    await getWaMessagesByContactId("contact-1", null);
+    await getWaMessagesByContactId("contact-1", "org-1", null);
 
     expect(db.waMessage.findMany.mock.calls[0][0].where.AND[1]).toEqual({});
   });

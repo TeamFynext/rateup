@@ -339,24 +339,6 @@ export interface WaInternalMessageBody {
   }[];
 }
 
-export interface WaPrivateMessageBody {
-  messaging_product?: "whatsapp";
-  recipient_type?: "individual";
-  type?: "text";
-  text: {
-    body: string;
-  };
-  // See WaInternalMessageBody.triggeredByUser above.
-  triggeredByUser: {
-    id: string | null;
-    name: string;
-  } | null;
-  mentionedUser?: {
-    id: string;
-    name: string;
-  }[];
-}
-
 export interface WaSendMessageBody {
   messaging_product: "whatsapp";
   recipient_type?: "individual";

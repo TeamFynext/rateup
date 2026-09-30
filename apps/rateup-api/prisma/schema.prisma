@@ -141,6 +141,8 @@ model User {
   removedAssignees            ConversationAssignedUserTeamMap[] @relation("ConversationRemovedUser")
   assignedStafftoConversation ConversationAssignedUserTeamMap[] @relation("ConversationAssignedByUser")
   inboxMentions               InboxMention[]
+  inboxNotes                  InboxNote[]                       @relation("InboxNoteAuthor")
+  deletedInboxNotes           InboxNote[]                       @relation("InboxNoteDeletedBy")
   assignedLeads               LeadAssignee[]                    @relation("LeadAssignee")
   ownedLeads                  Lead[]                            @relation("LeadOwner")
   closedLeads                 Lead[]                            @relation("LeadClosedBy")
@@ -212,12 +214,14 @@ model Org {
   ContactLabel            ContactLabel[]
   businessHours           BusinessHour[]
   rules                   Rule[]
+  shopifyCheckouts        ShopifyCheckout[]
   ruleMessageBodyLocks    RuleMessageBodyLock[]
   waMessageOrgTeamMaps    WaMessageOrgTeamMap[]
   Webhook                 Webhook?
   inboxAutomations        InboxAutomation[]
   inboxStats              InboxStats?
   inboxMentions           InboxMention[]
+  inboxNotes              InboxNote[]
   conversationTags        ConversationTag[]
   pipelines               Pipeline[]
 
@@ -608,10 +612,94 @@ model Rule {
   groups  RuleConditionGroup[]
   actions RuleAction[]
 
+  shopifyCheckoutReminders ShopifyCheckoutReminder[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([name, orgId], name: "rule_name_org_id_unique")
+}
+
+/// A Shopify checkout, kept from its checkouts/create and checkouts/update webhooks so an
+/// abandoned one can be reminded about. Carries customer data: expired rows are deleted by
+/// the daily cleanup, and customers/redact and shop/redact delete them on request.
+model ShopifyCheckout {
+  id               String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId            String                    @db.Uuid
+  org              Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  /// The myshopify domain; shop/redact arrives after uninstall, when only this names the rows.
+  shop             String
+  /// The REST checkout id from the webhook.
+  shopifyId        String
+  /// Matches `checkout_token` on the order the checkout turns into.
+  token            String
+  /// E.164, parsed once on arrival; null when the buyer gave no usable number.
+  phone            String?
+  email            String?
+  acceptsMarketing Boolean                   @default(false)
+  /// The webhook payload, which is the snake_case shape rule variables are mapped against.
+  body             Json
+  /// `gid://shopify/Product/…`, the form rule product filters store.
+  productIds       String[]                  @default([])
+  shopifyUpdatedAt DateTime
+  status           ShopifyCheckoutStatus     @default(OPEN)
+  recoveredOrderId String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  reminders        ShopifyCheckoutReminder[]
+
+  @@unique([orgId, shopifyId])
+  @@index([orgId, token])
+  @@index([shop])
+  @@index([status, shopifyUpdatedAt])
+}
+
+enum ShopifyCheckoutStatus {
+  OPEN
+  RECOVERED
+  EXPIRED
+}
+
+/// One abandoned-checkout rule's reminder for one checkout. The row is the send's claim:
+/// the delayed job only decides when it is looked at.
+model ShopifyCheckoutReminder {
+  id         String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  checkoutId String                        @db.Uuid
+  checkout   ShopifyCheckout               @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  ruleId     String                        @db.Uuid
+  rule       Rule                          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  dueAt      DateTime
+  status     ShopifyCheckoutReminderStatus @default(SCHEDULED)
+  /// Why a reminder was skipped or failed.
+  reason     String?
+  sentAt     DateTime?
+  /// The code in the reminder's tracked recovery link, /api/public/r/<linkCode>.
+  linkCode          String                        @unique
+  /// The WhatsApp message id (wamid) the send returned; WaMessage.messageId holds the same.
+  waMessageId       String?
+  clickedAt         DateTime?
+  clickCount        Int                           @default(0)
+  /// The order this reminder recovered: the last one sent before that order was placed.
+  attributedOrderId String?
+  attributedAt      DateTime?
+  /// The order total in the shop's own currency.
+  revenue           Decimal?                      @db.Decimal(12, 2)
+  currency          String?
+  createdAt  DateTime                      @default(now())
+  updatedAt  DateTime                      @updatedAt
+
+  @@unique([checkoutId, ruleId])
+  @@index([status, dueAt])
+  @@index([ruleId, sentAt])
+}
+
+enum ShopifyCheckoutReminderStatus {
+  SCHEDULED
+  SENDING
+  SENT
+  SKIPPED
+  FAILED
+  CANCELLED
 }
 
 enum RulePlatform {
@@ -1028,6 +1116,7 @@ model Contact {
   loyaltyAccounts             CustomerLoyaltyAccount[]
   leads                       Lead[]
   inboxMentions               InboxMention[]
+  inboxNotes                  InboxNote[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -3209,6 +3298,7 @@ model Conversation {
   /// Resolution quality set when the conversation is closed with a result.
   resolutionResult       ResolutionResult?
   inboxMentions          InboxMention[]
+  notes                  InboxNote[]
   /// Conversation-scoped tags. Distinct from `ContactLabel`, which sticks to the
   /// customer across every ticket they ever open.
   tags                   ConversationTagMap[]
@@ -3283,13 +3373,42 @@ model InboxMention {
   conversation    Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   mentionedUserId String        @db.Uuid
   mentionedUser   User          @relation(fields: [mentionedUserId], references: [id], onDelete: Cascade)
-  messageId       String?       @db.Uuid
+  noteId          String?       @db.Uuid
+  note            InboxNote?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
   createdAt       DateTime      @default(now())
   clearedAt       DateTime?
 
   @@index([orgId, mentionedUserId, clearedAt])
   @@index([contactId, mentionedUserId, clearedAt])
   @@index([conversationId])
+  @@index([noteId])
+}
+
+/// A private note agents leave on a ticket. Kept out of `WaMessage` so customer-traffic
+/// reads never have to exclude it; the thread read merges notes back in by time.
+model InboxNote {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId          String         @db.Uuid
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  conversationId String         @db.Uuid
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  contactId      String         @db.Uuid
+  contact        Contact        @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  authorId       String?        @db.Uuid
+  author         User?          @relation("InboxNoteAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  /// WhatsApp-formatted text (`*bold*`, `_italic_`), as the composer sends it.
+  body           String
+  /// The composer's temporary id, echoed back so its placeholder is replaced, not duplicated.
+  clientId       String?
+  createdAt      DateTime       @default(now())
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  deletedById    String?        @db.Uuid
+  deletedBy      User?          @relation("InboxNoteDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  mentions       InboxMention[]
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([contactId, createdAt(sort: Desc)])
 }
 
 enum WaMessageOrgTeamType {
