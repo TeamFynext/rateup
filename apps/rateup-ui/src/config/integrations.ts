@@ -67,6 +67,16 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     logo: `${imagesPath}/landing/logos/zoho.png`,
     page: false,
   },
+  // Hidden until WooCommerce and HubSpot launch — uncomment to show. (needs a HubSpot logo on the image CDN first)
+  // {
+  //   slug: "hubspot",
+  //   name: "HubSpot",
+  //   role: "CRM sync",
+  //   description:
+  //     "Contacts in step both ways, Leads board leads as HubSpot deals that move with them, and closed WhatsApp conversations and survey responses logged on the contact.",
+  //   logo: `${imagesPath}/landing/logos/hubspot.png`,
+  //   page: true,
+  // },
   {
     slug: "zapier",
     name: "Zapier",

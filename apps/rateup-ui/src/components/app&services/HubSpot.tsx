@@ -1,7 +1,10 @@
 import { IconAlertTriangle, IconExternalLink, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { useHubSpotStatus } from "@/backend/appsIntegration/hubspot/hubspot.query";
+import {
+  useHubSpotStatus,
+  useUpdateHubSpotSettings,
+} from "@/backend/appsIntegration/hubspot/hubspot.query";
 import { useDeleteIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { OAuthConnectButton } from "@/components/dashboard/settings/integrations/connect/OAuthConnectButton.tsx";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
@@ -9,18 +12,24 @@ import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integration
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
+import { HubSpotBulkSync } from "./HubSpotBulkSync.tsx";
+import { HubSpotDeals } from "./HubSpotDeals.tsx";
+
 /**
- * HubSpot's settings page. Step 2.1: connecting and the connection itself; contact and deal
- * sync settings join it as those steps land.
+ * HubSpot's settings page: connecting, the connection itself and what RateUp sends —
+ * contacts, and Leads board deals.
  */
 export function HubSpot() {
   const { t } = useTranslation();
   const { data: status, isPending } = useHubSpotStatus();
   const disconnect = useDeleteIntegrationMutation(IntegratedApps.hubspot);
+  const settings = useUpdateHubSpotSettings();
   const config = INTEGRATIONS_CONFIG.hubspot;
 
   if (isPending) {
@@ -114,6 +123,95 @@ export function HubSpot() {
           <dt className="text-muted-foreground">{t("Connected")}</dt>
           <dd>{formatIsoDateStringWithTime(status.connectedAt)}</dd>
         </dl>
+      </IntegrationFormCard>
+
+      <IntegrationFormCard title={t("Contacts")}>
+        <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+          <div className="flex flex-col gap-1">
+            <FieldLabel htmlFor="hubspot-sync-contacts" className="text-sm font-medium">
+              {t("Send contacts to HubSpot")}
+            </FieldLabel>
+            <FieldDescription className="text-xs">
+              {t(
+                "New and edited contacts with an email or phone number are sent to HubSpot, and edits made in HubSpot come back. Someone HubSpot already has, by email or phone, is linked, not duplicated. Deleting a contact on either side leaves the other.",
+              )}
+            </FieldDescription>
+          </div>
+          <Switch
+            id="hubspot-sync-contacts"
+            checked={status.settings.syncContacts}
+            disabled={settings.isPending}
+            onCheckedChange={(on) => settings.mutate({ syncContacts: on })}
+          />
+        </Field>
+        <Field orientation="horizontal" className="mt-3 rounded-lg border border-border p-3">
+          <div className="flex flex-col gap-1">
+            <FieldLabel htmlFor="hubspot-import-contacts" className="text-sm font-medium">
+              {t("Add new HubSpot contacts to RateUp")}
+            </FieldLabel>
+            <FieldDescription className="text-xs">
+              {t(
+                "Contacts created in HubSpot with a phone number, including its country code, become RateUp contacts. A number or email RateUp already has is linked, not duplicated.",
+              )}
+            </FieldDescription>
+          </div>
+          <Switch
+            id="hubspot-import-contacts"
+            checked={status.settings.importContacts}
+            disabled={settings.isPending}
+            onCheckedChange={(on) => settings.mutate({ importContacts: on })}
+          />
+        </Field>
+      </IntegrationFormCard>
+
+      <HubSpotDeals settings={status.settings} />
+
+      <HubSpotBulkSync runs={status.bulk} />
+
+      <IntegrationFormCard
+        title={t("Activity")}
+        description={t(
+          "Logged as notes on the person's HubSpot contact, which is added to HubSpot if it is not there yet.",
+        )}
+      >
+        <div className="flex flex-col gap-3">
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <div className="flex flex-col gap-1">
+              <FieldLabel htmlFor="hubspot-log-conversations" className="text-sm font-medium">
+                {t("Log closed conversations in HubSpot")}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t(
+                  "When a conversation is closed: who closed it, why, the resolution, and its last 50 messages.",
+                )}
+              </FieldDescription>
+            </div>
+            <Switch
+              id="hubspot-log-conversations"
+              checked={status.settings.logConversations}
+              disabled={settings.isPending}
+              onCheckedChange={(on) => settings.mutate({ logConversations: on })}
+            />
+          </Field>
+          <Field orientation="horizontal" className="rounded-lg border border-border p-3">
+            <div className="flex flex-col gap-1">
+              <FieldLabel htmlFor="hubspot-log-surveys" className="text-sm font-medium">
+                {t("Log survey responses in HubSpot")}
+              </FieldLabel>
+              <FieldDescription className="text-xs">
+                {t(
+                  "Each response from a known contact, with its questions and answers. Encrypted answers stay in RateUp.",
+                )}
+              </FieldDescription>
+            </div>
+            <Switch
+              id="hubspot-log-surveys"
+              checked={status.settings.logSurveyResponses}
+              disabled={settings.isPending}
+              onCheckedChange={(on) => settings.mutate({ logSurveyResponses: on })}
+            />
+          </Field>
+        </div>
       </IntegrationFormCard>
     </IntegrationShell>
   );

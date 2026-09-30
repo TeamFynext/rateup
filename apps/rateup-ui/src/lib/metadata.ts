@@ -347,6 +347,18 @@ const pageMetadata = {
     sitemap: false,
     noindex: true,
   },
+  "/integrations/hubspot": {
+    title: "HubSpot WhatsApp Integration: Contacts, Deals & Conversations | RateUp",
+    description:
+      "Connect HubSpot to WhatsApp. Two-way contact sync, Leads board leads as HubSpot deals that move with them, and closed conversations and survey responses logged on the contact.",
+    ogTitle: "HubSpot WhatsApp Integration: Contacts, Deals & Conversations",
+    ogDescription:
+      "Contacts in step both ways, leads as deals with stage mapping, and WhatsApp conversations on the HubSpot timeline.",
+    // Hidden until WooCommerce and HubSpot launch — uncomment to show. (restore the sitemap entry, drop noindex)
+    // sitemap: { priority: "0.8", changefreq: "monthly" },
+    sitemap: false,
+    noindex: true,
+  },
 } as const satisfies Record<string, PageMetadata>;
 
 export type PagePath = keyof typeof pageMetadata;

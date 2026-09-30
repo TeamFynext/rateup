@@ -95,6 +95,7 @@ import { Route as authSignupSuccessIndexRouteImport } from './routes/(auth)/sign
 import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
 import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
+import { Route as marketingIntegrationsHubspotIndexRouteImport } from './routes/(marketing)/integrations/hubspot/index'
 import { Route as marketingIntegrationsShopifyIndexRouteImport } from './routes/(marketing)/integrations/shopify/index'
 import { Route as marketingIntegrationsWoocommerceIndexRouteImport } from './routes/(marketing)/integrations/woocommerce/index'
 import { Route as marketingPricingShopifyIndexRouteImport } from './routes/(marketing)/pricing/shopify/index'
@@ -670,6 +671,12 @@ const marketingBlogTagSitemapDotxmlRoute =
     id: '/tag/sitemap.xml',
     path: '/tag/sitemap.xml',
     getParentRoute: () => marketingBlogRouteRoute,
+  } as any)
+const marketingIntegrationsHubspotIndexRoute =
+  marketingIntegrationsHubspotIndexRouteImport.update({
+    id: '/integrations/hubspot/',
+    path: '/integrations/hubspot/',
+    getParentRoute: () => marketingRouteRoute,
   } as any)
 const marketingIntegrationsShopifyIndexRoute =
   marketingIntegrationsShopifyIndexRouteImport.update({
@@ -1507,6 +1514,7 @@ export interface FileRoutesByFullPath {
   '/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/signup/success/': typeof authSignupSuccessIndexRoute
   '/blog/$slug/': typeof marketingBlogSlugIndexRoute
+  '/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
   '/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
   '/integrations/woocommerce/': typeof marketingIntegrationsWoocommerceIndexRoute
   '/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
@@ -1712,6 +1720,7 @@ export interface FileRoutesByTo {
   '/login/verify-phone-number': typeof authLoginVerifyPhoneNumberIndexRoute
   '/signup/success': typeof authSignupSuccessIndexRoute
   '/blog/$slug': typeof marketingBlogSlugIndexRoute
+  '/integrations/hubspot': typeof marketingIntegrationsHubspotIndexRoute
   '/integrations/shopify': typeof marketingIntegrationsShopifyIndexRoute
   '/integrations/woocommerce': typeof marketingIntegrationsWoocommerceIndexRoute
   '/pricing/shopify': typeof marketingPricingShopifyIndexRoute
@@ -1926,6 +1935,7 @@ export interface FileRoutesById {
   '/(auth)/login/verify-phone-number/': typeof authLoginVerifyPhoneNumberIndexRoute
   '/(auth)/signup/success/': typeof authSignupSuccessIndexRoute
   '/(marketing)/blog/$slug/': typeof marketingBlogSlugIndexRoute
+  '/(marketing)/integrations/hubspot/': typeof marketingIntegrationsHubspotIndexRoute
   '/(marketing)/integrations/shopify/': typeof marketingIntegrationsShopifyIndexRoute
   '/(marketing)/integrations/woocommerce/': typeof marketingIntegrationsWoocommerceIndexRoute
   '/(marketing)/pricing/shopify/': typeof marketingPricingShopifyIndexRoute
@@ -2138,6 +2148,7 @@ export interface FileRouteTypes {
     | '/login/verify-phone-number/'
     | '/signup/success/'
     | '/blog/$slug/'
+    | '/integrations/hubspot/'
     | '/integrations/shopify/'
     | '/integrations/woocommerce/'
     | '/pricing/shopify/'
@@ -2343,6 +2354,7 @@ export interface FileRouteTypes {
     | '/login/verify-phone-number'
     | '/signup/success'
     | '/blog/$slug'
+    | '/integrations/hubspot'
     | '/integrations/shopify'
     | '/integrations/woocommerce'
     | '/pricing/shopify'
@@ -2556,6 +2568,7 @@ export interface FileRouteTypes {
     | '/(auth)/login/verify-phone-number/'
     | '/(auth)/signup/success/'
     | '/(marketing)/blog/$slug/'
+    | '/(marketing)/integrations/hubspot/'
     | '/(marketing)/integrations/shopify/'
     | '/(marketing)/integrations/woocommerce/'
     | '/(marketing)/pricing/shopify/'
@@ -3297,6 +3310,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/tag/sitemap.xml'
       preLoaderRoute: typeof marketingBlogTagSitemapDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
+    }
+    '/(marketing)/integrations/hubspot/': {
+      id: '/(marketing)/integrations/hubspot/'
+      path: '/integrations/hubspot'
+      fullPath: '/integrations/hubspot/'
+      preLoaderRoute: typeof marketingIntegrationsHubspotIndexRouteImport
+      parentRoute: typeof marketingRouteRoute
     }
     '/(marketing)/integrations/shopify/': {
       id: '/(marketing)/integrations/shopify/'
@@ -4250,6 +4270,7 @@ interface marketingRouteRouteChildren {
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute
   marketingTermsOfServiceIndexRoute: typeof marketingTermsOfServiceIndexRoute
   marketingToolsIndexRoute: typeof marketingToolsIndexRoute
+  marketingIntegrationsHubspotIndexRoute: typeof marketingIntegrationsHubspotIndexRoute
   marketingIntegrationsShopifyIndexRoute: typeof marketingIntegrationsShopifyIndexRoute
   marketingIntegrationsWoocommerceIndexRoute: typeof marketingIntegrationsWoocommerceIndexRoute
   marketingPricingShopifyIndexRoute: typeof marketingPricingShopifyIndexRoute
@@ -4292,6 +4313,8 @@ const marketingRouteRouteChildren: marketingRouteRouteChildren = {
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,
   marketingTermsOfServiceIndexRoute: marketingTermsOfServiceIndexRoute,
   marketingToolsIndexRoute: marketingToolsIndexRoute,
+  marketingIntegrationsHubspotIndexRoute:
+    marketingIntegrationsHubspotIndexRoute,
   marketingIntegrationsShopifyIndexRoute:
     marketingIntegrationsShopifyIndexRoute,
   marketingIntegrationsWoocommerceIndexRoute:

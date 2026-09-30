@@ -5,6 +5,11 @@
 //   orders, rewards as one-use checkout coupons, new customers as contacts, and products in the
 //   WhatsApp catalog kept up to date. See /integrations/woocommerce
 //
+// Also on launch: add "/integrations/hubspot" to the list below, with the bullet:
+// - **HubSpot** — contacts synced both ways, Leads board leads as HubSpot deals with column-to-stage
+//   mapping both ways, and closed WhatsApp conversations and survey responses logged as notes on the
+//   contact. See /integrations/hubspot
+//
 // Markdown variant of /integrations and /integrations/shopify, served to clients that ask for
 // `Accept: text/markdown` via `createMarkdownMiddleware`.
 
