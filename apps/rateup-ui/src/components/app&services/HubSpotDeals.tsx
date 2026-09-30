@@ -79,12 +79,21 @@ export function HubSpotDeals({ settings }: Readonly<{ settings: HubSpotSettings 
   const isDirty = useMemo(() => {
     if (!board || !pipelines) return false;
     if ((settings.dealPipelineId ?? "") !== pipelineId) return true;
-    const saved = new Map(settings.stageMappings.map((m) => [m.stageId, m.hubspotStageId]));
+    // Filtered like `stageMappings`: a saved mapping to a deleted column or stage is not an edit.
+    const saved = new Map(
+      settings.stageMappings
+        .filter(
+          (m) =>
+            columns.some((column) => column.id === m.stageId) &&
+            stages.some((stage) => stage.id === m.hubspotStageId),
+        )
+        .map((m) => [m.stageId, m.hubspotStageId]),
+    );
     return (
       saved.size !== stageMappings.length ||
       stageMappings.some((m) => saved.get(m.stageId) !== m.hubspotStageId)
     );
-  }, [board, pipelines, settings, pipelineId, stageMappings]);
+  }, [board, pipelines, settings, pipelineId, columns, stages, stageMappings]);
 
   const pipelineItems = (pipelines ?? []).map((pipeline) => ({
     value: pipeline.id,

@@ -144,12 +144,19 @@ export function GetLeadMapping({ meta }: Props) {
   );
 
   // A column left unmapped is omitted rather than saved with an empty status:
-  // "absent" is what the push reads as "send no status".
+  // "absent" is what the push reads as "send no status". So is one mapped to a
+  // status since deleted in GetLead, which the editor shows as not synced —
+  // saving it would keep pushing a status GetLead no longer has. Until the
+  // statuses have loaded there is nothing to check against, so none is dropped.
   const stageMappings = useMemo<GetLeadStageMapping[]>(() => {
     const statusName = (id: string) => meta?.statuses.find((s) => s.id === id)?.name;
+    const statusExists = (id: string) => !meta || meta.statuses.some((s) => s.id === id);
 
     return stages
-      .filter((stage) => mappings[stage.id] && mappings[stage.id] !== UNMAPPED)
+      .filter(
+        (stage) =>
+          mappings[stage.id] && mappings[stage.id] !== UNMAPPED && statusExists(mappings[stage.id]),
+      )
       .map((stage) => ({
         stageId: stage.id,
         stageName: stage.name,

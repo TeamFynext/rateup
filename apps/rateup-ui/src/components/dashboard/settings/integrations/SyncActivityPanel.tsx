@@ -114,7 +114,10 @@ export function SyncActivityPanel({ integration }: Readonly<{ integration: strin
         <CardTitle>{t("Sync activity")}</CardTitle>
         <CardDescription>{t("What reached your leads in the last 30 days.")}</CardDescription>
         <CardAction>
+          {/* A span, not a <button>: the panel sits inside the page's read-only fieldset,
+              which disables buttons, and refreshing is a read. */}
           <Button
+            render={<span />}
             variant="ghost"
             size="icon"
             aria-label={t("Refresh")}

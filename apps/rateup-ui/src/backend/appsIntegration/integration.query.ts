@@ -230,8 +230,11 @@ export const useStartOAuthConnect = (name: string) => {
     onSuccess: ({ url }) => {
       window.location.assign(url);
     },
-    onError: (error) => {
-      toast.error(error?.message || "Could not start connecting", { id: `oauth-start-${name}` });
+    // The server's reason ("already connected to another workspace") beats axios's status line.
+    onError: (error: { response?: { data?: { error?: string } }; message?: string }) => {
+      toast.error(error?.response?.data?.error || error?.message || "Could not start connecting", {
+        id: `oauth-start-${name}`,
+      });
     },
   });
 };
