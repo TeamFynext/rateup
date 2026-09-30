@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
+import { write } from "hucre";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 
@@ -335,13 +336,21 @@ export async function buildImportTemplate(pipelineId: string, format: "csv" | "x
     ]);
   }
 
-  const ExcelJS = (await import("exceljs")).default;
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet("Import");
-  sheet.columns = columns.map((column) => ({ header: column.header, key: column.key, width: 22 }));
-  sheet.getRow(1).font = { bold: true };
-  for (const row of example) sheet.addRow(row);
-  // Kept as text so Excel does not turn +91… into 9.19E+11 or drop the plus.
-  sheet.getColumn("phone").numFmt = "@";
-  return Buffer.from(await workbook.xlsx.writeBuffer());
+  const buffer = await write({
+    sheets: [
+      {
+        name: "Import",
+        columns: columns.map((column) => ({
+          header: column.header,
+          key: column.key,
+          width: 22,
+          // Kept as text so Excel does not turn +91… into 9.19E+11 or drop the plus.
+          numFmt: column.key === "phone" ? "@" : undefined,
+        })),
+        data: example,
+      },
+    ],
+    format: "xlsx",
+  });
+  return Buffer.from(buffer);
 }

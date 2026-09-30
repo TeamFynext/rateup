@@ -28,6 +28,7 @@ import {
   shortCodeParamSchema,
   searchQuerySchema,
   contactSearchQuerySchema,
+  exportQuerySchema,
 } from "./account.schema.js";
 import { declareAccess } from "../../../authz/registry.js";
 
@@ -184,7 +185,10 @@ export async function customerAccountRoutes(server: FastifyInstance) {
 
   server.get(
     "/export",
-    { config: { permission: "loyalty.accounts.export" } },
+    {
+      schema: { querystring: exportQuerySchema },
+      config: { permission: "loyalty.accounts.export" },
+    },
     exportCustomerAccountsHandler,
   );
 }

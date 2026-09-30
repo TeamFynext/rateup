@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { tabularExportFormatSchema } from "../../../utils/spreadsheet.js";
+
 import { isAvailableChannel, LoyaltyChannel } from "../messaging/channelIds.js";
 
 const preferredChannelSchema = z
@@ -119,6 +121,13 @@ const searchQuerySchema = z.object({
   name: z.string().optional(),
 });
 
+/** `GET /accounts/export`. "excel" is what the dashboard sent before ODS was offered. */
+const exportQuerySchema = z.object({
+  format: z
+    .preprocess((value) => (value === "excel" ? "xlsx" : value), tabularExportFormatSchema)
+    .default("xlsx"),
+});
+
 /** `GET /accounts/contacts` — the org's contacts, for enrolling one from the counter. */
 const contactSearchQuerySchema = z.object({
   search: z.string().trim().max(100).optional(),
@@ -138,6 +147,7 @@ export type ApplyRedemptionInput = z.infer<typeof applyRedemptionSchema>;
 export type AssignRewardInput = z.infer<typeof assignRewardSchema>;
 export type SearchQueryInput = z.infer<typeof searchQuerySchema>;
 export type ContactSearchQueryInput = z.infer<typeof contactSearchQuerySchema>;
+export type ExportQueryInput = z.infer<typeof exportQuerySchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -155,4 +165,5 @@ export {
   shortCodeParamSchema,
   searchQuerySchema,
   contactSearchQuerySchema,
+  exportQuerySchema,
 };
