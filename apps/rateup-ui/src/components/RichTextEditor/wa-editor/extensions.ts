@@ -7,9 +7,13 @@ import StarterKit from "@tiptap/starter-kit";
 import type { RefObject } from "react";
 
 import type { MentionUser } from "../mention/MentionList.tsx";
-import { createMentionSuggestion } from "../mention/suggestion.ts";
+import { createMentionSuggestion, MENTION_SUGGESTION_KEY } from "../mention/suggestion.ts";
 
-/** Submits on Enter instead of inserting a newline (inbox composer). */
+/**
+ * Submits on Enter; Shift+Enter still falls through to a line break. Enter is left
+ * alone while the @-mention list is open (it picks the teammate) and while an IME is
+ * composing (it confirms the character).
+ */
 export const CustomEnter = Extension.create({
   name: "customEnter",
 
@@ -21,7 +25,9 @@ export const CustomEnter = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      Enter: () => {
+      Enter: ({ editor }) => {
+        if (editor.view.composing) return false;
+        if (MENTION_SUGGESTION_KEY.getState(editor.state)?.active) return false;
         this.options.onEnter();
         return true;
       },
@@ -30,7 +36,8 @@ export const CustomEnter = Extension.create({
 });
 
 export interface WaExtensionOptions {
-  placeholder?: string;
+  /** A function is read on every render of the placeholder, so it can change in place. */
+  placeholder?: string | (() => string);
   /** Character limit enforced by CharacterCount. */
   max?: number;
   /** When provided, Enter runs this instead of inserting a newline. */

@@ -40,15 +40,46 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
-    id: "2026-09-25-loyalty-counter-welcome",
-    title: "A WhatsApp welcome for counter sign-ups",
+    id: "2026-09-30-shopify-cart-reminder-results",
+    title: "See the revenue your cart reminders bring back",
     summary:
-      "Customers you enrol at the counter now get a WhatsApp welcome message, which you can turn off in Loyalty → Messages. You can also switch the joining and referral bonuses on or off.",
-    publishedAt: "2026-09-25",
-    kinds: ["new", "improvement"],
-    area: "Loyalty",
-    link: { to: "/dashboard/loyalty/messages", label: "Open Messages" },
+      "The Shopify page now has a Results tab with orders and revenue recovered by your abandoned-cart reminders. Their links are tagged so Shopify's own reports credit WhatsApp too.",
+    publishedAt: "2026-09-30",
+    kinds: ["new"],
+    area: "Shopify",
+    link: { to: "/dashboard/settings/integrations/shopify" },
   },
+  {
+    id: "2026-09-30-shopify-cart-reminders",
+    title: "Abandoned-cart reminders, sent on time",
+    summary:
+      "Choose how long a Shopify checkout sits untouched before your reminder goes out, and add a second rule for a follow-up. Reminders stop as soon as the order comes through.",
+    publishedAt: "2026-09-30",
+    kinds: ["improvement"],
+    area: "Automation",
+  },
+
+  {
+    id: "2026-09-26-quick-reply-media",
+    title: "Quick replies with images, audio and video",
+    summary:
+      "Attach images, voice notes or videos to a quick reply in Inbox Settings, and they are added to your message when you use it.",
+    publishedAt: "2026-09-26",
+    kinds: ["new"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "settings" } },
+  },
+  {
+    id: "2026-09-26-inbox-one-click-assign",
+    title: "Assign a chat in one click",
+    summary:
+      "Click the assignee in a chat's side panel (or press A), search for a teammate and pick them. You can also let a team hand the chat to whoever's turn it is.",
+    publishedAt: "2026-09-26",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox" },
+  },
+
   {
     id: "2026-09-25-notification-settings",
     title: "Choose your own notifications",

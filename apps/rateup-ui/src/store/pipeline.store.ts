@@ -42,7 +42,6 @@ export interface PipelineViewState {
   filter: LeadFilter;
   search: string;
   stageId: string | null;
-  teamId: string | null;
   /** The board only ever sets this from a lead's own source. */
   source: LeadSource | null;
   assigneeId: string | null;
@@ -54,7 +53,7 @@ export interface PipelineViewState {
 interface PipelineStore extends PipelineViewState {
   patch: (patch: Partial<PipelineViewState>) => void;
   /** Sets a facet, or clears it when it is already the active one. */
-  toggle: <K extends "stageId" | "teamId" | "source" | "assigneeId">(
+  toggle: <K extends "stageId" | "source" | "assigneeId">(
     key: K,
     value: NonNullable<PipelineViewState[K]>,
   ) => void;
@@ -66,7 +65,6 @@ const INITIAL: PipelineViewState = {
   filter: "open",
   search: "",
   stageId: null,
-  teamId: null,
   source: null,
   assigneeId: null,
   leadId: null,
@@ -79,8 +77,7 @@ export const usePipelineStore = create<PipelineStore>()(
       ...INITIAL,
       patch: (patch) => set(patch),
       toggle: (key, value) => set((state) => ({ [key]: state[key] === value ? null : value })),
-      clearFacets: () =>
-        set({ search: "", stageId: null, teamId: null, source: null, assigneeId: null }),
+      clearFacets: () => set({ search: "", stageId: null, source: null, assigneeId: null }),
     }),
     {
       name: "rateup:pipeline:view",
@@ -91,12 +88,11 @@ export const usePipelineStore = create<PipelineStore>()(
       // Everything the user can see and undo is kept. The open lead and the
       // create dialog are not: restoring them would reopen an overlay nobody
       // asked for, over a lead that may since have been deleted.
-      partialize: ({ view, filter, search, stageId, teamId, source, assigneeId }) => ({
+      partialize: ({ view, filter, search, stageId, source, assigneeId }) => ({
         view,
         filter,
         search,
         stageId,
-        teamId,
         source,
         assigneeId,
       }),

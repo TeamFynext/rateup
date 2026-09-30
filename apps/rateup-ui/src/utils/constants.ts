@@ -366,6 +366,14 @@ export const shopifyEventData = [
     label: "On abandoned checkouts",
     value: ShopifyEvents.ABANDONED_CHECKOUTS,
   },
+  {
+    label: "On refund issued",
+    value: ShopifyEvents.REFUNDS_CREATE,
+  },
+  {
+    label: "On store credit issued",
+    value: ShopifyEvents.STORE_CREDIT_ISSUED,
+  },
 ];
 
 export const defaultTitleSubtitleStartBtnTextsObj = {

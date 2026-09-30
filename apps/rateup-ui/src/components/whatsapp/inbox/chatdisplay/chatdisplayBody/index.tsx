@@ -1,4 +1,3 @@
-import { IconLock } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { FC } from "react";
@@ -80,20 +79,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
     }
   }, [selectedKey, messagesByKey]);
 
-  /**
-   * The composer's "Private Note" tab is also the thread's view mode: in it the
-   * thread shows internal notes only, so the note history reads as its own
-   * surface instead of being scattered through the customer conversation.
-   */
-  const { activeTab, setActiveTab } = useComposerTabStore();
-  const isNotesView = activeTab === "private";
-  const visibleMessages = useMemo(
-    () =>
-      isNotesView
-        ? allMessages.filter((m) => m?.messageBody?.exchangeProcess === "privateNote")
-        : allMessages,
-    [allMessages, isNotesView],
-  );
+  const setActiveTab = useComposerTabStore((state) => state.setActiveTab);
 
   const { pendingByRow } = usePendingMessagesStore();
 
@@ -169,32 +155,20 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
                 <EndofConversationComponent />
               )}
             </MessageScrollerItem>
-            {isNotesView && !visibleMessages.length && (
-              <MessageScrollerItem messageId="wa-inbox-notes-empty">
-                <div className="flex flex-col items-center gap-1.5 py-10 text-center">
-                  <IconLock className="size-5 text-amber-600 dark:text-amber-500" />
-                  <p className="text-sm font-medium text-foreground">No internal notes yet</p>
-                  <p className="max-w-xs text-xs text-muted-foreground">
-                    Notes stay with the ticket and are never sent to the customer.
-                  </p>
-                </div>
-              </MessageScrollerItem>
-            )}
-            {visibleMessages.map((message, index) => (
+            {allMessages.map((message, index) => (
               <MessageScrollerItem key={message?.id ?? index} messageId={message?.id}>
                 <MessageItem
                   message={message}
                   selectedContact={selectedContact!}
-                  previousMessage={index > 0 ? visibleMessages[index - 1] : undefined}
+                  previousMessage={index > 0 ? allMessages[index - 1] : undefined}
                 />
               </MessageScrollerItem>
             ))}
-            {!isNotesView &&
-              pendingMessages.map((msg: PendingMessage) => (
-                <MessageScrollerItem key={msg.id} messageId={msg.id} scrollAnchor>
-                  <PendingMessageBubble message={msg} />
-                </MessageScrollerItem>
-              ))}
+            {pendingMessages.map((msg: PendingMessage) => (
+              <MessageScrollerItem key={msg.id} messageId={msg.id} scrollAnchor>
+                <PendingMessageBubble message={msg} />
+              </MessageScrollerItem>
+            ))}
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton />

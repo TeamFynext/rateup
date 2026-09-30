@@ -10,6 +10,8 @@ import { PipelinePage } from "@/components/pipeline/PipelinePage.tsx";
  */
 const pipelineSearchSchema = z.object({
   p: z.string().optional(),
+  /** A card's share id, from `/pl/<id>`; resolved and dropped on arrival. */
+  lead: z.string().optional(),
 });
 
 export type PipelineSearch = z.infer<typeof pipelineSearchSchema>;

@@ -191,15 +191,10 @@ const LeadRow = memo(function LeadRow({
         {lead.assignees.length > 0 ? (
           <>
             <AssigneeStack assignees={lead.assignees} max={2} />
-            <span className="min-w-0">
-              <span className="text-foreground block truncate text-xs">
-                {lead.assignees.length === 1
-                  ? lead.assignees[0].name
-                  : t("{total} assignees", { total: lead.assignees.length })}
-              </span>
-              <span className="text-muted-foreground block text-[10px]">
-                {lead.team?.name ?? t("No team")}
-              </span>
+            <span className="text-foreground min-w-0 truncate text-xs">
+              {lead.assignees.length === 1
+                ? lead.assignees[0].name
+                : t("{total} assignees", { total: lead.assignees.length })}
             </span>
           </>
         ) : (

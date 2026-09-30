@@ -29,7 +29,7 @@ export function LogsView({
         <MessageLogs filters={filters} />
       </TabsContent>
       <TabsContent value="activity">
-        <AuditLogs />
+        <AuditLogs dateRange={filters.dateRange} />
       </TabsContent>
     </Tabs>
   );

@@ -18,6 +18,15 @@ export interface CreateQuickReplyInput {
   text: unknown;
   key: string;
   topic: string;
+  media: QuickReplyMedia[];
+}
+
+/** An attachment sent with a quick reply. Same shape as a composer attachment. */
+export interface QuickReplyMedia {
+  type: "image" | "audio" | "video";
+  url: string;
+  key: string;
+  name: string;
 }
 
 export async function createWaQuickReply(data: CreateQuickReplyInput) {
@@ -30,6 +39,7 @@ export interface QuickReply {
   key: string;
   text: string;
   topic: string;
+  media?: QuickReplyMedia[];
   message?: string;
   priority?: number;
 }

@@ -91,7 +91,12 @@ interface WaTextEditorProps {
   border?: boolean;
   allowFiles?: boolean;
   hideCharacterCount?: boolean;
-  /** Enable @-mentions of teammates (used by the private-note composer). */
+  /**
+   * `note` writes an internal note: amber surface, and none of the tools that only
+   * make sense for something the customer receives (media, templates, channel).
+   */
+  mode?: "message" | "note";
+  /** Enable @-mentions of teammates. */
   enableMention?: boolean;
   /** Candidate users for the @-mention suggestion list. */
   mentionUsers?: MentionUser[];
@@ -121,9 +126,16 @@ function WaTextEditor({
   hideCharacterCount = false,
   enableMention = false,
   mentionUsers,
+  mode = "message",
   quickRepliesOpen,
   onQuickRepliesOpenChange,
 }: Readonly<WaTextEditorProps>) {
+  const isNote = mode === "note";
+  // What only a customer-bound message can carry.
+  const channelTools = inbox && !isNote;
+  // The editor's own plugins are created once, so they read the mode through a ref.
+  const isNoteRef = useRef(isNote);
+  isNoteRef.current = isNote;
   const [opened, { open, close }] = useDisclosure(false);
   const [internalShowQuickReplies, setInternalShowQuickReplies] = useState(false);
   // Controlled when the parent owns the toggle; otherwise fall back to local state.
@@ -140,9 +152,24 @@ function WaTextEditor({
   // ref so the mention list stays current as `mentionUsers` updates.
   const mentionUsersRef = useRef<MentionUser[]>([]);
   mentionUsersRef.current = mentionUsers ?? [];
+  // Read through a ref: callers pass a new function every render, and rebuilding the
+  // extension list for each one would reconfigure the editor on every keystroke.
+  const onEnterRef = useRef(customEnter);
+  onEnterRef.current = customEnter;
+  const submitsOnEnter = customEnter !== undefined;
+  // Same for the placeholder, which changes with the composer's mode.
+  const placeholderRef = useRef(placeholder);
+  placeholderRef.current = placeholder;
   const extensions = useMemo(
-    () => createWaExtensions({ placeholder, max, customEnter, enableMention, mentionUsersRef }),
-    [customEnter, enableMention, placeholder, max],
+    () =>
+      createWaExtensions({
+        placeholder: () => placeholderRef.current,
+        max,
+        customEnter: submitsOnEnter ? () => onEnterRef.current?.() : undefined,
+        enableMention,
+        mentionUsersRef,
+      }),
+    [submitsOnEnter, enableMention, max],
   );
   const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
@@ -160,7 +187,7 @@ function WaTextEditor({
         new Plugin({
           props: {
             handleTextInput(view, from, _to, text) {
-              if (text === "/" && !isQuickReplyEditor) {
+              if (text === "/" && !isQuickReplyEditor && !isNoteRef.current) {
                 const slice = view.state.doc.slice(0, from);
                 const textBefore = slice.content.textBetween(0, slice.content.size, "\n", "\n");
 
@@ -175,7 +202,7 @@ function WaTextEditor({
             },
 
             handlePaste(_view, event) {
-              if (!allowFiles) return false;
+              if (!allowFiles || isNoteRef.current) return false;
               const items = event.clipboardData?.items;
               if (!items) return false;
 
@@ -248,6 +275,11 @@ function WaTextEditor({
   useEffect(() => {
     if (editor) editor.setEditable(editable);
   }, [editable]);
+
+  // The placeholder is a decoration, redrawn only on a transaction.
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) editor.view.dispatch(editor.state.tr);
+  }, [editor, placeholder]);
   const [isModalOpened, { close: onModalClose, open: openModal }] = useDisclosure(false);
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
 
@@ -348,7 +380,8 @@ function WaTextEditor({
       {/* Attachments wrap instead of pushing the composer sideways — ten pending
           files on a phone is a second row, not a horizontal scroll. */}
       <div className="flex flex-wrap gap-1 px-2 pt-2 empty:hidden">
-        {media.length > 0 &&
+        {!isNote &&
+          media.length > 0 &&
           media.map((me) => {
             return (
               <div className="relative inline-flex" key={me?.key}>
@@ -383,7 +416,7 @@ function WaTextEditor({
           })}
         <ShowMedia opened={opened} close={close} />
       </div>
-      {showQuickReplies && (
+      {showQuickReplies && !isNote && (
         <div className="p-2 shrink-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Quick Replies</span>
@@ -398,8 +431,9 @@ function WaTextEditor({
           </div>
           <div className="overflow-auto min-w-40 min-h-20 max-h-50">
             <WaQuickReply
-              handleSelectQuickReply={(value) => {
+              handleSelectQuickReply={(reply) => {
                 if (editor) {
+                  const value = reply.text ?? "";
                   const parsedValue = !isJSONString(value)
                     ? parseFromWhatsAppFormat(value)
                     : JSON.parse(value);
@@ -416,7 +450,15 @@ function WaTextEditor({
                       .run();
                   }
 
-                  editor.chain().focus().insertContent(parsedValue).run();
+                  if (value) editor.chain().focus().insertContent(parsedValue).run();
+                  // Attachments only exist in the inbox composer. `shared`: the files
+                  // are the quick reply's, so dropping one from this draft keeps it.
+                  if (inbox) {
+                    const inDraft = new Set(media.map((m) => m.key));
+                    for (const item of reply.media ?? []) {
+                      if (!inDraft.has(item.key)) addMedia({ ...item, shared: true });
+                    }
+                  }
                   setShowQuickReplies(false);
                   setSearchTerm("");
                 }
@@ -435,7 +477,7 @@ function WaTextEditor({
         <div className="min-w-0 flex-1">
           <ToolbarProvider editor={editor!}>
             <TooltipProvider>
-              {inbox && !quickRepliesControlled && (
+              {channelTools && !quickRepliesControlled && (
                 <div className="flex items-center justify-end px-2 pb-1">
                   <CustomTooltip
                     trigger={
@@ -461,15 +503,19 @@ function WaTextEditor({
                   editor={editor}
                   style={
                     {
-                      backgroundColor: "var(--accent)",
+                      // The note surface comes from the class list, as the note bubble's does.
+                      backgroundColor: isNote ? undefined : "var(--accent)",
                       borderRadius: "5px",
                       "--wa-editor-min-h": `${mih}px`,
                       "--wa-editor-max-h": `${mah}px`,
                     } as React.CSSProperties
                   }
-                  className={`max-h-40 min-h-9 overflow-y-auto rounded-xl sm:max-h-(--wa-editor-max-h) sm:min-h-(--wa-editor-min-h) ${
-                    editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""
-                  }`}
+                  className={cn(
+                    "max-h-40 min-h-9 overflow-y-auto rounded-xl sm:max-h-(--wa-editor-max-h) sm:min-h-(--wa-editor-min-h)",
+                    isNote && "bg-amber-50 dark:bg-amber-400/10",
+                    editor?.isFocused &&
+                      (isNote ? "ring-1 ring-amber-400/70" : "ring-1 ring-(--grey-color-4)"),
+                  )}
                 />
               </div>
               <div
@@ -541,7 +587,7 @@ function WaTextEditor({
                     }
                     content={<span>Undo/Redo</span>}
                   />
-                  {inbox && !isQuickReplyEditor && (
+                  {channelTools && !isQuickReplyEditor && (
                     <Popover>
                       <PopoverTrigger>
                         <CustomTooltip
@@ -577,7 +623,7 @@ function WaTextEditor({
                       </PopoverContent>
                     </Popover>
                   )}
-                  {inbox && platform === MessagePlatform.WHATSAPP && (
+                  {channelTools && platform === MessagePlatform.WHATSAPP && (
                     <div className="hidden sm:flex">
                       <CustomTooltip
                         trigger={
@@ -605,7 +651,7 @@ function WaTextEditor({
                       />
                     </div>
                   )}
-                  {inbox && platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
+                  {channelTools && platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
                   {/* Everything above that is a named action rather than a typing
                       aid collapses into one button on a phone. Kept as a separate
                       trigger rather than a JS breakpoint so no toolbar control
@@ -625,7 +671,7 @@ function WaTextEditor({
                         <IconDots className="size-5" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
-                        {platform === MessagePlatform.WHATSAPP && (
+                        {channelTools && platform === MessagePlatform.WHATSAPP && (
                           <>
                             <DropdownMenuItem className="gap-2 text-xs" onClick={() => openModal()}>
                               <IconLayoutBoard className="size-4" />
@@ -668,7 +714,7 @@ function WaTextEditor({
                 </div>
 
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:flex-none sm:gap-2">
-                  {inbox && <AccountSelectComponent />}
+                  {channelTools && <AccountSelectComponent />}
                   {/* On a phone the send button rides at the end of this row. As
                       its own column it reserved its width down the whole height
                       of the composer — width the message box never got back,

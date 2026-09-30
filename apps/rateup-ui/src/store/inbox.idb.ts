@@ -166,6 +166,15 @@ export async function patchMessageInIDB(messageId: string, data: Record<string, 
   await tx.done;
 }
 
+/** Drops rows from one thread's cache; `saveMessagesToIDB` only ever adds and updates. */
+export async function deleteMessagesFromIDB(key: string, ids: string[]) {
+  if (!ids.length) return;
+  const db = await getDB();
+  const tx = db.transaction(STORE_MESSAGES, "readwrite");
+  await Promise.all(ids.map((id) => tx.objectStore(STORE_MESSAGES).delete(`${key}_${id}`)));
+  await tx.done;
+}
+
 export async function clearAllMessagesFromIDB() {
   const db = await getDB();
   await db.clear(STORE_MESSAGES);

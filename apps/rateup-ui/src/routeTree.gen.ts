@@ -27,6 +27,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
 import { Route as DashboardLoyaltyRouteRouteImport } from './routes/dashboard/loyalty/route'
 import { Route as DashboardMetaAgentRouteRouteImport } from './routes/dashboard/meta-agent/route'
+import { Route as PlShortIdRouteImport } from './routes/pl/$shortId'
 import { Route as authInviteIndexRouteImport } from './routes/(auth)/invite/index'
 import { Route as authLoginIndexRouteImport } from './routes/(auth)/login/index'
 import { Route as authLogoutIndexRouteImport } from './routes/(auth)/logout/index'
@@ -306,6 +307,11 @@ const DashboardMetaAgentRouteRoute = DashboardMetaAgentRouteRouteImport.update({
   id: '/meta-agent',
   path: '/meta-agent',
   getParentRoute: () => DashboardRouteRoute,
+} as any)
+const PlShortIdRoute = PlShortIdRouteImport.update({
+  id: '/pl/$shortId',
+  path: '/pl/$shortId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const authInviteIndexRoute = authInviteIndexRouteImport.update({
   id: '/invite/',
@@ -1426,6 +1432,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
+  '/pl/$shortId': typeof PlShortIdRoute
   '/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -1630,6 +1637,7 @@ export interface FileRoutesByTo {
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
+  '/pl/$shortId': typeof PlShortIdRoute
   '/': typeof marketingIndexRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -1843,6 +1851,7 @@ export interface FileRoutesById {
   '/dashboard/loyalty': typeof DashboardLoyaltyRouteRouteWithChildren
   '/dashboard/meta-agent': typeof DashboardMetaAgentRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
+  '/pl/$shortId': typeof PlShortIdRoute
   '/(marketing)/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -2054,6 +2063,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
+    | '/pl/$shortId'
     | '/'
     | '/admin/'
     | '/dashboard/'
@@ -2258,6 +2268,7 @@ export interface FileRouteTypes {
     | '/sitemap_index.xml'
     | '/dashboard/loyalty'
     | '/.well-known/api-catalog'
+    | '/pl/$shortId'
     | '/'
     | '/admin'
     | '/dashboard'
@@ -2470,6 +2481,7 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty'
     | '/dashboard/meta-agent'
     | '/.well-known/api-catalog'
+    | '/pl/$shortId'
     | '/(marketing)/'
     | '/admin/'
     | '/dashboard/'
@@ -2679,6 +2691,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   Sitemap_indexDotxmlRoute: typeof Sitemap_indexDotxmlRoute
   DotwellKnownApiCatalogRoute: typeof DotwellKnownApiCatalogRoute
+  PlShortIdRoute: typeof PlShortIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2808,6 +2821,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/meta-agent'
       preLoaderRoute: typeof DashboardMetaAgentRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/pl/$shortId': {
+      id: '/pl/$shortId'
+      path: '/pl/$shortId'
+      fullPath: '/pl/$shortId'
+      preLoaderRoute: typeof PlShortIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(auth)/invite/': {
       id: '/(auth)/invite/'
@@ -4722,6 +4742,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   Sitemap_indexDotxmlRoute: Sitemap_indexDotxmlRoute,
   DotwellKnownApiCatalogRoute: DotwellKnownApiCatalogRoute,
+  PlShortIdRoute: PlShortIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

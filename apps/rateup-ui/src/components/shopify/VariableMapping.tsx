@@ -4,7 +4,7 @@ import { useId, useMemo } from "react";
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 
-import { Field, FieldLabel } from "../ui/field.tsx";
+import { Field, FieldDescription, FieldLabel } from "../ui/field.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import {
   contactVariablePresets,
@@ -16,10 +16,23 @@ interface VariableMappingProps {
   waTemplateId: string;
   value: { templateParamIndex: number; shopifyPath: string }[];
   onChange: (value: { templateParamIndex: number; shopifyPath: string }[]) => void;
+  /** The variable filling the `{{1}}` at the end of the template's URL button. */
+  buttonValue?: string;
+  onButtonChange?: (value: string | undefined) => void;
   triggerEvent?: string;
 }
 
-const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: VariableMappingProps) => {
+/** The base a URL button needs for a tracked recovery link; the code is its `{{1}}`. */
+const TRACKED_LINK_BASE = `${import.meta.env.VITE_API_URL}/api/public/r/`;
+
+const VariableMapping = ({
+  waTemplateId,
+  value,
+  onChange,
+  buttonValue,
+  onButtonChange,
+  triggerEvent,
+}: VariableMappingProps) => {
   const uid = useId();
   const { data: template, isLoading } = useWaTemplateById(waTemplateId);
   const isShopify = triggerEvent === "SHOPIFY_EVENT";
@@ -47,6 +60,18 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
     return Array.isArray(bodyExamples) ? bodyExamples : [];
   }, [template]);
 
+  // Meta allows a variable only at the end of a URL button's address.
+  const urlButton = useMemo(() => {
+    const buttons = template?.data?.components?.find(
+      (c: { type?: string }) => c.type === "BUTTONS" || c.type === "buttons",
+    )?.buttons;
+    return buttons?.find(
+      (button: { type?: string; url?: string }) =>
+        button.type === "URL" && button.url?.endsWith("{{1}}"),
+    ) as { text?: string; url?: string } | undefined;
+  }, [template]);
+  const buttonIsTracked = Boolean(urlButton?.url?.startsWith(TRACKED_LINK_BASE));
+
   const handleMappingChange = (index: number, shopifyPath: string) => {
     const newValue = [...value];
     const existingIndex = newValue.findIndex((m) => m.templateParamIndex === index);
@@ -67,7 +92,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
     );
   }
 
-  if (variables.length === 0) {
+  if (variables.length === 0 && !urlButton) {
     return null;
   }
 
@@ -121,6 +146,36 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
           );
         })}
       </Field>
+      {urlButton && onButtonChange && (
+        <Field>
+          <FieldLabel htmlFor={`${uid}-button-url`} className="text-xs">
+            Button “{urlButton.text}” link ending
+          </FieldLabel>
+          <Select
+            value={buttonValue ?? ""}
+            onValueChange={(val) => onButtonChange(val || undefined)}
+            items={variableOptions}
+          >
+            <SelectTrigger id={`${uid}-button-url`} className="h-9 sm:w-1/2">
+              <SelectValue placeholder="Use the template's sample value" />
+            </SelectTrigger>
+            <SelectContent>
+              {variableOptions.map((preset) => (
+                <SelectItem key={preset.value} value={preset.value}>
+                  {preset.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isShopify && (
+            <FieldDescription className="text-xs">
+              {buttonIsTracked
+                ? "Pick “Checkout Recovery Link — button code” to send a tracked cart link."
+                : `For a tracked cart link that counts clicks and orders, approve the button with the address ${TRACKED_LINK_BASE}{{1}} and pick “Checkout Recovery Link — button code”.`}
+            </FieldDescription>
+          )}
+        </Field>
+      )}
     </div>
   );
 };

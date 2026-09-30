@@ -1,34 +1,32 @@
-import {
-  IconCheck,
-  IconCopy,
-  IconEdit,
-  IconFolder,
-  IconInbox,
-  IconPlus,
-  IconX,
-} from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconEdit, IconFolder, IconInbox, IconX } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { ComponentProps, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useRemoveContactsFromGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
+import {
+  useAddExistingContactMutation,
+  useContactGroup,
+  useRemoveContactsFromGroup,
+} from "@/backend/campaign/contactGroup/contactGroup.query";
 import {
   useContactFullDetails,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useConversationsByContact } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
+import ChipAddPicker from "@/components/common/chip-add-picker.tsx";
 import { useContactTableStore } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import {
   deriveStatus,
   STATUS_PILL_BASE,
 } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayHeader/ticket.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { cn } from "@/lib/utils.ts";
 import { copyToClipboard } from "@/utils/whatsappLink.ts";
 
 import { Badge } from "../ui/badge.tsx";
-import { Button } from "../ui/button.tsx";
+import { Button, buttonVariants } from "../ui/button.tsx";
 import { ContactAvatar } from "../ui/contact-avatar.tsx";
 import {
   Dialog,
@@ -41,7 +39,6 @@ import {
 import { FieldLabel } from "../ui/field.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 import { Textarea } from "../ui/textarea.tsx";
-import AddToGroupModal from "./AddToGroupModal.tsx";
 import { contactRowToInitialValues } from "./contact-form-schema.ts";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";
@@ -150,16 +147,17 @@ const ContactDetailedView = ({
   setOpened,
   selectedContact,
   setIsEditOpen,
-  setIsAddToGroupOpen,
   showInboxLink = true,
+  showConversations = true,
 }: {
   opened: boolean;
   setOpened: (open: boolean) => void;
   selectedContact: ContactPreview;
   /** Off where the dialog is opened from the inbox itself. */
   showInboxLink?: boolean;
+  /** Off in the inbox, whose thread already lists the contact's other conversations. */
+  showConversations?: boolean;
   setIsEditOpen: (open: boolean) => void;
-  setIsAddToGroupOpen: (open: boolean) => void;
 }) => {
   const [selectedGroup, setSelectedGroup] = useState<GroupRef | null>(null);
   const [editNotes, setEditNotes] = useState(false);
@@ -171,6 +169,8 @@ const ContactDetailedView = ({
     if (opened) setEditNotes(false);
   }
   const removeContacts = useRemoveContactsFromGroup(selectedGroup?.id ?? "");
+  const addToGroup = useAddExistingContactMutation();
+  const { data: allGroups = [] } = useContactGroup();
   const updateContact = useEditContactMutation();
   const confirm = useConfirm();
 
@@ -442,56 +442,58 @@ const ContactDetailedView = ({
           </div>
 
           <div className="space-y-5 min-w-0">
-            <Section title="Conversations">
-              {isLoadingConversations ? (
-                <div className="space-y-1.5 pt-1">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ) : conversations.length > 0 ? (
-                <div className="space-y-1.5 pt-1">
-                  {recentConversations.map((conversation) => {
-                    const status = deriveStatus({
-                      conversationStatus: conversation.status,
-                      assignedUsers: conversation.assignedUsers,
-                    });
-                    return (
-                      <div
-                        key={conversation.id}
-                        className="flex items-center gap-2 rounded-md border border-border/60 px-2.5 py-2"
-                      >
-                        {conversation.number ? (
-                          <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
-                            #{conversation.number}
-                          </span>
-                        ) : null}
-                        <span className="min-w-0 flex-1 truncate text-sm">
-                          {conversation.subject || (
-                            <span className="text-muted-foreground">
-                              {conversation.messageCount} messages
+            {showConversations && (
+              <Section title="Conversations">
+                {isLoadingConversations ? (
+                  <div className="space-y-1.5 pt-1">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : conversations.length > 0 ? (
+                  <div className="space-y-1.5 pt-1">
+                    {recentConversations.map((conversation) => {
+                      const status = deriveStatus({
+                        conversationStatus: conversation.status,
+                        assignedUsers: conversation.assignedUsers,
+                      });
+                      return (
+                        <div
+                          key={conversation.id}
+                          className="flex items-center gap-2 rounded-md border border-border/60 px-2.5 py-2"
+                        >
+                          {conversation.number ? (
+                            <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+                              #{conversation.number}
                             </span>
-                          )}
-                        </span>
-                        <span className={`${STATUS_PILL_BASE} shrink-0 ${status.className}`}>
-                          <span className="size-[5px] rounded-full bg-current" />
-                          {status.label}
-                        </span>
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {formatDate(conversation.lastMessageAt ?? conversation.createdAt)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {conversations.length > RECENT_CONVERSATION_COUNT && (
-                    <p className="text-xs text-muted-foreground">
-                      +{conversations.length - RECENT_CONVERSATION_COUNT} older in the inbox
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground py-1">No conversations yet</p>
-              )}
-            </Section>
+                          ) : null}
+                          <span className="min-w-0 flex-1 truncate text-sm">
+                            {conversation.subject || (
+                              <span className="text-muted-foreground">
+                                {conversation.messageCount} messages
+                              </span>
+                            )}
+                          </span>
+                          <span className={`${STATUS_PILL_BASE} shrink-0 ${status.className}`}>
+                            <span className="size-[5px] rounded-full bg-current" />
+                            {status.label}
+                          </span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {formatDate(conversation.lastMessageAt ?? conversation.createdAt)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {conversations.length > RECENT_CONVERSATION_COUNT && (
+                      <p className="text-xs text-muted-foreground">
+                        +{conversations.length - RECENT_CONVERSATION_COUNT} older in the inbox
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-1">No conversations yet</p>
+                )}
+              </Section>
+            )}
 
             <Section title="Activity">
               <Row label="Last received" value={formatDateTime(lastReceived)} />
@@ -585,18 +587,21 @@ const ContactDetailedView = ({
                 ) : (
                   <p className="text-sm text-muted-foreground">Not in any group</p>
                 )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-1"
-                  onClick={() => {
-                    setOpened(false);
-                    setIsAddToGroupOpen(true);
-                  }}
-                >
-                  <IconPlus className="w-4 h-4 mr-1" />
-                  Add to group
-                </Button>
+                <ChipAddPicker
+                  options={allGroups}
+                  activeIds={groups.map(
+                    (entry: { contactGroup?: GroupRef }) => entry.contactGroup?.id ?? "",
+                  )}
+                  onAdd={(groupId) =>
+                    addToGroup.mutate({ customerList: [selectedContact.id], groupId })
+                  }
+                  disabled={addToGroup.isPending}
+                  label="Add to group"
+                  placeholder="Search groups"
+                  emptyText="No groups yet"
+                  marker={() => <IconFolder className="size-4 shrink-0 text-muted-foreground" />}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-1")}
+                />
               </div>
             </Section>
           </div>
@@ -644,16 +649,17 @@ export const ContactDetailDialog = ({
   open,
   onOpenChange,
   showInboxLink,
+  showConversations,
   onSaved,
 }: {
   contact: ContactPreview;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   showInboxLink?: boolean;
+  showConversations?: boolean;
   onSaved?: ComponentProps<typeof CreateOrEditContactModal>["onSaved"];
 }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isAddToGroupOpen, setIsAddToGroupOpen] = useState(false);
   // Same query key as the dialog's own fetch, so this reads the cache rather than refetching.
   const { data: details } = useContactFullDetails(contact.id, open || isEditOpen);
   const initialValues = useMemo(
@@ -669,20 +675,14 @@ export const ContactDetailDialog = ({
         setOpened={onOpenChange}
         selectedContact={contact}
         setIsEditOpen={setIsEditOpen}
-        setIsAddToGroupOpen={setIsAddToGroupOpen}
         showInboxLink={showInboxLink}
+        showConversations={showConversations}
       />
       <CreateOrEditContactModal
         opened={isEditOpen}
         setOpened={setIsEditOpen}
         initialValues={initialValues}
         onSaved={onSaved}
-      />
-      <AddToGroupModal
-        opened={isAddToGroupOpen}
-        setOpened={setIsAddToGroupOpen}
-        selectedContactIds={[contact.id]}
-        contact={{ name: details?.name ?? contact.name, phone: details?.phone ?? contact.phone }}
       />
     </>
   );

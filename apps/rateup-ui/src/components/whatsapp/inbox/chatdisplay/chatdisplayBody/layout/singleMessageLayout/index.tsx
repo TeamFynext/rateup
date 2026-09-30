@@ -7,7 +7,6 @@ import {
   IconCircleCheck,
   IconClock,
   IconCopy,
-  IconLock,
   IconRobot,
   IconShieldOff,
   IconSparkles,
@@ -46,6 +45,8 @@ import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/
 import type { WaReceiveMessageBody } from "@/types/global";
 import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";
 import { getContactPlatform, isMetaAiMessage } from "@/utils/whatsapp/inbox.ts";
+
+import NoteBubble from "./NoteBubble.tsx";
 
 interface Props {
   exchangeProcess: "send" | "receive" | "internal" | "privateNote";
@@ -283,27 +284,8 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   }
 
   /* --------------------------------------------------------- internal note */
-  // Centered and amber via the `note` Bubble variant — internal notes are not part
-  // of the customer conversation, and the colour is what signals that at a glance.
-  if (exchangeProcess === "privateNote") {
-    return (
-      <Message align="center">
-        <MessageContent className="max-w-[78%]">
-          <MessageHeader className="gap-1.5 text-[10px] font-extrabold tracking-wider uppercase">
-            <IconLock className="size-3 shrink-0" />
-            <span className="truncate">
-              Internal note · {senderName} · {timestamp}
-            </span>
-          </MessageHeader>
-          <Bubble variant="note" className="max-w-full">
-            <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>
-          </Bubble>
-          {messageObject?.stats && !messageObject?.stats?.failed && (
-            <MessageFooter>{timestampWithStats}</MessageFooter>
-          )}
-        </MessageContent>
-      </Message>
-    );
+  if (exchangeProcess === "privateNote" && messageObject) {
+    return <NoteBubble note={messageObject} />;
   }
 
   /* ------------------------------------------------------- bot / automation */

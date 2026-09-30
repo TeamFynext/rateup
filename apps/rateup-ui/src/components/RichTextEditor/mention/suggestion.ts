@@ -1,9 +1,13 @@
 import type { MentionOptions } from "@tiptap/extension-mention";
+import { PluginKey } from "@tiptap/pm/state";
 import { ReactRenderer } from "@tiptap/react";
 
 import { MentionList, type MentionListRef, type MentionUser } from "./MentionList.tsx";
 
 const MAX_SUGGESTIONS = 8;
+
+/** Named so the composer's Enter-to-send can tell when the list is open. */
+export const MENTION_SUGGESTION_KEY = new PluginKey("mentionSuggestion");
 
 /**
  * Suggestion config for the @-mention extension. `getUsers` is read lazily (from a
@@ -16,6 +20,7 @@ export function createMentionSuggestion(
 ): MentionOptions<MentionUser>["suggestion"] {
   return {
     char: "@",
+    pluginKey: MENTION_SUGGESTION_KEY,
     items: ({ query }) => {
       const q = query.trim().toLowerCase();
       return getUsers()

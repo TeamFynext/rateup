@@ -12,6 +12,7 @@ import { IntegrationEmptyState } from "@/components/dashboard/settings/integrati
 import { INTEGRATIONS_CONFIG } from "@/components/dashboard/settings/integrations/integrations.config.ts";
 import { IntegrationShell } from "@/components/dashboard/settings/integrations/IntegrationShell.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import ShopifyResults from "@/components/shopify/ShopifyResults.tsx";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules.tsx";
 import ShopifySettings from "@/components/shopify/ShopifySettings.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -111,11 +112,15 @@ export function Shopify() {
         </Button>
       }
     >
-      <Tabs defaultValue="schedules" className="w-full">
+      <Tabs defaultValue="results" className="w-full">
         <TabsList className="mb-4">
+          <TabsTrigger value="results">{translations("Results")}</TabsTrigger>
           <TabsTrigger value="schedules">{translations("Schedules")}</TabsTrigger>
           <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
         </TabsList>
+        <TabsContent value="results">
+          <ShopifyResults />
+        </TabsContent>
         <TabsContent value="schedules">
           <ShopifySchedules
             shopifyProducts={shopifyProducts}

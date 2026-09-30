@@ -147,6 +147,23 @@ export const useChatSocket = () => {
               messageStore.mergeMessages(key, [message]);
             }
             break;
+          case "inbox_note": {
+            // A note joins the thread and nothing else: the row's preview, unread
+            // count and sort clocks belong to customer traffic.
+            const { message: note, contactId, conversationId } = data.inbox_note;
+            const noteRowKey =
+              resolveIncomingRowKey(
+                useContactsStore.getState().contactsById,
+                contactId,
+                conversationId,
+              ) ?? conversationId;
+            for (const key of [`${noteRowKey}_all`, `${noteRowKey}_internal`]) {
+              // Clears the author's placeholder, which shares the note's messageId.
+              messageStore.removeMessage(key, note.messageId);
+              messageStore.mergeMessages(key, [note]);
+            }
+            break;
+          }
           case "message_status_update":
             if (selectedContact && selectedContact?.id === data?.message_status_update?.contactId) {
               // Status receipts target the open thread — key by its ticket bucket.
@@ -320,7 +337,7 @@ function conversationClocksFor(message: {
   messageBody?: { exchangeProcess?: string } | null;
 }) {
   const exchange = message.messageBody?.exchangeProcess;
-  if (message.sourcePlatform === "INTERNAL" || exchange === "privateNote") return {};
+  if (message.sourcePlatform === "INTERNAL") return {};
   if (exchange !== "receive") return { conversationLastMessageAt: message.waCreatedAt };
   return {
     conversationLastMessageAt: message.waCreatedAt,

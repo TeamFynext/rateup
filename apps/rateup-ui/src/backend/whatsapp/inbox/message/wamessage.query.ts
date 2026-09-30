@@ -15,17 +15,20 @@ import useContactStore, { useContactsStore } from "@/store/inbox.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import type { NewPendingMessage } from "@/store/pendingMessages.ts";
 import { usePendingSend } from "@/store/pendingMessages.ts";
-import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
+import type { RequestPayloadFields } from "@/types/api.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
-import type { AssignInboxResult } from "./wamessage.api";
+import type { AssignInboxResult, CreateNotePayload } from "./wamessage.api";
 import type { WaMessageLogFilter } from "./wamessage.api";
 import {
   assignInboxToUser,
+  assignOwner,
   blockWhatsAppUser,
   bulkAssignInboxToUser,
   createPrivateMessage,
+  deletePrivateNote,
+  editPrivateNote,
   deleteConversation,
   deleteConversations,
   exportWaChats,
@@ -201,6 +204,22 @@ export const useAssignInboxToUer = (_contactId: string, filterData: string) => {
     },
     onError: (e) => {
       toast.warning(e?.message || "Something went wrong");
+    },
+  });
+};
+
+/** Toasts are the caller's: it knows whose name to put in them. */
+export const useAssignOwner = (filterData: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: assignOwner,
+    onSuccess: (result, variables) => {
+      followAssignmentToItsTicket(result, variables.contactId);
+      qc.invalidateQueries({ queryKey: whatsappKeys.assignedInboxUser() });
+      qc.invalidateQueries({ queryKey: contactKeys.filteredBy(filterData) });
+      qc.invalidateQueries({ queryKey: contactKeys.inboxCount() });
+      qc.invalidateQueries({ queryKey: notificationKeys.all() });
+      qc.invalidateQueries({ queryKey: notificationKeys.count() });
     },
   });
 };
@@ -592,14 +611,21 @@ export function useGenerateInboxResponse() {
   });
 }
 
-interface CreatePrivateMessageVariables {
-  data: RequestPayload;
-}
-
 export function useCreatePrivateMessage(contactId: string) {
   return useMutation({
-    mutationFn: ({ data }: CreatePrivateMessageVariables) => createPrivateMessage(contactId, data),
+    mutationFn: (data: CreateNotePayload) => createPrivateMessage(contactId, data),
   });
+}
+
+export function useEditPrivateNote() {
+  return useMutation({
+    mutationFn: ({ noteId, text }: { noteId: string; text: { body: unknown } }) =>
+      editPrivateNote(noteId, text),
+  });
+}
+
+export function useDeletePrivateNote() {
+  return useMutation({ mutationFn: (noteId: string) => deletePrivateNote(noteId) });
 }
 
 export function useWaMessageLogs(filter: WaMessageLogFilter) {

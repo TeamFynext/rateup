@@ -1,5 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { normaliseLeadParams } from "@/backend/pipeline/pipeline.keys.ts";
 import {
@@ -7,6 +9,7 @@ import {
   usePipelineQuery,
   usePipelinesQuery,
   usePipelineStatsQuery,
+  useSharedLeadQuery,
 } from "@/backend/pipeline/pipeline.query.tsx";
 import type { LeadListParams, PipelineDetail } from "@/backend/pipeline/pipeline.types.ts";
 import { useUserInfo } from "@/backend/user/user.query.tsx";
@@ -72,11 +75,10 @@ export function usePipelineData() {
         filter: view.filter,
         search: leadSearch,
         stageId: view.stageId ?? undefined,
-        teamId: view.teamId ?? undefined,
         source: view.source ?? undefined,
         assigneeId: view.assigneeId ?? undefined,
       }),
-    [view.filter, leadSearch, view.stageId, view.teamId, view.source, view.assigneeId],
+    [view.filter, leadSearch, view.stageId, view.source, view.assigneeId],
   );
 
   // A facet whose target has left the board cannot be cleared by clicking it
@@ -86,7 +88,6 @@ export function usePipelineData() {
   // board reads as "no leads match these filters" over counts that still say
   // three. `stageId` is dropped on rehydrate for the same reason; these three
   // can only be checked once the data they point at has loaded.
-  const teams = statsQuery.data?.teams;
   const sources = statsQuery.data?.sources;
   const { patch } = view;
 
@@ -95,21 +96,31 @@ export function usePipelineData() {
 
     if (view.assigneeId && membersQuery.isSuccess && !members.some((m) => m.id === view.assigneeId))
       stale.assigneeId = null;
-    if (view.teamId && teams && !teams.some((team) => team.id === view.teamId)) stale.teamId = null;
     if (view.source && sources && !sources.some((row) => row.source === view.source))
       stale.source = null;
 
     if (Object.keys(stale).length > 0) patch(stale);
-  }, [
-    view.assigneeId,
-    view.teamId,
-    view.source,
-    members,
-    membersQuery.isSuccess,
-    teams,
-    sources,
-    patch,
-  ]);
+  }, [view.assigneeId, view.source, members, membersQuery.isSuccess, sources, patch]);
+
+  // A share link lands here as `?lead=<shortUrlId>`: open its board and the
+  // card, then drop the param so a reload or a board switch does not reopen it.
+  const { t } = useTranslation();
+  const sharedLead = useSharedLeadQuery(search.lead);
+  useEffect(() => {
+    if (!search.lead) return;
+    if (sharedLead.data) {
+      void navigate({ search: { p: sharedLead.data.pipelineId }, replace: true });
+      patch({ leadId: sharedLead.data.id });
+    } else if (sharedLead.isError) {
+      toast.error(
+        t(
+          "This card isn't available to you. It may have been deleted, or you're not on its board.",
+        ),
+        { id: "pipeline-shared-lead" },
+      );
+      void navigate({ search: { p: search.p }, replace: true });
+    }
+  }, [search.lead, search.p, sharedLead.data, sharedLead.isError, navigate, patch, t]);
 
   /** Switches board, which is the only part of the screen that is URL state. */
   const setPipeline = (pipelineId: string) => {

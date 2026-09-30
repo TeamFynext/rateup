@@ -1,10 +1,8 @@
 import {
-  IconArrowsShuffle,
   IconBan,
   IconCamera,
   IconCheck,
   IconChevronDown,
-  IconChevronUp,
   IconCircleX,
   IconHash,
   IconLayoutSidebarRightCollapse,
@@ -16,8 +14,10 @@ import {
   IconPlus,
   IconRosetteDiscountCheck,
   IconSeeding,
+  IconShieldCheck,
   IconShieldExclamation,
   IconShieldOff,
+  IconShieldX,
   IconTicket,
   IconTrash,
   IconUser,
@@ -53,6 +53,7 @@ import {
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import ChipAddPicker from "@/components/common/chip-add-picker.tsx";
 import { ContactDetailDialog } from "@/components/Contacts/ContactDetailedView.tsx";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
 import { findLeadsPipeline } from "@/components/pipeline/pipelineTypes.ts";
@@ -69,6 +70,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import AssigneePicker from "@/components/whatsapp/inbox/assign/AssigneePicker.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
@@ -90,7 +92,6 @@ import {
 import { useDeleteTicket } from "../useDeleteTicket.ts";
 import { generateInternalMessageId } from "../util.tsx";
 import type { OptimisticMessage } from "./chatdisplayFooter/index.tsx";
-import AssignUser from "./chatdisplayHeader/AssignUser.tsx";
 import { deriveStatus, STATUS_PILL_BASE } from "./chatdisplayHeader/ticket.ts";
 
 interface TicketPanelProps {
@@ -162,9 +163,7 @@ function Section({
     <div className={cn("border-b border-border px-4 py-3.5", className)}>
       {label && (
         <div className="mb-2.5 flex min-h-5 items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            {label}
-          </span>
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
           {action}
         </div>
       )}
@@ -195,6 +194,10 @@ const ICON_BUTTON =
 /** Tag and label chips. */
 const CHIP =
   "inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-semibold";
+
+/** The spam / block / delete row at the foot of the panel. */
+const DANGER_OUTLINE =
+  "border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive";
 
 const ADD_CHIP =
   "inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
@@ -261,9 +264,6 @@ export default function TicketPanel({
   const editConversation = useEditConversation();
 
   const [copied, setCopied] = useState(false);
-  const [assignExpanded, setAssignExpanded] = useState(false);
-  const [labelPickerOpen, setLabelPickerOpen] = useState(false);
-  const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState(false);
   const [subjectDraft, setSubjectDraft] = useState("");
@@ -291,10 +291,7 @@ export default function TicketPanel({
   useEffect(() => {
     setIsContactDialogOpen(false);
     setEditingTicket(false);
-    setLabelPickerOpen(false);
-    setTagPickerOpen(false);
     setStagePickerOpen(false);
-    setAssignExpanded(false);
     setCopied(false);
   }, [contact?.conversationId, contact?.id]);
 
@@ -500,24 +497,12 @@ export default function TicketPanel({
       </div>
 
       {/* ---- Assignment ---- */}
-      <Section
-        label={t("Assignment")}
-        action={
-          <button
-            type="button"
-            onClick={() => setAssignExpanded((v) => !v)}
-            className="-mr-1.5 inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-bold text-primary transition-colors hover:bg-primary/10"
-          >
-            {assignExpanded ? t("Done") : t("Change")}
-            {assignExpanded ? (
-              <IconChevronUp className="size-3" />
-            ) : (
-              <IconChevronDown className="size-3" />
-            )}
-          </button>
-        }
-      >
-        <div className="flex items-center gap-2.5">
+      <Section label={t("Assignment")}>
+        <AssigneePicker
+          contact={contact}
+          acceptsShortcut
+          triggerClassName="-mx-2 flex w-[calc(100%+1rem)] cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted"
+        >
           {primaryAssignee ? (
             <>
               <CreativeAvatar name={primaryAssignee.name} size="sm" />
@@ -541,20 +526,7 @@ export default function TicketPanel({
               </div>
             </>
           )}
-        </div>
-
-        {assignExpanded && (
-          <div className="mt-3 flex flex-col gap-2">
-            {/* The real multi-assignee flow — team + agent picking lives inside. */}
-            <AssignUser contactId={contact?.id} variant="outline" />
-            <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted">
-              <IconArrowsShuffle className="size-3.25 shrink-0 text-muted-foreground" />
-              <span className="text-[11px] leading-snug text-muted-foreground">
-                {t("Assign this ticket to a team or to individual agents.")}
-              </span>
-            </div>
-          </div>
-        )}
+        </AssigneePicker>
       </Section>
 
       {/* ---- Title & Description ----
@@ -562,7 +534,7 @@ export default function TicketPanel({
            what an agent reads first, so they sit above the contact/meta sections
            rather than at the foot of the panel. */}
       <Section
-        label={t("Title & Description")}
+        label={t("Title & description")}
         action={
           !editingTicket &&
           contact?.conversationId && (
@@ -644,7 +616,7 @@ export default function TicketPanel({
       {canSeePipeline && !!board?.stages.length && (
         <div className="border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2.5">
-            <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <span className="shrink-0 text-xs font-medium text-muted-foreground">
               {t("Lead stage")}
             </span>
 
@@ -746,7 +718,7 @@ export default function TicketPanel({
            and the two are named apart on screen: a tag describes *this* ticket,
            a label describes the customer. */}
       {contact?.conversationId && (
-        <Section label={t("Conversation Tags")}>
+        <Section label={t("Conversation tags")}>
           <div className="flex flex-wrap gap-1.5">
             {conversationTags.map((tag) => (
               <span
@@ -767,52 +739,24 @@ export default function TicketPanel({
                 </button>
               </span>
             ))}
-            <button type="button" onClick={() => setTagPickerOpen((v) => !v)} className={ADD_CHIP}>
-              <IconPlus className="size-3" />
-              {t("Add")}
-            </button>
+            <ChipAddPicker
+              options={allTags}
+              activeIds={activeTagIds}
+              onAdd={handleToggleTag}
+              disabled={assignTags.isPending}
+              placeholder={t("Search tags")}
+              emptyText={t("No conversation tags yet — create them in Inbox Settings.")}
+              marker={(tag) => (
+                <IconHash className="size-3 shrink-0" style={{ color: tag.color ?? undefined }} />
+              )}
+              className={ADD_CHIP}
+            />
           </div>
-
-          {tagPickerOpen &&
-            (allTags.length === 0 ? (
-              <p className="mt-2 text-[12px] text-muted-foreground">
-                {t("No conversation tags yet — create them in Inbox Settings.")}
-              </p>
-            ) : (
-              <div className="mt-2 p-1.5 rounded-[10px] max-h-56 overflow-y-auto overscroll-contain border border-border bg-background shadow-sm">
-                {allTags.map((tag) => {
-                  const checked = activeTagIds.includes(tag.id);
-                  return (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => handleToggleTag(tag.id)}
-                      disabled={assignTags.isPending}
-                      className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md cursor-pointer hover:bg-primary/10"
-                    >
-                      <span
-                        className={cn(
-                          "size-3.75 rounded shrink-0 flex items-center justify-center border-[1.5px]",
-                          checked ? "bg-primary border-primary" : "border-border",
-                        )}
-                      >
-                        {checked && <IconCheck className="size-2.75 text-primary-foreground" />}
-                      </span>
-                      <IconHash
-                        className="size-3 shrink-0"
-                        style={{ color: tag.color ?? undefined }}
-                      />
-                      <span className="text-[13px] truncate text-foreground">{tag.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
         </Section>
       )}
 
       {/* ---- Contact Labels ---- */}
-      <Section label={t("Contact Labels")}>
+      <Section label={t("Contact labels")}>
         <div className="flex flex-wrap gap-1.5">
           {contactLabels.map((label) => (
             <span
@@ -831,41 +775,21 @@ export default function TicketPanel({
               </button>
             </span>
           ))}
-          <button type="button" onClick={() => setLabelPickerOpen((v) => !v)} className={ADD_CHIP}>
-            <IconPlus className="size-3" />
-            {t("Add")}
-          </button>
+          <ChipAddPicker
+            options={allLabels}
+            activeIds={activeLabelIds}
+            onAdd={handleToggleLabel}
+            placeholder={t("Search labels")}
+            emptyText={t("No contact labels yet.")}
+            marker={(label) => (
+              <span
+                className="size-2.25 shrink-0 rounded-full"
+                style={{ background: label.color ?? undefined }}
+              />
+            )}
+            className={ADD_CHIP}
+          />
         </div>
-
-        {labelPickerOpen && (
-          <div className="mt-2 p-1.5 rounded-[10px] max-h-56 overflow-y-auto border border-border bg-background shadow-sm">
-            {allLabels.map((label: { id: string; name?: string; color?: string }) => {
-              const checked = activeLabelIds.includes(label.id);
-              return (
-                <button
-                  key={label.id}
-                  type="button"
-                  onClick={() => handleToggleLabel(label.id)}
-                  className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md cursor-pointer hover:bg-primary/10"
-                >
-                  <span
-                    className={cn(
-                      "size-3.75 rounded shrink-0 flex items-center justify-center border-[1.5px]",
-                      checked ? "bg-primary border-primary" : "border-border",
-                    )}
-                  >
-                    {checked && <IconCheck className="size-2.75 text-primary-foreground" />}
-                  </span>
-                  <span
-                    className="size-2.25 rounded-full shrink-0"
-                    style={{ background: label.color }}
-                  />
-                  <span className="text-[13px] truncate text-foreground">{label.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
       </Section>
 
       {/* ---- Contact ---- */}
@@ -901,6 +825,21 @@ export default function TicketPanel({
               <span className="truncate text-[15px] font-bold text-foreground">
                 {contact?.name || contact?.whatsappUserName || "—"}
               </span>
+              {contact?.consent ? (
+                <IconShieldCheck
+                  className="size-4 shrink-0 text-green-600"
+                  role="img"
+                  aria-label={t("Consent given")}
+                  title={t("Consent given")}
+                />
+              ) : (
+                <IconShieldX
+                  className="size-4 shrink-0 text-amber-600"
+                  role="img"
+                  aria-label={t("No consent")}
+                  title={t("No consent")}
+                />
+              )}
             </div>
             {displayPhone && (
               <div className="flex items-center gap-1 truncate text-[13px] text-muted-foreground">
@@ -911,26 +850,18 @@ export default function TicketPanel({
           </div>
         </div>
 
-        <dl className="mt-3 flex divide-x divide-border rounded-lg bg-muted py-2">
-          {contact?.createdAt && (
-            <div className="min-w-0 flex-1 px-3">
-              <dt className="text-[11px] text-muted-foreground">{t("Customer since")}</dt>
-              <dd className="truncate text-[13px] font-bold text-foreground">
-                {dayjs(contact.createdAt).format("MMM YYYY")}
-              </dd>
-            </div>
-          )}
-          <div className="min-w-0 flex-1 px-3">
-            <dt className="text-[11px] text-muted-foreground">{t("Consent")}</dt>
+        {contact?.createdAt && (
+          <dl className="mt-3 rounded-lg bg-muted px-3 py-2">
+            <dt className="text-[11px] text-muted-foreground">{t("Customer since")}</dt>
             <dd className="truncate text-[13px] font-bold text-foreground">
-              {contact?.consent ? t("Given") : t("Not given")}
+              {dayjs(contact.createdAt).format("MMM YYYY")}
             </dd>
-          </div>
-        </dl>
+          </dl>
+        )}
       </Section>
 
       {/* ---- Ticket Info ---- */}
-      <Section label={t("Ticket Info")}>
+      <Section label={t("Ticket info")}>
         <div className="flex flex-col gap-2.5">
           <InfoRow
             label={t("Channel")}
@@ -981,50 +912,50 @@ export default function TicketPanel({
       </Section>
 
       {/* ---- Board ticket / spam (contact-level, so it toggles both ways) ---- */}
-      <div className="flex flex-col gap-2 p-4">
+      <div className="flex gap-1.5 p-4">
         <Button
           type="button"
-          size="sm"
+          size="xs"
           onClick={() => toggleSpam(!contact?.isSpam)}
           loading={spamMutation.isPending}
-          variant={contact?.isSpam ? "outline" : "destructive"}
+          variant="outline"
+          title={contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
+          className={cn("flex-1", !contact?.isSpam && DANGER_OUTLINE)}
         >
-          {contact?.isSpam ? (
-            <IconShieldOff className="size-3.75" />
-          ) : (
-            <IconShieldExclamation className="size-3.75" />
-          )}
-          {contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
+          {contact?.isSpam ? <IconShieldOff /> : <IconShieldExclamation />}
+          {contact?.isSpam ? t("Not spam") : t("Spam")}
         </Button>
 
         {canBlock && (
           <Button
             type="button"
-            size="sm"
+            size="xs"
             variant="outline"
             onClick={() => void blockContact()}
             loading={blockMutation.isPending}
-            className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            title={t("Block contact")}
+            className={cn("flex-1", DANGER_OUTLINE)}
           >
-            <IconBan className="size-3.75" />
-            {t("Block contact")}
+            <IconBan />
+            {t("Block")}
           </Button>
         )}
 
-        {/* Deleting is ticket-grained, unlike spam above it: it takes this one
+        {/* Deleting is ticket-grained, unlike spam beside it: it takes this one
             ticket and its messages and leaves the contact alone. Admin-only,
             matching the endpoint's own gate. */}
         {canDelete && (
           <Button
             type="button"
-            size="sm"
+            size="xs"
             variant="outline"
             onClick={() => deleteTicket()}
             disabled={isDeletingTicket}
-            className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            title={t("Delete conversation")}
+            className={cn("flex-1", DANGER_OUTLINE)}
           >
-            <IconTrash className="size-3.75" />
-            {t("Delete conversation")}
+            <IconTrash />
+            {t("Delete")}
           </Button>
         )}
       </div>
@@ -1074,6 +1005,7 @@ export default function TicketPanel({
           open={isContactDialogOpen}
           onOpenChange={setIsContactDialogOpen}
           showInboxLink={false}
+          showConversations={false}
           onSaved={({ name, phone, email }) => {
             // The list keeps a row until its ticket changes, and a contact edit is not one.
             updateContactById(contact.id, (c) => ({ ...c, name, phone, email }));
