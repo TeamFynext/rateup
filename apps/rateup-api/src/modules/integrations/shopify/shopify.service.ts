@@ -180,13 +180,20 @@ export async function claimUnownedShopifyIntegration(shop: string, orgId: string
 export async function registerShopifyWebhook(session: Session) {
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({ session });
-  const registered = new Set((await getManagableWebhooks(client)).map((w) => w.topic));
-  // Every missing topic is tried: one the shop's scopes refuse must not block the rest.
+  const existing = await getManagableWebhooks(client);
+  // A topic counts as registered only at this deployment's address. One left pointing at
+  // an old URL (a rotated dev tunnel, a moved API) is still "subscribed" in Shopify's eyes
+  // but delivers nowhere we listen — so it is recreated here and the stale one removed.
+  const target = `${API_URL}${WEBHOOK_API_ROUTE}`;
+  // Every topic is tried: one the shop's scopes refuse must not block the rest.
   const errors: string[] = [];
   for (const topic of Object.keys(defaultWebhookHandlers)) {
-    if (registered.has(topic)) continue;
+    const forTopic = existing.filter((w) => w.topic === topic);
     try {
-      await registerWebhookByTopic(topic, session);
+      if (!forTopic.some((w) => w.uri === target)) await registerWebhookByTopic(topic, session);
+      for (const stale of forTopic.filter((w) => w.uri !== target)) {
+        await deleteWebhookById(stale.id, client);
+      }
     } catch (e) {
       errors.push(e instanceof Error ? e.message : String(e));
     }
@@ -637,6 +644,7 @@ export async function registerWebhookByTopic(topic: string, session: Session) {
 interface ManagableWebhookNode {
   id: string;
   topic: string;
+  uri: string;
 }
 
 interface WebhookSubscriptionsData {
@@ -658,6 +666,7 @@ export async function getManagableWebhooks(client: GraphqlClient): Promise<Manag
         node {
         id
         topic
+        uri
       }
       cursor
     }
