@@ -1,5 +1,9 @@
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import type { IntegrationEvent, IntegrationEventJobData } from "./integrationEvent.types.js";
+import type {
+  IntegrationEvent,
+  IntegrationEventJobData,
+  SurveyResponseSnapshot,
+} from "./integrationEvent.types.js";
 
 /** The job name the integration worker recognises as an event to fan out. */
 export const INTEGRATION_EVENT_JOB = "integration-event";
@@ -18,4 +22,22 @@ export async function emitIntegrationEvent(orgId: string, event: IntegrationEven
     orgId,
     event,
   } satisfies IntegrationEventJobData);
+}
+
+/**
+ * `survey.response_submitted`, from wherever a response is filed. Only a response
+ * with a contact is announced: the CRMs have nobody to put an anonymous one on.
+ */
+export async function emitSurveyResponseSubmitted(
+  orgId: string | null | undefined,
+  response: { id: string; contactId: string | null; platform: string; createdAt: Date },
+) {
+  if (!orgId || !response.contactId) return;
+  const snapshot: SurveyResponseSnapshot = {
+    id: response.id,
+    contactId: response.contactId,
+    platform: response.platform,
+    createdAt: response.createdAt.toISOString(),
+  };
+  await emitIntegrationEvent(orgId, { type: "survey.response_submitted", response: snapshot });
 }

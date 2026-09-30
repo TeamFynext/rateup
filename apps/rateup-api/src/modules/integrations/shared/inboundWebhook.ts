@@ -90,14 +90,19 @@ export async function inboundWebhookRoutes(server: FastifyInstance) {
   });
 
   // WooCommerce pings a new webhook with a plain form post (`webhook_id=…`),
-  // which Fastify would otherwise answer 415 before the provider saw it.
-  server.addContentTypeParser(
-    "application/x-www-form-urlencoded",
-    { parseAs: "string" },
-    (_request, body, done) => {
-      done(null, Object.fromEntries(new URLSearchParams(String(body))));
-    },
-  );
+  // which Fastify would otherwise answer 415 before the provider saw it. The app
+  // already parses form posts server-wide (`@fastify/formbody` in plugins/index.ts),
+  // and Fastify refuses a second parser for a type, so this only stands in where
+  // that plugin is not registered — a bare server, as in the tests.
+  if (!server.hasContentTypeParser("application/x-www-form-urlencoded")) {
+    server.addContentTypeParser(
+      "application/x-www-form-urlencoded",
+      { parseAs: "string" },
+      (_request, body, done) => {
+        done(null, Object.fromEntries(new URLSearchParams(String(body))));
+      },
+    );
+  }
 
   server.post<{ Params: Params }>(
     "/:provider/:integrationId",

@@ -71,6 +71,13 @@ export function recordLink(
   });
 }
 
+/** Forgets a link, e.g. when the Rateup record is deleted. The remote record is left alone. */
+export function removeLink({ integrationId, entityType }: LinkKey, rateupId: string) {
+  return prisma.integrationEntityLink.deleteMany({
+    where: { integrationId, entityType, rateupId },
+  });
+}
+
 /**
  * True when an inbound change carries exactly what Rateup last pushed for this
  * record — our own write coming back through the provider's webhook. Applying

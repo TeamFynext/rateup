@@ -33,7 +33,12 @@ import prisma from "../../../utils/prisma.js";
 import { getIntegrationProvider } from "../providers/registry.js";
 import { OAuthConnectError } from "../shared/oauthConnectError.js";
 import { getHubSpotAccessToken, HUBSPOT_SCOPES } from "./hubspot.auth.js";
-import { connectHubSpot, disconnectHubSpot, getHubSpotStatus } from "./hubspot.connect.js";
+import {
+  connectHubSpot,
+  disconnectHubSpot,
+  getHubSpotStatus,
+  updateHubSpotSettings,
+} from "./hubspot.connect.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 const db = prisma.integration as unknown as Record<string, Mock>;
@@ -196,6 +201,44 @@ describe("the connection, as the settings page sees it", () => {
     expect(JSON.stringify(status)).not.toMatch(/at-old|rt-old/);
   });
 
+  test("sending contacts is off until an admin turns it on", async () => {
+    const row = { id: "int-1", active: true, consecutiveFailures: 0, credential: credential() };
+    db.findUnique.mockResolvedValue(row);
+    await expect(getHubSpotStatus("org-1")).resolves.toMatchObject({
+      settings: { syncContacts: false },
+    });
+
+    await updateHubSpotSettings("org-1", { syncContacts: true });
+    expect(db.update).toHaveBeenCalledWith({
+      where: { id: "int-1" },
+      data: { credential: expect.objectContaining({ syncContacts: true, portalId: 4401 }) },
+    });
+  });
+
+  test("picking another pipeline clears the stage mapping made for the old one", async () => {
+    const mapped = credential({
+      dealPipelineId: "default",
+      stageMappings: [{ stageId: "col-1", hubspotStageId: "closedwon" }],
+    });
+    db.findUnique.mockResolvedValue({ id: "int-1", active: true, credential: mapped });
+
+    await updateHubSpotSettings("org-1", { syncDeals: true });
+    expect(db.update.mock.calls[0][0].data.credential.stageMappings).toHaveLength(1);
+
+    await updateHubSpotSettings("org-1", { dealPipelineId: "renewals" });
+    expect(db.update.mock.calls[1][0].data.credential).toMatchObject({
+      dealPipelineId: "renewals",
+      stageMappings: [],
+    });
+  });
+
+  test("settings cannot be saved without a connection", async () => {
+    db.findUnique.mockResolvedValue(null);
+    await expect(updateHubSpotSettings("org-1", { syncContacts: true })).rejects.toBeInstanceOf(
+      OAuthConnectError,
+    );
+  });
+
   test("disconnecting revokes the grant, and a failure there does not stop it", async () => {
     await disconnectHubSpot({ id: "int-1", credential: credential() } as never);
     expect(hubspot.delete).toHaveBeenCalledWith(
@@ -217,5 +260,19 @@ describe("in the registry", () => {
     expect(provider?.oauth?.scopes).toEqual(HUBSPOT_SCOPES);
     expect(provider?.oauth?.config.clientId).toBe("client-id");
     expect(provider?.oauth?.config.tokenAuth).toBe("form");
+  });
+
+  test("hears contact edits only with the switch on, and deletions either way", () => {
+    const provider = getIntegrationProvider("hubspot");
+    const row = (syncContacts: boolean) => ({ credential: credential({ syncContacts }) }) as never;
+    expect(provider?.subscribedEvents(row(false))).toEqual(["contact.deleted"]);
+    expect(provider?.subscribedEvents(row(true))).toEqual([
+      "contact.created",
+      "contact.updated",
+      "contact.deleted",
+    ]);
+    expect(
+      provider?.subscribedEvents({ credential: credential({ syncDeals: true }) } as never),
+    ).toEqual(["contact.deleted", "lead.created", "lead.stage_changed"]);
   });
 });

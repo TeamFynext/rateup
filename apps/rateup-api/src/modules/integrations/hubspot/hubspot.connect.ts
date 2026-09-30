@@ -4,8 +4,14 @@ import { log } from "../../../utils/logger.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import type { OAuth2Tokens } from "../shared/oauth2.js";
 import { OAuthConnectError } from "../shared/oauthConnectError.js";
+import { hubSpotClientFor } from "./hubspot.auth.js";
 import { getHubSpotTokenInfo, revokeHubSpotRefreshToken } from "./hubspot.client.js";
-import { readHubSpotCredential, type HubSpotCredential } from "./hubspot.types.js";
+import { listHubSpotDealPipelines } from "./hubspot.deals.js";
+import {
+  readHubSpotCredential,
+  type HubSpotCredential,
+  type HubSpotSettings,
+} from "./hubspot.types.js";
 
 /**
  * Connecting a HubSpot account, through the shared consent-screen flow
@@ -110,10 +116,54 @@ export async function getHubSpotStatus(orgId: string) {
     hubDomain: credential.hubDomain ?? null,
     connectedBy: credential.connectedBy ?? null,
     connectedAt: credential.connectedAt,
+    settings: {
+      syncContacts: credential.syncContacts ?? false,
+      syncDeals: credential.syncDeals ?? false,
+      dealPipelineId: credential.dealPipelineId ?? null,
+      stageMappings: credential.stageMappings ?? [],
+      importContacts: credential.importContacts ?? false,
+      importDeals: credential.importDeals ?? false,
+      logConversations: credential.logConversations ?? false,
+      logSurveyResponses: credential.logSurveyResponses ?? false,
+    },
+    bulk: {
+      import: credential.bulk?.import ?? null,
+      export: credential.bulk?.export ?? null,
+    },
     health: {
       consecutiveFailures: integration.consecutiveFailures,
       lastError: integration.lastError,
       lastErrorAt: integration.lastErrorAt,
     },
   };
+}
+
+/** Saves the HubSpot page's switches onto the credential. */
+export async function updateHubSpotSettings(orgId: string, settings: HubSpotSettings) {
+  const integration = await prisma.integration.findUnique({ where: whereOrg(orgId) });
+  const credential = integration?.active ? readHubSpotCredential(integration.credential) : null;
+  if (!integration || !credential) throw new OAuthConnectError("HubSpot is not connected.", 400);
+
+  const next = { ...credential, ...settings };
+  // Another pipeline has other stages: the old mapping means nothing there.
+  if (
+    settings.dealPipelineId !== undefined &&
+    settings.dealPipelineId !== credential.dealPipelineId
+  ) {
+    next.stageMappings = settings.stageMappings ?? [];
+  }
+  await prisma.integration.update({
+    where: { id: integration.id },
+    data: { credential: next as never },
+  });
+  return getHubSpotStatus(orgId);
+}
+
+/** The account's deal pipelines, for the Deals card's picker and stage mapping. */
+export async function getHubSpotPipelines(orgId: string) {
+  const integration = await prisma.integration.findUnique({ where: whereOrg(orgId) });
+  if (!integration?.active || !readHubSpotCredential(integration.credential)) {
+    throw new OAuthConnectError("HubSpot is not connected.", 400);
+  }
+  return listHubSpotDealPipelines(await hubSpotClientFor(integration));
 }

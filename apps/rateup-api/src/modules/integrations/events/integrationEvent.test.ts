@@ -58,7 +58,11 @@ import { pushCrmLeadStatus, processZoho } from "../external/zoho/zoho.service.js
 import { addZapierTriggerToQueue } from "../external/zapier/zapier.service.js";
 import { addGetLeadSyncToQueue } from "../external/getlead/getlead.queue.js";
 import { enqueueOrgWebhookDispatch } from "../../webhook/webhook.service.js";
-import { emitIntegrationEvent, INTEGRATION_EVENT_JOB } from "./emitIntegrationEvent.js";
+import {
+  emitIntegrationEvent,
+  INTEGRATION_EVENT_JOB,
+  emitSurveyResponseSubmitted,
+} from "./emitIntegrationEvent.js";
 import { processIntegrationEvent } from "./integrationEvent.fanout.js";
 import { processIntegrationJob } from "../external/integrationDispatch.js";
 import type { IntegrationEvent, IntegrationEventOf } from "./integrationEvent.types.js";
@@ -171,6 +175,35 @@ describe("emitIntegrationEvent", () => {
 
     expect(jobs()).toEqual([
       [INTEGRATION_EVENT_JOB, { orgId: ORG, event: { type: "contact.created", contact } }],
+    ]);
+  });
+
+  test("a survey response is announced only when it has a contact", async () => {
+    const response = {
+      id: "resp-1",
+      platform: "WEB",
+      createdAt: new Date("2026-09-30T11:00:00.000Z"),
+    };
+    await emitSurveyResponseSubmitted(ORG, { ...response, contactId: null });
+    expect(jobs()).toEqual([]);
+
+    await emitSurveyResponseSubmitted(ORG, { ...response, contactId: "c-1" });
+    expect(jobs()).toEqual([
+      [
+        INTEGRATION_EVENT_JOB,
+        {
+          orgId: ORG,
+          event: {
+            type: "survey.response_submitted",
+            response: {
+              id: "resp-1",
+              contactId: "c-1",
+              platform: "WEB",
+              createdAt: "2026-09-30T11:00:00.000Z",
+            },
+          },
+        },
+      ],
     ]);
   });
 });

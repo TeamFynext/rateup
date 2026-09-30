@@ -1,3 +1,4 @@
+import { emitSurveyResponseSubmitted } from "../../integrations/events/emitIntegrationEvent.js";
 import {
   PlatformType,
   Prisma,
@@ -595,6 +596,10 @@ async function publishSavedResponse(
     ZapierTriggers.RESPONSE_SUBMITTED,
     { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
     res.surveyTeamMap.team.orgId,
+  );
+  // Best effort, like the Zap: the response is filed whether or not this lands.
+  await emitSurveyResponseSubmitted(res.surveyTeamMap.team.orgId, res).catch((err) =>
+    log.error({ err, responseId: res.id }, "Failed to announce the survey response"),
   );
 }
 

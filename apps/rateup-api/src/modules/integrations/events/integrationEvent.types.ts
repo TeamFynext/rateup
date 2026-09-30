@@ -85,8 +85,7 @@ interface LeadStageEventBase {
  * Each adapter translates it into whatever its provider expects, so a call site
  * emits one event and never learns which providers are connected.
  *
- * `loyalty.*` and `survey.response_submitted` join this union when their
- * emitters move over (Phase 3).
+ * `loyalty.*` joins this union when its emitters move over (Phase 3).
  */
 export type IntegrationEvent =
   | {
@@ -106,6 +105,7 @@ export type IntegrationEvent =
       contact: ContactRecord;
     }
   | { type: "conversation.closed"; contact: ContactRecord }
+  | { type: "survey.response_submitted"; response: SurveyResponseSnapshot }
   | ({ type: "lead.created" } & LeadStageEventBase)
   | ({
       type: "lead.stage_changed";
@@ -120,6 +120,19 @@ export type IntegrationEvent =
       type: `order.${OrderEventStatus}`;
       order: OrderSnapshot;
     };
+
+/**
+ * A survey response from a known contact. Only ids and when: the answers can be
+ * encrypted, and a listener that needs them loads the response and decides what
+ * it may send.
+ */
+export interface SurveyResponseSnapshot {
+  id: string;
+  contactId: string;
+  /** `WEB`, `WHATSAPP`, … — `ResponsePlatform`. */
+  platform: string;
+  createdAt: string;
+}
 
 /** Order statuses, as `commerce.types.ts` defines them; each is its own event. */
 export type OrderEventStatus =

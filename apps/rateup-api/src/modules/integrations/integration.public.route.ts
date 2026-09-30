@@ -4,6 +4,7 @@ import { getleadPublicRoutes } from "./external/getlead/getlead.public.route.js"
 import { petPoojaWebhookHandler } from "./integrations.controller.js";
 import { inboundWebhookRoutes } from "./shared/inboundWebhook.js";
 import { wooCommercePublicRoutes } from "./woocommerce/woocommerce.route.js";
+import { hubSpotPublicRoutes } from "./hubspot/hubspot.route.js";
 
 export async function integrationPublicRoutes(server: FastifyInstance) {
   server.register(shopifyPublicRoutes, { prefix: "/shopify" });
@@ -19,4 +20,7 @@ export async function integrationPublicRoutes(server: FastifyInstance) {
 
   // WooCommerce POSTs the key it issued here, server to server; see woocommerce.connect.ts.
   server.register(wooCommercePublicRoutes, { prefix: "/woocommerce" });
+
+  // HubSpot's app webhooks: one address for every connected account, signed (v3).
+  server.register(hubSpotPublicRoutes, { prefix: "/hubspot" });
 }
