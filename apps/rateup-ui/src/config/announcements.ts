@@ -39,6 +39,25 @@ export interface Announcement {
 }
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
+  {
+    id: "2026-09-30-shopify-cart-reminder-results",
+    title: "See the revenue your cart reminders bring back",
+    summary:
+      "The Shopify page now has a Results tab with orders and revenue recovered by your abandoned-cart reminders. Their links are tagged so Shopify's own reports credit WhatsApp too.",
+    publishedAt: "2026-09-30",
+    kinds: ["new"],
+    area: "Shopify",
+    link: { to: "/dashboard/settings/integrations/shopify" },
+  },
+  {
+    id: "2026-09-30-shopify-cart-reminders",
+    title: "Abandoned-cart reminders, sent on time",
+    summary:
+      "Choose how long a Shopify checkout sits untouched before your reminder goes out, and add a second rule for a follow-up. Reminders stop as soon as the order comes through.",
+    publishedAt: "2026-09-30",
+    kinds: ["improvement"],
+    area: "Automation",
+  },
 
   {
     id: "2026-09-26-quick-reply-media",

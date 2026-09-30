@@ -225,6 +225,8 @@ const sendTemplateActionValueSchema = z.object({
     )
     .default([]),
   useProductImageAsHeader: z.boolean().optional(),
+  /** The variable whose value becomes the `{{1}}` suffix of the template's URL button. */
+  buttonUrlVariable: z.string().optional(),
 });
 
 const sendTemplateActionSchema = z.object({
@@ -300,6 +302,14 @@ const ruleOptionsSchema = z.object({
     }),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).default([]),
+  // Abandoned checkouts; the API applies 60 minutes and true when these are unset.
+  abandonedCheckoutDelayMinutes: z
+    .number()
+    .int()
+    .min(15, "Send after at least 15 minutes")
+    .max(7 * 24 * 60, "Send after 7 days at most")
+    .optional(),
+  requireMarketingConsent: z.boolean().optional(),
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).default("ALL"),
   instagramPostIds: z.array(z.string()).default([]),

@@ -38,6 +38,9 @@ export interface WaGetMessagesBody {
     profilePhoto?: string;
   };
   messageId?: string;
+  /** `NOTE` for a private note; notes are kept apart from customer traffic on the server. */
+  kind?: "NOTE";
+  sendBy?: string | null;
   readUsers?: string[];
   reactionMessage?: {
     id: string;
@@ -486,8 +489,39 @@ export async function generateInboxResponse(data: RequestPayload) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)).data;
 }
 
-export async function createPrivateMessage(contactId: string, data: RequestPayload) {
-  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`, data)).data;
+export interface CreateNotePayload {
+  /** The editor's Tiptap document, or plain text. */
+  text: { body: unknown };
+  /** The composer's placeholder id; the server echoes it back as `messageId`. */
+  messageId: string;
+  conversationId?: string | null;
+  mentionedUserIds: string[];
+}
+
+export async function createPrivateMessage(
+  contactId: string,
+  data: CreateNotePayload,
+): Promise<WaGetMessagesBody> {
+  const { conversationId, ...rest } = data;
+  return (
+    await axiosClient.post(`${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`, {
+      ...rest,
+      ...(conversationId && { conversationId }),
+    })
+  ).data;
+}
+
+export async function editPrivateNote(
+  noteId: string,
+  text: { body: unknown },
+): Promise<WaGetMessagesBody> {
+  return (
+    await axiosClient.patch(`${WA_CONTACT_BASE_PATH}/privatemessage/note/${noteId}`, { text })
+  ).data;
+}
+
+export async function deletePrivateNote(noteId: string): Promise<WaGetMessagesBody> {
+  return (await axiosClient.delete(`${WA_CONTACT_BASE_PATH}/privatemessage/note/${noteId}`)).data;
 }
 
 /** One row of the message-logs report. */

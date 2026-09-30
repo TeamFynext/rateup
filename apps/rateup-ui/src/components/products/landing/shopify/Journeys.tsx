@@ -152,12 +152,13 @@ export default function Journeys() {
             heading="Recover carts with the checkout link in the message"
             body={
               <>
-                RateUp polls abandoned checkouts and sends your recovery template with the Checkout
-                Recovery Link variable. Combine it with a &ldquo;Copy offer code&rdquo; button so
-                the discount travels with the message.
+                When a checkout sits untouched for the delay you choose, RateUp sends your recovery
+                template with the Checkout Recovery Link variable, and stops if the order comes
+                through first. Combine it with a &ldquo;Copy offer code&rdquo; button so the
+                discount travels with the message.
               </>
             }
-            tags={["Recovery link", "Offer code button", "Scheduled checks"]}
+            tags={["Recovery link", "Offer code button", "Follow-up reminders"]}
             link={{
               to: "/products/whatsapp-broadcast",
               label: "Promotional sends live in WhatsApp Broadcast",

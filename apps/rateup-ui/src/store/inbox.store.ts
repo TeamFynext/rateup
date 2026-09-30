@@ -20,6 +20,7 @@ import {
 import {
   clearAllContactsFromDB,
   clearAllMessagesFromIDB,
+  deleteMessagesFromIDB,
   loadContactIdsForFilter,
   loadContactsFromDB,
   patchMessageInIDB,
@@ -887,11 +888,22 @@ export const useMessagesStore = create<MessagesStore>()(
            message a visitor had sent into a single bubble. The generator is fixed, but rows
            already stored keep their duplicates, and the row id was always the real identity. */
         const existing = new Map(entry.messages.map((x) => [x.id ?? x.messageId, x]));
+        // A line the composer drew before the API answered carries its temporary id as
+        // both `id` and `messageId`; the stored row keeps that id as `messageId` only.
+        const placeholders = new Map(
+          entry.messages.filter((x) => x.messageId && x.id === x.messageId).map((x) => [x.id, x]),
+        );
+        const replaced: string[] = [];
 
         const changedOrNew: WaGetMessagesBody[] = [];
 
         for (const msg of messages) {
           const id = msg.id ?? msg.messageId;
+          if (msg.messageId && msg.id !== msg.messageId && placeholders.has(msg.messageId)) {
+            existing.delete(msg.messageId);
+            placeholders.delete(msg.messageId);
+            replaced.push(msg.messageId);
+          }
           const existingMsg = existing.get(id);
 
           if (existingMsg) {
@@ -935,6 +947,7 @@ export const useMessagesStore = create<MessagesStore>()(
         if (changedOrNew.length) {
           saveMessagesToIDB(key, changedOrNew);
         }
+        deleteMessagesFromIDB(key, replaced);
       },
 
       addMessage: (key, message) => {
@@ -959,15 +972,18 @@ export const useMessagesStore = create<MessagesStore>()(
         const entry = state.messagesByKey.get(key);
         if (!entry?.messages?.length) return;
 
-        const filteredMessages = entry.messages.filter(
-          (msg) => (msg.messageId ?? msg.id) !== messageId,
-        );
+        const removed = entry.messages.filter((msg) => (msg.messageId ?? msg.id) === messageId);
+        if (!removed.length) return;
+        const filteredMessages = entry.messages.filter((msg) => !removed.includes(msg));
 
         const m = new Map(state.messagesByKey);
         m.set(key, { messages: filteredMessages });
         set({ messagesByKey: m });
 
-        saveMessagesToIDB(key, filteredMessages);
+        deleteMessagesFromIDB(
+          key,
+          removed.map((msg) => msg.id),
+        );
       },
 
       updateMessageByMessageId: (key, messageId, data) =>

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { integrationKeys } from "@/backend/campaign/campaign.keys";
@@ -10,6 +10,7 @@ import {
   deleteShopifyWebhookByTopic,
   getProductsFromShopify,
   getRegisteredWebhooks,
+  getShopifyAttribution,
   registerShopifyWebhookbyTopic,
   registerShopifyWebhooks,
   updateShopifySession,
@@ -20,6 +21,20 @@ export const useGetProductsFromShopify = (enabled: boolean) => {
     queryKey: ["shopifyProducts"],
     queryFn: getProductsFromShopify,
     enabled,
+  });
+};
+
+/** Cart-reminder results for the last `days` days, ending now. */
+export const useShopifyAttribution = (days: number) => {
+  return useQuery({
+    queryKey: ["shopifyAttribution", days],
+    queryFn: () => {
+      const to = new Date();
+      const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+      return getShopifyAttribution({ from: from.toISOString(), to: to.toISOString() });
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
 };
 
