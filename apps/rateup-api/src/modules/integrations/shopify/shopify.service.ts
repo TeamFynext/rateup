@@ -87,6 +87,7 @@ import type {
   ShopifyWebhookBody,
 } from "./shopify.types.js";
 import { notify } from "../../notification/notify.js";
+import { normalisePhone } from "../../loyalty/util.js";
 
 export async function getShopifyAuthUrl(
   rawRequest: IncomingMessage,
