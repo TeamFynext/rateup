@@ -14,6 +14,8 @@ interface Props {
   setParameterData: Updater<WaTemplateComponent[]>;
   template: WaTemplateFetchBody;
   parameters?: WaTemplateComponent[];
+  /** Leave out the sections that have nothing to fill in. */
+  hideEmpty?: boolean;
   leadgenData?: {
     data: LeadgenNodeData;
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
@@ -80,6 +82,10 @@ export default function WaTemplateFormElements(props: Props) {
         const exampleParams = props.parameters?.find(
           (data) => data.type === component.type?.toLowerCase(),
         )?.parameters;
+        const hasInput =
+          (component.type === "HEADER" && !!component.format && component.format !== "TEXT") ||
+          (component.type === "BODY" && !!component.example?.body_text?.[0]?.length);
+        if (props.hideEmpty && !hasInput) return null;
         switch (component.type) {
           case "HEADER":
             return (

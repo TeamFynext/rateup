@@ -15,11 +15,11 @@ import useContactStore, { useContactsStore } from "@/store/inbox.store.ts";
 import type { ContactWithUpdatedAt } from "@/store/inbox.store.ts";
 import type { NewPendingMessage } from "@/store/pendingMessages.ts";
 import { usePendingSend } from "@/store/pendingMessages.ts";
-import type { RequestPayload, RequestPayloadFields } from "@/types/api.ts";
+import type { RequestPayloadFields } from "@/types/api.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { getApiErrorMessage } from "@/utils/apiError.ts";
 
-import type { AssignInboxResult } from "./wamessage.api";
+import type { AssignInboxResult, CreateNotePayload } from "./wamessage.api";
 import type { WaMessageLogFilter } from "./wamessage.api";
 import {
   assignInboxToUser,
@@ -27,6 +27,8 @@ import {
   blockWhatsAppUser,
   bulkAssignInboxToUser,
   createPrivateMessage,
+  deletePrivateNote,
+  editPrivateNote,
   deleteConversation,
   deleteConversations,
   exportWaChats,
@@ -609,14 +611,21 @@ export function useGenerateInboxResponse() {
   });
 }
 
-interface CreatePrivateMessageVariables {
-  data: RequestPayload;
-}
-
 export function useCreatePrivateMessage(contactId: string) {
   return useMutation({
-    mutationFn: ({ data }: CreatePrivateMessageVariables) => createPrivateMessage(contactId, data),
+    mutationFn: (data: CreateNotePayload) => createPrivateMessage(contactId, data),
   });
+}
+
+export function useEditPrivateNote() {
+  return useMutation({
+    mutationFn: ({ noteId, text }: { noteId: string; text: { body: unknown } }) =>
+      editPrivateNote(noteId, text),
+  });
+}
+
+export function useDeletePrivateNote() {
+  return useMutation({ mutationFn: (noteId: string) => deletePrivateNote(noteId) });
 }
 
 export function useWaMessageLogs(filter: WaMessageLogFilter) {

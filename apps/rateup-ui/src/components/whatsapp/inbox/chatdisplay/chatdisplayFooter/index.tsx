@@ -7,14 +7,12 @@ import {
   IconNote,
   IconSend,
   IconShieldExclamation,
-  IconTypography,
   IconUserCheck,
   IconUserPlus,
   IconUsers,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { EditorContent } from "@tiptap/react";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,31 +32,17 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
-import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
 import {
   extractMentionUserIds,
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
-import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
-import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
-import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
-import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
-import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
-import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
-import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
-import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
-import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
-import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
-import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import AssigneePicker from "@/components/whatsapp/inbox/assign/AssigneePicker.tsx";
 import { buildAssignEvent } from "@/components/whatsapp/inbox/assign/assignEvent.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -80,7 +64,7 @@ import {
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import { isTicketClosed } from "../chatdisplayHeader/ticket.ts";
-import { useComposerTabStore } from "./composerTabStore.ts";
+import { type ComposerTab, useComposerTabStore } from "./composerTabStore.ts";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
 
 // Mirrors WaTextEditor's default CharacterCount limit so the footer count and the
@@ -122,8 +106,6 @@ export default function WaInboxChatDisplayFooter({
 }: Readonly<{
   contact: ContactWithUpdatedAt;
 }>) {
-  // Shared with the thread body: the "private" tab also filters the thread to
-  // internal notes only.
   const { activeTab, setActiveTab } = useComposerTabStore();
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
 
@@ -160,13 +142,28 @@ export default function WaInboxChatDisplayFooter({
     [orgMembers],
   );
 
-  const privateNoteEditor = useWaEditor({
-    content: body.text.body,
-    placeholder: "Add a private note",
-    enableMention: true,
-    mentionUsers,
-    onChange: (value) => setBody({ ...body, text: { ...body.text, body: value } }),
-  });
+  // Mentioning a teammate means the words are for the team, so the draft becomes a
+  // note. Only a mention *added* in message mode switches: an agent who switches back
+  // by hand keeps their choice.
+  const mentionCountRef = useRef(0);
+  const [switchedByMention, setSwitchedByMention] = useState(false);
+  function handleDraftChange(value: TiptapNode) {
+    setBody({ ...body, text: { ...body.text, body: value } });
+    const mentions = extractMentionUserIds(value).length;
+    // Read from the store: the editor may still hold the callback from an earlier render.
+    if (
+      mentions > mentionCountRef.current &&
+      useComposerTabStore.getState().activeTab === "message"
+    ) {
+      setActiveTab("private");
+      setSwitchedByMention(true);
+    }
+    mentionCountRef.current = mentions;
+  }
+  function chooseTab(tab: ComposerTab) {
+    setActiveTab(tab);
+    setSwitchedByMention(false);
+  }
 
   useEffect(() => {
     if (body.type === "location" && body.location) {
@@ -305,78 +302,56 @@ export default function WaInboxChatDisplayFooter({
     }));
   }
   function handleSendPrivateMessage() {
-    if (!body.text?.body || parseToWhatsAppFormat(body.text.body).trim().length === 0) {
-      return;
-    }
-    if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
-      toast.error("Select a account to send the message");
-      return;
-    }
-    const values = {
-      type: body.type,
-      text: body.text,
-      media: media,
-      contacts: body.contacts,
-      location: body.location,
-    };
-    // Mentions are resolved by id (robust to names with spaces), taken straight
-    // from the mention nodes the user inserted.
-    const mentionedUserIds = extractMentionUserIds(values.text?.body);
-    const mentionedUser = mentionUsers.filter((u) => mentionedUserIds.includes(u.id));
-    resetBody();
-    resetMedia();
-    setAudioUrl(null);
+    const text = body.text?.body;
+    if (!text || parseToWhatsAppFormat(text).trim().length === 0) return;
+    const mentionedUserIds = extractMentionUserIds(text);
+    // A note is text only: whatever the reply has staged stays staged.
+    setBody({ ...body, text: { body: "" } });
+    setSwitchedByMention(false);
+    mentionCountRef.current = 0;
+
     const id = generateInternalMessageId();
-    const newMessage: OptimisticMessage = {
-      id: id,
+    const placeholder: OptimisticMessage = {
+      id,
+      messageId: id,
+      kind: "NOTE",
       contactId: contact.id,
+      conversationId: contact.conversationId ?? null,
       waCreatedAt: new Date().toISOString(),
       messageBody: {
-        send: null,
-        receive: null,
-        privateNote: {
-          text: {
-            body: parseToWhatsAppFormat(values.text.body),
-          },
-          mentionedUser,
-          triggeredByUser: {
-            id: user?.userId ?? "",
-            name: user?.userName ?? "",
-          },
-        },
         exchangeProcess: "privateNote",
+        privateNote: {
+          text: { body: parseToWhatsAppFormat(text) },
+          mentionedUser: mentionUsers.filter((u) => mentionedUserIds.includes(u.id)),
+          triggeredByUser: { id: user?.userId ?? "", name: user?.userName ?? "" },
+        },
       },
       sourcePlatform: "INTERNAL",
-      sourceIdentifier: null,
+      sourceIdentifier: "internal",
       sendBy: user?.userId,
-      sender: {
-        name: user?.userName,
-        profilePhoto: user?.profilePhoto,
-      },
-      stats: {
-        read: "",
-        sent: "",
-        failed: "",
-        delivered: "",
-      },
-      messageId: id,
+      sender: { name: user?.userName, profilePhoto: user?.profilePhoto },
+      stats: { read: "", sent: "", failed: "", delivered: "" },
     };
-    const rowKey = getRowKey(contact);
-    messagesStore.addMessage(`${rowKey}_all`, newMessage);
-    messagesStore.addMessage(`${rowKey}_internal`, newMessage);
+    const keys = [`${getRowKey(contact)}_all`, `${getRowKey(contact)}_internal`];
+    keys.forEach((key) => messagesStore.addMessage(key, placeholder));
 
     createPrivateMessage.mutate(
       {
-        data: {
-          ...values,
-          messageId: id,
-          mentionedUserIds,
-        },
+        text: { body: text },
+        messageId: id,
+        conversationId: contact.conversationId,
+        mentionedUserIds,
       },
       {
-        onError: () => {
-          messagesStore.removeMessage(`${rowKey}_all`, id);
-          messagesStore.removeMessage(`${rowKey}_internal`, id);
+        // The server's note echoes the placeholder's id as its messageId.
+        onSuccess: (note) =>
+          keys.forEach((key) => {
+            messagesStore.removeMessage(key, id);
+            messagesStore.mergeMessages(key, [note]);
+          }),
+        onError: (error) => {
+          keys.forEach((key) => messagesStore.removeMessage(key, id));
+          toast.error(getApiErrorMessage(error, "The note wasn't saved."));
         },
       },
     );
@@ -385,93 +360,98 @@ export default function WaInboxChatDisplayFooter({
   const isSessionExpired =
     platform !== MessagePlatform.WEBCHAT &&
     isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
+  // Past the 24h window only a template reaches the customer; a note still works.
+  const isNoteMode = activeTab === "private" || isSessionExpired;
   submiRef.current = () => {
-    if (isSessionExpired) return;
-    handleSendMessage();
+    if (isNoteMode) handleSendPrivateMessage();
+    else handleSendMessage();
   };
 
   useEffect(() => {
     resetMedia();
+    setSwitchedByMention(false);
   }, [contact]);
 
-  const SendMessageComponent = () => {
-    return (
-      <CustomTooltip
-        trigger={
-          <Button
-            aria-label={translations("Send")}
-            size="icon-lg"
-            className="size-9 shrink-0 bg-green-600 hover:bg-green-700 dark:hover:bg-green-300 sm:size-10"
-            onClick={handleSendMessage}
-            disabled={
-              isSessionExpired ||
-              isRecording ||
-              isOverCharLimit ||
-              (!media.length && !body.media?.length && !isTextValid)
-            }
-          >
-            <IconSend className="w-4 h-4" />
-          </Button>
-        }
-        content={<span>{translations("Send")}</span>}
-      />
-    );
-  };
-  const SendPrivateMessageComponent = () => {
-    return (
-      <CustomTooltip
-        trigger={
-          <Button
-            aria-label={translations("Send")}
-            size="icon-lg"
-            className="size-9 shrink-0 bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-300 sm:size-10"
-            onClick={handleSendPrivateMessage}
-            disabled={
-              isSessionExpired ||
-              isRecording ||
-              (!media.length && !body.media?.length && !isTextValid)
-            }
-          >
-            <IconSend className="w-4 h-4" />
-          </Button>
-        }
-        content={<span>{translations("Send")}</span>}
-      />
-    );
-  };
+  const canSend = isNoteMode
+    ? isTextValid
+    : !isRecording && !isOverCharLimit && (media.length > 0 || !!body.media?.length || isTextValid);
 
-  if (isSessionExpired) {
-    if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK)
-      return null;
-    return (
-      <div className="flex items-start justify-start gap-2.5 border-t border-border bg-background p-3 lg:p-2">
-        <WaInboxFooterMenu sessionExpired={isSessionExpired} contact={contact} />
-      </div>
-    );
-  }
+  const SendButton = () => (
+    <CustomTooltip
+      trigger={
+        <Button
+          aria-label={isNoteMode ? translations("Add note") : translations("Send")}
+          size="icon-lg"
+          className={cn(
+            "size-9 shrink-0 sm:size-10",
+            isNoteMode
+              ? "bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-300"
+              : "bg-green-600 hover:bg-green-700 dark:hover:bg-green-300",
+          )}
+          onClick={() => submiRef.current?.()}
+          disabled={!canSend}
+        >
+          {isNoteMode ? <IconNote className="size-4" /> : <IconSend className="size-4" />}
+        </Button>
+      }
+      content={<span>{isNoteMode ? translations("Add note") : translations("Send")}</span>}
+    />
+  );
+
+  const showMessageTab = !isSessionExpired;
+  const composer = (
+    <WaTextEditor
+      handleInputChange={handleDraftChange}
+      content={body.text.body}
+      mih={67}
+      inbox={true}
+      mode={isNoteMode ? "note" : "message"}
+      enableMention={true}
+      mentionUsers={mentionUsers}
+      customEnter={() => submiRef.current?.()}
+      editable={!isRecording && !audioUrl && body.type === "text"}
+      placeholder={
+        isNoteMode
+          ? translations("Internal note — only your team sees this. @ to mention")
+          : translations("Type a message… / for quick replies, @ to mention a teammate")
+      }
+      sendMessageButton={<SendButton />}
+      border={true}
+      allowFiles={true}
+      hideCharacterCount={true}
+      quickRepliesOpen={quickRepliesOpen}
+      onQuickRepliesOpenChange={setQuickRepliesOpen}
+    />
+  );
+
   return (
     // The composer is the one part of the thread that must never be compressed:
     // in a column flex the body above it can give up space, this cannot.
     <div className="shrink-0">
-      <div className="flex flex-col gap-2">
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v)}
-          className="bg-white p-1.5 dark:bg-transparent sm:p-2"
-        >
-          {/* One line, always: the tabs give up width (the note tab shortens its
-              label) so the character count never wraps to a row of its own. Every
-              row here is height the message list does not get. */}
-          <div className="flex items-center justify-between gap-2">
+      {isSessionExpired && platform === MessagePlatform.WHATSAPP && (
+        <div className="flex items-start justify-start gap-2.5 border-t border-border bg-background p-3 lg:p-2">
+          <WaInboxFooterMenu sessionExpired={isSessionExpired} contact={contact} />
+        </div>
+      )}
+      <div className="flex flex-col gap-2 bg-white p-1.5 dark:bg-transparent sm:p-2">
+        {/* One line, always: the tabs give up width (the note tab shortens its
+            label) so the character count never wraps to a row of its own. Every
+            row here is height the message list does not get. */}
+        <div className="flex items-center justify-between gap-2">
+          <Tabs
+            value={isNoteMode ? "private" : "message"}
+            onValueChange={(v) => chooseTab(v as ComposerTab)}
+          >
             <TabsList className="h-8! min-w-0 shrink rounded-lg bg-muted p-0.5 sm:h-9! sm:p-1">
-              <TabsTrigger
-                value="message"
-                className="flex items-center px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:text-sm"
-              >
-                <IconMessage className="mr-1.5 size-3.5" />
-                Message
-              </TabsTrigger>
-
+              {showMessageTab && (
+                <TabsTrigger
+                  value="message"
+                  className="flex items-center px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:text-sm"
+                >
+                  <IconMessage className="mr-1.5 size-3.5" />
+                  Message
+                </TabsTrigger>
+              )}
               <TabsTrigger
                 value="private"
                 className="flex items-center px-2 text-xs data-[state=active]:bg-amber-600 data-[state=active]:text-white sm:text-sm"
@@ -481,139 +461,62 @@ export default function WaInboxChatDisplayFooter({
                 <span className="hidden sm:inline">Private Note</span>
               </TabsTrigger>
             </TabsList>
+          </Tabs>
 
-            {activeTab === "message" && (
-              <div className="flex shrink-0 items-center gap-1">
-                <CustomTooltip
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="size-7 p-0"
-                      onClick={() => setQuickRepliesOpen((prev) => !prev)}
-                    >
-                      <IconBolt className="size-4 text-cyan-600" />
-                    </Button>
-                  }
-                  content={<p>Quick Replies</p>}
-                />
-                <FooterCharacterCount body={body} max={MESSAGE_CHAR_LIMIT} />
-              </div>
-            )}
-          </div>
-
-          <TabsContent value="message">
-            {conversationLimitReached ? (
-              <Alert className="flex! flex-col items-center gap-2 border-amber-300 bg-amber-50 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
-                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
-                  <IconExclamationCircle size={"1.1rem"} />
-                  <AlertTitle className="text-sm font-medium">
-                    {translations("Conversation limit reached")} (
-                    {conversationsUsed.toLocaleString()}/{conversationLimit.toLocaleString()})
-                  </AlertTitle>
-                </div>
-                <AlertDescription className="max-w-md text-xs">
-                  {isAnnualConversationLimit
-                    ? translations(
-                        "You've used all conversations in your annual plan. Upgrade your plan to send more messages, or wait for it to reset.",
-                      )
-                    : translations(
-                        "You've used all conversations for this month. Upgrade your plan to send more messages, or wait for your monthly limit to reset.",
-                      )}
-                </AlertDescription>
-                <Button size="sm" onClick={() => navigate({ to: "/dashboard/settings/billing" })}>
-                  {translations("Upgrade Plan")}
-                </Button>
-              </Alert>
-            ) : (
-              <WaTextEditor
-                handleInputChange={(value) => {
-                  setBody({ ...body, text: { ...body.text, body: value } });
-                }}
-                content={body.text.body}
-                mih={67}
-                inbox={true}
-                customEnter={() => submiRef.current?.()}
-                editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
-                placeholder="Type a message...Type / for quick replies"
-                sendMessageButton={<SendMessageComponent />}
-                border={true}
-                allowFiles={true}
-                hideCharacterCount={true}
-                quickRepliesOpen={quickRepliesOpen}
-                onQuickRepliesOpenChange={setQuickRepliesOpen}
+          {isNoteMode ? (
+            <p className="hidden min-w-0 truncate text-xs text-amber-700 dark:text-amber-400 sm:block">
+              {switchedByMention
+                ? translations("Mentioning a teammate turns this into an internal note.")
+                : translations("Only your team sees notes.")}
+            </p>
+          ) : (
+            <div className="flex shrink-0 items-center gap-1">
+              <CustomTooltip
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="size-7 p-0"
+                    onClick={() => setQuickRepliesOpen((prev) => !prev)}
+                  >
+                    <IconBolt className="size-4 text-cyan-600" />
+                  </Button>
+                }
+                content={<p>Quick Replies</p>}
               />
-            )}
-          </TabsContent>
-
-          <TabsContent value="private">
-            {/* Same shape as the message composer, so it gets the same treatment:
-                the editor column is allowed to shrink and the send button is not. */}
-            <div className="flex items-start gap-2 p-2 pb-0 sm:p-4 sm:pb-0">
-              <div className="min-w-0 flex-1">
-                <ToolbarProvider editor={privateNoteEditor!}>
-                  <TooltipProvider>
-                    <EditorContent
-                      editor={privateNoteEditor}
-                      style={{
-                        backgroundColor: "var(--accent)",
-                        borderRadius: "5px",
-                      }}
-                      // Same as the message composer: one line to start on a
-                      // phone, the roomier fixed box once there is height to spare.
-                      className="max-h-40 min-h-9 overflow-y-auto rounded-xl sm:max-h-50 sm:min-h-16.75"
-                    />
-                    <div className="flex flex-wrap items-center p-2">
-                      <div className="mt-1 flex items-center">
-                        <InsertEmoji editor={privateNoteEditor} />
-                      </div>
-                      <Popover>
-                        <PopoverTrigger>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            title="Format Message"
-                          >
-                            <IconTypography className="h-5 w-5" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full">
-                          <div className="flex flex-nowrap gap-1">
-                            <div className="flex items-center">
-                              <BoldToolbar />
-                              <ItalicToolbar />
-                              <StrikeThroughToolbar />
-                              <CodeToolbar />
-                            </div>
-                            <div className="flex items-center">
-                              <BlockquoteToolbar />
-                              <BulletListToolbar />
-                              <OrderedListToolbar />
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      <div className="flex items-center">
-                        <UndoToolbar />
-                        <RedoToolbar />
-                      </div>
-                      {/* Sits with the tools on a phone, as in the message tab —
-                          a send column beside the editor costs its width down the
-                          full height of the composer. */}
-                      <div className="ml-auto sm:hidden">
-                        <SendPrivateMessageComponent />
-                      </div>
-                    </div>
-                  </TooltipProvider>
-                </ToolbarProvider>
-              </div>
-              <div className="mt-5 hidden shrink-0 sm:block">
-                <SendPrivateMessageComponent />
-              </div>
+              <FooterCharacterCount body={body} max={MESSAGE_CHAR_LIMIT} />
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
+
+        {!isNoteMode && conversationLimitReached ? (
+          <Alert className="flex! flex-col items-center gap-2 border-amber-300 bg-amber-50 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
+            <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+              <IconExclamationCircle size={"1.1rem"} />
+              <AlertTitle className="text-sm font-medium">
+                {translations("Conversation limit reached")} ({conversationsUsed.toLocaleString()}/
+                {conversationLimit.toLocaleString()})
+              </AlertTitle>
+            </div>
+            <AlertDescription className="max-w-md text-xs">
+              {isAnnualConversationLimit
+                ? translations(
+                    "You've used all conversations in your annual plan. Upgrade your plan to send more messages, or wait for it to reset.",
+                  )
+                : translations(
+                    "You've used all conversations for this month. Upgrade your plan to send more messages, or wait for your monthly limit to reset.",
+                  )}
+            </AlertDescription>
+            <Button size="sm" onClick={() => navigate({ to: "/dashboard/settings/billing" })}>
+              {translations("Upgrade Plan")}
+            </Button>
+          </Alert>
+        ) : (
+          composer
+        )}
+        <p className="hidden px-2 text-[11px] text-muted-foreground sm:block">
+          {translations("Enter to send · Shift + Enter for a new line")}
+        </p>
       </div>
     </div>
   );
@@ -844,11 +747,6 @@ export const WaInboxSpamContactFooter = ({ contact }: { contact: ContactWithUpda
   );
 };
 
-/**
- * An optimistic message pushed into the thread before the server echoes it.
- * The `null` slots mirror the wire shape, where only one of
- * send/receive/privateNote is populated.
- */
 /**
  * A message the composer adds to the thread before the send round-trips. It is the same row
  * the list renders, minus the fields only the server can fill in.

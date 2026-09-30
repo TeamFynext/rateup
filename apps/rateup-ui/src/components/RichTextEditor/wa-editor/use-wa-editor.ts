@@ -41,9 +41,21 @@ export function useWaEditor({
   const mentionUsersRef = useRef<MentionUser[]>([]);
   mentionUsersRef.current = mentionUsers ?? [];
 
+  // Read through a ref: callers pass a new function every render, and rebuilding the
+  // extension list for each one would reconfigure the editor on every keystroke.
+  const onEnterRef = useRef(customEnter);
+  onEnterRef.current = customEnter;
+  const submitsOnEnter = customEnter !== undefined;
   const extensions = useMemo(
-    () => createWaExtensions({ placeholder, max, customEnter, enableMention, mentionUsersRef }),
-    [customEnter, enableMention, placeholder, max],
+    () =>
+      createWaExtensions({
+        placeholder,
+        max,
+        customEnter: submitsOnEnter ? () => onEnterRef.current?.() : undefined,
+        enableMention,
+        mentionUsersRef,
+      }),
+    [submitsOnEnter, enableMention, placeholder, max],
   );
 
   const editor = useEditor({

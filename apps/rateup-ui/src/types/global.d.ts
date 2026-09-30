@@ -565,14 +565,21 @@ export interface WaPrivateMessageBody {
   text: {
     body: string;
   };
+  /** Null once the author's account is gone. */
   triggeredByUser: {
     id: string;
     name: string;
-  };
+  } | null;
   mentionedUser?: {
     id: string;
     name: string;
   }[];
+  editedAt?: string;
+  /** Set on a deleted note, whose text is then empty. */
+  deletedBy?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface WaSendMessageBody {
