@@ -17,6 +17,43 @@ export async function getProductsFromShopify() {
   return (await axiosClient.get(`${SHOPIFY_BASE_URL}/products`)).data as ShopifyProduct[];
 }
 
+export interface RevenueByCurrency {
+  currency: string;
+  /** Decimal string, e.g. "1180.00". */
+  amount: string;
+}
+
+export interface ReminderFunnel {
+  sent: number;
+  failed: number;
+  delivered: number;
+  read: number;
+  clicked: number;
+  recovered: number;
+}
+
+/** What cart reminders sent in a period went on to do; mirrors getShopifyAttribution. */
+export interface ShopifyAttribution {
+  from: string;
+  to: string;
+  totals: ReminderFunnel & { revenue: RevenueByCurrency[]; recoveredWithoutReminder: number };
+  byRule: Array<
+    ReminderFunnel & { ruleId: string; ruleName: string; revenue: RevenueByCurrency[] }
+  >;
+  byDay: Array<{
+    day: string;
+    sent: number;
+    clicked: number;
+    recovered: number;
+    revenue: RevenueByCurrency[];
+  }>;
+}
+
+export async function getShopifyAttribution(params: { from: string; to: string }) {
+  return (await axiosClient.get(`${SHOPIFY_BASE_URL}/attribution`, { params })).data
+    .data as ShopifyAttribution;
+}
+
 export async function getRegisteredWebhooks() {
   return (await axiosClient.get(`${SHOPIFY_BASE_URL}/registered-webhooks`)).data as ShopifyEvents[];
 }

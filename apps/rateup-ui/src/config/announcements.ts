@@ -40,14 +40,23 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
-    id: "2026-09-29-inbox-notes-in-thread",
-    title: "Internal notes sit in the conversation",
+    id: "2026-09-30-shopify-cart-reminder-results",
+    title: "See the revenue your cart reminders bring back",
     summary:
-      "Notes now appear in the chat alongside customer messages and can be edited or deleted. Typing @ and a teammate's name turns your draft into a note, and Enter sends while Shift + Enter adds a new line.",
-    publishedAt: "2026-09-29",
+      "The Shopify page now has a Results tab with orders and revenue recovered by your abandoned-cart reminders. Their links are tagged so Shopify's own reports credit WhatsApp too.",
+    publishedAt: "2026-09-30",
+    kinds: ["new"],
+    area: "Shopify",
+    link: { to: "/dashboard/settings/integrations/shopify" },
+  },
+  {
+    id: "2026-09-30-shopify-cart-reminders",
+    title: "Abandoned-cart reminders, sent on time",
+    summary:
+      "Choose how long a Shopify checkout sits untouched before your reminder goes out, and add a second rule for a follow-up. Reminders stop as soon as the order comes through.",
+    publishedAt: "2026-09-30",
     kinds: ["improvement"],
-    area: "Inbox",
-    link: { to: "/dashboard/inbox" },
+    area: "Automation",
   },
 
   {

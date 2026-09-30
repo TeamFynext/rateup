@@ -98,6 +98,7 @@ const ActionValueInput = ({
         templateId: valueField.value,
         variableMapping: [],
         useProductImageAsHeader: false,
+        buttonUrlVariable: undefined,
       };
     }
     // Two action types store an object, so the shape is narrowed by a key rather
@@ -108,6 +109,7 @@ const ActionValueInput = ({
       templateId: stored?.templateId ?? "",
       variableMapping: stored?.variableMapping ?? [],
       useProductImageAsHeader: stored?.useProductImageAsHeader ?? false,
+      buttonUrlVariable: stored?.buttonUrlVariable,
     };
   };
 
@@ -332,6 +334,10 @@ const ActionValueInput = ({
                 ...templateValue,
                 variableMapping,
               })
+            }
+            buttonValue={templateValue.buttonUrlVariable}
+            onButtonChange={(buttonUrlVariable) =>
+              valueField.onChange({ ...templateValue, buttonUrlVariable })
             }
             triggerEvent={triggerEvent}
           />
