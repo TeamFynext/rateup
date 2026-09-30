@@ -109,6 +109,7 @@ import {
   getShopifyIntegrationByShop,
   handleShopifyOrderEvents,
   handleShopifyAppUnistalled,
+  registerShopifyWebhook,
   registerWebhookByTopic,
   resolveShopifyPathValue,
   updateShopifyIntegrationByShop,
@@ -119,6 +120,7 @@ import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply
 import webhookHandlers, {
   customersDataRequestHandler,
   customersRedactHandler,
+  defaultWebhookHandlers,
   mandatoryWebhookHandlers,
   shopRedactRequestHandler,
   WEBHOOK_API_ROUTE,
@@ -371,6 +373,72 @@ describe("registerWebhookByTopic", () => {
     await expect(
       registerWebhookByTopic("ORDERS_CREATE", { shop: SHOP } as unknown as Session),
     ).rejects.toThrow("Access denied for orders/create");
+  });
+});
+
+// ===========================================================================
+// registerShopifyWebhook — subscriptions left at an old address
+// ===========================================================================
+
+describe("registerShopifyWebhook", () => {
+  const target = () => `${process.env.API_URL}${WEBHOOK_API_ROUTE}`;
+
+  function clientWith(nodes: { id: string; topic: string; uri: string }[]) {
+    const request = vi.fn(async (query: string, _opts?: any) => {
+      if (query.includes("webhookSubscriptions(")) {
+        return {
+          data: {
+            webhookSubscriptions: {
+              edges: nodes.map((node) => ({ node, cursor: node.id })),
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+          },
+        };
+      }
+      return { data: { webhookSubscriptionCreate: { userErrors: [] } } };
+    });
+    return request;
+  }
+
+  async function run(request: ReturnType<typeof clientWith>) {
+    const shopify = (await import("./shopify.config.js")).default as any;
+    shopify.clients.Graphql = class {
+      request = request;
+    };
+    await registerShopifyWebhook({ shop: SHOP } as unknown as Session);
+    const created = request.mock.calls
+      .filter(([q]) => q.includes("webhookSubscriptionCreate("))
+      .map(([, o]) => o.variables.topic);
+    const deleted = request.mock.calls
+      .filter(([q]) => q.includes("webhookSubscriptionDelete("))
+      .map(([, o]) => o.variables.id);
+    return { created, deleted };
+  }
+
+  test("re-points a topic subscribed at an old address, then drops the old one", async () => {
+    const topics = Object.keys(defaultWebhookHandlers);
+    const request = clientWith(
+      topics.map((topic) =>
+        topic === "ORDERS_CREATE"
+          ? { id: "old", topic, uri: "https://old-tunnel.example/webhooks" }
+          : { id: topic, topic, uri: target() },
+      ),
+    );
+
+    const { created, deleted } = await run(request);
+
+    expect(created).toEqual(["ORDERS_CREATE"]);
+    expect(deleted).toEqual(["old"]);
+  });
+
+  test("leaves topics already at this address alone", async () => {
+    const topics = Object.keys(defaultWebhookHandlers);
+    const request = clientWith(topics.map((topic) => ({ id: topic, topic, uri: target() })));
+
+    const { created, deleted } = await run(request);
+
+    expect(created).toEqual([]);
+    expect(deleted).toEqual([]);
   });
 });
 
