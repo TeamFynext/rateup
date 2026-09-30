@@ -46,6 +46,7 @@ import {
 import { getIntegrationByName, updateIntegrationByName } from "../integrations.service.js";
 import { UpdateIntgrationInput } from "../integrations.schema.js";
 import { API_URL } from "../../../utils/constants/constants.js";
+import { normalisePhone } from "../../loyalty/util.js";
 import {
   OrderStatus,
   Org,
@@ -1080,6 +1081,20 @@ interface FulfillmentOrderShowData {
   } | null;
 }
 
+/**
+ * The number as `Contact.phone` stores it: country code, no "+". Shopify hands a phone over
+ * as the buyer typed it, so a national "9876543210" would otherwise open a second contact
+ * and conversation beside the existing "919876543210". The order's country fills in a
+ * missing code; India when the order names none.
+ */
+export function shopifyContactPhone(
+  raw: string | null | undefined,
+  countryCode?: string | null,
+): string | null {
+  if (!raw) return null;
+  return normalisePhone(raw, countryCode || "IN");
+}
+
 export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
   const { webhookId, shop, topic } = webhook;
   // The queue's job payload carries every webhook topic's shape, so it is typed
@@ -1213,19 +1228,25 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
     await markCheckoutRecovered(shopifyInfo.orgId, body);
   }
 
-  if (!customerPhone) {
+  const contactPhone = shopifyContactPhone(
+    customerPhone,
+    body?.billing_address?.country_code ||
+      body?.shipping_address?.country_code ||
+      body?.customer?.default_address?.country_code,
+  );
+  if (!contactPhone) {
     // The survey and automation paths genuinely need a number — there is nowhere to send a
     // WhatsApp message without one. Logged at info, not trace: "this order reached nobody"
     // is something a shop needs to be able to find.
     log.info(
-      { shop, topic, orderId, hasEmail: Boolean(customerEmail) },
-      "Shopify order carries no phone number; WhatsApp survey and automation paths skipped",
+      { shop, topic, orderId, hasPhone: Boolean(customerPhone), hasEmail: Boolean(customerEmail) },
+      "Shopify order carries no usable phone number; WhatsApp survey and automation paths skipped",
     );
     return;
   }
 
   await createScheduleOnShopifyEvent({
-    customerPhone,
+    customerPhone: `+${contactPhone}`,
     event: topic,
     shopifyInfo,
     productIds,
@@ -1237,7 +1258,7 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
 
   await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
     orgId: shopifyInfo.orgId,
-    phone: customerPhone,
+    phone: contactPhone,
     shopifyEvent: topic,
     shopifyProductIds: productIds,
     shopifyBody: body,
@@ -1272,10 +1293,18 @@ interface RefundOrderData {
       lastName: string | null;
       defaultEmailAddress: { emailAddress: string } | null;
       defaultPhoneNumber: { phoneNumber: string } | null;
-      defaultAddress: { phone: string | null } | null;
+      defaultAddress: { phone: string | null; countryCodeV2: string | null } | null;
     } | null;
-    billingAddress: { phone: string | null; city: string | null } | null;
-    shippingAddress: { phone: string | null; city: string | null } | null;
+    billingAddress: {
+      phone: string | null;
+      city: string | null;
+      countryCodeV2: string | null;
+    } | null;
+    shippingAddress: {
+      phone: string | null;
+      city: string | null;
+      countryCodeV2: string | null;
+    } | null;
   } | null;
 }
 
@@ -1329,10 +1358,10 @@ export async function handleShopifyRefundEvent(webhook: ShopifyWebhookJobData) {
       lastName
       defaultEmailAddress { emailAddress }
       defaultPhoneNumber { phoneNumber }
-      defaultAddress { phone }
+      defaultAddress { phone countryCodeV2 }
     }
-    billingAddress { phone city }
-    shippingAddress { phone city }
+    billingAddress { phone city countryCodeV2 }
+    shippingAddress { phone city countryCodeV2 }
   }
 }`,
     { variables: { id: `gid://shopify/Order/${body.order_id}` } },
@@ -1343,12 +1372,16 @@ export async function handleShopifyRefundEvent(webhook: ShopifyWebhookJobData) {
     return;
   }
 
-  const customerPhone =
+  const customerPhone = shopifyContactPhone(
     order.customer?.defaultPhoneNumber?.phoneNumber ||
-    order.phone ||
-    order.customer?.defaultAddress?.phone ||
-    order.billingAddress?.phone ||
-    order.shippingAddress?.phone;
+      order.phone ||
+      order.customer?.defaultAddress?.phone ||
+      order.billingAddress?.phone ||
+      order.shippingAddress?.phone,
+    order.billingAddress?.countryCodeV2 ||
+      order.shippingAddress?.countryCodeV2 ||
+      order.customer?.defaultAddress?.countryCodeV2,
+  );
   if (!customerPhone) {
     log.info(
       { shop, orderId: body.order_id, refundId: body.id },

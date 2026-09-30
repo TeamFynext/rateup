@@ -774,6 +774,20 @@ describe("handleShopifyOrderEvents — which paths a missing phone stops", () =>
     expect(checkAndExecuteRuleByTriggerEvent).toHaveBeenCalled();
   });
 
+  test.each([
+    ["with its country code", "+91 90000 00001"],
+    ["with the code but no plus", "919000000001"],
+    ["typed without a country code", "9000000001"],
+  ])("a phone %s reaches automations as Contact.phone stores it", async (_label, phone) => {
+    await handleShopifyOrderEvents(
+      order({ customer: { phone }, billing_address: { country_code: "IN" } }) as never,
+    );
+
+    // One spelling, so the existing contact and conversation are reused rather than a
+    // 10-digit twin opened beside them.
+    expect((checkAndExecuteRuleByTriggerEvent as Mock).mock.calls[0][1].phone).toBe("919000000001");
+  });
+
   test("an order with only an email still earns points", async () => {
     // The regression this guards: the handler used to return early when no phone was
     // found, which killed the loyalty path too — even though it can match on email, and
