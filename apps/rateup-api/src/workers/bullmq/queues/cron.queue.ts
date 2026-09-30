@@ -31,7 +31,9 @@ export const SCHEDULED_JOBS = [
   { id: "shopifyCheckoutCleanup", pattern: "30 3 * * *", tz: "Etc/UTC" },
   // Subscribes connected shops to webhook topics added after they installed.
   { id: "shopifyWebhookSync", pattern: "15 4 * * *", tz: "Etc/UTC" },
-  { id: "zohoRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
+  // Every provider's `refreshCredential` — Zoho's token and webhook channels today.
+  // Was `zohoRefresh`; the stale scheduler is removed by `syncJobSchedulers`.
+  { id: "integrationCredentialRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
   // Cycles legacy non-expiring Shopify tokens (rejected from 2027-01-01) and keeps
   // idle shops' 90-day refresh tokens from lapsing; in-use tokens renew on demand.
   { id: "shopifyTokenRenewal", pattern: "40 2 * * *", tz: "Etc/UTC" },

@@ -46,6 +46,7 @@ import {
 } from "./instagram_automation.service.js";
 import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
+import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.mapping.js";
 import {
   resolveShopifyPathValue,
   getShopifyProductImage,
@@ -392,6 +393,8 @@ export interface RuleWithConditions {
     };
     shopifyEvent?: ShopifyEvents;
     shopifyProductIds?: string[];
+    wooEvent?: string;
+    wooProductIds?: string[];
     abandonedCheckoutDelayMinutes?: number;
     requireMarketingConsent?: boolean;
     instagramScope?: "ALL" | "SPECIFIC";
@@ -646,6 +649,11 @@ export interface RuleExecutionContext {
   shopifyEvent?: ShopifyEvents;
   shopifyProductIds?: string[];
   shopifyBody?: ShopifyBody;
+  /** The WooCommerce order status that fired a `WOOCOMMERCE_EVENT` rule, e.g. "completed". */
+  wooEvent?: string;
+  wooProductIds?: string[];
+  /** The WooCommerce order payload, for template variables. */
+  wooBody?: Record<string, unknown>;
   instagramMediaId?: string;
 }
 
@@ -775,19 +783,30 @@ export async function checkAndExecuteRuleByTriggerEvent(
       ) {
         continue;
       }
+      if (
+        triggerEvent === TriggerEvent.WOOCOMMERCE_EVENT &&
+        rule.options?.wooEvent !== context.wooEvent
+      ) {
+        continue;
+      }
 
       // Filter by product IDs if configured
-      if (triggerEvent === TriggerEvent.SHOPIFY_EVENT) {
-        const configuredProductIds = [...(rule.options?.shopifyProductIds ?? [])].map((id) =>
-          String(id),
-        );
+      if (
+        triggerEvent === TriggerEvent.SHOPIFY_EVENT ||
+        triggerEvent === TriggerEvent.WOOCOMMERCE_EVENT
+      ) {
+        const isWoo = triggerEvent === TriggerEvent.WOOCOMMERCE_EVENT;
+        const configuredProductIds = [
+          ...((isWoo ? rule.options?.wooProductIds : rule.options?.shopifyProductIds) ?? []),
+        ].map((id) => String(id));
+        const orderProductIds = isWoo ? context.wooProductIds : context.shopifyProductIds;
 
         if (!configuredProductIds.length) {
           // No product-specific filter configured
-        } else if (!context.shopifyProductIds?.length) {
+        } else if (!orderProductIds?.length) {
           continue;
         } else {
-          const hasProduct = context.shopifyProductIds.some((id) =>
+          const hasProduct = orderProductIds.some((id) =>
             configuredProductIds.includes(String(id)),
           );
           if (!hasProduct) continue;
@@ -1461,18 +1480,22 @@ async function executeSendTemplateAction(
     ? await getContactByPhoneNumberAndOrgId(context.phone, context.orgId)
     : null;
 
-  const parameterData = buildTemplateParameterData(
-    variableMapping,
-    context.shopifyBody,
-    contactData,
-  );
+  // A WooCommerce rule maps its variables against the Woo order; everything else
+  // keeps resolving against Shopify's payload, as it always has.
+  const resolveOrderPath = context.wooBody
+    ? (path: string) => resolveWooPathValue(context.wooBody, path)
+    : (path: string) => resolveShopifyPathValue(context.shopifyBody, path);
+
+  const parameterData = buildTemplateParameterData(variableMapping, resolveOrderPath, contactData);
 
   if (useProductImageAsHeader) {
     const productId =
       context.shopifyBody?.line_items?.[0]?.product_id ?? context.shopifyProductIds?.[0];
-    const imageUrl = productId
-      ? await getShopifyProductImage(context.orgId, String(productId))
-      : null;
+    const imageUrl = context.wooBody
+      ? wooLineItemImage(context.wooBody)
+      : productId
+        ? await getShopifyProductImage(context.orgId, String(productId))
+        : null;
     if (imageUrl) {
       parameterData.push({
         type: "header",
@@ -1487,7 +1510,7 @@ async function executeSendTemplateAction(
   }
 
   const buttonVariable = buttonUrlVariable
-    ? String(resolveVariablePath(buttonUrlVariable, context.shopifyBody, contactData) ?? "")
+    ? String(resolveVariablePath(buttonUrlVariable, resolveOrderPath, contactData) ?? "")
     : undefined;
 
   const result = await sendTemplateToUserCore(
@@ -1512,9 +1535,16 @@ async function executeSendTemplateAction(
   return { success: true };
 }
 
+/** The first line item's image, which WooCommerce includes on each order line. */
+function wooLineItemImage(wooBody: Record<string, unknown>): string | null {
+  const items = (wooBody as { line_items?: Array<{ image?: { src?: unknown } }> }).line_items;
+  const src = items?.[0]?.image?.src;
+  return typeof src === "string" && src ? src : null;
+}
+
 function resolveVariablePath(
   path: string,
-  shopifyBody?: ShopifyBody,
+  resolveOrderPath: (path: string) => string,
   contactData?: {
     name?: string | null;
     email?: string | null;
@@ -1534,13 +1564,13 @@ function resolveVariablePath(
     }
     return "";
   }
-  // Shopify / generic dot-path resolution
-  return resolveShopifyPathValue(shopifyBody, path);
+  // The store order: Shopify's or WooCommerce's, as the caller decided.
+  return resolveOrderPath(path);
 }
 
 function buildTemplateParameterData(
   variableMapping: { templateParamIndex: number; shopifyPath: string }[] = [],
-  shopifyBody?: ShopifyBody,
+  resolveOrderPath: (path: string) => string,
   contactData?: {
     name?: string | null;
     email?: string | null;
@@ -1559,7 +1589,9 @@ function buildTemplateParameterData(
   const bodyParameters: Array<{ type: string; text: string }> = [];
   for (let i = 0; i <= maxIndex; i++) {
     const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
-    const text = mapping ? resolveVariablePath(mapping.shopifyPath, shopifyBody, contactData) : "";
+    const text = mapping
+      ? resolveVariablePath(mapping.shopifyPath, resolveOrderPath, contactData)
+      : "";
 
     bodyParameters.push({ type: "text", text });
   }

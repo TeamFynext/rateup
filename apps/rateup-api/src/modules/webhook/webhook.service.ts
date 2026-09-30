@@ -84,11 +84,23 @@ export async function verifyWebhookUrl(url: string, verifyToken: string): Promis
   }
 }
 
-export interface OutgoingWebhookJobData {
-  phoneId: string;
+/**
+ * An outgoing webhook delivery. Message status jobs arrive keyed on the WhatsApp
+ * number that sent the message; integration events are keyed on the org.
+ */
+export type OutgoingWebhookJobData = (
+  | { phoneId: string; orgId?: never }
+  | { orgId: string; phoneId?: never }
+) & {
   event: string;
   payload: Record<string, unknown>;
-}
+};
+
+const OUTGOING_WEBHOOK_JOB_OPTIONS = {
+  attempts: 5,
+  backoff: { type: "exponential" as const, delay: 5_000 },
+  removeOnComplete: { count: 1 },
+};
 
 export async function enqueueWebhookDispatch(
   phoneId: string,
@@ -102,10 +114,19 @@ export async function enqueueWebhookDispatch(
       event,
       payload,
     } satisfies OutgoingWebhookJobData,
-    {
-      attempts: 5,
-      backoff: { type: "exponential", delay: 5_000 },
-      removeOnComplete: { count: 1 },
-    },
+    OUTGOING_WEBHOOK_JOB_OPTIONS,
+  );
+}
+
+/** Queues a delivery for an org-level event (see `webhook.provider.ts`). */
+export async function enqueueOrgWebhookDispatch(
+  orgId: string,
+  event: string,
+  payload: Record<string, unknown>,
+) {
+  await outgoingWebhookQueue.add(
+    "dispatch",
+    { orgId, event, payload } satisfies OutgoingWebhookJobData,
+    OUTGOING_WEBHOOK_JOB_OPTIONS,
   );
 }

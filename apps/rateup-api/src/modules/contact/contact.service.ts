@@ -46,7 +46,7 @@ import {
   checkAndExecuteRuleByTriggerEvent,
   resolveContactChannel,
 } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
+import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import {
   mapStatusToField,
   transitionInboxStat,
@@ -54,12 +54,6 @@ import {
   decrementInboxStat,
   type StatsField,
 } from "../whatsapp/inbox/inboxStats/inboxStats.service.js";
-import { pushCrmLeadStatus, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
-import {
-  addZohoContactToQueue,
-  buildZohoContactPayload,
-  buildZohoLeadPayload,
-} from "../integrations/external/zoho/zoho.utils.js";
 
 // A `ContactCore.customFields` entry's `id` is declared optional in the input
 // schema, but the DB column it's written to (`ContactCustomFieldValue.fieldId`)
@@ -128,13 +122,6 @@ export async function createContact(
     // identifiers and stays "ALL" for a plain phone import.
     ...(await resolveContactChannel(user)),
   });
-  await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_CREATE,
-    { [ZapierTriggers.CONTACT_CREATE]: user },
-    user.orgId,
-  );
-  await addZohoContactToQueue(user, user?.orgId);
-
   let lifecycleName;
   if (user.lifecycleId) {
     const lifecycle = await prisma.lifecycle.findUnique({
@@ -150,33 +137,11 @@ export async function createContact(
       lifecycleName = lifecycle.name;
     }
   }
-  await integrationTriggerQueue.add("zoho-lead-create", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.LEAD_CREATE,
-    orgId: user?.orgId,
-    data: buildZohoLeadPayload({
-      ...user,
-      leadStatus: lifecycleName,
-    }),
-    rateupContactId: user.id,
+  await emitIntegrationEvent(user.orgId, {
+    type: "contact.created",
+    contact: user,
+    ...(lifecycleName && { lifecycleName }),
   });
-
-  if (user.lifecycleId) {
-    await integrationTriggerQueue.add("bigin-deal-create", {
-      integrationName: "zoho",
-      triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-      orgId: user.orgId,
-      data: {
-        name: user.name,
-        source: user.source,
-        email: user.email,
-        phone: user.phone,
-        notes: user.notes,
-        lifecycleId: user.lifecycleId,
-      },
-      rateupContactId: user.id,
-    });
-  }
   return user;
 }
 
@@ -202,21 +167,7 @@ export async function getOrcreateContact(contact: ContactCore & { orgId: string 
     data: rest,
   });
 
-  await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_CREATE,
-    { [ZapierTriggers.CONTACT_CREATE]: user },
-    user.orgId,
-  );
-  await addZohoContactToQueue(user, user?.orgId);
-  await integrationTriggerQueue.add("zoho-lead-create", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.LEAD_CREATE,
-    orgId: user?.orgId,
-    data: buildZohoLeadPayload({
-      ...user,
-    }),
-    rateupContactId: user.id,
-  });
+  await emitIntegrationEvent(user.orgId, { type: "contact.created", contact: user });
   if (customFields?.length) {
     await prisma.contactCustomFieldValue.createMany({
       data: customFields.map((field) => toContactCustomFieldValueInput(field, user.id)),
@@ -322,47 +273,12 @@ export async function createMultipleContacts(contacts: createMultipleContactInpu
       });
     }
 
-    // Batch Zapier triggers
+    // Batch integration events
     for (let i = 0; i < createdContacts.length; i += BATCH_SIZE) {
       const batch = createdContacts.slice(i, i + BATCH_SIZE);
 
       await Promise.all(
-        batch.map(async (contact) => {
-          await addZapierTriggerToQueue(
-            ZapierTriggers.CONTACT_CREATE,
-            {
-              [ZapierTriggers.CONTACT_CREATE]: contact,
-            },
-            orgId,
-          );
-
-          await addZohoContactToQueue(contact, orgId);
-          await integrationTriggerQueue.add("zoho-lead-create", {
-            integrationName: "zoho",
-            triggerKey: ZohoTriggers.LEAD_CREATE,
-            orgId: orgId,
-            data: buildZohoLeadPayload({
-              ...contact,
-            }),
-            rateupContactId: contact.id,
-          });
-          if (contact.lifecycleId) {
-            await integrationTriggerQueue.add("bigin-deal-create", {
-              integrationName: "zoho",
-              triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-              orgId,
-              data: {
-                name: contact.name,
-                source: contact.source,
-                email: contact.email,
-                phone: contact.phone,
-                notes: contact.notes,
-                lifecycleId: contact.lifecycleId,
-              },
-              rateupContactId: contact.id,
-            });
-          }
-        }),
+        batch.map((contact) => emitIntegrationEvent(orgId, { type: "contact.created", contact })),
       );
     }
   }
@@ -710,29 +626,7 @@ export async function deleteContactById(contactId: string, orgId: string) {
       orgId,
     },
   });
-  await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_DELETED,
-    { [ZapierTriggers.CONTACT_DELETED]: user },
-    user.orgId,
-  );
-  const integrationIds = user.integrationIds;
-  await integrationTriggerQueue.add("zoho-contact-delete", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.CONTACT_DELETE,
-    orgId: user.orgId,
-    data: {
-      zohoContactId: integrationIds?.zoho?.contact?.id,
-    },
-  });
-  // Also enqueue Bigin contact delete
-  await integrationTriggerQueue.add("zoho-bigin-contact-delete", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.BIGIN_CONTACT_DELETE,
-    orgId: user.orgId,
-    data: {
-      biginContactId: integrationIds?.bigin?.contact?.id,
-    },
-  });
+  await emitIntegrationEvent(user.orgId, { type: "contact.deleted", contact: user });
   return user;
 }
 
@@ -1007,94 +901,22 @@ export async function updateContactById(
       }
     });
   }
-  await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_UPDATED,
-    { [ZapierTriggers.CONTACT_UPDATED]: updatedContact },
-    updatedContact.orgId,
-  );
-  const integrationIds = updatedContact.integrationIds as {
-    zoho?: {
-      contact?: {
-        id: string;
-      };
-      lead?: { id: string };
-    };
-    bigin?: {
-      contact?: {
-        id: string;
-      };
-    };
-  };
-
-  await integrationTriggerQueue.add("zoho-contact-update", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.CONTACT_UPDATE,
-    orgId: updatedContact.orgId,
-    data: {
-      zohoContactId: integrationIds?.zoho?.contact?.id,
-      ...buildZohoContactPayload(updatedContact),
-    },
+  await emitIntegrationEvent(updatedContact.orgId, {
+    type: "contact.updated",
+    contact: updatedContact,
+    changed: updatedContact.lifecycleId ? ["details", "lifecycle"] : ["details"],
   });
-  // Also enqueue Bigin contact update
-  await integrationTriggerQueue.add("zoho-bigin-contact-update", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.BIGIN_CONTACT_UPDATE,
-    orgId: updatedContact.orgId,
-    data: {
-      biginContactId: integrationIds?.bigin?.contact?.id,
-      ...buildZohoContactPayload(updatedContact),
-    },
-  });
-
-  if (updatedContact.lifecycleId && integrationIds?.zoho?.lead?.id) {
-    const lifecycle = await prisma.lifecycle.findUnique({
-      where: {
-        id: updatedContact.lifecycleId,
-      },
-      select: {
-        name: true,
-      },
-    });
-
-    if (lifecycle) {
-      const { Lead_Status: _mapped, ...payload } = buildZohoLeadPayload(updatedContact);
-      await pushCrmLeadStatus(
-        updatedContact.orgId,
-        integrationIds.zoho.lead.id,
-        {
-          lifecycleId: updatedContact.lifecycleId,
-          lifecycleName: lifecycle.name,
-        },
-        payload,
-      );
-    }
-  }
   if (updatedContact.lifecycleId) {
-    await integrationTriggerQueue.add("zoho-bigin-deal-update", {
-      integrationName: "zoho",
-      triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-      orgId: updatedContact.orgId,
-      data: {
-        name: updatedContact.name,
-        source: updatedContact.source,
-        email: updatedContact.email,
-        phone: updatedContact.phone,
-        notes: updatedContact.notes,
-        lifecycleId: updatedContact.lifecycleId,
-      },
-      rateupContactId: updatedContact.id,
-    });
     triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
   }
 
   if (
     WaMessageClosedStatus.includes(updatedContact.waMessageAssignStatus as WaMessageAssignStatus)
   ) {
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONVERSATION_CLOSED,
-      { [ZapierTriggers.CONVERSATION_CLOSED]: updatedContact },
-      updatedContact.orgId,
-    );
+    await emitIntegrationEvent(updatedContact.orgId, {
+      type: "conversation.closed",
+      contact: updatedContact,
+    });
     const assignedUsers = await getAssignedUserForContact(updatedContact.id);
     await deleteAssignedUsersforContact(updatedContact.id);
     await notify({
@@ -1245,37 +1067,7 @@ export async function getOrCreateContactByPhone(
       if (addToConversation) {
         conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
       }
-      await addZapierTriggerToQueue(
-        ZapierTriggers.CONTACT_CREATE,
-        { [ZapierTriggers.CONTACT_CREATE]: contact },
-        orgId,
-      );
-      await addZohoContactToQueue(contact, orgId);
-      await integrationTriggerQueue.add("zoho-lead-create", {
-        integrationName: "zoho",
-        triggerKey: ZohoTriggers.LEAD_CREATE,
-        orgId: orgId,
-        data: buildZohoLeadPayload({
-          ...contact,
-        }),
-        rateupContactId: contact.id,
-      });
-      if (contact.lifecycleId) {
-        await integrationTriggerQueue.add("bigin-deal-create", {
-          integrationName: "zoho",
-          triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-          orgId,
-          data: {
-            name: contact.name,
-            source: contact.source,
-            email: contact.email,
-            phone: contact.phone,
-            notes: contact.notes,
-            lifecycleId: contact.lifecycleId,
-          },
-          rateupContactId: contact.id,
-        });
-      }
+      await emitIntegrationEvent(orgId, { type: "contact.created", contact });
       return { contact, conversation };
     }
   } catch (e) {
@@ -1322,37 +1114,7 @@ export async function getOrCreateContactByIgsId(
       if (addToConversation) {
         conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
       }
-      await addZapierTriggerToQueue(
-        ZapierTriggers.CONTACT_CREATE,
-        { [ZapierTriggers.CONTACT_CREATE]: contact },
-        orgId,
-      );
-      await addZohoContactToQueue(contact, orgId);
-      await integrationTriggerQueue.add("zoho-lead-create", {
-        integrationName: "zoho",
-        triggerKey: ZohoTriggers.LEAD_CREATE,
-        orgId: orgId,
-        data: buildZohoLeadPayload({
-          ...contact,
-        }),
-        rateupContactId: contact.id,
-      });
-      if (contact.lifecycleId) {
-        await integrationTriggerQueue.add("bigin-deal-create", {
-          integrationName: "zoho",
-          triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-          orgId,
-          data: {
-            name: contact.name,
-            source: contact.source,
-            email: contact.email,
-            phone: contact.phone,
-            notes: contact.notes,
-            lifecycleId: contact.lifecycleId,
-          },
-          rateupContactId: contact.id,
-        });
-      }
+      await emitIntegrationEvent(orgId, { type: "contact.created", contact });
       return { contact, conversation };
     }
   } catch (e) {
@@ -1411,40 +1173,7 @@ export async function getOrCreateContactByPsid(
       });
     }
 
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_CREATE,
-      {
-        [ZapierTriggers.CONTACT_CREATE]: contact,
-      },
-      orgId,
-    );
-
-    await addZohoContactToQueue(contact, orgId);
-    await integrationTriggerQueue.add("zoho-lead-create", {
-      integrationName: "zoho",
-      triggerKey: ZohoTriggers.LEAD_CREATE,
-      orgId: orgId,
-      data: buildZohoLeadPayload({
-        ...contact,
-      }),
-      rateupContactId: contact.id,
-    });
-    if (contact.lifecycleId) {
-      await integrationTriggerQueue.add("bigin-deal-create", {
-        integrationName: "zoho",
-        triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-        orgId,
-        data: {
-          name: contact.name,
-          source: contact.source,
-          email: contact.email,
-          phone: contact.phone,
-          notes: contact.notes,
-          lifecycleId: contact.lifecycleId,
-        },
-        rateupContactId: contact.id,
-      });
-    }
+    await emitIntegrationEvent(orgId, { type: "contact.created", contact });
 
     return { contact, conversation };
   } catch (e) {
@@ -1478,41 +1207,7 @@ export async function deleteManyContacts(contactIds: Array<string>, orgId: strin
     },
   });
   for (const contact of contacts) {
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_DELETED,
-      { [ZapierTriggers.CONTACT_DELETED]: contact },
-      contact.orgId,
-    );
-    const integrationIds = contact.integrationIds as {
-      zoho?: {
-        contact?: {
-          id: string;
-        };
-      };
-      bigin?: {
-        contact?: {
-          id: string;
-        };
-      };
-    };
-
-    await integrationTriggerQueue.add("zoho-contact-delete", {
-      integrationName: "zoho",
-      triggerKey: ZohoTriggers.CONTACT_DELETE,
-      orgId: contact.orgId,
-      data: {
-        zohoContactId: integrationIds?.zoho?.contact?.id,
-      },
-    });
-    // Also enqueue Bigin contact delete
-    await integrationTriggerQueue.add("zoho-bigin-contact-delete", {
-      integrationName: "zoho",
-      triggerKey: ZohoTriggers.BIGIN_CONTACT_DELETE,
-      orgId: contact.orgId,
-      data: {
-        biginContactId: integrationIds?.bigin?.contact?.id,
-      },
-    });
+    await emitIntegrationEvent(contact.orgId, { type: "contact.deleted", contact });
   }
   return res;
 }
@@ -1740,85 +1435,14 @@ export async function updateMulitplceContacts(contacts: createMultipleContactInp
           skipDuplicates: true,
         });
       }
-      await addZapierTriggerToQueue(
-        ZapierTriggers.CONTACT_UPDATED,
-        { [ZapierTriggers.CONTACT_UPDATED]: contact },
-        orgId,
-      );
-      const integrationIds = updatedContact.integrationIds as {
-        zoho?: {
-          contact?: {
-            id: string;
-          };
-          lead?: {
-            id: string;
-          };
-        };
-        bigin?: {
-          contact?: {
-            id: string;
-          };
-        };
-      };
-
-      await integrationTriggerQueue.add("zoho-contact-update", {
-        integrationName: "zoho",
-        triggerKey: ZohoTriggers.CONTACT_UPDATE,
-        orgId: updatedContact.orgId,
-        data: {
-          zohoContactId: integrationIds?.zoho?.contact?.id,
-          ...buildZohoContactPayload(updatedContact),
-        },
+      // The saved row, not the input: Zapier used to receive the input here,
+      // the only update path that did. Every other one sends the stored contact.
+      await emitIntegrationEvent(updatedContact.orgId, {
+        type: "contact.updated",
+        contact: updatedContact,
+        changed: updatedContact.lifecycleId ? ["details", "lifecycle"] : ["details"],
       });
-      // Also enqueue Bigin contact update for bulk upserts
-      await integrationTriggerQueue.add("zoho-bigin-contact-update", {
-        integrationName: "zoho",
-        triggerKey: ZohoTriggers.BIGIN_CONTACT_UPDATE,
-        orgId: updatedContact.orgId,
-        data: {
-          biginContactId: integrationIds?.bigin?.contact?.id,
-          ...buildZohoContactPayload(updatedContact),
-        },
-      });
-
-      if (updatedContact.lifecycleId && integrationIds?.zoho?.lead?.id) {
-        const lifecycle = await prisma.lifecycle.findUnique({
-          where: {
-            id: updatedContact.lifecycleId,
-          },
-          select: {
-            name: true,
-          },
-        });
-
-        if (lifecycle) {
-          const { Lead_Status: _mapped, ...payload } = buildZohoLeadPayload(updatedContact);
-          await pushCrmLeadStatus(
-            updatedContact.orgId,
-            integrationIds.zoho.lead.id,
-            {
-              lifecycleId: updatedContact.lifecycleId,
-              lifecycleName: lifecycle.name,
-            },
-            payload,
-          );
-        }
-      }
       if (updatedContact.lifecycleId) {
-        await integrationTriggerQueue.add("zoho-bigin-deal-update", {
-          integrationName: "zoho",
-          triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-          orgId: updatedContact.orgId,
-          data: {
-            name: updatedContact.name,
-            source: updatedContact.source,
-            email: updatedContact.email,
-            phone: updatedContact.phone,
-            notes: updatedContact.notes,
-            lifecycleId: updatedContact.lifecycleId,
-          },
-          rateupContactId: updatedContact.id,
-        });
         triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
       }
     }
@@ -1944,40 +1568,12 @@ export async function updateLifecycleStageofContacts(
   });
 
   for (const contact of contacts) {
-    const integrationIds = contact.integrationIds as {
-      zoho?: {
-        contact?: {
-          id: string;
-        };
-        lead?: {
-          id: string;
-        };
-      };
-    };
-
-    if (integrationIds?.zoho?.lead?.id) {
-      await pushCrmLeadStatus(contact.orgId, integrationIds.zoho.lead.id, {
-        lifecycleId,
-        lifecycleName: lifecycle.name,
-      });
-    }
-    if (lifecycleId) {
-      await integrationTriggerQueue.add("zoho-bigin-deal-update", {
-        integrationName: "zoho",
-        triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-        orgId: contact.orgId,
-        data: {
-          name: contact.name,
-          source: contact.source,
-          email: contact.email,
-          phone: contact.phone,
-          notes: contact.notes,
-          lifecycleId,
-        },
-        rateupContactId: contact.id,
-      });
-      triggerConversionsApiForContact(contact, lifecycleId);
-    }
+    await emitIntegrationEvent(contact.orgId, {
+      type: "contact.updated",
+      contact: { ...contact, lifecycleId },
+      changed: ["lifecycle"],
+    });
+    if (lifecycleId) triggerConversionsApiForContact(contact, lifecycleId);
   }
 }
 
@@ -2116,18 +1712,14 @@ export async function bulkUpdateWaMessageAssignStatus(
         });
       }
 
-      await addZapierTriggerToQueue(
-        ZapierTriggers.CONTACT_UPDATED,
-        { [ZapierTriggers.CONTACT_UPDATED]: contact },
-        contact.orgId,
-      );
+      await emitIntegrationEvent(contact.orgId, {
+        type: "contact.updated",
+        contact,
+        changed: ["status"],
+      });
 
       if (closing) {
-        await addZapierTriggerToQueue(
-          ZapierTriggers.CONVERSATION_CLOSED,
-          { [ZapierTriggers.CONVERSATION_CLOSED]: contact },
-          contact.orgId,
-        );
+        await emitIntegrationEvent(contact.orgId, { type: "conversation.closed", contact });
       }
 
       if (!closing) return;

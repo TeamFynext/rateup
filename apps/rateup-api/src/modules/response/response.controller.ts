@@ -1,3 +1,4 @@
+import { emitSurveyResponseSubmitted } from "../integrations/events/emitIntegrationEvent.js";
 import axios from "axios";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
@@ -276,6 +277,7 @@ export async function createResponseHandler(
           { [ZapierTriggers.RESPONSE_SUBMITTED]: response },
           response.surveyTeamMap.team.orgId,
         ),
+        emitSurveyResponseSubmitted(response.surveyTeamMap.team.orgId, response),
       ]);
       for (const [index, result] of sideEffects.entries()) {
         if (result.status === "rejected") {

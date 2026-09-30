@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { HttpResponseError, Session } from "@shopify/shopify-api";
+import { encryptCredentialSecrets } from "../shared/credentialCrypto.js";
 import prisma from "../../../utils/prisma.js";
 import connection from "../../../utils/redisConnection.js";
 import { log } from "../../../utils/logger.js";
@@ -103,7 +104,9 @@ function needsRefresh(stored: StoredShopifySession) {
  */
 export async function saveShopifySession(integrationId: string, session: Session) {
   const stored = toStoredSession(session);
-  await prisma.$executeRaw`UPDATE "Integration" SET credential = jsonb_set(credential, '{session}', ${JSON.stringify(stored)}::jsonb) WHERE id = ${integrationId}::uuid`;
+  // Raw SQL skips the client's credential encryption, so the tokens are
+  // encrypted here; the read side decrypts through the client as usual.
+  await prisma.$executeRaw`UPDATE "Integration" SET credential = jsonb_set(credential, '{session}', ${JSON.stringify(encryptCredentialSecrets(stored))}::jsonb) WHERE id = ${integrationId}::uuid`;
   return stored;
 }
 

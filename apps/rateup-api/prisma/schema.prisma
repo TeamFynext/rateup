@@ -751,7 +751,7 @@ enum ConditionOperator {
   STARTS_WITH
   ENDS_WITH
 }
-
+// abhinav/integrations didnt run migration
 enum TriggerEvent {
   MESSAGE_RECEIVED
   CHAT_CLOSED
@@ -762,6 +762,8 @@ enum TriggerEvent {
   /// exist while rules written against the old one are still running.
   STAGE_UPDATED
   SHOPIFY_EVENT
+  /// A WooCommerce order reached a status (processing, completed, …); see woocommerce.orders.ts.
+  WOOCOMMERCE_EVENT
   INSTAGRAM_COMMENT
   INSTAGRAM_STORY_MENTION
 }
@@ -2180,8 +2182,37 @@ model Integration {
   orgId      String?   @db.Uuid //case of orgId not available when getting credential. can be update later
   createdAt  DateTime? @default(now())
   active     Boolean   @default(true)
+  links      IntegrationEntityLink[]
+  /// Health, kept by the shared refresh cron and job runner: the last failure
+  /// and how many have happened in a row. Reset by the next success. Admins are
+  /// notified when the streak reaches the provider's threshold.
+  lastError           String?
+  lastErrorAt         DateTime?
+  consecutiveFailures Int       @default(0)
 
   @@unique([orgId, name], name: "orgid_integration_name_unique")
+}
+
+/// Which external record a Rateup record is mirrored to, per connected
+/// integration. Gives the sync idempotent upserts (look the pair up before
+/// creating), dedupe, and echo suppression for two-way sync: `lastSyncHash` is
+/// the hash of what Rateup last pushed, so an inbound change carrying the same
+/// content is our own write coming back and is skipped.
+model IntegrationEntityLink {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  integrationId String      @db.Uuid
+  /// "contact", "lead", "deal", "order", … — the Rateup side's kind of record.
+  entityType    String
+  rateupId      String      @db.Uuid
+  externalId    String
+  lastSyncedAt  DateTime?
+  lastSyncHash  String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([integrationId, entityType, rateupId], name: "integration_entity_rateup_unique")
+  @@unique([integrationId, entityType, externalId], name: "integration_entity_external_unique")
 }
 
 model WaMessageSchedule {
@@ -2281,7 +2312,9 @@ model LoyaltyProgram {
   emailNotifications       Boolean          @default(true)
   whatsappNotifications    Boolean          @default(true)
   enableShopifyOrderPoints Boolean          @default(false)
-  enablePointsExpiration   Boolean          @default(false)
+  /// WooCommerce orders earn points when they reach `completed`, not on payment.
+  enableWooOrderPoints     Boolean          @default(false)
+  enablePointsExpiration  Boolean          @default(false)
   pointsExpirationMonths   Int              @default(12)
   // Inside an open 24-hour customer-service window, send a notification's text as a
   // plain message instead of the Meta template (free, and works before approval).
@@ -2715,16 +2748,18 @@ model LoyaltyRedemption {
   rulesValidatedAt      DateTime @default(now())
   rulesValidationPassed Boolean  @default(true)
 
-  /// Mirror of this code as a Shopify discount, when the reward is configured to sync
-  /// (`redemptionRules.shopify.enabled`). `redemptionCode` *is* the discount code, so the
-  /// code the customer gets over WhatsApp is the one that works at the shop's checkout.
-  /// `shopifyDiscountError` holds why a sync did not happen — a missing `write_discounts`
-  /// scope, or a reward value with no discount equivalent — so a cashier-only code can be
-  /// explained rather than just looking broken.
-  shopifyDiscountId    String?
-  shopifyDiscountUrl   String?
-  shopifyDiscountError String?
-  shopifySyncedAt      DateTime?
+  /// Mirror of this code as a discount in the connected store (Shopify or WooCommerce), when
+  /// the reward is configured to sync (`redemptionRules.<store>.enabled`). `redemptionCode`
+  /// *is* the discount code, so the code the customer gets over WhatsApp is the one that
+  /// works at the shop's checkout. `storeDiscountError` holds why a sync did not happen — a
+  /// missing scope, or a reward value with no discount equivalent — so a cashier-only code
+  /// can be explained rather than just looking broken.
+  ///
+  /// The columns keep their Shopify names from when Shopify was the only store.
+  storeDiscountId    String?   @map("shopifyDiscountId")
+  storeDiscountUrl   String?   @map("shopifyDiscountUrl")
+  storeDiscountError String?   @map("shopifyDiscountError")
+  storeSyncedAt      DateTime? @map("shopifySyncedAt")
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -3797,6 +3832,8 @@ model LeadActivity {
   createdAt DateTime @default(now())
 
   @@index([leadId, createdAt])
+  /// The integration page's Sync activity panel: recent entries of the INTEGRATION_* types.
+  @@index([type, createdAt])
 }
 
 /// The lead's scheduled next activity â€” the board card shows the earliest open one.

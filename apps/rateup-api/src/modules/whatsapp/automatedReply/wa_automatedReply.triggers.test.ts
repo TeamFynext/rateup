@@ -428,6 +428,111 @@ describe("checkAndExecuteRuleByTriggerEvent - Shopify events", () => {
   });
 });
 
+describe("checkAndExecuteRuleByTriggerEvent - WooCommerce events", () => {
+  const wooRule = (options: Record<string, unknown>, actions: unknown[] = []) =>
+    rule({ triggerEvent: TriggerEvent.WOOCOMMERCE_EVENT, options, actions });
+
+  const order = {
+    id: 901,
+    number: "901",
+    total: "1250.00",
+    currency: "INR",
+    billing: { first_name: "Asha", last_name: "Nair" },
+    line_items: [
+      { product_id: 77, name: "Tea", quantity: 2, image: { src: "https://shop.example/tea.jpg" } },
+    ],
+  };
+
+  test("only fires a rule watching the status the order reached", async () => {
+    db.rule.findMany.mockResolvedValue([wooRule({ wooEvent: "completed" })]);
+
+    await expect(
+      checkAndExecuteRuleByTriggerEvent(
+        TriggerEvent.WOOCOMMERCE_EVENT,
+        context({ wooEvent: "processing" }),
+      ),
+    ).resolves.toBeUndefined();
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.WOOCOMMERCE_EVENT,
+      context({ wooEvent: "completed" }),
+    );
+    expect(result?.rule.id).toBe("rule-1");
+  });
+
+  test("filters on the rule's products, not Shopify's", async () => {
+    db.rule.findMany.mockResolvedValue([
+      wooRule({ wooEvent: "completed", wooProductIds: ["77"], shopifyProductIds: ["1"] }),
+    ]);
+
+    expect(
+      await checkAndExecuteRuleByTriggerEvent(
+        TriggerEvent.WOOCOMMERCE_EVENT,
+        context({ wooEvent: "completed", wooProductIds: ["77"] }),
+      ),
+    ).toBeDefined();
+    await expect(
+      checkAndExecuteRuleByTriggerEvent(
+        TriggerEvent.WOOCOMMERCE_EVENT,
+        context({ wooEvent: "completed", wooProductIds: ["1"] }),
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  test("fills a template's variables from the Woo order, and its header from the line item", async () => {
+    const { sendTemplateToUserCore } =
+      await import("../messageTemplates/wa_templates.controller.js");
+    db.rule.findMany.mockResolvedValue([
+      wooRule({ wooEvent: "completed" }, [
+        {
+          id: "a-1",
+          type: "SEND_TEMPLATE",
+          value: {
+            templateId: "tpl-1",
+            useProductImageAsHeader: true,
+            variableMapping: [
+              { templateParamIndex: 0, shopifyPath: "customer_name" },
+              { templateParamIndex: 1, shopifyPath: "number" },
+              { templateParamIndex: 2, shopifyPath: "items" },
+            ],
+          },
+        },
+      ]),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.WOOCOMMERCE_EVENT,
+      context({ wooEvent: "completed", wooBody: order, phone: "+919000000001" }),
+    );
+
+    expect(sendTemplateToUserCore).toHaveBeenCalledWith(
+      "org-1",
+      "tpl-1",
+      "+919000000001",
+      [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: "Asha Nair" },
+            { type: "text", text: "901" },
+            { type: "text", text: "Tea (x2)" },
+          ],
+        },
+        {
+          type: "header",
+          parameters: [{ type: "image", image: { link: "https://shop.example/tea.jpg" } }],
+        },
+      ],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+  });
+});
+
 describe("checkAndExecuteRuleByTriggerEvent - Instagram events", () => {
   const commentRule = (options: Record<string, unknown> | null = null) =>
     rule({ triggerEvent: TriggerEvent.INSTAGRAM_COMMENT, platform: "INSTAGRAM", options });

@@ -41,6 +41,7 @@ export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: str
       sendTextInSession: data.sendTextInSession,
       enabledChannels: data.enabledChannels,
       enableShopifyOrderPoints: data.enableShopifyOrderPoints,
+      enableWooOrderPoints: data.enableWooOrderPoints,
       enablePointsExpiration: data.enablePointsExpiration,
       pointsExpirationMonths: data.pointsExpirationMonths,
       whatsappSettingsId: data.whatsappSettingsId,

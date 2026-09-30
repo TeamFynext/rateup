@@ -1,21 +1,22 @@
-import { log } from "../../../utils/logger.js";
 import { ShopifyEvents } from "../../../types/enums.js";
-import { awardPoints } from "../../loyalty/accounts/account.service.js";
-import { resolveProgramMember } from "../../loyalty/accounts/memberLookup.js";
-import { reversePurchasePoints } from "../../loyalty/accounts/pointsReversal.service.js";
-import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
-import { applyRedemption } from "../../loyalty/redemptions/redemption.service.js";
-import { LoyaltyError } from "../../loyalty/loyalty.errors.js";
-import { shopifyLoyaltyQueue } from "../../../workers/bullmq/queues/webhook.queue.js";
+import type { CommerceOrderStatus } from "../commerce/commerce.types.js";
+import {
+  commerceAwardKey,
+  commerceReversalKey,
+  enqueueCommerceOrderLoyalty,
+  processCommerceOrderLoyalty,
+  type CommerceLoyaltyJobData,
+  type CommerceLoyaltyOutcome,
+} from "../commerce/loyalty.js";
 import type { ShopifyBody } from "./shopify.types.js";
+import { shopifyLoyaltyEnabled } from "./shopify.util.js";
 
 /**
- * Loyalty points for Shopify orders.
+ * Loyalty points for Shopify orders: the Shopify half of `commerce/loyalty.ts`.
  *
- * Lifted out of `shopify.service.ts`, where it was ~140 lines of hand-written Prisma
- * writes inside one swallowing try/catch. The decisions now live in the loyalty module
- * (`awardPoints`, `reversePurchasePoints`, `resolveProgramMember`) and this file is only
- * about getting facts out of a Shopify payload and onto a queue.
+ * What is left here is getting facts out of a Shopify payload. The decisions —
+ * award on payment, reverse on cancellation, mark vouchers used — are the
+ * commerce layer's, shared with every store.
  */
 
 export interface ShopifyLoyaltyJobData {
@@ -30,17 +31,25 @@ export interface ShopifyLoyaltyJobData {
   discountCodes?: string[];
 }
 
-export type ShopifyLoyaltyOutcome =
-  | "awarded"
-  | "duplicate"
-  | "reversed"
-  | "already_reversed"
-  | "no_original"
-  | "no_match"
-  | "ambiguous_email"
-  | "program_off"
-  | "no_amount"
-  | "ignored";
+export type ShopifyLoyaltyOutcome = CommerceLoyaltyOutcome;
+
+/** How a Shopify topic reads as an order status. */
+export const SHOPIFY_ORDER_STATUS: Partial<Record<ShopifyEvents, CommerceOrderStatus>> = {
+  [ShopifyEvents.DRAFT_ORDERS_CREATE]: "draft_created",
+  [ShopifyEvents.ORDERS_CREATE]: "created",
+  [ShopifyEvents.ORDERS_PAID]: "paid",
+  [ShopifyEvents.ORDERS_PARTIALLY_FULFILLED]: "partially_fulfilled",
+  [ShopifyEvents.ORDERS_FULFILLED]: "fulfilled",
+  [ShopifyEvents.ORDERS_CANCELLED]: "cancelled",
+  [ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED]: "fulfillment_cancelled",
+};
+
+/** Shopify's loyalty settings, for the commerce layer. */
+export const SHOPIFY_LOYALTY = {
+  name: "shopify",
+  label: "Shopify",
+  loyaltyEnabled: shopifyLoyaltyEnabled,
+};
 
 export interface ShopifyOrderIdentity {
   orderId: string | null;
@@ -78,38 +87,6 @@ export function extractDiscountCodes(body: ShopifyBody): string[] {
 }
 
 /**
- * Topics on which an order has actually consumed its discount codes. A code is
- * spent when the order is placed, so paid or not; ORDERS_PAID repeats it for a
- * shop that only subscribes to that topic.
- */
-const REDEEMING_TOPICS = new Set<string>([ShopifyEvents.ORDERS_CREATE, ShopifyEvents.ORDERS_PAID]);
-
-/**
- * Marks the RateUp vouchers used on this order as used, the same way a cashier's
- * "Mark as used" does. Codes that aren't RateUp vouchers, or were already marked
- * (the other topic got there first), are skipped. Never throws: a voucher problem
- * must not cost the customer their points or retry the whole job.
- */
-async function useOrderVouchers(job: ShopifyLoyaltyJobData) {
-  if (!REDEEMING_TOPICS.has(job.topic)) return;
-  for (const code of job.discountCodes ?? []) {
-    try {
-      await applyRedemption(
-        { redemptionCode: code, appliedBy: "shopify", notes: `Shopify order ${job.orderId}` },
-        job.orgId,
-      );
-      log.info({ shop: job.shop, orderId: job.orderId, code }, "Voucher used at Shopify checkout");
-    } catch (e) {
-      if (e instanceof LoyaltyError) continue; // not ours, not approved, or already used
-      log.error(
-        { err: e, shop: job.shop, orderId: job.orderId, code },
-        "Could not mark a Shopify-applied voucher as used",
-      );
-    }
-  }
-}
-
-/**
  * What the customer actually paid, in the shop's own currency.
  *
  * The previous version read `total_line_items_price_set.presentment_money`, which is wrong
@@ -138,122 +115,40 @@ export function extractPurchaseAmount(body: ShopifyBody): number | null {
   return null;
 }
 
-/** One key per order, so a redelivery collapses onto the award it already made. */
-export const awardKey = (shop: string, orderId: string) => `shopify:${shop}:${orderId}`;
-export const reversalKey = (shop: string, orderId: string) => `${awardKey(shop, orderId)}:reversal`;
+/** One key per order — the keys already on the ledger, so they must not change. */
+export const awardKey = (shop: string, orderId: string) =>
+  commerceAwardKey("shopify", shop, orderId);
+export const reversalKey = (shop: string, orderId: string) =>
+  commerceReversalKey("shopify", shop, orderId);
+
+/** A Shopify loyalty job in the commerce layer's terms. */
+export function toCommerceLoyaltyJob(data: ShopifyLoyaltyJobData): CommerceLoyaltyJobData {
+  return {
+    provider: "shopify",
+    storeId: data.shop,
+    // A topic this bridge does not map (none are queued today) reads as a
+    // fulfilment cancel: the one status that changes nothing.
+    status: SHOPIFY_ORDER_STATUS[data.topic] ?? "fulfillment_cancelled",
+    eventKey: data.topic,
+    orgId: data.orgId,
+    orderId: data.orderId,
+    phone: data.phone,
+    email: data.email,
+    amount: data.amount,
+    discountCodes: data.discountCodes,
+  };
+}
 
 export async function enqueueShopifyOrderLoyalty(data: ShopifyLoyaltyJobData) {
-  await shopifyLoyaltyQueue.add("order-loyalty", data, {
-    // BullMQ 6 rejects a custom id containing ":" (unless it splits into exactly
-    // three parts), so the separator is "-".
-    jobId: `loyalty-${data.shop}-${data.topic}-${data.orderId}`,
-    attempts: 5,
-    backoff: { type: "exponential", delay: 10_000 },
-    removeOnComplete: { count: 5000 },
-    removeOnFail: false,
-  });
+  await enqueueCommerceOrderLoyalty(toCommerceLoyaltyJob(data));
 }
 
 /**
- * Award or reverse, for one order event.
- *
- * No try/catch: the worker classifies what comes out of here and decides whether a retry
- * could help. The old version swallowed everything into a log line, so a shop whose points
- * stopped working had nothing to look at.
+ * Award or reverse, for one Shopify order event. Also what the worker runs for
+ * a job queued in the old `{ shop, topic }` shape before the commerce layer.
  */
 export async function processShopifyOrderLoyalty(
   job: ShopifyLoyaltyJobData,
 ): Promise<ShopifyLoyaltyOutcome> {
-  const { shop, topic, orgId, orderId } = job;
-
-  // Independent of the points switch below: a voucher is spent whether or not
-  // orders earn points.
-  await useOrderVouchers(job);
-
-  const program = await getLoyaltyProgramByOrg(orgId);
-  if (!program || program.status !== "active" || !program.enableShopifyOrderPoints) {
-    return finish(job, "program_off", {});
-  }
-
-  const match = await resolveProgramMember({
-    programId: program.id,
-    orgId,
-    defaultCountryCode: program.defaultCountryCode,
-    phone: job.phone,
-    email: job.email,
-  });
-
-  if (match.status === "ambiguous") {
-    // Several active members share this address and nothing singles one out. Points are
-    // money-equivalent; crediting the wrong person is worse than crediting nobody, and
-    // unlike a miss it cannot be spotted later. The shop resolves it by merging contacts.
-    return finish(job, "ambiguous_email", { candidates: match.candidateAccountIds.length });
-  }
-  if (match.status !== "matched") {
-    return finish(job, "no_match", { reason: match.reason });
-  }
-
-  const account = match.account;
-
-  if (topic === ShopifyEvents.ORDERS_PAID) {
-    if (job.amount === null) {
-      return finish(job, "no_amount", { accountId: account.id });
-    }
-
-    const result = await awardPoints(program.id, account.contactId, job.amount, {
-      channel: "shopify",
-      orderId,
-      notes: "Shopify order auto-points (paid)",
-      idempotencyKey: awardKey(shop, orderId),
-    });
-
-    return finish(job, result.replayed ? "duplicate" : "awarded", {
-      accountId: account.id,
-      matchedBy: match.matchedBy,
-      points: result.pointsAwarded,
-      amount: job.amount,
-    });
-  }
-
-  if (topic === ShopifyEvents.ORDERS_CANCELLED) {
-    const result = await reversePurchasePoints({
-      programId: program.id,
-      accountId: account.id,
-      originalIdempotencyKey: awardKey(shop, orderId),
-      orderId,
-      idempotencyKey: reversalKey(shop, orderId),
-      source: "order_cancelled",
-      reason: "Shopify order cancelled",
-      orgId,
-    });
-
-    return finish(
-      job,
-      result.status === "reversed"
-        ? "reversed"
-        : result.status === "already_reversed"
-          ? "already_reversed"
-          : "no_original",
-      { accountId: account.id, matchedBy: match.matchedBy },
-    );
-  }
-
-  // FULFILLMENT_ORDERS_CANCELLED deliberately does not reverse. It means a *fulfillment
-  // request* was cancelled — the warehouse job — not the order, and it is routinely
-  // re-fulfilled moments later. Taking points off a customer who paid and kept their goods
-  // would be wrong, and nothing here would ever give them back.
-  return finish(job, "ignored", {});
-}
-
-/** One log line per terminal path, one shape, so "how many paid orders award points?" is answerable. */
-function finish(
-  job: ShopifyLoyaltyJobData,
-  outcome: ShopifyLoyaltyOutcome,
-  extra: Record<string, unknown>,
-): ShopifyLoyaltyOutcome {
-  log.info(
-    { shop: job.shop, topic: job.topic, orderId: job.orderId, orgId: job.orgId, outcome, ...extra },
-    "Shopify loyalty bridge",
-  );
-  return outcome;
+  return processCommerceOrderLoyalty(toCommerceLoyaltyJob(job), SHOPIFY_LOYALTY);
 }

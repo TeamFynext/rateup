@@ -28,10 +28,28 @@ vi.mock("../../utils/prisma.js", () => ({
     waInboxAssign: { createMany: vi.fn(), deleteMany: vi.fn() },
     lifecycle: { findFirst: vi.fn(), findUnique: vi.fn() },
     conversation: { findMany: vi.fn(), updateMany: vi.fn() },
+    integration: { findMany: vi.fn() },
+    webhook: { findUnique: vi.fn() },
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
   },
 }));
+
+// The contact service only emits integration events now. Rather than asserting
+// on the events alone, each one is run through the real fan-out and adapters
+// inline, so the assertions below still check the Zoho jobs and Zapier triggers
+// that come out the other end — the same ones the service used to enqueue
+// itself. The org is treated as having Zoho and GetLead connected.
+vi.mock("../integrations/events/emitIntegrationEvent.js", async () => {
+  const { processIntegrationEvent } =
+    await import("../integrations/events/integrationEvent.fanout.js");
+  return {
+    INTEGRATION_EVENT_JOB: "integration-event",
+    emitIntegrationEvent: vi.fn((orgId: string, event: any) =>
+      processIntegrationEvent({ orgId, event }),
+    ),
+  };
+});
 
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
@@ -108,7 +126,10 @@ vi.mock("../whatsapp/inbox/inboxStats/inboxStats.service.js", () => ({
 vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
   pushCrmLeadStatus: vi.fn(),
   ZohoTriggers: {
+    CONTACT_CREATE: "contact_created",
     LEAD_CREATE: "lead_created",
+    LEAD_UPDATE: "lead_updated",
+    BIGIN_CONTACT_CREATE: "bigin_contact_created",
     CONTACT_UPDATE: "contact_updated",
     CONTACT_DELETE: "contact_deleted",
     BIGIN_DEAL_CREATE: "bigin_deal_created",
@@ -117,7 +138,13 @@ vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
   },
 }));
 
-vi.mock("../integrations/external/zoho/zoho.utils.js", () => ({
+vi.mock("../integrations/external/zoho/zoho.utils.js", async () => ({
+  // The real subscription check, which the Zoho provider reads.
+  isZohoTriggerEnabled: (
+    await vi.importActual<typeof import("../integrations/external/zoho/zoho.utils.js")>(
+      "../integrations/external/zoho/zoho.utils.js",
+    )
+  ).isZohoTriggerEnabled,
   addZohoContactToQueue: vi.fn(),
   buildZohoContactPayload: vi.fn((c: any) => ({ Last_Name: c?.name })),
   buildZohoLeadPayload: vi.fn((c: any) => ({ Last_Name: c?.name, Lead_Status: c?.leadStatus })),
@@ -186,12 +213,44 @@ const db = prisma as unknown as {
   waInboxAssign: Record<string, Mock>;
   lifecycle: Record<string, Mock>;
   conversation: Record<string, Mock>;
+  integration: Record<string, Mock>;
+  webhook: Record<string, Mock>;
   $queryRaw: Mock;
   $transaction: Mock;
 };
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 const USER = "22222222-2222-4222-8222-222222222222";
+
+/**
+ * The org's connected integrations: Zoho and GetLead, every trigger switched on,
+ * so the providers' subscription filter lets every event through.
+ */
+const subscribed = (...fields: string[]) => ({
+  triggerSubscriptions: fields.map((subscribed_field) => ({ subscribed_field, active: true })),
+});
+const CONNECTED_INTEGRATIONS = [
+  {
+    name: "zoho",
+    active: true,
+    credential: subscribed(
+      "contact_created",
+      "contact_updated",
+      "contact_deleted",
+      "lead_created",
+      "lead_updated",
+      "bigin_contact_created",
+      "bigin_contact_updated",
+      "bigin_contact_deleted",
+      "bigin_deal_created",
+    ),
+  },
+  {
+    name: "getlead",
+    active: true,
+    credential: subscribed("getlead_lead_create", "getlead_lead_update"),
+  },
+];
 
 /// The interactive-transaction stub: hands the callback a tx client backed by
 /// the same mocks, so a test can assert on either `prisma.x` or the tx copy.
@@ -226,6 +285,8 @@ beforeEach(() => {
   db.conversation.findMany.mockResolvedValue([]);
   db.lifecycle.findUnique.mockResolvedValue(null);
   db.contactCustomField.findMany.mockResolvedValue([]);
+  db.integration.findMany.mockResolvedValue(CONNECTED_INTEGRATIONS);
+  db.webhook.findUnique.mockResolvedValue(null);
   (getAssignedUserForContact as Mock).mockResolvedValue([]);
   (mirrorConversationStatusTx as Mock).mockResolvedValue(null);
 });
@@ -1398,6 +1459,8 @@ describe("updateContactLabelsById", () => {
 describe("updateLifecycleStageofContacts", () => {
   beforeEach(() => {
     db.lifecycle.findFirst.mockResolvedValue({ name: "Customer" });
+    // The Zoho adapter resolves the name again on the worker side.
+    db.lifecycle.findUnique.mockResolvedValue({ name: "Customer" });
   });
 
   test("moves every requested contact in the caller's org to the new stage", async () => {
@@ -1433,10 +1496,13 @@ describe("updateLifecycleStageofContacts", () => {
 
     await updateLifecycleStageofContacts("lc-1", ORG, ["c1"]);
 
-    expect(pushCrmLeadStatus).toHaveBeenCalledWith(ORG, "lead-1", {
-      lifecycleId: "lc-1",
-      lifecycleName: "Customer",
-    });
+    expect(pushCrmLeadStatus).toHaveBeenCalledWith(
+      ORG,
+      "lead-1",
+      { lifecycleId: "lc-1", lifecycleName: "Customer" },
+      // A lifecycle-only write carries no details change along with it.
+      {},
+    );
   });
 });
 

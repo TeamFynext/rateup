@@ -49,6 +49,12 @@ const deleteZapierHookSchema = z.object({
   hookUrl: z.string().min(1),
 });
 
+/** What the frontend's generic OAuth callback page posts back. */
+const oauthCallbackSchema = z.object({
+  code: z.string().min(1),
+  state: z.string().min(1),
+});
+
 export type ByNameParams = z.infer<typeof byNameSchema>;
 
 export type ByIdParams = z.infer<typeof byIdSchema>;
@@ -61,6 +67,8 @@ export type WaPaymentCreateSchema = z.infer<typeof waPaymentCreateSchema>;
 
 export type DeleteZapierHookInput = z.infer<typeof deleteZapierHookSchema>;
 
+export type OAuthCallbackInput = z.infer<typeof oauthCallbackSchema>;
+
 // Auto-exported after fastify-zod migration
 export {
   byNameSchema,
@@ -69,4 +77,5 @@ export {
   updateIntgrationSchema,
   waPaymentCreateSchema,
   deleteZapierHookSchema,
+  oauthCallbackSchema,
 };

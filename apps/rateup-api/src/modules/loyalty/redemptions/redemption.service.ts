@@ -7,7 +7,7 @@ import { ApplyRedemptionInput, RedeemRewardInput } from "../accounts/account.sch
 import { sendLoyaltyEvent } from "../messaging/send.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 import { ASSIGNMENT_ONLY_REWARD_TYPES } from "../../../types/loyalty.js";
-import { syncRedemptionToShopify } from "../../integrations/shopify/shopifyDiscount.service.js";
+import { syncRedemptionDiscount } from "../../integrations/commerce/discounts.js";
 
 /**
  * A transaction client — what `prisma.$transaction(async (tx) => …)` hands the
@@ -142,11 +142,11 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       return { redemption: created, balanceAfter: account.currentPoints };
     });
 
-    // Mirror the code into Shopify before the customer is told about it, so a message that
+    // Mirror the code into the store before the customer is told about it, so a message that
     // quotes the code is only sent once the code actually works at checkout. A no-op unless
     // the reward opts in and its value is a discount — a genuine points payout has nothing
     // to express as a discount and is skipped.
-    const shopifyDiscount = await syncRedemptionToShopify(redemption.id);
+    const storeDiscount = await syncRedemptionDiscount(redemption.id);
 
     if (customer.contact?.phone && customer.contact?.orgId) {
       // Only a reward that actually pays points out is news about points. Everything the
@@ -179,7 +179,8 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       redemption,
       message: "Points added successfully",
       redemptionCode: instantRedemptionCode,
-      shopifyDiscountUrl: shopifyDiscount.discountUrl ?? null,
+      // Named for Shopify in the response the dashboard reads; set for any store with a link.
+      shopifyDiscountUrl: storeDiscount.discountUrl ?? null,
     };
   }
 
@@ -247,9 +248,9 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     // Only an approved redemption has actually cost the customer anything; creating the
     // discount for one still awaiting approval would put a live code in the shop that the
     // approver could still refuse. The approval path syncs it instead.
-    const shopifyDiscount = requiresApproval
+    const storeDiscount = requiresApproval
       ? { discountUrl: undefined }
-      : await syncRedemptionToShopify(redemption.id);
+      : await syncRedemptionDiscount(redemption.id);
 
     if (!requiresApproval && customer.contact?.phone && customer.contact?.orgId) {
       await sendLoyaltyEvent(
@@ -272,7 +273,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
         ? "Redemption pending approval"
         : "Coupon redeemed successfully. Use redemption code at cashier.",
       redemptionCode,
-      shopifyDiscountUrl: shopifyDiscount.discountUrl ?? null,
+      shopifyDiscountUrl: storeDiscount.discountUrl ?? null,
     };
   }
 
@@ -391,9 +392,9 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     return { redemption: created, balanceAfter: balance };
   });
 
-  const shopifyDiscount = requiresApproval
+  const storeDiscount = requiresApproval
     ? { discountUrl: undefined }
-    : await syncRedemptionToShopify(redemption.id);
+    : await syncRedemptionDiscount(redemption.id);
 
   if (!requiresApproval && customer.contact?.phone && customer.contact?.orgId) {
     await sendLoyaltyEvent(
@@ -417,7 +418,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       : `Reward assigned successfully. Short code: ${shortCode}`,
     redemptionCode,
     shortCode,
-    shopifyDiscountUrl: shopifyDiscount.discountUrl ?? null,
+    shopifyDiscountUrl: storeDiscount.discountUrl ?? null,
   };
 }
 

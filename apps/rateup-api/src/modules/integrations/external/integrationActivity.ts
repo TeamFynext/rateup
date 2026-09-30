@@ -56,3 +56,56 @@ export async function recordIntegrationSyncActivity(
     );
   }
 }
+
+const ACTIVITY_TYPES: IntegrationActivityType[] = [
+  "INTEGRATION_SYNCED",
+  "INTEGRATION_SKIPPED",
+  "INTEGRATION_RECEIVED",
+];
+
+/**
+ * The `integrationName`s each provider writes, keyed by provider, so an
+ * integration's page can find its own entries. Entries name the product the
+ * person recognises ("Zoho Bigin"), not the provider key — the timeline shows
+ * that name as-is — so one provider can own several.
+ */
+export const ACTIVITY_NAMES: Readonly<Partial<Record<string, readonly string[]>>> = {
+  zoho: ["Zoho CRM", "Zoho Bigin"],
+  getlead: ["GetLead"],
+};
+
+/** How far back the Sync activity panel looks. It is a recent-health view, not an archive. */
+const ACTIVITY_WINDOW_DAYS = 30;
+
+/**
+ * The most recent sync entries one provider left on this org's leads, newest
+ * first, for the integration page's Sync activity panel.
+ *
+ * Bounded by type and by the last 30 days so the `(type, createdAt)` index
+ * does the work; the org is reached through the lead's pipeline, since a lead
+ * carries no org of its own.
+ */
+export async function listIntegrationActivity(orgId: string, provider: string, limit = 25) {
+  const names = ACTIVITY_NAMES[provider];
+  if (!names?.length) return [];
+
+  const since = new Date(Date.now() - ACTIVITY_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const rows = await prisma.leadActivity.findMany({
+    where: {
+      type: { in: ACTIVITY_TYPES },
+      createdAt: { gte: since },
+      lead: { pipeline: { orgId } },
+      OR: names.map((name) => ({ details: { path: ["integrationName"], equals: name } })),
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      type: true,
+      details: true,
+      createdAt: true,
+      lead: { select: { id: true, name: true, pipelineId: true } },
+    },
+  });
+  return rows;
+}

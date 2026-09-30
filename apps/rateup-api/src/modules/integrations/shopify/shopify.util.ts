@@ -221,3 +221,7 @@ export function toShopifyProvinceCode(
   if (INDIA_CODES.has(trimmed.toUpperCase())) return trimmed.toUpperCase();
   return INDIA_PROVINCE_CODES[trimmed.toLowerCase().replace(/[^a-z]/g, "")];
 }
+
+/** Whether an org's loyalty programme awards points on Shopify orders. */
+export const shopifyLoyaltyEnabled = (program: Record<string, unknown>) =>
+  Boolean(program.enableShopifyOrderPoints);

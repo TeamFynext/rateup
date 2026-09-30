@@ -21,11 +21,14 @@ import {
   ByNameParams,
   DeleteZapierHookInput,
   IntegrationSchema,
+  OAuthCallbackInput,
   UpdateIntgrationInput,
   WaPaymentCreateSchema,
 } from "./integrations.schema.js";
 import { IntegratedApps } from "../../types/enums.js";
 import { parsePhoneNumber } from "libphonenumber-js";
+import { listIntegrationActivity } from "./external/integrationActivity.js";
+import { finishOAuthConnect, OAuthConnectError, startOAuthConnect } from "./shared/oauthConnect.js";
 
 /**
  * Strips the Shopify token pair before an integration leaves the API. The UI
@@ -63,10 +66,17 @@ export const getIntegrationStatusesHandler = async (
   try {
     const { orgId } = request.user;
     const integrations = await getAllIntegrationsByOrgId(orgId);
-    const statuses = Object.values(IntegratedApps).map((app) => ({
-      name: app,
-      isConnected: integrations.some((int) => int.name === app),
-    }));
+    const statuses = Object.values(IntegratedApps).map((app) => {
+      const row = integrations.find((int) => int.name === app);
+      return {
+        name: app,
+        isConnected: Boolean(row),
+        // Counted only when a job's last retry fails, so one is already a lost
+        // sync — enough for the list to flag the card.
+        consecutiveFailures: row?.consecutiveFailures ?? 0,
+        lastErrorAt: row?.lastErrorAt ?? null,
+      };
+    });
     reply.code(200).send(statuses);
   } catch {
     log.error("Error fetching integration statuses");
@@ -317,3 +327,76 @@ export async function deleteZapierTriggerHookHandler(
     reply.code(500).send(e);
   }
 }
+
+/**
+ * The registry, loaded on first use: providers import services that import
+ * this module's service, and a static import here would close that loop.
+ */
+async function providerByName(name: string) {
+  const { getIntegrationProvider } = await import("./providers/registry.js");
+  return getIntegrationProvider(name);
+}
+
+/** The Sync activity panel: the integration's health, and its recent entries on leads. */
+export const getIntegrationActivityHandler = async (
+  request: FastifyRequest<{ Params: ByNameParams }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.user;
+    const { name } = request.params;
+    const [integration, entries] = await Promise.all([
+      getIntegrationByName(orgId, name),
+      listIntegrationActivity(orgId, name),
+    ]);
+    return reply.send({
+      health: {
+        consecutiveFailures: integration?.consecutiveFailures ?? 0,
+        lastError: integration?.lastError ?? null,
+        lastErrorAt: integration?.lastErrorAt ?? null,
+      },
+      entries,
+    });
+  } catch (error) {
+    log.error({ err: error }, "Error fetching integration activity");
+    return reply.code(500).send({ error: "Something went wrong" });
+  }
+};
+
+export const getOAuthAuthorizeUrlHandler = async (
+  request: FastifyRequest<{ Params: ByNameParams }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId, userId } = request.user;
+    const { name } = request.params;
+    const url = startOAuthConnect(await providerByName(name), name, orgId, userId);
+    return reply.send({ url });
+  } catch (error) {
+    if (error instanceof OAuthConnectError) {
+      return reply.code(error.statusCode).send({ error: error.message });
+    }
+    log.error({ err: error }, "Error building OAuth authorize URL");
+    return reply.code(500).send({ error: "Something went wrong" });
+  }
+};
+
+export const finishOAuthConnectHandler = async (
+  request: FastifyRequest<{ Params: ByNameParams; Body: OAuthCallbackInput }>,
+  reply: FastifyReply,
+) => {
+  const { name } = request.params;
+  try {
+    const { orgId } = request.user;
+    await finishOAuthConnect(await providerByName(name), name, orgId, request.body);
+    return reply.send({ success: true });
+  } catch (error) {
+    if (error instanceof OAuthConnectError) {
+      return reply.code(error.statusCode).send({ error: error.message });
+    }
+    // Most often the provider refusing the code: expired, already used, or the
+    // redirect URI not matching its console.
+    log.error({ err: error, provider: name }, "OAuth connect failed");
+    return reply.code(502).send({ error: `Could not connect ${name}` });
+  }
+};
