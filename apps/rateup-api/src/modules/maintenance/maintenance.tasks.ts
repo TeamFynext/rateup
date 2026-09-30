@@ -1,4 +1,5 @@
 import type { TaskRunner } from "./task.js";
+import { migrateShopifyAbandonedCheckouts } from "./tasks/migrateShopifyAbandonedCheckouts.js";
 import { purgeOrphanedCampaignJobs } from "./tasks/purgeOrphanedCampaignJobs.js";
 import { restoreSentCampaignsFromDraft } from "./tasks/restoreSentCampaignsFromDraft.js";
 import { seedConversationAddon } from "./tasks/seedConversationAddon.js";
@@ -85,6 +86,20 @@ export const MAINTENANCE_TASKS: TaskDefinition[] = [
       "delivery record and is left alone. Preview first.",
     destructive: true,
     run: restoreSentCampaignsFromDraft,
+  },
+  {
+    id: "migrate-shopify-abandoned-checkouts",
+    title: "Move Shopify stores to webhook cart reminders",
+    description:
+      "Subscribes every connected Shopify store to the checkout webhooks that abandoned-cart " +
+      "reminders now run on, and turns each store's old abandoned-cart template setting into " +
+      'an "On abandoned checkouts" automation rule (plus a follow-up rule if it repeated), ' +
+      "then switches the old setting off. Run it once, right after the API that handles " +
+      "checkout webhooks is live; until then a store with the old setting sends no cart " +
+      "reminders. Safe to re-run. Preview lists each store's missing topics and the rules " +
+      "it would create.",
+    destructive: false,
+    run: migrateShopifyAbandonedCheckouts,
   },
 ];
 

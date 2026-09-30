@@ -214,6 +214,7 @@ model Org {
   ContactLabel            ContactLabel[]
   businessHours           BusinessHour[]
   rules                   Rule[]
+  shopifyCheckouts        ShopifyCheckout[]
   ruleMessageBodyLocks    RuleMessageBodyLock[]
   waMessageOrgTeamMaps    WaMessageOrgTeamMap[]
   Webhook                 Webhook?
@@ -611,10 +612,94 @@ model Rule {
   groups  RuleConditionGroup[]
   actions RuleAction[]
 
+  shopifyCheckoutReminders ShopifyCheckoutReminder[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([name, orgId], name: "rule_name_org_id_unique")
+}
+
+/// A Shopify checkout, kept from its checkouts/create and checkouts/update webhooks so an
+/// abandoned one can be reminded about. Carries customer data: expired rows are deleted by
+/// the daily cleanup, and customers/redact and shop/redact delete them on request.
+model ShopifyCheckout {
+  id               String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId            String                    @db.Uuid
+  org              Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  /// The myshopify domain; shop/redact arrives after uninstall, when only this names the rows.
+  shop             String
+  /// The REST checkout id from the webhook.
+  shopifyId        String
+  /// Matches `checkout_token` on the order the checkout turns into.
+  token            String
+  /// E.164, parsed once on arrival; null when the buyer gave no usable number.
+  phone            String?
+  email            String?
+  acceptsMarketing Boolean                   @default(false)
+  /// The webhook payload, which is the snake_case shape rule variables are mapped against.
+  body             Json
+  /// `gid://shopify/Product/…`, the form rule product filters store.
+  productIds       String[]                  @default([])
+  shopifyUpdatedAt DateTime
+  status           ShopifyCheckoutStatus     @default(OPEN)
+  recoveredOrderId String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  reminders        ShopifyCheckoutReminder[]
+
+  @@unique([orgId, shopifyId])
+  @@index([orgId, token])
+  @@index([shop])
+  @@index([status, shopifyUpdatedAt])
+}
+
+enum ShopifyCheckoutStatus {
+  OPEN
+  RECOVERED
+  EXPIRED
+}
+
+/// One abandoned-checkout rule's reminder for one checkout. The row is the send's claim:
+/// the delayed job only decides when it is looked at.
+model ShopifyCheckoutReminder {
+  id         String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  checkoutId String                        @db.Uuid
+  checkout   ShopifyCheckout               @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  ruleId     String                        @db.Uuid
+  rule       Rule                          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  dueAt      DateTime
+  status     ShopifyCheckoutReminderStatus @default(SCHEDULED)
+  /// Why a reminder was skipped or failed.
+  reason     String?
+  sentAt     DateTime?
+  /// The code in the reminder's tracked recovery link, /api/public/r/<linkCode>.
+  linkCode          String                        @unique
+  /// The WhatsApp message id (wamid) the send returned; WaMessage.messageId holds the same.
+  waMessageId       String?
+  clickedAt         DateTime?
+  clickCount        Int                           @default(0)
+  /// The order this reminder recovered: the last one sent before that order was placed.
+  attributedOrderId String?
+  attributedAt      DateTime?
+  /// The order total in the shop's own currency.
+  revenue           Decimal?                      @db.Decimal(12, 2)
+  currency          String?
+  createdAt  DateTime                      @default(now())
+  updatedAt  DateTime                      @updatedAt
+
+  @@unique([checkoutId, ruleId])
+  @@index([status, dueAt])
+  @@index([ruleId, sentAt])
+}
+
+enum ShopifyCheckoutReminderStatus {
+  SCHEDULED
+  SENDING
+  SENT
+  SKIPPED
+  FAILED
+  CANCELLED
 }
 
 enum RulePlatform {

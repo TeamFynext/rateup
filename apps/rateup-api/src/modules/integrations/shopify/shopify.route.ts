@@ -10,8 +10,13 @@ import {
   updateShopifyIntegrationByShopHandler,
   getFulfillmentOrdersHandler,
   createFulfillmentHandler,
+  getAttributionHandler,
 } from "./shopify.controller.js";
-import { byShopParamsSchema, registerWebhookbyTopicSchema } from "./shopify.schema.js";
+import {
+  attributionQuerySchema,
+  byShopParamsSchema,
+  registerWebhookbyTopicSchema,
+} from "./shopify.schema.js";
 
 export async function shopifyRoutes(server: FastifyInstance) {
   server.put(
@@ -32,6 +37,12 @@ export async function shopifyRoutes(server: FastifyInstance) {
   );
 
   server.get("/products", getProductsHandler);
+
+  server.get(
+    "/attribution",
+    { schema: { querystring: attributionQuerySchema } },
+    getAttributionHandler,
+  );
 
   server.get("/registered-webhooks", getRegisteredWebhooksHandler);
 
