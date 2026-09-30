@@ -69,10 +69,11 @@ const ORG = "org-1";
 const SHOP = "rateup.myshopify.com";
 const UPDATED = "2026-09-30T10:00:00.000Z";
 
+// The API 2026-07 checkouts/create|update shape: a token and cart_token, no `id`.
 function webhook(overrides: Record<string, unknown> = {}) {
   return {
-    id: 42,
     token: "tok-42",
+    cart_token: "cart-42",
     phone: "+919400651372",
     email: "ravi@example.com",
     updated_at: UPDATED,
@@ -90,7 +91,7 @@ function storedCheckout(overrides: Record<string, unknown> = {}) {
     id: "chk-1",
     orgId: ORG,
     shop: SHOP,
-    shopifyId: "42",
+    shopifyId: "tok-42",
     token: "tok-42",
     phone: "919400651372",
     acceptsMarketing: true,
@@ -157,7 +158,7 @@ describe("handleCheckoutWebhook", () => {
     expect(created).toMatchObject({
       orgId: ORG,
       shop: SHOP,
-      shopifyId: "42",
+      shopifyId: "tok-42",
       token: "tok-42",
       phone: "919400651372",
       acceptsMarketing: true,
@@ -319,11 +320,16 @@ describe("recovery and expiry", () => {
     expect(db.shopifyCheckoutReminder.update).not.toHaveBeenCalled();
   });
 
-  test("checkouts/delete expires the checkout", async () => {
-    db.shopifyCheckout.findUnique.mockResolvedValue(storedCheckout());
+  test("checkouts/delete expires the checkout its cart_token names", async () => {
+    db.shopifyCheckout.findMany.mockResolvedValue([{ id: "chk-1" }]);
 
-    await handleCheckoutDeleted(SHOP, { id: 42 });
+    await handleCheckoutDeleted(SHOP, { id: 9818200792, cart_token: "cart-42" });
 
+    expect(db.shopifyCheckout.findMany.mock.calls[0][0].where).toEqual({
+      orgId: ORG,
+      status: "OPEN",
+      OR: [{ shopifyId: "9818200792" }, { body: { path: ["cart_token"], equals: "cart-42" } }],
+    });
     expect(db.shopifyCheckout.update).toHaveBeenCalledWith({
       where: { id: "chk-1" },
       data: { status: "EXPIRED" },

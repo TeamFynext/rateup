@@ -57,8 +57,10 @@ const STUCK_SENDING_MINUTES = 30;
 
 /** The checkouts/create and checkouts/update fields read here. */
 export interface CheckoutWebhookBody {
+  /** Absent from checkouts/create and checkouts/update since API 2026-07; delete still sends it. */
   id?: number | string;
   token?: string;
+  cart_token?: string | null;
   email?: string | null;
   phone?: string | null;
   updated_at?: string;
@@ -201,11 +203,19 @@ async function scheduleReminders(checkout: ShopifyCheckout) {
 
 /** checkouts/create and checkouts/update. */
 export async function handleCheckoutWebhook(shop: string, body: CheckoutWebhookBody) {
-  if (body.id == null || !body.token) return;
+  // Keyed by the token, not `id`: API 2026-07 dropped `id` from checkouts/create and
+  // checkouts/update, and requiring it silently discarded every checkout.
+  if (!body.token) {
+    log.info({ shop }, "Shopify checkout webhook has no token; skipped");
+    return;
+  }
   const orgId = await orgIdForShop(shop);
-  if (!orgId) return;
+  if (!orgId) {
+    log.info({ shop }, "Shopify shop is not linked to an active org; checkout skipped");
+    return;
+  }
 
-  const shopifyId = String(body.id);
+  const shopifyId = body.token;
   const shopifyUpdatedAt = new Date(body.updated_at ?? body.created_at ?? Date.now());
   const existing = await prisma.shopifyCheckout.findUnique({
     where: { orgId_shopifyId: { orgId, shopifyId } },
@@ -239,19 +249,30 @@ export async function handleCheckoutWebhook(shop: string, body: CheckoutWebhookB
 }
 
 /** checkouts/delete: Shopify dropped the checkout, so nothing is left to recover. */
-export async function handleCheckoutDeleted(shop: string, body: { id?: number | string }) {
-  if (body.id == null) return;
+export async function handleCheckoutDeleted(
+  shop: string,
+  body: { id?: number | string; cart_token?: string | null },
+) {
   const orgId = await orgIdForShop(shop);
   if (!orgId) return;
-  const checkout = await prisma.shopifyCheckout.findUnique({
-    where: { orgId_shopifyId: { orgId, shopifyId: String(body.id) } },
+  // The delete payload carries `id` and `cart_token` but no `token`, and create/update no
+  // longer carry `id` — so the stored payload's cart_token is what joins them. `id` still
+  // matches rows written before API 2026-07, which were keyed by it.
+  const match: Prisma.ShopifyCheckoutWhereInput[] = [];
+  if (body.id != null) match.push({ shopifyId: String(body.id) });
+  if (body.cart_token) match.push({ body: { path: ["cart_token"], equals: body.cart_token } });
+  if (!match.length) return;
+  const checkouts = await prisma.shopifyCheckout.findMany({
+    where: { orgId, status: ShopifyCheckoutStatus.OPEN, OR: match },
+    select: { id: true },
   });
-  if (!checkout || checkout.status !== ShopifyCheckoutStatus.OPEN) return;
-  await prisma.shopifyCheckout.update({
-    where: { id: checkout.id },
-    data: { status: ShopifyCheckoutStatus.EXPIRED },
-  });
-  await cancelReminders(checkout.id);
+  for (const checkout of checkouts) {
+    await prisma.shopifyCheckout.update({
+      where: { id: checkout.id },
+      data: { status: ShopifyCheckoutStatus.EXPIRED },
+    });
+    await cancelReminders(checkout.id);
+  }
 }
 
 /** The orders/create fields recovery and attribution read. */

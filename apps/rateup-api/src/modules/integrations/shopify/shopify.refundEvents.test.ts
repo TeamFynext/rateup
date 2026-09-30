@@ -146,7 +146,7 @@ describe("handleShopifyRefundEvent", () => {
     expect(trigger).toBe("SHOPIFY_EVENT");
     expect(context).toMatchObject({
       orgId: ORG,
-      phone: "+919400651372",
+      phone: "919400651372",
       shopifyEvent: ShopifyEvents.STORE_CREDIT_ISSUED,
       shopifyProductIds: ["gid://shopify/Product/10311944569106"],
       platform: "WHATSAPP",
@@ -222,7 +222,21 @@ describe("handleShopifyRefundEvent", () => {
 
     await handleWebhook(refundWebhook([transaction("shopify_store_credit", "1.00")]));
 
-    expect(runRules.mock.calls[0][1].phone).toBe("+919999999999");
+    expect(runRules.mock.calls[0][1].phone).toBe("919999999999");
+  });
+
+  test("adds the address country's code to a number typed without one", async () => {
+    orderReturns({
+      ...ORDER,
+      phone: null,
+      customer: { ...ORDER.customer, defaultPhoneNumber: null },
+      shippingAddress: { phone: "99999 99999", city: "kannur", countryCodeV2: "IN" },
+    });
+
+    await handleWebhook(refundWebhook([transaction("shopify_store_credit", "1.00")]));
+
+    // As Contact.phone stores it, so the existing contact is found, not a 10-digit twin.
+    expect(runRules.mock.calls[0][1].phone).toBe("919999999999");
   });
 
   test("skips an order with no phone anywhere", async () => {
