@@ -155,6 +155,25 @@ export async function fulfillmentOrderCancelledHandler(
   await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
+export async function refundCreateHandler(
+  topic: string,
+  shop: string,
+  webhookRequestBody: string,
+  webhookId: string,
+  _apiVersion?: string,
+  _context?: unknown,
+) {
+  log.info(`handling webhook ${topic} for ${shop} shop`);
+  const webhookRequestBodyJson = JSON.parse(webhookRequestBody);
+  const webhook = {
+    topic,
+    webhookId,
+    body: webhookRequestBodyJson,
+    shop,
+  };
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
+}
+
 export async function customersDataRequestHandler(
   topic: string,
   shop: string,
@@ -166,26 +185,23 @@ export async function customersDataRequestHandler(
   log.info(`handling webhook ${topic} for ${shop} shop`);
 }
 
-export async function customersRedactHandler(
+/** Queues the topic for `handleWebhook`, deduped on Shopify's webhook id. */
+async function enqueueWebhookHandler(
   topic: string,
   shop: string,
-  _webhookRequestBody: string,
-  _webhookId: string,
+  webhookRequestBody: string,
+  webhookId: string,
   _apiVersion?: string,
   _context?: unknown,
 ) {
   log.info(`handling webhook ${topic} for ${shop} shop`);
+  const webhook = { topic, webhookId, body: JSON.parse(webhookRequestBody), shop };
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
-export async function shopRedactRequestHandler(
-  topic: string,
-  shop: string,
-  _webhookRequestBody: string,
-  _webhookId: string,
-  _apiVersion?: string,
-  _context?: unknown,
-) {
-  log.info(`handling webhook ${topic} for ${shop} shop`);
-}
+
+// The stored abandoned checkouts are this app's customer data to redact.
+export const customersRedactHandler = enqueueWebhookHandler;
+export const shopRedactRequestHandler = enqueueWebhookHandler;
 
 export async function appSubscriptionUpdateHandler(
   topic: string,
@@ -271,6 +287,34 @@ export const defaultWebhookHandlers: Record<string, WebhookHandler[]> = {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: WEBHOOK_API_ROUTE,
       callback: fulfillmentOrderCancelledHandler,
+    },
+  ],
+  REFUNDS_CREATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: refundCreateHandler,
+    },
+  ],
+  CHECKOUTS_CREATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: enqueueWebhookHandler,
+    },
+  ],
+  CHECKOUTS_UPDATE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: enqueueWebhookHandler,
+    },
+  ],
+  CHECKOUTS_DELETE: [
+    {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: WEBHOOK_API_ROUTE,
+      callback: enqueueWebhookHandler,
     },
   ],
 };

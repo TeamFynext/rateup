@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("../note/note.service.js", () => ({
+  createNote: vi.fn(),
+  editNote: vi.fn(),
+  deleteNote: vi.fn(),
+}));
+vi.mock("./assignOwner.service.js", () => ({ assignConversationOwner: vi.fn() }));
 vi.mock("./wamessage.service.js", () => ({
   addNewWaMessage: vi.fn(),
   assignWaMessageToUser: vi.fn(),
@@ -27,7 +33,6 @@ vi.mock("./wamessage.service.js", () => ({
 
 vi.mock("./wamessage.utils.js", () => ({
   deriveConversationSubject: vi.fn(),
-  extractMentions: vi.fn(() => []),
   handleWaReceivedImages: vi.fn(async (b: unknown) => b),
   returnAppropriateTimeStamp: vi.fn(async () => "2026-07-27T09:00:00Z"),
 }));
@@ -111,6 +116,7 @@ import {
 } from "./wamessage.service.js";
 import { blockWhatsappUser, unblockWhatsappUser } from "../../whatsappSurvey/wasurvey.service.js";
 import { writeXlsx } from "hucre/xlsx";
+import { assignConversationOwner } from "./assignOwner.service.js";
 import {
   assignWaMessageHandler,
   blockWhatsappUserHandler,
@@ -246,6 +252,22 @@ describe("bulkAssignWaMessageHandler", () => {
       message: "Chats assigned successfully",
       assignedCount: 3,
     });
+  });
+
+  test("hands each chat to the team's next member when given a team", async () => {
+    const ownerMock = assignConversationOwner as unknown as ReturnType<typeof vi.fn>;
+    ownerMock.mockResolvedValue({ assignees: [{ userId: "u2", teamId: "team-1" }] });
+    const reply = makeReply();
+
+    await bulkAssignWaMessageHandler(
+      makeRequest({ body: { contactIds: ["c1", "c2"], teamId: "team-1" } }),
+      reply,
+    );
+
+    expect(ownerMock).toHaveBeenCalledTimes(2);
+    expect(ownerMock).toHaveBeenCalledWith({ contactId: "c1", teamId: "team-1" }, ACTOR);
+    expect(m.assign).not.toHaveBeenCalled();
+    expect(reply.payload.assignedCount).toBe(2);
   });
 
   test("honours the assign-if-online flag when given", async () => {

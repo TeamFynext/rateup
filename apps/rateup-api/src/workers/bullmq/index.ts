@@ -7,7 +7,9 @@ import { connectKafkaProducer, producer } from "../../plugins/kafka.js";
 import { syncJobSchedulers } from "./queues/cron.queue.js";
 import { reconcileScheduledCampaignSends } from "../../modules/campaign/campaignRetry.service.js";
 import { reconcileScheduledFeedbackRequests } from "../../modules/loyalty/feedback/feedback.scheduler.js";
+import { reconcileCheckoutReminders } from "../../modules/integrations/shopify/shopify.checkouts.service.js";
 
+import * as abandonedCheckoutReminder from "./processors/abandonedCheckoutReminder.processor.js";
 import * as campaignDequeue from "./processors/campaignDequeue.processor.js";
 import * as campaignEnqueue from "./processors/campaignEnqueue.processor.js";
 import * as campaignRetryFire from "./processors/campaignRetryFire.processor.js";
@@ -40,6 +42,7 @@ import * as zapierTrigger from "./processors/zapierTrigger.processor.js";
 // the exported instances is what lets shutdown drain them instead of dropping
 // in-flight jobs on SIGTERM.
 const PROCESSOR_MODULES = [
+  abandonedCheckoutReminder,
   campaignDequeue,
   campaignEnqueue,
   campaignRetryFire,
@@ -87,6 +90,10 @@ async function start() {
   // Same story for loyalty feedback asks: one delayed job per SCHEDULED row.
   const feedback = await reconcileScheduledFeedbackRequests();
   log.info(`Checked ${feedback.checked} scheduled feedback requests (re-armed ${feedback.armed})`);
+
+  // And for abandoned-checkout reminders.
+  const reminders = await reconcileCheckoutReminders();
+  log.info(`Checked ${reminders.checked} checkout reminders (re-armed ${reminders.armed})`);
 
   process.on("unhandledRejection", (reason) => {
     log.error(reason, "Unhandled promise rejection");

@@ -463,108 +463,111 @@ export async function deleteConversations(conversationIds: string[], orgId: stri
   };
 }
 
+/**
+ * Makes the ticket's active assignees exactly `assignees`. A removed row is kept
+ * (with `lastRemovedAt`) as history, so assigning that person again reactivates it
+ * rather than creating a second row. An empty list revokes everyone; the caller
+ * owns the status change that goes with it.
+ */
 export async function updateConversationAssignees(
   conversationId: string,
   data: ConversationAssigneeUpdateSchema,
   userId?: string,
 ) {
   await prisma.$transaction(async (tx) => {
-    const { assignees, assignedAt, removedAt, assignedBy, removedBy } = data;
-    if (assignees && assignees.length > 0) {
-      const existingAssignees = await tx.conversationAssignedUserTeamMap.findMany({
-        where: {
-          conversationId: conversationId,
+    const { assignees = [], assignedAt, removedAt, assignedBy, removedBy } = data;
+    const existingAssignees = await tx.conversationAssignedUserTeamMap.findMany({
+      where: { conversationId },
+    });
+    const active = existingAssignees.filter((ea) => !ea.lastRemovedAt);
+
+    const assigneesToRemove = active.filter((ea) => !assignees.some((a) => a.userId === ea.userId));
+    const assigneesToUpdate = active.filter((ea) =>
+      assignees.some((a) => a.userId === ea.userId && a.teamId && a.teamId !== ea.teamId),
+    );
+    const assigneesToReactivate = existingAssignees.filter(
+      (ea) => ea.lastRemovedAt && assignees.some((a) => a.userId === ea.userId),
+    );
+    const assigneesToAdd = assignees.filter(
+      (a) => !existingAssignees.some((ea) => ea.userId === a.userId),
+    );
+
+    for (const assignee of assigneesToRemove) {
+      await tx.conversationAssignedUserTeamMap.update({
+        where: { userId_conversationId: { userId: assignee.userId, conversationId } },
+        data: {
+          lastRemovedAt: removedAt || new Date(),
+          lastRemovedBy: removedBy || userId,
+          actionHistory: [
+            ...assignee.actionHistory,
+            {
+              action: "assignment-revoked",
+              date: removedAt || new Date(),
+              by: removedBy || userId,
+            },
+          ],
         },
       });
-
-      const assigneesToRemove = existingAssignees.filter(
-        (ea) => !assignees.find((a) => a.userId === ea.userId),
-      );
-      const assigneesToUpdate = existingAssignees.filter((ea) =>
-        assignees.some((a) => a.userId === ea.userId && a.teamId !== ea.teamId),
-      );
-
-      const assigneesToAdd = assignees.filter(
-        (a) => !existingAssignees.find((ea) => ea.userId === a.userId),
-      );
-      for (const assignee of assigneesToRemove) {
-        await tx.conversationAssignedUserTeamMap.update({
-          where: {
-            userId_conversationId: {
-              userId: assignee.userId,
-              conversationId,
-            },
-          },
-          data: {
-            lastRemovedAt: removedAt || new Date(),
-            lastRemovedBy: removedBy || userId,
-            actionHistory: [
-              ...assignee.actionHistory,
-              {
-                action: "assignment-revoked",
-                date: removedAt || new Date(),
-                by: removedBy || userId,
-              },
-            ],
-          },
-        });
-      }
-      for (const assignee of assigneesToUpdate) {
-        const matched = assignees.find((as) => as.userId === assignee.userId);
-        if (!matched) {
-          throw new Error(`Assignee ${assignee.userId} not found in incoming assignees list`);
-        }
-        const teamId = matched.teamId;
-        await tx.conversationAssignedUserTeamMap.update({
-          where: {
-            userId_conversationId: {
-              userId: assignee.userId,
-              conversationId,
-            },
-          },
-          data: {
-            teamId,
-            actionHistory: [
-              ...assignee.actionHistory,
-              {
-                action: "updated-team",
-                date: new Date(),
-                by: userId,
-              },
-            ],
-          },
-        });
-      }
-      for (const assignee of assigneesToAdd) {
-        // `teamId` is optional on the incoming schema but a required FK on the
-        // map row itself — a new assignment can't be created without one.
-        if (!assignee.teamId) {
-          throw new Error(`teamId is required to assign user ${assignee.userId}`);
-        }
-        await tx.conversationAssignedUserTeamMap.create({
-          data: {
-            conversationId: conversationId,
-            userId: assignee.userId,
-            teamId: assignee.teamId,
-            lastAssignedAt: assignedAt || new Date(),
-            lastAssignedBy: assignedBy || userId,
-            isAssignedByAutomation: !assignedBy && !userId,
-            actionHistory: [
-              {
-                action: "assigned",
-                date: assignedAt || new Date(),
-                by: assignedBy || userId,
-              },
-            ],
-          },
-        });
-      }
-      await tx.conversation.update({
-        where: {
-          id: conversationId,
-        },
+    }
+    for (const assignee of assigneesToUpdate) {
+      const matched = assignees.find((as) => as.userId === assignee.userId);
+      await tx.conversationAssignedUserTeamMap.update({
+        where: { userId_conversationId: { userId: assignee.userId, conversationId } },
         data: {
-          assignedAt: !existingAssignees.length ? assignedAt || new Date() : undefined,
+          teamId: matched?.teamId,
+          actionHistory: [
+            ...assignee.actionHistory,
+            { action: "updated-team", date: new Date(), by: userId },
+          ],
+        },
+      });
+    }
+    for (const assignee of assigneesToReactivate) {
+      const matched = assignees.find((as) => as.userId === assignee.userId);
+      await tx.conversationAssignedUserTeamMap.update({
+        where: { userId_conversationId: { userId: assignee.userId, conversationId } },
+        data: {
+          teamId: matched?.teamId || assignee.teamId,
+          lastRemovedAt: null,
+          lastRemovedBy: null,
+          lastAssignedAt: assignedAt || new Date(),
+          lastAssignedBy: assignedBy || userId,
+          actionHistory: [
+            ...assignee.actionHistory,
+            { action: "assigned", date: assignedAt || new Date(), by: assignedBy || userId },
+          ],
+        },
+      });
+    }
+    for (const assignee of assigneesToAdd) {
+      // `teamId` is optional on the incoming schema but a required FK on the
+      // map row itself — a new assignment can't be created without one.
+      if (!assignee.teamId) {
+        throw new Error(`teamId is required to assign user ${assignee.userId}`);
+      }
+      await tx.conversationAssignedUserTeamMap.create({
+        data: {
+          conversationId: conversationId,
+          userId: assignee.userId,
+          teamId: assignee.teamId,
+          lastAssignedAt: assignedAt || new Date(),
+          lastAssignedBy: assignedBy || userId,
+          isAssignedByAutomation: !assignedBy && !userId,
+          actionHistory: [
+            {
+              action: "assigned",
+              date: assignedAt || new Date(),
+              by: assignedBy || userId,
+            },
+          ],
+        },
+      });
+    }
+    if (assignees.length > 0) {
+      await tx.conversation.update({
+        where: { id: conversationId },
+        data: {
+          assignedAt: !active.length ? assignedAt || new Date() : undefined,
           status: WaMessageAssignStatus.ASSIGNED,
         },
       });

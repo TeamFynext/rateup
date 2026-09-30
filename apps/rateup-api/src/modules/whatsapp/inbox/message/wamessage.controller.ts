@@ -8,6 +8,7 @@ import {
   waChatExportConstraints,
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
+  AssignOwnerBody,
   BlockUserBody,
   FavoriteContactBody,
   SpamContactBody,
@@ -15,6 +16,8 @@ import {
   ReopenConversationBody,
   GenerateInboxResponseBody,
   PrivateWaMessageBody,
+  EditPrivateNoteBody,
+  PrivateNoteParams,
   BulkWaMessageAssignBody,
   LogsQuery,
 } from "./wamessage.schema.js";
@@ -36,13 +39,13 @@ import {
   sendLocationMessage,
   generateChatAnalytics,
   generateInboxResponse,
-  createInternalWaMessage,
   createWaMessageOrgTeamMap,
   getWaMessageLogs,
   setConversationFavorite,
   setContactSpam,
 } from "./wamessage.service.js";
 import { ByContactIdParams } from "../../../contact/contact.schema.js";
+import { createNote, deleteNote, editNote } from "../note/note.service.js";
 import {
   createReactionMessage,
   createTextMessage,
@@ -56,12 +59,12 @@ import {
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
   deriveConversationSubject,
-  extractMentions,
   handleWaReceivedImages,
   returnAppropriateTimeStamp,
 } from "./wamessage.utils.js";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service.js";
 import { log } from "../../../../utils/logger.js";
+import { HttpError } from "../../../../utils/http.js";
 import { normalizeSourceIdentifier } from "../../../../utils/channelIdentifier.js";
 import {
   getContactById,
@@ -101,6 +104,7 @@ import { recordMessageInWindow } from "../../metering/meteredConversation.servic
 import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 import { notifyInboundMessage } from "./inboundNotify.js";
+import { assignConversationOwner } from "./assignOwner.service.js";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -714,7 +718,13 @@ export async function getWaMessagesByContactIdHandler(
     const phone = request.query.phone || undefined;
     const conversationId = request.query.conversationId || null;
     const { contactId } = request.params;
-    const messages = await getWaMessagesByContactId(contactId, cursor, phone, conversationId);
+    const messages = await getWaMessagesByContactId(
+      contactId,
+      request.user.orgId,
+      cursor,
+      phone,
+      conversationId,
+    );
     reply.send(messages);
   } catch (error) {
     log.error(error);
@@ -948,6 +958,22 @@ export async function assignWaMessageHandler(
   }
 }
 
+export async function assignConversationOwnerHandler(
+  request: FastifyRequest<{ Body: AssignOwnerBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    return reply.send(await assignConversationOwner(request.body, request.actor!));
+  } catch (error) {
+    const statusCode = (error as { statusCode?: unknown }).statusCode;
+    if (typeof statusCode === "number" && statusCode < 500) {
+      return reply.status(statusCode).send({ message: (error as Error).message });
+    }
+    log.error({ err: error }, "Error in assignConversationOwnerHandler");
+    return reply.status(500).send("Internal Server Error");
+  }
+}
+
 export async function getAssignedUserForContactHandler(
   request: FastifyRequest<{ Params: ByContactIdParams }>,
   reply: FastifyReply,
@@ -1080,6 +1106,18 @@ export async function generateInboxResponseHandler(
   }
 }
 
+function noteText(body: PrivateWaMessageBody["text"]["body"]) {
+  return typeof body === "string" ? body : parseToWhatsAppFormat(body);
+}
+
+function replyNoteError(error: unknown, reply: FastifyReply, action: string) {
+  if (error instanceof HttpError && error.statusCode < 500) {
+    return reply.status(error.statusCode).send({ message: error.message });
+  }
+  log.error({ err: error }, `Error ${action} private note`);
+  return reply.status(500).send("Internal Server Error");
+}
+
 export async function createPrivateMessageHandler(
   request: FastifyRequest<{
     Body: PrivateWaMessageBody;
@@ -1089,36 +1127,50 @@ export async function createPrivateMessageHandler(
 ) {
   try {
     const { orgId, userId } = request.user;
-    const { contactId } = request.params;
     const body = request.body;
-    let text = "";
-    if (typeof body.text?.body === "string") {
-      text = body.text.body;
-    } else if (body.text?.body?.type === "doc") {
-      text = parseToWhatsAppFormat(body.text.body);
-    } else {
-      throw new Error("Invalid text.body format");
-    }
-    const mentionedUsers = extractMentions(text);
-    const res = await createInternalWaMessage({
-      contactId: contactId,
-      privateMessageText: text,
-      trigerredByUser: userId,
-      orgId: orgId,
-      exchangeProcess: "privateNote",
-      mentionedUsers: mentionedUsers,
-      // Client sends explicit ids when the note came from the mention picker;
-      // these win over the name-based `mentionedUsers` fallback below.
+    const note = await createNote({
+      orgId,
+      contactId: request.params.contactId,
+      conversationId: body.conversationId,
+      authorId: userId,
+      text: noteText(body.text.body),
       mentionedUserIds: body.mentionedUserIds,
-      // `messageId` is optional on the request body (used for optimistic client
-      // ids) but required by createInternalWaMessage — same fallback used by its
-      // other callers in wamessage.service.ts.
-      messageId: body.messageId ?? crypto.randomUUID(),
+      clientId: body.messageId,
     });
-    reply.code(200).send(res);
+    reply.code(200).send(note);
   } catch (error) {
-    log.error({ err: error }, "Error in creating private note");
-    reply.status(500).send("Internal Server Error");
+    return replyNoteError(error, reply, "creating");
+  }
+}
+
+export async function editPrivateNoteHandler(
+  request: FastifyRequest<{ Body: EditPrivateNoteBody; Params: PrivateNoteParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = request.user;
+    if (!userId) return reply.status(401).send("User not found on request");
+    const note = await editNote(
+      request.params.noteId,
+      orgId,
+      userId,
+      noteText(request.body.text.body),
+    );
+    reply.send(note);
+  } catch (error) {
+    return replyNoteError(error, reply, "editing");
+  }
+}
+
+export async function deletePrivateNoteHandler(
+  request: FastifyRequest<{ Params: PrivateNoteParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const note = await deleteNote(request.params.noteId, request.user.orgId, request.actor!);
+    reply.send(note);
+  } catch (error) {
+    return replyNoteError(error, reply, "deleting");
   }
 }
 
@@ -1129,7 +1181,7 @@ export async function bulkAssignWaMessageHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { contactIds, assignee, assignIfOnline, messageId } = request.body;
+    const { contactIds, assignee, teamId, assignIfOnline, messageId } = request.body;
 
     // Guarded per contact so one failure does not abandon the rest: the caller gets a
     // per-contact outcome and can tell which conversations were actually assigned.
@@ -1138,16 +1190,18 @@ export async function bulkAssignWaMessageHandler(
 
     for (const contactId of contactIds) {
       try {
-        const res = await assignWaMessageToUser(
-          {
-            contactId,
-            assignees: [assignee],
-            assignIfOnline: assignIfOnline ?? false,
-            messageId,
-          },
-          request.user.orgId,
-          request.userId,
-        );
+        const res = teamId
+          ? await assignConversationOwner({ contactId, teamId }, request.actor!)
+          : await assignWaMessageToUser(
+              {
+                contactId,
+                assignees: assignee ? [assignee] : [],
+                assignIfOnline: assignIfOnline ?? false,
+                messageId,
+              },
+              request.user.orgId,
+              request.userId,
+            );
 
         results.push({ contactId, success: true, result: res });
       } catch (e) {

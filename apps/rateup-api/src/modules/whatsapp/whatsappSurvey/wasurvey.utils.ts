@@ -939,6 +939,9 @@ export function parseToWhatsAppFormat(
         return (node.content ?? []).map(parseNode).join("");
       case "mention":
         return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
+      // Shift+Enter in the inbox composer, where plain Enter sends.
+      case "hardBreak":
+        return "\n";
       default:
         return "";
     }

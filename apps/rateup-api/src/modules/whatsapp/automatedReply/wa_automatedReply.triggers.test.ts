@@ -528,6 +528,7 @@ describe("checkAndExecuteRuleByTriggerEvent - WooCommerce events", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
     );
   });
 });

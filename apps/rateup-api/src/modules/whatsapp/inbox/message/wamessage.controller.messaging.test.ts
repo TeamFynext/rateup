@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("../note/note.service.js", () => ({
+  createNote: vi.fn(),
+  editNote: vi.fn(),
+  deleteNote: vi.fn(),
+}));
+vi.mock("./assignOwner.service.js", () => ({ assignConversationOwner: vi.fn() }));
 vi.mock("./wamessage.service.js", () => ({
   addNewWaMessage: vi.fn(),
   assignWaMessageToUser: vi.fn(),
   clearMentionsForConversation: vi.fn(),
-  createInternalWaMessage: vi.fn(),
   createWaMessageOrgTeamMap: vi.fn(),
   exportWhatsapChats: vi.fn(),
   filterChats: vi.fn(),
@@ -27,7 +32,6 @@ vi.mock("./wamessage.service.js", () => ({
 
 vi.mock("./wamessage.utils.js", () => ({
   deriveConversationSubject: vi.fn(),
-  extractMentions: vi.fn(() => []),
   handleWaReceivedImages: vi.fn(async (b: unknown) => b),
   returnAppropriateTimeStamp: vi.fn(async () => "2026-07-27T09:00:00Z"),
 }));
@@ -94,7 +98,6 @@ vi.mock("../../../metaAgent/metaAgent.threadOwner.js", () => ({
 
 import {
   addNewWaMessage,
-  createInternalWaMessage,
   createWaMessageOrgTeamMap,
   clearMentionsForConversation,
   getMediaFile,
@@ -105,17 +108,15 @@ import {
   sendLocationMessage,
   sendMediaMessages,
 } from "./wamessage.service.js";
-import {
-  deriveConversationSubject,
-  extractMentions,
-  handleWaReceivedImages,
-} from "./wamessage.utils.js";
+import { deriveConversationSubject, handleWaReceivedImages } from "./wamessage.utils.js";
 import {
   createReactionMessage,
   createTextMessage,
   parseToWhatsAppFormat,
 } from "../../whatsappSurvey/wasurvey.utils.js";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
+import { createNote } from "../note/note.service.js";
+import { HttpError } from "../../../../utils/http.js";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service.js";
 import {
   getContactById,
@@ -155,7 +156,6 @@ type Mock = ReturnType<typeof vi.fn>;
 
 const m = {
   addNewWaMessage: addNewWaMessage as unknown as Mock,
-  createInternalWaMessage: createInternalWaMessage as unknown as Mock,
   createWaMessageOrgTeamMap: createWaMessageOrgTeamMap as unknown as Mock,
   clearMentions: clearMentionsForConversation as unknown as Mock,
   getMediaFile: getMediaFile as unknown as Mock,
@@ -166,7 +166,6 @@ const m = {
   sendLocationMessage: sendLocationMessage as unknown as Mock,
   sendMediaMessages: sendMediaMessages as unknown as Mock,
   deriveSubject: deriveConversationSubject as unknown as Mock,
-  extractMentions: extractMentions as unknown as Mock,
   handleImages: handleWaReceivedImages as unknown as Mock,
   createTextMessage: createTextMessage as unknown as Mock,
   createReactionMessage: createReactionMessage as unknown as Mock,
@@ -294,7 +293,6 @@ beforeEach(() => {
   m.updateContact.mockResolvedValue({ ...CONTACT, waMessageAssignStatus: "UNASSIGNED" });
   m.handleImages.mockImplementation(async (b: unknown) => b);
   m.getContactById.mockResolvedValue({ ...CONTACT, igsId: "ig-1", psid: "ps-1", other: "web-1" });
-  m.extractMentions.mockReturnValue([]);
 });
 
 describe("handleWaMessages - finding the contact", () => {
@@ -997,6 +995,7 @@ describe("getWaMessagesByContactIdHandler", () => {
 
     expect(m.getWaMessagesByContactId).toHaveBeenCalledWith(
       "contact-1",
+      "org-1",
       "cur-1",
       "15550001",
       "conv-1",
@@ -1015,7 +1014,13 @@ describe("getWaMessagesByContactIdHandler", () => {
     // `phone` is `undefined`, not `null`, here: getWaMessagesByContactId's `phone`
     // param only accepts `string | undefined` (matches the query schema's
     // `.optional()`), unlike `cursor`/`conversationId` which explicitly accept `null`.
-    expect(m.getWaMessagesByContactId).toHaveBeenCalledWith("contact-1", null, undefined, null);
+    expect(m.getWaMessagesByContactId).toHaveBeenCalledWith(
+      "contact-1",
+      "org-1",
+      null,
+      undefined,
+      null,
+    );
   });
 
   test("returns 500 when the lookup throws", async () => {
@@ -1124,30 +1129,32 @@ describe("reopenConversationHandler", () => {
 });
 
 describe("createPrivateMessageHandler", () => {
-  test("stores a plain-text note with the users it mentions", async () => {
-    m.extractMentions.mockReturnValue(["alice"]);
-    m.createInternalWaMessage.mockResolvedValue({ id: "note-1" });
+  test("stores a plain-text note on the ticket it was written on", async () => {
+    (createNote as Mock).mockResolvedValue({ id: "note-1" });
     const reply = makeReply();
 
     await createPrivateMessageHandler(
       makeRequest({
         params: { contactId: "contact-1" },
-        body: { text: { body: "@alice please look" }, messageId: "msg-1" },
+        body: {
+          text: { body: "@alice please look" },
+          messageId: "msg-1",
+          conversationId: "conv-1",
+          mentionedUserIds: ["user-9"],
+        },
       }),
       reply,
     );
 
-    expect(m.extractMentions).toHaveBeenCalledWith("@alice please look");
-    expect(m.createInternalWaMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        contactId: "contact-1",
-        privateMessageText: "@alice please look",
-        trigerredByUser: "user-1",
-        orgId: "org-1",
-        exchangeProcess: "privateNote",
-        mentionedUsers: ["alice"],
-      }),
-    );
+    expect(createNote).toHaveBeenCalledWith({
+      orgId: "org-1",
+      contactId: "contact-1",
+      conversationId: "conv-1",
+      authorId: "user-1",
+      text: "@alice please look",
+      mentionedUserIds: ["user-9"],
+      clientId: "msg-1",
+    });
     expect(reply.code).toHaveBeenCalledWith(200);
   });
 
@@ -1161,31 +1168,19 @@ describe("createPrivateMessageHandler", () => {
     );
 
     expect(m.parseRichText).toHaveBeenCalled();
-    expect(m.createInternalWaMessage.mock.calls[0][0].privateMessageText).toBe("parsed-rich-text");
+    expect((createNote as Mock).mock.calls[0][0].text).toBe("parsed-rich-text");
   });
 
-  test("passes explicit mention ids straight through", async () => {
-    await createPrivateMessageHandler(
-      makeRequest({
-        params: { contactId: "contact-1" },
-        body: { text: { body: "note" }, mentionedUserIds: ["user-9"] },
-      }),
-      makeReply(),
-    );
-
-    expect(m.createInternalWaMessage.mock.calls[0][0].mentionedUserIds).toEqual(["user-9"]);
-  });
-
-  test("returns 500 for a note whose body is neither text nor a document", async () => {
+  test("answers a refusal from the service with its status", async () => {
+    (createNote as Mock).mockRejectedValue(new HttpError("Contact not found", 404));
     const reply = makeReply();
 
     await createPrivateMessageHandler(
-      makeRequest({ params: { contactId: "contact-1" }, body: { text: { body: 42 } } }),
+      makeRequest({ params: { contactId: "nope" }, body: { text: { body: "hi" } } }),
       reply,
     );
 
-    expect(reply.status).toHaveBeenCalledWith(500);
-    expect(m.createInternalWaMessage).not.toHaveBeenCalled();
+    expect(reply.status).toHaveBeenCalledWith(404);
   });
 });
 

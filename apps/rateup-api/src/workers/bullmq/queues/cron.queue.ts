@@ -27,7 +27,10 @@ export const SCHEDULED_JOBS = [
   // is left is the other half of the old pairing — a campaign drains before its
   // delivery webhooks land, so recognising a finished send still needs a sweep.
   { id: "campaignSettle", pattern: "*/5 * * * *", tz: "Etc/UTC" },
-  { id: "hourlyJobs", pattern: "0 * * * *" },
+  // Stored Shopify checkouts hold customer contact details; expire and delete old ones.
+  { id: "shopifyCheckoutCleanup", pattern: "30 3 * * *", tz: "Etc/UTC" },
+  // Subscribes connected shops to webhook topics added after they installed.
+  { id: "shopifyWebhookSync", pattern: "15 4 * * *", tz: "Etc/UTC" },
   // Every provider's `refreshCredential` — Zoho's token and webhook channels today.
   // Was `zohoRefresh`; the stale scheduler is removed by `syncJobSchedulers`.
   { id: "integrationCredentialRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },

@@ -57,14 +57,21 @@ const NewWaMessageBody = z.object({
   platform: z.string(),
 });
 
+const privateNoteText = z.object({
+  // Plain text from the app, a Tiptap document from the web editor.
+  body: z.union([
+    z.string().trim().min(1),
+    z.looseObject({ type: z.literal("doc"), content: z.array(z.any()) }),
+  ]),
+});
+
+// Both clients post their whole composer state here; only these fields are read.
 const PrivateWaMessageBody = z.object({
-  type: z.enum(["text"]),
-  text: z.any(),
-  messageId: string().optional(),
-  platform: z.string(),
-  // Users @-mentioned in the note, resolved by id on the client (robust to names
-  // with spaces, which text extraction can't match).
-  mentionedUserIds: z.array(z.string()).optional(),
+  text: privateNoteText,
+  messageId: string().max(200).optional(),
+  conversationId: z.guid().optional(),
+  // Resolved by id on the client: names with spaces can't be matched in the text.
+  mentionedUserIds: z.array(z.guid()).max(50).optional(),
 });
 
 const PaginateQuerySchema = z.object({
@@ -153,6 +160,19 @@ const waMessageAssignBody = z.object({
   assignees: z.array(z.object({ userId: z.string(), teamId: z.string() })),
   assignIfOnline: z.boolean().default(false),
   messageId: z.string().optional(), // for internal message
+  // The ticket on screen. Without it the contact's newest ticket is assigned, which is
+  // the wrong one when an older ticket is still open.
+  conversationId: z.uuid().nullish(),
+});
+
+/// One owner per ticket: `userId` names them, `teamId` alone round-robins within
+/// that team, and neither unassigns.
+const assignOwnerBody = z.object({
+  contactId: z.string(),
+  conversationId: z.uuid().nullish(),
+  userId: z.uuid().nullish(),
+  teamId: z.uuid().nullish(),
+  messageId: z.string().optional(),
 });
 
 const blockUserSchema = z.object({
@@ -180,15 +200,24 @@ const reopenConversationSchema = z.object({
   messageId: z.string().optional(), // for the internal "assigned" event
 });
 
-const bulkWaMessageAssignBody = z.object({
-  contactIds: z.array(z.string()),
-  assignee: z.object({
-    userId: z.string(),
-    teamId: z.string(),
-  }),
-  assignIfOnline: z.boolean().default(false),
-  messageId: z.string().optional(),
-});
+/// Either one `assignee` for every chat, or a `teamId` whose members take the chats
+/// in turn, one owner per chat.
+const bulkWaMessageAssignBody = z
+  .object({
+    contactIds: z.array(z.string()),
+    assignee: z
+      .object({
+        userId: z.string(),
+        teamId: z.string(),
+      })
+      .optional(),
+    teamId: z.uuid().optional(),
+    assignIfOnline: z.boolean().default(false),
+    messageId: z.string().optional(),
+  })
+  .refine((body) => Boolean(body.assignee) !== Boolean(body.teamId), {
+    message: "Send either an assignee or a teamId",
+  });
 
 const logsQuerySchema = z.object({
   dateKey: z.string().optional(),
@@ -204,6 +233,10 @@ const logsQuerySchema = z.object({
 
 export type NewWaMessageBody = z.infer<typeof NewWaMessageBody>;
 export type PrivateWaMessageBody = z.infer<typeof PrivateWaMessageBody>;
+export const privateNoteParams = z.object({ noteId: z.guid() });
+export const editPrivateNoteBody = z.object({ text: privateNoteText });
+export type PrivateNoteParams = z.infer<typeof privateNoteParams>;
+export type EditPrivateNoteBody = z.infer<typeof editPrivateNoteBody>;
 export type PaginateQuerySchema = z.infer<typeof PaginateQuerySchema>;
 export type WaChatFilterSchema = z.infer<typeof WaChatFilterSchema>;
 export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;
@@ -211,6 +244,7 @@ export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
 export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
 export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
 export type WaMessageAssignBody = z.input<typeof waMessageAssignBody>;
+export type AssignOwnerBody = z.infer<typeof assignOwnerBody>;
 export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type FavoriteContactBody = z.infer<typeof favoriteContactSchema>;
@@ -238,5 +272,6 @@ export {
   reopenConversationSchema,
   generateInboxResponseBody,
   bulkWaMessageAssignBody,
+  assignOwnerBody,
   logsQuerySchema,
 };

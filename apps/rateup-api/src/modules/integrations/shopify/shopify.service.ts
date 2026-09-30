@@ -1,6 +1,15 @@
 import prisma from "../../../utils/prisma.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import shopify from "./shopify.config.js";
+import {
+  type CheckoutWebhookBody,
+  type CustomerRedactBody,
+  handleCheckoutDeleted,
+  handleCheckoutWebhook,
+  markCheckoutRecovered,
+  redactShopifyCustomer,
+  redactShopifyShop,
+} from "./shopify.checkouts.service.js";
 import { getActiveShopifySession } from "./shopify.session.js";
 import { GraphqlClient, GraphQLClientResponse, Session } from "@shopify/shopify-api";
 import type { IncomingMessage, ServerResponse } from "http";
@@ -24,7 +33,6 @@ import {
 import { createTemplateMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { getDbTemplate } from "../../whatsapp/messageTemplates/wa_templates.service.js";
 import { getFlowIdFromTemplateComponents } from "../../whatsapp/messageTemplates/wa_templates.utils.js";
-import { parsePhoneNumber } from "libphonenumber-js";
 import {
   PaymentSource,
   ShopifyOrderWebhookTopicEventMap,
@@ -49,8 +57,6 @@ import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
 import { pauseOrg } from "../../org/org.services.js";
 import { WEBHOOK_API_ROUTE, defaultWebhookHandlers } from "./shopify.handler.js";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
-import { getScheduleTime } from "../../../utils/date.js";
 import {
   extractDiscountCodes,
   extractPurchaseAmount,
@@ -58,11 +64,7 @@ import {
 } from "./shopifyLoyalty.service.js";
 import type { CommerceOrder, CommerceStore, CommerceSurvey } from "../commerce/commerce.types.js";
 import { onOrderEvent } from "../commerce/orders.js";
-import {
-  buildSurveyTemplateParameters,
-  processOrderSurveySchedule,
-  type OrderSurveyJobData,
-} from "../commerce/surveys.js";
+import { processOrderSurveySchedule, type OrderSurveyJobData } from "../commerce/surveys.js";
 import { shopifyCommerce } from "./shopify.commerce.js";
 import { ShopifyBody, shopifyErrorDetail } from "./shopify.types.js";
 import { signFlowToken } from "../../whatsapp/flows/flowToken.js";
@@ -180,8 +182,34 @@ export async function registerShopifyWebhook(session: Session) {
   if (!shopify) throw new Error("Shopify integration is not configured");
   const client = new shopify.clients.Graphql({ session });
   const registered = new Set((await getManagableWebhooks(client)).map((w) => w.topic));
+  // Every missing topic is tried: one the shop's scopes refuse must not block the rest.
+  const errors: string[] = [];
   for (const topic of Object.keys(defaultWebhookHandlers)) {
-    if (!registered.has(topic)) await registerWebhookByTopic(topic, session);
+    if (registered.has(topic)) continue;
+    try {
+      await registerWebhookByTopic(topic, session);
+    } catch (e) {
+      errors.push(e instanceof Error ? e.message : String(e));
+    }
+  }
+  if (errors.length) throw new Error(errors.join("; "));
+}
+
+/**
+ * Daily: subscribes every connected shop to topics added since it installed. Otherwise a
+ * new topic reaches only shops whose merchant presses "register webhooks" again.
+ */
+export async function syncShopifyWebhooks() {
+  const integrations = (await prisma.integration.findMany({
+    where: { name: IntegratedApps.shopify, active: true },
+  })) as unknown as ShopifyIntegration[];
+  for (const integration of integrations) {
+    if (!integration.credential?.session) continue;
+    try {
+      await registerShopifyWebhook(await getActiveShopifySession(integration));
+    } catch (e) {
+      log.error({ err: e, orgId: integration.orgId }, "Shopify webhook sync failed for shop");
+    }
   }
 }
 
@@ -216,164 +244,6 @@ export async function runShopifyOrderAutomation(
     shopifyBody: order.raw as unknown as ShopifyBody,
     platform: "WHATSAPP",
   });
-}
-
-export async function sendShopifySurveyCronAction() {
-  const currentTime = new Date();
-  const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000);
-
-  const integrations = (await prisma.integration.findMany({
-    where: {
-      name: IntegratedApps.shopify,
-    },
-  })) as unknown as ShopifyIntegration[];
-
-  if (!integrations.length) {
-    log.trace("No shopify integration found");
-    return;
-  }
-
-  for (const integration of integrations) {
-    const {
-      credential: { shopifySurveys },
-      orgId,
-    } = integration;
-
-    if (!shopifySurveys || !shopifySurveys.length) {
-      log.trace("No config found");
-      continue;
-    }
-    const newShopifySurveys = [...shopifySurveys];
-    const callShopifyApi = newShopifySurveys.some(
-      (s) =>
-        s.event === ShopifyEvents.ABANDONED_CHECKOUTS &&
-        s.schedules &&
-        s.schedules.some(
-          (sch) =>
-            sch.status === "SCHEDULED" ||
-            (s.repeatInterval.value &&
-              dayjs().diff(dayjs(sch.sentAt), s.repeatInterval.unit) >= s.repeatInterval.value),
-        ),
-    );
-
-    let allCheckouts: AbandonedCheckoutNode[] | undefined;
-
-    if (callShopifyApi) {
-      try {
-        if (!shopify) throw new Error("Shopify integration is not configured");
-        const client = new shopify.clients.Graphql({
-          session: await getActiveShopifySession(integration),
-        });
-        allCheckouts = await getAbandonedCheckouts(client);
-      } catch (e) {
-        log.error({ err: e }, "Error getting abandoned checkouts");
-        continue;
-      }
-    }
-
-    for (const config of newShopifySurveys) {
-      const { event, schedules, repeatInterval, waTemplateId, teamId, active } = config;
-      if (!schedules || !schedules.length || !active) {
-        log.trace("No schedules found");
-        continue;
-      }
-      const newSchedules = [...schedules];
-      const isAbandonedEvent = event === ShopifyEvents.ABANDONED_CHECKOUTS;
-      if (!isAbandonedEvent) continue;
-      if (isAbandonedEvent && !callShopifyApi) continue;
-      for (const sch of newSchedules) {
-        let tobeSent = false;
-        const isCheckoutNotExist =
-          isAbandonedEvent && !allCheckouts?.find((c) => c.id === sch.checkoutId);
-        if (sch.status === "SCHEDULED" && new Date(sch.scheduledAt) <= fiveMinutesLater) {
-          if (isCheckoutNotExist) {
-            sch.status = "CHECKOUT DELETED";
-            sch.history.forEach((h) => {
-              if (h.scheduledAt === sch.scheduledAt) h.status = "CHECKOUT DELETED";
-            });
-          } else {
-            tobeSent = true;
-          }
-        } else {
-          if (isAbandonedEvent && !isCheckoutNotExist) {
-            if (
-              repeatInterval?.value &&
-              dayjs().diff(dayjs(sch.sentAt), repeatInterval?.unit) >= repeatInterval?.value
-            ) {
-              tobeSent = true;
-              //add new schedule history and update
-              const newSchedule: ScheduleObj = {
-                createdAt: new Date(),
-                scheduledAt: new Date(),
-                sentAt: null,
-                status: null,
-              };
-              sch.createdAt = newSchedule.createdAt;
-              sch.scheduledAt = newSchedule.scheduledAt;
-              sch.sentAt = newSchedule.sentAt;
-              sch.history = [...sch.history, newSchedule];
-            }
-          }
-        }
-        console.log("tobeSent", tobeSent);
-        if (tobeSent) {
-          try {
-            const parameterData = buildSurveyTemplateParameters(
-              config as unknown as CommerceSurvey,
-              sch.body as unknown as Record<string, unknown>,
-              (raw, path) => resolveShopifyPathValue(raw as ShopifyWebhookBody, path),
-            );
-
-            const res = await sendTemplateToUserCore(
-              orgId,
-              waTemplateId ?? "",
-              sch.phone,
-              parameterData,
-              teamId,
-            );
-            // sendTemplateToUserCore's declared return type is a union with the
-            // timeDelay-scheduled branch (which has no `.message`/boolean
-            // `.status`), but we never pass a timeDelay here so only the
-            // `message` shape can ever come back at runtime — narrow for TS.
-            if ("message" in res) {
-              sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
-              let messageSentAt: Date | null = null;
-              if (res.status) {
-                const message = await prisma.waMessage.findFirst({
-                  where: {
-                    messageId: res.message,
-                  },
-                });
-                messageSentAt = message?.waCreatedAt ?? null;
-              }
-              sch.sentAt = messageSentAt;
-              sch.history.forEach((h) => {
-                if (h.scheduledAt === sch.scheduledAt) {
-                  h.status = sch.status;
-                  h.sentAt = messageSentAt;
-                }
-              });
-            }
-          } catch (e) {
-            log.error({ err: e }, "error sending template");
-            continue;
-          }
-        }
-      }
-      config.schedules = newSchedules;
-    }
-    try {
-      await updateShopifyIntegrationByOrgId(orgId, {
-        credential: {
-          ...integration.credential,
-          shopifySurveys: newShopifySurveys,
-        },
-      });
-    } catch (e) {
-      log.error({ err: e, orgId }, "error updating shopify integration");
-      continue;
-    }
-  }
 }
 
 export async function deleteWebhookById(webhookId: string, client: GraphqlClient) {
@@ -890,6 +760,23 @@ export async function handleWebhook(webhook: ShopifyWebhookJobData) {
     case ShopifyEvents.FULFILLMENT_ORDERS_CANCELLED:
       await handleShopifyOrderEvents(webhook);
       break;
+    case ShopifyEvents.REFUNDS_CREATE:
+      await handleShopifyRefundEvent(webhook);
+      break;
+    // Each body is narrowed by the topic its case matches.
+    case ShopifyEvents.CHECKOUTS_CREATE:
+    case ShopifyEvents.CHECKOUTS_UPDATE:
+      await handleCheckoutWebhook(webhook.shop, webhook.body as unknown as CheckoutWebhookBody);
+      break;
+    case ShopifyEvents.CHECKOUTS_DELETE:
+      await handleCheckoutDeleted(webhook.shop, webhook.body);
+      break;
+    case ShopifyEvents.CUSTOMERS_REDACT:
+      await redactShopifyCustomer(webhook.shop, webhook.body as unknown as CustomerRedactBody);
+      break;
+    case ShopifyEvents.SHOP_REDACT:
+      await redactShopifyShop(webhook.shop);
+      break;
     case ShopifyEvents.APP_UNINSTALLED:
       await handleShopifyAppUnistalled(webhook);
       break;
@@ -1104,6 +991,170 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       raw: body as unknown as Record<string, unknown>,
     },
   );
+
+  if (topic === ShopifyEvents.ORDERS_CREATE) {
+    await markCheckoutRecovered(shopifyInfo.orgId, body);
+  }
+}
+
+/** The gateway Shopify records on the transaction when a refund goes to store credit. */
+const STORE_CREDIT_GATEWAY = "shopify_store_credit";
+
+/** The refunds/create fields read here; the rest is left to the index signature. */
+interface ShopifyRefundWebhookBody {
+  id?: number | string;
+  order_id?: number | string;
+  note?: string | null;
+  created_at?: string;
+  transactions?: { kind?: string; status?: string; gateway?: string; amount?: string }[];
+  refund_line_items?: {
+    quantity?: number;
+    line_item?: { product_id?: number | null; title?: string };
+  }[];
+}
+
+interface RefundOrderData {
+  order: {
+    name: string;
+    email: string | null;
+    phone: string | null;
+    currencyCode: string;
+    customer: {
+      firstName: string | null;
+      lastName: string | null;
+      defaultEmailAddress: { emailAddress: string } | null;
+      defaultPhoneNumber: { phoneNumber: string } | null;
+      defaultAddress: { phone: string | null } | null;
+    } | null;
+    billingAddress: { phone: string | null; city: string | null } | null;
+    shippingAddress: { phone: string | null; city: string | null } | null;
+  } | null;
+}
+
+/**
+ * refunds/create. One refund can send money back to the original payment method and to
+ * store credit at once, so it raises up to two rule events — REFUNDS_CREATE for the
+ * original-method part and STORE_CREDIT_ISSUED for the store credit part — each carrying
+ * only its own amount as `refund_amount`.
+ *
+ * The payload names the order but not the customer, so the order is looked up for the
+ * phone, name and currency the rules and their variables need.
+ */
+export async function handleShopifyRefundEvent(webhook: ShopifyWebhookJobData) {
+  const { shop } = webhook;
+  const body = webhook.body as ShopifyRefundWebhookBody;
+
+  // Summed in paise/cents so a split refund's two parts add up exactly.
+  let originalCents = 0;
+  let storeCreditCents = 0;
+  for (const transaction of body.transactions ?? []) {
+    if (transaction.kind !== "refund" || transaction.status !== "success") continue;
+    const cents = Math.round(Number(transaction.amount ?? 0) * 100);
+    if (transaction.gateway === STORE_CREDIT_GATEWAY) storeCreditCents += cents;
+    else originalCents += cents;
+  }
+  const events = [
+    { event: ShopifyEvents.REFUNDS_CREATE, cents: originalCents },
+    { event: ShopifyEvents.STORE_CREDIT_ISSUED, cents: storeCreditCents },
+  ].filter((e) => e.cents > 0);
+  // A restock-only refund moves no money, and there is nothing to tell the customer.
+  if (!events.length || !body.order_id) return;
+
+  const shopifyInfo = await getShopifyIntegrationByShop(shop);
+  if (!shopifyInfo) {
+    log.trace(`No shopify session found`);
+    return;
+  }
+  if (!shopify) throw new Error("Shopify integration is not configured");
+  const client = new shopify.clients.Graphql({
+    session: await getActiveShopifySession(shopifyInfo),
+  });
+  const res: GraphQLClientResponse<RefundOrderData> = await client.request(
+    `query RefundOrder($id: ID!) {
+  order(id: $id) {
+    name
+    email
+    phone
+    currencyCode
+    customer {
+      firstName
+      lastName
+      defaultEmailAddress { emailAddress }
+      defaultPhoneNumber { phoneNumber }
+      defaultAddress { phone }
+    }
+    billingAddress { phone city }
+    shippingAddress { phone city }
+  }
+}`,
+    { variables: { id: `gid://shopify/Order/${body.order_id}` } },
+  );
+  const order = res.data?.order;
+  if (!order) {
+    log.info({ shop, orderId: body.order_id }, "Shopify refund's order not found");
+    return;
+  }
+
+  const customerPhone =
+    order.customer?.defaultPhoneNumber?.phoneNumber ||
+    order.phone ||
+    order.customer?.defaultAddress?.phone ||
+    order.billingAddress?.phone ||
+    order.shippingAddress?.phone;
+  if (!customerPhone) {
+    log.info(
+      { shop, orderId: body.order_id, refundId: body.id },
+      "Shopify refund's order carries no phone number; automation paths skipped",
+    );
+    return;
+  }
+
+  const email = order.customer?.defaultEmailAddress?.emailAddress ?? order.email;
+  const refundLineItems = body.refund_line_items ?? [];
+  const productIds = refundLineItems.flatMap((item) =>
+    item.line_item?.product_id ? [`gid://shopify/Product/${item.line_item.product_id}`] : [],
+  );
+  // The snake_case order shape rule variables are mapped against, so "Order Name",
+  // "Customer First Name" and "Currency" resolve as they do for order events.
+  const ruleBody = {
+    id: body.id,
+    order_id: body.order_id,
+    name: order.name,
+    note: body.note ?? "",
+    created_at: body.created_at,
+    currency: order.currencyCode,
+    store_credit_amount: (storeCreditCents / 100).toFixed(2),
+    email,
+    customer: order.customer
+      ? {
+          first_name: order.customer.firstName,
+          last_name: order.customer.lastName,
+          email,
+          phone: customerPhone,
+        }
+      : null,
+    billing_address: order.billingAddress,
+    shipping_address: order.shippingAddress,
+    line_items: refundLineItems.map((item) => ({
+      title: item.line_item?.title,
+      quantity: item.quantity,
+      product_id: item.line_item?.product_id,
+    })),
+  };
+
+  for (const { event, cents } of events) {
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
+      orgId: shopifyInfo.orgId,
+      phone: customerPhone,
+      shopifyEvent: event,
+      shopifyProductIds: productIds,
+      shopifyBody: {
+        ...ruleBody,
+        refund_amount: (cents / 100).toFixed(2),
+      } as unknown as ShopifyBody,
+      platform: "WHATSAPP",
+    });
+  }
 }
 
 export async function handleShopifyAppUnistalled(webhook: { shop: string }) {
@@ -1139,229 +1190,6 @@ export async function deleteShopifyIntegrationByShop(shop: string) {
       },
     },
   });
-}
-
-interface AbandonedCheckoutNode {
-  id: string;
-  createdAt: string;
-  completedAt: string | null;
-  billingAddress: { phone: string | null } | null;
-  customer: { defaultAddress: { phone: string | null } | null } | null;
-}
-
-interface AbandonedCheckoutsData {
-  abandonedCheckouts: {
-    edges: { node: AbandonedCheckoutNode; cursor: string }[];
-    pageInfo: { endCursor: string | null; hasNextPage: boolean };
-  };
-}
-
-export async function getAbandonedCheckouts(
-  client: GraphqlClient,
-): Promise<AbandonedCheckoutNode[]> {
-  const allCheckouts: AbandonedCheckoutNode[] = [];
-  let hasNextPage = true;
-  let cursor: string | null = null;
-  while (hasNextPage) {
-    // BUG (fixed): the query used to ask for `edges { nodes { ... } }` — but
-    // `nodes` (plural) is a field of the *connection*
-    // (AbandonedCheckoutConnection), not of an individual edge
-    // (AbandonedCheckoutEdge, which only has `node`, singular). Shopify's
-    // GraphQL API rejects that field entirely, so this always failed and the
-    // abandoned-checkout survey/recovery feature could never return a single
-    // checkout. Also added `billingAddress`/`customer.defaultAddress` phone
-    // fields, which `validateAndParseCheckoutPhone` needs to find a phone
-    // number — the query never selected them, so that lookup could never
-    // succeed even once the edges/node bug above was fixed.
-    const data: GraphQLClientResponse<AbandonedCheckoutsData> = await client.request(
-      `query getAbandonedCheckouts($cursor: String) {
-      abandonedCheckouts(first: 50, after: $cursor){
-      edges {
-       node {
-         id
-         createdAt
-         completedAt
-         billingAddress {
-           phone
-         }
-         customer {
-           defaultAddress {
-             phone
-           }
-         }
-       }
-       cursor
-      }
-      pageInfo {
-       endCursor
-       hasNextPage
-      }
-      }
-  }`,
-      { variables: { cursor } },
-    );
-    if (!data.data) throw new Error("Shopify abandonedCheckouts query returned no data");
-    hasNextPage = data.data.abandonedCheckouts.pageInfo.hasNextPage;
-    cursor = data.data.abandonedCheckouts.pageInfo.endCursor;
-    allCheckouts.push(
-      ...data.data.abandonedCheckouts.edges.map((e) => e.node).filter((a) => !a.completedAt),
-    );
-  }
-  return allCheckouts;
-}
-
-export async function sendTemplateForShopifyAbandonedCheckouts() {
-  try {
-    const integrations = (await prisma.integration.findMany({
-      where: {
-        name: IntegratedApps.shopify,
-      },
-    })) as unknown as ShopifyIntegration[];
-
-    await Promise.all(
-      integrations.map(async (integration) => {
-        const { orgId, credential } = integration;
-        const abandonedCheckoutConfig = credential.shopifySurveys.find(
-          (s) => s.event === ShopifyEvents.ABANDONED_CHECKOUTS,
-        );
-        if (!abandonedCheckoutConfig) {
-          log.trace("No abandoned checkout template config found");
-          return false;
-        }
-        const { waTemplateId, teamId } = abandonedCheckoutConfig;
-        if (!shopify) throw new Error("Shopify integration is not configured");
-        const client = new shopify.clients.Graphql({
-          session: await getActiveShopifySession(integration),
-        });
-        const allCheckouts = await getAbandonedCheckouts(client);
-
-        if (!allCheckouts || !allCheckouts.length) {
-          log.trace("No abandoned checkouts found");
-          return false;
-        }
-        //checkouts created within one hour
-        const lastCheckouts = allCheckouts.filter(
-          (checkout) => dayjs().diff(checkout.createdAt, "hours") < 1,
-        );
-
-        if (!lastCheckouts.length) {
-          log.trace("No recent checkouts ");
-          if (!abandonedCheckoutConfig.repeatInterval.value) return false;
-        }
-
-        let sentNowCheckoutList: Array<{ phone: string; checkoutId: string }> = [];
-
-        const { timeDelay, schedules = [], repeatInterval } = abandonedCheckoutConfig;
-        const shopifySurveys = [...credential.shopifySurveys];
-
-        lastCheckouts.forEach((checkout) => {
-          const phone = validateAndParseCheckoutPhone(checkout);
-
-          if (!phone) {
-            log.trace("invalid phone number");
-            return false;
-          }
-          if (timeDelay) {
-            // BUG (fixed): `checkout` is the GraphQL abandoned-checkout node
-            // (camelCase `createdAt`), not a REST order/checkout payload —
-            // `checkout.created_at` was always undefined, so `getScheduleTime`
-            // silently scheduled off `undefined` instead of the checkout's
-            // real creation time.
-            const scheduledTime = getScheduleTime(timeDelay, new Date(checkout.createdAt));
-            const schedule = {
-              status: "SCHEDULED",
-              createdAt: new Date(),
-              scheduledAt: scheduledTime,
-            };
-            schedules.push({
-              ...schedule,
-              history: [schedule],
-              phone,
-              checkoutId: checkout.id.toString(),
-            });
-          } else {
-            sentNowCheckoutList.push({
-              phone,
-              checkoutId: checkout.id.toString(),
-            });
-          }
-        });
-        if (repeatInterval?.value) {
-          allCheckouts
-            .filter((checkout) =>
-              schedules.find(
-                (c) =>
-                  checkout.id === c.checkoutId &&
-                  dayjs().diff(dayjs(c.sentAt), repeatInterval?.unit) >= repeatInterval?.value,
-              ),
-            )
-            .forEach((checkout) => {
-              const phone = validateAndParseCheckoutPhone(checkout);
-              if (phone)
-                sentNowCheckoutList.push({
-                  phone,
-                  checkoutId: checkout.id.toString(),
-                });
-            });
-        }
-        await Promise.all(
-          sentNowCheckoutList.map(async (checkout) => {
-            const res = await sendTemplateToUserCore(
-              orgId,
-              waTemplateId ?? "",
-              checkout.phone,
-              [],
-              teamId,
-            );
-            if (!("message" in res)) return;
-
-            let messageSentAt = new Date();
-            if (res.status) {
-              const message = await prisma.waMessage.findFirst({
-                where: {
-                  messageId: res.message,
-                },
-              });
-              messageSentAt = message?.waCreatedAt ?? messageSentAt;
-            }
-            const schedule = {
-              status: res.status ? "SENT" : `FAILED: ${res.message}`,
-              createdAt: messageSentAt,
-              scheduledAt: messageSentAt,
-              sentAt: res.status ? messageSentAt : null,
-            };
-            const index = schedules.findIndex((s) => s.checkoutId === checkout.checkoutId);
-            if (index !== -1) {
-              const history = schedules[index].history ?? [];
-              history.push(schedule);
-              schedules[index] = {
-                ...schedule,
-                phone: checkout.phone,
-                history,
-              };
-            } else {
-              schedules.push({
-                ...schedule,
-                history: [schedule],
-                phone: checkout.phone,
-                checkoutId: checkout.checkoutId,
-              });
-            }
-          }),
-        );
-
-        shopifySurveys.forEach((s) => {
-          if (s.event === ShopifyEvents.ABANDONED_CHECKOUTS) s.schedules = schedules;
-        });
-
-        const _resp1 = await updateShopifyIntegrationByOrgId(orgId, {
-          credential: { ...credential, shopifySurveys },
-        });
-      }),
-    );
-  } catch (e) {
-    log.error(e);
-  }
 }
 
 /**
@@ -1952,29 +1780,6 @@ export async function createShopifyDraftOrder(
   }
 
   return draftOrderData.data.draftOrderCreate.draftOrder;
-}
-
-function validateAndParseCheckoutPhone(checkout: AbandonedCheckoutNode) {
-  // BUG (fixed): this read `checkout.customer.phone` and
-  // `checkout.customer.default_address.phone` / `checkout.billing_address.phone`
-  // with no optional chaining, and none of those fields (nor a top-level
-  // `checkout.phone` — AbandonedCheckout has no such field) are ever present
-  // on the GraphQL abandoned-checkout node this function is actually called
-  // with. Every call threw ("Cannot read properties of undefined/null") the
-  // moment `checkout.customer` was ever null, aborting the whole
-  // `Promise.all` in `sendTemplateForShopifyAbandonedCheckouts` for every org
-  // being processed in that batch, not just the one with a missing phone.
-  const phoneNumber = checkout.customer?.defaultAddress?.phone || checkout.billingAddress?.phone;
-  if (!phoneNumber) {
-    log.trace("No Phone Number found");
-    return false;
-  }
-  const phone = parsePhoneNumber(phoneNumber, "IN");
-  if (phone.isValid() === false) {
-    log.trace("Invalid Phone number");
-    return false;
-  }
-  return phone.number;
 }
 
 /**

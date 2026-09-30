@@ -37,6 +37,7 @@ vi.mock("../../utils/prisma.js", () => ({
       delete: vi.fn(),
     },
     leadActivity: { create: vi.fn(), createMany: vi.fn() },
+    leadNote: { findUniqueOrThrow: vi.fn(), update: vi.fn() },
     leadTask: { updateMany: vi.fn() },
     contact: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     teamMember: { findMany: vi.fn() },
@@ -129,7 +130,10 @@ import {
   BadCursorError,
   countContactStageLoss,
   createLead,
+  getLeadById,
   moveLead,
+  NotNoteAuthorError,
+  updateNote,
   openLeadOnPipelineForContact,
   resolvePipelineForContact,
   setContactStage,
@@ -732,6 +736,21 @@ describe("a lead's owner", () => {
     db.lead.create.mockResolvedValue({ id: LEAD, labels: [], assignees: [], tasks: [] });
   });
 
+  test("a new lead gets a share-link id shaped like a web survey's", async () => {
+    await createLead({
+      pipelineId: PIPELINE,
+      stageId: STAGE,
+      name: "Walk-in",
+      source: "MANUAL",
+      channel: "NONE",
+      userId: USER,
+    } as never);
+
+    expect(db.lead.create.mock.calls[0][0].data.shortUrlId).toMatch(
+      /^[6789BCDFGHJKLMNPQRTWbcdfghjkmnpqrtwz]{8}$/,
+    );
+  });
+
   test("is whoever opened it", async () => {
     await createLead({
       pipelineId: PIPELINE,
@@ -863,6 +882,54 @@ describe("a rule opening a lead on a named pipeline", () => {
 
 // A rule names the board it wants, so it must not also fan the contact out across
 // every team that happens to have auto-add on.
+describe("editing a note", () => {
+  test("its author may change the text", async () => {
+    db.leadNote.findUniqueOrThrow.mockResolvedValueOnce({ authorId: USER });
+
+    await updateNote("note-1", { text: "Called back, wants a quote" }, USER);
+
+    expect(db.leadNote.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "note-1" },
+        data: { text: "Called back, wants a quote" },
+      }),
+    );
+  });
+
+  test("anyone else is refused, admins included", async () => {
+    db.leadNote.findUniqueOrThrow.mockResolvedValueOnce({ authorId: "someone-else" });
+
+    await expect(updateNote("note-1", { text: "x" }, USER)).rejects.toBeInstanceOf(
+      NotNoteAuthorError,
+    );
+    expect(db.leadNote.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("a lead's detail", () => {
+  test("lists every open activity, with the soonest as the next one", async () => {
+    const soon = { id: "t1", title: "Call", dueAt: new Date("2026-10-01") };
+    const later = { id: "t2", title: "Send quote", dueAt: new Date("2026-10-05") };
+    db.lead.findUnique.mockResolvedValueOnce({
+      id: LEAD,
+      labels: [],
+      assignees: [],
+      tasks: [soon, later],
+      notes: [],
+      activities: [],
+    });
+
+    const lead = await getLeadById(LEAD);
+
+    expect(db.lead.findUnique.mock.calls[0][0].include.tasks).toMatchObject({
+      where: { completedAt: null },
+      take: undefined,
+    });
+    expect(lead?.openTasks).toEqual([soon, later]);
+    expect(lead?.nextTask).toEqual(soon);
+  });
+});
+
 describe("assigning a lead", () => {
   const ALICE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   const BOB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -1054,8 +1121,6 @@ describe("assigning a contact to a stage", () => {
       pipelineId: PIPELINE,
       stageId: STAGE,
       contactId: CONTACT,
-      // Assigning names a board, not a team.
-      teamId: null,
     });
   });
 

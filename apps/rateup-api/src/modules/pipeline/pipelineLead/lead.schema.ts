@@ -17,6 +17,11 @@ export const idParamsSchema = z.object({
   id: z.uuid(),
 });
 
+/** A share link's id — `getShortUrlId()`'s length. */
+export const shortUrlIdParamsSchema = z.object({
+  id: z.string().length(8),
+});
+
 export const leadFilter = z.enum(["open", "mine", "rotting", "noactivity", "won", "lost"]);
 
 /**
@@ -37,7 +42,6 @@ export const listLeadsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   filter: leadFilter.default("open"),
   search: z.string().trim().max(160).optional(),
-  teamId: z.uuid().optional(),
   source: leadSource.optional(),
   assigneeId: z.uuid().optional(),
 });
@@ -48,12 +52,12 @@ export const createLeadRequestSchema = z.object({
   pipelineId: z.uuid(),
   stageId: z.uuid(),
   name: z.string().min(1).max(160),
+  description: z.string().max(5000).nullish(),
   company: z.string().max(160).nullish(),
   phone: z.string().max(32).nullish(),
   email: z.email().nullish(),
   source: leadSource.default("MANUAL"),
   channel: leadChannel.default("NONE"),
-  teamId: z.uuid().nullish(),
   contactId: z.uuid().nullish(),
   expectedCloseAt: z.iso.datetime().nullish(),
   labelIds: z.array(z.uuid()).optional(),
@@ -62,12 +66,12 @@ export const createLeadRequestSchema = z.object({
 
 export const updateLeadRequestSchema = z.object({
   name: z.string().min(1).max(160).optional(),
+  description: z.string().max(5000).nullish(),
   company: z.string().max(160).nullish(),
   phone: z.string().max(32).nullish(),
   email: z.email().nullish(),
   source: leadSource.optional(),
   channel: leadChannel.optional(),
-  teamId: z.uuid().nullish(),
   contactId: z.uuid().nullish(),
   expectedCloseAt: z.iso.datetime().nullish(),
   labelIds: z.array(z.uuid()).optional(),
@@ -92,14 +96,11 @@ export const bulkUpdateLeadsRequestSchema = z
   .object({
     leadIds: z.array(z.uuid()).min(1).max(200),
     stageId: z.uuid().optional(),
-    teamId: z.uuid().nullish(),
     assigneeIds: z.array(z.uuid()).optional(),
   })
-  .refine(
-    (value) =>
-      value.stageId !== undefined || value.assigneeIds !== undefined || value.teamId !== undefined,
-    { message: "Provide at least one field to update" },
-  );
+  .refine((value) => value.stageId !== undefined || value.assigneeIds !== undefined, {
+    message: "Provide at least one field to update",
+  });
 
 export const bulkDeleteLeadsRequestSchema = z.object({
   leadIds: z.array(z.uuid()).min(1).max(200),

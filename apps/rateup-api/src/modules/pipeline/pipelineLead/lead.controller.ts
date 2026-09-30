@@ -10,12 +10,15 @@ import {
   deleteNote,
   deleteTask,
   getLeadById,
+  getLeadByShortUrlId,
   listLeads,
   BadCursorError,
   LeadExistsForContactError,
   moveLead,
   reopenLead,
   updateLead,
+  updateNote,
+  NotNoteAuthorError,
   updateTask,
   getContactStage,
   setContactStage,
@@ -57,6 +60,22 @@ export async function getLeadHandler(
 ) {
   try {
     const lead = await getLeadById(request.params.id);
+    if (!lead) {
+      return reply.code(404).send({ message: "Lead not found" });
+    }
+    return reply.code(200).send(lead);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error retrieving lead" });
+  }
+}
+
+export async function getSharedLeadHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const lead = await getLeadByShortUrlId(request.params.id);
     if (!lead) {
       return reply.code(404).send({ message: "Lead not found" });
     }
@@ -196,6 +215,22 @@ export async function createNoteHandler(
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error creating note" });
+  }
+}
+
+export async function updateNoteHandler(
+  request: FastifyRequest<{ Params: { id: string }; Body: CreateNoteRequestSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const note = await updateNote(request.params.id, request.body, request.userId);
+    return reply.code(200).send(note);
+  } catch (error) {
+    if (error instanceof NotNoteAuthorError) {
+      return reply.code(403).send({ message: error.message });
+    }
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error updating note" });
   }
 }
 

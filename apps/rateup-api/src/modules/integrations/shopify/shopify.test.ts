@@ -88,6 +88,10 @@ vi.mock("../../whatsapp/messageTemplates/wa_templates.auth.js", () => ({
   verifyTemplateMessageLimit: vi.fn(),
 }));
 vi.mock("../../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
+vi.mock("../../../workers/bullmq/queues/index.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../workers/bullmq/queues/index.js")>()),
+  webhookQueue: { add: vi.fn() },
+}));
 // Loyalty is the commerce layer's now (`commerce/loyalty.ts`, driven through Shopify in
 // shopifyLoyalty.service.test.ts); from here it is just an enqueue.
 vi.mock("../commerce/loyalty.js", async () => {
@@ -105,7 +109,6 @@ import prisma from "../../../utils/prisma.js";
 import { pauseOrg } from "../../org/org.services.js";
 import { getIntegrationByName, deleteIntegrationByName } from "../integrations.service.js";
 import {
-  getAbandonedCheckouts,
   getShopifyIntegrationByShop,
   handleShopifyOrderEvents,
   handleShopifyAppUnistalled,
@@ -126,6 +129,7 @@ import webhookHandlers, {
 import { getScheduledTime, ShopifyPlanMap } from "./shopify.util.js";
 import { ShopifyEvents, ShopifySendAfter } from "../../../types/enums.js";
 import { shopifyRoutes } from "./shopify.route.js";
+import { webhookQueue } from "../../../workers/bullmq/queues/index.js";
 import type { Session } from "@shopify/shopify-api";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -374,75 +378,6 @@ describe("registerWebhookByTopic", () => {
 });
 
 // ===========================================================================
-// getAbandonedCheckouts
-// ===========================================================================
-
-describe("getAbandonedCheckouts", () => {
-  // NOTE (fixed): the query used to ask for `edges { nodes { ... } } ` — but
-  // `nodes` (plural) only exists on the connection, not on an individual
-  // edge (which only has `node`). Shopify rejects that field, so this used to
-  // throw for every call. It's now `edges { node { ... } }`, matching how the
-  // code reads the response.
-  test("reads back a well-formed edges/node response without throwing", async () => {
-    const client: any = {
-      request: vi.fn(async () => ({
-        data: {
-          abandonedCheckouts: {
-            edges: [
-              {
-                node: {
-                  id: "gid://shopify/AbandonedCheckout/1",
-                  createdAt: new Date().toISOString(),
-                  completedAt: null,
-                  billingAddress: null,
-                  customer: null,
-                },
-                cursor: "c",
-              },
-            ],
-            pageInfo: { hasNextPage: false, endCursor: null },
-          },
-        },
-      })),
-    };
-
-    await expect(getAbandonedCheckouts(client)).resolves.toEqual([
-      expect.objectContaining({ id: "gid://shopify/AbandonedCheckout/1" }),
-    ]);
-  });
-
-  test("the query text asks for node (singular) inside edges", async () => {
-    const client: any = {
-      request: vi.fn(async () => ({ data: { abandonedCheckouts: { edges: [], pageInfo: {} } } })),
-    };
-
-    await getAbandonedCheckouts(client).catch(() => {});
-
-    const query = client.request.mock.calls[0][0];
-    expect(query).toContain("edges {");
-    expect(query).toContain("node {");
-    expect(query).not.toContain("nodes {");
-  });
-
-  // NOTE (fixed): the projection used to be id/createdAt/completedAt only —
-  // no phone, no customer, no billing address — even though
-  // validateAndParseCheckoutPhone needs `customer.defaultAddress.phone` /
-  // `billingAddress.phone` to find a phone number to message. Now selected.
-  test("selects phone fields the sender needs to find a customer phone number", async () => {
-    const client: any = {
-      request: vi.fn(async () => ({ data: { abandonedCheckouts: { edges: [], pageInfo: {} } } })),
-    };
-
-    await getAbandonedCheckouts(client).catch(() => {});
-
-    const query = client.request.mock.calls[0][0];
-    expect(query).toContain("phone");
-    expect(query).toContain("customer");
-    expect(query).toContain("billingAddress");
-  });
-});
-
-// ===========================================================================
 // handleShopifyAppUnistalled
 // ===========================================================================
 
@@ -516,8 +451,8 @@ describe("handleShopifyAppUnistalled", () => {
 // ===========================================================================
 
 describe("the mandatory privacy webhooks", () => {
-  // NOTE: Shopify requires these three of every public app. All three bodies
-  // are a single log.info — no lookup, no deletion, no export, no queue.
+  // Shopify requires these three of every public app. The two redact topics are queued:
+  // stored abandoned checkouts are customer data this app has to delete on request.
   test("the customer data request handler only logs", async () => {
     const { log } = await import("../../../utils/logger.js");
 
@@ -526,9 +461,7 @@ describe("the mandatory privacy webhooks", () => {
     expect(log.info).toHaveBeenCalledOnce();
   });
 
-  test("the customer redact handler only logs", async () => {
-    const { log } = await import("../../../utils/logger.js");
-
+  test("the customer redact handler queues the request for the worker", async () => {
     await customersRedactHandler(
       "CUSTOMERS_REDACT",
       SHOP,
@@ -537,15 +470,21 @@ describe("the mandatory privacy webhooks", () => {
       "2024-10",
     );
 
-    expect(log.info).toHaveBeenCalledOnce();
+    expect(webhookQueue.add).toHaveBeenCalledWith(
+      "process-webhook",
+      { topic: "CUSTOMERS_REDACT", webhookId: "wh-2", body: { customer: { id: 1 } }, shop: SHOP },
+      { jobId: "wh-2" },
+    );
   });
 
-  test("the shop redact handler only logs", async () => {
-    const { log } = await import("../../../utils/logger.js");
-
+  test("the shop redact handler queues the request for the worker", async () => {
     await shopRedactRequestHandler("SHOP_REDACT", SHOP, "{}", "wh-3", "2024-10");
 
-    expect(log.info).toHaveBeenCalledOnce();
+    expect(webhookQueue.add).toHaveBeenCalledWith(
+      "process-webhook",
+      expect.objectContaining({ topic: "SHOP_REDACT", shop: SHOP }),
+      { jobId: "wh-3" },
+    );
   });
 
   test("all three are nonetheless registered as handled topics", () => {

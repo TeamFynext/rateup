@@ -91,7 +91,6 @@ export function leadWhere(
   if (view) clauses.push(view);
 
   if (query.stageId) clauses.push(Prisma.sql`l."stageId" = ${query.stageId}::uuid`);
-  if (query.teamId) clauses.push(Prisma.sql`l."teamId" = ${query.teamId}::uuid`);
   if (query.source) clauses.push(Prisma.sql`l.source = ${query.source}::"LeadSource"`);
 
   if (query.assigneeId) {

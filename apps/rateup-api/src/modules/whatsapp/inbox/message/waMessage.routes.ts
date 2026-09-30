@@ -1,11 +1,14 @@
 import { FastifyInstance } from "fastify";
 import {
   assignWaMessageHandler,
+  assignConversationOwnerHandler,
   blockWhatsappUserHandler,
   bulkAssignWaMessageHandler,
   clearConversationMentionsHandler,
   reopenConversationHandler,
   createPrivateMessageHandler,
+  editPrivateNoteHandler,
+  deletePrivateNoteHandler,
   setContactFavoriteHandler,
   setContactSpamHandler,
   exportWhatsappChatsHandler,
@@ -27,12 +30,16 @@ import { byContactIdSchema } from "../../../contact/contact.schema.js";
 import {
   blockUserSchema,
   bulkWaMessageAssignBody,
+  assignOwnerBody,
   clearMentionsSchema,
   reopenConversationSchema,
   favoriteContactSchema,
   spamContactSchema,
   generateInboxResponseBody,
   PaginateQuerySchema,
+  PrivateWaMessageBody,
+  privateNoteParams,
+  editPrivateNoteBody,
   waChatExportQuerySchema,
   waChatFilterQuerySchema,
   waMessageAssignBody,
@@ -126,6 +133,17 @@ export async function waMessageRoutes(server: FastifyInstance) {
   );
 
   server.post(
+    "/assign/owner",
+    {
+      config: { permission: "inbox.assign" },
+      schema: {
+        body: assignOwnerBody,
+      },
+    },
+    assignConversationOwnerHandler,
+  );
+
+  server.post(
     "/assign-bulk",
     {
       config: { permission: "inbox.assign" },
@@ -141,9 +159,23 @@ export async function waMessageRoutes(server: FastifyInstance) {
     {
       schema: {
         params: byContactIdSchema,
+        body: PrivateWaMessageBody,
       },
     },
     createPrivateMessageHandler,
+  );
+
+  // The author edits; the author or an inbox manager deletes (checked in the service).
+  server.patch(
+    "/privatemessage/note/:noteId",
+    { schema: { params: privateNoteParams, body: editPrivateNoteBody } },
+    editPrivateNoteHandler,
+  );
+
+  server.delete(
+    "/privatemessage/note/:noteId",
+    { schema: { params: privateNoteParams } },
+    deletePrivateNoteHandler,
   );
 
   server.get(

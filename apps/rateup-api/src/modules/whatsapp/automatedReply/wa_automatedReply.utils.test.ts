@@ -4,11 +4,14 @@ vi.mock("../../../utils/prisma.js", () => ({
   default: {
     waAutomatedReply: { count: vi.fn() },
     businessHour: { findUnique: vi.fn() },
+    rule: { findFirst: vi.fn() },
   },
   excludeFields: vi.fn(),
 }));
 
-vi.mock("../../../utils/redisConnection.js", () => ({ default: { exists: vi.fn(async () => 0) } }));
+vi.mock("../../../utils/redisConnection.js", () => ({
+  default: { exists: vi.fn(async () => 0), set: vi.fn() },
+}));
 vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
   notificationQueue: { add: vi.fn() },
@@ -66,7 +69,10 @@ import { findRecentAutomation } from "../whatsappSurvey/automation-logger.utils.
 import { getContactByPhoneNumberAndOrgId } from "../../contact/contact.service.js";
 import { WaAutomatedReplyMatchType } from "../../../types/enums.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
+import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
+import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.service.js";
 import {
+  executeScheduledRule,
   generateInternalMessageId,
   generateOrderReferenceId,
   readAssignStageValue,
@@ -834,5 +840,61 @@ describe("readAssignStageValue", () => {
     expect(readAssignStageValue(undefined)).toBe("");
     expect(readAssignStageValue(42)).toBe("");
     expect(readAssignStageValue({ stageId: 7 })).toBe("");
+  });
+});
+
+describe("executeScheduledRule - a scheduled template send", () => {
+  const templateRule = (value: Record<string, unknown>) =>
+    rule({
+      triggerEvent: TriggerEvent.SHOPIFY_EVENT,
+      actions: [{ id: "a-1", type: "SEND_TEMPLATE", value: { templateId: "tpl-1", ...value } }],
+    });
+  const context = { orgId: "org-1", phone: "919400651372", platform: "WHATSAPP" as const };
+
+  test("reports the message id of a template that went out", async () => {
+    (prisma as any).rule.findFirst.mockResolvedValue(templateRule({}));
+    (sendTemplateToUserCore as Mock).mockResolvedValue({ status: true, message: "wamid.1" });
+
+    const outcome = await executeScheduledRule("rule-1", context);
+
+    expect(outcome).toEqual({
+      status: "ran",
+      executedActions: [{ actionId: "a-1", success: true, messageId: "wamid.1" }],
+    });
+  });
+
+  test("reports a send Meta refused as a failed action", async () => {
+    (prisma as any).rule.findFirst.mockResolvedValue(templateRule({}));
+    (sendTemplateToUserCore as Mock).mockResolvedValue({
+      status: false,
+      message: "Template is paused",
+    });
+
+    const outcome = await executeScheduledRule("rule-1", context);
+
+    expect(outcome).toMatchObject({
+      executedActions: [{ actionId: "a-1", success: false, error: "Template is paused" }],
+    });
+  });
+
+  test("fills the template's URL button from the mapped variable", async () => {
+    (prisma as any).rule.findFirst.mockResolvedValue(
+      templateRule({ buttonUrlVariable: "recovery_link_code" }),
+    );
+    (resolveShopifyPathValue as Mock).mockReturnValue("AbC123xYz9");
+    (sendTemplateToUserCore as Mock).mockResolvedValue({ status: true, message: "wamid.2" });
+
+    await executeScheduledRule("rule-1", { ...context, shopifyBody: {} as any });
+
+    expect((sendTemplateToUserCore as Mock).mock.calls[0][9]).toBe("AbC123xYz9");
+  });
+
+  test("an inactive rule sends nothing", async () => {
+    (prisma as any).rule.findFirst.mockResolvedValue(rule({ isActive: false }));
+
+    await expect(executeScheduledRule("rule-1", context)).resolves.toEqual({
+      status: "inactive",
+    });
+    expect(sendTemplateToUserCore).not.toHaveBeenCalled();
   });
 });

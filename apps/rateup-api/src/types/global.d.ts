@@ -16,7 +16,6 @@ import {
 import prisma from "../utils/prisma.js";
 import {
   WaInternalMessageBody,
-  WaPrivateMessageBody,
   WaReceiveMessageBody,
   WaSendMessageBody,
   WaTemplateComponent,
@@ -24,6 +23,7 @@ import {
 } from "./whatsapp.types.js";
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
+import type { ThreadNote } from "../modules/whatsapp/inbox/note/note.service.js";
 import z from "zod";
 import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service.js";
 
@@ -1172,16 +1172,14 @@ declare global {
     | IgReceiveMessageBody
     | FbReceiveMessageBody
     | WaInternalMessageBody
-    | WaPrivateMessageBody
     | import("./whatsapp.types.js").WaWebhookChangeValue
     | Record<string, unknown>;
 
   interface WaInboxMessageBody {
-    exchangeProcess: "send" | "receive" | "internal" | "privateNote";
+    exchangeProcess: "send" | "receive" | "internal";
     send?: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody;
     receive?: WaReceiveMessageBody | IgReceiveMessageBody | FbReceiveMessageBody;
     internal?: WaInternalMessageBody;
-    privateNote?: WaPrivateMessageBody;
   }
   interface WaTemplateDefaultValues {
     image?: {
@@ -1625,11 +1623,17 @@ export interface FlowLogicJump {
 }
 
 export interface orgWsMessage {
-  type: "inbox" | "message_deleted" | "meta_agent_thread" | "notification";
+  type: "inbox" | "inbox_note" | "message_deleted" | "meta_agent_thread" | "notification";
   inbox?: {
     /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
     contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
     message: WaMessage;
+  };
+  /** A note written, edited or deleted. It joins the thread and leaves the inbox row alone. */
+  inbox_note?: {
+    contactId: string;
+    conversationId: string;
+    message: ThreadNote;
   };
   /** A message the customer revoked. The row still exists; only its rendering changes. */
   message_deleted?: {

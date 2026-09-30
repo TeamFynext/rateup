@@ -1,5 +1,6 @@
 import type { LeadChannel, LeadSource } from "../../../../generated/prisma/client.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
+import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../../utils/commonUtils.js";
 import prisma from "../../../utils/prisma.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 import type {
@@ -25,7 +26,6 @@ export const leadListInclude = {
     include: { assignee: { select: { id: true, name: true, profilePhoto: true } } },
   },
   owner: { select: { id: true, name: true, profilePhoto: true } },
-  team: { select: { id: true, name: true, color: true } },
   contact: { select: { id: true, name: true, phone: true } },
   stage: { select: { id: true, name: true, probability: true, rottingDays: true, status: true } },
   lostReason: { select: { id: true, label: true } },
@@ -269,6 +269,8 @@ export async function getLeadById(id: string) {
     where: { id },
     include: {
       ...leadListInclude,
+      // Every open activity, in the order `nextTask` is chosen from.
+      tasks: { ...leadListInclude.tasks, take: undefined },
       notes: {
         orderBy: { createdAt: "desc" },
         include: { author: { select: { id: true, name: true, profilePhoto: true } } },
@@ -283,7 +285,15 @@ export async function getLeadById(id: string) {
 
   if (!lead) return null;
   const { notes, activities, ...rest } = lead;
-  return { ...serialiseLead(rest), notes, activities };
+  return { ...serialiseLead(rest), openTasks: rest.tasks, notes, activities };
+}
+
+/** The card behind a share link, and the board it sits on. */
+export async function getLeadByShortUrlId(shortUrlId: string) {
+  return prisma.lead.findUnique({
+    where: { shortUrlId },
+    select: { id: true, pipelineId: true },
+  });
 }
 
 export async function getPipelineIdByLeadId(id: string) {
@@ -378,19 +388,21 @@ export async function createLead(
     : null;
   const source = contactSourceToLeadSource(contact?.source) ?? data.source;
 
-  const created = await prisma
-    .$transaction(async (tx) => {
+  // Drawn inside the retried function, so a short-id collision retries with a new one.
+  const created = await shortIdUniqueConstraintErrHandler(() =>
+    prisma.$transaction(async (tx) => {
       const lead = await tx.lead.create({
         data: {
+          shortUrlId: getShortUrlId(),
           pipelineId: data.pipelineId,
           stageId: data.stageId,
           name: data.name,
+          description: data.description || null,
           company: data.company,
           phone: data.phone,
           email: data.email,
           source,
           channel: data.channel,
-          teamId: data.teamId ?? null,
           contactId,
           ownerId: data.automated ? null : data.userId,
           expectedCloseAt: data.expectedCloseAt ? new Date(data.expectedCloseAt) : null,
@@ -426,22 +438,22 @@ export async function createLead(
       });
 
       return serialiseLead(lead);
-    })
-    .catch(async (error: unknown) => {
-      // The pre-check above lost a race, or two requests arrived together: either
-      // way the constraint is telling us the same thing the check would have, so
-      // it is reported the same way rather than as a 500.
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002" &&
-        contactId &&
-        guardContactConflict
-      ) {
-        const clash = await existingLeadForContact(contactId, data.pipelineId);
-        if (clash) throw clash;
-      }
-      throw error;
-    });
+    }),
+  ).catch(async (error: unknown) => {
+    // The pre-check above lost a race, or two requests arrived together: either
+    // way the constraint is telling us the same thing the check would have, so
+    // it is reported the same way rather than as a 500.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002" &&
+      contactId &&
+      guardContactConflict
+    ) {
+      const clash = await existingLeadForContact(contactId, data.pipelineId);
+      if (clash) throw clash;
+    }
+    throw error;
+  });
 
   if (data.quiet) return created;
 
@@ -473,12 +485,12 @@ export async function updateLead(id: string, data: UpdateLeadRequestSchema, user
       where: { id },
       data: {
         ...(data.name !== undefined && { name: data.name }),
+        ...(data.description !== undefined && { description: data.description || null }),
         ...(data.company !== undefined && { company: data.company }),
         ...(data.phone !== undefined && { phone: data.phone }),
         ...(data.email !== undefined && { email: data.email }),
         ...(data.source !== undefined && { source: data.source }),
         ...(data.channel !== undefined && { channel: data.channel }),
-        ...(data.teamId !== undefined && { teamId: data.teamId }),
         ...(data.contactId !== undefined && { contactId: data.contactId }),
         ...(data.expectedCloseAt !== undefined && {
           expectedCloseAt: data.expectedCloseAt ? new Date(data.expectedCloseAt) : null,
@@ -881,9 +893,6 @@ export async function setContactStage({
       email: contact.email,
       source,
       channel,
-      // Assigning a stage names a board, not a team; whoever picks the lead up
-      // sets that.
-      teamId: null,
       userId,
       automated,
       syncIntegrations,
@@ -1105,8 +1114,6 @@ export async function openLeadOnPipelineForContact({
     email: contact.email,
     source,
     channel,
-    // The rule names a board, not a team; whoever picks the lead up sets that.
-    teamId: null,
     userId,
     automated: true,
     contactLeadChecked: true,
@@ -1239,13 +1246,6 @@ export async function bulkUpdateLeads(data: BulkUpdateLeadsRequestSchema, userId
     }
   }
 
-  if (data.teamId !== undefined) {
-    await prisma.lead.updateMany({
-      where: { id: { in: data.leadIds } },
-      data: { teamId: data.teamId },
-    });
-  }
-
   // Reassignment runs per lead so each one records who joined and who left,
   // exactly as a single-lead edit would.
   if (data.assigneeIds !== undefined) {
@@ -1282,6 +1282,27 @@ export async function createNote(leadId: string, data: CreateNoteRequestSchema, 
     prisma.lead.update({ where: { id: leadId }, data: { lastActivityAt: new Date() } }),
   ]);
   return note;
+}
+
+/** Someone other than a note's author tried to edit it. The handler answers 403. */
+export class NotNoteAuthorError extends Error {
+  constructor() {
+    super("Only the person who wrote a note can edit it");
+    this.name = "NotNoteAuthorError";
+  }
+}
+
+export async function updateNote(id: string, data: CreateNoteRequestSchema, userId: string) {
+  const note = await prisma.leadNote.findUniqueOrThrow({
+    where: { id },
+    select: { authorId: true },
+  });
+  if (note.authorId !== userId) throw new NotNoteAuthorError();
+  return prisma.leadNote.update({
+    where: { id },
+    data: { text: data.text },
+    include: { author: { select: { id: true, name: true, profilePhoto: true } } },
+  });
 }
 
 export async function deleteNote(id: string) {
