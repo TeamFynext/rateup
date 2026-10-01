@@ -25,14 +25,15 @@ export async function emitIntegrationEvent(orgId: string, event: IntegrationEven
 }
 
 /**
- * `survey.response_submitted`, from wherever a response is filed. Only a response
- * with a contact is announced: the CRMs have nobody to put an anonymous one on.
+ * `survey.response_submitted`, from wherever a response is filed. An anonymous
+ * response is announced too: Zapier forwards every response, and the CRMs skip
+ * one with no contact.
  */
 export async function emitSurveyResponseSubmitted(
   orgId: string | null | undefined,
   response: { id: string; contactId: string | null; platform: string; createdAt: Date },
 ) {
-  if (!orgId || !response.contactId) return;
+  if (!orgId) return;
   const snapshot: SurveyResponseSnapshot = {
     id: response.id,
     contactId: response.contactId,

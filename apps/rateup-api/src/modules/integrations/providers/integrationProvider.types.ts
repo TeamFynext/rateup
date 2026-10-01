@@ -27,6 +27,12 @@ export interface ProviderJobData<TData = unknown> {
   rateupLeadId?: string;
 }
 
+/** How a provider job is being run, for providers that act on their last try. */
+export interface ProviderJobRunContext {
+  /** No retry follows if this run throws. */
+  finalAttempt: boolean;
+}
+
 export interface IntegrationEventContext {
   orgId: string;
   /** The org's active row for this provider; `null` for a `self`-gated provider. */
@@ -62,7 +68,11 @@ export interface IntegrationProvider {
   /** Translates an event into this provider's jobs and enqueues them. */
   handleEvent(event: IntegrationEvent, context: IntegrationEventContext): Promise<void>;
   /** Runs one of the jobs `handleEvent` enqueued. Absent for providers that enqueue elsewhere. */
-  processJob?(integration: Integration, job: ProviderJobData): Promise<void>;
+  processJob?(
+    integration: Integration,
+    job: ProviderJobData,
+    context: ProviderJobRunContext,
+  ): Promise<void>;
   /**
    * Provider → Rateup webhooks, delivered to the shared receiver at
    * `inboundWebhookUrl(name, integration.id)`. Verify the signature against the

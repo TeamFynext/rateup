@@ -72,9 +72,9 @@ vi.mock("./inboundNotify.js", () => ({ notifyInboundMessage: vi.fn() }));
 vi.mock("../../../org/ws/org.ws.controller.js", () => ({ sendViaWstoOrgHandler: vi.fn() }));
 vi.mock("../../instagram/instagram.service.js", () => ({ getIgUserDetailsFromMeta: vi.fn() }));
 vi.mock("../../facebook/facebook.service.js", () => ({ getFacebookUserDetailsFromMeta: vi.fn() }));
-vi.mock("../../../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { NEW_MESSAGE: "NEW_MESSAGE" },
+vi.mock("../../../integrations/events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvent: vi.fn(),
+  emitSurveyResponseSubmitted: vi.fn(),
 }));
 vi.mock("../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },

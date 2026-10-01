@@ -45,10 +45,6 @@ import { getSubscription } from "../subscription/subscription.service.js";
 import { getFlowFromDb } from "../whatsapp/flows/flow.service.js";
 import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema.js";
 import { PrismaClientKnownRequestError } from "../../../generated/prisma/internal/prismaNamespace.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service.js";
 import { getSpreadsheetContentType, getSpreadsheetFilename } from "../../utils/spreadsheet.js";
 
 export async function getResponsesHandler(
@@ -272,11 +268,6 @@ export async function createResponseHandler(
         updateResponse(response.id, { ip, location }),
         sendResponseToWebhook(response, response.surveyTeamMap.team.orgId),
         createTestimonial(data, response.id),
-        addZapierTriggerToQueue(
-          ZapierTriggers.RESPONSE_SUBMITTED,
-          { [ZapierTriggers.RESPONSE_SUBMITTED]: response },
-          response.surveyTeamMap.team.orgId,
-        ),
         emitSurveyResponseSubmitted(response.surveyTeamMap.team.orgId, response),
       ]);
       for (const [index, result] of sideEffects.entries()) {

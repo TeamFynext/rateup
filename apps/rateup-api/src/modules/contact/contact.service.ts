@@ -30,10 +30,6 @@ import {
 } from "../whatsapp/inbox/message/wamessage.service.js";
 import { notify } from "../notification/notify.js";
 import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service.js";
-import {
   conversationStatusData,
   createConversation,
   mirrorConversationStatusTx,
@@ -850,17 +846,12 @@ export async function updateContactLabelsById(
   if (!contact.Lifecycle) {
     throw new Error(`Lifecycle not found for id ${lifecycleId}`);
   }
-  await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_LIFECYCLE_UPDATED,
-    {
-      [ZapierTriggers.CONTACT_LIFECYCLE_UPDATED]: {
-        contactId: contact.id,
-        lifecycleId,
-        lifecycleName: contact.Lifecycle.name,
-      },
-    },
-    contact.orgId,
-  );
+  await emitIntegrationEvent(contact.orgId, {
+    type: "contact.lifecycle_changed",
+    contactId: contact.id,
+    lifecycleId,
+    lifecycleName: contact.Lifecycle.name,
+  });
 
   return contact;
 }

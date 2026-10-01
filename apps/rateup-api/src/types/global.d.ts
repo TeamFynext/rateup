@@ -25,7 +25,7 @@ import { RouteShorthandOptionsWithHandler } from "fastify";
 import type { StoredShopifySession } from "../modules/integrations/shopify/shopify.session.js";
 import type { ThreadNote } from "../modules/whatsapp/inbox/note/note.service.js";
 import z from "zod";
-import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service.js";
+import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.types.js";
 
 type GoogleReview = {
   minRating?: number;
@@ -281,7 +281,7 @@ declare global {
 
   interface ScheduleObj {
     // Assigned by callers via crypto.randomUUID() to correlate a schedule with
-    // its BullMQ job and its own history entries (see shopify.service.ts).
+    // its BullMQ job and its own history entries (see commerce/surveys.ts).
     scheduleId?: string;
     createdAt: Date;
     // Persisted as an explicit `null` (not omitted) in the credential JSON blob

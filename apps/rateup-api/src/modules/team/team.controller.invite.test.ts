@@ -31,9 +31,8 @@ vi.mock("supertokens-node/recipe/session/index.js", () => ({
 vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));
-vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { NEW_TEAM_MEMBER_CREATED: "NEW_TEAM_MEMBER_CREATED" },
+vi.mock("../integrations/events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvent: vi.fn(),
 }));
 
 import {
@@ -44,10 +43,7 @@ import {
   inviteTeamMember,
 } from "./team.service.js";
 import { log } from "../../utils/logger.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service.js";
+import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import {
   addMembertoTeamsHandler,
   completeInviteHandler,
@@ -57,12 +53,14 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const completeInviteMock = completeInvite as unknown as Mock;
-const addZapierTriggerMock = addZapierTriggerToQueue as unknown as Mock;
+const emitMock = emitIntegrationEvent as unknown as Mock;
 
 const ACCEPTED_INVITE = {
   id: "invite-token-1",
   email: "invitee@acme.com",
+  name: "Invitee",
   orgId: "org-1",
+  team: { code: "T1", name: "Support" },
   isUser: false,
   redirectLink: "https://app.rateup.app/auth/reset-password?token=reset-1",
 };
@@ -111,14 +109,18 @@ describe("completeInviteHandler", () => {
     });
   });
 
-  test("notifies Zapier that a team member joined the org", async () => {
+  test("tells the integrations (Zapier) that a team member joined the org", async () => {
     await completeInviteHandler(makeRequest(), makeReply());
 
-    expect(addZapierTriggerMock).toHaveBeenCalledWith(
-      ZapierTriggers.NEW_TEAM_MEMBER_CREATED,
-      { [ZapierTriggers.NEW_TEAM_MEMBER_CREATED]: ACCEPTED_INVITE },
-      "org-1",
-    );
+    expect(emitMock).toHaveBeenCalledWith("org-1", {
+      type: "team.member_joined",
+      member: {
+        name: "Invitee",
+        email: "invitee@acme.com",
+        isExistingUser: false,
+        team: { code: "T1", name: "Support" },
+      },
+    });
   });
 
   test("returns 500 and logs when the invitation cannot be accepted", async () => {
@@ -134,18 +136,18 @@ describe("completeInviteHandler", () => {
     expect(log.error).toHaveBeenCalled();
   });
 
-  test("does not fire the Zapier trigger when acceptance failed", async () => {
+  test("announces nothing when acceptance failed", async () => {
     completeInviteMock.mockRejectedValue(new Error("Invitation not found"));
 
     await completeInviteHandler(makeRequest("bad-token"), makeReply());
 
-    expect(addZapierTriggerMock).not.toHaveBeenCalled();
+    expect(emitMock).not.toHaveBeenCalled();
   });
 
   // The trigger is queued before the reply is sent, so a queue failure produces one
   // 500 rather than a 500 contradicting an already-sent 200.
-  test("answers a single 500 when the Zapier trigger throws", async () => {
-    addZapierTriggerMock.mockRejectedValue(new Error("queue down"));
+  test("answers a single 500 when the announcement throws", async () => {
+    emitMock.mockRejectedValue(new Error("queue down"));
     const reply = makeReply();
 
     await completeInviteHandler(makeRequest(), reply);

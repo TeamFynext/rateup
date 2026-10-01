@@ -48,9 +48,8 @@ vi.mock("../testimonial/testimonial.service.js", () => ({ createTestimonial: vi.
 vi.mock("../question/question.service.js", () => ({ getQuestionsBySurveyId: vi.fn() }));
 vi.mock("../subscription/subscription.service.js", () => ({ getSubscription: vi.fn() }));
 vi.mock("../whatsapp/flows/flow.service.js", () => ({ getFlowFromDb: vi.fn() }));
-vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { RESPONSE_SUBMITTED: "response_submitted" },
+vi.mock("../integrations/events/emitIntegrationEvent.js", () => ({
+  emitSurveyResponseSubmitted: vi.fn(),
 }));
 vi.mock("../../utils/auth.js", () => ({ assertRootOrg: vi.fn() }));
 vi.mock("../../authz/resourceScope.js", () => ({ surveyInScope: vi.fn() }));
@@ -61,7 +60,7 @@ import prisma from "../../utils/prisma.js";
 import * as service from "./response.service.js";
 import { getTeamIdsBySurveyMapId, getTeamIdsByUserId } from "../team/team.service.js";
 import { createTestimonial } from "../testimonial/testimonial.service.js";
-import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
+import { emitSurveyResponseSubmitted } from "../integrations/events/emitIntegrationEvent.js";
 import { log } from "../../utils/logger.js";
 import { fetchLocation } from "../../utils/location.js";
 import { surveyInScope } from "../../authz/resourceScope.js";
@@ -466,7 +465,7 @@ describe("createResponseHandler", () => {
 
   // Promise.all rejected on the first failure, so whichever of the six
   // operations had not yet resolved were abandoned — a submission could be
-  // recorded with its Google Sheet row missing or its Zapier event never queued,
+  // recorded with its Google Sheet row missing or its integration event never queued,
   // and the respondent's 201 had already gone out.
   test("one failing side effect does not abandon the rest of the batch", async () => {
     (createTestimonial as unknown as Mock).mockRejectedValueOnce(new Error("boom"));
@@ -474,7 +473,7 @@ describe("createResponseHandler", () => {
     await createResponseHandler({ body } as never, reply());
 
     expect(svc.sendResponseToWebhook).toHaveBeenCalled();
-    expect(addZapierTriggerToQueue).toHaveBeenCalled();
+    expect(emitSurveyResponseSubmitted).toHaveBeenCalled();
   });
 
   test("the WhatsApp platform skips the whole post-processing block", async () => {

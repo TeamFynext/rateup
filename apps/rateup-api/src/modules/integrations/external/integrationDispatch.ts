@@ -68,13 +68,13 @@ export async function processIntegration(job: Job<ProviderJobData>) {
     return;
   }
 
+  const finalAttempt = job.attemptsMade + 1 >= (job.opts?.attempts ?? 1);
   try {
-    await provider.processJob(integration, job.data);
+    await provider.processJob(integration, job.data, { finalAttempt });
   } catch (error) {
     // Counted once the job has run out of retries, so a GetLead 429 that its
     // backoff rides out is not reported as a failure.
-    const attempts = job.opts?.attempts ?? 1;
-    if (job.attemptsMade + 1 >= attempts) {
+    if (finalAttempt) {
       await recordIntegrationFailure(integration, provider.label, error, {
         notifyAfter: JOB_FAILURES_NOTIFY_AFTER,
       });

@@ -60,10 +60,6 @@ import { logAutomationAction } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service.js";
 import { producer } from "../../../plugins/kafka.js";
 import { assertWithinConversationLimit } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
@@ -592,12 +588,7 @@ async function publishSavedResponse(
 
     await updateCampaignStats(session.campaignParticipantId);
   }
-  addZapierTriggerToQueue(
-    ZapierTriggers.RESPONSE_SUBMITTED,
-    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
-    res.surveyTeamMap.team.orgId,
-  );
-  // Best effort, like the Zap: the response is filed whether or not this lands.
+  // Best effort: the response is filed whether or not this lands.
   await emitSurveyResponseSubmitted(res.surveyTeamMap.team.orgId, res).catch((err) =>
     log.error({ err, responseId: res.id }, "Failed to announce the survey response"),
   );
