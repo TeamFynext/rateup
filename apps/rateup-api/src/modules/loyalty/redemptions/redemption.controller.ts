@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import { write } from "hucre";
 import {
   applyRedemption,
   getRedemptionsByCustomer,
@@ -122,44 +123,35 @@ export async function getTransactionsHandler(
 
       // Generate Excel/CSV
       if (request.query.export === "excel") {
-        const ExcelJS = (await import("exceljs")).default;
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Transactions");
-
-        // Add headers
-        worksheet.columns = [
-          { header: "Transaction ID", key: "id", width: 40 },
-          { header: "Date", key: "date", width: 20 },
-          { header: "Customer Name", key: "customerName", width: 25 },
-          { header: "Customer Phone", key: "customerPhone", width: 20 },
-          { header: "Type", key: "type", width: 15 },
-          { header: "Source", key: "source", width: 20 },
-          { header: "Points", key: "points", width: 12 },
-          { header: "Balance After", key: "balanceAfter", width: 15 },
-          { header: "Description", key: "description", width: 30 },
-        ];
-
-        // Style header row
-        worksheet.getRow(1).font = { bold: true };
-        worksheet.getRow(1).fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFE0E0E0" },
-        };
-
-        // Add data
-        transactions.forEach((txn) => {
-          worksheet.addRow({
-            id: txn.id,
-            date: txn.createdAt.toISOString(),
-            customerName: txn.account.contact?.name || "N/A",
-            customerPhone: txn.account.contact?.phone || "N/A",
-            type: txn.transactionType,
-            source: txn.source,
-            points: txn.points,
-            balanceAfter: txn.balanceAfter,
-            description: txn.description || "",
-          });
+        const buffer = await write({
+          sheets: [
+            {
+              name: "Transactions",
+              columns: [
+                { header: "Transaction ID", key: "id", width: 40 },
+                { header: "Date", key: "date", width: 20 },
+                { header: "Customer Name", key: "customerName", width: 25 },
+                { header: "Customer Phone", key: "customerPhone", width: 20 },
+                { header: "Type", key: "type", width: 15 },
+                { header: "Source", key: "source", width: 20 },
+                { header: "Points", key: "points", width: 12 },
+                { header: "Balance After", key: "balanceAfter", width: 15 },
+                { header: "Description", key: "description", width: 30 },
+              ],
+              data: transactions.map((txn) => ({
+                id: txn.id,
+                date: txn.createdAt.toISOString(),
+                customerName: txn.account.contact?.name || "N/A",
+                customerPhone: txn.account.contact?.phone || "N/A",
+                type: txn.transactionType,
+                source: txn.source,
+                points: txn.points,
+                balanceAfter: txn.balanceAfter,
+                description: txn.description || "",
+              })),
+            },
+          ],
+          format: "xlsx",
         });
 
         reply.header(
@@ -171,7 +163,6 @@ export async function getTransactionsHandler(
           `attachment; filename="transactions-${new Date().toISOString()}.xlsx"`,
         );
 
-        const buffer = await workbook.xlsx.writeBuffer();
         return reply.send(buffer);
       } else {
         // CSV export

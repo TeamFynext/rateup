@@ -27,6 +27,7 @@ vi.mock("./contactGroup.service.js", () => ({
   getContactGroupsByContactId: vi.fn(),
   getContactGroupsByOrgId: vi.fn(),
   getContactGroupsByTeamId: vi.fn(),
+  countMatchingGroupMembers: vi.fn(),
   getContactsByContactGroupIdWithPagination: vi.fn(),
   removeContactsFromGroup: vi.fn(),
   updateContactGroup: vi.fn(),
@@ -35,6 +36,7 @@ vi.mock("./contactGroup.service.js", () => ({
 
 vi.mock("../contact.service.js", () => ({
   createMultipleContacts: vi.fn(),
+  getContactIdsByListQuery: vi.fn(),
   importCSVContacts: vi.fn(),
 }));
 
@@ -50,12 +52,17 @@ import {
   getContactGroupsByContactId,
   getContactGroupsByOrgId,
   getContactGroupsByTeamId,
+  countMatchingGroupMembers,
   getContactsByContactGroupIdWithPagination,
   removeContactsFromGroup,
   updateContactGroup,
   updateContactGroupsForContact,
 } from "./contactGroup.service.js";
-import { createMultipleContacts, importCSVContacts } from "../contact.service.js";
+import {
+  createMultipleContacts,
+  getContactIdsByListQuery,
+  importCSVContacts,
+} from "../contact.service.js";
 import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 import {
   addExistingContactsToGroupHandler,
@@ -67,6 +74,7 @@ import {
   deleteManyContactGroupsHandler,
   getContactGroupsByContactIdHandler,
   getContactGroupsHandler,
+  getGroupMatchCountsHandler,
   getContactsByContactGroupIdHandler,
   removeContactsFromGroupHandler,
   updateContactGroupHandler,
@@ -300,6 +308,24 @@ describe("deleteManyContactGroupsHandler", () => {
 // membership
 // ===========================================================================
 
+describe("getGroupMatchCountsHandler", () => {
+  test("counts with the filter keys, scoped to the team and the caller's org", async () => {
+    (countMatchingGroupMembers as Mock).mockResolvedValue({ g1: 4 });
+    const rep = reply();
+
+    await getGroupMatchCountsHandler(
+      request({ query: { teamId: "t1", labelIds: "l1", source: "whatsapp" } }),
+      rep,
+    );
+
+    expect(countMatchingGroupMembers).toHaveBeenCalledWith("t1", ORG, {
+      labelIds: "l1",
+      source: "whatsapp",
+    });
+    expect(answer(rep)).toMatchObject({ code: 200 });
+  });
+});
+
 describe("addExistingContactsToGroupHandler", () => {
   test("passes the ids, the customer flag and the caller's org", async () => {
     (addExistingContactsToGroup as Mock).mockResolvedValue(undefined);
@@ -315,6 +341,31 @@ describe("addExistingContactsToGroupHandler", () => {
 
     expect(addExistingContactsToGroup).toHaveBeenCalledWith("g1", ["c1"], true, ORG);
     expect(answer(rep).code).toBe(200);
+  });
+
+  test("a filter adds every contact the list query matches, not just picked ids", async () => {
+    (getContactIdsByListQuery as Mock).mockResolvedValue(["c1", "c2", "c3"]);
+    (addExistingContactsToGroup as Mock).mockResolvedValue({ added: 3, skipped: 0 });
+    const rep = reply();
+
+    await addExistingContactsToGroupHandler(
+      request({
+        params: { contactGroupId: "g1" },
+        body: { contactIds: ["ignored"], filter: { labelIds: "l1", source: "whatsapp" } },
+      }),
+      rep,
+    );
+
+    expect(getContactIdsByListQuery).toHaveBeenCalledWith(ORG, {
+      labelIds: "l1",
+      source: "whatsapp",
+    });
+    expect(addExistingContactsToGroup).toHaveBeenCalledWith(
+      "g1",
+      ["c1", "c2", "c3"],
+      undefined,
+      ORG,
+    );
   });
 
   test("reports a missing group as a 404", async () => {

@@ -24,6 +24,8 @@ vi.mock("../program/program.service.js", () => ({ getLoyaltyProgramByOrg: vi.fn(
 vi.mock("../rewards/reward.service.js", () => ({ getActiveLoyaltyRewards: vi.fn() }));
 vi.mock("./memberCard.service.js", () => ({ sendMemberCard: vi.fn() }));
 
+import { read } from "hucre";
+
 import {
   assignRewardToCustomer,
   awardPoints,
@@ -57,6 +59,7 @@ import {
   searchContactsForEnrolmentHandler,
   updateCustomerAccountHandler,
 } from "./account.controller.js";
+import { exportQuerySchema } from "./account.schema.js";
 
 type Mock = ReturnType<typeof vi.fn>;
 
@@ -856,25 +859,31 @@ describe("exportCustomerAccountsHandler", () => {
     expect(answer(rep).code).toBe(404);
   });
 
-  test("defaults to CSV with a header row", async () => {
+  /** The CSV the handler sent, as text, BOM left out, one entry per line. */
+  const csvLines = (rep: ReturnType<typeof reply>) =>
+    new TextDecoder().decode(rep.send.mock.calls[0][0] as Uint8Array).split("\r\n");
+
+  test("writes CSV with a header row and a BOM", async () => {
     (getCustomerAccountsForExport as Mock).mockResolvedValue([customer()]);
     const rep = reply();
 
-    await exportCustomerAccountsHandler(request({ query: {} }), rep);
+    await exportCustomerAccountsHandler(request({ query: { format: "csv" } }), rep);
 
-    expect(rep.header).toHaveBeenCalledWith("Content-Type", "text/csv");
-    const csv = rep.send.mock.calls[0][0] as string;
-    expect(csv.split("\n")[0]).toBe("Name,Phone,Email,Tier,Points,Lifetime Points,Referral Code");
-    expect(csv.split("\n")[1]).toBe("Ann,919000000001,a@b.c,Gold,500,900,ANN-AB12");
+    expect(rep.header).toHaveBeenCalledWith("Content-Type", "text/csv; charset=utf-8");
+    const bytes = rep.send.mock.calls[0][0] as Uint8Array;
+    expect(Array.from(bytes.subarray(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+    const lines = csvLines(rep);
+    expect(lines[0]).toBe("Name,Phone,Email,Tier,Points,Lifetime Points,Referral Code");
+    expect(lines[1]).toBe("Ann,919000000001,a@b.c,Gold,500,900,ANN-AB12");
   });
 
   test("labels an untiered customer as N/A", async () => {
     (getCustomerAccountsForExport as Mock).mockResolvedValue([customer({ currentTier: null })]);
     const rep = reply();
 
-    await exportCustomerAccountsHandler(request({ query: {} }), rep);
+    await exportCustomerAccountsHandler(request({ query: { format: "csv" } }), rep);
 
-    expect(rep.send.mock.calls[0][0]).toContain("N/A");
+    expect(csvLines(rep)[1]).toContain("N/A");
   });
 
   test("a comma in a customer's name is quoted, keeping the columns aligned", async () => {
@@ -883,10 +892,9 @@ describe("exportCustomerAccountsHandler", () => {
     ]);
     const rep = reply();
 
-    await exportCustomerAccountsHandler(request({ query: {} }), rep);
+    await exportCustomerAccountsHandler(request({ query: { format: "csv" } }), rep);
 
-    const row = (rep.send.mock.calls[0][0] as string).split("\n")[1];
-    expect(row).toBe('"Smith, Ann",919000000001,a@b.c,Gold,500,900,ANN-AB12');
+    expect(csvLines(rep)[1]).toBe('"Smith, Ann",919000000001,a@b.c,Gold,500,900,ANN-AB12');
   });
 
   test("a name beginning with = is neutralised before it reaches the file", async () => {
@@ -897,24 +905,44 @@ describe("exportCustomerAccountsHandler", () => {
     ]);
     const rep = reply();
 
-    await exportCustomerAccountsHandler(request({ query: {} }), rep);
+    await exportCustomerAccountsHandler(request({ query: { format: "csv" } }), rep);
 
-    const csv = rep.send.mock.calls[0][0] as string;
-    expect(csv).toContain('"\'=HYPERLINK(""http://x"",""click"")"');
-    expect(csv).not.toContain("\n=HYPERLINK");
+    const row = csvLines(rep)[1];
+    expect(row.startsWith("\"'=HYPERLINK(")).toBe(true);
   });
 
-  test("builds a workbook when excel is asked for", async () => {
+  test.each([
+    ["xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+    ["ods", "application/vnd.oasis.opendocument.spreadsheet"],
+  ])("builds a %s workbook that reads back", async (format, contentType) => {
     (getCustomerAccountsForExport as Mock).mockResolvedValue([customer()]);
     const rep = reply();
 
-    await exportCustomerAccountsHandler(request({ query: { format: "excel" } }), rep);
+    await exportCustomerAccountsHandler(request({ query: { format } }), rep);
 
+    expect(rep.header).toHaveBeenCalledWith("Content-Type", contentType);
     expect(rep.header).toHaveBeenCalledWith(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition",
+      expect.stringMatching(new RegExp(`filename="customers-\\d{4}-\\d{2}-\\d{2}\\.${format}"`)),
     );
-    expect(rep.send.mock.calls[0][0]).toBeInstanceOf(Buffer);
+    const workbook = await read(rep.send.mock.calls[0][0] as Uint8Array);
+    expect(workbook.sheets[0].rows[1]).toEqual([
+      "Ann",
+      "919000000001",
+      "a@b.c",
+      "Gold",
+      500,
+      900,
+      "ANN-AB12",
+    ]);
+  });
+});
+
+describe("exportQuerySchema", () => {
+  test('reads the dashboard\'s old "excel" as xlsx and defaults to xlsx', () => {
+    expect(exportQuerySchema.parse({ format: "excel" })).toEqual({ format: "xlsx" });
+    expect(exportQuerySchema.parse({})).toEqual({ format: "xlsx" });
+    expect(exportQuerySchema.safeParse({ format: "pdf" }).success).toBe(false);
   });
 });
 

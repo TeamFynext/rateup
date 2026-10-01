@@ -19,6 +19,8 @@ import {
 import { BATCH_SIZE } from "../../../utils/constants/constants.js";
 import { ContactGroupType } from "../../../../generated/prisma/client.js";
 import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "../contact.channel.js";
+import { buildContactListWhere } from "../contact.listQuery.js";
+import type { PaginationQuery as ContactListQuery } from "../contact.schema.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -77,6 +79,26 @@ export async function getContactGroupsByTeamId(
   });
 
   return contactGroups;
+}
+/**
+ * For each group in a team, how many of its WhatsApp members match a contacts list query — what
+ * the campaign picker would add from that group with those filters on. A separate count rather
+ * than a filtered `_count` on the group list, which stays the plain member count.
+ */
+export async function countMatchingGroupMembers(
+  teamId: string,
+  orgId: string,
+  query: ContactListQuery,
+) {
+  const rows = await prisma.contactGroupMap.groupBy({
+    by: ["contactGroupId"],
+    where: {
+      contactGroup: { teamId, team: { orgId } },
+      contact: { ...whatsappContactWhere, ...buildContactListWhere(orgId, query) },
+    },
+    _count: { _all: true },
+  });
+  return Object.fromEntries(rows.map((row) => [row.contactGroupId, row._count._all]));
 }
 //also used in zapier controller
 export async function getContactGroupsByOrgId(orgId: string, type?: ContactGroupType) {
