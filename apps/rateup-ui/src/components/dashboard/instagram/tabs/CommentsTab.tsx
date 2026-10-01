@@ -29,15 +29,22 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
 
-export function CommentsTab() {
+/** `ibaId` is the account picked in the page header; rules for other accounts stay hidden. */
+export function CommentsTab({ ibaId }: Readonly<{ ibaId: string }>) {
   const { data: rules = [] } = useRules();
   const updateMutation = useUpdateRuleMutation();
   const deleteMutation = useDeleteRuleMutation();
   const { t } = useTranslation();
 
   const commentRules = useMemo(
-    () => rules.filter((r) => r.platform === "INSTAGRAM" && r.triggerEvent === "INSTAGRAM_COMMENT"),
-    [rules],
+    () =>
+      rules.filter(
+        (r) =>
+          r.platform === "INSTAGRAM" &&
+          r.triggerEvent === "INSTAGRAM_COMMENT" &&
+          r.whatsappSettingsPhoneIds?.includes(ibaId),
+      ),
+    [rules, ibaId],
   );
 
   return (
@@ -59,7 +66,11 @@ export function CommentsTab() {
               <Link
                 to="/dashboard/automation/$automationId"
                 params={{ automationId: "new" }}
-                search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_COMMENT" }}
+                search={{
+                  platform: "INSTAGRAM",
+                  triggerEvent: "INSTAGRAM_COMMENT",
+                  channel: ibaId,
+                }}
               />
             }
           >
@@ -87,7 +98,11 @@ export function CommentsTab() {
                   <Link
                     to="/dashboard/automation/$automationId"
                     params={{ automationId: "new" }}
-                    search={{ platform: "INSTAGRAM", triggerEvent: "INSTAGRAM_COMMENT" }}
+                    search={{
+                      platform: "INSTAGRAM",
+                      triggerEvent: "INSTAGRAM_COMMENT",
+                      channel: ibaId,
+                    }}
                   />
                 }
               >
