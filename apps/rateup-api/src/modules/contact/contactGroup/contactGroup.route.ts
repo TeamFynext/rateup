@@ -5,7 +5,8 @@ import {
   byContactGroupIdParamsSchema,
   paginationQuery,
   updateContactGroupInputSchema,
-  addExistingContactsToGroupInputSchema,
+  addExistingContactsToGroupBodySchema,
+  groupMatchCountsQuerySchema,
   addNewContactsToGroupInputSchema,
   removeGroupContactsSchema,
   deleteManyGroupSchema,
@@ -26,6 +27,7 @@ import {
   deleteManyContactGroupsHandler,
   addNewContactsfromCSVToGroupHandler,
   getContactGroupsByContactIdHandler,
+  getGroupMatchCountsHandler,
   updateContactGroupsForContactHandler,
 } from "./contactGroup.controller.js";
 import fastifyMultipart from "@fastify/multipart";
@@ -55,6 +57,16 @@ export async function contactGroupRoutes(server: FastifyInstance) {
       },
     },
     getContactGroupsHandler,
+  );
+
+  server.get(
+    "/match-counts",
+    {
+      schema: {
+        querystring: groupMatchCountsQuerySchema,
+      },
+    },
+    getGroupMatchCountsHandler,
   );
 
   server.get(
@@ -94,7 +106,7 @@ export async function contactGroupRoutes(server: FastifyInstance) {
     {
       schema: {
         params: byContactGroupIdParamsSchema,
-        body: addExistingContactsToGroupInputSchema,
+        body: addExistingContactsToGroupBodySchema,
       },
     },
     addExistingContactsToGroupHandler,

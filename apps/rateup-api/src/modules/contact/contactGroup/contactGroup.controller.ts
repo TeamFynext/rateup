@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { log } from "../../../utils/logger.js";
 import {
-  AddExistingContactsToGroupInput,
+  AddExistingContactsToGroupBody,
   AddExistingContactsToMultipleGroupsInput,
   AddNewContactsToGroupInput,
   ByContactGroupIdParams,
@@ -10,6 +10,7 @@ import {
   CreateContactGroupInput,
   DeleteManyGroupsInput,
   GetContactGroupsQuery,
+  GroupMatchCountsQuery,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
 } from "./contactGroup.schema.js";
@@ -22,6 +23,7 @@ import {
   deleteContactGroup,
   getContactGroupsByTeamId,
   getContactGroupsByOrgId,
+  countMatchingGroupMembers,
   removeContactsFromGroup,
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
@@ -32,7 +34,11 @@ import {
 import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
-import { createMultipleContacts, importCSVContacts } from "../contact.service.js";
+import {
+  createMultipleContacts,
+  getContactIdsByListQuery,
+  importCSVContacts,
+} from "../contact.service.js";
 import { getMultipartFieldValue } from "../../../utils/upload/validate.js";
 import { PaginationQuery } from "../contact.schema.js";
 
@@ -84,6 +90,23 @@ export async function getContactGroupsHandler(
   }
 }
 
+export async function getGroupMatchCountsHandler(
+  request: FastifyRequest<{ Querystring: GroupMatchCountsQuery }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { teamId, ...filter } = request.query;
+    const counts = await countMatchingGroupMembers(
+      teamId,
+      request.user.orgId,
+      filter as PaginationQuery,
+    );
+    reply.code(200).send(counts);
+  } catch (error) {
+    return replyForError(reply, error, "Error counting matching group members");
+  }
+}
+
 export async function getContactsByContactGroupIdHandler(
   request: FastifyRequest<{
     Params: ByContactGroupIdParams;
@@ -122,17 +145,24 @@ export async function createContactGroupHandler(
 
 export async function addExistingContactsToGroupHandler(
   request: FastifyRequest<{
-    Body: AddExistingContactsToGroupInput;
+    Body: AddExistingContactsToGroupBody;
     Params: ByContactGroupIdParams;
   }>,
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
+    const { contactIds, filter } = request.body;
+    // A filter means "everyone the list matched", resolved here on the server so it
+    // reaches past the page the dialog happens to show.
+    const ids = filter
+      ? await getContactIdsByListQuery(orgId, filter as PaginationQuery)
+      : (contactIds ?? []);
     const contactGroup = await addExistingContactsToGroup(
       request.params.contactGroupId,
-      request.body.contactIds,
+      ids,
       request.body.isCustomer,
-      request.user.orgId,
+      orgId,
     );
     reply.code(200).send(contactGroup);
   } catch (error) {

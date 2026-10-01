@@ -10,6 +10,7 @@ import { PaginationQuery } from "../../contact/contact.schema.js";
 import { CampaignParticipant, Prisma } from "../../../../generated/prisma/client.js";
 import { CampaignNotFoundError } from "../campaign.errors.js";
 import { whatsappContactWhere } from "../../contact/contact.channel.js";
+import { buildContactListWhere } from "../../contact/contact.listQuery.js";
 
 async function assertCampaignInOrg(campaignId: string, orgId: string) {
   const campaign = await prisma.campaign.findFirst({
@@ -32,8 +33,14 @@ export async function createCampaignParticipantsFromGroup(
         in: data.groupIds,
       },
       contactGroup: { team: { orgId } },
-      // A group can hold contacts from any channel; only the WhatsApp ones are reachable by a campaign.
-      contact: whatsappContactWhere,
+      // A group can hold contacts from any channel; only the WhatsApp ones are reachable by a
+      // campaign. With a filter, only the members it matches are taken.
+      contact: data.groupFilter
+        ? {
+            ...whatsappContactWhere,
+            ...buildContactListWhere(orgId, data.groupFilter as PaginationQuery),
+          }
+        : whatsappContactWhere,
     },
   });
 
@@ -57,8 +64,16 @@ export async function createCampaignParticipantsFromContacts(
   data: CreateCampaignParticipantsFromContactsInput,
 ) {
   await assertCampaignInOrg(campaignId, orgId);
+  // Picked ids, plus — when a filter came along — everyone the contacts list matched for it.
+  const picked: Prisma.ContactWhereInput = { id: { in: data.contactIds } };
   const contacts = await prisma.contact.findMany({
-    where: { id: { in: data.contactIds }, orgId, ...whatsappContactWhere },
+    where: data.filter
+      ? {
+          orgId,
+          ...whatsappContactWhere,
+          OR: [picked, buildContactListWhere(orgId, data.filter as PaginationQuery)],
+        }
+      : { ...picked, orgId, ...whatsappContactWhere },
     select: { id: true },
   });
   const campaignParticipants = await prisma.campaignParticipant.createMany({
@@ -131,9 +146,11 @@ export async function createCampaignParticipants(
   const [fromContacts, fromGroups, fromCampaigns] = await Promise.all([
     createCampaignParticipantsFromContacts(campaignId, orgId, {
       contactIds: data.contactIds,
+      filter: data.filter,
     }),
     createCampaignParticipantsFromGroup(campaignId, orgId, {
       groupIds: data.groupIds,
+      groupFilter: data.groupFilter,
     }),
     createCampaignParticipantsFromAnotherCampaign(campaignId, orgId, data),
   ]);
