@@ -672,6 +672,32 @@ describe("getContactsByOrgId", () => {
     ]);
   });
 
+  test("labelIds matches contacts carrying any of the labels", async () => {
+    await getContactsByOrgId(ORG, { labelIds: "l1,l2,l1" } as any);
+
+    expect(where().AND).toEqual([{ ContactLabelMap: { some: { labelId: { in: ["l1", "l2"] } } } }]);
+  });
+
+  test("a custom field filter matches its value case-insensitively", async () => {
+    await getContactsByOrgId(ORG, { customFieldId: "f1", customFieldValue: " Gold " } as any);
+
+    expect(where().AND).toEqual([
+      {
+        customFields: {
+          some: { fieldId: "f1", value: { equals: "Gold", mode: "insensitive" } },
+        },
+      },
+    ]);
+  });
+
+  test("a custom field without a value matches contacts that have it set", async () => {
+    await getContactsByOrgId(ORG, { customFieldId: "f1" } as any);
+
+    expect(where().AND).toEqual([
+      { customFields: { some: { fieldId: "f1", value: { not: "" } } } },
+    ]);
+  });
+
   test("a name filter becomes a case-insensitive contains", async () => {
     await getContactsByOrgId(ORG, { name: "an" } as any);
 

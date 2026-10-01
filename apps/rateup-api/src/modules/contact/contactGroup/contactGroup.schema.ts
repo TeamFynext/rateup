@@ -44,11 +44,23 @@ const addExistingContactsToGroupInputSchema = z.object({
   contactIds: z.array(z.string()),
   isCustomer: z.boolean().optional(),
 });
+/**
+ * The dashboard's form of the above: either picked `contactIds`, or `filter` — the contacts
+ * list query (search plus filter keys, as `GET /contact` takes them) — to add every contact it
+ * matches. The public API keeps the ids-only schema.
+ */
+const addExistingContactsToGroupBodySchema = addExistingContactsToGroupInputSchema.extend({
+  contactIds: z.array(z.string()).optional(),
+  filter: z.record(z.string(), z.string()).optional(),
+});
 const addExistingContactsToMultipleGroupsInputSchema = addExistingContactsToGroupInputSchema.extend(
   {
     contactGroupIds: z.array(z.string()),
   },
 );
+
+/** `teamId` plus the contacts list filter keys, passed through as `GET /contact` takes them. */
+const groupMatchCountsQuerySchema = z.looseObject({ teamId: z.uuid() });
 
 const getContactGroupsQuerySchema = z.object({
   contactGroupId: z.string().optional(),
@@ -84,6 +96,8 @@ const contactGroupByContactIdBody = z.object({
 
 export type GetContactGroupsQuery = z.infer<typeof getContactGroupsQuerySchema>;
 export type AddExistingContactsToGroupInput = z.infer<typeof addExistingContactsToGroupInputSchema>;
+export type GroupMatchCountsQuery = z.infer<typeof groupMatchCountsQuerySchema>;
+export type AddExistingContactsToGroupBody = z.infer<typeof addExistingContactsToGroupBodySchema>;
 export type AddExistingContactsToMultipleGroupsInput = z.infer<
   typeof addExistingContactsToMultipleGroupsInputSchema
 >;
@@ -103,6 +117,8 @@ export {
   byContactGroupIdParamsSchema,
   updateContactGroupInputSchema,
   addExistingContactsToGroupInputSchema,
+  addExistingContactsToGroupBodySchema,
+  groupMatchCountsQuerySchema,
   addNewContactsToGroupInputSchema,
   getContactGroupsQuerySchema,
   removeGroupContactsSchema,
