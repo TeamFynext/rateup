@@ -5,6 +5,7 @@ import { buildTemplateComponents } from "../whatsapp/messageTemplates/templateCo
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service.js";
 import { createTemplateMessage } from "../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { sendMetaMessage } from "../whatsapp/meta/metaMessage.service.js";
+import { CAMPAIGN_TEST_FLOW_TOKEN } from "../whatsapp/flows/flowToken.js";
 import { PlatformType } from "../../../generated/prisma/enums.js";
 
 export class CampaignTestSendError extends Error {
@@ -46,9 +47,7 @@ export async function sendCampaignTestMessage(
   const recipient = phone.replace(/[^\d+]/g, "");
 
   // Rendered with the same builder the real send uses, so a test exercises the
-  // actual header, body and buttons rather than an approximation of them. The
-  // flow button is left out: a test send has no participant for a flow response
-  // to be filed against.
+  // actual header, body and buttons rather than an approximation of them.
   const components = await buildTemplateComponents({
     dbTemplate: {
       data: dbTemplate.data,
@@ -58,7 +57,20 @@ export async function sendCampaignTestMessage(
     orgId,
     phone: recipient,
     teamId: campaign.teamId,
-    includeFlowButton: false,
+    // The campaign's variable mapping, as the real send passes it. When the number
+    // is one of the org's contacts the test shows their own name and fields;
+    // otherwise, and for any value the contact lacks, the template's example
+    // fills in. A mapping too short for the template still fails here exactly
+    // as it would for real.
+    personalize: {
+      contact: (await findTestContact(orgId, recipient)) ?? {},
+      contactTags: campaign.dynamicTags,
+    },
+    // Meta rejects a template with a flow button sent without one (131009). The
+    // test token resolves to no run, so a test has no participant for a flow
+    // response to be filed against.
+    includeFlowButton: hasFlowButton(dbTemplate.data),
+    flowToken: CAMPAIGN_TEST_FLOW_TOKEN,
   });
 
   const result = await sendMetaMessage({
@@ -73,6 +85,9 @@ export async function sendCampaignTestMessage(
     category: dbTemplate.data.category,
     teamId: campaign.teamId,
     messageType: "TEMPLATE",
+    // The number the real send goes out on. Without it an org with more than one
+    // connected number gets no credentials at all (see `getWaSendingSettings`).
+    sourceIdentifier: dbTemplate.whatsappSettingsPhoneId ?? undefined,
   });
 
   if (!result.ok) {
@@ -81,4 +96,40 @@ export async function sendCampaignTestMessage(
   }
 
   return { messageId: result.messageId };
+}
+
+function hasFlowButton(data: { components?: { type?: string; buttons?: { type?: string }[] }[] }) {
+  return Boolean(
+    data.components?.some(
+      (c) =>
+        c.type?.toUpperCase() === "BUTTONS" &&
+        c.buttons?.some((b) => b.type?.toUpperCase() === "FLOW"),
+    ),
+  );
+}
+
+/**
+ * The org's contact for the test number, shaped like the campaign worker's
+ * participant row. Contacts are stored digits-only, with a few legacy `+`
+ * spellings; the digits-only row wins when a number has both.
+ */
+async function findTestContact(orgId: string, recipient: string) {
+  const digits = recipient.replace(/\D/g, "");
+  if (!digits) return null;
+
+  const contacts = await prisma.contact.findMany({
+    where: { orgId, phone: { in: [digits, `+${digits}`] } },
+    select: {
+      name: true,
+      phone: true,
+      customFields: { select: { value: true, field: { select: { slug: true } } } },
+    },
+  });
+  const contact = contacts.find((c) => c.phone === digits) ?? contacts[0];
+  if (!contact) return null;
+
+  return {
+    name: contact.name,
+    customFields: contact.customFields.map((f) => ({ slug: f.field.slug, value: f.value })),
+  };
 }
