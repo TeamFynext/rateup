@@ -8,15 +8,26 @@ const byCampaignParticipantIdParamsSchema = z.object({
 
 const createCampaignParticipantsFromGroupsSchema = z.object({
   groupIds: z.array(z.uuid()),
+  groupFilter: z.record(z.string(), z.string()).optional(),
 });
+
+/**
+ * `filter` is the contacts list query (search plus filter keys, as `GET /contact` takes them);
+ * every WhatsApp contact it matches is added, alongside any picked `contactIds`.
+ */
+const contactListFilterSchema = z.record(z.string(), z.string()).optional();
 
 const createCampaignParticipantsFromContactsSchema = z.object({
   contactIds: z.array(z.uuid()),
+  filter: contactListFilterSchema,
 });
 
 const createCampaignParticipantsSchema = z.object({
   contactIds: z.array(z.uuid()),
+  filter: contactListFilterSchema,
   groupIds: z.array(z.uuid()),
+  /** Same shape as `filter`, but narrows the members taken from `groupIds` instead. */
+  groupFilter: contactListFilterSchema,
   status: z.array(z.enum(CampaignParticipantAddStatus)),
   campaignIds: z.array(z.uuid()),
 });

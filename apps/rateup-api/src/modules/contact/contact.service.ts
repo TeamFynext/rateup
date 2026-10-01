@@ -1,8 +1,8 @@
-import { Contact, ContactGroupType, Prisma } from "../../../generated/prisma/client.js";
+import { Contact } from "../../../generated/prisma/client.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import { ContactNotFoundError } from "./contact.errors.js";
-import { WHATSAPP_CONTACT_CHANNEL, whatsappContactWhere } from "./contact.channel.js";
+import { buildContactListWhere } from "./contact.listQuery.js";
 import { releaseThreadsOnTicketClose } from "../metaAgent/metaAgent.autoRelease.js";
 export { ContactNotFoundError };
 import {
@@ -473,146 +473,28 @@ export async function getContactByIdForWebhook(contactId: string) {
   return await prisma.contact.findUnique({ where: { id: contactId } });
 }
 
+/** Every contact id the contacts list would show for this query, across all of its pages. */
+export async function getContactIdsByListQuery(orgId: string, query: PaginationQuery) {
+  const contacts = await prisma.contact.findMany({
+    where: buildContactListWhere(orgId, query),
+    select: { id: true },
+  });
+  return contacts.map((contact) => contact.id);
+}
+
 export async function getContactsByOrgId(orgId: string, query?: PaginationQuery) {
   const {
     page = 0,
     limit = 500,
-    search = "",
     sort = "createdAt",
     desc = "desc",
-    // type = ContactGroupType.NORMAL,
-    ...filter
   } = query ?? {
     page: 0,
     limit: 500,
-    search: "",
     sort: "createdAt",
     desc: "asc",
   };
-  let filterData: Prisma.ContactWhereInput[] = [];
-  if (filter) {
-    const params = new URLSearchParams(filter);
-    for (const [key, value] of params.entries()) {
-      switch (key) {
-        case "name":
-        case "phone":
-        case "email": {
-          filterData.push({
-            [key]: {
-              contains: value,
-              mode: "insensitive" as const,
-            },
-          });
-          break;
-        }
-        case "createdAt": {
-          const day = new Date(value);
-          if (!Number.isNaN(day.getTime())) {
-            const nextDay = new Date(day);
-            nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-            filterData.push({ createdAt: { gte: day, lt: nextDay } });
-          }
-          break;
-        }
-        case "consent": {
-          filterData.push({
-            [key]: {
-              equals: value?.toLocaleLowerCase() === "true",
-            },
-          });
-          break;
-        }
-
-        case "filterGroupName": {
-          let splitValue = [...new Set(value?.split(","))];
-          filterData.push({
-            contactGroups: {
-              some: {
-                contactGroupId: {
-                  in: splitValue,
-                },
-              },
-            },
-          });
-          break;
-        }
-        case "source": {
-          // `source` is a free-form column whose writers disagree on casing
-          // ("whatsapp" vs "WEBCHAT" vs "CSV IMPORT"), so match it case-insensitively.
-          if (value !== "all") {
-            filterData.push({
-              source: { equals: value, mode: "insensitive" as const },
-            });
-          }
-          break;
-        }
-        case "channel": {
-          // Unlike `source`, this asks where the contact is actually reachable — see
-          // contact.channel.ts. Only WhatsApp is selectable today; anything else is ignored.
-          if (value === WHATSAPP_CONTACT_CHANNEL) {
-            filterData.push(whatsappContactWhere);
-          }
-          break;
-        }
-        case "lifecycleId": {
-          if (value !== "all") {
-            filterData.push({
-              [key]: value,
-            });
-          }
-          break;
-        }
-        case "stageId": {
-          // The pipeline counterpart of `lifecycleId`. A contact has no stage of
-          // its own — the stage belongs to its lead — so this asks whether the
-          // contact has a lead sitting in that column.
-          if (value !== "all") {
-            filterData.push({
-              leads: { some: { stageId: value } },
-            });
-          }
-          break;
-        }
-        case "labelId": {
-          if (!["all", "active", "blocked"].includes(value)) {
-            filterData.push({
-              ContactLabelMap: {
-                some: {
-                  labelId: value,
-                },
-              },
-            });
-          }
-          if (value === "active") {
-            filterData.push({
-              blockedOnWhatsApp: false,
-            });
-          } else if (value === "blocked") {
-            filterData.push({
-              blockedOnWhatsApp: true,
-            });
-          }
-          break;
-        }
-      }
-    }
-  }
-  if (search?.length > 0) {
-    filterData.push({
-      OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
-      ],
-    });
-  }
-  if (query?.type === ContactGroupType.LOYALTY) {
-    // Contact -> CustomerLoyaltyAccount is a list relation (`loyaltyAccounts`);
-    // "is a loyalty member" is therefore `some`, not `isNot: null`.
-    filterData.push({ loyaltyAccounts: { some: {} } });
-  }
-
-  const searchCondition: Prisma.ContactWhereInput =
-    filterData?.length > 0 ? { orgId, AND: filterData } : { orgId };
+  const searchCondition = buildContactListWhere(orgId, query);
   // Count total matching contacts
   const totalCount = await prisma.contact.count({
     where: searchCondition,

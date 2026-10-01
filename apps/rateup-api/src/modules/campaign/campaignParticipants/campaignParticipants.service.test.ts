@@ -134,6 +134,29 @@ describe("createCampaignParticipantsFromContacts", () => {
     expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toEqual([]);
   });
 
+  test("a filter adds every WhatsApp contact the list query matches, beside picked ids", async () => {
+    db.contact.findMany.mockResolvedValue([{ id: "c-1" }, { id: "c-9" }]);
+
+    await createCampaignParticipantsFromContacts(CAMPAIGN_ID, ORG_A, {
+      contactIds: ["c-1"],
+      filter: { labelIds: "l-1" },
+    });
+
+    expect(db.contact.findMany.mock.calls[0][0].where).toEqual({
+      orgId: ORG_A,
+      psid: null,
+      igsId: null,
+      OR: [
+        { id: { in: ["c-1"] } },
+        {
+          orgId: ORG_A,
+          AND: [{ ContactLabelMap: { some: { labelId: { in: ["l-1"] } } } }],
+        },
+      ],
+    });
+    expect(db.campaignParticipant.createMany.mock.calls[0][0].data).toHaveLength(2);
+  });
+
   test("refuses a campaign belonging to another org", async () => {
     db.campaign.findFirst.mockResolvedValue(null);
 
@@ -169,6 +192,20 @@ describe("createCampaignParticipantsFromGroup", () => {
         status: CampaignParticipantStatus.PENDING,
       },
     ]);
+  });
+
+  test("a group filter keeps only the WhatsApp members it matches", async () => {
+    await createCampaignParticipantsFromGroup(CAMPAIGN_ID, ORG_A, {
+      groupIds: ["g-1"],
+      groupFilter: { labelIds: "l-1" },
+    });
+
+    expect(db.contactGroupMap.findMany.mock.calls[0][0].where.contact).toEqual({
+      psid: null,
+      igsId: null,
+      orgId: ORG_A,
+      AND: [{ ContactLabelMap: { some: { labelId: { in: ["l-1"] } } } }],
+    });
   });
 
   test("adds nothing for a group that holds no contacts", async () => {
