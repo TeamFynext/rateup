@@ -226,7 +226,7 @@ export const useIntegrationActivity = (name: string, enabled = true) => {
 /** Fetches a signed authorize URL and leaves for the provider's consent screen. */
 export const useStartOAuthConnect = (name: string) => {
   return useMutation({
-    mutationFn: () => getOAuthAuthorizeUrl(name),
+    mutationFn: (options?: Record<string, string>) => getOAuthAuthorizeUrl(name, options),
     onSuccess: ({ url }) => {
       window.location.assign(url);
     },

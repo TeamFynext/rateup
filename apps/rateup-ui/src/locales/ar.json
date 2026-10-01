@@ -3341,6 +3341,7 @@
     "Replace": "استبدال",
     "Replace API key": "استبدال مفتاح API",
     "Replace image": "استبدال الصورة",
+    "Replace the webhook URL and secret?": "هل تريد استبدال رابط الويب هوك والسر؟",
     "Replace URL and secret": "استبدل عنوان URL والسر",
     "Replaces the default rate, it does not add to it.": "يستبدل المعدل الافتراضي، ولا يضيف إليه.",
     "Replacing...": "استبدال...",

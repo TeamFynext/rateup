@@ -3341,6 +3341,7 @@
     "Replace": "Ersetzen",
     "Replace API key": "API-Schlüssel ersetzen",
     "Replace image": "Bild ersetzen",
+    "Replace the webhook URL and secret?": "Webhook-URL und Secret ersetzen?",
     "Replace URL and secret": "Ersetzen Sie URL und Secret",
     "Replaces the default rate, it does not add to it.": "Ersetzt den Standardtarif, erhöht ihn jedoch nicht.",
     "Replacing...": "Ersetzen...",

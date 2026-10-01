@@ -1,4 +1,5 @@
 import { IconAlertTriangle, IconLoader2 } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -6,6 +7,16 @@ import {
   useIssueGetLeadWebhookMutation,
 } from "@/backend/appsIntegration/getlead/getlead.query";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
 
@@ -75,19 +86,15 @@ export function GetLeadWebhook() {
   const { data: webhook, isPending } = useGetLeadWebhook(true);
   const issueMutation = useIssueGetLeadWebhookMutation();
 
+  // Replacing breaks a workflow that is already delivering, so it is confirmed
+  // first; creating the first URL breaks nothing and goes straight through.
+  const [confirming, setConfirming] = useState(false);
   const rotate = () => {
-    if (
-      webhook?.configured &&
-      !window.confirm(
-        t(
-          "This replaces the URL and secret. The workflow in GetLead will stop delivering until you paste the new ones in.",
-        ),
-      )
-    ) {
-      return;
-    }
-    issueMutation.mutate();
+    if (webhook?.configured) setConfirming(true);
+    else issueMutation.mutate();
   };
+  const confirmRotate = () =>
+    issueMutation.mutate(undefined, { onSettled: () => setConfirming(false) });
 
   return (
     <Card className="p-4">
@@ -165,6 +172,31 @@ export function GetLeadWebhook() {
                   : t("Create webhook URL")}
             </Button>
           </div>
+
+          <AlertDialog open={confirming} onOpenChange={setConfirming}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("Replace the webhook URL and secret?")}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t(
+                    "This replaces the URL and secret. The workflow in GetLead will stop delivering until you paste the new ones in.",
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={issueMutation.isPending}>
+                  {t("Cancel")}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  onClick={confirmRotate}
+                  loading={issueMutation.isPending}
+                >
+                  {t("Replace")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </Card>
