@@ -13,6 +13,7 @@ import {
   IconTrendingUp,
   IconUsers,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -39,6 +40,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import {
@@ -61,6 +63,7 @@ import {
   SentCampaignChoice,
 } from "@/types/enums.ts";
 import type { Campaign, CampaignDripStage } from "@/types/global";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import { CONTACT_SORT } from "@/utils/constants.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
@@ -85,6 +88,8 @@ export function CampaignDetails() {
   // always supported were unreachable from the page.
   const [selectedDripStage, setSelectedDripStage] = useState("all");
   const [resumeOpen, setResumeOpen] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const queryClient = useQueryClient();
 
   const { t } = useTranslation("campaign.details");
   const navigate = useNavigate();
@@ -242,6 +247,23 @@ export function CampaignDetails() {
   const handleDeliveryReport = (format: "xlsx" | "ods" = "xlsx") => {
     toast.loading("Generating delivery report...", { id: "delivery-report" });
     deliveryReportMutation.mutate({ campaignId, selectedDripStage, format });
+  };
+
+  const handleAnalyticsPdf = async () => {
+    setExportingPdf(true);
+    toast.loading(t("Preparing the analytics report…"), { id: "campaign-analytics-pdf" });
+    try {
+      // Loaded on demand, like the analytics section's export: jsPDF is heavy.
+      const { exportCampaignReport } = await import("./analytics/campaignReport.ts");
+      await exportCampaignReport(queryClient, campaign);
+      toast.success(t("Analytics report downloaded"), { id: "campaign-analytics-pdf" });
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("Could not create the analytics report")), {
+        id: "campaign-analytics-pdf",
+      });
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   // A drip the platform paused starts again the same way one its owner paused does.
@@ -404,7 +426,12 @@ export function CampaignDetails() {
                   action in two places, one of which quietly ignored half of it. */}
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={<Button variant="ghost" loading={deliveryReportMutation.isPending} />}
+                render={
+                  <Button
+                    variant="ghost"
+                    loading={deliveryReportMutation.isPending || exportingPdf}
+                  />
+                }
               >
                 <IconFileDownload className="size-4" aria-hidden />
                 {t("Export")}
@@ -420,6 +447,13 @@ export function CampaignDetails() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDeliveryReport("ods")}>
                     {t("Download as OpenDocument (ODS)")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>{t("Analytics")}</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => void handleAnalyticsPdf()}>
+                    {t("Download as PDF")}
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>

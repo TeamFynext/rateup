@@ -114,7 +114,7 @@ function describeRange(range: Date[]) {
  * glyphs, so a translated report would print as boxes. Names typed in those scripts
  * have the same limit.
  */
-async function downloadReport(
+export async function downloadReport(
   queryClient: QueryClient,
   build: (t: Translate) => Report,
   filename: string,
@@ -194,7 +194,7 @@ function describeDays(days: number) {
   return describeRange([end.subtract(Math.max(days - 1, 0), "day").toDate(), end.toDate()]);
 }
 
-const fileSlug = (name: string | undefined) =>
+export const fileSlug = (name: string | undefined) =>
   (name ?? "report")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")

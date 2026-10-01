@@ -41,9 +41,11 @@ export const getContactsList = async (
   columnFilters: ColumnFilterState[],
   type?: string,
 ) => {
-  const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
+  const filter = columnFilters
+    .map((data) => `&${data.id}=${encodeURIComponent(String(data.value))}`)
+    .join("&");
   const desc = sort.desc ? "desc" : "asc";
-  const contactUrl = `${CONTACT_BASE_URL}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}&type=${type}`;
+  const contactUrl = `${CONTACT_BASE_URL}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${encodeURIComponent(search)}&sort=${sort.id}&desc=${desc}${filter}&type=${type}`;
   const contactsData = await axiosClient.get(contactUrl);
   return contactsData.data as { users: ContactsData[]; totalCount: number };
 };
