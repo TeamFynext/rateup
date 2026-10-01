@@ -20,6 +20,7 @@ import {
   getContactGroupList,
   getContactGroupsByContactId,
   getContactGroupsByTeamId,
+  getGroupMatchCounts,
   removeContactsFromGroup,
   updateContactGroup,
   updateContactGroupsForContact,
@@ -54,6 +55,18 @@ export const useContactGroupsByTeamId = (teamId: string, contactChannel?: string
   return useQuery({
     queryKey: contactGroupKeys.byTeam(teamId, contactChannel),
     queryFn: () => getContactGroupsByTeamId(teamId, contactChannel),
+  });
+};
+
+/** Only fetched while `query` is set — without filters the plain member counts already apply. */
+export const useGroupMatchCounts = (
+  teamId: string | undefined,
+  query: Record<string, string> | null,
+) => {
+  return useQuery({
+    queryKey: contactGroupKeys.matchCounts(teamId ?? "", query ?? {}),
+    queryFn: () => getGroupMatchCounts(teamId ?? "", query ?? {}),
+    enabled: Boolean(teamId && query),
   });
 };
 

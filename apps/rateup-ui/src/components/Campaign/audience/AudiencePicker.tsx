@@ -1,6 +1,7 @@
 import {
   IconChevronLeft,
   IconChevronRight,
+  IconFilter,
   IconFolderOpen,
   IconListSearch,
   IconSearch,
@@ -21,9 +22,17 @@ import {
   useClearCampaignParticipants,
   useRemoveCampaignParticipant,
 } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
-import { useContactGroupsByTeamId } from "@/backend/campaign/contactGroup/contactGroup.query";
+import {
+  useContactGroupsByTeamId,
+  useGroupMatchCounts,
+} from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { pressable } from "@/components/common/pressable.ts";
+import {
+  ContactListFilters,
+  toContactListQuery,
+  useContactListFilters,
+} from "@/components/Contacts/ContactListFilters.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ContactAvatar } from "@/components/ui/contact-avatar.tsx";
@@ -113,6 +122,8 @@ export function AudiencePicker({
 }: Readonly<AudiencePickerProps>) {
   const uid = useId();
   const { t } = useTranslation("campaign.addParticipants");
+  // The filter bar's strings, shared with the group dialog, live in the default namespace.
+  const { t: tc } = useTranslation();
   const [ownTab, setOwnTab] = useState<CampaignParticipantSource>(
     CampaignParticipantSource.INDIVIDUAL,
   );
@@ -132,11 +143,32 @@ export function AudiencePicker({
     pageSize: Number(PAGE_SIZE[0]),
   });
 
+  // Label, stage, source and custom-field filters for the Individual tab. Applied by the
+  // server, so "Add all matching" can enrol everyone they match, not just the page shown.
+  const listFilters = useContactListFilters(() =>
+    setPagination((prev) => ({ ...prev, pageIndex: 0 })),
+  );
+  const [showFilters, setShowFilters] = useState(false);
   // Campaigns message over WhatsApp, so only WhatsApp contacts can take part: the contact list is
   // filtered to them, and each group's member count reports only the members it can reach.
-  const { data, isPending } = useContacts(pagination, debouncedSearch, undefined, [
-    { id: "channel", value: WHATSAPP_CONTACT_CHANNEL },
-  ]);
+  const contactFilters = useMemo(
+    () => [{ id: "channel", value: WHATSAPP_CONTACT_CHANNEL }, ...listFilters.filters],
+    [listFilters.filters],
+  );
+  const { data, isPending } = useContacts(pagination, debouncedSearch, undefined, contactFilters);
+  // On the Group tab the same filters narrow which members a group contributes, applied to
+  // every group picked (see handleSubmit). Each group then shows how many members match.
+  const groupFilterQuery = useMemo(
+    () => (listFilters.filters.length > 0 ? toContactListQuery(listFilters.filters) : null),
+    [listFilters.filters],
+  );
+  const { data: matchCounts } = useGroupMatchCounts(campaign?.teamId, groupFilterQuery);
+  // What a group would add right now: its matching members while filtering (undefined until the
+  // counts arrive), otherwise every member.
+  const groupReach = (group: ContactGroup) =>
+    groupFilterQuery ? (matchCounts ? (matchCounts[group.id] ?? 0) : undefined) : undefined;
+  const contributes = (group: ContactGroup) =>
+    (groupReach(group) ?? group?._count?.contacts ?? 0) > 0;
   const { data: contactGroup, isLoading: groupIsLoading } = useContactGroupsByTeamId(
     campaign?.teamId,
     WHATSAPP_CONTACT_CHANNEL,
@@ -190,7 +222,7 @@ export function AudiencePicker({
     }
 
     if (selectedTab === CampaignParticipantSource.GROUP) {
-      const selectableGroups = contactGroup?.data?.filter((g) => g?._count?.contacts) || [];
+      const selectableGroups = contactGroup?.data?.filter(contributes) || [];
 
       return selectableGroups.length > 0 && selectedGroups.length === selectableGroups.length;
     }
@@ -210,6 +242,9 @@ export function AudiencePicker({
     contacts,
     selectedContacts,
     contactGroup?.data,
+    // `contributes` reads these.
+    groupFilterQuery,
+    matchCounts,
     selectedGroups,
     campaignData?.data,
     selectedCampaigns,
@@ -241,10 +276,13 @@ export function AudiencePicker({
 
     const contactIds = selectedContacts.map((customer) => customer.id);
     const groupIds = selectedGroups.map((group) => group.id);
+    // Option A: the filters on screen when this commits apply to every picked group.
+    const groupFilter = groupIds.length > 0 && groupFilterQuery ? groupFilterQuery : undefined;
     const campaignIds = selectedCampaigns.map((campaign) => campaign.id);
     const participants = {
       contactIds,
       groupIds,
+      groupFilter,
       campaignIds,
       status: selectedStatus,
     };
@@ -266,6 +304,7 @@ export function AudiencePicker({
     selectedGroups,
     selectedStatus,
     selectedTab,
+    groupFilterQuery,
     t,
   ]);
   const selectableContacts =
@@ -284,8 +323,7 @@ export function AudiencePicker({
       }
 
       case CampaignParticipantSource.GROUP: {
-        const selectableGroups =
-          contactGroup?.data?.filter((g) => (g?._count?.contacts ?? 0) > 0) ?? [];
+        const selectableGroups = contactGroup?.data?.filter(contributes) ?? [];
 
         setSelectedGroups(checked ? selectableGroups : []);
         break;
@@ -370,6 +408,41 @@ export function AudiencePicker({
     setSelectedCampaigns([]);
   };
 
+  const isNarrowed = listFilters.filters.length > 0 || debouncedSearch.trim().length > 0;
+
+  /**
+   * Enrol every contact the current search and filters match, across all pages. Written
+   * straight away rather than staged as picks: the selection could be thousands of contacts,
+   * and the server resolves the filter itself, so there are no rows here to stage.
+   */
+  const addAllMatching = async () => {
+    const confirmed = await confirm({
+      title: tc("Add all matching contacts"),
+      description: t(
+        "{count, plural, one {# WhatsApp contact matches} other {# WhatsApp contacts match}} these filters. Anyone already on the campaign is skipped.",
+        { count: totalAvailable },
+      ),
+      confirmText: tc("Add all"),
+      cancelText: t("Cancel"),
+    });
+    if (!confirmed) return;
+    try {
+      await addCampaignParticipants.mutateAsync({
+        data: {
+          contactIds: [],
+          groupIds: [],
+          campaignIds: [],
+          status: selectedStatus,
+          filter: toContactListQuery(contactFilters, debouncedSearch),
+        },
+        campaignId: campaign?.id,
+      });
+      toast.success(t("Matching contacts added to the campaign"));
+    } catch {
+      // The mutation's own onError has already told the user.
+    }
+  };
+
   const tabLabel =
     selectedTab === CampaignParticipantSource.INDIVIDUAL
       ? t("contacts")
@@ -417,6 +490,41 @@ export function AudiencePicker({
             </div>
           </div>
 
+          {selectedTab !== CampaignParticipantSource.CAMPAIGN ? (
+            <div className="border-border border-b px-4 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-[12.5px]"
+                  aria-expanded={showFilters}
+                  onClick={() => setShowFilters((open) => !open)}
+                >
+                  <IconFilter className="size-3.5" aria-hidden />
+                  {t("Filters")}
+                  {listFilters.filters.length > 0 ? (
+                    <span className="bg-primary text-primary-foreground rounded-full px-1.5 text-[11px] tabular-nums">
+                      {listFilters.filters.length}
+                    </span>
+                  ) : null}
+                </Button>
+                {listFilters.filters.length > 0 ? (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-[12.5px]"
+                    onClick={listFilters.clear}
+                  >
+                    {tc("Clear filters")}
+                  </Button>
+                ) : null}
+              </div>
+              {showFilters ? (
+                <ContactListFilters controls={listFilters.controls} className="pt-2" />
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="border-border/60 bg-muted flex items-center justify-between gap-3 border-b px-4 py-2">
             <Field orientation="horizontal">
               <Checkbox
@@ -457,6 +565,20 @@ export function AudiencePicker({
                   </SelectContent>
                 </Select>
               </div>
+            ) : selectedTab === CampaignParticipantSource.INDIVIDUAL &&
+              isNarrowed &&
+              totalAvailable > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[12.5px]"
+                loading={addCampaignParticipants.isPending}
+                onClick={() => void addAllMatching()}
+              >
+                {tc("{count, plural, one {Add # matching contact} other {Add all # matching}}", {
+                  count: totalAvailable,
+                })}
+              </Button>
             ) : (
               <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
                 <IconListSearch className="size-3.5" aria-hidden />
@@ -503,6 +625,7 @@ export function AudiencePicker({
                   (filteredGroups?.length ? (
                     filteredGroups.map((group) => (
                       <CustomerGroup
+                        matchCount={groupReach(group)}
                         key={group?.id}
                         group={group}
                         selectedGroups={selectedGroups}
@@ -651,7 +774,7 @@ export function AudiencePicker({
                     key={group.id}
                     tone="accent"
                     label={group.name}
-                    meta={group?._count?.contacts}
+                    meta={groupReach(group) ?? group?._count?.contacts}
                     onRemove={() =>
                       setSelectedGroups((prev) => prev.filter((g) => g.id !== group.id))
                     }
@@ -697,7 +820,9 @@ export function AudiencePicker({
                   when the panel is only showing who is already on the campaign. */}
               {selectedCount > 0 ? (
                 <div className="bg-muted text-secondary-foreground mt-auto flex justify-between rounded-lg px-3.5 py-3 text-[12.5px]">
-                  <span>{t("Groups and campaigns expand when the campaign sends")}</span>
+                  <span>
+                    {t("Groups and campaigns are added as individual recipients when saved")}
+                  </span>
                   <span className="text-foreground font-semibold tabular-nums">
                     {t("{count} selected", { count: selectedCount })}
                   </span>
@@ -899,14 +1024,24 @@ interface CustomerGroupProps {
   group: ContactGroup;
   selectedGroups: ContactGroup[];
   setSelectedGroups: (groups: ContactGroup[]) => void;
+  /** While filters are on: how many of the group's WhatsApp members match them. */
+  matchCount?: number;
 }
 
-/** A saved contact group. Groups with no reachable members cannot be picked. */
-export const CustomerGroup = ({ group, selectedGroups, setSelectedGroups }: CustomerGroupProps) => {
+/**
+ * A saved contact group. Groups with no reachable members cannot be picked — with filters on,
+ * that means no matching members. One already picked can still be unticked.
+ */
+export const CustomerGroup = ({
+  group,
+  selectedGroups,
+  setSelectedGroups,
+  matchCount,
+}: CustomerGroupProps) => {
   const { t } = useTranslation("campaign.addParticipants");
   const isSelected = selectedGroups.some((g) => g?.id === group?.id);
   const count = group?._count?.contacts ?? 0;
-  const empty = count === 0;
+  const empty = (matchCount ?? count) === 0 && !isSelected;
 
   const toggle = () => {
     if (empty) return;
@@ -937,7 +1072,9 @@ export const CustomerGroup = ({ group, selectedGroups, setSelectedGroups }: Cust
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-[13.5px] font-medium">{group?.name}</span>
         <span className="text-muted-foreground text-xs tabular-nums">
-          {t("{count} contacts", { count })}
+          {matchCount === undefined
+            ? t("{count} contacts", { count })
+            : t("{match} of {count} match", { match: matchCount, count })}
         </span>
       </div>
       {group?.type === ContactGroupType.LOYALTY ? (
