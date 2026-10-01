@@ -26,6 +26,14 @@ import { log } from "../../../utils/logger.js";
 
 const TOKEN_VERSION = "v1";
 
+/**
+ * The token on a campaign's "Send test to me" message. Meta refuses a template
+ * with a flow button unless the button carries a token, but a test has no
+ * survey run behind it, so this one resolves to no run: the tester can open the
+ * flow, and nothing they submit is filed as a real response.
+ */
+export const CAMPAIGN_TEST_FLOW_TOKEN = "campaign-test";
+
 export interface FlowTokenPayload {
   /** SurveyTeamMap the answers belong to. */
   s: string;
