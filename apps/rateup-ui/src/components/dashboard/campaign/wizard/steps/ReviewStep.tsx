@@ -1,4 +1,11 @@
-import { IconAlertTriangle, IconPencil, IconRocket, IconSend } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconLoader2,
+  IconPencil,
+  IconRocket,
+  IconSearch,
+  IconSend,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,12 +17,15 @@ import {
   useSendCampaign,
   useSendCampaignTestMutation,
 } from "@/backend/campaign/campaign.query";
+import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
+import { useDebounce } from "@/hooks/use-debounce.ts";
 import { cn } from "@/lib/utils";
 import {
   CampaignParticipantStatus,
@@ -58,6 +68,9 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
   const sendCampaign = useSendCampaign(campaignId, campaign?.teamId ?? "");
   const sendTest = useSendCampaignTestMutation();
   const [testPhone, setTestPhone] = useState("");
+  // The contact the number was picked from, shown so the sender can see who
+  // gets the test. Cleared as soon as the number is edited by hand.
+  const [testContact, setTestContact] = useState<{ name: string; phone: string } | null>(null);
   // A number the picker itself calls valid: the button is the only guard here,
   // and a test send spends a conversation whether or not anyone receives it.
   const testPhoneIsValid = Boolean(testPhone) && isValidPhoneNumber(testPhone);
@@ -368,7 +381,7 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
             <IconSend className="size-4" aria-hidden />
             {t("Send test to me")}
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-72">
+          <PopoverContent align="end" className="w-80">
             <form
               className="flex flex-col gap-3"
               onSubmit={(event) => {
@@ -378,6 +391,13 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
             >
               <Field>
                 <FieldLabel htmlFor="campaign-test-phone">{t("Send a test to")}</FieldLabel>
+                <TestContactSearch
+                  onPick={(contact) => {
+                    const phone = toE164(contact.phone);
+                    setTestPhone(phone);
+                    setTestContact({ name: contact.name || contact.phone, phone });
+                  }}
+                />
                 {/* The same country-picker input as every other number in the
                     product. A bare text field let a national number through with
                     no country code, which Meta accepts and delivers to nobody —
@@ -391,9 +411,27 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
                   countryCallingCodeEditable={false}
                   placeholder={t("Enter phone number")}
                   value={testPhone}
-                  onChange={(value) => setTestPhone(value ?? "")}
+                  onChange={(value) => {
+                    setTestPhone(value ?? "");
+                    if (digitsOf(value ?? "") !== digitsOf(testContact?.phone ?? "")) {
+                      setTestContact(null);
+                    }
+                  }}
                   className="w-full"
                 />
+                {testContact ? (
+                  testPhoneIsValid ? (
+                    <FieldDescription>
+                      {t("Sending to {name}", { name: testContact.name })}
+                    </FieldDescription>
+                  ) : (
+                    <FieldDescription className="text-amber-700 dark:text-amber-500">
+                      {t("{name}'s number has no country code. Fix it above to send.", {
+                        name: testContact.name,
+                      })}
+                    </FieldDescription>
+                  )
+                ) : null}
                 <FieldDescription>
                   {t("Sends the real template. It counts towards your allowance.")}
                 </FieldDescription>
@@ -408,6 +446,92 @@ export function ReviewStep({ wizard, registerSubmit }: Readonly<CampaignWizardSt
           {t("Scheduled sends can be paused or cancelled until the first batch starts.")}
         </span>
       </aside>
+    </div>
+  );
+}
+
+const digitsOf = (phone: string) => phone.replace(/\D/g, "");
+
+/**
+ * Contacts store numbers however they arrived — the WhatsApp webhook writes a
+ * wa_id with the country code but no "+". The picker wants E.164, so add the
+ * "+" back; a number saved without its country code then fails validation and
+ * the form says so, rather than sending to the wrong country.
+ */
+const toE164 = (phone: string) => `+${digitsOf(phone)}`;
+
+const TEST_CONTACT_PAGE = { pageIndex: 0, pageSize: 5 };
+
+/** Fills the test number from a contact the org already has. */
+function TestContactSearch({
+  onPick,
+}: Readonly<{ onPick: (contact: { name: string; phone: string }) => void }>) {
+  const { t } = useTranslation("campaign.wizard");
+  const [query, setQuery] = useState("");
+  const trimmed = query.trim();
+  // A number is matched as a substring of the stored one, which may not carry
+  // the "+" or the spacing the sender typed — so search a number by its digits.
+  const term = /^[\d\s()+-]+$/.test(trimmed) ? digitsOf(trimmed) : trimmed;
+  const debounced = useDebounce(term, 300);
+  const { data, isFetching } = useContacts(
+    TEST_CONTACT_PAGE,
+    debounced,
+    undefined,
+    undefined,
+    undefined,
+    debounced.length > 0,
+  );
+  const contacts = (data?.users ?? []).filter((contact) => Boolean(contact.phone));
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <InputGroup>
+        <InputGroupAddon>
+          {isFetching ? (
+            <IconLoader2 className="animate-spin" size={16} aria-hidden />
+          ) : (
+            <IconSearch size={16} aria-hidden />
+          )}
+        </InputGroupAddon>
+        <InputGroupInput
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("Search contacts by name or number")}
+          aria-label={t("Search contacts by name or number")}
+          autoComplete="off"
+          inputMode="search"
+        />
+      </InputGroup>
+
+      {debounced && !isFetching && contacts.length === 0 ? (
+        <span className="text-muted-foreground px-1 text-xs">
+          {t("No contact matches “{query}”.", { query: debounced })}
+        </span>
+      ) : null}
+
+      {debounced && contacts.length > 0 ? (
+        <ul className="divide-border border-border bg-card flex flex-col divide-y rounded-lg border">
+          {contacts.map((contact) => (
+            <li key={contact.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  onPick({ name: contact.name, phone: contact.phone });
+                  setQuery("");
+                }}
+                className="hover:bg-muted flex w-full flex-col px-3 py-2 text-left"
+              >
+                <span className="text-foreground truncate text-[13px] font-medium">
+                  {contact.name || t("No name")}
+                </span>
+                <span className="text-muted-foreground text-xs tabular-nums">{contact.phone}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <span className="text-muted-foreground px-1 text-xs">{t("or enter a number")}</span>
     </div>
   );
 }

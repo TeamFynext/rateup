@@ -9,6 +9,7 @@ import {
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { FilterSelect } from "@/components/dashboard/contacts/ContactsPage.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
@@ -19,11 +20,19 @@ import { Input } from "../ui/input.tsx";
 import { ScrollArea } from "../ui/scroll-area.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
+import {
+  ContactListFilters,
+  toContactListQuery,
+  useContactListFilters,
+} from "./ContactListFilters.tsx";
 import ContactPagination from "./ContactPagination.tsx";
 
 /**
  * Picks contacts already in the org and adds them to a group. Members of the group are shown
  * ticked and locked, so the list reads as the whole contact book rather than hiding them.
+ *
+ * Every filter is applied by the contacts list endpoint, so "Add all matching" sends the same
+ * query and the server adds everyone it matches — not just the page on screen.
  */
 const AddExistingContacts = ({
   groupId,
@@ -35,22 +44,40 @@ const AddExistingContacts = ({
   existingContactIds: string[];
 }) => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [columnFilters, setColumnFilters] = useDebouncedState<ColumnFiltersState>([], 200);
+  const [groupFilters, setGroupFilters] = useDebouncedState<ColumnFiltersState>([], 200);
+  // The search input is uncontrolled; bumping this remounts it empty on "Clear filters".
+  const [resetKey, setResetKey] = useState(0);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const addExistingContacts = useAddExistingContactMutation();
-  const { isPending, data } = useContacts(pagination, searchTerm, undefined, columnFilters);
+  // Filters change which rows exist, so start again from the first page.
+  const resetPage = () => setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  const listFilters = useContactListFilters(resetPage);
+  const filters = [...groupFilters, ...listFilters.filters];
+
   const { data: contactGroups } = useContactGroup();
+  const addExistingContacts = useAddExistingContactMutation();
+  const { isPending, data } = useContacts(pagination, searchTerm, undefined, filters);
 
   const contacts = data?.users ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const isNarrowed = filters.length > 0 || searchTerm.trim().length > 0;
   const isMember = (id: string) => existingContactIds.includes(id);
   const selectableIds = contacts.map((contact) => contact.id).filter((id) => !isMember(id));
   const allOnPageSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selectedIds.includes(id));
+
+  function clearFilters() {
+    setGroupFilters([]);
+    listFilters.clear();
+    setSearchTerm("");
+    setResetKey((key) => key + 1);
+    resetPage();
+  }
 
   function toggle(id: string, checked: boolean) {
     setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((other) => other !== id)));
@@ -64,46 +91,77 @@ const AddExistingContacts = ({
     );
   }
 
+  const onAdded = {
+    onSuccess: () => {
+      setSelectedIds([]);
+      close();
+    },
+  };
+
   function handleAdd() {
+    addExistingContacts.mutate({ customerList: selectedIds, groupId }, onAdded);
+  }
+
+  async function handleAddAllMatching() {
+    const ok = await confirm({
+      title: t("Add all matching contacts"),
+      description: t(
+        "{count, plural, one {# contact matches} other {# contacts match}} these filters. Anyone already in the group is skipped.",
+        { count: totalCount },
+      ),
+      confirmText: t("Add all"),
+      cancelText: t("Cancel"),
+    });
+    if (!ok) return;
     addExistingContacts.mutate(
-      { customerList: selectedIds, groupId },
-      {
-        onSuccess: () => {
-          setSelectedIds([]);
-          close();
-        },
-      },
+      { groupId, filter: toContactListQuery(filters, searchTerm) },
+      onAdded,
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="relative flex-1">
-          <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <FieldLabel htmlFor="add-existing-search" className="sr-only">
-            {t("Search Contact")}
-          </FieldLabel>
-          <Input
-            id="add-existing-search"
-            type="search"
-            className="border-none bg-muted pl-9 placeholder:text-sm"
-            placeholder={t("Search by name or phone...")}
-            defaultValue={searchTerm}
-            onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <FieldLabel htmlFor="add-existing-search" className="sr-only">
+              {t("Search Contact")}
+            </FieldLabel>
+            <Input
+              key={resetKey}
+              id="add-existing-search"
+              type="search"
+              className="border-none bg-muted pl-9 placeholder:text-sm"
+              placeholder={t("Search by name or phone...")}
+              defaultValue={searchTerm}
+              onChange={(event) => {
+                setSearchTerm(event.currentTarget.value);
+                resetPage();
+              }}
+            />
+          </div>
+          <div className="sm:w-60">
+            <FilterSelect
+              contactArray={
+                contactGroups
+                  ?.filter((group) => group.id !== groupId)
+                  .map((group) => ({ value: group.id, label: group.name })) ?? []
+              }
+              setFilterByTag={(value) => {
+                setGroupFilters(value);
+                resetPage();
+              }}
+              filterByTag={groupFilters}
+            />
+          </div>
+          {isNarrowed && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              {t("Clear filters")}
+            </Button>
+          )}
         </div>
-        <div className="sm:w-60">
-          <FilterSelect
-            contactArray={
-              contactGroups
-                ?.filter((group) => group.id !== groupId)
-                .map((group) => ({ value: group.id, label: group.name })) ?? []
-            }
-            setFilterByTag={setColumnFilters}
-            filterByTag={columnFilters}
-          />
-        </div>
+        <ContactListFilters controls={listFilters.controls} />
       </div>
 
       <div className="rounded-lg border">
@@ -171,12 +229,24 @@ const AddExistingContacts = ({
           <ContactPagination
             pagination={pagination}
             setPagination={setPagination}
-            totalPageCount={Math.ceil((data?.totalCount ?? 0) / pagination.pageSize)}
+            totalPageCount={Math.ceil(totalCount / pagination.pageSize)}
           />
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {isNarrowed && totalCount > 0 && (
+          <Button
+            variant="outline"
+            className="sm:mr-auto"
+            onClick={handleAddAllMatching}
+            disabled={addExistingContacts.isPending}
+          >
+            {t("{count, plural, one {Add # matching contact} other {Add all # matching}}", {
+              count: totalCount,
+            })}
+          </Button>
+        )}
         <Button variant="outline" onClick={close}>
           {t("Cancel")}
         </Button>

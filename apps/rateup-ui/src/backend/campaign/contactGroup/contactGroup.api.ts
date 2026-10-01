@@ -40,6 +40,18 @@ export const getContactGroupsByTeamId = async (teamId: string, contactChannel?: 
   return contactGroupsData;
 };
 
+/**
+ * For each of a team's groups, how many WhatsApp members match a contacts list query — what
+ * the campaign picker adds from that group with the same filters on. Keyed by group id; a
+ * group with no matches is left out.
+ */
+export const getGroupMatchCounts = async (teamId: string, query: Record<string, string>) => {
+  const res = await axiosClient.get(`${CONTACT_GROUP_BASE_URL}/match-counts`, {
+    params: { teamId, ...query },
+  });
+  return res.data as Record<string, number>;
+};
+
 export const getContactGroupById = async (
   groupId: string,
   pagination: {
@@ -114,18 +126,20 @@ export const updateContactGroup = (groupId: string | undefined, data: RequestPay
 };
 
 export const addExistingContactsToGroup = ({
-  customerList,
+  customerList = [],
   groupId,
   isCustomer = false,
+  filter,
 }: {
-  customerList: string[];
+  customerList?: string[];
   groupId: string;
   isCustomer?: boolean;
+  /** The contacts list query (search + filter keys); adds every contact it matches instead of `customerList`. */
+  filter?: Record<string, string>;
 }) => {
-  const customerListObj = {
-    contactIds: customerList,
-    isCustomer,
-  };
+  const customerListObj = filter
+    ? { filter, isCustomer }
+    : { contactIds: customerList, isCustomer };
   const res = axiosClient.post(
     `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/existing`,
     customerListObj,
