@@ -46,6 +46,7 @@ export const useContacts = (
   sorting?: SortState,
   columnFilters?: ColumnFilterState[],
   type?: string,
+  enabled = true,
 ) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
@@ -54,6 +55,7 @@ export const useContacts = (
   return useQuery({
     queryKey: contactKeys.list(pagination, search, sort, filters, groupType),
     queryFn: () => getContactsList(pagination, search, sort, filters, groupType),
+    enabled,
   });
 };
 

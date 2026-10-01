@@ -4574,7 +4574,17 @@
     "Zoho CRM only": "Zoho CRM فقط",
     "Zoho Leads": "زوهو يؤدي",
     "Zoho leads synced successfully": "تمت مزامنة العملاء المتوقعين من Zoho بنجاح",
-    "Zoom the Image": "تكبير الصورة"
+    "Zoom the Image": "تكبير الصورة",
+    "Add all matching contacts": "إضافة جميع جهات الاتصال المطابقة",
+    "{count, plural, one {# contact matches} other {# contacts match}} these filters. Anyone already in the group is skipped.": "{count, plural, one {# جهة اتصال تطابق} other {# جهات اتصال تطابق}} هذه الفلاتر. سيتم تخطي من هو موجود بالفعل في المجموعة.",
+    "Add all": "إضافة الكل",
+    "Filter by label": "التصفية حسب التصنيف",
+    "Custom field": "حقل مخصص",
+    "Any value": "أي قيمة",
+    "Custom field value": "قيمة الحقل المخصص",
+    "Equals… (empty = any value)": "يساوي… (فارغ = أي قيمة)",
+    "Pick a field first": "اختر حقلاً أولاً",
+    "{count, plural, one {Add # matching contact} other {Add all # matching}}": "{count, plural, one {إضافة # جهة اتصال مطابقة} other {إضافة جميع المطابقين (#)}}"
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% تم التسليم · {read}% قراءة",
@@ -4625,7 +4635,12 @@
     "Tick contacts on the left or pick a group. You can also save this draft and add recipients later.": "حدد جهات الاتصال الموجودة على اليسار أو اختر مجموعة. يمكنك أيضًا حفظ هذه المسودة وإضافة المستلمين لاحقًا.",
     "Unnamed contact": "جهة اتصال بدون اسم",
     "WhatsApp contacts only": "التواصل واتساب فقط",
-    "You have not selected any participant": "لم تقم باختيار أي مشارك"
+    "You have not selected any participant": "لم تقم باختيار أي مشارك",
+    "Filters": "الفلاتر",
+    "{count, plural, one {# WhatsApp contact matches} other {# WhatsApp contacts match}} these filters. Anyone already on the campaign is skipped.": "{count, plural, one {# جهة اتصال واتساب تطابق} other {# جهات اتصال واتساب تطابق}} هذه الفلاتر. سيتم تخطي من هو موجود بالفعل في الحملة.",
+    "Matching contacts added to the campaign": "تمت إضافة جهات الاتصال المطابقة إلى الحملة",
+    "{match} of {count} match": "{match} من {count} مطابقة",
+    "Groups and campaigns are added as individual recipients when saved": "تُضاف المجموعات والحملات كمستلمين فرديين عند الحفظ"
   },
   "eg": {
     " I agree to": "أنا أوافق على",
@@ -4805,7 +4820,11 @@
     "Upgrade plan": "خطة الترقية",
     "Wait for the campaign's current send to finish.": "انتظر حتى ينتهي الإرسال الحالي للحملة.",
     "We couldn't load this campaign.": "لم نتمكن من تحميل هذه الحملة.",
-    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "لقد تم استنفاد رصيد المحادثة الخاص بخطتك، لذا توقف الإرسال. قم بترقية خطتك أو انتظر حتى تتم إعادة ضبط الرصيد، ثم استأنفه."
+    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "لقد تم استنفاد رصيد المحادثة الخاص بخطتك، لذا توقف الإرسال. قم بترقية خطتك أو انتظر حتى تتم إعادة ضبط الرصيد، ثم استأنفه.",
+    "Download as PDF": "تنزيل بصيغة PDF",
+    "Preparing the analytics report…": "جارٍ إعداد تقرير التحليلات…",
+    "Analytics report downloaded": "تم تنزيل تقرير التحليلات",
+    "Could not create the analytics report": "تعذّر إنشاء تقرير التحليلات"
   },
   "campaign.list": {
     "{count} campaigns": "{count} حملات",
@@ -5032,7 +5051,13 @@
     "Who should receive this?": "من يجب أن يتلقى هذا؟",
     "You can change everything else later.": "يمكنك تغيير كل شيء آخر في وقت لاحق.",
     "Your business": "عملك",
-    "Your conversation allowance is fully used, so nothing would be delivered.": "تم استخدام بدل المحادثة الخاص بك بالكامل، لذلك لن يتم تسليم أي شيء."
+    "Your conversation allowance is fully used, so nothing would be delivered.": "تم استخدام بدل المحادثة الخاص بك بالكامل، لذلك لن يتم تسليم أي شيء.",
+    "Search contacts by name or number": "ابحث في جهات الاتصال بالاسم أو الرقم",
+    "No contact matches “{query}”.": "لا توجد جهة اتصال تطابق “{query}”.",
+    "No name": "بدون اسم",
+    "or enter a number": "أو أدخل رقمًا",
+    "Sending to {name}": "جارٍ الإرسال إلى {name}",
+    "{name}'s number has no country code. Fix it above to send.": "رقم {name} لا يحتوي على رمز الدولة. صحّحه أعلاه للإرسال."
   },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "إضافة مرحلة دورة الحياة",

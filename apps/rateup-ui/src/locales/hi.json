@@ -4574,7 +4574,17 @@
     "Zoho CRM only": "केवल ज़ोहो सीआरएम",
     "Zoho Leads": "ज़ोहो लीड्स",
     "Zoho leads synced successfully": "ज़ोहो लीड सफलतापूर्वक समन्वयित हो गए",
-    "Zoom the Image": "छवि को ज़ूम करें"
+    "Zoom the Image": "छवि को ज़ूम करें",
+    "Add all matching contacts": "सभी मेल खाने वाले संपर्क जोड़ें",
+    "{count, plural, one {# contact matches} other {# contacts match}} these filters. Anyone already in the group is skipped.": "{count, plural, one {# संपर्क} other {# संपर्क}} इन फ़िल्टर से मेल खाते हैं। जो पहले से समूह में हैं उन्हें छोड़ दिया जाएगा।",
+    "Add all": "सभी जोड़ें",
+    "Filter by label": "लेबल के अनुसार फ़िल्टर करें",
+    "Custom field": "कस्टम फ़ील्ड",
+    "Any value": "कोई भी मान",
+    "Custom field value": "कस्टम फ़ील्ड का मान",
+    "Equals… (empty = any value)": "बराबर… (खाली = कोई भी मान)",
+    "Pick a field first": "पहले एक फ़ील्ड चुनें",
+    "{count, plural, one {Add # matching contact} other {Add all # matching}}": "{count, plural, one {# मेल खाने वाला संपर्क जोड़ें} other {सभी # मेल खाने वाले जोड़ें}}"
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% वितरित · {read}% पढ़ा गया",
@@ -4625,7 +4635,12 @@
     "Tick contacts on the left or pick a group. You can also save this draft and add recipients later.": "बाईं ओर संपर्कों पर निशान लगाएं या कोई समूह चुनें. आप इस ड्राफ्ट को सहेज भी सकते हैं और बाद में प्राप्तकर्ताओं को जोड़ सकते हैं।",
     "Unnamed contact": "अनाम संपर्क",
     "WhatsApp contacts only": "केवल व्हाट्सएप संपर्क",
-    "You have not selected any participant": "आपने किसी भी प्रतिभागी का चयन नहीं किया है"
+    "You have not selected any participant": "आपने किसी भी प्रतिभागी का चयन नहीं किया है",
+    "Filters": "फ़िल्टर",
+    "{count, plural, one {# WhatsApp contact matches} other {# WhatsApp contacts match}} these filters. Anyone already on the campaign is skipped.": "{count, plural, one {# WhatsApp संपर्क} other {# WhatsApp संपर्क}} इन फ़िल्टर से मेल खाते हैं। जो पहले से अभियान में हैं उन्हें छोड़ दिया जाएगा।",
+    "Matching contacts added to the campaign": "मेल खाने वाले संपर्क अभियान में जोड़ दिए गए",
+    "{match} of {count} match": "{count} में से {match} मेल खाते हैं",
+    "Groups and campaigns are added as individual recipients when saved": "सहेजने पर समूह और अभियान अलग-अलग प्राप्तकर्ताओं के रूप में जोड़े जाते हैं"
   },
   "eg": {
     " I agree to": "मैं सहमत हूं",
@@ -4805,7 +4820,11 @@
     "Upgrade plan": "उन्नयन योजना",
     "Wait for the campaign's current send to finish.": "कैंपेन का मौजूदा प्रेषण पूरा होने तक प्रतीक्षा करें।",
     "We couldn't load this campaign.": "हम इस अभियान को लोड नहीं कर सके.",
-    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "आपकी योजना का वार्तालाप भत्ता समाप्त हो गया है, इसलिए भेजना बंद कर दिया गया है। अपनी योजना को अपग्रेड करें या भत्ते के रीसेट होने की प्रतीक्षा करें, फिर फिर से शुरू करें।"
+    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "आपकी योजना का वार्तालाप भत्ता समाप्त हो गया है, इसलिए भेजना बंद कर दिया गया है। अपनी योजना को अपग्रेड करें या भत्ते के रीसेट होने की प्रतीक्षा करें, फिर फिर से शुरू करें।",
+    "Download as PDF": "PDF के रूप में डाउनलोड करें",
+    "Preparing the analytics report…": "एनालिटिक्स रिपोर्ट तैयार की जा रही है…",
+    "Analytics report downloaded": "एनालिटिक्स रिपोर्ट डाउनलोड हो गई",
+    "Could not create the analytics report": "एनालिटिक्स रिपोर्ट नहीं बन सकी"
   },
   "campaign.list": {
     "{count} campaigns": "{count} अभियान",
@@ -5032,7 +5051,13 @@
     "Who should receive this?": "इसे किसे प्राप्त करना चाहिए?",
     "You can change everything else later.": "आप बाद में बाकी सब कुछ बदल सकते हैं.",
     "Your business": "तुम्हारा व्यापार",
-    "Your conversation allowance is fully used, so nothing would be delivered.": "आपके वार्तालाप भत्ते का पूरा उपयोग हो चुका है, इसलिए कुछ भी वितरित नहीं किया जाएगा।"
+    "Your conversation allowance is fully used, so nothing would be delivered.": "आपके वार्तालाप भत्ते का पूरा उपयोग हो चुका है, इसलिए कुछ भी वितरित नहीं किया जाएगा।",
+    "Search contacts by name or number": "नाम या नंबर से संपर्क खोजें",
+    "No contact matches “{query}”.": "कोई संपर्क “{query}” से मेल नहीं खाता।",
+    "No name": "कोई नाम नहीं",
+    "or enter a number": "या नंबर दर्ज करें",
+    "Sending to {name}": "{name} को भेजा जा रहा है",
+    "{name}'s number has no country code. Fix it above to send.": "{name} के नंबर में देश कोड नहीं है। भेजने के लिए ऊपर ठीक करें।"
   },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "जीवनचक्र चरण जोड़ें",

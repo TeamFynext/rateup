@@ -63,7 +63,7 @@ interface DataTableToolbarProps {
   table: ReactTable<DataTableFeatures, ContactsData>;
 }
 
-const SourceSelector = ({
+export const SourceSelector = ({
   value,
   onChange,
 }: {

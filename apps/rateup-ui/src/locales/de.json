@@ -4574,7 +4574,17 @@
     "Zoho CRM only": "Nur Zoho CRM",
     "Zoho Leads": "Zoho führt",
     "Zoho leads synced successfully": "Zoho-Leads wurden erfolgreich synchronisiert",
-    "Zoom the Image": "Zoomen Sie das Bild"
+    "Zoom the Image": "Zoomen Sie das Bild",
+    "Add all matching contacts": "Alle passenden Kontakte hinzufügen",
+    "{count, plural, one {# contact matches} other {# contacts match}} these filters. Anyone already in the group is skipped.": "{count, plural, one {# Kontakt entspricht} other {# Kontakte entsprechen}} diesen Filtern. Bereits vorhandene Gruppenmitglieder werden übersprungen.",
+    "Add all": "Alle hinzufügen",
+    "Filter by label": "Nach Label filtern",
+    "Custom field": "Benutzerdefiniertes Feld",
+    "Any value": "Beliebiger Wert",
+    "Custom field value": "Wert des benutzerdefinierten Felds",
+    "Equals… (empty = any value)": "Ist gleich … (leer = beliebiger Wert)",
+    "Pick a field first": "Zuerst ein Feld wählen",
+    "{count, plural, one {Add # matching contact} other {Add all # matching}}": "{count, plural, one {# passenden Kontakt hinzufügen} other {Alle # passenden hinzufügen}}"
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered} % geliefert · {read} % gelesen",
@@ -4625,7 +4635,12 @@
     "Tick contacts on the left or pick a group. You can also save this draft and add recipients later.": "Klicken Sie links auf „Kontakte“ oder wählen Sie eine Gruppe aus. Sie können diesen Entwurf auch speichern und später Empfänger hinzufügen.",
     "Unnamed contact": "Unbenannter Kontakt",
     "WhatsApp contacts only": "Nur WhatsApp-Kontakte",
-    "You have not selected any participant": "Sie haben keinen Teilnehmer ausgewählt"
+    "You have not selected any participant": "Sie haben keinen Teilnehmer ausgewählt",
+    "Filters": "Filter",
+    "{count, plural, one {# WhatsApp contact matches} other {# WhatsApp contacts match}} these filters. Anyone already on the campaign is skipped.": "{count, plural, one {# WhatsApp-Kontakt entspricht} other {# WhatsApp-Kontakte entsprechen}} diesen Filtern. Wer bereits in der Kampagne ist, wird übersprungen.",
+    "Matching contacts added to the campaign": "Passende Kontakte wurden zur Kampagne hinzugefügt",
+    "{match} of {count} match": "{match} von {count} passen",
+    "Groups and campaigns are added as individual recipients when saved": "Gruppen und Kampagnen werden beim Speichern als einzelne Empfänger hinzugefügt"
   },
   "eg": {
     " I agree to": " Ich stimme zu",
@@ -4805,7 +4820,11 @@
     "Upgrade plan": "Upgrade-Plan",
     "Wait for the campaign's current send to finish.": "Warten Sie, bis der laufende Versand der Kampagne abgeschlossen ist.",
     "We couldn't load this campaign.": "Wir konnten diese Kampagne nicht laden.",
-    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "Das Konversationskontingent Ihres Plans ist aufgebraucht, daher wurde der Versand gestoppt. Aktualisieren Sie Ihren Plan oder warten Sie, bis das Guthaben zurückgesetzt wird, und fahren Sie dann fort."
+    "Your plan's conversation allowance is used up, so sending stopped. Upgrade your plan or wait for the allowance to reset, then resume.": "Das Konversationskontingent Ihres Plans ist aufgebraucht, daher wurde der Versand gestoppt. Aktualisieren Sie Ihren Plan oder warten Sie, bis das Guthaben zurückgesetzt wird, und fahren Sie dann fort.",
+    "Download as PDF": "Als PDF herunterladen",
+    "Preparing the analytics report…": "Analysebericht wird erstellt…",
+    "Analytics report downloaded": "Analysebericht heruntergeladen",
+    "Could not create the analytics report": "Analysebericht konnte nicht erstellt werden"
   },
   "campaign.list": {
     "{count} campaigns": "{count} Kampagnen",
@@ -5032,7 +5051,13 @@
     "Who should receive this?": "Wer soll das erhalten?",
     "You can change everything else later.": "Alles andere können Sie später ändern.",
     "Your business": "Ihr Unternehmen",
-    "Your conversation allowance is fully used, so nothing would be delivered.": "Ihr Gesprächskontingent ist vollständig ausgeschöpft, es wird also nichts zugestellt."
+    "Your conversation allowance is fully used, so nothing would be delivered.": "Ihr Gesprächskontingent ist vollständig ausgeschöpft, es wird also nichts zugestellt.",
+    "Search contacts by name or number": "Kontakte nach Name oder Nummer suchen",
+    "No contact matches “{query}”.": "Kein Kontakt passt zu „{query}“.",
+    "No name": "Kein Name",
+    "or enter a number": "oder Nummer eingeben",
+    "Sending to {name}": "Wird an {name} gesendet",
+    "{name}'s number has no country code. Fix it above to send.": "Die Nummer von {name} hat keine Ländervorwahl. Korrigieren Sie sie oben, um zu senden."
   },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "Lebenszyklusphase hinzufügen",

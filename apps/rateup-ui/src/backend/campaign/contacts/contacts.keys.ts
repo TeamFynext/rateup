@@ -52,6 +52,9 @@ export const contactGroupKeys = {
     (teamId === undefined
       ? ["contactGroupsDataByTeamId"]
       : ["contactGroupsDataByTeamId", teamId, contactChannel]) as readonly unknown[],
+  /** Per-group counts of the WhatsApp members a contacts list query matches. */
+  matchCounts: (teamId: string, query: Record<string, string>) =>
+    ["contactGroupMatchCounts", teamId, query] as const,
   /** Without a contact id this is the prefix that sweeps every contact's group list. */
   byContact: (contactId?: string) =>
     (contactId === undefined
