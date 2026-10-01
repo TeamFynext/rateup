@@ -766,6 +766,8 @@ enum TriggerEvent {
   WOOCOMMERCE_EVENT
   INSTAGRAM_COMMENT
   INSTAGRAM_STORY_MENTION
+  /// Someone opened the DM thread from an ig.me link; options.instagramRef narrows it to one ?ref=.
+  INSTAGRAM_REFERRAL
 }
 
 model RuleAction {

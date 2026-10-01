@@ -73,6 +73,17 @@ export const ruleOptionsSchema = z.object({
   // Instagram-specific options
   instagramScope: z.enum(["ALL", "SPECIFIC"]).optional(),
   instagramPostIds: z.array(z.string()).optional(),
+  // Unset means both, which is how comment rules behaved before live comments were split out.
+  instagramCommentSource: z.enum(["ALL", "POSTS", "LIVE"]).optional(),
+  // The ?ref= of an ig.me link; unset matches every link. Meta allows these characters.
+  instagramRef: z
+    .string()
+    .trim()
+    .max(250)
+    .regex(/^[A-Za-z0-9_=-]*$/, "Use letters, numbers, - _ and = only")
+    .optional(),
+  // Posted under the comment, one picked at random; 2200 is Instagram's comment limit.
+  instagramPublicReplies: z.array(z.string().trim().min(1).max(2200)).max(10).optional(),
 });
 
 const createRuleBaseSchema = z.object({

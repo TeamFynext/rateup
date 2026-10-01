@@ -39,7 +39,11 @@ import {
   resolvePipelineForContact,
   setContactStage,
 } from "../../pipeline/pipelineLead/lead.service.js";
-import { sendInstagramTextMessage } from "../instagram/instagram_messaging.service.js";
+import {
+  replyToInstagramComment,
+  sendInstagramPrivateReply,
+  sendInstagramTextMessage,
+} from "../instagram/instagram_messaging.service.js";
 import {
   startInstagramAutomationFlow,
   type InstagramAutomation,
@@ -399,6 +403,9 @@ export interface RuleWithConditions {
     requireMarketingConsent?: boolean;
     instagramScope?: "ALL" | "SPECIFIC";
     instagramPostIds?: string[];
+    instagramPublicReplies?: string[];
+    instagramCommentSource?: "ALL" | "POSTS" | "LIVE";
+    instagramRef?: string;
   } | null;
   groups: Array<{
     id: string;
@@ -655,6 +662,52 @@ export interface RuleExecutionContext {
   /** The WooCommerce order payload, for template variables. */
   wooBody?: Record<string, unknown>;
   instagramMediaId?: string;
+  /**
+   * Set for INSTAGRAM_COMMENT. A commenter who has never messaged the business can only
+   * be reached by a private reply to this comment, and Meta allows one per comment.
+   */
+  instagramCommentId?: string;
+  /** The comment was made on a live video rather than a post or reel. */
+  instagramLiveComment?: boolean;
+  /** The ?ref= of the ig.me link that opened the thread, for INSTAGRAM_REFERRAL. */
+  instagramRef?: string;
+}
+
+/** Posts one of the rule's public replies under the comment; never fails the rule. */
+async function replyToCommentInPublic(rule: RuleWithConditions, context: RuleExecutionContext) {
+  const replies = rule.options?.instagramPublicReplies ?? [];
+  if (!replies.length || !context.instagramCommentId || !context.phoneNumberId) return;
+
+  const text = replies[Math.floor(Math.random() * replies.length)];
+  try {
+    await replyToInstagramComment(context.instagramCommentId, text, context.phoneNumberId);
+  } catch (error) {
+    log.error(
+      { err: error, ruleId: rule.id, commentId: context.instagramCommentId },
+      "Could not post the public reply to an Instagram comment",
+    );
+  }
+}
+
+/** The comment to privately reply to, once: later sends in the same run go as plain DMs. */
+function takeInstagramCommentId(context: RuleExecutionContext): string | undefined {
+  const commentId = context.instagramCommentId;
+  context.instagramCommentId = undefined;
+  return commentId;
+}
+
+async function sendInstagramRuleText(
+  context: RuleExecutionContext,
+  igsId: string,
+  ibaId: string,
+  text: string,
+) {
+  const commentId = takeInstagramCommentId(context);
+  if (commentId) {
+    await sendInstagramPrivateReply(commentId, text, ibaId, context.orgId, igsId);
+  } else {
+    await sendInstagramTextMessage(igsId, text, context.orgId, ibaId);
+  }
 }
 
 /**
@@ -742,6 +795,12 @@ export async function checkAndExecuteRuleByTriggerEvent(
   }
 
   const typedRules = rules as RuleWithConditions[];
+  // A link rule naming this exact ref beats one that answers every link.
+  if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
+    typedRules.sort(
+      (a, b) => Number(!!b.options?.instagramRef) - Number(!!a.options?.instagramRef),
+    );
+  }
 
   // Helper to determine if a rule has any business hour configuration
   const hasBusinessHours = (rule: RuleWithConditions): boolean => {
@@ -815,6 +874,10 @@ export async function checkAndExecuteRuleByTriggerEvent(
 
       // Instagram comment: filter by post scope, then check comment text against conditions
       if (triggerEvent === TriggerEvent.INSTAGRAM_COMMENT) {
+        const source = rule.options?.instagramCommentSource ?? "ALL";
+        if (source !== "ALL" && source !== (context.instagramLiveComment ? "LIVE" : "POSTS")) {
+          continue;
+        }
         const scope = rule.options?.instagramScope ?? "ALL";
         if (scope === "SPECIFIC") {
           const configuredPostIds = rule.options?.instagramPostIds ?? [];
@@ -828,6 +891,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
         if (!isMatch) continue;
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_MENTION) {
         // Story mentions always match — no post filtering or message checks
+      } else if (triggerEvent === TriggerEvent.INSTAGRAM_REFERRAL) {
+        const wanted = rule.options?.instagramRef?.toLowerCase();
+        if (wanted && wanted !== context.instagramRef?.toLowerCase()) continue;
       } else {
         const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
         if (!isMatch) continue;
@@ -839,6 +905,10 @@ export async function checkAndExecuteRuleByTriggerEvent(
       );
 
       const executedActions = await executeRuleActions(rule, context);
+
+      if (triggerEvent === TriggerEvent.INSTAGRAM_COMMENT) {
+        await replyToCommentInPublic(rule, context);
+      }
 
       if (rule.options?.sendOncePerDay && phoneText) {
         await redisConnection.set(
@@ -1376,12 +1446,7 @@ async function executeSendMessageAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendInstagramTextMessage(
-      context.phone,
-      messageText,
-      context.orgId,
-      context.phoneNumberId,
-    );
+    await sendInstagramRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
     await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
@@ -1391,12 +1456,7 @@ async function executeSendMessageAction(
 
 async function executeSendWebSurveyAction(
   surveyTeamMapId: string,
-  context: {
-    orgId: string;
-    phone?: string | null;
-    phoneNumberId?: string;
-    platform?: string;
-  },
+  context: RuleExecutionContext,
 ): Promise<boolean> {
   if (!context.phone || !context.orgId || !surveyTeamMapId) return false;
 
@@ -1429,12 +1489,7 @@ async function executeSendWebSurveyAction(
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
     if (!context.phoneNumberId) return false;
-    await sendInstagramTextMessage(
-      context.phone,
-      messageText,
-      context.orgId,
-      context.phoneNumberId,
-    );
+    await sendInstagramRuleText(context, context.phone, context.phoneNumberId, messageText);
   } else {
     await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
@@ -1674,6 +1729,7 @@ async function executeTriggerChatbotAction(
         automation as unknown as InstagramAutomation,
         context.orgId,
         context.phoneNumberId,
+        takeInstagramCommentId(context),
       );
       return true;
     }

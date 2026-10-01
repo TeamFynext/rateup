@@ -214,12 +214,20 @@ async function reserveMessageBodyCommands(
   });
 }
 
+/** Triggers that never match on message text, so they reserve no keyword. */
+function triggerSkipsKeywordLock(triggerEvent: string) {
+  return (
+    triggerEvent === "INSTAGRAM_COMMENT" ||
+    triggerEvent === "INSTAGRAM_STORY_MENTION" ||
+    triggerEvent === "INSTAGRAM_REFERRAL"
+  );
+}
+
 // Create Rule
 export async function createRule(data: CreateRuleInput & { orgId: string }) {
   const { groups, actions, options, orgId } = data;
 
-  const skipMessageBodyLock =
-    data.triggerEvent === "INSTAGRAM_COMMENT" || data.triggerEvent === "INSTAGRAM_STORY_MENTION";
+  const skipMessageBodyLock = triggerSkipsKeywordLock(data.triggerEvent);
 
   const messageBodyCandidates = skipMessageBodyLock
     ? []
@@ -342,8 +350,7 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
   const isEnabling = data.isActive === true && !existingRule.isActive;
 
   const triggerEvent = data.triggerEvent ?? existingRule.triggerEvent;
-  const skipMessageBodyLock =
-    triggerEvent === "INSTAGRAM_COMMENT" || triggerEvent === "INSTAGRAM_STORY_MENTION";
+  const skipMessageBodyLock = triggerSkipsKeywordLock(triggerEvent);
 
   let messageBodyCandidates: MessageBodyCandidate[] = [];
 

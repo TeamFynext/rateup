@@ -862,3 +862,43 @@ export async function getInstagramStories(ibaId: string): Promise<InstagramStory
 
   return (response.data?.data as InstagramStoryItem[]) ?? [];
 }
+
+/** Answers a comment in public, under the post. Needs instagram_manage_comments. */
+export async function replyToInstagramComment(
+  commentId: string,
+  text: string,
+  ibaId: string,
+): Promise<{ id?: string }> {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+  if (!waSettings?.pageAccessToken) {
+    throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
+  }
+
+  const response = await callMetaApi(`/${commentId}/replies`, "POST", waSettings.pageAccessToken, {
+    message: text,
+  });
+  return response.data ?? {};
+}
+
+/**
+ * Whether the user follows the business account. Meta only shares this once the user
+ * has messaged the business; before that, and on any error, the answer is "no".
+ */
+export async function doesUserFollowInstagramAccount(igsId: string, ibaId: string) {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+  if (!waSettings?.pageAccessToken) {
+    throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
+  }
+
+  try {
+    const response = await callMetaApi(
+      `/${igsId}?fields=is_user_follow_business`,
+      "GET",
+      waSettings.pageAccessToken,
+    );
+    return response.data?.is_user_follow_business === true;
+  } catch (error) {
+    log.warn({ err: error, igsId }, "[Instagram] Could not read whether the user follows");
+    return false;
+  }
+}
