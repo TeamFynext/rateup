@@ -1,11 +1,9 @@
 import { Worker, Job } from "bullmq";
 import { log } from "../../../utils/logger.js";
 import baseRedis from "../../../utils/redisConnection.js";
-import {
-  handleWebhook,
-  processShopifySurveySchedule,
-  ShopifyWebhookJobData,
-} from "../../../modules/integrations/shopify/shopify.service.js";
+import { handleWebhook } from "../../../modules/integrations/shopify/shopify.inbound.js";
+import { processShopifySurveySchedule } from "../../../modules/integrations/shopify/shopify.orders.js";
+import type { ShopifyWebhookJobData } from "../../../modules/integrations/shopify/shopify.types.js";
 import { ShopifyEvents } from "../../../types/enums.js";
 import {
   toCommerceLoyaltyJob,

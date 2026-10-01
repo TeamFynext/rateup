@@ -1,6 +1,6 @@
 import shopify from "./shopify.config.js";
 import { getActiveShopifySession } from "./shopify.session.js";
-import { getShopifyInfo } from "./shopify.service.js";
+import { getShopifyInfo } from "./shopify.credential.js";
 import { log } from "../../../utils/logger.js";
 import type { LoyaltyRedemptionRules } from "../../../types/loyalty.js";
 import type {

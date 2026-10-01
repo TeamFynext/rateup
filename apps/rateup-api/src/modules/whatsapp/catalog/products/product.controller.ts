@@ -10,7 +10,7 @@ import {
   syncShopifyProductsToCatalog,
   updateCatalogProducts,
 } from "./product.service.js";
-import { createShopifyProduct } from "../../../integrations/shopify/shopify.service.js";
+import { createShopifyProduct } from "../../../integrations/shopify/shopify.catalog.js";
 import { WooConnectError } from "../../../integrations/woocommerce/woocommerce.connect.js";
 import {
   getWooProductsForCatalog,

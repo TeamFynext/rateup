@@ -88,7 +88,7 @@ import { shopifyLoyaltyQueue } from "../../../workers/bullmq/queues/webhook.queu
 import { updateIntegrationByName } from "../integrations.service.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import { handleShopifyOrderEvents, processShopifySurveySchedule } from "./shopify.service.js";
+import { handleShopifyOrderEvents, processShopifySurveySchedule } from "./shopify.orders.js";
 import { ShopifyEvents } from "../../../types/enums.js";
 
 type Mock = ReturnType<typeof vi.fn>;

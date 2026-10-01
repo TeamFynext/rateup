@@ -46,8 +46,10 @@ vi.mock("./instagram_automation.service.js", () => ({ startInstagramAutomationFl
 vi.mock("./instagram_automatedReply.service.js", () => ({
   getInstagramAutomatedReplyById: vi.fn(),
 }));
-vi.mock("../../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../../integrations/shopify/shopify.mapping.js", () => ({
   resolveShopifyPathValue: vi.fn(),
+}));
+vi.mock("../../integrations/shopify/shopify.catalog.js", () => ({
   getShopifyProductImage: vi.fn(),
 }));
 vi.mock("axios", () => ({ default: { get: vi.fn(), post: vi.fn() } }));

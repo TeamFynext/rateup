@@ -110,13 +110,12 @@ import { pauseOrg } from "../../org/org.services.js";
 import { getIntegrationByName, deleteIntegrationByName } from "../integrations.service.js";
 import {
   getShopifyIntegrationByShop,
-  handleShopifyOrderEvents,
-  handleShopifyAppUnistalled,
-  registerShopifyWebhook,
-  registerWebhookByTopic,
-  resolveShopifyPathValue,
   updateShopifyIntegrationByShop,
-} from "./shopify.service.js";
+} from "./shopify.credential.js";
+import { handleShopifyOrderEvents } from "./shopify.orders.js";
+import { handleShopifyAppUnistalled } from "./shopify.inbound.js";
+import { registerShopifyWebhook, registerWebhookByTopic } from "./shopify.webhooks.js";
+import { resolveShopifyPathValue } from "./shopify.mapping.js";
 import { updateShopifyIntegrationByShopHandler } from "./shopify.controller.js";
 import { enqueueCommerceOrderLoyalty as enqueueShopifyOrderLoyalty } from "../commerce/loyalty.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";

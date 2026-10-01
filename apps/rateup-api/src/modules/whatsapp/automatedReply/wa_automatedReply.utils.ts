@@ -47,10 +47,8 @@ import {
 import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.mapping.js";
-import {
-  resolveShopifyPathValue,
-  getShopifyProductImage,
-} from "../../integrations/shopify/shopify.service.js";
+import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapping.js";
+import { getShopifyProductImage } from "../../integrations/shopify/shopify.catalog.js";
 import axios from "axios";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
 import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";

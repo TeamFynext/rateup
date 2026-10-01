@@ -8,7 +8,7 @@ vi.mock("../../../utils/upload/s3Upload.js", () => ({
 }));
 vi.mock("../wa_axios.js", () => ({ callMetaApi: vi.fn() }));
 vi.mock("./wasurvey.service.js", () => ({ sendMessage: vi.fn() }));
-vi.mock("../../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../../integrations/shopify/shopify.catalog.js", () => ({
   captureShopifyOrderPayment: vi.fn(),
 }));
 

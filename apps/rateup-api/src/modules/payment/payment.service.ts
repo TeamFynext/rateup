@@ -18,7 +18,8 @@ import {
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../utils/email/payments/subscriptionActivated.js";
 import { sendSubscriptionPurchasedAlert } from "../../utils/email/payments/subscriptionPurchasedAlert.js";
-import { getRecurringCharge, getShopifyInfo } from "../integrations/shopify/shopify.service.js";
+import { getRecurringCharge } from "../integrations/shopify/shopify.billing.js";
+import { getShopifyInfo } from "../integrations/shopify/shopify.credential.js";
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../workers/bullmq/queues/index.js";
 import {

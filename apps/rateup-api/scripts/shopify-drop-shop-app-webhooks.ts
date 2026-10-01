@@ -23,7 +23,7 @@ import prisma from "../src/utils/prisma.js";
 import connection from "../src/utils/redisConnection.js";
 import shopify from "../src/modules/integrations/shopify/shopify.config.js";
 import { getActiveShopifySession } from "../src/modules/integrations/shopify/shopify.session.js";
-import { deleteWebhookById } from "../src/modules/integrations/shopify/shopify.service.js";
+import { deleteWebhookById } from "../src/modules/integrations/shopify/shopify.webhooks.js";
 import { IntegratedApps } from "../src/types/enums.js";
 
 const APP_LEVEL_TOPICS = ["APP_UNINSTALLED", "APP_SUBSCRIPTIONS_UPDATE"];

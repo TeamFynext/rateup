@@ -31,8 +31,10 @@ vi.mock("../../utils/email/payments/subscriptionActivated.js", () => ({
   createEmailBodySubscriptionActivated: vi.fn().mockResolvedValue("<p>activated</p>"),
 }));
 
-vi.mock("../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../integrations/shopify/shopify.billing.js", () => ({
   getRecurringCharge: vi.fn(),
+}));
+vi.mock("../integrations/shopify/shopify.credential.js", () => ({
   getShopifyInfo: vi.fn(),
 }));
 

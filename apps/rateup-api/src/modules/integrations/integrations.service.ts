@@ -12,7 +12,7 @@ import {
 import { callMetaApi } from "../whatsapp/wa_axios.js";
 import { log } from "../../utils/logger.js";
 import { getWaSettings, getWaSettingsById } from "../whatsapp/settings/wa_settings.service.js";
-import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service.js";
+import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.messages.js";
 import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils.js";
 import { getScheduleTime } from "../../utils/date.js";
 import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
