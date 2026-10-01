@@ -1,6 +1,20 @@
 import axios from "axios";
 import type { Integration } from "../../../../../generated/prisma/client.js";
 
+/**
+ * Rateup events forwarded to GetLead, gated per-org by `triggerSubscriptions`.
+ * The values are stored on every org's credential and on queued jobs, so they
+ * never change.
+ *
+ * `NOTE_CREATE` has a switch on the settings page and a handler in the push,
+ * but no event queues it yet.
+ */
+export enum GetLeadTriggers {
+  LEAD_CREATE = "getlead_lead_create",
+  LEAD_UPDATE = "getlead_lead_update",
+  NOTE_CREATE = "getlead_note_create",
+}
+
 /** One `{id, name}` row from `GET /meta` — a source, status or purpose. */
 export interface GetLeadRef {
   id: string;

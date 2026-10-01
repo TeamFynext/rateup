@@ -2,7 +2,7 @@ import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
 import type { IntegrationEvent } from "../../events/integrationEvent.types.js";
 import type { IntegrationEventContext } from "../../providers/integrationProvider.types.js";
 import { addGetLeadSyncToQueue } from "./getlead.queue.js";
-import { GetLeadTriggers } from "./getlead.service.js";
+import { GetLeadTriggers } from "./getlead.types.js";
 
 /**
  * Translates board stage events into GetLead pushes. GetLead is outbound-only

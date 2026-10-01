@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
@@ -32,29 +32,17 @@ vi.mock("../external/getlead/getlead.queue.js", () => ({ addGetLeadSyncToQueue: 
 
 vi.mock("../../webhook/webhook.service.js", () => ({ enqueueOrgWebhookDispatch: vi.fn() }));
 
-vi.mock("../external/getlead/getlead.service.js", () => ({
-  GetLeadTriggers: { LEAD_CREATE: "getlead_lead_create", LEAD_UPDATE: "getlead_lead_update" },
-  processGetLead: vi.fn(),
-}));
-vi.mock("../external/zoho/zoho.service.js", () => ({
+vi.mock("../external/getlead/getlead.push.js", () => ({ processGetLeadJob: vi.fn() }));
+vi.mock("../external/zoho/zoho.crm.js", () => ({
   pushCrmLeadStatus: vi.fn(),
-  processZoho: vi.fn(),
-  ZohoTriggers: {
-    CONTACT_CREATE: "contact_created",
-    CONTACT_UPDATE: "contact_updated",
-    CONTACT_DELETE: "contact_deleted",
-    LEAD_CREATE: "lead_created",
-    LEAD_UPDATE: "lead_updated",
-    BIGIN_CONTACT_CREATE: "bigin_contact_created",
-    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
-    BIGIN_CONTACT_DELETE: "bigin_contact_deleted",
-    BIGIN_DEAL_CREATE: "bigin_deal_created",
-  },
+  updateZohoLeadQueue: vi.fn(),
+  processZohoCrmJob: vi.fn(),
+  ZOHO_CRM_TRIGGERS: [],
 }));
 
 import prisma from "../../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import { pushCrmLeadStatus, processZoho } from "../external/zoho/zoho.service.js";
+import { pushCrmLeadStatus } from "../external/zoho/zoho.crm.js";
 import { addZapierTriggerToQueue } from "../external/zapier/zapier.service.js";
 import { addGetLeadSyncToQueue } from "../external/getlead/getlead.queue.js";
 import { enqueueOrgWebhookDispatch } from "../../webhook/webhook.service.js";
@@ -209,6 +197,9 @@ describe("emitIntegrationEvent", () => {
 });
 
 describe("processIntegrationJob", () => {
+  // Only the `processJob` spies below; the module mocks keep their implementations.
+  afterEach(() => vi.restoreAllMocks());
+
   test("fans an event job out instead of treating it as a provider job", async () => {
     await processIntegrationJob({
       name: INTEGRATION_EVENT_JOB,
@@ -224,6 +215,7 @@ describe("processIntegrationJob", () => {
 
   test("routes a provider job to that provider through the registry", async () => {
     (db.integration as any).findUnique = vi.fn().mockResolvedValue({ name: "zoho", active: true });
+    const processZoho = vi.spyOn(zohoProvider, "processJob").mockResolvedValue();
 
     await processIntegrationJob({
       name: "zoho-lead-create",
@@ -235,6 +227,7 @@ describe("processIntegrationJob", () => {
 
   test("drops a job whose integration has since been switched off", async () => {
     (db.integration as any).findUnique = vi.fn().mockResolvedValue({ name: "zoho", active: false });
+    const processZoho = vi.spyOn(zohoProvider, "processJob").mockResolvedValue();
 
     await processIntegrationJob({
       name: "zoho-lead-create",

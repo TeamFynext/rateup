@@ -123,19 +123,11 @@ vi.mock("../whatsapp/inbox/inboxStats/inboxStats.service.js", () => ({
   decrementInboxStat: vi.fn(),
 }));
 
-vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
+vi.mock("../integrations/external/zoho/zoho.crm.js", () => ({
   pushCrmLeadStatus: vi.fn(),
-  ZohoTriggers: {
-    CONTACT_CREATE: "contact_created",
-    LEAD_CREATE: "lead_created",
-    LEAD_UPDATE: "lead_updated",
-    BIGIN_CONTACT_CREATE: "bigin_contact_created",
-    CONTACT_UPDATE: "contact_updated",
-    CONTACT_DELETE: "contact_deleted",
-    BIGIN_DEAL_CREATE: "bigin_deal_created",
-    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
-    BIGIN_CONTACT_DELETE: "bigin_contact_deleted",
-  },
+  updateZohoLeadQueue: vi.fn(),
+  processZohoCrmJob: vi.fn(),
+  ZOHO_CRM_TRIGGERS: [],
 }));
 
 vi.mock("../integrations/external/zoho/zoho.utils.js", async () => ({
@@ -1360,7 +1352,7 @@ describe("updateContactById", () => {
   // the org's mapping decides which Zoho status it means, and a lifecycle named
   // something Zoho's picklist does not hold is a rejected push.
   test("reports the lifecycle to the mirrored zoho lead", async () => {
-    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.crm.js");
     db.contact.update.mockResolvedValue(
       updated({ lifecycleId: "lc-1", integrationIds: { zoho: { lead: { id: "lead-1" } } } }),
     );
@@ -1377,7 +1369,7 @@ describe("updateContactById", () => {
   });
 
   test("skips the lead update when the contact has no mirrored lead", async () => {
-    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.crm.js");
     db.contact.update.mockResolvedValue(updated({ lifecycleId: "lc-1" }));
 
     await updateContactById("c1", ORG, { lifecycleId: "lc-1" } as any, USER, existing);
@@ -1489,7 +1481,7 @@ describe("updateLifecycleStageofContacts", () => {
   });
 
   test("pushes the new stage to contacts that are mirrored as zoho leads", async () => {
-    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.service.js");
+    const { pushCrmLeadStatus } = await import("../integrations/external/zoho/zoho.crm.js");
     db.contact.findMany.mockResolvedValue([
       { id: "c1", orgId: ORG, integrationIds: { zoho: { lead: { id: "lead-1" } } } },
     ]);

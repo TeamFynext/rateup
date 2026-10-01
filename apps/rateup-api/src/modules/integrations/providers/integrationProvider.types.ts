@@ -84,11 +84,32 @@ export interface IntegrationProvider {
    * code; the provider only says where to send the user and what to keep.
    */
   oauth?: ProviderOAuth;
+  /**
+   * The pasted-key connect, for `auth: "apiKey"` providers. With this set, the
+   * shared route (`POST /:name/connect`) hands it the form's fields.
+   */
+  apiKey?: ProviderApiKey;
+}
+
+export interface ProviderApiKey {
+  /**
+   * Checks the fields against the provider and saves the connection. Validate
+   * the fields here — the route only knows they are strings — and throw
+   * `IntegrationConnectError` for a refusal the user should read. What it
+   * returns is sent back to the settings page.
+   */
+  connect(orgId: string, fields: Readonly<Record<string, string>>): Promise<unknown>;
 }
 
 export interface ProviderOAuth {
   config: OAuth2Config;
   scopes: readonly string[];
+  /**
+   * Scopes that depend on a choice made before connecting — Zoho's CRM / Bigin
+   * picker. Given the authorize-url's query; throw `OAuthConnectError` (400) for
+   * a choice it does not know. Without it, `scopes` is always asked for.
+   */
+  scopesFor?(options: Readonly<Record<string, string>>): readonly string[];
   scopeSeparator?: string;
   extraAuthorizeParams?: Record<string, string>;
   /**

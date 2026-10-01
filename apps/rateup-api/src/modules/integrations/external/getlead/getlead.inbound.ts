@@ -2,7 +2,8 @@ import type { Integration } from "../../../../../generated/prisma/client.js";
 import prisma from "../../../../utils/prisma.js";
 import { log } from "../../../../utils/logger.js";
 import { recordIntegrationSyncActivity } from "../integrationActivity.js";
-import { getCachedGetLeadMeta, writeGetLeadId } from "./getlead.service.js";
+import { getCachedGetLeadMeta } from "./getlead.connect.js";
+import { writeGetLeadId } from "./getlead.push.js";
 import { getGetLeadCredential } from "./getlead.types.js";
 import { LEADS_PIPELINE_TYPE } from "../../../pipeline/pipelineTypes.js";
 

@@ -84,19 +84,11 @@ vi.mock("../integrations/external/zapier/zapier.service.js", () => ({
   addZapierTriggerToQueue: vi.fn(),
   ZapierTriggers: { CONTACT_STAGE_UPDATED: "contact_stage_updated" },
 }));
-vi.mock("../integrations/external/zoho/zoho.service.js", () => ({
+vi.mock("../integrations/external/zoho/zoho.crm.js", () => ({
   pushCrmLeadStatus: vi.fn(),
-  ZohoTriggers: {
-    CONTACT_CREATE: "contact_created",
-    CONTACT_UPDATE: "contact_updated",
-    CONTACT_DELETE: "contact_deleted",
-    LEAD_CREATE: "lead_created",
-    LEAD_UPDATE: "lead_updated",
-    BIGIN_CONTACT_CREATE: "bigin_contact_created",
-    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
-    BIGIN_CONTACT_DELETE: "bigin_contact_deleted",
-    BIGIN_DEAL_CREATE: "bigin_deal_created",
-  },
+  updateZohoLeadQueue: vi.fn(),
+  processZohoCrmJob: vi.fn(),
+  ZOHO_CRM_TRIGGERS: [],
 }));
 vi.mock("../integrations/meta/conversions.service.js", () => ({
   sendWonConversionEvent: vi.fn(),
@@ -106,7 +98,7 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
 import { addZapierTriggerToQueue } from "../integrations/external/zapier/zapier.service.js";
-import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.service.js";
+import { pushCrmLeadStatus } from "../integrations/external/zoho/zoho.crm.js";
 import { sendWonConversionEvent } from "../integrations/meta/conversions.service.js";
 import {
   isPipelineAccessible,

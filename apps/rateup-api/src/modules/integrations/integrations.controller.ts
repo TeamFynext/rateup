@@ -21,6 +21,8 @@ import {
   ByNameParams,
   DeleteZapierHookInput,
   IntegrationSchema,
+  ApiKeyConnectInput,
+  OAuthAuthorizeQuery,
   OAuthCallbackInput,
   UpdateIntgrationInput,
   WaPaymentCreateSchema,
@@ -28,7 +30,10 @@ import {
 import { IntegratedApps } from "../../types/enums.js";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { listIntegrationActivity } from "./external/integrationActivity.js";
+import { connectWithApiKey } from "./shared/apiKeyConnect.js";
 import { finishOAuthConnect, OAuthConnectError, startOAuthConnect } from "./shared/oauthConnect.js";
+import { IntegrationConnectError } from "./shared/oauthConnectError.js";
+import { recordAuditEvent } from "../../utils/auditLog.js";
 
 /**
  * Strips the Shopify token pair before an integration leaves the API. The UI
@@ -363,14 +368,46 @@ export const getIntegrationActivityHandler = async (
   }
 };
 
+/**
+ * Connects a pasted-key provider after proving the key works.
+ *
+ * The audit event is written here, by hand: the generic audit hook skips this
+ * route (`auditLog.ts`), because it would log `request.body` — a live API key.
+ */
+export const connectWithApiKeyHandler = async (
+  request: FastifyRequest<{ Params: ByNameParams; Body: ApiKeyConnectInput }>,
+  reply: FastifyReply,
+) => {
+  const { name } = request.params;
+  try {
+    const { orgId } = request.user;
+    const provider = await providerByName(name);
+    const result = await connectWithApiKey(provider, name, orgId, request.body);
+    await recordAuditEvent(request, `${provider?.label ?? name} connected`);
+    return reply.send(result ?? { success: true });
+  } catch (error) {
+    if (error instanceof IntegrationConnectError) {
+      return reply.code(error.statusCode).send({ error: error.message });
+    }
+    log.error({ err: error, provider: name }, "API key connect failed");
+    return reply.code(500).send({ error: "Something went wrong" });
+  }
+};
+
 export const getOAuthAuthorizeUrlHandler = async (
-  request: FastifyRequest<{ Params: ByNameParams }>,
+  request: FastifyRequest<{ Params: ByNameParams; Querystring: OAuthAuthorizeQuery }>,
   reply: FastifyReply,
 ) => {
   try {
     const { orgId, userId } = request.user;
     const { name } = request.params;
-    const url = startOAuthConnect(await providerByName(name), name, orgId, userId);
+    const url = startOAuthConnect(
+      await providerByName(name),
+      name,
+      orgId,
+      userId,
+      request.query ?? {},
+    );
     return reply.send({ url });
   } catch (error) {
     if (error instanceof OAuthConnectError) {

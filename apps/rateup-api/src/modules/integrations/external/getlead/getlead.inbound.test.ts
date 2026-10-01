@@ -21,8 +21,10 @@ vi.mock("../../../../utils/prisma.js", () => ({
 
 const getCachedGetLeadMeta = vi.fn();
 const writeGetLeadId = vi.fn();
-vi.mock("./getlead.service.js", () => ({
+vi.mock("./getlead.connect.js", () => ({
   getCachedGetLeadMeta: (...args: unknown[]) => getCachedGetLeadMeta(...args),
+}));
+vi.mock("./getlead.push.js", () => ({
   writeGetLeadId: (...args: unknown[]) => writeGetLeadId(...args),
 }));
 

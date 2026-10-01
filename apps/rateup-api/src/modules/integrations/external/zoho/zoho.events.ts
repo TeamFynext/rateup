@@ -7,7 +7,8 @@ import type {
   IntegrationEventOf,
 } from "../../events/integrationEvent.types.js";
 import type { IntegrationEventContext } from "../../providers/integrationProvider.types.js";
-import { pushCrmLeadStatus, ZohoTriggers } from "./zoho.service.js";
+import { pushCrmLeadStatus } from "./zoho.crm.js";
+import { ZohoTriggers } from "./zoho.types.js";
 import {
   addZohoContactToQueue,
   buildZohoContactPayload,
@@ -16,10 +17,10 @@ import {
 
 /**
  * Translates Rateup's integration events into the Zoho CRM / Bigin jobs that
- * `processZoho` runs.
+ * the provider's `processJob` runs.
  *
  * The jobs and payloads are exactly what the contact and lead services used to
- * enqueue themselves; only who builds them moved. `processZoho` still decides
+ * enqueue themselves; only who builds them moved. `processJob` still decides
  * per trigger whether the org subscribed to it.
  */
 export async function handleZohoEvent(event: IntegrationEvent, { orgId }: IntegrationEventContext) {
@@ -139,8 +140,8 @@ async function onContactUpdated(orgId: string, event: IntegrationEventOf<"contac
 async function onContactDeleted(orgId: string, event: IntegrationEventOf<"contact.deleted">) {
   const ids = integrationIdsOf(event.contact);
 
-  // Queued even when the contact was never mirrored; `processZoho` skips a
-  // delete with no id.
+  // Queued even when the contact was never mirrored; the job skips a delete with
+  // no id.
   await integrationTriggerQueue.add("zoho-contact-delete", {
     integrationName: "zoho",
     triggerKey: ZohoTriggers.CONTACT_DELETE,

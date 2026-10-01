@@ -25,10 +25,16 @@ vi.mock("./integrations.service.js", () => ({
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("./shopify/shopify.route.js", () => ({ shopifyRoutes: vi.fn() }));
+vi.mock("../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
+vi.mock("./providers/registry.js", () => ({ getIntegrationProvider: vi.fn() }));
 
 import { log } from "../../utils/logger.js";
+import { recordAuditEvent } from "../../utils/auditLog.js";
 import * as service from "./integrations.service.js";
+import { getIntegrationProvider } from "./providers/registry.js";
+import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import {
+  connectWithApiKeyHandler,
   createGoogleSheetAuthToken,
   createIntegrationHandler,
   createWaPaymentConfigurationsHandler,
@@ -233,6 +239,69 @@ describe("the write handlers", () => {
 // ===========================================================================
 // createGoogleSheetAuthToken
 // ===========================================================================
+
+// ===========================================================================
+// POST /:name/connect — the shared pasted-key connect
+// ===========================================================================
+
+describe("connectWithApiKeyHandler", () => {
+  const request = (name: string, body: Record<string, string>) =>
+    ({ params: { name }, body, user: { orgId: ORG } }) as never;
+
+  test("hands the form to the provider's connect, for the caller's org, and audits it", async () => {
+    const connect = vi.fn().mockResolvedValue({ meta: { sources: [] } });
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({
+      label: "GetLead",
+      apiKey: { connect },
+    });
+    const rep = reply();
+
+    await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_good" }), rep);
+
+    expect(connect).toHaveBeenCalledWith(ORG, { apiKey: "ik_good" });
+    expect(answer(rep).body).toEqual({ meta: { sources: [] } });
+    // The event names the provider and nothing else — never the key.
+    expect(recordAuditEvent).toHaveBeenCalledWith(expect.anything(), "GetLead connected");
+  });
+
+  test("answers the provider's refusal with its own status and message", async () => {
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({
+      label: "GetLead",
+      apiKey: {
+        connect: vi
+          .fn()
+          .mockRejectedValue(new IntegrationConnectError("That API key was rejected.", 400)),
+      },
+    });
+    const rep = reply();
+
+    await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_bad" }), rep);
+
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "That API key was rejected." } });
+    expect(recordAuditEvent).not.toHaveBeenCalled();
+  });
+
+  test("404s a provider that does not connect with a key", async () => {
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({ label: "HubSpot" });
+    const rep = reply();
+
+    await connectWithApiKeyHandler(request("hubspot", { apiKey: "x" }), rep);
+
+    expect(answer(rep).code).toBe(404);
+  });
+
+  test("500s anything unexpected without echoing it", async () => {
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({
+      label: "GetLead",
+      apiKey: { connect: vi.fn().mockRejectedValue(new Error("db down")) },
+    });
+    const rep = reply();
+
+    await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_good" }), rep);
+
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
+  });
+});
 
 describe("createGoogleSheetAuthToken", () => {
   test("stores the exchanged tokens against the caller's org", async () => {
@@ -514,6 +583,7 @@ describe("route registration", () => {
     };
     expect(probe("/:name/oauth/authorize-url", "GET")).toBe("integrations.manage");
     expect(probe("/:name/oauth/callback", "POST")).toBe("integrations.manage");
+    expect(probe("/:name/connect", "POST")).toBe("integrations.manage");
     expect(probe("/:name/activity", "GET")).toBe("integrations.read");
   });
 

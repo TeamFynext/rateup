@@ -3,7 +3,7 @@ import type { Integration } from "../../../../../generated/prisma/client.js";
 
 /**
  * A webhook channel Zoho handed back when we subscribed to record events, one
- * per product (see registerZohoWebhook in zoho.client.ts).
+ * per product (see `registerZohoChannels` in zoho.connect.ts).
  */
 export interface ZohoWebhookRegistration {
   channelId: string;
@@ -13,6 +13,53 @@ export interface ZohoWebhookRegistration {
 }
 
 export type ZohoProductName = "crm" | "bigin";
+
+/**
+ * The org's per-trigger switches (`credential.triggerSubscriptions`), and the
+ * job keys the Zoho jobs are queued under. The values are stored on every
+ * org's credential and on jobs already waiting in the queue, so they never
+ * change.
+ */
+export enum ZohoTriggers {
+  CONTACT_CREATE = "contact_created",
+  CONTACT_UPDATE = "contact_updated",
+  CONTACT_DELETE = "contact_deleted",
+  CONTACT_WEBHOOK = "contact_webhook",
+  LEAD_WEBHOOK = "lead_webhook",
+  LEAD_UPDATE = "lead_updated",
+  LEAD_CREATE = "lead_created",
+  BIGIN_CONTACT_CREATE = "bigin_contact_created",
+  BIGIN_CONTACT_UPDATE = "bigin_contact_updated",
+  BIGIN_CONTACT_DELETE = "bigin_contact_deleted",
+  BIGIN_DEAL_CREATE = "bigin_deal_created",
+  BIGIN_CONTACT_WEBHOOK = "bigin_contact_webhook",
+  BIGIN_DEAL_WEBHOOK = "bigin_deal_webhook",
+}
+
+/**
+ * The job key for a Zoho → Rateup notification, queued by `handleZohoInbound`.
+ * Not a `ZohoTriggers` value: it is not a switch an org can turn off — the
+ * per-module `*_WEBHOOK` switches are checked when it runs.
+ */
+export const ZOHO_INBOUND = "zoho_inbound";
+
+/** What every outbound Zoho job runs with, resolved once by the provider. */
+export interface ZohoJobContext {
+  integration: Integration;
+  credential: ZohoCredential;
+  accessToken: string;
+  /** The Rateup contact the job came from, where a created record's id is kept. */
+  rateupContactId?: string;
+  /** The board lead the job came from, whose timeline hears how it went. */
+  rateupLeadId?: string;
+}
+
+/** What an inbound job carries: which record changed, and where. */
+export interface ZohoInboundJobData {
+  product: ZohoProductName;
+  module: string;
+  recordId: string;
+}
 
 /** A Bigin pipeline / sub-pipeline / stage the user picked in settings. */
 export interface ZohoPipelineOption {

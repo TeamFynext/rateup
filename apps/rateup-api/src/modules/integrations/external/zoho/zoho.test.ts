@@ -4,60 +4,45 @@ vi.mock("../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../integrations.service.js", () => ({
-  createIntegration: vi.fn(),
-  getIntegrationByName: vi.fn(),
-  updateIntegrationByName: vi.fn(),
+vi.mock("./zoho.import.js", () => ({
+  fetchZohoContacts: vi.fn(),
+  fetchZohoLeads: vi.fn(),
+  syncZohoContacts: vi.fn(),
+  syncZohoLeads: vi.fn(),
 }));
 
-vi.mock("./zoho.service.js", async () => {
-  const actual = await vi.importActual<any>("./zoho.service.js").catch(() => ({}));
-  return {
-    ZohoTriggers: (actual as any).ZohoTriggers ?? {},
-    fetchZohoContacts: vi.fn(),
-    fetchZohoLeads: vi.fn(),
-    fetchZohoPipelineMeta: vi.fn(),
-    fetchZohoUsers: vi.fn(),
-    getIntegrationByZohoChannelId: vi.fn(),
-    getValidZohoAccessToken: vi.fn(),
-    syncContactFromZohoRecord: vi.fn(),
-    syncZohoContacts: vi.fn(),
-    syncZohoLeads: vi.fn(),
-  };
-});
-
-vi.mock("./zoho.client.js", () => ({
-  getZohoRecordById: vi.fn(),
-  registerZohoWebhook: vi.fn(),
-  unsubscribeZohoWebhook: vi.fn(),
+vi.mock("./zoho.meta.js", () => ({
+  fetchZohoPipelineMeta: vi.fn(),
+  fetchZohoUsers: vi.fn(),
 }));
 
-vi.mock("axios", () => ({ default: { post: vi.fn(), get: vi.fn() } }));
+vi.mock("./zoho.inbound.js", () => ({
+  findIntegrationByZohoChannel: vi.fn(),
+  handleZohoInbound: vi.fn(),
+}));
+
+// The real receiver pulls in the whole provider registry; the alias only needs
+// to recognise a rejection.
+vi.mock("../../shared/inboundWebhookContract.js", () => ({
+  InboundWebhookRejected: class InboundWebhookRejected extends Error {},
+}));
 
 vi.mock("../../../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("../../../../workers/bullmq/queues/index.js", () => ({
   integrationTriggerQueue: { add: vi.fn() },
 }));
 
-import axios from "axios";
 import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
 import { checkSession } from "../../../../utils/checkSession.js";
-import { getIntegrationByName } from "../../integrations.service.js";
+import { InboundWebhookRejected } from "../../shared/inboundWebhookContract.js";
+import { fetchZohoContacts, fetchZohoLeads } from "./zoho.import.js";
+import { findIntegrationByZohoChannel, handleZohoInbound } from "./zoho.inbound.js";
+import { fetchZohoUsers } from "./zoho.meta.js";
 import {
-  fetchZohoContacts,
-  fetchZohoLeads,
-  fetchZohoUsers,
-  getIntegrationByZohoChannelId,
-  getValidZohoAccessToken,
-} from "./zoho.service.js";
-import { getZohoRecordById, unsubscribeZohoWebhook } from "./zoho.client.js";
-import {
-  disconnectZohoIntegrationHandler,
   getZohoContactsHandler,
   getZohoLeadsHandler,
   getZohoUsersHandler,
   handleZohoWebhook,
-  zohoAuthenticationHandler,
 } from "./zoho.controller.js";
 import { zohoRoutes } from "./zoho.route.js";
 import {
@@ -84,12 +69,8 @@ function answer(rep: any) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (getIntegrationByName as unknown as Mock).mockResolvedValue(null);
-  (getIntegrationByZohoChannelId as unknown as Mock).mockResolvedValue(null);
-  (getValidZohoAccessToken as unknown as Mock).mockResolvedValue("zoho-access-token");
-  (getZohoRecordById as unknown as Mock).mockResolvedValue({ data: [{ id: "z-1" }] });
-  (unsubscribeZohoWebhook as unknown as Mock).mockResolvedValue(undefined);
-  (axios.post as unknown as Mock).mockResolvedValue({ status: 200 });
+  (findIntegrationByZohoChannel as unknown as Mock).mockResolvedValue(null);
+  (handleZohoInbound as unknown as Mock).mockResolvedValue(undefined);
   (integrationTriggerQueue.add as unknown as Mock).mockResolvedValue({ id: "job-1" });
 });
 
@@ -109,6 +90,8 @@ describe("zohoRoutes", () => {
     return { srv, routes, hooks };
   }
 
+  // Connecting and disconnecting moved to the shared integration routes; what
+  // is left are the settings page's reads and syncs.
   test("guards every operator route with checkSession", async () => {
     const { srv, routes } = server();
 
@@ -116,19 +99,16 @@ describe("zohoRoutes", () => {
 
     const guarded = routes.filter((r) => r.opts?.preHandler === checkSession);
     expect(guarded.map((r) => r.url)).toEqual([
-      "/auth",
       "/contacts",
       "/contacts/sync",
       "/leads",
       "/users",
       "/pipelines",
       "/leads/sync",
-      "/unsubscribe/:orgId",
     ]);
   });
 
-  // The webhook is the only open route now, and it verifies a per-org shared secret.
-  test("leaves only the webhook unguarded", async () => {
+  test("leaves only the old webhook address unguarded", async () => {
     const { srv, routes } = server();
 
     await zohoRoutes(srv);
@@ -138,14 +118,9 @@ describe("zohoRoutes", () => {
   });
 });
 
-// ===========================================================================
-// disconnectZohoIntegrationHandler
-// ===========================================================================
-
-// These four took `orgId` from the query string, so any logged-in user could
-// name someone else's org: the reads returned that org's CRM data through its
-// stored credentials, and `/auth` wrote an OAuth credential onto it — attaching
-// the caller's own Zoho account to an org that had not connected one.
+// These took `orgId` from the query string, so any logged-in user could name
+// someone else's org and read that org's CRM data through its stored
+// credentials.
 describe("zoho handlers read the org from the session, not the query", () => {
   test("contacts", async () => {
     (fetchZohoContacts as unknown as Mock).mockResolvedValueOnce([]);
@@ -180,224 +155,66 @@ describe("zoho handlers read the org from the session, not the query", () => {
 
     expect(fetchZohoUsers).toHaveBeenCalledWith(ORG);
   });
-
-  test("auth writes the credential to the caller's org", async () => {
-    // Already connected, so the handler answers before doing any OAuth work —
-    // enough to see which org it looked at.
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ active: true });
-
-    await zohoAuthenticationHandler(
-      { body: { code: "oauth-code" }, query: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
-      reply(),
-    );
-
-    expect(getIntegrationByName).toHaveBeenCalledWith(ORG, "zoho");
-    expect(getIntegrationByName).not.toHaveBeenCalledWith(VICTIM_ORG, "zoho");
-  });
-});
-
-describe("disconnectZohoIntegrationHandler", () => {
-  const credential = {
-    access_token: "zoho-access",
-    refresh_token: "zoho-refresh",
-    api_domain: "https://www.zohoapis.in",
-    crmWebhook: { channelId: "chan-crm" },
-    biginWebhook: { channelId: "chan-bigin" },
-  };
-
-  test("acts on the caller's own org, not the one the path names", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
-    const rep = reply();
-
-    await disconnectZohoIntegrationHandler(
-      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
-      rep,
-    );
-
-    expect(getIntegrationByName).toHaveBeenCalledWith(ORG, "zoho");
-    expect(getIntegrationByName).not.toHaveBeenCalledWith(VICTIM_ORG, "zoho");
-    expect(answer(rep).code).toBe(200);
-  });
-
-  test("unsubscribes both webhooks and revokes the refresh token", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
-
-    await disconnectZohoIntegrationHandler(
-      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
-      reply(),
-    );
-
-    expect(unsubscribeZohoWebhook).toHaveBeenCalledTimes(2);
-    expect(axios.post).toHaveBeenCalledWith(
-      "https://accounts.zoho.in/oauth/v2/token/revoke",
-      null,
-      { params: { token: "zoho-refresh" } },
-    );
-  });
-
-  // NOTE: revoking is irreversible from this side — the org has to walk the
-  // whole OAuth consent flow again to restore the sync.
-  test("reports success even when every step of the teardown failed", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
-    (unsubscribeZohoWebhook as unknown as Mock).mockRejectedValue(new Error("zoho down"));
-    (axios.post as unknown as Mock).mockRejectedValueOnce(new Error("revoke failed"));
-    const rep = reply();
-
-    await disconnectZohoIntegrationHandler(
-      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
-      rep,
-    );
-
-    expect(answer(rep)).toEqual({
-      code: 200,
-      body: { success: true, message: "Zoho disconnected successfully" },
-    });
-  });
-
-  test("leaves the integration row in place", async () => {
-    (getIntegrationByName as unknown as Mock).mockResolvedValueOnce({ credential });
-
-    await disconnectZohoIntegrationHandler(
-      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
-      reply(),
-    );
-
-    // Nothing deletes or deactivates the row; only the remote side is torn down.
-    const svc = await import("../../integrations.service.js");
-    expect(svc.updateIntegrationByName).not.toHaveBeenCalled();
-  });
-
-  test("404s an org with no zoho integration", async () => {
-    const rep = reply();
-
-    await disconnectZohoIntegrationHandler(
-      { params: { orgId: VICTIM_ORG }, user: { orgId: ORG } } as never,
-      rep,
-    );
-
-    expect(answer(rep).code).toBe(404);
-  });
 });
 
 // ===========================================================================
-// handleZohoWebhook
+// handleZohoWebhook — the pre-move address
 // ===========================================================================
 
 describe("handleZohoWebhook", () => {
-  const integration = {
-    orgId: ORG,
-    credential: {
-      zohoWebhookSecret: "shared-secret",
-      access_token: "zoho-access",
-      api_domain: "https://www.zohoapis.in",
-    },
-  };
-
-  const payload = (over: any = {}) => ({
-    channel_id: "chan-1",
-    token: "shared-secret",
-    ids: ["z-1"],
-    module: "Contacts",
-    ...over,
-  });
-
-  // NOTE: this is the one webhook in the module that authenticates its caller.
-  test("rejects a payload whose token does not match the stored secret", async () => {
-    (getIntegrationByZohoChannelId as unknown as Mock).mockResolvedValueOnce(integration);
-    const rep = reply();
-
-    await handleZohoWebhook(
-      { params: { product: "crm" }, body: payload({ token: "guessed" }) } as never,
-      rep,
-    );
-
-    expect(answer(rep).code).toBe(401);
-    expect(getZohoRecordById).not.toHaveBeenCalled();
-  });
-
-  test("accepts a payload whose token matches", async () => {
-    (getIntegrationByZohoChannelId as unknown as Mock).mockResolvedValueOnce(integration);
-    const rep = reply();
-
-    await handleZohoWebhook({ params: { product: "crm" }, body: payload() } as never, rep);
-
-    expect(answer(rep)).toEqual({ code: 200, body: { success: true } });
-    expect(getZohoRecordById).toHaveBeenCalledOnce();
-  });
-
-  // NOTE: a plain !== on two strings — not a constant-time compare. The secret
-  // is a random id rather than a signature over the body, so a replayed
-  // payload with a captured token is accepted.
-  test("compares the secret with a plain inequality", async () => {
-    (getIntegrationByZohoChannelId as unknown as Mock).mockResolvedValueOnce({
-      ...integration,
-      credential: { ...integration.credential, zohoWebhookSecret: undefined },
-    });
-    const rep = reply();
-
-    await handleZohoWebhook(
-      { params: { product: "crm" }, body: payload({ token: "anything" }) } as never,
-      rep,
-    );
-
-    expect(answer(rep).code).toBe(401);
-  });
-
-  test("400s a payload missing any of the three required fields", async () => {
-    for (const missing of ["channel_id", "token", "ids"]) {
-      const body = payload();
-      delete (body as any)[missing];
-      const rep = reply();
-
-      await handleZohoWebhook({ params: { product: "crm" }, body } as never, rep);
-
-      expect(answer(rep).code).toBe(400);
-    }
-  });
+  const integration = { id: "int-1", orgId: ORG, credential: {} };
+  const body = { channel_id: "chan-1", token: "shared-secret", ids: ["z-1"], module: "Contacts" };
 
   test("404s a channel it does not recognise", async () => {
     const rep = reply();
 
-    await handleZohoWebhook({ params: { product: "crm" }, body: payload() } as never, rep);
+    await handleZohoWebhook({ params: { product: "crm" }, body } as never, rep);
+
+    expect(findIntegrationByZohoChannel).toHaveBeenCalledWith("chan-1");
+    expect(answer(rep).code).toBe(404);
+    expect(handleZohoInbound).not.toHaveBeenCalled();
+  });
+
+  test("404s a delivery with no channel id", async () => {
+    const rep = reply();
+
+    await handleZohoWebhook({ params: { product: "crm" }, body: {} } as never, rep);
 
     expect(answer(rep).code).toBe(404);
+    expect(findIntegrationByZohoChannel).not.toHaveBeenCalled();
   });
 
-  // NOTE: only Leads, Contacts and Deals are handled; anything else is logged
-  // and answered 200, so Zoho stops retrying an event nothing consumed.
-  test("acknowledges an unhandled module as a success", async () => {
-    (getIntegrationByZohoChannelId as unknown as Mock).mockResolvedValueOnce(integration);
+  test("hands a known channel's delivery to the provider's inbound handler", async () => {
+    (findIntegrationByZohoChannel as unknown as Mock).mockResolvedValueOnce(integration);
+    const request = { params: { product: "crm" }, body };
     const rep = reply();
 
-    await handleZohoWebhook(
-      { params: { product: "crm" }, body: payload({ module: "Accounts" }) } as never,
-      rep,
-    );
+    await handleZohoWebhook(request as never, rep);
 
+    expect(handleZohoInbound).toHaveBeenCalledWith(integration, request);
     expect(answer(rep)).toEqual({ code: 200, body: { success: true } });
-    expect(getZohoRecordById).not.toHaveBeenCalled();
   });
 
-  test("acknowledges an unknown product as a success too", async () => {
-    (getIntegrationByZohoChannelId as unknown as Mock).mockResolvedValueOnce(integration);
+  test("answers 401 when the inbound handler rejects the token", async () => {
+    (findIntegrationByZohoChannel as unknown as Mock).mockResolvedValueOnce(integration);
+    (handleZohoInbound as unknown as Mock).mockRejectedValueOnce(
+      new InboundWebhookRejected("token mismatch"),
+    );
     const rep = reply();
 
-    await handleZohoWebhook({ params: { product: "desk" }, body: payload() } as never, rep);
+    await handleZohoWebhook({ params: { product: "crm" }, body } as never, rep);
 
-    expect(answer(rep).code).toBe(200);
-    expect(getZohoRecordById).not.toHaveBeenCalled();
+    expect(answer(rep).code).toBe(401);
   });
 
-  test("only the first record id of a batch is processed", async () => {
-    (getIntegrationByZohoChannelId as unknown as Mock).mockResolvedValueOnce(integration);
+  test("answers 500 on anything else, so Zoho retries", async () => {
+    (findIntegrationByZohoChannel as unknown as Mock).mockResolvedValueOnce(integration);
+    (handleZohoInbound as unknown as Mock).mockRejectedValueOnce(new Error("redis down"));
+    const rep = reply();
 
-    await handleZohoWebhook(
-      { params: { product: "crm" }, body: payload({ ids: ["z-1", "z-2", "z-3"] }) } as never,
-      reply(),
-    );
+    await handleZohoWebhook({ params: { product: "crm" }, body } as never, rep);
 
-    expect(getZohoRecordById).toHaveBeenCalledOnce();
-    expect((getZohoRecordById as unknown as Mock).mock.calls[0][2]).toBe("z-1");
+    expect(answer(rep).code).toBe(500);
   });
 });
 

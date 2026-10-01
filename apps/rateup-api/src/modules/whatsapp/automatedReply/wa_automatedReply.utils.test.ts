@@ -53,10 +53,7 @@ vi.mock("axios", () => ({ default: { get: vi.fn(), post: vi.fn() } }));
 vi.mock("../../integrations/meta/conversions.service.js", () => ({
   triggerConversionsApiForContact: vi.fn(),
 }));
-vi.mock("../../integrations/external/zoho/zoho.service.js", () => ({
-  updateZohoLeadQueue: { add: vi.fn() },
-  ZohoTriggers: {},
-}));
+
 vi.mock("../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
 }));

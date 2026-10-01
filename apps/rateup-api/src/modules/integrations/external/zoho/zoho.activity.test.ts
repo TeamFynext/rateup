@@ -22,7 +22,7 @@ vi.mock("../../../pipeline/pipelineLead/lead.service.js", () => ({
   setContactStage: vi.fn(),
 }));
 
-const { pushCrmLeadStatus } = await import("./zoho.service.js");
+const { pushCrmLeadStatus } = await import("./zoho.crm.js");
 
 const MAPPED = [{ stageId: "stage-1", stageName: "Qualified", zohoLeadStatus: "Qualified Lead" }];
 

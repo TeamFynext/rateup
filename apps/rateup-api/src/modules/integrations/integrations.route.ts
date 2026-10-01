@@ -6,6 +6,7 @@ import {
   deleteIntegrationByNameHandler,
   deleteWaPaymentConfigurationHandler,
   deleteZapierTriggerHookHandler,
+  connectWithApiKeyHandler,
   finishOAuthConnectHandler,
   getAllIntegrationsByOrgHandler,
   getIntegrationActivityHandler,
@@ -24,8 +25,12 @@ import {
   updateIntgrationSchema,
   waPaymentCreateSchema,
   deleteZapierHookSchema,
+  apiKeyConnectSchema,
+  oauthAuthorizeQuerySchema,
   oauthCallbackSchema,
   type DeleteZapierHookInput,
+  type ApiKeyConnectInput,
+  type OAuthAuthorizeQuery,
   type OAuthCallbackInput,
   type IntegrationSchema,
   type ByNameParams,
@@ -60,13 +65,22 @@ export async function integrationsRoutes(server: FastifyInstance) {
     getIntegrationActivityHandler,
   );
 
+  // The shared pasted-key connect (`shared/apiKeyConnect.ts`).
+  server.post<{ Params: ByNameParams; Body: ApiKeyConnectInput }>(
+    "/:name/connect",
+    {
+      config: { permission: "integrations.manage" },
+      schema: { params: byNameSchema, body: apiKeyConnectSchema },
+    },
+    connectWithApiKeyHandler,
+  );
   // The shared OAuth connect (`shared/oauthConnect.ts`). The authorize URL is a
   // GET but starts a credential write, so it asks for manage like the callback.
-  server.get<{ Params: ByNameParams }>(
+  server.get<{ Params: ByNameParams; Querystring: OAuthAuthorizeQuery }>(
     "/:name/oauth/authorize-url",
     {
       config: { permission: "integrations.manage" },
-      schema: { params: byNameSchema },
+      schema: { params: byNameSchema, querystring: oauthAuthorizeQuerySchema },
     },
     getOAuthAuthorizeUrlHandler,
   );
