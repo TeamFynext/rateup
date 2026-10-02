@@ -2,13 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Text,
   Modal,
   ScrollView,
   useColorScheme,
-  Pressable,
 } from "react-native";
 import Image from "@/components/common/Image";
 
@@ -459,7 +458,7 @@ const MessageSendPanel = ({
                   <View key={item.key} className="relative w-[80px] h-[80px]">
                     {/* @ts-ignore */}
                     {!item.uploading && (
-                      <TouchableOpacity
+                      <Pressable
                         onPress={() => {
                           setDeletingKey(item.key);
                           setTimeout(() => {
@@ -474,7 +473,7 @@ const MessageSendPanel = ({
                         ) : (
                           <Text className="text-white text-xs">×</Text>
                         )}
-                      </TouchableOpacity>
+                      </Pressable>
                     )}
                     {/* @ts-ignore */}
                     {item.uploading ? (
@@ -539,7 +538,7 @@ const MessageSendPanel = ({
                         {item.name}
                       </Text>
                       {!item.uploading ? (
-                        <TouchableOpacity onPress={() => removeMedia(item.key)}>
+                        <Pressable onPress={() => removeMedia(item.key)}>
                           <Text
                             className="text-sm leading-4"
                             style={{
@@ -548,7 +547,7 @@ const MessageSendPanel = ({
                           >
                             ×
                           </Text>
-                        </TouchableOpacity>
+                        </Pressable>
                       ) : (
                         <ActivityIndicator size={10} color={isDark ? "#aaa" : "#888"} />
                       )}
@@ -595,10 +594,9 @@ const MessageSendPanel = ({
                     color: isDark ? "#7ac44d" : "#3B6D11",
                   },
                 ].map(({ type, label, Icon, bg, color }) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={type}
                     onPress={() => pickMedia(type)}
-                    activeOpacity={0.75}
                     className="flex-1 mx-1 items-center gap-1.5 py-2.5 rounded-xl border-[0.5px]"
                     style={{
                       backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
@@ -617,7 +615,7 @@ const MessageSendPanel = ({
                     >
                       {label}
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
 
                 {/* Voice cell */}
@@ -671,9 +669,8 @@ const MessageSendPanel = ({
                   padding: 3,
                 }}
               >
-                <TouchableOpacity
+                <Pressable
                   onPress={() => switchMode(false)}
-                  activeOpacity={0.8}
                   style={{
                     flex: 1,
                     alignItems: "center",
@@ -704,11 +701,10 @@ const MessageSendPanel = ({
                   >
                     Message
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
 
-                <TouchableOpacity
+                <Pressable
                   onPress={() => switchMode(true)}
-                  activeOpacity={0.8}
                   style={{
                     flex: 1,
                     alignItems: "center",
@@ -732,7 +728,7 @@ const MessageSendPanel = ({
                   >
                     Note
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
 
@@ -848,7 +844,7 @@ const MessageSendPanel = ({
                       >
                         Send Template
                       </Text>
-                      <TouchableOpacity
+                      <Pressable
                         onPress={() => setTemplateModalVisible(false)}
                         style={{
                           width: 32,
@@ -860,7 +856,7 @@ const MessageSendPanel = ({
                         }}
                       >
                         <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
-                      </TouchableOpacity>
+                      </Pressable>
                     </View>
 
                     <ScrollView
@@ -1076,7 +1072,7 @@ const MessageSendPanel = ({
                   >
                     Send Template
                   </Text>
-                  <TouchableOpacity
+                  <Pressable
                     onPress={() => setTemplateModalVisible(false)}
                     style={{
                       width: 32,
@@ -1088,7 +1084,7 @@ const MessageSendPanel = ({
                     }}
                   >
                     <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
 
                 <ScrollView

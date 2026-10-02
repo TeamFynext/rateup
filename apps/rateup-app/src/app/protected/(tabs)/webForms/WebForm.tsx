@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from "react-native";
+import { View, Text, ActivityIndicator, Pressable, RefreshControl } from "react-native";
 import React, { useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -88,7 +88,7 @@ const WebForm = () => {
 
   const renderItem = ({ item }: { item: any }) => {
     return (
-      <TouchableOpacity
+      <Pressable
         className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-md flex flex-col space-y-2 mb-2"
         onPress={() =>
           router.push({
@@ -129,7 +129,7 @@ const WebForm = () => {
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 

@@ -1,12 +1,5 @@
 import React, { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  useColorScheme,
-} from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, useColorScheme } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import dayjs from "dayjs";
@@ -215,14 +208,14 @@ const ContactInfo = () => {
           borderBottomColor: t.border1,
         }}
       >
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
           style={{ width: 34, height: 34, alignItems: "center", justifyContent: "center" }}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
           <ArrowLeft size={21} color={t.fg1} />
-        </TouchableOpacity>
+        </Pressable>
         <Text style={{ fontSize: 15, fontFamily: "Figtree_800ExtraBold", color: t.fg1 }}>
           Contact info
         </Text>
@@ -297,7 +290,7 @@ const ContactInfo = () => {
               value={formatPhone(phone)}
               last
               action={
-                <TouchableOpacity
+                <Pressable
                   onPress={copyPhone}
                   hitSlop={10}
                   accessibilityRole="button"
@@ -316,7 +309,7 @@ const ContactInfo = () => {
                   ) : (
                     <Copy size={17} color={t.fg3} />
                   )}
-                </TouchableOpacity>
+                </Pressable>
               }
             />
           </Section>
@@ -328,7 +321,7 @@ const ContactInfo = () => {
             label="Name"
             value={contact?.name || contact?.whatsappUserName || ""}
             action={
-              <TouchableOpacity
+              <Pressable
                 onPress={() =>
                   router.push({
                     pathname: "/protected/chat/Edit",
@@ -341,7 +334,7 @@ const ContactInfo = () => {
                 style={{ padding: 6 }}
               >
                 <Pencil size={16} color={t.fg3} />
-              </TouchableOpacity>
+              </Pressable>
             }
           />
           <InfoRow

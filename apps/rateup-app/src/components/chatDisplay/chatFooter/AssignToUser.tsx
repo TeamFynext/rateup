@@ -4,7 +4,7 @@ import { useLoggedInUser } from "@/api/api";
 import { useAssignOwner, useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
 import { useTeamsMembersOfOrg } from "@/api/teams/teams.query";
 import { useState } from "react";
-import { Text, TouchableOpacity, useColorScheme } from "react-native";
+import { Pressable, Text, useColorScheme } from "react-native";
 import { TeamMembersData } from "@/context/type";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { UserCheck } from "lucide-react-native";
@@ -107,11 +107,11 @@ export default function AssignToUser({
   return (
     <>
       {iconOnly ? (
-        <TouchableOpacity onPress={() => setVisible(true)} style={{ padding: 4 }}>
+        <Pressable onPress={() => setVisible(true)} style={{ padding: 4 }}>
           <UserCheck color={iconColor || textColor} size={iconSize} />
-        </TouchableOpacity>
+        </Pressable>
       ) : (
-        <TouchableOpacity
+        <Pressable
           onPress={() => setVisible(true)}
           style={
             plain
@@ -146,7 +146,7 @@ export default function AssignToUser({
           >
             Assign
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
 
       <AssigneeSheet

@@ -1,6 +1,6 @@
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Keyboard } from "react-native";
+import { View, Text, TextInput, Pressable, Keyboard } from "react-native";
 import { useRouter } from "expo-router";
 import { loggedUserDetails, signIn } from "@/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
@@ -95,13 +95,13 @@ export default function SignInScreen({ setError }: { readonly setError: (msg: st
           autoCapitalize="none"
         />
 
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+        <Pressable onPress={() => setShowPassword(!showPassword)}>
           {showPassword ? (
             <Eye color={isDark ? "white" : "black"} strokeWidth={1} />
           ) : (
             <EyeClosed color={isDark ? "white" : "black"} strokeWidth={1} />
           )}
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Remember Me + Forgot Password */}
@@ -139,15 +139,15 @@ export default function SignInScreen({ setError }: { readonly setError: (msg: st
           />
           <Text className="ml-2 text-sm text-[#343A40] dark:text-white">Remember Me</Text>
         </View>
-        <TouchableOpacity onPress={() => router.push("/auth/ForgotPassword")}>
+        <Pressable onPress={() => router.push("/auth/ForgotPassword")}>
           <Text className="text-[#004F98] dark:text-blue-400 text-sm font-medium">
             Forgot Password?
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Sign In Button */}
-      <TouchableOpacity
+      <Pressable
         onPress={handleSignIn}
         className={`py-3 rounded-md mb-4 items-center ${loading ? "bg-[#7AA5C8]" : "bg-[#004F98]"}`}
         disabled={loading}
@@ -155,7 +155,7 @@ export default function SignInScreen({ setError }: { readonly setError: (msg: st
         <Text className="text-white font-semibold text-[16px]">
           {loading ? "Signing In..." : "Sign In"}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }

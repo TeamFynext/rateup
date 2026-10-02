@@ -6,7 +6,6 @@ import {
   Pressable,
   Text,
   View,
-  TouchableOpacity,
   useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -176,7 +175,7 @@ const ResponsesTab = ({
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12 }}
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <Pressable
             onPress={() => {
               setData([item]);
               setFlowData([flow]);
@@ -195,7 +194,7 @@ const ResponsesTab = ({
             }}
           >
             <ContactCard item={item} />
-          </TouchableOpacity>
+          </Pressable>
         )}
       />
     </View>

@@ -3,7 +3,7 @@ import {
   ActivityIndicator,
   Text,
   Dimensions,
-  TouchableOpacity,
+  Pressable,
   FlatList,
   useColorScheme,
 } from "react-native";
@@ -312,7 +312,7 @@ const ChatBody = ({ id }: { id: string }) => {
             zIndex: 100,
           }}
         >
-          <TouchableOpacity
+          <Pressable
             onPress={() => {
               listRef.current?.scrollToOffset({
                 offset: 0,
@@ -323,7 +323,7 @@ const ChatBody = ({ id }: { id: string }) => {
             className="bg-black p-2 rounded-full shadow-md"
           >
             <ChevronDown color="white" />
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       )}
     </View>
