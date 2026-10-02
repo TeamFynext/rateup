@@ -37,8 +37,9 @@ vi.mock("./contactGroup.service.js", () => ({
 vi.mock("../contact.service.js", () => ({
   createMultipleContacts: vi.fn(),
   getContactIdsByListQuery: vi.fn(),
-  importCSVContacts: vi.fn(),
 }));
+
+vi.mock("../contactImport.service.js", () => ({ startContactImport: vi.fn() }));
 
 import { Prisma } from "../../../../generated/prisma/client.js";
 import {
@@ -58,11 +59,8 @@ import {
   updateContactGroup,
   updateContactGroupsForContact,
 } from "./contactGroup.service.js";
-import {
-  createMultipleContacts,
-  getContactIdsByListQuery,
-  importCSVContacts,
-} from "../contact.service.js";
+import { createMultipleContacts, getContactIdsByListQuery } from "../contact.service.js";
+import { startContactImport } from "../contactImport.service.js";
 import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 import {
   addExistingContactsToGroupHandler,
@@ -509,7 +507,7 @@ describe("addNewContactsfromCSVToGroupHandler", () => {
   });
 
   test("imports into the group named in the path", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "success", data: "ok" });
+    (startContactImport as Mock).mockResolvedValue({ status: "queued", jobId: "j1" });
     const rep = reply();
 
     await addNewContactsfromCSVToGroupHandler(
@@ -520,19 +518,18 @@ describe("addNewContactsfromCSVToGroupHandler", () => {
       rep,
     );
 
-    expect(importCSVContacts).toHaveBeenCalledWith(
-      expect.anything(),
-      ORG,
-      ["tier"],
-      false,
-      "g1",
-      true,
-    );
-    expect(answer(rep).code).toBe(200);
+    expect(startContactImport).toHaveBeenCalledWith(expect.anything(), {
+      orgId: ORG,
+      contactGroupId: "g1",
+      tags: ["tier"],
+      updateExisting: false,
+      hasHeaderRow: true,
+    });
+    expect(answer(rep)).toEqual({ code: 202, body: { status: "queued", jobId: "j1" } });
   });
 
   test("forwards the has-header-row flag", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "success" });
+    (startContactImport as Mock).mockResolvedValue({ status: "queued", jobId: "j1" });
 
     await addNewContactsfromCSVToGroupHandler(
       request({
@@ -542,11 +539,15 @@ describe("addNewContactsfromCSVToGroupHandler", () => {
       reply(),
     );
 
-    expect((importCSVContacts as Mock).mock.calls[0][5]).toBe(false);
+    expect((startContactImport as Mock).mock.calls[0][1].hasHeaderRow).toBe(false);
   });
 
   test("turns a validation result into a 400 carrying the bad rows", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "error", data: [{ name: "x" }] });
+    (startContactImport as Mock).mockResolvedValue({
+      status: "error",
+      data: [{ name: "x" }],
+      message: "No valid contacts were found in the file.",
+    });
     const rep = reply();
 
     await addNewContactsfromCSVToGroupHandler(
@@ -556,12 +557,27 @@ describe("addNewContactsfromCSVToGroupHandler", () => {
 
     expect(answer(rep)).toEqual({
       code: 400,
-      body: { error: "VALIDATION_ERR", data: [{ name: "x" }] },
+      body: {
+        error: "VALIDATION_ERR",
+        data: [{ name: "x" }],
+        message: "No valid contacts were found in the file.",
+      },
     });
   });
 
-  test("reports an empty spreadsheet as an internal error", async () => {
-    (importCSVContacts as Mock).mockResolvedValue(undefined);
+  test("answers 400 when no file was sent", async () => {
+    const rep = reply();
+
+    await addNewContactsfromCSVToGroupHandler(
+      request({ params: { contactGroupId: "g1" }, file: vi.fn().mockResolvedValue(undefined) }),
+      rep,
+    );
+
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "No file uploaded." } });
+  });
+
+  test("answers 500 when the import cannot be queued", async () => {
+    (startContactImport as Mock).mockRejectedValue(new Error("redis down"));
     const rep = reply();
 
     await addNewContactsfromCSVToGroupHandler(
