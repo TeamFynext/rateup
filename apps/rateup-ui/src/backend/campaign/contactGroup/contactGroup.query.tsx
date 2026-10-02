@@ -131,11 +131,7 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
       });
       queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
-    onSuccess: () => {
-      toast.success("Added new member successfully.", {
-        id: "contact-group-add-member",
-      });
-    },
+    // No success toast: the upload only queues the import, and the dialog follows it.
     onError: (error) => {
       const isValidationError = getApiErrorData(error)?.error === "VALIDATION_ERR";
       if (!isValidationError) {
