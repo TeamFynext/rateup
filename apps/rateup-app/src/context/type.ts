@@ -1,7 +1,13 @@
 export type orgWsMessage = {
-  type: "inbox" | "message_status_update";
+  type: "inbox" | "inbox_note" | "message_status_update";
   inbox?: {
     contact: ContactsData;
+    message: WaGetMessagesBody;
+  };
+  /** A private note: it joins the thread and leaves the inbox row alone. */
+  inbox_note?: {
+    contactId: string;
+    conversationId: string | null;
     message: WaGetMessagesBody;
   };
   /**

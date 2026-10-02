@@ -174,7 +174,9 @@ const ChatBody = ({ id }: { id: string }) => {
             timestamp={time}
             assignStatus={item.messageBody?.internal?.assignStatus || ""}
             exchangeProcess={item.messageBody.exchangeProcess}
-            senderName={item.sender?.name || ""}
+            senderName={
+              item.sender?.name || item.messageBody?.privateNote?.triggeredByUser?.name || ""
+            }
             // Outgoing with no sender attached. The payload carries no
             // `isAutomedMessage` (that lives on waMessageOrgTeamMap server-side
             // and isn't returned), so an absent `sender` is the signal that no
@@ -184,6 +186,15 @@ const ChatBody = ({ id }: { id: string }) => {
             template={parsed.template}
             templateComponentParams={item.templateComponentParams}
             stats={item.stats}
+            note={
+              item.messageBody?.exchangeProcess === "privateNote"
+                ? {
+                    deleted: !!item.deletedAt,
+                    edited: !!item.messageBody.privateNote?.editedAt,
+                    deletedBy: item.messageBody.privateNote?.deletedBy?.name,
+                  }
+                : undefined
+            }
           />
         </View>
       );

@@ -14,12 +14,17 @@ export function useMention({
   enabled,
   text,
   setText,
+  onPick,
 }: {
-  /** Only the private note composes mentions; the message tab types normally. */
   enabled: boolean;
   text: string;
   setText: (value: string) => void;
+  /** Called after a teammate is inserted. */
+  onPick?: (user: MentionUser) => void;
 }) {
+  // Read through a ref: `pick` is memoised and would otherwise call a stale callback.
+  const onPickRef = useRef(onPick);
+  onPickRef.current = onPick;
   const { data: orgMembers } = useTeamsMembersOfOrg();
 
   const users = useMemo<MentionUser[]>(
@@ -93,6 +98,7 @@ export function useMention({
       setText(next);
       setCaret(position);
       setJustPicked(true);
+      onPickRef.current?.(user);
     },
     [caret, text, setText],
   );

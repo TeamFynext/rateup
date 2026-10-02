@@ -33,6 +33,7 @@ type MessageBubbleProps = {
   templateComponentParams?: WaTemplateComponent[];
   assignStatus?: string;
   stats?: any;
+  note?: { deleted: boolean; edited: boolean; deletedBy?: string };
 };
 
 const MessageBubble = ({
@@ -47,6 +48,7 @@ const MessageBubble = ({
   templateComponentParams,
   assignStatus,
   stats,
+  note,
 }: MessageBubbleProps) => {
   const renderContent = useCallback(
     (textColor?: string) => {
@@ -243,9 +245,24 @@ const MessageBubble = ({
               {senderName
                 ? `Internal note · ${senderName}${timestamp ? ` · ${timestamp}` : ""}`
                 : "Internal note"}
+              {note?.edited && !note.deleted ? " · edited" : ""}
             </Text>
           </View>
-          {renderContent(t.note.text)}
+          {note?.deleted ? (
+            // The API clears a deleted note's text; the row stays so the thread shows the gap.
+            <Text
+              style={{
+                fontSize: 13,
+                fontFamily: "InstrumentSans_400Regular",
+                fontStyle: "italic",
+                color: t.note.label,
+              }}
+            >
+              {note.deletedBy ? `Note deleted by ${note.deletedBy}` : "Note deleted"}
+            </Text>
+          ) : (
+            renderContent(t.note.text)
+          )}
         </View>
       </View>
     );
