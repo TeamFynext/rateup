@@ -34,12 +34,9 @@ import {
 import { ContactGroupNotFoundError } from "./contactGroup.errors.js";
 import { Prisma } from "../../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
-import {
-  createMultipleContacts,
-  getContactIdsByListQuery,
-  importCSVContacts,
-} from "../contact.service.js";
-import { getMultipartFieldValue } from "../../../utils/upload/validate.js";
+import { createMultipleContacts, getContactIdsByListQuery } from "../contact.service.js";
+import { readImportFormFields } from "../contactImport.form.js";
+import { startContactImport } from "../contactImport.service.js";
 import { PaginationQuery } from "../contact.schema.js";
 
 function replyForError(reply: FastifyReply, error: unknown, context: string) {
@@ -283,28 +280,21 @@ export async function addNewContactsfromCSVToGroupHandler(
 ) {
   try {
     const file = await request.file();
+    if (!file) return reply.code(400).send({ error: "No file uploaded." });
     const { orgId } = request.user;
-    const contactGroupId = request.params.contactGroupId;
-    if (!dataExtractFileMimeTypes.includes(file?.mimetype as string))
+    if (!dataExtractFileMimeTypes.includes(file.mimetype))
       return reply.code(400).send({ error: "This file type is not permitted." });
-    const tags: string[] = [];
-    let update = false;
-    let hasHeaderRow = true;
-    for (const key in file?.fields) {
-      const value = getMultipartFieldValue(file?.fields?.[key]);
-      if (key.startsWith("tags[")) {
-        if (typeof value === "string") tags.push(value);
-      } else if (key === "update") {
-        update = value === "true";
-      } else if (key === "hasHeaderRow") {
-        hasHeaderRow = value !== "false";
-      }
+    const res = await startContactImport(file, {
+      orgId,
+      contactGroupId: request.params.contactGroupId,
+      ...readImportFormFields(file.fields),
+    });
+    if (res.status === "error") {
+      return reply
+        .code(400)
+        .send({ error: "VALIDATION_ERR", data: res.data, message: res.message });
     }
-    const res = await importCSVContacts(file!, orgId, tags, update, contactGroupId, hasHeaderRow);
-    if (res!.status === "error") {
-      return reply.code(400).send({ error: "VALIDATION_ERR", data: res!.data });
-    }
-    reply.code(200).send(res);
+    reply.code(202).send(res);
   } catch (err) {
     log.error({ err }, "Error importing CSV contacts to group");
     reply

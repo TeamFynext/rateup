@@ -11,6 +11,7 @@ import {
   customFieldSchema,
   byFieldIdSchema,
   bulkUpdateContactStatusSchema,
+  contactImportJobParamsSchema,
 } from "./contact.schema.js";
 import {
   addCustomFieldHandler,
@@ -24,6 +25,7 @@ import {
   getAllContactsHandler,
   getContactByIdHandler,
   getContactFullDetailsByIdHandler,
+  getContactImportStatusHandler,
   getCustomFieldHandler,
   importCSVContactsHandler,
   updateContactByIdHandler,
@@ -163,6 +165,15 @@ export async function contactRoutes(server: FastifyInstance) {
       },
     },
     importCSVContactsHandler,
+  );
+  server.get(
+    "/import/:jobId",
+    {
+      schema: {
+        params: contactImportJobParamsSchema,
+      },
+    },
+    getContactImportStatusHandler,
   );
   server.get(
     "/custom-fields",

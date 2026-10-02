@@ -32,13 +32,16 @@ vi.mock("./contact.service.js", () => ({
   getContactsByOrgId: vi.fn(),
   getCustomFields: vi.fn(),
   getExistingContactCountByPhno: vi.fn(),
-  importCSVContacts: vi.fn(),
   updateContactById: vi.fn(),
   updateContactLabelsById: vi.fn(),
   updateCustomField: vi.fn(),
   updateLifecycleStageofContacts: vi.fn(),
 }));
 
+vi.mock("./contactImport.service.js", () => ({
+  startContactImport: vi.fn(),
+  getContactImportStatus: vi.fn(),
+}));
 vi.mock("./contact.utils.js", () => ({
   createLCustomer: vi.fn(),
   handlePostRegisterAction: vi.fn(),
@@ -75,13 +78,13 @@ import {
   getContactsByOrgId,
   getCustomFields,
   getExistingContactCountByPhno,
-  importCSVContacts,
   updateContactById,
   updateContactLabelsById,
   updateCustomField,
   updateLifecycleStageofContacts,
 } from "./contact.service.js";
 import { createLCustomer } from "./contact.utils.js";
+import { getContactImportStatus, startContactImport } from "./contactImport.service.js";
 import { sendLoyalty } from "../loyalty/messaging/send.js";
 import { getLoyaltyWaCommandByType } from "../loyalty/settings/settings.service.js";
 import { ContactNotFoundError } from "./contact.errors.js";
@@ -98,6 +101,7 @@ import {
   getContactByIdHandler,
   getCustomFieldHandler,
   importCSVContactsHandler,
+  getContactImportStatusHandler,
   updateContactByIdHandler,
   updateContactLabelsByIdHandler,
   updateCustomFieldHandler,
@@ -492,6 +496,8 @@ describe("importCSVContactsHandler", () => {
     );
     return { mimetype, fields: wrapped };
   }
+  const options = () => (startContactImport as Mock).mock.calls[0][1];
+  const queued = { status: "queued", jobId: "contact-import-1", total: 1 };
 
   test("refuses a file type that is not a spreadsheet", async () => {
     const rep = reply();
@@ -502,11 +508,11 @@ describe("importCSVContactsHandler", () => {
     );
 
     expect(answer(rep)).toEqual({ code: 400, body: { error: "This file type is not permitted." } });
-    expect(importCSVContacts).not.toHaveBeenCalled();
+    expect(startContactImport).not.toHaveBeenCalled();
   });
 
   test("collects the tag fields in order", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "success", data: "ok" });
+    (startContactImport as Mock).mockResolvedValue(queued);
 
     await importCSVContactsHandler(
       request({
@@ -519,67 +525,56 @@ describe("importCSVContactsHandler", () => {
       reply(),
     );
 
-    expect((importCSVContacts as Mock).mock.calls[0][2]).toEqual(["tier", "city"]);
+    expect(options().tags).toEqual(["tier", "city"]);
+    expect(options().orgId).toBe(ORG);
   });
 
   test("only the literal string true turns on update-existing", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "success" });
+    (startContactImport as Mock).mockResolvedValue(queued);
 
     await importCSVContactsHandler(
       request({ file: vi.fn().mockResolvedValue(upload({ update: { value: "yes" } })) }),
       reply(),
     );
 
-    expect((importCSVContacts as Mock).mock.calls[0][3]).toBe(false);
+    expect(options().updateExisting).toBe(false);
   });
 
   test("update-existing is honoured when the field says true", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "success" });
+    (startContactImport as Mock).mockResolvedValue(queued);
 
     await importCSVContactsHandler(
       request({ file: vi.fn().mockResolvedValue(upload({ update: { value: "true" } })) }),
       reply(),
     );
 
-    expect((importCSVContacts as Mock).mock.calls[0][3]).toBe(true);
+    expect(options().updateExisting).toBe(true);
   });
 
   test("a header row is assumed unless the field explicitly says false", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "success" });
+    (startContactImport as Mock).mockResolvedValue(queued);
 
     await importCSVContactsHandler(
       request({ file: vi.fn().mockResolvedValue(upload({ hasHeaderRow: { value: "false" } })) }),
       reply(),
     );
 
-    expect((importCSVContacts as Mock).mock.calls[0][5]).toBe(false);
+    expect(options().hasHeaderRow).toBe(false);
   });
 
   test("passes no group id — this endpoint imports into no group", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "success" });
+    (startContactImport as Mock).mockResolvedValue(queued);
 
     await importCSVContactsHandler(request({ file: vi.fn().mockResolvedValue(upload()) }), reply());
 
-    expect((importCSVContacts as Mock).mock.calls[0][4]).toBeUndefined();
+    expect(options().contactGroupId).toBeUndefined();
   });
 
   test("turns a validation result into a 400 carrying the bad rows", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({ status: "error", data: [{ name: "x" }] });
-    const rep = reply();
-
-    await importCSVContactsHandler(request({ file: vi.fn().mockResolvedValue(upload()) }), rep);
-
-    expect(answer(rep)).toEqual({
-      code: 400,
-      body: { error: "VALIDATION_ERR", data: [{ name: "x" }] },
-    });
-  });
-
-  test("reports an empty spreadsheet as a validation error", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({
-      data: [],
+    (startContactImport as Mock).mockResolvedValue({
       status: "error",
-      message: "The file contained no contacts.",
+      data: [{ name: "x" }],
+      message: "No valid contacts were found in the file.",
     });
     const rep = reply();
 
@@ -589,25 +584,40 @@ describe("importCSVContactsHandler", () => {
       code: 400,
       body: {
         error: "VALIDATION_ERR",
-        data: [],
-        message: "The file contained no contacts.",
+        data: [{ name: "x" }],
+        message: "No valid contacts were found in the file.",
       },
     });
   });
 
-  test("answers a partly-valid file as a 200 carrying both halves", async () => {
-    (importCSVContacts as Mock).mockResolvedValue({
-      status: "partial",
-      imported: 499,
-      rejected: [{ name: "x", phone: "y" }],
-      data: [],
-    });
+  test("answers a queued import with 202 and the job to poll", async () => {
+    (startContactImport as Mock).mockResolvedValue(queued);
     const rep = reply();
 
     await importCSVContactsHandler(request({ file: vi.fn().mockResolvedValue(upload()) }), rep);
 
-    expect(answer(rep).code).toBe(200);
-    expect(answer(rep).body).toMatchObject({ status: "partial", imported: 499 });
+    expect(answer(rep)).toEqual({ code: 202, body: queued });
+  });
+});
+
+describe("getContactImportStatusHandler", () => {
+  test("answers 404 for a job that is gone or belongs to another org", async () => {
+    (getContactImportStatus as Mock).mockResolvedValue(null);
+    const rep = reply();
+
+    await getContactImportStatusHandler(request({ params: { jobId: "contact-import-1" } }), rep);
+
+    expect(getContactImportStatus).toHaveBeenCalledWith("contact-import-1", ORG);
+    expect(answer(rep).code).toBe(404);
+  });
+
+  test("returns the status as read", async () => {
+    (getContactImportStatus as Mock).mockResolvedValue({ state: "running", processed: 1000 });
+    const rep = reply();
+
+    await getContactImportStatusHandler(request({ params: { jobId: "contact-import-1" } }), rep);
+
+    expect(answer(rep)).toEqual({ code: 200, body: { state: "running", processed: 1000 } });
   });
 });
 

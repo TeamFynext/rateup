@@ -4,6 +4,7 @@ export * from "./automation.queue.js";
 export * from "./campaign.queue.js";
 export * from "./abandonedCheckout.queue.js";
 export * from "./campaignRetry.queue.js";
+export * from "./contactImport.queue.js";
 export * from "./cron.queue.js";
 export * from "./integration.queue.js";
 export * from "./loyaltyFeedback.queue.js";
