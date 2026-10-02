@@ -114,6 +114,12 @@ const CreateContactModal = ({
       });
       formData.append("file", csvfile);
       importCSVContactMutation.mutate(formData, {
+        // The upload only queues the file; the contacts arrive as the background job writes them.
+        onSuccess: () => {
+          toast.success(
+            translations("Import started. Your contacts will appear as they are added."),
+          );
+        },
         onSettled: () => {
           setIsCreating(false);
           form.reset();
