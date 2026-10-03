@@ -72,12 +72,48 @@ export const importContacts = async (data: RequestPayload) => {
   return res;
 };
 
+/** What the API answers once it has validated a spreadsheet and queued it (202). */
+export interface ContactImportStarted {
+  status: "queued";
+  jobId: string;
+  total: number;
+  rejectedCount: number;
+  duplicateCount: number;
+}
+
+export type ContactImportState = "queued" | "running" | "completed" | "failed";
+
+/** `GET /contact/import/:jobId` — mirrors `ContactImportStatus` in rateup-api's contactImport.service.ts. */
+export interface ContactImportStatus {
+  jobId: string;
+  state: ContactImportState;
+  total: number;
+  processed: number;
+  created: number;
+  updated: number;
+  /** Already in the list and left as they were, because update-existing was off. */
+  skipped: number;
+  addedToGroup: number;
+  /** Rows refused while validating, capped at 1,000; `rejectedCount` is exact. */
+  rejected: { name: string; phone: string }[];
+  rejectedCount: number;
+  duplicateCount: number;
+}
+
+/**
+ * Validates the file and queues it. The contacts are written by a background job, so this
+ * returns in seconds even for a large file; poll `getContactImportStatus` for the outcome.
+ */
 export const importCSVContacts = async (data: RequestPayload) => {
-  const res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
+  const res = await axiosClient.post<ContactImportStarted>(`${CONTACT_BASE_URL}/importcsv`, data, {
     timeout: 60000,
   });
   return res;
 };
+
+export async function getContactImportStatus(jobId: string) {
+  return (await axiosClient.get<ContactImportStatus>(`${CONTACT_BASE_URL}/import/${jobId}`)).data;
+}
 
 export const deleteContact = async (contactId: string) => {
   const res = await axiosClient.delete(`${CONTACT_BASE_URL}/${contactId}`);

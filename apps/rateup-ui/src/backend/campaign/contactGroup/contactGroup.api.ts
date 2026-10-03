@@ -2,6 +2,7 @@ import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 import type { ContactGroupType } from "@/types/enums.ts";
 
 import { axiosClient } from "../../apiClient";
+import type { ContactImportStarted } from "../contacts/contacts.api";
 
 export interface ICreateContactGroup {
   name: string;
@@ -102,7 +103,7 @@ export const addNewContactFromCSV = ({
   data: RequestPayload;
   groupId: string;
 }) => {
-  const res = axiosClient.post(
+  const res = axiosClient.post<ContactImportStarted>(
     `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/new/importcsv`,
     data,
     {

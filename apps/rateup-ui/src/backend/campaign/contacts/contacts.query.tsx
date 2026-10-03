@@ -28,6 +28,7 @@ import {
   exportContacts,
   getContactById,
   getContactFullDetails,
+  getContactImportStatus,
   getContactLabels,
   getContactsList,
   getCustomField,
@@ -162,6 +163,33 @@ export const useImportContactMutation = () => {
         id: "contact-create",
       });
     },
+  });
+};
+
+/**
+ * Polls a queued import until it finishes. Once it does, the contact lists (and the group,
+ * when the import was into one) are refreshed, since that is when the rows exist.
+ */
+export const useContactImportStatus = (jobId: string | null, groupId?: string) => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: contactKeys.importStatus(jobId ?? ""),
+    queryFn: async () => {
+      const status = await getContactImportStatus(jobId ?? "");
+      if (status.state === "completed" || status.state === "failed") {
+        queryClient.invalidateQueries({ queryKey: contactKeys.all() });
+        queryClient.invalidateQueries({ queryKey: contactKeys.filtered() });
+        if (groupId) queryClient.invalidateQueries({ queryKey: contactGroupKeys.detail(groupId) });
+      }
+      return status;
+    },
+    enabled: Boolean(jobId),
+    refetchInterval: (query) => {
+      const state = query.state.data?.state;
+      return state === "completed" || state === "failed" ? false : 1500;
+    },
+    // A finished import's numbers do not change; keep showing them.
+    staleTime: Infinity,
   });
 };
 

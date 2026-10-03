@@ -29,6 +29,8 @@ export const contactKeys = {
   filtered: () => ["contacts", "filtered"] as const,
   filteredBy: (filterData: KeyPart) => ["contacts", "filtered", filterData] as const,
   inboxCount: () => ["contactInboxCount"] as const,
+  /** A queued spreadsheet import. Outside the `["contacts"]` root so list invalidations skip it. */
+  importStatus: (jobId: string) => ["contactImport", jobId] as const,
 } as const;
 
 export const contactGroupKeys = {
