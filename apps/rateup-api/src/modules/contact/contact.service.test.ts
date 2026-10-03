@@ -55,14 +55,8 @@ vi.mock("../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../../utils/spreadsheet.js", () => ({
-  readSpreadsheetObjects: vi.fn(),
-  readSpreadsheetRows: vi.fn(),
-}));
-
 vi.mock("./contactGroup/contactGroup.service.js", () => ({
   addExistingContactsToMultipleGroups: vi.fn(),
-  addNewContactsToGroup: vi.fn(),
 }));
 
 vi.mock("../integrations/meta/conversions.service.js", () => ({
@@ -138,11 +132,7 @@ vi.mock("../integrations/external/zoho/zoho.utils.js", async () => ({
 
 import prisma from "../../utils/prisma.js";
 import { releaseThreadsOnTicketClose } from "../metaAgent/metaAgent.autoRelease.js";
-import { readSpreadsheetObjects, readSpreadsheetRows } from "../../utils/spreadsheet.js";
-import {
-  addExistingContactsToMultipleGroups,
-  addNewContactsToGroup,
-} from "./contactGroup/contactGroup.service.js";
+import { addExistingContactsToMultipleGroups } from "./contactGroup/contactGroup.service.js";
 import { queueZapierTrigger } from "../integrations/external/zapier/zapier.deliver.js";
 import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import { integrationTriggerQueue } from "../../workers/bullmq/queues/index.js";
@@ -166,7 +156,6 @@ import {
   addCustomField,
   bulkUpdateWaMessageAssignStatus,
   createContact,
-  createContactsFromCsv,
   createMultipleContacts,
   deleteContactById,
   deleteCustomField,
@@ -181,12 +170,10 @@ import {
   getOrCreateContactByPsid,
   getOrcreateContact,
   handleContactConsent,
-  importCSVContacts,
   updateContactById,
   updateContactLabelsById,
   updateCustomField,
   updateLifecycleStageofContacts,
-  updateMulitplceContacts,
 } from "./contact.service.js";
 
 type Mock = ReturnType<typeof vi.fn>;
@@ -1538,209 +1525,6 @@ describe("updateLifecycleStageofContacts", () => {
   });
 });
 
-// ===========================================================================
-// CSV import
-// ===========================================================================
-
-describe("importCSVContacts", () => {
-  function file(mimetype = "text/csv") {
-    return { mimetype, toBuffer: vi.fn().mockResolvedValue(Buffer.from("")) } as any;
-  }
-
-  test("reads a header row by default and lower-cases the headers", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({ data: [] });
-
-    await importCSVContacts(file(), ORG, []);
-
-    expect(readSpreadsheetObjects).toHaveBeenCalled();
-    const opts = (readSpreadsheetObjects as Mock).mock.calls[0][2];
-    expect(opts.transformHeader(" Name ")).toBe("name");
-    expect(opts.transformValue(" 42 ")).toBe("42");
-    expect(opts.transformValue(null)).toBe("");
-  });
-
-  test("assumes name,phone,<tags> column order when there is no header row", async () => {
-    (readSpreadsheetRows as Mock).mockResolvedValue([["Ann", "919000000001", "gold"]]);
-    db.contactCustomField.findMany.mockResolvedValue([]);
-
-    await importCSVContacts(file(), ORG, ["tier"], false, undefined, false);
-
-    expect(readSpreadsheetRows).toHaveBeenCalled();
-    expect(readSpreadsheetObjects).not.toHaveBeenCalled();
-  });
-
-  test("reports an empty file as an error the caller can render", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({ data: [] });
-
-    await expect(importCSVContacts(file(), ORG, [])).resolves.toEqual({
-      data: [],
-      status: "error",
-      message: "The file contained no contacts.",
-    });
-  });
-
-  test("rejects a row with no name", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [{ name: "", phone: "919876543210" }],
-    });
-
-    const res: any = await importCSVContacts(file(), ORG, []);
-
-    expect(res.status).toBe("error");
-    expect(res.data).toEqual([{ name: "name is missing/invalid", phone: expect.any(String) }]);
-  });
-
-  test("rejects a row whose phone is not a real number", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [{ name: "Ann", phone: "12" }],
-    });
-
-    const res: any = await importCSVContacts(file(), ORG, []);
-
-    expect(res.status).toBe("error");
-    expect(res.data[0].phone).toBe("12: Invalid phone number");
-  });
-
-  test("reports a missing phone distinctly from an invalid one", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({ data: [{ name: "Ann" }] });
-
-    const res: any = await importCSVContacts(file(), ORG, []);
-
-    expect(res.data[0].phone).toBe("phone is missing");
-  });
-
-  test("stores a valid number without its leading plus", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [{ name: "Ann", phone: "+91 98765 43210" }],
-    });
-
-    await importCSVContacts(file(), ORG, []);
-
-    const [rows] = (createMultipleContactsSpy() as any) ?? [];
-    expect(rows[0].phone).toBe("919876543210");
-  });
-
-  test("recovers a phone that a spreadsheet mangled into scientific notation", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [{ name: "Ann", phone: "9.19876543210E+11" }],
-    });
-
-    await importCSVContacts(file(), ORG, []);
-
-    const [rows] = (createMultipleContactsSpy() as any) ?? [];
-    expect(rows[0].phone).toBe("919876543210");
-  });
-
-  test("reports a partly-valid file as a partial success, naming both halves", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [
-        { name: "Ann", phone: "+919876543210" },
-        { name: "", phone: "" },
-      ],
-    });
-
-    const res: any = await importCSVContacts(file(), ORG, []);
-
-    expect(db.contact.createManyAndReturn).toHaveBeenCalled();
-    expect(res).toMatchObject({ status: "partial", imported: 1 });
-    expect(res.rejected).toHaveLength(1);
-  });
-
-  test("reports a fully valid file as a success", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [{ name: "Ann", phone: "+919876543210" }],
-    });
-
-    const res: any = await importCSVContacts(file(), ORG, []);
-
-    expect(res.status).toBe("success");
-  });
-
-  test("adds the imported rows to a group when one was named", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [{ name: "Ann", phone: "+919876543210" }],
-    });
-    (addNewContactsToGroup as Mock).mockResolvedValue("done");
-
-    const res: any = await importCSVContacts(file(), ORG, [], false, "g1");
-
-    expect(addNewContactsToGroup).toHaveBeenCalledWith("g1", expect.any(Array), ORG);
-    expect(res).toEqual({ data: "done", imported: 1, status: "success" });
-  });
-
-  test("upserts instead of creating when updateExisting is set", async () => {
-    (readSpreadsheetObjects as Mock).mockResolvedValue({
-      data: [{ name: "Ann", phone: "+919876543210" }],
-    });
-
-    await importCSVContacts(file(), ORG, [], true);
-
-    expect(db.contact.upsert).toHaveBeenCalled();
-    expect(db.contact.createManyAndReturn).not.toHaveBeenCalled();
-  });
-});
-
-/// The rows handed to createMultipleContacts, read back off the prisma mock.
-function createMultipleContactsSpy() {
-  const call = db.contact.createManyAndReturn.mock.calls[0];
-  return call ? [call[0].data] : undefined;
-}
-
-describe("createContactsFromCsv", () => {
-  test("stamps every imported contact with a CSV IMPORT source", async () => {
-    await createContactsFromCsv([{ name: "Ann", phone: "9190001" }], ORG, [], false, undefined);
-
-    expect(db.contact.createManyAndReturn.mock.calls[0][0].data[0].source).toBe("CSV IMPORT");
-  });
-
-  test("maps a spreadsheet column onto a custom field when its slug was tagged", async () => {
-    db.contactCustomField.findMany.mockResolvedValue([{ id: "f1", slug: "tier" }]);
-    db.contact.createManyAndReturn.mockResolvedValue([{ id: "c1", phone: "9190001" }]);
-
-    await createContactsFromCsv(
-      [{ name: "Ann", phone: "9190001", tier: "gold" }],
-      ORG,
-      ["tier"],
-      false,
-      undefined,
-    );
-
-    expect(db.contactCustomFieldValue.createMany).toHaveBeenCalledWith({
-      data: [{ contactId: "c1", fieldId: "f1", value: "gold" }],
-      skipDuplicates: true,
-    });
-  });
-
-  test("ignores a column whose slug was not tagged", async () => {
-    db.contactCustomField.findMany.mockResolvedValue([{ id: "f1", slug: "tier" }]);
-    db.contact.createManyAndReturn.mockResolvedValue([{ id: "c1", phone: "9190001" }]);
-
-    await createContactsFromCsv(
-      [{ name: "Ann", phone: "9190001", tier: "gold" }],
-      ORG,
-      [],
-      false,
-      undefined,
-    );
-
-    expect(db.contactCustomFieldValue.createMany).not.toHaveBeenCalled();
-  });
-
-  test("returns the group result when a group was named", async () => {
-    (addNewContactsToGroup as Mock).mockResolvedValue({ ok: true });
-
-    const res = await createContactsFromCsv(
-      [{ name: "Ann", phone: "9190001" }],
-      ORG,
-      [],
-      false,
-      "g1",
-    );
-
-    expect(res).toEqual({ ok: true });
-  });
-});
-
 describe("getExistingContactCountByPhno", () => {
   test("counts the phone numbers that already exist in the org", async () => {
     db.contact.count.mockResolvedValue(2);
@@ -1755,63 +1539,6 @@ describe("getExistingContactCountByPhno", () => {
   test("issues no query at all for an empty list", async () => {
     expect(await getExistingContactCountByPhno([], ORG)).toBe(0);
     expect(db.contact.count).not.toHaveBeenCalled();
-  });
-});
-
-describe("updateMulitplceContacts", () => {
-  test("upserts on the phone+org key", async () => {
-    await updateMulitplceContacts([{ name: "Ann", phone: "9190001" } as any], ORG);
-
-    expect(db.contact.upsert.mock.calls[0][0].where).toEqual({
-      contact_phone_org_id_unique: { phone: "9190001", orgId: ORG },
-    });
-  });
-
-  test("an update refreshes every field the row carries", async () => {
-    await updateMulitplceContacts(
-      [{ name: "Ann", phone: "9190001", email: "a@b.c", source: "CSV IMPORT" } as any],
-      ORG,
-    );
-
-    expect(db.contact.upsert.mock.calls[0][0].update).toEqual({
-      name: "Ann",
-      email: "a@b.c",
-      source: "CSV IMPORT",
-    });
-  });
-
-  // The identity keys are what the upsert matched on; rewriting them would move
-  // the contact rather than refresh it.
-  test("an update never rewrites the phone or the org", async () => {
-    await updateMulitplceContacts([{ name: "Ann", phone: "9190001" } as any], ORG);
-
-    const { update } = db.contact.upsert.mock.calls[0][0];
-    expect(update).not.toHaveProperty("phone");
-    expect(update).not.toHaveProperty("orgId");
-  });
-
-  test("a create carries the whole row", async () => {
-    await updateMulitplceContacts([{ name: "Ann", phone: "9190001", email: "a@b.c" } as any], ORG);
-
-    expect(db.contact.upsert.mock.calls[0][0].create).toMatchObject({
-      name: "Ann",
-      phone: "9190001",
-      email: "a@b.c",
-      orgId: ORG,
-    });
-  });
-
-  test("replaces the custom field values of an upserted contact", async () => {
-    db.contact.upsert.mockResolvedValue({ id: "c1", orgId: ORG });
-
-    await updateMulitplceContacts(
-      [{ name: "Ann", phone: "9190001", customFields: [{ id: "f1", value: "x" }] } as any],
-      ORG,
-    );
-
-    expect(db.contactCustomFieldValue.deleteMany).toHaveBeenCalledWith({
-      where: { contactId: "c1" },
-    });
   });
 });
 

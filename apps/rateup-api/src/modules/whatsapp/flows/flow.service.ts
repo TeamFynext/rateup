@@ -34,7 +34,7 @@ import {
   shouldShowGoogleReviewV2,
 } from "../whatsappSurvey/wasurvey.service.js";
 import { validateLogic, validateLogicV2 } from "../../question/question.utils.js";
-import { signFlowToken, verifyFlowToken } from "./flowToken.js";
+import { CAMPAIGN_TEST_FLOW_TOKEN, signFlowToken, verifyFlowToken } from "./flowToken.js";
 import { appendFlowResponses, clearFlowResponses, getFlowResponses } from "./flowState.js";
 import { onFeedbackFlowCompleted } from "../../loyalty/feedback/feedback.completion.js";
 import { unusableRequest } from "./flow.errors.js";
@@ -1193,6 +1193,7 @@ export async function resolveFlowRun(
    */
   agentFallback?: { surveyId: string; phone?: string },
 ): Promise<FlowRun | null> {
+  if (flowToken === CAMPAIGN_TEST_FLOW_TOKEN) return null;
   const context = verifyFlowToken(flowToken);
   if (!context) {
     return agentFallback ? agentFlowRun(flowToken, orgId, agentFallback) : null;

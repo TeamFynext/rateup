@@ -144,6 +144,10 @@ const byFieldIdSchema = z.object({
   fieldId: z.string(),
 });
 
+export const contactImportJobParamsSchema = z.object({
+  jobId: z.string().regex(/^contact-import-[0-9a-f-]{36}$/),
+});
+
 const assignLabelsToContactSchema = z.object({
   labelIds: z.array(z.uuid()),
 });

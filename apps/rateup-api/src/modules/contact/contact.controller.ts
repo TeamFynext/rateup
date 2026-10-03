@@ -1,6 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import dayjs from "dayjs";
-import { getMultipartFieldValue } from "../../utils/upload/validate.js";
 import {
   ByContactIdParams,
   createMultipleContactInput,
@@ -13,6 +12,8 @@ import {
   BulkUpdateContactStatusSchema,
 } from "./contact.schema.js";
 import { ContactNotFoundError } from "./contact.errors.js";
+import { readImportFormFields } from "./contactImport.form.js";
+import { getContactImportStatus, startContactImport } from "./contactImport.service.js";
 import { log } from "../../utils/logger.js";
 import {
   addCustomField,
@@ -27,7 +28,6 @@ import {
   getContactsByOrgId,
   getCustomFields,
   getExistingContactCountByPhno,
-  importCSVContacts,
   updateContactById,
   updateContactLabelsById,
   updateCustomField,
@@ -274,6 +274,10 @@ function toCellValue(value: unknown): CellValue {
   return String(value);
 }
 
+/**
+ * Validates the spreadsheet and queues it; the contacts are written by the worker. Answers
+ * 202 with a `jobId` to poll at `GET /contacts/import/:jobId`.
+ */
 export async function importCSVContactsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const file = await request.file();
@@ -283,29 +287,30 @@ export async function importCSVContactsHandler(request: FastifyRequest, reply: F
     const orgId = request.user.orgId;
     if (!dataExtractFileMimeTypes.includes(file.mimetype))
       return reply.code(400).send({ error: "This file type is not permitted." });
-    const tags: string[] = [];
-    let update = false;
-    let hasHeaderRow = true;
-    for (const key in file.fields) {
-      const value = getMultipartFieldValue(file.fields[key]);
-      if (key.startsWith("tags[")) {
-        if (typeof value === "string") tags.push(value);
-      } else if (key === "update") {
-        update = value === "true";
-      } else if (key === "hasHeaderRow") {
-        hasHeaderRow = value !== "false";
-      }
-    }
-    const res = await importCSVContacts(file, orgId, tags, update, undefined, hasHeaderRow);
+    const res = await startContactImport(file, { orgId, ...readImportFormFields(file.fields) });
     if (res.status === "error") {
       return reply
         .code(400)
         .send({ error: "VALIDATION_ERR", data: res.data, message: res.message });
     }
-    reply.code(200).send(res);
+    reply.code(202).send(res);
   } catch (e) {
     log.error({ err: e }, "Error importing CSV contacts");
     reply.code(500).send({ error: e instanceof Error ? e.message : "Something went wrong" });
+  }
+}
+
+export async function getContactImportStatusHandler(
+  request: FastifyRequest<{ Params: { jobId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const status = await getContactImportStatus(request.params.jobId, request.user.orgId);
+    if (!status) return reply.code(404).send({ error: "Import not found." });
+    reply.code(200).send(status);
+  } catch (e) {
+    log.error({ err: e }, "Error reading a contact import's status");
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 

@@ -184,7 +184,7 @@ describe("an order webhook", () => {
 
     expect(checkAndExecuteRuleByTriggerEvent).toHaveBeenCalledWith("SHOPIFY_EVENT", {
       orgId: ORG,
-      phone: "+919000000001",
+      phone: "919000000001",
       shopifyEvent: ShopifyEvents.ORDERS_PAID,
       shopifyProductIds: ["gid://shopify/Product/77"],
       shopifyBody: expect.objectContaining({ id: 5551 }),
