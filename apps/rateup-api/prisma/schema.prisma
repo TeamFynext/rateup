@@ -3485,6 +3485,9 @@ model Webhook {
   orgId     String   @unique @db.Uuid
   url       String
   events    String[]
+  /// HMAC key for the `X-Rateup-Signature` header, `encryptSecret`-encrypted.
+  /// Null on rows saved before signing; the first delivery or reveal fills it.
+  secret    String?
 }
 
 enum InboxAutomationAction {

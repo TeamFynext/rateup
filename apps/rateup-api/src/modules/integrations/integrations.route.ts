@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify";
 import {
-  createGoogleSheetAuthToken,
   createIntegrationHandler,
   createWaPaymentConfigurationsHandler,
   deleteIntegrationByNameHandler,
@@ -11,7 +10,6 @@ import {
   getAllIntegrationsByOrgHandler,
   getIntegrationActivityHandler,
   getOAuthAuthorizeUrlHandler,
-  getGoogleAuthUrlForSheetHandler,
   getIntegrationByNameHandler,
   getRegenerateWaPaymentConfigOauthHandler,
   getWaPaymentConfigByNameHandler,
@@ -118,9 +116,6 @@ export async function integrationsRoutes(server: FastifyInstance) {
     deleteIntegrationByNameHandler,
   );
 
-  server.post<{ Body: { code: string } }>("/google/auth-token", {}, createGoogleSheetAuthToken);
-
-  server.get("/google/auth-url", getGoogleAuthUrlForSheetHandler);
   server.get("/wa_payment_configurations", getWaPaymentConfigurationsHandler);
   server.get(
     "/regenerate_wa_payment_config_oauth/:name",

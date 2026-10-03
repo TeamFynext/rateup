@@ -12,14 +12,11 @@ vi.mock("./integrations.service.js", () => ({
   deleteZapierTriggerHooks: vi.fn(),
   getAllIntegrations: vi.fn(),
   getAllIntegrationsByOrgId: vi.fn(),
-  getGoogleAuthUrl: vi.fn(),
   getIntegrationByName: vi.fn(),
   getIntegrationByPetPoojaRestaurantId: vi.fn(),
   getRegenerateWaPaymentConfigOauth: vi.fn(),
   getWaPaymentConfigByName: vi.fn(),
   getWaPaymentConfigurations: vi.fn(),
-  initializeAuthClient: vi.fn(),
-  removeSurveySpreadSheetSheetId: vi.fn(),
   updateIntegrationByName: vi.fn(),
 }));
 
@@ -35,7 +32,6 @@ import { getIntegrationProvider } from "./providers/registry.js";
 import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import {
   connectWithApiKeyHandler,
-  createGoogleSheetAuthToken,
   createIntegrationHandler,
   createWaPaymentConfigurationsHandler,
   deleteIntegrationByNameHandler,
@@ -71,22 +67,9 @@ beforeEach(() => {
   svc.createIntegration.mockResolvedValue({ id: "int-1" });
   svc.updateIntegrationByName.mockResolvedValue({ id: "int-1" });
   svc.deleteIntegrationByName.mockResolvedValue({ id: "int-1" });
-  svc.removeSurveySpreadSheetSheetId.mockResolvedValue(undefined);
   svc.deleteZapierTriggerHooks.mockResolvedValue(undefined);
   svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValue(null);
   svc.createWaPaymentConfigurations.mockResolvedValue(true);
-  svc.initializeAuthClient.mockResolvedValue({
-    getToken: vi.fn(async () => ({
-      tokens: {
-        access_token: "ya29.token",
-        refresh_token: "1//refresh",
-        expiry_date: 1_800_000,
-        scope:
-          "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email",
-      },
-    })),
-    getTokenInfo: vi.fn(async () => ({ email: "owner@example.test" })),
-  });
 });
 
 // ===========================================================================
@@ -198,21 +181,13 @@ describe("the write handlers", () => {
     expect(svc.updateIntegrationByName).toHaveBeenCalledWith(ORG, "googlesheet", body);
   });
 
-  test("delete clears the survey spreadsheet ids only for googlesheet", async () => {
+  // Google Sheets' survey cleanup is its provider's `disconnect`, run by the service.
+  test("delete hands every provider to the same service call", async () => {
     await deleteIntegrationByNameHandler(
       { user: { orgId: ORG }, params: { name: "googlesheet" } } as never,
       reply(),
     );
-    expect(svc.removeSurveySpreadSheetSheetId).toHaveBeenCalledWith(ORG);
-
-    vi.clearAllMocks();
-    svc.deleteIntegrationByName.mockResolvedValue({ id: "int-1" });
-
-    await deleteIntegrationByNameHandler(
-      { user: { orgId: ORG }, params: { name: "zapier" } } as never,
-      reply(),
-    );
-    expect(svc.removeSurveySpreadSheetSheetId).not.toHaveBeenCalled();
+    expect(svc.deleteIntegrationByName).toHaveBeenCalledWith("googlesheet", ORG);
   });
 
   test("a successful payment-config create answers 201 with a message", async () => {
@@ -235,10 +210,6 @@ describe("the write handlers", () => {
     });
   });
 });
-
-// ===========================================================================
-// createGoogleSheetAuthToken
-// ===========================================================================
 
 // ===========================================================================
 // POST /:name/connect — the shared pasted-key connect
@@ -300,60 +271,6 @@ describe("connectWithApiKeyHandler", () => {
     await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_good" }), rep);
 
     expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
-  });
-});
-
-describe("createGoogleSheetAuthToken", () => {
-  test("stores the exchanged tokens against the caller's org", async () => {
-    const rep = reply();
-
-    await createGoogleSheetAuthToken(
-      { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
-      rep,
-    );
-
-    const [data, orgId] = svc.createIntegration.mock.calls[0];
-    expect(orgId).toBe(ORG);
-    expect(data.name).toBe("googlesheet");
-    expect(data.credential.refreshToken).toBe("1//refresh");
-    expect(answer(rep).code).toBe(201);
-  });
-
-  test("splits the granted scopes on a space", async () => {
-    await createGoogleSheetAuthToken(
-      { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
-      reply(),
-    );
-
-    const scopes = svc.createIntegration.mock.calls[0][0].credential.scopes;
-    expect(scopes.length).toBeGreaterThan(1);
-    expect(scopes.every((scope: string) => !scope.includes(" "))).toBe(true);
-  });
-
-  test("stores the refresh token in the clear", async () => {
-    await createGoogleSheetAuthToken(
-      { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
-      reply(),
-    );
-
-    expect(svc.createIntegration.mock.calls[0][0].credential).toMatchObject({
-      accessToken: "ya29.token",
-      refreshToken: "1//refresh",
-    });
-  });
-
-  test("answers a bare 500 when the exchange fails", async () => {
-    svc.initializeAuthClient.mockResolvedValueOnce({
-      getToken: vi.fn(async () => {
-        throw new Error("invalid_grant");
-      }),
-      getTokenInfo: vi.fn(),
-    });
-    const rep = reply();
-
-    await createGoogleSheetAuthToken({ user: { orgId: ORG }, body: { code: "bad" } } as never, rep);
-
-    expect(answer(rep)).toEqual({ code: 500, body: undefined });
   });
 });
 
@@ -559,7 +476,7 @@ describe("route registration", () => {
 
     await integrationsRoutes(srv);
 
-    for (const url of ["/", "/:name", "/google/auth-token", "/wa_payment_configuration"]) {
+    for (const url of ["/", "/:name", "/:name/oauth/callback", "/wa_payment_configuration"]) {
       const r = routes.find((x) => x.url === url && x.method !== "GET");
       expect(r, url).toBeDefined();
       // The module default applies at registration time, so replay the hook on the route.

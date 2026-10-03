@@ -65,6 +65,12 @@ export interface IntegrationProvider {
    * finer-grained toggles, so this is only there to skip work nobody wants.
    */
   subscribedEvents(integration: Integration | null): readonly IntegrationEventType[];
+  /**
+   * For a `self` provider whose `subscribedEvents` cannot see its settings: the
+   * events this org has really switched on, read from wherever it keeps them.
+   * Only asked by a caller deciding whether to emit at all (`subscribedEventTypes`).
+   */
+  orgSubscribedEvents?(orgId: string): Promise<readonly IntegrationEventType[]>;
   /** Translates an event into this provider's jobs and enqueues them. */
   handleEvent(event: IntegrationEvent, context: IntegrationEventContext): Promise<void>;
   /** Runs one of the jobs `handleEvent` enqueued. Absent for providers that enqueue elsewhere. */
@@ -122,6 +128,13 @@ export interface ProviderOAuth {
   scopesFor?(options: Readonly<Record<string, string>>): readonly string[];
   scopeSeparator?: string;
   extraAuthorizeParams?: Record<string, string>;
+  /**
+   * Where the consent screen returns to, as a path on the frontend, when it is
+   * not the shared callback page — for a redirect URI registered with the
+   * provider before the shared flow existed. That page must post the code and
+   * state to the shared callback route, as `OAuthCallback` does.
+   */
+  redirectPath?: string;
   /**
    * Saves the connection from freshly exchanged tokens: creates or updates the
    * org's `Integration` row and sets up anything remote (webhooks). Throw to

@@ -1,5 +1,5 @@
 import { appConfig } from "../../../config.js";
-import type { IntegrationProvider } from "../providers/integrationProvider.types.js";
+import type { IntegrationProvider, ProviderOAuth } from "../providers/integrationProvider.types.js";
 import {
   buildAuthorizeUrl,
   exchangeOAuthCode,
@@ -24,7 +24,8 @@ import { OAuthConnectError } from "./oauthConnectError.js";
 export { OAuthConnectError };
 
 /** Must match the redirect URI registered in each provider's developer console. */
-export function oauthRedirectUri(provider: string) {
+export function oauthRedirectUri(provider: string, oauth?: Pick<ProviderOAuth, "redirectPath">) {
+  if (oauth?.redirectPath) return `${appConfig.frontendUrl}${oauth.redirectPath}`;
   return `${appConfig.frontendUrl}/dashboard/settings/integrations/${provider}/callback`;
 }
 
@@ -58,7 +59,7 @@ export function startOAuthConnect(
     );
   }
   return buildAuthorizeUrl(oauth.config, {
-    redirectUri: oauthRedirectUri(name),
+    redirectUri: oauthRedirectUri(name, oauth),
     state: signOAuthState({ orgId, provider: name, userId }),
     scopes: [...(oauth.scopesFor?.(options) ?? oauth.scopes)],
     scopeSeparator: oauth.scopeSeparator,
@@ -89,7 +90,7 @@ export async function finishOAuthConnect(
 
   const tokens = await exchangeOAuthCode(oauth.config, {
     code,
-    redirectUri: oauthRedirectUri(name),
+    redirectUri: oauthRedirectUri(name, oauth),
   });
   await oauth.connect(orgId, tokens);
 }

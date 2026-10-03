@@ -5,14 +5,11 @@ import {
   deleteWaPaymentConfiguration,
   deleteZapierTriggerHooks,
   getAllIntegrationsByOrgId,
-  getGoogleAuthUrl,
   getIntegrationByName,
   getIntegrationByPetPoojaRestaurantId,
   getRegenerateWaPaymentConfigOauth,
   getWaPaymentConfigByName,
   getWaPaymentConfigurations,
-  initializeAuthClient,
-  removeSurveySpreadSheetSheetId,
   updateIntegrationByName,
 } from "./integrations.service.js";
 import { log } from "../../utils/logger.js";
@@ -226,7 +223,6 @@ export const deleteIntegrationByNameHandler = async (
     const orgId = request.user.orgId;
     const name = request.params.name;
     const data = await deleteIntegrationByName(name, orgId);
-    if (name === IntegratedApps.googlesheet) await removeSurveySpreadSheetSheetId(orgId);
 
     reply.send(data);
   } catch {
@@ -234,54 +230,6 @@ export const deleteIntegrationByNameHandler = async (
     return reply.code(500).send({ error: "Something went wrong" });
   }
 };
-
-export async function getGoogleAuthUrlForSheetHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const url = await getGoogleAuthUrl();
-    reply.code(200).send(url);
-  } catch {
-    return reply.code(500).send({ error: "Something went wrong" });
-  }
-}
-
-export async function createGoogleSheetAuthToken(
-  request: FastifyRequest<{
-    Body: {
-      code: string;
-    };
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const code = request.body.code;
-    const oauth2Client = await initializeAuthClient();
-    const { tokens } = await oauth2Client.getToken(code);
-    if (!tokens.access_token)
-      throw new Error("Google OAuth response did not include an access token");
-    const { email } = await oauth2Client.getTokenInfo(tokens.access_token);
-    // Chosen later, when the user picks a Drive folder to export sheets into.
-    const driveFolderId: string | null = null;
-    const data = {
-      name: IntegratedApps.googlesheet,
-      credential: {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        expiryDate: tokens.expiry_date,
-        scopes: tokens.scope ? tokens.scope.split(" ") : [],
-        userEmail: email,
-        driveFolderId,
-      },
-    };
-    await createIntegration(data, request.user.orgId);
-    reply.code(201).send({ message: "success" });
-  } catch (error) {
-    console.error(error);
-    reply.code(500).send();
-  }
-}
 
 /** The order webhook PetPooja posts; only the restaurant and customer are read. */
 interface PetPoojaWebhookBody {

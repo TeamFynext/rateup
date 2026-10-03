@@ -1,4 +1,5 @@
 import { getLeadProvider } from "../external/getlead/getlead.provider.js";
+import { googleSheetProvider } from "../googlesheet/googlesheet.provider.js";
 import { zapierProvider } from "../external/zapier/zapier.provider.js";
 import { zohoProvider } from "../external/zoho/zoho.provider.js";
 import { webhookProvider } from "../../webhook/webhook.provider.js";
@@ -22,6 +23,7 @@ export const INTEGRATION_PROVIDERS: readonly IntegrationProvider[] = [
   wooCommerceProvider,
   hubSpotProvider,
   shopifyProvider,
+  googleSheetProvider,
 ];
 
 export function getIntegrationProvider(name: string): IntegrationProvider | undefined {

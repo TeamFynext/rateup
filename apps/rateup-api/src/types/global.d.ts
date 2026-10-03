@@ -209,7 +209,8 @@ declare global {
   interface GoogleSheetCredential {
     accessToken: string;
     refreshToken: string;
-    expiryDate: string;
+    /** Epoch ms of the access token's expiry, as Google reported it at connect. */
+    expiryDate?: number;
     scopes: string[];
     userEmail: string | null;
     driveFolderId?: string | null;

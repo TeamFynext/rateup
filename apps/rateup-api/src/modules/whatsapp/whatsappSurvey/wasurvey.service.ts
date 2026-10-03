@@ -35,7 +35,6 @@ import { getQuestionsBySurveyId } from "../../question/question.service.js";
 import { CreateResponseInput } from "../../response/response.schema.js";
 import {
   createResponse,
-  saveResponseToGoogleSheet,
   sendResponseToWebhook,
   updateResponse,
 } from "../../response/response.service.js";
@@ -557,17 +556,7 @@ export interface SaveResponsesContext {
 async function publishSavedResponse(
   res: Awaited<ReturnType<typeof createResponse>>,
   session: SaveResponsesContext,
-  anonymous: boolean,
 ) {
-  const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
-  await saveResponseToGoogleSheet({
-    surveyTeamMapId,
-    responses,
-    language,
-    createdAt,
-    respondent: !anonymous && Contact?.phone,
-    tag,
-  });
   await sendResponseToWebhook(res, session.orgId);
   if (session.surveyTeamMapId) {
     await updateCompletedSurvey(session.surveyTeamMapId);
@@ -682,7 +671,7 @@ export async function saveResponses(session: SaveResponsesContext) {
   // the whole request, so none of it is allowed to hold the caller. Each is
   // logged on failure rather than surfaced: the respondent has already been told
   // their answers were saved, which is true.
-  void publishSavedResponse(res, session, anonymous).catch((e) =>
+  void publishSavedResponse(res, session).catch((e) =>
     log.error({ err: e, responseId: res.id }, "Post-save fan-out failed"),
   );
 

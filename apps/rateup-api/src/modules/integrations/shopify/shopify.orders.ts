@@ -170,6 +170,12 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
   // Everything after this point — loyalty, the order.* event, the survey and the
   // automation rules — is the commerce layer's, shared with every store.
   const orderId = body?.id != null ? String(body.id) : null;
+  const contactPhone = shopifyContactPhone(
+    customerPhone,
+    body?.billing_address?.country_code ||
+      body?.shipping_address?.country_code ||
+      body?.customer?.default_address?.country_code,
+  );
   await onOrderEvent(
     {
       provider: shopifyCommerce,
@@ -181,7 +187,7 @@ export async function handleShopifyOrderEvents(webhook: ShopifyWebhookJobData) {
       orderId,
       status: SHOPIFY_ORDER_STATUS[topic] ?? "fulfillment_cancelled",
       eventKey: topic,
-      customer: { phone: customerPhone ?? null, email: customerEmail ?? null },
+      customer: { phone: contactPhone ? `+${contactPhone}` : null, email: customerEmail ?? null },
       amount: extractPurchaseAmount(body),
       productIds,
       discountCodes: extractDiscountCodes(body),

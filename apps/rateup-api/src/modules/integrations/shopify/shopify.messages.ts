@@ -25,7 +25,8 @@ export async function runShopifyOrderAutomation(
 ) {
   await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
     orgId: store.orgId,
-    phone,
+    // Rules match on `Contact.phone`, which carries no "+".
+    phone: phone.replace(/^\+/, ""),
     shopifyEvent: order.eventKey as ShopifyEvents,
     shopifyProductIds: order.productIds,
     shopifyBody: order.raw as unknown as ShopifyBody,

@@ -25,6 +25,20 @@ export async function emitIntegrationEvent(orgId: string, event: IntegrationEven
 }
 
 /**
+ * Many events at once, as one round trip to Redis — for a bulk write such as a
+ * contact import. Each is still its own job, fanned out on its own.
+ */
+export async function emitIntegrationEvents(orgId: string, events: readonly IntegrationEvent[]) {
+  if (!events.length) return;
+  await integrationTriggerQueue.addBulk(
+    events.map((event) => ({
+      name: INTEGRATION_EVENT_JOB,
+      data: { orgId, event } satisfies IntegrationEventJobData,
+    })),
+  );
+}
+
+/**
  * `survey.response_submitted`, from wherever a response is filed. An anonymous
  * response is announced too: Zapier forwards every response, and the CRMs skip
  * one with no contact.

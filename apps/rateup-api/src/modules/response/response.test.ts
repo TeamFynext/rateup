@@ -29,12 +29,14 @@ vi.mock("./response.service.js", () => ({
   getSurveyResponseBySurveyId: vi.fn(),
   getSurveyResponseCount: vi.fn(),
   resetResponsesStats: vi.fn(),
-  saveResponseToGoogleSheet: vi.fn(),
   sendEmailOnResponseCreation: vi.fn(),
   sendResponseToWebhook: vi.fn(),
-  syncResponseToGoogleSheet: vi.fn(),
   updateResponse: vi.fn(),
   happyIndexResponsesBySurveyId: vi.fn(),
+}));
+
+vi.mock("../integrations/googlesheet/googlesheet.sync.js", () => ({
+  syncResponseToGoogleSheet: vi.fn(),
 }));
 
 vi.mock("../team/team.service.js", () => ({
@@ -61,6 +63,7 @@ import * as service from "./response.service.js";
 import { getTeamIdsBySurveyMapId, getTeamIdsByUserId } from "../team/team.service.js";
 import { createTestimonial } from "../testimonial/testimonial.service.js";
 import { emitSurveyResponseSubmitted } from "../integrations/events/emitIntegrationEvent.js";
+import { syncResponseToGoogleSheet } from "../integrations/googlesheet/googlesheet.sync.js";
 import { log } from "../../utils/logger.js";
 import { fetchLocation } from "../../utils/location.js";
 import { surveyInScope } from "../../authz/resourceScope.js";
@@ -138,7 +141,7 @@ beforeEach(() => {
   svc.getAllResponses.mockResolvedValue([]);
   svc.deleteResponse.mockResolvedValue({ id: VICTIM_RESPONSE });
   svc.downloadExcelResponse.mockResolvedValue(Buffer.from("xlsx"));
-  svc.syncResponseToGoogleSheet.mockResolvedValue({ id: VICTIM_SURVEY });
+  (syncResponseToGoogleSheet as unknown as Mock).mockResolvedValue({ id: VICTIM_SURVEY });
   (getTeamIdsByUserId as unknown as Mock).mockResolvedValue([]);
   (getTeamIdsBySurveyMapId as unknown as Mock).mockResolvedValue([]);
   (surveyInScope as unknown as Mock).mockResolvedValue(true);
@@ -405,7 +408,6 @@ describe("createResponseHandler", () => {
 
   beforeEach(() => {
     svc.createResponse.mockResolvedValue(created);
-    svc.saveResponseToGoogleSheet.mockResolvedValue(undefined);
     svc.sendEmailOnResponseCreation.mockResolvedValue(undefined);
     svc.updateResponse.mockResolvedValue(undefined);
     svc.sendResponseToWebhook.mockResolvedValue(undefined);
@@ -422,13 +424,13 @@ describe("createResponseHandler", () => {
       header: vi.fn(() => rep),
       status: vi.fn(() => rep),
     };
-    svc.saveResponseToGoogleSheet.mockImplementationOnce(async () => {
-      order.push("sheet");
+    svc.sendResponseToWebhook.mockImplementationOnce(async () => {
+      order.push("webhook");
     });
 
     await createResponseHandler({ body } as never, rep);
 
-    expect(order).toEqual(["reply", "sheet"]);
+    expect(order).toEqual(["reply", "webhook"]);
   });
 
   test("the respondent's 201 carries no body", async () => {
@@ -479,7 +481,7 @@ describe("createResponseHandler", () => {
   test("the WhatsApp platform skips the whole post-processing block", async () => {
     await createResponseHandler({ body: { ...body, platform: "WHATSAPP" } } as never, reply());
 
-    expect(svc.saveResponseToGoogleSheet).not.toHaveBeenCalled();
+    expect(emitSurveyResponseSubmitted).not.toHaveBeenCalled();
     expect(createTestimonial).not.toHaveBeenCalled();
   });
 
@@ -584,12 +586,12 @@ describe("syncResponseToGoogleSheetHandler", () => {
       rep,
     );
 
-    expect(svc.syncResponseToGoogleSheet).toHaveBeenCalledWith(VICTIM_SURVEY, ORG);
+    expect(syncResponseToGoogleSheet as unknown as Mock).toHaveBeenCalledWith(VICTIM_SURVEY, ORG);
     expect(answer(rep).code).toBe(201);
   });
 
   test("an ordinary error is answered with a fixed 500", async () => {
-    svc.syncResponseToGoogleSheet.mockRejectedValueOnce(new Error("db down"));
+    (syncResponseToGoogleSheet as unknown as Mock).mockRejectedValueOnce(new Error("db down"));
     const rep = reply();
 
     await syncResponseToGoogleSheetHandler(
@@ -601,7 +603,7 @@ describe("syncResponseToGoogleSheetHandler", () => {
   });
 
   test("an axios error is reported cleanly", async () => {
-    svc.syncResponseToGoogleSheet.mockRejectedValueOnce(
+    (syncResponseToGoogleSheet as unknown as Mock).mockRejectedValueOnce(
       Object.assign(new Error("invalid_grant"), {
         isAxiosError: true,
         response: { data: { error: "invalid_grant" } },

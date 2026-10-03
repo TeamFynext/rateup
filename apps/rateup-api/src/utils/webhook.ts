@@ -1,52 +1,14 @@
-import crypto, { randomUUID } from "node:crypto";
-import { getOrgById } from "../modules/org/org.services.js";
-import axios from "axios";
-import { log } from "./logger.js";
-import { wait } from "../modules/whatsapp/whatsappSurvey/wasurvey.controller.js";
+import crypto from "node:crypto";
+import prisma from "./prisma.js";
 
-export async function sendWebhook(endpoint: string, payload: unknown, orgId: string) {
-  if (!endpoint.startsWith("https://")) return;
-  let attempt = 0;
-  let webhookId = randomUUID();
-  while (attempt < 3) {
-    try {
-      const secret = await getWebhookSecret(orgId);
-      const signature = crypto
-        .createHmac("sha256", secret)
-        .update(JSON.stringify(payload))
-        .digest("base64");
-      const res = await axios.post(endpoint, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Rateup-Signature": signature,
-          "X-Rateup-Triggered-At": new Date().toISOString(),
-          "X-Webhook-Id": webhookId,
-        },
-      });
-      if (res.status >= 200 && res.status <= 300) log.debug("Webhook delivered successfully");
-      else log.trace("something went wrong in sending webhook");
-      break;
-    } catch (e) {
-      log.warn(
-        {
-          endpoint,
-          attempt,
-          status: axios.isAxiosError(e) ? e.response?.status : undefined,
-          error: e instanceof Error ? e.message : String(e),
-        },
-        "Webhook delivery failed",
-      );
-      if (axios.isAxiosError(e) && e.response && e.response.status >= 500)
-        log.trace("error sending webhook");
-      else break;
-      attempt++;
-      await wait(Math.pow(2, attempt) * 1000);
-    }
-  }
-}
-
+/**
+ * The secret survey response webhooks are signed with (`X-Rateup-Signature`),
+ * derived from the org and its owner. Kept as it is so receivers already
+ * verifying it keep working; the org's own webhook has a random secret of its
+ * own (`Webhook.secret`). Delivery is `deliverOutgoingWebhook`.
+ */
 export async function getWebhookSecret(orgId: string) {
-  const org = await getOrgById(orgId);
+  const org = await prisma.org.findUnique({ where: { id: orgId }, select: { ownerId: true } });
   if (!org) {
     throw new Error(`Org not found for id ${orgId}`);
   }

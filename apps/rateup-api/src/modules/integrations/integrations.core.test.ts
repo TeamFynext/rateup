@@ -39,12 +39,6 @@ vi.mock("../whatsapp/settings/wa_settings.service.js", () => ({
 }));
 vi.mock("./shopify/shopify.messages.js", () => ({ sendWhatsAppTemplateToCustomer: vi.fn() }));
 vi.mock("./integration_axios.js", () => ({ callWaAmeliaApi: vi.fn() }));
-vi.mock("googleapis", () => ({
-  google: {
-    auth: { OAuth2: class {} },
-    options: vi.fn(),
-  },
-}));
 
 import axios from "axios";
 import prisma from "../../utils/prisma.js";

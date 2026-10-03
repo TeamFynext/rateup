@@ -48,7 +48,8 @@ import {
   INTEGRATION_EVENT_JOB,
   emitSurveyResponseSubmitted,
 } from "./emitIntegrationEvent.js";
-import { processIntegrationEvent } from "./integrationEvent.fanout.js";
+import { processIntegrationEvent, subscribedEventTypes } from "./integrationEvent.fanout.js";
+import { webhookProvider } from "../../webhook/webhook.provider.js";
 import { processIntegrationJob } from "../external/integrationDispatch.js";
 import type { IntegrationEvent, IntegrationEventOf } from "./integrationEvent.types.js";
 import type { IntegrationProvider } from "../providers/integrationProvider.types.js";
@@ -327,6 +328,58 @@ describe("the fan-out", () => {
       ]),
     ).rejects.toBeInstanceOf(AggregateError);
     expect(healthy.handleEvent).toHaveBeenCalled();
+  });
+});
+
+describe("subscribedEventTypes", () => {
+  const fake = (overrides: Partial<IntegrationProvider>): IntegrationProvider => ({
+    name: "zoho" as any,
+    label: "Test",
+    auth: "custom",
+    connection: "integration",
+    events: ["contact.created", "contact.updated"],
+    subscribedEvents: () => ["contact.created"],
+    handleEvent: vi.fn(),
+    ...overrides,
+  });
+
+  test("collects what each connected provider subscribed to, in one lookup", async () => {
+    connect("zoho", "getlead");
+
+    const wanted = await subscribedEventTypes(ORG, [
+      fake({}),
+      fake({ name: "getlead" as any, subscribedEvents: () => ["contact.updated"] }),
+    ]);
+
+    expect([...wanted].sort()).toEqual(["contact.created", "contact.updated"]);
+    expect(db.integration.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  test("leaves out a provider the org has not connected", async () => {
+    connect();
+
+    expect((await subscribedEventTypes(ORG, [fake({})])).size).toBe(0);
+  });
+
+  test("never claims an event the provider does not handle", async () => {
+    connect("zoho");
+    const sloppy = fake({ subscribedEvents: () => ["contact.created", "lead.created"] });
+
+    expect([...(await subscribedEventTypes(ORG, [sloppy]))]).toEqual(["contact.created"]);
+  });
+
+  test("asks the outgoing Webhook for the events its row has switched on", async () => {
+    connect();
+    db.webhook.findUnique.mockResolvedValue({ events: ["message_status", "contact.created"] });
+
+    expect([...(await subscribedEventTypes(ORG, [webhookProvider]))]).toEqual(["contact.created"]);
+  });
+
+  test("an org with no outgoing Webhook wants nothing from it", async () => {
+    connect();
+    db.webhook.findUnique.mockResolvedValue(null);
+
+    expect((await subscribedEventTypes(ORG, [webhookProvider])).size).toBe(0);
   });
 });
 
@@ -682,7 +735,17 @@ describe("outgoing Webhook adapter", () => {
 
     await run({ type: "contact.created", contact });
 
-    expect(enqueueOrgWebhookDispatch).toHaveBeenCalledWith(ORG, "contact.created", { contact });
+    // The public shape: CRM ids and notes stay inside RateUp.
+    expect(enqueueOrgWebhookDispatch).toHaveBeenCalledWith(ORG, "contact.created", {
+      contact: {
+        id: "c1",
+        name: "Ann",
+        phone: "919000000001",
+        email: "ann@example.com",
+        source: "WHATSAPP",
+        lifecycleId: null,
+      },
+    });
   });
 
   test("sends nothing for an event the org did not subscribe to", async () => {
