@@ -6,7 +6,6 @@ import { IntegratedApps } from "@/types/enums.ts";
 
 import type { integrationSchemaProps, updateIntegrationSchema } from "./integration.api";
 import {
-  createGoogleSheetAuthToken,
   createIntegration,
   createWaPaymentConfiguration,
   deleteIntegration,
@@ -14,7 +13,6 @@ import {
   deleteZapierTriggerHook,
   finishOAuthConnect,
   getAllIntegrations,
-  getGoogleSheetAuthorizationUrl,
   getIntegrationActivity,
   getIntegrationByType,
   getIntegrationStatuses,
@@ -166,24 +164,6 @@ export const useDeleteIntegrationMutation = (type: IntegratedApps) => {
   });
 };
 
-export const useGetGoogleSheetAuthorizationUrl = () => {
-  return useQuery({
-    queryKey: ["authriationurl"],
-    queryFn: () => getGoogleSheetAuthorizationUrl(),
-  });
-};
-
-export const useCreateAuthToken = () => {
-  return useMutation({
-    mutationFn: createGoogleSheetAuthToken,
-    onError: (error) => {
-      toast.error(error?.message || "Error authorizing Google Sheets", {
-        id: "googlesheet-auth-token",
-      });
-    },
-  });
-};
-
 export const useGetAllIntegrations = () => {
   return useQuery({
     queryKey: integrationKeys.all(),
@@ -226,7 +206,7 @@ export const useIntegrationActivity = (name: string, enabled = true) => {
 /** Fetches a signed authorize URL and leaves for the provider's consent screen. */
 export const useStartOAuthConnect = (name: string) => {
   return useMutation({
-    mutationFn: () => getOAuthAuthorizeUrl(name),
+    mutationFn: (options?: Record<string, string>) => getOAuthAuthorizeUrl(name, options),
     onSuccess: ({ url }) => {
       window.location.assign(url);
     },

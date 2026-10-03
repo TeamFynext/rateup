@@ -86,7 +86,3 @@ export async function getZohoPipelines(product: string) {
 export async function syncZohoLeads() {
   return (await axiosClient.post(`${ZOHO_BASE_URL}/leads/sync`)).data;
 }
-
-export async function unsubscribeZoho(orgId: string) {
-  return (await axiosClient.post(`${ZOHO_BASE_URL}/unsubscribe/${orgId}`)).data;
-}
