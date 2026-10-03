@@ -6,7 +6,6 @@ import { IntegratedApps } from "@/types/enums.ts";
 
 import type { integrationSchemaProps, updateIntegrationSchema } from "./integration.api";
 import {
-  createGoogleSheetAuthToken,
   createIntegration,
   createWaPaymentConfiguration,
   deleteIntegration,
@@ -14,7 +13,6 @@ import {
   deleteZapierTriggerHook,
   finishOAuthConnect,
   getAllIntegrations,
-  getGoogleSheetAuthorizationUrl,
   getIntegrationActivity,
   getIntegrationByType,
   getIntegrationStatuses,
@@ -161,24 +159,6 @@ export const useDeleteIntegrationMutation = (type: IntegratedApps) => {
     onError: (error) => {
       toast.error(error?.message || `Error deleting integration`, {
         id: "integration-delete",
-      });
-    },
-  });
-};
-
-export const useGetGoogleSheetAuthorizationUrl = () => {
-  return useQuery({
-    queryKey: ["authriationurl"],
-    queryFn: () => getGoogleSheetAuthorizationUrl(),
-  });
-};
-
-export const useCreateAuthToken = () => {
-  return useMutation({
-    mutationFn: createGoogleSheetAuthToken,
-    onError: (error) => {
-      toast.error(error?.message || "Error authorizing Google Sheets", {
-        id: "googlesheet-auth-token",
       });
     },
   });

@@ -8,11 +8,8 @@ import {
   useStartOAuthConnect,
 } from "@/backend/appsIntegration/integration.query";
 import { IntegrationFormCard } from "@/components/dashboard/settings/integrations/IntegrationFormCard.tsx";
-import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { useUser } from "@/context/UserContext";
 import { IntegratedApps } from "@/types/enums";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
@@ -22,7 +19,6 @@ const PRODUCTS = { crm: "crm", bigin: "bigin", both: "crm,bigin" } as const;
 
 export const ZohoAuthentication = ({ integration }: { integration: AppIntegration }) => {
   const { t } = useTranslation();
-  const user = useUser();
   const [connectionMode, setConnectionMode] = useState<keyof typeof PRODUCTS | null>(null);
   // Disconnecting through the generic delete also unsubscribes Zoho's webhooks and revokes
   // the grant: the API asks the Zoho provider to clean up before the row goes.
@@ -39,7 +35,7 @@ export const ZohoAuthentication = ({ integration }: { integration: AppIntegratio
   return (
     <IntegrationFormCard
       title={t("Connection")}
-      description={t("The Zoho products RateUp may read and write, and the org they belong to.")}
+      description={t("The Zoho products RateUp may read and write.")}
       actions={
         integration ? (
           <Button
@@ -63,16 +59,6 @@ export const ZohoAuthentication = ({ integration }: { integration: AppIntegratio
         )
       }
     >
-      <Field>
-        <FieldLabel htmlFor="zoho-org-id">{t("Organization ID")}</FieldLabel>
-        <InputGroup>
-          <InputGroupInput id="zoho-org-id" value={user.user?.orgId} readOnly />
-          <InputGroupAddon align="inline-end">
-            <ApiCopyButton value={user.user?.orgId ?? ""} />
-          </InputGroupAddon>
-        </InputGroup>
-      </Field>
-
       {!integration && (
         <Field>
           <FieldLabel htmlFor="zoho-connection-mode">{t("Products")}</FieldLabel>

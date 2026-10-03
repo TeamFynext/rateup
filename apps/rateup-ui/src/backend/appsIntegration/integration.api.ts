@@ -43,16 +43,6 @@ export const deleteIntegration = async (type: IntegratedApps) => {
   return response.data;
 };
 
-export async function getGoogleSheetAuthorizationUrl() {
-  const res = await axiosClient.get(`${ROUTE_URL}google/auth-url`);
-  return res.data;
-}
-
-export async function createGoogleSheetAuthToken(data: RequestPayload) {
-  const res = await axiosClient.post(`${ROUTE_URL}google/auth-token`, data);
-  return res.data;
-}
-
 export const getWaPaymentConfigurations = async (whatsappSettingsId?: string) => {
   const response = await axiosClient.get(`${ROUTE_URL}wa_payment_configurations`, {
     params: whatsappSettingsId ? { whatsappSettingsId } : undefined,

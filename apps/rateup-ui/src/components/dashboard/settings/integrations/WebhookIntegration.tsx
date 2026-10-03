@@ -1,16 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconInfoCircle, IconLoader2, IconTrash } from "@tabler/icons-react";
+import { IconEye, IconInfoCircle, IconLoader2, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
 
-import type { WebhookEvent } from "@/backend/webhook/webhook.api";
+import { WEBHOOK_EVENTS, type WebhookEvent } from "@/backend/webhook/webhook.api";
 import {
   useDeleteWebhookMutation,
+  useRotateWebhookSecretMutation,
   useSaveWebhookMutation,
+  useUpdateWebhookEventsMutation,
   useWebhook,
+  useWebhookSecret,
 } from "@/backend/webhook/webhook.query";
+import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,22 +42,113 @@ import {
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useCan } from "@/hooks/usePermission.ts";
 
 import { INTEGRATIONS_CONFIG } from "./integrations.config.ts";
 import { IntegrationShell } from "./IntegrationShell.tsx";
 
-const EVENT_OPTIONS: Readonly<{ value: WebhookEvent; label: string; description: string }[]> = [
+type EventOption = Readonly<{ value: WebhookEvent; label: string; description: string }>;
+
+// Labels are translation keys, passed to `t` where they render.
+const EVENT_GROUPS: Readonly<{ title: string; events: readonly EventOption[] }[]> = [
   {
-    value: "message_status",
-    label: "Message Status",
-    description:
-      "Receive updates when a message is sent, delivered, read, or failed — including message details.",
+    title: "Messages",
+    events: [
+      {
+        value: "message_status",
+        label: "Message Status",
+        description:
+          "Receive updates when a message is sent, delivered, read, or failed — including message details.",
+      },
+      {
+        value: "message.received",
+        label: "Message received",
+        description: "Every inbound message, on any channel, with its content.",
+      },
+    ],
+  },
+  {
+    title: "Contacts",
+    events: [
+      {
+        value: "contact.created",
+        label: "Contact created",
+        description: "A contact was added, by hand, by import or from a conversation.",
+      },
+      {
+        value: "contact.updated",
+        label: "Contact updated",
+        description: "A contact's details or inbox status changed.",
+      },
+      {
+        value: "contact.deleted",
+        label: "Contact deleted",
+        description: "A contact was removed.",
+      },
+      {
+        value: "contact.assigned",
+        label: "Contact assigned",
+        description: "Someone was newly assigned to a contact's conversation.",
+      },
+      {
+        value: "contact.lifecycle_changed",
+        label: "Lifecycle changed",
+        description: "A contact was moved to a different lifecycle stage.",
+      },
+      {
+        value: "contact_group.members_added",
+        label: "Added to group",
+        description: "Contacts joined a contact group.",
+      },
+    ],
+  },
+  {
+    title: "Conversations",
+    events: [
+      {
+        value: "conversation.closed",
+        label: "Conversation closed",
+        description: "A conversation in the inbox was closed.",
+      },
+    ],
+  },
+  {
+    title: "Leads",
+    events: [
+      {
+        value: "lead.created",
+        label: "Lead created",
+        description: "A lead was added to a pipeline.",
+      },
+      {
+        value: "lead.stage_changed",
+        label: "Lead stage changed",
+        description: "A lead moved to another stage, including from a connected CRM.",
+      },
+    ],
+  },
+  {
+    title: "Surveys and team",
+    events: [
+      {
+        value: "survey.response_submitted",
+        label: "Survey response submitted",
+        description:
+          "A survey was answered. Carries the response's ids; the answers stay in RateUp.",
+      },
+      {
+        value: "team.member_joined",
+        label: "Team member joined",
+        description: "Someone accepted an invitation and joined the organisation.",
+      },
+    ],
   },
 ];
 
 const formSchema = z.object({
   url: z.url("Please enter a valid URL (e.g. https://example.com/webhook)"),
-  events: z.array(z.enum(["message_status"] as const)),
+  events: z.array(z.enum(WEBHOOK_EVENTS)),
   verifyToken: z.string().min(1, "Verify token cannot be empty"),
 });
 
@@ -102,29 +197,93 @@ function EventsField({
           </span>
         ) : null}
       </FieldTitle>
-      {EVENT_OPTIONS.map((opt) => (
-        <Field key={opt.value} orientation="horizontal" data-invalid={invalid}>
-          <FieldContent>
-            <FieldLabel
-              htmlFor={`event-${opt.value}`}
-              className={disabled ? "text-muted-foreground" : ""}
-            >
-              {opt.label}
-            </FieldLabel>
-            <FieldDescription>{opt.description}</FieldDescription>
-          </FieldContent>
-          <Switch
-            id={`event-${opt.value}`}
-            name={name}
-            aria-invalid={invalid}
-            checked={value.includes(opt.value)}
-            onCheckedChange={(checked) => toggle(opt.value, checked)}
-            disabled={disabled || isSaving}
-          />
-        </Field>
+      {EVENT_GROUPS.map((group) => (
+        <div key={group.title} className="flex flex-col gap-3">
+          <p className="text-xs font-medium text-muted-foreground uppercase">{t(group.title)}</p>
+          {group.events.map((opt) => (
+            <Field key={opt.value} orientation="horizontal" data-invalid={invalid}>
+              <FieldContent>
+                <FieldLabel
+                  htmlFor={`event-${opt.value}`}
+                  className={disabled ? "text-muted-foreground" : ""}
+                >
+                  {t(opt.label)}
+                </FieldLabel>
+                <FieldDescription>{t(opt.description)}</FieldDescription>
+              </FieldContent>
+              <Switch
+                id={`event-${opt.value}`}
+                name={name}
+                aria-invalid={invalid}
+                checked={value.includes(opt.value)}
+                onCheckedChange={(checked) => toggle(opt.value, checked)}
+                disabled={disabled || isSaving}
+              />
+            </Field>
+          ))}
+        </div>
       ))}
       {invalid ? <FieldError errors={[error]} /> : null}
     </Field>
+  );
+}
+
+/**
+ * The secret every delivery is signed with. Fetched only when someone asks to
+ * see it, and only for those who may change the webhook.
+ */
+function SigningSecretCard() {
+  const { t } = useTranslation();
+  const confirm = useConfirm();
+  const [revealed, setRevealed] = useState(false);
+  const secret = useWebhookSecret(revealed);
+  const rotate = useRotateWebhookSecretMutation();
+
+  const onRotate = async () => {
+    const ok = await confirm({
+      title: t("Replace the signing secret?"),
+      description: t(
+        "Deliveries are signed with the new secret straight away. Your endpoint will reject them until it is updated.",
+      ),
+      confirmText: t("Replace secret"),
+    });
+    if (ok) rotate.mutate(undefined, { onSuccess: () => setRevealed(true) });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("Signing secret")}</CardTitle>
+        <CardDescription>
+          {t(
+            "Every delivery carries an X-Rateup-Signature header: the base64 HMAC-SHA256 of the raw request body, keyed with this secret. Compute it on your side and compare before trusting the request.",
+          )}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex max-w-lg flex-col gap-3">
+        {revealed && secret.data ? (
+          <LinkCopyElement link={secret.data.secret} label={t("Secret")} />
+        ) : (
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRevealed(true)}
+              loading={revealed && secret.isFetching}
+            >
+              <IconEye data-icon="inline-start" />
+              {t("Show secret")}
+            </Button>
+          </div>
+        )}
+        <div>
+          <Button type="button" variant="ghost" onClick={onRotate} loading={rotate.isPending}>
+            <IconRefresh data-icon="inline-start" />
+            {t("Replace secret")}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -132,7 +291,9 @@ export default function WebhookIntegration() {
   const { t } = useTranslation();
   const { data: webhook, isLoading } = useWebhook();
   const saveMutation = useSaveWebhookMutation();
+  const updateEvents = useUpdateWebhookEventsMutation();
   const deleteMutation = useDeleteWebhookMutation();
+  const canManage = useCan("webhooks.manage");
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [tokenRevealed, setTokenRevealed] = useState(false);
@@ -156,17 +317,11 @@ export default function WebhookIntegration() {
   const tokenMasked =
     !!webhook && !tokenRevealed && (!!webhook.verifyToken || webhook.verifyToken === undefined);
 
+  // Only the event list changes, so the URL is not challenged again.
   const handleEventImmediateSave = (nextEvents: WebhookEvent[]) => {
-    if (!webhook) return;
+    if (!webhook || !nextEvents.length) return;
     setEventsSaving(true);
-    saveMutation.mutate(
-      {
-        url: webhook.url,
-        events: nextEvents,
-        verifyToken: webhook.verifyToken,
-      },
-      { onSettled: () => setEventsSaving(false) },
-    );
+    updateEvents.mutate(nextEvents, { onSettled: () => setEventsSaving(false) });
   };
 
   const onSubmit = (data: FormValues) => {
@@ -322,6 +477,8 @@ export default function WebhookIntegration() {
           </form>
         )}
       </Card>
+
+      {webhook && canManage ? <SigningSecretCard /> : null}
 
       <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
         <DialogContent className="sm:max-w-sm">
