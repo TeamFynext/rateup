@@ -14,18 +14,6 @@
       "bundleIdentifier": "com.rateupapp.rateup",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
-            ]
-          },
-          {
-            "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
-            ]
-          }
-        ],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -51,6 +39,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RateUp to access your photos to set your profile photo.",
+          "microphonePermission": "Allow RateUp to access microphone."
+        }
+      ],
       [
         "expo-build-properties",
         {
@@ -79,7 +74,12 @@
         }
       ],
       ["expo-apple-authentication"],
-      "@react-native-google-signin/google-signin",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
+        }
+      ],
       [
         "expo-notifications",
         {

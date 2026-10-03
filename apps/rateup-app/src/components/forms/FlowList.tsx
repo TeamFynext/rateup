@@ -1,34 +1,28 @@
 import React, { memo, useMemo, useState, useCallback } from "react";
-import { View, Text, ActivityIndicator, Pressable, RefreshControl } from "react-native";
+import { View, Text, ActivityIndicator, RefreshControl } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useWaFlowsFromDb } from "@/api/whatsapp/flow/flow.query";
 import FlowSearchBar from "@/components/flow/FlowSearchBar";
 import { useRouter } from "expo-router";
 import { useFlowFilterStore, useSearchFlowStore } from "@/utils/store";
-import { MoveRight, SlidersHorizontal } from "lucide-react-native";
+import { SlidersHorizontal } from "lucide-react-native";
 import { colors } from "@/constants/constants";
 import ScreenHeader, { HeaderIconButton } from "@/components/common/ScreenHeader";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
+import type { DbFlow } from "@/api/whatsapp/types";
+import FormCard, { type FormStatus } from "@/components/forms/FormCard";
 
-const getStatusBadge = (status: string) => {
-  const color = status === "PUBLISHED" ? "bg-green-500" : "bg-orange-400";
-  return (
-    <View className="flex-row items-center justify-center gap-1">
-      <View className={`w-2 h-2 rounded-full ${color}`} />
-      <Text
-        className={`text-xs font-medium ${
-          status === "PUBLISHED" ? "text-green-600" : "text-orange-500"
-        }`}
-      >
-        {status}
-      </Text>
-    </View>
-  );
+const FLOW_STATUS: Record<string, FormStatus> = {
+  PUBLISHED: { label: "Published", tone: "success" },
+  DRAFT: { label: "Draft", tone: "warm" },
+  BLOCKED: { label: "Blocked", tone: "danger" },
+  THROTTLED: { label: "Throttled", tone: "danger" },
+  DEPRECATED: { label: "Deprecated", tone: "neutral" },
 };
 
-const Flow = () => {
+const Flow = ({ switcher }: Readonly<{ switcher: React.ReactNode }>) => {
   const { data = [], isLoading, isError, refetch } = useWaFlowsFromDb();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -66,13 +60,6 @@ const Flow = () => {
       flows = flows.filter((flow) => flow.name.toLowerCase().includes(search.toLowerCase()));
     }
 
-    // Alphabetical sort
-    if (alphabetical === "A-Z") {
-      flows = flows.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (alphabetical === "Z-A") {
-      flows = flows.sort((a, b) => b.name.localeCompare(a.name));
-    }
-
     // Sort by createdAt
     if (sortByDate === "latest") {
       flows = flows.sort(
@@ -84,38 +71,25 @@ const Flow = () => {
       );
     }
 
+    // Name order last, so it wins over the date order whenever it is set.
+    if (alphabetical === "A-Z") {
+      flows = flows.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (alphabetical === "Z-A") {
+      flows = flows.sort((a, b) => b.name.localeCompare(a.name));
+    }
+
     return flows;
   }, [data, teamId, status, sortByDate, alphabetical, search]);
 
-  if (isLoading) {
+  const renderItem = ({ item }: { item: DbFlow }) => {
+    const screens = item.json?.screens?.length ?? 0;
     return (
-      <View
-        className="flex-1 px-4 pt-4 w-screen justify-center items-center"
-        style={{ backgroundColor: pageBg }}
-      >
-        <ActivityIndicator size="large" />
-        <Text className="text-primaryBlue font-semibold">Loading flows...</Text>
-      </View>
-    );
-  }
-
-  const renderItem = ({ item }: { item: any }) => {
-    const createdAt = new Date(item.createdAt);
-    const now = new Date();
-    const isToday = createdAt.toDateString() === now.toDateString();
-    const formattedTime = createdAt.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const formattedDate = `${createdAt.getDate().toString().padStart(2, "0")}/${(
-      createdAt.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}/${createdAt.getFullYear()}`;
-
-    return (
-      <Pressable
-        className="bg-white dark:bg-slate-900 rounded-xl px-4 py-3 mb-3 shadow-md"
+      <FormCard
+        kind="flow"
+        title={item.name}
+        status={FLOW_STATUS[item.status] ?? { label: item.status, tone: "neutral" }}
+        createdAt={item.createdAt}
+        detail={screens ? `${screens} screen${screens === 1 ? "" : "s"}` : undefined}
         onPress={() =>
           router.push({
             //@ts-ignore
@@ -123,22 +97,7 @@ const Flow = () => {
             params: { flowName: item.name },
           })
         }
-      >
-        <View className="flex-row justify-between items-center mb-1">
-          <Text className="text-base font-semibold dark:text-white">{item.name}</Text>
-          <Text className="text-xs text-gray-500">{isToday ? formattedTime : formattedDate}</Text>
-        </View>
-
-        <View className="flex-row justify-between items-center mt-1">
-          {getStatusBadge(item.status)}
-          <View className="bg-primaryBlue/20 px-2 py-0.5 rounded-full">
-            <View className="flex-row items-center justify-center gap-1">
-              <Text className="text-xs font-semibold text-primaryBlue">Response</Text>
-              <MoveRight width={15} height={15} color={colors["primary-blue"]} />
-            </View>
-          </View>
-        </View>
-      </Pressable>
+      />
     );
   };
 
@@ -149,20 +108,41 @@ const Flow = () => {
     alphabetical !== null,
   ].filter(Boolean).length;
 
+  const header = (
+    <ScreenHeader
+      title="Forms"
+      actions={
+        <HeaderIconButton
+          onPress={() => router.push("/protected/flow/FlowFilter")}
+          badge={activeFilterCount}
+        >
+          <SlidersHorizontal size={20} color={t.fg2} />
+        </HeaderIconButton>
+      }
+      below={
+        <View style={{ gap: 10 }}>
+          {switcher}
+          <FlowSearchBar />
+        </View>
+      }
+    />
+  );
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: pageBg }}>
+        {header}
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" />
+          <Text className="text-primaryBlue font-semibold mt-2">Loading flows...</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: pageBg }}>
-      <ScreenHeader
-        title="WhatsApp Flow"
-        actions={
-          <HeaderIconButton
-            onPress={() => router.push("/protected/flow/FlowFilter")}
-            badge={activeFilterCount}
-          >
-            <SlidersHorizontal size={20} color={t.fg2} />
-          </HeaderIconButton>
-        }
-        below={<FlowSearchBar />}
-      />
+      {header}
       <View className="flex-1 pt-2 px-4 w-screen">
         <FlashList
           data={filteredAndSortedFlows}

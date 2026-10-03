@@ -1,29 +1,31 @@
 import { Toast } from "@/components/common/Notice";
-import { Alert, View, Text, ScrollView, TextInput, Modal, Pressable } from "react-native";
+import { Alert, View, Text, ScrollView, Pressable } from "react-native";
+import { router } from "expo-router";
 import Image from "@/components/common/Image";
 import React, { useState, useEffect } from "react";
 import { namePreview } from "../../utils/chatbox_utils";
-import { signOut, useUpdateActiveStatusMutation } from "@/api/api";
+import { signOut } from "@/api/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { getThemePreference, setThemePreference, ThemePreference } from "../../utils/theme";
 import { Colors } from "@/constants/colors";
 import { pendingCashierWrites } from "@/utils/clearLocalData";
 import { roleLabelOf } from "@/hooks/usePermissions";
+import StatusRow from "./StatusPicker";
 
 interface UserProfile {
   email: string;
   orgName: string;
   role: string;
+  roleKey?: string;
   profilePhoto: string;
   orgPhone: string;
   userName: string;
   orgId: string;
-  userId: string;
 }
 
-const Row = ({ icon, label, value }: any) => (
-  <Pressable className="flex-row items-center justify-between py-4">
+const Row = ({ icon, label, value, onPress }: any) => (
+  <Pressable onPress={onPress} className="flex-row items-center justify-between py-4">
     <View className="flex-row items-center gap-3">
       <Ionicons name={icon} size={20} color="#6b7280" />
       <Text className="text-gray-700 dark:text-gray-500">{label}</Text>
@@ -38,16 +40,14 @@ const Row = ({ icon, label, value }: any) => (
 
 const AccountBar = ({
   email,
-  userId,
   orgName,
   role,
+  roleKey,
   profilePhoto,
   orgPhone,
   userName,
 }: UserProfile) => {
   const [loading, setLoading] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
   const { setColorScheme } = useColorScheme();
   const [themePref, setThemePref] = useState<ThemePreference>("system");
 
@@ -59,15 +59,13 @@ const AccountBar = ({
     loadTheme();
   }, []);
 
+  const openProfile = () => router.push("/protected/profile");
+
   const handleThemeChange = async (newTheme: ThemePreference) => {
     setThemePref(newTheme);
     await setThemePreference(newTheme);
     setColorScheme(newTheme);
   };
-
-  const updateActiveStatus = useUpdateActiveStatusMutation();
-
-  const isValid = confirmText === "DELETE ACCOUNT";
 
   const handleSignOut = async () => {
     // A counter write that has not reached the server is a customer who paid and got
@@ -112,35 +110,6 @@ const AccountBar = ({
     });
   };
 
-  const handleDeleteUser = () => {
-    if (!userId) return;
-
-    Toast.show({
-      type: "info",
-      text1: "Deleting account...",
-    });
-
-    updateActiveStatus.mutate(userId, {
-      onSuccess: () => {
-        Toast.show({
-          type: "success",
-          text1: "Account deleted successfully",
-        });
-
-        setShowDeleteModal(false);
-        setConfirmText("");
-
-        handleSignOut();
-      },
-      onError: (error: any) => {
-        Toast.show({
-          type: "error",
-          text1: error?.message || "Failed to delete account",
-        });
-      },
-    });
-  };
-
   return (
     // No title of its own: the tab screen puts "Account Details" in the shared
     // `ScreenHeader`, on the same bar and at the same weight as the other tabs, and the
@@ -149,35 +118,48 @@ const AccountBar = ({
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         {/* Profile */}
         <View className="items-center mb-6">
-          <View className="w-24 h-24 rounded-full overflow-hidden bg-blue-400">
-            {profilePhoto ? (
-              <Image
-                source={{
-                  uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
-                }}
-                className="w-full h-full"
-              />
-            ) : (
-              <View className="flex-1 justify-center items-center">
-                <Text className="text-white text-2xl font-bold">{namePreview(userName)}</Text>
-              </View>
-            )}
-          </View>
+          <Pressable
+            onPress={openProfile}
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile"
+          >
+            <View className="w-24 h-24 rounded-full overflow-hidden bg-blue-400">
+              {profilePhoto ? (
+                <Image
+                  source={{
+                    uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
+                  }}
+                  className="w-full h-full"
+                />
+              ) : (
+                <View className="flex-1 justify-center items-center">
+                  <Text className="text-white text-2xl font-bold">{namePreview(userName)}</Text>
+                </View>
+              )}
+            </View>
+            <View className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white dark:bg-slate-800 items-center justify-center border border-gray-200 dark:border-slate-700">
+              <Ionicons name="pencil" size={14} color="#6b7280" />
+            </View>
+          </Pressable>
 
           <Text className="text-xl font-semibold mt-4 dark:text-white">{userName}</Text>
 
           <View className="mt-2 bg-blue-100 px-3 py-1 rounded-full">
-            <Text className="text-blue-600 text-xs font-semibold">{roleLabelOf({ role })}</Text>
+            <Text className="text-blue-600 text-xs font-semibold">
+              {roleLabelOf({ role, roleKey })}
+            </Text>
           </View>
         </View>
 
         {/* Info */}
         <View className="bg-white dark:bg-slate-900 rounded-2xl px-4 shadow-sm">
-          <Row icon="person-outline" label="Name" value={userName} />
+          <Row icon="person-outline" label="Name" value={userName} onPress={openProfile} />
           <Row icon="mail-outline" label="Email" value={email} />
           <Row icon="business-outline" label="Organization" value={orgName} />
           <Row icon="call-outline" label="Phone Number" value={orgPhone} />
         </View>
+
+        <StatusRow />
 
         {/* Appearance Settings */}
         <View className="mt-6 bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm">
@@ -220,12 +202,20 @@ const AccountBar = ({
           </View>
         </View>
 
-        {/* Delete Account (NO ROLE RESTRICTION) */}
         <Pressable
-          onPress={() => setShowDeleteModal(true)}
-          className="mt-6 bg-red-50 border border-red-200 py-4 rounded-xl items-center active:bg-red-100"
+          onPress={() => router.push("/protected/security")}
+          className="mt-6 bg-white dark:bg-slate-900 rounded-2xl px-4 py-4 shadow-sm flex-row items-center gap-3 active:opacity-80"
         >
-          <Text className="text-red-500 font-semibold">Delete Account</Text>
+          <Ionicons name="shield-checkmark-outline" size={20} color="#6b7280" />
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-700 dark:text-gray-300">
+              Security
+            </Text>
+            <Text className="text-xs text-gray-500 dark:text-gray-400">
+              Password and account deletion
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
         </Pressable>
 
         {/* Logout */}
@@ -239,60 +229,6 @@ const AccountBar = ({
           <Text className="text-white font-semibold">{loading ? "Logging Out..." : "Log Out"}</Text>
         </Pressable>
       </ScrollView>
-
-      {/* MODAL */}
-      <Modal visible={showDeleteModal} transparent animationType="fade">
-        <View className="flex-1 justify-center items-center bg-black/50 px-6">
-          <View className="bg-white dark:bg-slate-900 w-full rounded-2xl p-6">
-            <Text className="text-lg font-semibold mb-2 dark:text-white">Delete Account</Text>
-
-            <Text className="text-gray-500 mb-4">
-              Type <Text className="font-bold">DELETE ACCOUNT</Text> to confirm.
-            </Text>
-
-            <TextInput
-              value={confirmText}
-              onChangeText={(text) => setConfirmText(text.toUpperCase())}
-              placeholder="DELETE ACCOUNT"
-              className="border border-gray-300 rounded-lg px-4 py-3 mb-4 text-gray-800 dark:text-white"
-            />
-
-            {/* Buttons */}
-            <View className="flex-row justify-end gap-3">
-              {/* Cancel */}
-              <Pressable
-                onPress={() => {
-                  setShowDeleteModal(false);
-                  setConfirmText("");
-                }}
-                className="px-4 py-2 rounded-lg bg-gray-100 active:bg-gray-200"
-              >
-                <Text className="text-gray-600 font-medium">Cancel</Text>
-              </Pressable>
-
-              {/* Delete */}
-              <Pressable
-                disabled={!isValid}
-                onPress={() => {
-                  if (!isValid) {
-                    return Toast.show({
-                      type: "error",
-                      text1: "Type DELETE ACCOUNT correctly",
-                    });
-                  }
-
-                  handleDeleteUser();
-                }}
-                className={`px-4 py-2 rounded-lg ${
-                  !isValid ? "bg-red-200" : "bg-red-500 active:bg-red-600"
-                }`}
-              >
-                <Text className="text-white font-semibold">Delete</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };

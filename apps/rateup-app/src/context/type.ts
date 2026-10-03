@@ -207,7 +207,9 @@ export interface TeamMembersData {
   email: string;
   name: string;
   role: string;
+  roleKey?: string;
+  profilePhoto?: string | null;
   teams: Team[];
   isPaused?: boolean;
-  status: "online" | "offline";
+  status: "online" | "busy" | "offline";
 }
