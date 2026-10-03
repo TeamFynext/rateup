@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("../../../utils/prisma.js", () => ({
   default: {
     integration: { findMany: vi.fn() },
     webhook: { findUnique: vi.fn() },
     lifecycle: { findUnique: vi.fn() },
+    surveyResponse: { findUnique: vi.fn() },
   },
 }));
 
@@ -17,45 +18,29 @@ vi.mock("../../../workers/bullmq/queues/index.js", () => ({
   outgoingWebhookQueue: { add: vi.fn() },
 }));
 
-vi.mock("../external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: {
-    CONTACT_CREATE: "new_contact_create",
-    CONTACT_UPDATED: "contact_updated",
-    CONTACT_DELETED: "contact_deleted",
-    CONVERSATION_CLOSED: "conversation_closed",
-    CONTACT_STAGE_UPDATED: "contact_stage_updated",
-  },
+vi.mock("../external/zapier/zapier.deliver.js", () => ({
+  queueZapierTrigger: vi.fn(),
+  deliverZapierHook: vi.fn(),
 }));
 
 vi.mock("../external/getlead/getlead.queue.js", () => ({ addGetLeadSyncToQueue: vi.fn() }));
 
 vi.mock("../../webhook/webhook.service.js", () => ({ enqueueOrgWebhookDispatch: vi.fn() }));
 
-vi.mock("../external/getlead/getlead.service.js", () => ({
-  GetLeadTriggers: { LEAD_CREATE: "getlead_lead_create", LEAD_UPDATE: "getlead_lead_update" },
-  processGetLead: vi.fn(),
-}));
-vi.mock("../external/zoho/zoho.service.js", () => ({
+vi.mock("../external/getlead/getlead.push.js", () => ({ processGetLeadJob: vi.fn() }));
+vi.mock("../external/zoho/zoho.crm.js", () => ({
   pushCrmLeadStatus: vi.fn(),
-  processZoho: vi.fn(),
-  ZohoTriggers: {
-    CONTACT_CREATE: "contact_created",
-    CONTACT_UPDATE: "contact_updated",
-    CONTACT_DELETE: "contact_deleted",
-    LEAD_CREATE: "lead_created",
-    LEAD_UPDATE: "lead_updated",
-    BIGIN_CONTACT_CREATE: "bigin_contact_created",
-    BIGIN_CONTACT_UPDATE: "bigin_contact_updated",
-    BIGIN_CONTACT_DELETE: "bigin_contact_deleted",
-    BIGIN_DEAL_CREATE: "bigin_deal_created",
-  },
+  updateZohoLeadQueue: vi.fn(),
+  processZohoCrmJob: vi.fn(),
+  ZOHO_CRM_TRIGGERS: [],
 }));
 
 import prisma from "../../../utils/prisma.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
-import { pushCrmLeadStatus, processZoho } from "../external/zoho/zoho.service.js";
-import { addZapierTriggerToQueue } from "../external/zapier/zapier.service.js";
+import { pushCrmLeadStatus } from "../external/zoho/zoho.crm.js";
+import { queueZapierTrigger } from "../external/zapier/zapier.deliver.js";
+import { ZapierTriggers } from "../external/zapier/zapier.types.js";
+import { zapierProvider } from "../external/zapier/zapier.provider.js";
 import { addGetLeadSyncToQueue } from "../external/getlead/getlead.queue.js";
 import { enqueueOrgWebhookDispatch } from "../../webhook/webhook.service.js";
 import {
@@ -63,7 +48,8 @@ import {
   INTEGRATION_EVENT_JOB,
   emitSurveyResponseSubmitted,
 } from "./emitIntegrationEvent.js";
-import { processIntegrationEvent } from "./integrationEvent.fanout.js";
+import { processIntegrationEvent, subscribedEventTypes } from "./integrationEvent.fanout.js";
+import { webhookProvider } from "../../webhook/webhook.provider.js";
 import { processIntegrationJob } from "../external/integrationDispatch.js";
 import type { IntegrationEvent, IntegrationEventOf } from "./integrationEvent.types.js";
 import type { IntegrationProvider } from "../providers/integrationProvider.types.js";
@@ -91,6 +77,7 @@ const ALL_TRIGGERS: Record<string, string[]> = {
     "bigin_deal_created",
   ],
   getlead: ["getlead_lead_create", "getlead_lead_update"],
+  zapier: Object.values(ZapierTriggers),
 };
 
 function row(name: string, triggers: string[] = ALL_TRIGGERS[name] ?? []) {
@@ -164,7 +151,7 @@ const run = (event: IntegrationEvent) => processIntegrationEvent({ orgId: ORG, e
 
 beforeEach(() => {
   vi.clearAllMocks();
-  connect("zoho", "getlead");
+  connect("zoho", "getlead", "zapier");
   db.webhook.findUnique.mockResolvedValue(null);
   db.lifecycle.findUnique.mockResolvedValue({ name: "Customer" });
 });
@@ -178,14 +165,15 @@ describe("emitIntegrationEvent", () => {
     ]);
   });
 
-  test("a survey response is announced only when it has a contact", async () => {
+  test("a survey response is announced, an anonymous one too", async () => {
     const response = {
       id: "resp-1",
       platform: "WEB",
       createdAt: new Date("2026-09-30T11:00:00.000Z"),
     };
     await emitSurveyResponseSubmitted(ORG, { ...response, contactId: null });
-    expect(jobs()).toEqual([]);
+    expect(jobs()[0][1].event.response.contactId).toBeNull();
+    vi.clearAllMocks();
 
     await emitSurveyResponseSubmitted(ORG, { ...response, contactId: "c-1" });
     expect(jobs()).toEqual([
@@ -209,21 +197,25 @@ describe("emitIntegrationEvent", () => {
 });
 
 describe("processIntegrationJob", () => {
+  // Only the `processJob` spies below; the module mocks keep their implementations.
+  afterEach(() => vi.restoreAllMocks());
+
   test("fans an event job out instead of treating it as a provider job", async () => {
     await processIntegrationJob({
       name: INTEGRATION_EVENT_JOB,
       data: { orgId: ORG, event: { type: "conversation.closed", contact } },
     } as any);
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
+    expect(queueZapierTrigger).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "zapier" }),
       "conversation_closed",
-      { conversation_closed: contact },
-      ORG,
+      contact,
     );
   });
 
   test("routes a provider job to that provider through the registry", async () => {
     (db.integration as any).findUnique = vi.fn().mockResolvedValue({ name: "zoho", active: true });
+    const processZoho = vi.spyOn(zohoProvider, "processJob").mockResolvedValue();
 
     await processIntegrationJob({
       name: "zoho-lead-create",
@@ -235,6 +227,7 @@ describe("processIntegrationJob", () => {
 
   test("drops a job whose integration has since been switched off", async () => {
     (db.integration as any).findUnique = vi.fn().mockResolvedValue({ name: "zoho", active: false });
+    const processZoho = vi.spyOn(zohoProvider, "processJob").mockResolvedValue();
 
     await processIntegrationJob({
       name: "zoho-lead-create",
@@ -335,6 +328,58 @@ describe("the fan-out", () => {
       ]),
     ).rejects.toBeInstanceOf(AggregateError);
     expect(healthy.handleEvent).toHaveBeenCalled();
+  });
+});
+
+describe("subscribedEventTypes", () => {
+  const fake = (overrides: Partial<IntegrationProvider>): IntegrationProvider => ({
+    name: "zoho" as any,
+    label: "Test",
+    auth: "custom",
+    connection: "integration",
+    events: ["contact.created", "contact.updated"],
+    subscribedEvents: () => ["contact.created"],
+    handleEvent: vi.fn(),
+    ...overrides,
+  });
+
+  test("collects what each connected provider subscribed to, in one lookup", async () => {
+    connect("zoho", "getlead");
+
+    const wanted = await subscribedEventTypes(ORG, [
+      fake({}),
+      fake({ name: "getlead" as any, subscribedEvents: () => ["contact.updated"] }),
+    ]);
+
+    expect([...wanted].sort()).toEqual(["contact.created", "contact.updated"]);
+    expect(db.integration.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  test("leaves out a provider the org has not connected", async () => {
+    connect();
+
+    expect((await subscribedEventTypes(ORG, [fake({})])).size).toBe(0);
+  });
+
+  test("never claims an event the provider does not handle", async () => {
+    connect("zoho");
+    const sloppy = fake({ subscribedEvents: () => ["contact.created", "lead.created"] });
+
+    expect([...(await subscribedEventTypes(ORG, [sloppy]))]).toEqual(["contact.created"]);
+  });
+
+  test("asks the outgoing Webhook for the events its row has switched on", async () => {
+    connect();
+    db.webhook.findUnique.mockResolvedValue({ events: ["message_status", "contact.created"] });
+
+    expect([...(await subscribedEventTypes(ORG, [webhookProvider]))]).toEqual(["contact.created"]);
+  });
+
+  test("an org with no outgoing Webhook wants nothing from it", async () => {
+    connect();
+    db.webhook.findUnique.mockResolvedValue(null);
+
+    expect((await subscribedEventTypes(ORG, [webhookProvider])).size).toBe(0);
   });
 });
 
@@ -532,60 +577,155 @@ describe("GetLead adapter", () => {
 });
 
 describe("Zapier adapter", () => {
-  test("fires without any Integration row — the hook subscriptions decide", async () => {
-    connect();
+  const zapierRow = () => expect.objectContaining({ name: "zapier" });
+
+  test("fires for an org with an active hook on the trigger", async () => {
+    await run({ type: "contact.created", contact });
+
+    expect(queueZapierTrigger).toHaveBeenCalledWith(zapierRow(), "new_contact_create", contact);
+  });
+
+  test("is not handed an event no active Zap listens to", async () => {
+    db.integration.findMany.mockResolvedValue([row("zapier", ["new_contact_create"])]);
+
+    await run({ type: "contact.deleted", contact });
+
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
+    const subscribed = zapierProvider.subscribedEvents(
+      row("zapier", ["new_message_received"]) as never,
+    );
+    expect(subscribed).toEqual(["message.received"]);
+  });
+
+  test("an org without a Zapier connection hears nothing", async () => {
+    connect("zoho");
 
     await run({ type: "contact.created", contact });
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
-      "new_contact_create",
-      { new_contact_create: contact },
-      ORG,
-    );
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
   });
 
   test("a lifecycle-only update is not reported as a contact update", async () => {
     await run({ type: "contact.updated", contact, changed: ["lifecycle"] });
 
-    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
   });
 
   test("a status-only update is", async () => {
     await run({ type: "contact.updated", contact, changed: ["status"] });
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
-      "contact_updated",
-      { contact_updated: contact },
-      ORG,
-    );
+    expect(queueZapierTrigger).toHaveBeenCalledWith(zapierRow(), "contact_updated", contact);
   });
 
   test("a stage change reports the stage, even one Zoho made", async () => {
     await run(leadEvent({ origin: "integration" }));
 
-    expect(addZapierTriggerToQueue).toHaveBeenCalledWith(
-      "contact_stage_updated",
-      {
-        contact_stage_updated: {
-          contactId: "c1",
-          leadId: "lead-1",
-          pipelineId: "p1",
-          pipelineName: "Sales",
-          pipelineType: "LEADS",
-          stageId: "stage-1",
-          stageName: "Qualified",
-          stageStatus: "OPEN",
-        },
-      },
-      ORG,
-    );
+    expect(queueZapierTrigger).toHaveBeenCalledWith(zapierRow(), "contact_stage_updated", {
+      contactId: "c1",
+      leadId: "lead-1",
+      pipelineId: "p1",
+      pipelineName: "Sales",
+      stageId: "stage-1",
+      stageName: "Qualified",
+      stageStatus: "OPEN",
+    });
   });
 
   test("a resync moved nothing, and a board-only lead has no contact to key on", async () => {
     await run(leadEvent({ resync: true }));
     await run(leadEvent({ lead: { ...leadEvent().lead, contactId: null }, contact: null }));
 
-    expect(addZapierTriggerToQueue).not.toHaveBeenCalled();
+    expect(queueZapierTrigger).not.toHaveBeenCalled();
+  });
+
+  test("an assignment hands over the new assignees", async () => {
+    const assignees = [{ userId: "u1", teamId: "t1" }];
+
+    await run({ type: "contact.assigned", contact, assignees });
+
+    expect(queueZapierTrigger).toHaveBeenCalledWith(zapierRow(), "new_contact_assignee", {
+      contact,
+      newAssignees: assignees,
+    });
+  });
+
+  test("a lifecycle set through the lifecycle endpoint fires the lifecycle trigger", async () => {
+    await run({
+      type: "contact.lifecycle_changed",
+      contactId: "c1",
+      lifecycleId: "l1",
+      lifecycleName: "Customer",
+    });
+
+    expect(queueZapierTrigger).toHaveBeenCalledWith(zapierRow(), "contact_lifecycle_updated", {
+      contactId: "c1",
+      lifecycleId: "l1",
+      lifecycleName: "Customer",
+    });
+  });
+
+  test("a group write fires once per contact that joined", async () => {
+    await run({
+      type: "contact_group.members_added",
+      contactGroupId: "g1",
+      contactIds: ["c1", "c2"],
+    });
+
+    expect(queueZapierTrigger).toHaveBeenCalledTimes(2);
+    expect(queueZapierTrigger).toHaveBeenLastCalledWith(zapierRow(), "contact_added_to_group", {
+      contactId: "c2",
+      contactGroupId: "g1",
+    });
+  });
+
+  test("an inbound message and a new team member reach their triggers", async () => {
+    const message = {
+      from: "919000000001",
+      messageId: "wamid-1",
+      messageBody: { text: "hi" },
+      sourcePlatform: "WHATSAPP",
+      sourceIdentifier: "pn-1",
+    };
+    const member = {
+      name: "Bo",
+      email: "bo@example.com",
+      isExistingUser: false,
+      team: { name: "Sales", code: "S1" },
+    };
+
+    await run({ type: "message.received", message });
+    await run({ type: "team.member_joined", member });
+
+    expect(queueZapierTrigger).toHaveBeenCalledWith(zapierRow(), "new_message_received", message);
+    expect(queueZapierTrigger).toHaveBeenCalledWith(
+      zapierRow(),
+      "new_staff_joined_to_team",
+      member,
+    );
+  });
+
+  test("a survey response is loaded and sent as filed, an anonymous one included", async () => {
+    const filed = {
+      responses: [],
+      contactId: null,
+      surveyTeamMap: { survey: { title: "NPS" }, team: { name: "Sales" } },
+    };
+    db.surveyResponse.findUnique.mockResolvedValue(filed);
+
+    await run({
+      type: "survey.response_submitted",
+      response: {
+        id: "resp-1",
+        contactId: null,
+        platform: "WEB",
+        createdAt: "2026-10-01T00:00:00.000Z",
+      },
+    });
+
+    expect(db.surveyResponse.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "resp-1" } }),
+    );
+    expect(queueZapierTrigger).toHaveBeenCalledWith(zapierRow(), "response_submitted", filed);
   });
 });
 
@@ -595,7 +735,17 @@ describe("outgoing Webhook adapter", () => {
 
     await run({ type: "contact.created", contact });
 
-    expect(enqueueOrgWebhookDispatch).toHaveBeenCalledWith(ORG, "contact.created", { contact });
+    // The public shape: CRM ids and notes stay inside RateUp.
+    expect(enqueueOrgWebhookDispatch).toHaveBeenCalledWith(ORG, "contact.created", {
+      contact: {
+        id: "c1",
+        name: "Ann",
+        phone: "919000000001",
+        email: "ann@example.com",
+        source: "WHATSAPP",
+        lifecycleId: null,
+      },
+    });
   });
 
   test("sends nothing for an event the org did not subscribe to", async () => {

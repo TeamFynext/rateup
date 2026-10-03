@@ -1,6 +1,5 @@
 import { integrationTriggerQueue } from "../../../../workers/bullmq/queues/index.js";
-import { ZohoTriggers } from "./zoho.service.js";
-import type { ZohoCredential } from "./zoho.types.js";
+import { ZohoTriggers, type ZohoCredential } from "./zoho.types.js";
 
 function parseZohoName(name?: string | null) {
   const cleanName = (name || "").trim();

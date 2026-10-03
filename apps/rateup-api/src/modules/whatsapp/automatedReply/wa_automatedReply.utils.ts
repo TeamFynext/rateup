@@ -47,17 +47,11 @@ import {
 import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import { resolveWooPathValue } from "../../integrations/woocommerce/woocommerce.mapping.js";
-import {
-  resolveShopifyPathValue,
-  getShopifyProductImage,
-} from "../../integrations/shopify/shopify.service.js";
+import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.mapping.js";
+import { getShopifyProductImage } from "../../integrations/shopify/shopify.catalog.js";
 import axios from "axios";
-import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
-import {
-  updateZohoLeadQueue,
-  ZohoTriggers,
-} from "../../integrations/external/zoho/zoho.service.js";
+import { emitIntegrationEvent } from "../../integrations/events/emitIntegrationEvent.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
@@ -1308,38 +1302,13 @@ async function executeAssignLifecycleAction(
 
   if (!lifecycle) return true;
 
-  const integrationIds = updatedContact.integrationIds as {
-    zoho?: {
-      contact?: {
-        id: string;
-      };
-      lead?: {
-        id: string;
-      };
-    };
-  };
-
-  // Update Zoho Lead
-  if (integrationIds?.zoho?.lead?.id) {
-    await updateZohoLeadQueue(updatedContact.orgId, integrationIds.zoho.lead.id, {
-      Lead_Status: lifecycle.name,
-    });
-  }
-
-  // Trigger Zoho automation / deal sync
-  await integrationTriggerQueue.add("zoho-bigin-deal-update", {
-    integrationName: "zoho",
-    triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
-    orgId: updatedContact.orgId,
-    data: {
-      name: updatedContact.name,
-      source: updatedContact.source,
-      email: updatedContact.email,
-      phone: updatedContact.phone,
-      notes: updatedContact.notes,
-      lifecycleId,
-    },
-    rateupContactId: updatedContact.id,
+  // Every connected CRM hears about it the way it hears about any lifecycle
+  // change — Zoho through the org's status mapping, rather than the lifecycle's
+  // name pushed straight into `Lead_Status`.
+  await emitIntegrationEvent(updatedContact.orgId, {
+    type: "contact.updated",
+    contact: updatedContact,
+    changed: ["lifecycle"],
   });
 
   // Trigger Conversions API if applicable

@@ -1,54 +1,15 @@
 import { Worker, Job } from "bullmq";
 import baseRedis from "../../../utils/redisConnection.js";
 import { log } from "../../../utils/logger.js";
-import { OutgoingWebhookJobData } from "../../../modules/webhook/webhook.service.js";
-import prisma from "../../../utils/prisma.js";
+import {
+  deliverOutgoingWebhook,
+  type OutgoingWebhookJobData,
+} from "../../../modules/webhook/webhook.service.js";
 
 export const outgoingWebhookWorker = new Worker(
   "outgoingWebhookQueue",
   async (job: Job<OutgoingWebhookJobData>) => {
-    const { event, payload } = job.data;
-
-    // Message status jobs name the sending number; integration events name the org.
-    const webhook = job.data.orgId
-      ? {
-          org: {
-            Webhook: await prisma.webhook.findUnique({
-              where: { orgId: job.data.orgId },
-              select: { url: true, events: true },
-            }),
-          },
-        }
-      : await prisma.whatsappSettings.findUnique({
-          where: { phoneId: job.data.phoneId },
-          select: {
-            org: {
-              select: {
-                Webhook: {
-                  select: {
-                    url: true,
-                    events: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-
-    if (!webhook?.org?.Webhook?.events.includes(event)) return;
-    log.debug({ url: webhook.org.Webhook.url, id: job?.id }, "Delivering outgoing webhook");
-
-    const response = await fetch(webhook.org.Webhook.url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, ...payload }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!response.ok) {
-      throw new Error(
-        `Webhook POST to ${webhook.org.Webhook.url} failed with status ${response.status}`,
-      );
-    }
+    await deliverOutgoingWebhook(job.data, job.id ?? `${job.name}-${job.timestamp}`);
   },
   {
     connection: baseRedis.duplicate(),

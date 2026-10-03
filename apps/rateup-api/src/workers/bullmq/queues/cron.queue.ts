@@ -31,12 +31,10 @@ export const SCHEDULED_JOBS = [
   { id: "shopifyCheckoutCleanup", pattern: "30 3 * * *", tz: "Etc/UTC" },
   // Subscribes connected shops to webhook topics added after they installed.
   { id: "shopifyWebhookSync", pattern: "15 4 * * *", tz: "Etc/UTC" },
-  // Every provider's `refreshCredential` — Zoho's token and webhook channels today.
-  // Was `zohoRefresh`; the stale scheduler is removed by `syncJobSchedulers`.
+  // Every provider's `refreshCredential`: Zoho's token and webhook channels, and
+  // Shopify's legacy-token cycle and lapsing refresh tokens. Replaces `zohoRefresh`
+  // and `shopifyTokenRenewal`; `syncJobSchedulers` removes their stale schedulers.
   { id: "integrationCredentialRefresh", pattern: "*/45 * * * *", tz: "Etc/UTC" },
-  // Cycles legacy non-expiring Shopify tokens (rejected from 2027-01-01) and keeps
-  // idle shops' 90-day refresh tokens from lapsing; in-use tokens renew on demand.
-  { id: "shopifyTokenRenewal", pattern: "40 2 * * *", tz: "Etc/UTC" },
   { id: "midnightStatsReset", pattern: "30 0 * * *" },
   // Expired partner-API replay records. They hold nothing but a stored response and are
   // only useful for 24 hours; the durable idempotency guarantee is the ledger's own key.

@@ -16,16 +16,10 @@ import {
   contactImportRowsKey,
   EMPTY_IMPORT_PROGRESS,
   enqueueContactImport,
-  integrationTriggerQueue,
-  zapierTriggerQueue,
 } from "../../workers/bullmq/queues/index.js";
-import { ZapierTriggers } from "../integrations/external/zapier/zapier.service.js";
-import { pushCrmLeadStatus, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
+import { emitIntegrationEvents } from "../integrations/events/emitIntegrationEvent.js";
+import type { IntegrationEvent } from "../integrations/events/integrationEvent.types.js";
 import { triggerConversionsApiForContact } from "../integrations/meta/conversions.service.js";
-import {
-  buildZohoContactPayload,
-  buildZohoLeadPayload,
-} from "../integrations/external/zoho/zoho.utils.js";
 import { getCustomFields } from "./contact.service.js";
 
 /** Rows one upload may carry. The rows sit in Redis until the worker is done with them. */
@@ -361,7 +355,6 @@ export async function importContactBatch(
     created,
     updated,
     newMembers,
-    fieldsByPhone,
   });
 
   return {
@@ -372,53 +365,16 @@ export async function importContactBatch(
   };
 }
 
-interface TriggerSubscription {
-  subscribed_field?: string;
-  active?: boolean;
-}
-
 /**
- * Which Zapier and Zoho triggers this org would actually act on — the same tests
- * `notifyZapier` and `processZoho` apply when a job reaches them. Read once per batch, so a
- * subscription switched on mid-import starts receiving from the next batch.
- */
-async function subscribedImportTriggers(orgId: string) {
-  const integrations = await prisma.integration.findMany({
-    where: { orgId, name: { in: ["zapier", "zoho"] } },
-    select: { name: true, active: true, credential: true },
-  });
-  const keys = (name: string, requireActive: boolean) => {
-    const integration = integrations.find((i) => i.name === name);
-    if (!integration || (requireActive && !integration.active)) return new Set<string>();
-    const subs = (integration.credential as { triggerSubscriptions?: unknown } | null)
-      ?.triggerSubscriptions;
-    return new Set(
-      (Array.isArray(subs) ? (subs as TriggerSubscription[]) : [])
-        .filter((sub) => sub.active && sub.subscribed_field)
-        .map((sub) => sub.subscribed_field as string),
-    );
-  };
-  // `processIntegration` drops a Zoho job for an inactive integration; `notifyZapier` does not
-  // look at `active`, only at the subscriptions.
-  return { zapier: keys("zapier", false), zoho: keys("zoho", true) };
-}
-
-type ContactIntegrationIds = {
-  zoho?: { contact?: { id: string }; lead?: { id: string } };
-  bigin?: { contact?: { id: string } };
-} | null;
-
-/**
- * The integration events main sent for the same import, unchanged in name, trigger and
- * payload — except that a Zapier or Zoho job is not queued when the org has no active
- * subscription for it, since the worker would drop it on arrival. Enqueueing those would
- * put several jobs per contact on the queues, and Zoho logs every job it receives at info.
+ * The integration events for one batch, the same ones contact.service emits for
+ * a single contact — but only those some provider of this org is waiting for,
+ * checked once per batch: an import is thousands of contacts, and the fan-out
+ * would drop every unwanted event on arrival anyway.
  *
- * - Create mode (main: `createMultipleContacts`): Zapier "new contact", Zoho contact,
- *   Bigin contact and Zoho lead for every created contact.
- * - Update mode (main: `updateMulitplceContacts`): every row was upserted, so every contact
- *   — new or existing — gets the update events, and none gets the create ones.
- * - Group (main: `addNewContactsToGroup`): Zapier "added to group" for each new member.
+ * - Create mode: `contact.created` for every created contact.
+ * - Update mode: every row was upserted, so every contact — new or existing —
+ *   gets `contact.updated`, and none gets `contact.created`.
+ * - Group: `contact_group.members_added` for the new members.
  */
 async function sendImportEvents(
   orgId: string,
@@ -427,139 +383,53 @@ async function sendImportEvents(
     created,
     updated,
     newMembers,
-    fieldsByPhone,
   }: {
     updateExisting: boolean;
     created: Contact[];
     updated: Contact[];
     newMembers: { contactId: string; contactGroupId: string }[];
-    fieldsByPhone: Map<string, CustomFieldValueInput[]>;
   },
 ) {
   const upserted = updateExisting ? [...updated, ...created] : [];
   const createdOnly = updateExisting ? [] : created;
   if (!upserted.length && !createdOnly.length && !newMembers.length) return;
 
-  const subscribed = await subscribedImportTriggers(orgId);
-  const zapierOn = (trigger: ZapierTriggers) => subscribed.zapier.has(trigger);
-  const zohoOn = (trigger: string) => subscribed.zoho.has(trigger);
-
-  const zapierJobs: { name: string; data: unknown }[] = [];
-  const zohoJobs: { name: string; data: unknown }[] = [];
-  const zohoJob = (name: string, triggerKey: string, data: unknown, rateupContactId?: string) => {
-    if (zohoOn(triggerKey)) {
-      zohoJobs.push({
-        name,
-        data: { integrationName: "zoho", triggerKey, orgId, data, rateupContactId },
-      });
-    }
-  };
-
-  for (const contact of createdOnly) {
-    if (zapierOn(ZapierTriggers.CONTACT_CREATE)) {
-      zapierJobs.push({
-        name: ZapierTriggers.CONTACT_CREATE,
-        data: { data: { [ZapierTriggers.CONTACT_CREATE]: contact }, orgId },
-      });
-    }
-    const contactPayload = buildZohoContactPayload(contact);
-    zohoJob("zoho-contact-create", ZohoTriggers.CONTACT_CREATE, contactPayload, contact.id);
-    zohoJob(
-      "zoho-bigin-contact-create",
-      ZohoTriggers.BIGIN_CONTACT_CREATE,
-      contactPayload,
-      contact.id,
-    );
-    zohoJob(
-      "zoho-lead-create",
-      ZohoTriggers.LEAD_CREATE,
-      buildZohoLeadPayload(contact),
-      contact.id,
-    );
-  }
-
-  const lifecycleNames = new Map<string, string | null>();
-  const lifecycleName = async (id: string) => {
-    if (!lifecycleNames.has(id)) {
-      const lifecycle = await prisma.lifecycle.findUnique({
-        where: { id },
-        select: { name: true },
-      });
-      lifecycleNames.set(id, lifecycle?.name ?? null);
-    }
-    return lifecycleNames.get(id) ?? null;
-  };
-
+  // The Meta Conversions API is not an integration provider; it is told as before.
   for (const contact of upserted) {
-    if (zapierOn(ZapierTriggers.CONTACT_UPDATED)) {
-      // Main sent the spreadsheet row here, not the saved contact.
-      zapierJobs.push({
-        name: ZapierTriggers.CONTACT_UPDATED,
-        data: {
-          data: {
-            [ZapierTriggers.CONTACT_UPDATED]: {
-              name: contact.name,
-              phone: contact.phone,
-              source: CSV_IMPORT_SOURCE,
-              customFields: fieldsByPhone.get(contact.phone ?? "") ?? [],
-            },
-          },
-          orgId,
-        },
-      });
-    }
-    const integrationIds = contact.integrationIds as ContactIntegrationIds;
-    zohoJob("zoho-contact-update", ZohoTriggers.CONTACT_UPDATE, {
-      zohoContactId: integrationIds?.zoho?.contact?.id,
-      ...buildZohoContactPayload(contact),
-    });
-    zohoJob("zoho-bigin-contact-update", ZohoTriggers.BIGIN_CONTACT_UPDATE, {
-      biginContactId: integrationIds?.bigin?.contact?.id,
-      ...buildZohoContactPayload(contact),
-    });
-
-    if (contact.lifecycleId && integrationIds?.zoho?.lead?.id) {
-      const name = await lifecycleName(contact.lifecycleId);
-      if (name) {
-        const { Lead_Status: _mapped, ...payload } = buildZohoLeadPayload(contact);
-        await pushCrmLeadStatus(
-          orgId,
-          integrationIds.zoho.lead.id,
-          { lifecycleId: contact.lifecycleId, lifecycleName: name },
-          payload,
-        );
-      }
-    }
-    if (contact.lifecycleId) {
-      zohoJob(
-        "zoho-bigin-deal-update",
-        ZohoTriggers.BIGIN_DEAL_CREATE,
-        {
-          name: contact.name,
-          source: contact.source,
-          email: contact.email,
-          phone: contact.phone,
-          notes: contact.notes,
-          lifecycleId: contact.lifecycleId,
-        },
-        contact.id,
-      );
-      // Not awaited, as on main; it catches its own failures.
-      void triggerConversionsApiForContact(contact, contact.lifecycleId);
-    }
+    // Not awaited; it catches its own failures.
+    if (contact.lifecycleId) void triggerConversionsApiForContact(contact, contact.lifecycleId);
   }
 
-  if (zapierOn(ZapierTriggers.CONTACT_ADDED_TO_GROUP)) {
-    for (const member of newMembers) {
-      zapierJobs.push({
-        name: ZapierTriggers.CONTACT_ADDED_TO_GROUP,
-        data: { data: { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: member }, orgId },
+  // Imported on use: the fan-out loads every provider, which the API side of an
+  // import has no need for.
+  const { subscribedEventTypes } =
+    await import("../integrations/events/integrationEvent.fanout.js");
+  const wanted = await subscribedEventTypes(orgId);
+  const events: IntegrationEvent[] = [];
+
+  if (wanted.has("contact.created")) {
+    for (const contact of createdOnly) events.push({ type: "contact.created", contact });
+  }
+  if (wanted.has("contact.updated")) {
+    for (const contact of upserted) {
+      events.push({
+        type: "contact.updated",
+        contact,
+        changed: contact.lifecycleId ? ["details", "lifecycle"] : ["details"],
       });
     }
   }
+  if (wanted.has("contact_group.members_added")) {
+    const byGroup = new Map<string, string[]>();
+    for (const { contactGroupId, contactId } of newMembers) {
+      byGroup.set(contactGroupId, [...(byGroup.get(contactGroupId) ?? []), contactId]);
+    }
+    for (const [contactGroupId, contactIds] of byGroup) {
+      events.push({ type: "contact_group.members_added", contactGroupId, contactIds });
+    }
+  }
 
-  if (zapierJobs.length) await zapierTriggerQueue.addBulk(zapierJobs);
-  if (zohoJobs.length) await integrationTriggerQueue.addBulk(zohoJobs);
+  await emitIntegrationEvents(orgId, events);
 }
 
 export type ContactImportState = "queued" | "running" | "completed" | "failed";

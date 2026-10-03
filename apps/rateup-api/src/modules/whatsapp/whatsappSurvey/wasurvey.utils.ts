@@ -24,7 +24,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import { Contact, TemplateType } from "../../../../generated/prisma/client.js";
 import { sendMessage } from "./wasurvey.service.js";
-import { captureShopifyOrderPayment } from "../../integrations/shopify/shopify.service.js";
+import { captureShopifyOrderPayment } from "../../integrations/shopify/shopify.catalog.js";
 import prisma from "../../../utils/prisma.js";
 import {
   ButtonOption,

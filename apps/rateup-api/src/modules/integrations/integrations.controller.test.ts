@@ -12,24 +12,26 @@ vi.mock("./integrations.service.js", () => ({
   deleteZapierTriggerHooks: vi.fn(),
   getAllIntegrations: vi.fn(),
   getAllIntegrationsByOrgId: vi.fn(),
-  getGoogleAuthUrl: vi.fn(),
   getIntegrationByName: vi.fn(),
   getIntegrationByPetPoojaRestaurantId: vi.fn(),
   getRegenerateWaPaymentConfigOauth: vi.fn(),
   getWaPaymentConfigByName: vi.fn(),
   getWaPaymentConfigurations: vi.fn(),
-  initializeAuthClient: vi.fn(),
-  removeSurveySpreadSheetSheetId: vi.fn(),
   updateIntegrationByName: vi.fn(),
 }));
 
 vi.mock("../../utils/checkSession.js", () => ({ checkSession: vi.fn() }));
 vi.mock("./shopify/shopify.route.js", () => ({ shopifyRoutes: vi.fn() }));
+vi.mock("../../utils/auditLog.js", () => ({ recordAuditEvent: vi.fn() }));
+vi.mock("./providers/registry.js", () => ({ getIntegrationProvider: vi.fn() }));
 
 import { log } from "../../utils/logger.js";
+import { recordAuditEvent } from "../../utils/auditLog.js";
 import * as service from "./integrations.service.js";
+import { getIntegrationProvider } from "./providers/registry.js";
+import { IntegrationConnectError } from "./shared/oauthConnectError.js";
 import {
-  createGoogleSheetAuthToken,
+  connectWithApiKeyHandler,
   createIntegrationHandler,
   createWaPaymentConfigurationsHandler,
   deleteIntegrationByNameHandler,
@@ -65,22 +67,9 @@ beforeEach(() => {
   svc.createIntegration.mockResolvedValue({ id: "int-1" });
   svc.updateIntegrationByName.mockResolvedValue({ id: "int-1" });
   svc.deleteIntegrationByName.mockResolvedValue({ id: "int-1" });
-  svc.removeSurveySpreadSheetSheetId.mockResolvedValue(undefined);
   svc.deleteZapierTriggerHooks.mockResolvedValue(undefined);
   svc.getIntegrationByPetPoojaRestaurantId.mockResolvedValue(null);
   svc.createWaPaymentConfigurations.mockResolvedValue(true);
-  svc.initializeAuthClient.mockResolvedValue({
-    getToken: vi.fn(async () => ({
-      tokens: {
-        access_token: "ya29.token",
-        refresh_token: "1//refresh",
-        expiry_date: 1_800_000,
-        scope:
-          "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email",
-      },
-    })),
-    getTokenInfo: vi.fn(async () => ({ email: "owner@example.test" })),
-  });
 });
 
 // ===========================================================================
@@ -192,21 +181,13 @@ describe("the write handlers", () => {
     expect(svc.updateIntegrationByName).toHaveBeenCalledWith(ORG, "googlesheet", body);
   });
 
-  test("delete clears the survey spreadsheet ids only for googlesheet", async () => {
+  // Google Sheets' survey cleanup is its provider's `disconnect`, run by the service.
+  test("delete hands every provider to the same service call", async () => {
     await deleteIntegrationByNameHandler(
       { user: { orgId: ORG }, params: { name: "googlesheet" } } as never,
       reply(),
     );
-    expect(svc.removeSurveySpreadSheetSheetId).toHaveBeenCalledWith(ORG);
-
-    vi.clearAllMocks();
-    svc.deleteIntegrationByName.mockResolvedValue({ id: "int-1" });
-
-    await deleteIntegrationByNameHandler(
-      { user: { orgId: ORG }, params: { name: "zapier" } } as never,
-      reply(),
-    );
-    expect(svc.removeSurveySpreadSheetSheetId).not.toHaveBeenCalled();
+    expect(svc.deleteIntegrationByName).toHaveBeenCalledWith("googlesheet", ORG);
   });
 
   test("a successful payment-config create answers 201 with a message", async () => {
@@ -231,60 +212,65 @@ describe("the write handlers", () => {
 });
 
 // ===========================================================================
-// createGoogleSheetAuthToken
+// POST /:name/connect — the shared pasted-key connect
 // ===========================================================================
 
-describe("createGoogleSheetAuthToken", () => {
-  test("stores the exchanged tokens against the caller's org", async () => {
-    const rep = reply();
+describe("connectWithApiKeyHandler", () => {
+  const request = (name: string, body: Record<string, string>) =>
+    ({ params: { name }, body, user: { orgId: ORG } }) as never;
 
-    await createGoogleSheetAuthToken(
-      { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
-      rep,
-    );
-
-    const [data, orgId] = svc.createIntegration.mock.calls[0];
-    expect(orgId).toBe(ORG);
-    expect(data.name).toBe("googlesheet");
-    expect(data.credential.refreshToken).toBe("1//refresh");
-    expect(answer(rep).code).toBe(201);
-  });
-
-  test("splits the granted scopes on a space", async () => {
-    await createGoogleSheetAuthToken(
-      { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
-      reply(),
-    );
-
-    const scopes = svc.createIntegration.mock.calls[0][0].credential.scopes;
-    expect(scopes.length).toBeGreaterThan(1);
-    expect(scopes.every((scope: string) => !scope.includes(" "))).toBe(true);
-  });
-
-  test("stores the refresh token in the clear", async () => {
-    await createGoogleSheetAuthToken(
-      { user: { orgId: ORG }, body: { code: "auth-code" } } as never,
-      reply(),
-    );
-
-    expect(svc.createIntegration.mock.calls[0][0].credential).toMatchObject({
-      accessToken: "ya29.token",
-      refreshToken: "1//refresh",
-    });
-  });
-
-  test("answers a bare 500 when the exchange fails", async () => {
-    svc.initializeAuthClient.mockResolvedValueOnce({
-      getToken: vi.fn(async () => {
-        throw new Error("invalid_grant");
-      }),
-      getTokenInfo: vi.fn(),
+  test("hands the form to the provider's connect, for the caller's org, and audits it", async () => {
+    const connect = vi.fn().mockResolvedValue({ meta: { sources: [] } });
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({
+      label: "GetLead",
+      apiKey: { connect },
     });
     const rep = reply();
 
-    await createGoogleSheetAuthToken({ user: { orgId: ORG }, body: { code: "bad" } } as never, rep);
+    await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_good" }), rep);
 
-    expect(answer(rep)).toEqual({ code: 500, body: undefined });
+    expect(connect).toHaveBeenCalledWith(ORG, { apiKey: "ik_good" });
+    expect(answer(rep).body).toEqual({ meta: { sources: [] } });
+    // The event names the provider and nothing else — never the key.
+    expect(recordAuditEvent).toHaveBeenCalledWith(expect.anything(), "GetLead connected");
+  });
+
+  test("answers the provider's refusal with its own status and message", async () => {
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({
+      label: "GetLead",
+      apiKey: {
+        connect: vi
+          .fn()
+          .mockRejectedValue(new IntegrationConnectError("That API key was rejected.", 400)),
+      },
+    });
+    const rep = reply();
+
+    await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_bad" }), rep);
+
+    expect(answer(rep)).toEqual({ code: 400, body: { error: "That API key was rejected." } });
+    expect(recordAuditEvent).not.toHaveBeenCalled();
+  });
+
+  test("404s a provider that does not connect with a key", async () => {
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({ label: "HubSpot" });
+    const rep = reply();
+
+    await connectWithApiKeyHandler(request("hubspot", { apiKey: "x" }), rep);
+
+    expect(answer(rep).code).toBe(404);
+  });
+
+  test("500s anything unexpected without echoing it", async () => {
+    (getIntegrationProvider as unknown as Mock).mockReturnValue({
+      label: "GetLead",
+      apiKey: { connect: vi.fn().mockRejectedValue(new Error("db down")) },
+    });
+    const rep = reply();
+
+    await connectWithApiKeyHandler(request("getlead", { apiKey: "ik_good" }), rep);
+
+    expect(answer(rep)).toEqual({ code: 500, body: { error: "Something went wrong" } });
   });
 });
 
@@ -490,7 +476,7 @@ describe("route registration", () => {
 
     await integrationsRoutes(srv);
 
-    for (const url of ["/", "/:name", "/google/auth-token", "/wa_payment_configuration"]) {
+    for (const url of ["/", "/:name", "/:name/oauth/callback", "/wa_payment_configuration"]) {
       const r = routes.find((x) => x.url === url && x.method !== "GET");
       expect(r, url).toBeDefined();
       // The module default applies at registration time, so replay the hook on the route.
@@ -514,6 +500,7 @@ describe("route registration", () => {
     };
     expect(probe("/:name/oauth/authorize-url", "GET")).toBe("integrations.manage");
     expect(probe("/:name/oauth/callback", "POST")).toBe("integrations.manage");
+    expect(probe("/:name/connect", "POST")).toBe("integrations.manage");
     expect(probe("/:name/activity", "GET")).toBe("integrations.read");
   });
 

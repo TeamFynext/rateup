@@ -41,11 +41,8 @@ import {
 } from "./team.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../../utils/logger.js";
+import { emitIntegrationEvent } from "../integrations/events/emitIntegrationEvent.js";
 import { errorMessage } from "../../utils/commonUtils.js";
-import {
-  addZapierTriggerToQueue,
-  ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service.js";
 
 export async function createTeamHandler(
   request: FastifyRequest<{
@@ -183,11 +180,15 @@ export async function completeInviteHandler(
     const invite = await completeInvite(request.params.token);
     // Queued before the reply: sending first meant a queue failure fell into the catch
     // and attempted a contradictory 500 on an already-answered request.
-    await addZapierTriggerToQueue(
-      ZapierTriggers.NEW_TEAM_MEMBER_CREATED,
-      { [ZapierTriggers.NEW_TEAM_MEMBER_CREATED]: invite },
-      invite.orgId,
-    );
+    await emitIntegrationEvent(invite.orgId, {
+      type: "team.member_joined",
+      member: {
+        name: invite.name,
+        email: invite.email,
+        isExistingUser: invite.isUser,
+        team: invite.team,
+      },
+    });
     reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
   } catch (e) {
     log.error(e);

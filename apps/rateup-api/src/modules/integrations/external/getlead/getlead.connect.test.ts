@@ -22,13 +22,11 @@ vi.mock("./getlead.client.js", () => ({
   getGetLeadMeta: (...args: unknown[]) => getGetLeadMeta(...args),
 }));
 
-const {
-  connectGetLead,
-  getCachedGetLeadMeta,
-  GetLeadConnectionError,
-  mergeGetLeadCredential,
-  saveGetLeadSettings,
-} = await import("./getlead.service.js");
+const { connectGetLead, connectGetLeadFromForm, getCachedGetLeadMeta } =
+  await import("./getlead.connect.js");
+const { mergeGetLeadCredential } = await import("./getlead.credential.js");
+const { saveGetLeadSettings } = await import("./getlead.settings.js");
+const { IntegrationConnectError } = await import("../../shared/oauthConnectError.js");
 
 const META = {
   sources: [
@@ -108,21 +106,21 @@ describe("connectGetLead", () => {
   test("rejects a bad key as a 400 and stores nothing", async () => {
     getGetLeadMeta.mockRejectedValue(httpError(401));
 
-    await expect(connectGetLead("org-1", "ik_bad")).rejects.toBeInstanceOf(GetLeadConnectionError);
-    await expect(connectGetLead("org-1", "ik_bad")).rejects.toMatchObject({ status: 400 });
+    await expect(connectGetLead("org-1", "ik_bad")).rejects.toBeInstanceOf(IntegrationConnectError);
+    await expect(connectGetLead("org-1", "ik_bad")).rejects.toMatchObject({ statusCode: 400 });
     expect(integration.upsert).not.toHaveBeenCalled();
   });
 
   test("an unreachable GetLead is a 502, not a bad key", async () => {
     getGetLeadMeta.mockRejectedValue(httpError(500));
 
-    await expect(connectGetLead("org-1", "ik_good")).rejects.toMatchObject({ status: 502 });
+    await expect(connectGetLead("org-1", "ik_good")).rejects.toMatchObject({ statusCode: 502 });
   });
 
   test("surfaces a rate limit as 429 so the client can back off", async () => {
     getGetLeadMeta.mockRejectedValue(httpError(429));
 
-    await expect(connectGetLead("org-1", "ik_good")).rejects.toMatchObject({ status: 429 });
+    await expect(connectGetLead("org-1", "ik_good")).rejects.toMatchObject({ statusCode: 429 });
   });
 });
 
@@ -135,7 +133,7 @@ describe("saveGetLeadSettings — tenant isolation", () => {
 
     await expect(
       saveGetLeadSettings("org-1", { stageMappings: mapping } as never),
-    ).rejects.toMatchObject({ status: 400 });
+    ).rejects.toMatchObject({ statusCode: 400 });
     expect(integration.upsert).not.toHaveBeenCalled();
   });
 
@@ -244,7 +242,7 @@ describe("getCachedGetLeadMeta", () => {
   test("throws when the org never connected", async () => {
     integration.findUnique.mockResolvedValue(null);
 
-    await expect(getCachedGetLeadMeta("org-1")).rejects.toMatchObject({ status: 404 });
+    await expect(getCachedGetLeadMeta("org-1")).rejects.toMatchObject({ statusCode: 404 });
   });
 });
 
@@ -302,7 +300,7 @@ describe("saveGetLeadSettings", () => {
     integration.findUnique.mockResolvedValue(null);
 
     await expect(saveGetLeadSettings("org-1", { stageMappings: [] })).rejects.toMatchObject({
-      status: 404,
+      statusCode: 404,
     });
   });
 });
@@ -339,5 +337,32 @@ describe("the default source", () => {
     await connectGetLead("org-1", "ik_good");
 
     expect(integration.upsert.mock.calls[0][0].create.credential.defaults).toBeUndefined();
+  });
+});
+
+// The shared `POST /integrations/getlead/connect` hands the form over as strings.
+describe("connectGetLeadFromForm", () => {
+  test("connects with a well-formed key", async () => {
+    integration.findUnique.mockResolvedValue(null);
+    getGetLeadMeta.mockResolvedValue(META);
+
+    await connectGetLeadFromForm("org-1", { apiKey: " ik_good " });
+
+    expect(getGetLeadMeta).toHaveBeenCalledOnce();
+    expect(integration.upsert.mock.calls[0][0].create.credential.apiKey).toBe("ik_good");
+  });
+
+  test("refuses a paste that is not a GetLead key before calling GetLead", async () => {
+    await expect(connectGetLeadFromForm("org-1", { apiKey: "zoho-token" })).rejects.toMatchObject({
+      statusCode: 400,
+      message: "A GetLead API key starts with ik_",
+    });
+    expect(getGetLeadMeta).not.toHaveBeenCalled();
+  });
+
+  test("refuses a form with no key", async () => {
+    await expect(connectGetLeadFromForm("org-1", {})).rejects.toBeInstanceOf(
+      IntegrationConnectError,
+    );
   });
 });

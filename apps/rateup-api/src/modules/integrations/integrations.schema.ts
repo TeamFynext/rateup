@@ -50,6 +50,12 @@ const deleteZapierHookSchema = z.object({
 });
 
 /** What the frontend's generic OAuth callback page posts back. */
+/** A pasted-key connect form; each provider validates its own fields. */
+const apiKeyConnectSchema = z.record(z.string(), z.string());
+
+/** Choices made before connecting that shape the consent request — Zoho's `products`. */
+const oauthAuthorizeQuerySchema = z.record(z.string(), z.string());
+
 const oauthCallbackSchema = z.object({
   code: z.string().min(1),
   state: z.string().min(1),
@@ -67,6 +73,10 @@ export type WaPaymentCreateSchema = z.infer<typeof waPaymentCreateSchema>;
 
 export type DeleteZapierHookInput = z.infer<typeof deleteZapierHookSchema>;
 
+export type ApiKeyConnectInput = z.infer<typeof apiKeyConnectSchema>;
+
+export type OAuthAuthorizeQuery = z.infer<typeof oauthAuthorizeQuerySchema>;
+
 export type OAuthCallbackInput = z.infer<typeof oauthCallbackSchema>;
 
 // Auto-exported after fastify-zod migration
@@ -77,5 +87,7 @@ export {
   updateIntgrationSchema,
   waPaymentCreateSchema,
   deleteZapierHookSchema,
+  apiKeyConnectSchema,
+  oauthAuthorizeQuerySchema,
   oauthCallbackSchema,
 };

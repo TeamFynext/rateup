@@ -17,13 +17,13 @@ vi.mock("../../integrations/shopify/shopify.handler.js", () => ({
 vi.mock("../../integrations/shopify/shopify.session.js", () => ({
   getActiveShopifySession: vi.fn(async () => ({ shop: "store.myshopify.com" })),
 }));
-vi.mock("../../integrations/shopify/shopify.service.js", () => ({
+vi.mock("../../integrations/shopify/shopify.webhooks.js", () => ({
   getManagableWebhooks: vi.fn(async () => [{ id: "w1", topic: "ORDERS_CREATE" }]),
   registerShopifyWebhook: vi.fn(),
 }));
 
 import prisma from "../../../utils/prisma.js";
-import { registerShopifyWebhook } from "../../integrations/shopify/shopify.service.js";
+import { registerShopifyWebhook } from "../../integrations/shopify/shopify.webhooks.js";
 import { runTask } from "../task.js";
 import { migrateShopifyAbandonedCheckouts } from "./migrateShopifyAbandonedCheckouts.js";
 

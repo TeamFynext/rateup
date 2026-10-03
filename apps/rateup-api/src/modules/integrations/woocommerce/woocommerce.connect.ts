@@ -4,7 +4,7 @@ import type { Integration } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import { IntegratedApps } from "../../../types/enums.js";
-import { inboundWebhookUrl } from "../shared/inboundWebhook.js";
+import { inboundWebhookUrl } from "../shared/inboundWebhookContract.js";
 import { markIntegrationHealthy, recordIntegrationFailure } from "../shared/integrationHealth.js";
 import { signOAuthState, verifyOAuthState } from "../shared/oauth2.js";
 import {

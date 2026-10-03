@@ -1,9 +1,7 @@
 import type { CommerceProvider } from "../commerce/commerce.types.js";
-import {
-  resolveShopifyPathValue,
-  runShopifyOrderAutomation,
-  saveShopifySurveys,
-} from "./shopify.service.js";
+import { saveShopifySurveys } from "./shopify.credential.js";
+import { resolveShopifyPathValue } from "./shopify.mapping.js";
+import { runShopifyOrderAutomation } from "./shopify.messages.js";
 import {
   createShopifyDiscountCode,
   deactivateShopifyDiscountCode,
@@ -12,8 +10,9 @@ import { shopifyLoyaltyEnabled } from "./shopify.util.js";
 
 /**
  * Shopify as a commerce store. Every member defers to a function rather than
- * holding a reference: this module and `shopify.service.ts` import each other,
- * and a reference taken while that cycle is still loading would be undefined.
+ * holding a reference: `shopify.orders.ts` imports this module, and the rule
+ * engine behind `runShopifyOrderAutomation` reaches back into Shopify, so a
+ * reference taken while that cycle is still loading could be undefined.
  */
 export const shopifyCommerce: CommerceProvider = {
   name: "shopify",

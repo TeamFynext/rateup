@@ -5,7 +5,10 @@ import { log } from "../../../utils/logger.js";
 import { IntegratedApps } from "../../../types/enums.js";
 import { integrationTriggerQueue } from "../../../workers/bullmq/queues/index.js";
 import type { ProviderJobData } from "../providers/integrationProvider.types.js";
-import { InboundWebhookRejected, type InboundWebhookRequest } from "../shared/inboundWebhook.js";
+import {
+  InboundWebhookRejected,
+  type InboundWebhookRequest,
+} from "../shared/inboundWebhookContract.js";
 import { readWooCredential, WOO_TOPICS, type WooTopic } from "./woocommerce.types.js";
 
 /** One delivery, as it waits on the queue for its handler. */

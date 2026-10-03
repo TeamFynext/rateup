@@ -39,8 +39,8 @@ export class ShopifyReauthRequiredError extends Error {
 // Refresh this long before the access token lapses, so no request goes out with
 // a token that expires mid-flight.
 const ACCESS_TOKEN_MARGIN_MS = 5 * 60_000;
-// A shop nobody touches for 90 days would lose its refresh token; the daily
-// cron refreshes any whose refresh token is this close to expiring.
+// A shop nobody touches for 90 days would lose its refresh token; the scheduled
+// refresh renews any whose refresh token is this close to expiring.
 const REFRESH_TOKEN_MARGIN_MS = 14 * 24 * 60 * 60_000;
 const LOCK_TTL_MS = 30_000;
 const LOCK_WAIT_MS = 15_000;
@@ -88,12 +88,18 @@ function isAccessTokenExpired(stored: StoredShopifySession, marginMs = 0) {
   return !!stored.expires && new Date(stored.expires).getTime() - marginMs <= Date.now();
 }
 
-function needsRefresh(stored: StoredShopifySession) {
-  if (isLegacy(stored)) return true;
-  if (isAccessTokenExpired(stored, ACCESS_TOKEN_MARGIN_MS)) return true;
+function isRefreshTokenLapsing(stored: StoredShopifySession) {
   return (
     !!stored.refreshTokenExpires &&
     new Date(stored.refreshTokenExpires).getTime() - REFRESH_TOKEN_MARGIN_MS <= Date.now()
+  );
+}
+
+function needsRefresh(stored: StoredShopifySession) {
+  return (
+    isLegacy(stored) ||
+    isAccessTokenExpired(stored, ACCESS_TOKEN_MARGIN_MS) ||
+    isRefreshTokenLapsing(stored)
   );
 }
 
@@ -221,25 +227,20 @@ export async function getActiveShopifySession(integration: ShopifySessionHolder)
   return toSession(renewed);
 }
 
-/** Daily: cycles legacy tokens ahead of the 2027-01-01 cutoff and keeps idle shops' refresh tokens alive. */
-export async function renewShopifyTokensCronAction() {
-  const integrations = (await prisma.integration.findMany({
-    where: { name: IntegratedApps.shopify, active: true },
-    select: { id: true, credential: true },
-  })) as unknown as ShopifySessionHolder[];
-
-  let renewed = 0;
-  for (const integration of integrations) {
-    const stored = integration.credential?.session;
-    if (!stored || !needsRefresh(stored)) continue;
-    try {
-      await getActiveShopifySession(integration);
-      renewed++;
-    } catch (e) {
-      log.error({ err: e, shop: stored.shop }, "Shopify token renewal failed");
-    }
-  }
-  log.info("Renewed %d of %d Shopify tokens", renewed, integrations.length);
+/**
+ * The provider's scheduled refresh (`refreshCredential`, on the shared sweep):
+ * cycles a legacy token ahead of the 2027-01-01 cutoff and keeps an idle
+ * shop's 90-day refresh token from lapsing.
+ *
+ * An access token that has merely expired is left alone. The sweep runs every
+ * 45 minutes and an idle shop's hour-long token is nearly always expired, so
+ * renewing it here would exchange every shop's tokens around the clock; the
+ * next API call renews it on demand instead.
+ */
+export async function refreshShopifyCredential(integration: ShopifySessionHolder) {
+  const stored = integration.credential?.session;
+  if (!stored || (!isLegacy(stored) && !isRefreshTokenLapsing(stored))) return;
+  await getActiveShopifySession(integration);
 }
 
 /**

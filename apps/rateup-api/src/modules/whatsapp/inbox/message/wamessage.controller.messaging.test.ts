@@ -72,9 +72,9 @@ vi.mock("./inboundNotify.js", () => ({ notifyInboundMessage: vi.fn() }));
 vi.mock("../../../org/ws/org.ws.controller.js", () => ({ sendViaWstoOrgHandler: vi.fn() }));
 vi.mock("../../instagram/instagram.service.js", () => ({ getIgUserDetailsFromMeta: vi.fn() }));
 vi.mock("../../facebook/facebook.service.js", () => ({ getFacebookUserDetailsFromMeta: vi.fn() }));
-vi.mock("../../../integrations/external/zapier/zapier.service.js", () => ({
-  addZapierTriggerToQueue: vi.fn(),
-  ZapierTriggers: { NEW_MESSAGE: "NEW_MESSAGE" },
+vi.mock("../../../integrations/events/emitIntegrationEvent.js", () => ({
+  emitIntegrationEvent: vi.fn(),
+  emitSurveyResponseSubmitted: vi.fn(),
 }));
 vi.mock("../../../../utils/logger.js", () => ({
   log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
@@ -138,7 +138,7 @@ import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
 import { setMetaAgentThreadOwner } from "../../../metaAgent/metaAgent.threadOwner.js";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
-import { addZapierTriggerToQueue } from "../../../integrations/external/zapier/zapier.service.js";
+import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
 import { PlatformType } from "../../../../../generated/prisma/client.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import {
@@ -188,7 +188,7 @@ const m = {
   setThreadOwner: setMetaAgentThreadOwner as unknown as Mock,
   igDetails: getIgUserDetailsFromMeta as unknown as Mock,
   fbDetails: getFacebookUserDetailsFromMeta as unknown as Mock,
-  zapier: addZapierTriggerToQueue as unknown as Mock,
+  emit: emitIntegrationEvent as unknown as Mock,
 };
 
 const CONTACT = {
@@ -692,20 +692,22 @@ describe("handleWaMessages - taking a thread over from Meta AI", () => {
 });
 
 describe("handleWaMessages - fanning out", () => {
-  test("raises the Zapier new-message trigger for inbound messages only", async () => {
+  test("announces inbound messages to the integrations (Zapier's new-message trigger)", async () => {
     await callHandleWaMessages({ type: "receive", messageId: "wamid-1" });
 
-    expect(m.zapier).toHaveBeenCalledWith(
-      "NEW_MESSAGE",
-      { NEW_MESSAGE: expect.objectContaining({ messageId: "wamid-1", from: "15550001" }) },
-      "org-1",
-    );
+    expect(m.emit).toHaveBeenCalledWith("org-1", {
+      type: "message.received",
+      message: expect.objectContaining({ messageId: "wamid-1", from: "15550001" }),
+    });
   });
 
-  test("raises no Zapier trigger for outbound messages", async () => {
+  test("announces no outbound message", async () => {
     await callHandleWaMessages({ type: "send" });
 
-    expect(m.zapier).not.toHaveBeenCalled();
+    expect(m.emit).not.toHaveBeenCalledWith(
+      "org-1",
+      expect.objectContaining({ type: "message.received" }),
+    );
   });
 
   test("pushes the message to connected clients, naming the ticket it landed on", async () => {

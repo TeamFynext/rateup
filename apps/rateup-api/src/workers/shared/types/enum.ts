@@ -94,18 +94,3 @@ export enum PlatformType {
   WHATSAPP = "WHATSAPP",
   INSTAGRAM = "INSTAGRAM",
 }
-
-export enum ZapierTriggers {
-  CONTACT_CREATE = "new_contact_create",
-  CONTACT_ASSIGN = "new_contact_assignee",
-  NEW_MESSAGE = "new_message_received",
-  CONVERSATION_CLOSED = "conversation_closed",
-  CONTACT_UPDATED = "contact_updated",
-  CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
-  /** The board's counterpart to the lifecycle trigger, added beside it. */
-  CONTACT_STAGE_UPDATED = "contact_stage_updated",
-  CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
-  RESPONSE_SUBMITTED = "response_submitted",
-  CONTACT_DELETED = "contact_deleted",
-  NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
-}
