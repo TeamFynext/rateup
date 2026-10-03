@@ -128,6 +128,7 @@ export function Flow() {
           >
             <FlowPageHeader
               name={flow.name}
+              status={flow.status}
               tab={tab}
               setTabState={setTab}
               flowDbId={flow.dbFlowId}
