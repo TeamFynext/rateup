@@ -1,112 +1,116 @@
-import { useColorScheme } from "nativewind";
-import React from "react";
-import { View, Text } from "react-native";
 import dayjs from "dayjs";
+import { ChevronRight, UserRound } from "lucide-react-native";
+import React from "react";
+import { Text, View } from "react-native";
 
+import { FONT, useTheme } from "@/components/loyalty/cashier/ui";
+import { plural } from "@/components/surveyResults/kit";
+import { scaleColor } from "@/components/surveyResults/scaleColor";
+import { getSentiment } from "@/constants/sentimentScale";
+
+/** Answers short enough to read as a chip; the rest are counted, not shown. */
+const SCALE_TYPES = ["Yes or No", "Like or Dislike", "Smiley", "Rating", "Opinion Scale"];
+
+const formatResponse = (response: unknown) => {
+  if (!response) return "—";
+  if (typeof response !== "object") return String(response);
+  return Object.values(response)
+    .map((val) => (typeof val === "object" ? JSON.stringify(val) : String(val)))
+    .join(", ");
+};
+
+/** One respondent in a results list. The caller owns the press. */
 export const ContactCard = ({ item }: { item: any }) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { t, isDark } = useTheme();
+  const s = getSentiment(isDark);
 
   const created = dayjs(item.createdAt);
-
-  const isToday = created.isSame(dayjs(), "day");
-
-  const time = isToday ? created.format("h:mm A") : created.format("DD/MM/YYYY");
-
-  // Allowed response types
-  const allowedTypes = ["Yes or No", "Like or Dislike", "Smiley", "Rating", "Opinion Scale"];
-
-  // Format response for display
-  const formatResponse = (responseObj: any) => {
-    if (!responseObj) return "—";
-
-    const values = Object.values(responseObj);
-
-    return values
-      .map((val) => (typeof val === "object" ? JSON.stringify(val) : String(val)))
-      .join(", ");
-  };
-
-  // Dynamic class for each response type
-  const getTagStyle = (type: string) => {
-    switch (type) {
-      case "Smiley":
-        return {
-          container: isDark ? "bg-yellow-900" : "bg-yellow-100",
-          text: isDark ? "text-yellow-200" : "text-yellow-800",
-        };
-
-      case "Rating":
-        return {
-          container: isDark ? "bg-green-900" : "bg-green-100",
-          text: isDark ? "text-green-200" : "text-green-800",
-        };
-
-      default:
-        return {
-          container: isDark ? "bg-blue-900" : "bg-blue-100",
-          text: isDark ? "text-blue-200" : "text-blue-800",
-        };
-    }
-  };
-
-  const filteredResponses = item.responses
-    ?.filter((r: any) => allowedTypes.includes(r.type))
-    .slice(0, 3);
+  const time = created.isSame(dayjs(), "day")
+    ? created.format("h:mm A")
+    : created.format("D MMM YYYY");
+  const answers: any[] = item.responses ?? [];
+  const chips = answers.filter((r) => SCALE_TYPES.includes(r.type)).slice(0, 3);
 
   return (
     <View
-      className="flex-row items-start gap-4 rounded-2xl p-4 border"
       style={{
-        backgroundColor: isDark ? "#0f172a" : "#ffffff",
-        borderColor: isDark ? "#1e293b" : "#E5E7EB",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        padding: 14,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: t.border1,
+        backgroundColor: t.surface,
       }}
     >
-      {/* Avatar */}
-      <View className="w-14 h-14 rounded-full bg-rateUpGreen20 items-center justify-center">
-        <Text className="text-rateUpGreen font-bold text-2xl">{item.phone ? "0" : "R"}</Text>
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: t.brandSoft,
+        }}
+      >
+        <UserRound size={20} color={t.brand} />
       </View>
 
-      {/* Info */}
-      <View className="flex-1">
-        <View className="flex-row justify-between items-center">
+      <View style={{ flex: 1, gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text
-            className="font-semibold text-md text-gray-900 dark:text-white flex-1 mr-2"
             numberOfLines={1}
+            style={{ flex: 1, fontFamily: FONT.semibold, fontSize: 15, color: t.fg1 }}
           >
-            {item.phone || "Respondent"}
+            {item.phone || "Anonymous respondent"}
           </Text>
-
-          <Text className="text-xs text-gray-500 dark:text-slate-400">{time}</Text>
+          <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>{time}</Text>
         </View>
 
-        {/* Tags */}
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row gap-2 flex-wrap mt-3">
-            {filteredResponses.length !== 0 ? (
-              filteredResponses.map((r: any, index: number) => {
-                const { container, text } = getTagStyle(r.type);
-
-                return (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+          {chips.length > 0 ? (
+            chips.map((r, index) => {
+              const label = formatResponse(r.response);
+              return (
+                <View
+                  key={r.questionId || index}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 999,
+                    backgroundColor: t.surface2,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: scaleColor(r.type, label, s) ?? t.fg4,
+                    }}
+                  />
                   <Text
-                    key={r.questionId || index}
-                    className={`px-4 py-1 rounded-full ${container} ${text} text-sm font-medium`}
+                    numberOfLines={1}
+                    style={{ maxWidth: 140, fontFamily: FONT.medium, fontSize: 12, color: t.fg2 }}
                   >
-                    {formatResponse(r.response)}
+                    {label}
                   </Text>
-                );
-              })
-            ) : (
-              <View className="bg-gray-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                <Text className="text-gray-700 dark:text-slate-300 text-xs font-semibold">
-                  {item?.responses?.length || 0}{" "}
-                  {item?.responses?.length > 1 ? "Responses" : "Response"}
-                </Text>
-              </View>
-            )}
-          </View>
+                </View>
+              );
+            })
+          ) : (
+            <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
+              {plural(answers.length, "answer")}
+            </Text>
+          )}
         </View>
       </View>
+
+      <ChevronRight size={18} color={t.fg4} />
     </View>
   );
 };

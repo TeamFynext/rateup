@@ -5,7 +5,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { unregisterPushToken } from "../utils/notification";
 import { clearLocalUserData } from "../utils/clearLocalData";
-import { Toast } from "@/components/common/Notice";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -132,32 +131,66 @@ export const createGoogleUser = async (data: ICreateGoogleUser) => {
   await axios.post("/user/complete-google-signup", data);
 };
 
-export const updateActiveStatus = (userId: string) =>
+/** The API re-checks the password on a self-delete; a Google-only account sends none. */
+export const updateActiveStatus = (userId: string, password?: string) =>
   axios({
     url: `/api/user/update-active-status/${userId}`,
     method: "PUT",
+    data: password ? { password } : {},
   });
 
 export function useUpdateActiveStatusMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userId: string) => updateActiveStatus(userId),
+    mutationFn: ({ userId, password }: { userId: string; password?: string }) =>
+      updateActiveStatus(userId, password),
 
     onSuccess: () => {
-      Toast.success("Account deleted successfully!");
-
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["loggedUser"] });
     },
+  });
+}
 
-    onError: (error: any) => {
-      console.error("Error deleting member", error?.message);
+export interface UserProfileData {
+  name?: string | null;
+  profilePhoto?: string | null;
+  hasPassword?: boolean;
+}
 
-      Toast.error(error?.message || "Something went wrong");
+export const useUserProfile = () =>
+  useQuery({
+    queryKey: ["userProfile"],
+    queryFn: async () => {
+      const res = await axios.get("/api/user/profile");
+      return res.data.data as UserProfileData;
     },
   });
+
+/** Name only: the API keeps the stored title and phone when they are not sent. */
+export const updateProfileName = (name: string) => axios.put("/api/user/update-profile", { name });
+
+export const updateProfilePhoto = (profilePhoto: string) =>
+  axios.put("/api/user/update-profile-photo", { profilePhoto });
+
+export type AvailabilityStatus = "online" | "busy" | "offline";
+export type PresenceMode = "automatic" | "manual";
+
+export const updateAvailability = (data: {
+  status: AvailabilityStatus;
+  presenceMode: PresenceMode;
+}) => axios.put("/api/user/status", data);
+
+export const changePassword = (data: { existingPassword: string; newPassword: string }) =>
+  axios.post("/api/user/change-password", data);
+
+/** The API's own `message`, which says what went wrong ("Incorrect password"). */
+export function serverMessage(error: unknown, fallback: string): string {
+  const message = (error as { response?: { data?: { message?: unknown } } })?.response?.data
+    ?.message;
+  return typeof message === "string" && message ? message : fallback;
 }

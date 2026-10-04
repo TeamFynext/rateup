@@ -1,20 +1,15 @@
-import { useColorScheme } from "nativewind";
-import { View, Text, ScrollView, Pressable } from "react-native";
-import React, { useMemo, useState } from "react";
-import {
-  AngryIcon,
-  ChevronDown,
-  ChevronUp,
-  LaughIcon,
-  MehIcon,
-  TargetIcon,
-  Users,
-} from "lucide-react-native";
-import { QuestionType2 } from "./enum";
-import { renderChoiceItem } from "@/util";
+import React, { useMemo } from "react";
+import { Text, View } from "react-native";
+
 import type { SurveyQuestion } from "@/api/question/types";
 import type { ChoiceWiseEntry, NpsEntry } from "@/api/response/types";
 import type { DbFlow } from "@/api/whatsapp/types";
+import ProgressBar from "@/components/common/ProgressBar";
+import { Divider, FONT, NUM, useTheme } from "@/components/loyalty/cashier/ui";
+import { SectionCard, StatTile, Swatch, plural } from "@/components/surveyResults/kit";
+import { scaleColor } from "@/components/surveyResults/scaleColor";
+import { getSentiment, npsColors } from "@/constants/sentimentScale";
+import { QuestionType2 } from "./enum";
 
 type SurveyQuestionProps = {
   /** `Object.entries` of the analytics `choiceWise` map, keyed by question id. */
@@ -27,240 +22,211 @@ type SurveyQuestionProps = {
   flow: DbFlow | null;
 };
 
+const getPercentage = (count: number, total: number) =>
+  total > 0 ? Math.round((count / total) * 100) : 0;
+
 const SurveyQuestions = ({ choiceWise, NPS, flow, version, questions }: SurveyQuestionProps) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { t, isDark } = useTheme();
+  const s = getSentiment(isDark);
+  const nps = npsColors(s);
 
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  const toggleExpand = (id: string) => {
-    setExpanded((prev) => {
-      const newSet = new Set(prev);
-
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-
-      return newSet;
-    });
-  };
-
-  const flowQuestions = useMemo(() => {
-    return flow?.json?.screens?.flatMap((screen) =>
-      screen.layout.children
-        .filter((child) => child.type !== QuestionType2.Footer)
-        .map(({ id, label, metaType, name, header }) => ({
-          id,
-          label,
-          metaType,
-          name,
-          header,
-        }))
-        .filter(({ name }) => name),
-    );
-  }, [flow]);
+  const flowQuestions = useMemo(
+    () =>
+      flow?.json?.screens?.flatMap((screen) =>
+        screen.layout.children
+          .filter((child) => child.type !== QuestionType2.Footer && child.name)
+          .map((child) => ({
+            id: child.id,
+            label: child.label,
+            metaType: child.metaType,
+            header: child.header,
+            dataSource: child["data-source"],
+          })),
+      ),
+    [flow],
+  );
 
   const getQuestion = (questionId: string) => {
     if (version === 1) {
       const question = questions?.find((q) => q?.id === questionId);
-
       return {
         type: question?.type,
-        questionTitle: question?.title || question?.label,
+        title: question?.title || question?.label,
+        dataSource: undefined,
       };
     }
-
     const question = flowQuestions?.find((q) => q.id === questionId);
-
     return {
       type: question?.metaType,
-      questionTitle: question?.header || question?.label,
+      title: question?.header || question?.label,
+      dataSource: question?.dataSource,
     };
   };
-
-  const getPercentage = (count: number, total: number) =>
-    total > 0 ? Math.round((count / total) * 100) : "0";
 
   if (choiceWise.length === 0) return null;
 
   return (
-    <ScrollView className="flex-1 bg-white dark:bg-slate-950">
-      {choiceWise?.map(([questionId, questionData], index) => {
-        const questionDetails = getQuestion(questionId);
-
-        const type = questionDetails?.type;
-
-        const title = questionDetails?.questionTitle;
-
-        const npsEntry = NPS.find(([id]) => id === questionId)?.[1];
-
+    <SectionCard title="Question breakdown" description="How each answer was distributed.">
+      {choiceWise.map(([questionId, questionData], index) => {
+        const { type, title, dataSource } = getQuestion(questionId);
         const responseCount = questionData?.responseCount || 0;
+        const npsData = NPS.find(([id]) => id === questionId)?.[1]?.npsData;
+        const maxCount = Math.max(0, ...questionData.data.map((c) => c.count));
 
-        const npsscore = npsEntry?.npsData?.npsScore ?? 0;
-
-        const npsScore = Math.round(npsscore);
-
-        const promoters = npsEntry?.npsData?.promoters ?? 0;
-
-        const passives = npsEntry?.npsData?.passives ?? 0;
-
-        const detractors = npsEntry?.npsData?.detractors ?? 0;
-
-        const total = promoters + passives + detractors;
-
-        const chartData = questionData?.data.map((item) => ({
-          ...item,
-          percentage: getPercentage(item?.count, responseCount),
-        }));
-
-        const maxCount = Math.max(...chartData.map((c) => c.count));
-
-        const mostVotedChoice = chartData.find((c) => c.count === maxCount)?.choice;
-
-        const isExpanded = expanded.has(questionId);
+        const scaleValueOf = (choice: string | number) =>
+          dataSource?.find((d) => d.title === String(choice))?.id ?? String(choice);
 
         return (
-          <View
-            key={questionId}
-            className="rounded-2xl mb-3 overflow-hidden border"
-            style={{
-              backgroundColor: isDark ? "#0f172a" : "#ffffff",
+          <View key={questionId} style={{ gap: 14 }}>
+            {index > 0 ? <Divider /> : null}
 
-              borderColor: isDark ? "#1e293b" : "#E2E5ED",
-            }}
-          >
-            {/* Header */}
-            <Pressable
-              onPress={() => toggleExpand(questionId)}
-              className="flex-row justify-between items-center px-4 py-5"
-            >
-              <View className="flex-row items-center gap-2 flex-1">
-                <View className="bg-rateUpBlue rounded-full w-6 h-6 flex justify-center items-center">
-                  <Text className="text-sm font-semibold text-white">{index + 1}</Text>
-                </View>
-
-                <Text className="font-semibold text-md flex-1 text-black dark:text-white">
-                  {getLocalizedText(title)}
+            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+              <View
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: t.brandSoft,
+                }}
+              >
+                <Text style={{ fontFamily: FONT.semibold, fontSize: 12, color: t.brand, ...NUM }}>
+                  {index + 1}
                 </Text>
               </View>
-
-              <View>
-                {isExpanded ? (
-                  <ChevronUp size={20} color={isDark ? "#CBD5E1" : "#4B5563"} />
-                ) : (
-                  <ChevronDown size={20} color={isDark ? "#CBD5E1" : "#4B5563"} />
-                )}
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ fontFamily: FONT.semibold, fontSize: 14, color: t.fg1 }}>
+                  {getLocalizedText(title)}
+                </Text>
+                <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
+                  {plural(responseCount, "response")}
+                </Text>
               </View>
-            </Pressable>
+            </View>
 
-            {isExpanded && (
-              <View className="flex gap-8 pb-4">
-                {/* Choices */}
-                <View className="flex gap-1 p-1">
-                  {chartData?.length > 0 ? (
-                    chartData.map((item: any, idx: number) =>
-                      renderChoiceItem(type, item, idx, mostVotedChoice, version),
-                    )
-                  ) : (
-                    <Text className="text-gray-500 dark:text-slate-400 text-center">
-                      No responses yet.
-                    </Text>
-                  )}
-                </View>
-
-                {/* NPS */}
-                {npsEntry && (
-                  <View className="px-4 py-1 flex justify-center gap-3">
-                    {/* NPS Score */}
-                    <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center">
-                        <View className="rounded-lg p-1 bg-[#2B82DE1F]">
-                          <TargetIcon color={"#2B82DE"} width={25} height={25} />
-                        </View>
-
-                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-                          NPS Score
+            {questionData.data.length === 0 ? (
+              <Text style={{ fontFamily: FONT.regular, fontSize: 13, color: t.fg3 }}>
+                No responses yet.
+              </Text>
+            ) : (
+              <View style={{ gap: 12 }}>
+                {questionData.data.map((item) => {
+                  const pct = getPercentage(item.count, responseCount);
+                  const top = item.count === maxCount && maxCount > 0;
+                  return (
+                    <View key={String(item.choice)} style={{ gap: 6 }}>
+                      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+                        <Text
+                          numberOfLines={2}
+                          style={{
+                            flex: 1,
+                            fontFamily: top ? FONT.semibold : FONT.regular,
+                            fontSize: 13,
+                            color: t.fg1,
+                          }}
+                        >
+                          {String(item.choice)}
+                        </Text>
+                        <Text
+                          style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3, ...NUM }}
+                        >
+                          {plural(item.count, "vote")}
+                          <Text style={{ fontFamily: FONT.medium, color: t.fg1 }}>
+                            {"  "}
+                            {pct}%
+                          </Text>
                         </Text>
                       </View>
-
-                      <Text className="text-[#00BF83] font-bold text-xl">
-                        {npsScore > 0 ? `+${Math.round(npsScore)}` : Math.round(npsScore)}
-                      </Text>
+                      <ProgressBar
+                        progress={pct / 100}
+                        color={scaleColor(type, scaleValueOf(item.choice), s) ?? t.brand}
+                        style={{ height: 8, borderRadius: 4, backgroundColor: t.surface2 }}
+                      />
                     </View>
-
-                    {/* Total */}
-                    <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center">
-                        <View className="rounded-lg p-1 bg-[#2B82DE1F]">
-                          <Users color={"#2B82DE"} width={25} height={25} />
-                        </View>
-
-                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-                          Total Responses
-                        </Text>
-                      </View>
-
-                      <Text className="text-[#00BF83] font-bold text-xl">{total}</Text>
-                    </View>
-
-                    {/* Promoters */}
-                    <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center">
-                        <View className="rounded-full p-1 bg-[#00BF831F]">
-                          <LaughIcon color={"#00BF83"} width={25} height={25} />
-                        </View>
-
-                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-                          Promoters
-                        </Text>
-                      </View>
-
-                      <Text className="text-[#00BF83] font-bold text-xl">{promoters}</Text>
-                    </View>
-
-                    {/* Passives */}
-                    <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center">
-                        <View className="rounded-full p-1 bg-[#FFC1071F]">
-                          <MehIcon color={"#FFC107"} width={25} height={25} />
-                        </View>
-
-                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-                          Passives
-                        </Text>
-                      </View>
-
-                      <Text className="text-[#FFC107] font-bold text-xl">{passives}</Text>
-                    </View>
-
-                    {/* Detractors */}
-                    <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center">
-                        <View className="rounded-full p-1 bg-[#FF61611F]">
-                          <AngryIcon color={"#FF6161"} width={25} height={25} />
-                        </View>
-
-                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
-                          Detractors
-                        </Text>
-                      </View>
-
-                      <Text className="text-[#FF6161] font-bold text-xl">{detractors}</Text>
-                    </View>
-                  </View>
-                )}
+                  );
+                })}
               </View>
             )}
+
+            {npsData ? (
+              <NpsBlock
+                responseCount={responseCount}
+                npsScore={Math.round(npsData.npsScore ?? 0)}
+                parts={[
+                  { label: "Promoters", value: npsData.promoters ?? 0, color: nps.promoter },
+                  { label: "Passives", value: npsData.passives ?? 0, color: nps.passive },
+                  { label: "Detractors", value: npsData.detractors ?? 0, color: nps.detractor },
+                ]}
+              />
+            ) : null}
           </View>
         );
       })}
-    </ScrollView>
+    </SectionCard>
   );
 };
 
 export default SurveyQuestions;
+
+function NpsBlock({
+  responseCount,
+  npsScore,
+  parts,
+}: Readonly<{
+  responseCount: number;
+  npsScore: number;
+  parts: { label: string; value: number; color: string }[];
+}>) {
+  const { t } = useTheme();
+  const total = parts.reduce((sum, p) => sum + p.value, 0);
+  const happiness = total > 0 ? ((parts[0].value / total) * 10).toFixed(1) : "0";
+
+  return (
+    <View style={{ gap: 12 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        <StatTile label="Responses" minWidth="30%" value={responseCount.toLocaleString()} />
+        <StatTile
+          label="NPS"
+          minWidth="30%"
+          value={npsScore >= 0 ? `+${npsScore}` : String(npsScore)}
+        />
+        <StatTile label="Happiness index" minWidth="30%" value={happiness} />
+      </View>
+
+      <View
+        style={{
+          flexDirection: "row",
+          height: 10,
+          borderRadius: 5,
+          overflow: "hidden",
+          backgroundColor: t.surface2,
+        }}
+      >
+        {parts.map((p) => (
+          <View
+            key={p.label}
+            style={{ width: `${getPercentage(p.value, responseCount)}%`, backgroundColor: p.color }}
+          />
+        ))}
+      </View>
+
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {parts.map((p) => (
+          <View key={p.label} style={{ flex: 1, gap: 2 }}>
+            <Swatch color={p.color} label={p.label} />
+            <Text style={{ fontFamily: FONT.semibold, fontSize: 18, color: t.fg1, ...NUM }}>
+              {getPercentage(p.value, responseCount)}%
+            </Text>
+            <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3, ...NUM }}>
+              {plural(p.value, "response")}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;

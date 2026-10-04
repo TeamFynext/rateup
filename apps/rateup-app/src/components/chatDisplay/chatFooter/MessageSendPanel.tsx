@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -27,6 +27,7 @@ import {
   Paperclip,
   Plus,
   Send,
+  StickyNote,
   Zap,
 } from "lucide-react-native";
 import TemplateSending from "./TemplateSending";
@@ -37,6 +38,10 @@ import type { QuickReply } from "@/api/inbox/quickReplies/quickReplies.api";
 import { quickReplyToWhatsAppText } from "@/utils/quickReplyText";
 import { useMention } from "./mention/useMention";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { Toast } from "@/components/common/Notice";
+import { useAuth } from "@/context/AuthContext";
+import { useLoggedInUser } from "@/api/api";
 import { create } from "zustand";
 import Animated, {
   interpolate,
@@ -93,6 +98,12 @@ const MessageSendPanel = ({
     platform as MessagePlatform,
   );
   const createPrivateMessage = useCreatePrivateMessage(selectedContactId);
+  const { userId } = useAuth();
+  const { data: me } = useLoggedInUser();
+  // The ticket this chat was opened on; without one the API files the note on the newest.
+  const conversationId = useContactsStore((state) =>
+    state.contactsById.get(contactId),
+  )?.conversationId;
   let { isSessionActive } = useSessionActiveStore();
   const form = useForm<FormValues>({
     defaultValues: {
@@ -152,21 +163,28 @@ const MessageSendPanel = ({
   const [mediaPanelVisible, setMediaPanelVisible] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const noteTheme = getInboxRowTheme(isDark).note;
 
-  // @-mentions of teammates, private note only.
+  // Mentioning a teammate means the words are for the team, so a reply being written
+  // becomes a note, text and all.
   const mention = useMention({
-    enabled: isPrivate,
+    enabled: true,
     text: textBody ?? "",
     setText: (value) => setValue("text.body", value, { shouldDirty: true }),
+    onPick: () => {
+      if (isPrivate) return;
+      switchMode(true, { carryText: true });
+      Toast.info("Mentioning a teammate turns this into an internal note.");
+    },
   });
 
   // `/` at the start of a word opens the quick replies, as on the web.
   const { data: quickReplies = [], isLoading: quickRepliesLoading } = useQuickReplies();
   const quickReplyQuery = useMemo(() => {
-    if (mention.isOpen) return null;
+    if (mention.isOpen || isPrivate) return null;
     const match = QUICK_REPLY_TRIGGER.exec((textBody ?? "").slice(0, mention.caret));
     return match ? match[1].toLowerCase() : null;
-  }, [textBody, mention.caret, mention.isOpen]);
+  }, [textBody, mention.caret, mention.isOpen, isPrivate]);
   const matchingQuickReplies = useMemo(
     () =>
       quickReplyQuery === null
@@ -213,6 +231,29 @@ const MessageSendPanel = ({
     });
 
     setTemplateOptionsVisible(next);
+  };
+
+  // Everything that reaches the customer — templates, attachments, quick replies — is
+  // closed in Note mode, so nothing opened for a reply can be sent from a note.
+  // One input serves both modes, so each keeps its own text and nothing typed as a
+  // note is left in the box when switching back to a reply.
+  const drafts = useRef({ message: "", note: "" });
+  const switchMode = (note: boolean, { carryText = false } = {}) => {
+    if (note === isPrivate) return;
+    if (carryText) {
+      // The text in the box, and the mentions picked in it, move over with the mode.
+      drafts.current[isPrivate ? "note" : "message"] = "";
+    } else {
+      drafts.current[isPrivate ? "note" : "message"] = textBody ?? "";
+      setValue("text.body", drafts.current[note ? "note" : "message"]);
+      mention.reset();
+    }
+    setSelectedIndex(note ? 1 : 0);
+    setIsPrivate(note);
+    if (note) {
+      setMediaPanelVisible(false);
+      if (templateOptionsVisible) togglePanel();
+    }
   };
 
   const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
@@ -272,42 +313,59 @@ const MessageSendPanel = ({
   };
 
   const handleSendPrivateMessage = handleSubmit((values) => {
-    if (!values.text.body && !values.media.length) return;
+    const text = values.text.body ?? "";
+    // The API stores a note's text only.
+    if (!text.trim() || !selectedContactId) return;
+    const contactId = selectedContactId as string;
     const id = generateInternalMessageId();
     // Mentions go up as ids: the server matches those first and only falls back
     // to scanning `@name` out of the text, which misses names with spaces.
-    const mentionedUserIds = mention.getMentionedUserIds(values.text.body ?? "");
+    const mentionedUserIds = mention.getMentionedUserIds(text);
 
-    // Optimistic UI update
-    if (selectedContactId) {
-      const contactId = selectedContactId as string;
-      const mockedMessage = {
-        id,
-        messageId: id,
-        createdAt: new Date().toISOString(),
-        waCreatedAt: new Date().toISOString(),
-        messageBody: {
-          exchangeProcess: "privateNote",
-          privateNote: {
-            text: values.text,
-            media: values.media,
-          },
+    const authorName: string = me?.userName ?? "You";
+    const placeholder = {
+      id,
+      messageId: id,
+      kind: "NOTE",
+      createdAt: new Date().toISOString(),
+      waCreatedAt: new Date().toISOString(),
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: "internal",
+      sendBy: userId,
+      messageBody: {
+        exchangeProcess: "privateNote",
+        privateNote: {
+          text: { body: text },
+          triggeredByUser: userId ? { id: userId, name: authorName } : null,
         },
-        sender: { name: "You" },
-      };
-      useMessagesStore
-        .getState()
-        .addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
-      useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
+      },
+      sender: { name: authorName },
+    };
+    const threadKeys = [`${contactId}_${whatsappSettingsPhoneId}`, `${contactId}_all`];
+    const messages = useMessagesStore.getState();
+    for (const key of threadKeys) messages.addMessage(key, placeholder);
 
-      createPrivateMessage.mutate({ ...values, messageId: id, mentionedUserIds });
-    } else {
-      createPrivateMessage.mutate({ ...values, messageId: id, mentionedUserIds });
-    }
+    createPrivateMessage.mutate(
+      {
+        type: "text",
+        text: { body: text },
+        messageId: id,
+        mentionedUserIds,
+        ...(conversationId && { conversationId }),
+      },
+      {
+        onError: () => {
+          const store = useMessagesStore.getState();
+          for (const key of threadKeys) store.removeMessage(key, id);
+          // Handed back only if nothing was typed since, so the text is never lost or clobbered.
+          if (!form.getValues("text.body")) setValue("text.body", text);
+          Toast.error("The note could not be saved. Try again.");
+        },
+      },
+    );
 
-    reset(initialMessgabody);
-    resetMedia();
-    setAudioUrl(null);
+    // Attachments and a voice note belong to the reply draft, so they stay.
+    setValue("text.body", "");
     mention.reset();
   });
 
@@ -390,7 +448,8 @@ const MessageSendPanel = ({
         borderTopColor: isDark ? Colors.dark.borderLight : Colors.light.border,
       }}
     >
-      {isSessionActive ? (
+      {/* A note never reaches the customer, so an expired window doesn't close it. */}
+      {isSessionActive || isPrivate ? (
         <View className="opacity-100" pointerEvents="auto">
           {media.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mb-3 px-4 pt-3">
@@ -611,10 +670,7 @@ const MessageSendPanel = ({
                 }}
               >
                 <Pressable
-                  onPress={() => {
-                    setSelectedIndex(0);
-                    setIsPrivate(false);
-                  }}
+                  onPress={() => switchMode(false)}
                   style={{
                     flex: 1,
                     alignItems: "center",
@@ -648,10 +704,7 @@ const MessageSendPanel = ({
                 </Pressable>
 
                 <Pressable
-                  onPress={() => {
-                    setSelectedIndex(1);
-                    setIsPrivate(true);
-                  }}
+                  onPress={() => switchMode(true)}
                   style={{
                     flex: 1,
                     alignItems: "center",
@@ -689,24 +742,26 @@ const MessageSendPanel = ({
                 gap: 10,
               }}
             >
-              <Pressable onPress={togglePanel}>
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    backgroundColor: Colors.brand.blue,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Animated.View style={animatedPlusStyle}>
-                    <Plus size={18} color="#fff" />
-                  </Animated.View>
-                </View>
-              </Pressable>
+              {!isPrivate && (
+                <Pressable onPress={togglePanel}>
+                  <View
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      backgroundColor: Colors.brand.blue,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Animated.View style={animatedPlusStyle}>
+                      <Plus size={18} color="#fff" />
+                    </Animated.View>
+                  </View>
+                </Pressable>
+              )}
 
-              {templateOptionsVisible && (
+              {!isPrivate && templateOptionsVisible && (
                 <View
                   style={{
                     position: "absolute",
@@ -823,7 +878,11 @@ const MessageSendPanel = ({
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: isDark ? Colors.dark.inputBg : Colors.light.inputBg,
+                  backgroundColor: isPrivate
+                    ? noteTheme.bg
+                    : isDark
+                      ? Colors.dark.inputBg
+                      : Colors.light.inputBg,
                   borderRadius: 24,
                   paddingVertical: 10,
                   paddingHorizontal: 14,
@@ -831,7 +890,11 @@ const MessageSendPanel = ({
                   alignItems: "center",
                   gap: 8,
                   borderWidth: 1,
-                  borderColor: isDark ? Colors.dark.inputBorder : Colors.light.border,
+                  borderColor: isPrivate
+                    ? noteTheme.border
+                    : isDark
+                      ? Colors.dark.inputBorder
+                      : Colors.light.border,
                 }}
               >
                 <TextInput
@@ -844,7 +907,9 @@ const MessageSendPanel = ({
                     padding: 0,
                     maxHeight: 120,
                   }}
-                  placeholder={selectedIndex === 0 ? "Type a message…" : "Add a note…"}
+                  placeholder={
+                    selectedIndex === 0 ? "Type a message…" : "Add a note — only your team sees it"
+                  }
                   placeholderTextColor={
                     isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder
                   }
@@ -853,24 +918,26 @@ const MessageSendPanel = ({
                   onChangeText={mention.handleChangeText}
                   onSelectionChange={mention.handleSelectionChange}
                 />
-                <Pressable
-                  onPress={openQuickReplies}
-                  hitSlop={6}
-                  accessibilityRole="button"
-                  accessibilityLabel="Quick replies"
-                >
-                  <Zap
-                    size={17}
-                    color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
-                  />
-                </Pressable>
                 {!isPrivate && (
-                  <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
-                    <Paperclip
-                      size={17}
-                      color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
-                    />
-                  </Pressable>
+                  <>
+                    <Pressable
+                      onPress={openQuickReplies}
+                      hitSlop={6}
+                      accessibilityRole="button"
+                      accessibilityLabel="Quick replies"
+                    >
+                      <Zap
+                        size={17}
+                        color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
+                      />
+                    </Pressable>
+                    <Pressable onPress={() => setMediaPanelVisible((prev) => !prev)}>
+                      <Paperclip
+                        size={17}
+                        color={isDark ? Colors.dark.inactive : Colors.light.textPlaceholder}
+                      />
+                    </Pressable>
+                  </>
                 )}
               </View>
 
@@ -1067,21 +1134,19 @@ const MessageSendPanel = ({
           </View>
 
           <Pressable
-            disabled
+            onPress={() => switchMode(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add a note"
             style={{
               width: 42,
               height: 42,
               borderRadius: 999,
-              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+              backgroundColor: Colors.accent.orange,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Send
-              size={18}
-              color={isDark ? Colors.dark.inactive : Colors.light.inactive}
-              style={{ marginLeft: 2 }}
-            />
+            <StickyNote size={18} color="#fff" />
           </Pressable>
         </View>
       )}

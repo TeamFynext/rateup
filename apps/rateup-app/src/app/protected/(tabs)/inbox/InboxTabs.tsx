@@ -16,6 +16,7 @@ import Inbox from "@/components/inbox/inbox";
 import RefreshButton from "@/components/inbox/RefreshButton";
 import InboxSearchView from "@/components/inbox/InboxSearchView";
 import ScreenHeader, { HeaderIconButton } from "@/components/common/ScreenHeader";
+import { HeaderStatusButton } from "@/components/home/StatusPicker";
 import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { ChevronsDownUp, ChevronsUpDown, Search, UserCheck, X } from "lucide-react-native";
 import { useInboxCountStore } from "@/store/inboxCountStore";
@@ -314,6 +315,7 @@ export default function InboxLayout() {
                     </HeaderIconButton>
                     <RefreshButton />
                     <InboxButtons activeFilterCount={activeFilterCount} />
+                    <HeaderStatusButton />
                   </>
                 }
                 below={

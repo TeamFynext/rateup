@@ -1,134 +1,72 @@
-import { View, Text, Pressable, ScrollView, useColorScheme } from "react-native";
-import React, { useMemo } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useFlowDataStore, useFlowResponseDataStore } from "@/utils/store";
-import { QuestionType2, WaQuestions } from "@/components/flow/enum";
-import type { WaFlowFormChoice } from "@/api/whatsapp/types";
 import dayjs from "dayjs";
+import { useLocalSearchParams } from "expo-router";
+import React, { useMemo } from "react";
+import { View } from "react-native";
+
+import type { WaFlowFormChoice } from "@/api/whatsapp/types";
+import DocumentResponse from "@/components/flow/DocumentResponse";
+import { QuestionType2, WaQuestions } from "@/components/flow/enum";
 import {
   LDResponseMap,
   RatingScaleMap,
   SmileyResponseMap,
   YNResponseMap,
 } from "@/components/flow/enumMap";
-import DocumentResponse from "@/components/flow/DocumentResponse";
 import ImageResponse from "@/components/flow/ImageResponse";
-import { ArrowLeft } from "lucide-react-native";
+import ResponseDetail from "@/components/surveyResults/ResponseDetail";
+import { useFlowDataStore, useFlowResponseDataStore } from "@/utils/store";
+import { firstParam } from "@/utils/params";
+
+/** `WaQuestions` and `QuestionType2` share keys; the latter holds the readable name. */
+const typeLabel = (metaType?: WaQuestions) => {
+  const key = Object.keys(WaQuestions).find(
+    (k) => WaQuestions[k as keyof typeof WaQuestions] === metaType,
+  );
+  return key ? QuestionType2[key as keyof typeof QuestionType2] : metaType;
+};
 
 const Flow2Response = () => {
-  const isDark = useColorScheme() === "dark";
-
   const { respondent } = useLocalSearchParams();
-
-  const router = useRouter();
-
   const { flowData } = useFlowDataStore();
-
   const { data } = useFlowResponseDataStore();
+  const row = data[0];
 
-  const flowQuestions = useMemo(() => {
-    return flowData[0]?.json?.screens?.flatMap((screen) =>
-      screen.layout.children
-        .filter((child) => child.type !== QuestionType2.Footer)
-        .map(({ id, label, metaType, name, "data-source": dataSource, header }) => ({
-          id,
-          label,
-          metaType,
-          dataSource,
-          name,
-          header,
-        }))
-        .filter(({ name }) => name),
-    );
-  }, [flowData]);
+  const flowQuestions = useMemo(
+    () =>
+      flowData[0]?.json?.screens?.flatMap((screen) =>
+        screen.layout.children
+          .filter((child) => child.type !== QuestionType2.Footer && child.name)
+          .map(({ id, label, metaType, name, "data-source": dataSource, header }) => ({
+            id,
+            label,
+            metaType,
+            dataSource,
+            name,
+            header,
+          })),
+      ) ?? [],
+    [flowData],
+  );
 
-  const responses = data[0]?.responses || [];
-
-  const getResponseForQuestion = (questionId: string | undefined) => {
-    return responses.find((res) => res.questionId === questionId);
-  };
+  const responses = row?.responses ?? [];
+  const answers = responses.length
+    ? flowQuestions.map((question, index) => {
+        const raw = responses.find((res) => res.questionId === question.id);
+        return {
+          key: question.id ?? String(index),
+          question: question.header || question.label || "",
+          type: typeLabel(question.metaType),
+          answer: getCellData(raw?.response, question),
+        };
+      })
+    : [];
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
-      {/* Header */}
-      <View className="flex-row items-center gap-5 p-4">
-        <Pressable onPress={() => router.back()} className="flex-row items-center">
-          <ArrowLeft color={isDark ? "white" : "black"} />
-        </Pressable>
-
-        <View className="flex-row items-center gap-3">
-          <View className="w-14 h-14 rounded-full bg-rateUpLightGreen items-center justify-center">
-            <Text className="text-rateUpGreen font-bold text-2xl">{respondent ? "0" : "R"}</Text>
-          </View>
-
-          <Text className="text-xl font-medium text-gray-900 dark:text-white">
-            {respondent || "Respondent"}
-          </Text>
-        </View>
-      </View>
-
-      {/* Content */}
-      {flowQuestions?.length && responses?.length ? (
-        <ScrollView
-          className="px-4"
-          contentContainerStyle={{ paddingBottom: 30 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {flowQuestions.map((question, index) => {
-            const raw = getResponseForQuestion(question.id);
-
-            const response = raw?.response;
-
-            const formatted = getCellData(response, question);
-
-            const responseType = question.metaType;
-
-            return (
-              <View
-                key={question.id}
-                className="mb-5 rounded-2xl p-4 border"
-                style={{
-                  backgroundColor: isDark ? "#0f172a" : "#ffffff",
-                  borderColor: isDark ? "#1e293b" : "#E5E7EB",
-                }}
-              >
-                {/* Index & Type */}
-                <View className="flex-row items-center mb-3 gap-2">
-                  <View className="w-7 h-7 rounded-full bg-rateUpGreen items-center justify-center">
-                    <Text className="text-white text-xs font-semibold">{index + 1}</Text>
-                  </View>
-
-                  <Text className="text-white bg-rateUpGreen px-3 py-1 rounded-full text-xs font-medium">
-                    {responseType}
-                  </Text>
-                </View>
-
-                {/* Question */}
-                <Text className="text-base font-bold text-gray-800 dark:text-white mb-2">
-                  {question.header || question.label}
-                </Text>
-
-                {/* Answer */}
-                <View className="pl-1">
-                  {typeof formatted === "string" ? (
-                    <Text className="text-sm leading-6 text-gray-600 dark:text-slate-300">
-                      {formatted || "No response"}
-                    </Text>
-                  ) : (
-                    formatted
-                  )}
-                </View>
-              </View>
-            );
-          })}
-        </ScrollView>
-      ) : (
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-rateUpTextGray dark:text-slate-400">No responses to be shown</Text>
-        </View>
-      )}
-    </SafeAreaView>
+    <ResponseDetail
+      respondent={firstParam(respondent) || row?.phone}
+      submittedAt={row?.createdAt}
+      answers={answers}
+    />
   );
 };
 

@@ -1,178 +1,140 @@
-import { useColorScheme } from "nativewind";
-import { View, Text } from "react-native";
+import { AngryIcon, FrownIcon, LaughIcon, MehIcon, SmileIcon } from "lucide-react-native";
 import React from "react";
-import { FrownIcon, SmileIcon, LaughIcon, MehIcon, AngryIcon } from "lucide-react-native";
-import { useHappyIndex } from "@/api/response/response.query";
+import { Text, View } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
+
+import { useHappyIndex } from "@/api/response/response.query";
 import ProgressBar from "@/components/common/ProgressBar";
+import { FONT, NUM, useTheme } from "@/components/loyalty/cashier/ui";
+import { CardSkeleton, DotBadge, SectionCard } from "@/components/surveyResults/kit";
+import { getSentiment, scale5 } from "@/constants/sentimentScale";
 
 const HappyIndex = ({ surveyId }: { surveyId: string }) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-
+  const { t, isDark } = useTheme();
+  const s = getSentiment(isDark);
+  const colors = scale5(s);
   const { data, isLoading } = useHappyIndex(surveyId);
 
-  const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));
+  if (isLoading || !data) return <CardSkeleton height={420} />;
 
-  const happinessValue = Number(data?.happinessIndex ?? 0);
+  const happiness = Number(data.happinessIndex ?? 0);
+  const outOfTen = Number((happiness / 10).toFixed(1));
 
-  const moodList = [
+  // Worst first, mirroring the web's `INDEX_BANDS`.
+  const bands = [
+    { min: 9, label: "Very Happy", color: s.best },
+    { min: 7, label: "Happy", color: s.good },
+    { min: 5, label: "Neutral", color: s.neutral },
+    { min: 3, label: "Unhappy", color: s.poor },
+    { min: -Infinity, label: "Very Unhappy", color: s.worst },
+  ];
+  const band = bands.find((b) => outOfTen >= b.min) ?? bands[bands.length - 1];
+
+  const moods = [
     {
       label: "Very Happy",
-      value: data?.veryHappy ?? 0,
-      percentage: data?.veryHappyPercentage ?? 0,
-      icon: LaughIcon,
-      color: "#00BF83",
+      value: data.veryHappy,
+      pct: data.veryHappyPercentage,
+      Icon: LaughIcon,
+      color: colors[4],
     },
     {
       label: "Happy",
-      value: data?.happy ?? 0,
-      percentage: data?.happyPercentage ?? 0,
-      icon: SmileIcon,
-      color: "#66BF00",
+      value: data.happy,
+      pct: data.happyPercentage,
+      Icon: SmileIcon,
+      color: colors[3],
     },
     {
       label: "Neutral",
-      value: data?.neutral ?? 0,
-      percentage: data?.neutralPercentage ?? 0,
-      icon: MehIcon,
-      color: "#FFC107",
+      value: data.neutral,
+      pct: data.neutralPercentage,
+      Icon: MehIcon,
+      color: colors[2],
     },
     {
       label: "Unhappy",
-      value: data?.sad ?? 0,
-      percentage: data?.sadPercentage ?? 0,
-      icon: FrownIcon,
-      color: "#FF8B07",
+      value: data.sad,
+      pct: data.sadPercentage,
+      Icon: FrownIcon,
+      color: colors[1],
     },
     {
       label: "Very Unhappy",
-      value: data?.verySad ?? 0,
-      percentage: data?.verySadPercentage ?? 0,
-      icon: AngryIcon,
-      color: "#FF6161",
+      value: data.verySad,
+      pct: data.verySadPercentage,
+      Icon: AngryIcon,
+      color: colors[0],
     },
   ];
 
-  let happinessIndexStatus, happyIndexStatusBg;
-
-  if (h_index >= 9) {
-    happinessIndexStatus = "Very Happy";
-    happyIndexStatusBg = "#00BF83";
-  } else if (h_index >= 7) {
-    happinessIndexStatus = "Happy";
-    happyIndexStatusBg = "#66BF00";
-  } else if (h_index >= 5) {
-    happinessIndexStatus = "Neutral";
-    happyIndexStatusBg = "#FFC107";
-  } else if (h_index >= 3) {
-    happinessIndexStatus = "Unhappy";
-    happyIndexStatusBg = "#FF8B07";
-  } else {
-    happinessIndexStatus = "Very Unhappy";
-    happyIndexStatusBg = "#FF6161";
-  }
-
-  if (isLoading) {
-    return (
-      <View className="bg-white dark:bg-slate-950 p-4 flex-1 space-y-6">
-        <View className="flex items-center gap-6">
-          <View className="w-[170px] h-[170px] rounded-full bg-gray-200 dark:bg-slate-800" />
-
-          <View className="flex space-y-4">
-            {[...Array(5)].map((_, index) => (
-              <View key={index} className="flex-row items-center gap-2 w-full">
-                <View className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-800" />
-
-                <View className="flex-1 space-y-2">
-                  <View className="flex-row justify-between">
-                    <View className="h-3 w-20 bg-gray-200 dark:bg-slate-700 rounded" />
-
-                    <View className="h-4 w-12 bg-gray-300 dark:bg-slate-700 rounded-full" />
-                  </View>
-
-                  <View className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full w-full" />
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <View className="bg-white dark:bg-slate-950 p-4 lg:col-span-3 w-full flex-1 h-full">
-      <Text className="text-lg font-semibold mb-4 text-black dark:text-white">Happiness Index</Text>
-
-      <View className="flex flex-col md:flex-row items-center gap-6 px-4">
+    <SectionCard
+      title="Happiness Index"
+      description="How respondents felt, from their scale answers."
+    >
+      <View style={{ alignItems: "center" }}>
         <AnimatedCircularProgress
-          size={170}
-          width={15}
-          fill={happinessValue}
-          tintColor={happyIndexStatusBg}
-          backgroundColor={isDark ? "#1e293b" : "#E6ECF2"}
+          size={180}
+          width={16}
+          fill={happiness}
+          tintColor={band.color}
+          backgroundColor={t.surface2}
           rotation={0}
           lineCap="round"
         >
           {() => (
-            <View className="items-center">
-              <Text className="text-4xl font-bold text-black dark:text-white">
-                {(happinessValue / 10).toFixed(1)}
-              </Text>
-
-              <Text className="text-xs text-[#7A8289] dark:text-slate-400">Out of 10</Text>
-
-              <View
-                style={{ backgroundColor: happyIndexStatusBg }}
-                className="rounded px-2 py-1 mt-2"
-              >
-                <Text className="text-white text-xs">{happinessIndexStatus}</Text>
+            <View style={{ alignItems: "center", gap: 6 }}>
+              <View style={{ alignItems: "center" }}>
+                <Text style={{ fontFamily: FONT.extrabold, fontSize: 36, color: t.fg1, ...NUM }}>
+                  {outOfTen.toFixed(1)}
+                </Text>
+                <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3 }}>
+                  Out of 10
+                </Text>
               </View>
+              <DotBadge label={band.label} color={band.color} />
             </View>
           )}
         </AnimatedCircularProgress>
-
-        <View className="flex flex-col gap-4 w-full">
-          {moodList?.map(({ label, value, percentage, icon: Icon, color }) => (
-            <View key={label} className="flex-row items-center gap-2 w-full">
-              <View className="bg-[#004F981F] dark:bg-slate-800 rounded-full p-1">
-                <Icon color={isDark ? "#60A5FA" : "#004F98"} size={30} />
-              </View>
-
-              <View className="flex-1">
-                <View className="flex-row justify-between items-center">
-                  <Text className="font-semibold text-xs text-[#343A40] dark:text-white">
-                    {label}
-                  </Text>
-
-                  <View className="flex-row items-center gap-1">
-                    <Text className="text-[#7A8289] dark:text-slate-400 text-xs">
-                      ({value ?? 0})
-                    </Text>
-
-                    <View className="bg-[#004F98] rounded-full px-2 py-0.5">
-                      <Text className="text-white text-xs">{Math.round(percentage)}%</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <ProgressBar
-                  progress={percentage / 100}
-                  color={color}
-                  style={{
-                    height: 6,
-                    borderRadius: 10,
-                    marginTop: 6,
-                    backgroundColor: isDark ? "#1e293b" : "#E5E7EB",
-                  }}
-                />
-              </View>
-            </View>
-          ))}
-        </View>
       </View>
-    </View>
+
+      <View style={{ gap: 14 }}>
+        {moods.map(({ label, value, pct, Icon, color }) => (
+          <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: t.brandSoft,
+              }}
+            >
+              <Icon size={20} color={t.brand} />
+            </View>
+            <View style={{ flex: 1, gap: 6 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ fontFamily: FONT.medium, fontSize: 12, color: t.fg1 }}>{label}</Text>
+                <Text style={{ fontFamily: FONT.regular, fontSize: 12, color: t.fg3, ...NUM }}>
+                  {value ?? 0}
+                  <Text style={{ fontFamily: FONT.medium, color: t.fg1 }}>
+                    {"  "}
+                    {Math.round(pct ?? 0)}%
+                  </Text>
+                </Text>
+              </View>
+              <ProgressBar
+                progress={(pct ?? 0) / 100}
+                color={color}
+                style={{ height: 6, borderRadius: 10, backgroundColor: t.surface2 }}
+              />
+            </View>
+          </View>
+        ))}
+      </View>
+    </SectionCard>
   );
 };
 
