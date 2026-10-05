@@ -4,11 +4,10 @@ vi.mock("../wa_axios.js", () => ({
   callMetaApi: vi.fn(),
   GraphApiError: class GraphApiError extends Error {},
 }));
-vi.mock("../settings/wa_settings.service.js", () => ({
-  getWaSettingsByIbaId: vi.fn(),
-  getWaSettings: vi.fn(),
-  getWaSettingsByPageId: vi.fn(),
-  updateWaSettingsById: vi.fn(),
+vi.mock("../metaChannel/metaChannel.service.js", () => ({
+  getInstagramChannel: vi.fn(),
+  getMessengerChannel: vi.fn(),
+  updateMetaChannelById: vi.fn(),
 }));
 vi.mock("../whatsappSurvey/wasurvey.auth.js", () => ({
   assertWithinConversationLimit: vi.fn(),
@@ -24,7 +23,7 @@ vi.mock("../../../utils/logger.js", () => ({
 }));
 
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
+import { getInstagramChannel, updateMetaChannelById } from "../metaChannel/metaChannel.service.js";
 import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
@@ -54,8 +53,8 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const callMetaApiMock = callMetaApi as unknown as Mock;
-const getSettingsMock = getWaSettingsByIbaId as unknown as Mock;
-const updateSettingsMock = updateWaSettingsById as unknown as Mock;
+const getSettingsMock = getInstagramChannel as unknown as Mock;
+const updateSettingsMock = updateMetaChannelById as unknown as Mock;
 const assertLimitMock = assertWithinConversationLimit as unknown as Mock;
 const handleWaMessagesMock = handleWaMessages as unknown as Mock;
 
@@ -66,7 +65,8 @@ const ORG_ID = "org-1";
 const SETTINGS: {
   id: string;
   orgId: string;
-  ibaId: string;
+  platform: string;
+  accountId: string;
   fbPageId: string;
   pageAccessToken: string;
   instagramIceBreakers: unknown;
@@ -74,7 +74,8 @@ const SETTINGS: {
 } = {
   id: "settings-1",
   orgId: ORG_ID,
-  ibaId: IBA_ID,
+  platform: "INSTAGRAM",
+  accountId: IBA_ID,
   fbPageId: "page-1",
   pageAccessToken: "page-token-abc",
   instagramIceBreakers: null,
@@ -203,6 +204,13 @@ describe("sendInstagramTextMessage", () => {
       "conversation limit reached",
     );
     expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+
+  // The org scopes the lookup, so a send never goes out on another org's account.
+  test("looks the account up within the sending org", async () => {
+    await sendInstagramTextMessage(IGS_ID, "hello", ORG_ID, IBA_ID);
+
+    expect(getSettingsMock).toHaveBeenCalledWith(IBA_ID, ORG_ID);
   });
 
   test("refuses when the account is not connected", async () => {

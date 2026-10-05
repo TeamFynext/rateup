@@ -3,6 +3,7 @@ import { inScope } from "../../authz/scope.js";
 import { channelIdentifierSpellings } from "../../utils/channelIdentifier.js";
 import { FRONTEND_URL } from "../../utils/constants/constants.js";
 import { renderNotificationEmailBodies } from "../../utils/email/react/templates.js";
+import { PlatformType } from "../../../generated/prisma/enums.js";
 import prisma from "../../utils/prisma.js";
 import { getChannelScope } from "../whatsapp/settings/wa_channel_access.js";
 import { eventDefinition, type NotificationEvent } from "./notification.catalogue.js";
@@ -24,15 +25,20 @@ async function channelIdForIdentifier(
   orgId: string,
   sourceIdentifier: string,
 ): Promise<string | null> {
-  const channels = await prisma.whatsappSettings.findMany({
-    where: { orgId },
-    select: { id: true, phone: true, ibaId: true, fbPageId: true },
+  // Any platform but WhatsApp records its own account id, which names one channel.
+  const byAccount = await prisma.channel.findFirst({
+    where: { orgId, accountId: sourceIdentifier, platform: { not: PlatformType.WHATSAPP } },
+    select: { id: true },
   });
-  const match = channels.find(
-    (channel) =>
-      channel.ibaId === sourceIdentifier ||
-      channel.fbPageId === sourceIdentifier ||
-      channelIdentifierSpellings(channel.phone).includes(sourceIdentifier),
+  if (byAccount) return byAccount.id;
+
+  // WhatsApp records the number, in any of its spellings.
+  const numbers = await prisma.channel.findMany({
+    where: { orgId, platform: PlatformType.WHATSAPP },
+    select: { id: true, address: true },
+  });
+  const match = numbers.find((channel) =>
+    channelIdentifierSpellings(channel.address).includes(sourceIdentifier),
   );
   return match?.id ?? null;
 }

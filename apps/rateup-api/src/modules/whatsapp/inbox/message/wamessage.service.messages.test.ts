@@ -21,9 +21,11 @@ vi.mock("../../../../utils/prisma.js", () => ({
 vi.mock("../../wa_axios.js", () => ({ callMetaApi: vi.fn() }));
 vi.mock("../../settings/wa_settings.service.js", () => ({
   getWaSettings: vi.fn(),
-  getWaSettingsByIbaId: vi.fn(),
-  getWaSettingsByPageId: vi.fn(),
   getWaSettingsByPhone: vi.fn(),
+}));
+vi.mock("../../metaChannel/metaChannel.service.js", () => ({
+  getInstagramChannel: vi.fn(),
+  getMessengerChannel: vi.fn(),
 }));
 vi.mock("../../settings/wa_channel_access.js", () => ({ getScopedSourceIdentifiers: vi.fn() }));
 vi.mock("axios", () => ({ default: { get: vi.fn() } }));
@@ -89,12 +91,8 @@ vi.mock("../../../../../generated/prisma/client.js", () => ({
 import prisma from "../../../../utils/prisma.js";
 import axios from "axios";
 import { callMetaApi } from "../../wa_axios.js";
-import {
-  getWaSettings,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
-  getWaSettingsByPhone,
-} from "../../settings/wa_settings.service.js";
+import { getWaSettings, getWaSettingsByPhone } from "../../settings/wa_settings.service.js";
+import { getMessengerChannel, getInstagramChannel } from "../../metaChannel/metaChannel.service.js";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
 import {
   createAudioMessage,
@@ -136,8 +134,8 @@ const sendMessageMock = sendMessage as unknown as Mock;
 const callMetaApiMock = callMetaApi as unknown as Mock;
 const getWaSettingsMock = getWaSettings as unknown as Mock;
 const getWaSettingsByPhoneMock = getWaSettingsByPhone as unknown as Mock;
-const getWaSettingsByIbaIdMock = getWaSettingsByIbaId as unknown as Mock;
-const getWaSettingsByPageIdMock = getWaSettingsByPageId as unknown as Mock;
+const getInstagramChannelMock = getInstagramChannel as unknown as Mock;
+const getMessengerChannelByPageIdMock = getMessengerChannel as unknown as Mock;
 const axiosGetMock = (axios as unknown as { get: Mock }).get;
 
 const MESSAGE: {
@@ -854,12 +852,13 @@ describe("markMessagesAsRead", () => {
       sourcePlatform: PlatformType.INSTAGRAM,
       contact: { orgId: "org-1", phone: null, igsId: "igsid-1", psid: null },
     });
-    getWaSettingsByIbaIdMock.mockResolvedValue({ pageAccessToken: "page-token" });
+    getInstagramChannelMock.mockResolvedValue({ pageAccessToken: "page-token" });
 
     await markMessagesAsRead("contact-1", "user-1");
     await vi.waitFor(() => expect(callMetaApiMock).toHaveBeenCalled());
 
-    expect(getWaSettingsByIbaIdMock).toHaveBeenCalledWith("iba-1");
+    // Scoped to the contact's org, so a mark-seen never goes out on another org's account.
+    expect(getInstagramChannelMock).toHaveBeenCalledWith("iba-1", "org-1");
     expect(callMetaApiMock).toHaveBeenCalledWith(
       "/me/messages",
       "POST",
@@ -877,12 +876,12 @@ describe("markMessagesAsRead", () => {
       sourcePlatform: PlatformType.FACEBOOK,
       contact: { orgId: "org-1", phone: null, igsId: null, psid: "psid-1" },
     });
-    getWaSettingsByPageIdMock.mockResolvedValue({ pageAccessToken: "page-token" });
+    getMessengerChannelByPageIdMock.mockResolvedValue({ pageAccessToken: "page-token" });
 
     await markMessagesAsRead("contact-1", "user-1");
     await vi.waitFor(() => expect(callMetaApiMock).toHaveBeenCalled());
 
-    expect(getWaSettingsByPageIdMock).toHaveBeenCalledWith("page-1");
+    expect(getMessengerChannelByPageIdMock).toHaveBeenCalledWith("page-1", "org-1");
     expect(callMetaApiMock).toHaveBeenCalledWith("/me/messages", "POST", "page-token", {
       recipient: { id: "psid-1" },
       sender_action: "mark_seen",

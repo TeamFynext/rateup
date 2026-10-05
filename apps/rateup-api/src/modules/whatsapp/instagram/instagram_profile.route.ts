@@ -16,13 +16,13 @@ import { declareAccess } from "../../../authz/registry.js";
 export async function instagramProfileRoutes(server: FastifyInstance) {
   declareAccess(server, { access: "session" });
 
-  server.get("/:whatsappSettingsId", getInstagramProfileHandler);
-  server.post("/:whatsappSettingsId/ice-breakers", setInstagramIceBreakersHandler);
-  server.post("/:whatsappSettingsId/ice-breakers/sync", syncInstagramIceBreakersHandler);
-  server.delete("/:whatsappSettingsId/ice-breakers", deleteInstagramIceBreakersHandler);
-  server.post("/:whatsappSettingsId/persistent-menu", setInstagramPersistentMenuHandler);
-  server.post("/:whatsappSettingsId/persistent-menu/sync", syncInstagramPersistentMenuHandler);
-  server.delete("/:whatsappSettingsId/persistent-menu", deleteInstagramPersistentMenuHandler);
+  server.get("/:channelId", getInstagramProfileHandler);
+  server.post("/:channelId/ice-breakers", setInstagramIceBreakersHandler);
+  server.post("/:channelId/ice-breakers/sync", syncInstagramIceBreakersHandler);
+  server.delete("/:channelId/ice-breakers", deleteInstagramIceBreakersHandler);
+  server.post("/:channelId/persistent-menu", setInstagramPersistentMenuHandler);
+  server.post("/:channelId/persistent-menu/sync", syncInstagramPersistentMenuHandler);
+  server.delete("/:channelId/persistent-menu", deleteInstagramPersistentMenuHandler);
 
   server.get("/media/:ibaId", getInstagramMediaHandler);
   server.get("/stories/:ibaId", getInstagramStoriesHandler);

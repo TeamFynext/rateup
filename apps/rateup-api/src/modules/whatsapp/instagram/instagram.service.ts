@@ -1,5 +1,4 @@
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByIbaId, getWaSettingsById } from "../settings/wa_settings.service.js";
 import { log } from "../../../utils/logger.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
@@ -8,14 +7,14 @@ import { getInstagramMediaPermalink } from "./instagram_messaging.service.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
-import { handleInstagramUserResponse } from "../automatedReply/instagram_automation.service.js";
+import { getInstagramChannel } from "../metaChannel/metaChannel.service.js";
 
 export async function getIgUserDetailsFromMeta(igsId: string, ibaId: string) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  if (!waSettings) {
+  const channel = await getInstagramChannel(ibaId);
+  if (!channel) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
   }
-  const { pageAccessToken } = waSettings;
+  const { pageAccessToken } = channel;
   const url = `/${igsId}?fields=name,username,profile_pic,follower_count,is_verified_user,is_user_follow_business,is_business_follow_user`;
   const res = await callMetaApi(url, "GET", pageAccessToken);
   // trace, not info: this is the customer's whole Instagram profile.
@@ -40,7 +39,7 @@ export async function handleInstagramWebhook(
   for (const entry of data.entry) {
     let waSettings;
     try {
-      waSettings = await getWaSettingsByIbaId(entry.id);
+      waSettings = await getInstagramChannel(entry.id);
     } catch (error) {
       log.error({ err: error, ibaId: entry.id }, "[Instagram] Failed to load settings for account");
       failed++;
@@ -51,13 +50,7 @@ export async function handleInstagramWebhook(
       log.trace("No instagram settings found for instagram business account id: %s", entry.id);
       continue;
     }
-    const { orgId, ibaId } = waSettings;
-    if (!ibaId) {
-      // Guaranteed non-null in practice: waSettings was just looked up BY ibaId, but
-      // the column itself is nullable, so this narrows the type for everything below.
-      log.trace("Instagram settings for account %s have no ibaId configured", entry.id);
-      continue;
-    }
+    const { orgId, accountId: ibaId } = waSettings;
     const settings = { orgId, ibaId };
 
     // Handle comment/live_comment change events
@@ -494,32 +487,4 @@ export async function handleInstagramMessageReaction(
     undefined,
     reaction?.mid,
   );
-}
-
-interface MetaFbPage {
-  id: string;
-  name: string;
-  access_token: string;
-  instagram_business_account?: { id: string };
-}
-
-export async function getFbPages(settingsId: string, orgId: string) {
-  const waSettings = await getWaSettingsById(settingsId, orgId);
-  if (!waSettings) {
-    throw new Error(`No WhatsApp settings found for id ${settingsId}`);
-  }
-  const { accessToken } = waSettings;
-  const res = await callMetaApi(
-    `/me/accounts?fields=id,name,access_token,instagram_business_account`,
-    "GET",
-    accessToken,
-  );
-  return (res.data.data as MetaFbPage[])
-    .filter((i) => Boolean(i.instagram_business_account?.id))
-    .map((i) => ({
-      fbPageId: i.id,
-      ibaId: i.instagram_business_account!.id,
-      pageAccessToken: i.access_token,
-      fbPageName: i.name,
-    }));
 }

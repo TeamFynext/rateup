@@ -58,7 +58,23 @@ export async function registerBusinessClientHandler(
 
     log.trace("Phone numbers: %o", phoneNumbers);
 
-    const phone = phoneNumbers?.[0];
+    // A WABA can hold several numbers, and each is its own channel row. Pick the number this
+    // signup was for; taking the first one made a second number from the same business
+    // overwrite the first number's channel instead of adding its own.
+    const phone = phone_number_id
+      ? phoneNumbers?.find((number: { id: string }) => number.id === phone_number_id)
+      : phoneNumbers?.length === 1
+        ? phoneNumbers[0]
+        : undefined;
+    if (!phone) {
+      log.error(
+        { wabaId: waba_id, phoneNumberId: phone_number_id },
+        "The signed-up phone number is not on this WhatsApp Business Account",
+      );
+      return rep
+        .status(400)
+        .send({ message: "Could not find the phone number from this signup. Try again." });
+    }
 
     // Subscribing to webhook
     const subRes = await subscribeWABAToWebhook(waba_id, accessToken);

@@ -18,12 +18,7 @@ import {
 import { log } from "../../../../utils/logger.js";
 import { emitIntegrationEvent } from "../../../integrations/events/emitIntegrationEvent.js";
 import { callMetaApi } from "../../wa_axios.js";
-import {
-  getWaSettings,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
-  getWaSettingsByPhone,
-} from "../../settings/wa_settings.service.js";
+import { getWaSettings, getWaSettingsByPhone } from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import type { Actor } from "../../../../authz/actor.js";
 import axios from "axios";
@@ -80,6 +75,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { ByContactIdParams } from "../../../contact/contact.schema.js";
 import { channelDigits, channelIdentifierSpellings } from "../../../../utils/channelIdentifier.js";
 import { dateFilterFor } from "../../../apiAnalytics/apianalytics.service.js";
+import { getInstagramChannel, getMessengerChannel } from "../../metaChannel/metaChannel.service.js";
 
 /**
  * One row of the raw inbox-list query. The projection is built by hand in SQL and spread
@@ -2014,8 +2010,8 @@ async function sendReadReceipt(contactId: string) {
   // nothing but `recipient` and `sender_action`.
   const isInstagram = latest.sourcePlatform === PlatformType.INSTAGRAM;
   const settings = isInstagram
-    ? await getWaSettingsByIbaId(latest.sourceIdentifier)
-    : await getWaSettingsByPageId(latest.sourceIdentifier);
+    ? await getInstagramChannel(latest.sourceIdentifier, orgId)
+    : await getMessengerChannel(latest.sourceIdentifier, orgId);
   const accessToken = settings?.pageAccessToken;
   // Instagram threads key off the IGSID, Messenger off the page-scoped id.
   const recipientId = isInstagram ? latest.contact?.igsId : latest.contact?.psid;

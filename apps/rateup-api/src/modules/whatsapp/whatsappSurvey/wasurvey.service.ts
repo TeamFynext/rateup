@@ -40,12 +40,7 @@ import {
 } from "../../response/response.service.js";
 import { updateCompletedSurvey } from "../../survey/survey.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
-import {
-  getWaSendingSettings,
-  getWaSettings,
-  getWaSettingsByIbaId,
-  getWaSettingsByPageId,
-} from "../settings/wa_settings.service.js";
+import { getWaSendingSettings, getWaSettings } from "../settings/wa_settings.service.js";
 import { GraphApiError, callMetaApi } from "../wa_axios.js";
 import { graphApiErrorDetail } from "../../../utils/graphError.js";
 
@@ -63,6 +58,7 @@ import { producer } from "../../../plugins/kafka.js";
 import { assertWithinConversationLimit } from "./wasurvey.auth.js";
 import type { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils.js";
 import { channelDigits } from "../../../utils/channelIdentifier.js";
+import { getInstagramChannel, getMessengerChannel } from "../metaChannel/metaChannel.service.js";
 
 export async function sendMessage(
   orgId: string,
@@ -101,26 +97,26 @@ export async function sendMessage(
     if (!whatsappSettingsPhoneId) {
       throw new Error("whatsappSettingsPhoneId is required for Instagram messages");
     }
-    waSettings = await getWaSettingsByIbaId(whatsappSettingsPhoneId);
-    if (!waSettings) {
+    const channel = await getInstagramChannel(whatsappSettingsPhoneId, orgId);
+    if (!channel) {
       throw new Error(`Instagram account is not configured for id: ${whatsappSettingsPhoneId}`);
     }
     to = (messageData as IgSendMessageBody).recipient.id;
     configId = "me";
-    accessToken = waSettings.pageAccessToken ?? undefined;
-    sourceIdentifier = waSettings.ibaId ?? undefined;
+    accessToken = channel.pageAccessToken;
+    sourceIdentifier = channel.accountId;
   } else if (platform === PlatformType.FACEBOOK) {
     if (!whatsappSettingsPhoneId) {
       throw new Error("whatsappSettingsPhoneId is required for Facebook messages");
     }
-    waSettings = await getWaSettingsByPageId(whatsappSettingsPhoneId);
-    if (!waSettings) {
+    const channel = await getMessengerChannel(whatsappSettingsPhoneId, orgId);
+    if (!channel) {
       throw new Error(`Facebook page is not configured for page ID: ${whatsappSettingsPhoneId}`);
     }
     to = (messageData as FbSendMessageBody).recipient.id;
     configId = "me";
-    accessToken = waSettings.pageAccessToken ?? undefined;
-    sourceIdentifier = waSettings.fbPageId ?? undefined;
+    accessToken = channel.pageAccessToken;
+    sourceIdentifier = channel.fbPageId;
   } else if (platform !== PlatformType.WEBCHAT) {
     // Not `getWaSettings`: an unnamed number must not fall back to the org's
     // oldest channel. Replying on a number the customer never wrote to has no

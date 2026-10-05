@@ -998,25 +998,35 @@ export async function getConversationOnAccountDistribution(
   }
   const result = await prisma.$queryRaw<
     {
-      phoneId: string;
-      ibaId: string;
-      phone: string;
+      channelId: string | null;
+      channelName: string | null;
+      phoneId: string | null;
+      ibaId: string | null;
+      phone: string | null;
       conversationCount: number;
       sourcePlatform: string;
     }[]
   >`
  SELECT
     COUNT(DISTINCT c.id)::INTEGER AS "conversationCount",
-    ws."phoneId",
-    ws."ibaId",
-    ws."phone",
+    ch."id" AS "channelId",
+    ch."name" AS "channelName",
+    CASE WHEN ch."platform" = 'WHATSAPP' THEN ch."accountId" END AS "phoneId",
+    CASE WHEN ch."platform" = 'INSTAGRAM' THEN ch."accountId" END AS "ibaId",
+    CASE WHEN ch."platform" = 'WHATSAPP' THEN ch."address" END AS "phone",
     wm."sourcePlatform"
 FROM "Conversation" c
 LEFT JOIN "WaMessage" wm
     ON wm."conversationId" = c.id
-LEFT JOIN "WhatsappSettings" ws
-    ON ltrim(wm."sourceIdentifier", '+') =
-       ltrim(COALESCE(ws."phone", ws."ibaId"), '+')
+-- The org's own channel, whatever the platform: WhatsApp messages record the number,
+-- every other platform its account id.
+LEFT JOIN "Channel" ch
+    ON ch."orgId" = c."orgId"
+   AND ch."platform"::text = wm."sourcePlatform"::text
+   AND (
+        (ch."platform" = 'WHATSAPP' AND ltrim(wm."sourceIdentifier", '+') = ltrim(ch."address", '+'))
+     OR (ch."platform" <> 'WHATSAPP' AND wm."sourceIdentifier" = ch."accountId")
+   )
 WHERE c."orgId" = ${orgId}::uuid
   AND (
         wm."sourceIdentifier" IS NOT NULL
@@ -1029,9 +1039,7 @@ WHERE c."orgId" = ${orgId}::uuid
   AND c."createdAt" < COALESCE(${endDate}, NOW())
   ${conversationTeamFilter(teamId)}
 GROUP BY
-    ws."phoneId",
-    ws."ibaId",
-    ws."phone",
+    ch."id",
     wm."sourcePlatform";
   `;
   return result;
