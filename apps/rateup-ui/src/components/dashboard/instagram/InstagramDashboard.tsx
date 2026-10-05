@@ -176,16 +176,16 @@ export function InstagramDashboard() {
           </TabsTrigger>
         </TabsList>
 
-        {selectedSetting?.ibaId && (
+        {selectedSetting && (
           <>
             <TabsContent value="chatbots" className="mt-4">
               <ChatbotsTab />
             </TabsContent>
             <TabsContent value="comments" className="mt-4">
-              <CommentsTab ibaId={selectedSetting.ibaId} />
+              <CommentsTab ibaId={selectedSetting.accountId} />
             </TabsContent>
             <TabsContent value="stories" className="mt-4">
-              <StoriesTab ibaId={selectedSetting.ibaId} />
+              <StoriesTab ibaId={selectedSetting.accountId} />
             </TabsContent>
             <TabsContent value="persistent-menu" className="mt-4">
               <PersistentMenuTab
@@ -201,6 +201,7 @@ export function InstagramDashboard() {
             </TabsContent>
             <TabsContent value="ig-me-links" className="mt-4">
               <IgMeLinksTab
+                ibaId={selectedSetting.accountId}
                 username={selectedSetting.username}
                 displayName={selectedSetting.name}
               />

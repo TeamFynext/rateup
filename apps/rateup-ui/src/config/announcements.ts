@@ -48,6 +48,8 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["new"],
     area: "Channels",
     link: { to: "/dashboard/settings/channels" },
+  },
+  {
     id: "2026-10-03-flow-analytics-refresh",
     title: "A cleaner look for WhatsApp Flows",
     summary:
@@ -56,6 +58,8 @@ export const ANNOUNCEMENTS: readonly Announcement[] = [
     kinds: ["improvement"],
     area: "Flows",
     link: { to: "/dashboard/whatsapp/flows" },
+  },
+  {
     id: "2026-10-01-instagram-comment-replies",
     title: "Instagram comments: public replies and lives",
     summary:

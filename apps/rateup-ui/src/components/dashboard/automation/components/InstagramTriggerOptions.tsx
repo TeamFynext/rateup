@@ -2,7 +2,7 @@ import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { useChannels } from "@/backend/channels/channels.query";
 import { igMeLink } from "@/components/dashboard/instagram/igMeLink.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
@@ -58,8 +58,9 @@ export function InstagramLinkRef() {
   const { control } = useFormContext<CreateRuleInput>();
   const [ibaId] = useWatch({ control, name: "whatsappSettingsPhoneIds" }) ?? [];
   const ref = useWatch({ control, name: "options.instagramRef" }) ?? "";
-  const { data: settings } = useWaSettings();
-  const username = settings?.find((s) => s.ibaId && s.ibaId === ibaId)?.igUserName;
+  const { data: channels } = useChannels(true, "INSTAGRAM");
+  // An Instagram rule's channel id is the account id, which the registry keeps as `accountId`.
+  const username = channels?.find((channel) => channel.accountId === ibaId)?.username;
   const link = igMeLink(username, ref);
   const [copied, setCopied] = useState(false);
 
