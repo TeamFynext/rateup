@@ -41,6 +41,8 @@ vi.mock("../flows/flow.service.js", () => ({ sendFlow: vi.fn() }));
 vi.mock("../whatsappSurvey/wasurvey.controller.js", () => ({ processNextNode: vi.fn() }));
 vi.mock("../instagram/instagram_messaging.service.js", () => ({
   sendInstagramTextMessage: vi.fn(),
+  sendInstagramPrivateReply: vi.fn(),
+  replyToInstagramComment: vi.fn(),
 }));
 vi.mock("./instagram_automation.service.js", () => ({ startInstagramAutomationFlow: vi.fn() }));
 vi.mock("./instagram_automatedReply.service.js", () => ({
@@ -68,6 +70,14 @@ import {
   checkAndExecuteRuleByTriggerEvent,
   resolveContactChannel,
 } from "./wa_automatedReply.utils.js";
+import {
+  replyToInstagramComment,
+  sendInstagramPrivateReply,
+  sendInstagramTextMessage,
+} from "../instagram/instagram_messaging.service.js";
+import { log } from "../../../utils/logger.js";
+import { startInstagramAutomationFlow } from "./instagram_automation.service.js";
+import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 
 // No dayjs.extend here on purpose — see wa_automatedReply.utils.test.ts.
 type Mock = ReturnType<typeof vi.fn>;
@@ -586,6 +596,140 @@ describe("checkAndExecuteRuleByTriggerEvent - Instagram events", () => {
     ).resolves.toBeUndefined();
   });
 
+  const commentContext = context({
+    platform: "INSTAGRAM",
+    phone: "igs-1",
+    phoneNumberId: "iba-1",
+    instagramMediaId: "media-1",
+    instagramCommentId: "comment-1",
+  });
+
+  // A commenter who never messaged the business is unreachable by plain DM, and Meta
+  // allows one private reply per comment.
+  test("answers a comment with a private reply first, then plain DMs", async () => {
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        triggerEvent: TriggerEvent.INSTAGRAM_COMMENT,
+        platform: "INSTAGRAM",
+        actions: [
+          { id: "a1", type: "SEND_MESSAGE", value: "Here's your link" },
+          { id: "a2", type: "SEND_MESSAGE", value: "Anything else?" },
+        ],
+      }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.INSTAGRAM_COMMENT, commentContext);
+
+    expect(sendInstagramPrivateReply).toHaveBeenCalledExactlyOnceWith(
+      "comment-1",
+      "Here's your link",
+      "iba-1",
+      "org-1",
+      "igs-1",
+    );
+    expect(sendInstagramTextMessage).toHaveBeenCalledExactlyOnceWith(
+      "igs-1",
+      "Anything else?",
+      "org-1",
+      "iba-1",
+    );
+  });
+
+  test("posts one of the rule's public replies under the comment", async () => {
+    const replies = ["Sent you a DM 📩", "Check your inbox!"];
+    db.rule.findMany.mockResolvedValue([commentRule({ instagramPublicReplies: replies })]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.INSTAGRAM_COMMENT, commentContext);
+
+    expect(replyToInstagramComment).toHaveBeenCalledOnce();
+    const [commentId, text, ibaId] = (replyToInstagramComment as Mock).mock.calls[0];
+    expect([commentId, ibaId]).toEqual(["comment-1", "iba-1"]);
+    expect(replies).toContain(text);
+  });
+
+  test("posts no public reply when the rule has none", async () => {
+    db.rule.findMany.mockResolvedValue([commentRule()]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.INSTAGRAM_COMMENT, commentContext);
+
+    expect(replyToInstagramComment).not.toHaveBeenCalled();
+  });
+
+  test("still sends the DM when the public reply fails", async () => {
+    (replyToInstagramComment as Mock).mockRejectedValue(new Error("permission missing"));
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        triggerEvent: TriggerEvent.INSTAGRAM_COMMENT,
+        platform: "INSTAGRAM",
+        options: { instagramPublicReplies: ["Sent!"] },
+        actions: [{ id: "a1", type: "SEND_MESSAGE", value: "Here's your link" }],
+      }),
+    ]);
+
+    await expect(
+      checkAndExecuteRuleByTriggerEvent(TriggerEvent.INSTAGRAM_COMMENT, commentContext),
+    ).resolves.toBeDefined();
+    expect(sendInstagramPrivateReply).toHaveBeenCalledOnce();
+    expect(log.error).toHaveBeenCalled();
+  });
+
+  test("hands the comment to a chatbot so its first message is the private reply", async () => {
+    const automation = { id: "bot-1" };
+    (getInstagramAutomatedReplyById as Mock).mockResolvedValue(automation);
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        triggerEvent: TriggerEvent.INSTAGRAM_COMMENT,
+        platform: "INSTAGRAM",
+        actions: [{ id: "a1", type: "TRIGGER_CHATBOT", value: "bot-1" }],
+      }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(TriggerEvent.INSTAGRAM_COMMENT, commentContext);
+
+    expect(startInstagramAutomationFlow).toHaveBeenCalledWith(
+      "igs-1",
+      automation,
+      "org-1",
+      "iba-1",
+      "comment-1",
+    );
+  });
+
+  test("answers a story mention with a plain DM", async () => {
+    db.rule.findMany.mockResolvedValue([
+      rule({
+        triggerEvent: TriggerEvent.INSTAGRAM_STORY_MENTION,
+        platform: "INSTAGRAM",
+        actions: [{ id: "a1", type: "SEND_MESSAGE", value: "Hi" }],
+      }),
+    ]);
+
+    await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_STORY_MENTION,
+      context({ platform: "INSTAGRAM", phone: "igs-1", phoneNumberId: "iba-1" }),
+    );
+
+    expect(sendInstagramPrivateReply).not.toHaveBeenCalled();
+    expect(sendInstagramTextMessage).toHaveBeenCalledOnce();
+  });
+
+  test.each([
+    ["a posts-only rule", "POSTS", false, true],
+    ["a posts-only rule", "POSTS", true, false],
+    ["a live-only rule", "LIVE", true, true],
+    ["a live-only rule", "LIVE", false, false],
+    ["a rule with no source set", undefined, true, true],
+  ])("%s (%s) on a live=%s comment matches: %s", async (_name, source, live, matches) => {
+    db.rule.findMany.mockResolvedValue([commentRule({ instagramCommentSource: source })]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_COMMENT,
+      context({ platform: "INSTAGRAM", instagramMediaId: "media-1", instagramLiveComment: live }),
+    );
+
+    expect(Boolean(result)).toBe(matches);
+  });
+
   // Story mentions carry no text worth matching, so they bypass condition checks.
   test("always answers a story mention, conditions or not", async () => {
     db.rule.findMany.mockResolvedValue([
@@ -665,5 +809,58 @@ describe("resolveContactChannel", () => {
   // legitimately fire today.
   test("stays open for a contact with no channel", async () => {
     await expect(resolveContactChannel({ id: "c1" })).resolves.toEqual({ platform: "ALL" });
+  });
+});
+
+describe("checkAndExecuteRuleByTriggerEvent - ig.me links", () => {
+  const linkRule = (id: string, instagramRef?: string) =>
+    rule({
+      id,
+      name: id,
+      triggerEvent: TriggerEvent.INSTAGRAM_REFERRAL,
+      platform: "INSTAGRAM",
+      options: instagramRef ? { instagramRef } : null,
+    });
+  const opened = (ref: string) => context({ platform: "INSTAGRAM", instagramRef: ref });
+
+  test("answers the link whose ref the rule names, ignoring case", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("summer", "Summer_Sale")]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_REFERRAL,
+      opened("summer_sale"),
+    );
+
+    expect(result?.rule.id).toBe("summer");
+  });
+
+  test("stays quiet for a link with another ref", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("summer", "summer_sale")]);
+
+    await expect(
+      checkAndExecuteRuleByTriggerEvent(TriggerEvent.INSTAGRAM_REFERRAL, opened("winter")),
+    ).resolves.toBeUndefined();
+  });
+
+  test("lets a rule with no ref answer every link", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("any")]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_REFERRAL,
+      opened("winter"),
+    );
+
+    expect(result?.rule.id).toBe("any");
+  });
+
+  test("prefers the rule naming the ref over one that answers every link", async () => {
+    db.rule.findMany.mockResolvedValue([linkRule("any"), linkRule("summer", "summer_sale")]);
+
+    const result = await checkAndExecuteRuleByTriggerEvent(
+      TriggerEvent.INSTAGRAM_REFERRAL,
+      opened("summer_sale"),
+    );
+
+    expect(result?.rule.id).toBe("summer");
   });
 });

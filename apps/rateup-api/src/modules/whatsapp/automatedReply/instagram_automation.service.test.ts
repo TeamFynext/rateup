@@ -4,6 +4,8 @@ vi.mock("../../../utils/prisma.js", () => ({
   default: {
     waAutomatedReplyMessage: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -23,6 +25,7 @@ vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
 }));
 
 vi.mock("../instagram/instagram_messaging.service.js", () => ({
+  doesUserFollowInstagramAccount: vi.fn(),
   sendInstagramGenericTemplate: vi.fn(),
   sendInstagramImage: vi.fn(),
   sendInstagramPrivateReply: vi.fn(),
@@ -46,6 +49,7 @@ import {
   wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
 import {
+  doesUserFollowInstagramAccount,
   sendInstagramGenericTemplate,
   sendInstagramImage,
   sendInstagramPrivateReply,
@@ -64,7 +68,13 @@ import {
 type Mock = ReturnType<typeof vi.fn>;
 
 const db = prisma as unknown as {
-  waAutomatedReplyMessage: { findFirst: Mock; update: Mock; updateMany: Mock };
+  waAutomatedReplyMessage: {
+    findFirst: Mock;
+    findMany: Mock;
+    findUnique: Mock;
+    update: Mock;
+    updateMany: Mock;
+  };
 };
 
 const m = {
@@ -77,6 +87,7 @@ const m = {
   sendGeneric: sendInstagramGenericTemplate as unknown as Mock,
   sendProduct: sendInstagramProductTemplate as unknown as Mock,
   sendPrivateReply: sendInstagramPrivateReply as unknown as Mock,
+  follows: doesUserFollowInstagramAccount as unknown as Mock,
 };
 
 const IGS_ID = "igs-1";
@@ -110,6 +121,8 @@ function run(automation: any, nodeId: string, commentId?: string) {
 beforeEach(() => {
   vi.clearAllMocks();
   db.waAutomatedReplyMessage.findFirst.mockResolvedValue(null);
+  db.waAutomatedReplyMessage.findMany.mockResolvedValue([]);
+  db.waAutomatedReplyMessage.findUnique.mockResolvedValue(null);
   db.waAutomatedReplyMessage.update.mockResolvedValue({});
   db.waAutomatedReplyMessage.updateMany.mockResolvedValue({ count: 1 });
   m.track.mockResolvedValue({ id: "msg-1" });
@@ -445,22 +458,45 @@ describe("processNextInstagramNode - replying to a comment", () => {
 });
 
 describe("processNextInstagramNode - waiting for the user", () => {
-  test("stops at a text input node", async () => {
+  /** The update that parks the flow, if one was made. */
+  const parked = () =>
+    db.waAutomatedReplyMessage.update.mock.calls.find(([arg]) => arg.data.response?.waitingAt)?.[0];
+
+  test("asks a text input node's question and waits there for the answer", async () => {
     const automation = flow(
-      [{ id: "in1", type: "textInputNode", data: {} }, textNode("t1")],
+      [{ id: "in1", type: "textInputNode", data: { question: "Your email?" } }, textNode("t1")],
       [edge("in1", "t1")],
     );
 
     await run(automation, "in1");
 
+    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IGS_ID, "Your email?", ORG_ID, IBA_ID);
+    expect(parked()).toMatchObject({ where: { id: "msg-1" }, data: { currentNode: "in1" } });
+  });
+
+  test("asks the question as the private reply when the flow came from a comment", async () => {
+    const automation = flow([{ id: "in1", type: "textInputNode", data: { question: "Email?" } }]);
+
+    await run(automation, "in1", "comment-1");
+
+    expect(m.sendPrivateReply).toHaveBeenCalledWith("comment-1", "Email?", IBA_ID, ORG_ID, IGS_ID);
     expect(m.sendText).not.toHaveBeenCalled();
-    expect(m.logAction).not.toHaveBeenCalled();
+  });
+
+  test("keeps answers already collected when it parks again", async () => {
+    db.waAutomatedReplyMessage.findUnique.mockResolvedValue({
+      response: { answers: { name: "Ada" } },
+    });
+
+    await run(flow([{ id: "in1", type: "textInputNode", data: { question: "Q" } }]), "in1");
+
+    expect(parked().data.response.answers).toEqual({ name: "Ada" });
   });
 
   test.each([
     ["a quick reply node", "instagramQuickReplyNode"],
     ["a generic template node", "instagramGenericTemplateNode"],
-  ])("does not walk past %s, but does record where the user is", async (_name, type) => {
+  ])("waits at %s instead of walking past it", async (_name, type) => {
     const node = {
       id: "q1",
       type,
@@ -470,11 +506,68 @@ describe("processNextInstagramNode - waiting for the user", () => {
 
     await run(automation, "q1");
 
-    expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith({
-      where: { phone: IGS_ID, waAutomatedReplyId: "ig-auto-1" },
-      data: { currentNode: "t1" },
-    });
+    expect(parked()).toMatchObject({ data: { currentNode: "q1", status: "inProgress" } });
     expect(m.sendText).not.toHaveBeenCalledWith(IGS_ID, "Hello there", ORG_ID, IBA_ID);
+  });
+
+  test("finishes rather than waits at a choice with no branches", async () => {
+    const node = { id: "q1", type: "instagramQuickReplyNode", data: { quick_replies: [] } };
+
+    await run(flow([node]), "q1");
+
+    expect(parked()).toBeUndefined();
+    expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "completed" } }),
+    );
+  });
+
+  // node.tsx in rateup-ui names a handle `qr_<index>` when the option has no id.
+  test("sends the same payload the builder used as the branch handle", async () => {
+    const node = {
+      id: "q1",
+      type: "instagramQuickReplyNode",
+      data: { text: "Pick", quick_replies: [{ title: "Yes" }] },
+    };
+
+    await run(flow([node, textNode("t1")], [edge("q1", "t1", "qr_0")]), "q1");
+
+    expect(m.sendQuickReply.mock.calls[0][2][0].payload).toBe("qr_0");
+  });
+});
+
+describe("processNextInstagramNode - follow check", () => {
+  const followCheck = { id: "f1", type: "instagramFollowCheckNode", data: {} };
+  const unlockFlow = flow(
+    [followCheck, textNode("link", "Here's your link"), textNode("nudge", "Follow us first")],
+    [edge("f1", "link", "following"), edge("f1", "nudge", "notFollowing")],
+  );
+
+  test("unlocks the following branch for a follower", async () => {
+    m.follows.mockResolvedValue(true);
+
+    await run(unlockFlow, "f1");
+
+    expect(m.follows).toHaveBeenCalledWith(IGS_ID, IBA_ID);
+    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IGS_ID, "Here's your link", ORG_ID, IBA_ID);
+  });
+
+  test("nudges someone who does not follow yet", async () => {
+    m.follows.mockResolvedValue(false);
+
+    await run(unlockFlow, "f1");
+
+    expect(m.sendText).toHaveBeenCalledExactlyOnceWith(IGS_ID, "Follow us first", ORG_ID, IBA_ID);
+  });
+
+  test("finishes the flow when the taken branch leads nowhere", async () => {
+    m.follows.mockResolvedValue(true);
+
+    await run(flow([followCheck], [edge("f1", "nudge", "notFollowing")]), "f1");
+
+    expect(m.sendText).not.toHaveBeenCalled();
+    expect(db.waAutomatedReplyMessage.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "completed" } }),
+    );
   });
 });
 
@@ -543,13 +636,34 @@ describe("processNextInstagramNode - pausing", () => {
 });
 
 describe("handleInstagramUserResponse", () => {
-  function activeFlow(currentNode: string, nodes: any[], edges: any[] = []) {
+  const recently = () => new Date(Date.now() - 60_000).toISOString();
+
+  function waitingAt(
+    currentNode: string,
+    nodes: any[],
+    edges: any[] = [],
+    response: Record<string, unknown> = { waitingAt: recently() },
+  ) {
     return {
       id: "msg-1",
       currentNode,
+      response,
       waAutomatedReply: { id: "ig-auto-1", matchData: { json: { nodes, edges } } },
     };
   }
+
+  const quickReply = {
+    id: "q1",
+    type: "instagramQuickReplyNode",
+    data: {
+      quick_replies: [
+        { id: "opt-yes", title: "Yes" },
+        { id: "opt-no", title: "No" },
+      ],
+    },
+  };
+  const yesNo = [quickReply, textNode("yes", "You said yes"), textNode("no", "You said no")];
+  const yesNoEdges = [edge("q1", "yes", "opt-yes"), edge("q1", "no", "opt-no")];
 
   test("reports nothing to do when the user has no automation running", async () => {
     await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
@@ -558,7 +672,7 @@ describe("handleInstagramUserResponse", () => {
   test("looks only at in-progress Instagram automations for this user", async () => {
     await handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID);
 
-    expect(db.waAutomatedReplyMessage.findFirst.mock.calls[0][0].where).toMatchObject({
+    expect(db.waAutomatedReplyMessage.findMany.mock.calls[0][0].where).toMatchObject({
       phone: IGS_ID,
       orgId: ORG_ID,
       status: "inProgress",
@@ -567,15 +681,43 @@ describe("handleInstagramUserResponse", () => {
   });
 
   test("reports nothing when the tracked node no longer exists in the flow", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(activeFlow("ghost", [START]));
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("ghost", [START])]);
 
     await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
   });
 
+  // Meta refuses to message a user 24h after their last message, so the wait has lapsed.
+  test("ignores a wait older than Meta's messaging window", async () => {
+    const stale = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt("q1", yesNo, yesNoEdges, { waitingAt: stale }),
+    ]);
+
+    await expect(handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID)).resolves.toBe(false);
+  });
+
+  test("ignores a flow that is not waiting", async () => {
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("q1", yesNo, yesNoEdges, {})]);
+
+    await expect(handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID)).resolves.toBe(false);
+  });
+
+  test("answers the flow that most recently started waiting", async () => {
+    const older = waitingAt("q1", yesNo, yesNoEdges, {
+      waitingAt: new Date(Date.now() - 3_600_000).toISOString(),
+    });
+    const newer = { ...waitingAt("q1", yesNo, yesNoEdges), id: "msg-2" };
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([older, newer]);
+
+    await handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID, "opt-yes");
+
+    expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].where).toEqual({ id: "msg-2" });
+  });
+
   test("records what the user said", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(
-      activeFlow("in1", [{ id: "in1", type: "textInputNode", data: {} }]),
-    );
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt("in1", [{ id: "in1", type: "textInputNode", data: {} }]),
+    ]);
 
     await handleInstagramUserResponse(IGS_ID, "my answer", ORG_ID, IBA_ID);
 
@@ -586,32 +728,42 @@ describe("handleInstagramUserResponse", () => {
     });
   });
 
-  test("carries on past a text input node once the user answers", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(
-      activeFlow(
+  test("stores a text input answer and carries on to the next node", async () => {
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt(
         "in1",
         [{ id: "in1", type: "textInputNode", data: { variableName: "email" } }, textNode("t1")],
         [edge("in1", "t1")],
+        { waitingAt: recently(), answers: { name: "Ada" } },
       ),
-    );
+    ]);
 
     await expect(handleInstagramUserResponse(IGS_ID, "a@b.com", ORG_ID, IBA_ID)).resolves.toBe(
       true,
     );
+
+    expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].data.response).toEqual({
+      answers: { name: "Ada", email: "a@b.com" },
+    });
+    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Hello there", ORG_ID, IBA_ID);
+  });
+
+  test("finishes the flow when the answered question is the last step", async () => {
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt("in1", [{ id: "in1", type: "textInputNode", data: { variableName: "email" } }]),
+    ]);
+
+    await expect(handleInstagramUserResponse(IGS_ID, "a@b.com", ORG_ID, IBA_ID)).resolves.toBe(
+      true,
+    );
+
+    expect(db.waAutomatedReplyMessage.update.mock.calls[0][0].data).toMatchObject({
+      status: "completed",
+    });
   });
 
   test("takes the branch matching the button the user tapped", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(
-      activeFlow(
-        "q1",
-        [
-          { id: "q1", type: "instagramQuickReplyNode", data: {} },
-          textNode("yes", "You said yes"),
-          textNode("no", "You said no"),
-        ],
-        [edge("q1", "yes", "opt-yes"), edge("q1", "no", "opt-no")],
-      ),
-    );
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("q1", yesNo, yesNoEdges)]);
 
     const result = await handleInstagramUserResponse(IGS_ID, "Yes", ORG_ID, IBA_ID, "opt-yes");
 
@@ -620,43 +772,68 @@ describe("handleInstagramUserResponse", () => {
     expect(m.sendText).not.toHaveBeenCalledWith(IGS_ID, "You said no", ORG_ID, IBA_ID);
   });
 
-  // An edge with no sourceHandle is the catch-all branch out of a choice node.
-  test("takes an unlabelled branch when the button matches nothing", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(
-      activeFlow(
-        "q1",
-        [{ id: "q1", type: "instagramQuickReplyNode", data: {} }, textNode("t1", "Anything")],
-        [edge("q1", "t1")],
-      ),
-    );
+  test("treats typing a choice's title as tapping it", async () => {
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("q1", yesNo, yesNoEdges)]);
 
-    await expect(
-      handleInstagramUserResponse(IGS_ID, "whatever", ORG_ID, IBA_ID, "unknown-button"),
-    ).resolves.toBe(true);
+    await expect(handleInstagramUserResponse(IGS_ID, " no ", ORG_ID, IBA_ID)).resolves.toBe(true);
+    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "You said no", ORG_ID, IBA_ID);
   });
 
-  test("reports nothing when no branch matches the button", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(
-      activeFlow(
-        "q1",
-        [{ id: "q1", type: "instagramQuickReplyNode", data: {} }, textNode("yes")],
-        [edge("q1", "yes", "opt-yes")],
-      ),
-    );
+  test("takes the button branch of a generic template card", async () => {
+    const card = {
+      id: "g1",
+      type: "instagramGenericTemplateNode",
+      data: { elements: [{ title: "Card", buttons: [{ type: "postback", title: "Buy" }] }] },
+    };
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt("g1", [card, textNode("t1", "Great")], [edge("g1", "t1", "btn_0_0")]),
+    ]);
 
     await expect(
-      handleInstagramUserResponse(IGS_ID, "no", ORG_ID, IBA_ID, "opt-missing"),
+      handleInstagramUserResponse(IGS_ID, "Buy", ORG_ID, IBA_ID, "btn_0_0"),
+    ).resolves.toBe(true);
+    expect(m.sendText).toHaveBeenCalledWith(IGS_ID, "Great", ORG_ID, IBA_ID);
+  });
+
+  // An edge with no sourceHandle is the catch-all branch out of a choice node.
+  test("takes an unlabelled branch for typed text that matches no choice", async () => {
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt("q1", [quickReply, textNode("t1", "Anything")], [edge("q1", "t1")]),
+    ]);
+
+    await expect(handleInstagramUserResponse(IGS_ID, "whatever", ORG_ID, IBA_ID)).resolves.toBe(
+      true,
+    );
+  });
+
+  // A stale button or a persistent-menu tap is not an answer to this question.
+  test("leaves a button from elsewhere to the rules, even with a catch-all branch", async () => {
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt("q1", [quickReply, textNode("t1", "Anything")], [edge("q1", "t1")]),
+    ]);
+
+    await expect(
+      handleInstagramUserResponse(IGS_ID, "Menu", ORG_ID, IBA_ID, "MENU_PAYLOAD"),
     ).resolves.toBe(false);
+    expect(db.waAutomatedReplyMessage.update).not.toHaveBeenCalled();
+  });
+
+  test("reports nothing when no branch matches the reply", async () => {
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([
+      waitingAt("q1", yesNo, [edge("q1", "yes", "opt-yes")]),
+    ]);
+
+    await expect(handleInstagramUserResponse(IGS_ID, "maybe", ORG_ID, IBA_ID)).resolves.toBe(false);
   });
 
   test("reports nothing for a node that was not waiting on the user", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockResolvedValue(activeFlow("t1", [textNode("t1")]));
+    db.waAutomatedReplyMessage.findMany.mockResolvedValue([waitingAt("t1", [textNode("t1")])]);
 
     await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
   });
 
   test("reports nothing rather than throwing when the lookup fails", async () => {
-    db.waAutomatedReplyMessage.findFirst.mockRejectedValue(new Error("db down"));
+    db.waAutomatedReplyMessage.findMany.mockRejectedValue(new Error("db down"));
 
     await expect(handleInstagramUserResponse(IGS_ID, "hello", ORG_ID, IBA_ID)).resolves.toBe(false);
     expect(log.error).toHaveBeenCalled();

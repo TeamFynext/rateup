@@ -1012,6 +1012,12 @@ declare global {
             read?: {
               mid: string;
             };
+            /** Opening an existing thread from an ig.me link (the messaging_referral field). */
+            referral?: {
+              ref?: string;
+              source?: string;
+              type?: string;
+            };
           },
         ];
       },

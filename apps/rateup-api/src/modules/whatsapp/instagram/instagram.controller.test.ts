@@ -151,20 +151,3 @@ describe("instagramWebhookEventHandler - failures", () => {
     expect(rep.code).toHaveBeenCalledWith(200);
   });
 });
-
-describe("instagramWebhookEventHandler - who is allowed to post here", () => {
-  test("processes an event that carries no signature header", async () => {
-    await instagramWebhookEventHandler(makeRequest(IG_EVENT, {}), makeReply());
-
-    expect(handleWebhookMock).toHaveBeenCalledWith(IG_EVENT);
-  });
-
-  test("processes an event whose signature header is plainly wrong", async () => {
-    await instagramWebhookEventHandler(
-      makeRequest(IG_EVENT, { "x-hub-signature-256": "sha256=deadbeef" }),
-      makeReply(),
-    );
-
-    expect(handleWebhookMock).toHaveBeenCalledWith(IG_EVENT);
-  });
-});
