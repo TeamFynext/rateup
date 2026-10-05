@@ -14,7 +14,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { useChannels } from "@/backend/channels/channels.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { buttonVariants } from "@/components/ui/button.tsx";
 import {
@@ -44,13 +44,11 @@ import { PersistentMenuTab } from "./tabs/PersistentMenuTab.tsx";
 import { StoriesTab } from "./tabs/StoriesTab.tsx";
 
 export function InstagramDashboard() {
-  const { data: waSettings, isLoading } = useWaSettings();
+  const { data: instagramChannels, isLoading } = useChannels(true, "INSTAGRAM");
   const { t } = useTranslation();
 
-  const connectedSettings = useMemo(
-    () => waSettings?.filter((s) => s.ibaId?.length) ?? [],
-    [waSettings],
-  );
+  // Instagram accounts are their own channels, connected without WhatsApp.
+  const connectedSettings = useMemo(() => instagramChannels ?? [], [instagramChannels]);
 
   const [selectedId, setSelectedId] = useState<string | undefined>();
 
@@ -125,7 +123,7 @@ export function InstagramDashboard() {
             onValueChange={(v) => setSelectedId(v ?? undefined)}
             items={connectedSettings.map((s) => ({
               value: s.id,
-              label: s.igDisplayName || s.igUserName || s.phoneDisplayName || s.phone,
+              label: s.name || s.username || s.accountId,
             }))}
           >
             <SelectTrigger className="w-56">
@@ -136,7 +134,7 @@ export function InstagramDashboard() {
                 <SelectItem key={s.id} value={s.id}>
                   <div className="flex items-center gap-2">
                     <IconBrandInstagram className="size-3.5 text-muted-foreground" />
-                    {s.igDisplayName || s.igUserName || s.phoneDisplayName || s.phone}
+                    {s.name || s.username || s.accountId}
                   </div>
                 </SelectItem>
               ))}
@@ -191,21 +189,20 @@ export function InstagramDashboard() {
             </TabsContent>
             <TabsContent value="persistent-menu" className="mt-4">
               <PersistentMenuTab
-                waSettingId={selectedSetting.id}
-                businessName={selectedSetting.igDisplayName || selectedSetting.igUserName || ""}
+                channelId={selectedSetting.id}
+                businessName={selectedSetting.name || selectedSetting.username || ""}
               />
             </TabsContent>
             <TabsContent value="ice-breakers" className="mt-4">
               <IceBreakersTab
-                waSettingId={selectedSetting.id}
-                businessName={selectedSetting.igDisplayName || selectedSetting.igUserName || ""}
+                channelId={selectedSetting.id}
+                businessName={selectedSetting.name || selectedSetting.username || ""}
               />
             </TabsContent>
             <TabsContent value="ig-me-links" className="mt-4">
               <IgMeLinksTab
-                ibaId={selectedSetting.ibaId}
-                username={selectedSetting.igUserName}
-                displayName={selectedSetting.igDisplayName}
+                username={selectedSetting.username}
+                displayName={selectedSetting.name}
               />
             </TabsContent>
           </>

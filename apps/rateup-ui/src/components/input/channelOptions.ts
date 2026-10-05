@@ -1,8 +1,9 @@
+import type { Channel } from "@/backend/channels/channels.api";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { MessagePlatform } from "@/types/enums.ts";
 
 export interface ChannelOption {
-  /** What the inbox filter stores: a phone number (or phone id), an IG account id or a FB page id. */
+  /** What the inbox filter stores: a phone number (or phone id), or the platform's account id. */
   value: string;
   label: string;
   status?: string;
@@ -16,15 +17,17 @@ interface ChannelOptionsInput {
   filterIds?: string[];
 }
 
+const digitsOf = (value?: string | null) => (value ?? "").replace(/\D/g, "");
+
 /**
- * The connected channels, flattened out of the WhatsApp settings rows — one entry
- * per WhatsApp number, Instagram account and Facebook page.
+ * The connected channels, one entry per channel of any platform — each WhatsApp number,
+ * Instagram account and Messenger Page, and whatever platform joins the registry next.
  *
  * Shared so the inbox's Channel filter and every AccountSelector offer the same
  * list with the same values; the inbox filter and the API match on `value`.
  */
 export function getChannelOptions(
-  waSettings: WaSettings | undefined,
+  channels: Channel[] | undefined,
   {
     platform = MessagePlatform.WHATSAPP,
     usePhoneNumber = false,
@@ -32,41 +35,28 @@ export function getChannelOptions(
   }: ChannelOptionsInput = {},
 ): ChannelOption[] {
   const options: ChannelOption[] = [];
-  const include = (value: string) => Boolean(value) && (!filterIds || filterIds.includes(value));
+  const include = (value: string | null | undefined): value is string =>
+    Boolean(value) && (!filterIds || filterIds.includes(value ?? ""));
 
-  for (const account of waSettings ?? []) {
-    if (platform === "all" || platform === MessagePlatform.WHATSAPP) {
-      const value = usePhoneNumber ? account?.phone?.replace("+", "") : account.phoneId;
-      if (include(value)) {
-        options.push({
-          value,
-          label: account?.phoneDisplayName || account.phone,
-          status: account.status,
-          platform: MessagePlatform.WHATSAPP,
-        });
-      }
-    }
+  for (const channel of channels ?? []) {
+    const channelPlatform = channel.platform as MessagePlatform;
+    if (platform !== "all" && platform !== channelPlatform) continue;
 
-    if ((platform === "all" || platform === MessagePlatform.INSTAGRAM) && include(account.ibaId)) {
-      options.push({
-        value: account.ibaId,
-        label: account.igUserName ?? account.ibaId,
-        status: account.status,
-        platform: MessagePlatform.INSTAGRAM,
-      });
-    }
+    // A WhatsApp number is addressed by its phone id, or by the number itself where the
+    // caller filters messages; every other platform by its own account id.
+    const whatsapp = channelPlatform === MessagePlatform.WHATSAPP;
+    const value =
+      whatsapp && usePhoneNumber ? channel.address?.replace("+", "") : channel.accountId;
+    if (!include(value)) continue;
 
-    if (
-      (platform === "all" || platform === MessagePlatform.FACEBOOK) &&
-      include(account.fbPageId)
-    ) {
-      options.push({
-        value: account.fbPageId,
-        label: account.fbUserName ?? account.fbPageId,
-        status: account.status,
-        platform: MessagePlatform.FACEBOOK,
-      });
-    }
+    options.push({
+      value,
+      label: whatsapp
+        ? channel.name || channel.address || channel.accountId
+        : (channel.username ?? channel.name ?? channel.accountId),
+      status: channel.status,
+      platform: channelPlatform,
+    });
   }
 
   return options;
@@ -83,89 +73,96 @@ export interface ResolvedChannel {
   isConnected: boolean;
 }
 
-const digitsOf = (value?: string | null) => (value ?? "").replace(/\D/g, "");
-
 /**
- * The connected account a message's `sourceIdentifier` names, or undefined when
- * none of the org's accounts match (disconnected since, or a legacy row that
- * recorded no identifier).
+ * The connected WhatsApp number a message's `sourceIdentifier` names, or undefined
+ * when none of the org's numbers match (disconnected since, a legacy row that
+ * recorded no identifier, or a platform other than WhatsApp).
  *
- * WhatsApp identifiers are matched on digits alone: the same number is written
- * with a leading `+` by the webhook and without one by our own sends, so a plain
- * `===` misses half of every thread. Matching a number to a channel with `===`
- * is the bug this exists to stop anyone writing again.
+ * Identifiers are matched on digits alone: the same number is written with a
+ * leading `+` by the webhook and without one by our own sends, so a plain `===`
+ * misses half of every thread. Matching a number to a channel with `===` is the
+ * bug this exists to stop anyone writing again.
  */
 export function findChannelAccount(
   waSettings: WaSettings | undefined,
   platform: MessagePlatform | string | null | undefined,
   identifier: string | null | undefined,
 ): NonNullable<WaSettings>[number] | undefined {
-  if (!identifier || !platform || platform === MessagePlatform.WEBCHAT) return undefined;
+  if (!identifier || platform !== MessagePlatform.WHATSAPP) return undefined;
 
   return (waSettings ?? []).find((account) => {
+    const phoneDigits = digitsOf(account.phone);
+    return (
+      (Boolean(phoneDigits) && phoneDigits === digitsOf(identifier)) ||
+      account.phoneId === identifier
+    );
+  });
+}
+
+/**
+ * The connected channel a message's `sourcePlatform` + `sourceIdentifier` name, on that
+ * platform only. WhatsApp matches the number on digits alone (or its phone id); every
+ * other platform matches its account id.
+ */
+export function findChannel(
+  channels: Channel[] | undefined,
+  platform: MessagePlatform | string | null | undefined,
+  identifier: string | null | undefined,
+): Channel | undefined {
+  if (!identifier || !platform) return undefined;
+  return channels?.find((channel) => {
+    if (channel.platform !== platform) return false;
     if (platform === MessagePlatform.WHATSAPP) {
-      const phoneDigits = digitsOf(account.phone);
+      const digits = digitsOf(channel.address);
       return (
-        (Boolean(phoneDigits) && phoneDigits === digitsOf(identifier)) ||
-        account.phoneId === identifier
+        (Boolean(digits) && digits === digitsOf(identifier)) || channel.accountId === identifier
       );
     }
-    if (platform === MessagePlatform.INSTAGRAM) {
-      return Boolean(account.ibaId) && account.ibaId === identifier;
-    }
-    if (platform === MessagePlatform.FACEBOOK) {
-      return Boolean(account.fbPageId) && account.fbPageId === identifier;
-    }
-    return false;
+    return channel.accountId === identifier;
   });
 }
 
 /**
  * Name the channel a message arrived on, given what the message recorded
- * (`sourcePlatform` + `sourceIdentifier`) and the org's connected accounts.
+ * (`sourcePlatform` + `sourceIdentifier`) and the org's connected channels.
  *
- * A number that matches no connected account is still named — the org may have
+ * A number that matches no connected channel is still named — the org may have
  * disconnected it since, and the digits are more use than an empty chip.
  *
  * Returns null when there is nothing to name: webchat, internal notes, and legacy
  * messages that predate the identifier.
  */
 export function resolveChannel(
-  waSettings: WaSettings | undefined,
+  channels: Channel[] | undefined,
   platform: MessagePlatform | string | null | undefined,
   identifier: string | null | undefined,
 ): ResolvedChannel | null {
   if (!identifier || !platform || platform === MessagePlatform.WEBCHAT) return null;
 
-  const account = findChannelAccount(waSettings, platform, identifier);
-
-  if (account) {
-    if (platform === MessagePlatform.WHATSAPP) {
-      return {
-        platform: MessagePlatform.WHATSAPP,
-        label: account.phoneDisplayName || account.phone || identifier,
-        account: account.phoneDisplayName ? account.phone : undefined,
-        isConnected: true,
-      };
-    }
-
-    if (platform === MessagePlatform.INSTAGRAM) {
-      const handle = account.igUserName ? `@${account.igUserName}` : account.ibaId;
-      return {
-        platform: MessagePlatform.INSTAGRAM,
-        label: account.igDisplayName || handle,
-        account: account.igDisplayName ? handle : undefined,
-        isConnected: true,
-      };
-    }
-
-    if (platform === MessagePlatform.FACEBOOK) {
-      return {
-        platform: MessagePlatform.FACEBOOK,
-        label: account.fbUserName || account.fbPageId,
-        isConnected: true,
-      };
-    }
+  const channel = findChannel(channels, platform, identifier);
+  if (channel && platform === MessagePlatform.WHATSAPP) {
+    return {
+      platform: MessagePlatform.WHATSAPP,
+      label: channel.name || channel.address || identifier,
+      account: channel.name ? (channel.address ?? undefined) : undefined,
+      isConnected: true,
+    };
+  }
+  if (channel && channel.username) {
+    const handle = `@${channel.username}`;
+    return {
+      platform: platform as MessagePlatform,
+      label: channel.name || handle,
+      account: channel.name ? handle : undefined,
+      isConnected: true,
+    };
+  }
+  if (channel) {
+    return {
+      platform: platform as MessagePlatform,
+      label: channel.name || channel.accountId,
+      isConnected: true,
+    };
   }
 
   return {

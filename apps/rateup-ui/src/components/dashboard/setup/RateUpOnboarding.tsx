@@ -1,6 +1,6 @@
 // The setup guide rendered by the `/dashboard/setup/` route. Layout follows the
-// "Onboarding Setup v2" design: required Meta steps first, then extra channels,
-// then the optional work. The step rail from that design is the app sidebar's
+// "Onboarding Setup v2" design: the channels first (at least one is required), then
+// WhatsApp's own Meta steps, then the optional work. The step rail from that design is the app sidebar's
 // "Get started" section (see `setup.nav.tsx`) rather than a second rail in here.
 
 import { IconArrowRight, IconCircleCheck, IconCircleX, IconLoader2 } from "@tabler/icons-react";
@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { subscriptionKeys } from "@/backend/campaign/campaign.keys";
+import { useChannels } from "@/backend/channels/channels.query";
 import {
   useChecklist,
   useOrgNameAndPhone,
@@ -17,8 +18,7 @@ import {
 } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { getVerificationStatus } from "@/backend/whatsapp/settings/waSettings.api";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { ConnectChannelButton } from "@/components/common/connect-channel-button.tsx";
+import { ConnectMetaChannelButton } from "@/components/common/connect-meta-channel-button.tsx";
 import { ContinueWithFacebookButton } from "@/components/common/continue-with-facebook-button.tsx";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
@@ -38,6 +38,7 @@ import {
   isTaskBlocked,
   isTaskSkippable,
   derivedDone,
+  withInheritedSkips,
   META_BILLING_URL,
   setupCopy,
 } from "./setup.tasks.ts";
@@ -56,43 +57,53 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
   const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
   const { data: sub, isLoading: isSubLoading } = useSubscription();
-  const { data: waSettings, isLoading } = useWaSettings();
+  const { data: channels, isLoading } = useChannels();
   const { data: checklist } = useChecklist();
   const { data: orgInfo } = useOrgNameAndPhone();
   const updateOrg = useUpdateOrgDetailsMutation({ showSuccessToast: false });
 
-  // Straight from the WhatsApp settings, which is where every Meta link is recorded.
+  // Every platform is connected on its own; each counts once it has a channel.
   const connected = useMemo<ConnectionState>(
     () =>
       isLoading
         ? {}
         : {
-            whatsapp: Boolean(waSettings?.length),
-            instagram: waSettings?.some((setting) => setting.ibaId?.length) ?? false,
-            messenger: waSettings?.some((setting) => setting.fbPageId?.length) ?? false,
+            whatsapp: channels?.some((channel) => channel.platform === "WHATSAPP") ?? false,
+            instagram: channels?.some((channel) => channel.platform === "INSTAGRAM") ?? false,
+            messenger: channels?.some((channel) => channel.platform === "FACEBOOK") ?? false,
           },
-    [waSettings, isLoading],
+    [channels, isLoading],
   );
   const isSubReady = !isSubLoading && sub;
   const hasLoyaltyFeature = isSubReady
     ? hasFeature(sub, SubscriptionFeaturePathName.Whatsapp)
     : null;
 
-  const { visibleTasks, checklistMap, skippedMap, doneTasks, totalTasks, minsLeft, pct, allDone } =
-    useMemo(
-      () =>
-        getSetupProgress({
-          checklist: checklist?.onboardingChecklist,
-          connected,
-          hasLoyaltyFeature,
-          overrides: {
-            ...localChecklist,
-            ...(verificationStatus === "verified" ? { verify: true } : {}),
-          },
-          skipOverrides: localSkips,
-        }),
-      [checklist, connected, hasLoyaltyFeature, localChecklist, localSkips, verificationStatus],
-    );
+  const {
+    visibleTasks,
+    checklistMap,
+    skippedMap,
+    effectiveSkips,
+    hasChannel,
+    doneTasks,
+    totalTasks,
+    minsLeft,
+    pct,
+    allDone,
+  } = useMemo(
+    () =>
+      getSetupProgress({
+        checklist: checklist?.onboardingChecklist,
+        connected,
+        hasLoyaltyFeature,
+        overrides: {
+          ...localChecklist,
+          ...(verificationStatus === "verified" ? { verify: true } : {}),
+        },
+        skipOverrides: localSkips,
+      }),
+    [checklist, connected, hasLoyaltyFeature, localChecklist, localSkips, verificationStatus],
+  );
 
   /** The sidebar points at a step with `?step=`; that is what the guide highlights. */
   const focused = visibleTasks.find((task) => task.id === step)?.id;
@@ -152,13 +163,14 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
 
   /** Writes both maps together — they live in one JSON field on the org. */
   const save = (done: ChecklistMap, skipped: ChecklistMap) => {
+    const offBooks = withInheritedSkips(done, skipped);
     updateOrg.mutate(
       {
         onboardingChecklist: { ...done, skipped },
         // A skipped step is not outstanding, so waving off the last one finishes
         // the guide — and takes "Get started" out of the sidebar.
         onboardingChecklistCompleted: visibleTasks.every(
-          (task) => done[task.id] || skipped[task.id],
+          (task) => done[task.id] || offBooks[task.id],
         ),
       },
       {
@@ -235,15 +247,17 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
 
   const groups: { id: TaskGroup; title: string; hint: string; required?: boolean }[] = [
     {
-      id: "required",
-      title: translations("Connect WhatsApp"),
-      hint: translations("You can't send until these three are done"),
+      id: "channels",
+      title: translations("Connect a channel"),
+      hint: translations(
+        "Connect at least one — every conversation lands in the same inbox, with the same replies and rules",
+      ),
       required: true,
     },
     {
-      id: "channels",
-      title: translations("Add more channels"),
-      hint: translations("One inbox for every conversation — same replies, same rules"),
+      id: "whatsapp",
+      title: translations("Finish WhatsApp setup"),
+      hint: translations("You can't send on WhatsApp until these are done"),
     },
     {
       id: "optional",
@@ -257,7 +271,9 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
   const renderTaskCard = (task: TaskDef) => {
     const { title, desc, btnLabel } = copy[task.id];
     const done = Boolean(checklistMap[task.id]);
-    const skipped = !done && Boolean(skippedMap[task.id]);
+    const skipped = !done && Boolean(effectiveSkips[task.id]);
+    // Skipped along with the step it needs, so it comes back only with that step.
+    const inheritedSkip = skipped && !skippedMap[task.id];
     const blocked = isTaskBlocked(task, checklistMap);
 
     return (
@@ -281,7 +297,9 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
             )}
             {skipped && <Badge variant="secondary">{translations("Skipped")}</Badge>}
             {/* Everything that waits, waits on the WhatsApp connection. */}
-            {blocked && <Badge variant="secondary">{translations("Waiting on WhatsApp")}</Badge>}
+            {blocked && !skipped && (
+              <Badge variant="secondary">{translations("Waiting on WhatsApp")}</Badge>
+            )}
           </>
         }
         detail={
@@ -290,7 +308,7 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
           ) : null
         }
         action={
-          skipped ? (
+          inheritedSkip ? null : skipped ? (
             <Button
               variant="secondary"
               className="h-10 w-full"
@@ -308,14 +326,13 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
               buttonType="login_with"
               size="medium"
             />
-          ) : task.group === "channels" ? (
-            // Instagram and Messenger are configured in place too — the same modal
-            // channel settings opens, without the trip to channel settings.
-            <ConnectChannelButton
+          ) : task.group === "channels" && !done ? (
+            // Instagram and Messenger run their own Facebook login in place, with or
+            // without WhatsApp; once connected the button manages them instead.
+            <ConnectMetaChannelButton
               platform={task.id === "instagram" ? "instagram" : "facebook"}
-              label={btnLabel}
-              variant={done ? "secondary" : "default"}
               className="h-10 w-full"
+              size="medium"
             />
           ) : (
             <Button
@@ -343,8 +360,8 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
                   {translations("Mark done")}
                 </label>
               </span>
-              {/* The three Meta steps gate sending, so only the rest can be waved off. */}
-              {!done && isTaskSkippable(task) && (
+              {/* At least one channel has to stay, and WhatsApp's own steps go with it. */}
+              {!done && isTaskSkippable(task, checklistMap, effectiveSkips) && (
                 <button
                   type="button"
                   onClick={() => handleSkip(task.id, true)}
@@ -389,9 +406,7 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
                   {translations("You're live.")}
                 </span>
                 <span className="text-[14.5px] leading-normal text-white/70">
-                  {translations(
-                    "You can send and receive on WhatsApp. Every reply lands in your inbox.",
-                  )}
+                  {translations("Your channels are connected. Every reply lands in your inbox.")}
                 </span>
               </div>
               <Button size="lg" variant="secondary" onClick={hideGuide}>
@@ -410,7 +425,7 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
                 </h1>
                 <p className="m-0 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">
                   {translations(
-                    "Three steps in Meta get your number sending. Everything after that is optional — each one opens the page where you finish it.",
+                    "Connect at least one channel to start talking to customers. Everything after that is optional — each one opens the page where you finish it.",
                   )}
                 </p>
               </div>
@@ -448,7 +463,14 @@ export function RateUpOnboarding({ step }: Readonly<{ step?: string }>) {
                   hint={group.hint}
                   badge={
                     group.required ? (
-                      <Badge variant="system">{translations("Required")}</Badge>
+                      hasChannel ? (
+                        <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
+                          <IconCircleCheck size={12} />
+                          {translations("Done")}
+                        </Badge>
+                      ) : (
+                        <Badge variant="system">{translations("Required")}</Badge>
+                      )
                     ) : null
                   }
                 />

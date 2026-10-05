@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
+import { useChannels } from "@/backend/channels/channels.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -114,7 +115,8 @@ const WaInboxChatSelect = () => {
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)), !!processedFilter);
 
-  const { data: waSettings, isLoading } = useWaSettings();
+  const { isLoading } = useWaSettings();
+  const { data: channels } = useChannels();
 
   const { setFilterData, filterData } = useContactStore();
 
@@ -763,7 +765,7 @@ const WaInboxChatSelect = () => {
                     ) : (
                       <WaInboxChatSelectCard
                         contact={contact}
-                        waSettings={waSettings!}
+                        channels={channels}
                         lifeCycleLabels={lifeCycleLabels ?? []}
                         isSelectionMode={isSelectionMode}
                         selectedChats={selectedChats}

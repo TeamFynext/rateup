@@ -32,6 +32,7 @@ import {
   useAssignContactLabelsToContactId,
   useContactLabels,
 } from "@/backend/campaign/contacts/contacts.query";
+import { useChannels } from "@/backend/channels/channels.query";
 import {
   useClearContactStageMutation,
   useContactStageQuery,
@@ -52,7 +53,6 @@ import {
   useEditConversation,
   useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import ChipAddPicker from "@/components/common/chip-add-picker.tsx";
 import { ContactDetailDialog } from "@/components/Contacts/ContactDetailedView.tsx";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
@@ -233,7 +233,7 @@ export default function TicketPanel({
   const { data: allTags = [] } = useConversationTags();
   const { data: teamRes } = useTeamsByUser();
   const teams = teamRes?.data ?? [];
-  const { data: waSettings } = useWaSettings();
+  const { data: channels } = useChannels();
 
   const spamMutation = useSetContactSpam();
   const blockMutation = useBlockWhatsAppUser();
@@ -314,7 +314,7 @@ export default function TicketPanel({
   // own messages. `contact.metadata` is the last webhook payload seen for the
   // *contact*, so on a multi-channel org it names whichever number they wrote to
   // last — not necessarily the one this ticket is on.
-  const connectedChannel = resolveChannel(waSettings, platform, channelIdentifier);
+  const connectedChannel = resolveChannel(channels, platform, channelIdentifier);
   const displayPhone = getContactDisplayPhone(contact);
   const resolutionResult: ResolutionResult | null = contact?.resolutionResult ?? null;
   const status = deriveStatus(contact);

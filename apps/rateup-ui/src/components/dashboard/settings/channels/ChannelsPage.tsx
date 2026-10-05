@@ -10,7 +10,8 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import type { Channel } from "@/backend/channels/channels.api";
+import { useChannels } from "@/backend/channels/channels.query";
 import { PageHeading, SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -19,38 +20,28 @@ import { Button } from "@/components/ui/button.tsx";
 export function ChannelsPage() {
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
-  const { data: waSettings, isLoading } = useWaSettings();
+  const { data: channels, isLoading } = useChannels();
 
-  const waConnected = !isLoading && Boolean(waSettings?.length);
-  const waCount = waSettings?.length ?? 0;
-  const igCount = waSettings?.filter((setting) => setting.ibaId?.length > 0).length ?? 0;
-  const fbCount = waSettings?.filter((s) => s.fbPageId && s.fbPageId.length > 0).length ?? 0;
+  // Every channel is its own registry row; each platform is counted on its own.
+  const countOf = (platform: Channel["platform"]) =>
+    channels?.filter((channel) => channel.platform === platform).length ?? 0;
+  const waCount = countOf("WHATSAPP");
+  const igCount = countOf("INSTAGRAM");
+  const fbCount = countOf("FACEBOOK");
+  const hasChannel = waCount + igCount + fbCount > 0;
 
   const open = (channel: "whatsapp" | "facebook" | "instagram") =>
     navigate({ to: "/dashboard/settings/channels/$channel", params: { channel } });
 
-  /** Meta hangs Messenger and Instagram off the WhatsApp connection, so it comes first. */
-  const needsWhatsApp = !waConnected && !isLoading;
-
-  /**
-   * How many are connected, or what is holding the channel up. `dependent` marks the
-   * two channels Meta hangs off WhatsApp — WhatsApp itself is never waiting on itself.
-   */
-  const statusBadge = (count: number, dependent = false) => {
-    if (count > 0) {
-      return (
-        <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
-          <IconCircleCheck size={12} />
-          {translations("{count} connected", { count })}
-        </Badge>
-      );
-    }
-
-    if (dependent && needsWhatsApp) {
-      return <Badge variant="secondary">{translations("Waiting on WhatsApp")}</Badge>;
-    }
-
-    return null;
+  /** How many are connected. */
+  const statusBadge = (count: number) => {
+    if (count === 0) return null;
+    return (
+      <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
+        <IconCircleCheck size={12} />
+        {translations("{count} connected", { count })}
+      </Badge>
+    );
   };
 
   const action = (
@@ -78,31 +69,37 @@ export function ChannelsPage() {
       />
 
       <section className="flex flex-col gap-3">
+        {/* Same rule as the setup guide: any one channel gets an org going. */}
         <SectionHeading
-          title={translations("WhatsApp")}
-          hint={translations("Messenger and Instagram hang off this connection")}
-        />
-
-        <SetupRowCard
-          icon={IconBrandWhatsapp}
-          tint="green"
-          title={translations("WhatsApp Business")}
-          description={translations(
-            "Connect your WhatsApp inbox to handle conversations and campaigns.",
+          title={translations("Connect a channel")}
+          hint={translations(
+            "Connect at least one — every conversation lands in the same inbox, with the same replies and rules",
           )}
-          done={waConnected}
-          badges={statusBadge(waCount)}
-          action={action(waConnected, "whatsapp", isLoading)}
-        />
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <SectionHeading
-          title={translations("More channels")}
-          hint={translations("Optional — add them in any order, any time")}
+          badge={
+            isLoading ? null : hasChannel ? (
+              <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
+                <IconCircleCheck size={12} />
+                {translations("Done")}
+              </Badge>
+            ) : (
+              <Badge variant="system">{translations("Required")}</Badge>
+            )
+          }
         />
 
         <div className="flex flex-col gap-3">
+          <SetupRowCard
+            icon={IconBrandWhatsapp}
+            tint="green"
+            title={translations("WhatsApp Business")}
+            description={translations(
+              "Connect your WhatsApp inbox to handle conversations and campaigns.",
+            )}
+            done={waCount > 0}
+            badges={statusBadge(waCount)}
+            action={action(waCount > 0, "whatsapp", isLoading)}
+          />
+
           <SetupRowCard
             icon={IconBrandFacebook}
             tint="brand"
@@ -111,8 +108,8 @@ export function ChannelsPage() {
               "Connect your Facebook Page to manage Messenger conversations and automate replies.",
             )}
             done={fbCount > 0}
-            badges={statusBadge(fbCount, true)}
-            action={action(fbCount > 0, "facebook", needsWhatsApp || isLoading)}
+            badges={statusBadge(fbCount)}
+            action={action(fbCount > 0, "facebook", isLoading)}
           />
 
           <SetupRowCard
@@ -123,8 +120,8 @@ export function ChannelsPage() {
               "Integrate Instagram DMs to manage customer interactions and automate replies.",
             )}
             done={igCount > 0}
-            badges={statusBadge(igCount, true)}
-            action={action(igCount > 0, "instagram", needsWhatsApp || isLoading)}
+            badges={statusBadge(igCount)}
+            action={action(igCount > 0, "instagram", isLoading)}
           />
         </div>
       </section>

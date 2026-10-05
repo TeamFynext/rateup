@@ -4792,7 +4792,14 @@
     "Zoho Lead Status": "Zoho-Lead-Status",
     "Zoho Leads": "Zoho führt",
     "Zoho leads synced successfully": "Zoho-Leads wurden erfolgreich synchronisiert",
-    "Zoom the Image": "Zoomen Sie das Bild"
+    "Zoom the Image": "Zoomen Sie das Bild",
+    "Connect a channel": "Kanal verbinden",
+    "Connect at least one — every conversation lands in the same inbox, with the same replies and rules": "Verbinden Sie mindestens einen – jede Unterhaltung landet im selben Posteingang, mit denselben Antworten und Regeln",
+    "Finish WhatsApp setup": "WhatsApp-Einrichtung abschließen",
+    "You can't send on WhatsApp until these are done": "Sie können erst auf WhatsApp senden, wenn diese Schritte erledigt sind",
+    "Story replies and DMs land in the same inbox as every other channel.": "Story-Antworten und DMs landen im selben Posteingang wie alle anderen Kanäle.",
+    "Your channels are connected. Every reply lands in your inbox.": "Ihre Kanäle sind verbunden. Jede Antwort landet in Ihrem Posteingang.",
+    "Connect at least one channel to start talking to customers. Everything after that is optional — each one opens the page where you finish it.": "Verbinden Sie mindestens einen Kanal, um mit Kunden zu sprechen. Alles danach ist optional – jeder Schritt öffnet die Seite, auf der Sie ihn abschließen."
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered} % geliefert · {read} % gelesen",

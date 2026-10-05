@@ -13,11 +13,11 @@ import {
   syncInstagramPersistentMenu,
 } from "./instagramProfile.api";
 
-export const useInstagramProfile = (waSettingsId?: string) =>
+export const useInstagramProfile = (channelId?: string) =>
   useQuery({
-    queryKey: ["instagramProfile", waSettingsId],
-    queryFn: () => getInstagramProfile(waSettingsId!),
-    enabled: Boolean(waSettingsId),
+    queryKey: ["instagramProfile", channelId],
+    queryFn: () => getInstagramProfile(channelId!),
+    enabled: Boolean(channelId),
   });
 
 export const useInstagramMediaPosts = (ibaId?: string) =>
@@ -38,14 +38,14 @@ export const useInstagramStories = (ibaId?: string) =>
     staleTime: 5 * 60 * 1000,
   });
 
-export const useSetInstagramIceBreakersMutation = (waSettingsId?: string) => {
+export const useSetInstagramIceBreakersMutation = (channelId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: (iceBreakers: Parameters<typeof setInstagramIceBreakers>[1]) =>
-      setInstagramIceBreakers(waSettingsId!, iceBreakers),
+      setInstagramIceBreakers(channelId!, iceBreakers),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
+      qc.invalidateQueries({ queryKey: ["instagramProfile", channelId] });
       toast.success("Instagram ice breakers saved to DB");
     },
     onError: (error) => {
@@ -54,13 +54,13 @@ export const useSetInstagramIceBreakersMutation = (waSettingsId?: string) => {
   });
 };
 
-export const useSyncInstagramIceBreakersMutation = (waSettingsId?: string) => {
+export const useSyncInstagramIceBreakersMutation = (channelId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => syncInstagramIceBreakers(waSettingsId!),
+    mutationFn: () => syncInstagramIceBreakers(channelId!),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
+      qc.invalidateQueries({ queryKey: ["instagramProfile", channelId] });
       toast.success("Instagram ice breakers synced with Meta");
     },
     onError: (error) => {
@@ -69,13 +69,13 @@ export const useSyncInstagramIceBreakersMutation = (waSettingsId?: string) => {
   });
 };
 
-export const useDeleteInstagramIceBreakersMutation = (waSettingsId?: string) => {
+export const useDeleteInstagramIceBreakersMutation = (channelId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => deleteInstagramIceBreakers(waSettingsId!),
+    mutationFn: () => deleteInstagramIceBreakers(channelId!),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
+      qc.invalidateQueries({ queryKey: ["instagramProfile", channelId] });
       toast.success("Instagram ice breakers deleted");
     },
     onError: (error) => {
@@ -84,14 +84,14 @@ export const useDeleteInstagramIceBreakersMutation = (waSettingsId?: string) => 
   });
 };
 
-export const useSetInstagramPersistentMenuMutation = (waSettingsId?: string) => {
+export const useSetInstagramPersistentMenuMutation = (channelId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: (persistentMenu: Parameters<typeof setInstagramPersistentMenu>[1]) =>
-      setInstagramPersistentMenu(waSettingsId!, persistentMenu),
+      setInstagramPersistentMenu(channelId!, persistentMenu),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
+      qc.invalidateQueries({ queryKey: ["instagramProfile", channelId] });
       toast.success("Instagram persistent menu saved to DB");
     },
     onError: (error) => {
@@ -100,13 +100,13 @@ export const useSetInstagramPersistentMenuMutation = (waSettingsId?: string) => 
   });
 };
 
-export const useSyncInstagramPersistentMenuMutation = (waSettingsId?: string) => {
+export const useSyncInstagramPersistentMenuMutation = (channelId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => syncInstagramPersistentMenu(waSettingsId!),
+    mutationFn: () => syncInstagramPersistentMenu(channelId!),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
+      qc.invalidateQueries({ queryKey: ["instagramProfile", channelId] });
       toast.success("Instagram persistent menu synced with Meta");
     },
     onError: (error) => {
@@ -115,13 +115,13 @@ export const useSyncInstagramPersistentMenuMutation = (waSettingsId?: string) =>
   });
 };
 
-export const useDeleteInstagramPersistentMenuMutation = (waSettingsId?: string) => {
+export const useDeleteInstagramPersistentMenuMutation = (channelId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => deleteInstagramPersistentMenu(waSettingsId!),
+    mutationFn: () => deleteInstagramPersistentMenu(channelId!),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
+      qc.invalidateQueries({ queryKey: ["instagramProfile", channelId] });
       toast.success("Instagram persistent menu deleted");
     },
     onError: (error) => {

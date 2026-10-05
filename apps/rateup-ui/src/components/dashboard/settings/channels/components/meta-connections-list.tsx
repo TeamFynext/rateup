@@ -1,6 +1,6 @@
-// Messenger and Instagram are the same screen with different labels: one row per
-// WhatsApp channel, showing what is linked to it and offering to link or unlink.
-// They were two near-identical files; the differences that remain are in PLATFORMS.
+// Messenger and Instagram are the same screen with different labels: one row per connected
+// channel — each Messenger Page and each Instagram account is its own — with a login of
+// its own to add more. None of it needs WhatsApp, and neither platform needs the other.
 
 import {
   IconBrandFacebook,
@@ -10,13 +10,14 @@ import {
 } from "@tabler/icons-react";
 import type { TFunction } from "i18next";
 import type { ReactNode } from "react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import { useUpsertWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
-import { FacebookConfigModal } from "@/components/common/facebook-config-modal.tsx";
-import { InstagramConfigModal } from "@/components/common/instagram-config-modal.tsx";
+import type { MetaChannel } from "@/backend/meta/metaChannels.api";
+import { useDeleteMetaChannelMutation, useMetaChannels } from "@/backend/meta/metaChannels.query";
+import {
+  ConnectMetaChannelButton,
+  type MetaChannelRoute,
+} from "@/components/common/connect-meta-channel-button.tsx";
 import { SectionHeading } from "@/components/common/page-heading.tsx";
 import { SetupRowCard } from "@/components/common/setup-row-card.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
@@ -25,23 +26,17 @@ import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
-type WaSetting = WaSettings[number];
-
 interface PlatformSpec {
+  platform: MetaChannel["platform"];
   icon: TablerIcon;
   heading: (t: TFunction) => string;
   hint: (t: TFunction) => string;
-  /** Shown when there is no WhatsApp channel to hang the asset off. */
   empty: (t: TFunction) => string;
-  connectLabel: (t: TFunction) => string;
-  changeLabel: (t: TFunction) => string;
-  isConnected: (setting: WaSetting) => boolean;
-  /** What the row shows about the linked asset. */
-  detail: (setting: WaSetting, t: TFunction) => ReactNode;
-  /** Cleared on the setting to unlink. */
-  clear: Partial<WaSetting>;
-  confirm: (t: TFunction) => { title: string; description: string };
-  Modal: typeof FacebookConfigModal;
+  title: (channel: MetaChannel) => string;
+  description: (channel: MetaChannel, t: TFunction) => string;
+  /** What the row shows about the connection. */
+  detail: (channel: MetaChannel, t: TFunction) => ReactNode;
+  disconnectConfirm: (t: TFunction) => { title: string; description: string };
 }
 
 /** A labelled value under the row's description. */
@@ -58,152 +53,113 @@ function DetailField({ label, value }: Readonly<{ label: string; value?: string 
   );
 }
 
-const PLATFORMS: Record<"facebook" | "instagram", PlatformSpec> = {
+const PLATFORMS: Record<MetaChannelRoute, PlatformSpec> = {
   facebook: {
+    platform: "FACEBOOK",
     icon: IconBrandFacebook,
     heading: (t) => t("Facebook Messenger connections"),
-    hint: (t) => t("One Facebook Page per WhatsApp channel"),
-    empty: (t) =>
-      t("Connect at least one WhatsApp Business account first to enable Facebook Messenger."),
-    connectLabel: (t) => t("Connect Page"),
-    changeLabel: (t) => t("Change Page"),
-    isConnected: (setting) => Boolean(setting.fbPageId?.length),
-    detail: (setting, t) => <DetailField label={t("Page")} value={setting.fbUserName} />,
-    // Instagram hangs off the Page, so unlinking the Page unlinks it too.
-    clear: { fbPageId: "", pageAccessToken: "", ibaId: "", igUserName: "", igDisplayName: "" },
-    confirm: (t) => ({
-      title: t("Disconnect Facebook Page and Instagram?"),
+    hint: (t) => t("Each Page is its own channel — connect as many as you need"),
+    empty: (t) => t("No Facebook Page connected yet. Continue with Facebook to pick one."),
+    title: (channel) => channel.name ?? channel.accountId,
+    description: (channel, t) => `${t("Facebook Page")} · ${channel.accountId}`,
+    detail: (channel, t) => <DetailField label={t("Page")} value={channel.name} />,
+    disconnectConfirm: (t) => ({
+      title: t("Disconnect this Facebook Page?"),
       description: t(
-        "Disconnecting this Facebook Page will also disconnect the linked Instagram account from this channel.",
+        "Messenger conversations from this Page will stop arriving in the inbox. Other channels are not affected.",
       ),
     }),
-    Modal: FacebookConfigModal,
   },
   instagram: {
+    platform: "INSTAGRAM",
     icon: IconBrandInstagram,
     heading: (t) => t("Instagram connections"),
-    hint: (t) => t("One Instagram account per WhatsApp channel"),
-    empty: (t) => t("Connect at least one WhatsApp Business account first to enable Instagram."),
-    connectLabel: (t) => t("Connect account"),
-    changeLabel: (t) => t("Change account"),
-    isConnected: (setting) => Boolean(setting.ibaId?.length),
-    detail: (setting, t) => (
+    hint: (t) => t("Each account is its own channel — connect as many as you need"),
+    empty: (t) => t("No Instagram account connected yet. Continue with Facebook to pick one."),
+    title: (channel) =>
+      channel.username ? `@${channel.username}` : (channel.name ?? channel.accountId),
+    description: (channel, t) =>
+      channel.pageName
+        ? t("Instagram account · linked to {page}", { page: channel.pageName })
+        : t("Instagram account"),
+    detail: (channel, t) => (
       <span className="flex flex-wrap gap-6">
-        <DetailField label={t("Username")} value={setting.igUserName && `@${setting.igUserName}`} />
-        <DetailField label={t("Display name")} value={setting.igDisplayName} />
+        <DetailField label={t("Username")} value={channel.username && `@${channel.username}`} />
+        <DetailField label={t("Display name")} value={channel.name} />
       </span>
     ),
-    clear: { ibaId: "", igUserName: "", igDisplayName: "" },
-    confirm: (t) => ({
+    disconnectConfirm: (t) => ({
       title: t("Disconnect this Instagram account?"),
-      description: t("Instagram DMs will stop arriving in the inbox for this WhatsApp channel."),
+      description: t(
+        "Instagram DMs and comments from this account will stop arriving in the inbox. Other channels are not affected.",
+      ),
     }),
-    Modal: InstagramConfigModal,
   },
 };
 
-export function MetaConnectionsList({
-  platform,
-  waSettings,
-  isLoading,
-}: Readonly<{
-  platform: "facebook" | "instagram";
-  waSettings: WaSettings | undefined;
-  isLoading: boolean;
-}>) {
+export function MetaConnectionsList({ platform }: Readonly<{ platform: MetaChannelRoute }>) {
   const spec = PLATFORMS[platform];
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
-  const upsertMutation = useUpsertWaSettingsMutation();
+  const { data: channels, isLoading } = useMetaChannels(true, spec.platform);
+  const deleteMutation = useDeleteMetaChannelMutation();
 
-  const [selected, setSelected] = useState<WaSetting | null>(null);
-  const [configOpen, setConfigOpen] = useState(false);
-
-  const openConfig = (setting: WaSetting) => {
-    setSelected(setting);
-    setConfigOpen(true);
-  };
-
-  const disconnect = async (setting: WaSetting) => {
-    const { title, description } = spec.confirm(translations);
+  const disconnect = async (channel: MetaChannel) => {
+    const { title, description } = spec.disconnectConfirm(translations);
     const confirmed = await confirm({
       title,
       description,
       confirmText: translations("Disconnect"),
       cancelText: translations("Cancel"),
     });
-
     if (!confirmed) return;
-
-    upsertMutation.mutate({ ...setting, ...spec.clear });
+    deleteMutation.mutate(channel.id);
   };
 
   return (
     <section className="flex flex-col gap-3">
-      <SectionHeading title={spec.heading(translations)} hint={spec.hint(translations)} />
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <SectionHeading title={spec.heading(translations)} hint={spec.hint(translations)} />
+        <ConnectMetaChannelButton platform={platform} size="medium" />
+      </div>
 
       {isLoading ? (
         <Skeleton className="h-24 w-full rounded-lg" />
-      ) : !waSettings?.length ? (
+      ) : !channels?.length ? (
         <Alert>
           <AlertDescription>{spec.empty(translations)}</AlertDescription>
         </Alert>
       ) : (
         <div className="flex flex-col gap-3">
-          {waSettings.map((setting) => {
-            const connected = spec.isConnected(setting);
-
-            return (
-              <SetupRowCard
-                key={setting.id || setting.phoneId}
-                icon={spec.icon}
-                tint="brand"
-                title={setting.phoneDisplayName || setting.phone}
-                description={`${translations("WhatsApp channel")} · ${setting.wabaId}`}
-                done={connected}
-                badges={
-                  connected ? (
-                    <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
-                      <IconCircleCheck size={12} />
-                      {translations("Connected")}
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">{translations("Not connected")}</Badge>
-                  )
-                }
-                detail={connected ? spec.detail(setting, translations) : null}
-                action={
-                  <Button
-                    variant={connected ? "secondary" : "default"}
-                    className="h-10 w-full"
-                    onClick={() => openConfig(setting)}
-                  >
-                    {connected ? spec.changeLabel(translations) : spec.connectLabel(translations)}
-                  </Button>
-                }
-                actionFooter={
-                  connected ? (
-                    <button
-                      type="button"
-                      disabled={upsertMutation.isPending}
-                      onClick={() => disconnect(setting)}
-                      className="cursor-pointer text-xs text-destructive underline-offset-4 hover:underline disabled:opacity-50"
-                    >
-                      {translations("Disconnect")}
-                    </button>
-                  ) : null
-                }
-              />
-            );
-          })}
+          {channels.map((channel) => (
+            <SetupRowCard
+              key={channel.id}
+              icon={spec.icon}
+              tint="brand"
+              title={spec.title(channel)}
+              description={spec.description(channel, translations)}
+              done
+              badges={
+                <Badge className="bg-green-600/10 text-green-700 dark:text-green-500">
+                  <IconCircleCheck size={12} />
+                  {translations("Connected")}
+                </Badge>
+              }
+              detail={spec.detail(channel, translations)}
+              action={
+                <Button
+                  variant="secondary"
+                  className="h-10 w-full"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => disconnect(channel)}
+                >
+                  {translations("Disconnect")}
+                </Button>
+              }
+            />
+          ))}
         </div>
       )}
-
-      <spec.Modal
-        opened={configOpen}
-        close={() => setConfigOpen(false)}
-        selectedWaSettings={selected}
-      />
     </section>
   );
 }
