@@ -40,6 +40,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-05-instagram-messenger-standalone",
+    title: "Connect Instagram or Messenger on their own",
+    summary:
+      "Instagram and Facebook Messenger no longer need WhatsApp — connect either one alone, and as many accounts and Pages as you like.",
+    publishedAt: "2026-10-05",
+    kinds: ["new"],
+    area: "Channels",
+    link: { to: "/dashboard/settings/channels" },
+  },
+  {
     id: "2026-09-30-shopify-cart-reminder-results",
     title: "See the revenue your cart reminders bring back",
     summary:

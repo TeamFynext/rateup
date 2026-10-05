@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
+import { useChannels } from "@/backend/channels/channels.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useLoyaltyFeedback } from "@/backend/loyalty/feedback.query";
 import { useLoyaltyOnboardingState } from "@/backend/loyalty/onboarding.query";
@@ -117,10 +118,10 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
 
   // Only the inbox's Channel filter needs these, and the query is shared and
   // cached forever — so it costs nothing on the pages that already fetched it.
-  const { data: waSettings } = useWaSettings(Boolean(isInbox));
+  const { data: connectedChannels } = useChannels(Boolean(isInbox));
   const channels = useMemo(
-    () => getChannelOptions(waSettings, { platform: "all", usePhoneNumber: true }),
-    [waSettings],
+    () => getChannelOptions(connectedChannels, { platform: "all", usePhoneNumber: true }),
+    [connectedChannels],
   );
 
   // Same shape as the inbox counts above: the sidebar is mounted app-wide, so

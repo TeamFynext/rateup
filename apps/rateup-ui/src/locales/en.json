@@ -4753,7 +4753,14 @@
     "Zoho Lead Status": "Zoho Lead Status",
     "Zoho Leads": "Zoho Leads",
     "Zoho leads synced successfully": "Zoho leads synced successfully",
-    "Zoom the Image": "Zoom the Image"
+    "Zoom the Image": "Zoom the Image",
+    "Connect a channel": "Connect a channel",
+    "Connect at least one — every conversation lands in the same inbox, with the same replies and rules": "Connect at least one — every conversation lands in the same inbox, with the same replies and rules",
+    "Finish WhatsApp setup": "Finish WhatsApp setup",
+    "You can't send on WhatsApp until these are done": "You can't send on WhatsApp until these are done",
+    "Story replies and DMs land in the same inbox as every other channel.": "Story replies and DMs land in the same inbox as every other channel.",
+    "Your channels are connected. Every reply lands in your inbox.": "Your channels are connected. Every reply lands in your inbox.",
+    "Connect at least one channel to start talking to customers. Everything after that is optional — each one opens the page where you finish it.": "Connect at least one channel to start talking to customers. Everything after that is optional — each one opens the page where you finish it."
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% delivered · {read}% read",

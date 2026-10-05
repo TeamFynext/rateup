@@ -29,9 +29,6 @@ interface WaManualConfigFormValues {
   accessToken: string;
   webhookPassword: string;
   appId: string;
-  fbPageId: string;
-  ibaId: string;
-  pageAccessToken: string;
   phoneDisplayName: string;
 }
 
@@ -41,9 +38,6 @@ const defaultFormValues: WaManualConfigFormValues = {
   accessToken: "",
   webhookPassword: "",
   appId: "",
-  fbPageId: "",
-  ibaId: "",
-  pageAccessToken: "",
   phoneDisplayName: "",
 };
 
@@ -64,9 +58,6 @@ export function WhatsAppManualConfiguration({
     accessToken: z.string().trim().min(1, translations("AccessToken is required")),
     webhookPassword: z.string().trim().min(1, translations("Webhook Password is required")),
     appId: z.string().trim().min(1, translations("AppId is required")),
-    fbPageId: z.string(),
-    ibaId: z.string(),
-    pageAccessToken: z.string(),
     phoneDisplayName: z.string(),
   });
 

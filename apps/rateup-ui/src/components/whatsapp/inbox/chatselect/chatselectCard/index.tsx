@@ -11,12 +11,12 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { Channel } from "@/backend/channels/channels.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { whatsappKeys } from "@/backend/whatsapp/whatsapp.keys";
 import { pressable } from "@/components/common/pressable.ts";
 import { resolveChannel } from "@/components/input/channelOptions.ts";
@@ -57,7 +57,7 @@ import { generateInternalMessageId, getSoucePlatformIconAndColor } from "../../u
 
 interface WaInboxChatSelectCardProps {
   contact: ContactWithUpdatedAt;
-  waSettings: WaSettings;
+  channels: Channel[] | undefined;
   lifeCycleLabels: Array<{
     id: string;
     name: string;
@@ -70,7 +70,7 @@ interface WaInboxChatSelectCardProps {
 }
 export default function WaInboxChatSelectCard({
   contact,
-  waSettings,
+  channels,
   lifeCycleLabels,
   isSelectionMode,
   selectedChats,
@@ -98,8 +98,8 @@ export default function WaInboxChatSelectCard({
    * webchat and internal-only threads.
    */
   const channel = useMemo(
-    () => resolveChannel(waSettings, platform, channelIdentifier),
-    [waSettings, platform, channelIdentifier],
+    () => resolveChannel(channels, platform, channelIdentifier),
+    [channels, platform, channelIdentifier],
   );
   const lifecycleInfo = useMemo(() => {
     const label = lifeCycleLabels?.find((label) => label.id === contact?.lifecycleId);

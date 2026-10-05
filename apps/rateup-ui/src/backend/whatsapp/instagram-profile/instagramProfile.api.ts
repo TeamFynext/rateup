@@ -25,49 +25,49 @@ interface InstagramProfileData {
   persistentMenu: InstagramPersistentMenu;
 }
 
-export async function getInstagramProfile(waSettingsId: string) {
-  return (await axiosClient.get(`${base}/${waSettingsId}`)).data as {
+export async function getInstagramProfile(channelId: string) {
+  return (await axiosClient.get(`${base}/${channelId}`)).data as {
     success: boolean;
     data: InstagramProfileData;
   };
 }
 
 export async function setInstagramIceBreakers(
-  waSettingsId: string,
+  channelId: string,
   iceBreakers: InstagramIceBreaker[],
   syncWithMeta = false,
 ) {
-  return axiosClient.post(`${base}/${waSettingsId}/ice-breakers`, {
+  return axiosClient.post(`${base}/${channelId}/ice-breakers`, {
     iceBreakers,
     syncWithMeta,
   });
 }
 
-export async function syncInstagramIceBreakers(waSettingsId: string) {
-  return axiosClient.post(`${base}/${waSettingsId}/ice-breakers/sync`);
+export async function syncInstagramIceBreakers(channelId: string) {
+  return axiosClient.post(`${base}/${channelId}/ice-breakers/sync`);
 }
 
-export async function deleteInstagramIceBreakers(waSettingsId: string) {
-  return axiosClient.delete(`${base}/${waSettingsId}/ice-breakers`);
+export async function deleteInstagramIceBreakers(channelId: string) {
+  return axiosClient.delete(`${base}/${channelId}/ice-breakers`);
 }
 
 export async function setInstagramPersistentMenu(
-  waSettingsId: string,
+  channelId: string,
   persistentMenu: InstagramPersistentMenu,
   syncWithMeta = false,
 ) {
-  return axiosClient.post(`${base}/${waSettingsId}/persistent-menu`, {
+  return axiosClient.post(`${base}/${channelId}/persistent-menu`, {
     persistentMenu,
     syncWithMeta,
   });
 }
 
-export async function syncInstagramPersistentMenu(waSettingsId: string) {
-  return axiosClient.post(`${base}/${waSettingsId}/persistent-menu/sync`);
+export async function syncInstagramPersistentMenu(channelId: string) {
+  return axiosClient.post(`${base}/${channelId}/persistent-menu/sync`);
 }
 
-export async function deleteInstagramPersistentMenu(waSettingsId: string) {
-  return axiosClient.delete(`${base}/${waSettingsId}/persistent-menu`);
+export async function deleteInstagramPersistentMenu(channelId: string) {
+  return axiosClient.delete(`${base}/${channelId}/persistent-menu`);
 }
 
 interface InstagramMediaItem {

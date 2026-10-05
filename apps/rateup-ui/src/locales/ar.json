@@ -4753,7 +4753,14 @@
     "Zoho Lead Status": "حالة زوهو الرصاص",
     "Zoho Leads": "زوهو يؤدي",
     "Zoho leads synced successfully": "تمت مزامنة العملاء المتوقعين من Zoho بنجاح",
-    "Zoom the Image": "تكبير الصورة"
+    "Zoom the Image": "تكبير الصورة",
+    "Connect a channel": "ربط قناة",
+    "Connect at least one — every conversation lands in the same inbox, with the same replies and rules": "اربط قناة واحدة على الأقل — تصل كل محادثة إلى صندوق الوارد نفسه، بالردود والقواعد نفسها",
+    "Finish WhatsApp setup": "إكمال إعداد واتساب",
+    "You can't send on WhatsApp until these are done": "لا يمكنك الإرسال على واتساب حتى تكتمل هذه الخطوات",
+    "Story replies and DMs land in the same inbox as every other channel.": "تصل الردود على القصص والرسائل المباشرة إلى صندوق الوارد نفسه مثل كل القنوات الأخرى.",
+    "Your channels are connected. Every reply lands in your inbox.": "قنواتك متصلة. كل رد يصل إلى صندوق الوارد.",
+    "Connect at least one channel to start talking to customers. Everything after that is optional — each one opens the page where you finish it.": "اربط قناة واحدة على الأقل لبدء التواصل مع العملاء. كل ما بعد ذلك اختياري — كل خطوة تفتح الصفحة التي تكملها فيها."
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% تم التسليم · {read}% قراءة",

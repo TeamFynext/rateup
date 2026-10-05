@@ -40,8 +40,11 @@ export type CardId =
 /** Per-step completion flags. */
 export type ChecklistMap = Partial<Record<CardId, boolean>>;
 
-/** The three bands the guide groups steps into; each renders its own heading. */
-export type TaskGroup = "required" | "channels" | "optional";
+/**
+ * The three bands the guide groups steps into; each renders its own heading.
+ * "channels" is the required one — any single connected channel satisfies it.
+ */
+export type TaskGroup = "channels" | "whatsapp" | "optional";
 
 /** Meta's billing hub — external, so it opens in a new tab rather than routing. */
 export const META_BILLING_URL =
@@ -65,6 +68,9 @@ export const CARD_ROUTES = {
   auto: { to: "/dashboard/automation" },
   points: { to: "/dashboard/loyalty/settings" },
   invite: { to: "/dashboard/settings/users" },
+  // Only reached once connected, to manage them.
+  instagram: { to: "/dashboard/settings/channels/$channel", params: { channel: "instagram" } },
+  messenger: { to: "/dashboard/settings/channels/$channel", params: { channel: "facebook" } },
 } as const;
 
 export type NavigableCardId = keyof typeof CARD_ROUTES;
@@ -80,46 +86,46 @@ export interface TaskDef {
   tint: RowTint;
   /** Rough time-to-finish, summed into the "N min left" estimate. */
   mins: number;
-  /** Step that must be done first; until then this one is disabled. */
+  /**
+   * Step that must be done first; until then this one is disabled. Skipping that
+   * step skips this one too — there is nothing to verify without WhatsApp.
+   */
   needs?: CardId;
   /** Hidden unless the plan includes the loyalty feature. */
   loyaltyOnly?: boolean;
 }
 
 export const TASKS: readonly TaskDef[] = [
-  { id: "api", group: "required", icon: IconMessageCircle, tint: "accent", mins: 3 },
+  // Any one of the three channels gets an org going. Instagram and Messenger run
+  // their own Facebook login, so neither waits on WhatsApp.
+  { id: "api", group: "channels", icon: IconMessageCircle, tint: "accent", mins: 3 },
+  { id: "instagram", group: "channels", icon: IconBrandInstagram, tint: "brand", mins: 1 },
+  { id: "messenger", group: "channels", icon: IconBrandMessenger, tint: "brand", mins: 1 },
   {
     id: "verify",
-    group: "required",
+    group: "whatsapp",
     icon: IconRosetteDiscountCheck,
     tint: "accent",
     mins: 5,
     needs: "api",
   },
-  { id: "payment", group: "required", icon: IconCreditCard, tint: "green", mins: 2 },
-  // Meta hangs both off the WhatsApp connection, so neither can be configured first.
   {
-    id: "instagram",
-    group: "channels",
-    icon: IconBrandInstagram,
-    tint: "brand",
-    mins: 1,
+    id: "payment",
+    group: "whatsapp",
+    icon: IconCreditCard,
+    tint: "green",
+    mins: 2,
     needs: "api",
   },
-  {
-    id: "messenger",
-    group: "channels",
-    icon: IconBrandMessenger,
-    tint: "brand",
-    mins: 1,
-    needs: "api",
-  },
-  { id: "cmds", group: "optional", icon: IconFileText, tint: "accent", mins: 4 },
+  // Templates live on the WhatsApp Business account, so they wait on it too.
+  { id: "cmds", group: "optional", icon: IconFileText, tint: "accent", mins: 4, needs: "api" },
   { id: "hours", group: "optional", icon: IconClock, tint: "accent", mins: 2 },
   { id: "auto", group: "optional", icon: IconMessageReply, tint: "accent", mins: 2 },
   { id: "points", group: "optional", icon: IconGift, tint: "warm", mins: 3, loyaltyOnly: true },
   { id: "invite", group: "optional", icon: IconUsers, tint: "accent", mins: 1 },
 ];
+
+const CHANNEL_IDS = TASKS.filter((task) => task.group === "channels").map((task) => task.id);
 
 /** A step's translated copy: card text plus the shorter label the sidebar uses. */
 export interface CardCopy {
@@ -158,7 +164,7 @@ export function setupCopy(t: TFunction): Record<CardId, CardCopy> {
     },
     instagram: {
       title: t("Connect an Instagram Business Account to RateUp"),
-      desc: t("Story replies and DMs land next to your WhatsApp threads."),
+      desc: t("Story replies and DMs land in the same inbox as every other channel."),
       btnLabel: t("Connect Instagram"),
       navLabel: t("Instagram"),
     },
@@ -232,8 +238,15 @@ export interface SetupProgress {
   /** Every step on offer, skipped ones included — the guide still lists those. */
   visibleTasks: TaskDef[];
   checklistMap: ChecklistMap;
-  /** Steps the org has waved off; they count for nothing and leave the sidebar. */
+  /** Steps the org has waved off by hand — what gets stored. */
   skippedMap: ChecklistMap;
+  /**
+   * {@link skippedMap} plus the steps skipped along with what they need. These count
+   * for nothing and leave the sidebar.
+   */
+  effectiveSkips: ChecklistMap;
+  /** At least one channel is connected — the one thing the guide insists on. */
+  hasChannel: boolean;
   doneTasks: number;
   totalTasks: number;
   /** Summed `mins` of everything still outstanding. */
@@ -277,11 +290,12 @@ export function getSetupProgress({
     ...derived,
   };
   const skippedMap: ChecklistMap = { ...storedSkips, ...skipOverrides };
+  const effective = withInheritedSkips(checklistMap, skippedMap);
 
   const visibleTasks = TASKS.filter((task) => !task.loyaltyOnly || hasLoyaltyFeature);
   // A skipped step is off the books entirely: it is neither done nor outstanding,
   // so the guide can still finish for someone who will never add Instagram.
-  const countedTasks = visibleTasks.filter((task) => !skippedMap[task.id]);
+  const countedTasks = visibleTasks.filter((task) => !effective[task.id]);
   const totalTasks = countedTasks.length;
   const doneTasks = countedTasks.filter((task) => checklistMap[task.id]).length;
 
@@ -289,6 +303,8 @@ export function getSetupProgress({
     visibleTasks,
     checklistMap,
     skippedMap,
+    effectiveSkips: effective,
+    hasChannel: CHANNEL_IDS.some((id) => checklistMap[id]),
     doneTasks,
     totalTasks,
     minsLeft: countedTasks
@@ -300,11 +316,34 @@ export function getSetupProgress({
 }
 
 /**
- * The three Meta steps genuinely gate sending, so they cannot be waved off; the
- * channels and the optional work can.
+ * The stored skips plus every undone step whose `needs` is skipped — kept apart
+ * from the stored map so un-skipping WhatsApp brings its steps back with it.
  */
-export function isTaskSkippable(task: TaskDef): boolean {
-  return task.group !== "required";
+export function withInheritedSkips(done: ChecklistMap, skipped: ChecklistMap): ChecklistMap {
+  const effective: ChecklistMap = { ...skipped };
+
+  for (const task of TASKS) {
+    if (task.needs && skipped[task.needs] && !done[task.id]) effective[task.id] = true;
+  }
+
+  return effective;
+}
+
+/**
+ * Any channel can be waved off as long as one is left to connect — the guide
+ * needs at least one. WhatsApp's own steps go with WhatsApp rather than on their
+ * own: once it is connected they genuinely gate sending. The optional work can
+ * always be skipped.
+ */
+export function isTaskSkippable(
+  task: TaskDef,
+  checklistMap: ChecklistMap,
+  skippedMap: ChecklistMap,
+): boolean {
+  if (task.group === "whatsapp") return false;
+  if (task.group !== "channels") return true;
+
+  return CHANNEL_IDS.some((id) => id !== task.id && (checklistMap[id] || !skippedMap[id]));
 }
 
 /** A step is held back until whatever it `needs` is done. */

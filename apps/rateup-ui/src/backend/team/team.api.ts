@@ -142,6 +142,10 @@ export async function getTeamById(teamId: string) {
 
 export interface TeamChannelItem {
   id: string;
+  /** Which kind of channel row this grant is for. */
+  kind?: "whatsapp" | "facebook" | "instagram";
+  pageName?: string | null;
+  igUserName?: string | null;
   phone?: string | null;
   phoneId?: string | null;
   ibaId?: string | null;

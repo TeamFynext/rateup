@@ -4753,7 +4753,14 @@
     "Zoho Lead Status": "ज़ोहो लीड स्थिति",
     "Zoho Leads": "ज़ोहो लीड्स",
     "Zoho leads synced successfully": "ज़ोहो लीड सफलतापूर्वक समन्वयित हो गए",
-    "Zoom the Image": "छवि को ज़ूम करें"
+    "Zoom the Image": "छवि को ज़ूम करें",
+    "Connect a channel": "एक चैनल कनेक्ट करें",
+    "Connect at least one — every conversation lands in the same inbox, with the same replies and rules": "कम से कम एक कनेक्ट करें — हर बातचीत उसी इनबॉक्स में आती है, उन्हीं जवाबों और नियमों के साथ",
+    "Finish WhatsApp setup": "WhatsApp सेटअप पूरा करें",
+    "You can't send on WhatsApp until these are done": "ये चरण पूरे होने तक आप WhatsApp पर संदेश नहीं भेज सकते",
+    "Story replies and DMs land in the same inbox as every other channel.": "स्टोरी के जवाब और DM बाकी सभी चैनलों के साथ उसी इनबॉक्स में आते हैं।",
+    "Your channels are connected. Every reply lands in your inbox.": "आपके चैनल कनेक्ट हो गए हैं। हर जवाब आपके इनबॉक्स में आता है।",
+    "Connect at least one channel to start talking to customers. Everything after that is optional — each one opens the page where you finish it.": "ग्राहकों से बात शुरू करने के लिए कम से कम एक चैनल कनेक्ट करें। उसके बाद सब कुछ वैकल्पिक है — हर चरण वह पेज खोलता है जहाँ आप उसे पूरा करते हैं।"
   },
   "campaign.card": {
     "{delivered}% delivered · {read}% read": "{delivered}% वितरित · {read}% पढ़ा गया",

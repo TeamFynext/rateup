@@ -17,6 +17,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { Channel } from "@/backend/channels/channels.api";
+import { useChannels } from "@/backend/channels/channels.query";
 import { teamKeys } from "@/backend/org/org.keys";
 import { inviteTeamMember } from "@/backend/team/team.api";
 import {
@@ -30,8 +32,6 @@ import {
   useTeamMembersFromInvitation,
   useUpdateTeamChannels,
 } from "@/backend/team/team.query";
-import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { ColorField } from "@/components/common/color-field.tsx";
 import { RoleBadge } from "@/components/common/RoleBadge.tsx";
 import { RoleSelect } from "@/components/common/RoleSelect.tsx";
@@ -912,21 +912,31 @@ function AutosaveStatusLabel({ status }: Readonly<{ status: AutosaveStatus }>) {
   );
 }
 
-/** Best available human-readable name for a channel, with the platform it belongs to. */
-function describeChannel(channel: WaSettings[number]): { label: string; platform: string } {
-  if (channel?.ibaId) {
-    return {
-      label: channel.igDisplayName || channel.igUserName || channel.ibaId,
-      platform: "Instagram",
-    };
-  }
-  if (channel?.fbPageId) {
-    return { label: channel.fbUserName || channel.fbPageId, platform: "Facebook" };
-  }
-  return {
-    label: channel?.phoneDisplayName || channel?.phone || channel?.phoneId || "Unnamed channel",
-    platform: "WhatsApp",
-  };
+interface ChannelAccessRow {
+  id: string;
+  label: string;
+  platform: string;
+}
+
+const PLATFORM_LABEL: Record<string, string> = {
+  WHATSAPP: "WhatsApp",
+  FACEBOOK: "Facebook",
+  INSTAGRAM: "Instagram",
+  WEBCHAT: "Webchat",
+};
+
+/** Every grantable channel, of any platform, with its best human-readable name. */
+function describeChannels(channels: Channel[] | undefined): ChannelAccessRow[] {
+  return (channels ?? []).map((channel) => ({
+    id: channel.id,
+    label:
+      channel.platform === "WHATSAPP"
+        ? channel.name || channel.address || channel.accountId
+        : channel.username
+          ? `@${channel.username}`
+          : (channel.name ?? channel.accountId),
+    platform: PLATFORM_LABEL[channel.platform] ?? channel.platform,
+  }));
 }
 
 export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
@@ -934,7 +944,7 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
   const teamId = selectedTeam?.id as string;
 
   const { data, isLoading } = useTeamChannels(teamId);
-  const { data: allChannelsList, isLoading: isLoadingChannels } = useWaSettings();
+  const { data: connectedChannels, isLoading: isLoadingChannels } = useChannels();
   const updateMutation = useUpdateTeamChannels(teamId);
 
   // `null` means "untouched" — the server's value is shown until then.
@@ -984,7 +994,7 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
     );
   }
 
-  const channels = allChannelsList ?? [];
+  const channels = describeChannels(connectedChannels);
   const hasNoGrant = !current.allChannels && current.ids.size === 0;
 
   return (
@@ -1029,23 +1039,21 @@ export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam
               {translations("No channels are connected to this organisation yet.")}
             </p>
           ) : (
-            channels.map((channel) => {
-              const { label, platform } = describeChannel(channel);
-
+            channels.map(({ id, label, platform }) => {
               return (
                 <label
-                  key={channel.id}
-                  htmlFor={`team-channel-${channel.id}`}
+                  key={id}
+                  htmlFor={`team-channel-${id}`}
                   className={cn(
                     "flex items-center gap-3 px-4 py-2.5 text-sm",
                     current.allChannels ? "opacity-60" : "cursor-pointer",
                   )}
                 >
                   <Checkbox
-                    id={`team-channel-${channel.id}`}
-                    checked={current.allChannels || current.ids.has(channel.id)}
+                    id={`team-channel-${id}`}
+                    checked={current.allChannels || current.ids.has(id)}
                     disabled={current.allChannels}
-                    onCheckedChange={() => toggleChannel(channel.id)}
+                    onCheckedChange={() => toggleChannel(id)}
                   />
                   <span className="min-w-0 flex-1 truncate">{label}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">{platform}</span>
