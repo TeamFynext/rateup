@@ -228,6 +228,7 @@ export function loyaltyMenuRule(input: {
       wooProductIds: [],
       instagramScope: "ALL",
       instagramPostIds: [],
+      instagramPublicReplies: [],
     },
   };
 }

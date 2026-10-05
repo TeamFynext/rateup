@@ -284,6 +284,9 @@ interface InstagramProductTemplateNodeData extends BaseNodeData {
   whatsappSettingsPhoneId?: string;
 }
 
+/** Branches on whether the person follows the account; its handles are fixed, see node.tsx. */
+type InstagramFollowCheckNodeData = BaseNodeData;
+
 interface InstagramIceBreakerNodeData extends BaseNodeData {
   iceBreakers: Array<{
     question: string;
@@ -339,6 +342,7 @@ export interface NodeTypeMap {
   instagramStoryReplyNode: InstagramStoryReplyNodeData;
   instagramProductTemplateNode: InstagramProductTemplateNodeData;
   instagramIceBreakerNode: InstagramIceBreakerNodeData;
+  instagramFollowCheckNode: InstagramFollowCheckNodeData;
 }
 
 /**

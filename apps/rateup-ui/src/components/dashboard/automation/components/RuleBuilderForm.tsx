@@ -50,6 +50,8 @@ import { shopifyEventData, wooEventData } from "@/utils/constants.ts";
 
 import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
+import { InstagramPublicReplies } from "./InstagramPublicReplies.tsx";
+import { InstagramCommentSource, InstagramLinkRef } from "./InstagramTriggerOptions.tsx";
 import RuleOptions from "./RuleOptions.tsx";
 import type { CreateRuleInput, CreateRuleValues, Platform } from "./schema.ts";
 import { getTriggerEventsForPlatform, INSTAGRAM_SCOPE_OPTIONS, PLATFORMS } from "./schema.ts";
@@ -130,6 +132,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   const isWooTrigger = triggerEvent === "WOOCOMMERCE_EVENT";
   const isInstagramCommentTrigger = triggerEvent === "INSTAGRAM_COMMENT";
   const isInstagramStoryTrigger = triggerEvent === "INSTAGRAM_STORY_MENTION";
+  const isInstagramReferralTrigger = triggerEvent === "INSTAGRAM_REFERRAL";
   const isInstagramTrigger = isInstagramCommentTrigger || isInstagramStoryTrigger;
 
   const shopifyEvent = useWatch({
@@ -141,6 +144,10 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   const wooProductIds = useWatch({ control: form.control, name: "options.wooProductIds" }) ?? [];
   const instagramScope =
     useWatch({ control: form.control, name: "options.instagramScope" }) ?? "ALL";
+  const instagramCommentSource = useWatch({
+    control: form.control,
+    name: "options.instagramCommentSource",
+  });
   const selectedPhoneIds =
     useWatch({ control: form.control, name: "whatsappSettingsPhoneIds" }) ?? [];
 
@@ -457,6 +464,8 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                           isInstagramTrigger={isInstagramTrigger}
                           isInstagramCommentTrigger={isInstagramCommentTrigger}
                           isInstagramStoryTrigger={isInstagramStoryTrigger}
+                          isInstagramReferralTrigger={isInstagramReferralTrigger}
+                          instagramCommentSource={instagramCommentSource}
                           shopifyEvent={shopifyEvent}
                           shopifyProductIds={shopifyProductIds}
                           instagramScope={instagramScope}
@@ -548,6 +557,12 @@ const TriggerPanel: React.FC<{
               if (value !== "INSTAGRAM_COMMENT" && value !== "INSTAGRAM_STORY_MENTION") {
                 form.setValue("options.instagramScope", "ALL");
                 form.setValue("options.instagramPostIds", []);
+              }
+              if (value !== "INSTAGRAM_COMMENT") {
+                form.setValue("options.instagramCommentSource", undefined);
+              }
+              if (value !== "INSTAGRAM_REFERRAL") {
+                form.setValue("options.instagramRef", undefined);
               }
               if (value !== "MESSAGE_RECEIVED") {
                 form.setValue("groups", []);
@@ -790,6 +805,8 @@ const ConditionsPanel: React.FC<{
   isInstagramTrigger: boolean;
   isInstagramCommentTrigger: boolean;
   isInstagramStoryTrigger: boolean;
+  isInstagramReferralTrigger: boolean;
+  instagramCommentSource: string | undefined;
   shopifyEvent: string | undefined;
   shopifyProductIds: string[];
   instagramScope: string;
@@ -817,6 +834,8 @@ const ConditionsPanel: React.FC<{
   isInstagramTrigger,
   isInstagramCommentTrigger,
   isInstagramStoryTrigger,
+  isInstagramReferralTrigger,
+  instagramCommentSource,
   shopifyEvent,
   shopifyProductIds,
   instagramScope,
@@ -853,11 +872,13 @@ const ConditionsPanel: React.FC<{
       <div className="space-y-4">
         <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
           {isInstagramCommentTrigger
-            ? "Sends a private reply when someone comments on your post, reel, or ad."
+            ? "Runs when someone comments on your post, reel, or ad. The first message your actions send arrives as a private reply to that comment."
             : "Triggers when someone mentions your account in their Instagram Story."}
         </div>
 
-        {isInstagramCommentTrigger && (
+        {isInstagramCommentTrigger && <InstagramCommentSource />}
+
+        {isInstagramCommentTrigger && instagramCommentSource !== "LIVE" && (
           <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
             <span className="text-sm font-semibold block">Apply to</span>
             <Controller
@@ -924,6 +945,18 @@ const ConditionsPanel: React.FC<{
             )}
           </div>
         )}
+
+        {isInstagramCommentTrigger && <InstagramPublicReplies />}
+      </div>
+    )}
+
+    {isInstagramReferralTrigger && (
+      <div className="space-y-4">
+        <div className="rounded-lg border border-dashed p-3.5 text-sm text-muted-foreground">
+          Runs when someone opens a chat with you from this ig.me link — share it in your bio,
+          stories or anywhere online.
+        </div>
+        <InstagramLinkRef />
       </div>
     )}
 
@@ -1114,6 +1147,7 @@ const ConditionsPanel: React.FC<{
 
     {/* Standard condition blocks */}
     {!isInstagramStoryTrigger &&
+      !isInstagramReferralTrigger &&
       !isShopifyTrigger &&
       !isWooTrigger &&
       groupFields.map((group, groupIndex: number) => (
@@ -1142,7 +1176,7 @@ const ConditionsPanel: React.FC<{
         </div>
       ))}
 
-    {!isShopifyTrigger && !isInstagramStoryTrigger && (
+    {!isShopifyTrigger && !isInstagramStoryTrigger && !isInstagramReferralTrigger && (
       <Button
         type="button"
         variant="outline"
