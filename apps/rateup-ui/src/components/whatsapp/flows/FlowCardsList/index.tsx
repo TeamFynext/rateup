@@ -23,6 +23,7 @@ function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsDa
             version={flow.version}
             categories={flow.categories}
             responseCount={responseCount}
+            teamIds={flow.survey?.teams?.map((team) => team.teamId) ?? []}
           />
         );
       }}

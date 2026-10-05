@@ -1,4 +1,4 @@
-import { IconFileDownload } from "@tabler/icons-react";
+import { IconChartBar, IconFileDownload } from "@tabler/icons-react";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
@@ -8,11 +8,16 @@ import { useResponseAnalytics } from "@/backend/surveys/response/response.query"
 import { useAllResponseNPSForGraph } from "@/backend/surveys/surveys.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import OverallResponseGraphWebForm from "@/components/Graph/OverallResponseGraphWebForm.tsx";
-import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView.tsx";
-import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { FlowQuestionSummary } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
@@ -98,29 +103,39 @@ const ResultsOverviewWebForm = ({
   return (
     <div className="flex flex-col gap-6">
       {isPending ? (
-        <RateupLoader />
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-9 w-full" />
+          <div className="grid gap-4 lg:grid-cols-5">
+            <Skeleton className="h-72 lg:col-span-3" />
+            <Skeleton className="h-72 lg:col-span-2" />
+          </div>
+          <Skeleton className="h-96 w-full" />
+        </div>
       ) : isError ? (
         <ErrorComponent refetch={refetch} isRefetching={isRefetching} />
       ) : !npsOverView.length && !choiceWiseOverView.length ? (
-        <NothingFound
-          className="min-h-[70vh]"
-          text={translations("No Data available for Analysis")}
-        />
+        <Empty className="min-h-[60vh]">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <IconChartBar />
+            </EmptyMedia>
+            <EmptyTitle>{translations("No data to analyse yet")}</EmptyTitle>
+            <EmptyDescription>
+              {translations("Charts appear here once the first responses come in.")}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <>
           {!flowId && <SurveyStatsWebForm surveyId={surveyId} />}
 
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
-                <Button variant="outline" size="sm" onClick={handleExport}>
-                  <IconFileDownload className="mr-1.5 size-4" />
-                  {translations("Export to PDF")}
-                </Button>
-                <CalenderIconDateRangePicker ranges={ranges} setRange={setRanges} />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CalenderIconDateRangePicker ranges={ranges} setRange={setRanges} />
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <IconFileDownload className="mr-1.5 size-4" />
+              {translations("Export to PDF")}
+            </Button>
+          </div>
 
           <div ref={targetRef} className="flex flex-col gap-6">
             <HappyIndex surveyId={surveyId} />

@@ -14,12 +14,12 @@ import { useTranslation } from "react-i18next";
 
 import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
 import { BackLink } from "@/components/common/back-link.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import type { WaFlowStatus } from "@/types/enums.ts";
 
-import styles from "./FlowPageHeader.module.css";
+import WaFlowStatusBadge from "../../WaTemplateStatusBadge.tsx";
 
 export enum FlowTabEnum {
   Edit = "Edit",
@@ -32,6 +32,7 @@ export enum FlowTabEnum {
 
 interface FlowPageHeaderProps {
   name: string;
+  status?: WaFlowStatus;
   tab: FlowTabEnum;
   setTabState: (tab: FlowTabEnum) => void;
   previewOpened?: boolean;
@@ -51,6 +52,7 @@ const tabIcons = {
 
 function FlowPageHeader({
   name,
+  status,
   tab,
   setTabState,
   previewOpened = false,
@@ -67,19 +69,16 @@ function FlowPageHeader({
     }
   };
 
-  const isActive = true; // You can make this dynamic based on flow state
-
   return (
-    <div className={styles["flow-page-header"]}>
-      {/* Row 1: Back Button, Title, Badge, and Subtitle */}
-      <div className={styles["header-row-1"]}>
+    <div className="bg-background">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border p-2.5">
         <BackLink to="/dashboard/whatsapp/flows" label={t("Flows")} />
 
-        <div className={styles["title-section"]}>
-          <div className={styles["title-row"]}>
-            <h1 className={styles["flow-title"]}>{name}</h1>
-            {isActive && <Badge className={styles["status-badge"]}>Active</Badge>}
-          </div>
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <h1 className="truncate font-display text-xl font-semibold tracking-tight text-foreground">
+            {name}
+          </h1>
+          {status && <WaFlowStatusBadge status={status} />}
         </div>
 
         {/* Action Buttons */}
@@ -116,8 +115,7 @@ function FlowPageHeader({
         </div>
       </div>
 
-      {/* Row 2: Tabs Navigation */}
-      <div className={styles["header-row-2"]}>
+      <div className="px-6 py-2">
         <Tabs value={tab} defaultValue={FlowTabEnum.Edit} onValueChange={setTabState}>
           <TabsList>
             {Object.values(FlowTabEnum).map((tabNameString) => {

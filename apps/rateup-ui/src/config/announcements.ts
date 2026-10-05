@@ -40,6 +40,14 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-10-03-flow-analytics-refresh",
+    title: "A cleaner look for WhatsApp Flows",
+    summary:
+      "Flow cards now show status and response counts at a glance, and flow and survey analytics use clearer charts in RateUp colours that work in dark mode.",
+    publishedAt: "2026-10-03",
+    kinds: ["improvement"],
+    area: "Flows",
+    link: { to: "/dashboard/whatsapp/flows" },
     id: "2026-10-01-instagram-comment-replies",
     title: "Instagram comments: public replies and lives",
     summary:

@@ -4,7 +4,10 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { cn } from "@/lib/utils";
 
 /** One badge shape for every status in the section: an outline chip with a dot whose colour carries the state. */
-function DotBadge({ dotClassName, label }: Readonly<{ dotClassName: string; label: string }>) {
+export function DotBadge({
+  dotClassName,
+  label,
+}: Readonly<{ dotClassName: string; label: string }>) {
   return (
     <Badge variant="outline" className="gap-1.5 font-normal text-foreground">
       <span className={cn("size-1.5 rounded-full", dotClassName)} aria-hidden />
